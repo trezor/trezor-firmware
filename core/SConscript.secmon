@@ -14,6 +14,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
+DISABLE_TROPIC = ARGUMENTS.get('DISABLE_TROPIC', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
@@ -23,6 +24,7 @@ if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
     raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
 if STORAGE_INSECURE_TESTING_MODE:
     DISABLE_OPTIGA = True
+    DISABLE_TROPIC = True
     PYOPT = "0"
 
 FEATURE_FLAGS = {
@@ -50,6 +52,11 @@ if DISABLE_OPTIGA:
     if PRODUCTION:
         raise RuntimeError("DISABLE_OPTIGA requires non-production build")
     FEATURES_WANTED.remove("optiga")
+
+if DISABLE_TROPIC:
+    if PRODUCTION:
+        raise RuntimeError("DISABLE_TROPIC requires non-production build")
+    FEATURES_WANTED.remove("tropic")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
