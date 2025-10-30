@@ -31,3 +31,22 @@ pub fn bootloader_process_ble() -> BootloaderWFResult {
             .unwrap_or(BootloaderWFResult::Error)
     }
 }
+
+#[derive(PartialEq, Debug, Eq, Clone, Copy, FromPrimitive, ToPrimitive)]
+pub enum DebuglinkResult {
+    Repaint = ffi::debuglink_result_t_DEBUGLINK_RESULT_REPAINT as _,
+    None = ffi::debuglink_result_t_DEBUGLINK_RESULT_NONE as _,
+}
+
+pub fn debuglink_process() -> DebuglinkResult {
+    unsafe {
+        unwrap!(
+            DebuglinkResult::from_u32(ffi::debuglink_process()),
+            "Invalid debuglink result"
+        )
+    }
+}
+
+pub fn debuglink_notify_layout_change() {
+    unsafe { ffi::debuglink_notify_layout_change() }
+}
