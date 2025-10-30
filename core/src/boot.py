@@ -81,6 +81,19 @@ else:
             return
 
 
+async def start_ipc_responder() -> None:
+    from trezor import io
+
+    print("Spawning app task...")
+    task_id = io.app_cache.spawn("app_id")
+    print(f"App Task ID: {task_id}")
+
+    while True:
+        msg = await loop.wait(io.IPC2_EVENT | io.POLL_READ)
+        io.ipc_send(msg.remote(), msg.fn(), msg.data())
+        msg.free()
+
+
 async def bootscreen() -> None:
     """Sequence of actions to be done on boot (after device is connected).
 
@@ -161,5 +174,7 @@ if utils.USE_POWER_MANAGER:
 if __debug__ and not utils.EMULATOR:
     config.wipe()
 
-loop.schedule(bootscreen())
+loop.schedule(start_ipc_responder())
+
+# loop.schedule(bootscreen())
 loop.run()
