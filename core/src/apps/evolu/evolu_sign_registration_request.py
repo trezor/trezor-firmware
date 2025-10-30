@@ -31,18 +31,10 @@ async def evolu_sign_registration_request(
         ValueError: If the delegated identity proof is invalid.
 
     """
-    from trezor import utils, wire
+    from trezor import utils
     from trezor.messages import EvoluRegistrationRequest
-    from trezor.utils import bootloader_locked
 
     from .common import check_delegated_identity_proof
-
-    if (
-        bootloader_locked() is False
-    ):  # cannot use `if not bootloader_locked()` since on None we do not want to raise an error
-        raise wire.ProcessError(
-            "Cannot sign registration request since bootloader is unlocked."
-        )
 
     if not utils.USE_OPTIGA:
         raise RuntimeError("Optiga is not available")
@@ -99,6 +91,7 @@ def _get_certificates() -> list[AnyBytes]:
         cert_len = r.offset - cert_begin + n
         r.seek(cert_begin)
         certificates.append(r.read_memoryview(cert_len))
+
     return certificates
 
 

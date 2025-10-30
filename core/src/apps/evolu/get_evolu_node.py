@@ -29,15 +29,9 @@ async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
     from trezor import TR, utils
     from trezor.messages import EvoluNode
     from trezor.ui.layouts import confirm_action
-    from trezor.utils import bootloader_locked
-    from trezor.wire import NotInitialized, ProcessError
+    from trezor.wire import NotInitialized
 
     from .common import check_delegated_identity_proof
-
-    if (
-        bootloader_locked() is False
-    ):  # cannot use `if not bootloader_locked()` since on None we do not want to raise an error
-        raise ProcessError("Cannot provide Evolu node since bootloader is unlocked.")
 
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
