@@ -75,6 +75,9 @@ def configure(
         defines += [("USE_TOUCH", "1")]
         defines += [("USE_I2C", "1")]
 
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/touch/touch_debug.c"]
+
     if "sd_card" in features_wanted:
         sources += ["embed/io/sdcard/stm32f4/sdcard.c"]
         sources += ["embed/upymod/modtrezorio/ff.c"]
