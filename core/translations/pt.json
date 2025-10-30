@@ -42,7 +42,12 @@
     "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": "Caminho de derivação incorreto para a conta.",
     "addr_mismatch__xpub_mismatch": "XPUB não coincide?",
-    "address__cancel_contact_support": "Se o endereço de destino não corresponder, contate o suporte Trezor em trezor.io/support.",
+    "address__cancel_contact_support": {
+      "Bolt": "Se o endereço de destino não corresponder, contate o suporte Trezor em trezor.io/support.",
+      "Caesar": "Se o endereço de destino não corresponder, contate o suporte Trezor em trezor.io/support.",
+      "Delizia": "Se o endereço de destino não corresponder, contate o suporte Trezor em trezor.io/support.",
+      "Eckhart": "Se o endereço não bater, contacte o suporte Trezor em trezor.io/support."
+    },
     "address__cancel_receive": {
       "Bolt": "Cancelar recebimento",
       "Caesar": "Cancelar recebimento",
@@ -297,7 +302,12 @@
     "buttons__again": "Refazer",
     "buttons__allow": "Permitir",
     "buttons__back": "Voltar",
-    "buttons__back_up": "Criar backup",
+    "buttons__back_up": {
+      "Bolt": "Backup",
+      "Caesar": "Criar backup",
+      "Delizia": "Criar backup",
+      "Eckhart": "Criar backup"
+    },
     "buttons__cancel": "Cancelar",
     "buttons__change": "Alterar",
     "buttons__check": "Verificar",
@@ -319,7 +329,12 @@
       "Delizia": "Segure para confirmar",
       "Eckhart": "Segure para confirmar"
     },
-    "buttons__info": "Informações",
+    "buttons__info": {
+      "Bolt": "Info.",
+      "Caesar": "Informações",
+      "Delizia": "Informações",
+      "Eckhart": "Informações"
+    },
     "buttons__install": "Instalar",
     "buttons__more_info": "Mais inform.",
     "buttons__ok_i_understand": "OK, entendo",
@@ -752,8 +767,18 @@
     "ethereum__priority_fee": "Taxa de prioridade máx.",
     "ethereum__show_full_array": "Exibir arranjo completo",
     "ethereum__show_full_domain": "Exibir domínio completo",
-    "ethereum__show_full_message": "Exibir mensagem completa",
-    "ethereum__show_full_struct": "Exibir estrutura completa",
+    "ethereum__show_full_message": {
+      "Bolt": "Exibir mensagem",
+      "Caesar": "Exibir mensagem completa",
+      "Delizia": "Exibir mensagem completa",
+      "Eckhart": "Exibir mensagem completa"
+    },
+    "ethereum__show_full_struct": {
+      "Bolt": "Exibir estrutura",
+      "Caesar": "Exibir estrutura completa",
+      "Delizia": "Exibir estrutura completa",
+      "Eckhart": "Exibir estrutura completa"
+    },
     "ethereum__sign_eip712": "Confirmar assinatura de dados tipados EIP-712?",
     "ethereum__staking_claim": "Resgatar",
     "ethereum__staking_claim_address": "Endereço de resgate",
@@ -1430,7 +1455,7 @@
     "pin__cancel_setup": {
       "Bolt": "Cancelar config. do PIN",
       "Caesar": "Cancelar config. do PIN",
-      "Delizia": "Cancelar configuração do PIN",
+      "Delizia": "Cancelar config. do PIN",
       "Eckhart": "Cancelar configuração do PIN?"
     },
     "pin__change": "Alterar PIN",
@@ -1468,7 +1493,12 @@
     "pin__turn_off": "Deseja mesmo desligar a proteção por PIN?",
     "pin__turn_on": "Ligar proteção por PIN?",
     "pin__wipe_code_exists_description": "Desative o código de limpeza antes de desativar a proteção por PIN.",
-    "pin__wipe_code_exists_title": "Código de limpeza definido",
+    "pin__wipe_code_exists_title": {
+      "Bolt": "Código de limp. definido",
+      "Caesar": "Código de limpeza definido",
+      "Delizia": "Código de limpeza definido",
+      "Eckhart": "Código de limpeza definido"
+    },
     "pin__wrong_pin": "PIN incorreto",
     "plurals__contains_x_keys": "chave|chaves",
     "plurals__lock_after_x_days": "dia|dias",
@@ -1512,7 +1542,7 @@
     "recovery__cancel_dry_run": {
       "Bolt": "Cancelar verif. do backup",
       "Caesar": "Cancelar verif. do backup",
-      "Delizia": "Cancelar verificação do backup",
+      "Delizia": "Cancelar verif. do backup",
       "Eckhart": "Cancelar verificação do backup"
     },
     "recovery__check_dry_run": {
@@ -1635,8 +1665,18 @@
     "reset__all_x_of_y_template": "todos {0} dos {1} shares",
     "reset__any_x_of_y_template": "quaisquer {0} dos {1} shares",
     "reset__button_create": "Criar carteira",
-    "reset__button_recover": "Recuperar carteira",
-    "reset__by_continuing": "Ao continuar, você aceita os termos e condições da Trezor Company.",
+    "reset__button_recover": {
+      "Bolt": "Recup. carteira",
+      "Caesar": "Recuperar carteira",
+      "Delizia": "Recuperar carteira",
+      "Eckhart": "Recuperar carteira"
+    },
+    "reset__by_continuing": {
+      "Bolt": "Ao continuar, você aceita os T&C da Trezor Company.",
+      "Caesar": "Ao continuar, você aceita os termos e condições da Trezor Company.",
+      "Delizia": "Ao continuar, você aceita os termos e condições da Trezor Company.",
+      "Eckhart": "Ao continuar, você aceita os termos e condições da Trezor Company."
+    },
     "reset__cancel_create_wallet": "Cancelar criação da carteira",
     "reset__check_backup_instructions": "Vamos verificar rapidamente seu backup.",
     "reset__check_backup_title": "Verif. backup",
@@ -1722,7 +1762,7 @@
       "Eckhart": "Selec. a {0}ª palavra do backup de sua carteira"
     },
     "reset__select_word_x_of_y_template": {
-      "Bolt": "Selec. palavra {0} de {1}:",
+      "Bolt": "Palavra {0} de {1}:",
       "Caesar": "Selec. palavra {0} de {1}:",
       "Delizia": "Sel. palavra {0} de {1}:",
       "Eckhart": "Selecione a palavra {0} de {1}:"
@@ -1771,7 +1811,12 @@
     "reset__title_number_of_groups": "Número de grupos",
     "reset__title_number_of_shares": "Número de shares",
     "reset__title_set_group_threshold": "Def. limite mín. do grupo",
-    "reset__title_set_number_of_groups": "Definir número de grupos",
+    "reset__title_set_number_of_groups": {
+      "Bolt": "Definir nº de grupos",
+      "Caesar": "Definir número de grupos",
+      "Delizia": "Definir número de grupos",
+      "Eckhart": "Definir número de grupos"
+    },
     "reset__title_set_number_of_shares": "Definir número de shares",
     "reset__title_set_threshold": "Definir limite mínimo",
     "reset__title_shamir_backup": "Backup multi-share",
@@ -2239,7 +2284,12 @@
     "tutorial__ready_to_use": "Seu Trezor está pronto\npara ser usado.",
     "tutorial__ready_to_use_safe5": "Você está pronto para começar a usar o dispositivo!",
     "tutorial__restart_tutorial": "Reiniciar tutorial",
-    "tutorial__scroll_down": "Pressione o botão direito para rolar para baixo e ler todo o conteúdo quando o texto não couber na tela.\n\nPressione o botão esquerdo para rolar para cima.",
+    "tutorial__scroll_down": {
+      "Bolt": "Pressione o botão direito para rolar para baixo e ler todo o conteúdo quando o texto não couber na tela.\n\nPressione o botão esquerdo para rolar para cima.",
+      "Caesar": "Pressione o botão direito para rolar para baixo e ler todo o conteúdo quando o texto não couber na tela. Pressione o botão esquerdo para rolar para cima.",
+      "Delizia": "Pressione o botão direito para rolar para baixo e ler todo o conteúdo quando o texto não couber na tela.\n\nPressione o botão esquerdo para rolar para cima.",
+      "Eckhart": "Pressione o botão direito para rolar para baixo e ler todo o conteúdo quando o texto não couber na tela.\n\nPressione o botão esquerdo para rolar para cima."
+    },
     "tutorial__suite_restart": "Reveja este tutorial a qualquer momento no app Trezor Suite.",
     "tutorial__sure_you_want_skip": "Deseja mesmo\npular o tutorial?",
     "tutorial__swipe_up_and_down": {
@@ -2269,7 +2319,12 @@
       "Delizia": "",
       "Eckhart": "TROPIC01 é um chip de segurança de nova geração, com código aberto, projetado para segurança de hardware transparente e auditável."
     },
-    "tutorial__use_trezor": "Use o Trezor pressionando\nos botões esquerdo e direito.\n\nSiga à direita.",
+    "tutorial__use_trezor": {
+      "Bolt": "Use o Trezor pressionando\nos botões esquerdo e direito.\n\nSiga à direita.",
+      "Caesar": "Use o Trezor pressionando os botões esquerdo e direito. Siga à direita.",
+      "Delizia": "Use o Trezor pressionando\nos botões esquerdo e direito.\n\nSiga à direita.",
+      "Eckhart": "Use o Trezor pressionando\nos botões esquerdo e direito.\n\nSiga à direita."
+    },
     "tutorial__welcome_press_right": "Bem-vindo(a) ao Trezor. Pressione o botão direito para continuar.",
     "tutorial__welcome_safe5": {
       "Bolt": "",
@@ -2312,7 +2367,12 @@
     "wipe_code__enter_new": "Novo cód. limpeza",
     "wipe_code__info": "O cód. limpeza serve para apagar todos os dados deste dispositivo.",
     "wipe_code__invalid": "Cód. limpeza inválido",
-    "wipe_code__mismatch": "Os códigos de limpeza inseridos não coincidem.",
+    "wipe_code__mismatch": {
+      "Bolt": "Cód. limpeza não coincidem.",
+      "Caesar": "Os códigos de limpeza inseridos não coincidem.",
+      "Delizia": "Os códigos de limpeza inseridos não coincidem.",
+      "Eckhart": "Os códigos de limpeza inseridos não coincidem."
+    },
     "wipe_code__pin_not_set_description": "Defina um PIN antes de ativar o código de limpeza.",
     "wipe_code__reenter": {
       "Bolt": "Reins. cód. limpeza",
@@ -2376,8 +2436,18 @@
     "words__connect": "Conectar",
     "words__connected": "Conectado",
     "words__contains": "Contém",
-    "words__continue_anyway": "Continuar mesmo assim",
-    "words__continue_anyway_question": "Continuar mesmo assim?",
+    "words__continue_anyway": {
+      "Bolt": "Continuar",
+      "Caesar": "Continuar mesmo assim",
+      "Delizia": "Continuar mesmo assim",
+      "Eckhart": "Continuar mesmo assim"
+    },
+    "words__continue_anyway_question": {
+      "Bolt": "Continuar?",
+      "Caesar": "Continuar mesmo assim?",
+      "Delizia": "Continuar mesmo assim?",
+      "Eckhart": "Continuar mesmo assim?"
+    },
     "words__continue_with": "Continuar com",
     "words__device": "Dispositivo",
     "words__disabled": "Desativado",
