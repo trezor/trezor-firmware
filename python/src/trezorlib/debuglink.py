@@ -34,7 +34,12 @@ from mnemonic import Mnemonic
 
 from . import btc, mapping, messages, models, protobuf
 from .client import ProtocolVersion, TrezorClient
-from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
+from .exceptions import (
+    Cancelled,
+    TrezorException,
+    TrezorFailure,
+    UnexpectedMessageError,
+)
 from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
 from .tools import parse_path
@@ -748,6 +753,16 @@ class DebugLink:
         state = self._call(messages.DebugLinkGetState(wait_word_list=True))
         return state.reset_word
 
+    def get_features(self) -> messages.Features | None:
+        self._write(messages.GetFeatures())
+
+        msg = self._read()
+
+        if not isinstance(msg, messages.Features):
+            raise TrezorException("Unexpected response to GetFeatures")
+
+        return msg
+
     def _decision(
         self, decision: messages.DebugLinkDecision, wait: bool | None = None
     ) -> None:
@@ -1325,6 +1340,10 @@ class TrezorClientDebugLink(TrezorClient):
         self.pin_callback = get_pin
         self.button_callback = self.ui.button_request
 
+        # protocol = ProtocolV1Channel(debug_transport, mapping.DEFAULT_MAPPING)
+        #
+        # super().__init__(transport, app_name=app_name, host_name=host_name, protocol=protocol)
+
         super().__init__(transport, app_name=app_name, host_name=host_name)
         self.sync_responses()
 
@@ -1341,6 +1360,17 @@ class TrezorClientDebugLink(TrezorClient):
     @property
     def layout_type(self) -> LayoutType:
         return self.debug.layout_type
+
+    @property
+    def features(self) -> messages.Features:
+        if self._features is None:
+            if self.debug is not None:
+                self._features = self.debug.get_features()
+            else:
+                self._features = self.protocol.get_features()
+            self.check_firmware_version(warn_only=True)
+        assert self._features is not None
+        return self._features
 
     def get_new_client(self) -> TrezorClientDebugLink:
         new_client = TrezorClientDebugLink(
@@ -1368,6 +1398,7 @@ class TrezorClientDebugLink(TrezorClient):
         self,
         passphrase: str | object = "",
         derive_cardano: bool = False,
+        bootloader_session: bool = False,
     ) -> SessionDebugWrapper:
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
@@ -1375,6 +1406,7 @@ class TrezorClientDebugLink(TrezorClient):
             super().get_session(
                 passphrase,
                 derive_cardano,
+                bootloader_session,
             )
         )
         return session

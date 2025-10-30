@@ -62,7 +62,12 @@ class BackgroundDeviceHandler:
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
 
-        with self.debuglink().wait_for_layout_change():
+        bootloader_session = kwargs.get("bootloader_session", False)  # Default to False
+
+        if not bootloader_session:
+            with self.debuglink().wait_for_layout_change():
+                self.task = self._pool.submit(self.client.get_session, *args, **kwargs)
+        else:
             self.task = self._pool.submit(self.client.get_session, *args, **kwargs)
 
     def run_with_session(

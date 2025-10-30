@@ -222,11 +222,12 @@ class TrezorClient:
         self,
         passphrase: str | object = "",
         derive_cardano: bool = False,
+        bootloader_session: bool = False,
     ) -> Session:
         """
         Returns a new session.
         """
-        if isinstance(self.protocol, ProtocolV1Channel):
+        if isinstance(self.protocol, ProtocolV1Channel) or bootloader_session:
             from .transport.session import SessionV1, derive_seed
 
             if passphrase is SEEDLESS:
@@ -235,7 +236,8 @@ class TrezorClient:
                 self,
                 derive_cardano=derive_cardano,
             )
-            derive_seed(session, passphrase)
+            if not bootloader_session:
+                derive_seed(session, passphrase)
             return session
         if isinstance(self.protocol, ProtocolV2Channel):
             from .transport.session import SessionV2

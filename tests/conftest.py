@@ -315,6 +315,10 @@ def _client_unlocked(
     # Resetting all the debug events to not be influenced by previous test
     _raw_client.debug.reset_debug_events()
 
+    if _raw_client.features.bootloader_mode:
+        yield _raw_client
+        return
+
     if test_ui:
         # we need to reseed before the wipe
         _raw_client.debug.reseed(0)
@@ -391,7 +395,8 @@ def _client_unlocked(
 def client(
     request: pytest.FixtureRequest, _client_unlocked: Client
 ) -> t.Generator[Client, None, None]:
-    _client_unlocked.lock()
+    if not _client_unlocked.features.bootloader_mode:
+        _client_unlocked.lock()
     if bool(request.node.get_closest_marker("invalidate_client")):
         with ui_tests.screen_recording(_client_unlocked, request):
             try:

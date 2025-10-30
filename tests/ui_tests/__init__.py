@@ -68,7 +68,7 @@ def screen_recording(
 
         # Wait for response, which gives the emulator time to catch up and redraw the homescreen.
         # Otherwise there's a race condition between that and stopping recording.
-        client.sync_responses()
+        # client.sync_responses()
         client.debug.stop_recording()
 
     result = testcase.build_result(request)
