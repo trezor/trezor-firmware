@@ -15,6 +15,7 @@ EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
+DEBUGLINK = ARGUMENTS.get('DEBUGLINK', '0') == '1'
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 SCM_REVISION = ARGUMENTS.get('SCM_REVISION', None)
@@ -37,6 +38,10 @@ if STORAGE_INSECURE_TESTING_MODE:
 if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
   exit(1)
+
+if DEBUGLINK or PYOPT == '0':
+  DEBUGLINK = True
+  PYOPT = '0'
 
 if LOG_STACK_USAGE and PYOPT != '0':
   print("LOG_STACK_USAGE=1 works only with PYOPT=0.")
@@ -76,7 +81,6 @@ if DISABLE_OPTIGA:
 
 if PYOPT == '0':
     DBG_CONSOLE = DBG_CONSOLE or "VCP"
-    FEATURES_WANTED += ["usb_iface_debug"]
 
 if DBG_CONSOLE != "":
     FEATURES_WANTED += ["dbg_console"]
@@ -92,6 +96,10 @@ PATH_HAL = []
 RUST_UI_FEATURES = []
 
 FROZEN = True
+
+if DEBUGLINK:
+    FEATURES_WANTED += ["usb_iface_debug"]
+    CPPDEFINES_MOD += ['DEBUGLINK']
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -877,6 +885,7 @@ env.Depends(protobuf_blobs, qstr_generated)
 features = ['micropython', 'protobuf', 'ui', 'translations'] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 if PYOPT == '0':
     features.append('debug')
+    features.append('debuglink')
     features.append('ui_debug')
     features.append('ui_debug_overlay')
 if EVERYTHING:
