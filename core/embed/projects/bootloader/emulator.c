@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "hslec:b:f:i:")) != -1) {
+  while ((opt = getopt(argc, argv, "hslewc:b:f:i:")) != -1) {
     switch (opt) {
       case 's':
         bootargs_set(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
@@ -169,6 +169,11 @@ int main(int argc, char **argv) {
           exit(1);
         }
       } break;
+      case 'w': {
+        if (sectrue != flash_area_erase(&FIRMWARE_AREA, NULL)) {
+          exit(1);
+        }
+      } break;
       case 'f': {
         uint8_t hash[BLAKE2S_DIGEST_LENGTH];
         if (!load_firmware(optarg, hash)) {
@@ -176,6 +181,7 @@ int main(int argc, char **argv) {
         }
         bootargs_set(BOOT_COMMAND_INSTALL_UPGRADE, hash, sizeof(hash));
       } break;
+
 #ifdef LOCKABLE_BOOTLOADER
       case 'l':
         secret_lock_bootloader();
