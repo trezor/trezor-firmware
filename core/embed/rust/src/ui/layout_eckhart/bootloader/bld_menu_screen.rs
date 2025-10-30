@@ -1,7 +1,10 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::{Alignment, Rect},
-    shape::Renderer,
+use crate::{
+    trezorhal::ble,
+    ui::{
+        component::{Component, Event, EventCtx},
+        geometry::{Alignment, Rect},
+        shape::Renderer,
+    },
 };
 
 use super::{
@@ -33,7 +36,8 @@ impl BldMenuScreen {
     pub fn new() -> Self {
         let bluetooth = Button::with_text("Pair new device".into())
             .styled(theme::bootloader::button_bld_menu())
-            .with_text_align(Alignment::Start);
+            .with_text_align(Alignment::Start)
+            .initially_enabled(ble::get_enabled());
         let reboot = Button::with_text("Restart".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
