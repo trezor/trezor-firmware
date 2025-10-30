@@ -49,6 +49,10 @@ void tsqueue_reset(tsqueue_t *queue);
 bool tsqueue_enqueue(tsqueue_t *queue, const uint8_t *data, uint16_t len,
                      int32_t *id);
 
+// Peek into the front of the queue
+bool tsqueue_peek(tsqueue_t *queue, uint8_t *data, uint16_t max_len,
+                  uint16_t *len, int32_t *id);
+
 // Read data from the queue
 bool tsqueue_dequeue(tsqueue_t *queue, uint8_t *data, uint16_t max_len,
                      uint16_t *len, int32_t *id);

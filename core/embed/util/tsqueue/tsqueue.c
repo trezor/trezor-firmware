@@ -138,6 +138,32 @@ bool tsqueue_dequeue(tsqueue_t *queue, uint8_t *data, uint16_t max_len,
   return true;
 }
 
+bool tsqueue_peek(tsqueue_t *queue, uint8_t *data, uint16_t max_len,
+                  uint16_t *len, int32_t *id) {
+  irq_key_t key = irq_lock();
+
+  tsqueue_discard_aborted(queue);
+
+  if (!queue->entries[queue->rix].used) {
+    irq_unlock(key);
+    return false;
+  }
+
+  if (len != NULL) {
+    *len = queue->entries[queue->rix].len;
+  }
+
+  if (id != NULL) {
+    *id = queue->entries[queue->rix].id;
+  }
+
+  memcpy(data, queue->entries[queue->rix].buffer,
+         MIN(queue->entries[queue->rix].len, max_len));
+
+  irq_unlock(key);
+  return true;
+}
+
 // Check if the queue is full
 bool tsqueue_full(tsqueue_t *queue) {
   irq_key_t key = irq_lock();
