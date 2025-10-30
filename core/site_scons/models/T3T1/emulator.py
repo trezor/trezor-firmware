@@ -73,6 +73,9 @@ def configure(
         features_available.append("touch")
         defines += [("USE_TOUCH", "1")]
 
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/touch/touch_debug.c"]
+
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 
