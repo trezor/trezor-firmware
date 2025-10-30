@@ -483,7 +483,9 @@ fn generate_trezorhal_bindings() {
         // nrf
         .allowlist_function("nrf_send_uart_data")
         // c_layout
-        .allowlist_type("c_layout_t");
+        .allowlist_type("c_layout_t")
+        .allowlist_function("debuglink_process")
+        .allowlist_function("debuglink_notify_layout_change");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

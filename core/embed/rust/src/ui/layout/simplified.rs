@@ -117,6 +117,12 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     render(frame);
     ModelUI::fadein();
 
+    #[cfg(feature = "ui_debug")]
+    {
+        use crate::trezorhal::bootloader::debuglink_notify_layout_change;
+        debuglink_notify_layout_change();
+    }
+
     #[cfg(all(feature = "power_manager", feature = "haptic"))]
     let mut haptic_played = false;
     #[cfg(feature = "power_manager")]
@@ -142,6 +148,9 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
 
     #[cfg(feature = "power_manager")]
     unwrap!(ifaces.push(Syshandle::PowerManager));
+
+    #[cfg(all(feature = "bootloader", feature = "debuglink"))]
+    unwrap!(ifaces.push(Syshandle::UsbDebug));
 
     loop {
         let event = sysevents_poll(ifaces.as_slice());
@@ -262,6 +271,12 @@ pub fn show(frame: &mut impl Component<Msg = impl ReturnToC>, fading: bool) -> u
     if fading {
         ModelUI::fadein()
     };
+
+    #[cfg(feature = "ui_debug")]
+    {
+        use crate::trezorhal::bootloader::debuglink_notify_layout_change;
+        debuglink_notify_layout_change();
+    }
 
     0
 }

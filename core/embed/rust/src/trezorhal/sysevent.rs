@@ -29,6 +29,9 @@ use crate::trezorhal::time::ticks_ms;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 
+#[cfg(all(feature = "bootloader", feature = "debuglink"))]
+use crate::trezorhal::bootloader::debuglink_process;
+
 #[derive(PartialEq, Debug, Eq, Clone, Copy)]
 pub enum Syshandle {
     UsbWire = ffi::syshandle_t_SYSHANDLE_USB_WIRE as _,
@@ -144,6 +147,11 @@ pub fn parse_event(signalled: &sysevents_t) -> Option<Event> {
             let pm_event = pm_parse_event(pm_event);
             return Some(Event::PM(pm_event));
         }
+    }
+
+    #[cfg(all(feature = "bootloader", feature = "debuglink"))]
+    if signalled.read_ready & (1 << ffi::syshandle_t_SYSHANDLE_USB_DEBUG) != 0 {
+        debuglink_process();
     }
 
     None

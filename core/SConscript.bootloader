@@ -8,6 +8,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
+DEBUGLINK = ARGUMENTS.get('DEBUGLINK', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
@@ -43,6 +44,10 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 RUST_UI_FEATURES = []
+
+if DEBUGLINK:
+    FEATURES_WANTED.append("usb_iface_debug")
+    CPPDEFINES_MOD.append("DEBUGLINK")
 
 if DBG_CONSOLE != "":
     FEATURES_WANTED += ["dbg_console"]
@@ -157,6 +162,14 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/version_check.c',
 ]
 
+if DEBUGLINK:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/workflow/debuglink.c',
+        'embed/projects/bootloader/wire/debug_iface_usb.c',
+        'embed/projects/bootloader/protob/protob_debug.c',
+        'embed/projects/bootloader/protob/pb/messages-debug.pb.c',
+    ]
+
 if "boot_ucb" in FEATURES_AVAILABLE:
     env.Replace(
         HEADERTOOL='headertool_pq',
@@ -248,6 +261,11 @@ cmake_gen = env.Command(
 # Rust library
 #
 features = ['bootloader',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
+
+if DEBUGLINK:
+    features.append('debuglink')
+    features.append('ui_debug')
+    features.append('ui_debug_overlay')
 
 if UI_PERFORMANCE_OVERLAY:
     features.append('ui_performance_overlay')

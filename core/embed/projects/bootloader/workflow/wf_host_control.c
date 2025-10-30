@@ -53,6 +53,10 @@
 
 #endif
 
+#ifdef DEBUGLINK
+#include "workflow/debuglink.h"
+#endif
+
 workflow_result_t workflow_host_control(const fw_info_t *fw,
                                         c_layout_t *wait_layout,
                                         uint32_t *ui_action_result,
@@ -89,6 +93,9 @@ workflow_result_t workflow_host_control(const fw_info_t *fw,
 #endif
 #ifdef USE_POWER_MANAGER
   awaited.read_ready |= 1 << SYSHANDLE_POWER_MANAGER;
+#endif
+#ifdef DEBUGLINK
+  awaited.read_ready |= 1 << SYSHANDLE_USB_DEBUG;
 #endif
 
   uint32_t res = screen_attach(wait_layout);
@@ -194,6 +201,13 @@ workflow_result_t workflow_host_control(const fw_info_t *fw,
 #else
     if (signalled.read_ready == 0) {
       continue;
+    }
+#endif
+
+#ifdef DEBUGLINK
+    if (signalled.read_ready & (1 << SYSHANDLE_USB_DEBUG)) {
+      // process debug input
+      debuglink_process();
     }
 #endif
 

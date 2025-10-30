@@ -51,3 +51,6 @@ pub mod irq;
 
 #[cfg(feature = "nrf")]
 pub mod nrf;
+
+#[cfg(feature = "bootloader")]
+pub mod bootloader;
