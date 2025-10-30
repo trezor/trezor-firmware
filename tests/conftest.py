@@ -147,6 +147,9 @@ def _raw_client(request: pytest.FixtureRequest) -> t.Generator[Client, None, Non
 def _get_raw_client(request: pytest.FixtureRequest) -> Client:
     # In case tests run in parallel, each process has its own emulator/client.
     # Requesting the emulator fixture only if relevant.
+
+    bootloader = request.config.getoption("bootloader")
+
     if request.session.config.getoption("control_emulators"):
         emu_fixture = request.getfixturevalue("emulator")
         client = emu_fixture.client
@@ -160,7 +163,7 @@ def _get_raw_client(request: pytest.FixtureRequest) -> Client:
         if path:
             client = _client_from_path(request, path, interact)
         else:
-            client = _find_client(request, interact)
+            client = _find_client(request, interact, bootloader)
 
     return client
 
@@ -176,10 +179,17 @@ def _client_from_path(
         raise RuntimeError(f"Failed to open debuglink for {path}") from e
 
 
-def _find_client(request: pytest.FixtureRequest, interact: bool) -> Client:
+def _find_client(
+    request: pytest.FixtureRequest, interact: bool, bootloader: bool = False
+) -> Client:
     devices = enumerate_devices()
     for device in devices:
-        return Client(device, auto_interact=not interact, open_transport=True)
+        return Client(
+            device,
+            auto_interact=not interact,
+            open_transport=True,
+            bootloader=bootloader,
+        )
 
     request.session.shouldstop = "Failed to communicate with Trezor"
     raise RuntimeError("No debuggable device found")
@@ -307,13 +317,18 @@ def _client_unlocked(
     _raw_client.reset_debug_features()
     if isinstance(_raw_client.protocol, ProtocolV1Channel):
         try:
-            _raw_client.sync_responses()
+            if not _raw_client.is_bootloader():
+                _raw_client.sync_responses()
         except Exception:
             request.session.shouldstop = "Failed to communicate with Trezor"
             pytest.fail("Failed to communicate with Trezor")
 
     # Resetting all the debug events to not be influenced by previous test
     _raw_client.debug.reset_debug_events()
+
+    if _raw_client.is_bootloader():
+        yield _raw_client
+        return
 
     if test_ui:
         # we need to reseed before the wipe
@@ -391,7 +406,9 @@ def _client_unlocked(
 def client(
     request: pytest.FixtureRequest, _client_unlocked: Client
 ) -> t.Generator[Client, None, None]:
-    _client_unlocked.lock()
+
+    if not _client_unlocked.is_bootloader():
+        _client_unlocked.lock()
     if bool(request.node.get_closest_marker("invalidate_client")):
         with ui_tests.screen_recording(_client_unlocked, request):
             try:
@@ -541,6 +558,12 @@ def pytest_addoption(parser: "Parser") -> None:
         action="store_true",
         default=False,
         help="Issue a warning when GC leak detected (otherwise, fail the test)",
+    )
+    parser.addoption(
+        "--bootloader",
+        action="store_true",
+        default=False,
+        help="Use bootloader mode for this test run",
     )
 
 
