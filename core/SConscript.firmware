@@ -16,6 +16,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
+DISABLE_TROPIC = ARGUMENTS.get('DISABLE_TROPIC', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 SCM_REVISION = ARGUMENTS.get('SCM_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
@@ -32,6 +33,7 @@ if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
     raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
 if STORAGE_INSECURE_TESTING_MODE:
     DISABLE_OPTIGA = True
+    DISABLE_TROPIC = True
     PYOPT = "0"
 
 if BENCHMARK and PYOPT != '0':
@@ -73,6 +75,11 @@ if DISABLE_OPTIGA:
     if PYOPT != '0':
         raise RuntimeError("DISABLE_OPTIGA requires PYOPT=0")
     FEATURES_WANTED.remove("optiga")
+
+if DISABLE_TROPIC:
+    if PRODUCTION:
+        raise RuntimeError("DISABLE_TROPIC requires non-production build")
+    FEATURES_WANTED.remove("tropic")
 
 if PYOPT == '0':
     DBG_CONSOLE = DBG_CONSOLE or "VCP"
