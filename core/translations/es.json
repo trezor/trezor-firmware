@@ -55,7 +55,7 @@
       "Eckhart": "¿Cancelar recepción?"
     },
     "address__check_with_source": "Revisa dirección con la fuente.",
-    "address__coin_address_template": "dirección {0}",
+    "address__coin_address_template": "Dirección {0}",
     "address__confirmed": "Dirección de destino confirmada",
     "address__public_key": "Clave pública",
     "address__public_key_confirmed": "Clave pública confirmada",
@@ -133,7 +133,7 @@
       "Bolt": "C. seg. de la billetera completada",
       "Caesar": "C. seg. de la billetera completada",
       "Delizia": "C. seg. de la billetera completada",
-      "Eckhart": "C. seg. de la billetera completada."
+      "Eckhart": "Copia de seguridad de la billetera completada."
     },
     "backup__title_backup_wallet": "C. seg. billetera",
     "backup__title_create_wallet_backup": "Crear copia de seguridad",
@@ -159,7 +159,7 @@
     "bitcoin__title_payjoin": "Payjoin",
     "bitcoin__title_proof_of_ownership": "Prueba de propiedad",
     "bitcoin__title_purchase_ticket": "Comprar ticket",
-    "bitcoin__title_update_transaction": "Actualizar transacc.",
+    "bitcoin__title_update_transaction": "Actualizar transacción",
     "bitcoin__unknown_path": "Ruta desconocida",
     "bitcoin__unknown_transaction": "Transacc. desconocida",
     "bitcoin__unusually_high_fee": "Comisión inusualmente alta.",
@@ -1574,7 +1574,7 @@
       "Bolt": "Palabra {0} de {1}",
       "Caesar": "Palabra {0} de {1}",
       "Delizia": "Palabra {0} de {1}",
-      "Eckhart": "Palabra {0} \nde {1}"
+      "Eckhart": "Palabra {0} de {1}"
     },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} {plural} más iniciando",
@@ -1666,7 +1666,7 @@
       "Delizia": "Selecciona palabra {0}",
       "Eckhart": "Selecciona la palabra #{0} de la c. seg. de tu billetera."
     },
-    "reset__select_word_x_of_y_template": "Selec. palabra {0} de {1}:",
+    "reset__select_word_x_of_y_template": "Palabra {0} de {1}:",
     "reset__set_it_to_count_template": "Ajústalo en {0} y necesitarás ",
     "reset__share_checked_successfully_template": "Fragmento #{0} verificado con éxito.",
     "reset__share_completed_template": {
@@ -1686,7 +1686,12 @@
     "reset__slip39_checklist_more_info_threshold_example_template": "Si fijas {0} de {1} fragmentos, necesitarás {2} fragmentos de la c. seg. para recuperar tu billetera.",
     "reset__slip39_checklist_num_groups": "Número de grupos",
     "reset__slip39_checklist_num_groups_x_template": "Número de grupos: {0}",
-    "reset__slip39_checklist_num_shares": "Número de fragmentos",
+    "reset__slip39_checklist_num_shares": {
+      "Bolt": "Número de fragmentos",
+      "Caesar": "Número de frag.",
+      "Delizia": "Número de frag.",
+      "Eckhart": "Número de fragmentos"
+    },
     "reset__slip39_checklist_num_shares_x_template": {
       "Bolt": "Número de fragmentos: {0}",
       "Caesar": "Número de fragmentos: {0}",
@@ -1951,7 +1956,7 @@
     "solana__priority_fee": "Comisión de prioridad",
     "solana__stake": "Hacer stake",
     "solana__stake_account": "Cuenta de stake",
-    "solana__stake_on_question": "¿Hacer staking de SOL en {0}?",
+    "solana__stake_on_question": "¿Hacer stake de SOL en {0}?",
     "solana__stake_question": "¿Hacer staking de SOL?",
     "solana__stake_withdrawal_warning": "La billetera actual no es la autoridad de retiro del staking de SOL.",
     "solana__stake_withdrawal_warning_title": "Dirección de la autoridad de retiro",
@@ -2267,8 +2272,18 @@
       "Eckhart": "El código de borrar se ha cambiado."
     },
     "wipe_code__diff_from_pin": "El código de borrar debe ser diferente del PIN.",
-    "wipe_code__disabled": "Cód. borrar desactivado.",
-    "wipe_code__enabled": "Cód. borrar activado.",
+    "wipe_code__disabled": {
+      "Bolt": "Cód. borrar desactivado.",
+      "Caesar": "Cód. borrar desactivado.",
+      "Delizia": "Cód. borrar desactivado.",
+      "Eckhart": "El código de borrar se ha desactivado."
+    },
+    "wipe_code__enabled": {
+      "Bolt": "Cód. borrar activado.",
+      "Caesar": "Cód. borrar activado.",
+      "Delizia": "Cód. borrar activado.",
+      "Eckhart": "El código de borrar se ha activado."
+    },
     "wipe_code__enter_new": "Nuevo cód. borrar",
     "wipe_code__info": "Con el cód. borrar eliminarás todos los datos del dispositivo.",
     "wipe_code__invalid": "Cód. borrar inválido",
