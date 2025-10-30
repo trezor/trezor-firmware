@@ -111,6 +111,9 @@ def configure(
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
 
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/touch/touch_debug.c"]
+
     if "ble" in features_wanted:
         sources += ["embed/io/ble/unix/ble.c"]
         paths += ["embed/io/ble/inc"]
