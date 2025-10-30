@@ -185,7 +185,12 @@
       "Delizia": "Sauvegarde du portefeuille terminée",
       "Eckhart": "Sauvegarde du portefeuille terminée."
     },
-    "backup__title_backup_wallet": "Sauvegarder le portefeuille",
+    "backup__title_backup_wallet": {
+      "Bolt": "Sauveg. portef.",
+      "Caesar": "Sauvegarder le portefeuille",
+      "Delizia": "Sauvegarder le portefeuille",
+      "Eckhart": "Sauvegarder le portefeuille"
+    },
     "backup__title_create_wallet_backup": "Créez une sauvegarde de portefeuille",
     "backup__title_skip": {
       "Bolt": "Ignorer sauvegarde",
@@ -433,7 +438,12 @@
     "buttons__again": "Refaire",
     "buttons__allow": "Autoriser",
     "buttons__back": "Retour",
-    "buttons__back_up": "Sauvegarder",
+    "buttons__back_up": {
+      "Bolt": "Sauveg.",
+      "Caesar": "Sauvegarder",
+      "Delizia": "Sauvegarder",
+      "Eckhart": "Sauvegarder"
+    },
     "buttons__cancel": "Annuler",
     "buttons__change": "Changer",
     "buttons__check": "Vérifier",
@@ -1671,8 +1681,8 @@
     "pin__diff_from_wipe_code": "Le nouveau code PIN doit être différent de votre code d'effacement.",
     "pin__disabled": "Protection par code PIN\ndésactivée.",
     "pin__enabled": "Protection par code PIN\nactivée.",
-    "pin__enter": "Saisir le code PIN",
-    "pin__enter_new": "Entrez le nouveau code PIN",
+    "pin__enter": "Saisir le PIN",
+    "pin__enter_new": "Entrez le nouveau PIN",
     "pin__entered_not_valid": "Le PIN que vous avez entré n'est pas valide.",
     "pin__info": "Le code PIN sera requis pour accéder à cet appareil.",
     "pin__invalid_pin": "PIN invalide",
@@ -1690,10 +1700,15 @@
     "pin__title_check_pin": "Vérifier le PIN",
     "pin__title_settings": "Paramètres du code PIN",
     "pin__title_wrong_pin": "PIN incorrect",
-    "pin__tries_left": "essais restants",
+    "pin__tries_left": "essais",
     "pin__turn_off": "Voulez-vous vraiment désactiver la protection par PIN ?",
     "pin__turn_on": "Activer la protection par code PIN ?",
-    "pin__wipe_code_exists_description": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
+      "Caesar": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
+      "Delizia": "Désactivez le code d'effac. avant de désact. la protection par PIN.",
+      "Eckhart": "Désactivez le code d'effacement avant de désactiver la protection par code PIN."
+    },
     "pin__wipe_code_exists_title": "Code d'effacement défini",
     "pin__wrong_pin": "PIN incorrect",
     "plurals__contains_x_keys": "touche|touches",
@@ -1840,7 +1855,12 @@
     "reset__advanced_group_threshold_info": "Le seuil de groupe spécifie le nombre de groupes requis pour récupérer votre portefeuille.",
     "reset__all_x_of_y_template": "tous {0} fragm. sur {1}",
     "reset__any_x_of_y_template": "{0} des {1} fragments",
-    "reset__button_create": "Créer un portefeuille",
+    "reset__button_create": {
+      "Bolt": "Créer un portef.",
+      "Caesar": "Créer un portef.",
+      "Delizia": "Créer un portefeuille",
+      "Eckhart": "Créer un portefeuille"
+    },
     "reset__button_recover": "Récupérer un portefeuille",
     "reset__by_continuing": "En continuant, vous acceptez les conditions générales de Trezor.",
     "reset__cancel_create_wallet": "Annuler la création du portefeuille",
@@ -1911,7 +1931,7 @@
       "Eckhart": "Fragment de récupération #{0}"
     },
     "reset__recovery_wallet_backup_title": {
-      "Bolt": "Sauvegarde du portefeuille",
+      "Bolt": "Sauvegarde du portef.",
       "Caesar": "Sauvegarde du portefeuille",
       "Delizia": "Sauvegarde du portef.",
       "Eckhart": "Sauvegarde du portefeuille"
@@ -1989,7 +2009,12 @@
       "Eckhart": "Plus d'infos sur trezor.io/tos"
     },
     "reset__total_number_of_shares_in_group_template": "Définir le nombre total de fragments dans le Groupe {0}.",
-    "reset__use_your_backup": "Utilisez votre sauvegarde lorsque vous avez besoin de récupérer votre portefeuille.",
+    "reset__use_your_backup": {
+      "Bolt": "Utilisez votre sauveg. lorsque vous avez besoin de récupérer votre portef.",
+      "Caesar": "Utilisez votre sauvegarde lorsque vous avez besoin de récupérer votre portefeuille.",
+      "Delizia": "Utilisez votre sauvegarde lorsque vous avez besoin de récupérer votre portefeuille.",
+      "Eckhart": "Utilisez votre sauvegarde lorsque vous avez besoin de récupérer votre portefeuille."
+    },
     "reset__words_may_repeat": "Les mots peuvent se répéter.",
     "reset__words_written_down_template": "J'ai noté les {0} mots dans l'ordre.",
     "reset__write_down_words_template": {
@@ -2517,7 +2542,7 @@
       "Bolt": "Annuler la config. du code d'effacement",
       "Caesar": "Annuler la config. du code d'effacement",
       "Delizia": "Annuler la config. du code d'effacement",
-      "Eckhart": "Annuler la config. du code d'effacement ?"
+      "Eckhart": "Annuler la configuration du code d'effacement ?"
     },
     "wipe_code__change": "Modifier le code d'eff.",
     "wipe_code__change_question": "Modifier le code d'eff. ?",
