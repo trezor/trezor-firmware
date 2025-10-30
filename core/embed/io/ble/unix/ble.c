@@ -119,6 +119,7 @@ void ble_start(void) {
   sock_start(&drv->data_sock, ip, port_base + DATA_PORT_OFFSET);
   sock_start(&drv->event_sock, ip, port_base + EVENT_PORT_OFFSET);
 
+  drv->enabled = true;
   drv->initialized = true;
 }
 
