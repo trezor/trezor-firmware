@@ -28,6 +28,10 @@
 
 #include "touch_poll.h"
 
+#ifdef DEBUGLINK
+#include "touch_debug.h"
+#endif
+
 // #define TOUCH_TRACE_EVENT
 
 typedef struct {
@@ -51,6 +55,10 @@ static touch_fsm_t g_touch_tls[SYSTASK_MAX_TASKS];
 static const syshandle_vmt_t g_touch_handle_vmt;
 
 bool touch_poll_init(void) {
+#ifdef DEBUGLINK
+  touch_debug_init();
+#endif
+
   return syshandle_register(SYSHANDLE_TOUCH, &g_touch_handle_vmt, NULL);
 }
 
@@ -167,7 +175,15 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
 uint32_t touch_get_event(void) {
   touch_fsm_t* fsm = &g_touch_tls[systask_id(systask_active())];
 
-  uint32_t touch_state = touch_get_state();
+  uint32_t touch_state = 0;
+
+#ifdef DEBUGLINK
+  touch_state = touch_debug_poll();
+#endif
+
+  if (touch_state == 0) {
+    touch_state = touch_get_state();
+  }
 
   uint32_t event = touch_fsm_get_event(fsm, touch_state);
 
@@ -190,7 +206,16 @@ static void on_event_poll(void* context, bool read_awaited,
   UNUSED(write_awaited);
 
   if (read_awaited) {
-    uint32_t touch_state = touch_get_state();
+    uint32_t touch_state = 0;
+
+#ifdef DEBUGLINK
+    touch_state = touch_debug_peek();
+#endif
+
+    if (touch_state == 0) {
+      touch_state = touch_get_state();
+    }
+
     syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
   }
 }
