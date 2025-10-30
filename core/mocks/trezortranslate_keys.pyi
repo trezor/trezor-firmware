@@ -177,6 +177,7 @@ class TR:
     cardano__confirming_pool_registration: str = "Confirming pool registration as owner."
     cardano__confirming_transaction: str = "Confirming a transaction."
     cardano__cost: str = "Cost"
+    cardano__credential_intro_template: str = "{0} credential is a {1}"
     cardano__credential_mismatch: str = "Credential doesn't match payment credential."
     cardano__datum_hash: str = "Datum hash:"
     cardano__delegating_to: str = "Delegating to:"
