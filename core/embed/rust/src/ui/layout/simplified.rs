@@ -105,5 +105,11 @@ pub fn show(frame: &mut impl Component<Msg = impl ReturnToC>, fading: bool) -> u
         ModelUI::fadein()
     };
 
+    #[cfg(all(feature = "debuglink", feature = "bootloader"))]
+    {
+        use crate::trezorhal::bootloader::debuglink_notify_layout_change;
+        debuglink_notify_layout_change();
+    }
+
     0
 }
