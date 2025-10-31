@@ -482,6 +482,7 @@ impl DeviceMenuScreen {
             TR::buttons__restart.into(),
             DeviceMenuMsg::Reboot,
         ));
+        #[cfg(feature = "debug")]
         items.add(MenuItem::return_msg(
             TR::reboot_to_bootloader__title.into(),
             DeviceMenuMsg::RebootToBootloader,
