@@ -122,7 +122,10 @@ extern "C" fn new_confirm_trade(n_args: usize, args: *const Obj, kwargs: *mut Ma
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let subtitle: TString = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into()?;
-        let sell_amount: TString = kwargs.get(Qstr::MP_QSTR_sell_amount)?.try_into()?;
+        let sell_amount: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_sell_amount)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let buy_amount: TString = kwargs.get(Qstr::MP_QSTR_buy_amount)?.try_into()?;
         let back_button: bool = kwargs.get_or(Qstr::MP_QSTR_back_button, false)?;
         let layout = ModelUI::confirm_trade(title, subtitle, sell_amount, buy_amount, back_button)?;
@@ -1515,7 +1518,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     subtitle: str,
-    ///     sell_amount: str,
+    ///     sell_amount: str | None,
     ///     buy_amount: str,
     ///     back_button: bool = False,
     /// ) -> LayoutObj[UiResult]:
