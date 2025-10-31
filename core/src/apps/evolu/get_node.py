@@ -31,9 +31,6 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
 
-    if not msg.proof_of_delegated_identity:
-        raise ValueError("Proof of delegated identity must be provided")
-
     if not check_delegated_identity_proof(
         bytes(msg.proof_of_delegated_identity), header=b"EvoluGetNode"
     ):

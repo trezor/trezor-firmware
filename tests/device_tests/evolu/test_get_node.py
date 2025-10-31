@@ -29,3 +29,19 @@ def test_evolu_get_node_invalid_proof(session: Session):
         match="Invalid proof",
     ):
         evolu.get_node(session, proof=proof)
+
+
+def test_evolu_get_node_no_proof(session: Session):
+    with pytest.raises(
+        TrezorFailure,
+        match="Invalid proof",
+    ):
+        evolu.get_node(session, proof=b"")
+
+
+def test_evolu_get_node_none_proof(session: Session):
+    with pytest.raises(
+        TrezorFailure,
+        match="DataError: Failed to decode message: Missing required field. proof_of_delegated_identity",
+    ):
+        evolu.get_node(session, proof=None)
