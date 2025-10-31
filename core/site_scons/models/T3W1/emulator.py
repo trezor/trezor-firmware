@@ -139,5 +139,6 @@ def configure(
 
     if "serial_number" in features_wanted:
         defines += [("USE_SERIAL_NUMBER", "1")]
+        features_available.append("serial_number")
 
     return features_available

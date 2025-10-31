@@ -316,6 +316,7 @@ def configure(
 
     if "serial_number" in features_wanted:
         defines += [("USE_SERIAL_NUMBER", "1")]
+        features_available.append("serial_number")
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
     env.get("ENV")["MEMORY_LAYOUT"] = memory_layout
