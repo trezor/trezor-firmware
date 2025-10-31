@@ -2225,7 +2225,7 @@
       "Delizia": "",
       "Eckhart": "TROPIC01 es una nueva generación de chip open-source con Elemento Seguro, diseñado para la seguridad de hardware transparente y auditable."
     },
-    "tutorial__use_trezor": "Usa tu Trezor pulsando\nlos botones izquierdo y derecho.\n\nContinúa con el botón derecho.",
+    "tutorial__use_trezor": "Usa tu Trezor pulsando\nlos botones izquierdo y derecho.\n\rContinúa con el botón derecho.",
     "tutorial__welcome_press_right": "Bienvenido a Trezor. Pulsa el botón derecho para continuar.",
     "tutorial__welcome_safe5": {
       "Bolt": "",
