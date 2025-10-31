@@ -10,25 +10,20 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
     """
     Returns the SLIP-21 node to generate Evolu keys for this passphrase.
 
-    This function does not work if the bootloader is unlocked or if the device is not initialized.
+    This function does not work if the device is not initialized.
 
-    On devices with Optiga, this function requires a proof of delegated identity.
-
-    On devices without Optiga, the user is prompted to confirm the issuance of the node every time.
+    This function requires a proof of delegated identity.
 
     Args:
-        msg (EvoluGetNode): The message containing parameters and optional proof of delegated identity.
+        msg (EvoluGetNode): The message containing parameters and proof of delegated identity.
     Returns:
         EvoluNode: The derived SLIP-21 node containing the necessary data for further key generation.
     Raises:
-        ProcessError: If the bootloader is unlocked.
         NotInitialized: If the device is not initialized.
-        ValueError: If Optiga is available but the proof of delegated identity is missing or invalid.
+        ValueError: If the proof of delegated identity is missing or invalid.
     """
     from storage.device import is_initialized
-    from trezor import TR, utils
     from trezor.messages import EvoluNode
-    from trezor.ui.layouts import confirm_action
     from trezor.wire import NotInitialized
 
     from .common import check_delegated_identity_proof
@@ -36,22 +31,13 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
 
-    if utils.USE_OPTIGA:
-        if not msg.proof_of_delegated_identity:
-            raise ValueError(
-                "Proof of delegated identity must be provided when Optiga is available"
-            )
+    if not msg.proof_of_delegated_identity:
+        raise ValueError("Proof of delegated identity must be provided")
 
-        if not check_delegated_identity_proof(
-            bytes(msg.proof_of_delegated_identity), header=b"EvoluGetNode"
-        ):
-            raise ValueError("Invalid proof")
-    else:
-        await confirm_action(
-            "evolu_get_node_without_optiga",
-            TR.secure_sync__header,
-            TR.secure_sync__evolu_node_no_optiga,
-        )
+    if not check_delegated_identity_proof(
+        bytes(msg.proof_of_delegated_identity), header=b"EvoluGetNode"
+    ):
+        raise ValueError("Invalid proof")
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite
 

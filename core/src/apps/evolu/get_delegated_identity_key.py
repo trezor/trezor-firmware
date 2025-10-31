@@ -16,8 +16,6 @@ async def get_delegated_identity_key(
     3. as a token of the user's trust in this Trezor - Suite communication. Subsequent Secure Sync requests
     to this Trezor will be authenticated using this key, so we can skip more user confirmations.
 
-    This function does not work if the bootloader is unlocked.
-
     On devices with THP, we require a valid THP credential to be provided in the `msg`. The metadata from the credential
     is then displayed to the user during the confirmation. On devices without THP a generic confirmation dialog is shown.
 
@@ -26,8 +24,6 @@ async def get_delegated_identity_key(
     Returns:
         EvoluDelegatedIdentityKey: The response message containing the delegated identity private key.
     Raises:
-        wire.ProcessError: If the bootloader is unlocked.
-        RuntimeError: If Optiga is not available.
         ValueError: If THP is enabled but the credential is missing or invalid.
     """
 
