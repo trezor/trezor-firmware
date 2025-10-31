@@ -182,6 +182,9 @@ typedef enum {
   SYSCALL_TROPIC_ECC_SIGN,
   SYSCALL_TROPIC_DATA_READ,
 
+  SYSCALL_APP_CACHE_SPAWN,
+  SYSCALL_APP_CACHE_UNLOAD,
+
   SYSCALL_STORAGE_GET,
 
   // ------------------------------------------------------

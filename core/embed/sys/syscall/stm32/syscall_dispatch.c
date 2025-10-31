@@ -893,6 +893,20 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 #endif
 
+#ifdef USE_APP_LOADING
+    case SYSCALL_APP_CACHE_SPAWN: {
+      const char *app_id = (const char *)args[0];
+      size_t app_id_size = (size_t)args[1];
+      systask_id_t *app_task_id = (systask_id_t *)args[2];
+      args[0] = app_cache_spawn__verified(app_id, app_id_size, app_task_id);
+    } break;
+
+    case SYSCALL_APP_CACHE_UNLOAD: {
+      systask_id_t app_task_id = (systask_id_t)args[0];
+      app_cache_unload(app_task_id);
+    } break;
+#endif
+
     default:
       system_exit_fatal("Invalid syscall", __FILE__, __LINE__);
       break;

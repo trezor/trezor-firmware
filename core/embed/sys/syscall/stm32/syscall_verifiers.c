@@ -1313,4 +1313,25 @@ access_violation:
 }
 #endif
 
+#ifdef USE_APP_LOADING
+
+bool app_cache_spawn__verified(const char *app_name, size_t app_name_size,
+                               systask_id_t *app_task_id) {
+  if (!probe_read_access(app_name, app_name_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(app_task_id, sizeof(*app_task_id))) {
+    goto access_violation;
+  }
+
+  return app_cache_spawn(app_name, app_name_size, app_task_id);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_APP_LOADING
+
 #endif  // KERNEL

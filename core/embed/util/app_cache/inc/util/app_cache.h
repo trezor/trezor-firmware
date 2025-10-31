@@ -17,38 +17,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef KERNEL
+#pragma once
 
-#include <trezor_rtl.h>
+#include <trezor_types.h>
 
-#include <sys/applet.h>
-#include <sys/coreapp.h>
 #include <sys/systask.h>
 
-extern int coreapp_emu(int argc, char** argv);
+/**
+ * Spawns an external application with the given application ID.
+ *
+ * @param app_id Pointer to the application ID string.
+ * @param app_id_size Size of the application ID string.
+ * @param task_id Pointer to store the spawned application's task ID.
+ *
+ * @return true if the application was successfully spawned, false otherwise.
+ */
+bool app_cache_spawn(const char* app_id, size_t app_id_size,
+                     systask_id_t* task_id);
 
-// API getter function implemented in the coreapp
-extern const void* coreapp_api_get(uint32_t version);
-
-bool coreapp_init(applet_t* applet, int argc, char** argv) {
-  const applet_privileges_t coreapp_privileges = {0};
-
-  applet_init(applet, &coreapp_privileges, NULL);
-
-  if (!systask_init(&applet->task, 0, 0, 0, applet)) {
-    return false;
-  }
-
-  if (!systask_push_call(&applet->task, (void*)coreapp_emu, (uintptr_t)argc,
-                         (uintptr_t)argv, 0)) {
-    return false;
-  }
-
-  return true;
-}
-
-#ifdef USE_APP_LOADING
-void* coreapp_get_api_getter(void) { return (void*)coreapp_api_get; }
-#endif
-
-#endif  // KERNEL
+/**
+ * Kills the external application with the given task ID.
+ *
+ * If the application with the specified task ID is not found, the function
+ * does nothing.
+ *
+ * @param task_id Task ID of the application
+ */
+void app_cache_unload(systask_id_t task_id);

@@ -880,4 +880,20 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
 
 #endif
 
+#ifdef USE_APP_LOADING
+
+#include <util/app_cache.h>
+
+bool app_cache_spawn(const char *app_id, size_t app_id_size,
+                     systask_id_t *task_id) {
+  return (bool)syscall_invoke3((uint32_t)app_id, app_id_size, (uint32_t)task_id,
+                               SYSCALL_APP_CACHE_SPAWN);
+}
+
+void app_cache_unload(systask_id_t task_id) {
+  syscall_invoke1((uint32_t)task_id, SYSCALL_APP_CACHE_UNLOAD);
+}
+
+#endif
+
 #endif  // KERNEL_MODE

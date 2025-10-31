@@ -317,4 +317,13 @@ bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
 
 #endif
 
+#ifdef USE_APP_LOADING
+
+#include <util/app_cache.h>
+
+bool app_cache_spawn__verified(const char *app_name, size_t app_name_size,
+                               systask_id_t *app_task_id);
+
+#endif
+
 #endif  // KERNEL

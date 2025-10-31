@@ -159,13 +159,15 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         paths += ["embed/sys/ipc/inc"]
 
     if "applet" in features_wanted:
-        sources += ["embed/sys/task/stm32/applet.c"]
+        sources += ["embed/sys/task/applet.c"]
         sources += ["embed/sys/task/stm32/coreapp.c"]
 
     if "app_loading" in features_wanted:
         sources += ["embed/util/elf_loader/stm32/elf_loader.c"]
+        sources += ["embed/util/app_cache/app_cache.c"]
         defines += [("USE_APP_LOADING", "1")]
         paths += ["embed/util/elf_loader/inc"]
+        paths += ["embed/util/app_cache/inc"]
 
     if "usb" in features_wanted:
         sources += [
