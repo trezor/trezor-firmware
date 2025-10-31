@@ -33,10 +33,14 @@ async def sign_registration_request(
     """
     from trezor import utils
     from trezor.messages import EvoluRegistrationRequest
+    from trezor.utils import BufferReader
 
-    from .common import check_delegated_identity_proof
+    from apps.common.certificates import parse_cert_chain
+    from apps.evolu.common import check_delegated_identity_proof
 
-    if not utils.USE_OPTIGA:
+    if utils.USE_OPTIGA:
+        from trezor.crypto import optiga
+    else:
         raise RuntimeError("Optiga is not available")
 
     challenge_bytes, size_bytes = _check_data(
@@ -54,7 +58,8 @@ async def sign_registration_request(
         raise ValueError("Invalid proof")
 
     signature = _get_signature(challenge_bytes, size_bytes)
-    certificates = _get_certificates()
+    r = BufferReader(optiga.get_certificate(optiga.DEVICE_CERT_INDEX))
+    certificates = parse_cert_chain(r)
 
     return EvoluRegistrationRequest(
         certificate_chain=certificates,
@@ -73,26 +78,6 @@ def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
     size_to_acquire_bytes = size.to_bytes(4, "big")
 
     return challenge, size_to_acquire_bytes
-
-
-def _get_certificates() -> list[AnyBytes]:
-    from trezor import wire
-    from trezor.crypto import optiga
-    from trezor.crypto.der import read_length
-    from trezor.utils import BufferReader
-
-    certificates = []
-    r = BufferReader(optiga.get_certificate(optiga.DEVICE_CERT_INDEX))
-    while r.remaining_count() > 0:
-        cert_begin = r.offset
-        if r.get() != 0x30:
-            wire.FirmwareError("Device certificate is corrupted.")
-        n = read_length(r)
-        cert_len = r.offset - cert_begin + n
-        r.seek(cert_begin)
-        certificates.append(r.read_memoryview(cert_len))
-
-    return certificates
 
 
 def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
