@@ -271,6 +271,9 @@ CPPDEFINES_MOD += [
     'FANCY_FATAL_ERROR',
     ]
 
+if TREZOR_MODEL in ["T3W1", "T3T1"]:
+    CPPDEFINES_MOD += ('THREAD_LOCAL', '__attribute__((section(".tls")))'),
+
 # modtrezorutils
 SOURCE_MOD += [
     'embed/upymod/modtrezorutils/modtrezorutils.c',
