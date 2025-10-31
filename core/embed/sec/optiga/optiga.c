@@ -368,7 +368,7 @@ static bool optiga_is_configured() {
   metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
   metadata.data_type = TYPE_AUTOREF;
 #if PRODUCTION
-  metadata_locked.lcso = OPTIGA_META_LCS_OPERATIONAL;
+  metadata.lcso = OPTIGA_META_LCS_OPERATIONAL;
 #endif
 
   if (!read_metadata(OID_PIN_SECRET, &metadata_stored)) {
