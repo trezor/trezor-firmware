@@ -3030,7 +3030,7 @@
       "Delizia": "",
       "Eckhart": "TROPIC01 ist eine neue Generation des Open-Source Secure-Element-Chips, entwickelt für transparente und auditierbare Hardware-Sicherheit."
     },
-    "tutorial__use_trezor": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\n\nWeiter rechts.",
+    "tutorial__use_trezor": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\n\rWeiter rechts.",
     "tutorial__welcome_press_right": "Willkommen bei Trezor. Drücke rechts, um fortzufahren.",
     "tutorial__welcome_safe5": {
       "Bolt": "",
