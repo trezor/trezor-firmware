@@ -30,13 +30,23 @@
 
 static mpu_area_t coreapp_code_area;
 static mpu_area_t coreapp_tls_area;
+static void* coreapp_api_getter = NULL;
 
 // defined in linker script
 extern uint32_t _kernel_flash_end;
 #define KERNEL_END COREAPP_CODE_ALIGN((uint32_t) & _kernel_flash_end)
 
-// Initializes coreapp applet
-void coreapp_init(applet_t* applet) {
+static void coreapp_clear_memory(applet_t* applet) {
+  if (applet->layout.data1.size > 0) {
+    memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
+  }
+  if (applet->layout.data2.size > 0) {
+    memset((void*)applet->layout.data2.start, 0, applet->layout.data2.size);
+  }
+}
+
+bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
+                  size_t arg_size) {
   const uint32_t CODE1_START = KERNEL_END;
 
 #ifdef FIRMWARE_P1_START
@@ -65,19 +75,7 @@ void coreapp_init(applet_t* applet) {
   };
 
   applet_init(applet, &coreapp_layout, &coreapp_privileges);
-}
 
-static void coreapp_clear_memory(applet_t* applet) {
-  if (applet->layout.data1.size > 0) {
-    memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
-  }
-  if (applet->layout.data2.size > 0) {
-    memset((void*)applet->layout.data2.start, 0, applet->layout.data2.size);
-  }
-}
-
-bool coreapp_reset(applet_t* applet, uint32_t cmd, const void* arg,
-                   size_t arg_size) {
   // Enable access to coreapp memory regions
   mpu_set_active_applet(&applet->layout);
 
@@ -91,6 +89,7 @@ bool coreapp_reset(applet_t* applet, uint32_t cmd, const void* arg,
   // (we will need then later for extension applets)
   coreapp_tls_area = header->tls;
   coreapp_code_area = applet->layout.code1;
+  coreapp_api_getter = header->api_getter;
 
   // Reset the applet task (stack pointer, etc.)
   if (!systask_init(&applet->task, header->stack.start, header->stack.size, 0,
@@ -120,5 +119,7 @@ bool coreapp_reset(applet_t* applet, uint32_t cmd, const void* arg,
 mpu_area_t coreapp_get_code_area(void) { return coreapp_code_area; }
 
 mpu_area_t coreapp_get_tls_area(void) { return coreapp_tls_area; }
+
+void* coreapp_get_api_getter(void) { return coreapp_api_getter; }
 
 #endif  // KERNEL

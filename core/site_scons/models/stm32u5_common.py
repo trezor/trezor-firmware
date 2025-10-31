@@ -120,6 +120,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/time/stm32/systick.c",
         "embed/sys/time/stm32/systimer.c",
         "embed/sys/task/sysevent.c",
+        "embed/sys/task/system.c",
         "embed/sys/trustzone/stm32u5/trustzone.c",
         "embed/util/board_capabilities/stm32/board_capabilities.c",
         "embed/util/cpuid/stm32/cpuid.c",
@@ -149,9 +150,22 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
             features_wanted += ["system_view"]
             defines += ["USE_DBG_CONSOLE_SYSTEM_VIEW"]
 
+    if "ipc" in features_wanted:
+        sources += [
+            "embed/sys/ipc/ipc.c",
+            "embed/sys/ipc/stm32u5/ipc_memcpy.c",
+        ]
+        defines += [("USE_IPC", "1")]
+        paths += ["embed/sys/ipc/inc"]
+
     if "applet" in features_wanted:
         sources += ["embed/sys/task/stm32/applet.c"]
         sources += ["embed/sys/task/stm32/coreapp.c"]
+
+    if "app_loading" in features_wanted:
+        sources += ["embed/util/elf_loader/stm32/elf_loader.c"]
+        defines += [("USE_APP_LOADING", "1")]
+        paths += ["embed/util/elf_loader/inc"]
 
     if "usb" in features_wanted:
         sources += [
