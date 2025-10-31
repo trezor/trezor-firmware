@@ -236,6 +236,28 @@
                 "sig_s": "42f03f5dd99ed5b2368e85048546468fd9ae962bb0c7b6650bf0a39b9b2bb517"
             },
             "skip_models": ["t1"]
+        },
+        {
+            "name": "unknown_call_unknown_token_unknown_chain",
+            "parameters": {
+                "comment": "Unknown call - unknown token unknown chain",
+                "data": "abababab000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdddddddddddddddddddddddddddddddddddddddd",
+                "chain_id": 200901,
+                "fake_defs": false,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 401838,
+                "sig_r": "ed7a8a9c774301a075dd5c3b4fceb6ee045acc90469c5d1d8979f4018173cf2b",
+                "sig_s": "23b644d3974a4e4d4646fbab3c149f00e1d1b0521f654091c5fc2cf6b1ef59ba"
+            },
+            "skip_models": ["t1"]
         }
     ]
 }
