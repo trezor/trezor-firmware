@@ -43,6 +43,28 @@
 // Maximum time to wait for Tropic to boot. Chosen arbitrarily.
 #define TROPIC_BOOT_TIMEOUT_MS 1000
 
+#define TROPIC_MAX_RETRIES 5
+// Statement expression, see
+// https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
+#define TROPIC_RETRY_COMMAND(command)                          \
+  ({                                                           \
+    lt_ret_t TROPIC_RETRY_COMMAND_res = LT_FAIL;               \
+    for (int TROPIC_RETRY_COMMAND_i = 0;                       \
+         TROPIC_RETRY_COMMAND_i < TROPIC_MAX_RETRIES;          \
+         TROPIC_RETRY_COMMAND_i++) {                           \
+      TROPIC_RETRY_COMMAND_res = command;                      \
+      if (TROPIC_RETRY_COMMAND_res == LT_L1_SPI_ERROR) {       \
+        continue;                                              \
+      }                                                        \
+      if (TROPIC_RETRY_COMMAND_res == LT_L1_CHIP_ALARM_MODE) { \
+        tropic01_reset();                                      \
+        continue;                                              \
+      }                                                        \
+      break;                                                   \
+    }                                                          \
+    TROPIC_RETRY_COMMAND_res;                                  \
+  })
+
 typedef struct {
   bool initialized;
   bool session_started;
@@ -97,8 +119,8 @@ lt_ret_t tropic_start_custom_session(const uint8_t *stpub,
 
   tropic_wait_for_ready();
 
-  lt_ret_t ret =
-      lt_session_start(&drv->handle, stpub, pkey_index, shipriv, shipub);
+  lt_ret_t ret = TROPIC_RETRY_COMMAND(
+      lt_session_start(&drv->handle, stpub, pkey_index, shipriv, shipub));
 
   drv->pairing_key_index = pkey_index;
   drv->session_started = (ret == LT_OK);
@@ -270,8 +292,8 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
     return false;
   }
 
-  lt_ret_t res =
-      lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len, sig);
+  lt_ret_t res = TROPIC_RETRY_COMMAND(
+      lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len, sig));
   if (res != LT_OK) {
     memzero(sig, ECDSA_RAW_SIGNATURE_SIZE);
     return false;
@@ -414,8 +436,8 @@ bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
 
   ui_progress();
 
-  lt_ret_t res = lt_mac_and_destroy(&drv->handle, first_slot_index + pin_index,
-                                    digest, digest);
+  lt_ret_t res = TROPIC_RETRY_COMMAND(lt_mac_and_destroy(
+      &drv->handle, first_slot_index + pin_index, digest, digest));
 
   ui_progress();
 
@@ -451,8 +473,8 @@ bool tropic_pin_reset_slots(
   ui_progress();
 
   for (int i = 0; i <= pin_index; i++) {
-    res = lt_mac_and_destroy(&drv->handle, first_slot_index + i, reset_key,
-                             output);
+    res = TROPIC_RETRY_COMMAND(lt_mac_and_destroy(
+        &drv->handle, first_slot_index + i, reset_key, output));
     if (res != LT_OK) {
       goto cleanup;
     }
@@ -472,6 +494,47 @@ void tropic_pin_reset_slots_time(uint32_t *time_ms, uint16_t pin_index) {
   }
 }
 
+static lt_ret_t tropic_pin_set_inner(
+    tropic_ui_progress_t ui_progress, lt_handle_t *handle,
+    uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE], uint16_t slot_index,
+    uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]) {
+  lt_ret_t res = LT_FAIL;
+  uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+  uint8_t digest[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+
+  res = lt_mac_and_destroy(handle, slot_index, reset_key, output);
+  if (res != LT_OK) {
+    goto cleanup;
+  }
+
+  hmac_sha256(stretched_pin, TROPIC_MAC_AND_DESTROY_SIZE, NULL, 0, digest);
+
+  ui_progress();
+
+  res = lt_mac_and_destroy(handle, slot_index, digest, digest);
+  if (res != LT_OK) {
+    goto cleanup;
+  }
+
+  ui_progress();
+
+  hmac_sha256(stretched_pin, TROPIC_MAC_AND_DESTROY_SIZE, digest,
+              sizeof(digest), stretched_pin);
+
+  res = lt_mac_and_destroy(handle, slot_index, reset_key, output);
+  if (res != LT_OK) {
+    goto cleanup;
+  }
+
+  ui_progress();
+
+cleanup:
+  memzero(output, sizeof(output));
+  memzero(digest, sizeof(digest));
+
+  return res;
+}
+
 bool tropic_pin_set(
     tropic_ui_progress_t ui_progress,
     uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE],
@@ -486,51 +549,19 @@ bool tropic_pin_set(
     return false;
   }
 
-  lt_ret_t res = LT_FAIL;
-  uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
-  uint8_t digest[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
-
   mac_and_destroy_slot_t first_slot_index = get_first_mac_and_destroy_slot(drv);
 
   ui_progress();
 
   for (int i = 0; i < PIN_MAX_TRIES; i++) {
-    res = lt_mac_and_destroy(&drv->handle, first_slot_index + i, reset_key,
-                             output);
-    if (res != LT_OK) {
-      goto cleanup;
+    if (TROPIC_RETRY_COMMAND(
+            tropic_pin_set_inner(ui_progress, &drv->handle, stretched_pins[i],
+                                 first_slot_index + i, reset_key)) != LT_OK) {
+      return false;
     }
-
-    hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, NULL, 0,
-                digest);
-
-    ui_progress();
-
-    res =
-        lt_mac_and_destroy(&drv->handle, first_slot_index + i, digest, digest);
-    if (res != LT_OK) {
-      goto cleanup;
-    }
-
-    ui_progress();
-
-    hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, digest,
-                sizeof(digest), stretched_pins[i]);
-
-    res = lt_mac_and_destroy(&drv->handle, first_slot_index + i, reset_key,
-                             output);
-    if (res != LT_OK) {
-      goto cleanup;
-    }
-
-    ui_progress();
   }
 
-cleanup:
-  memzero(output, sizeof(output));
-  memzero(digest, sizeof(digest));
-
-  return res == LT_OK;
+  return true;
 }
 
 void tropic_pin_set_time(uint32_t *time_ms) {
@@ -566,15 +597,16 @@ bool tropic_pin_set_kek_masks(
 
   uint16_t masked_kek_slot = get_kek_masks_slot(drv);
 
-  ret = lt_r_mem_data_erase(&drv->handle, masked_kek_slot);
+  ret =
+      TROPIC_RETRY_COMMAND(lt_r_mem_data_erase(&drv->handle, masked_kek_slot));
   if (ret != LT_OK) {
     goto cleanup;
   }
 
   ui_progress();
 
-  ret =
-      lt_r_mem_data_write(&drv->handle, masked_kek_slot, masks, sizeof(masks));
+  ret = TROPIC_RETRY_COMMAND(
+      lt_r_mem_data_write(&drv->handle, masked_kek_slot, masks, sizeof(masks)));
   if (ret != LT_OK) {
     goto cleanup;
   }
@@ -612,8 +644,8 @@ bool tropic_pin_unmask_kek(
 
   ui_progress();
 
-  if (lt_r_mem_data_read(&drv->handle, masked_kek_slot, masks, &length) !=
-      LT_OK) {
+  if (TROPIC_RETRY_COMMAND(lt_r_mem_data_read(&drv->handle, masked_kek_slot,
+                                              masks, &length)) != LT_OK) {
     return false;
   }
 
