@@ -57,9 +57,6 @@ bool app_cache_spawn(const char* app_id, size_t app_id_size,
     return false;
   }
 #else
-  return false;
-  /* temporarily commented out
-
   applet_layout_t temp_layout = {
       .code1 = {.start = APPCODE_START, .size = APPCODE_MAXSIZE},
       .data1 = {.start = APPDATA_RAM_START, .size = APPDATA_RAM_SIZE},
@@ -71,7 +68,6 @@ bool app_cache_spawn(const char* app_id, size_t app_id_size,
                 (void*)APPDATA_RAM_START, APPDATA_RAM_SIZE, &cache->applet)) {
     return false;
   }
-  */
 #endif
 
   cache->applet_loaded = true;
