@@ -58,6 +58,10 @@ secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
   ret = secret_key_get(slot, master_key.bytes, master_key.size);
 #else   // SECRET_PRIVILEGED_MASTER_KEY_SLOT
+  if (slot != UNUSED_KEY_SLOT) {
+    ret = secfalse;
+    goto cleanup;
+  }
   ret = secret_key_master_key_get(&master_key);
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
@@ -77,11 +81,6 @@ secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
                                     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   // `slot` argument is not used unless SECRET_PRIVILEGED_MASTER_KEY_SLOT is
   // defined
-#ifndef SECRET_PRIVILEGED_MASTER_KEY_SLOT
-  if (slot != UNUSED_KEY_SLOT) {
-    return secfalse;
-  }
-#endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
   _Static_assert(ECDSA_PRIVATE_KEY_SIZE == SHA256_DIGEST_LENGTH);
 
