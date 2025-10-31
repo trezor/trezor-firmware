@@ -356,7 +356,12 @@
       "Delizia": "Bestätigen",
       "Eckhart": "Bestätigen"
     },
-    "buttons__format": "Formatieren",
+    "buttons__format": {
+      "Bolt": "Formatier.",
+      "Caesar": "",
+      "Delizia": "Formatieren",
+      "Eckhart": ""
+    },
     "buttons__go_back": "Zurück",
     "buttons__hold_to_confirm": {
       "Bolt": "Halten z. Best.",
@@ -503,12 +508,7 @@
       "Eckhart": "Die Zahlungsadresse für die Registrierung des Voting-Keys gehört diesem Gerät. Ihr(e)"
     },
     "cardano__key_hash": "Key-Hash",
-    "cardano__margin": {
-      "Bolt": "Marge",
-      "Caesar": "Marge",
-      "Delizia": "Margin",
-      "Eckhart": "Margin"
-    },
+    "cardano__margin": "Marge",
     "cardano__message_hash": "Nachrichten-Hash:",
     "cardano__message_hex": "Nachrichten-Hex",
     "cardano__message_text": "Nachrichtentext",
@@ -584,12 +584,7 @@
       "Delizia": "Transaktion signieren mit {0}",
       "Eckhart": "Unterzeichne Transaktion mit {0}"
     },
-    "cardano__stake_delegation": {
-      "Bolt": "Stake-Delegierung",
-      "Caesar": "Stake-Delegierung",
-      "Delizia": "Stake-Delegierung",
-      "Eckhart": "Stake-Delegation"
-    },
+    "cardano__stake_delegation": "Stake-Delegierung",
     "cardano__stake_deregistration": {
       "Bolt": "Stake-Key-Deregistrierung",
       "Caesar": "Stake-Key-Deregistrierung",
@@ -3126,12 +3121,7 @@
     },
     "word_count__title": "Anzahl der Wörter",
     "words__about": "Über",
-    "words__account": {
-      "Bolt": "Konto",
-      "Caesar": "Account",
-      "Delizia": "Konto",
-      "Eckhart": "Konto"
-    },
+    "words__account": "Konto",
     "words__account_colon": "Konto:",
     "words__address": "Adresse",
     "words__amount": "Betrag",
