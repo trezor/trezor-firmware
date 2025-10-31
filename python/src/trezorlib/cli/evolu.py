@@ -47,7 +47,7 @@ def get_node(
 @cli.command()
 @click.argument("proof", type=str)
 @click.argument("challenge", type=str)
-@click.option("--size", "-s", type=int, default=10)
+@click.option("--size", "-s", type=int, default=1048576)  # 1 MB
 @with_session
 def sign_registration_request(
     session: Session,

@@ -35,7 +35,7 @@ message EvoluNode {
  */
 message EvoluSignRegistrationRequest {
     required bytes challenge_from_server = 1;  // replay attack protection
-    required uint32 size_to_acquire = 2;
+    required uint32 size_to_acquire = 2;       // number of bytes to acquire
     required bytes proof_of_delegated_identity = 3;
 }
 

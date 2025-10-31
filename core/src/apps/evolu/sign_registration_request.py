@@ -5,12 +5,13 @@ if TYPE_CHECKING:
 
     from trezor.messages import EvoluRegistrationRequest, EvoluSignRegistrationRequest
 
+BYTES_IN_UINT32 = 4
 
 async def sign_registration_request(
     msg: EvoluSignRegistrationRequest,
 ) -> EvoluRegistrationRequest:
     """
-    Signs a registration request for this device to register `msg.size_to_acquire` megabytes of space on the Gate server.
+    Signs a registration request for this device to register `msg.size_to_acquire` bytes of space on the Gate server.
     The request is signed using the device's Optiga certificate.
 
     This function only works if the bootloader is locked and if the device has Optiga available.
@@ -75,7 +76,7 @@ def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
     if not 0 <= size <= 0xFFFFFFFF:
         raise wire.DataError("Invalid size_to_acquire")
 
-    size_to_acquire_bytes = size.to_bytes(4, "big")
+    size_to_acquire_bytes = size.to_bytes(BYTES_IN_UINT32, "big")
 
     return challenge, size_to_acquire_bytes
 
