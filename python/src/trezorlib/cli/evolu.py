@@ -79,9 +79,9 @@ def get_delegated_identity_key(
     pubkey: Optional[str] = None,
 ) -> str:
     """
-    Request the device for the delegated identity key.
+    Request the delegated identity key of this device.
     This key is used to prove the identity of the device at the Gate server and to prove
-    to Trezor that this Suite has been given trust by user to manage the Secure Sync.
+    to Trezor that this host has been given trust by the user to manage the Secure Sync.
     """
 
     thp_credential = bytes.fromhex(credential) if credential else None
