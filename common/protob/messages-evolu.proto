@@ -16,7 +16,7 @@ option (include_in_bitcoin_only) = true;
  * @next EvoluNode
  */
 message EvoluGetNode {
-    optional bytes proof_of_delegated_identity = 1;
+  required bytes proof_of_delegated_identity = 1;
 }
 
 /**

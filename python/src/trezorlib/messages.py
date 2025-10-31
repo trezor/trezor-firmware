@@ -5552,13 +5552,13 @@ class EthereumFieldType(protobuf.MessageType):
 class EvoluGetNode(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2100
     FIELDS = {
-        1: protobuf.Field("proof_of_delegated_identity", "bytes", repeated=False, required=False, default=None),
+        1: protobuf.Field("proof_of_delegated_identity", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        proof_of_delegated_identity: Optional["bytes"] = None,
+        proof_of_delegated_identity: "bytes",
     ) -> None:
         self.proof_of_delegated_identity = proof_of_delegated_identity
 

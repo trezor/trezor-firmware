@@ -4100,12 +4100,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluGetNode(protobuf.MessageType):
-        proof_of_delegated_identity: "AnyBytes | None"
+        proof_of_delegated_identity: "AnyBytes"
 
         def __init__(
             self,
             *,
-            proof_of_delegated_identity: "AnyBytes | None" = None,
+            proof_of_delegated_identity: "AnyBytes",
         ) -> None:
             pass
 
