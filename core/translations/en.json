@@ -1796,7 +1796,6 @@
     },
     "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Secure Sync with this Trezor?",
     "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Secure Sync with this Trezor?",
-    "secure_sync__evolu_node_no_optiga": "Allow Trezor Suite to use Secure Sync with this passphrase?",
     "secure_sync__header": "Secure Sync",
     "send__cancel_sign": "Cancel sign",
     "send__cancel_transaction": "Cancel transaction",

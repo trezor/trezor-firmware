@@ -1556,7 +1556,6 @@ pub enum TranslatedString {
     ble__must_be_enabled = 1167,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "The Bluetooth must be turned on to pair with a new device."}
     secure_sync__delegated_identity_key_no_thp = 1168,  // "Allow Trezor Suite to use Secure Sync with this Trezor?"
     secure_sync__delegated_identity_key_thp = 1169,  // "Allow {0} on {1} to use Secure Sync with this Trezor?"
-    secure_sync__evolu_node_no_optiga = 1170,  // "Allow Trezor Suite to use Secure Sync with this passphrase?"
     secure_sync__header = 1171,  // "Secure Sync"
 }
 
@@ -4952,7 +4951,6 @@ impl TranslatedString {
             (Self::ble__must_be_enabled, "The Bluetooth must be turned on to pair with a new device."),
             (Self::secure_sync__delegated_identity_key_no_thp, "Allow Trezor Suite to use Secure Sync with this Trezor?"),
             (Self::secure_sync__delegated_identity_key_thp, "Allow {0} on {1} to use Secure Sync with this Trezor?"),
-            (Self::secure_sync__evolu_node_no_optiga, "Allow Trezor Suite to use Secure Sync with this passphrase?"),
             (Self::secure_sync__header, "Secure Sync"),
     ];
 
@@ -6077,7 +6075,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_sd_card__wrong_sd_card, Self::sd_card__wrong_sd_card),
         (Qstr::MP_QSTR_secure_sync__delegated_identity_key_no_thp, Self::secure_sync__delegated_identity_key_no_thp),
         (Qstr::MP_QSTR_secure_sync__delegated_identity_key_thp, Self::secure_sync__delegated_identity_key_thp),
-        (Qstr::MP_QSTR_secure_sync__evolu_node_no_optiga, Self::secure_sync__evolu_node_no_optiga),
         (Qstr::MP_QSTR_secure_sync__header, Self::secure_sync__header),
         (Qstr::MP_QSTR_send__cancel_sign, Self::send__cancel_sign),
         (Qstr::MP_QSTR_send__cancel_transaction, Self::send__cancel_transaction),

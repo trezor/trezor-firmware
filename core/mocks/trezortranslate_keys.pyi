@@ -814,7 +814,6 @@ class TR:
     sd_card__wrong_sd_card: str = "Wrong SD card."
     secure_sync__delegated_identity_key_no_thp: str = "Allow Trezor Suite to use Secure Sync with this Trezor?"
     secure_sync__delegated_identity_key_thp: str = "Allow {0} on {1} to use Secure Sync with this Trezor?"
-    secure_sync__evolu_node_no_optiga: str = "Allow Trezor Suite to use Secure Sync with this passphrase?"
     secure_sync__header: str = "Secure Sync"
     send__cancel_sign: str = "Cancel sign"
     send__cancel_transaction: str = "Cancel transaction"
