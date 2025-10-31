@@ -90,6 +90,8 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 
   } else {
     if (drv->woke_up_from_suspend) {
+#ifdef USE_RTC
+
       // Use known battery self-discharge rate to compensate the fuel gauge
       // estimation during the suspend period. Since this period may be very
       // long and the battery temperature may vary, use the average ambient
@@ -98,14 +100,16 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
                                PM_SELF_DISG_RATE_SUSPEND_MA, 25.0f);
 
       // TODO: Currently in suspend mode we use single self-discharge rate
-      // but in practive the discharge rate may change in case the BLE chip
+      // but in practive the discharge rate may change in case some components
       // remains active. Since the device is very likely to stay in suspend
       // mode for limited time, for now we decided to neglect this. but in
-      // the future we may want to distinguish between suspend mode
-      // with/without BLE and use different self-discharge rates.
+      // the future we may want to distinguish between different suspend modes
+      // and use different self-discharge rates.
 
       fuel_gauge_set_soc(&drv->fuel_gauge, drv->fuel_gauge.soc,
                          drv->fuel_gauge.P);
+
+#endif  // USE_RTC
 
       // clear the flag
       drv->woke_up_from_suspend = false;
@@ -142,7 +146,10 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
     pm_store_data_to_backup_ram();
 
     if (drv->suspending) {
+#ifdef USE_RTC
+      // Schedule auto-hibernation rtc event
       pm_schedule_rtc_wakeup();
+#endif
       drv->suspending = false;
       drv->suspended = true;
     }

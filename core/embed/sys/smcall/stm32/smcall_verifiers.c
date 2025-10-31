@@ -213,6 +213,18 @@ access_violation:
   return false;
 }
 
+bool __wur optiga_get_sec_clr_time__verified(uint32_t *sec_clr_time) {
+  if (!probe_write_access(sec_clr_time, sizeof(*sec_clr_time))) {
+    goto access_violation;
+  }
+
+  return optiga_get_sec_clr_time(sec_clr_time);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------

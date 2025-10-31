@@ -59,8 +59,8 @@
 #endif
 
 #ifdef USE_OPTIGA
+#include <sec/optiga.h>
 #include <sec/optiga_commands.h>
-#include <sec/optiga_transport.h>
 #include "cmd/prodtest_optiga.h"
 #endif
 

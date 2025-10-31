@@ -49,7 +49,7 @@
 
 // Timeout after which the device automatically transit from suspend to
 // hibernation
-#define PM_AUTO_HIBERNATE_TIMEOUT_S (2 * 60 * 60)  // 2 hours
+#define PM_AUTO_HIBERNATE_TIMEOUT_S (60 * 60 * 2)  // 2 hours
 
 #define PM_STABILIZATION_TIMEOUT_MS 2000
 
@@ -128,6 +128,7 @@ typedef struct {
   bool request_hibernate;
   bool request_turn_on;
   bool shutdown_timer_elapsed;
+  bool autohibernation_scheduled;
 
   // Timers and timestamps
   systimer_t* monitoring_timer;
@@ -179,6 +180,7 @@ pm_status_t pm_store_data_to_backup_ram(void);
 void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
                               float battery_current_mah, float bat_temp_c);
 
+#
 // Schedule the RTC wakeup when going into suspend mode.
 // Return false if the driver was not initialized or the RTC timestamp is
 // not available.

@@ -191,6 +191,15 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] = optiga_read_sec__verified(sec);
     } break;
 
+    case SMCALL_OPTIGA_GET_SEC_CLR_TIME: {
+      uint32_t *sec_clr_time = (uint32_t *)args[0];
+      args[0] = optiga_get_sec_clr_time__verified(sec_clr_time);
+    } break;
+
+    case SMCALL_OPTIGA_POWER_DOWN: {
+      optiga_power_down();
+    } break;
+
 #if PYOPT == 0
     case SMCALL_OPTIGA_SET_SEC_MAX: {
       optiga_set_sec_max();

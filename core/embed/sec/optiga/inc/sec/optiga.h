@@ -47,6 +47,69 @@ typedef enum _optiga_sign_result {
 // Size of secrets used in PIN processing, e.g. salted PIN, master secret etc.
 #define OPTIGA_PIN_SECRET_SIZE 32
 
+// Security event counter threshold to suspend optiga without postponing
+// optiga deinitialization
+#define OPTIGA_SEC_SUSPEND_THR 20
+
+/**
+ * @brief Initialize optiga driver
+ *
+ * @return OPTIGA_SUCCESS in case the driver was sucessfully initialized.
+ */
+optiga_result optiga_init(void);
+
+/**
+ * @brief Deinitialize optiga driver
+ */
+void optiga_deinit(void);
+
+/**
+ * @brief Deinitialize optiga driver with conditional power management
+ *
+ * @warning This function may leave the OPTIGA chip powered on under certain
+ * conditions, resulting in increased power consumption. Use with caution in
+ * power-sensitive applications.
+ *
+ * When the Security Event Counter (SEC) exceeds OPTIGA_SEC_SUSPEND_THR, this
+ * function will suspend the driver but keep the OPTIGA chip powered to allow
+ * the SEC counter to decrement naturally.
+ *
+ * @note Required follow-up procedure when OPTIGA remains powered:
+ * 1. Call optiga_get_sec_clr_time() to get the estimated time (in seconds)
+ *    needed for the SEC counter to clear
+ * 2. Wait for the returned duration
+ * 3. Call optiga_power_down() to safely power off the OPTIGA chip
+ */
+void optiga_soft_deinit(void);
+
+/**
+ * @brief Force immediate power down of the OPTIGA chip
+ *
+ * @note This function should be called after optiga_soft_deinit() and
+ * waiting for the time returned by optiga_get_sec_clr_time().
+ */
+void optiga_power_down(void);
+
+/**
+ * @brief Get estimated time for Security Event Counter (SEC) to clear
+ *
+ * Retrieves the estimated time required for the OPTIGA chip's Security Event
+ * Counter to decrement to a safe level, allowing for proper power down without
+ * affecting future operations.
+ *
+ * @note This function should be called after optiga_soft_deinit() when the
+ * OPTIGA chip remains powered due to elevated SEC counter. The returned time
+ * represents the minimum wait period before calling optiga_power_down().
+ * Returned `sec_clr_time` value is a not a actual counter value, but the
+ * snapshot of the SOC counter value done during the `optiga_soft_deinit()`
+ * call.
+ *
+ * @param sec_clr_time Pointer to store the estimated clear time in seconds.
+ *
+ * @return true when successfully retrieved the SEC clear time estimate
+ */
+bool optiga_get_sec_clr_time(uint32_t *sec_clr_time);
+
 optiga_sign_result __wur optiga_sign(uint8_t index, const uint8_t *digest,
                                      size_t digest_size, uint8_t *der_signature,
                                      size_t max_der_signature_size,
@@ -110,5 +173,26 @@ bool __wur optiga_pin_get_rem(uint32_t *ctr);
 bool __wur optiga_pin_decrease_rem_v4(uint32_t count);
 
 bool __wur optiga_pin_decrease_rem(uint32_t count);
+
+/* *****************************************************************************
+ *  KERNEL PART
+ * ****************************************************************************/
+
+/**
+ * @brief Suspends optiga driver
+ *
+ * @note This is part of driver is used in KERNEL_MODE since it schedules RTC
+ * event to power down the optiga chip when its left powered up due to high
+ * SEC counter value.
+ */
+void optiga_suspend();
+
+/**
+ * @brief Resumes optiga driver
+ *
+ * @note This part of driver is used in KERNEL_MODE since it handles/cancel
+ * active RTC power down event when resuming from suspend.
+ */
+void optiga_resume();
 
 #endif

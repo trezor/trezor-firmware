@@ -242,9 +242,8 @@ pm_status_t pm_get_state(pm_state_t* state) {
 // - If the callback return with wakeup_flags set, system_suspend() returns.
 #ifdef USE_RTC
 void pm_rtc_wakeup_callback(void* context) {
-  // No need to do anything here, but left as a placeholder for potential
-  // future use. This is an optimal place where to set a wakeup flag from RTC
-  // wakeup_flags_set(WAKEUP_FLAG_RTC);
+  pm_driver_t* drv = &g_pm;
+  drv->autohibernation_scheduled = false;
 }
 #endif
 
@@ -559,9 +558,11 @@ bool pm_driver_suspend(void) {
     // Driver just woke up from suspend and have no data available yet.
     // Request the suspend but wait for the next pmic_meausrement
     drv->suspending = true;
-
   } else {
+#ifdef USE_RTC
+    // Schedule auto-hibernation rtc event
     pm_schedule_rtc_wakeup();
+#endif
     drv->suspended = true;
   }
 
@@ -573,14 +574,14 @@ bool pm_driver_suspend(void) {
   return true;
 }
 
+#ifdef USE_RTC
+
 bool pm_schedule_rtc_wakeup(void) {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
     return false;
   }
-
-#ifdef USE_RTC
 
   // Capture the timestamp when device was active for the last time.
   if (!rtc_get_timestamp(&drv->last_active_timestamp)) {
@@ -594,19 +595,17 @@ bool pm_schedule_rtc_wakeup(void) {
     pm_hibernate();
   }
 
-  uint32_t time_to_hibernate =
-      PM_AUTO_HIBERNATE_TIMEOUT_S -
-      (drv->last_active_timestamp - drv->suspend_timestamp);
+  if (!drv->autohibernation_scheduled) {
+    rtc_schedule_wakeup_event(
+        drv->suspend_timestamp + PM_AUTO_HIBERNATE_TIMEOUT_S, NULL,
+        pm_rtc_wakeup_callback, NULL);
+    drv->autohibernation_scheduled = true;
+  }
 
-  rtc_wakeup_timer_start(time_to_hibernate, pm_rtc_wakeup_callback, NULL);
-
-#endif
-
-  systimer_delete(drv->monitoring_timer);
-
-  drv->suspended = true;
   return true;
 }
+
+#endif
 
 bool pm_is_charging(void) {
   pm_driver_t* drv = &g_pm;
@@ -661,7 +660,6 @@ bool pm_driver_resume(void) {
   drv->state_machine_stabilized = false;
 
 #ifdef USE_RTC
-  rtc_wakeup_timer_stop();
 
   uint32_t rtc_timestamp;
   rtc_get_timestamp(&rtc_timestamp);

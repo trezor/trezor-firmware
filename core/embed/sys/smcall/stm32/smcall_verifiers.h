@@ -69,6 +69,8 @@ bool __wur optiga_read_cert__verified(uint8_t index, uint8_t *cert,
 
 bool __wur optiga_read_sec__verified(uint8_t *sec);
 
+bool __wur optiga_get_sec_clr_time__verified(uint32_t *sec_clr_time);
+
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
