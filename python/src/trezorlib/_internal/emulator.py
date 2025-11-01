@@ -127,10 +127,6 @@ class TropicModel:
                 # where we told the model to listen
                 result = s.connect_ex(("127.0.0.1", self.port))
                 if result == 0:
-                    # seems that even if the model is listening for connections
-                    # it sometimes needs up to 2 seconds more
-                    # before it actually correctly processes requests
-                    time.sleep(2)
                     break
             if self.process.poll() is not None:
                 raise RuntimeError("Tropic model process died")
