@@ -187,7 +187,7 @@ def format_header(
 
 
 def format_secmon_header(
-    header: firmware.secmon.SecmonHeader,
+    header: firmware.SecmonHeader,
     code_hash: bytes,
     digest: bytes,
     sig_status: Status,

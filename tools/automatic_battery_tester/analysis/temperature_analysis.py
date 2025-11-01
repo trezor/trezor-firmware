@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import sys
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 from InquirerPy import inquirer
@@ -12,7 +15,9 @@ battery_thermal_limit = 45.0  # Celsius
 case_thermal_limit = 41.0  # Celsius
 
 
-def select_waveforms(dataset_directory=default_dataset_dir):
+def select_waveforms(
+    dataset_directory: Path = default_dataset_dir,
+) -> list[dict[str, Path]]:
     """
     Select waveforms from a given dataset directory.
 
@@ -74,7 +79,14 @@ def select_waveforms(dataset_directory=default_dataset_dir):
     return selected
 
 
-def colored_region_plot(axis, time_vector, data_vector, mask, color="red", alpha=0.5):
+def colored_region_plot(
+    axis: plt.Axes,
+    time_vector: Any,
+    data_vector: Any,
+    mask: Any,
+    color: str = "red",
+    alpha: float = 0.5,
+) -> None:
 
     start = None
     in_region = False
@@ -100,7 +112,13 @@ def colored_region_plot(axis, time_vector, data_vector, mask, color="red", alpha
         )
 
 
-def colored_region_box(axis, time_vector, mask, color="orange", alpha=0.5):
+def colored_region_box(
+    axis: plt.Axes,
+    time_vector: Any,
+    mask: Any,
+    color: str = "orange",
+    alpha: float = 0.5,
+) -> None:
 
     start = None
     in_region = False
@@ -118,11 +136,11 @@ def colored_region_box(axis, time_vector, mask, color="orange", alpha=0.5):
         axis.axvspan(time_vector[start], time_vector[-1], color=color, alpha=alpha)
 
 
-def sec_to_min(time_vector):
+def sec_to_min(time_vector: Any) -> Any:
     return (time_vector - time_vector[0]) / 60.0
 
 
-def plot_temperature_profile(waveform_name, profile_data):
+def plot_temperature_profile(waveform_name: str, profile_data: Any) -> None:
 
     fig, ax = plt.subplots(2)
     fig.canvas.manager.set_window_title(waveform_name)
@@ -180,10 +198,10 @@ def plot_temperature_profile(waveform_name, profile_data):
     ax[0].legend()
     ax[0].grid(True)
 
-    def min_to_hr(x):
+    def min_to_hr(x: float) -> float:
         return x / 60.0
 
-    def hr_to_min(x):
+    def hr_to_min(x: float) -> float:
         return x * 60.0
 
     secax = ax[0].secondary_xaxis("top", functions=(min_to_hr, hr_to_min))
@@ -235,12 +253,12 @@ def plot_temperature_profile(waveform_name, profile_data):
     )
 
 
-def main():
+def main() -> None:
 
     selected_waveforms = select_waveforms()
 
     for waveform in selected_waveforms:
-
+        assert waveform["waveform"] is not None
         # Load data from files
         profile_data = load_measured_data(
             data_file_path=waveform["waveform"],

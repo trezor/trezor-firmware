@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import enum
 import logging
 import time
@@ -23,7 +25,9 @@ class ScenarioPhase(enum.Enum):
 
 class SwitchingScenario(TestScenario):
 
-    def __init__(self, discharge_switch_cycle_min=5, relaxation_time_min=60):
+    def __init__(
+        self, discharge_switch_cycle_min: int = 5, relaxation_time_min: int = 60
+    ) -> None:
 
         # DUT use display backlight intensity to change its load (discharge
         # current). Backlight intensity could be set in range of 0-255, but
@@ -39,7 +43,7 @@ class SwitchingScenario(TestScenario):
         self.test_time_id = "0000000000"
         self.previous_phase = ScenarioPhase.NOT_STARTED
 
-    def setup(self, dut_controller: DutController):
+    def setup(self, dut_controller: DutController) -> None:
 
         # Start with charging phase first, so connect the charger with relay
         # and enable the charging.
@@ -58,7 +62,7 @@ class SwitchingScenario(TestScenario):
         self.phase_start = time.time()
         self.test_time_id = f"{time.strftime('%y%m%d%H%M')}"
 
-    def run(self, dut_controller):
+    def run(self, dut_controller: DutController) -> bool:
 
         if self.previous_phase != self.scenario_phase:
             logging.info(f"Switching scenario entered {self.scenario_phase} phase.")
@@ -140,7 +144,9 @@ class SwitchingScenario(TestScenario):
         # Relax
         return False
 
-    def log_data(self, dut_controller, output_directory: Path, temp):
+    def log_data(
+        self, dut_controller: DutController, output_directory: Path, temp: float | int
+    ) -> None:
 
         dut_controller.log_data(
             output_directory,
@@ -150,5 +156,5 @@ class SwitchingScenario(TestScenario):
             temp,
         )
 
-    def teardown(self, dut_controller):
+    def teardown(self, dut_controller: DutController) -> None:
         pass

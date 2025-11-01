@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import datetime
 import re
@@ -79,7 +80,7 @@ def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
     return True
 
 
-def linkify_gh_diff(changelog_file: Path, tag_prefix: str):
+def linkify_gh_diff(changelog_file: Path, tag_prefix: str) -> None:
     linkified = False
     versions = []
     result_lines = []
@@ -123,7 +124,7 @@ def current_date(project: Path) -> str:
         return today.strftime(f"%-d{daysuffix} %B %Y")
 
 
-def filter_changelog(changelog_file: Path, internal_name: str):
+def filter_changelog(changelog_file: Path, internal_name: str) -> None:
     def filter_line(line: str) -> str | None:
         m = MODELS_RE.search(line)
         if not m:
@@ -162,7 +163,7 @@ def _iter_fragments(project: Path) -> Iterator[Path]:
         yield fragment
 
 
-def check_fragments_style(project: Path):
+def check_fragments_style(project: Path) -> None:
     success = True
     for fragment in _iter_fragments(project):
         fragment_text = fragment.read_text().strip()
@@ -179,7 +180,7 @@ def check_fragments_style(project: Path):
         click.echo(f"Changelog style OK: {project}")
 
 
-def fix_fragments_style(project: Path):
+def fix_fragments_style(project: Path) -> None:
     for fragment in _iter_fragments(project):
         fragment_text = fragment.read_text().rstrip()
         if not fragment_text.endswith("."):
@@ -187,7 +188,7 @@ def fix_fragments_style(project: Path):
             click.echo(f"Changelog '{fragment}' style fixed.")
 
 
-def generate_filtered(project: Path, changelog: Path):
+def generate_filtered(project: Path, changelog: Path) -> None:
     if project.parts[-1] != "core":
         return
 
@@ -198,19 +199,19 @@ def generate_filtered(project: Path, changelog: Path):
 
 
 @click.group()
-def cli():
+def cli() -> None:
     pass
 
 
 @cli.command()
-def check():
+def check() -> None:
     """Check the style of all changelog fragments."""
     for project in KNOWN_PROJECTS:
         check_fragments_style(project)
 
 
 @cli.command()
-def style():
+def style() -> None:
     """Fix the style of all changelog fragments."""
     for project in KNOWN_PROJECTS:
         fix_fragments_style(project)
@@ -241,7 +242,13 @@ def style():
     is_flag=True,
     help="Only regenerate the model-changelogs from the main one.",
 )
-def generate(project, version, date, check, only_models):
+def generate(
+    project: Path,
+    version: str | None,
+    date: str | None,
+    check: bool,
+    only_models: bool,
+) -> None:
     """Generate changelog for given project (core, python, legacy/firmware,
     legacy/bootloader).
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import ModuleType
 from typing import Optional
 
 from . import emulator, trezor_t3t1_revE
@@ -8,7 +9,7 @@ from . import emulator, trezor_t3t1_revE
 def configure_board(
     revision: Optional[int | str],
     features_wanted: list[str],
-    env: dict,  # type: ignore
+    env: dict,
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],
@@ -20,7 +21,7 @@ def configure_board(
     revision = revision or "E"
 
     # Mapping of revisions to their respective configurations
-    revision_map = {
+    revision_map: dict[int | str, ModuleType] = {
         "emulator": emulator,
         "E": trezor_t3t1_revE,
     }

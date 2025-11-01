@@ -27,20 +27,20 @@ EXCLUDE = {"icon_webauthn"}
 COMMON_TOOLS_PATH = ROOT / "common" / "tools"
 sys.path.insert(0, str(COMMON_TOOLS_PATH))
 
-import coin_info
+import coin_info  # type: ignore [Import "coin_info" could not be resolved]
 
 
 @click.command()
 @click.option("-c", "--check", is_flag=True, help="Do not write, only check.")
 @click.option("-r", "--remove", is_flag=True, help="Remove unrecognized files.")
-def build_icons(check: bool, remove: bool):
+def build_icons(check: bool, remove: bool) -> None:
     """Build FIDO app icons in the source tree."""
 
     for path, size in DESTINATIONS.items():
         build_icons_size(path, size, check, remove)
 
 
-def build_icons_size(destination: Path, size: int, check: bool, remove: bool):
+def build_icons_size(destination: Path, size: int, check: bool, remove: bool) -> None:
     icon_size = (size, size)
     checks_ok = True
     apps = coin_info.fido_info()
@@ -55,14 +55,14 @@ def build_icons_size(destination: Path, size: int, check: bool, remove: bool):
                 continue
 
         im = Image.open(app["icon"])
-        resized = im.resize(icon_size, Image.BOX)
+        resized = im.resize(icon_size, Image.BOX)  # type: ignore ["BOX" is not a known attribute of module "PIL.Image"]
         toi = toif.from_image(resized)
         dest_path = destination / f"icon_{app['key']}.toif"
 
         total_size += len(toi.to_bytes())
 
         if not check:
-            toi.save(dest_path)
+            toi.save(str(dest_path))
         else:
             if not dest_path.exists():
                 print(f"Missing TOIF: {dest_path}")

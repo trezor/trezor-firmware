@@ -6,14 +6,7 @@ import logging
 import re
 from collections import OrderedDict, defaultdict
 from pathlib import Path
-from typing import Dict  # for python38 support, must be used in type aliases
-from typing import List  # for python38 support, must be used in type aliases
-from typing import Any, Callable, Iterable, Iterator, cast
-
-from typing_extensions import (  # for python37 support, is not present in typing there
-    Literal,
-    TypedDict,
-)
+from typing import Any, Callable, Iterable, Iterator, Literal, TypedDict, cast
 
 try:
     import requests
@@ -31,9 +24,9 @@ class SupportItemVersion(TypedDict):
     unsupported: dict[str, str]
 
 
-SupportData = Dict[str, SupportItemVersion]
-SupportInfoItem = Dict[str, Literal[False] | str]
-SupportInfo = Dict[str, SupportInfoItem]
+SupportData = dict[str, SupportItemVersion]
+SupportInfoItem = dict[str, Literal[False] | str]
+SupportInfo = dict[str, SupportInfoItem]
 
 
 class Coin(TypedDict):
@@ -107,8 +100,8 @@ class Coin(TypedDict):
     bitcore: list[str]
 
 
-Coins = List[Coin]
-CoinBuckets = Dict[str, Coins]
+Coins = list[Coin]
+CoinBuckets = dict[str, Coins]
 
 
 class FidoApp(TypedDict):
@@ -124,7 +117,7 @@ class FidoApp(TypedDict):
     icon: str
 
 
-FidoApps = List[FidoApp]
+FidoApps = list[FidoApp]
 
 
 def load_json(*path: str | Path) -> Any:
@@ -144,7 +137,7 @@ def get_btc_testnet_status(name: str) -> bool:
 # ====== CoinsInfo ======
 
 
-class CoinsInfo(Dict[str, Coins]):
+class CoinsInfo(dict[str, Coins]):
     """Collection of information about all known kinds of coins.
 
     It contains the following lists:

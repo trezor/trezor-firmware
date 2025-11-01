@@ -1,17 +1,15 @@
 {
     "include": [
-        "src",
         "tools",
-        "site_scons"
+        "common"
     ],
     "exclude": [
-        "src/apps/monero",
-        "src/typing.py",
-        "tools/codegen/get_trezor_keys.py",
+        "tools/pyright_tool.py",
         "tools/snippets"
     ],
     "stubPath": "mocks/generated",
     "typeCheckingMode": "basic",
     "pythonVersion": "3.10",
-    "reportMissingModuleSource": false
+    "reportMissingModuleSource": false,
+    "reportMissingImports": false
 }

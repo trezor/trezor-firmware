@@ -16,13 +16,13 @@ def compress_binary(data: bytes) -> bytes:
     return compressor.compress(data) + compressor.flush()
 
 
-def exit_interactive_mode(ser):
+def exit_interactive_mode(ser: serial.Serial) -> None:
     ser.write(("." + "\r\n").encode())
     time.sleep(0.1)
     ser.reset_input_buffer()
 
 
-def send_cmd(ser, cmd, expect_ok=True):
+def send_cmd(ser: serial.Serial, cmd: str, expect_ok: bool = True) -> str:
     """Send a line, read response, and abort on CLI_ERROR."""
     ser.write((cmd + "\r\n").encode())
     # Give the device a moment to process
@@ -38,7 +38,7 @@ def send_cmd(ser, cmd, expect_ok=True):
     return resp
 
 
-def upload_bootloader(port, bin_path, chunk_size):
+def upload_bootloader(port: str, bin_path: str, chunk_size: int) -> None:
     # Read binary file
     data = Path(bin_path).read_bytes()
     data_size = len(data)
@@ -102,7 +102,7 @@ def upload_bootloader(port, bin_path, chunk_size):
     show_default=True,
     help="Max bytes per chunk (in compressed form)",
 )
-def main(port, binary, chunk_size):
+def main(port: str, binary: str, chunk_size: int) -> None:
     """
     Upload a bootloader image via USB-VCP CLI.
 
