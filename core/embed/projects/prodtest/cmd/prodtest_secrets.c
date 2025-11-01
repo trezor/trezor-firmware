@@ -128,7 +128,7 @@ static void prodtest_secrets_init(cli_t* cli) {
   // Ensure that a session with Tropic is established so that we can include
   // randomness from the chip when generating the secrets. At this point in
   // provisioning the factory pairing key should still be valid.
-  if (!prodtest_tropic_factory_session_start(tropic_get_handle())) {
+  if (tropic_custom_session_start(TROPIC_FACTORY_PAIRING_KEY_SLOT) != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`prodtest_tropic_factory_session_start` failed.");
     return;
