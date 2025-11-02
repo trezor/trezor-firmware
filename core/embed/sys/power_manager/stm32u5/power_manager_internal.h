@@ -19,10 +19,12 @@
 
 #pragma once
 
+#include <trezor_types.h>
+
 #include <sys/pmic.h>
 #include <sys/power_manager.h>
+#include <sys/rtc_scheduler.h>
 #include <sys/systimer.h>
-#include <trezor_types.h>
 
 #include "../fuel_gauge/fuel_gauge.h"
 #include "../stwlc38/stwlc38.h"
@@ -135,6 +137,7 @@ typedef struct {
   uint32_t suspend_timestamp;
   uint32_t last_active_timestamp;
   uint32_t time_in_suspend_s;
+  rtc_event_id_t autohibernate_event_id;
 
 } pm_driver_t;
 
