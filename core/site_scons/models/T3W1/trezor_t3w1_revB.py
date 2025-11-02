@@ -112,6 +112,7 @@ def configure(
 
     if "rtc" in features_wanted:
         sources += ["embed/sys/time/stm32u5/rtc.c"]
+        sources += ["embed/sys/time/stm32u5/rtc_scheduler.c"]
         defines += [("USE_RTC", "1")]
 
     if "haptic" in features_wanted:

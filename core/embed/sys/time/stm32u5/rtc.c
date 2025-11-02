@@ -25,6 +25,7 @@
 #include <sys/irq.h>
 #include <sys/mpu.h>
 #include <sys/rtc.h>
+#include <sys/rtc_scheduler.h>
 #include <sys/suspend.h>
 
 // RTC driver structure
@@ -100,73 +101,6 @@ bool rtc_get_timestamp(uint32_t* timestamp) {
   *timestamp = rtc_calendar_to_timestamp(&date, &time);
 
   return true;
-}
-
-bool rtc_wakeup_timer_start(uint32_t seconds, rtc_wakeup_callback_t callback,
-                            void* context) {
-  rtc_driver_t* drv = &g_rtc_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  if (seconds < 1 || seconds > 0x10000) {
-    return false;
-  }
-
-  irq_key_t irq_key = irq_lock();
-  drv->callback = callback;
-  drv->callback_context = context;
-  irq_unlock(irq_key);
-
-  HAL_StatusTypeDef status;
-
-  status = HAL_RTCEx_SetWakeUpTimer_IT(&drv->hrtc, seconds - 1,
-                                       RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
-  if (HAL_OK != status) {
-    return false;
-  }
-
-  return true;
-}
-
-void rtc_wakeup_timer_stop(void) {
-  rtc_driver_t* drv = &g_rtc_driver;
-
-  if (!drv->initialized) {
-    return;
-  }
-
-  HAL_RTCEx_DeactivateWakeUpTimer(&drv->hrtc);
-  drv->callback = NULL;
-  drv->callback_context = NULL;
-}
-
-void RTC_IRQHandler(void) {
-  rtc_driver_t* drv = &g_rtc_driver;
-
-  IRQ_LOG_ENTER();
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
-
-  if (READ_BIT(RTC->MISR, RTC_MISR_WUTMF) != 0U) {
-    // Clear the wakeup timer interrupt flag
-    WRITE_REG(RTC->SCR, RTC_SCR_CWUTF);
-
-    rtc_wakeup_callback_t callback = drv->callback;
-    void* callback_context = drv->callback_context;
-
-    // Deactivate the wakeup timer to prevent re-triggering
-    rtc_wakeup_timer_stop();
-
-    if (callback != NULL) {
-      callback(callback_context);
-    } else {
-      wakeup_flags_set(WAKEUP_FLAG_RTC);
-    }
-  }
-
-  mpu_restore(mpu_mode);
-  IRQ_LOG_EXIT();
 }
 
 static const uint8_t days_in_month[] = {
@@ -297,6 +231,74 @@ bool rtc_get(rtc_datetime_t* datetime) {
   datetime->weekday = date.WeekDay;
 
   return true;
+}
+
+bool rtc_wakeup_timer_start(uint32_t event_timestamp,
+                            rtc_wakeup_callback_t callback, void* context) {
+  rtc_driver_t* drv = &g_rtc_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  uint32_t rtc_timestamp;
+  rtc_get_timestamp(&rtc_timestamp);
+
+  int32_t delta = event_timestamp - rtc_timestamp;
+  uint32_t wakeup_counter_s = 1 + MAX(delta, 1);
+
+  irq_key_t irq_key = irq_lock();
+
+  HAL_StatusTypeDef status;
+  status = HAL_RTCEx_SetWakeUpTimer_IT(&drv->hrtc, wakeup_counter_s - 1,
+                                       RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
+  if (HAL_OK != status) {
+    irq_unlock(irq_key);
+    return false;
+  }
+
+  drv->callback = callback;
+  drv->callback_context = context;
+
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+void rtc_wakeup_timer_stop(void) {
+  rtc_driver_t* drv = &g_rtc_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  irq_key_t key = irq_lock();
+
+  HAL_RTCEx_DeactivateWakeUpTimer(&drv->hrtc);
+
+  irq_unlock(key);
+}
+
+void RTC_IRQHandler(void) {
+  rtc_driver_t* drv = &g_rtc_driver;
+
+  IRQ_LOG_ENTER();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+
+  if (READ_BIT(RTC->MISR, RTC_MISR_WUTMF) != 0U) {
+    // Clear the wakeup timer interrupt flag
+    WRITE_REG(RTC->SCR, RTC_SCR_CWUTF);
+
+    // Deactivate the wakeup timer to prevent re-triggering
+    rtc_wakeup_timer_stop();
+
+    if (drv->callback != NULL) {
+      drv->callback(drv->callback_context);
+    }
+  }
+
+  mpu_restore(mpu_mode);
+  IRQ_LOG_EXIT();
 }
 
 #endif  // KERNEL_MODE
