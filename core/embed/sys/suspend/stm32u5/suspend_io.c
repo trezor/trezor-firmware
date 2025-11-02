@@ -38,9 +38,7 @@
 #endif
 
 #ifdef USE_OPTIGA
-#include <sec/optiga_config.h>
-#include <sec/optiga_hal.h>
-#include <sec/optiga_transport.h>
+#include <sec/optiga_init.h>
 #endif
 
 #ifdef USE_RGB_LED
@@ -96,17 +94,11 @@ void suspend_secure_drivers() {
 #ifdef USE_TROPIC
   tropic_deinit();
 #endif
-#ifdef USE_OPTIGA
-  optiga_deinit();
-#endif
 }
 
 void resume_secure_drivers() {
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
-#endif
-#ifdef USE_OPTIGA
-  optiga_init_and_configure();
 #endif
 #ifdef USE_TROPIC
   tropic_init();
@@ -117,6 +109,12 @@ void resume_secure_drivers() {
 
 void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
   suspend_secure_drivers();
+
+#ifdef USE_OPTIGA
+  // Optiga has to be suspended from kernel, since the suspend routine needs
+  // to access RTC scheduler which is not available in secure mode.
+  optiga_suspend();
+#endif
 
 #ifdef USE_HAPTIC
   haptic_deinit();
@@ -169,6 +167,11 @@ void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_BLE
   ble_resume(&wakeup_params->ble);
 #endif
+#ifdef USE_OPTIGA
+  // Optiga kernel part of resume routine
+  optiga_resume();
+#endif
+
   resume_secure_drivers();
 }
 
