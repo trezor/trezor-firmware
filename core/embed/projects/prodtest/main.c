@@ -60,7 +60,7 @@
 
 #ifdef USE_OPTIGA
 #include <sec/optiga_commands.h>
-#include <sec/optiga_transport.h>
+#include <sec/optiga_init.h>
 #include "cmd/prodtest_optiga.h"
 #endif
 
