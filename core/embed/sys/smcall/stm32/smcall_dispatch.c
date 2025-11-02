@@ -39,6 +39,7 @@
 
 #ifdef USE_OPTIGA
 #include <sec/optiga.h>
+#include <sec/optiga_init.h>
 #endif
 
 #ifdef USE_SUSPEND
@@ -190,6 +191,18 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     case SMCALL_OPTIGA_READ_SEC: {
       uint8_t *sec = (uint8_t *)args[0];
       args[0] = optiga_read_sec__verified(sec);
+    } break;
+
+    case SMCALL_OPTIGA_CLOSE_CHANNEL: {
+      optiga_close_channel();
+    } break;
+
+    case SMCALL_OPTIGA_POWER_DOWN: {
+      optiga_power_down();
+    } break;
+
+    case SMCALL_OPTIGA_INIT_AND_CONFIGURE: {
+      optiga_init_and_configure();
     } break;
 
 #if PYOPT == 0

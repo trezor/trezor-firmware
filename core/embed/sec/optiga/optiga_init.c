@@ -23,6 +23,7 @@
 
 #include <sec/optiga.h>
 #include <sec/optiga_commands.h>
+#include <sec/optiga_init.h>
 #include <sec/optiga_transport.h>
 #include <sec/secret_keys.h>
 #include <sys/systick.h>
@@ -54,6 +55,20 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 }
 #endif
 
+optiga_result optiga_init() {
+  optiga_transport_power_up();
+  return optiga_transport_open_channel();
+}
+
+void optiga_deinit() {
+  optiga_transport_close_channel();
+  optiga_transport_power_down();
+}
+
+void optiga_close_channel() { optiga_transport_close_channel(); }
+
+void optiga_power_down() { optiga_transport_power_down(); }
+
 void optiga_init_and_configure(void) {
 #if defined(USE_DBG_CONSOLE) && defined(USE_OPTIGA_LOGGING)
   // command log is relatively quiet so we enable it in debug builds
@@ -81,3 +96,78 @@ void optiga_init_and_configure(void) {
 }
 
 #endif  // SECURE_MODE
+
+#ifdef KERNEL_MODE
+
+#include <sec/optiga.h>
+#include <sec/optiga_commands.h>
+#include <sec/optiga_init.h>
+#include <sys/irq.h>
+
+#ifdef USE_RTC
+
+#include <sys/rtc.h>
+#include <sys/rtc_scheduler.h>
+
+uint32_t rtc_wakeup_event_id = 0;
+
+void optiga_rtc_wakeup_callback(void *context) {
+  optiga_power_down();
+  rtc_wakeup_event_id = 0;
+}
+
+static void optiga_schedule_power_down(uint32_t power_down_time_s) {
+  uint32_t current_timestamp;
+  rtc_get_timestamp(&current_timestamp);
+
+  if (!rtc_schedule_wakeup_event(current_timestamp + power_down_time_s,
+                                 optiga_rtc_wakeup_callback, NULL,
+                                 &rtc_wakeup_event_id)) {
+    // Failed to schedule RTC event, deinit optiga right away
+    optiga_power_down();
+  }
+}
+
+#endif
+
+void optiga_suspend() {
+#ifdef USE_RTC
+
+  uint8_t sec;
+  bool status = optiga_read_sec(&sec);
+
+  optiga_close_channel();
+
+  if (status && sec > OPTIGA_SEC_SUSPEND_THR) {
+    // Optiga SEC is high, schedule power down after certain time
+    // to make sure SEC has enough time to decrease.
+    uint32_t power_down_time_s =
+        ((sec - OPTIGA_SEC_SUSPEND_THR) * OPTIGA_T_MAX_MS) / 1000;
+    optiga_schedule_power_down(power_down_time_s);
+
+  } else {
+    optiga_power_down();
+  }
+
+#else
+
+  optiga_deinit();
+
+#endif  // USE_RTC
+}
+
+void optiga_resume() {
+#ifdef USE_RTC
+
+  if (rtc_wakeup_event_id != 0) {
+    rtc_cancel_wakeup_event(rtc_wakeup_event_id);
+    rtc_wakeup_event_id = 0;
+    optiga_power_down();
+  }
+
+#endif
+
+  optiga_init_and_configure();
+}
+
+#endif  // KERNEL_MODE

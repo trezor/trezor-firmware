@@ -189,9 +189,11 @@ static uint16_t calc_crc(uint8_t *data, size_t data_size) {
   return crc;
 }
 
-optiga_result optiga_init(void) {
-  optiga_hal_init();
+void optiga_transport_power_up(void) { optiga_hal_init(); }
 
+void optiga_transport_power_down(void) { optiga_hal_deinit(); }
+
+optiga_result optiga_transport_open_channel(void) {
   i2c_bus = i2c_bus_open(OPTIGA_I2C_INSTANCE);
   if (i2c_bus == NULL) {
     return OPTIGA_ERR_I2C_OPEN;
@@ -200,7 +202,7 @@ optiga_result optiga_init(void) {
   return optiga_set_data_reg_len(OPTIGA_DATA_REG_LEN);
 }
 
-void optiga_deinit(void) {
+void optiga_transport_close_channel(void) {
   i2c_bus_close(i2c_bus);
   i2c_bus = NULL;
 
@@ -215,8 +217,6 @@ void optiga_deinit(void) {
   memzero(sec_chan_decr_nonce, sizeof(sec_chan_decr_nonce));
   memzero(sec_chan_buffer, sizeof(sec_chan_buffer));
   sec_chan_size = 0;
-
-  optiga_hal_deinit();
 }
 
 static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {

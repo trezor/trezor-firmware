@@ -30,8 +30,10 @@
 // Maximum command and response APDU size supported by OPTIGA.
 #define OPTIGA_MAX_APDU_SIZE 1557
 
-optiga_result optiga_init(void);
-void optiga_deinit(void);
+optiga_result optiga_transport_open_channel(void);
+void optiga_transport_close_channel(void);
+void optiga_transport_power_up(void);
+void optiga_transport_power_down(void);
 
 optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
                                         size_t secret_size);
