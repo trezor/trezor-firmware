@@ -37,7 +37,7 @@
 #endif
 
 #ifdef USE_OPTIGA
-#include <sec/optiga_config.h>
+#include <sec/optiga_init.h>
 #endif
 
 #ifdef USE_TAMPER
