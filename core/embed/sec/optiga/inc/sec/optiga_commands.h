@@ -173,6 +173,9 @@ typedef struct {
 #define OPTIGA_RANDOM_MAX_SIZE 256
 #define OPTIGA_MAX_CERT_SIZE 1728
 
+// The throttling delay when the security event counter is at its maximum.
+#define OPTIGA_T_MAX_MS 5000
+
 #define OPTIGA_ACCESS_CONDITION(ac_id, oid)           \
   (const optiga_metadata_item) {                      \
     (const uint8_t[]){ac_id, oid >> 8, oid & 0xff}, 3 \

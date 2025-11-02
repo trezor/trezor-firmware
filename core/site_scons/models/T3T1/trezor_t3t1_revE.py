@@ -113,7 +113,7 @@ def configure(
         sources += ["embed/sec/optiga/stm32/optiga_hal.c"]
         sources += ["embed/sec/optiga/optiga.c"]
         sources += ["embed/sec/optiga/optiga_commands.c"]
-        sources += ["embed/sec/optiga/optiga_config.c"]
+        sources += ["embed/sec/optiga/optiga_init.c"]
         sources += ["embed/sec/optiga/optiga_transport.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
         paths += ["embed/sec/optiga/inc"]

@@ -195,6 +195,19 @@ bool optiga_read_sec(uint8_t *sec) {
   return (bool)smcall_invoke1((uint32_t)sec, SMCALL_OPTIGA_READ_SEC);
 }
 
+void optiga_close_channel(void) { smcall_invoke0(SMCALL_OPTIGA_CLOSE_CHANNEL); }
+
+void optiga_power_down(void) { smcall_invoke0(SMCALL_OPTIGA_POWER_DOWN); }
+
+void optiga_init_and_configure(void) {
+  smcall_invoke0(SMCALL_OPTIGA_INIT_AND_CONFIGURE);
+}
+
+#if PYOPT == 0
+void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
+
+#endif
+
 #endif  // USE_OPTIGA
 
 // =============================================================================
@@ -207,11 +220,6 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return (secbool)smcall_invoke1((uint32_t)dest,
                                  SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
 }
-
-#if PYOPT == 0
-void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
-
-#endif
 
 // =============================================================================
 // storage.h
