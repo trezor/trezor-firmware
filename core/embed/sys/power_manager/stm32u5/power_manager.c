@@ -29,6 +29,7 @@
 
 #ifdef USE_RTC
 #include <sys/rtc.h>
+#include <sys/rtc_scheduler.h>
 #endif
 
 #include "../fuel_gauge/battery_model.h"
@@ -237,14 +238,12 @@ pm_status_t pm_get_state(pm_state_t* state) {
 
 // This callback is called from inside the system_suspend() function
 // when the rtc wake-up timer expires.
-// - The callback can schedule the next wake-up by calling
-// rtc_wakeup_timer_start().
-// - If the callback return with wakeup_flags set, system_suspend() returns.
 #ifdef USE_RTC
 void pm_rtc_wakeup_callback(void* context) {
-  // No need to do anything here, but left as a placeholder for potential
-  // future use. This is an optimal place where to set a wakeup flag from RTC
-  // wakeup_flags_set(WAKEUP_FLAG_RTC);
+  pm_driver_t* drv = &g_pm;
+
+  // Clear autohibernate event reference
+  drv->autohibernate_event_id = 0;
 }
 #endif
 
@@ -281,6 +280,14 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
 #endif
 
   wakeup_flags_t wakeup_flags = system_suspend();
+
+#ifdef USE_RTC
+  // Cancel autohibernate event if scheduled
+  if (drv->autohibernate_event_id != 0) {
+    rtc_cancel_wakeup_event(drv->autohibernate_event_id);
+    drv->autohibernate_event_id = 0;
+  }
+#endif
 
   // Wait for pmic measurements to stabilize the fuel gauge estimation.
   pm_status_t status = pm_wait_to_stabilize(drv, PM_STABILIZATION_TIMEOUT_MS);
@@ -559,9 +566,11 @@ bool pm_driver_suspend(void) {
     // Driver just woke up from suspend and have no data available yet.
     // Request the suspend but wait for the next pmic_meausrement
     drv->suspending = true;
-
   } else {
+#ifdef USE_RTC
+    // Schedule auto-hibernation rtc event
     pm_schedule_rtc_wakeup();
+#endif
     drv->suspended = true;
   }
 
@@ -573,14 +582,14 @@ bool pm_driver_suspend(void) {
   return true;
 }
 
+#ifdef USE_RTC
+
 bool pm_schedule_rtc_wakeup(void) {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
     return false;
   }
-
-#ifdef USE_RTC
 
   // Capture the timestamp when device was active for the last time.
   if (!rtc_get_timestamp(&drv->last_active_timestamp)) {
@@ -594,19 +603,16 @@ bool pm_schedule_rtc_wakeup(void) {
     pm_hibernate();
   }
 
-  uint32_t time_to_hibernate =
-      PM_AUTO_HIBERNATE_TIMEOUT_S -
-      (drv->last_active_timestamp - drv->suspend_timestamp);
+  if (drv->autohibernate_event_id == 0) {
+    rtc_schedule_wakeup_event(
+        drv->suspend_timestamp + PM_AUTO_HIBERNATE_TIMEOUT_S,
+        pm_rtc_wakeup_callback, NULL, &drv->autohibernate_event_id);
+  }
 
-  rtc_wakeup_timer_start(time_to_hibernate, pm_rtc_wakeup_callback, NULL);
-
-#endif
-
-  systimer_delete(drv->monitoring_timer);
-
-  drv->suspended = true;
   return true;
 }
+
+#endif
 
 bool pm_is_charging(void) {
   pm_driver_t* drv = &g_pm;
@@ -661,7 +667,6 @@ bool pm_driver_resume(void) {
   drv->state_machine_stabilized = false;
 
 #ifdef USE_RTC
-  rtc_wakeup_timer_stop();
 
   uint32_t rtc_timestamp;
   rtc_get_timestamp(&rtc_timestamp);
