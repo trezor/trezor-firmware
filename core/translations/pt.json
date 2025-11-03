@@ -106,7 +106,12 @@
       "Delizia": "Crie um backup para evitar perder acesso aos seus fundos",
       "Eckhart": "Crie um backup de carteira para evitar perder acesso aos seus fundos."
     },
-    "backup__info_multi_share_backup": "O backup da sua carteira contém diversas listas de palavras em uma ordem específica (shares).",
+    "backup__info_multi_share_backup": {
+      "Bolt": "O backup contém listas de palavras em uma ordem específica (shares).",
+      "Caesar": "O backup da sua carteira contém diversas listas de palavras em uma ordem específica (shares).",
+      "Delizia": "O backup da sua carteira contém diversas listas de palavras em uma ordem específica (shares).",
+      "Eckhart": "O backup da sua carteira contém diversas listas de palavras em uma ordem específica (shares)."
+    },
     "backup__info_single_share_backup": "O backup da sua carteira contém {0} palavras em uma ordem específica.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Você deve fazer o backup da sua nova carteira agora.",
@@ -771,8 +776,18 @@
     "ethereum__new_contract": "Novo contrato será implantado",
     "ethereum__no_message_field": "Sem campo de mensagem",
     "ethereum__priority_fee": "Taxa de prioridade máx.",
-    "ethereum__show_full_array": "Exibir arranjo completo",
-    "ethereum__show_full_domain": "Exibir domínio completo",
+    "ethereum__show_full_array": {
+      "Bolt": "Exibir arranjo",
+      "Caesar": "Exibir arranjo completo",
+      "Delizia": "Exibir arranjo completo",
+      "Eckhart": "Exibir arranjo completo"
+    },
+    "ethereum__show_full_domain": {
+      "Bolt": "Exibir domínio",
+      "Caesar": "Exibir domínio completo",
+      "Delizia": "Exibir domínio completo",
+      "Eckhart": "Exibir domínio completo"
+    },
     "ethereum__show_full_message": {
       "Bolt": "Exibir mensagem",
       "Caesar": "Exibir mensagem completa",
@@ -1498,9 +1513,14 @@
     "pin__tries_left": "tentativas restantes",
     "pin__turn_off": "Deseja mesmo desligar a proteção por PIN?",
     "pin__turn_on": "Ligar proteção por PIN?",
-    "pin__wipe_code_exists_description": "Desative o código de limpeza antes de desativar a proteção por PIN.",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "Desative o código de limp. antes de desativar a proteção PIN.",
+      "Caesar": "Desative o código de limpeza antes de desativar a proteção por PIN.",
+      "Delizia": "Desative o código de limpeza antes de desativar a proteção por PIN.",
+      "Eckhart": "Desative o código de limpeza antes de desativar a proteção por PIN."
+    },
     "pin__wipe_code_exists_title": {
-      "Bolt": "Código de limp. definido",
+      "Bolt": "Cód. limp. definido",
       "Caesar": "Código de limpeza definido",
       "Delizia": "Código de limpeza definido",
       "Eckhart": "Código de limpeza definido"
