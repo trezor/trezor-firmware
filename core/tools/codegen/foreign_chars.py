@@ -109,8 +109,9 @@ italian_chars = (
 )
 
 
-portugese_chars = (
+portuguese_chars = (
     "º",
+    "À",
     "Á",
     "Ã",
     "Ç",
@@ -129,6 +130,7 @@ portugese_chars = (
     "ô",
     "õ",
     "ú",
+    "ª",
 )
 
 
@@ -138,5 +140,5 @@ all_languages = {
     "es": spanish_chars,
     "de": german_chars,
     "it": italian_chars,
-    "pt": portugese_chars,
+    "pt": portuguese_chars,
 }
