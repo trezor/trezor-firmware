@@ -111,7 +111,6 @@ italian_chars = (
 
 portugese_chars = (
     "º",
-    "À",
     "Á",
     "Ã",
     "Ç",
@@ -130,7 +129,6 @@ portugese_chars = (
     "ô",
     "õ",
     "ú",
-    "ª",
 )
 
 
