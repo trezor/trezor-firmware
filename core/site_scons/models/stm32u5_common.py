@@ -89,6 +89,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/rng/rng_common.c",
         "embed/sec/secret/stm32u5/secret.c",
         "embed/sec/secret/stm32u5/secret_keys.c",
+        "embed/sec/secret/secret_keys_common.c",
         "embed/sec/secure_aes/stm32u5/secure_aes.c",
         "embed/sec/secure_aes/stm32u5/secure_aes_unpriv.c",
         "embed/sec/storage/stm32u5/storage_salt.c",

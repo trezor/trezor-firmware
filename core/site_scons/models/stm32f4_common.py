@@ -70,6 +70,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/rng/rng_common.c",
         "embed/sec/secret/stm32f4/secret.c",
         "embed/sec/secret/stm32f4/secret_keys.c",
+        "embed/sec/secret/secret_keys_common.c",
         "embed/sec/storage/stm32f4/storage_salt.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
         "embed/sys/irq/stm32/irq.c",

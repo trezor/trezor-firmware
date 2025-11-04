@@ -479,6 +479,23 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#include <sec/secret_keys.h>
+
+secbool secret_key_delegated_identity__verified(
+    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  if (!probe_write_access(dest, ECDSA_PRIVATE_KEY_SIZE)) {
+    goto access_violation;
+  }
+
+  return secret_key_delegated_identity(dest);
+
+access_violation:
+  apptask_access_violation();
+  return secfalse;
+}
+
+// ---------------------------------------------------------------------
+
 static PIN_UI_WAIT_CALLBACK storage_callback = NULL;
 
 static secbool storage_callback_wrapper(uint32_t wait, uint32_t progress,

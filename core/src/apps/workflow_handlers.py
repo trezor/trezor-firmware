@@ -106,8 +106,14 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.cipher_key_value"
     if msg_type == MessageType.GetFirmwareHash:
         return "apps.misc.get_firmware_hash"
+
+    # evolu
     if msg_type == MessageType.EvoluGetNode:
-        return "apps.misc.get_evolu_node"
+        return "apps.evolu.get_node"
+    if msg_type == MessageType.EvoluSignRegistrationRequest:
+        return "apps.evolu.sign_registration_request"
+    if msg_type == MessageType.EvoluGetDelegatedIdentityKey:
+        return "apps.evolu.get_delegated_identity_key"
 
     if not utils.BITCOIN_ONLY:
         # When promoting the Nostr app to production-level

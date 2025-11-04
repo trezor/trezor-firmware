@@ -25,6 +25,7 @@
 
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
+#include "../secret_keys_common.h"
 
 #ifdef USE_TROPIC
 
@@ -70,6 +71,22 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return sectrue;
 }
 
-#endif
+#endif  // USE_TROPIC
 
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+#ifdef SECRET_UNPRIVILEGED_MASTER_KEY_SLOT
+  static uint8_t key_slot = SECRET_UNPRIVILEGED_MASTER_KEY_SLOT;
+#else
+  static uint8_t key_slot = UNUSED_KEY_SLOT;
 #endif
+  return secret_key_derive_nist256p1(key_slot, KEY_INDEX_DELEGATED_IDENTITY,
+                                     dest);
+}
+
+secbool secret_key_master_key_get(secret_key_master_key_t* master_key) {
+  memset(master_key->bytes, 0, SECRET_KEY_MASTER_KEY_SIZE);
+  master_key->size = SECRET_KEY_MASTER_KEY_SIZE;
+  return sectrue;
+}
+
+#endif  // SECURE_MODE

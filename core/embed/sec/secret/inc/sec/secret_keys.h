@@ -21,6 +21,10 @@
 
 #include <trezor_types.h>
 
+#include <ecdsa.h>
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
 #ifdef SECURE_MODE
 
 #ifdef SECRET_MASTER_KEY_SLOT_SIZE
@@ -35,8 +39,6 @@ secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]);
 
 #ifdef USE_OPTIGA
 
-#include <ecdsa.h>
-
 #define OPTIGA_PAIRING_SECRET_SIZE 32
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]);
 secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
@@ -45,7 +47,6 @@ secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #ifdef USE_TROPIC
 
-#include <ecdsa.h>
 #include <ed25519-donna/ed25519.h>
 
 secbool secret_key_tropic_public(curve25519_key dest);
@@ -68,12 +69,31 @@ secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]);
 secbool secret_key_storage_salt(uint16_t fw_type,
                                 uint8_t dest[SECRET_KEY_STORAGE_SALT_SIZE]);
 
+#define SECRET_KEY_MASTER_KEY_SIZE 32
+
+typedef struct {
+  size_t size;
+  uint8_t bytes[SECRET_KEY_MASTER_KEY_SIZE];
+} secret_key_master_key_t;
+
+/**
+ * Retrieves the generated buffer with the master key.
+ *
+ * If master key has not yet been generated for the device,
+ * it is generated now.
+ *
+ * This key is used to derive additional credential keys (e.g. Evolu).
+ *
+ * @param master_key structure filled with the generated data.
+ */
+secbool secret_key_master_key_get(secret_key_master_key_t* master_key);
+
 #endif  // SECURE_MODE
 
 #ifdef KERNEL_MODE
 #ifdef USE_NRF_AUTH
-secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
-                                    const uint8_t *mac, size_t mac_len);
+secbool secret_validate_nrf_pairing(const uint8_t* message, size_t msg_len,
+                                    const uint8_t* mac, size_t mac_len);
 
 #endif
 #endif

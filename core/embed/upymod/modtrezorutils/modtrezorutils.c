@@ -35,6 +35,7 @@
 #include "embed/upymod/trezorobj.h"
 
 #include <io/usb.h>
+#include <sec/secret_keys.h>
 #include <sys/bootutils.h>
 #include <sys/notify.h>
 #include <util/fwutils.h>
@@ -233,6 +234,22 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
                                  mod_trezorutils_firmware_vendor);
+
+/// def delegated_identity() -> bytes:
+///     """
+///     Returns the delegated identity key used for registration and space
+///     management at Evolu.
+///     """
+STATIC mp_obj_t mod_trezorutils_delegated_identity(void) {
+  uint8_t private_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  if (secret_key_delegated_identity(private_key) != sectrue) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to read delegated identity."));
+  }
+  return mp_obj_new_bytes(private_key, sizeof(private_key));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_delegated_identity_obj,
+                                 mod_trezorutils_delegated_identity);
 
 /// def unit_color() -> int | None:
 ///     """
@@ -583,7 +600,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_firmware_header_obj,
 
 /// def bootloader_locked() -> bool | None:
 ///     """
-///     Returns True/False if the the bootloader is locked/unlocked and None if
+///     Returns True/False if the bootloader is locked/unlocked and None if
 ///     the feature is not supported.
 ///     """
 STATIC mp_obj_t mod_trezorutils_bootloader_locked() {
@@ -779,7 +796,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_nrf_get_version),
      MP_ROM_PTR(&mod_trezorutils_nrf_get_version_obj)},
 #endif
-
+    {MP_ROM_QSTR(MP_QSTR_delegated_identity),
+     MP_ROM_PTR(&mod_trezorutils_delegated_identity_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_color),
      MP_ROM_PTR(&mod_trezorutils_unit_color_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_packaging),

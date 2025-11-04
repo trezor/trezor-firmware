@@ -1810,6 +1810,9 @@
       "Delizia": "Wrong SD card.",
       "Eckhart": ""
     },
+    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
+    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Cancel sign",
     "send__cancel_transaction": "Cancel transaction",
     "send__confirm_sending": "Sending amount",
