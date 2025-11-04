@@ -1543,8 +1543,18 @@
     "recovery__you_have_entered": "Zadali jste",
     "regulatory__title": "Regulace",
     "reset__advanced_group_threshold_info": "Počet částí zálohy skupiny určuje počet skupin potřebných k obnovení peněženky.",
-    "reset__all_x_of_y_template": "všech {0} z {1} částí",
-    "reset__any_x_of_y_template": "lib. {0} z {1} částí",
+    "reset__all_x_of_y_template": {
+      "Bolt": "všech {0} z {1} částí",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__any_x_of_y_template": {
+      "Bolt": "lib. {0} z {1} částí",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__button_create": "Vytv. peněženku",
     "reset__button_recover": "Obn. peněženku",
     "reset__by_continuing": "Pokračováním přijímáte smluvní podmínky společnosti Trezor.",
@@ -1573,14 +1583,39 @@
     "reset__incorrect_word_selected": "Vybrali jste nesprávné slovo",
     "reset__more_at": "Více na",
     "reset__more_info_at": "Další informace na",
-    "reset__need_all_share_template": "K obnovení potřebujete všech {0} částí.",
-    "reset__need_any_share_template": "K obnovení potřebujete libovolné {0} části.",
-    "reset__needed_to_form_a_group": "potřeba k vytvoření skupiny. ",
-    "reset__needed_to_recover_your_wallet": "potřeba k obnovení peněženky. ",
+    "reset__need_all_share_template": {
+      "Bolt": "K obnovení potřebujete všech {0} částí.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__need_any_share_template": {
+      "Bolt": "K obnovení potřebujete libovolné {0} části.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_form_a_group": {
+      "Bolt": "potřeba k vytvoření skupiny. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_recover_your_wallet": {
+      "Bolt": "potřeba k obnovení peněženky. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__never_make_digital_copy": "Nevytvářejte digitální kopii zálohy ani ji nenahrávejte na internet!",
     "reset__num_of_share_holders_template": "Každý z {0} lidí nebo míst bude mít jednu část.",
     "reset__num_of_shares_advanced_info_template": "Každá část zálohy je sekvence {0} slov. Dále zvolíte počet částí pro obnovu potřebných k vytvoření skupiny {1}.",
-    "reset__num_of_shares_basic_info_template": "Každá část zálohy je sekvence {0} slov. Dále zvolíte, kolik částí potřebujete k obnovení peněženky.",
+    "reset__num_of_shares_basic_info_template": {
+      "Bolt": "Každá část zálohy je sekvence {0} slov. Dále zvolíte, kolik částí potřebujete k obnovení peněženky.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__num_of_shares_how_many": "Kolik částí zálohy peněženky chcete vytvořit?",
     "reset__num_of_shares_long_info_template": {
       "Bolt": "Každá část zálohy je sekvence {0} slov. Každý seznam slov si uložte na jiné, bezpečné místo nebo ho sdělte někomu, komu důvěřujete. Poté je použijte v případě potřeby obnovení peněženky.",
@@ -1590,7 +1625,12 @@
     },
     "reset__num_shares_for_group_template": "Potřebný počet částí k vytvoření skupiny {0}.",
     "reset__number_of_shares_info": "= počet seznamů jedinečných slov u zálohy peněženky.",
-    "reset__one_share": "1 část",
+    "reset__one_share": {
+      "Bolt": "1 část",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__only_one_share_will_be_created": "Bude vytvořena pouze jedna část.",
     "reset__recovery_share_description": "Podíl zálohy je seznam slov, která jste zapsali při nastavování Trezor.",
     "reset__recovery_share_number": "Záloha vaší peněženky se skládá z 1 až 16 podílů.",
@@ -1608,7 +1648,12 @@
     },
     "reset__select_word_template": "Vybrat slovo {0}",
     "reset__select_word_x_of_y_template": "Vyb. slovo {0} z {1}:",
-    "reset__set_it_to_count_template": "Nastavte {0} a budete potřebovat ",
+    "reset__set_it_to_count_template": {
+      "Bolt": "Nastavte {0} a budete potřebovat ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__share_checked_successfully_template": "Část č. {0} byla úspěšně zkontrolována.",
     "reset__share_completed_template": "Část č. {0} byla dokončena",
     "reset__share_words_first": "Zapište si první slovo zálohy.",
@@ -1628,7 +1673,12 @@
     "reset__slip39_checklist_title": "Kont. seznam zálohy",
     "reset__slip39_checklist_write_down": "Zapište si a zkontr. všechny části",
     "reset__slip39_checklist_write_down_recovery": "Zapište si a zkontr. části zálohy",
-    "reset__the_threshold_sets_the_number_of_shares": "Počet pro obnovu nastaví počet částí ",
+    "reset__the_threshold_sets_the_number_of_shares": {
+      "Bolt": "Počet pro obnovu nastaví počet částí ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__the_word_is_repeated": "Slovo se opakuje",
     "reset__threshold_info": "= minimální počet seznamů jedinečných slov u obnovy.",
     "reset__title_backup_is_done": "Záloha je dokončena",
@@ -1641,7 +1691,12 @@
     "reset__title_set_number_of_shares": "Nastavit počet částí",
     "reset__title_set_threshold": "Nast. počet obnovy",
     "reset__title_shamir_backup": "Vícedílná záloha",
-    "reset__to_form_group_template": "k vytvoření skupiny {0}.",
+    "reset__to_form_group_template": {
+      "Bolt": "k vytvoření skupiny {0}.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__tos_link": "trezor.io/tos",
     "reset__total_number_of_shares_in_group_template": "Nastavte celkový počet částí ve skupině {0}.",
     "reset__use_your_backup": "Použijte zálohu, když potřebujete obnovit peněženku.",
@@ -1649,7 +1704,12 @@
     "reset__words_written_down_template": "Mám zapsáno postupně všech {0} slov.",
     "reset__write_down_words_template": "Na kartu zálohy napište {0} slov v pořadí.",
     "reset__wrong_word_selected": "Vybrali jste chybné slovo!",
-    "reset__you_need_one_share": "Pro obnovení potřebujete 1 část.",
+    "reset__you_need_one_share": {
+      "Bolt": "Pro obnovení potřebujete 1 část.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__your_backup_is_done": "Záloha je dokončena.",
     "ripple__confirm_tag": "Potvrdit značku",
     "ripple__destination_tag_missing": "",

@@ -1853,8 +1853,18 @@
     "recovery__you_have_entered": "Vous avez saisi",
     "regulatory__title": "Régulation",
     "reset__advanced_group_threshold_info": "Le seuil de groupe spécifie le nombre de groupes requis pour récupérer votre portefeuille.",
-    "reset__all_x_of_y_template": "tous {0} fragm. sur {1}",
-    "reset__any_x_of_y_template": "{0} des {1} fragments",
+    "reset__all_x_of_y_template": {
+      "Bolt": "tous {0} fragm. sur {1}",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__any_x_of_y_template": {
+      "Bolt": "{0} des {1} fragments",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__button_create": {
       "Bolt": "Créer un portef.",
       "Caesar": "Créer un portef.",
@@ -1908,19 +1918,49 @@
     "reset__incorrect_word_selected": "Mauvais mot sélectionné",
     "reset__more_at": "Plus d'infos sur",
     "reset__more_info_at": "Plus d'informations sur",
-    "reset__need_all_share_template": "Vous avez besoin de {0} fragments pour la récupération.",
-    "reset__need_any_share_template": "Vous avez besoin de {0} fragments pour la récupération.",
-    "reset__needed_to_form_a_group": "requis pour former un groupe. ",
-    "reset__needed_to_recover_your_wallet": "requis pour récupérer votre portefeuille. ",
+    "reset__need_all_share_template": {
+      "Bolt": "Vous avez besoin de {0} fragments pour la récupération.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__need_any_share_template": {
+      "Bolt": "Vous avez besoin de {0} fragments pour la récupération.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_form_a_group": {
+      "Bolt": "requis pour former un groupe. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_recover_your_wallet": {
+      "Bolt": "requis pour récupérer votre portefeuille. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__never_make_digital_copy": "Ne conservez jamais votre sauvegarde sous forme numérique.",
     "reset__num_of_share_holders_template": "{0} personnes ou emplacements détiendront chacun un fragment.",
     "reset__num_of_shares_advanced_info_template": "Chaque fragment de récupération se compose de {0} mots. Vous allez ensuite définir le seuil minimum de fragments nécessaires pour former le Groupe {1}.",
-    "reset__num_of_shares_basic_info_template": "Chaque fragment de récupération se compose de {0} mots. Vous allez ensuite choisir le nombre de fragments nécessaires pour récupérer votre portefeuille.",
+    "reset__num_of_shares_basic_info_template": {
+      "Bolt": "Chaque fragment de récupération se compose de {0} mots. Vous allez ensuite choisir le nombre de fragments nécessaires pour récupérer votre portefeuille.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__num_of_shares_how_many": "Combien de fragments de sauvegarde voulez-vous créer ?",
     "reset__num_of_shares_long_info_template": "Chaque fragment de sauvegarde se compose de {0} mots.\nConservez chaque liste de mots séparément dans un endroit sûr, ou partagez-les avec des personnes de confiance. Rassemblez-les au besoin pour récupérer votre portefeuille.",
     "reset__num_shares_for_group_template": "Le nombre de parts requis pour former le Groupe {0}.",
     "reset__number_of_shares_info": "= nombre total de listes de mots uniques pour la sauveg. du portefeuille",
-    "reset__one_share": "1 fragment",
+    "reset__one_share": {
+      "Bolt": "1 fragment",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__only_one_share_will_be_created": "Un seul fragment sera créé.",
     "reset__recovery_share_description": "Un fragment de récupération est une liste de mots que vous avez écrit lors de la configuration de votre Trezor.",
     "reset__recovery_share_number": "Votre sauvegarde de portefeuille se compose de 1 à 16 fragments.",
@@ -1958,7 +1998,12 @@
       "Eckhart": "Sélectionnez le mot #{0} de la sauvegarde"
     },
     "reset__select_word_x_of_y_template": "Sélect. mot {0} sur {1} :",
-    "reset__set_it_to_count_template": "Définissez-le sur {0} et vous aurez besoin ",
+    "reset__set_it_to_count_template": {
+      "Bolt": "Définissez-le sur {0} et vous aurez besoin ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__share_checked_successfully_template": "Fragment #{0} vérifié avec succès.",
     "reset__share_completed_template": "Fragment de récupération #{0} complété",
     "reset__share_words_first": "Notez le premier mot de la sauvegarde.",
@@ -1988,7 +2033,12 @@
     "reset__slip39_checklist_title": "Vérifications de la sauvegarde",
     "reset__slip39_checklist_write_down": "Notez et vérifiez tous les fragments.",
     "reset__slip39_checklist_write_down_recovery": "Notez et vérifiez tous les fragments de sauvegarde de portefeuille.",
-    "reset__the_threshold_sets_the_number_of_shares": "Le seuil définit le nombre de fragments ",
+    "reset__the_threshold_sets_the_number_of_shares": {
+      "Bolt": "Le seuil définit le nombre de fragments ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__the_word_is_repeated": "Le mot est répété",
     "reset__threshold_info": "= nombre min de listes de mots uniques utilisées pour la récup.",
     "reset__title_backup_is_done": "Sauveg. terminée",
@@ -2001,7 +2051,12 @@
     "reset__title_set_number_of_shares": "Définir le nombre de fragments",
     "reset__title_set_threshold": "Définir le seuil",
     "reset__title_shamir_backup": "Sauvegarde multi-fragments",
-    "reset__to_form_group_template": "pour former le Groupe {0}.",
+    "reset__to_form_group_template": {
+      "Bolt": "pour former le Groupe {0}.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__tos_link": {
       "Bolt": "trezor.io/tos",
       "Caesar": "trezor.io/tos",
@@ -2024,7 +2079,12 @@
       "Eckhart": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille."
     },
     "reset__wrong_word_selected": "Mauvais mot sélectionné !",
-    "reset__you_need_one_share": "Pour la récupération, un fragment est requis.",
+    "reset__you_need_one_share": {
+      "Bolt": "Pour la récupération, un fragment est requis.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__your_backup_is_done": "Votre sauvegarde est terminée.",
     "ripple__confirm_tag": "Confirmer le tag",
     "ripple__destination_tag_missing": "",
