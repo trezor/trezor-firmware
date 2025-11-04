@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.9.4] (19th November 2025)
+
+### Added
+- Show an explicit warning when `ButtonRequest` ACK is delayed.  [#5884]
+- Show warning on Ripple destination tag missing.  [#5931]
+
+### Changed
+- Deprecate ETH Holesky testnet and use Hoodi testnet instead.  [#5942]
+
+### Fixed
+- Fix false "NO USB CONNECTION" warning on the home screen.  [#5980]
+- Restart bluetooth on reboot from device menu.  [#6023]
+- Removed warning screen for some non-ERC20 contract calls.  [#6032]
+- Removed "More info" menu item from screens that don't have more info.  [#6053]
+
 ## [2.9.3] (internal release)
 
 ### Fixed
@@ -1177,10 +1192,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#5464]: https://github.com/trezor/trezor-firmware/pull/5464
 [#5526]: https://github.com/trezor/trezor-firmware/pull/5526
 [#5532]: https://github.com/trezor/trezor-firmware/pull/5532
+[#5760]: https://github.com/trezor/trezor-firmware/pull/5760
 [#5763]: https://github.com/trezor/trezor-firmware/pull/5763
+[#5845]: https://github.com/trezor/trezor-firmware/pull/5845
 [#5867]: https://github.com/trezor/trezor-firmware/pull/5867
 [#5870]: https://github.com/trezor/trezor-firmware/pull/5870
 [#5882]: https://github.com/trezor/trezor-firmware/pull/5882
+[#5884]: https://github.com/trezor/trezor-firmware/pull/5884
+[#5897]: https://github.com/trezor/trezor-firmware/pull/5897
 [#5911]: https://github.com/trezor/trezor-firmware/pull/5911
 [#5922]: https://github.com/trezor/trezor-firmware/pull/5922
 [#5928]: https://github.com/trezor/trezor-firmware/pull/5928
+[#5931]: https://github.com/trezor/trezor-firmware/pull/5931
+[#5939]: https://github.com/trezor/trezor-firmware/pull/5939
+[#5942]: https://github.com/trezor/trezor-firmware/pull/5942
+[#5952]: https://github.com/trezor/trezor-firmware/pull/5952
+[#5980]: https://github.com/trezor/trezor-firmware/pull/5980
+[#5990]: https://github.com/trezor/trezor-firmware/pull/5990
+[#5995]: https://github.com/trezor/trezor-firmware/pull/5995
+[#6019]: https://github.com/trezor/trezor-firmware/pull/6019
+[#6022]: https://github.com/trezor/trezor-firmware/pull/6022
+[#6023]: https://github.com/trezor/trezor-firmware/pull/6023
+[#6032]: https://github.com/trezor/trezor-firmware/pull/6032
+[#6053]: https://github.com/trezor/trezor-firmware/pull/6053
+[#6075]: https://github.com/trezor/trezor-firmware/pull/6075
+[#6076]: https://github.com/trezor/trezor-firmware/pull/6076
+[#6096]: https://github.com/trezor/trezor-firmware/pull/6096
+[#6100]: https://github.com/trezor/trezor-firmware/pull/6100
