@@ -113,7 +113,7 @@ class PaymentRequestVerifier:
         else:
             nonce = b""
             if payment_request.memos:
-                DataError("Missing nonce in payment request.")
+                raise DataError("Missing nonce in payment request.")
 
         writers.write_bytes_fixed(self.h_pr, b"SL\x00\x24", 4)
         writers.write_bytes_prefixed(self.h_pr, nonce)
@@ -149,7 +149,7 @@ class PaymentRequestVerifier:
                 writers.write_bytes_prefixed(self.h_pr, memo.title.encode())
                 writers.write_bytes_prefixed(self.h_pr, memo.text.encode())
             else:
-                DataError("Unrecognized memo type in payment request.")
+                raise DataError("Unrecognized memo type in payment request.")
 
         writers.write_uint32_le(
             self.h_pr, slip44_id if slip44_id is not None else SLIP44_ID_RESERVED
