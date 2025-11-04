@@ -1,4 +1,9 @@
 
+## 0.3.5 [19th November 2025]
+
+### Fixed
+- Fix ble-adv-start without args.  [#6010]
+
 ## 0.3.4 [21st October 2025]
 
 ### Added
@@ -179,3 +184,4 @@
 [#5897]: https://github.com/trezor/trezor-firmware/pull/5897
 [#5900]: https://github.com/trezor/trezor-firmware/pull/5900
 [#5940]: https://github.com/trezor/trezor-firmware/pull/5940
+[#6010]: https://github.com/trezor/trezor-firmware/pull/6010
