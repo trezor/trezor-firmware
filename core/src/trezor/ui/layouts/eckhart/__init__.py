@@ -1404,6 +1404,7 @@ if not utils.BITCOIN_ONLY:
             br_code=ButtonRequestType.ConfirmOutput,
             info_items=info_items,
             info_title=TR.stellar__token_info,
+            is_data=False,
             chunkify_info=True,
             chunkify=False,
         )

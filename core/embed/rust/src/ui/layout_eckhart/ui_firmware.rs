@@ -471,7 +471,7 @@ impl FirmwareUI for UIEckhart {
             } else if is_data {
                 &theme::TEXT_MONO_ADDRESS
             } else {
-                &theme::TEXT_MEDIUM
+                &theme::TEXT_MONO_MEDIUM_LIGHT
             },
             description_font: &theme::TEXT_SMALL,
             extra_font: &theme::TEXT_SMALL,
