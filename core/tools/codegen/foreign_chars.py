@@ -98,17 +98,6 @@ german_chars = (
     "ü",
 )
 
-italian_chars = (
-    "À",
-    "à",
-    "è",
-    "é",
-    "ì",
-    "ò",
-    "ù",
-)
-
-
 portuguese_chars = (
     "º",
     "À",
@@ -139,6 +128,5 @@ all_languages = {
     "fr": french_chars,
     "es": spanish_chars,
     "de": german_chars,
-    "it": italian_chars,
     "pt": portuguese_chars,
 }
