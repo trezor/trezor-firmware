@@ -168,9 +168,6 @@
 #define RFAL_ISODEP_ATS_MIN_LEN                (1U)                                                   /*!< Minimum ATS length   Digital 1.1  13.6.2 */
 #define RFAL_ISODEP_ATS_HDR_LEN                (5U)                                                   /*!< ATS headerlength     Digital 1.1  13.6.2 */
 #define RFAL_ISODEP_ATS_MAX_LEN                (RFAL_ISODEP_ATS_HDR_LEN + RFAL_ISODEP_ATS_HB_MAX_LEN) /*!< Maximum ATS length   Digital 1.1  13.6.2 */
-#define RFAL_ISODEP_ATS_T0_FSCI_MASK           (0x0FU)                                                /*!< ATS T0's FSCI mask   Digital 1.1  13.6.2 */
-#define RFAL_ISODEP_ATS_TB_FWI_SHIFT           (4U)                                                   /*!< ATS TB's FWI shift   Digital 1.1  13.6.2 */
-#define RFAL_ISODEP_ATS_FWI_MASK               (0x0FU)                                                /*!< ATS TB's FWI shift   Digital 1.1  13.6.2 */
 #define RFAL_ISODEP_ATS_TL_POS                 (0x00U)                                                /*!< ATS TL's position    Digital 1.1  13.6.2 */
 
 
@@ -188,7 +185,7 @@
 #define RFAL_ISODEP_PPS0_VALID_MASK            (0xEFU)  /*!< PPS REQ PPS0 valid coding mask     ISO14443-4  5.4 */
 
 #define RFAL_ISODEP_CMD_ATTRIB                 (0x1DU)  /*!< ATTRIB command                 Digital 1.1  14.6.1 */
-#define RFAL_ISODEP_ATTRIB_PARAM2_DSI_SHIFT    (6U)     /*!< ATTRIB PARAM2 DSI_ID shift        Digital 1.1  14.6.1 */
+#define RFAL_ISODEP_ATTRIB_PARAM2_DSI_SHIFT    (6U)     /*!< ATTRIB PARAM2 DSI shift        Digital 1.1  14.6.1 */
 #define RFAL_ISODEP_ATTRIB_PARAM2_DRI_SHIFT    (4U)     /*!< ATTRIB PARAM2 DRI shift        Digital 1.1  14.6.1 */
 #define RFAL_ISODEP_ATTRIB_PARAM2_DXI_MASK     (0xF0U)  /*!< ATTRIB PARAM2 DxI mask         Digital 1.1  14.6.1 */
 #define RFAL_ISODEP_ATTRIB_PARAM2_FSDI_MASK    (0x0FU)  /*!< ATTRIB PARAM2 FSDI mask        Digital 1.1  14.6.1 */
@@ -835,10 +832,11 @@ static ReturnCode rfalIsoDepDataExchangePCD( uint16_t *outActRxLen, bool *outIsC
             /*******************************************************************************/
             
             (*outActRxLen) = rfalConvBitsToBytes( *outActRxLen );
+                       
             
-            
-            /* Check rcvd msg length, cannot be less then the expected header */
-            if( ((*outActRxLen) < gIsoDep.hdrLen) || ((*outActRxLen) >= gIsoDep.ourFsx) )
+            /* Check rcvd msg length, cannot be less then the expected header                             */
+            /* Check rcvd msg length, cannot be above FSD (SoD + Payload + EoD)    Digital 2.3  15.6.1.15 */
+            if( ((*outActRxLen) < gIsoDep.hdrLen) || (((*outActRxLen) ) > (gIsoDep.ourFsx - ISODEP_CRC_LEN)) )
             {
                 return RFAL_ERR_PROTO;
             }
@@ -1253,8 +1251,8 @@ ReturnCode rfalIsoDepListenStartActivation( rfalIsoDepAtsParam *atsParam, const 
         txBuf[ bufIt++ ] = ( (RFAL_ISODEP_ATS_T0_TA_PRESENCE_MASK | RFAL_ISODEP_ATS_T0_TB_PRESENCE_MASK | 
                               RFAL_ISODEP_ATS_T0_TC_PRESENCE_MASK)| atsParam->fsci       );                  /* T0 */
         txBuf[ bufIt++ ] = atsParam->ta;                                                                     /* TA */
-        txBuf[ bufIt++ ] = ( (atsParam->fwi << RFAL_ISODEP_RATS_PARAM_FSDI_SHIFT) | 
-                             (atsParam->sfgi & RFAL_ISODEP_RATS_PARAM_FSDI_MASK) );                          /* TB */
+        txBuf[ bufIt++ ] = ( (atsParam->fwi << RFAL_ISODEP_ATS_TB_FWI_SHIFT) | 
+                             (atsParam->sfgi & RFAL_ISODEP_ATS_SFGI_MASK) );                                 /* TB */
         txBuf[ bufIt++ ] = (uint8_t)((atsParam->didSupport) ? RFAL_ISODEP_ATS_TC_DID : 0U);                  /* TC */
         
         if( atsParam->hbLen > 0U )             /* MISRA 21.18 */
@@ -1448,7 +1446,7 @@ ReturnCode rfalIsoDepListenGetActivationStatus( void )
     /* Activation done, keep the rcvd data in, reMap the activation buffer to the global to be retrieved by the DEP method */
     gIsoDep.rxBuf       = (uint8_t*)gIsoDep.actvParam.rxBuf;
     gIsoDep.rxBufLen    = sizeof( rfalIsoDepBufFormat );
-    gIsoDep.rxBufInfPos = (uint8_t)((uint32_t)gIsoDep.actvParam.rxBuf->inf - (uint32_t)gIsoDep.actvParam.rxBuf->prologue);
+    gIsoDep.rxBufInfPos = (uint8_t)((uintptr_t)gIsoDep.actvParam.rxBuf->inf - (uintptr_t)gIsoDep.actvParam.rxBuf->prologue);
     gIsoDep.rxLen       = gIsoDep.actvParam.rxLen;
     gIsoDep.rxChaining  = gIsoDep.actvParam.isRxChaining;
     
@@ -2429,6 +2427,7 @@ ReturnCode rfalIsoDepPollBGetActivationStatus( void )
 {
     ReturnCode ret;
     uint8_t    mbli;
+    uint8_t    expectedDid;
 
     /***************************************************************************/
     /* Process ATTRIB Response                                                 */
@@ -2438,8 +2437,8 @@ ReturnCode rfalIsoDepPollBGetActivationStatus( void )
         if( ret == RFAL_ERR_NONE )
         {
             /* Digital 1.1 14.6.2.3 - Check if received DID match */
-            uint8_t expected_did = ((RFAL_ISODEP_NO_DID==gIsoDep.did) ? RFAL_ISODEP_DID_00 : gIsoDep.did);
-            if( (gIsoDep.actvDev->activation.B.Listener.ATTRIB_RES.mbliDid & RFAL_ISODEP_ATTRIB_RES_DID_MASK) != expected_did )
+            expectedDid = ((RFAL_ISODEP_NO_DID==gIsoDep.did) ? RFAL_ISODEP_DID_00 : gIsoDep.did);
+            if( (gIsoDep.actvDev->activation.B.Listener.ATTRIB_RES.mbliDid & RFAL_ISODEP_ATTRIB_RES_DID_MASK) != expectedDid )
             {
                 return RFAL_ERR_PROTO;
             }

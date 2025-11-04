@@ -16,7 +16,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -483,7 +483,7 @@ ReturnCode rfalNfcfPollerCheck( const uint8_t* nfcid2, const rfalNfcfServBlockLi
     if( ret == RFAL_ERR_NONE )
     {
         /* Skip LEN byte */
-        checkRes = (rxBuf + RFAL_NFCF_LENGTH_LEN);
+        checkRes = &rxBuf[RFAL_NFCF_LENGTH_LEN];
        
         /* Check NFCID and response length    T3T v1.0   5.4.2.3 */
         if( (RFAL_BYTECMP( nfcid2, &checkRes[RFAL_NFCF_CMD_LEN], RFAL_NFCF_NFCID2_LEN ) != 0) || 
@@ -588,7 +588,7 @@ ReturnCode rfalNfcfPollerUpdate( const uint8_t* nfcid2, const rfalNfcfServBlockL
     if( ret == RFAL_ERR_NONE )
     {
         /* Skip LEN byte */
-        updateRes = (rxBuf + RFAL_NFCF_LENGTH_LEN);
+        updateRes = &rxBuf[RFAL_NFCF_LENGTH_LEN];
         
         /* Check NFCID and response length    T3T v1.0   5.5.2.3 */
         if( (RFAL_BYTECMP( nfcid2, &updateRes[RFAL_NFCF_CMD_LEN], RFAL_NFCF_NFCID2_LEN ) != 0) || 

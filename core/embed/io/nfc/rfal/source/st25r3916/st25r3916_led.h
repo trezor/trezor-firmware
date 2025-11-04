@@ -82,7 +82,7 @@ void st25r3916ledInit( void );
 
 /*! 
  *****************************************************************************
- *  \brief   ST25R3916 LED Event Interrupt
+ *  \brief  ST25R3916 LED Event Interrupt
  *
  *  This function should be called upon a ST25R3916 Interrupt, providing 
  *  the interrupt event with ST25R3916 irq flags to update LEDs 
@@ -95,7 +95,7 @@ void st25r3916ledEvtIrq( uint32_t irqs );
 
 /*! 
  *****************************************************************************
- *  \brief   ST25R3916 LED Event Write Register
+ *  \brief  ST25R3916 LED Event Write Register
  *
  *  This function should be called on a ST25R3916 Write Register operation
  *  providing the event with the register and value to update LEDs 
@@ -109,7 +109,7 @@ void st25r3916ledEvtWrReg( uint8_t reg, uint8_t val );
 
 /*! 
  *****************************************************************************
- *  \brief   ST25R3916 LED Event Write Multiple Register
+ *  \brief  ST25R3916 LED Event Write Multiple Register
  *
  *  This function should be called upon a ST25R3916 Write Multiple Registers, 
  *  providing the event with the registers and values to update LEDs 
@@ -124,7 +124,7 @@ void st25r3916ledEvtWrMultiReg( uint8_t reg, const uint8_t* vals, uint8_t len );
 
 /*! 
  *****************************************************************************
- *  \brief   ST25R3916 LED Event Direct Command
+ *  \brief  ST25R3916 LED Event Direct Command
  *
  *  This function should be called upon a ST25R3916 direct command, providing 
  *  the event with the command executed
@@ -134,6 +134,20 @@ void st25r3916ledEvtWrMultiReg( uint8_t reg, const uint8_t* vals, uint8_t len );
  *****************************************************************************
  */
 void st25r3916ledEvtCmd( uint8_t cmd );
+
+/*! 
+ *****************************************************************************
+ *  \brief  ST25R3916 LED Event Direct Commands
+ *
+ *  This function should be called upon the execution of ST25R3916 direct 
+ *  commands, providing the event with the commands executed
+ *
+ *  \param[in] cmds: ST25R3916 cmds executed
+ *  \param[in] len : number of commands executed
+ *
+ *****************************************************************************
+ */
+void st25r3916ledEvtCmds( const uint8_t* cmds, uint8_t len );
 
 #endif /* ST25R3916_LED_H */
 
