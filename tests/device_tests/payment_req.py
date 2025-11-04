@@ -8,6 +8,8 @@ from trezorlib.transport.session import Session
 
 from ..common import compact_size
 
+SLIP44_ID_UNDEFINED = 0xFFFF_FFFF
+
 
 @dataclass
 class TextMemo:
@@ -112,7 +114,9 @@ def make_payment_request(
         else:
             raise ValueError
 
-    h_pr.update(slip44.to_bytes(4, "little"))
+    h_pr.update(
+        (slip44 if slip44 is not None else SLIP44_ID_UNDEFINED).to_bytes(4, "little")
+    )
 
     change_address = iter(change_addresses or [])
     h_outputs = sha256()

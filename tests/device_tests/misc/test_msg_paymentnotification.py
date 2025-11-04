@@ -42,7 +42,7 @@ def test_paymentnotification(session: Session):
     payment_request = make_payment_request(
         session,
         recipient_name="trezor.io",
-        slip44=0,
+        slip44=None,
         outputs=None,
         memos=[purchase_memo, text_memo],
         nonce=nonce,

@@ -15,7 +15,7 @@ async def payment_notification(msg: PaymentNotification) -> Success:
     from trezor.wire import DataError
 
     from apps.common.keychain import get_keychain
-    from apps.common.payment_request import PaymentRequestVerifier
+    from apps.common.payment_request import SLIP44_ID_UNDEFINED, PaymentRequestVerifier
 
     if msg.payment_req is None:
         raise DataError("Missing payment request.")
@@ -24,7 +24,9 @@ async def payment_notification(msg: PaymentNotification) -> Success:
         raise DataError("Payment request amount must be missing")
 
     slip21_keychain = await get_keychain("", [], [[b"SLIP-0024"]])
-    PaymentRequestVerifier(msg.payment_req, 0, slip21_keychain).verify()
+    PaymentRequestVerifier(
+        msg.payment_req, SLIP44_ID_UNDEFINED, slip21_keychain
+    ).verify()
 
     verified_payment_request = msg.payment_req
 
