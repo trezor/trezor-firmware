@@ -38,7 +38,7 @@
   "translations": {
     "addr_mismatch__contact_support_at": {
       "Bolt": "Contactez l'assistance Trezor à",
-      "Caesar": "Veuillez contacter le support Trezor à",
+      "Caesar": "Contactez l'assistance Trezor à",
       "Delizia": "Veuillez contacter le support Trezor à",
       "Eckhart": "Veuillez contacter le support Trezor à"
     },
@@ -57,7 +57,7 @@
     "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": {
       "Bolt": "Chemin dériv. incorrect pour le compte sélectionné.",
-      "Caesar": "Chemin de dérivation incorrect pour le compte sélectionné.",
+      "Caesar": "Chemin dériv. incorrect pour le compte sélectionné.",
       "Delizia": "Chemin de dérivation incorrect pour le compte sélectionné.",
       "Eckhart": "Chemin de dérivation incorrect pour le compte sélectionné."
     },
@@ -65,7 +65,7 @@
     "address__cancel_contact_support": "Si l'adresse ne correspond pas, contactez le support à trezor.io/support.",
     "address__cancel_receive": {
       "Bolt": "Annuler réception",
-      "Caesar": "Annuler la réception",
+      "Caesar": "Annuler réception",
       "Delizia": "Annuler la réception",
       "Eckhart": "Annuler la réception ?"
     },
@@ -79,7 +79,7 @@
     "address__title_provider_address": "Adresse du fournisseur",
     "address__title_receive_address": {
       "Bolt": "Adr. de récep.",
-      "Caesar": "Adresse de réception",
+      "Caesar": "Adr. de récep.",
       "Delizia": "Adresse de réception",
       "Eckhart": "Adresse de réception"
     },
@@ -93,7 +93,7 @@
     },
     "address_details__account_info": {
       "Bolt": "Info compte",
-      "Caesar": "Info du compte",
+      "Caesar": "Info compte",
       "Delizia": "Info du compte",
       "Eckhart": "Info du compte"
     },
@@ -106,13 +106,13 @@
     },
     "address_details__title_receive_address": {
       "Bolt": "Adr. de récep.",
-      "Caesar": "Adresse de réception",
+      "Caesar": "Adr. de récep.",
       "Delizia": "Adresse de réception",
       "Eckhart": "Adresse de réception"
     },
     "address_details__title_receiving_to": {
       "Bolt": "Récep. sur",
-      "Caesar": "Réception sur",
+      "Caesar": "Récep. sur",
       "Delizia": "Réception sur",
       "Eckhart": "Réception sur"
     },
@@ -120,7 +120,7 @@
     "authenticate__header": "Authentifier l'appareil",
     "auto_lock__change_template": {
       "Bolt": "Auto-verrouiller Trezor après {0} d'inactivité ?",
-      "Caesar": "Verrouillage auto de votre Trezor après {0} d'inactivité ?",
+      "Caesar": "Auto-verrouiller Trezor après {0} d'inactivité ?",
       "Delizia": "Verrouillage auto de votre Trezor après {0} d'inactivité ?",
       "Eckhart": "Verrouillage auto de votre Trezor après {0} d'inactivité ?"
     },
@@ -160,7 +160,7 @@
     "backup__info_single_share_backup": "La sauvegarde de votre portefeuille contient {0} mots dans un ordre spécifique.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Sauvegardez votre portef. maintenant.",
-      "Caesar": "Vous devriez sauvegarder votre nouveau portefeuille dès maintenant.",
+      "Caesar": "Sauvegardez votre portef. maintenant.",
       "Delizia": "Vous devriez sauvegarder votre nouveau portefeuille dès maintenant.",
       "Eckhart": "Sauvegardez votre nouveau portefeuille maintenant."
     },
@@ -187,7 +187,7 @@
     },
     "backup__title_backup_wallet": {
       "Bolt": "Sauveg. portef.",
-      "Caesar": "Sauvegarder le portefeuille",
+      "Caesar": "Sauveg. portef.",
       "Delizia": "Sauvegarder le portefeuille",
       "Eckhart": "Sauvegarder le portefeuille"
     },
@@ -201,7 +201,7 @@
     "backup__want_to_skip": "Voulez-vous vraiment ignorer la sauvegarde ?",
     "bitcoin__commitment_data": {
       "Bolt": "Engagement",
-      "Caesar": "Données d'engagement",
+      "Caesar": "Engagement",
       "Delizia": "Données d'engagement",
       "Eckhart": "Données d'engagement"
     },
@@ -226,13 +226,13 @@
     },
     "bitcoin__locktime_set_to": {
       "Bolt": "Délai de verr. déf.",
-      "Caesar": "Délai de verrouillage défini à",
+      "Caesar": "Délai de verr. déf.",
       "Delizia": "Délai de verrouillage défini à",
       "Eckhart": "Délai de verrouillage défini à"
     },
     "bitcoin__locktime_set_to_blockheight": {
       "Bolt": "Délai de verr. déf. à la hauteur de bloc",
-      "Caesar": "Délai de verrouillage défini à la hauteur de bloc",
+      "Caesar": "Délai de verr. déf. à la hauteur de bloc",
       "Delizia": "Délai de verrouillage défini à la hauteur de bloc",
       "Eckhart": "Délai de verrouillage défini à la hauteur de bloc"
     },
@@ -248,13 +248,13 @@
     "bitcoin__ticket_amount": "Montant du ticket",
     "bitcoin__title_confirm_details": {
       "Bolt": "Conf. détails",
-      "Caesar": "Confirmer les détails",
+      "Caesar": "Conf. détails",
       "Delizia": "Confirmer les détails",
       "Eckhart": "Confirmer les détails"
     },
     "bitcoin__title_finalize_transaction": {
       "Bolt": "Finaliser trans.",
-      "Caesar": "Finaliser la transaction",
+      "Caesar": "Finaliser trans.",
       "Delizia": "Finaliser la transaction",
       "Eckhart": "Finaliser la transaction"
     },
@@ -266,7 +266,7 @@
     "bitcoin__title_purchase_ticket": "Acheter un ticket",
     "bitcoin__title_update_transaction": {
       "Bolt": "Màj la trans.",
-      "Caesar": "Mettre à jour la transaction",
+      "Caesar": "Màj la trans.",
       "Delizia": "Mettre à jour la transaction",
       "Eckhart": "Mettre à jour la transaction"
     },
@@ -274,14 +274,14 @@
     "bitcoin__unknown_transaction": "Transaction inconnue",
     "bitcoin__unusually_high_fee": {
       "Bolt": "Frais anormalement élevés.",
-      "Caesar": "Frais exceptionnellement élevés.",
+      "Caesar": "Frais anormalement élevés.",
       "Delizia": "Frais exceptionnellement élevés.",
       "Eckhart": "Frais exceptionnellement élevés."
     },
     "bitcoin__unverified_external_inputs": "La transaction contient des entrées externes non vérifiées.",
     "bitcoin__valid_signature": {
       "Bolt": "Signature valide.",
-      "Caesar": "La signature est valide.",
+      "Caesar": "Signature valide.",
       "Delizia": "La signature est valide.",
       "Eckhart": "La signature est valide."
     },
@@ -440,7 +440,7 @@
     "buttons__back": "Retour",
     "buttons__back_up": {
       "Bolt": "Sauveg.",
-      "Caesar": "Sauvegarder",
+      "Caesar": "Sauveg.",
       "Delizia": "Sauvegarder",
       "Eckhart": "Sauvegarder"
     },
@@ -461,7 +461,7 @@
     "buttons__enter": "Saisir",
     "buttons__enter_share": {
       "Bolt": "Saisir fragm.",
-      "Caesar": "Entrez le fragment",
+      "Caesar": "Saisir fragm.",
       "Delizia": "Entrez le fragment",
       "Eckhart": "Entrez le fragment"
     },
@@ -547,7 +547,7 @@
     "cardano__input_index": "Index d'entrée :",
     "cardano__intro_text_change": {
       "Bolt": "L'adresse suivante est une adresse de change.",
-      "Caesar": "L'adresse suivante appartient à cet appareil. Ses",
+      "Caesar": "L'adresse suivante est une adresse de change.",
       "Delizia": "L'adresse suivante appartient à cet appareil. Ses",
       "Eckhart": "L'adresse suivante appartient à cet appareil. Ses"
     },
@@ -567,7 +567,7 @@
     "cardano__path": "chemin",
     "cardano__pledge": {
       "Bolt": "Montant engagé",
-      "Caesar": "Montant d'engagement",
+      "Caesar": "Montant engagé",
       "Delizia": "Montant d'engagement",
       "Eckhart": "Montant d'engagement"
     },
@@ -590,7 +590,7 @@
     "cardano__reward_address": "L'adresse est une adresse de récompense.",
     "cardano__reward_eligibility_warning": {
       "Bolt": "Avertissement : l'adr. n'est pas une adr. de paiement, elle n'est pas éligible aux récompenses.",
-      "Caesar": "Avertissement : l'adresse n'est pas une adresse de paiement, elle n'est pas éligible aux récompenses.",
+      "Caesar": "Avertissement : l'adr. n'est pas une adr. de paiement, elle n'est pas éligible aux récompenses.",
       "Delizia": "Avertissement : l'adresse n'est pas une adresse de paiement, elle n'est pas éligible aux récompenses.",
       "Eckhart": "Avertissement : l'adresse n'est pas une adresse de paiement, elle n'est pas éligible aux récompenses."
     },
@@ -613,7 +613,7 @@
     "cardano__script_invalid_before": "Non valide avant",
     "cardano__script_invalid_hereafter": {
       "Bolt": "Non valide après",
-      "Caesar": "Non valide par la suite",
+      "Caesar": "Non valide après",
       "Delizia": "Non valide par la suite",
       "Eckhart": "Non valide par la suite"
     },
@@ -691,7 +691,7 @@
     "entropy__send": "Voulez-vous vraiment envoyer l'entropie ?",
     "entropy__title_confirm": {
       "Bolt": "Conf. entropie",
-      "Caesar": "Confirmer l'entropie",
+      "Caesar": "Conf. entropie",
       "Delizia": "Confirmer l'entropie",
       "Eckhart": "Confirmer l'entropie"
     },
@@ -931,20 +931,20 @@
     },
     "ethereum__amount_sent": {
       "Bolt": "Montant envoyé:",
-      "Caesar": "Montant envoyé :",
+      "Caesar": "Montant envoyé:",
       "Delizia": "Montant envoyé :",
       "Eckhart": "Montant envoyé :"
     },
     "ethereum__approve": "Approuver",
     "ethereum__approve_amount_allowance": {
       "Bolt": "Montant autorisé",
-      "Caesar": "Allocation du montant",
+      "Caesar": "Montant autorisé",
       "Delizia": "Allocation du montant",
       "Eckhart": "Allocation du montant"
     },
     "ethereum__approve_chain_id": {
       "Bolt": "Chaîne ID",
-      "Caesar": "ID de chaîneID",
+      "Caesar": "Chaîne ID",
       "Delizia": "ID de chaîne",
       "Eckhart": "ID de chaîne"
     },
@@ -994,7 +994,7 @@
     "ethereum__staking_stake_intro": "Mettre en staking des ETH sur Everstake ?",
     "ethereum__staking_unstake": {
       "Bolt": "Unstake",
-      "Caesar": "Retirer du staking",
+      "Caesar": "Unstake",
       "Delizia": "Retirer du staking",
       "Eckhart": "Retirer du staking"
     },
@@ -1006,7 +1006,7 @@
     "ethereum__title_confirm_struct": "Confirmer le struct",
     "ethereum__title_confirm_typed_data": {
       "Bolt": "Confirmer les données structurées",
-      "Caesar": "Confirmer les données structurées",
+      "Caesar": "Conf. données",
       "Delizia": "Confirmer les données structurées",
       "Eckhart": "Conf. données"
     },
@@ -1785,7 +1785,7 @@
     },
     "recovery__num_of_words": {
       "Bolt": "Définir le nb de mots de la sauveg.",
-      "Caesar": "Sélectionnez le nombre de mots de votre sauvegarde.",
+      "Caesar": "Définir le nb de mots de la sauveg.",
       "Delizia": "Sélectionnez le nombre de mots de votre sauvegarde.",
       "Eckhart": "Sélectionnez le nombre de mots de votre sauvegarde."
     },
@@ -1812,7 +1812,7 @@
     "recovery__title_cancel_recovery": "Annuler la récupération",
     "recovery__title_dry_run": {
       "Bolt": "Vérif. sauvegarde",
-      "Caesar": "Vérification de la sauvegarde",
+      "Caesar": "Vérif. sauvegarde",
       "Delizia": "Vérification de la sauvegarde",
       "Eckhart": "Vérification de la sauvegarde"
     },
@@ -1868,20 +1868,20 @@
     "reset__check_backup_title": "Vérifier la sauvegarde",
     "reset__check_group_share_title_template": {
       "Bolt": "Verif. g{0} - f{1}",
-      "Caesar": "Vérifier g{0} - fragment {1}",
+      "Caesar": "Verif. g{0} - f{1}",
       "Delizia": "Vérifier g{0} - fragm. {1}",
       "Eckhart": "Vérifier g{0} - fragment {1}"
     },
     "reset__check_share_backup_template": "Vérifions rapidement le Fragment #{0}.",
     "reset__check_share_title_template": {
       "Bolt": "Vérifier fragm. #{0}",
-      "Caesar": "Vérifier le fragment #{0}",
+      "Caesar": "Vérifier fragm. #{0}",
       "Delizia": "Vérifier le fragm. #{0}",
       "Eckhart": "Vérifier le fragment #{0}"
     },
     "reset__check_wallet_backup_title": {
       "Bolt": "Vérifiez la sauveg.",
-      "Caesar": "Vérifier la sauvegarde du portefeuille",
+      "Caesar": "Vérifiez la sauveg.",
       "Delizia": "Vérifiez la sauveg.",
       "Eckhart": "Vérifier la sauvegarde du portefeuille"
     },
