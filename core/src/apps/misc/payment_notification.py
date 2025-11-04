@@ -24,7 +24,7 @@ async def payment_notification(msg: PaymentNotification) -> Success:
         raise DataError("Payment request amount must be missing")
 
     slip21_keychain = await get_keychain("", [], [[b"SLIP-0024"]])
-    PaymentRequestVerifier(msg.payment_req, 0, slip21_keychain).verify()
+    PaymentRequestVerifier(msg.payment_req, None, slip21_keychain).verify()
 
     verified_payment_request = msg.payment_req
 
