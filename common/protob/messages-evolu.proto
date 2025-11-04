@@ -1,14 +1,13 @@
-
 syntax = "proto2";
 package hw.trezor.messages.evolu;
-
-import "options.proto";
-
-option (include_in_bitcoin_only) = true;
 
 // Sugar for easier handling in Java
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageEvolu";
+
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
 
 /**
  * Request: Ask the device for the SLIP-21 node for Evolu, a local first storage
@@ -17,6 +16,7 @@ option java_outer_classname = "TrezorMessageEvolu";
  * @next EvoluNode
  */
 message EvoluGetNode {
+  required bytes proof_of_delegated_identity = 1;
 }
 
 /**
@@ -25,4 +25,45 @@ message EvoluGetNode {
  */
 message EvoluNode {
     required bytes data = 1;
+}
+
+/**
+ * Request: Request the device to sign a registration request for Evolu.
+ * @start
+ * @next EvoluRegistrationRequest
+ * @next Failure
+ */
+message EvoluSignRegistrationRequest {
+    required bytes challenge_from_server = 1;  // replay attack protection
+    required uint32 size_to_acquire = 2;       // number of bytes to acquire
+    required bytes proof_of_delegated_identity = 3;
+}
+
+/**
+ * Response: The signature of the registration request with the Optiga's
+ * certificate chain.
+ * @end
+ */
+message EvoluRegistrationRequest {
+    repeated bytes certificate_chain = 1;
+    required bytes signature = 2;
+}
+
+/**
+ * Request: Request the delegated identity key from the device.
+ * @start
+ * @next EvoluDelegatedIdentityKey
+ * @next Failure
+ */
+message EvoluGetDelegatedIdentityKey {
+    optional bytes thp_credential = 1; // THP credential so that we can display the host on the device
+    optional bytes host_static_public_key = 2; // Host static public key for THP so that we can validate the credentials
+}
+
+/**
+ * Response: The delegated identity key for Evolu.
+ * @end
+ */
+message EvoluDelegatedIdentityKey {
+  required bytes private_key = 1;  // nist256p1 private key
 }

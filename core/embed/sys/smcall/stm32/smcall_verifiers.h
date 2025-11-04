@@ -72,6 +72,14 @@ bool __wur optiga_read_sec__verified(uint8_t *sec);
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
+
+#include <sec/secret_keys.h>
+
+secbool secret_key_delegated_identity__verified(
+    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
+// ---------------------------------------------------------------------
+
 #include <sec/storage.h>
 
 void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback);
@@ -155,4 +163,5 @@ secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
                                               const uint8_t *mac,
                                               size_t mac_len);
 #endif
+
 #endif  // SECMON

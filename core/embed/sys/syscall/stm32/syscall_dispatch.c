@@ -28,6 +28,7 @@
 #include <io/usb.h>
 #include <sec/rng.h>
 #include <sec/secret.h>
+#include <sec/secret_keys.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/notify.h>
@@ -438,7 +439,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       optiga_set_sec_max();
     } break;
 #endif
-#endif
+#endif  // USE_OPTIGA
+
+    case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
+      uint8_t *dest = (uint8_t *)args[0];
+      args[0] = secret_key_delegated_identity__verified(dest);
+    } break;
 
     case SYSCALL_STORAGE_SETUP: {
       PIN_UI_WAIT_CALLBACK callback = (PIN_UI_WAIT_CALLBACK)args[0];

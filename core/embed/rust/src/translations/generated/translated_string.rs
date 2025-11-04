@@ -1557,6 +1557,9 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ripple__destination_tag_missing = 1168,  // "Destination tag is not set. Typically needed when sending to exchanges."
     words__comm_trouble = 1169,  // "Your Trezor is having trouble communicating with your connected device."
+    secure_sync__delegated_identity_key_no_thp = 1170,  // "Allow Trezor Suite to use Suite Sync with this Trezor?"
+    secure_sync__delegated_identity_key_thp = 1171,  // "Allow {0} on {1} to use Suite Sync with this Trezor?"
+    secure_sync__header = 1173,  // "Suite Sync"
 }
 
 impl TranslatedString {
@@ -4987,6 +4990,9 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ripple__destination_tag_missing, "Destination tag is not set. Typically needed when sending to exchanges."),
             (Self::words__comm_trouble, "Your Trezor is having trouble communicating with your connected device."),
+            (Self::secure_sync__delegated_identity_key_no_thp, "Allow Trezor Suite to use Suite Sync with this Trezor?"),
+            (Self::secure_sync__delegated_identity_key_thp, "Allow {0} on {1} to use Suite Sync with this Trezor?"),
+            (Self::secure_sync__header, "Suite Sync"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -6110,6 +6116,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_sd_card__use_different_card, Self::sd_card__use_different_card),
         (Qstr::MP_QSTR_sd_card__wanna_format, Self::sd_card__wanna_format),
         (Qstr::MP_QSTR_sd_card__wrong_sd_card, Self::sd_card__wrong_sd_card),
+        (Qstr::MP_QSTR_secure_sync__delegated_identity_key_no_thp, Self::secure_sync__delegated_identity_key_no_thp),
+        (Qstr::MP_QSTR_secure_sync__delegated_identity_key_thp, Self::secure_sync__delegated_identity_key_thp),
+        (Qstr::MP_QSTR_secure_sync__header, Self::secure_sync__header),
         (Qstr::MP_QSTR_send__cancel_sign, Self::send__cancel_sign),
         (Qstr::MP_QSTR_send__cancel_transaction, Self::send__cancel_transaction),
         (Qstr::MP_QSTR_send__confirm_sending, Self::send__confirm_sending),

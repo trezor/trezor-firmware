@@ -16,14 +16,14 @@
 
 from __future__ import annotations
 
-import typing as t
+from typing import TYPE_CHECKING, Optional
 
 import click
 
-from .. import evolu, messages
+from .. import evolu
 from . import with_session
 
-if t.TYPE_CHECKING:
+if TYPE_CHECKING:
     from ..transport.session import Session
 
 
@@ -33,15 +33,62 @@ def cli() -> None:
 
 
 @cli.command()
+@click.argument("proof", type=str)
 @with_session
 def get_node(
-    session: "Session",
-) -> dict[str, str]:
+    session: Session,
+    proof: str,
+) -> str:
     """Return the SLIP-21 node for Evolu."""
+    proof_bytes = bytes.fromhex(proof)
+    return evolu.get_node(session, proof=proof_bytes).hex()
 
-    node: messages.EvoluNode = evolu.get_evolu_node(
-        session,
+
+@cli.command()
+@click.argument("proof", type=str)
+@click.argument("challenge", type=str)
+@click.option("--size", "-s", type=int, default=1048576)  # 1 MB
+@with_session
+def sign_registration_request(
+    session: Session,
+    proof: str,
+    challenge: str,
+    size: int,
+) -> dict[str, str]:
+    """Sign a registration request for this device to be registred at the Quota Manager server."""
+
+    response = evolu.sign_registration_request(
+        session=session,
+        challenge=bytes.fromhex(challenge),
+        size=size,
+        proof=bytes.fromhex(proof),
     )
     return {
-        "data": node.data.hex(),
+        "certificates": ",".join([cert.hex() for cert in response.certificate_chain]),
+        "signature": response.signature.hex(),
     }
+
+
+@click.option("--credential", "-c", type=str)
+@click.option("--pubkey", "-p", type=str)
+@cli.command()
+@with_session
+def get_delegated_identity_key(
+    session: Session,
+    credential: Optional[str] = None,
+    pubkey: Optional[str] = None,
+) -> str:
+    """
+    Request the delegated identity key of this device.
+    This key is used to prove the identity of the device at the Quota Manager server and to prove
+    to Trezor that this host has been given trust by the user to manage the Suite Sync.
+    """
+
+    thp_credential = bytes.fromhex(credential) if credential else None
+    host_static_public_key = bytes.fromhex(pubkey) if pubkey else None
+
+    return evolu.get_delegated_identity_key(
+        session=session,
+        thp_credential=thp_credential,
+        host_static_public_key=host_static_public_key,
+    ).hex()

@@ -15,7 +15,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	SetBrightness DebugLinkOptigaSetSecMax \
 	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult \
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
-	BleUnpair PaymentNotification EvoluGetNode EvoluNode \
+	BleUnpair PaymentNotification Evolu \
 	GetSerialNumber SerialNumber
 
 ifeq ($(BITCOIN_ONLY), 1)

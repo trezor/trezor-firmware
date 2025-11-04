@@ -195,12 +195,23 @@ bool optiga_read_sec(uint8_t *sec) {
   return (bool)smcall_invoke1((uint32_t)sec, SMCALL_OPTIGA_READ_SEC);
 }
 
+#endif  // USE_OPTIGA
+
+// =============================================================================
+// secret_keys.h
+// =============================================================================
+
+#include <sec/secret_keys.h>
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  return (secbool)smcall_invoke1((uint32_t)dest,
+                                 SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
+}
+
 #if PYOPT == 0
 void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 
 #endif
-
-#endif  // USE_OPTIGA
 
 // =============================================================================
 // storage.h
