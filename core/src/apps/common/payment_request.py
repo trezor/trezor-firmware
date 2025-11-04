@@ -59,14 +59,34 @@ class PaymentRequestVerifier:
         if not _is_coin_swap(payment_request):
             raise DataError("Only COIN SWAP payment requests are supported.")
 
+    def get_expected_nonce(self) -> bytes | None:
+        from storage.cache_common import APP_COMMON_NONCE
+
+        return context.cache_get(APP_COMMON_NONCE)
+
+    def delete_nonce_cache(self) -> None:
+        from storage.cache_common import APP_COMMON_NONCE
+
+        context.cache_delete(APP_COMMON_NONCE)
+
     if __debug__:
 
         def _use_debug_key(self) -> None:
             # nist256p1 public key of m/0h for "all all ... all" seed.
+            # Corresponding private key: b"\x05\x62\x35\xb0\x47\x6f\x05\x7f\x27\x65\x21\x97\x24\xf7\xf1\x80\x7d\x58\x80\x2b\x55\x0e\xd5\xbf\x6f\x73\x05\x0a\xf5\x45\x63\x00"
+            # keeping it here for reference in case tests need to be updated!
             self.PUBLIC_KEY = b"\x03\xd9\xd9\x3f\x89\xc6\x96\x3b\x94\xbb\xd7\xa5\x11\x88\x28\xe4\x4c\x1c\x39\x59\x15\xac\xe8\x48\x88\x71\x7f\x56\x8c\xb0\x19\x74\xc3"
 
         def _use_debug_verification(self) -> None:
             self.verify_payment_request_is_supported = lambda payment_request: None
+
+        def _use_debug_nonce_verification(self) -> None:
+            self.get_expected_nonce = lambda: b"DEBUG NONCE"
+
+            def _del() -> None:
+                self.get_expected_nonce = lambda: None
+
+            self.delete_nonce_cache = _del
 
     def __init__(
         self,
@@ -77,7 +97,6 @@ class PaymentRequestVerifier:
             8, 32
         ] = 8,  # amount is normally 8 bytes, but for EVM assets it is 32 bytes
     ) -> None:
-        from storage.cache_common import APP_COMMON_NONCE
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
 
@@ -88,6 +107,11 @@ class PaymentRequestVerifier:
         if __debug__:
             self._use_debug_key()
             self._use_debug_verification()
+            if context.CURRENT_CONTEXT is None:
+                # in unit tests we don't have a context, so we replace
+                # the nonce verification with the debug version
+                # otherwise (device tests, etc) we should use the proper nonce verification
+                self._use_debug_nonce_verification()
 
         payment_request = _sanitize_payment_request(payment_request)
         self.verify_payment_request_is_supported(payment_request)
@@ -107,13 +131,13 @@ class PaymentRequestVerifier:
 
         if payment_request.nonce:
             nonce = bytes(payment_request.nonce)
-            if context.cache_get(APP_COMMON_NONCE) != nonce:
+            if self.get_expected_nonce() != nonce:
                 raise DataError("Invalid nonce in payment request.")
-            context.cache_delete(APP_COMMON_NONCE)
+            self.delete_nonce_cache()
         else:
             nonce = b""
             if payment_request.memos:
-                DataError("Missing nonce in payment request.")
+                raise DataError("Missing nonce in payment request.")
 
         writers.write_bytes_fixed(self.h_pr, b"SL\x00\x24", 4)
         writers.write_bytes_prefixed(self.h_pr, nonce)
@@ -151,7 +175,7 @@ class PaymentRequestVerifier:
                 writers.write_bytes_prefixed(self.h_pr, memo.title.encode())
                 writers.write_bytes_prefixed(self.h_pr, memo.text.encode())
             else:
-                DataError("Unrecognized memo type in payment request.")
+                raise DataError("Unrecognized memo type in payment request.")
 
         writers.write_uint32_le(self.h_pr, slip44_id)
 

@@ -45,6 +45,21 @@ def patch_prod(func: Callable[P, None]) -> Callable[P, None]:
     return wrapper
 
 
+# Decorator that replaces DEBUG version of nonce verification
+# by the PROD version (which use wire context)
+def patch_prod_nonce(func: Callable[P, None]) -> Callable[P, None]:
+
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> bytes:
+        with patch(
+            PaymentRequestVerifier,
+            "_use_debug_nonce_verification",
+            lambda self: None,
+        ):
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
 # Get keychain for SLIP-24
 def _get_test_keychain() -> Keychain:
     coin = coins.by_name("Bitcoin")
@@ -69,6 +84,14 @@ def _get_request_without_memos() -> PaymentRequest:
     )
 
 
+def _get_request_with_unknown_memo() -> PaymentRequest:
+    return PaymentRequest(
+        recipient_name="TEST Recipient",
+        signature=b"",
+        memos=[PaymentRequestMemo()],
+    )
+
+
 def _get_request_with_text_memo() -> PaymentRequest:
     text_memo = TextMemo(text="text memo text")
 
@@ -90,17 +113,18 @@ def _get_request_with_coin_purchase_memo() -> PaymentRequest:
     )
 
 
-def _get_sell_payment_request() -> PaymentRequest:
+def _get_sell_payment_request(include_nonce=b"DEBUG NONCE") -> PaymentRequest:
     text_memo = TextMemo(text="text memo text")
     mac = "a7594205d318491c7335d460acfebadc3c862b803abfd5a0fcf7ea6082bff1dc"
     refund_memo = RefundMemo(address="ADDRESS", mac=unhexlify(mac))
     debug_signature = (
-        "20b638bff2341f526ee99faa7afb28f72c54c535db69b25451ce7471dd8866fd1"
-        "8644a89effcc7dfb07a281bd5c516045180341c813536563ff50725f4221df5f8"
+        "20a71af90876caf75f987c432d7769311e04e0cf23afb31279acdf5563a0154a2"
+        "372a44d16c605b0710e9c7c93a0e9a382d946d99c43490edfcdf366bdbca5305c"
     )
     return PaymentRequest(
         recipient_name="TEST Recipient",
         signature=unhexlify(debug_signature),
+        nonce=include_nonce,
         memos=[
             PaymentRequestMemo(text_memo=text_memo),
             PaymentRequestMemo(refund_memo=refund_memo),
@@ -108,12 +132,12 @@ def _get_sell_payment_request() -> PaymentRequest:
     )
 
 
-def _get_coin_swap_request() -> PaymentRequest:
+def _get_coin_swap_request(include_nonce=b"DEBUG NONCE") -> PaymentRequest:
     mac = "08f2e807b9932596dd15831958cb1172ae5bb3c8bc8c6476b089bc045ca4d8b8"
     mac2 = "1394db3333b67a73b9abb6f5c9afe37c2a5f8fb92aa17baf9c696ec85d2523c1"
     debug_signature = (
-        "20a5500e61eafdfbb83643f5b2c139757f760e32a7416b92a1b07a4f1a6c307a4"
-        "149fbda45fdb98e051f3b839e63eb67bb167f32a85f8c6864a60785e304b703b1"
+        "20fbd1cb462cedc87de4d42206745fd41cd6618c5d7d24e10d3fd504ae5312658"
+        "e4c26c0ee3666380476deff2ac3d1899e86a298d98e249302207ffd14e70a3030"
     )
     coin_purchase_memo = CoinPurchaseMemo(
         coin_type=0, amount="AMOUNT", address="ADDRESS", mac=unhexlify(mac)
@@ -122,6 +146,7 @@ def _get_coin_swap_request() -> PaymentRequest:
     return PaymentRequest(
         recipient_name="TEST Recipient",
         signature=unhexlify(debug_signature),
+        nonce=include_nonce,
         memos=[
             PaymentRequestMemo(coin_purchase_memo=coin_purchase_memo),
             PaymentRequestMemo(refund_memo=refund_memo),
@@ -199,6 +224,40 @@ class TestPaymentRequestVerfier(unittest.TestCase):
             verifier.verify()
         self.assertEqual(e.value.message, "Invalid signature in payment request.")
 
+    @patch_prod_nonce
+    def test_payment_requests_without_nonce_in_prod(self):
+        with self.assertRaises(wire.DataError) as e:
+            PaymentRequestVerifier(
+                payment_request=_get_coin_swap_request(include_nonce=None),
+                slip44_id=1,
+                keychain=_get_test_keychain(),
+                amount_size_bytes=12345,
+            )
+        self.assertEqual(e.value.message, "Missing nonce in payment request.")
+
+    @patch_prod_nonce
+    def test_payment_requests_with_nonce_in_prod(self):
+        with self.assertRaises(wire.context.NoWireContext):
+            PaymentRequestVerifier(
+                payment_request=_get_coin_swap_request(),
+                slip44_id=1,
+                keychain=_get_test_keychain(),
+                amount_size_bytes=12345,
+            )
+
+    def test_payment_requests_unknown_memo(self):
+        with self.assertRaises(wire.DataError) as e:
+            PaymentRequestVerifier(
+                payment_request=_get_request_with_unknown_memo(),
+                slip44_id=1,
+                keychain=_get_test_keychain(),
+                amount_size_bytes=12345,
+            )
+        self.assertEqual(
+            e.value.message,
+            "Exactly one memo type must be specified in each PaymentRequestMemo.",
+        )
+
     def test_payment_requests_supported_in_debug_without_memos(self):
 
         verifier = PaymentRequestVerifier(
@@ -233,6 +292,36 @@ class TestPaymentRequestVerfier(unittest.TestCase):
         )
 
         # Verify signature
+        verifier.verify()
+
+    def test_payment_requests_without_nonce_in_debug(self):
+        with self.assertRaises(wire.DataError) as e:
+            PaymentRequestVerifier(
+                payment_request=_get_coin_swap_request(include_nonce=None),
+                slip44_id=1,
+                keychain=_get_test_keychain(),
+                amount_size_bytes=12345,
+            )
+        self.assertEqual(e.value.message, "Missing nonce in payment request.")
+
+    def test_payment_requests_with_wrong_nonce_in_debug(self):
+        with self.assertRaises(wire.DataError) as e:
+            PaymentRequestVerifier(
+                payment_request=_get_coin_swap_request(include_nonce=b"ANOTHER NONCE"),
+                slip44_id=1,
+                keychain=_get_test_keychain(),
+                amount_size_bytes=12345,
+            )
+        self.assertEqual(e.value.message, "Invalid nonce in payment request.")
+
+    def test_payment_requests_with_debug_nonce_in_debug(self):
+        verifier = PaymentRequestVerifier(
+            payment_request=_get_coin_swap_request(),
+            slip44_id=1,
+            keychain=_get_test_keychain(),
+            amount_size_bytes=12345,
+        )
+
         verifier.verify()
 
 
