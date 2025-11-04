@@ -1576,12 +1576,7 @@
     "recovery__wanna_cancel_dry_run": "¿Quieres cancelar la revisión de la copia de seguridad?",
     "recovery__wanna_cancel_recovery": "¿Quieres cancelar el proceso de recuperación?",
     "recovery__word_count_template": "({0} palabras)",
-    "recovery__word_x_of_y_template": {
-      "Bolt": "Palabra {0} de {1}",
-      "Caesar": "Palabra {0} de {1}",
-      "Delizia": "Palabra {0} de {1}",
-      "Eckhart": "Palabra {0} de {1}"
-    },
+    "recovery__word_x_of_y_template": "Palabra {0} de {1}",
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} {plural} más iniciando",
       "Caesar": "{count} {plural} más iniciando",
@@ -1598,8 +1593,18 @@
     "recovery__you_have_entered": "Has introducido",
     "regulatory__title": "Regulación",
     "reset__advanced_group_threshold_info": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera.",
-    "reset__all_x_of_y_template": "{0} de {1} fragmentos",
-    "reset__any_x_of_y_template": "{0} de {1} fragmentos",
+    "reset__all_x_of_y_template": {
+      "Bolt": "{0} de {1} fragmentos",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__any_x_of_y_template": {
+      "Bolt": "{0} de {1} fragmentos",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__button_create": "Crear billet.",
     "reset__button_recover": "Recup. billet.",
     "reset__by_continuing": "Al continuar aceptas los términos de Trezor Company.",
@@ -1633,23 +1638,48 @@
     "reset__incorrect_word_selected": "Palabra incorrecta seleccionada",
     "reset__more_at": "Más en",
     "reset__more_info_at": "Más información en",
-    "reset__need_all_share_template": "Para la recup. necesitas todos los {0} fragm.",
-    "reset__need_any_share_template": "Para la recup. necesitas {0} fragm. cualquiera.",
-    "reset__needed_to_form_a_group": "neces. para formar un grupo. ",
-    "reset__needed_to_recover_your_wallet": "neces. para recuperar tu billetera. ",
+    "reset__need_all_share_template": {
+      "Bolt": "Para la recup. necesitas todos los {0} fragm.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__need_any_share_template": {
+      "Bolt": "Para la recup. necesitas {0} fragm. cualquiera.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_form_a_group": {
+      "Bolt": "neces. para formar un grupo. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_recover_your_wallet": {
+      "Bolt": "neces. para recuperar tu billetera. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__never_make_digital_copy": "Nunca guardes tu c. seg. de forma digital.",
     "reset__num_of_share_holders_template": "{0} personas o ubicaciones tendrán un fragmento cada una.",
     "reset__num_of_shares_advanced_info_template": "Cada fragmento de recuperación es una lista de {0} palabras. Elige el umbral necesario para formar el Grupo {1}.",
-    "reset__num_of_shares_basic_info_template": "Cada fragmento de recuperación es una lista de {0} palabras. Elige cuántos fragmento necesitarás para recuperar la billetera.",
+    "reset__num_of_shares_basic_info_template": {
+      "Bolt": "Cada fragmento de recuperación es una lista de {0} palabras. Elige cuántos fragmento necesitarás para recuperar la billetera.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__num_of_shares_how_many": "¿Cuántos fragmentos de la c. seg quieres crear?",
     "reset__num_of_shares_long_info_template": "Cada fragmento de la c. seg. es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera.",
     "reset__num_shares_for_group_template": "Nro.necesario de fragmentos para formar el grupo {0}.",
     "reset__number_of_shares_info": "= total de listas de palabras únicas usadas para la c. seg.",
     "reset__one_share": {
       "Bolt": "1 fragmento",
-      "Caesar": "1 recurso compartido",
-      "Delizia": "1 fragmento",
-      "Eckhart": "1 fragmento"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__only_one_share_will_be_created": "Solo se creará un fragmento.",
     "reset__recovery_share_description": "Un fragmento de recuperación es la lista de palabras que anotaste al configurar tu Trezor.",
@@ -1673,7 +1703,12 @@
       "Eckhart": "Selecciona la palabra #{0} de la c. seg. de tu billetera."
     },
     "reset__select_word_x_of_y_template": "Palabra {0} de {1}:",
-    "reset__set_it_to_count_template": "Ajústalo en {0} y necesitarás ",
+    "reset__set_it_to_count_template": {
+      "Bolt": "Ajústalo en {0} y necesitarás ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__share_checked_successfully_template": "Fragmento #{0} verificado con éxito.",
     "reset__share_completed_template": {
       "Bolt": "Se ha completado el recurso #{0}",
@@ -1718,7 +1753,12 @@
     "reset__slip39_checklist_title": "Lista c. seg.",
     "reset__slip39_checklist_write_down": "Escribe y verifica todos los fragmentos",
     "reset__slip39_checklist_write_down_recovery": "Escribe y verifica los fragmentos de respaldo",
-    "reset__the_threshold_sets_the_number_of_shares": "El umbral define el núm. de fragmentos. ",
+    "reset__the_threshold_sets_the_number_of_shares": {
+      "Bolt": "El umbral define el núm. de fragmentos. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__the_word_is_repeated": "La palabra se repite",
     "reset__threshold_info": "= mínimo de listas de palabras únicas para la recuperación.",
     "reset__title_backup_is_done": "C. seg. completa",
@@ -1731,7 +1771,12 @@
     "reset__title_set_number_of_shares": "Definir núm. fragmentos",
     "reset__title_set_threshold": "Ajustar umbral",
     "reset__title_shamir_backup": "Respaldo con múltiples fragmentos",
-    "reset__to_form_group_template": "para formar el Grupo {0}.",
+    "reset__to_form_group_template": {
+      "Bolt": "para formar el Grupo {0}.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__tos_link": {
       "Bolt": "trezor.io/tos",
       "Caesar": "trezor.io/tos",
@@ -1749,7 +1794,12 @@
       "Eckhart": "Escribe en orden estas {0} palabras en la tarjeta de respaldo."
     },
     "reset__wrong_word_selected": "¡Palabra incorrecta seleccionada!",
-    "reset__you_need_one_share": "Para la recup. necesitas 1 fragm.",
+    "reset__you_need_one_share": {
+      "Bolt": "Para la recup. necesitas 1 fragm.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__your_backup_is_done": "C. seg. completa.",
     "ripple__confirm_tag": "Confirmar etiqueta",
     "ripple__destination_tag_missing": "",

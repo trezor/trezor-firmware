@@ -1993,12 +1993,17 @@
     "recovery__you_have_entered": "Du hast eingegeben",
     "regulatory__title": "Regulierung",
     "reset__advanced_group_threshold_info": "Die Gruppenschwelle zeigt die nötige Anzahl der Gruppen zur Wallet-Wiederherstell.",
-    "reset__all_x_of_y_template": "alle {0} der {1} Shares",
+    "reset__all_x_of_y_template": {
+      "Bolt": "alle {0} der {1} Shares",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__any_x_of_y_template": {
       "Bolt": "{0} der {1} Shares",
-      "Caesar": "{0} der {1} Shares",
-      "Delizia": "{0} der {1} Shares",
-      "Eckhart": "beliebige {0} der {1} Shares"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__button_create": {
       "Bolt": "Wallet erstellen",
@@ -2105,22 +2110,27 @@
     },
     "reset__need_all_share_template": {
       "Bolt": "Alle {0} Shares zur Wiederherstellung nötig",
-      "Caesar": "Alle {0} Shares zur Wiederherstellung nötig",
-      "Delizia": "Alle {0} Shares zur Wiederherstellung nötig",
-      "Eckhart": "Zur Wiederherstellung sind alle {0} Shares nötig."
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__need_any_share_template": {
       "Bolt": "Du benötigst {0} Shares zur Wiederherstellung.",
-      "Caesar": "Du benötigst {0} Shares zur Wiederherstellung.",
-      "Delizia": "Du benötigst {0} Shares zur Wiederherstellung.",
-      "Eckhart": "Zur Wiederherstellung benötigst du jede der {0} Shares."
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "reset__needed_to_form_a_group": "erforderlich, um Gruppe zu bilden. ",
+    "reset__needed_to_form_a_group": {
+      "Bolt": "erforderlich, um Gruppe zu bilden. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__needed_to_recover_your_wallet": {
       "Bolt": "zur Wallet Wiederh. nötig. ",
-      "Caesar": "zur Wallet Wiederh. nötig. ",
-      "Delizia": "zur Wallet Wiederh. nötig. ",
-      "Eckhart": "benötigt, um deine Wallet wiederherzustellen. "
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__never_make_digital_copy": {
       "Bolt": "Erstelle niemals eine digitale Kopie deines Backups oder lade es online hoch.",
@@ -2137,9 +2147,9 @@
     },
     "reset__num_of_shares_basic_info_template": {
       "Bolt": "Jeder Recovery Share besteht aus {0} Wörtern. Wähle, wie viele Shares du zur Wallet-Wiederherstell. benötigst.",
-      "Caesar": "Jeder Recovery Share besteht aus {0} Wörtern. Wähle, wie viele Shares du zur Wallet-Wiederherstell. benötigst.",
-      "Delizia": "Jeder Recovery Share besteht aus {0} Wörtern. Wähle, wie viele Shares du zur Wallet-Wiederherstell. benötigst.",
-      "Eckhart": "Jeder Recovery Share ist eine Sequenz aus {0} Wörtern. Als Nächstes wählst du aus, wie viele Shares du benötigst, um dein Wallet wiederherzustellen."
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__num_of_shares_how_many": "Wie viele Wallet-Backup-Shares möchtest du erstellen?",
     "reset__num_of_shares_long_info_template": "Jeder Recovery Share besteht aus {0} Wörtern. Speichere jede Wortliste an einem anderen, sicheren Ort oder teile sie mit vertrauenswürdigen Personen. Nutze sie je nach Bedarf, um dein Wallet wiederherzustellen.",
@@ -2150,7 +2160,12 @@
       "Delizia": "= Gesamtzahl eindeutiger Wortlisten für Wallet-Backup.",
       "Eckhart": "= Gesamtzahl einzigartiger Wortlisten für Wallet-Backup."
     },
-    "reset__one_share": "1 Share",
+    "reset__one_share": {
+      "Bolt": "1 Share",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__only_one_share_will_be_created": "Es wird nur ein Share erstellt.",
     "reset__recovery_share_description": {
       "Bolt": "Die Recovery-Share ist eine Wortliste, die du beim Einrichten deines Trezors aufgeschrieben hast.",
@@ -2195,9 +2210,9 @@
     },
     "reset__set_it_to_count_template": {
       "Bolt": "Bei {0} benötigst du ",
-      "Caesar": "Bei {0} benötigst du ",
-      "Delizia": "Bei {0} benötigst du ",
-      "Eckhart": "Stelle es auf {0} und du benötigst "
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__share_checked_successfully_template": "Share #{0} erfolgreich geprüft.",
     "reset__share_completed_template": "Share #{0} abgeschlossen",
@@ -2260,9 +2275,9 @@
     },
     "reset__the_threshold_sets_the_number_of_shares": {
       "Bolt": "Die Schwelle bestimmt die Anzahl der Shares ",
-      "Caesar": "Die Schwelle bestimmt die Anzahl der Shares ",
-      "Delizia": "Die Schwelle bestimmt die Anzahl der Shares ",
-      "Eckhart": "Der Schwellenwert bestimmt die Anzahl der Shares "
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__the_word_is_repeated": {
       "Bolt": "Das Wort wiederholt sich",
@@ -2313,9 +2328,9 @@
     "reset__title_shamir_backup": "Multi-Share-Backup",
     "reset__to_form_group_template": {
       "Bolt": "zur Bildung von Gruppe {0}.",
-      "Caesar": "zur Bildung von Gruppe {0}.",
-      "Delizia": "zur Bildung von Gruppe {0}.",
-      "Eckhart": "bilden der Gruppe {0}."
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__tos_link": {
       "Bolt": "trezor.io/tos",
@@ -2354,7 +2369,12 @@
       "Delizia": "Ausgewähltes Wort ist falsch!",
       "Eckhart": "Falsches Wort ist ausgewählt!"
     },
-    "reset__you_need_one_share": "Du benötigst 1 Share zur Wiederherstellung.",
+    "reset__you_need_one_share": {
+      "Bolt": "Du benötigst 1 Share zur Wiederherstellung.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__your_backup_is_done": {
       "Bolt": "Backup abgeschlossen.",
       "Caesar": "Backup abgeschlossen.",
