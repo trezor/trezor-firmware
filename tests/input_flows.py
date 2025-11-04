@@ -1209,7 +1209,7 @@ class InputFlowSignTxInformation(InputFlowBase):
         assert TR.translate(title_path) in content
         assert "Legacy #6" in content
         assert TR.confirm_total__fee_rate in content
-        assert "71.56 sat" in content
+        assert "71.56 sat" in content
 
     def input_flow_bolt(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_bolt(self.client)
@@ -1242,7 +1242,7 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         assert TR.translate(title_path) in content
         assert TR.bitcoin__multiple_accounts in content
         assert TR.confirm_total__fee_rate in content
-        assert "18.33 sat" in content
+        assert "18.33 sat" in content
 
     def input_flow_bolt(self) -> BRGeneratorType:
         # multiple accounts warning

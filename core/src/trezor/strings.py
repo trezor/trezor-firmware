@@ -23,9 +23,9 @@ def format_amount(amount: int, decimals: int) -> str:
 
 def format_amount_unit(amount: str, unit: str) -> str:
     """
-    Formats an amount and a unit with a non-breakable space '\u00a0' between them, e.g. "1.23 BTC".
+    Formats an amount and a unit.
     """
-    return f"{amount} {unit}"
+    return f"{amount} {unit}"
 
 
 def format_ordinal(number: int) -> str:

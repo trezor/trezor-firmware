@@ -122,19 +122,19 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
         assert TR.send__total_amount in layout.text_content()
-        assert "0.0039 BTC" in layout.text_content()
+        assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
         debug.swipe_up()
         layout = debug.read_layout()
         assert TR.send__total_amount in layout.text_content()
-        assert "0.0039 BTC" in layout.text_content()
+        assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
         debug.press_right()
         layout = debug.read_layout()
         assert TR.send__total_amount in layout.text_content()
-        assert "0.0039 BTC" in layout.text_content()
+        assert "0.0039 BTC" in layout.text_content()
     else:
         raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
@@ -184,20 +184,20 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
         assert TR.send__total_amount in layout.text_content()
-        assert "0.0039 BTC" in layout.text_content()
+        assert "0.0039 BTC" in layout.text_content()
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
         debug.swipe_up()
         layout = debug.read_layout()
         assert TR.send__total_amount in layout.text_content()
-        assert "0.0039 BTC" in layout.text_content()
+        assert "0.0039 BTC" in layout.text_content()
         debug.swipe_up()
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
         debug.press_right()
         layout = debug.read_layout()
         assert TR.send__total_amount in layout.text_content()
-        assert "0.0039 BTC" in layout.text_content()
+        assert "0.0039 BTC" in layout.text_content()
     else:
         raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
