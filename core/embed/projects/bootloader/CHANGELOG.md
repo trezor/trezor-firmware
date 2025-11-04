@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.15 [19th November 2025]
+
+### Fixed
+- [T3W1] Erase BLE bonds too after entering wipe code.  [#5939]
+- [T3W1] Respect BLE on/off settings in bootloader.  [#5952]
+- [T3W1] Fixed battery drain when waiting for unofficial firmware confirmation.  [#5993]
+- [T3W1] Adjust random part of BLE device name during pairing.  [#6019]
+- [T3W1] Restart bluetooth on reboot from device menu.  [#6023]
+
 ## 2.1.14 [21st October 2025]
 
 ### Changed
@@ -215,3 +224,8 @@ Internal only release for Model R prototypes.
 [#5345]: https://github.com/trezor/trezor-firmware/pull/5345
 [#5484]: https://github.com/trezor/trezor-firmware/pull/5484
 [#5857]: https://github.com/trezor/trezor-firmware/pull/5857
+[#5939]: https://github.com/trezor/trezor-firmware/pull/5939
+[#5952]: https://github.com/trezor/trezor-firmware/pull/5952
+[#5993]: https://github.com/trezor/trezor-firmware/pull/5993
+[#6019]: https://github.com/trezor/trezor-firmware/pull/6019
+[#6023]: https://github.com/trezor/trezor-firmware/pull/6023
