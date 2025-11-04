@@ -1353,6 +1353,26 @@ ReturnCode st25r3916ExecuteCommand( uint8_t cmd );
 
 /*! 
  *****************************************************************************
+ *  \brief  Execute direct commands
+ *
+ *  This function is used to start so-called direct command. These commands
+ *  are implemented inside the chip and each command has unique code (see
+ *  datasheet).
+ *
+ *  \warning Commands to be executed must support command chaining
+ *
+ *  \param[in]   cmds : code of the direct commands to be executed.
+ *  \param[in] length : number of direct command to be executed.
+ *
+ *  \return RFAL_ERR_NONE  : Operation successful
+ *  \return RFAL_ERR_PARAM : Invalid parameter
+ *  \return RFAL_ERR_SEND  : Transmission error or acknowledge not received
+ *****************************************************************************
+ */
+ReturnCode st25r3916ExecuteCommands( const uint8_t *cmds, uint8_t length );
+
+/*! 
+ *****************************************************************************
  *  \brief  Read a test register within the ST25R3916
  *
  *  This function is used to read the content of test address \a reg within the ST25R3916

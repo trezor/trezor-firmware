@@ -17,7 +17,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -340,8 +340,8 @@ ReturnCode rfalChipMeasurePowerSupply( uint8_t param, uint8_t* result );
  *
  * Measures I and Q channels
  *
- *  \param[out] resI : 8 bit long result of the I channel (signed)
- *  \param[out] resQ : 8 bit long result of the Q channel (signed)
+ * \param[out] resI : 8 bit long result of the I channel (signed)
+ * \param[out] resQ : 8 bit long result of the Q channel (signed)
  *
  * \return  RFAL_ERR_IO      : Internal error
  * \return  RFAL_ERR_NOTSUPP : Feature not supported
@@ -369,13 +369,61 @@ ReturnCode rfalChipMeasureCombinedIQ( uint8_t* result );
 
 /*! 
  *****************************************************************************
+ * \brief  Measure I channel
+ *
+ * Measures I channel
+ *
+ * \param[out] result : I channel
+ *
+ * \return  RFAL_ERR_IO      : Internal error
+ * \return  RFAL_ERR_NOTSUPP : Feature not supported
+ * \return  RFAL_ERR_NONE    : No error
+ *****************************************************************************
+ */
+ReturnCode rfalChipMeasureI( uint8_t* result );
+
+
+/*! 
+ *****************************************************************************
+ * \brief  Measure Q channel
+ *
+ * Measures Q channel
+ *
+ * \param[out] result : Q channel
+ *
+ * \return  RFAL_ERR_IO      : Internal error
+ * \return  RFAL_ERR_NOTSUPP : Feature not supported
+ * \return  RFAL_ERR_NONE    : No error
+ *****************************************************************************
+ */
+ReturnCode rfalChipMeasureQ( uint8_t* result );
+
+
+/*! 
+ *****************************************************************************
+ * \brief  Measure Current
+ *
+ * Measures the electrical current 
+ *
+ * \param[out] result : current 
+ *
+ * \return  RFAL_ERR_IO      : Internal error
+ * \return  RFAL_ERR_NOTSUPP : Feature not supported
+ * \return  RFAL_ERR_NONE    : No error
+ *****************************************************************************
+ */
+ReturnCode rfalChipMeasureCurrent( uint8_t* result );
+
+
+/*! 
+ *****************************************************************************
  * \brief  Set Antenna mode
  *
  * Sets the antenna mode. 
  * Differential or single ended antenna mode (RFO1 or RFO2)
  *
- *  \param[in]   single : FALSE differential ; single ended mode
- *  \param[in]    rfiox : FALSE   RFI1/RFO1  ; TRUE   RFI2/RFO2
+ * \param[in]   single : FALSE differential ; single ended mode
+ * \param[in]    rfiox : FALSE   RFI1/RFO1  ; TRUE   RFI2/RFO2
  *
  * \return  RFAL_ERR_IO      : Internal error
  * \return  RFAL_ERR_NOTSUPP : Feature not supported
