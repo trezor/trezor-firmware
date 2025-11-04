@@ -2176,10 +2176,10 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x02(\x0cR\rpeerPublicKey\x12(\n\x10ecdsa_curve_name\x18\x03\x20\x01\
     (\tR\x0eecdsaCurveName\"P\n\x0eECDHSessionKey\x12\x1f\n\x0bsession_key\
     \x18\x01\x20\x02(\x0cR\nsessionKey\x12\x1d\n\npublic_key\x18\x02\x20\x01\
-    (\x0cR\tpublicKey\"a\n\x13PaymentNotification\x12J\n\x0bpayment_req\x18\
+    (\x0cR\tpublicKey\"g\n\x13PaymentNotification\x12J\n\x0bpayment_req\x18\
     \x01\x20\x01(\x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentRe\
-    qB>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCrypto\x80\
-    \xa6\x1d\x01\
+    q:\x04\x88\xb2\x19\x01B>\n#com.satoshilabs.trezor.lib.protobufB\x13Trezo\
+    rMessageCrypto\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

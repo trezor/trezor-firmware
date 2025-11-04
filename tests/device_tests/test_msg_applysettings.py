@@ -446,9 +446,6 @@ def test_safety_checks(session: Session):
 
 
 @pytest.mark.models("core")
-@pytest.mark.xfail(
-    reason="GetNonce was removed from experimental features. Currently, there is no replacement."
-)
 def test_experimental_features(session: Session):
     client = session.client
 

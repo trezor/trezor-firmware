@@ -97,5 +97,7 @@ message ECDHSessionKey {
  * @next Success
  */
 message PaymentNotification {
+    option (experimental_message) = true;
+
     optional common.PaymentRequest payment_req = 1;  // SLIP-24 payment request
 }

@@ -1266,25 +1266,25 @@ impl ::protobuf::reflect::ProtobufValue for RippleSignedTx {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-ripple.proto\x12\x19hw.trezor.messages.ripple\x1a\x15mess\
-    ages-common.proto\"n\n\x10RippleGetAddress\x12\x1b\n\taddress_n\x18\x01\
-    \x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\
-    \x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\x08R\x08chunkify\
-    \";\n\rRippleAddress\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\
-    \x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xd1\x03\n\x0cRippleSign\
-    Tx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03fee\
-    \x18\x02\x20\x02(\x04R\x03fee\x12\x17\n\x05flags\x18\x03\x20\x01(\r:\x01\
-    0R\x05flags\x12\x1a\n\x08sequence\x18\x04\x20\x02(\rR\x08sequence\x120\n\
-    \x14last_ledger_sequence\x18\x05\x20\x01(\rR\x12lastLedgerSequence\x12O\
-    \n\x07payment\x18\x06\x20\x02(\x0b25.hw.trezor.messages.ripple.RippleSig\
-    nTx.RipplePaymentR\x07payment\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08\
-    R\x08chunkify\x12J\n\x0bpayment_req\x18\x08\x20\x01(\x0b2).hw.trezor.mes\
-    sages.common.PaymentRequestR\npaymentReq\x1ar\n\rRipplePayment\x12\x16\n\
-    \x06amount\x18\x01\x20\x02(\x04R\x06amount\x12\x20\n\x0bdestination\x18\
-    \x02\x20\x02(\tR\x0bdestination\x12'\n\x0fdestination_tag\x18\x03\x20\
-    \x01(\rR\x0edestinationTag\"S\n\x0eRippleSignedTx\x12\x1c\n\tsignature\
-    \x18\x01\x20\x02(\x0cR\tsignature\x12#\n\rserialized_tx\x18\x02\x20\x02(\
-    \x0cR\x0cserializedTxB:\n#com.satoshilabs.trezor.lib.protobufB\x13Trezor\
-    MessageRipple\
+    ages-common.proto\x1a\roptions.proto\"n\n\x10RippleGetAddress\x12\x1b\n\
+    \taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\
+    \x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\
+    \x08R\x08chunkify\";\n\rRippleAddress\x12\x18\n\x07address\x18\x01\x20\
+    \x02(\tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xd7\
+    \x03\n\x0cRippleSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addre\
+    ssN\x12\x10\n\x03fee\x18\x02\x20\x02(\x04R\x03fee\x12\x17\n\x05flags\x18\
+    \x03\x20\x01(\r:\x010R\x05flags\x12\x1a\n\x08sequence\x18\x04\x20\x02(\r\
+    R\x08sequence\x120\n\x14last_ledger_sequence\x18\x05\x20\x01(\rR\x12last\
+    LedgerSequence\x12O\n\x07payment\x18\x06\x20\x02(\x0b25.hw.trezor.messag\
+    es.ripple.RippleSignTx.RipplePaymentR\x07payment\x12\x1a\n\x08chunkify\
+    \x18\x07\x20\x01(\x08R\x08chunkify\x12P\n\x0bpayment_req\x18\x08\x20\x01\
+    (\x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentReqB\x04\xc8\
+    \xf0\x19\x01\x1ar\n\rRipplePayment\x12\x16\n\x06amount\x18\x01\x20\x02(\
+    \x04R\x06amount\x12\x20\n\x0bdestination\x18\x02\x20\x02(\tR\x0bdestinat\
+    ion\x12'\n\x0fdestination_tag\x18\x03\x20\x01(\rR\x0edestinationTag\"S\n\
+    \x0eRippleSignedTx\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
+    \x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\x0cserializedTxB:\n#com.sat\
+    oshilabs.trezor.lib.protobufB\x13TrezorMessageRipple\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1301,8 +1301,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
+            let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(super::messages_common::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(5);
             messages.push(RippleGetAddress::generated_message_descriptor_data());
             messages.push(RippleAddress::generated_message_descriptor_data());

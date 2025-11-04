@@ -578,6 +578,7 @@ def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict
     assert sig_v == result["sig_v"]
 
 
+@pytest.mark.experimental
 @pytest.mark.models("core")
 @pytest.mark.parametrize(
     "has_refund,has_text,has_multiple_purchases",
@@ -652,6 +653,7 @@ def test_signtx_payment_req(
     )
 
 
+@pytest.mark.experimental
 @pytest.mark.models("core")
 def test_signtx_payment_req_long_value(
     session: Session,
