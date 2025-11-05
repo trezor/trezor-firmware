@@ -403,4 +403,5 @@ pub const Font_RobotoMono_Light_30_info: FontInfo = FontInfo {
     baseline: 7,
     glyph_data: &Font_RobotoMono_Light_30,
     glyph_nonprintable: &Font_RobotoMono_Light_30_glyph_nonprintable,
+    kernings: None,
 };
