@@ -122,7 +122,7 @@ fn generate_qstr_bindings() {
         .size_t_is_usize(true)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files change.
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate Rust QSTR bindings")
         .write_to_file(&dest_file)
@@ -201,7 +201,7 @@ fn prepare_bindings() -> bindgen::Builder {
         .layout_tests(false)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files change.
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
 }
 
 #[cfg(feature = "micropython")]
@@ -506,8 +506,7 @@ fn generate_crypto_bindings() {
         .allowlist_type("ed25519_signature")
         .allowlist_type("ed25519_public_key")
         .allowlist_function("ed25519_cosi_combine_publickeys")
-        // incorrect signature from bindgen, see crypto::ed25519:ffi_override
-        //.allowlist_function("ed25519_sign_open")
+        .allowlist_function("ed25519_sign_open")
         // sha256
         .allowlist_var("SHA256_DIGEST_LENGTH")
         .allowlist_type("SHA256_CTX")

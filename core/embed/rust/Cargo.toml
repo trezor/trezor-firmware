@@ -159,7 +159,7 @@ default-features = false
 # Build dependencies
 
 [build-dependencies.bindgen]
-version = "0.62.0"
+version = "0.72.1"
 default-features = false
 features = ["runtime"]
 
