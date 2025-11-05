@@ -21,7 +21,14 @@ async def busyscreen() -> None:
 
 
 async def homescreen() -> None:
-    from trezor import TR
+    from trezor import TR, loop
+
+    if utils.USE_THP:
+        # HOTFIX: allow some additional time for THP background tasks to
+        # finish processing the last ACK before starting the creation and
+        # painting of the homescreen (which may hog the CPU for >100ms).
+        # For more details, see #6126.
+        await loop.sleep(0)
 
     if storage.device.is_initialized():
         label = storage.device.get_label()
