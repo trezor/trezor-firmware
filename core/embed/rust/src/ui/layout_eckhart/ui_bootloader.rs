@@ -139,6 +139,36 @@ impl BootloaderLayoutType for BootloaderLayout {
         }
     }
 
+    #[cfg(feature = "ui_debug")]
+    fn trace<T: FnMut(&str)>(&mut self, callback: T) {
+        use crate::trace::{JsonTracer, Trace};
+
+        match self {
+            BootloaderLayout::Welcome(f) => {
+                let mut tracer = JsonTracer::new(callback);
+                tracer.root(&|t| f.trace(t))
+            }
+            BootloaderLayout::Menu(f) => {
+                let mut tracer = JsonTracer::new(callback);
+                tracer.root(&|t| f.trace(t))
+            }
+            BootloaderLayout::Connect(f) => {
+                let mut tracer = JsonTracer::new(callback);
+                tracer.root(&|t| f.trace(t))
+            }
+            #[cfg(feature = "ble")]
+            BootloaderLayout::PairingMode(f) => {
+                let mut tracer = JsonTracer::new(callback);
+                tracer.root(&|t| f.trace(t))
+            }
+            #[cfg(feature = "ble")]
+            BootloaderLayout::WirelessSetup(f) => {
+                let mut tracer = JsonTracer::new(callback);
+                tracer.root(&|t| f.trace(t))
+            }
+        }
+    }
+
     fn init_welcome() -> Self {
         let screen = BldWelcomeScreen::new();
         Self::Welcome(screen)

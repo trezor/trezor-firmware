@@ -8,6 +8,10 @@ pub trait BootloaderLayoutType {
     }
 
     fn show(&mut self) -> u32;
+
+    #[cfg(feature = "ui_debug")]
+    fn trace<T: FnMut(&str)>(&mut self, callback: T);
+
     fn init_welcome() -> Self;
     fn init_menu(initial_setup: bool) -> Self;
     fn init_connect(initial_setup: bool, auto_update: bool) -> Self;

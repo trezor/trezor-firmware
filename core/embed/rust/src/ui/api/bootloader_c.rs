@@ -35,6 +35,22 @@ extern "C" fn screen_event(layout: *mut c_layout_t, signalled: &sysevents_t) -> 
 }
 
 #[no_mangle]
+extern "C" fn screen_trace(
+    layout: *mut c_layout_t,
+    callback: extern "C" fn(text: *const cty::c_char, text_len: u8),
+) {
+    // SAFETY: calling code is supposed to give us exclusive access to an already
+    // initialized layout
+    unsafe {
+        let mut layout = LayoutBuffer::<<ModelUI as BootloaderUI>::CLayoutType>::new(layout);
+        let layout = layout.get_mut();
+        layout.trace(|text: &str| {
+            callback(text.as_ptr() as _, text.len() as _);
+        })
+    }
+}
+
+#[no_mangle]
 extern "C" fn screen_render(layout: *mut c_layout_t) {
     unsafe {
         let mut layout = LayoutBuffer::<<ModelUI as BootloaderUI>::CLayoutType>::new(layout);
