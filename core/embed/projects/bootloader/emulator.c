@@ -40,6 +40,7 @@ void usage(void) {
   printf("Usage: ./build/bootloader/bootloader_emu [options]\n");
   printf("Options:\n");
   printf("  -s  stay in bootloader\n");
+  printf("  -w  wipe any firmware before booting\n");
   printf("  -e MESSAGE [TITLE [FOOTER]]  display error screen and stop\n");
   printf("  -c COLOR_VARIANT  set color variant\n");
   printf("  -b BITCOIN_ONLY  set bitcoin only flag\n");
