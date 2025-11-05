@@ -17,6 +17,7 @@
 #endif
 
 #include "emulator.h"
+#include "rust_ui_common.h"
 
 #undef FIRMWARE_START
 
@@ -39,6 +40,7 @@ bool storage_empty(const flash_area_t *area) {
 void usage(void) {
   printf("Usage: ./build/bootloader/bootloader_emu [options]\n");
   printf("Options:\n");
+  printf("  -a  disable animations\n");
   printf("  -s  stay in bootloader\n");
   printf("  -w  wipe any firmware before booting\n");
   printf("  -e MESSAGE [TITLE [FOOTER]]  display error screen and stop\n");
@@ -149,8 +151,11 @@ int main(int argc, char **argv) {
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "hslewc:b:f:i:")) != -1) {
+  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:")) != -1) {
     switch (opt) {
+      case 'a':
+        disable_animation(true);
+        break;
       case 's':
         bootargs_set(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
         break;
