@@ -27,6 +27,8 @@ enable=
     inconsistent-return-statements,
     lost-exception,
     pointless-string-statement,
+    pointless-exception-statement,
+    pointless-statement,
     simplifiable-if-statement,
     super-init-not-called,
     superfluous-parens,
