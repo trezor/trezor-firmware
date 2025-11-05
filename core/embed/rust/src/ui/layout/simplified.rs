@@ -117,7 +117,7 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     render(frame);
     ModelUI::fadein();
 
-    #[cfg(feature = "ui_debug")]
+    #[cfg(all(feature = "bootloader", feature = "ui_debug"))]
     {
         use crate::trezorhal::bootloader::debuglink_notify_layout_change;
         debuglink_notify_layout_change();
@@ -272,7 +272,7 @@ pub fn show(frame: &mut impl Component<Msg = impl ReturnToC>, fading: bool) -> u
         ModelUI::fadein()
     };
 
-    #[cfg(feature = "ui_debug")]
+    #[cfg(all(feature = "bootloader", feature = "ui_debug"))]
     {
         use crate::trezorhal::bootloader::debuglink_notify_layout_change;
         debuglink_notify_layout_change();
