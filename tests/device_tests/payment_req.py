@@ -8,7 +8,7 @@ from trezorlib.transport.session import Session
 
 from ..common import compact_size
 
-SLIP44_ID_RESERVED = 0xFFFF_FFFF
+SLIP44_ID_UNDEFINED = 0xFFFF_FFFF
 
 
 @dataclass
@@ -115,7 +115,7 @@ def make_payment_request(
             raise ValueError
 
     h_pr.update(
-        (slip44 if slip44 is not None else SLIP44_ID_RESERVED).to_bytes(4, "little")
+        (slip44 if slip44 is not None else SLIP44_ID_UNDEFINED).to_bytes(4, "little")
     )
 
     change_address = iter(change_addresses or [])

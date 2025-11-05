@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
 
-SLIP44_ID_RESERVED = const(0xFFFF_FFFF)
+SLIP44_ID_UNDEFINED = const(0xFFFF_FFFF)
 
 _MEMO_TYPE_TEXT = const(1)
 _MEMO_TYPE_REFUND = const(2)
@@ -71,7 +71,7 @@ class PaymentRequestVerifier:
     def __init__(
         self,
         payment_request: PaymentRequest,
-        slip44_id: int | None,
+        slip44_id: int,
         keychain: Keychain,
         amount_size_bytes: Literal[
             8, 32
@@ -125,7 +125,9 @@ class PaymentRequestVerifier:
                 writers.write_uint32_le(self.h_pr, _MEMO_TYPE_TEXT)
                 writers.write_bytes_prefixed(self.h_pr, memo.text.encode())
             elif m.refund_memo is not None:
-                if slip44_id is None:
+                if slip44_id is SLIP44_ID_UNDEFINED:
+                    # Trezor can not hold coins of type SLIP44_ID_UNDEFINED,
+                    # so a refund for a payment request with that coin type makes no sense
                     raise DataError("Cannot process refund memo.")
                 memo = m.refund_memo
                 # Unlike in a coin purchase memo, the coin type is implied by the payment request.
@@ -151,9 +153,7 @@ class PaymentRequestVerifier:
             else:
                 raise DataError("Unrecognized memo type in payment request.")
 
-        writers.write_uint32_le(
-            self.h_pr, slip44_id if slip44_id is not None else SLIP44_ID_RESERVED
-        )
+        writers.write_uint32_le(self.h_pr, slip44_id)
 
     def verify(self) -> None:
         from trezor.crypto.curve import nist256p1
