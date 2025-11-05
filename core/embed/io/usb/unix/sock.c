@@ -10,11 +10,12 @@ void sock_init(emu_sock_t *sock) {
 
 void sock_start(emu_sock_t *sock, const char *ip, uint16_t port) {
   sock->port = port;
-  sock->sock = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);
+  sock->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
   ensure(sectrue * (sock->sock >= 0), NULL);
 
-  int ret = fcntl(sock->sock, F_SETFL, O_NONBLOCK);
+  int flags = fcntl(sock->sock, F_GETFL, 0);
+  int ret = fcntl(sock->sock, F_SETFL, flags | O_NONBLOCK);
   ensure(sectrue * (ret != -1), NULL);
 
   sock->si_me.sin_family = AF_INET;
@@ -54,7 +55,7 @@ bool sock_can_recv(emu_sock_t *sock) {
 
 ssize_t sock_sendto(emu_sock_t *sock, const void *data, size_t len) {
   if (sock->slen > 0) {
-    ssize_t r = sendto(sock->sock, data, len, MSG_DONTWAIT,
+    ssize_t r = sendto(sock->sock, data, len, 0,
                        (const struct sockaddr *)&(sock->si_other), sock->slen);
     if (r != len) {
       return -1;
@@ -68,8 +69,8 @@ ssize_t sock_recvfrom(emu_sock_t *sock, uint8_t *data, size_t max_len) {
   struct sockaddr_in si;
   socklen_t sl = sizeof(si);
   memset(data, 0, max_len);
-  ssize_t r = recvfrom(sock->sock, data, max_len, MSG_DONTWAIT,
-                       (struct sockaddr *)&si, &sl);
+  ssize_t r =
+      recvfrom(sock->sock, data, max_len, 0, (struct sockaddr *)&si, &sl);
   if (r <= 0) {
     return 0;
   }
