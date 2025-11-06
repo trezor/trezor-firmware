@@ -83,8 +83,8 @@ def test_set_get(nc_class):
     assert common.memory_equals(sc, sp)
 
     for s in (sc, sp):
-        s.change_pin("", "222")
-        s.change_pin("222", "99")
+        s.change_pin("222")
+        s.change_pin("99")
         s.set(0xAAAA, b"something else")
     assert common.memory_equals(sc, sp)
 

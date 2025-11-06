@@ -70,6 +70,6 @@ async def load_device(msg: LoadDevice) -> Success:
     storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
     storage_device.set_label(msg.label or "")
     if msg.pin:
-        config.change_pin("", msg.pin, None, None)
+        config.change_pin(msg.pin, None)
 
     return Success(message="Device loaded")

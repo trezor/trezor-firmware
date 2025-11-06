@@ -240,10 +240,10 @@ secbool storage_is_unlocked(void) {
 
 void storage_lock(void) { smcall_invoke0(SMCALL_STORAGE_LOCK); }
 
-secbool storage_unlock(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
-  return (secbool)smcall_invoke3((uint32_t)pin, pin_len, (uint32_t)ext_salt,
-                                 SMCALL_STORAGE_UNLOCK);
+storage_unlock_result_t storage_unlock(const uint8_t *pin, size_t pin_len,
+                                       const uint8_t *ext_salt) {
+  return (storage_unlock_result_t)smcall_invoke3(
+      (uint32_t)pin, pin_len, (uint32_t)ext_salt, SMCALL_STORAGE_UNLOCK);
 }
 
 secbool storage_has_pin(void) {
@@ -257,14 +257,12 @@ uint32_t storage_get_pin_rem(void) {
   return smcall_invoke0(SMCALL_STORAGE_GET_PIN_REM);
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
-                           const uint8_t *new_ext_salt) {
-  return (secbool)smcall_invoke6((uint32_t)oldpin, oldpin_len, (uint32_t)newpin,
-                                 newpin_len, (uint32_t)old_ext_salt,
-                                 (uint32_t)new_ext_salt,
-                                 SMCALL_STORAGE_CHANGE_PIN);
+storage_pin_change_result_t storage_change_pin(const uint8_t *newpin,
+                                               size_t newpin_len,
+                                               const uint8_t *new_ext_salt) {
+  return (storage_pin_change_result_t)smcall_invoke3(
+      (uint32_t)newpin, newpin_len, (uint32_t)new_ext_salt,
+      SMCALL_STORAGE_CHANGE_PIN);
 }
 
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {

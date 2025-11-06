@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import storage.sd_salt as storage_sd_salt
-from trezor import TR, config
+from trezor import TR, config, wire
 from trezor.enums import SdProtectOperationType
 from trezor.messages import Success
 from trezor.ui.layouts import show_success
@@ -65,26 +65,33 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
     # Make sure SD card is present.
     await ensure_sdcard()
 
-    # Get the current PIN.
+    # Get and check the current PIN.
     if config.has_pin():
         pin = await request_pin(TR.pin__enter, config.get_pin_rem())
+        if not config.unlock(pin, None):
+            await error_pin_invalid()
     else:
         pin = ""
 
-    # Check PIN and prepare salt file.
+    # Generate the salt and store it on the SD card first, because SD card operations are more likely to fail than MCU flash operations.
     salt, salt_auth_key, salt_tag = _make_salt()
+    # Store the salt on the SD card.
     await _set_salt(salt, salt_tag)
 
-    if not config.change_pin(pin, pin, None, salt):
-        # Wrong PIN. Clean up the prepared salt file.
+    try:
+        # Set the salt in storage
+        config.change_pin(pin, salt)
+        # Cannot return false, because the device was unlocked by the PIN.
+    except RuntimeError:
+        # Failed to set salt in storage. Clean up the prepared salt file.
         try:
             storage_sd_salt.remove_sd_salt()
         except Exception:
             # The cleanup is not necessary for the correct functioning of
             # SD-protection. If it fails for any reason, we suppress the
-            # exception, because primarily we need to raise wire.PinInvalid.
+            # exception.
             pass
-        await error_pin_invalid()
+        raise wire.ProcessError("Failed to set salt in storage")
 
     storage_device.set_sd_salt_auth_key(salt_auth_key)
 
@@ -105,9 +112,16 @@ async def _sd_protect_disable(msg: SdProtect) -> Success:
     # Get the current PIN and salt from the SD card.
     pin, salt = await request_pin_and_sd_salt(TR.pin__enter)
 
-    # Check PIN and remove salt.
-    if not config.change_pin(pin, pin, salt, None):
-        await error_pin_invalid()
+    if config.has_pin():
+        # Check PIN.
+        if not config.unlock(pin, salt):
+            await error_pin_invalid()
+
+    # Remove salt from storage.
+    try:
+        config.change_pin(pin, None)
+    except RuntimeError:
+        raise wire.FirmwareError("Failed to remove SD salt")
 
     storage_device.set_sd_salt_auth_key(None)
 
@@ -137,12 +151,19 @@ async def _sd_protect_refresh(msg: SdProtect) -> Success:
     # Get the current PIN and salt from the SD card.
     pin, old_salt = await request_pin_and_sd_salt(TR.pin__enter)
 
-    # Check PIN and change salt.
+    if config.has_pin():
+        # Check PIN.
+        if not config.unlock(pin, old_salt):
+            await error_pin_invalid()
+
+    # Change salt.
     new_salt, new_auth_key, new_salt_tag = _make_salt()
     await _set_salt(new_salt, new_salt_tag, stage=True)
 
-    if not config.change_pin(pin, pin, old_salt, new_salt):
-        await error_pin_invalid()
+    try:
+        config.change_pin(pin, new_salt)
+    except RuntimeError:
+        raise wire.FirmwareError("Failed to set new salt in storage")
 
     storage_device.set_sd_salt_auth_key(new_auth_key)
 
