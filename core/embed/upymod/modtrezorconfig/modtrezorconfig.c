@@ -85,10 +85,57 @@ STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
                    MP_ERROR_TEXT("Invalid length of external salt."));
   }
 
-  if (sectrue != storage_unlock(pin_b.buf, pin_b.len, ext_salt_b.buf)) {
-    return mp_const_false;
+  switch (storage_unlock(pin_b.buf, pin_b.len, ext_salt_b.buf)) {
+    case UNLOCK_OK:
+      return mp_const_true;
+    case UNLOCK_NOT_INITIALIZED:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Device is not initialized."));
+    case UNLOCK_NO_PIN:
+      mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("No PIN is set."));
+    case UNLOCK_PIN_GET_FAILS_FAILED:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Failed to get PIN failure counter."));
+    case UNLOCK_TOO_MANY_FAILS:
+      mp_raise_msg(
+          &mp_type_RuntimeError,
+          MP_ERROR_TEXT("Too many incorrect PIN attempts; storage wiped."));
+    case UNLOCK_UI_CANCELLED:
+      mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("UI cancelled."));
+    case UNLOCK_INCREASE_FAILS_FAILED:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Failed to increase PIN failure counter."));
+    case UNLOCK_INCORRECT_PIN:
+      return mp_const_false;
+    case UNLOCK_WRONG_STORAGE_VERSION:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Wrong storage version."));
+    case UNLOCK_OPTIGA_GET_HMAC_RESET_KEY_FAILED:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("OPTIGA get HMAC reset failed."));
+    case UNLOCK_OPTIGA_HMAC_COUNTER_RESET_FAILED:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("OPTIGA HMAC counter reset failed."));
+    case UNLOCK_GET_TROPIC_MAC_AND_DESTROY_RESET_KEY_FAILED:
+      mp_raise_msg(
+          &mp_type_RuntimeError,
+          MP_ERROR_TEXT("get Tropic MAC and destroy reset key failed."));
+    case UNLOCK_TROPIC_RESET_SLOTS_FAILED:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Tropic slots reset failed."));
+    case UNLOCK_PIN_RESET_FAILS_FAILED:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Failed to reset PIN failure counter."));
+    case UNLOCK_ACCESS_VIOLATION:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Access violation during unlock."));
+    case UNLOCK_UNKNOWN:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Something went wrong during unlock."));
+    default:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Something went wrong during unlock."));
   }
-  return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj,
                                  mod_trezorconfig_unlock);
@@ -152,48 +199,54 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
                                  mod_trezorconfig_get_pin_rem);
 
 /// def change_pin(
-///     oldpin: str,
 ///     newpin: str,
-///     old_ext_salt: AnyBytes | None,
 ///     new_ext_salt: AnyBytes | None,
 /// ) -> bool:
 ///     """
-///     Change PIN and external salt. Returns True on success, False on failure.
+///     Change PIN and external salt. Returns True on success, False on entering
+///     the wipe code. Has to be run with unlocked storage.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
                                             const mp_obj_t *args) {
-  mp_buffer_info_t oldpin = {0};
-  mp_get_buffer_raise(args[0], &oldpin, MP_BUFFER_READ);
-
   mp_buffer_info_t newpin = {0};
-  mp_get_buffer_raise(args[1], &newpin, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[0], &newpin, MP_BUFFER_READ);
 
   mp_buffer_info_t ext_salt_b = {0};
-  const uint8_t *old_ext_salt = NULL;
-  if (args[2] != mp_const_none) {
-    mp_get_buffer_raise(args[2], &ext_salt_b, MP_BUFFER_READ);
-    if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
-      mp_raise_msg(&mp_type_ValueError,
-                   MP_ERROR_TEXT("Invalid length of external salt."));
-    old_ext_salt = ext_salt_b.buf;
-  }
   const uint8_t *new_ext_salt = NULL;
-  if (args[3] != mp_const_none) {
-    mp_get_buffer_raise(args[3], &ext_salt_b, MP_BUFFER_READ);
+  if (args[1] != mp_const_none) {
+    mp_get_buffer_raise(args[1], &ext_salt_b, MP_BUFFER_READ);
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
       mp_raise_msg(&mp_type_ValueError,
                    MP_ERROR_TEXT("Invalid length of external salt."));
     new_ext_salt = ext_salt_b.buf;
   }
 
-  if (sectrue != storage_change_pin(oldpin.buf, oldpin.len, newpin.buf,
-                                    newpin.len, old_ext_salt, new_ext_salt)) {
-    return mp_const_false;
+  switch (storage_change_pin(newpin.buf, newpin.len, new_ext_salt)) {
+    case PIN_CHANGE_OK:
+      return mp_const_true;
+    case PIN_CHANGE_WIPE_CODE:
+      return mp_const_false;
+    case PIN_CHANGE_STORAGE_LOCKED:
+      mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Storage is locked."));
+    case PIN_CHANGE_WRONG_ARGUMENT:
+      mp_raise_msg(&mp_type_ValueError,
+                   MP_ERROR_TEXT("Wrong argument provided."));
+    case PIN_CHANGE_NOT_INITIALIZED:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Device is not initialized."));
+    case PIN_CHANGE_CANNOT_SET_PIN:
+      mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Cannot set the PIN."));
+    case PIN_CHANGE_ACCESS_VIOLATION:
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Access violation during PIN change."));
+    case PIN_CHANGE_UNKNOWN:
+      mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Change PIN failed."));
+    default:
+      mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Change PIN failed."));
   }
-  return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 4,
-                                           4, mod_trezorconfig_change_pin);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 2,
+                                           2, mod_trezorconfig_change_pin);
 
 /// def ensure_not_wipe_code(pin: str) -> None:
 ///     """

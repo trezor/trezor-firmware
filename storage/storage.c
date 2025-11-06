@@ -509,11 +509,6 @@ static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
       unlock_time(pin_index, &time_ms, &optiga_sec,
                   &optiga_last_time_decreased_ms);
       break;
-    case STORAGE_PIN_OP_CHANGE:
-      set_pin_time(&time_ms, &optiga_sec, &optiga_last_time_decreased_ms);
-      unlock_time(pin_index, &time_ms, &optiga_sec,
-                  &optiga_last_time_decreased_ms);
-      break;
     default:
       assert(false);
   }
@@ -1173,8 +1168,8 @@ static uint32_t get_backoff_time_ms(uint32_t fail_ctr) {
   return 1000 * ((1 << fail_ctr) - 1);
 }
 
-static secbool unlock(const uint8_t *pin, size_t pin_len,
-                      const uint8_t *ext_salt) {
+static storage_unlock_result_t unlock(const uint8_t *pin, size_t pin_len,
+                                      const uint8_t *ext_salt) {
   const uint8_t *unlock_pin = pin;
   size_t unlock_pin_len = pin_len;
   uint32_t legacy_pin = 0;
@@ -1196,7 +1191,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   uint32_t ctr = 0;
   if (sectrue != pin_get_fails(&ctr)) {
     memzero(&legacy_pin, sizeof(legacy_pin));
-    return secfalse;
+    return UNLOCK_PIN_GET_FAILS_FAILED;
   }
 
   // Wipe storage if too many failures
@@ -1204,7 +1199,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   if (ctr >= PIN_MAX_TRIES) {
     storage_wipe();
     show_pin_too_many_screen();
-    return secfalse;
+    return UNLOCK_TOO_MANY_FAILS;
   }
 
   ui_progress();
@@ -1214,7 +1209,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   while (hal_ticks_ms() - begin < get_backoff_time_ms(ctr)) {
     if (sectrue == ui_progress()) {
       memzero(&legacy_pin, sizeof(legacy_pin));
-      return secfalse;
+      return UNLOCK_UI_CANCELLED;
     }
     hal_delay(100);
   }
@@ -1223,14 +1218,14 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   // PIN.  If the PIN is correct, we reset the counter afterwards.  If not, we
   // check if this is the last allowed attempt.
   if (sectrue != storage_pin_fails_increase()) {
-    return secfalse;
+    return UNLOCK_INCREASE_FAILS_FAILED;
   }
 
   // Check that the PIN fail counter was incremented.
   uint32_t ctr_ck = 0;
   if (sectrue != pin_get_fails(&ctr_ck) || ctr + 1 != ctr_ck) {
     handle_fault("PIN counter increment");
-    return secfalse;
+    return UNLOCK_PIN_GET_FAILS_FAILED;
   }
 
   // Check whether the entered PIN is correct.
@@ -1247,12 +1242,12 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     while (hal_ticks_ms() - ui_begin < ui_total) {
       ui_message = WRONG_PIN_MSG;
       if (sectrue == ui_progress()) {
-        return secfalse;
+        return UNLOCK_UI_CANCELLED;
       }
       hal_delay(100);
     }
 
-    return secfalse;
+    return UNLOCK_INCORRECT_PIN;
   }
   memzero(&legacy_pin, sizeof(legacy_pin));
 
@@ -1263,7 +1258,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   // storage_get_encrypted() which calls auth_get().
   if (sectrue != storage_upgrade_unlocked(pin, pin_len, ext_salt) ||
       sectrue != check_storage_version()) {
-    return secfalse;
+    return UNLOCK_WRONG_STORAGE_VERSION;
   }
 
   unlocked = sectrue;
@@ -1276,11 +1271,11 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
                               sizeof(optiga_hmac_reset_key),
                               &optiga_hmac_reset_key_len) != sectrue ||
         optiga_hmac_reset_key_len != SHA256_DIGEST_LENGTH) {
-      return secfalse;
+      return UNLOCK_OPTIGA_GET_HMAC_RESET_KEY_FAILED;
     }
     if (!optiga_pin_reset_hmac_counter(ui_progress, optiga_hmac_reset_key)) {
       memzero(optiga_hmac_reset_key, sizeof(optiga_hmac_reset_key));
-      return secfalse;
+      return UNLOCK_OPTIGA_HMAC_COUNTER_RESET_FAILED;
     }
     memzero(optiga_hmac_reset_key, sizeof(optiga_hmac_reset_key));
   }
@@ -1295,20 +1290,24 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
                             &tropic_mac_and_destroy_reset_key_len) != sectrue ||
       tropic_mac_and_destroy_reset_key_len !=
           sizeof(tropic_mac_and_destroy_reset_key)) {
-    return secfalse;
+    return UNLOCK_GET_TROPIC_MAC_AND_DESTROY_RESET_KEY_FAILED;
   }
   if (!tropic_pin_reset_slots(ui_progress, ctr,
                               tropic_mac_and_destroy_reset_key)) {
     memzero(tropic_mac_and_destroy_reset_key,
             sizeof(tropic_mac_and_destroy_reset_key));
-    return secfalse;
+    return UNLOCK_TROPIC_RESET_SLOTS_FAILED;
   }
   memzero(tropic_mac_and_destroy_reset_key,
           sizeof(tropic_mac_and_destroy_reset_key));
 #endif
 
   // Finally set the counter to 0 to indicate success.
-  return pin_fails_reset();
+  if (sectrue == pin_fails_reset()) {
+    return UNLOCK_OK;
+  } else {
+    return UNLOCK_PIN_RESET_FAILS_FAILED;
+  }
 }
 
 void unlock_time(uint16_t pin_index, uint32_t *time_ms, uint8_t *optiga_sec,
@@ -1362,10 +1361,14 @@ void unlock_time(uint16_t pin_index, uint32_t *time_ms, uint8_t *optiga_sec,
   *time_ms += time_estimate_clock_cycles_ms(13500000);
 }
 
-secbool storage_unlock(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
-  if (sectrue != initialized || pin == NULL) {
-    return secfalse;
+storage_unlock_result_t storage_unlock(const uint8_t *pin, size_t pin_len,
+                                       const uint8_t *ext_salt) {
+  if (sectrue != initialized) {
+    return UNLOCK_NOT_INITIALIZED;
+  }
+
+  if (pin == NULL) {
+    return UNLOCK_NO_PIN;
   }
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
@@ -1381,7 +1384,7 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
     ui_message = VERIFYING_PIN_MSG;
   }
 
-  secbool ret = unlock(pin, pin_len, ext_salt);
+  storage_unlock_result_t ret = unlock(pin, pin_len, ext_salt);
   mpu_restore(mpu_mode);
 
   ui_progress_finish();
@@ -1702,32 +1705,40 @@ end:
   return rem_mcu;
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
-                           const uint8_t *new_ext_salt) {
-  if (sectrue != initialized || oldpin == NULL || newpin == NULL) {
-    return secfalse;
+storage_pin_change_result_t storage_change_pin(const uint8_t *newpin,
+                                               size_t newpin_len,
+                                               const uint8_t *new_ext_salt) {
+  if (sectrue != initialized) {
+    return PIN_CHANGE_NOT_INITIALIZED;
   }
+
+  if (newpin == NULL) {
+    return PIN_CHANGE_WRONG_ARGUMENT;
+  }
+
+  storage_pin_change_result_t ret = PIN_CHANGE_UNKNOWN;
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 
-  ui_progress_init(STORAGE_PIN_OP_CHANGE);
-  ui_message =
-      (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
+  ui_progress_init(STORAGE_PIN_OP_SET);
+  ui_message = PROCESSING_MSG;
 
-  secbool ret = unlock(oldpin, oldpin_len, old_ext_salt);
-  if (sectrue != ret) {
+  if (sectrue != storage_is_unlocked()) {
+    ret = PIN_CHANGE_STORAGE_LOCKED;
     goto end;
   }
 
   // Fail if the new PIN is the same as the wipe code.
-  ret = is_not_wipe_code(newpin, newpin_len);
-  if (sectrue != ret) {
+  if (sectrue != is_not_wipe_code(newpin, newpin_len)) {
+    ret = PIN_CHANGE_WIPE_CODE;
     goto end;
   }
 
-  ret = set_pin(newpin, newpin_len, new_ext_salt);
+  if (sectrue == set_pin(newpin, newpin_len, new_ext_salt)) {
+    ret = PIN_CHANGE_OK;
+  } else {
+    ret = PIN_CHANGE_CANNOT_SET_PIN;
+  }
 
 end:
   mpu_restore(mpu_mode);
@@ -1783,8 +1794,11 @@ secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
   ui_message =
       (pin_len != 0 && wipe_code_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
-  secbool ret = unlock(pin, pin_len, ext_salt);
-  if (sectrue != ret) {
+  secbool ret;
+  if (UNLOCK_OK == unlock(pin, pin_len, ext_salt)) {
+    ret = sectrue;
+  } else {
+    ret = secfalse;
     goto end;
   }
 
