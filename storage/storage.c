@@ -1712,11 +1712,11 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 
-  ui_progress_init(STORAGE_PIN_OP_CHANGE);
+  ui_progress_init(STORAGE_PIN_OP_SET);
   ui_message =
       (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
-  secbool ret = unlock(oldpin, oldpin_len, old_ext_salt);
+  secbool ret = storage_is_unlocked();
   if (sectrue != ret) {
     goto end;
   }
