@@ -19,11 +19,11 @@ def test_init_pin(nc_class):
 def test_change_pin(nc_class):
     sc, sp = common.init(nc_class, unlock=True)
     for s in (sc, sp):
-        assert s.change_pin("", "222")
-        assert not s.change_pin("9999", "")  # invalid PIN
+        assert s.change_pin("222")
+        assert not s.unlock("9999")  # invalid PIN
         assert s.unlock("222")
-        assert s.change_pin("222", "99999")
-        assert s.change_pin("99999", "Trezor")
+        assert s.change_pin("99999")
+        assert s.change_pin("Trezor")
         assert s.unlock("Trezor")
         assert not s.unlock("9999")  # invalid PIN
         assert not s.unlock("99999")  # invalid old PIN
@@ -38,9 +38,9 @@ def test_has_pin(nc_class):
         assert not s.has_pin()
         assert s.unlock("")
         assert not s.has_pin()
-        assert s.change_pin("", "22")
+        assert s.change_pin("22")
         assert s.has_pin()
-        assert s.change_pin("22", "")
+        assert s.change_pin("")
         assert not s.has_pin()
 
 
@@ -48,7 +48,7 @@ def test_has_pin(nc_class):
 def test_wipe_after_max_pin(nc_class):
     sc, sp = common.init(nc_class, unlock=True)
     for s in (sc, sp):
-        assert s.change_pin("", "222")
+        assert s.change_pin("222")
         assert s.unlock("222")
         s.set(0x0202, b"Hello")
 

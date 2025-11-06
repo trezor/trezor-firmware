@@ -50,7 +50,9 @@ class StorageUpgrade(RuleBasedStateMachine):
 
     @rule(oldpin=pins, newpin=pins)
     def change_pin(self, oldpin, newpin):
-        assert self.sm.change_pin(oldpin, newpin) == self.sc.change_pin(oldpin, newpin)
+        assert self.sm.change_pin(oldpin=oldpin, newpin=newpin) == self.sc.change_pin(
+            oldpin, newpin
+        )
         self.ensure_unlocked()
 
     @invariant()

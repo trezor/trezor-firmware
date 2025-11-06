@@ -37,8 +37,11 @@ class StorageModel:
     def get_pin_rem(self) -> int:
         return self.pin_rem
 
-    def change_pin(self, oldpin: str, newpin: str) -> bool:
-        if self.unlocked and self.unlock(oldpin):
+    def change_pin(self, newpin: str, oldpin: str | None = None) -> bool:
+        if self.unlocked:
+            if oldpin is not None:
+                if not self.unlock(oldpin):
+                    return False
             self.pin = newpin
             return True
         else:

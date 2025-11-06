@@ -358,6 +358,10 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("translations_write")
         .allowlist_function("translations_erase")
         .allowlist_function("translations_area_bytesize")
+        .allowlist_type("storage_unlock_result_t")
+        .rustified_enum("storage_unlock_result_t")
+        .allowlist_type("storage_pin_change_result_t")
+        .rustified_enum("storage_pin_change_result_t")
         // display
         .allowlist_function("display_refresh")
         .allowlist_function("display_set_backlight")

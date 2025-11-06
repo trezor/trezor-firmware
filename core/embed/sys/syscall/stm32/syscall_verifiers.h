@@ -180,13 +180,12 @@ bool telemetry_get__verified(telemetry_data_t *out);
 
 void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback);
 
-secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
-                                 const uint8_t *ext_salt);
+storage_unlock_result_t storage_unlock__verified(const uint8_t *pin,
+                                                 size_t pin_len,
+                                                 const uint8_t *ext_salt);
 
-secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
-                                     const uint8_t *newpin, size_t newpin_len,
-                                     const uint8_t *old_ext_salt,
-                                     const uint8_t *new_ext_salt);
+storage_pin_change_result_t storage_change_pin__verified(
+    const uint8_t *newpin, size_t newpin_len, const uint8_t *new_ext_salt);
 
 void storage_ensure_not_wipe_code__verified(const uint8_t *pin, size_t pin_len);
 
