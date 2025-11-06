@@ -48,7 +48,7 @@ def wrap_protobuf_load(
             raise DataError("Failed to decode message")
 
 
-async def handle_single_message(ctx: Context, msg: Message) -> bool:
+def handle_single_message(ctx: Context, msg: Message):
     """Handle a message that was loaded from a WireInterface by the caller.
 
     Find the appropriate handler, run it and write its result on the wire. In case
@@ -86,94 +86,97 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
                 iface=ctx.iface,
             )
 
-    res_msg: protobuf.MessageType | None = None
+    def _workflow_task():
+        res_msg: protobuf.MessageType | None = None
 
-    # We need to find a handler for this message type.
-    try:
-        handler: Handler = find_handler(ctx.iface, msg.type)
-    except Error as exc:
-        # Handlers are allowed to exception out. In that case, we can skip decoding
-        # and return the error.
-        await ctx.write(failure(exc))
-        return True
+        # We need to find a handler for this message type.
+        try:
+            handler: Handler = find_handler(ctx.iface, msg.type)
+        except Error as exc:
+            # Handlers are allowed to exception out. In that case, we can skip decoding
+            # and return the error.
+            yield from ctx.write(failure(exc))
+            return True
 
-    if msg.type in workflow.ALLOW_WHILE_LOCKED:
-        workflow.autolock_interrupts_workflow = False
+        if msg.type in workflow.ALLOW_WHILE_LOCKED:
+            workflow.autolock_interrupts_workflow = False
 
-    # Here we make sure we always respond with a Failure response
-    # in case of any errors.
-    try:
-        # Find a protobuf.MessageType subclass that describes this
-        # message.  Raises if the type is not found.
-        req_type = protobuf.type_for_wire(ctx.message_type_enum_name, msg.type)
+        # Here we make sure we always respond with a Failure response
+        # in case of any errors.
+        try:
+            # Find a protobuf.MessageType subclass that describes this
+            # message.  Raises if the type is not found.
+            req_type = protobuf.type_for_wire(ctx.message_type_enum_name, msg.type)
 
-        # Try to decode the message according to schema from
-        # `req_type`. Raises if the message is malformed.
-        req_msg = wrap_protobuf_load(msg.data, req_type)
+            # Try to decode the message according to schema from
+            # `req_type`. Raises if the message is malformed.
+            req_msg = wrap_protobuf_load(msg.data, req_type)
 
-        if __debug__ and utils.LOG_STACK_USAGE:
-            utils.zero_unused_stack()
-            unused_stack_before = utils.estimate_unused_stack()
+            if __debug__ and utils.LOG_STACK_USAGE:
+                utils.zero_unused_stack()
+                unused_stack_before = utils.estimate_unused_stack()
 
-        # Create the handler task.
-        task = handler(req_msg)
+            # Create the handler task.
+            task = handler(req_msg)
 
-        # Run the workflow task.  Workflow can do more on-the-wire
-        # communication inside, but it should eventually return a
-        # response message, or raise an exception (a rather common
-        # thing to do).  Exceptions are handled in the code below.
+            # Run the workflow task.  Workflow can do more on-the-wire
+            # communication inside, but it should eventually return a
+            # response message, or raise an exception (a rather common
+            # thing to do).  Exceptions are handled in the code below.
 
-        # Spawn a workflow around the task. This ensures that concurrent
-        # workflows are shut down.
-        res_msg = await workflow.spawn(with_context(ctx, task))
+            res_msg = yield from with_context(ctx, task)
 
-        if __debug__ and utils.LOG_STACK_USAGE:
-            unused_stack_after = utils.estimate_unused_stack()
-            log.debug(
-                __name__,
-                "<%s> estimated stack usage=%d (unused before=%d, after=%d)",
-                msg_type,
-                unused_stack_before - unused_stack_after,
-                unused_stack_before,
-                unused_stack_after,
-            )
+            if __debug__ and utils.LOG_STACK_USAGE:
+                unused_stack_after = utils.estimate_unused_stack()
+                log.debug(
+                    __name__,
+                    "<%s> estimated stack usage=%d (unused before=%d, after=%d)",
+                    msg_type,
+                    unused_stack_before - unused_stack_after,
+                    unused_stack_before,
+                    unused_stack_after,
+                )
 
-    except UnexpectedMessageException:
-        # Workflow was trying to read a message from the wire, and
-        # something unexpected came in.  See Context.read() for
-        # example, which expects some particular message and raises
-        # UnexpectedMessage if another one comes in.
-        # In order not to lose the message, we return it to the caller.
+        except UnexpectedMessageException:
+            # Workflow was trying to read a message from the wire, and
+            # something unexpected came in.  See Context.read() for
+            # example, which expects some particular message and raises
+            # UnexpectedMessage if another one comes in.
+            # In order not to lose the message, we return it to the caller.
 
-        # We process the unexpected message by aborting the current workflow and
-        # possibly starting a new one, initiated by that message. (The main usecase
-        # being, the host does not finish the workflow, we want other callers to
-        # be able to do their own thing.)
-        #
-        # The message is stored in the exception, which we re-raise for the caller
-        # to process. It is not a standard exception that should be logged and a result
-        # sent to the wire.
-        raise
-    except BaseException as exc:
-        # Either:
-        # - the message had a type that has a registered handler, but does not have
-        #   a protobuf class
-        # - the message was not valid protobuf
-        # - workflow raised some kind of an exception while running
-        # - something canceled the workflow from the outside
-        if __debug__:
-            if isinstance(exc, ActionCancelled):
-                log.debug(__name__, "cancelled: %s", exc.message, iface=ctx.iface)
-            elif isinstance(exc, loop.TaskClosed):
-                log.debug(__name__, "cancelled: loop task was closed", iface=ctx.iface)
-            else:
-                log.exception(__name__, exc, iface=ctx.iface)
-        res_msg = failure(exc)
+            # We process the unexpected message by aborting the current workflow and
+            # possibly starting a new one, initiated by that message. (The main usecase
+            # being, the host does not finish the workflow, we want other callers to
+            # be able to do their own thing.)
+            #
+            # The message is stored in the exception, which we re-raise for the caller
+            # to process. It is not a standard exception that should be logged and a result
+            # sent to the wire.
+            raise
+        except BaseException as exc:
+            # Either:
+            # - the message had a type that has a registered handler, but does not have
+            #   a protobuf class
+            # - the message was not valid protobuf
+            # - workflow raised some kind of an exception while running
+            # - something canceled the workflow from the outside
+            if __debug__:
+                if isinstance(exc, ActionCancelled):
+                    log.debug(__name__, "cancelled: %s", exc.message, iface=ctx.iface)
+                elif isinstance(exc, loop.TaskClosed):
+                    log.debug(__name__, "cancelled: loop task was closed", iface=ctx.iface)
+                else:
+                    log.exception(__name__, exc, iface=ctx.iface)
+            res_msg = failure(exc)
 
-    if res_msg is not None:
-        # perform the write outside the big try-except block, so that usb write
-        # problem bubbles up
-        await ctx.write(res_msg)
+        if res_msg is not None:
+            # perform the write outside the big try-except block, so that usb write
+            # problem bubbles up
+            yield from ctx.write(res_msg)
+
+    # Spawn a workflow around the task. This ensures that concurrent
+    # workflows are shut down.
+    yield from workflow.spawn(_workflow_task())
 
     # Look into `AVOID_RESTARTING_FOR` to see if this message should avoid restarting.
     return msg.type in AVOID_RESTARTING_FOR
