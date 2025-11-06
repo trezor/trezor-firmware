@@ -29,10 +29,8 @@ class Storage:
     def has_pin(self) -> bool:
         return sectrue == self.lib.storage_has_pin()
 
-    def change_pin(self, oldpin: str, newpin: str) -> bool:
-        return sectrue == self.lib.storage_change_pin(
-            c.c_uint32(int("1" + oldpin)), c.c_uint32(int("1" + newpin))
-        )
+    def change_pin(self, newpin: str) -> bool:
+        return sectrue == self.lib.storage_change_pin(c.c_uint32(int("1" + newpin)))
 
     def get(self, key: int) -> bytes:
         val_ptr = c.c_void_p()

@@ -509,14 +509,11 @@ uint32_t storage_get_pin_rem(void) {
   return syscall_invoke0(SYSCALL_STORAGE_GET_PIN_REM);
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
+secbool storage_change_pin(const uint8_t *newpin, size_t newpin_len,
                            const uint8_t *new_ext_salt) {
-  return (secbool)syscall_invoke6(
-      (uint32_t)oldpin, oldpin_len, (uint32_t)newpin, newpin_len,
-      (uint32_t)old_ext_salt, (uint32_t)new_ext_salt,
-      SYSCALL_STORAGE_CHANGE_PIN);
+  return (secbool)syscall_invoke3((uint32_t)newpin, newpin_len,
+                                  (uint32_t)new_ext_salt,
+                                  SYSCALL_STORAGE_CHANGE_PIN);
 }
 
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {

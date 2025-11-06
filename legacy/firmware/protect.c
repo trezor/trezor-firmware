@@ -236,7 +236,6 @@ bool protectPin(bool use_cached) {
 }
 
 bool protectChangePin(bool removal) {
-  static CONFIDENTIAL char old_pin[MAX_PIN_LEN + 1] = "";
   static CONFIDENTIAL char new_pin[MAX_PIN_LEN + 1] = "";
   const char *pin = NULL;
 
@@ -248,25 +247,19 @@ bool protectChangePin(bool removal) {
       return false;
     }
 
-    // If removing, defer the check to config_changePin().
-    if (!removal) {
-      usbTiny(1);
-      bool ret = config_unlock(pin);
-      usbTiny(0);
-      if (ret == false) {
-        fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
-        return false;
-      }
+    usbTiny(1);
+    bool ret = config_unlock(pin);
+    usbTiny(0);
+    if (ret == false) {
+      fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+      return false;
     }
-
-    strlcpy(old_pin, pin, sizeof(old_pin));
   }
 
   if (!removal) {
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst,
                      _("Please enter new PIN:"));
     if (pin == NULL || pin[0] == '\0') {
-      memzero(old_pin, sizeof(old_pin));
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
     }
@@ -275,22 +268,19 @@ bool protectChangePin(bool removal) {
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
                      _("Please re-enter new PIN:"));
     if (pin == NULL) {
-      memzero(old_pin, sizeof(old_pin));
       memzero(new_pin, sizeof(new_pin));
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
     }
 
     if (strncmp(new_pin, pin, sizeof(new_pin)) != 0) {
-      memzero(old_pin, sizeof(old_pin));
       memzero(new_pin, sizeof(new_pin));
       fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
       return false;
     }
   }
 
-  bool ret = config_changePin(old_pin, new_pin);
-  memzero(old_pin, sizeof(old_pin));
+  bool ret = config_changePin(new_pin);
   memzero(new_pin, sizeof(new_pin));
   if (ret == false) {
     if (removal) {
