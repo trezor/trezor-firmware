@@ -429,29 +429,40 @@ static void lt_mcounter_update_time(uint32_t *time_ms) { *time_ms += 51; }
 
 static void lt_r_mem_data_erase_time(uint32_t *time_ms) { *time_ms += 55; }
 
+static uint32_t g_change_pin_counter_cached = 0;
+static bool g_is_change_pin_counter_cached = false;
+
 static bool get_change_pin_counter(uint32_t *change_pin_counter) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  lt_ret_t ret = lt_mcounter_get(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT,
-                                 change_pin_counter);
-  if (ret == LT_L3_COUNTER_INVALID) {
-    // The counter has not been initialized yet
-    *change_pin_counter = 0;
+  if (g_is_change_pin_counter_cached) {
+    *change_pin_counter = g_change_pin_counter_cached;
     return true;
   }
 
-  if (ret != LT_OK) {
+  lt_ret_t ret = lt_mcounter_get(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT,
+                                 change_pin_counter);
+  if (ret == LT_OK) {
+    *change_pin_counter =
+        TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE - *change_pin_counter;
+  } else if (ret == LT_L3_COUNTER_INVALID) {
+    // The counter has not been initialized yet
+    *change_pin_counter = 0;
+  } else {
     return false;
   }
 
-  *change_pin_counter =
-      TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE - *change_pin_counter;
+  g_change_pin_counter_cached = *change_pin_counter;
+  g_is_change_pin_counter_cached = true;
 
   return true;
 }
 
-static void get_change_pin_counter_time(uint32_t *time_ms) {
-  lt_mcounter_get_time(time_ms);
+static void get_change_pin_counter_time(uint32_t *time_ms,
+                                        bool is_change_pin_counter_cached) {
+  if (!is_change_pin_counter_cached) {
+    lt_mcounter_get_time(time_ms);
+  }
 }
 
 static bool update_change_pin_counter() {
@@ -466,12 +477,17 @@ static bool update_change_pin_counter() {
     if (ret != LT_OK) {
       return false;
     }
-
+    g_change_pin_counter_cached = 1;
+    g_is_change_pin_counter_cached = true;
     return true;
   }
 
   if (ret != LT_OK) {
     return false;
+  }
+
+  if (g_is_change_pin_counter_cached) {
+    g_change_pin_counter_cached++;
   }
 
   return true;
@@ -525,7 +541,7 @@ cleanup:
 }
 
 void tropic_pin_stretch_time(uint32_t *time_ms) {
-  get_change_pin_counter_time(time_ms);
+  get_change_pin_counter_time(time_ms, g_is_change_pin_counter_cached);
   lt_mac_and_destroy_time(time_ms);
 }
 
@@ -570,7 +586,10 @@ cleanup:
 }
 
 void tropic_pin_reset_slots_time(uint32_t *time_ms, uint16_t pin_index) {
-  get_change_pin_counter_time(time_ms);
+  // When get_change_pin_counter() is called in tropic_pin_reset_slots(), the
+  // change pin counter will have already been cached by
+  // get_change_pin_counter() in tropic_pin_stretch()
+  get_change_pin_counter_time(time_ms, true);
   for (int i = 0; i <= pin_index; i++) {
     lt_mac_and_destroy_time(time_ms);
   }
@@ -642,7 +661,10 @@ cleanup:
 void tropic_pin_set_time(uint32_t *time_ms) {
   rng_fill_buffer_strong_time(time_ms);
   update_change_pin_counter_time(time_ms);
-  get_change_pin_counter_time(time_ms);
+  // When get_change_pin_counter() is called in tropic_pin_set(), the
+  // change pin counter will have already been cached by
+  // update_change_pin_counter() in tropic_pin_set()
+  get_change_pin_counter_time(time_ms, true);
   for (int i = 0; i < PIN_MAX_TRIES; i++) {
     lt_mac_and_destroy_time(time_ms);
     lt_mac_and_destroy_time(time_ms);
