@@ -146,10 +146,14 @@ class Session:
             assert resp.message is not None
             return resp.message
 
+        import time
+
+        start = time.monotonic()
         resp = self.call(
             messages.Ping(message=message, button_protection=button_protection),
             expect=messages.Success,
         )
+        print(time.monotonic() - start)
         assert resp.message is not None
         return resp.message
 

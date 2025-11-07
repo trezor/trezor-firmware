@@ -436,11 +436,14 @@ async def handle_EndSession(msg: EndSession) -> Success:
 
 
 async def handle_Ping(msg: Ping) -> Success:
-    if msg.button_protection:
-        from trezor.enums import ButtonRequestType as B
-        from trezor.ui.layouts import confirm_action
+    from trezor.enums import ButtonRequestType
+    from trezor.messages import ButtonAck, ButtonRequest
 
-        await confirm_action("ping", TR.words__confirm, "ping", br_code=B.ProtectCall)
+    if msg.message.startswith("iters"):
+        br = ButtonRequest(code=ButtonRequestType.Other)
+        for _ in range(int(msg.message.split("=")[1])):
+            await context.call(br, ButtonAck)
+
     return Success(message=msg.message)
 
 
