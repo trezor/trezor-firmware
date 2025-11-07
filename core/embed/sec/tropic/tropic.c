@@ -57,10 +57,69 @@ typedef struct {
 
 static tropic_driver_t g_tropic_driver = {0};
 
-#if !PRODUCTION
-static bool tropic_get_tropic_pubkey(lt_handle_t *handle,
-                                     curve25519_key pubkey);
-#endif
+#if !PRODUCTION || defined(TREZOR_PRODTEST)
+static uint8_t tropic_cert_chain[LT_NUM_CERTIFICATES *
+                                 LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE] = {0};
+static size_t tropic_cert_chain_length = 0;
+static curve25519_key tropic_public_cached = {0};
+
+static bool cache_tropic_cert_chain(void) {
+  if (tropic_cert_chain_length > 0) {
+    return true;
+  }
+
+  struct lt_cert_store_t cert_store = {0};
+  for (size_t i = 0; i < LT_NUM_CERTIFICATES; i++) {
+    cert_store.certs[i] =
+        &tropic_cert_chain[i * LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE];
+    cert_store.buf_len[i] = LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE;
+  }
+
+  lt_ret_t ret = LT_FAIL;
+
+  ret = lt_get_info_cert_store(&g_tropic_driver.handle, &cert_store);
+  if (ret != LT_OK) {
+    return false;
+  }
+
+  ret = lt_get_st_pub(&cert_store, tropic_public_cached,
+                      sizeof(tropic_public_cached));
+  if (ret != LT_OK) {
+    return false;
+  }
+
+  // Compactify tropic_cert_chain for future use. This invalidates the
+  // cert_store.
+  size_t length = 0;
+  for (size_t i = 0; i < LT_NUM_CERTIFICATES; i++) {
+    memmove(&tropic_cert_chain[length], cert_store.certs[i],
+            cert_store.cert_len[i]);
+    length += cert_store.cert_len[i];
+  }
+
+  tropic_cert_chain_length = length;
+
+  return true;
+}
+
+bool tropic_get_pubkey(curve25519_key pubkey) {
+  if (!cache_tropic_cert_chain()) {
+    return false;
+  }
+  memcpy(pubkey, tropic_public_cached, sizeof(curve25519_key));
+  return true;
+}
+
+bool tropic_get_cert_chain_ptr(uint8_t const **cert_chain,
+                               size_t *cert_chain_length) {
+  if (!cache_tropic_cert_chain()) {
+    return false;
+  }
+  *cert_chain = tropic_cert_chain;
+  *cert_chain_length = tropic_cert_chain_length;
+  return true;
+}
+#endif  // !PRODUCTION || defined(TREZOR_PRODTEST)
 
 bool tropic_wait_for_ready(void) {
   tropic_driver_t *drv = &g_tropic_driver;
@@ -134,7 +193,7 @@ lt_ret_t tropic_custom_session_start(pkey_index_t pairing_key_index) {
   if (secret_key_tropic_public(tropic_public) != sectrue) {
 #if !PRODUCTION || defined(TREZOR_PRODTEST)
     if (pairing_key_index != TROPIC_FACTORY_PAIRING_KEY_SLOT ||
-        !tropic_get_tropic_pubkey(&drv->handle, tropic_public))
+        !tropic_get_pubkey(tropic_public))
 #endif
     {
       goto cleanup;
@@ -294,33 +353,6 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
   lt_ret_t res = lt_r_mem_data_read(&drv->handle, udata_slot, data, size);
   return res == LT_OK;
 }
-
-#if !PRODUCTION
-static bool tropic_get_tropic_pubkey(lt_handle_t *handle,
-                                     curve25519_key pubkey) {
-  uint8_t buffer[LT_NUM_CERTIFICATES * LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE];
-
-  struct lt_cert_store_t cert_store = {0};
-  for (size_t i = 0; i < LT_NUM_CERTIFICATES; i++) {
-    cert_store.certs[i] = &buffer[i * LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE];
-    cert_store.buf_len[i] = LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE;
-  }
-
-  lt_ret_t ret = LT_FAIL;
-
-  ret = lt_get_info_cert_store(handle, &cert_store);
-  if (ret != LT_OK) {
-    return false;
-  }
-
-  ret = lt_get_st_pub(&cert_store, pubkey, sizeof(curve25519_key));
-  if (ret != LT_OK) {
-    return false;
-  }
-
-  return true;
-}
-#endif  // !PRODUCTION
 
 void tropic_get_factory_privkey(curve25519_key privkey) {
 #ifdef TREZOR_EMULATOR

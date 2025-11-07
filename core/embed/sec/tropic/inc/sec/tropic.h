@@ -78,6 +78,10 @@ lt_ret_t tropic_custom_session_start(pkey_index_t pairing_key_index);
 lt_ret_t tropic_session_invalidate(void);
 
 bool tropic_wait_for_ready(void);
+
+bool tropic_get_pubkey(curve25519_key pubkey);
+
+bool tropic_get_cert_chain_ptr(uint8_t const** cert_chain, size_t* length);
 #endif
 
 #endif

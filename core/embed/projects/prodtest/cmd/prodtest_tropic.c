@@ -54,11 +54,6 @@ typedef enum {
 static tropic_handshake_state_t tropic_handshake_state =
     TROPIC_HANDSHAKE_STATE_0;
 
-static uint8_t tropic_cert_chain[LT_NUM_CERTIFICATES *
-                                 LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE] = {0};
-static size_t tropic_cert_chain_length = 0;
-static curve25519_key tropic_public_cached = {0};
-
 // TODO: Update this link to correspond with the latest chip revision when it
 // becomes available.
 // https://github.com/tropicsquare/tropic01/blob/da459d18db7aea107419035b9cdf316d89a73445/doc/api/tropic01_user_api_v1.1.2.pdf
@@ -540,60 +535,17 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
   cli_ok_hexdata(cli, &chip_id, sizeof(chip_id));
 }
 
-static bool cache_tropic_cert_chain(void) {
-  if (tropic_cert_chain_length > 0) {
-    return true;
-  }
-
-  struct lt_cert_store_t cert_store = {0};
-  for (size_t i = 0; i < LT_NUM_CERTIFICATES; i++) {
-    cert_store.certs[i] =
-        &tropic_cert_chain[i * LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE];
-    cert_store.buf_len[i] = LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE;
-  }
-
-  lt_ret_t ret = LT_FAIL;
-
-  ret = lt_get_info_cert_store(tropic_get_handle(), &cert_store);
-  if (ret != LT_OK) {
-    return false;
-  }
-
-  ret = lt_get_st_pub(&cert_store, tropic_public_cached,
-                      sizeof(tropic_public_cached));
-  if (ret != LT_OK) {
-    return false;
-  }
-
-  // Compactify tropic_cert_chain for future use. This invalidates the
-  // cert_store.
-  size_t length = 0;
-  for (size_t i = 0; i < LT_NUM_CERTIFICATES; i++) {
-    memmove(&tropic_cert_chain[length], cert_store.certs[i],
-            cert_store.cert_len[i]);
-    length += cert_store.cert_len[i];
-  }
-
-  tropic_cert_chain_length = length;
-
-  return true;
-}
-
-static const curve25519_key* prodtest_tropic_get_tropic_public(void) {
-  if (!cache_tropic_cert_chain()) {
-    return NULL;
-  }
-  return &tropic_public_cached;
-}
-
 static void prodtest_tropic_certtropic_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
   }
 
-  if (!cache_tropic_cert_chain()) {
-    cli_error(cli, CLI_ERROR, "`cache_tropic_cert_chain()` failed");
+  const uint8_t* tropic_cert_chain = NULL;
+  size_t tropic_cert_chain_length = 0;
+  if (!tropic_get_cert_chain_ptr(&tropic_cert_chain,
+                                 &tropic_cert_chain_length)) {
+    cli_error(cli, CLI_ERROR, "`tropic_get_cert_chain_ptr()` failed");
     return;
   }
 
@@ -787,10 +739,9 @@ static void prodtest_tropic_pair(cli_t* cli) {
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   // Get the Tropic01 public pairing key from the chip's certificate.
-  const curve25519_key* tropic_public_cert =
-      prodtest_tropic_get_tropic_public();
-  if (tropic_public_cert == NULL) {
-    cli_error(cli, CLI_ERROR, "`prodtest_tropic_get_tropic_public()` failed");
+  curve25519_key tropic_public = {0};
+  if (!tropic_get_pubkey(tropic_public)) {
+    cli_error(cli, CLI_ERROR, "`tropic_get_tropic_pubkey()` failed");
     goto cleanup;
   }
 
@@ -800,7 +751,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
   if (secret_key_tropic_public(tropic_public_flash) != sectrue) {
 #ifdef SECRET_TROPIC_TROPIC_PUBKEY_SLOT
     // This is skipped in the prodtest emulator.
-    if (secret_key_set(SECRET_TROPIC_TROPIC_PUBKEY_SLOT, *tropic_public_cert,
+    if (secret_key_set(SECRET_TROPIC_TROPIC_PUBKEY_SLOT, tropic_public,
                        sizeof(curve25519_key)) != sectrue) {
       cli_error(cli, CLI_ERROR,
                 "`secret_key_set()` failed for tropic public key.");
@@ -812,8 +763,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
       goto cleanup;
     }
   }
-  if (memcmp(*tropic_public_cert, tropic_public_flash,
-             sizeof(curve25519_key)) != 0) {
+  if (memcmp(tropic_public, tropic_public_flash, sizeof(curve25519_key)) != 0) {
     cli_error(cli, CLI_ERROR,
               "Tropic public key does not match the expected value.");
     goto cleanup;
@@ -908,15 +858,14 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
     goto cleanup;
   }
 
-  const curve25519_key* tropic_public = prodtest_tropic_get_tropic_public();
-  if (tropic_public == NULL) {
-    cli_error(cli, CLI_ERROR, "`prodtest_tropic_get_tropic_public()` failed");
-    goto cleanup;
+  curve25519_key tropic_public = {0};
+  if (!tropic_get_pubkey(tropic_public)) {
+    cli_error(cli, CLI_ERROR, "`tropic_get_tropic_pubkey()` failed");
   }
 
   uint8_t output[sizeof(unprivileged_private) + NOISE_TAG_SIZE] = {0};
   if (!secure_channel_encrypt((uint8_t*)unprivileged_private,
-                              sizeof(unprivileged_private), *tropic_public,
+                              sizeof(unprivileged_private), tropic_public,
                               sizeof(curve25519_key), output)) {
     // `secure_channel_handshake_2()` might not have been called
     cli_error(cli, CLI_ERROR, "`secure_channel_encrypt()` failed.");
