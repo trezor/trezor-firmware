@@ -456,7 +456,9 @@ impl FirmwareUI for UIEckhart {
         warning_footer: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        debug_assert!(!(info && external_menu));
+        if info && external_menu {
+            return Err(Error::NotImplementedError);
+        }
 
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
