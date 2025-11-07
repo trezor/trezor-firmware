@@ -130,6 +130,11 @@ def test_autolock_cancels_ui(session: Session):
     session._write(messages.ButtonAck())
     # sleep more than auto-lock delay
     time.sleep(10.5)
+
+    if session.model is models.T3W1:
+        # T3W1 device will suspend - wake it up using a DebugLink message
+        session.debug_client.debug.state(messages.DebugWaitType.IMMEDIATE)
+
     resp = session._read()
 
     assert isinstance(resp, messages.Failure)
