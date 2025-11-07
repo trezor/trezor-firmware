@@ -814,7 +814,6 @@ def confirm_value(
         description=description,
         subtitle=subtitle,
         verb=verb,
-        info=bool(info_items),
         hold=hold,
         chunkify=chunkify,
         cancel=cancel,
@@ -1542,7 +1541,6 @@ async def confirm_signverify(
         value=address,
         description="",
         verb=TR.buttons__continue,
-        info=True,
         chunkify=chunkify,
         external_menu=True,
     )
