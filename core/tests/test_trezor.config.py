@@ -102,10 +102,6 @@ class TestConfig(unittest.TestCase):
 
             self.assertTrue(config.change_pin(old_pin, new_pin, None, None))
 
-            # Old PIN cannot be used to change the current PIN.
-            if old_pin != new_pin:
-                self.assertFalse(config.change_pin(old_pin, "666", None, None))
-
             # Storage remains unlocked.
             self.assertEqual(config.get(1, 1), b"value")
 
@@ -139,7 +135,7 @@ class TestConfig(unittest.TestCase):
         config.wipe()
         self.assertTrue(config.unlock("", None))
         config.set(1, 1, b"value")
-        self.assertFalse(config.change_pin("", "", salt1, None))
+        self.assertFalse(config.unlock("", salt1))
         self.assertTrue(config.change_pin("", "000", None, salt1))
         self.assertEqual(config.get(1, 1), b"value")
 

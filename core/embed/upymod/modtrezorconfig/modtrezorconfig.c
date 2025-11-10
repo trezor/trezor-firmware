@@ -159,6 +159,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
 /// ) -> bool:
 ///     """
 ///     Change PIN and external salt. Returns True on success, False on failure.
+///     Has to be run with unlocked storage.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
                                             const mp_obj_t *args) {

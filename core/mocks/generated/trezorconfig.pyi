@@ -66,7 +66,8 @@ def change_pin(
     new_ext_salt: AnyBytes | None,
 ) -> bool:
     """
-    Change PIN and external salt. Returns True on success, False on failure.
+    Change PIN and external salt. Returns True on success, False on failure. Has to be
+    ran with unlocked storage.
     """
 
 
