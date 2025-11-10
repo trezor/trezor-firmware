@@ -108,9 +108,9 @@ class ProtocolV2Channel(Channel):
         message_type, message_data = self.mapping.encode(message)
         self.session_id: int = DEFAULT_SESSION_ID
         self._encrypt_and_write(DEFAULT_SESSION_ID, message_type, message_data)
-        header, _payload = self._read_until_valid_crc_check()
-        if not header.is_ack():
-            raise exceptions.TrezorException("ACK expected")
+        # header, _payload = self._read_until_valid_crc_check()
+        # if not header.is_ack():
+        #     raise exceptions.TrezorException("ACK expected")
         _, msg_type, msg_data = self.read_and_decrypt(timeout)
         features = self.mapping.decode(msg_type, msg_data)
         if not isinstance(features, messages.Features):
@@ -285,17 +285,18 @@ class ProtocolV2Channel(Channel):
         self._is_paired = trezor_state != TREZOR_STATE_UNPAIRED
 
     def _read_ack(self) -> None:
-        header, payload = self._read_until_valid_crc_check()
-        if not header.is_ack() or len(payload) > 0:
-            LOG.error("Received message is not a valid ACK")
+        pass
+        # header, payload = self._read_until_valid_crc_check()
+        # if not header.is_ack() or len(payload) > 0:
+        #     LOG.error("Received message is not a valid ACK")
 
     def _send_ack_bit(self, bit: int) -> None:
-        if bit not in (0, 1):
-            raise ValueError("Invalid ACK bit")
+        # if bit not in (0, 1):
+        #     raise ValueError("Invalid ACK bit")
         LOG.debug(f"sending ack {bit}")
-        ctrl_byte = 0x20 if bit == 0 else 0x28
-        header = MessageHeader(ctrl_byte, self.channel_id, 4)
-        thp_io.write_payload_to_wire_and_add_checksum(self.transport, header, b"")
+        # ctrl_byte = 0x20 if bit == 0 else 0x28
+        # header = MessageHeader(ctrl_byte, self.channel_id, 4)
+        # thp_io.write_payload_to_wire_and_add_checksum(self.transport, header, b"")
 
     def _encrypt_and_write(
         self,
@@ -331,8 +332,8 @@ class ProtocolV2Channel(Channel):
             if header.cid != self.channel_id:
                 # Received message from different channel - discard
                 continue
-            if control_byte.is_ack(header.ctrl_byte):
-                continue
+            assert not control_byte.is_ack(header.ctrl_byte)
+                # continue
             if not header.is_encrypted_transport():
                 LOG.error(
                     "Trying to decrypt not encrypted message! ("

@@ -252,11 +252,11 @@ class Channel:
             seq_bit = control_byte.get_seq_bit(ctrl_byte)
 
             # 1: Handle ACKs
-            if control_byte.is_ack(ctrl_byte):
-                handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
-                if expected_ctrl_byte is None:
-                    return payload
-                continue
+            assert not control_byte.is_ack(ctrl_byte)
+                # handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
+                # if expected_ctrl_byte is None:
+                #     return payload
+                # continue
 
             if expected_ctrl_byte is None or not expected_ctrl_byte(ctrl_byte):
                 if __debug__:
@@ -273,11 +273,11 @@ class Channel:
                     self._log(
                         "Received message with an unexpected sequential bit",
                     )
-                await send_ack(self, ack_bit=seq_bit)
+                # await send_ack(self, ack_bit=seq_bit)
                 continue
 
             # 3: Send ACK in response
-            await send_ack(self, ack_bit=seq_bit)
+            # await send_ack(self, ack_bit=seq_bit)
 
             ABP.set_expected_receive_seq_bit(self.channel_cache, 1 - seq_bit)
 
@@ -420,12 +420,12 @@ class Channel:
         header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
 
         # ACK is needed before sending more data
-        ABP.set_sending_allowed(self.channel_cache, False)
+        # ABP.set_sending_allowed(self.channel_cache, False)
 
         # allows preempting this channel, if another channel becomes active
         self.last_write_ms = utime.ticks_ms()
 
-        for i in range(_MAX_RETRANSMISSION_COUNT):
+        for i in range(1):
             result = await race(
                 self.iface_ctx.write_payload(header, payload), _WRITE_TIMEOUT
             )
@@ -434,20 +434,20 @@ class Channel:
                     log.error(__name__, "Sending is stuck for %d ms", _WRITE_TIMEOUT_MS)
                 break
 
-            # Channel's estimated latency + a variable delay (from 200ms till ~3.52s)
-            timeout_ms = ack_latency_ms + round(10300 - 1010000 / (100 + i))
-            try:
-                # wait and return after receiving an ACK, or raise in case of an unexpected message.
-                await self.recv_payload(expected_ctrl_byte=None, timeout_ms=timeout_ms)
-            except Timeout:
-                if __debug__:
-                    log.warning(__name__, "Retransmit after %d ms", timeout_ms)
-                continue
+            # # Channel's estimated latency + a variable delay (from 200ms till ~3.52s)
+            # timeout_ms = ack_latency_ms + round(10300 - 1010000 / (100 + i))
+            # try:
+            #     # wait and return after receiving an ACK, or raise in case of an unexpected message.
+            #     await self.recv_payload(expected_ctrl_byte=None, timeout_ms=timeout_ms)
+            # except Timeout:
+            #     if __debug__:
+            #         log.warning(__name__, "Retransmit after %d ms", timeout_ms)
+            #     continue
 
-            ack_latency_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
-            # Limit estimated latency to avoid integer overflows and too long delays
-            ack_latency_ms = max(0, min(800, ack_latency_ms))
-            self.channel_cache.set_int(CHANNEL_ACK_LATENCY_MS, ack_latency_ms)
+            # ack_latency_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
+            # # Limit estimated latency to avoid integer overflows and too long delays
+            # ack_latency_ms = max(0, min(800, ack_latency_ms))
+            # self.channel_cache.set_int(CHANNEL_ACK_LATENCY_MS, ack_latency_ms)
 
             # `ABP.set_sending_allowed()` will be called after a valid ACK
             if ABP.is_sending_allowed(self.channel_cache):
@@ -492,28 +492,28 @@ class Channel:
             )
 
 
-def send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
-    ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ACK_MESSAGE, ack_bit)
-    header = PacketHeader(ctrl_byte, channel.get_channel_id_int(), CHECKSUM_LENGTH)
-    if __debug__:
-        log.debug(
-            __name__,
-            "Writing ACK message to a channel with cid: %s, ack_bit: %d",
-            hexlify_if_bytes(channel.channel_id),
-            ack_bit,
-            iface=channel.iface,
-        )
-    return channel.iface_ctx.write_payload(header, b"")
+# def send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
+#     ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ACK_MESSAGE, ack_bit)
+#     header = PacketHeader(ctrl_byte, channel.get_channel_id_int(), CHECKSUM_LENGTH)
+#     if __debug__:
+#         log.debug(
+#             __name__,
+#             "Writing ACK message to a channel with cid: %s, ack_bit: %d",
+#             hexlify_if_bytes(channel.channel_id),
+#             ack_bit,
+#             iface=channel.iface,
+#         )
+#     return channel.iface_ctx.write_payload(header, b"")
 
 
-def handle_ack(ctx: Channel, ack_bit: int) -> None:
-    if not ABP.is_ack_valid(ctx.channel_cache, ack_bit):
-        return
-    # ACK is expected and it has correct sync bit
-    if __debug__:
-        log.debug(
-            __name__,
-            "Received ACK message with correct ack bit",
-            iface=ctx.iface,
-        )
-    ABP.set_sending_allowed(ctx.channel_cache, True)
+# def handle_ack(ctx: Channel, ack_bit: int) -> None:
+#     if not ABP.is_ack_valid(ctx.channel_cache, ack_bit):
+#         return
+#     # ACK is expected and it has correct sync bit
+#     if __debug__:
+#         log.debug(
+#             __name__,
+#             "Received ACK message with correct ack bit",
+#             iface=ctx.iface,
+#         )
+#     ABP.set_sending_allowed(ctx.channel_cache, True)
