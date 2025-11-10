@@ -90,6 +90,8 @@ typedef union
 #define ALIGNED_(x) __declspec(align(x))
 #elif defined(__GNUC__) && defined(__x86_64__)
 #define ALIGNED_(x) __attribute__ ((aligned(x)))
+#elif defined(__clang__) && defined(__x86_64__)
+#define ALIGNED_(x) __attribute__ ((aligned(x)))
 #else
 #define ALIGNED_(x)
 #endif
