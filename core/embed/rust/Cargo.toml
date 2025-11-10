@@ -111,7 +111,7 @@ qrcodegen = { version = "1.8.0", path = "../../vendor/QR-Code-generator/rust-no-
 spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 ufmt = "0.2.0"
-zeroize = { version = "1.7.0", default-features = false, optional = true }
+zeroize = { version = "1.8.2", default-features = false, optional = true }
 
 # Runtime dependencies
 
