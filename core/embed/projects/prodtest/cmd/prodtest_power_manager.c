@@ -333,6 +333,53 @@ void prodtest_pm_event_monitor(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+void prodtest_pm_battery_temp_test(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Starting battery temperature test...");
+
+  char screen_text_buf[100];
+
+  float max_temp_c = -1000.0f;
+  float min_temp_c = 1000.0f;
+
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "battery temp test aborted");
+      break;
+    }
+
+    pm_report_t report;
+    pm_get_report(&report);
+
+    if (report.battery_temp_c > max_temp_c) {
+      max_temp_c = report.battery_temp_c;
+    }
+
+    if (report.battery_temp_c < min_temp_c) {
+      min_temp_c = report.battery_temp_c;
+    }
+
+    mini_snprintf(screen_text_buf, 100,
+                  "min: %d.%02d / act: %d.%02d / max: %d.%02d", (int)min_temp_c,
+                  abs((int)(min_temp_c * 100) % 100),
+                  (int)report.battery_temp_c,
+                  abs((int)(report.battery_temp_c * 100) % 100),
+                  (int)max_temp_c, abs((int)(max_temp_c * 100) % 100));
+
+    screen_prodtest_show_text(screen_text_buf, strlen(screen_text_buf));
+
+    systick_delay_ms(200);
+  }
+
+  prodtest_show_homescreen();
+
+  cli_ok(cli, "");
+}
+
 void prodtest_pm_set_soc_target(cli_t* cli) {
   uint32_t target = 0;
   if (!cli_arg_uint32(cli, "target", &target) || target > 100 || target < 10) {
@@ -417,6 +464,13 @@ PRODTEST_CLI_CMD(
 .func = prodtest_pm_fuel_gauge_monitor,
 .info = "Watch fuel gauge data",
 .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "pm-battery-temp-test",
+  .func = prodtest_pm_battery_temp_test,
+  .info = "Run battery temperature test",
+  .args = ""
 );
 
 PRODTEST_CLI_CMD(
