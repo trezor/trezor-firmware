@@ -1,11 +1,17 @@
 use crate::error::value_error;
 
+pub mod aesgcm;
 pub mod cosi;
+pub mod crc32;
+pub mod curve25519;
 pub mod ed25519;
 mod ffi;
+pub mod hmac;
 pub mod merkle;
 pub mod sha256;
+pub mod sha512;
 
+#[cfg_attr(feature = "test", derive(core::fmt::Debug))]
 pub enum Error {
     // Signature verification failed
     SignatureVerificationFailed,
@@ -13,6 +19,9 @@ pub enum Error {
     InvalidEncoding,
     // Provided parameters are not accepted (e.g., signature threshold out of bounds)
     InvalidParams,
+    // Implementation returned an error without further details
+    #[allow(clippy::enum_variant_names)]
+    RuntimeError,
 }
 
 impl From<Error> for crate::error::Error {
@@ -21,6 +30,7 @@ impl From<Error> for crate::error::Error {
             Error::SignatureVerificationFailed => value_error!(c"Signature verification failed"),
             Error::InvalidEncoding => value_error!(c"Invalid key or signature encoding"),
             Error::InvalidParams => value_error!(c"Invalid cryptographic parameters"),
+            Error::RuntimeError => value_error!(c"Cryptography runtime error"),
         }
     }
 }
