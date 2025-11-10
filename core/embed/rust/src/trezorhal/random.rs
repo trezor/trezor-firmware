@@ -28,6 +28,10 @@ pub fn uniform_between_except(min: u32, max: u32, except: u32) -> u32 {
     }
 }
 
+pub fn bytes(dest: &mut [u8]) {
+    unsafe { super::ffi::random_buffer(dest.as_mut_ptr(), dest.len()) }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
