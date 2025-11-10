@@ -250,7 +250,7 @@ int prodtest_main(void) {
 #endif
 
 #ifdef TREZOR_MODEL_T3W1
-  display_set_backlight(85);
+  display_set_backlight(155);
 #else
   display_set_backlight(150);
 #endif
