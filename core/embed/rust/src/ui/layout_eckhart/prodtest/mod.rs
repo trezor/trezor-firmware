@@ -113,6 +113,34 @@ impl ProdtestUI for UIEckhart {
 
         display::refresh();
     }
+    
+    fn screen_prodtest_nfc(tag_connected: bool) {
+        display::sync();
+        
+        render_on_display(None, Some(Color::black()), |target| {
+            
+            shape::Circle::new(
+                screen().center(), 
+                150,
+            )
+            .with_thickness(5)
+            .with_bg(if tag_connected {
+                Color::rgb(0, 255, 0)
+            } else {
+                Color::black()
+            })    
+            .with_fg(Color::white()).
+            render(target);
+            
+            shape::Text::new(screen().center(), "Place NFC tag", fonts::FONT_SATOSHI_REGULAR_22)
+                .with_fg(Color::white())
+                .with_align(Alignment::Center)
+                .render(target);
+            
+        });
+
+        display::refresh();
+    }
 
     fn screen_prodtest_draw(events: Vec<TouchEvent, 256>) {
         display::sync();
