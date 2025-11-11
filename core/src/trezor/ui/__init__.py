@@ -283,7 +283,7 @@ class Layout(Generic[T]):
             result = await self.result_box
             assert CURRENT_LAYOUT is None  # the screen is blank now
 
-            if is_done is not None:
+            if is_done is not None and utils.USE_THP:
                 # Make sure ButtonRequest is ACKed, before the result is returned.
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
                 self.button_request_box.put(None, replace=True)
