@@ -57,6 +57,8 @@ bool tropic_init(uint16_t port);
 bool tropic_init(void);
 #endif
 
+void tropic01_reset(void);
+
 void tropic_deinit(void);
 
 #ifdef TREZOR_PRODTEST

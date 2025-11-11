@@ -66,6 +66,42 @@
 #define TROPIC_CHANGE_COUNTER_SLOT MCOUNTER_INDEX_4
 #define TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE 0xfffffffe
 
+#ifdef TREZOR_EMULATOR
+#define TROPIC_RETRY_COMMAND(command) command
+#else
+bool tropic_session_start(void);
+
+#define TROPIC_MAX_RETRIES 5
+// Statement expression, see
+// https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
+#define TROPIC_RETRY_COMMAND(command)                                       \
+  ({                                                                        \
+    lt_ret_t TROPIC_RETRY_COMMAND_res = LT_FAIL;                            \
+    for (int TROPIC_RETRY_COMMAND_i = 0;                                    \
+         TROPIC_RETRY_COMMAND_i < TROPIC_MAX_RETRIES;                       \
+         TROPIC_RETRY_COMMAND_i++) {                                        \
+      TROPIC_RETRY_COMMAND_res = command;                                   \
+      if (TROPIC_RETRY_COMMAND_res == LT_L1_SPI_ERROR) {                    \
+        continue;                                                           \
+      }                                                                     \
+      if (TROPIC_RETRY_COMMAND_res == LT_L1_CHIP_ALARM_MODE) {              \
+        bool session_started = g_tropic_driver.session_started;             \
+        pkey_index_t pairing_key_index = g_tropic_driver.pairing_key_index; \
+        tropic_deinit();                                                    \
+        tropic01_reset();                                                   \
+        tropic_init();                                                      \
+        tropic_wait_for_ready();                                            \
+        if (session_started) {                                              \
+          tropic_custom_session_start(pairing_key_index);                   \
+        }                                                                   \
+        continue;                                                           \
+      }                                                                     \
+      break;                                                                \
+    }                                                                       \
+    TROPIC_RETRY_COMMAND_res;                                               \
+  })
+#endif  // TREZOR_EMULATOR
+
 typedef struct {
   bool initialized;
   bool session_started;
@@ -225,8 +261,9 @@ lt_ret_t tropic_custom_session_start(pkey_index_t pairing_key_index) {
 
   tropic_wait_for_ready();
 
-  ret = lt_session_start(&drv->handle, tropic_public, pairing_key_index,
-                         trezor_private, trezor_public);
+  ret = TROPIC_RETRY_COMMAND(lt_session_start(&drv->handle, tropic_public,
+                                              pairing_key_index, trezor_private,
+                                              trezor_public));
 
   drv->session_started = (ret == LT_OK);
   drv->pairing_key_index = pairing_key_index;
@@ -352,8 +389,8 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
     return false;
   }
 
-  lt_ret_t res =
-      lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len, sig);
+  lt_ret_t res = TROPIC_RETRY_COMMAND(
+      lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len, sig));
   if (res != LT_OK) {
     memzero(sig, ECDSA_RAW_SIGNATURE_SIZE);
     return false;
@@ -488,8 +525,8 @@ static bool get_change_pin_counter(uint32_t *change_pin_counter) {
     return true;
   }
 
-  lt_ret_t ret = lt_mcounter_get(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT,
-                                 change_pin_counter);
+  lt_ret_t ret = TROPIC_RETRY_COMMAND(lt_mcounter_get(
+      &drv->handle, TROPIC_CHANGE_COUNTER_SLOT, change_pin_counter));
   if (ret == LT_OK) {
     *change_pin_counter =
         TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE - *change_pin_counter;
@@ -517,11 +554,13 @@ static bool update_change_pin_counter() {
   tropic_driver_t *drv = &g_tropic_driver;
   lt_ret_t ret = LT_FAIL;
 
-  ret = lt_mcounter_update(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT);
+  ret = TROPIC_RETRY_COMMAND(
+      lt_mcounter_update(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT));
   if (ret == LT_L3_COUNTER_INVALID) {
     // The counter has not been initialized yet
-    ret = lt_mcounter_init(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT,
-                           TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE - 1);
+    ret = TROPIC_RETRY_COMMAND(
+        lt_mcounter_init(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT,
+                         TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE - 1));
     if (ret != LT_OK) {
       return false;
     }
@@ -571,9 +610,15 @@ bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
     goto cleanup;
   }
 
-  if (lt_mac_and_destroy(
-          &drv->handle, get_mac_and_destroy_slot(pin_index, change_pin_counter),
-          digest, digest) != LT_OK) {
+  mac_and_destroy_slot_t slot_index =
+      get_mac_and_destroy_slot(pin_index, change_pin_counter);
+  // When `lt_mac_and_destroy()` returns an error and it is unclear whether the
+  // command was executed or not (for example, it returns LT_L1_CHIP_ALARM_MODE
+  // or LT_L1_SPI_ERROR), the best approach is to retry the command, hoping it
+  // has not already been been executed. If it has been executed, the PIN
+  // verification will fail.
+  if (TROPIC_RETRY_COMMAND(lt_mac_and_destroy(&drv->handle, slot_index, digest,
+                                              digest)) != LT_OK) {
     goto cleanup;
   }
 
@@ -617,9 +662,9 @@ bool tropic_pin_reset_slots(
   }
 
   for (int i = 0; i <= pin_index; i++) {
-    if (lt_mac_and_destroy(&drv->handle,
-                           get_mac_and_destroy_slot(i, change_pin_counter),
-                           reset_key, output) != LT_OK) {
+    if (TROPIC_RETRY_COMMAND(lt_mac_and_destroy(
+            &drv->handle, get_mac_and_destroy_slot(i, change_pin_counter),
+            reset_key, output)) != LT_OK) {
       goto cleanup;
     }
   }
@@ -696,16 +741,16 @@ bool tropic_pin_set(
     hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, NULL, 0,
                 digest);
 
-    if (lt_reset_and_mac_and_destroy(&drv->handle, slot_index, reset_key,
-                                     digest, output) != LT_OK) {
+    if (TROPIC_RETRY_COMMAND(lt_reset_and_mac_and_destroy(
+            &drv->handle, slot_index, reset_key, digest, output)) != LT_OK) {
       goto cleanup;
     }
 
     hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, output,
                 sizeof(output), stretched_pins[i]);
 
-    if (lt_mac_and_destroy(&drv->handle, slot_index, reset_key, output) !=
-        LT_OK) {
+    if (TROPIC_RETRY_COMMAND(lt_mac_and_destroy(&drv->handle, slot_index,
+                                                reset_key, output)) != LT_OK) {
       goto cleanup;
     }
   }
@@ -795,8 +840,8 @@ bool tropic_pin_unmask_kek(
 
   uint16_t masked_kek_slot = get_kek_masks_slot(drv);
 
-  if (lt_r_mem_data_read(&drv->handle, masked_kek_slot, masks, &length) !=
-      LT_OK) {
+  if (TROPIC_RETRY_COMMAND(lt_r_mem_data_read(&drv->handle, masked_kek_slot,
+                                              masks, &length)) != LT_OK) {
     goto cleanup;
   }
 
