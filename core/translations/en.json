@@ -1531,8 +1531,18 @@
       "Eckhart": "Regulatory"
     },
     "reset__advanced_group_threshold_info": "The group threshold specifies the number of groups required to recover your wallet.",
-    "reset__all_x_of_y_template": "all {0} of {1} shares",
-    "reset__any_x_of_y_template": "any {0} of {1} shares",
+    "reset__all_x_of_y_template": {
+      "Bolt": "all {0} of {1} shares",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__any_x_of_y_template": {
+      "Bolt": "any {0} of {1} shares",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__button_create": "Create wallet",
     "reset__button_recover": "Recover wallet",
     "reset__by_continuing": {
@@ -1571,14 +1581,39 @@
     },
     "reset__more_at": "More at",
     "reset__more_info_at": "More info at",
-    "reset__need_all_share_template": "For recovery you need all {0} of the shares.",
-    "reset__need_any_share_template": "For recovery you need any {0} of the shares.",
-    "reset__needed_to_form_a_group": "needed to form a group. ",
-    "reset__needed_to_recover_your_wallet": "needed to recover your wallet. ",
+    "reset__need_all_share_template": {
+      "Bolt": "For recovery you need all {0} of the shares.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__need_any_share_template": {
+      "Bolt": "For recovery you need any {0} of the shares.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_form_a_group": {
+      "Bolt": "needed to form a group. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__needed_to_recover_your_wallet": {
+      "Bolt": "needed to recover your wallet. ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__never_make_digital_copy": "Never put your backup anywhere digital.",
     "reset__num_of_share_holders_template": "{0} people or locations will each hold one share.",
     "reset__num_of_shares_advanced_info_template": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.",
-    "reset__num_of_shares_basic_info_template": "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet.",
+    "reset__num_of_shares_basic_info_template": {
+      "Bolt": "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__num_of_shares_how_many": "How many wallet backup shares do you want to create?",
     "reset__num_of_shares_long_info_template": {
       "Bolt": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
@@ -1588,7 +1623,12 @@
     },
     "reset__num_shares_for_group_template": "The required number of shares to form Group {0}.",
     "reset__number_of_shares_info": "= total number of unique word lists used for wallet backup.",
-    "reset__one_share": "1 share",
+    "reset__one_share": {
+      "Bolt": "1 share",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__only_one_share_will_be_created": "Only one share will be created.",
     "reset__recovery_share_description": "A recovery share is a list of words you wrote down when setting up your Trezor.",
     "reset__recovery_share_number": "Your wallet backup consists of 1 to 16 shares.",
@@ -1606,7 +1646,12 @@
       "Eckhart": "Select word #{0} from your wallet backup"
     },
     "reset__select_word_x_of_y_template": "Select word {0} of {1}:",
-    "reset__set_it_to_count_template": "Set it to {0} and you will need ",
+    "reset__set_it_to_count_template": {
+      "Bolt": "Set it to {0} and you will need ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__share_checked_successfully_template": "Share #{0} checked successfully.",
     "reset__share_completed_template": "Share #{0} completed",
     "reset__share_words_first": "Write down the first word from the backup.",
@@ -1631,7 +1676,12 @@
     "reset__slip39_checklist_title": "Backup checklist",
     "reset__slip39_checklist_write_down": "Write down and check all shares",
     "reset__slip39_checklist_write_down_recovery": "Write down & check all wallet backup shares",
-    "reset__the_threshold_sets_the_number_of_shares": "The threshold sets the number of shares ",
+    "reset__the_threshold_sets_the_number_of_shares": {
+      "Bolt": "The threshold sets the number of shares ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__the_word_is_repeated": {
       "Bolt": "The word is repeated",
       "Caesar": "The word is repeated",
@@ -1649,7 +1699,12 @@
     "reset__title_set_number_of_shares": "Set number of shares",
     "reset__title_set_threshold": "Set threshold",
     "reset__title_shamir_backup": "Multi-share backup",
-    "reset__to_form_group_template": "to form Group {0}.",
+    "reset__to_form_group_template": {
+      "Bolt": "to form Group {0}.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__tos_link": {
       "Bolt": "trezor.io/tos",
       "Caesar": "trezor.io/tos",
@@ -1662,7 +1717,12 @@
     "reset__words_written_down_template": "I wrote down all {0} words in order.",
     "reset__write_down_words_template": "Write the following {0} words in order on your wallet backup card.",
     "reset__wrong_word_selected": "Wrong word selected!",
-    "reset__you_need_one_share": "For recovery you need 1 share.",
+    "reset__you_need_one_share": {
+      "Bolt": "For recovery you need 1 share.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__your_backup_is_done": "Your backup is done.",
     "ripple__confirm_tag": "Confirm tag",
     "ripple__destination_tag_missing": "Destination tag is not set. Typically needed when sending to exchanges.",
