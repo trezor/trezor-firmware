@@ -30,6 +30,8 @@
 #include "rust_smp.h"
 #include "sha2.h"
 
+#include <sys/dbg_console.h>
+
 #define IMAGE_HASH_LEN 32
 #define IMAGE_TLV_SHA256 0x10
 
@@ -108,6 +110,30 @@ static int read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
 }
 
 bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
+  nrf_app_version_t v = {0};
+
+  nrf_reboot_to_bootloader();
+  nrf_set_dfu_mode(true);
+
+  if (true == smp_image_version_get(&v)) {
+    struct image_header *hdr = (struct image_header *)image_ptr;
+  
+    // Success - version contains null-terminated string like "1.0.3"
+    dbg_printf("nRF FW version: %u.%u.%u.%u\n", v.major, v.minor, v.revision,
+               v.build_num);
+    dbg_printf("MCU FW nRF FW version: %u.%u.%u.%u\n", hdr->ih_ver.iv_major,
+               hdr->ih_ver.iv_minor, hdr->ih_ver.iv_revision,
+               hdr->ih_ver.iv_build_num);
+  } else {
+    // Failed to get version
+    dbg_printf("Failed to retrieve version\n");
+  }
+
+  nrf_reboot();
+  nrf_set_dfu_mode(false);
+
+  return false;
+
   nrf_info_t info = {0};
 
   uint16_t try_cntr = 0;
