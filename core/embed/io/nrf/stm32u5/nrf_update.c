@@ -108,6 +108,22 @@ static int read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
 }
 
 bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
+
+  nrf_reboot_to_bootloader();
+  nrf_set_dfu_mode(true);
+
+  while (1) {
+    //smp_echo("test", 4);
+    smp_image_version_get();
+
+    systick_delay_ms(5000);
+  }
+  
+  nrf_reboot();
+  nrf_set_dfu_mode(false);
+
+  return false;
+
   nrf_info_t info = {0};
 
   uint16_t try_cntr = 0;

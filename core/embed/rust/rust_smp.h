@@ -6,6 +6,8 @@ bool smp_echo(const char* text, uint8_t text_len);
 
 void smp_reset(void);
 
+bool smp_image_version_get(void);
+
 void smp_process_rx_byte(uint8_t byte);
 
 bool smp_upload_app_image(const uint8_t* data, size_t len,

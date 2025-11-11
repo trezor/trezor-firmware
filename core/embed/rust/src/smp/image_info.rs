@@ -1,11 +1,11 @@
 use super::{
     receiver_acquire, receiver_release, send_request, wait_for_response, MsgType, SmpBuffer,
-    SmpHeader, SMP_CMD_ID_ECHO, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ,
+    SmpHeader, SMP_CMD_ID_IMAGE_STATE, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_READ,
 };
 use crate::time::Duration;
 use minicbor::{data::Type, decode, Decoder, Encoder};
 
-pub fn send(text: &str) -> bool {
+pub fn send() -> bool {
     let mut cbor_data = [0u8; 64];
     let mut data = [0u8; 64];
     let mut buffer = [0u8; 64];
@@ -13,15 +13,13 @@ pub fn send(text: &str) -> bool {
     let mut writer = SmpBuffer::new(&mut cbor_data);
 
     let mut enc = Encoder::new(&mut writer);
-    unwrap!(enc.map(1));
-    unwrap!(enc.str("d"));
-    unwrap!(enc.str(text));
+    unwrap!(enc.map(0));
 
     unwrap!(receiver_acquire());
 
     let data_len = writer.bytes_written();
 
-    let header = SmpHeader::new(SMP_OP_READ, data_len, SMP_GROUP_OS, 0, SMP_CMD_ID_ECHO).to_bytes();
+    let header = SmpHeader::new(SMP_OP_READ, data_len, SMP_GROUP_IMAGE, 0, SMP_CMD_ID_IMAGE_STATE).to_bytes();
 
     data[..SMP_HEADER_SIZE].copy_from_slice(&header);
     data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);
@@ -33,14 +31,15 @@ pub fn send(text: &str) -> bool {
         return false;
     }
 
-    let mut resp_buffer = [0u8; 64];
-    if wait_for_response(MsgType::Echo, &mut resp_buffer, Duration::from_millis(100)).is_ok() {
-        let echo_msg = process_msg(&resp_buffer);
-        return if let Ok(msg) = echo_msg {
-            msg == text
-        } else {
-            false
-        };
+    let mut resp_buffer = [0u8; 256];
+    if wait_for_response(MsgType::ImageStateResponse, &mut resp_buffer, Duration::from_millis(5000)).is_ok() {
+        // let echo_msg = process_msg(&resp_buffer);
+        // return if let Ok(msg) = echo_msg {
+        //     msg == text
+        // } else {
+        //     false
+        // };
+        return true
     }
 
     false
