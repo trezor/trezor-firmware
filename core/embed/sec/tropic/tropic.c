@@ -455,11 +455,27 @@ static void lt_r_mem_data_write_time(uint32_t *time_ms) {
   *time_ms += 77;
 }
 
+static void lt_r_mem_data_erase_time(uint32_t *time_ms) { *time_ms += 55; }
+
 static void lt_mcounter_get_time(uint32_t *time_ms) { *time_ms += 51; }
 
 static void lt_mcounter_update_time(uint32_t *time_ms) { *time_ms += 51; }
 
-static void lt_r_mem_data_erase_time(uint32_t *time_ms) { *time_ms += 55; }
+lt_ret_t lt_r_mem_data_erase_write(lt_handle_t *h, const uint16_t udata_slot,
+                                   uint8_t *data, const uint16_t size) {
+  lt_ret_t ret = lt_r_mem_data_erase(h, udata_slot);
+  if (ret != LT_OK) {
+    return ret;
+  }
+
+  return lt_r_mem_data_write(h, udata_slot, data, size);
+}
+
+lt_ret_t lt_r_mem_data_erase_write_time(uint32_t *time_ms) {
+  lt_r_mem_data_erase_time(time_ms);
+  lt_r_mem_data_write_time(time_ms);
+  return LT_OK;
+}
 
 static uint32_t g_change_pin_counter_cached = 0;
 static bool g_is_change_pin_counter_cached = false;
@@ -727,12 +743,8 @@ bool tropic_pin_set_kek_masks(
 
   uint16_t masked_kek_slot = get_kek_masks_slot(drv);
 
-  if (lt_r_mem_data_erase(&drv->handle, masked_kek_slot) != LT_OK) {
-    goto cleanup;
-  }
-
-  if (lt_r_mem_data_write(&drv->handle, masked_kek_slot, masks,
-                          sizeof(masks)) != LT_OK) {
+  if (lt_r_mem_data_erase_write(&drv->handle, masked_kek_slot, masks,
+                                sizeof(masks)) != LT_OK) {
     goto cleanup;
   }
 
@@ -746,8 +758,7 @@ cleanup:
 }
 
 void tropic_pin_set_kek_masks_time(uint32_t *time_ms) {
-  lt_r_mem_data_erase_time(time_ms);
-  lt_r_mem_data_write_time(time_ms);
+  lt_r_mem_data_erase_write_time(time_ms);
 }
 
 bool tropic_pin_unmask_kek(
