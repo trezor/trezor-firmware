@@ -1,4 +1,4 @@
-use super::{echo, process_rx_byte, reset, upload};
+use super::{echo, process_rx_byte, image_info, reset, upload};
 
 use crate::util::from_c_array;
 
@@ -12,6 +12,11 @@ extern "C" fn smp_echo(text: *const cty::c_char, text_len: u8) -> bool {
 #[no_mangle]
 extern "C" fn smp_reset() {
     reset::send();
+}
+
+#[no_mangle]
+extern "C" fn smp_image_version_get() -> bool {
+    image_info::send()
 }
 
 #[no_mangle]
