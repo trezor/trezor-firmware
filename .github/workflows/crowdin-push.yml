@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  push:
+  crowdin-push-sources:
     name: Split and upload sources
     if: github.ref_name == 'main'  # run only when dispatched from main
     runs-on: ubuntu-latest
