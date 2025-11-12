@@ -339,4 +339,42 @@ mod test {
             assert_eq!(result, v.tag);
         }
     }
+
+    #[test]
+    fn test_state() {
+        init_ctx!(ctx, &[0u8; 16], b"1");
+        let mut ctx = ctx.unwrap();
+
+        // ok: empty string tag
+        ctx.finish().unwrap();
+
+        // ok: any single operation
+        // not ok: after reset
+        let mut dest = [0u8; 16];
+        ctx.reset(b"2");
+        ctx.encrypt(b"asdf", &mut dest).unwrap();
+        ctx.finish().unwrap();
+        assert!(ctx.encrypt(b"asdf", &mut dest).is_err());
+
+        ctx.reset(b"3");
+        ctx.decrypt(b"fdsa", &mut dest).unwrap();
+        ctx.finish().unwrap();
+        assert!(ctx.decrypt(b"fdsa", &mut dest).is_err());
+
+        ctx.reset(b"5");
+        ctx.auth(b"foobar").unwrap();
+        ctx.finish().unwrap();
+        assert!(ctx.auth(b"foobar").is_err());
+
+        // not ok: mixing encrypt and decrypt
+        ctx.reset(b"6");
+        ctx.encrypt(b"asdf", &mut dest).unwrap();
+        ctx.encrypt_in_place(&mut dest).unwrap();
+        assert!(ctx.decrypt(b"fdsa", &mut dest).is_err());
+
+        ctx.reset(b"7");
+        ctx.decrypt_in_place(&mut dest).unwrap();
+        ctx.auth(b"foobar").unwrap();
+        assert!(ctx.encrypt(b"fdsa", &mut dest).is_err());
+    }
 }

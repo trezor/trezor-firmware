@@ -398,6 +398,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("SLIP39_WORDLIST")
         .allowlist_var("SLIP39_WORD_COUNT")
         // random
+        .allowlist_function("random_buffer")
         .allowlist_function("random_uniform")
         // rgb led
         .allowlist_type("rgb_led_effect_type_t")

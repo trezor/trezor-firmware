@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include "aes/aesgcm.h"
 #include "ed25519-donna/ed25519.h"
 #include "elligator2.h"
