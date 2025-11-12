@@ -18,6 +18,7 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+@unittest.skipUnless(utils.MODEL == "T2T1", "NEM")
 class TestNemMultisig(unittest.TestCase):
     def test_nem_multisig(self):
         # http://bob.nem.ninja:8765/#/multisig/7d3a7087023ee29005262016706818579a2b5499eb9ca76bad98c1e6f4c46642

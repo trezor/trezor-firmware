@@ -3,9 +3,11 @@ from common import *  # isort:skip
 
 from apps.common.paths import HARDENED
 
-if not utils.BITCOIN_ONLY:
-    from trezor.crypto import nem
+# Debug: Print model and BITCOIN_ONLY status
+print(f"DEBUG: utils.MODEL = {utils.MODEL}, {utils.INTERNAL_MODEL}")
+print(f"DEBUG: utils.BITCOIN_ONLY = {utils.BITCOIN_ONLY}")
 
+if not utils.BITCOIN_ONLY:
     from apps.nem.helpers import (
         NEM_NETWORK_MAINNET,
         NEM_NETWORK_MIJIN,
@@ -15,7 +17,10 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
+@unittest.skipUnless(utils.INTERNAL_MODEL == "T2T1", "NEM")
 class TestNemAddress(unittest.TestCase):
+    from trezor.crypto import nem
+
     def test_addresses(self):
         pubkey = unhexlify(
             "c5f54ba980fcbb657dbaaa42700539b207873e134d2375efeab5f1ab52f87844"
