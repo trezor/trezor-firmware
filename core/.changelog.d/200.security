@@ -1,0 +1,1 @@
+Fixed side-channel vulnerability in BIP-39 mnemonic processing.

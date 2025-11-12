@@ -529,7 +529,14 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
 static void recovery_scrambledword(const char *word) {
   int index = -1;
   if (enforce_wordlist) {  // check if word is valid
-    index = mnemonic_find_word(word);
+    // mnemonic_find_word requires a buffer of at least 9 bytes
+    char buffer[BIP39_MAX_WORD_LEN + 1] = {0};
+    int word_len = strlen(word);
+    if (word_len <= BIP39_MAX_WORD_LEN) {
+      memcpy(buffer, word, strlen(word));
+      index = mnemonic_find_word(buffer).index;
+      memzero(buffer, sizeof(buffer));
+    }
     if (index < 0) {  // not found
       if (!dry_run) {
         session_clear(true);

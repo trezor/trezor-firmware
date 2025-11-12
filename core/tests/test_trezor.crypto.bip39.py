@@ -158,6 +158,7 @@ class TestCryptoBip39(unittest.TestCase):
             "board flee heavy tunnel powder denial science ski answer betray cargo cat",
             "board blade invite damage undo sun mimic interest slam gaze truly inherit resist great inject rocket museum chief",
             "beyond stage sleep clip because twist token leaf atom beauty genius food business side grid unable middle armed observe pair crouch tonight away coconut",
+            "abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract abstract artefact electric",
         ]
         for m in v:
             self.assertEqual(bip39.check(m), True)
