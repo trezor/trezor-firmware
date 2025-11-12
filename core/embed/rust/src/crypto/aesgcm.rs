@@ -64,18 +64,16 @@ impl<'a> AesGcm<'a> {
                 ctx.as_mut().get_unchecked_mut(),
             )
         };
-        if res != RETURN_GOOD {
-            return Err(Error::RuntimeError);
-        }
+        ensure!(res == RETURN_GOOD, "gcm_init_and_key");
         let mut aesgcm = Self {
             ctx,
             state: State::Init,
         };
-        aesgcm.reset(iv)?;
+        aesgcm.reset(iv);
         Ok(aesgcm)
     }
 
-    pub fn reset(&mut self, iv: &[u8]) -> Result<(), Error> {
+    pub fn reset(&mut self, iv: &[u8]) {
         // SAFETY: ffi
         let res = unsafe {
             ffi::gcm_init_message(
@@ -84,9 +82,8 @@ impl<'a> AesGcm<'a> {
                 self.ctx.as_mut().get_unchecked_mut(),
             )
         };
-        self.check_result(res)?;
+        ensure!(res == RETURN_GOOD, "gcm_init_message");
         self.state = State::Init;
-        Ok(())
     }
 
     pub fn encrypt<'b>(
@@ -94,13 +91,9 @@ impl<'a> AesGcm<'a> {
         plaintext: &[u8],
         buffer: &'b mut [u8],
     ) -> Result<&'b [u8], Error> {
-        self.check_state(&[State::Init, State::Encrypting])?;
-        self.state = State::Encrypting;
-
-        if buffer.len() < plaintext.len() {
-            return Err(Error::InvalidParams);
-        }
-        let buffer = &mut buffer[..plaintext.len()];
+        let buffer = buffer
+            .get_mut(..plaintext.len())
+            .ok_or(Error::InvalidParams)?;
         buffer.copy_from_slice(plaintext);
         match self.encrypt_in_place(buffer) {
             Err(e) => {
@@ -122,7 +115,8 @@ impl<'a> AesGcm<'a> {
                 self.ctx.as_mut().get_unchecked_mut(),
             )
         };
-        self.check_result(res)
+        ensure!(res == RETURN_GOOD, "gcm_encrypt");
+        Ok(())
     }
 
     pub fn decrypt<'b>(
@@ -130,13 +124,9 @@ impl<'a> AesGcm<'a> {
         ciphertext: &[u8],
         buffer: &'b mut [u8],
     ) -> Result<&'b [u8], Error> {
-        self.check_state(&[State::Init, State::Decrypting])?;
-        self.state = State::Decrypting;
-
-        if buffer.len() < ciphertext.len() {
-            return Err(Error::InvalidParams);
-        }
-        let buffer = &mut buffer[..ciphertext.len()];
+        let buffer = buffer
+            .get_mut(..ciphertext.len())
+            .ok_or(Error::InvalidParams)?;
         buffer.copy_from_slice(ciphertext);
         self.decrypt_in_place(buffer)?;
         Ok(buffer)
@@ -154,7 +144,8 @@ impl<'a> AesGcm<'a> {
                 self.ctx.as_mut().get_unchecked_mut(),
             )
         };
-        self.check_result(res)
+        ensure!(res == RETURN_GOOD, "gcm_decrypt");
+        Ok(())
     }
 
     pub fn auth(&mut self, data: &[u8]) -> Result<(), Error> {
@@ -168,7 +159,8 @@ impl<'a> AesGcm<'a> {
                 self.ctx.as_mut().get_unchecked_mut(),
             )
         };
-        self.check_result(res)
+        ensure!(res == RETURN_GOOD, "gcm_auth_header");
+        Ok(())
     }
 
     pub fn finish(&mut self) -> Result<Tag, Error> {
@@ -184,21 +176,16 @@ impl<'a> AesGcm<'a> {
                 self.ctx.as_mut().get_unchecked_mut(),
             )
         };
-        self.check_result(res)?;
-        Ok(tag)
-    }
-
-    fn check_result(&mut self, res: i32) -> Result<(), Error> {
         if res != RETURN_GOOD {
             self.state = State::Failed;
-            return Err(Error::RuntimeError);
+            return Err(Error::InvalidContext);
         }
-        Ok(())
+        Ok(tag)
     }
 
     fn check_state(&self, allowed: &[State]) -> Result<(), Error> {
         if !allowed.contains(&self.state) {
-            return Err(Error::RuntimeError);
+            return Err(Error::InvalidContext);
         }
         Ok(())
     }

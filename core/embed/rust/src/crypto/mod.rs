@@ -19,9 +19,8 @@ pub enum Error {
     InvalidEncoding,
     // Provided parameters are not accepted (e.g., signature threshold out of bounds)
     InvalidParams,
-    // Implementation returned an error without further details
-    #[allow(clippy::enum_variant_names)]
-    RuntimeError,
+    // State precondition check failed (possibly raised by C implementation)
+    InvalidContext,
 }
 
 impl From<Error> for crate::error::Error {
@@ -30,7 +29,7 @@ impl From<Error> for crate::error::Error {
             Error::SignatureVerificationFailed => value_error!(c"Signature verification failed"),
             Error::InvalidEncoding => value_error!(c"Invalid key or signature encoding"),
             Error::InvalidParams => value_error!(c"Invalid cryptographic parameters"),
-            Error::RuntimeError => value_error!(c"Cryptography runtime error"),
+            Error::InvalidContext => value_error!(c"Invalid cryptographic context"),
         }
     }
 }
