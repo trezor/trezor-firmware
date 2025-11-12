@@ -208,9 +208,8 @@ macro_rules! init_ctx {
         let mut $name = crate::crypto::aesgcm::AesGcm::memory();
         // ... then make it inaccessible by overwriting the binding, and pin it
         #[allow(unused_mut)]
-        let mut $name = unsafe {
-            crate::crypto::aesgcm::AesGcm::new(core::pin::Pin::new_unchecked(&mut $name), $key, $iv)
-        };
+        let mut $name =
+            crate::crypto::aesgcm::AesGcm::new(core::pin::Pin::new(&mut $name), $key, $iv);
     };
 }
 

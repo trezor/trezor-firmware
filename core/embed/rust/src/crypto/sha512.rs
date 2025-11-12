@@ -63,9 +63,7 @@ macro_rules! init_ctx {
         let mut $name = crate::crypto::sha512::Sha512::memory();
         // ... then make it inaccessible by overwriting the binding, and pin it
         #[allow(unused_mut)]
-        let mut $name = unsafe {
-            crate::crypto::sha512::Sha512::new(core::pin::Pin::new_unchecked(&mut $name))
-        };
+        let mut $name = crate::crypto::sha512::Sha512::new(core::pin::Pin::new(&mut $name));
     };
 }
 
