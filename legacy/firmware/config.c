@@ -620,16 +620,6 @@ const uint8_t *config_getSeed(void) {
         return NULL;
       }
     }
-    // if storage was not imported (i.e. it was properly generated or recovered)
-    bool imported = false;
-    config_get_bool(KEY_IMPORTED, &imported);
-    if (!imported) {
-      // test whether mnemonic is a valid BIP-0039 mnemonic
-      if (!mnemonic_check(mnemonic)) {
-        // and if not then halt the device
-        error_shutdown(_("Storage failure"), _("detected."), NULL, NULL);
-      }
-    }
     char oldTiny = usbTiny(1);
     mnemonic_to_seed(mnemonic, passphrase, activeSessionCache->seed,
                      get_root_node_callback);  // BIP-0039

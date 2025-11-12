@@ -6875,12 +6875,24 @@ START_TEST(test_mnemonic_to_bits) {
 END_TEST
 
 START_TEST(test_mnemonic_find_word) {
-  ck_assert_int_eq(-1, mnemonic_find_word("aaaa"));
-  ck_assert_int_eq(-1, mnemonic_find_word("zzzz"));
+  char word1[BIP39_MAX_WORD_LEN + 1] = "aaaa";
+  found_word record = mnemonic_find_word(word1);
+  ck_assert_int_eq(-1, record.index);
+  ck_assert_int_eq(0, record.length);
+
+  char word2[BIP39_MAX_WORD_LEN + 1] = "zzzz";
+  record = mnemonic_find_word(word2);
+  ck_assert_int_eq(-1, record.index);
+  ck_assert_int_eq(0, record.length);
+
+  char word_buf[BIP39_MAX_WORD_LEN + 1] = {0};
   for (int i = 0; i < BIP39_WORD_COUNT; i++) {
     const char *word = mnemonic_get_word(i);
-    int index = mnemonic_find_word(word);
-    ck_assert_int_eq(i, index);
+    memset(word_buf, 0, sizeof(word_buf));
+    strncpy(word_buf, word, sizeof(word_buf) - 1);
+    record = mnemonic_find_word(word_buf);
+    ck_assert_int_eq(i, record.index);
+    ck_assert_int_eq(strlen(word), record.length);
   }
 }
 END_TEST
