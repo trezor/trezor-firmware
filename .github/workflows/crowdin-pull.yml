@@ -26,6 +26,7 @@ jobs:
       - name: Download translations from Crowdin
         uses: crowdin/github-action@v2
         with:
+          upload_sources: false
           download_translations: true
           config: core/translations/crowdin.yml
         env:
