@@ -1,7 +1,9 @@
 name: Crowdin - pull translations (manual)
 
+# on:
+#   workflow_dispatch:
 on:
-  workflow_dispatch:
+  push
 
 permissions:
   contents: write
