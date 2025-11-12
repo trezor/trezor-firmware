@@ -75,8 +75,9 @@ def cli(
     else:
         echo = click.echo
 
-    echo("Signing with dev keys...", err=True)
-    fw.sign_with_devkeys()
+    if sign_dev_keys:
+        echo("Signing with dev keys...", err=True)
+        fw.sign_with_devkeys()
 
     echo(f"Detected image type: {fw.NAME}")
     echo(fw.format(verbose))
