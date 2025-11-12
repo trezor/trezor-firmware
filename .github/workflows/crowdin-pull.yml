@@ -44,7 +44,7 @@ jobs:
         run: nix-shell --run "uv run python core/translations/crowdin.py merge"
 
       - name: Regenerate translation signatures
-        run: nix-shell --run "make -C core translations"
+        run: nix-shell --run "uv run make -C core translations"
 
       - name: Create PR
         uses: peter-evans/create-pull-request@v6
