@@ -81,6 +81,23 @@ async def handle_received_message(channel: Channel) -> bool:
     return False
 
 
+async def _handle_thp_during_unlock(channel: Channel) -> None:
+    """
+    Keep handling THP messages while waiting for unlock.
+    It allows preemption and ping/pong handling if the device is soft-locked.
+    """
+    while True:
+        # may raise ChannelPreemptedException if another channel preempts this one
+        msg = await channel._get_reassembled_message()
+        if __debug__:
+            # we don't expect messages from this channel since the handshake is not over
+            channel._log(
+                "drop unexpected message",
+                utils.hexlify_if_bytes(msg),
+                logger=log.warning,
+            )
+
+
 async def _handle_state_handshake(
     ctx: Channel,
 ) -> None:
@@ -107,14 +124,16 @@ async def _handle_state_handshake(
             return
 
         if try_to_unlock:
-            from trezor import workflow
+            from trezor import loop, workflow
 
             from apps.common.lock_manager import unlock_device
 
             # Register the unlock prompt with the workflow management system
             # (in order to avoid immediately respawning the lockscreen task)
             try:
-                return await workflow.spawn(unlock_device())
+                unlock = workflow.spawn(unlock_device())
+                handle = _handle_thp_during_unlock(channel=ctx)
+                return await loop.race(unlock, handle)
             except Exception as e:
                 if __debug__:
                     log.exception(__name__, e)
