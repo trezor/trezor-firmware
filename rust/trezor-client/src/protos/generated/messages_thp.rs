@@ -38,6 +38,8 @@ pub struct ThpDeviceProperties {
     pub protocol_version_minor: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpDeviceProperties.pairing_methods)
     pub pairing_methods: ::std::vec::Vec<::protobuf::EnumOrUnknown<ThpPairingMethod>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpDeviceProperties.ack_piggybacking)
+    pub ack_piggybacking: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpDeviceProperties.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -147,8 +149,27 @@ impl ThpDeviceProperties {
         self.protocol_version_minor = ::std::option::Option::Some(v);
     }
 
+    // optional bool ack_piggybacking = 6;
+
+    pub fn ack_piggybacking(&self) -> bool {
+        self.ack_piggybacking.unwrap_or(false)
+    }
+
+    pub fn clear_ack_piggybacking(&mut self) {
+        self.ack_piggybacking = ::std::option::Option::None;
+    }
+
+    pub fn has_ack_piggybacking(&self) -> bool {
+        self.ack_piggybacking.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_ack_piggybacking(&mut self, v: bool) {
+        self.ack_piggybacking = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut fields = ::std::vec::Vec::with_capacity(6);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "internal_model",
@@ -174,6 +195,11 @@ impl ThpDeviceProperties {
             "pairing_methods",
             |m: &ThpDeviceProperties| { &m.pairing_methods },
             |m: &mut ThpDeviceProperties| { &mut m.pairing_methods },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "ack_piggybacking",
+            |m: &ThpDeviceProperties| { &m.ack_piggybacking },
+            |m: &mut ThpDeviceProperties| { &mut m.ack_piggybacking },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpDeviceProperties>(
             "ThpDeviceProperties",
@@ -220,6 +246,9 @@ impl ::protobuf::Message for ThpDeviceProperties {
                 42 => {
                     ::protobuf::rt::read_repeated_packed_enum_or_unknown_into(is, &mut self.pairing_methods)?
                 },
+                48 => {
+                    self.ack_piggybacking = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -247,6 +276,9 @@ impl ::protobuf::Message for ThpDeviceProperties {
         for value in &self.pairing_methods {
             my_size += ::protobuf::rt::int32_size(5, value.value());
         };
+        if let Some(v) = self.ack_piggybacking {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -268,6 +300,9 @@ impl ::protobuf::Message for ThpDeviceProperties {
         for v in &self.pairing_methods {
             os.write_enum(5, ::protobuf::EnumOrUnknown::value(v))?;
         };
+        if let Some(v) = self.ack_piggybacking {
+            os.write_bool(6, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -290,6 +325,7 @@ impl ::protobuf::Message for ThpDeviceProperties {
         self.protocol_version_major = ::std::option::Option::None;
         self.protocol_version_minor = ::std::option::Option::None;
         self.pairing_methods.clear();
+        self.ack_piggybacking = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -300,6 +336,7 @@ impl ::protobuf::Message for ThpDeviceProperties {
             protocol_version_major: ::std::option::Option::None,
             protocol_version_minor: ::std::option::Option::None,
             pairing_methods: ::std::vec::Vec::new(),
+            ack_piggybacking: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -4757,78 +4794,79 @@ impl ThpPairingMethod {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x12messages-thp.proto\x12\x16hw.trezor.messages.thp\x1a\roptions.prot\
-    o\"\xa3\x02\n\x13ThpDeviceProperties\x12%\n\x0einternal_model\x18\x01\
+    o\"\xce\x02\n\x13ThpDeviceProperties\x12%\n\x0einternal_model\x18\x01\
     \x20\x02(\tR\rinternalModel\x12&\n\rmodel_variant\x18\x02\x20\x01(\r:\
     \x010R\x0cmodelVariant\x124\n\x16protocol_version_major\x18\x03\x20\x02(\
     \rR\x14protocolVersionMajor\x124\n\x16protocol_version_minor\x18\x04\x20\
     \x02(\rR\x14protocolVersionMinor\x12Q\n\x0fpairing_methods\x18\x05\x20\
-    \x03(\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\x0epairingMethods\"\
-    _\n%ThpHandshakeCompletionReqNoisePayload\x126\n\x17host_pairing_credent\
-    ial\x18\x01\x20\x01(\x0cR\x15hostPairingCredential\"\x87\x01\n\x13ThpCre\
-    ateNewSession\x12\x1e\n\npassphrase\x18\x01\x20\x01(\tR\npassphrase\x12\
-    \"\n\ton_device\x18\x02\x20\x01(\x08:\x05falseR\x08onDevice\x12,\n\x0ede\
-    rive_cardano\x18\x03\x20\x01(\x08:\x05falseR\rderiveCardano\"K\n\x11ThpP\
-    airingRequest\x12\x1b\n\thost_name\x18\x01\x20\x02(\tR\x08hostName\x12\
-    \x19\n\x08app_name\x18\x02\x20\x02(\tR\x07appName\"\x1b\n\x19ThpPairingR\
-    equestApproved\"s\n\x0fThpSelectMethod\x12`\n\x17selected_pairing_method\
-    \x18\x01\x20\x02(\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\x15sele\
-    ctedPairingMethod\"\x20\n\x1eThpPairingPreparationsFinished\"8\n\x16ThpC\
-    odeEntryCommitment\x12\x1e\n\ncommitment\x18\x01\x20\x02(\x0cR\ncommitme\
-    nt\"5\n\x15ThpCodeEntryChallenge\x12\x1c\n\tchallenge\x18\x01\x20\x02(\
-    \x0cR\tchallenge\"P\n\x17ThpCodeEntryCpaceTrezor\x125\n\x17cpace_trezor_\
-    public_key\x18\x01\x20\x02(\x0cR\x14cpaceTrezorPublicKey\"_\n\x18ThpCode\
-    EntryCpaceHostTag\x121\n\x15cpace_host_public_key\x18\x01\x20\x02(\x0cR\
-    \x12cpaceHostPublicKey\x12\x10\n\x03tag\x18\x02\x20\x02(\x0cR\x03tag\",\
-    \n\x12ThpCodeEntrySecret\x12\x16\n\x06secret\x18\x01\x20\x02(\x0cR\x06se\
-    cret\"\x20\n\x0cThpQrCodeTag\x12\x10\n\x03tag\x18\x01\x20\x02(\x0cR\x03t\
-    ag\")\n\x0fThpQrCodeSecret\x12\x16\n\x06secret\x18\x01\x20\x02(\x0cR\x06\
-    secret\"!\n\rThpNfcTagHost\x12\x10\n\x03tag\x18\x01\x20\x02(\x0cR\x03tag\
-    \"#\n\x0fThpNfcTagTrezor\x12\x10\n\x03tag\x18\x01\x20\x02(\x0cR\x03tag\"\
-    \x94\x01\n\x14ThpCredentialRequest\x123\n\x16host_static_public_key\x18\
-    \x01\x20\x02(\x0cR\x13hostStaticPublicKey\x12'\n\x0bautoconnect\x18\x02\
-    \x20\x01(\x08:\x05falseR\x0bautoconnect\x12\x1e\n\ncredential\x18\x03\
-    \x20\x01(\x0cR\ncredential\"p\n\x15ThpCredentialResponse\x127\n\x18trezo\
-    r_static_public_key\x18\x01\x20\x02(\x0cR\x15trezorStaticPublicKey\x12\
-    \x1e\n\ncredential\x18\x02\x20\x02(\x0cR\ncredential\"\x0f\n\rThpEndRequ\
-    est\"\x10\n\x0eThpEndResponse\"w\n\x15ThpCredentialMetadata\x12\x1b\n\th\
-    ost_name\x18\x01\x20\x02(\tR\x08hostName\x12\x20\n\x0bautoconnect\x18\
-    \x02\x20\x01(\x08R\x0bautoconnect\x12\x19\n\x08app_name\x18\x03\x20\x02(\
-    \tR\x07appName:\x04\x98\xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\
-    \x12R\n\rcred_metadata\x18\x01\x20\x02(\x0b2-.hw.trezor.messages.thp.Thp\
-    CredentialMetadataR\x0ccredMetadata\x12\x10\n\x03mac\x18\x02\x20\x02(\
-    \x0cR\x03mac:\x04\x98\xb2\x19\x01\"\xaf\x01\n\x1eThpAuthenticatedCredent\
-    ialData\x123\n\x16host_static_public_key\x18\x01\x20\x02(\x0cR\x13hostSt\
-    aticPublicKey\x12R\n\rcred_metadata\x18\x02\x20\x02(\x0b2-.hw.trezor.mes\
-    sages.thp.ThpCredentialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01\"\
-    \xdc\x01\n\x0eThpPairedCache\x12T\n\x07entries\x18\x01\x20\x03(\x0b2:.hw\
-    .trezor.messages.thp.ThpPairedCache.ThpPairedCacheEntryR\x07entries\x1an\
-    \n\x13ThpPairedCacheEntry\x12\x19\n\x08mac_addr\x18\x01\x20\x02(\x0cR\
-    \x07macAddr\x12\x1b\n\thost_name\x18\x02\x20\x02(\tR\x08hostName\x12\x19\
-    \n\x08app_name\x18\x03\x20\x02(\tR\x07appName:\x04\x98\xb2\x19\x01:\x04\
-    \x98\xb2\x19\x01*\xfb\x06\n\x0eThpMessageType\x12\x19\n\x15ThpMessageTyp\
-    e_Cancel\x10\x14\x12\x20\n\x1cThpMessageType_ButtonRequest\x10\x1a\x12\
-    \x1c\n\x18ThpMessageType_ButtonAck\x10\x1b\x12%\n\x20ThpMessageType_ThpP\
-    airingRequest\x10\xf0\x07\x12-\n(ThpMessageType_ThpPairingRequestApprove\
-    d\x10\xf1\x07\x12#\n\x1eThpMessageType_ThpSelectMethod\x10\xf2\x07\x122\
-    \n-ThpMessageType_ThpPairingPreparationsFinished\x10\xf3\x07\x12(\n#ThpM\
-    essageType_ThpCredentialRequest\x10\xf8\x07\x12)\n$ThpMessageType_ThpCre\
-    dentialResponse\x10\xf9\x07\x12!\n\x1cThpMessageType_ThpEndRequest\x10\
-    \xfa\x07\x12\"\n\x1dThpMessageType_ThpEndResponse\x10\xfb\x07\x12*\n%Thp\
-    MessageType_ThpCodeEntryCommitment\x10\x80\x08\x12)\n$ThpMessageType_Thp\
-    CodeEntryChallenge\x10\x81\x08\x12+\n&ThpMessageType_ThpCodeEntryCpaceTr\
-    ezor\x10\x82\x08\x12,\n'ThpMessageType_ThpCodeEntryCpaceHostTag\x10\x83\
-    \x08\x12&\n!ThpMessageType_ThpCodeEntrySecret\x10\x84\x08\x12\x20\n\x1bT\
-    hpMessageType_ThpQrCodeTag\x10\x88\x08\x12#\n\x1eThpMessageType_ThpQrCod\
-    eSecret\x10\x89\x08\x12!\n\x1cThpMessageType_ThpNfcTagHost\x10\x90\x08\
-    \x12#\n\x1eThpMessageType_ThpNfcTagTrezor\x10\x91\x08\x1a\x04\xd0\xf3\
-    \x18\x01\"\x04\x08\0\x10\x13\"\x04\x08\x15\x10\x19\"\x05\x08\x1c\x10\xe7\
-    \x07\"\x06\x08\xe8\x07\x10\xe8\x07\"\x06\x08\xe9\x07\x10\xef\x07\"\x06\
-    \x08\xf4\x07\x10\xf7\x07\"\x06\x08\xfc\x07\x10\xff\x07\"\x06\x08\x85\x08\
-    \x10\x87\x08\"\x06\x08\x8a\x08\x10\x8f\x08\"\x06\x08\x92\x08\x10\xcb\x08\
-    \"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07*G\n\x10ThpPairingMethod\x12\x0f\
-    \n\x0bSkipPairing\x10\x01\x12\r\n\tCodeEntry\x10\x02\x12\n\n\x06QrCode\
-    \x10\x03\x12\x07\n\x03NFC\x10\x04B;\n#com.satoshilabs.trezor.lib.protobu\
-    fB\x10TrezorMessageThp\x80\xa6\x1d\x01\
+    \x03(\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\x0epairingMethods\
+    \x12)\n\x10ack_piggybacking\x18\x06\x20\x01(\x08R\x0fackPiggybacking\"_\
+    \n%ThpHandshakeCompletionReqNoisePayload\x126\n\x17host_pairing_credenti\
+    al\x18\x01\x20\x01(\x0cR\x15hostPairingCredential\"\x87\x01\n\x13ThpCrea\
+    teNewSession\x12\x1e\n\npassphrase\x18\x01\x20\x01(\tR\npassphrase\x12\"\
+    \n\ton_device\x18\x02\x20\x01(\x08:\x05falseR\x08onDevice\x12,\n\x0ederi\
+    ve_cardano\x18\x03\x20\x01(\x08:\x05falseR\rderiveCardano\"K\n\x11ThpPai\
+    ringRequest\x12\x1b\n\thost_name\x18\x01\x20\x02(\tR\x08hostName\x12\x19\
+    \n\x08app_name\x18\x02\x20\x02(\tR\x07appName\"\x1b\n\x19ThpPairingReque\
+    stApproved\"s\n\x0fThpSelectMethod\x12`\n\x17selected_pairing_method\x18\
+    \x01\x20\x02(\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\x15selected\
+    PairingMethod\"\x20\n\x1eThpPairingPreparationsFinished\"8\n\x16ThpCodeE\
+    ntryCommitment\x12\x1e\n\ncommitment\x18\x01\x20\x02(\x0cR\ncommitment\"\
+    5\n\x15ThpCodeEntryChallenge\x12\x1c\n\tchallenge\x18\x01\x20\x02(\x0cR\
+    \tchallenge\"P\n\x17ThpCodeEntryCpaceTrezor\x125\n\x17cpace_trezor_publi\
+    c_key\x18\x01\x20\x02(\x0cR\x14cpaceTrezorPublicKey\"_\n\x18ThpCodeEntry\
+    CpaceHostTag\x121\n\x15cpace_host_public_key\x18\x01\x20\x02(\x0cR\x12cp\
+    aceHostPublicKey\x12\x10\n\x03tag\x18\x02\x20\x02(\x0cR\x03tag\",\n\x12T\
+    hpCodeEntrySecret\x12\x16\n\x06secret\x18\x01\x20\x02(\x0cR\x06secret\"\
+    \x20\n\x0cThpQrCodeTag\x12\x10\n\x03tag\x18\x01\x20\x02(\x0cR\x03tag\")\
+    \n\x0fThpQrCodeSecret\x12\x16\n\x06secret\x18\x01\x20\x02(\x0cR\x06secre\
+    t\"!\n\rThpNfcTagHost\x12\x10\n\x03tag\x18\x01\x20\x02(\x0cR\x03tag\"#\n\
+    \x0fThpNfcTagTrezor\x12\x10\n\x03tag\x18\x01\x20\x02(\x0cR\x03tag\"\x94\
+    \x01\n\x14ThpCredentialRequest\x123\n\x16host_static_public_key\x18\x01\
+    \x20\x02(\x0cR\x13hostStaticPublicKey\x12'\n\x0bautoconnect\x18\x02\x20\
+    \x01(\x08:\x05falseR\x0bautoconnect\x12\x1e\n\ncredential\x18\x03\x20\
+    \x01(\x0cR\ncredential\"p\n\x15ThpCredentialResponse\x127\n\x18trezor_st\
+    atic_public_key\x18\x01\x20\x02(\x0cR\x15trezorStaticPublicKey\x12\x1e\n\
+    \ncredential\x18\x02\x20\x02(\x0cR\ncredential\"\x0f\n\rThpEndRequest\"\
+    \x10\n\x0eThpEndResponse\"w\n\x15ThpCredentialMetadata\x12\x1b\n\thost_n\
+    ame\x18\x01\x20\x02(\tR\x08hostName\x12\x20\n\x0bautoconnect\x18\x02\x20\
+    \x01(\x08R\x0bautoconnect\x12\x19\n\x08app_name\x18\x03\x20\x02(\tR\x07a\
+    ppName:\x04\x98\xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\x12R\n\r\
+    cred_metadata\x18\x01\x20\x02(\x0b2-.hw.trezor.messages.thp.ThpCredentia\
+    lMetadataR\x0ccredMetadata\x12\x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac\
+    :\x04\x98\xb2\x19\x01\"\xaf\x01\n\x1eThpAuthenticatedCredentialData\x123\
+    \n\x16host_static_public_key\x18\x01\x20\x02(\x0cR\x13hostStaticPublicKe\
+    y\x12R\n\rcred_metadata\x18\x02\x20\x02(\x0b2-.hw.trezor.messages.thp.Th\
+    pCredentialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01\"\xdc\x01\n\
+    \x0eThpPairedCache\x12T\n\x07entries\x18\x01\x20\x03(\x0b2:.hw.trezor.me\
+    ssages.thp.ThpPairedCache.ThpPairedCacheEntryR\x07entries\x1an\n\x13ThpP\
+    airedCacheEntry\x12\x19\n\x08mac_addr\x18\x01\x20\x02(\x0cR\x07macAddr\
+    \x12\x1b\n\thost_name\x18\x02\x20\x02(\tR\x08hostName\x12\x19\n\x08app_n\
+    ame\x18\x03\x20\x02(\tR\x07appName:\x04\x98\xb2\x19\x01:\x04\x98\xb2\x19\
+    \x01*\xfb\x06\n\x0eThpMessageType\x12\x19\n\x15ThpMessageType_Cancel\x10\
+    \x14\x12\x20\n\x1cThpMessageType_ButtonRequest\x10\x1a\x12\x1c\n\x18ThpM\
+    essageType_ButtonAck\x10\x1b\x12%\n\x20ThpMessageType_ThpPairingRequest\
+    \x10\xf0\x07\x12-\n(ThpMessageType_ThpPairingRequestApproved\x10\xf1\x07\
+    \x12#\n\x1eThpMessageType_ThpSelectMethod\x10\xf2\x07\x122\n-ThpMessageT\
+    ype_ThpPairingPreparationsFinished\x10\xf3\x07\x12(\n#ThpMessageType_Thp\
+    CredentialRequest\x10\xf8\x07\x12)\n$ThpMessageType_ThpCredentialRespons\
+    e\x10\xf9\x07\x12!\n\x1cThpMessageType_ThpEndRequest\x10\xfa\x07\x12\"\n\
+    \x1dThpMessageType_ThpEndResponse\x10\xfb\x07\x12*\n%ThpMessageType_ThpC\
+    odeEntryCommitment\x10\x80\x08\x12)\n$ThpMessageType_ThpCodeEntryChallen\
+    ge\x10\x81\x08\x12+\n&ThpMessageType_ThpCodeEntryCpaceTrezor\x10\x82\x08\
+    \x12,\n'ThpMessageType_ThpCodeEntryCpaceHostTag\x10\x83\x08\x12&\n!ThpMe\
+    ssageType_ThpCodeEntrySecret\x10\x84\x08\x12\x20\n\x1bThpMessageType_Thp\
+    QrCodeTag\x10\x88\x08\x12#\n\x1eThpMessageType_ThpQrCodeSecret\x10\x89\
+    \x08\x12!\n\x1cThpMessageType_ThpNfcTagHost\x10\x90\x08\x12#\n\x1eThpMes\
+    sageType_ThpNfcTagTrezor\x10\x91\x08\x1a\x04\xd0\xf3\x18\x01\"\x04\x08\0\
+    \x10\x13\"\x04\x08\x15\x10\x19\"\x05\x08\x1c\x10\xe7\x07\"\x06\x08\xe8\
+    \x07\x10\xe8\x07\"\x06\x08\xe9\x07\x10\xef\x07\"\x06\x08\xf4\x07\x10\xf7\
+    \x07\"\x06\x08\xfc\x07\x10\xff\x07\"\x06\x08\x85\x08\x10\x87\x08\"\x06\
+    \x08\x8a\x08\x10\x8f\x08\"\x06\x08\x92\x08\x10\xcb\x08\"\t\x08\xcc\x08\
+    \x10\xff\xff\xff\xff\x07*G\n\x10ThpPairingMethod\x12\x0f\n\x0bSkipPairin\
+    g\x10\x01\x12\r\n\tCodeEntry\x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x07\n\
+    \x03NFC\x10\x04B;\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessag\
+    eThp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
