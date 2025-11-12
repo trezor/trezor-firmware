@@ -87,6 +87,11 @@ def test_unlock_pin(client: Client):
     protocol._send_handshake_init_request(try_to_unlock=True)
     protocol._read_ack()
     debug.synchronize_at("PinKeyboard")
+
+    # the device is responsive during unlock flow
+    protocol.transport.ping()
+    protocol.sync_responses()
+
     debug.input(PIN4)
 
     protocol._read_handshake_init_response()
