@@ -888,19 +888,6 @@ class DebugLink:
         else:
             self.t1_take_screenshots = False
 
-    def memory_read(self, address: int, length: int) -> bytes:
-        return self._call(
-            messages.DebugLinkMemoryRead(address=address, length=length)
-        ).memory
-
-    def memory_write(self, address: int, memory: bytes, flash: bool = False) -> None:
-        self._write(
-            messages.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash)
-        )
-
-    def flash_erase(self, sector: int) -> None:
-        self._write(messages.DebugLinkFlashErase(sector=sector))
-
     def erase_sd_card(self, format: bool = True) -> None:
         self._call(
             messages.DebugLinkEraseSdCard(format=format), expect=messages.Success
