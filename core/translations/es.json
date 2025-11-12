@@ -1591,7 +1591,12 @@
       "Eckhart": "{0} de {1} fragmentos introducidos."
     },
     "recovery__you_have_entered": "Has introducido",
-    "regulatory__title": "Regulación",
+    "regulatory__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Regulatorio"
+    },
     "reset__advanced_group_threshold_info": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera.",
     "reset__all_x_of_y_template": {
       "Bolt": "{0} de {1} fragmentos",
@@ -1723,7 +1728,7 @@
       "Eckhart": "Escribe la primera palabra de la c. seg."
     },
     "reset__share_words_title": "C. seg. estándar",
-    "reset__slip39_checklist_more_info_threshold": "El umbral fija el número mínimo de acciones para recuperar tu monedero.",
+    "reset__slip39_checklist_more_info_threshold": "El umbral fija el número mínimo de fragmentos necesarios para recuperar tu billetera.",
     "reset__slip39_checklist_more_info_threshold_example_template": "Si fijas {0} de {1} fragmentos, necesitarás {2} fragmentos de la c. seg. para recuperar tu billetera.",
     "reset__slip39_checklist_num_groups": "Número de grupos",
     "reset__slip39_checklist_num_groups_x_template": "Número de grupos: {0}",
@@ -1802,7 +1807,7 @@
     },
     "reset__your_backup_is_done": "C. seg. completa.",
     "ripple__confirm_tag": "Confirmar etiqueta",
-    "ripple__destination_tag_missing": "",
+    "ripple__destination_tag_missing": "Etiqueta de destino no definida. Normalmente es necesaria cuando envías a exchanges.",
     "ripple__destination_tag_template": "Etiqueta de destino:\n{0}",
     "rotation__change_template": "¿Cambiar la orientación de la pantalla a {0}?",
     "rotation__east": "este",
@@ -1947,6 +1952,9 @@
       "Delizia": "Tarjeta SD incorrecta.",
       "Eckhart": ""
     },
+    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
+    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Cancelar firma",
     "send__cancel_transaction": "Cancelar transacción",
     "send__confirm_sending": "Enviando importe",
@@ -2345,9 +2353,9 @@
     "wipe_code__invalid": "Cód. borrar inválido",
     "wipe_code__mismatch": "Los códigos de borrar no coinciden.",
     "wipe_code__pin_not_set_description": {
-      "Bolt": "Debes config. un PIN antes de activar el cód. borrar",
-      "Caesar": "Debes config. un PIN antes de activar el cód. borrar",
-      "Delizia": "Debes config. un PIN antes de activar el cód. borrar",
+      "Bolt": "Debes config. un PIN antes de activar el cód. borrar.",
+      "Caesar": "Debes config. un PIN antes de activar el cód. borrar.",
+      "Delizia": "Debes config. un PIN antes de activar el cód. borrar.",
       "Eckhart": "Debes configurar un PIN antes de activar el código de borrado."
     },
     "wipe_code__reenter": "Reingresar cód. bor.",
@@ -2382,6 +2390,7 @@
     "words__cancel_and_exit": "Cancelar y salir",
     "words__cancel_question": "¿Cancelar?",
     "words__chain": "Cadena",
+    "words__comm_trouble": "Tu Trezor está teniendo problemas al comunicarse con tu dispositivo conectado.",
     "words__confirm": "Confirmar",
     "words__confirm_fee": "Confirmar comisión",
     "words__connect": "Conectar",

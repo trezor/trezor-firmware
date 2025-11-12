@@ -46,7 +46,7 @@
       "Bolt": "Se o endereço de destino não corresponder, contate o suporte Trezor em trezor.io/support.",
       "Caesar": "Se o endereço de destino não corresponder, contate o suporte Trezor em trezor.io/support.",
       "Delizia": "Se o endereço de destino não corresponder, contate o suporte Trezor em trezor.io/support.",
-      "Eckhart": "Se o endereço não bater, contacte o suporte Trezor em trezor.io/support."
+      "Eckhart": "Se o endereço não bater, contate o suporte Trezor em trezor.io/support."
     },
     "address__cancel_receive": {
       "Bolt": "Cancelar recebimento",
@@ -1686,7 +1686,12 @@
       "Eckhart": "{0} de {1} shares inseridas."
     },
     "recovery__you_have_entered": "Você inseriu",
-    "regulatory__title": "Regulamento",
+    "regulatory__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Regulamentação"
+    },
     "reset__advanced_group_threshold_info": "O limite mínimo de grupos especifica o número de grupos exigido para recuperar sua carteira.",
     "reset__all_x_of_y_template": {
       "Bolt": "todos {0} dos {1} shares",
@@ -1917,7 +1922,7 @@
     },
     "reset__your_backup_is_done": "Backup concluído.",
     "ripple__confirm_tag": "Confirmar tag",
-    "ripple__destination_tag_missing": "",
+    "ripple__destination_tag_missing": "Tag de destino não definida. Normalmente exigida ao enviar para exchanges.",
     "ripple__destination_tag_template": "Tag de destino:\n{0}",
     "rotation__change_template": "Alterar a orientação da tela para {0}?",
     "rotation__east": "leste",
@@ -2072,6 +2077,9 @@
       "Delizia": "Cartão SD incorreto.",
       "Eckhart": ""
     },
+    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
+    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Cancelar assinatura",
     "send__cancel_transaction": "Cancelar transação",
     "send__confirm_sending": "Quantia de envio",
@@ -2512,6 +2520,7 @@
     "words__cancel_and_exit": "Cancelar e sair",
     "words__cancel_question": "Cancelar?",
     "words__chain": "Chain",
+    "words__comm_trouble": "Seu Trezor não está conseguindo se comunicar com o dispositivo conectado.",
     "words__confirm": "Confirmar",
     "words__confirm_fee": "Confirmar taxa",
     "words__connect": "Conectar",
