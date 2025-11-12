@@ -1,0 +1,55 @@
+name: Crowdin - pull translations (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: crowdin-pull
+  cancel-in-progress: true
+
+jobs:
+  crowdin-pull-and-pr:
+    if: github.ref_name == 'main'  # run only when dispatched from main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup environment
+        uses: ./.github/actions/environment
+
+      - name: Split source files (en.json -> en_<layout>.json)
+        run: nix-shell --run "uv run python core/translations/crowdin.py split"
+
+      - name: Download translations from Crowdin
+        uses: crowdin/github-action@v2
+        with:
+          config: core/translations/crowdin.yml
+          upload_sources: false
+          download_translations: true
+          push_sources: false
+          push_translations: false
+          create_pull_request: false
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+
+      - name: Merge translations
+        run: nix-shell --run "uv run python core/translations/crowdin.py merge"
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(translations): sync Crowdin translations"
+          title: "Crowdin translations update"
+          body: "Automated update of translations pulled from Crowdin."
+          branch: ci/crowdin-sync-${{ github.ref_name }}-${{ github.run_id }}
+          base: ${{ github.ref_name }}
+          labels: translations
