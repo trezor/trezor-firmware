@@ -174,3 +174,9 @@ tropic_model_config_check:
 gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config ## regenerate auto-generated files from sources
 
 gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check ## check validity of auto-generated files
+
+funnycoin_build:
+	@cd sdk/apps/funnycoin-rust ; cargo build
+
+funnycoin_get_public_key:
+	@cd sdk/apps/funnycoin-rust/scripts ; ./test_get_public_key.py

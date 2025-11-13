@@ -1,0 +1,10 @@
+[package]
+name = "trezor-structs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+rkyv = { version = "0.8", default-features = false }

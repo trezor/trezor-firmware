@@ -1491,6 +1491,10 @@ impl FirmwareUI for UICaesar {
         );
         Ok(layout)
     }
+
+    fn process_ipc_message(_data: &[u8]) -> Result<Gc<LayoutObj>, Error> {
+        Err(Error::NotImplementedError)
+    }
 }
 
 /// Function to create and call a `ButtonPage` dialog based on paginable content

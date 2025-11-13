@@ -571,6 +571,18 @@ pub enum MessageType {
     MessageType_TelemetryGet = 1100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_Telemetry)
     MessageType_Telemetry = 1101,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppLoad)
+    MessageType_ExtAppLoad = 9200,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppLoaded)
+    MessageType_ExtAppLoaded = 9201,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppRun)
+    MessageType_ExtAppRun = 9202,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ExtAppResult)
+    MessageType_ExtAppResult = 9203,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_FunnycoinGetPublicKey)
+    MessageType_FunnycoinGetPublicKey = 9204,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_FunnycoinPublicKey)
+    MessageType_FunnycoinPublicKey = 9205,
 }
 
 impl ::protobuf::Enum for MessageType {
@@ -854,6 +866,12 @@ impl ::protobuf::Enum for MessageType {
             9103 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkResult),
             1100 => ::std::option::Option::Some(MessageType::MessageType_TelemetryGet),
             1101 => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
+            9200 => ::std::option::Option::Some(MessageType::MessageType_ExtAppLoad),
+            9201 => ::std::option::Option::Some(MessageType::MessageType_ExtAppLoaded),
+            9202 => ::std::option::Option::Some(MessageType::MessageType_ExtAppRun),
+            9203 => ::std::option::Option::Some(MessageType::MessageType_ExtAppResult),
+            9204 => ::std::option::Option::Some(MessageType::MessageType_FunnycoinGetPublicKey),
+            9205 => ::std::option::Option::Some(MessageType::MessageType_FunnycoinPublicKey),
             _ => ::std::option::Option::None
         }
     }
@@ -1132,6 +1150,12 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_BenchmarkResult" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkResult),
             "MessageType_TelemetryGet" => ::std::option::Option::Some(MessageType::MessageType_TelemetryGet),
             "MessageType_Telemetry" => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
+            "MessageType_ExtAppLoad" => ::std::option::Option::Some(MessageType::MessageType_ExtAppLoad),
+            "MessageType_ExtAppLoaded" => ::std::option::Option::Some(MessageType::MessageType_ExtAppLoaded),
+            "MessageType_ExtAppRun" => ::std::option::Option::Some(MessageType::MessageType_ExtAppRun),
+            "MessageType_ExtAppResult" => ::std::option::Option::Some(MessageType::MessageType_ExtAppResult),
+            "MessageType_FunnycoinGetPublicKey" => ::std::option::Option::Some(MessageType::MessageType_FunnycoinGetPublicKey),
+            "MessageType_FunnycoinPublicKey" => ::std::option::Option::Some(MessageType::MessageType_FunnycoinPublicKey),
             _ => ::std::option::Option::None
         }
     }
@@ -1409,6 +1433,12 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_BenchmarkResult,
         MessageType::MessageType_TelemetryGet,
         MessageType::MessageType_Telemetry,
+        MessageType::MessageType_ExtAppLoad,
+        MessageType::MessageType_ExtAppLoaded,
+        MessageType::MessageType_ExtAppRun,
+        MessageType::MessageType_ExtAppResult,
+        MessageType::MessageType_FunnycoinGetPublicKey,
+        MessageType::MessageType_FunnycoinPublicKey,
     ];
 }
 
@@ -1692,6 +1722,12 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_BenchmarkResult => 269,
             MessageType::MessageType_TelemetryGet => 270,
             MessageType::MessageType_Telemetry => 271,
+            MessageType::MessageType_ExtAppLoad => 272,
+            MessageType::MessageType_ExtAppLoaded => 273,
+            MessageType::MessageType_ExtAppRun => 274,
+            MessageType::MessageType_ExtAppResult => 275,
+            MessageType::MessageType_FunnycoinGetPublicKey => 276,
+            MessageType::MessageType_FunnycoinPublicKey => 277,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1710,7 +1746,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xfb^\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xe3`\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2021,12 +2057,18 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\
     \x12'\n\x18MessageType_TelemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\
     \x90\xb5\x18\x01\x12$\n\x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\
-    \xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\
-    \x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\
-    \x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\
-    \x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\
-    \x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com\
-    .satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    \xa6\x1d\x01\x98\xb5\x18\x01\x12!\n\x16MessageType_ExtAppLoad\x10\xf0G\
+    \x1a\x04\x90\xb5\x18\x01\x12#\n\x18MessageType_ExtAppLoaded\x10\xf1G\x1a\
+    \x04\x98\xb5\x18\x01\x12\x20\n\x15MessageType_ExtAppRun\x10\xf2G\x1a\x04\
+    \x90\xb5\x18\x01\x12#\n\x18MessageType_ExtAppResult\x10\xf3G\x1a\x04\x98\
+    \xb5\x18\x01\x12,\n!MessageType_FunnycoinGetPublicKey\x10\xf4G\x1a\x04\
+    \x90\xb5\x18\x01\x12)\n\x1eMessageType_FunnycoinPublicKey\x10\xf5G\x1a\
+    \x04\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\
+    \x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\
+    \xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\
+    \xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\
+    \x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satos\
+    hilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
