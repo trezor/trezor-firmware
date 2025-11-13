@@ -46,13 +46,22 @@ jobs:
       - name: Regenerate translation signatures
         run: nix-shell --run "uv run make -C core translations"
 
+      - name: Generate GitHub App token
+        id: trezor-bot-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
+          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+
       - name: Create PR
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.trezor-bot-token.outputs.token }}
           commit-message: "chore(translations): sync Crowdin translations"
           title: "Crowdin translations update"
           body: "Automated update of translations pulled from Crowdin."
           branch: ci/crowdin-sync-${{ github.ref_name }}-${{ github.run_id }}
           base: ${{ github.ref_name }}
           labels: translations
+          assignees: obrusvit
+          reviewers: obrusvit
