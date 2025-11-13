@@ -82,6 +82,9 @@ if PYOPT == '0':
 if DBG_CONSOLE != "":
     FEATURES_WANTED += ["dbg_console"]
 
+if TREZOR_MODEL in ['T3W1']:
+    FEATURES_WANTED += ["app_loading"]
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -266,6 +269,9 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+if "app_loading" in FEATURES_WANTED:
+    SOURCE_MOD += ['embed/api/trezor_api_v1_impl.c']
 
 CPPDEFINES_MOD += [
     'TRANSLATIONS',
@@ -476,6 +482,7 @@ env.Replace(
 
 ALLPATHS = [
         '.',
+        'embed/api',
         'embed/rust',
         'embed/projects/firmware',
         'embed/rtl/inc',

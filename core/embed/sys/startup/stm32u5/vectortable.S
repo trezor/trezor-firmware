@@ -185,6 +185,8 @@ vector_table:
   .word _stack_section_size
   .word _tls_section_start
   .word _tls_section_size
+  .word coreapp_api_get
+  .word 0
 #if USE_STORAGE_HWKEY
   .word saes_unpriv_input
   .word saes_unpriv_output
