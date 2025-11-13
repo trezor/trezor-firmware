@@ -113,7 +113,7 @@ class USB:
         """
         Cleans up the USB stack.
         """
-from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc
+from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc, app_cache
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
 
