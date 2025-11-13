@@ -26,6 +26,7 @@ if BENCHMARK and PYOPT != '0':
 FEATURES_WANTED = [
     "applet",
     "ble",
+    "dbg_console",
     "display",
     "dma2d",
     "input",
