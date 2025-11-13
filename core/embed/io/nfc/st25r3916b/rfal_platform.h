@@ -30,8 +30,6 @@ extern "C" {
 
 #include <sys/systick.h>
 
-#include "io/nfc.h"
-
 #include "nfc_internal.h"
 
 // Device type definition

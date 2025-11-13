@@ -31,6 +31,10 @@ typedef enum {
 } nfc_backup_event_t;
 
 typedef struct {
+  bool connected;
+} nfc_backup_state_t;
+
+typedef struct {
   uint8_t magic;
   uint8_t version;
   uint8_t bytes[NFC_BACKUP_STORAGE_MAX_SIZE];  // Adjust size as needed
@@ -46,18 +50,19 @@ typedef struct {
   uint8_t ic_reference;
 } nfc_backup_system_info_t;
 
-typedef struct {
-  bool connected;
-  bool system_info_available;
-} nfc_backup_state_t;
-
 bool nfc_backup_init();
 
 void nfc_backup_deinit();
 
 bool nfc_backup_read_system_info(nfc_backup_system_info_t *system_info);
 
-bool nfc_backup_configure_discrete_mode();
+bool nfc_backup_enable_discrete_mode(void);
+
+bool nfc_backup_disable_discrete_mode(void);
+
+bool nfc_backup_toggle_discrete_mode(void);
+
+bool nfc_backup_get_events(nfc_backup_event_t* events);
 
 /**
  * @brief Activate NFC and start discovery poller

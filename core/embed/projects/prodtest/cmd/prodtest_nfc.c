@@ -333,6 +333,8 @@ static void prodtest_nfc_backup_read_info(cli_t* cli) {
 
   nfc_backup_stop_discovery();
 
+  nfc_backup_deinit();
+
   cli_ok(cli, "");
 }
 
@@ -395,6 +397,12 @@ static void prodtest_nfc_backup_read_secret(cli_t* cli) {
     return;
   }
 
+  // nfc_status_t ret = nfc_init();
+  // if(ret != NFC_OK) {
+  //   cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
+  //   return;
+  // }
+
   if (!nfc_backup_init()) {
     cli_error(cli, CLI_ERROR_FATAL, "NFC backup init failed");
     return;
@@ -405,38 +413,104 @@ static void prodtest_nfc_backup_read_secret(cli_t* cli) {
     return;
   }
 
-  uint8_t data_buffer[64] = {0};
+  nfc_backup_event_t event;
 
-  nfc_backup_state_t state = {0};
+  // Clean leftover event
+  nfc_backup_get_events(&event);
+  sysevents_t awaited_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_NFC_BACKUP;
+  sysevents_t signalled_events = {0};
+  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
 
   screen_prodtest_nfc(false);
 
   while (true) {
+
     if (cli_aborted(cli)) {
       cli_trace(cli, "Aborted.");
+      break;
+    }
+
+    sysevents_poll(&awaited_events, &signalled_events,
+                    ticks_timeout(10));
+
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_NFC_BACKUP) == 0) {
+      // Nothing to do
+      continue;
+    }
+
+    nfc_backup_get_events(&event);
+
+    if (event == NFC_BACKUP_CONNECTED){
+      cli_trace(cli, "NFC backup tag connected.");
+    }else if (event == NFC_BACKUP_DISCONNECTED){
+      cli_trace(cli, "NFC backup tag disconnected.");
+    }
+
+      // nfc_backup_system_info_t system_info;
+      // nfc_backup_read_system_info(&system_info);
+
+      // cli_trace(cli, "Found NFC backup tag:");
+      // for (int i = 0; i < 8; i++) {
+      //   cli_trace(cli, "UID[%d]: 0x%02X", i, system_info.uid[i]);
+      // }
+
+      // nfc_backup_read_data(data_buffer, sizeof(data_buffer));
+
+      // screen_prodtest_nfc(true);
+      // systick_delay_ms(500);
+
+      // // char secret_text[100];
+
+      // // mini_snprintf(secret_text, 100, "Secret: %s", data_buffer);
+      // // screen_prodtest_show_text(secret_text);
+
+      // //break;
+    // }
+  }
+
+  nfc_backup_stop_discovery();
+
+  cli_ok(cli, "");
+}
+
+static void prodtest_nfc_backup_disable_discrete_mode(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (!nfc_backup_init()) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC backup init failed");
+    return;
+  }
+
+  if (!nfc_backup_start_discovery()) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC backup start discovery failed");
+    return;
+  }
+
+  nfc_backup_state_t state = {0};
+
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "NFC backup discovery aborted");
       break;
     }
 
     nfc_backup_worker(&state);
 
     if (state.connected) {
+
       nfc_backup_system_info_t system_info;
       nfc_backup_read_system_info(&system_info);
 
-      cli_trace(cli, "Found NFC backup tag:");
+      cli_trace(cli, "NFC backup tag system info available");
       for (int i = 0; i < 8; i++) {
         cli_trace(cli, "UID[%d]: 0x%02X", i, system_info.uid[i]);
       }
 
-      nfc_backup_read_data(data_buffer, sizeof(data_buffer));
-
-      screen_prodtest_nfc(true);
-      systick_delay_ms(500);
-
-      // char secret_text[100];
-
-      // mini_snprintf(secret_text, 100, "Secret: %s", data_buffer);
-      // screen_prodtest_show_text(secret_text);
+      nfc_backup_disable_discrete_mode();
 
       break;
     }
@@ -444,12 +518,12 @@ static void prodtest_nfc_backup_read_secret(cli_t* cli) {
 
   nfc_backup_stop_discovery();
 
-  prodtest_show_homescreen();
+  nfc_backup_deinit();
 
-  cli_ok(cli, "");
+  cli_ok(cli, "NFC backup tag configured");
 }
 
-static void prodtest_nfc_backup_tag_configure(cli_t* cli) {
+static void prodtest_nfc_backup_enable_discrete_mode(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -486,7 +560,7 @@ static void prodtest_nfc_backup_tag_configure(cli_t* cli) {
         cli_trace(cli, "UID[%d]: 0x%02X", i, system_info.uid[i]);
       }
 
-      nfc_backup_configure_discrete_mode();
+      nfc_backup_enable_discrete_mode();
 
       break;
     }
@@ -494,107 +568,9 @@ static void prodtest_nfc_backup_tag_configure(cli_t* cli) {
 
   nfc_backup_stop_discovery();
 
+  nfc_backup_deinit();
+
   cli_ok(cli, "NFC backup tag configured");
-}
-
-static void prodtest_nfc_test(cli_t* cli) {
-  uint32_t timeout = 0;
-  bool timeout_set = false;
-  memset(&dev_info, 0, sizeof(dev_info));
-
-  if (cli_has_arg(cli, "timeout")) {
-    if (!cli_arg_uint32(cli, "timeout", &timeout)) {
-      cli_error_arg(cli, "Expecting timeout argument.");
-      return;
-    }
-    timeout_set = true;
-  }
-
-  if (cli_arg_count(cli) > 1) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  nfc_status_t ret = nfc_init();
-
-  if (ret != NFC_OK) {
-    cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
-    goto cleanup;
-  } else {
-    if (timeout_set) {
-      cli_trace(cli, "NFC activated in reader mode for %d ms.", timeout);
-    } else {
-      cli_trace(cli, "NFC activated in reader mode");
-    }
-  }
-
-  nfc_register_tech(NFC_POLLER_TECH_V);
-  nfc_activate_stm();
-
-  nfc_event_t nfc_event;
-  uint32_t expire_time = ticks_timeout(timeout);
-
-  while (true) {
-    if (timeout_set && ticks_expired(expire_time)) {
-      cli_error(cli, CLI_ERROR_TIMEOUT, "NFC timeout");
-      goto cleanup;
-    }
-
-    nfc_status_t nfc_status = nfc_get_event(&nfc_event);
-
-    if (nfc_status != NFC_OK) {
-      cli_error(cli, CLI_ERROR, "NFC error");
-      goto cleanup;
-    }
-
-    if (nfc_event == NFC_EVENT_ACTIVATED) {
-      nfc_dev_read_info(&dev_info);
-
-      cli_trace(cli, "NFC card detected.");
-
-      cli_trace(cli, "NFC Type V: UID: %s", dev_info.uid);
-
-      uint8_t data[12] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-      nfc_status_t status = nfc_st25_write_data(data, sizeof(data));
-      if (status != NFC_OK) {
-        cli_error(cli, CLI_ERROR, "NFC write data error: %d", status);
-        goto cleanup;
-      }
-
-      memset(data, 0, sizeof(data));
-
-      status = nfc_st25_read_data(data, sizeof(data));
-      if (status != NFC_OK) {
-        cli_error(cli, CLI_ERROR, "NFC read data error: %d", status);
-        goto cleanup;
-      }
-      cli_trace(cli,
-                "NFC Type V data read: %02x %02x %02x %02x %02x %02x %02x %02x "
-                "%02x %02x %02x %02x",
-                data[0], data[1], data[2], data[3], data[4], data[5], data[6],
-                data[7], data[8], data[9], data[10], data[11]);
-
-      if (timeout_set) {
-        nfc_dev_deactivate();
-        cli_trace(cli, "NFC reader mode over");
-        break;
-      }
-
-      systick_delay_ms(100);
-      nfc_dev_deactivate();
-    }
-
-    if (cli_aborted(cli)) {
-      goto cleanup;
-    }
-
-    systick_delay_ms(1);
-  }
-
-  cli_ok(cli, "");
-
-cleanup:
-  nfc_deinit();
 }
 
 // clang-format off
@@ -621,13 +597,6 @@ PRODTEST_CLI_CMD(
 );
 
 PRODTEST_CLI_CMD(
-  .name = "nfc-test",
-  .func = prodtest_nfc_test,
-  .info = "",
-  .args = "[<timeout>]"
-);
-
-PRODTEST_CLI_CMD(
   .name = "nfc-backup-read-info",
   .func = prodtest_nfc_backup_read_info,
   .info = "Read NFC backup tag system info",
@@ -635,8 +604,15 @@ PRODTEST_CLI_CMD(
 );
 
 PRODTEST_CLI_CMD(
-  .name = "nfc-backup-tag-configure",
-  .func = prodtest_nfc_backup_tag_configure,
+  .name = "nfc-backup-tag-enable-discrete-mode",
+  .func = prodtest_nfc_backup_enable_discrete_mode,
+  .info = "Configure NFC backup tag",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-backup-tag-disable-discrete-mode",
+  .func = prodtest_nfc_backup_disable_discrete_mode,
   .info = "Configure NFC backup tag",
   .args = ""
 );

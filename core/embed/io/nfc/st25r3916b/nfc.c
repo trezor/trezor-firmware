@@ -583,38 +583,6 @@ nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
   return NFC_OK;
 }
 
-HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t *tx_data,
-                                           uint8_t *rx_data, uint16_t length) {
-  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
-  HAL_StatusTypeDef status;
-
-  if ((tx_data != NULL) && (rx_data == NULL)) {
-    status = HAL_SPI_Transmit(&drv->hspi, (uint8_t *)tx_data, length, 1000);
-  } else if ((tx_data == NULL) && (rx_data != NULL)) {
-    status = HAL_SPI_Receive(&drv->hspi, rx_data, length, 1000);
-  } else {
-    status = HAL_SPI_TransmitReceive(&drv->hspi, (uint8_t *)tx_data, rx_data,
-                                     length, 1000);
-  }
-
-  return status;
-}
-
-void nfc_ext_irq_set_callback(void (*cb)(void)) {
-  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
-  drv->nfc_irq_callback = cb;
-}
-
-void NFC_EXTI_INTERRUPT_HANDLER(void) {
-  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
-
-  // Clear the EXTI line pending bit
-  __HAL_GPIO_EXTI_CLEAR_FLAG(NFC_INT_PIN);
-  if (drv->nfc_irq_callback != NULL) {
-    drv->nfc_irq_callback();
-  }
-}
-
 static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev) {
   ReturnCode err = RFAL_ERR_INTERNAL;
   uint8_t *rx_buf;
