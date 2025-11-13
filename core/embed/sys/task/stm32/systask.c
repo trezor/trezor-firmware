@@ -210,6 +210,13 @@ void systask_pop_data(systask_t* task, size_t size) { task->sp += size; }
 
 bool systask_push_call(systask_t* task, void* entrypoint, uint32_t arg1,
                        uint32_t arg2, uint32_t arg3) {
+#ifdef KERNEL
+  if (task->applet != NULL) {
+    applet_t* applet = (applet_t*)task->applet;
+    mpu_set_active_applet(&applet->layout);
+  }
+#endif
+
   uint32_t original_sp = task->sp;
 
   // Align stack pointer to 8 bytes
