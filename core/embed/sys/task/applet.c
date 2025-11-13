@@ -20,18 +20,35 @@
 #include <trezor_rtl.h>
 
 #include <sys/applet.h>
+#include <sys/systask.h>
 
-void applet_init(applet_t* applet, const applet_layout_t* layout,
-                 const applet_privileges_t* privileges) {
+#ifdef KERNEL
+
+void applet_init(applet_t* applet, const applet_privileges_t* privileges,
+                 applet_unload_cb_t unload_cb) {
   memset(applet, 0, sizeof(applet_t));
 
-  applet->layout = *layout;
-  applet->privileges = *privileges;
+  applet->unload_cb = unload_cb;
+
+  if (privileges != NULL) {
+    applet->privileges = *privileges;
+  }
 }
 
 void applet_run(applet_t* applet) { systask_yield_to(&applet->task); }
 
-void applet_stop(applet_t* applet) {}
+void applet_unload(applet_t* applet) {
+  if (applet->task.id > 0) {
+    if (systask_is_alive(&applet->task)) {
+      systask_exit(&applet->task, 0);
+    }
+  }
+
+  if (applet->unload_cb != NULL) {
+    applet->unload_cb(applet);
+    applet->unload_cb = NULL;
+  }
+}
 
 bool applet_is_alive(applet_t* applet) {
   return systask_is_alive(&applet->task);
@@ -46,3 +63,5 @@ applet_t* applet_active(void) {
 
   return (applet_t*)task->applet;
 }
+
+#endif  // KERNEL
