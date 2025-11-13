@@ -187,11 +187,11 @@ typedef struct {
   bool initialized;
   // Current mode
   mpu_mode_t mode;
-  // Address of the active framebuffer
-  // (if set to 0, the framebuffer is not accessible)
-  uint32_t active_fb_addr;
-  // Size of the framebuffer in bytes
-  size_t active_fb_size;
+  // Active framebuffer
+  // (if .addr is 0, the framebuffer is not accessible)
+  mpu_area_t active_fb;
+  // Applet thread-local storage area
+  mpu_area_t app_tls;
 
 } mpu_driver_t;
 
@@ -199,6 +199,9 @@ mpu_driver_t g_mpu_driver = {
     .initialized = false,
     .mode = MPU_MODE_DISABLED,
 };
+
+// forward declaration
+static void mpu_update_region7(mpu_mode_t mode);
 
 static inline void mpu_disable(void) {
   __DMB();
@@ -323,6 +326,8 @@ void mpu_set_active_applet(applet_layout_t* layout) {
 
   mpu_disable();
 
+  drv->app_tls = layout->tls;
+
   if (layout != NULL) {
     // clang-format off
     if (layout->code1.start != 0 && layout->code1.size != 0) {
@@ -337,17 +342,26 @@ void mpu_set_active_applet(applet_layout_t* layout) {
       DIS_REGION( 3 );
     }
 
-    if (layout->data2.start != 0 && layout->data2.size != 0) {
+    if (layout->code2.start != 0 && layout->code2.size != 0) {
+      SET_REGRUN( 4, layout->code2.start, layout->code2.size, FLASH_CODE, NO, YES );
+    } else if (layout->data2.start != 0 && layout->data2.size != 0) {
       SET_REGRUN( 4, layout->data2.start, layout->data2.size, SRAM, YES, YES );
     } else {
       DIS_REGION( 4 );
     }
     // clang-format on
+
   } else {
     DIS_REGION(2);
     DIS_REGION(3);
     DIS_REGION(4);
   }
+
+  // Remember the TLS area of the active applet
+  // (used in region #7 in MPU_APP mode)
+  drv->app_tls = layout->tls;
+
+  mpu_update_region7(drv->mode);
 
   if (drv->mode != MPU_MODE_DISABLED) {
     mpu_enable();
@@ -365,8 +379,8 @@ void mpu_set_active_fb(const void* addr, size_t size) {
 
   irq_key_t lock = irq_lock();
 
-  drv->active_fb_addr = (uint32_t)addr;
-  drv->active_fb_size = size;
+  drv->active_fb.start = (uint32_t)addr;
+  drv->active_fb.size = size;
 
   irq_unlock(lock);
 
@@ -384,8 +398,8 @@ bool mpu_inside_active_fb(const void* addr, size_t size) {
 
   bool result =
       ((uintptr_t)addr + size >= (uintptr_t)addr) &&  // overflow check
-      ((uintptr_t)addr >= drv->active_fb_addr) &&
-      ((uintptr_t)addr + size <= drv->active_fb_addr + drv->active_fb_size);
+      ((uintptr_t)addr >= drv->active_fb.start) &&
+      ((uintptr_t)addr + size <= drv->active_fb.start + drv->active_fb.size);
 
   irq_unlock(lock);
 
@@ -411,15 +425,15 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   switch (mode) {
     case MPU_MODE_APP_SAES:
     case MPU_MODE_APP:
-      if (drv->active_fb_addr != 0) {
-        SET_REGRUN( 5, drv->active_fb_addr,    drv->active_fb_size,   SRAM,        YES,    YES ); // Frame buffer
+      if (drv->active_fb.start != 0) {
+        SET_REGRUN( 5, drv->active_fb.start,    drv->active_fb.size,   SRAM,       YES,    YES );
       } else {
         DIS_REGION( 5 );
       }
       break;
     default:
-      if (drv->active_fb_addr != 0) {
-        SET_REGRUN( 5, drv->active_fb_addr,    drv->active_fb_size,   SRAM,        YES,    NO ); // Frame buffer
+      if (drv->active_fb.start != 0) {
+        SET_REGRUN( 5, drv->active_fb.start,    drv->active_fb.size,   SRAM,       YES,    NO );
       } else {
         DIS_REGION( 5 );
       }
@@ -490,22 +504,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // Region #7 is banked
 
-  // clang-format off
-  switch (mode) {
-      //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
-#ifdef KERNEL
-    case MPU_MODE_APP_SAES:
-      // This mode is intended for a special unprivileged task that needs
-      // access to secure SAES and TAMPER peripherals in unprivileged mode.
-      SET_REGION( 7, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    YES );
-      break;
-#endif
-    default:
-      // All peripherals (Privileged, Read-Write, Non-Executable)
-      SET_REGION( 7, PERIPH_BASE_NS,           PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
-      break;
-  }
-  // clang-format on
+  mpu_update_region7(mode);
 
   if (mode != MPU_MODE_DISABLED) {
     mpu_enable();
@@ -517,6 +516,38 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   irq_unlock(irq_key);
 
   return prev_mode;
+}
+
+// Must be called with IRQs disabled and MPU disabled
+static void mpu_update_region7(mpu_mode_t mode) {
+#ifdef KERNEL
+  mpu_driver_t* drv = &g_mpu_driver;
+#endif
+
+  // clang-format off
+  switch (mode) {
+      //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
+#ifdef KERNEL
+    case MPU_MODE_APP_SAES:
+      // This mode is intended for a special unprivileged task that needs
+      // access to secure SAES and TAMPER peripherals in unprivileged mode.
+      SET_REGION( 7, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    YES );
+      break;
+
+    case MPU_MODE_APP:
+      if (drv->app_tls.start != 0 && drv->app_tls.size != 0) {
+        SET_REGRUN( 7, drv->app_tls.start, drv->app_tls.size,      SRAM,        YES,    YES );
+      } else {
+        DIS_REGION( 7 );
+      }
+      break;
+#endif
+    default:
+      // All peripherals (Privileged, Read-Write, Non-Executable)
+      SET_REGION( 7, PERIPH_BASE_NS,           PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
+      break;
+  }
+  // clang-format on
 }
 
 void mpu_restore(mpu_mode_t mode) { mpu_reconfig(mode); }
