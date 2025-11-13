@@ -40,12 +40,12 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
-    . = ALIGN(512);
+    . = ALIGN(4);
   } >FLASH
 
   .data : ALIGN(4) {
     *(.data*);
-    . = ALIGN(512);
+    . = ALIGN(4);
   } >MAIN_RAM AT>FLASH
 
   /DISCARD/ : {
@@ -87,8 +87,9 @@ SECTIONS {
 
   .flash : {
     /* Pad the rest of bootloader area with zeros */
-    . = ADDR(.header) + BOOTLOADER_MAXSIZE - 1;
     BYTE(0x00)
+    FILL(0x00)
+    . = ADDR(.header) + BOOTLOADER_MAXSIZE;
     _bootloader_code_end = .;
   } >FLASH
 }
