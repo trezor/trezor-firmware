@@ -688,6 +688,12 @@ class MessageType(IntEnum):
     BenchmarkNames = 9101
     BenchmarkRun = 9102
     BenchmarkResult = 9103
+    ExtAppLoad = 9200
+    ExtAppLoaded = 9201
+    ExtAppRun = 9202
+    ExtAppResult = 9203
+    FunnycoinGetPublicKey = 9204
+    FunnycoinPublicKey = 9205
 
 
 class BenchmarkListNames(protobuf.MessageType):
@@ -5651,6 +5657,105 @@ class EvoluDelegatedIdentityKey(protobuf.MessageType):
         private_key: "bytes",
     ) -> None:
         self.private_key = private_key
+
+
+class ExtAppLoad(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9200
+    FIELDS = {
+        1: protobuf.Field("path", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        path: "str",
+    ) -> None:
+        self.path = path
+
+
+class ExtAppLoaded(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9201
+    FIELDS = {
+        1: protobuf.Field("hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hash: "bytes",
+    ) -> None:
+        self.hash = hash
+
+
+class ExtAppRun(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9202
+    FIELDS = {
+        1: protobuf.Field("hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("fn_id", "uint32", repeated=False, required=True),
+        3: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hash: "bytes",
+        fn_id: "int",
+        data: "bytes",
+    ) -> None:
+        self.hash = hash
+        self.fn_id = fn_id
+        self.data = data
+
+
+class ExtAppResult(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9203
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
+
+
+class FunnycoinGetPublicKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9204
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Funnycoin'),
+        3: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+        coin_name: Optional["str"] = 'Funnycoin',
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.coin_name = coin_name
+        self.show_display = show_display
+
+
+class FunnycoinPublicKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9205
+    FIELDS = {
+        1: protobuf.Field("xpub", "string", repeated=False, required=True),
+        2: protobuf.Field("public_key", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        xpub: "str",
+        public_key: Optional["bytes"] = None,
+    ) -> None:
+        self.xpub = xpub
+        self.public_key = public_key
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

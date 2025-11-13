@@ -1,0 +1,6 @@
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "relocation-model=pic", "--cfg", "log_level=\"trace\""]
+
+[target.armv7-unknown-linux-gnueabihf]
+rustflags = ["-C", "relocation-model=static", "--cfg", "log_level=\"trace\""]

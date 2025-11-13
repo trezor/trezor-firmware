@@ -308,6 +308,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_coveragedata;
   MP_QSTR_current;
   MP_QSTR_danger;
+  MP_QSTR_data;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
   MP_QSTR_debug;
@@ -555,6 +556,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pm_event;
   MP_QSTR_prefill;
   MP_QSTR_prefill_word;
+  MP_QSTR_process_ipc_message;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;
   MP_QSTR_progress__loading_transaction;
@@ -737,6 +739,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__wrong_word_selected;
   MP_QSTR_reset__you_need_one_share;
   MP_QSTR_reset__your_backup_is_done;
+  MP_QSTR_result;
   MP_QSTR_return_value;
   MP_QSTR_reverse;
   MP_QSTR_rotation__change_template;
@@ -803,6 +806,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
+  MP_QSTR_serialize_ui_result;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;
   MP_QSTR_set_high_speed;
