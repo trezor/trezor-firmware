@@ -66,4 +66,10 @@
 #define UNUSED(x) (void)(x)
 #endif
 
+#ifndef THREAD_LOCAL
+// Used to mark thread-local variables in coreapp.
+// THREAD_LOCAL is defined by the build system.
+#define THREAD_LOCAL
+#endif
+
 #endif  // TREZOR_RTL_H
