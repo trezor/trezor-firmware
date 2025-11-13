@@ -4213,6 +4213,100 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EvoluDelegatedIdentityKey"]:
             return isinstance(msg, cls)
 
+    class ExtAppLoad(protobuf.MessageType):
+        path: "str"
+
+        def __init__(
+            self,
+            *,
+            path: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppLoad"]:
+            return isinstance(msg, cls)
+
+    class ExtAppLoaded(protobuf.MessageType):
+        hash: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            hash: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppLoaded"]:
+            return isinstance(msg, cls)
+
+    class ExtAppRun(protobuf.MessageType):
+        hash: "AnyBytes"
+        fn_id: "int"
+        data: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            hash: "AnyBytes",
+            fn_id: "int",
+            data: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppRun"]:
+            return isinstance(msg, cls)
+
+    class ExtAppResult(protobuf.MessageType):
+        data: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            data: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppResult"]:
+            return isinstance(msg, cls)
+
+    class FunnycoinGetPublicKey(protobuf.MessageType):
+        address_n: "list[int]"
+        coin_name: "str"
+        show_display: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            coin_name: "str | None" = None,
+            show_display: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["FunnycoinGetPublicKey"]:
+            return isinstance(msg, cls)
+
+    class FunnycoinPublicKey(protobuf.MessageType):
+        xpub: "str"
+        public_key: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            xpub: "str",
+            public_key: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["FunnycoinPublicKey"]:
+            return isinstance(msg, cls)
+
     class MoneroTransactionSourceEntry(protobuf.MessageType):
         outputs: "list[MoneroOutputEntry]"
         real_output: "int | None"

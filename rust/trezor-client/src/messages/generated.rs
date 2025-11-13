@@ -101,6 +101,12 @@ trezor_message_impl! {
     BenchmarkResult => MessageType_BenchmarkResult,
     TelemetryGet => MessageType_TelemetryGet,
     Telemetry => MessageType_Telemetry,
+    ExtAppLoad => MessageType_ExtAppLoad,
+    ExtAppLoaded => MessageType_ExtAppLoaded,
+    ExtAppRun => MessageType_ExtAppRun,
+    ExtAppResult => MessageType_ExtAppResult,
+    FunnycoinGetPublicKey => MessageType_FunnycoinGetPublicKey,
+    FunnycoinPublicKey => MessageType_FunnycoinPublicKey,
 }
 
 #[cfg(feature = "bitcoin")]
