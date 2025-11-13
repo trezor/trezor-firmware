@@ -6431,6 +6431,7 @@ if TYPE_CHECKING:
         protocol_version_major: "int"
         protocol_version_minor: "int"
         pairing_methods: "list[ThpPairingMethod]"
+        ack_piggybacking: "bool | None"
 
         def __init__(
             self,
@@ -6440,6 +6441,7 @@ if TYPE_CHECKING:
             protocol_version_minor: "int",
             pairing_methods: "list[ThpPairingMethod] | None" = None,
             model_variant: "int | None" = None,
+            ack_piggybacking: "bool | None" = None,
         ) -> None:
             pass
 

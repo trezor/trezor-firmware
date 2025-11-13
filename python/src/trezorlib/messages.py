@@ -8205,6 +8205,7 @@ class ThpDeviceProperties(protobuf.MessageType):
         3: protobuf.Field("protocol_version_major", "uint32", repeated=False, required=True),
         4: protobuf.Field("protocol_version_minor", "uint32", repeated=False, required=True),
         5: protobuf.Field("pairing_methods", "ThpPairingMethod", repeated=True, required=False, default=None),
+        6: protobuf.Field("ack_piggybacking", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8215,12 +8216,14 @@ class ThpDeviceProperties(protobuf.MessageType):
         protocol_version_minor: "int",
         pairing_methods: Optional[Sequence["ThpPairingMethod"]] = None,
         model_variant: Optional["int"] = 0,
+        ack_piggybacking: Optional["bool"] = None,
     ) -> None:
         self.pairing_methods: Sequence["ThpPairingMethod"] = pairing_methods if pairing_methods is not None else []
         self.internal_model = internal_model
         self.protocol_version_major = protocol_version_major
         self.protocol_version_minor = protocol_version_minor
         self.model_variant = model_variant
+        self.ack_piggybacking = ack_piggybacking
 
 
 class ThpHandshakeCompletionReqNoisePayload(protobuf.MessageType):

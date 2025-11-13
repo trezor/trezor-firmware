@@ -71,6 +71,7 @@ message ThpDeviceProperties {
     required uint32 protocol_version_major = 3;       // The major version of the communication protocol used by the firmware.
     required uint32 protocol_version_minor = 4;       // The minor version of the communication protocol used by the firmware.
     repeated ThpPairingMethod pairing_methods = 5;    // The pairing methods supported by the Trezor.
+    optional bool ack_piggybacking = 6;               // If True, THP ACK piggybacking is supported by the Trezor.
 }
 
 /**
