@@ -40,6 +40,7 @@
 #define MPUX_TYPE_SRAM 1
 #define MPUX_TYPE_PERIPHERAL 2
 #define MPUX_TYPE_FLASH_DATA 3
+#define MPUX_TYPE_SRAM_CODE 4
 
 const static struct {
   uint32_t xn;    // executable
@@ -70,6 +71,12 @@ const static struct {
         .xn = LL_MPU_INSTRUCTION_ACCESS_DISABLE,
         .attr = LL_MPU_ATTRIBUTES_NUMBER3,
         .sh = LL_MPU_ACCESS_NOT_SHAREABLE,
+    },
+    // 4 - SRAM CODE
+    {
+        .xn = LL_MPU_INSTRUCTION_ACCESS_ENABLE,
+        .attr = LL_MPU_ATTRIBUTES_NUMBER1,
+        .sh = LL_MPU_ACCESS_INNER_SHAREABLE,
     },
 };
 
@@ -126,6 +133,15 @@ static void mpu_set_attributes(void) {
   MPU->MAIR0 |= 0x00 << 16;
   // Attr[3] - FLASH - Non-cacheable
   MPU->MAIR0 |= 0x44 << 24;
+}
+
+static inline bool is_flash_address(uint32_t addr) {
+  if ((addr >> 24) == (FLASH_BASE_NS >> 24)) {
+    return true;
+  } else if ((addr >> 24) == (FLASH_BASE_S >> 24)) {
+    return true;
+  }
+  return false;
 }
 
 #define STORAGE_SIZE (NORCOW_SECTOR_SIZE * NORCOW_SECTOR_COUNT)
@@ -331,7 +347,11 @@ void mpu_set_active_applet(const applet_layout_t* layout) {
   if (layout != NULL) {
     // clang-format off
     if (layout->code1.start != 0 && layout->code1.size != 0) {
-      SET_REGRUN( 2, layout->code1.start, layout->code1.size, FLASH_CODE, NO, YES );
+      if (is_flash_address(layout->code1.start)) {
+        SET_REGRUN( 2, layout->code1.start, layout->code1.size, FLASH_CODE, NO, YES );
+      } else {
+        SET_REGRUN( 2, layout->code1.start, layout->code1.size, SRAM_CODE, NO, YES );
+      }
     } else {
       DIS_REGION( 2 );
     }
@@ -343,7 +363,11 @@ void mpu_set_active_applet(const applet_layout_t* layout) {
     }
 
     if (layout->code2.start != 0 && layout->code2.size != 0) {
-      SET_REGRUN( 4, layout->code2.start, layout->code2.size, FLASH_CODE, NO, YES );
+      if (is_flash_address(layout->code2.start)) {
+        SET_REGRUN( 4, layout->code2.start, layout->code2.size, FLASH_CODE, NO, YES );
+      } else {
+        SET_REGRUN( 4, layout->code2.start, layout->code2.size, SRAM_CODE, NO, YES );
+      }
     } else if (layout->data2.start != 0 && layout->data2.size != 0) {
       SET_REGRUN( 4, layout->data2.start, layout->data2.size, SRAM, YES, YES );
     } else {
