@@ -194,10 +194,8 @@ typedef int mp_int_t; // must be pointer size
 typedef unsigned int mp_uint_t; // must be pointer size
 typedef long mp_off_t;
 
-#include <sys/irq.h>
-
-#define MICROPY_BEGIN_ATOMIC_SECTION()     irq_lock()
-#define MICROPY_END_ATOMIC_SECTION(state)  irq_unlock(state)
+#define MICROPY_BEGIN_ATOMIC_SECTION()     (0)
+#define MICROPY_END_ATOMIC_SECTION(state)  (void)(state)
 #define MICROPY_EVENT_POLL_HOOK \
     do { \
         extern void mp_handle_pending(bool); \
