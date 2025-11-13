@@ -31,12 +31,15 @@
 
 #include "ipc_memcpy.h"
 
+// Alignment for IPC data within the queue
+#define IPC_DATA_ALIGNMENT (sizeof(size_t))
+
 typedef struct {
   uint8_t free;
   systask_id_t remote;
   uint16_t fn;
   size_t size;
-  uint8_t data[];
+  uint8_t __attribute__((aligned(IPC_DATA_ALIGNMENT))) data[];
 } ipc_queue_item_t;
 
 typedef struct {
@@ -97,9 +100,16 @@ ipc_queue_t *ipc_queue(systask_id_t target, systask_id_t origin) {
 bool ipc_register(systask_id_t remote, void *buffer, size_t size) {
   systask_id_t target = systask_id(systask_active());
   ipc_queue_t *queue = ipc_queue(target, remote);
+
   if (queue == NULL) {
     return false;
   }
+
+  if (!IS_ALIGNED((uintptr_t)buffer, IPC_DATA_ALIGNMENT)) {
+    // Buffer is not properly aligned
+    return false;
+  }
+
   queue->ptr = buffer;
   queue->size = size;
   queue->wptr = buffer;
@@ -143,7 +153,8 @@ bool ipc_try_receive(ipc_message_t *msg) {
   msg->size = item->size;
 
   // Move read pointer to the next item
-  queue->rptr += sizeof(ipc_queue_item_t) + ALIGN_UP(item->size, 4);
+  queue->rptr +=
+      sizeof(ipc_queue_item_t) + ALIGN_UP(item->size, IPC_DATA_ALIGNMENT);
 
   return true;
 }
@@ -178,7 +189,8 @@ void ipc_message_free(ipc_message_t *msg) {
     bool advance_wptr = !item->free;
 
     // Move to next item
-    size_t item_size = ALIGN_UP(sizeof(ipc_queue_item_t) + item->size, 4);
+    size_t item_size =
+        ALIGN_UP(sizeof(ipc_queue_item_t) + item->size, IPC_DATA_ALIGNMENT);
     item = (ipc_queue_item_t *)((uint8_t *)item + item_size);
 
     if (advance_wptr) {
@@ -208,7 +220,8 @@ bool ipc_send(const ipc_message_t *msg) {
     return false;
   }
 
-  size_t item_size = ALIGN_UP(sizeof(ipc_queue_item_t) + msg->size, 4);
+  size_t item_size =
+      ALIGN_UP(sizeof(ipc_queue_item_t) + msg->size, IPC_DATA_ALIGNMENT);
   size_t free_size = queue->size - (queue->wptr - queue->ptr);
 
   if (item_size > free_size) {
