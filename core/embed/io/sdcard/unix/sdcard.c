@@ -39,12 +39,6 @@
 static uint8_t *sdcard_buffer = NULL;
 static secbool sdcard_powered = secfalse;
 
-static void sdcard_exit(void) {
-  int r = munmap(sdcard_buffer, SDCARD_SIZE);
-  ensure(sectrue * (r == 0), "munmap failed");
-  sdcard_buffer = NULL;
-}
-
 void sdcard_init(void) {
   if (sdcard_buffer != NULL) {
     return;
@@ -81,8 +75,12 @@ void sdcard_init(void) {
   }
 
   sdcard_powered = secfalse;
+}
 
-  atexit(sdcard_exit);
+void sdcard_deinit(void) {
+  int r = munmap(sdcard_buffer, SDCARD_SIZE);
+  ensure(sectrue * (r == 0), "munmap failed");
+  sdcard_buffer = NULL;
 }
 
 secbool sdcard_is_present(void) { return sectrue; }
