@@ -383,11 +383,13 @@ ReturnCode rfalCdGetDetectCardStatus( void )
             }
             break;
             
-            
-    #if RFAL_SUPPORT_MODE_POLL_NFCF
         /*******************************************************************************/
         case RFAL_CD_ST_NFCF_INIT:
-            
+        
+        #if !RFAL_SUPPORT_MODE_POLL_NFCF
+            gCd.st           = RFAL_CD_ST_NFCV_INIT;
+            break;
+        #else
             /* Verify if we are performing multi technology check */
             if( (gCd.skipTechFound) && (gCd.techFound == RFAL_CD_TECH_NFCF) )
             {

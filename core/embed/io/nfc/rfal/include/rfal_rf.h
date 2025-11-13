@@ -17,7 +17,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -30,7 +30,7 @@
  *  
  *  RFAL (RF Abstraction Layer) provides several functionalities required to 
  *  perform RF/NFC communications. <br>The RFAL encapsulates the different 
- *  RF ICs (ST25R3911, ST25R391x, etc) into a common and easy to use interface.
+ *  ST25 RF ICs (ST25R3911, ST25R3916, etc) into a common and easy to use interface.
  *  
  *  It provides interfaces to configure the RF IC, set/get timings, modes, bit rates,
  *  specific handlings, execute listen mode, etc. 
@@ -86,7 +86,7 @@
 * GLOBAL DEFINES
 ******************************************************************************
 */
-#define RFAL_VERSION                               0x030001U                                    /*!< RFAL Current Version: v3.0.1                      */
+#define RFAL_VERSION                               0x040002U                                    /*!< RFAL Current Version: v4.0.2                      */
 
 #define RFAL_FWT_NONE                              0xFFFFFFFFU                                  /*!< Disabled FWT: Wait forever for a response         */
 #define RFAL_GT_NONE                               RFAL_TIMING_NONE                             /*!< Disabled GT: No GT will be applied after Field On */
@@ -569,7 +569,7 @@ typedef enum
  *****************************************************************************
  * \brief  RFAL Initialize
  *  
- * Initializes RFAL layer and the ST25R391x
+ * Initializes RFAL layer and the ST25R
  * Ensures that ST25R is properly connected and returns error if any problem 
  * is detected
  *
@@ -602,7 +602,7 @@ ReturnCode rfalCalibrate( void );
  *****************************************************************************
  * \brief  RFAL Adjust Regulators 
  *  
- * Adjusts ST25R391x regulators 
+ * Adjusts ST25R regulators 
  * 
  * \param[out]  result : the result of the calibrate antenna in mV
  *                       NULL if result not requested
@@ -613,6 +613,23 @@ ReturnCode rfalCalibrate( void );
  *****************************************************************************
  */
 ReturnCode rfalAdjustRegulators( uint16_t* result );
+
+
+/*!
+ *****************************************************************************
+ * \brief  RFAL Set Regulators 
+ *  
+ * Sets the ST25R regulators to manual setting
+ * 
+ * \param[in]  regulation : Regulated voltage setting (ST25R device specific)
+ *                       
+ * \return RFAL_ERR_WRONG_STATE  : RFAL not initialized
+ * \return RFAL_ERR_PARAM        : Invalid regulator setting
+ * \return RFAL_ERR_NONE         : No error
+ * 
+ *****************************************************************************
+ */
+ReturnCode rfalSetRegulators( uint8_t regulation );
 
 
 /*!
@@ -820,7 +837,7 @@ rfalEHandling rfalGetErrorHandling( void );
  *****************************************************************************
  * \brief Set Observation Mode
  *  
- * Sets ST25R391x observation modes for RF debug purposes
+ * Sets ST25R observation modes for RF debug purposes
  *
  * \param[in]  txMode : the observation mode to be used during transmission
  * \param[in]  rxMode : the observation mode to be used during reception
@@ -837,7 +854,7 @@ void rfalSetObsvMode( uint32_t txMode, uint32_t rxMode );
  *****************************************************************************
  * \brief Get Observation Mode
  *  
- * Gets ST25R391x the current configured observation modes
+ * Gets ST25R the current configured observation modes
  *
  * \param[in]  txMode : the current observation mode configured for transmission
  * \param[in]  rxMode : the current observation mode configured for reception
@@ -851,7 +868,7 @@ void rfalGetObsvMode( uint8_t* txMode, uint8_t* rxMode );
  *****************************************************************************
  * \brief Disable Observation Mode
  *  
- * Disables the ST25R391x observation mode
+ * Disables the ST25R observation mode
  *****************************************************************************
  */
 void rfalDisableObsvMode( void );
@@ -1611,6 +1628,7 @@ bool rfalWakeUpModeHasWoke( void );
  */
 bool rfalWakeUpModeIsEnabled( void );
 
+
 /*!
  *****************************************************************************
  * \brief Wake-Up Get Info
@@ -1631,6 +1649,7 @@ bool rfalWakeUpModeIsEnabled( void );
  */
 ReturnCode rfalWakeUpModeGetInfo( bool force, rfalWakeUpInfo *info );
 
+
 /*!
  *****************************************************************************
  * \brief Wake-Up Mode Stop
@@ -1644,6 +1663,7 @@ ReturnCode rfalWakeUpModeGetInfo( bool force, rfalWakeUpInfo *info );
  *****************************************************************************
  */
 ReturnCode rfalWakeUpModeStop( void );
+
 
 /*!
  *****************************************************************************
