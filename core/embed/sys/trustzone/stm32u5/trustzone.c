@@ -69,7 +69,7 @@ extern uint32_t _secmon_size;
 #define SECMON_SIZE ((uint32_t) & _secmon_size)
 
 #define NONSECURE_CODE_START (FIRMWARE_START + SECMON_SIZE)
-#define NONSECURE_CODE_SIZE (FIRMWARE_MAXSIZE - SECMON_SIZE)
+#define NONSECURE_CODE_SIZE (FIRMWARE_MAXSIZE - SECMON_SIZE + APPCODE_MAXSIZE)
 
 static void tz_configure_sau(void) {
   SAU->CTRL = 0;
