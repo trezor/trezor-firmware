@@ -45,8 +45,9 @@ uint32_t last_touch_sample_time = 0;
     mp_raise_ValueError((mp_rom_error_text_t)msg); \
   }
 
+#include "embed/upymod/trezorobj.h"
+
 // clang-format off
-#include "modtrezorio-poll.h"
 #include "modtrezorio-usb.h"
 #include "modtrezorio-usb-if.h"
 // clang-format on
@@ -63,9 +64,13 @@ uint32_t last_touch_sample_time = 0;
 #ifdef USE_POWER_MANAGER
 #include "modtrezorio-pm.h"
 #endif
+#ifdef USE_IPC
+#include "modtrezorio-ipc.h"
+#endif
+#include "modtrezorio-poll.h"
 
 /// package: trezorio.__init__
-/// from . import fatfs, haptic, sdcard, ble, pm, rgb_led
+/// from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -74,6 +79,8 @@ uint32_t last_touch_sample_time = 0;
 /// BLE_EVENT: int # interface id for BLE events
 ///
 /// PM_EVENT: int  # interface id for power manager events
+///
+/// IPC2_EVENT: int  # interface id for IPC2 events
 ///
 /// TOUCH: int  # interface id of the touch events
 /// TOUCH_START: int  # event id of touch start event
@@ -128,6 +135,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #ifdef USE_POWER_MANAGER
     {MP_ROM_QSTR(MP_QSTR_pm), MP_ROM_PTR(&mod_trezorio_pm_module)},
     {MP_ROM_QSTR(MP_QSTR_PM_EVENT), MP_ROM_INT(SYSHANDLE_POWER_MANAGER)},
+#endif
+#ifdef USE_IPC
+    {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},
+    {MP_ROM_QSTR(MP_QSTR_ipc_send), MP_ROM_PTR(&mod_trezorio_ipc_send_obj)},
 #endif
 
     {MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezorio_USB_type)},
