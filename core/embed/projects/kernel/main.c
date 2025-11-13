@@ -38,6 +38,11 @@
 #include <util/rsod.h>
 #include <util/unit_properties.h>
 
+#ifdef USE_APP_LOADING
+#include <util/app_cache.h>
+#include <util/app_loader.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -188,6 +193,11 @@ void drivers_init() {
 
 #ifdef USE_USB
   usb_configure(NULL);
+#endif
+
+#ifdef USE_APP_LOADING
+  app_cache_init();
+  app_loader_init();
 #endif
 }
 

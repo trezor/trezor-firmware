@@ -26,6 +26,7 @@
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
 #include <sys/trustzone.h>
+#include <util/elf_loader.h>
 #include <util/image.h>
 
 #include "elf.h"
@@ -212,8 +213,10 @@ static void elf_unload_cb(applet_t* applet) {
   applet_layout_set_unpriv(&applet->layout, false);
 }
 
-bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
-              size_t ram_size, applet_t* applet) {
+bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
+  void* ram_ptr = NULL;  // !@# TODO alloc
+  size_t ram_size = 0;   // !@# TODO alloc
+
   applet_init(applet, NULL, NULL);
 
   elf_ctx_t elf = {0};
@@ -258,6 +261,8 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
 
   // Check if RO segment is properly aligned
   // !@#
+
+  // !@# Allocate RAM for RW segment
 
   // Check if RW segment fits available RAM
   if (elf.rw_phdr->p_memsz > ram_size) {
