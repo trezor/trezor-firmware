@@ -59,7 +59,7 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
   const applet_header_t* header = (applet_header_t*)applet->layout.code1.start;
 
   // Reset the applet task (stack pointer, etc.)
-  if (!systask_init(&applet->task, header->stack.start, header->stack.size,
+  if (!systask_init(&applet->task, header->stack.start, header->stack.size, 0,
                     applet)) {
     return false;
   }
