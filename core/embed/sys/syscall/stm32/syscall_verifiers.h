@@ -323,4 +323,21 @@ bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
 
 #endif
 
+#ifdef USE_APP_LOADING
+
+#include <util/app_loader.h>
+
+bool app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id);
+
+bool app_task_get_pminfo__verified(systask_id_t task_id,
+                                   systask_postmortem_t *pminfo);
+
+app_cache_image_t *app_cache_create_image__verified(const app_hash_t *hash,
+                                                    size_t image_size);
+
+bool app_cache_write_image__verified(app_cache_image_t *image, uintptr_t offset,
+                                     const void *data, size_t data_size);
+
+#endif
+
 #endif  // KERNEL

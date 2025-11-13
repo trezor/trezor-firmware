@@ -25,9 +25,10 @@
 #include <sys/applet.h>
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
-#include <sys/trustzone.h>
+#include <util/elf_loader.h>
 #include <util/image.h>
 
+#include "../app_arena.h"
 #include "elf.h"
 
 // Alignment required for MPU regions
@@ -186,35 +187,29 @@ static Elf32_Addr map_va(elf_ctx_t* elf, Elf32_Addr va) {
   return 0;
 }
 
-static void applet_layout_set_unpriv(applet_layout_t* layout, bool unpriv) {
-  // Align sizes to GTZC requirements
-  // TODO: this need to be revisited with proper implementation of app loading
-  // in the future
-  uint32_t code_start_aligned =
-      ALIGN_DOWN(layout->code1.start, TZ_FLASH_ALIGNMENT);
-  uint32_t code_size_aligned = ALIGN_UP(layout->code1.size, TZ_FLASH_ALIGNMENT);
-  uint32_t data_size_aligned = ALIGN_UP(layout->data1.size, TZ_SRAM_ALIGNMENT);
-
-  // Only code1 and data1 area are private to the applet
-  // (code2 eventually data2 may be shared with coreapp)
-
-  tz_set_flash_unpriv(code_start_aligned, code_size_aligned, unpriv);
-  tz_set_sram_unpriv(layout->data1.start, data_size_aligned, unpriv);
-}
-
 static void elf_unload_cb(applet_t* applet) {
-  // Clear applet data segment
-  mpu_set_active_applet(&applet->layout);
-  memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
-  mpu_set_active_applet(NULL);
+  void* ram_start = (void*)applet->layout.data1.start;
+  size_t ram_size = applet->layout.data1.size;
 
-  // Disable unprivileged access to applet memory regions
-  applet_layout_set_unpriv(&applet->layout, false);
+  if (ram_start != NULL && ram_size > 0) {
+    // Clear applet data segment
+    mpu_set_active_applet(&applet->layout);
+    memset(ram_start, 0, ram_size);
+    mpu_set_active_applet(NULL);
+
+    // Free applet RAM
+    app_arena_free(ram_start);
+  }
 }
 
-bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
-              size_t ram_size, applet_t* applet) {
+bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   applet_init(applet, NULL, NULL);
+
+  // Make sure the entire ELF file is accessible
+  const applet_layout_t temp_layout_1 = {
+      .code1 = {.start = (uintptr_t)elf_ptr, .size = elf_size},
+  };
+  mpu_set_active_applet(&temp_layout_1);
 
   elf_ctx_t elf = {0};
 
@@ -259,16 +254,25 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
   // Check if RO segment is properly aligned
   // !@#
 
-  // Check if RW segment fits available RAM
-  if (elf.rw_phdr->p_memsz > ram_size) {
+  // Allocate RAM for RW segment
+  size_t ram_size = ALIGN_UP(elf.rw_phdr->p_memsz, MPU_ALIGNMENT);
+  void* ram_ptr = app_arena_alloc(ram_size, APP_ALLOC_DATA);
+  if (ram_ptr == NULL) {
     goto cleanup;
   }
+
+  // Make sure ELF and allocated RAM are accessible
+  const applet_layout_t temp_layout_2 = {
+      .code1 = {.start = (uintptr_t)elf_ptr, .size = elf_size},
+      .data1 = {.start = (uintptr_t)ram_ptr, .size = ram_size},
+  };
+  mpu_set_active_applet(&temp_layout_2);
 
   // Prepare applet memory layout
   elf.layout.code1.start = (uintptr_t)elf.ehdr + elf.ro_phdr->p_offset;
   elf.layout.code1.size = ALIGN_UP(elf.ro_phdr->p_filesz, MPU_ALIGNMENT);
   elf.layout.data1.start = (uintptr_t)ram_ptr;
-  elf.layout.data1.size = ALIGN_UP(elf.rw_phdr->p_memsz, MPU_ALIGNMENT);
+  elf.layout.data1.size = ram_size;
 
   // It's intended to call coreapp functions directly so we have to make
   // coreapp code and TLS areas accessible when the applet is running.
@@ -313,9 +317,6 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
   applet_init(applet, &app_privileges, elf_unload_cb);
 
   applet->layout = elf.layout;
-
-  // Enable unprivileged access to applet memory regions
-  applet_layout_set_unpriv(&applet->layout, true);
 
   // Initialize RW segment
   memset((void*)elf.layout.data1.start, 0, elf.rw_phdr->p_memsz);

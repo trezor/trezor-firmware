@@ -100,8 +100,11 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         sources += ["embed/sys/task/unix/coreapp.c"]
 
     if "app_loading" in features_wanted:
-        sources += ["embed/util/elf_loader/unix/elf_loader.c"]
+        sources += ["embed/util/app_loader/unix/elf_loader.c"]
+        sources += ["embed/util/app_loader/app_cache.c"]
+        sources += ["embed/util/app_loader/app_task.c"]
+        sources += ["embed/util/app_loader/app_arena.c"]
         defines += [("USE_APP_LOADING", "1")]
-        paths += ["embed/util/elf_loader/inc"]
+        paths += ["embed/util/app_loader/inc"]
 
     return features_available
