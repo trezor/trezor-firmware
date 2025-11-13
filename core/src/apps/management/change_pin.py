@@ -50,7 +50,7 @@ async def change_pin(msg: ChangePin) -> Success:
         newpin = ""
 
     # write into storage
-    if not config.change_pin(curpin, newpin, salt, salt):
+    if not config.change_pin(newpin, salt):
         if newpin:
             await error_pin_matches_wipe_code()
         else:

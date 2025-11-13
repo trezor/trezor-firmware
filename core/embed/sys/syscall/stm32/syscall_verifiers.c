@@ -538,9 +538,7 @@ access_violation:
   return secfalse;
 }
 
-secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
-                                     const uint8_t *newpin, size_t newpin_len,
-                                     const uint8_t *old_ext_salt,
+secbool storage_change_pin__verified(const uint8_t *newpin, size_t newpin_len,
                                      const uint8_t *new_ext_salt) {
   if (!probe_read_access(oldpin, oldpin_len)) {
     goto access_violation;
@@ -558,8 +556,7 @@ secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
     goto access_violation;
   }
 
-  return storage_change_pin(oldpin, oldpin_len, newpin, newpin_len,
-                            old_ext_salt, new_ext_salt);
+  return storage_change_pin(newpin, newpin_len, new_ext_salt);
 
 access_violation:
   apptask_access_violation();
