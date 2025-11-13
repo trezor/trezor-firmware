@@ -17,40 +17,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_rtl.h>
 
-#ifdef KERNEL_MODE
+#include <io/display.h>
+#include <io/usb_config.h>
+#include <sys/system.h>
+#include <util/flash.h>
+#include <util/flash_otp.h>
+#include <util/unit_properties.h>
 
-#include <trezor_types.h>
-
-#include <trezor-storage/flash_area.h>
-#include <trezor-storage/flash_ll.h>
-
-#include "../norcow_config.h"
-
-void flash_init(void);
-
-void flash_deinit(void);
-
-extern const flash_area_t BOARDLOADER_AREA;
-extern const flash_area_t SECRET_AREA;
-extern const flash_area_t BHK_AREA;
-extern const flash_area_t ASSETS_AREA;
-extern const flash_area_t BOOTLOADER_AREA;
-extern const flash_area_t UNUSED_AREA;
-
-#ifdef SECMON
-extern flash_area_t FIRMWARE_AREA;
-#else
-extern const flash_area_t FIRMWARE_AREA;
+#ifdef USE_BUTTON
+#include <io/button.h>
 #endif
 
-#ifdef USE_BOOT_UCB
-extern const flash_area_t BOOTUCB_AREA;
-extern const flash_area_t BOOTUPDATE_AREA;
-#ifdef BOARDLOADER
-extern const flash_area_t NONBOARDLOADER_AREA;
+#ifdef USE_TOUCH
+#include <io/touch.h>
 #endif
-#endif  // USE_BOOT_UCB
 
-#endif  // KERNEL_MODE
+#ifdef USE_TROPIC
+#include <sec/tropic.h>
+#endif
+
+// Initialize the system and drivers for running tests in the Rust code.
+// The function is called from the Rust before the test main function is run.
+void rust_tests_c_setup(void) {
+  system_init(NULL);
+
+  flash_init();
+  flash_otp_init();
+
+  unit_properties_init();
+
+  display_init(DISPLAY_RESET_CONTENT);
+
+#if USE_TOUCH
+  touch_init();
+#endif
+
+#ifdef USE_BUTTON
+  button_init();
+#endif
+
+#ifdef USE_TROPIC
+  tropic_init(28992);
+#endif
+
+  usb_configure(NULL);
+}
