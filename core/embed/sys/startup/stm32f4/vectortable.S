@@ -132,10 +132,14 @@ vector_table:
 
   .section .vector_table, "a"
 vector_table:
+  .word reset_handler
   .word _stack_section_start
   .word _stack_section_size
-  .word reset_handler
-
+  .word 0
+  .word 0
+  .word 0
+  .word 0
+  .word 0
 
 #endif
 
