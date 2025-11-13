@@ -1,19 +1,35 @@
-use core::{mem::MaybeUninit, pin::Pin};
+use core::{marker::PhantomPinned, mem::MaybeUninit, pin::Pin};
 
-use zeroize::{DefaultIsZeroes, Zeroize as _};
+use zeroize::{zeroize_flat_type, Zeroize};
 
 use super::ffi;
 
-type Memory = ffi::SHA512_CTX;
+pub struct Memory {
+    inner: ffi::SHA512_CTX,
+    _phantom: PhantomPinned,
+}
 
 impl Default for Memory {
     fn default() -> Self {
         // SAFETY: a zeroed block of memory is a valid SHA512_CTX
-        unsafe { MaybeUninit::<Memory>::zeroed().assume_init() }
+        let inner = unsafe { MaybeUninit::<ffi::SHA512_CTX>::zeroed().assume_init() };
+        Self {
+            inner,
+            _phantom: PhantomPinned,
+        }
     }
 }
 
-impl DefaultIsZeroes for Memory {}
+impl Zeroize for Memory {
+    fn zeroize(&mut self) {
+        // SAFETY:
+        // - contains no references
+        // - plain struct with not Drop impls
+        // - only called in Drop impl
+        // - zeroed block of memory is valid
+        unsafe { zeroize_flat_type(&mut self.inner as *mut ffi::SHA512_CTX) };
+    }
+}
 
 pub const DIGEST_SIZE: usize = ffi::SHA512_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
@@ -23,22 +39,32 @@ pub struct Sha512<'a> {
 }
 
 impl<'a> Sha512<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory>) -> Self {
+    // SAFETY:
+    // The caller must ensure that the return value is handled according to the
+    // contract of `Pin::map_unchecked_mut` and `Pin::get_unchecked_mut`.
+    // Notably passing the pointer to a C function should be fine since the notion
+    // of moving doesn't exist there and the entire point of this pinning is not
+    // to leak more data than the C implementation.
+    unsafe fn inner(&mut self) -> *mut ffi::SHA512_CTX {
+        unsafe {
+            self.ctx
+                .as_mut()
+                .map_unchecked_mut(|m| &mut m.inner)
+                .get_unchecked_mut()
+        }
+    }
+
+    pub fn new(ctx: Pin<&'a mut Memory>) -> Self {
         // initialize the context
+        let mut res = Self { ctx };
         // SAFETY: safe with whatever finds itself as memory contents
-        unsafe { ffi::sha512_Init(ctx.as_mut().get_unchecked_mut()) };
-        Self { ctx }
+        unsafe { ffi::sha512_Init(res.inner()) };
+        res
     }
 
     pub fn update(&mut self, data: &[u8]) {
         // SAFETY: ffi
-        unsafe {
-            ffi::sha512_Update(
-                self.ctx.as_mut().get_unchecked_mut(),
-                data.as_ptr(),
-                data.len(),
-            )
-        };
+        unsafe { ffi::sha512_Update(self.inner(), data.as_ptr(), data.len()) };
     }
 
     pub fn memory() -> Memory {
@@ -47,13 +73,16 @@ impl<'a> Sha512<'a> {
 
     pub fn finalize_into(mut self, out: &mut Digest) {
         // SAFETY: ffi
-        unsafe { ffi::sha512_Final(self.ctx.as_mut().get_unchecked_mut(), out.as_mut_ptr()) };
+        unsafe { ffi::sha512_Final(self.inner(), out.as_mut_ptr()) };
     }
 }
 
 impl Drop for Sha512<'_> {
     fn drop(&mut self) {
-        self.ctx.zeroize();
+        // SAFETY: `Memory::zeroize` does not do any moving
+        unsafe {
+            self.ctx.as_mut().get_unchecked_mut().zeroize();
+        }
     }
 }
 
@@ -63,7 +92,9 @@ macro_rules! init_ctx {
         let mut $name = crate::crypto::sha512::Sha512::memory();
         // ... then make it inaccessible by overwriting the binding, and pin it
         #[allow(unused_mut)]
-        let mut $name = crate::crypto::sha512::Sha512::new(core::pin::Pin::new(&mut $name));
+        let mut $name = unsafe {
+            crate::crypto::sha512::Sha512::new(core::pin::Pin::new_unchecked(&mut $name))
+        };
     };
 }
 
