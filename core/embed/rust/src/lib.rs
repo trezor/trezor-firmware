@@ -12,6 +12,7 @@
 #![feature(trait_alias)]
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
+#![feature(str_from_raw_parts)]
 
 #[macro_use]
 extern crate num_derive;

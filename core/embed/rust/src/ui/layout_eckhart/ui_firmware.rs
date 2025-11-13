@@ -34,6 +34,8 @@ use crate::{
     util::interpolate,
 };
 
+use trezor_structs::ArchivedTrezorUiEnum;
+
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
 
@@ -1669,5 +1671,167 @@ impl FirmwareUI for UIEckhart {
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::show_tutorial::new_show_tutorial()?;
         Ok(flow)
+    }
+
+    fn process_ipc_message(data: &[u8]) -> Result<Gc<LayoutObj>, Error> {
+        // Deserialize the rkyv archived data directly from the static buffer
+        let archived = unsafe { rkyv::access_unchecked::<ArchivedTrezorUiEnum>(data) };
+
+        // Access the archived data zero-copy using StrBuffer::from_ptr_and_len
+        match archived {
+            ArchivedTrezorUiEnum::ConfirmAction { title, content } => {
+                // Create StrBuffers pointing directly to the archived data
+                // This is safe because the data has 'static lifetime
+                let title_buf =
+                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
+                let content_buf = unsafe {
+                    StrBuffer::from_ptr_and_len(content.data.as_ptr(), content.len as usize)
+                };
+
+                // Convert StrBuffers to TString for the API
+                let layout = Self::confirm_action(
+                    title_buf.into(),
+                    Some(content_buf.into()),
+                    None,  // description
+                    None,  // subtitle
+                    None,  // verb
+                    None,  // verb_cancel
+                    false, // hold
+                    false, // hold_danger
+                    false, // reverse
+                    false, // prompt_screen
+                    None,  // prompt_title
+                    false, // external_menu
+                )?;
+                LayoutObj::new_root(layout)
+            }
+            ArchivedTrezorUiEnum::ConfirmProperties { title, props } => {
+                // Create StrBuffers pointing directly to the archived data
+                // This is safe because the data has 'static lifetime
+                let title_buf =
+                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
+
+                // Build array of tuples for properties list
+                let mut tuple_objs = heapless::Vec::<Obj, 5>::new();
+                for i in 0..(props.len as usize) {
+                    let str1 = unsafe {
+                        core::str::from_raw_parts(
+                            props.data[i].0.data.as_ptr(),
+                            props.data[i].0.len as usize,
+                        )
+                    };
+                    let str2 = unsafe {
+                        core::str::from_raw_parts(
+                            props.data[i].1.data.as_ptr(),
+                            props.data[i].1.len as usize,
+                        )
+                    };
+                    let prop: Obj = unwrap!((
+                        unwrap!(Obj::try_from(str1)),
+                        unwrap!(Obj::try_from(str2)),
+                        Obj::from(false),
+                    )
+                        .try_into());
+
+                    unwrap!(tuple_objs.push(prop));
+                }
+
+                // Create List from tuples
+                let items = List::alloc(&tuple_objs)?;
+
+                // Convert StrBuffers to TString for the API
+                let layout = Self::confirm_properties(
+                    title_buf.into(),
+                    None,
+                    items.into(),
+                    true,
+                    None,
+                    false,
+                )?;
+                LayoutObj::new_root(layout)
+            }
+            ArchivedTrezorUiEnum::Warning { title, content } => {
+                // Create StrBuffers pointing directly to the archived data
+                // This is safe because the data has 'static lifetime
+                let title_buf =
+                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
+                let content_buf = unsafe {
+                    StrBuffer::from_ptr_and_len(content.data.as_ptr(), content.len as usize)
+                };
+
+                // Convert StrBuffers to TString for the API
+                Self::show_warning(
+                    title_buf.into(),
+                    TR::buttons__continue.into(),
+                    content_buf.into(),
+                    TString::empty(),
+                    false,
+                    false,
+                )
+            }
+            ArchivedTrezorUiEnum::Success { title, content } => {
+                // Create StrBuffers pointing directly to the archived data
+                // This is safe because the data has 'static lifetime
+                let title_buf =
+                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
+                let content_buf = unsafe {
+                    StrBuffer::from_ptr_and_len(content.data.as_ptr(), content.len as usize)
+                };
+
+                // Convert StrBuffers to TString for the API
+                Self::show_success(
+                    title_buf.into(),
+                    TR::buttons__continue.into(),
+                    content_buf.into(),
+                    false,
+                    0,
+                )
+            }
+            ArchivedTrezorUiEnum::RequestString { prompt } => {
+                // Create StrBuffers pointing directly to the archived data
+                // This is safe because the data has 'static lifetime
+                let prompt_buf = unsafe {
+                    StrBuffer::from_ptr_and_len(prompt.data.as_ptr(), prompt.len as usize)
+                };
+
+                // Convert StrBuffers to TString for the API
+                let layout = Self::request_string(
+                    prompt_buf.into(),
+                    50, // max_len
+                    false,
+                    None,
+                )?;
+
+                LayoutObj::new_root(layout)
+            }
+            ArchivedTrezorUiEnum::RequestNumber {
+                title,
+                content,
+                initial,
+                min,
+                max,
+            } => {
+                // Create StrBuffers pointing directly to the archived data
+                // This is safe because the data has 'static lifetime
+                let title_buf =
+                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
+                let content_buf = unsafe {
+                    StrBuffer::from_ptr_and_len(content.data.as_ptr(), content.len as usize)
+                };
+
+                // Convert StrBuffers to TString for the API
+                // Dereference archived u32 values to get normal u32
+                let layout = Self::request_number(
+                    title_buf.into(),
+                    (*initial).into(),
+                    (*min).into(),
+                    (*max).into(),
+                    Some(content_buf.into()),
+                    Some(|_| TString::empty()),
+                )?;
+
+                LayoutObj::new_root(layout)
+            }
+        }
     }
 }
