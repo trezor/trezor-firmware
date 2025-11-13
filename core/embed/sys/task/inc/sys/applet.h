@@ -25,28 +25,6 @@
 
 #include <sys/systask.h>
 
-// Applet entry point
-typedef void (*applet_startup_t)(const char* args, uint32_t random);
-
-// Applet header found at the beginning of the applet binary
-typedef struct {
-  // Applet entry point
-  applet_startup_t startup;
-  // Stack area
-  mpu_area_t stack;
-  // TLS area
-  mpu_area_t tls;
-  // Coreapp specific data
-  struct {
-    // Unprivileged SAES input buffer
-    void* saes_input;
-    // Unprivileged SAES output buffer
-    void* saes_output;
-    // Unprivileged SAES callback
-    void* saes_callback;
-  } coreapp;
-} applet_header_t;
-
 // Applet privileges
 typedef struct {
   bool assets_area_access;
@@ -67,15 +45,6 @@ typedef struct {
 // Initializes the applet structure
 void applet_init(applet_t* applet, const applet_layout_t* layout,
                  const applet_privileges_t* privileges);
-
-// Resets the applet and prepares it for execution from its entry point.
-//
-// Applet does not start immediately, it needs to be run by
-// `applet_run()` after calling this function.
-//
-// Returns `true` if the applet was successfully reset.
-bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
-                  size_t arg_size);
 
 // Runs the applet and waits until it finishes.
 void applet_run(applet_t* applet);
