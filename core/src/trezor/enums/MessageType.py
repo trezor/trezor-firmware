@@ -277,3 +277,9 @@ if not utils.BITCOIN_ONLY:
     TronContractRequest = 2204
     TronTransferContract = 2205
     TronTriggerSmartContract = 2206
+    ExtAppLoad = 9200
+    ExtAppLoaded = 9201
+    ExtAppRun = 9202
+    ExtAppResult = 9203
+    FunnycoinGetPublicKey = 9204
+    FunnycoinPublicKey = 9205

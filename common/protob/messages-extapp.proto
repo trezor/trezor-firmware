@@ -1,0 +1,54 @@
+syntax = "proto2";
+package hw.trezor.messages.extapps;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageExtApp";
+
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
+
+/**
+ * Request: Load an external application onto the device
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message ExtAppLoad {
+	// Path to the shared object (.so) library to load (emulator-only)
+	required string path = 1;
+}
+
+/**
+ * Response: External application loaded
+ * @end
+ */
+message ExtAppLoaded {
+	// Hash of the loaded app binary (implementation-defined, e.g., SHA-256)
+	required bytes hash = 1;
+}
+
+/**
+ * Request: Run an external application (starts IPC responder)
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message ExtAppRun {
+	// Hash of the app to run
+	required bytes hash = 1;
+	// Function ID to invoke
+	required uint32 fn_id = 2;
+	// Serialized function arguments
+	required bytes data = 3;
+}
+
+/**
+ * Response: External application run result
+ * @end
+ */
+message ExtAppResult {
+	// Serialized function result
+	required bytes data = 1;
+}
