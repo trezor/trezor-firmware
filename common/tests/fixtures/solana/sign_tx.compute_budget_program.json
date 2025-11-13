@@ -348,6 +348,71 @@
       "result": {
         "expected_signature": "28ea83fcee7c5e51678e04aa72d37018fd41240ec0c3262268b2dc449971bcc2705ac7d9d24515b9a2c23fe59343d9732466a2207a30ca4f4d84c0ee31451f00"
       }
+    },
+    {
+      "description": "Jito Transfer With Compute Budget",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 3
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111",
+            "asgardprogram111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 3,
+              "accounts": {},
+              "data": {
+                "instruction_id": 1,
+                "bytes": 2048
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {
+                "program_ref": 4
+              },
+              "data": {
+                "instruction_id": 2,
+                "units": 200000
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "funding_account": 0,
+                "recipient_account": 1
+              },
+              "data": {
+                "instruction_id": 2,
+                "lamports": 20000000
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "d0168dab377aef237fb54312afaae9906645355278623d9abfc6e06fd7b63ba5acf36d5f9fe22860f1644c88d81b66317ef605244ce6a121740d0d0331073d05"
+      }
     }
   ]
 }
