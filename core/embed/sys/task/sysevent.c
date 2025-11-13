@@ -24,9 +24,14 @@
 
 #ifdef KERNEL_MODE
 
+#include <sys/mpu.h>
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
 #include <trezor_bsp.h>
+
+#ifdef KERNEL
+#include <sys/applet.h>
+#endif
 
 #ifdef TREZOR_EMULATOR
 #include <sys/unix/sdl_event.h>
@@ -38,9 +43,12 @@ typedef struct {
   // Deadline for the task to be woken up
   uint32_t deadline;
   // Bitmask of events the task is waiting for
-  const sysevents_t *awaited;
+  sysevents_t awaited;
   // Bitmask of events that were signaled
-  sysevents_t *signalled;
+  sysevents_t signalled;
+
+  sysevents_t *signalled_arg;
+
 } sysevent_poller_t;
 
 typedef struct {
@@ -128,13 +136,13 @@ void syshandle_signal_read_ready(syshandle_t handle, void *param) {
   for (size_t i = 0; i < dispatcher->pollers_count; i++) {
     sysevent_poller_t *poller = &dispatcher->pollers[i];
     syshandle_mask_t handle_mask = 1 << handle;
-    if ((poller->awaited->read_ready & handle_mask) != 0) {
+    if ((poller->awaited.read_ready & handle_mask) != 0) {
       if (source->vmt->check_read_ready != NULL) {
         if (source->vmt->check_read_ready(source->context,
                                           systask_id(poller->task), param)) {
-          poller->signalled->read_ready |= handle_mask;
+          poller->signalled.read_ready |= handle_mask;
         } else {
-          poller->signalled->read_ready &= ~handle_mask;
+          poller->signalled.read_ready &= ~handle_mask;
         }
       }
     }
@@ -153,13 +161,13 @@ void syshandle_signal_write_ready(syshandle_t handle, void *param) {
   for (size_t i = 0; i < dispatcher->pollers_count; i++) {
     sysevent_poller_t *poller = &dispatcher->pollers[i];
     syshandle_mask_t handle_mask = 1 << handle;
-    if ((poller->awaited->write_ready & handle_mask) != 0) {
+    if ((poller->awaited.write_ready & handle_mask) != 0) {
       if (source->vmt->check_write_ready != NULL) {
         if (source->vmt->check_write_ready(source->context,
                                            systask_id(poller->task), param)) {
-          poller->signalled->write_ready |= handle_mask;
+          poller->signalled.write_ready |= handle_mask;
         } else {
-          poller->signalled->write_ready &= ~handle_mask;
+          poller->signalled.write_ready &= ~handle_mask;
         }
       }
     }
@@ -210,8 +218,9 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
   // Add task to the polling list
   // Kernel task has the highest priority so it is always first in the list
   dispatcher->pollers[prio].task = systask_active();
-  dispatcher->pollers[prio].awaited = awaited;
-  dispatcher->pollers[prio].signalled = signalled;
+  dispatcher->pollers[prio].awaited = *awaited;
+  dispatcher->pollers[prio].signalled = (sysevents_t){0};
+  dispatcher->pollers[prio].signalled_arg = signalled;
   dispatcher->pollers[prio].deadline = deadline;
 
   if (active_task != kernel_task) {
@@ -231,8 +240,8 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
     // Gather sources to poll
     for (size_t i = 0; i < dispatcher->pollers_count; i++) {
       sysevent_poller_t *poller = &dispatcher->pollers[i];
-      handles_to_read |= poller->awaited->read_ready;
-      handles_to_write |= poller->awaited->write_ready;
+      handles_to_read |= poller->awaited.read_ready;
+      handles_to_write |= poller->awaited.write_ready;
     }
 
     // Poll sources we are waiting for
@@ -253,10 +262,17 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
     for (size_t prio = 0; prio < dispatcher->pollers_count; prio++) {
       sysevent_poller_t *poller = &dispatcher->pollers[prio];
       bool timed_out = ((int32_t)(poller->deadline - now)) <= 0;
-      bool ready = (poller->signalled->read_ready != 0) ||
-                   (poller->signalled->write_ready != 0);
+      bool ready = (poller->signalled.read_ready != 0) ||
+                   (poller->signalled.write_ready != 0);
       if (ready || timed_out) {
         systask_t *task = poller->task;
+#if defined(KERNEL) && !defined(TREZOR_EMULATOR)
+        if (task->applet != NULL) {
+          applet_t *applet = (applet_t *)task->applet;
+          mpu_set_active_applet(&applet->layout);
+        }
+#endif
+        *poller->signalled_arg = poller->signalled;
         remove_poller(dispatcher, prio);
         if (task == kernel_task) {
           return;
