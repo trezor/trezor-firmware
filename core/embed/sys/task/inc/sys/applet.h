@@ -25,24 +25,35 @@
 
 #include <sys/systask.h>
 
+/** Applet structure */
+typedef struct applet applet_t;
+
 /** Applet privileges */
 typedef struct {
   bool assets_area_access;
 } applet_privileges_t;
 
-typedef struct {
-  /** Applet memory layout describing the memory areas
-   * the applet is allowed to use */
-  applet_layout_t layout;
+/** Callback called when an applet is unloaded */
+typedef void (*applet_unload_cb_t)(applet_t* applet);
+
+struct applet {
   /** Applet privileges */
   applet_privileges_t privileges;
+
   /** Task associated with the applet */
   systask_t task;
+  /** Callback called when the applet is unloaded */
+  applet_unload_cb_t unload_cb;
+
 #ifdef TREZOR_EMULATOR
   /** Handle returned by `dlopen()` */
   void* handle;
+#else
+  /** Applet memory layout describing the memory areas
+   * the applet is allowed to use */
+  applet_layout_t layout;
 #endif
-} applet_t;
+};
 
 /**
  * @brief Initializes the applet structure
@@ -51,11 +62,12 @@ typedef struct {
  * initializing the task associated with the applet.
  *
  * @param applet Pointer to the applet to initialize.
- * @param layout Pointer to the applet memory layout.
  * @param privileges Pointer to the applet privileges.
+ * @param unload_cb Callback called when the applet is unloaded.
+ *
  */
-void applet_init(applet_t* applet, const applet_layout_t* layout,
-                 const applet_privileges_t* privileges);
+void applet_init(applet_t* applet, const applet_privileges_t* privileges,
+                 applet_unload_cb_t unload_cb);
 
 /**
  * @brief Runs the applet task first time.
@@ -69,10 +81,10 @@ void applet_init(applet_t* applet, const applet_layout_t* layout,
 void applet_run(applet_t* applet);
 
 /**
- * @brief Release all resources held by the applet
+ * @brief Releases all resources held by the applet
  * @param applet Pointer to the applet to stop.
  */
-void applet_stop(applet_t* applet);
+void applet_unload(applet_t* applet);
 
 /**
  * @brief Returns `true` if the applet task is alive.
