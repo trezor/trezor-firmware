@@ -286,6 +286,10 @@ void mp_unix_mark_exec(void);
     void *mmap_region_head; \
     mp_obj_t trezorconfig_ui_wait_callback; \
 
+
+#define MICROPY_MULTI_INSTANCE 0
+#define MP_THREAD_LOCAL
+
 // We need to provide a declaration/definition of alloca()
 // unless support for it is disabled.
 #if !defined(MICROPY_NO_ALLOCA) || MICROPY_NO_ALLOCA == 0

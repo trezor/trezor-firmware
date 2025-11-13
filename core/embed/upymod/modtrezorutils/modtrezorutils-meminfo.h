@@ -220,7 +220,7 @@ void dump_short(FILE *out, mp_const_obj_t value) {
     print_type(out, "qstr", qstr_str(q), NULL, true);
 
   } else if (mp_obj_is_small_int(value)) {
-    static char num_buf[100];
+    char num_buf[100];
     snprintf(num_buf, 100, INT_FMT, MP_OBJ_SMALL_INT_VALUE(value));
     print_type(out, "smallint", num_buf, NULL, true);
 

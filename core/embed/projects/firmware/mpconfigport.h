@@ -87,6 +87,7 @@
 #define MICROPY_ENABLE_SCHEDULER    (0)
 #define MICROPY_SCHEDULER_DEPTH     (0)
 #define MICROPY_VFS                 (0)
+#define MICROPY_MODULE_ATTR_DELEGATION (1)
 
 // control over Python builtins
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
@@ -218,6 +219,10 @@ typedef long mp_off_t;
 
 #define MICROPY_PORT_ROOT_POINTERS \
     mp_obj_t trezorconfig_ui_wait_callback; \
+
+#define MICROPY_MULTI_INSTANCE 1
+
+#define MP_THREAD_LOCAL THREAD_LOCAL
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>
