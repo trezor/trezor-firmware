@@ -3,7 +3,7 @@ use core::ops::DerefMut;
 use crate::{
     micropython::gc::GcBox,
     ui::{
-        component::{Component, Event, EventCtx},
+        component::{base::EventPropagation, Component, Event, EventCtx},
         event::TouchEvent,
         geometry::{Direction, Insets, Offset, Rect},
         shape::{Bar, Renderer},
@@ -13,6 +13,7 @@ use crate::{
 
 use super::{
     super::component::{Button, ButtonMsg},
+    attach_anim::{AttachAnimation, MenuAttachAnimation},
     theme,
 };
 use heapless::Vec;
@@ -103,6 +104,8 @@ pub struct VerticalMenu<T = ShortMenuVec> {
     /// If true, the first button will overlap the header.
     /// When using subtitle, the overlap should be disabled.
     top_component_overlap: bool,
+    /// Attach animation for menu items.
+    attach_anim: MenuAttachAnimation,
 }
 
 pub enum VerticalMenuMsg {
@@ -127,6 +130,7 @@ impl<T: MenuItems> VerticalMenu<T> {
             offset_y: 0,
             offset_y_max: 0,
             top_component_overlap: true,
+            attach_anim: MenuAttachAnimation::default(),
         }
     }
 
@@ -321,13 +325,14 @@ impl<T: MenuItems> VerticalMenu<T> {
         }
     }
 
-    fn render_buttons<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        for button in self.buttons.iter() {
-            button.render(target);
+    fn render_buttons<'s>(&'s self, target: &mut impl Renderer<'s>, t: f32) {
+        for (idx, button) in self.buttons.iter().enumerate() {
+            let alpha = self.attach_anim.get_item_alpha(idx as u16, t);
+            button.render_with_alpha(target, alpha);
         }
     }
 
-    fn render_separators<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    fn render_separators<'s>(&'s self, target: &mut impl Renderer<'s>, t: f32) {
         #[inline]
         fn button_separator(button: &Button) -> Rect {
             Rect::from_top_left_and_size(
@@ -349,14 +354,16 @@ impl<T: MenuItems> VerticalMenu<T> {
             }
         }
 
-        for pair in self.buttons.iter().as_slice().windows(2) {
+        for (idx, pair) in self.buttons.iter().as_slice().windows(2).enumerate() {
             let [button_prev, button] = pair else {
                 continue;
             };
 
             if !button.is_pressed() && !button_prev.is_pressed() {
+                let alpha = self.attach_anim.get_separator_alpha((idx + 1) as u16, t);
                 Bar::new(button_separator(button))
                     .with_fg(theme::GREY_EXTRA_DARK)
+                    .with_alpha(alpha)
                     .render(target);
             }
         }
@@ -367,6 +374,7 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
     type Msg = VerticalMenuMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        self.attach_anim = MenuAttachAnimation::new(self.buttons.get_len() as u16);
         // Crop the menu area
         self.bounds = bounds.inset(Self::SIDE_INSETS);
 
@@ -394,7 +402,11 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Shif touch events by the scroll offset
+        if let EventPropagation::Stop = self.attach_anim.process_events(ctx, event) {
+            return None;
+        }
+
+        // Shift touch events by the scroll offset
         let event_shifted = self.shift_touch_event(event);
         for (i, button) in self.buttons.iter_mut().enumerate() {
             if let Some(ButtonMsg::Clicked) = button.event(ctx, event_shifted) {
@@ -405,13 +417,14 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let t = self.attach_anim.eval();
         // Clip and translate the sliding window based on the scroll offset
         target.in_clip(self.bounds, &|target| {
             target.with_origin(Offset::y(-self.offset_y), &|target| {
-                self.render_buttons(target);
+                self.render_buttons(target, t);
 
                 // Render separators between buttons
-                self.render_separators(target);
+                self.render_separators(target, t);
             });
         });
     }
