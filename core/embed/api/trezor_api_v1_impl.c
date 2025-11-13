@@ -43,7 +43,6 @@ const trezor_api_v1_t trezor_api_v1 = {
     .ipc_try_receive = ipc_try_receive,
     .ipc_message_free = ipc_message_free,
     .ipc_send = ipc_send,
-    .ipc_call = ipc_call,
 #endif
 };
 
