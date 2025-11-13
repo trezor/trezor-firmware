@@ -230,7 +230,7 @@ static void show_rsod(const systask_postmortem_t *pminfo) {
     // Loop until the coreapp is terminated
     kernel_loop(&coreapp);
     // Release the coreapp resources
-    applet_stop(&coreapp);
+    applet_unload(&coreapp);
 
     if (coreapp.task.pminfo.reason == TASK_TERM_REASON_EXIT) {
       // RSOD was shown successfully
@@ -296,7 +296,7 @@ int main(void) {
   // Loop until the coreapp is terminated
   kernel_loop(&coreapp);
   // Release the coreapp resources
-  applet_stop(&coreapp);
+  applet_unload(&coreapp);
 
 #ifndef USE_BOOTARGS_RSOD
   // Coreapp crashed, show RSOD

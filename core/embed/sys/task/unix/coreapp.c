@@ -31,10 +31,9 @@ extern int coreapp_emu(int argc, char** argv);
 extern const void* coreapp_api_get(uint32_t version);
 
 bool coreapp_init(applet_t* applet, int argc, char** argv) {
-  const applet_layout_t coreapp_layout = {0};
   const applet_privileges_t coreapp_privileges = {0};
 
-  applet_init(applet, &coreapp_layout, &coreapp_privileges);
+  applet_init(applet, &coreapp_privileges, NULL);
 
   if (!systask_init(&applet->task, 0, 0, 0, applet)) {
     return false;
