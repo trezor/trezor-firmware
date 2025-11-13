@@ -226,9 +226,7 @@ static void coreapp_init(applet_t *applet) {
   const uint32_t CODE1_END = FIRMWARE_START + FIRMWARE_MAXSIZE;
 #endif
 
-  applet_header_t *coreapp_header = (applet_header_t *)CODE1_START;
-
-  applet_layout_t coreapp_layout = {
+  const applet_layout_t coreapp_layout = {
       .data1.start = (uint32_t)AUX1_RAM_START,
       .data1.size = (uint32_t)AUX1_RAM_SIZE,
 #ifdef AUX2_RAM_START
@@ -247,7 +245,7 @@ static void coreapp_init(applet_t *applet) {
       .assets_area_access = true,
   };
 
-  applet_init(applet, coreapp_header, &coreapp_layout, &coreapp_privileges);
+  applet_init(applet, &coreapp_layout, &coreapp_privileges);
 }
 
 #ifndef USE_BOOTARGS_RSOD

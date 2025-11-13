@@ -32,11 +32,10 @@
 
 #ifdef KERNEL
 
-void applet_init(applet_t* applet, applet_header_t* header,
-                 applet_layout_t* layout, applet_privileges_t* privileges) {
+void applet_init(applet_t* applet, const applet_layout_t* layout,
+                 const applet_privileges_t* privileges) {
   memset(applet, 0, sizeof(applet_t));
 
-  applet->header = header;
   applet->layout = *layout;
   applet->privileges = *privileges;
 }
@@ -57,9 +56,11 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
   // Clear all memory the applet is allowed to use
   applet_clear_memory(applet);
 
+  const applet_header_t* header = (applet_header_t*)applet->layout.code1.start;
+
   // Reset the applet task (stack pointer, etc.)
-  if (!systask_init(&applet->task, applet->header->stack.start,
-                    applet->header->stack.size, applet)) {
+  if (!systask_init(&applet->task, header->stack.start, header->stack.size,
+                    applet)) {
     return false;
   }
 
@@ -77,8 +78,7 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
   uint32_t arg2 = (uint32_t)arg_copy;
   uint32_t arg3 = rng_get();
 
-  return systask_push_call(&applet->task, applet->header->startup, arg1, arg2,
-                           arg3);
+  return systask_push_call(&applet->task, header->startup, arg1, arg2, arg3);
 }
 
 #ifdef USE_TRUSTZONE
