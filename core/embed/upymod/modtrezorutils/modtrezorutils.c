@@ -655,31 +655,31 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_nrf_get_version_obj,
                                  mod_trezorutils_nrf_get_version);
 #endif
 
-STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
+STATIC const mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION), (const byte *)SCM_REVISION};
 
-STATIC mp_obj_str_t mod_trezorutils_model_name_obj = {
+STATIC const mp_obj_str_t mod_trezorutils_model_name_obj = {
     {&mp_type_str}, 0, sizeof(MODEL_NAME) - 1, (const byte *)MODEL_NAME};
 
-STATIC mp_obj_str_t mod_trezorutils_full_name_obj = {
+STATIC const mp_obj_str_t mod_trezorutils_full_name_obj = {
     {&mp_type_str},
     0,
     sizeof(MODEL_FULL_NAME) - 1,
     (const byte *)MODEL_FULL_NAME};
 
-STATIC mp_obj_str_t mod_trezorutils_model_usb_manufacturer_obj = {
+STATIC const mp_obj_str_t mod_trezorutils_model_usb_manufacturer_obj = {
     {&mp_type_str},
     0,
     sizeof(MODEL_USB_MANUFACTURER) - 1,
     (const byte *)MODEL_USB_MANUFACTURER};
 
-STATIC mp_obj_str_t mod_trezorutils_model_usb_product_obj = {
+STATIC const mp_obj_str_t mod_trezorutils_model_usb_product_obj = {
     {&mp_type_str},
     0,
     sizeof(MODEL_USB_PRODUCT) - 1,
     (const byte *)MODEL_USB_PRODUCT};
 
-STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
+STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
     {&mp_type_tuple},
     4,
     {MP_OBJ_NEW_SMALL_INT(VERSION_MAJOR), MP_OBJ_NEW_SMALL_INT(VERSION_MINOR),
