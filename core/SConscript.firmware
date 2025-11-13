@@ -271,7 +271,11 @@ SOURCE_MOD += [
 ]
 
 if "app_loading" in FEATURES_WANTED:
-    SOURCE_MOD += ['embed/api/trezor_api_v1_impl.c']
+    SOURCE_MOD += [
+        'embed/api/trezor_api_v1_impl.c',
+        'embed/upymod/modtrezorapp/modtrezorapp.c',
+    ]
+
 
 CPPDEFINES_MOD += [
     'TRANSLATIONS',
