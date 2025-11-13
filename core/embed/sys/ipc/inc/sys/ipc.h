@@ -54,6 +54,9 @@ bool ipc_init(void);
 /**
  * @brief Registers a buffer for receiving IPC messages from a specific task.
  *
+ * Buffer must be aligned to sizeof(size_t) bytes, otherwise the registration
+ * will fail.
+ *
  * @param remote The remote task ID to register the buffer for.
  * @param buffer Pointer to the buffer to use for receiving messages.
  * @param size Size of the buffer in bytes.
