@@ -44,10 +44,11 @@ extern const uint8_t *PIN_EMPTY;
 // Maximum number of failed unlock attempts.
 // NOTE: The PIN counter logic relies on this constant being less than or equal
 // to 16.
-#if USE_TROPIC && USE_OPTIGA
+#if USE_TROPIC
 // If both Optiga and Tropic are used, every PIN attempt requires a stretched
-// PIN slot on Optiga. This restricts the total number of PIN
-// attempts.
+// PIN slot in Optiga. This restricts the total number of PIN attempts to 10.
+// For simplicity we set the number of attempts to 10 when Tropic is used
+// without Optiga, even though more attempts could be supported.
 #define PIN_MAX_TRIES 10
 #else
 #define PIN_MAX_TRIES 16
