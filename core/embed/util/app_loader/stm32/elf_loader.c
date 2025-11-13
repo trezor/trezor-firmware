@@ -26,8 +26,10 @@
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
 #include <sys/trustzone.h>
+#include <util/elf_loader.h>
 #include <util/image.h>
 
+#include "../app_arena.h"
 #include "elf.h"
 
 // Alignment required for MPU regions
@@ -208,13 +210,21 @@ static void elf_unload_cb(applet_t* applet) {
   memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
   mpu_set_active_applet(NULL);
 
+  // Free applet RAM
+  app_arena_free((void*)applet->layout.data1.start);
+
   // Disable unprivileged access to applet memory regions
   applet_layout_set_unpriv(&applet->layout, false);
 }
 
-bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
-              size_t ram_size, applet_t* applet) {
+bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   applet_init(applet, NULL, NULL);
+
+  // Make sure the entire ELF file is accessible
+  const applet_layout_t temp_layout_1 = {
+      .code1 = {.start = (uintptr_t)elf_ptr, .size = elf_size},
+  };
+  mpu_set_active_applet(&temp_layout_1);
 
   elf_ctx_t elf = {0};
 
@@ -259,16 +269,25 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
   // Check if RO segment is properly aligned
   // !@#
 
-  // Check if RW segment fits available RAM
-  if (elf.rw_phdr->p_memsz > ram_size) {
+  // Allocate RAM for RW segment
+  size_t ram_size = ALIGN_UP(elf.rw_phdr->p_memsz, MPU_ALIGNMENT);
+  void* ram_ptr = app_arena_alloc(ram_size, APP_ALLOC_DATA);
+  if (ram_ptr == NULL) {
     goto cleanup;
   }
+
+  // Make sure ELF and allocated RAM are accessible
+  const applet_layout_t temp_layout_2 = {
+      .code1 = {.start = (uintptr_t)elf_ptr, .size = elf_size},
+      .data1 = {.start = (uintptr_t)ram_ptr, .size = ram_size},
+  };
+  mpu_set_active_applet(&temp_layout_2);
 
   // Prepare applet memory layout
   elf.layout.code1.start = (uintptr_t)elf.ehdr + elf.ro_phdr->p_offset;
   elf.layout.code1.size = ALIGN_UP(elf.ro_phdr->p_filesz, MPU_ALIGNMENT);
   elf.layout.data1.start = (uintptr_t)ram_ptr;
-  elf.layout.data1.size = ALIGN_UP(elf.rw_phdr->p_memsz, MPU_ALIGNMENT);
+  elf.layout.data1.size = ram_size;
 
   // It's intended to call coreapp functions directly so we have to make
   // coreapp code and TLS areas accessible when the applet is running.

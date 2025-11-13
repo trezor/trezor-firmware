@@ -23,33 +23,12 @@
 
 #include <sys/applet.h>
 
-#ifdef TREZOR_EMULATOR
-
 /**
  * Loads an ELF image using the system dynamic loader.
  *
  * @param applet Pointer to the applet_t structure to be initialized
- * @param filename Path to the ELF file to be loaded
+ * @param elf_ptr Pointer to the pointer to the ELF image in memory
+ * @param elf_size Size of the ELF image in memory
  * @return true on success, false on failure
  */
-bool elf_load(applet_t* applet, const char* filename);
-
-#else
-
-/**
- * Loads an ELF image
- *
- * Only ELF files with the specific properties are supported
- *
- * @param elf_ptr Pointer to the ELF image in flash
- * @param elf_size Size of the ELF image in bytes
- * @param ram_ptr Pointer to RAM area for RW segment
- * @param ram_size Size of the RAM area in bytes
- * @param applet Pointer to the applet_t structure to be initialized
- *
- * @return true on success, false on failure
- */
-bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
-              size_t ram_size, applet_t* applet);
-
-#endif
+bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size);
