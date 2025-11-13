@@ -635,3 +635,9 @@ if TYPE_CHECKING:
         BenchmarkNames = 9101
         BenchmarkRun = 9102
         BenchmarkResult = 9103
+        ExtAppLoad = 9200
+        ExtAppLoaded = 9201
+        ExtAppRun = 9202
+        ExtAppResult = 9203
+        FunnycoinGetPublicKey = 9204
+        FunnycoinPublicKey = 9205

@@ -1,0 +1,33 @@
+syntax = "proto2";
+package hw.trezor.messages.funnycoin;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageFunnycoin";
+
+
+/**
+ * Request: Get public key from external app
+ * @start
+ * @next PublicKey
+ * @next Failure
+ */
+message FunnycoinGetPublicKey {
+	// BIP-32 path to derive the key
+	repeated uint32 address_n = 1;
+	// Coin name (e.g., "Bitcoin")
+	optional string coin_name = 2 [default="Funnycoin"];
+	// Show on display
+	optional bool show_display = 3;
+}
+
+/**
+ * Response: Public key from external app
+ * @end
+ */
+message FunnycoinPublicKey {
+	// BIP-32 serialized extended public key
+	required string xpub = 1;
+	// Public key node
+	optional bytes public_key = 2;
+}
