@@ -27,19 +27,15 @@
 ///     """
 ///     Sends an IPC message to the specified remote task.
 ///     """
-STATIC mp_obj_t mod_trezorio_ipc_send(mp_obj_t remote, mp_obj_t fn,
-                                      mp_obj_t data) {
+STATIC mp_obj_t mod_trezorio_ipc_send(mp_obj_t remote_obj, mp_obj_t fn_obj,
+                                      mp_obj_t data_obj) {
   mp_buffer_info_t bufinfo = {0};
-  mp_get_buffer_raise(data, &bufinfo, MP_BUFFER_READ);
+  mp_get_buffer_raise(data_obj, &bufinfo, MP_BUFFER_READ);
 
-  ipc_message_t message = {
-      .remote = trezor_obj_get_uint(remote),
-      .fn = trezor_obj_get_uint(fn),
-      .data = bufinfo.buf,
-      .size = bufinfo.len,
-  };
+  systask_id_t remote = (systask_id_t)mp_obj_get_int(remote_obj);
+  uint32_t fn = (uint32_t)mp_obj_get_int(fn_obj);
 
-  if (!ipc_send(&message)) {
+  if (!ipc_send(remote, fn, bufinfo.buf, bufinfo.len)) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to send IPC message."));
   }

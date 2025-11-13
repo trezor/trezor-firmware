@@ -60,12 +60,8 @@ API_FN_VOID(ipc_message_free,
   (msg))
 
 API_FN(bool, ipc_send,
-  (const ipc_message_t *msg),
-  (msg))
-
-API_FN(bool, ipc_call,
-  (const ipc_message_t *req, ipc_message_t *rsp, uint32_t timeout),
-  (req, rsp, timeout))
+  (systask_id_t remote, uint32_t fn, const void * data, size_t data_size),
+  (remote, fn, data, data_size))
 
 #endif  // USE_IPC
 
