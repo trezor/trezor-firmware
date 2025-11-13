@@ -17,39 +17,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef KERNEL
-
 #include <trezor_rtl.h>
 
-#include <sys/applet.h>
 #include <sys/coreapp.h>
-#include <sys/systask.h>
+#include <util/elf_loader.h>
 
-extern int coreapp_emu(int argc, char** argv);
+#include <dlfcn.h>
 
-// API getter function implemented in the coreapp
-extern const void* coreapp_api_get(uint32_t version);
+bool elf_load(applet_t *applet, const char *filename) {
+  applet_layout_t layout = {0};
+  applet_privileges_t privileges = {0};
 
-bool coreapp_init(applet_t* applet, int argc, char** argv) {
-  const applet_layout_t coreapp_layout = {0};
-  const applet_privileges_t coreapp_privileges = {0};
+  applet_init(applet, &layout, &privileges);
 
-  applet_init(applet, &coreapp_layout, &coreapp_privileges);
+  applet->handle = dlopen(filename, RTLD_NOW);
+
+  if (applet->handle == NULL) {
+    // Failed to load the applet
+    return false;
+  }
+
+  void *entrypoint = dlsym(applet->handle, "applet_main");
+
+  if (entrypoint == NULL) {
+    // Applet entry point not found
+    dlclose(applet->handle);
+    applet->handle = NULL;
+    return false;
+  }
 
   if (!systask_init(&applet->task, 0, 0, 0, applet)) {
     return false;
   }
 
-  if (!systask_push_call(&applet->task, (void*)coreapp_emu, (uintptr_t)argc,
-                         (uintptr_t)argv, 0)) {
+  uintptr_t api_getter = (uintptr_t)coreapp_get_api_getter();
+
+  if (!systask_push_call(&applet->task, entrypoint, api_getter, 0, 0)) {
     return false;
   }
 
   return true;
 }
 
-#ifdef USE_APP_LOADING
-void* coreapp_get_api_getter(void) { return (void*)coreapp_api_get; }
-#endif
-
-#endif  // KERNEL
+void applet_unload(applet_t *applet) {
+  // Unload the applet
+  dlclose(applet->handle);
+}
