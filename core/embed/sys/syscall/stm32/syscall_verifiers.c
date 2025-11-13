@@ -162,16 +162,13 @@ access_violation:
   apptask_access_violation();
 }
 
-bool ipc_send__verified(const ipc_message_t *msg) {
-  if (!probe_read_access(msg, sizeof(*msg))) {
+bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
+                        size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
     goto access_violation;
   }
 
-  if (!probe_read_access(msg->data, msg->size)) {
-    goto access_violation;
-  }
-
-  return ipc_send(msg);
+  return ipc_send(remote, fn, data, data_size);
 
 access_violation:
   apptask_access_violation();

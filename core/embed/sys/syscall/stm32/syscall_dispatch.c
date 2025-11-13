@@ -209,8 +209,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_IPC_SEND: {
-      const ipc_message_t *msg = (const ipc_message_t *)args[0];
-      args[0] = ipc_send__verified(msg);
+      systask_id_t remote = (systask_id_t)args[0];
+      uint32_t fn = (uint32_t)args[1];
+      const void *data = (const void *)args[2];
+      size_t data_size = (size_t)args[3];
+      args[0] = ipc_send__verified(remote, fn, data, data_size);
     } break;
 #endif  // USE_IPC
 
