@@ -34,6 +34,15 @@ use crate::{
 };
 use heapless::Vec;
 
+use core::mem::MaybeUninit;
+use rkyv::{
+    api::low::to_bytes_in_with_alloc,
+    rancor::Failure,
+    ser::{allocator::SubAllocator, writer::Buffer},
+    util::Align,
+};
+use trezor_structs::{ShortString, TrezorUiResult};
+
 #[cfg(feature = "backlight")]
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 
@@ -1309,6 +1318,62 @@ extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+
+        let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+
+        // Pass the slice directly to the trait function
+        let layout = ModelUI::process_ipc_message(data)?;
+        Ok(layout.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_serialize_ui_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
+
+        // Map MicroPython UiResult object to Rust enum for serialization
+        let msg = if obj == CONFIRMED.as_obj() {
+            TrezorUiResult::Confirmed
+        } else if obj == CANCELLED.as_obj() {
+            TrezorUiResult::Cancelled
+        } else if obj == BACK.as_obj() {
+            TrezorUiResult::Back
+        } else if obj == INFO.as_obj() {
+            TrezorUiResult::Info
+        } else if obj == Obj::const_none() {
+            TrezorUiResult::None
+        } else if obj.is_str() {
+            let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+            TrezorUiResult::String(unwrap!(ShortString::from_str(unwrap!(
+                core::str::from_utf8(data)
+            ))))
+        } else if let Ok(val) = u32::try_from(obj) {
+            TrezorUiResult::Integer(val)
+        } else {
+            return Err(Error::TypeError);
+        };
+
+        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
+        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
+
+        let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
+            &msg,
+            Buffer::from(&mut *out),
+            SubAllocator::new(&mut arena),
+        )
+        .unwrap();
+
+        // Convert to Python bytes object
+        let py_bytes: Obj = (&bytes[..]).try_into()?;
+        Ok(py_bytes)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
         let buffer = data.try_into()?;
@@ -2158,6 +2223,20 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def tutorial() -> LayoutObj[UiResult]:
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, new_tutorial).as_obj(),
+
+    /// def process_ipc_message(
+    ///     *,
+    ///     data: bytes,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
+    Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
+
+    /// def serialize_ui_result(
+    ///     *,
+    ///     result: UiResult | int | str | None,
+    /// ) -> bytes:
+    ///     """Serialize a UI result into a compact binary format."""
+    Qstr::MP_QSTR_serialize_ui_result => obj_fn_kw!(0, new_serialize_ui_result).as_obj(),
 
     /// class BacklightLevels:
     ///     """Backlight levels. Values dynamically update based on user settings."""
