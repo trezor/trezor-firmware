@@ -79,10 +79,12 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
 
   if (entrypoint == NULL) {
     // Applet entry point not found
+    printf("Entry point is NULL\n");
     goto cleanup;
   }
 
   if (!systask_init(&applet->task, 0, 0, 0, applet)) {
+    printf("Failed to initialize applet task due to error %s\n", dlerror());
     goto cleanup;
   }
 

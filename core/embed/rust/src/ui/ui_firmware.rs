@@ -18,6 +18,9 @@ pub const MAX_MENU_ITEMS: usize = 5;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
 
+/// Maximum IPC message size in bytes for serialized data
+pub const MAX_IPC_SIZE: usize = 1024;
+
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(
@@ -492,4 +495,18 @@ pub trait FirmwareUI {
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error>;
+
+    /// Deserializes and processes an IPC message from a serialized byte array.
+    ///
+    /// This function takes a BinaryData containing the serialized rkyv message,
+    /// deserializes it, and dispatches to the appropriate UI function based on
+    /// the message type.
+    ///
+    /// # Arguments
+    /// * `data` - Byte slice containing the rkyv-encoded TrezorEnum message
+    ///
+    /// # Returns
+    /// A Result containing the layout object or an error if deserialization
+    /// fails
+    fn process_ipc_message(data: &[u8]) -> Result<Gc<LayoutObj>, Error>;
 }

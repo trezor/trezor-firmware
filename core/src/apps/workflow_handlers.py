@@ -95,6 +95,12 @@ def _find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.VerifyMessage:
         return "apps.bitcoin.verify_message"
 
+    # extapp
+    if msg_type == MessageType.ExtAppLoad:
+        return "apps.extapp.load"
+    if msg_type == MessageType.ExtAppRun:
+        return "apps.extapp.run"
+
     # misc
     if msg_type == MessageType.GetEntropy:
         return "apps.misc.get_entropy"
