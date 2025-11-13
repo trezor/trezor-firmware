@@ -23,27 +23,59 @@
 #include <util/elf_loader.h>
 
 #include <dlfcn.h>
+#include <unistd.h>
 
-static void elf_applet_unload(applet_t *applet) {
+#ifdef USE_DBG_CONSOLE
+#include <sys/dbg_console.h>
+#endif
+
+static void elf_applet_unload(applet_t* applet) {
   if (applet->handle != NULL) {
     // Unload dynamic library
     dlclose(applet->handle);
   }
 }
 
-bool elf_load(applet_t *applet, const char *filename) {
+bool write_to_file(const char* filename, const void* elf_ptr, size_t elf_size) {
+  FILE* f = fopen(filename, "wb");
+
+  if (f == NULL) {
+    return false;
+  }
+
+  int rc = fwrite(elf_ptr, 1, elf_size, f);
+
+  fclose(f);
+
+  return rc == elf_size;
+}
+
+bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   applet_privileges_t privileges = {0};
 
   applet_init(applet, &privileges, elf_applet_unload);
 
-  applet->handle = dlopen(filename, RTLD_NOW);
+  const char* filename = "/tmp/trezor_ext_app.so";
 
-  if (applet->handle == NULL) {
-    // Failed to load the applet
-    return false;
+  // Copy the image to the temporary file that will be
+  // unlinked just after it's loaded
+  if (!write_to_file(filename, elf_ptr, elf_size)) {
+    goto cleanup;
   }
 
-  void *entrypoint = dlsym(applet->handle, "applet_main");
+  applet->handle = dlopen(filename, RTLD_NOW);
+
+  unlink(filename);
+
+  if (applet->handle == NULL) {
+#ifdef USE_DBG_CONSOLE
+    dbg_printf("elf_load: %s\n", dlerror());
+#endif
+    // Failed to load the applet
+    goto cleanup;
+  }
+
+  void* entrypoint = dlsym(applet->handle, "applet_main");
 
   if (entrypoint == NULL) {
     // Applet entry point not found
