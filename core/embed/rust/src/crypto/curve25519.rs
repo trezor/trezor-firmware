@@ -62,9 +62,9 @@ impl Point {
         res
     }
 
-    /// SAFETY: not all byte arrays are valid points - caller must ensure the
-    /// input was obtained from `Point::to_bytes()`.
-    pub unsafe fn from_bytes(bytes: [u8; 32]) -> Self {
+    // No need for validation, every 32 byte array represents a valid point.
+    // See https://cr.yp.to/ecdh/curve25519-20060209.pdf
+    pub fn from_bytes(bytes: [u8; 32]) -> Self {
         Self { bytes }
     }
 
@@ -107,7 +107,7 @@ mod test {
             let sk = Scalar::from_bytes(*sk.first_chunk::<32>().unwrap());
 
             let pk = hex::decode(pk).unwrap();
-            let pk = unsafe { Point::from_bytes(*pk.first_chunk::<32>().unwrap()) };
+            let pk = Point::from_bytes(*pk.first_chunk::<32>().unwrap());
 
             let session = hex::decode(session).unwrap();
             let session = session.first_chunk::<32>().unwrap();
