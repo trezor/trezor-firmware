@@ -212,7 +212,7 @@ def check_device_match(
 
 
 def get_all_firmware_releases(
-    model: TrezorModel, bitcoin_only: bool, beta: bool
+    model: TrezorModel, bitcoin_only: bool
 ) -> List[Dict[str, Any]]:
     """Get sorted list of all releases suitable for inputted parameters"""
     url = f"https://data.trezor.io/firmware/{model.internal_name.lower()}/releases.json"
@@ -224,16 +224,6 @@ def get_all_firmware_releases(
 
     if bitcoin_only:
         releases = [r for r in releases if "url_bitcoinonly" in r]
-
-    # filter releases according to channel field
-    releases_stable = [
-        r for r in releases if "channel" not in r or r["channel"] == "stable"
-    ]
-    releases_beta = [r for r in releases if "channel" in r and r["channel"] == "beta"]
-    if beta:
-        releases = releases_stable + releases_beta
-    else:
-        releases = releases_stable
 
     releases.sort(key=lambda r: r["version"], reverse=True)
 
@@ -264,7 +254,6 @@ def get_url_and_fingerprint_from_release(
 def find_specified_firmware_version(
     model: TrezorModel,
     version: str,
-    beta: bool,
     bitcoin_only: bool,
 ) -> Tuple[str, str]:
     """Get the url from which to download the firmware and its expected fingerprint.
@@ -272,7 +261,7 @@ def find_specified_firmware_version(
     If the specified version is not found, exits with a failure.
     """
     want_version = [int(x) for x in version.split(".")]
-    releases = get_all_firmware_releases(model, bitcoin_only, beta)
+    releases = get_all_firmware_releases(model, bitcoin_only)
     for release in releases:
         if release["version"] == want_version:
             return get_url_and_fingerprint_from_release(release, bitcoin_only)
@@ -298,7 +287,6 @@ def _should_use_bitcoin_only(features: messages.Features) -> bool:
 def find_best_firmware_version(
     client: "TrezorClient",
     version: Optional[str],
-    beta: bool,
     bitcoin_only: Optional[bool],
 ) -> Tuple[str, str]:
     """Get the url from which to download the firmware and its expected fingerprint.
@@ -318,7 +306,7 @@ def find_best_firmware_version(
     def version_str(version: Iterable[int]) -> str:
         return ".".join(map(str, version))
 
-    releases = get_all_firmware_releases(model, bitcoin_only, beta)
+    releases = get_all_firmware_releases(model, bitcoin_only)
     highest_version = releases[0]["version"]
 
     if version:
@@ -355,8 +343,6 @@ def find_best_firmware_version(
                 raise click.ClickException("No versions were found!")
             # if there was no break, the newest is used
             click.echo(f"Closest available version: {version_str(closest_version)}")
-            if not beta and want_version > highest_version:
-                click.echo("Hint: specify --beta to look for a beta release.")
             sys.exit(1)
 
         # It can be impossible to update from a very old version directly
@@ -568,7 +554,6 @@ def verify(
 @click.option("-v", "--version", help="Which version to download")
 @click.option("-m", "--model", type=MODEL_CHOICE, help="Which model to download firmware for")
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
-@click.option("--beta", is_flag=True, help="Use firmware from BETA channel")
 @click.option("--bitcoin-only/--universal", is_flag=True, default=None, help="Download bitcoin-only or universal firmware (defaults to universal)")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
 @click.pass_obj
@@ -580,7 +565,6 @@ def download(
     version: Optional[str],
     skip_check: bool,
     fingerprint: Optional[str],
-    beta: bool,
     bitcoin_only: Optional[bool],
 ) -> None:
     """Download and save the firmware image.
@@ -591,14 +575,12 @@ def download(
     # When a version is specified, we do not even need the client connection
     #   (and we will not be checking device when validating)
     if model and version:
-        url, fp = find_specified_firmware_version(
-            model, version, beta, bool(bitcoin_only)
-        )
+        url, fp = find_specified_firmware_version(model, version, bool(bitcoin_only))
         bootloader_onev2 = None
     else:
         with obj.client_context() as client:
             url, fp = find_best_firmware_version(
-                client=client, version=version, beta=beta, bitcoin_only=bitcoin_only
+                client=client, version=version, bitcoin_only=bitcoin_only
             )
             bootloader_onev2 = _is_bootloader_onev2(client)
             if model is not None and model != client.model:
@@ -633,7 +615,6 @@ def download(
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
 @click.option("-n", "--dry-run", is_flag=True, help="Perform all steps but do not actually upload the firmware")
 @click.option("-l", "--language", help="Language code, blob, or URL")
-@click.option("--beta", is_flag=True, help="Use firmware from BETA channel")
 @click.option("--bitcoin-only/--universal", is_flag=True, default=None, help="Download bitcoin-only or universal firmware (defaults to universal)")
 @click.option("--raw", is_flag=True, help="Push raw firmware data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
@@ -648,7 +629,6 @@ def update(
     fingerprint: Optional[str],
     raw: bool,
     dry_run: bool,
-    beta: bool,
     bitcoin_only: Optional[bool],
     language: Optional[str],
 ) -> None:
@@ -691,7 +671,7 @@ def update(
         else:
             if not url:
                 url, fp = find_best_firmware_version(
-                    client=client, version=version, beta=beta, bitcoin_only=bitcoin_only
+                    client=client, version=version, bitcoin_only=bitcoin_only
                 )
                 if not fingerprint:
                     fingerprint = fp
