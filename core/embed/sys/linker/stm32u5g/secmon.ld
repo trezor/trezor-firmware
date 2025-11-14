@@ -61,7 +61,7 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
-    . = ALIGN(512);
+    . = ALIGN(4);
   } >FLASH
 
   .stack : ALIGN(8) {
@@ -70,7 +70,7 @@ SECTIONS {
 
   .data : ALIGN(4) {
     *(.data*);
-    . = ALIGN(512);
+    . = ALIGN(4);
   } >RAM AT>FLASH
 
   .bss : ALIGN(4) {
@@ -100,8 +100,9 @@ SECTIONS {
   }
 
   .flash : {
-    . = ALIGN(8K) - 1;
     BYTE(0x00)
+    FILL(0x00)
+    . = ALIGN(8K);
     _secmon_flash_end = .;
   } >FLASH
 }
