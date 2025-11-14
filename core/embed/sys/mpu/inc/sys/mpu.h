@@ -93,7 +93,7 @@ typedef struct {
 
 // Sets the MPU to allow unprivileged access to the given applet
 // (just one applet at a time can be visible)
-void mpu_set_active_applet(applet_layout_t* layout);
+void mpu_set_active_applet(const applet_layout_t* layout);
 
 // Sets the MPU to allow access to the
 // framebuffer at the given address and size.
