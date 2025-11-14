@@ -126,6 +126,7 @@ impl FirmwareUI for UIDelizia {
         _warning_footer: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
+        debug_assert!(!(info && external_menu));
         ConfirmValue::new(title, value.try_into()?, description)
             .with_description_font(&theme::TEXT_SUB_GREY)
             .with_text_mono(is_data)
