@@ -173,6 +173,17 @@ mod test {
         tag: &'static str,
     }
 
+    impl Vector {
+        fn decoded(&self) -> (Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>, Vec<u8>) {
+            let key = hex::decode(self.key).unwrap();
+            let iv = hex::decode(self.iv).unwrap();
+            let aad = hex::decode(self.aad).unwrap();
+            let pt = hex::decode(self.plaintext).unwrap();
+            let ct = hex::decode(self.ciphertext).unwrap();
+            (key, iv, aad, pt, ct)
+        }
+    }
+
     // first 10 vectors from https://github.com/BrianGladman/modes/blob/master/testvals/gcm.1
     const AES_GCM_VECTORS: &[Vector] = &[
         Vector {
@@ -260,30 +271,31 @@ mod test {
     #[test]
     fn test_vectors() {
         for v in AES_GCM_VECTORS {
-            let key = hex::decode(v.key).unwrap();
-            let iv = hex::decode(v.iv).unwrap();
-            let aad = hex::decode(v.aad).unwrap();
-            let plaintext = hex::decode(v.plaintext).unwrap();
+            let (key, iv, aad, plaintext, ciphertext) = v.decoded();
 
-            init_ctx!(ctx, key.as_slice(), iv.as_slice());
-            let mut ctx = ctx.unwrap();
+            init_ctx!(ctx_enc, &key, &iv);
+            let mut ctx_enc = ctx_enc.unwrap();
+            init_ctx!(ctx_dec, &key, &iv);
+            let mut ctx_dec = ctx_dec.unwrap();
 
             if !plaintext.is_empty() {
                 let mut buffer = vec![0; plaintext.len()];
-                let result = ctx
-                    .encrypt(plaintext.as_slice(), buffer.as_mut_slice())
-                    .unwrap();
-                let result = hex::encode(result);
-                assert_eq!(result, v.ciphertext);
+                let result = ctx_enc.encrypt(&plaintext, &mut buffer).unwrap();
+                assert_eq!(hex::encode(result), v.ciphertext);
+
+                let result = ctx_dec.decrypt(&ciphertext, &mut buffer).unwrap();
+                assert_eq!(hex::encode(result), v.plaintext);
             }
 
             if !aad.is_empty() {
-                ctx.auth(aad.as_slice()).unwrap();
+                ctx_enc.auth(&aad).unwrap();
+                ctx_dec.auth(&aad).unwrap();
             }
 
-            let result = ctx.finish().unwrap();
-            let result = hex::encode(result);
-            assert_eq!(result, v.tag);
+            let result = ctx_enc.finish().unwrap();
+            assert_eq!(hex::encode(result), v.tag);
+            let result = ctx_dec.finish().unwrap();
+            assert_eq!(hex::encode(result), v.tag);
         }
     }
 
@@ -323,5 +335,166 @@ mod test {
         ctx.decrypt_in_place(&mut dest).unwrap();
         ctx.auth(b"foobar").unwrap();
         assert!(ctx.encrypt(b"fdsa", &mut dest).is_err());
+    }
+
+    // test vectors from
+    // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
+    const NIST_VECTORS: &[Vector] = &[
+        Vector {
+            key: "11754cd72aec309bf52f7687212e8957",
+            iv: "3c819d9a9bed087615030b65",
+            plaintext: "",
+            aad: "",
+            ciphertext: "",
+            tag: "250327c674aaf477aef2675748cf6971",
+        },
+        Vector {
+            key: "fe9bb47deb3a61e423c2231841cfd1fb",
+            iv: "4d328eb776f500a2f7fb47aa",
+            plaintext: "f1cc3818e421876bb6b8bbd6c9",
+            aad: "",
+            ciphertext: "b88c5c1977b35b517b0aeae967",
+            tag: "43fd4727fe5cdb4b5b42818dea7ef8c9",
+        },
+        Vector {
+            key: "6f44f52c2f62dae4e8684bd2bc7d16ee7c557330305a790d",
+            iv: "9ae35825d7c7edc9a39a0732",
+            plaintext: "37222d30895eb95884bbbbaee4d9cae1",
+            aad: "1b4236b846fc2a0f782881ba48a067e9",
+            ciphertext: "a54b5da33fc1196a8ef31a5321bfcaeb",
+            tag: "1c198086450ae1834dd6c2636796bce2",
+        },
+        Vector {
+            key: "05f714021372ae1c8d72c98e6307fbddb26ee27615860a9fb48ba4c3ea360a00",
+            iv: "c0",
+            plaintext: "ec3afbaa1447e47ce068bffb787bd0cadc9f0deceb11fa78e981271390578ae95891f26664b5e62d1fd5fd0d0767a54da5f86f",
+            aad: "faf9fa457a8e70ea709da28545f18f041351e8d5",
+            ciphertext: "c8c5816ba9e7e0d20820dc0064a519a277889f5ac9661c9882b5a9896fd12836c6721514e885b1d34f5e888d1d85abce8c2ebb",
+            tag: "0856f211fade7d26d64478ca46025a3c",
+        },
+    ];
+
+    // following tests ported from test_trezor.crypto.aesgcm.py
+    #[test]
+    fn test_gcm() {
+        for v in NIST_VECTORS {
+            let (key, iv, aad, pt, ct) = v.decoded();
+
+            // Test encryption.
+            init_ctx!(ctx, &key, &iv);
+            let mut ctx = ctx.unwrap();
+            if !aad.is_empty() {
+                ctx.auth(&aad).unwrap();
+            }
+            let mut buffer = vec![0; pt.len()];
+            let result = ctx.encrypt(&pt, &mut buffer).unwrap();
+            assert_eq!(hex::encode(result), v.ciphertext);
+
+            let result = ctx.finish().unwrap();
+            assert_eq!(hex::encode(result), v.tag);
+
+            // Test decryption.
+            ctx.reset(&iv);
+            if !aad.is_empty() {
+                ctx.auth(&aad).unwrap();
+            }
+            let result = ctx.decrypt(&ct, &mut buffer).unwrap();
+            assert_eq!(hex::encode(result), v.plaintext);
+
+            let result = ctx.finish().unwrap();
+            assert_eq!(hex::encode(result), v.tag);
+        }
+    }
+
+    #[test]
+    fn test_gcm_in_place() {
+        for v in NIST_VECTORS {
+            let (key, iv, aad, pt, ct) = v.decoded();
+
+            // Test encryption.
+            init_ctx!(ctx, &key, &iv);
+            let mut ctx = ctx.unwrap();
+            if !aad.is_empty() {
+                ctx.auth(&aad).unwrap();
+            }
+            let mut buffer = Vec::new();
+            buffer.extend_from_slice(&pt);
+            ctx.encrypt_in_place(&mut buffer).unwrap();
+            assert_eq!(hex::encode(buffer), v.ciphertext);
+
+            let result = ctx.finish().unwrap();
+            assert_eq!(hex::encode(result), v.tag);
+
+            // Test decryption.
+            ctx.reset(&iv);
+            if !aad.is_empty() {
+                ctx.auth(&aad).unwrap();
+            }
+            let mut buffer = Vec::new();
+            buffer.extend_from_slice(&ct);
+            ctx.decrypt_in_place(&mut buffer).unwrap();
+            assert_eq!(hex::encode(buffer), v.plaintext);
+
+            let result = ctx.finish().unwrap();
+            assert_eq!(hex::encode(result), v.tag);
+        }
+    }
+
+    #[test]
+    fn test_gcm_chunks() {
+        for v in NIST_VECTORS {
+            let (key, iv, aad, pt, ct) = v.decoded();
+            let chunk_len = pt.len() / 3;
+            let mut buffer = vec![0; pt.len()];
+
+            init_ctx!(ctx, &key, &iv);
+            let mut ctx = ctx.unwrap();
+            ctx.decrypt(&ct[..chunk_len], &mut buffer[..chunk_len])
+                .unwrap();
+            ctx.auth(aad.get(..7).unwrap_or(&[])).unwrap();
+            ctx.decrypt(&ct[chunk_len..], &mut buffer[chunk_len..])
+                .unwrap();
+            ctx.auth(aad.get(7..).unwrap_or(&[])).unwrap();
+            assert_eq!(hex::encode(buffer), v.plaintext);
+            assert_eq!(hex::encode(ctx.finish().unwrap()), v.tag);
+
+            buffer = vec![0; pt.len()];
+            ctx.reset(&iv);
+            ctx.auth(aad.get(..7).unwrap_or(&[])).unwrap();
+            ctx.encrypt(&pt[..chunk_len], &mut buffer[..chunk_len])
+                .unwrap();
+            ctx.auth(aad.get(7..).unwrap_or(&[])).unwrap();
+            ctx.encrypt(&pt[chunk_len..], &mut buffer[chunk_len..])
+                .unwrap();
+            assert_eq!(hex::encode(buffer), v.ciphertext);
+            assert_eq!(hex::encode(ctx.finish().unwrap()), v.tag);
+        }
+    }
+
+    #[test]
+    fn test_gcm_chunks_in_place() {
+        for v in NIST_VECTORS {
+            let (key, iv, aad, pt, ct) = v.decoded();
+            let chunk_len = pt.len() / 3;
+
+            let mut buffer = ct;
+            init_ctx!(ctx, &key, &iv);
+            let mut ctx = ctx.unwrap();
+            ctx.decrypt_in_place(&mut buffer[..chunk_len]).unwrap();
+            ctx.auth(aad.get(..7).unwrap_or(&[])).unwrap();
+            ctx.decrypt_in_place(&mut buffer[chunk_len..]).unwrap();
+            ctx.auth(aad.get(7..).unwrap_or(&[])).unwrap();
+            assert_eq!(hex::encode(buffer), v.plaintext);
+            assert_eq!(hex::encode(ctx.finish().unwrap()), v.tag);
+
+            let mut buffer = pt;
+            ctx.reset(&iv);
+            ctx.auth(aad.get(..7).unwrap_or(&[])).unwrap();
+            ctx.encrypt_in_place(&mut buffer[..chunk_len]).unwrap();
+            ctx.auth(aad.get(7..).unwrap_or(&[])).unwrap();
+            ctx.encrypt_in_place(&mut buffer[chunk_len..]).unwrap();
+            assert_eq!(hex::encode(buffer), v.ciphertext);
+            assert_eq!(hex::encode(ctx.finish().unwrap()), v.tag);
+        }
     }
 }

@@ -142,4 +142,33 @@ mod test {
             assert_eq!(out_hex, *expected);
         }
     }
+
+    #[test]
+    fn test_update() {
+        // case 3
+        let key =
+            b"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa";
+        init_ctx!(ctx, key);
+        for _ in 0..50 {
+            ctx.update(b"\xdd");
+        }
+        let mut out = [0u8; DIGEST_SIZE];
+        ctx.finalize_into(&mut out);
+        assert_eq!(
+            hex::encode(out),
+            "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe"
+        );
+
+        // case 4
+        let key = b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19";
+        init_ctx!(ctx, key);
+        for _ in 0..50 {
+            ctx.update(b"\xcd");
+        }
+        ctx.finalize_into(&mut out);
+        assert_eq!(
+            hex::encode(out),
+            "82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b"
+        );
+    }
 }
