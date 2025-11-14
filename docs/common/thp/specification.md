@@ -347,16 +347,16 @@ flowchart LR
     S1a["S1a"]
     S1b["S1b"]
 
-    S0a -->|receive Ack(Seq=0)| S0a
-    S0b -->|send Message(Seq=0, Payload=payload0)| S1a
-    S0a -->|after timeout\nresend Message(Seq=1, Payload=payload1)| S0a:::dashed
-    S0a -->|receive Ack(Seq=1)| S0b
-    S0b -->|receive Ack(Seq=*)| S0b
-    S1a -->|receive Ack(Seq=1)| S1a
-    S1b -->|send Message(Seq=1, Payload=payload1)| S0a
-    S1a -->|receive Ack(Seq=0)| S1b
-    S1a -->|after timeout\nresend Message(Seq=0, Payload=payload0)| S1a:::dashed
-    S1b -->|receive Ack(Seq=*)| S1b
+    S0a -- receive Ack(Seq=0) --> S0a
+    S0b -- send Message(Seq=0, Payload=payload0) --> S1a
+    S0a -- after timeout\nresend Message(Seq=1, Payload=payload1) --> S0a:::dashed
+    S0a -- receive Ack(Seq=1) --> S0b
+    S0b -- receive Ack(Seq=*) --> S0b
+    S1a -- receive Ack(Seq=1) --> S1a
+    S1b -- send Message(Seq=1, Payload=payload1) --> S0a
+    S1a -- receive Ack(Seq=0) --> S1b
+    S1a -- after timeout\nresend Message(Seq=0, Payload=payload0) --> S1a:::dashed
+    S1b -- receive Ack(Seq=*) --> S1b
 
     classDef dashed stroke-dasharray: 5 5;
 ```
