@@ -139,7 +139,7 @@ bool config_getPin(char *dest, uint16_t dest_size);
 
 bool config_unlock(const char *pin);
 bool config_hasPin(void);
-bool config_changePin(const char *old_pin, const char *new_pin);
+bool config_changePin(const char *new_pin);
 bool session_isUnlocked(void);
 
 bool config_hasWipeCode(void);
