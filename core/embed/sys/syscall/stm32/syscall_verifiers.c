@@ -540,15 +540,7 @@ access_violation:
 
 secbool storage_change_pin__verified(const uint8_t *newpin, size_t newpin_len,
                                      const uint8_t *new_ext_salt) {
-  if (!probe_read_access(oldpin, oldpin_len)) {
-    goto access_violation;
-  }
-
   if (!probe_read_access(newpin, newpin_len)) {
-    goto access_violation;
-  }
-
-  if (!probe_read_access(old_ext_salt, EXTERNAL_SALT_SIZE)) {
     goto access_violation;
   }
 
