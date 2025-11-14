@@ -43,8 +43,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/rng/unix/rng.c",
         "embed/sec/rng/rng_common.c",
         "embed/sec/time_estimate/unix/time_estimate.c",
-        "embed/sys/dbg/dbg_console.c",
-        "embed/sys/dbg/unix/dbg_console_backend.c",
         "embed/sys/mpu/unix/mpu.c",
         "embed/sys/notify/notify.c",
         "embed/sys/startup/unix/bootutils.c",
@@ -62,6 +60,14 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/fwutils/fwutils.c",
         "embed/util/unit_properties/unix/unit_properties.c",
     ]
+
+    if "dbg_console" in features_wanted:
+        sources += [
+            "embed/sys/dbg/dbg_console.c",
+            "embed/sys/dbg/unix/dbg_console_backend.c",
+        ]
+        paths += ["embed/sys/dbg/inc"]
+        defines += [("USE_DBG_CONSOLE", "1")]
 
     if "usb" in features_wanted:
         sources += [
@@ -90,12 +96,15 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         paths += ["embed/sys/ipc/inc"]
 
     if "applet" in features_wanted:
-        sources += ["embed/sys/task/unix/applet.c"]
+        sources += ["embed/sys/task/applet.c"]
         sources += ["embed/sys/task/unix/coreapp.c"]
 
     if "app_loading" in features_wanted:
-        sources += ["embed/util/elf_loader/unix/elf_loader.c"]
+        sources += ["embed/util/app_loader/unix/elf_loader.c"]
+        sources += ["embed/util/app_loader/app_cache.c"]
+        sources += ["embed/util/app_loader/app_task.c"]
+        sources += ["embed/util/app_loader/app_arena.c"]
         defines += [("USE_APP_LOADING", "1")]
-        paths += ["embed/util/elf_loader/inc"]
+        paths += ["embed/util/app_loader/inc"]
 
     return features_available

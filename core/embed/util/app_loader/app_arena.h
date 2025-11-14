@@ -17,16 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/mpu.h>
+#pragma once
 
-void mpu_init(void) {
-  // MPU functions are not fully implemented in Emulator
-}
+typedef enum {
+  APP_ALLOC_IMAGE, /** Image memory allocation */
+  APP_ALLOC_DATA,  /** Data memory allocation */
+} app_alloc_type_t;
 
-mpu_mode_t mpu_get_mode(void) { return MPU_MODE_DISABLED; }
+/** Initializes the application arena.
+ *
+ * @return true on success, false on failure.
+ */
+bool app_arena_init(void);
 
-mpu_mode_t mpu_reconfig(mpu_mode_t mode) { return MPU_MODE_DISABLED; }
+/**
+ * Allocates memory for an application.
+ *
+ * @param size The size of the memory to allocate in bytes.
+ *
+ * @return Pointer to the allocated memory, or NULL if allocation failed.
+ */
+void* app_arena_alloc(size_t size, app_alloc_type_t type);
 
-void mpu_restore(mpu_mode_t mode) {}
-
-void mpu_set_active_applet(const applet_layout_t* layout) {}
+/**
+ * Frees memory previously allocated with app_arena_alloc().
+ *
+ * @param ptr Pointer to the memory to free.
+ */
+void app_arena_free(void* ptr);
