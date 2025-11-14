@@ -1,4 +1,4 @@
-use super::{echo, process_rx_byte, image_info, reset, upload};
+use super::{echo, image_info, process_rx_byte, reset, upload};
 
 use crate::util::from_c_array;
 
@@ -14,9 +14,41 @@ extern "C" fn smp_reset() {
     reset::send();
 }
 
+/// Get the nRF app version string.
+///
+/// # Arguments
+/// * `version_buf` - Pointer to a C buffer to write the version string
+/// * `buf_len` - Size of the buffer
+///
+/// # Returns
+/// The number of bytes written (excluding null terminator), or 0 on error.
+/// The string will be null-terminated if it fits in the buffer.
 #[no_mangle]
-extern "C" fn smp_image_version_get() -> bool {
-    image_info::send()
+extern "C" fn smp_image_version_get(
+    version_buf: *mut cty::c_char,
+    buf_len: cty::size_t,
+) -> cty::size_t {
+    if version_buf.is_null() || buf_len == 0 {
+        return 0;
+    }
+
+    unsafe {
+        // Create a mutable slice from the C buffer
+        let rust_buf = core::slice::from_raw_parts_mut(version_buf as *mut u8, buf_len);
+
+        // Reserve space for null terminator
+        if buf_len > 0 {
+            let result_len = image_info::get_version(&mut rust_buf[..buf_len - 1]);
+
+            if result_len > 0 {
+                // Add null terminator
+                rust_buf[result_len] = 0;
+                return result_len as cty::size_t;
+            }
+        }
+
+        0
+    }
 }
 
 #[no_mangle]
