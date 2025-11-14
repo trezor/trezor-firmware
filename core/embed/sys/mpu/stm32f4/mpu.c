@@ -218,7 +218,7 @@ mpu_mode_t mpu_get_mode(void) {
   return drv->mode;
 }
 
-void mpu_set_active_applet(applet_layout_t* layout) {
+void mpu_set_active_applet(const applet_layout_t* layout) {
   // On STM32F4 one coreapp applet is allowed to run at a time
 }
 
