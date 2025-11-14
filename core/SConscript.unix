@@ -18,6 +18,7 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '1')
+EXTAPP_SUPPORT = ARGUMENTS.get('EXTAPP_SUPPORT', '0') == '1'
 
 if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
@@ -52,7 +53,7 @@ if BITCOIN_ONLY == '0':
 if not DISABLE_TROPIC:
     FEATURES_WANTED.append('tropic')
 
-if TREZOR_MODEL in ['T3W1']:
+if TREZOR_MODEL in ['T3W1'] and EXTAPP_SUPPORT:
     FEATURES_WANTED += ["app_loading"]
 
 if not models.has_emulator(TREZOR_MODEL):
