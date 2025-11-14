@@ -1,31 +1,8 @@
-use core::{mem::MaybeUninit, pin::Pin};
+use core::pin::Pin;
 
-use zeroize::{zeroize_flat_type, Zeroize};
+use zeroize::Zeroize;
 
-use super::{ffi, Error};
-
-type Memory = ffi::gcm_ctx;
-
-impl Default for Memory {
-    fn default() -> Self {
-        // SAFETY: a zeroed block of memory is a valid aes_gcm
-        unsafe { MaybeUninit::<Memory>::zeroed().assume_init() }
-    }
-}
-
-// Can't use DefaultIsZeroes as we don't have Copy.
-impl Zeroize for Memory {
-    fn zeroize(&mut self) {
-        // SAFETY:
-        // - gcm_ctx does not contain references to outside data or dynamically sized
-        //   data
-        // - values do not have Drop impls
-        // - can invalidate the type if it is used after this function is called on it -
-        //   only used in Drop
-        // - all zero bit pattern is valid context, see Default impl
-        unsafe { zeroize_flat_type(self as *mut Self) };
-    }
-}
+use super::{ffi, memory::Memory, Error};
 
 // Tag size is a parameter but we fix it to 16 here for simplicity.
 pub const TAG_SIZE: usize = 16;
@@ -46,24 +23,22 @@ enum State {
 }
 
 pub struct AesGcm<'a> {
-    ctx: Pin<&'a mut Memory>,
+    ctx: Pin<&'a mut Memory<ffi::gcm_ctx>>,
     state: State,
 }
 
 impl<'a> AesGcm<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory>, key: &[u8], iv: &[u8]) -> Result<Self, Error> {
+    pub fn new(
+        mut ctx: Pin<&'a mut Memory<ffi::gcm_ctx>>,
+        key: &[u8],
+        iv: &[u8],
+    ) -> Result<Self, Error> {
         if !KEY_SIZES.contains(&key.len()) {
             return Err(Error::InvalidParams);
         }
         // initialize the context
         // SAFETY: ffi
-        let res = unsafe {
-            ffi::gcm_init_and_key(
-                key.as_ptr(),
-                key.len() as _,
-                ctx.as_mut().get_unchecked_mut(),
-            )
-        };
+        let res = unsafe { ffi::gcm_init_and_key(key.as_ptr(), key.len() as _, ctx.inner()) };
         ensure!(res == RETURN_GOOD, "gcm_init_and_key");
         let mut aesgcm = Self {
             ctx,
@@ -75,13 +50,7 @@ impl<'a> AesGcm<'a> {
 
     pub fn reset(&mut self, iv: &[u8]) {
         // SAFETY: ffi
-        let res = unsafe {
-            ffi::gcm_init_message(
-                iv.as_ptr(),
-                iv.len() as _,
-                self.ctx.as_mut().get_unchecked_mut(),
-            )
-        };
+        let res = unsafe { ffi::gcm_init_message(iv.as_ptr(), iv.len() as _, self.ctx.inner()) };
         ensure!(res == RETURN_GOOD, "gcm_init_message");
         self.state = State::Init;
     }
@@ -108,13 +77,7 @@ impl<'a> AesGcm<'a> {
         self.check_state(&[State::Init, State::Encrypting])?;
         self.state = State::Encrypting;
 
-        let res = unsafe {
-            ffi::gcm_encrypt(
-                data.as_mut_ptr(),
-                data.len() as _,
-                self.ctx.as_mut().get_unchecked_mut(),
-            )
-        };
+        let res = unsafe { ffi::gcm_encrypt(data.as_mut_ptr(), data.len() as _, self.ctx.inner()) };
         ensure!(res == RETURN_GOOD, "gcm_encrypt");
         Ok(())
     }
@@ -137,13 +100,7 @@ impl<'a> AesGcm<'a> {
         self.state = State::Decrypting;
 
         // SAFETY: ffi
-        let res = unsafe {
-            ffi::gcm_decrypt(
-                data.as_mut_ptr(),
-                data.len() as _,
-                self.ctx.as_mut().get_unchecked_mut(),
-            )
-        };
+        let res = unsafe { ffi::gcm_decrypt(data.as_mut_ptr(), data.len() as _, self.ctx.inner()) };
         ensure!(res == RETURN_GOOD, "gcm_decrypt");
         Ok(())
     }
@@ -152,13 +109,7 @@ impl<'a> AesGcm<'a> {
         self.check_state(&[State::Init, State::Encrypting, State::Decrypting])?;
 
         // SAFETY: ffi
-        let res = unsafe {
-            ffi::gcm_auth_header(
-                data.as_ptr(),
-                data.len() as _,
-                self.ctx.as_mut().get_unchecked_mut(),
-            )
-        };
+        let res = unsafe { ffi::gcm_auth_header(data.as_ptr(), data.len() as _, self.ctx.inner()) };
         ensure!(res == RETURN_GOOD, "gcm_auth_header");
         Ok(())
     }
@@ -169,13 +120,8 @@ impl<'a> AesGcm<'a> {
 
         let mut tag = [0u8; TAG_SIZE];
         // SAFETY: ffi
-        let res = unsafe {
-            ffi::gcm_compute_tag(
-                tag.as_mut_ptr(),
-                tag.len() as _,
-                self.ctx.as_mut().get_unchecked_mut(),
-            )
-        };
+        let res =
+            unsafe { ffi::gcm_compute_tag(tag.as_mut_ptr(), tag.len() as _, self.ctx.inner()) };
         if res != RETURN_GOOD {
             self.state = State::Failed;
             return Err(Error::InvalidContext);
@@ -190,7 +136,7 @@ impl<'a> AesGcm<'a> {
         Ok(())
     }
 
-    pub fn memory() -> Memory {
+    pub fn memory() -> Memory<ffi::gcm_ctx> {
         Memory::default()
     }
 }
@@ -208,8 +154,9 @@ macro_rules! init_ctx {
         let mut $name = crate::crypto::aesgcm::AesGcm::memory();
         // ... then make it inaccessible by overwriting the binding, and pin it
         #[allow(unused_mut)]
-        let mut $name =
-            crate::crypto::aesgcm::AesGcm::new(core::pin::Pin::new(&mut $name), $key, $iv);
+        let mut $name = unsafe {
+            crate::crypto::aesgcm::AesGcm::new(core::pin::Pin::new_unchecked(&mut $name), $key, $iv)
+        };
     };
 }
 

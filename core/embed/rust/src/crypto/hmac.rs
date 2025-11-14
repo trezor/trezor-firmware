@@ -1,71 +1,36 @@
-use core::{mem::MaybeUninit, pin::Pin};
+use core::pin::Pin;
 
-use zeroize::{zeroize_flat_type, Zeroize};
+use zeroize::Zeroize as _;
 
-use super::ffi;
-
-type Memory = ffi::HMAC_SHA256_CTX;
-
-impl Default for Memory {
-    fn default() -> Self {
-        // SAFETY: a zeroed block of memory is a valid HMAC_SHA256_CTX
-        unsafe { MaybeUninit::<Memory>::zeroed().assume_init() }
-    }
-}
-
-// Can't use DefaultIsZeroes as we don't have Copy.
-impl Zeroize for Memory {
-    fn zeroize(&mut self) {
-        // SAFETY:
-        // - gcm_ctx does not contain references to outside data or dynamically sized
-        //   data
-        // - values do not have Drop impls
-        // - can invalidate the type if it is used after this function is called on it -
-        //   only used in Drop
-        // - all zero bit pattern is valid context, see Default impl
-        unsafe { zeroize_flat_type(self as *mut Self) };
-    }
-}
+use super::{ffi, memory::Memory};
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub struct HmacSha256<'a> {
-    ctx: Pin<&'a mut Memory>,
+    ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>,
 }
 
 impl<'a> HmacSha256<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory>, key: &[u8]) -> Self {
+    pub fn new(mut ctx: Pin<&'a mut Memory<ffi::HMAC_SHA256_CTX>>, key: &[u8]) -> Self {
         // initialize the context
         // SAFETY: ffi
-        unsafe {
-            ffi::hmac_sha256_Init(
-                ctx.as_mut().get_unchecked_mut(),
-                key.as_ptr(),
-                key.len() as u32,
-            )
-        };
+        unsafe { ffi::hmac_sha256_Init(ctx.inner(), key.as_ptr(), key.len() as u32) };
         Self { ctx }
     }
 
     pub fn update(&mut self, data: &[u8]) {
         // SAFETY: ffi
-        unsafe {
-            ffi::hmac_sha256_Update(
-                self.ctx.as_mut().get_unchecked_mut(),
-                data.as_ptr(),
-                data.len() as u32,
-            )
-        };
+        unsafe { ffi::hmac_sha256_Update(self.ctx.inner(), data.as_ptr(), data.len() as u32) };
     }
 
-    pub fn memory() -> Memory {
+    pub fn memory() -> Memory<ffi::HMAC_SHA256_CTX> {
         Memory::default()
     }
 
     pub fn finalize_into(mut self, out: &mut Digest) {
         // SAFETY: ffi
-        unsafe { ffi::hmac_sha256_Final(self.ctx.as_mut().get_unchecked_mut(), out.as_mut_ptr()) };
+        unsafe { ffi::hmac_sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
     }
 }
 
