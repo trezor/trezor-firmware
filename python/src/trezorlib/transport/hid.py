@@ -120,7 +120,7 @@ class HidTransport(Transport):
             self.handle.close()
         self.handle = None
 
-    def write_chunk(self, chunk: bytes) -> None:
+    def write_chunk(self, chunk: bytes, /) -> None:
         if len(chunk) != 64:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
 
@@ -130,7 +130,7 @@ class HidTransport(Transport):
         LOG.log(DUMP_PACKETS, f"writing packet: {chunk.hex()}")
         self.handle.write(chunk)
 
-    def read_chunk(self, timeout: float | None = None) -> bytes:
+    def read_chunk(self, *, timeout: float | None = None) -> bytes:
         start = time.time()
         while True:
             # hidapi seems to return lists of ints instead of bytes
