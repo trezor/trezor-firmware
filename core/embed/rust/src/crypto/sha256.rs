@@ -1,53 +1,36 @@
-use core::{mem::MaybeUninit, pin::Pin};
+use core::pin::Pin;
 
-use zeroize::{DefaultIsZeroes, Zeroize as _};
+use zeroize::Zeroize as _;
 
-use super::ffi;
-
-type Memory = ffi::SHA256_CTX;
-
-impl Default for Memory {
-    fn default() -> Self {
-        // SAFETY: a zeroed block of memory is a valid SHA256_CTX
-        unsafe { MaybeUninit::<Memory>::zeroed().assume_init() }
-    }
-}
-
-impl DefaultIsZeroes for Memory {}
+use super::{ffi, memory::Memory};
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
 
 pub struct Sha256<'a> {
-    ctx: Pin<&'a mut Memory>,
+    ctx: Pin<&'a mut Memory<ffi::SHA256_CTX>>,
 }
 
 impl<'a> Sha256<'a> {
-    pub fn new(mut ctx: Pin<&'a mut Memory>) -> Self {
+    pub fn new(mut ctx: Pin<&'a mut Memory<ffi::SHA256_CTX>>) -> Self {
         // initialize the context
         // SAFETY: safe with whatever finds itself as memory contents
-        unsafe { ffi::sha256_Init(ctx.as_mut().get_unchecked_mut()) };
+        unsafe { ffi::sha256_Init(ctx.inner()) };
         Self { ctx }
     }
 
     pub fn update(&mut self, data: &[u8]) {
         // SAFETY: safe
-        unsafe {
-            ffi::sha256_Update(
-                self.ctx.as_mut().get_unchecked_mut(),
-                data.as_ptr(),
-                data.len(),
-            )
-        };
+        unsafe { ffi::sha256_Update(self.ctx.inner(), data.as_ptr(), data.len()) };
     }
 
-    pub fn memory() -> Memory {
+    pub fn memory() -> Memory<ffi::SHA256_CTX> {
         Memory::default()
     }
 
     pub fn finalize_into(mut self, out: &mut Digest) {
         // SAFETY: safe
-        unsafe { ffi::sha256_Final(self.ctx.as_mut().get_unchecked_mut(), out.as_mut_ptr()) };
+        unsafe { ffi::sha256_Final(self.ctx.inner(), out.as_mut_ptr()) };
     }
 }
 

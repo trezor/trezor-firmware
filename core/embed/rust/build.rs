@@ -122,7 +122,7 @@ fn generate_qstr_bindings() {
         .size_t_is_usize(true)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files change.
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate Rust QSTR bindings")
         .write_to_file(&dest_file)
@@ -201,7 +201,7 @@ fn prepare_bindings() -> bindgen::Builder {
         .layout_tests(false)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files change.
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
 }
 
 #[cfg(feature = "micropython")]
@@ -398,6 +398,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("SLIP39_WORDLIST")
         .allowlist_var("SLIP39_WORD_COUNT")
         // random
+        .allowlist_function("random_buffer")
         .allowlist_function("random_uniform")
         // rgb led
         .allowlist_type("rgb_led_effect_type_t")
@@ -502,19 +503,45 @@ fn generate_crypto_bindings() {
 
     let bindings = prepare_bindings()
         .header("crypto.h")
+        // aesgcm
+        .allowlist_type("gcm_ctx")
+        .no_copy("gcm_ctx")
+        .allowlist_function("gcm_init_and_key")
+        .allowlist_function("gcm_init_message")
+        .allowlist_function("gcm_encrypt")
+        .allowlist_function("gcm_decrypt")
+        .allowlist_function("gcm_auth_header")
+        .allowlist_function("gcm_compute_tag")
+        // curve25519
+        .allowlist_function("curve25519_scalarmult")
+        .allowlist_function("curve25519_scalarmult_basepoint")
         // ed25519
         .allowlist_type("ed25519_signature")
         .allowlist_type("ed25519_public_key")
         .allowlist_function("ed25519_cosi_combine_publickeys")
-        // incorrect signature from bindgen, see crypto::ed25519:ffi_override
-        //.allowlist_function("ed25519_sign_open")
+        .allowlist_function("ed25519_sign_open")
+        // elligator2
+        .allowlist_function("map_to_curve_elligator2_curve25519")
+        // hmac
+        .allowlist_type("HMAC_SHA256_CTX")
+        .no_copy("HMAC_SHA256_CTX")
+        .allowlist_function("hmac_sha256_Init")
+        .allowlist_function("hmac_sha256_Update")
+        .allowlist_function("hmac_sha256_Final")
         // sha256
         .allowlist_var("SHA256_DIGEST_LENGTH")
         .allowlist_type("SHA256_CTX")
         .no_copy("SHA256_CTX")
         .allowlist_function("sha256_Init")
         .allowlist_function("sha256_Update")
-        .allowlist_function("sha256_Final");
+        .allowlist_function("sha256_Final")
+        // sha512
+        .allowlist_var("SHA512_DIGEST_LENGTH")
+        .allowlist_type("SHA512_CTX")
+        .no_copy("SHA512_CTX")
+        .allowlist_function("sha512_Init")
+        .allowlist_function("sha512_Update")
+        .allowlist_function("sha512_Final");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

@@ -20,6 +20,7 @@
 
 #ifndef __ELLIGATOR2_H__
 #define __ELLIGATOR2_H__
+#include <stdbool.h>
 #include <stdint.h>
 #include "ed25519-donna/ed25519.h"
 
