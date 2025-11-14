@@ -189,10 +189,10 @@ class BridgeTransport(Transport):
         self._call("release")
         self.session = None
 
-    def write_chunk(self, chunk: bytes) -> None:
+    def write_chunk(self, chunk: bytes, /) -> None:
         self.handle.write_buf(chunk)
 
-    def read_chunk(self, timeout: float | None = None) -> bytes:
+    def read_chunk(self, *, timeout: float | None = None) -> bytes:
         return self.handle.read_buf(timeout=timeout)
 
     def is_ready(self) -> bool:

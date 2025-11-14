@@ -78,6 +78,10 @@ class Transport(metaclass=ABCMeta):
 
         raise TransportException(f"{cls.PATH_PREFIX} device not found: {path}")
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.get_path()})"
+
+    @abstractmethod
     def get_path(self) -> str:
         raise NotImplementedError
 
@@ -121,11 +125,11 @@ class Transport(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def write_chunk(self, chunk: bytes) -> None:
+    def write_chunk(self, chunk: bytes, /) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def read_chunk(self, timeout: float | None = None) -> bytes:
+    def read_chunk(self, *, timeout: float | None = None) -> bytes:
         raise NotImplementedError
 
     @abstractmethod

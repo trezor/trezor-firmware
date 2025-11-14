@@ -134,7 +134,7 @@ class WebUsbTransport(Transport):
                 LOG.warning("Failed to close %s: %s", self.handle, e)
         self.handle = None
 
-    def write_chunk(self, chunk: bytes) -> None:
+    def write_chunk(self, chunk: bytes, /) -> None:
         assert self.handle is not None
         if len(chunk) != WEBUSB_CHUNK_SIZE:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
@@ -156,7 +156,7 @@ class WebUsbTransport(Transport):
                 )
             return
 
-    def read_chunk(self, timeout: float | None = None) -> bytes:
+    def read_chunk(self, *, timeout: float | None = None) -> bytes:
         assert self.handle is not None
         endpoint = 0x80 | self.endpoint
         start = time.time()
