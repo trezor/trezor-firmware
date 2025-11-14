@@ -9,12 +9,13 @@ from ..common import draw_simple, interact, raise_if_not_confirmed
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
-    from typing import Awaitable, Callable, Iterable, List, NoReturn, Sequence
+    from typing import Awaitable, Callable, Iterable, NoReturn, Sequence
 
     from trezor.messages import StellarAsset
 
     from ..common import ExceptionType, PropertyType
     from ..menu import Details
+    from ..slip24 import Refund, Trade
 
 
 CONFIRMED = trezorui_api.CONFIRMED
@@ -552,47 +553,43 @@ def show_continue_in_app(content: str) -> None:
 
 async def confirm_payment_request(
     recipient_name: str,
-    recipient: str,
+    recipient_address: str | None,
     texts: Iterable[tuple[str | None, str]],
-    refunds: Iterable[tuple[str, str | None, str | None]],
-    trades: List[tuple[str, str, str, str | None, str | None]],
-    account_items: List[PropertyType],
+    refunds: Iterable[Refund],
+    trades: list[Trade],
+    account_items: list[PropertyType],
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
-    token_address: str | None,
+    extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-    # Note: we don't support "sales" (swap to fiat) yet,
-    # so if there is any trade, we assume it must be a swap
-    is_swap = len(trades) != 0
+    from ..slip24 import is_swap
 
-    for title, text in texts:
+    title = TR.words__swap if is_swap(trades) else TR.words__confirm
+
+    for t, text in texts:
         await raise_if_not_confirmed(
             trezorui_api.confirm_value(
-                title=title or (TR.words__swap if is_swap else TR.words__confirm),
+                title=t or title,
                 value=text,
                 description=None,
             ),
             "confirm_payment_request",
         )
 
-    main_layout = trezorui_api.confirm_with_info(
-        title=(TR.words__swap if is_swap else TR.words__confirm),
-        items=[(TR.words__provider, True), (recipient_name, False)],
-        verb=TR.buttons__continue,
-        verb_info=TR.buttons__info,
-        external_menu=True,
-    )
-
-    menu_items = [create_details(TR.address__title_provider_address, recipient)]
-    for r_address, r_account, r_account_path in refunds:
-        refund_account_items: list[PropertyType] = [("", r_address, None)]
-        if r_account:
-            refund_account_items.append((TR.words__account, r_account, None))
-        if r_account_path:
+    menu_items = []
+    if recipient_address is not None:
+        menu_items.append(
+            create_details(TR.address__title_provider_address, recipient_address)
+        )
+    for refund in refunds:
+        refund_account_items: list[PropertyType] = [("", refund.address, None)]
+        if refund.account:
+            refund_account_items.append((TR.words__account, refund.account, None))
+        if refund.account_path:
             refund_account_items.append(
-                (TR.address_details__derivation_path, r_account_path, None)
+                (TR.address_details__derivation_path, refund.account_path, None)
             )
         menu_items.append(
             create_details(
@@ -600,19 +597,30 @@ async def confirm_payment_request(
                 refund_account_items,
             )
         )
-    menu = Menu.root(menu_items)
+    if menu_items:
+        menu = Menu.root(menu_items)
 
-    await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+        main_layout = trezorui_api.confirm_with_info(
+            title=title,
+            items=[(TR.words__provider, True), (recipient_name, False)],
+            verb=TR.buttons__continue,
+            verb_info=TR.buttons__info,
+            external_menu=True,
+        )
 
-    for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
+        await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+    else:
+        await confirm_properties(
+            "confirm_payment_request",
+            title,
+            [(TR.words__provider, recipient_name, True)],
+        )
+
+    for trade in trades:
         await confirm_trade(
-            f"{TR.words__swap} {TR.words__assets}",
-            sell_amount,
-            buy_amount,
-            t_address,
-            t_account,
-            t_account_path,
-            token_address,
+            f"{title} {TR.words__assets}",
+            trade,
+            extra_menu_items or [],
         )
 
     if transaction_fee is not None:
@@ -1021,6 +1029,39 @@ def confirm_total(
     )
 
 
+async def confirm_trade(
+    title: str,
+    trade: Trade,
+    extra_menu_items: list[tuple[str, str]],
+) -> None:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+    items = []
+    if trade.sell_amount is not None:
+        items.append(("", trade.sell_amount, True))
+    items.append(("", trade.buy_amount, True))
+    trade_layout = trezorui_api.confirm_properties(
+        title=title,
+        items=items,
+        verb=TR.buttons__continue,
+        external_menu=True,
+    )
+
+    account_items: list[PropertyType] = [("", trade.address, None)]
+    if trade.account:
+        account_items.append((TR.words__account, trade.account, None))
+    if trade.account_path:
+        account_items.append(
+            (TR.address_details__derivation_path, trade.account_path, None)
+        )
+    menu_items = [create_details(TR.address__title_receive_address, account_items)]
+    for k, v in extra_menu_items:
+        menu_items.append(create_details(k, v))
+    menu = Menu.root(menu_items)
+
+    await confirm_with_menu(trade_layout, menu, "confirm_trade")
+
+
 if not utils.BITCOIN_ONLY:
 
     def confirm_ethereum_unknown_contract_warning(
@@ -1150,40 +1191,6 @@ if not utils.BITCOIN_ONLY:
             ),
             br_name="confirm_ethereum_approve",
         )
-
-    async def confirm_trade(
-        title: str,
-        sell_amount: str,
-        buy_amount: str,
-        address: str,
-        account: str | None,
-        account_path: str | None,
-        token_address: str | None,
-    ) -> None:
-        from trezor.ui.layouts.menu import Menu, confirm_with_menu
-
-        trade_layout = trezorui_api.confirm_properties(
-            title=title,
-            items=[("", sell_amount, True), ("", buy_amount, True)],
-            verb=TR.buttons__continue,
-            external_menu=True,
-        )
-
-        account_items: list[PropertyType] = [("", address, None)]
-        if account:
-            account_items.append((TR.words__account, account, None))
-        if account_path:
-            account_items.append(
-                (TR.address_details__derivation_path, account_path, None)
-            )
-        menu_items = [create_details(TR.address__title_receive_address, account_items)]
-        if token_address is not None:
-            menu_items.append(
-                create_details(TR.ethereum__token_contract, token_address)
-            )
-        menu = Menu.root(menu_items)
-
-        await confirm_with_menu(trade_layout, menu, "confirm_trade")
 
     async def confirm_ethereum_staking_tx(
         title: str,

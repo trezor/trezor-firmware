@@ -10,15 +10,17 @@ use crate::{
 use super::super::theme;
 
 pub struct TradeScreen {
-    sell_amount: Label<'static>,
+    sell_amount: Option<Label<'static>>,
     line: Bar,
     buy_amount: Label<'static>,
 }
 
 impl TradeScreen {
-    pub fn new(sell_amount: TString<'static>, buy_amount: TString<'static>) -> Self {
+    pub fn new(sell_amount: Option<TString<'static>>, buy_amount: TString<'static>) -> Self {
         Self {
-            sell_amount: Label::left_aligned(sell_amount, theme::TEXT_WARNING).bottom_aligned(),
+            sell_amount: sell_amount.map(|sell_amount| {
+                Label::left_aligned(sell_amount, theme::TEXT_WARNING).bottom_aligned()
+            }),
             line: Bar::new(theme::GREY_EXTRA_DARK, theme::BG, 2),
             buy_amount: Label::left_aligned(buy_amount, theme::TEXT_MAIN_GREEN_LIME).top_aligned(),
         }
@@ -32,12 +34,20 @@ impl Component for TradeScreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (top, bottom) = bounds.split_top(bounds.height() / 2);
-        let (sell_bounds, _) = top.split_bottom(self.sell_amount.font().text_height());
-        self.sell_amount.place(sell_bounds);
-        self.line
-            .place(Rect::new(top.bottom_left(), bottom.top_right()).outset(Insets::vertical(1)));
-        let (_, buy_bounds) = bottom.split_top(self.buy_amount.font().text_height());
-        self.buy_amount.place(buy_bounds);
+        if let Some(ref mut sell_amount) = &mut self.sell_amount {
+            let (sell_bounds, _) = top.split_bottom(sell_amount.font().text_height());
+            sell_amount.place(sell_bounds);
+            self.line.place(
+                Rect::new(top.bottom_left(), bottom.top_right()).outset(Insets::vertical(1)),
+            );
+            let (_, buy_bounds) = bottom.split_top(self.buy_amount.font().text_height());
+            self.buy_amount.place(buy_bounds);
+        } else {
+            self.buy_amount.place(
+                Rect::new(top.bottom_left(), bottom.top_right())
+                    .outset(Insets::vertical(self.buy_amount.font().text_height() / 2)),
+            );
+        }
         bounds
     }
 
