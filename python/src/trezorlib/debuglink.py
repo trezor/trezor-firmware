@@ -467,6 +467,9 @@ class LayoutContent(UnstructuredJSONReader):
     def has_menu(self) -> bool:
         return bool(self.find_unique_value_by_key("has_menu", False, bool))
 
+    def has_flow_menu(self) -> bool:
+        return bool(self.find_unique_value_by_key("has_flow_menu", False, bool))
+
 
 def multipage_content(layouts: list[LayoutContent]) -> str:
     """Get overall content from multiple-page layout."""
@@ -1007,31 +1010,57 @@ class DebugUI:
 
     def _visit_menu_items(self) -> LayoutContent:
         layout = self.debuglink.read_layout()
-        if not layout.has_menu() or not self.debuglink.allow_interactions:
+        if (
+            not layout.has_menu()
+            and not layout.has_flow_menu()
+            or not self.debuglink.allow_interactions
+        ):
             return layout
 
-        # enter info menu layout and paginate through its items
-        self.debuglink.press_info()
+        # enter menu layout and click its items
+        is_menu = False
+        is_flow_menu = False
+        if layout.has_menu():
+            is_menu = True
+            self.debuglink.press_info()
+        elif layout.has_flow_menu():
+            is_flow_menu = True
+            self.debuglink.click(self.debuglink.screen_buttons.menu())
 
         # TODO: support all core models
         if self.debuglink.layout_type is LayoutType.Delizia:
             item_buttons = self.debuglink.screen_buttons.vertical_menu_items()
             close_button = self.debuglink.screen_buttons.menu()
-            _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()
-            while True:
-                menu_layout = self.debuglink.read_layout()
-                assert "ScrolledVerticalMenu" in menu_layout.all_components()
-                menu_items = menu_layout.find_unique_value_by_key(
-                    key="menu_items", default=None, only_type=dict
+            menu_layout = self.debuglink.read_layout()
+            if "ScrolledVerticalMenu" in menu_layout.all_components():
+                _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()
+                while True:
+                    assert "ScrolledVerticalMenu" in menu_layout.all_components()
+                    menu_items = menu_layout.find_unique_value_by_key(
+                        key="menu_items", default=None, only_type=dict
+                    )
+                    for menu_item, item_button in zip(
+                        menu_items["current"], item_buttons
+                    ):
+                        if "cancel" in menu_item:
+                            continue  # don't click cancel
+                        self.debuglink.click(item_button)
+                        self.debuglink.click(close_button)
+                    if not menu_items["has_next"]:
+                        break
+                    self.debuglink.click(next)
+                    menu_layout = self.debuglink.read_layout()
+            elif "VerticalMenu" in menu_layout.all_components():
+                menu_buttons = menu_layout.find_unique_value_by_key(
+                    key="buttons", default=None, only_type=list
                 )
-                for menu_item, item_button in zip(menu_items["current"], item_buttons):
-                    if "cancel" in menu_item:
-                        continue  # skip cancellation by default
+                for menu_button, item_button in zip(menu_buttons, item_buttons):
+                    if menu_button.get("is_cancel"):
+                        continue  # don't click cancel
                     self.debuglink.click(item_button)
                     self.debuglink.click(close_button)
-                if not menu_items["has_next"]:
-                    break
-                self.debuglink.click(next)
+            else:
+                assert False, "Not a menu!"
 
         if self.debuglink.layout_type is LayoutType.Caesar:
             menu_items_count = self.debuglink.read_layout().page_count()
@@ -1042,8 +1071,12 @@ class DebugUI:
                 # paginate to next menu item
                 self.debuglink.press_right()
 
-        # confirm info menu layout
-        self.debuglink.press_yes()
+        if is_menu:
+            # confirm info menu layout
+            self.debuglink.press_yes()
+        elif is_flow_menu:
+            # close the menu
+            self.debuglink.click(self.debuglink.screen_buttons.menu())
         return layout
 
     def _paginate_and_confirm(self, pages: int | None) -> None:
