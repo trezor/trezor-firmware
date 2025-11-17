@@ -94,6 +94,7 @@ pub struct Frame<T> {
     horizontal_swipe: HorizontalSwipe,
     margin: usize,
     has_menu: bool,
+    has_flow_menu: bool,
 }
 
 pub enum FrameMsg<T> {
@@ -117,6 +118,7 @@ where
             horizontal_swipe: HorizontalSwipe::new(),
             margin: 0,
             has_menu: false,
+            has_flow_menu: false,
         }
     }
 
@@ -170,11 +172,21 @@ where
             .button_styled(theme::button_danger())
     }
 
-    // TODO: currently used to gradually introduce multi-item menus (#5189).
-    // After the migration, this flag should be set in `with_button()`.
+    // `has_menu` is used to gradually introduce multi-item menus (#5189).
+    // TODO: After the migration, this flag should be set in `with_button()`.
     pub fn with_external_menu(mut self) -> Self {
         // Allow visiting this menu automatically by tests
         self.has_menu = true;
+        self
+    }
+
+    // `has_flow_menu` is used to traverse old style (aka non-"external" menus)
+    // which are implemented as part of swipe flows.
+    // TODO: Once we have eventually replaced all these with new style "external
+    // menu" we should get rid of this flag and the related debuglink code.
+    pub fn with_flow_menu(mut self) -> Self {
+        // Allow visiting this menu automatically by tests
+        self.has_flow_menu = true;
         self
     }
 
@@ -463,5 +475,6 @@ where
         }
 
         t.bool("has_menu", self.has_menu);
+        t.bool("has_flow_menu", self.has_flow_menu);
     }
 }
