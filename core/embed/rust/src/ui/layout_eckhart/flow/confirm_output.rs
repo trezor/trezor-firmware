@@ -283,6 +283,7 @@ pub fn new_confirm_output(
         TextScreen::new(main_paragraphs.into_paragraphs().with_placement(
             LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING),
         ))
+        .with_flow_menu()
         .with_header(Header::new(title.unwrap_or(TString::empty())).with_menu_button())
         .with_subtitle(subtitle.unwrap_or(TString::empty()))
         .with_hint(Hint::new_page_counter())
@@ -320,6 +321,7 @@ pub fn new_confirm_output(
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical()),
         )
+        .with_flow_menu()
         .with_header(Header::new(TR::words__send.into()).with_menu_button())
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_UP),
@@ -385,6 +387,7 @@ pub fn new_confirm_output(
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical()),
         )
+        .with_flow_menu()
         .with_header(
             Header::new(summary_title.unwrap_or(TR::words__title_summary.into()))
                 .with_menu_button(),
