@@ -33,6 +33,7 @@ pub struct Button {
     long_press: ShortDuration, // long press requires non-zero duration
     long_timer: Timer,
     haptic: bool,
+    #[cfg(feature = "ui_debug")]
     is_cancel: bool, // used by debuglink
 }
 
@@ -54,6 +55,7 @@ impl Button {
             long_press: ShortDuration::ZERO,
             long_timer: Timer::new(),
             haptic: true,
+            #[cfg(feature = "ui_debug")]
             is_cancel: false,
         }
     }
@@ -105,8 +107,14 @@ impl Button {
         self
     }
 
+    #[cfg(feature = "ui_debug")]
     pub fn set_is_cancel(mut self) -> Self {
         self.is_cancel = true;
+        self
+    }
+
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn set_is_cancel(self) -> Self {
         self
     }
 
