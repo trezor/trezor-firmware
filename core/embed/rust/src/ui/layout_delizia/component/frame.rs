@@ -93,7 +93,9 @@ pub struct Frame<T> {
     swipe: SwipeConfig,
     horizontal_swipe: HorizontalSwipe,
     margin: usize,
+    #[cfg(feature = "ui_debug")]
     has_menu: bool,
+    #[cfg(feature = "ui_debug")]
     has_flow_menu: bool,
 }
 
@@ -117,7 +119,9 @@ where
             swipe: SwipeConfig::new(),
             horizontal_swipe: HorizontalSwipe::new(),
             margin: 0,
+            #[cfg(feature = "ui_debug")]
             has_menu: false,
+            #[cfg(feature = "ui_debug")]
             has_flow_menu: false,
         }
     }
@@ -174,9 +178,14 @@ where
 
     // `has_menu` is used to gradually introduce multi-item menus (#5189).
     // TODO: After the migration, this flag should be set in `with_button()`.
+    #[cfg(feature = "ui_debug")]
     pub fn with_external_menu(mut self) -> Self {
         // Allow visiting this menu automatically by tests
         self.has_menu = true;
+        self
+    }
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn with_external_menu(self) -> Self {
         self
     }
 
@@ -184,9 +193,14 @@ where
     // which are implemented as part of swipe flows.
     // TODO: Once we have eventually replaced all these with new style "external
     // menu" we should get rid of this flag and the related debuglink code.
+    #[cfg(feature = "ui_debug")]
     pub fn with_flow_menu(mut self) -> Self {
         // Allow visiting this menu automatically by tests
         self.has_flow_menu = true;
+        self
+    }
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn with_flow_menu(self) -> Self {
         self
     }
 

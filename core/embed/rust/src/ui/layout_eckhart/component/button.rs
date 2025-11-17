@@ -46,6 +46,7 @@ pub struct Button {
     long_timer: Timer,
     haptic: bool,
     subtext_marquee: Option<Marquee>,
+    #[cfg(feature = "ui_debug")]
     is_cancel: bool, // used by debuglink
 }
 
@@ -88,6 +89,7 @@ impl Button {
             long_timer: Timer::new(),
             haptic: true,
             subtext_marquee,
+            #[cfg(feature = "ui_debug")]
             is_cancel: false,
         }
     }
@@ -276,8 +278,14 @@ impl Button {
         matches!(self.radius_or_gradient, RadiusOrGradient::Gradient(_))
     }
 
+    #[cfg(feature = "ui_debug")]
     pub fn set_is_cancel(mut self) -> Self {
         self.is_cancel = true;
+        self
+    }
+
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn set_is_cancel(self) -> Self {
         self
     }
 

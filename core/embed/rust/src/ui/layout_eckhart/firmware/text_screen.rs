@@ -46,6 +46,7 @@ pub struct TextScreen<T> {
     show_action_bar: bool,
     show_page_counter: bool,
 
+    #[cfg(feature = "ui_debug")]
     has_flow_menu: bool,
     // TODO: swipe handling
     // TODO: animations
@@ -74,6 +75,7 @@ where
             background: None,
             show_action_bar: false,
             show_page_counter: false,
+            #[cfg(feature = "ui_debug")]
             has_flow_menu: false,
         }
     }
@@ -116,7 +118,10 @@ where
     // we should get rid of this flag and the related debuglink code.
     pub fn with_flow_menu(mut self) -> Self {
         // Allow visiting this menu automatically by tests
-        self.has_flow_menu = true;
+        #[cfg(feature = "ui_debug")]
+        {
+            self.has_flow_menu = true;
+        }
         self
     }
 

@@ -35,6 +35,7 @@ where
     /// Possibly enforcing the second button to be ignored after some time after
     /// pressing the first button
     ignore_second_button_ms: Option<u32>,
+    #[cfg(feature = "ui_debug")]
     has_menu: bool,
 }
 
@@ -62,6 +63,7 @@ where
             return_confirmed_index: false,
             show_scrollbar: true,
             ignore_second_button_ms: None,
+            #[cfg(feature = "ui_debug")]
             has_menu: false,
         }
     }
@@ -96,8 +98,14 @@ where
         self.return_confirmed_index.then_some(self.page_counter)
     }
 
+    #[cfg(feature = "ui_debug")]
     pub fn with_menu(mut self, has_menu: bool) -> Self {
         self.has_menu = has_menu;
+        self
+    }
+
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn with_menu(self, _has_menu: bool) -> Self {
         self
     }
 
