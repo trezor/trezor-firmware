@@ -75,9 +75,10 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
             _ => None,
         });
 
-    let content_menu = VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
-        Button::new_menu_item(TR::buttons__cancel.into(), theme::menu_item_title_orange()),
-    ))
+    let content_menu = VerticalMenuScreen::new(
+        VerticalMenu::<ShortMenuVec>::empty()
+            .with_item(Button::new_cancel_menu_item(TR::buttons__cancel.into())),
+    )
     .with_header(Header::new(title.into()).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),

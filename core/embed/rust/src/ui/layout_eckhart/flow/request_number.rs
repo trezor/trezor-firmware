@@ -97,10 +97,7 @@ pub fn new_request_number(
             TR::buttons__more_info.into(),
             theme::menu_item_title(),
         ))
-        .with_item(Button::new_menu_item(
-            TR::buttons__cancel.into(),
-            theme::menu_item_title_orange(),
-        ));
+        .with_item(Button::new_cancel_menu_item(TR::buttons__cancel.into()));
 
     let content_menu = VerticalMenuScreen::new(menu_items)
         .with_header(Header::new(title).with_close_button())

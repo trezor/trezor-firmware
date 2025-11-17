@@ -70,10 +70,7 @@ pub fn new_show_thp_pairing_code(
     });
 
     let mut menu = VerticalMenu::<ShortMenuVec>::empty();
-    menu.item(Button::new_menu_item(
-        TR::buttons__cancel.into(),
-        theme::menu_item_title_orange(),
-    ));
+    menu.item(Button::new_cancel_menu_item(TR::buttons__cancel.into()));
 
     let menu_content = VerticalMenuScreen::new(menu)
         .with_header(Header::new(TString::empty()).with_close_button())

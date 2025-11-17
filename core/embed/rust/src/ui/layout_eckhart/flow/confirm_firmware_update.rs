@@ -82,10 +82,7 @@ pub fn new_confirm_firmware_update(
             TR::firmware_update__title_fingerprint.into(),
             theme::firmware::menu_item_title(),
         ))
-        .with_item(Button::new_menu_item(
-            TR::buttons__cancel.into(),
-            theme::menu_item_title_orange(),
-        ));
+        .with_item(Button::new_cancel_menu_item(TR::buttons__cancel.into()));
 
     let content_menu = VerticalMenuScreen::new(menu)
         .with_header(Header::new(title).with_close_button())

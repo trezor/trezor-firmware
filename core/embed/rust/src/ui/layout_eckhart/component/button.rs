@@ -45,8 +45,8 @@ pub struct Button {
     long_press_danger: bool,
     long_timer: Timer,
     haptic: bool,
-
     subtext_marquee: Option<Marquee>,
+    is_cancel: bool, // used by debuglink
 }
 
 impl Button {
@@ -88,6 +88,7 @@ impl Button {
             long_timer: Timer::new(),
             haptic: true,
             subtext_marquee,
+            is_cancel: false,
         }
     }
 
@@ -97,6 +98,16 @@ impl Button {
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
             .with_radius(Self::MENU_ITEM_RADIUS)
+    }
+
+    #[cfg(feature = "micropython")]
+    pub fn new_cancel_menu_item(text: TString<'static>) -> Self {
+        Self::with_text(text)
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(theme::firmware::menu_item_title_orange())
+            .with_radius(Self::MENU_ITEM_RADIUS)
+            .set_is_cancel()
     }
 
     pub fn new_single_line_menu_item(text: TString<'static>, stylesheet: ButtonStyleSheet) -> Self {
@@ -263,6 +274,11 @@ impl Button {
 
     pub fn has_gradient(&self) -> bool {
         matches!(self.radius_or_gradient, RadiusOrGradient::Gradient(_))
+    }
+
+    pub fn set_is_cancel(mut self) -> Self {
+        self.is_cancel = true;
+        self
     }
 
     pub fn enable_if(&mut self, ctx: &mut EventCtx, enabled: bool) {
@@ -784,6 +800,7 @@ impl Component for Button {
 impl crate::trace::Trace for Button {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Button");
+        t.bool("is_cancel", self.is_cancel);
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text { text, .. } => t.string("text", *text),
