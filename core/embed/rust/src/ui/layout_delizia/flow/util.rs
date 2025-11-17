@@ -58,6 +58,7 @@ pub struct ConfirmValue {
     frame_margin: usize,
     cancel: bool,
     external_menu: bool,
+    flow_menu: bool,
 }
 
 impl ConfirmValue {
@@ -94,6 +95,7 @@ impl ConfirmValue {
             frame_margin: 0,
             cancel: false,
             external_menu: false,
+            flow_menu: false,
         }
     }
 
@@ -180,6 +182,11 @@ impl ConfirmValue {
         self.with_menu_button()
     }
 
+    pub const fn with_flow_menu(mut self, flow_menu: bool) -> Self {
+        self.flow_menu = flow_menu;
+        self
+    }
+
     pub const fn with_footer(
         mut self,
         instruction: TString<'static>,
@@ -264,6 +271,9 @@ impl ConfirmValue {
         }
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
+        }
+        if self.flow_menu {
+            frame = frame.with_flow_menu();
         }
 
         if self.swipe_up {

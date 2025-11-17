@@ -213,6 +213,7 @@ pub fn new_confirm_output(
 ) -> Result<SwipeFlow, error::Error> {
     // Main
     let main_content = confirm_main
+        .with_flow_menu(true)
         .into_layout()?
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
