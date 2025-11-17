@@ -984,6 +984,14 @@ class NullDebugLink(DebugLink):
         return None
 
 
+class UnexpectedMenuError(Exception):
+    def __init__(self, layout_content: str) -> None:
+        self.layout_content = layout_content
+
+    def __str__(self) -> str:
+        return f"Layout content: {self.layout_content}"
+
+
 class DebugUI:
     INPUT_FLOW_DONE = object()
 
@@ -1008,6 +1016,45 @@ class DebugUI:
             else:
                 self._paginate_and_confirm(br.pages)
 
+    def _visit_vertical_menu(self, menu_layout: LayoutContent) -> None:
+        assert self.debuglink.layout_type in (LayoutType.Delizia, LayoutType.Eckhart)
+        assert "VerticalMenu" in menu_layout.all_components()
+
+        item_buttons = self.debuglink.screen_buttons.vertical_menu_items()
+        close_button = self.debuglink.screen_buttons.menu()
+
+        menu_buttons = menu_layout.find_unique_value_by_key(
+            key="buttons", default=None, only_type=list
+        )
+        for menu_button, item_button in zip(menu_buttons, item_buttons):
+            if menu_button.get("is_cancel"):
+                continue  # don't click cancel
+            self.debuglink.click(item_button)
+            self.debuglink.click(close_button)
+
+    def _visit_scrolled_vertical_menu(self, menu_layout: LayoutContent) -> None:
+        assert self.debuglink.layout_type is LayoutType.Delizia
+        assert "ScrolledVerticalMenu" in menu_layout.all_components()
+
+        item_buttons = self.debuglink.screen_buttons.vertical_menu_items()
+        close_button = self.debuglink.screen_buttons.menu()
+
+        _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()
+        while True:
+            menu_items = menu_layout.find_unique_value_by_key(
+                key="menu_items", default=None, only_type=dict
+            )
+            for menu_item, item_button in zip(menu_items["current"], item_buttons):
+                if "cancel" in menu_item:
+                    continue  # don't click cancel
+                self.debuglink.click(item_button)
+                self.debuglink.click(close_button)
+            if not menu_items["has_next"]:
+                break
+            self.debuglink.click(next)
+            menu_layout = self.debuglink.read_layout()
+            assert "ScrolledVerticalMenu" in menu_layout.all_components()
+
     def _visit_menu_items(self) -> LayoutContent:
         layout = self.debuglink.read_layout()
         if (
@@ -1027,42 +1074,21 @@ class DebugUI:
             is_flow_menu = True
             self.debuglink.click(self.debuglink.screen_buttons.menu())
 
-        # TODO: support all core models
-        if self.debuglink.layout_type is LayoutType.Delizia:
-            item_buttons = self.debuglink.screen_buttons.vertical_menu_items()
-            close_button = self.debuglink.screen_buttons.menu()
+        if self.debuglink.layout_type is LayoutType.Eckhart:
+            menu_layout = self.debuglink.read_layout()
+            if "VerticalMenu" in menu_layout.all_components():
+                self._visit_vertical_menu(menu_layout)
+            else:
+                raise UnexpectedMenuError(menu_layout.json_str)
+        elif self.debuglink.layout_type is LayoutType.Delizia:
             menu_layout = self.debuglink.read_layout()
             if "ScrolledVerticalMenu" in menu_layout.all_components():
-                _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()
-                while True:
-                    assert "ScrolledVerticalMenu" in menu_layout.all_components()
-                    menu_items = menu_layout.find_unique_value_by_key(
-                        key="menu_items", default=None, only_type=dict
-                    )
-                    for menu_item, item_button in zip(
-                        menu_items["current"], item_buttons
-                    ):
-                        if "cancel" in menu_item:
-                            continue  # don't click cancel
-                        self.debuglink.click(item_button)
-                        self.debuglink.click(close_button)
-                    if not menu_items["has_next"]:
-                        break
-                    self.debuglink.click(next)
-                    menu_layout = self.debuglink.read_layout()
+                self._visit_scrolled_vertical_menu(menu_layout)
             elif "VerticalMenu" in menu_layout.all_components():
-                menu_buttons = menu_layout.find_unique_value_by_key(
-                    key="buttons", default=None, only_type=list
-                )
-                for menu_button, item_button in zip(menu_buttons, item_buttons):
-                    if menu_button.get("is_cancel"):
-                        continue  # don't click cancel
-                    self.debuglink.click(item_button)
-                    self.debuglink.click(close_button)
+                self._visit_vertical_menu(menu_layout)
             else:
-                assert False, "Not a menu!"
-
-        if self.debuglink.layout_type is LayoutType.Caesar:
+                raise UnexpectedMenuError(menu_layout.json_str)
+        elif self.debuglink.layout_type is LayoutType.Caesar:
             menu_items_count = self.debuglink.read_layout().page_count()
             for _ in range(menu_items_count):
                 self.debuglink.press_middle()
