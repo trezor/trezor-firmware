@@ -87,9 +87,10 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         })
         .one_button_request(br);
 
-    let content_menu = VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
-        Button::new_menu_item(TR::buttons__cancel.into(), theme::menu_item_title_orange()),
-    ))
+    let content_menu = VerticalMenuScreen::new(
+        VerticalMenu::<ShortMenuVec>::empty()
+            .with_item(Button::new_cancel_menu_item(TR::buttons__cancel.into())),
+    )
     .with_header(Header::new(title).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),

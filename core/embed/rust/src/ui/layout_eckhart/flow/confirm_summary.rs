@@ -160,9 +160,8 @@ pub fn new_confirm_summary(
         ));
         unwrap!(menu_items.push(MENU_ITEM_EXTRA_INFO));
     }
-    menu.item(Button::new_menu_item(
+    menu.item(Button::new_cancel_menu_item(
         verb_cancel.unwrap_or(TR::buttons__cancel.into()),
-        theme::menu_item_title_orange(),
     ));
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
     let content_menu = VerticalMenuScreen::new(menu)

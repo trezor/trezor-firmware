@@ -153,10 +153,7 @@ pub fn new_receive(
                 TR::address_details__account_info.into(),
                 theme::menu_item_title(),
             ))
-            .with_item(Button::new_menu_item(
-                TR::buttons__cancel.into(),
-                theme::menu_item_title_orange(),
-            )),
+            .with_item(Button::new_cancel_menu_item(TR::buttons__cancel.into())),
     )
     .with_header(Header::new(title).with_close_button())
     .map(|msg| match msg {

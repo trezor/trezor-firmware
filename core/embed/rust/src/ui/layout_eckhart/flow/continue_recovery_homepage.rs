@@ -246,9 +246,9 @@ fn flow_before_shares(
     >,
     cancel_btn: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
-    let content_menu = VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
-        Button::new_menu_item(cancel_btn, theme::menu_item_title_orange()),
-    ))
+    let content_menu = VerticalMenuScreen::new(
+        VerticalMenu::<ShortMenuVec>::empty().with_item(Button::new_cancel_menu_item(cancel_btn)),
+    )
     .with_header(Header::new(TString::empty()).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
@@ -282,10 +282,7 @@ fn flow_between_shares_simple(
                 TR::buttons__more_info.into(),
                 &theme::TEXT_MENU_ITEM_SUBTITLE,
             ))
-            .with_item(Button::new_menu_item(
-                TR::buttons__cancel.into(),
-                theme::menu_item_title_orange(),
-            )),
+            .with_item(Button::new_cancel_menu_item(TR::buttons__cancel.into())),
     )
     .with_header(Header::new(TR::recovery__title.into()).with_close_button())
     .map(|msg| match msg {
@@ -342,10 +339,7 @@ fn flow_between_shares_advanced(
                 TR::recovery__title_remaining_shares.into(),
                 theme::menu_item_title(),
             ))
-            .with_item(Button::new_menu_item(
-                cancel_btn,
-                theme::menu_item_title_orange(),
-            )),
+            .with_item(Button::new_cancel_menu_item(cancel_btn)),
     )
     .with_header(Header::new(TString::empty()).with_close_button())
     .map(|msg| match msg {

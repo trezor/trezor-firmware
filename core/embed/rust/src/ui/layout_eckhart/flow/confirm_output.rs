@@ -234,10 +234,7 @@ fn content_main_menu(
         ));
         unwrap!(main_menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
-    main_menu.item(Button::new_menu_item(
-        cancel_menu_label,
-        theme::menu_item_title_orange(),
-    ));
+    main_menu.item(Button::new_cancel_menu_item(cancel_menu_label));
     unwrap!(main_menu_items.push(MENU_ITEM_CANCEL));
 
     VerticalMenuScreen::<ShortMenuVec>::new(main_menu)
@@ -427,10 +424,7 @@ pub fn new_confirm_output(
             ));
             unwrap!(summary_menu_items.push(MENU_ITEM_FEE_INFO));
         }
-        summary_menu.item(Button::new_menu_item(
-            cancel_menu_label,
-            theme::menu_item_title_orange(),
-        ));
+        summary_menu.item(Button::new_cancel_menu_item(cancel_menu_label));
         unwrap!(summary_menu_items.push(MENU_ITEM_CANCEL));
         let content_summary_menu = VerticalMenuScreen::new(summary_menu)
             .with_header(Header::new(TString::empty()).with_close_button())

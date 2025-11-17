@@ -67,8 +67,6 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     extra_menu_label: Option<TString<'static>>,
     cancel_menu_label: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
-    let cancel_menu_label = cancel_menu_label.unwrap_or(TR::buttons__cancel.into());
-
     // Value
     let confirm_button = if hold {
         let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
@@ -109,9 +107,8 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
         unwrap!(menu_items.push(MENU_ITEM_INFO));
     }
 
-    menu.item(Button::new_menu_item(
-        cancel_menu_label,
-        theme::menu_item_title_orange(),
+    menu.item(Button::new_cancel_menu_item(
+        cancel_menu_label.unwrap_or(TR::buttons__cancel.into()),
     ));
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
 
