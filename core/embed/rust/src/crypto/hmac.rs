@@ -2,7 +2,10 @@ use core::pin::Pin;
 
 use zeroize::Zeroize as _;
 
-use super::{ffi, memory::Memory};
+use super::{
+    ffi,
+    memory::{init_ctx, Memory},
+};
 
 pub const DIGEST_SIZE: usize = ffi::SHA256_DIGEST_LENGTH as usize;
 pub type Digest = [u8; DIGEST_SIZE];
@@ -40,22 +43,8 @@ impl Drop for HmacSha256<'_> {
     }
 }
 
-macro_rules! init_ctx {
-    ($name:ident, $key:expr) => {
-        // assign the backing memory to $name...
-        let mut $name = crate::crypto::hmac::HmacSha256::memory();
-        // ... then make it inaccessible by overwriting the binding, and pin it
-        #[allow(unused_mut)]
-        let mut $name = unsafe {
-            crate::crypto::hmac::HmacSha256::new(core::pin::Pin::new_unchecked(&mut $name), $key)
-        };
-    };
-}
-
-pub(crate) use init_ctx;
-
 pub fn digest_into(key: &[u8], data: &[u8], out: &mut Digest) {
-    init_ctx!(ctx, key);
+    init_ctx!(HmacSha256, ctx, key);
     ctx.update(data);
     ctx.finalize_into(out);
 }
@@ -128,7 +117,7 @@ mod test {
         let mut out = [0u8; DIGEST_SIZE];
         let mut out_hex = [0u8; DIGEST_SIZE * 2];
 
-        init_ctx!(ctx, b"");
+        init_ctx!(HmacSha256, ctx, b"");
         ctx.finalize_into(&mut out);
         hexlify(&out, &mut out_hex);
 
@@ -148,7 +137,7 @@ mod test {
         // case 3
         let key =
             b"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa";
-        init_ctx!(ctx, key);
+        init_ctx!(HmacSha256, ctx, key);
         for _ in 0..50 {
             ctx.update(b"\xdd");
         }
@@ -161,7 +150,7 @@ mod test {
 
         // case 4
         let key = b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19";
-        init_ctx!(ctx, key);
+        init_ctx!(HmacSha256, ctx, key);
         for _ in 0..50 {
             ctx.update(b"\xcd");
         }
