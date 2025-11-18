@@ -53,6 +53,8 @@ pub mod low_level_api;
 pub mod log;
 pub mod ui;
 
+mod critical_section;
+
 use alloc::format;
 /// A wrapper which aligns its inner value to 4 bytes.
 #[derive(Clone, Copy, Debug)]
@@ -140,20 +142,20 @@ pub extern "C" fn applet_main(api_get: TrezorApiGetter) -> c_int {
     0
 }
 
-// #[panic_handler]
-// fn panic_handler(_: &core::panic::PanicInfo<'_>) -> ! {
-//     core::intrinsics::abort();
-// }
+#[panic_handler]
+fn panic_handler(_: &core::panic::PanicInfo<'_>) -> ! {
+    core::intrinsics::abort();
+}
 
 // #[alloc_error_handler]
 // fn alloc_error_handler(_: alloc::alloc::Layout) -> ! {
 //     core::intrinsics::abort();
 // }
 
-// #[lang = "eh_personality"]
-// fn eh_personality() -> ! {
-//     loop {}
-// }
+#[lang = "eh_personality"]
+fn eh_personality() -> ! {
+    loop {}
+}
 
 #[no_mangle]
 unsafe extern "C" fn _Unwind_Resume() {
