@@ -28,13 +28,13 @@ UNIX_PORT_OPTS ?=
 CROSS_PORT_OPTS ?=
 
 PRODUCTION ?= 0
-DEBUGLINK ?= 0
-PYOPT      ?= 1
+DEBUGLINK ?= 1
+PYOPT      ?= 0
 BITCOIN_ONLY ?= 0
 BOOTLOADER_QA ?= 0
-BOOTLOADER_DEVEL ?= 0
+BOOTLOADER_DEVEL ?= 1
 UNSAFE_FW ?= 0
-TREZOR_MODEL ?= T2T1
+TREZOR_MODEL ?= T3W1
 TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
@@ -257,7 +257,7 @@ test_emu_ui_record_multicore: ## quickly record all screens
 
 
 test_bootloader_ui: ## run bootloader UI tests
-	$(PYTEST) $(TESTPATH)/click_tests/bootloader $(TESTOPTS) \
+	$(PYTEST) -s $(TESTPATH)/click_tests/bootloader $(TESTOPTS) \
 		--ui=test --ui-check-missing --do-master-diff --bootloader
 
 pylint: ## run pylint on application sources and tests
