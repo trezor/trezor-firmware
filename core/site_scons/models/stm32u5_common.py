@@ -165,6 +165,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
 
     if "app_loading" in features_wanted:
         sources += ["embed/util/app_loader/stm32/elf_loader.c"]
+        sources += ["embed/util/app_loader/stm32/tapp_loader.c"]
         sources += ["embed/util/app_loader/app_cache.c"]
         sources += ["embed/util/app_loader/app_task.c"]
         sources += ["embed/util/app_loader/app_arena.c"]
