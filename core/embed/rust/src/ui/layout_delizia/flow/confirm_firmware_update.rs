@@ -77,7 +77,7 @@ pub fn new_confirm_firmware_update(
                 theme::ICON_CHEVRON_RIGHT,
                 TR::firmware_update__title_fingerprint.into(),
             )
-            .danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
+            .cancel_item(TR::buttons__cancel.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);

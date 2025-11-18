@@ -68,7 +68,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
 
     let content_menu = Frame::left_aligned(
         "".into(),
-        VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
+        VerticalMenu::empty().cancel_item(TR::backup__title_skip.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);

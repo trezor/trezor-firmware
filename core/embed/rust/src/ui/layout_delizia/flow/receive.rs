@@ -135,7 +135,7 @@ pub fn new_receive(
                 theme::ICON_CHEVRON_RIGHT,
                 TR::address_details__account_info.into(),
             )
-            .danger(theme::ICON_CANCEL, cancel_title.into()),
+            .cancel_item(cancel_title.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);

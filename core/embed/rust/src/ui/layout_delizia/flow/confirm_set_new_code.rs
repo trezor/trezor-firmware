@@ -80,7 +80,7 @@ pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
 
     let content_menu = Frame::left_aligned(
         "".into(),
-        VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_menu_item.into()),
+        VerticalMenu::empty().cancel_item(cancel_menu_item.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);
