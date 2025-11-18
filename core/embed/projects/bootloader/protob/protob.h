@@ -25,6 +25,7 @@
 
 #include "pb/messages.pb.h"
 
+#include "fw_check.h"
 #include "wire/codec_v1.h"
 
 typedef struct {
@@ -40,12 +41,6 @@ typedef struct {
 } protob_ios_t;
 
 secbool send_user_abort(protob_io_t *iface, const char *msg);
-
-typedef struct {
-  const vendor_header *vhdr;
-  const image_header *hdr;
-  secbool firmware_present;
-} fw_info_t;
 
 secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw);
 

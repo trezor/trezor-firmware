@@ -156,6 +156,7 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/wire/wire_iface_ble.c',
     'embed/projects/bootloader/protob/protob.c',
     'embed/projects/bootloader/protob/pb/messages.pb.c',
+    'embed/projects/bootloader/fw_check.c',
     'embed/projects/bootloader/version_check.c',
 ]
 
