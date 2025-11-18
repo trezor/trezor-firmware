@@ -64,9 +64,6 @@ static void drivers_init(void) {
 
 #ifdef USE_TAMPER
   tamper_init();
-#if PRODUCTION
-  tamper_external_enable();
-#endif
 #endif
 
   random_delays_init();
