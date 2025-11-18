@@ -4,7 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "trezor-binary"
+path = "src/lib.rs"
+required-features = ["trezor_binary"]
+
+[features]
+trezor_binary = []
 
 [profile.dev]
 panic = "abort"
@@ -19,13 +27,7 @@ codegen-units = 1
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
 emballoc = "0.3.0"
-critical-section = { version = "1.1", features = ["restore-state-u8"] }
-protobuf = { version = "3.7.2", default-features = false, features = ["bytes"] }
+prost = { version = "0.14.1", default-features = false, features = ["derive"] }
 
 [build-dependencies]
-protobuf-codegen = "3.7.2"
-
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = [
-    'cfg(log_level, values("off", "error", "warn", "info", "debug", "trace"))',
-] }
+prost-build = "0.14.1"

@@ -7,6 +7,7 @@ use alloc::format;
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
+use prost::Message;
 use trezor_app_sdk::ui::{
     confirm_properties, confirm_value, request_number, request_string, show_success, show_warning,
 };
@@ -14,36 +15,35 @@ pub use trezor_app_sdk::{debug, error, info, trace, warn, Result};
 
 // Include generated protobuf code
 mod funnycoin_proto {
-    include!(concat!(env!("OUT_DIR"), "/protos/mod.rs"));
+    include!(concat!(env!("OUT_DIR"), "/funnycoin.rs"));
 }
-use funnycoin_proto::messages_funnycoin::{FunnycoinGetPublicKey, FunnycoinPublicKey};
-use protobuf::Message;
+use funnycoin_proto::{FunnycoinGetPublicKey, FunnycoinPublicKey};
 
 #[global_allocator]
 static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
 
-// Provide a critical section implementation for single-threaded environment
-struct SingleThreadedCriticalSection;
-critical_section::set_impl!(SingleThreadedCriticalSection);
+// // Provide a critical section implementation for single-threaded environment
+// struct SingleThreadedCriticalSection;
+// critical_section::set_impl!(SingleThreadedCriticalSection);
 
-unsafe impl critical_section::Impl for SingleThreadedCriticalSection {
-    unsafe fn acquire() -> u8 {
-        // In single-threaded environment, no need to disable interrupts
-        0
-    }
+// unsafe impl critical_section::Impl for SingleThreadedCriticalSection {
+//     unsafe fn acquire() -> u8 {
+//         // In single-threaded environment, no need to disable interrupts
+//         0
+//     }
 
-    unsafe fn release(_token: u8) {
-        // Nothing to restore
-    }
-}
+//     unsafe fn release(_token: u8) {
+//         // Nothing to restore
+//     }
+// }
 
 /// Handle GetPublicKey request
 fn handle_get_public_key(request_data: &[u8]) -> Result<Vec<u8>> {
     use trezor_app_sdk::ApiError;
 
     // Deserialize the request
-    let request = FunnycoinGetPublicKey::parse_from_bytes(request_data)
-        .map_err(|_| ApiError::InvalidMessage)?;
+    let request =
+        FunnycoinGetPublicKey::decode(request_data).map_err(|_| ApiError::InvalidMessage)?;
 
     info!("GetPublicKey request for path: {:?}", request.address_n);
 
@@ -53,14 +53,12 @@ fn handle_get_public_key(request_data: &[u8]) -> Result<Vec<u8>> {
     // 3. Show on display if requested
 
     // For now, create a dummy response
-    let mut response = FunnycoinPublicKey::new();
-    response.xpub = Some(format!("xpub_dummy_for_path_{:?}", request.address_n));
+    let mut response = FunnycoinPublicKey::default();
+    response.xpub = format!("xpub_dummy_for_path_{:?}", request.address_n);
     response.public_key = Some(vec![0x04; 65]); // Dummy uncompressed public key
 
     // Serialize the response
-    response
-        .write_to_bytes()
-        .map_err(|_| ApiError::InvalidMessage)
+    Ok(response.encode_to_vec())
 }
 
 // Application entry point - receives raw bytes, returns raw bytes
