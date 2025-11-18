@@ -392,7 +392,7 @@ fn create_menu(
         unwrap!(menu_items.push(MENU_ITEM_INFO));
     }
 
-    menu = menu.danger(theme::ICON_CANCEL, menu_strings.verb_cancel);
+    menu = menu.cancel_item(menu_strings.verb_cancel);
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
 
     let content_menu = Frame::left_aligned("".into(), menu).with_cancel_button();

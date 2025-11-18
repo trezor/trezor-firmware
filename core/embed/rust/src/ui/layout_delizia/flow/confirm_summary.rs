@@ -114,10 +114,7 @@ pub fn new_confirm_summary(
         );
         unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
-    menu = menu.danger(
-        theme::ICON_CANCEL,
-        verb_cancel.unwrap_or(TR::send__cancel_sign.into()),
-    );
+    menu = menu.cancel_item(verb_cancel.unwrap_or(TR::send__cancel_sign.into()));
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
     let content_menu = Frame::left_aligned(TString::empty(), menu)
         .with_cancel_button()

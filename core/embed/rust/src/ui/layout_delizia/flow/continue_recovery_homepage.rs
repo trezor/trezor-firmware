@@ -214,7 +214,7 @@ pub fn new_continue_recovery_homepage(
     let res = if show_instructions {
         let content_menu = Frame::left_aligned(
             TString::empty(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn.into()),
+            VerticalMenu::empty().cancel_item(cancel_btn.into()),
         )
         .with_cancel_button()
         .map(super::util::map_to_choice);
@@ -231,7 +231,7 @@ pub fn new_continue_recovery_homepage(
                     theme::ICON_CHEVRON_RIGHT,
                     TR::recovery__title_remaining_shares.into(),
                 )
-                .danger(theme::ICON_CANCEL, cancel_btn.into()),
+                .cancel_item(cancel_btn.into()),
         )
         .with_cancel_button()
         .map(super::util::map_to_choice);
@@ -281,7 +281,7 @@ pub fn new_continue_recovery_homepage(
     } else {
         let content_menu = Frame::left_aligned(
             TString::empty(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn.into()),
+            VerticalMenu::empty().cancel_item(cancel_btn.into()),
         )
         .with_cancel_button()
         .map(super::util::map_to_choice);

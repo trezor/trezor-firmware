@@ -33,6 +33,7 @@ pub struct Button {
     long_press: ShortDuration, // long press requires non-zero duration
     long_timer: Timer,
     haptic: bool,
+    is_cancel: bool, // used by debuglink
 }
 
 impl Button {
@@ -53,6 +54,7 @@ impl Button {
             long_press: ShortDuration::ZERO,
             long_timer: Timer::new(),
             haptic: true,
+            is_cancel: false,
         }
     }
 
@@ -100,6 +102,11 @@ impl Button {
 
     pub fn without_haptics(mut self) -> Self {
         self.haptic = false;
+        self
+    }
+
+    pub fn set_is_cancel(mut self) -> Self {
+        self.is_cancel = true;
         self
     }
 
@@ -361,6 +368,7 @@ impl Component for Button {
 impl crate::trace::Trace for Button {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Button");
+        t.bool("is_cancel", self.is_cancel);
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => t.string("text", *text),

@@ -208,7 +208,12 @@ impl VerticalMenu {
         self
     }
 
-    pub fn danger(mut self, icon: Icon, text: TString<'static>) -> Self {
+    pub fn cancel_item(mut self, text: TString<'static>) -> Self {
+        unwrap!(self.buttons.push(VerticalMenuItem::Cancel(text).button()));
+        self
+    }
+
+    pub fn danger_item(mut self, icon: Icon, text: TString<'static>) -> Self {
         unwrap!(self.buttons.push(
             Button::with_icon_and_text(IconText::new(text, icon))
                 .styled(theme::button_warning_high())
@@ -333,7 +338,9 @@ impl VerticalMenuItem {
             }
             VerticalMenuItem::Cancel(text) => {
                 let content = IconText::new(*text, theme::ICON_CANCEL);
-                Button::with_icon_and_text(content).styled(theme::button_warning_high())
+                Button::with_icon_and_text(content)
+                    .styled(theme::button_warning_high())
+                    .set_is_cancel()
             }
         }
     }

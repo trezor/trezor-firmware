@@ -114,7 +114,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
 
     let content_menu = Frame::left_aligned(
         TString::empty(),
-        VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn_text),
+        VerticalMenu::empty().cancel_item(cancel_btn_text),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);
