@@ -169,22 +169,9 @@ impl Drop for AesGcm<'_> {
     }
 }
 
-#[allow(unused_macros)]
-macro_rules! init_ctx {
-    ($name:ident, $key:expr, $iv:expr) => {
-        // assign the backing memory to $name...
-        let mut $name = crate::crypto::aesgcm::AesGcm::memory();
-        // ... then make it inaccessible by overwriting the binding, and pin it
-        #[allow(unused_mut)]
-        let mut $name = unsafe {
-            crate::crypto::aesgcm::AesGcm::new(core::pin::Pin::new_unchecked(&mut $name), $key, $iv)
-        };
-    };
-}
-
 #[cfg(test)]
 mod test {
-    use super::*;
+    use super::{super::memory::init_ctx, *};
 
     struct Vector {
         key: &'static str,
@@ -295,9 +282,9 @@ mod test {
         for v in AES_GCM_VECTORS {
             let (key, iv, aad, plaintext, ciphertext) = v.decoded();
 
-            init_ctx!(ctx_enc, &key, &iv);
+            init_ctx!(AesGcm, ctx_enc, &key, &iv);
             let mut ctx_enc = ctx_enc.unwrap();
-            init_ctx!(ctx_dec, &key, &iv);
+            init_ctx!(AesGcm, ctx_dec, &key, &iv);
             let mut ctx_dec = ctx_dec.unwrap();
 
             if !plaintext.is_empty() {
@@ -323,7 +310,7 @@ mod test {
 
     #[test]
     fn test_state() {
-        init_ctx!(ctx, &[0u8; 16], b"1");
+        init_ctx!(AesGcm, ctx, &[0u8; 16], b"1");
         let mut ctx = ctx.unwrap();
 
         // ok: empty string tag
@@ -403,7 +390,7 @@ mod test {
             let (key, iv, aad, pt, ct) = v.decoded();
 
             // Test encryption.
-            init_ctx!(ctx, &key, &iv);
+            init_ctx!(AesGcm, ctx, &key, &iv);
             let mut ctx = ctx.unwrap();
             if !aad.is_empty() {
                 ctx.auth(&aad).unwrap();
@@ -434,7 +421,7 @@ mod test {
             let (key, iv, aad, pt, ct) = v.decoded();
 
             // Test encryption.
-            init_ctx!(ctx, &key, &iv);
+            init_ctx!(AesGcm, ctx, &key, &iv);
             let mut ctx = ctx.unwrap();
             if !aad.is_empty() {
                 ctx.auth(&aad).unwrap();
@@ -469,7 +456,7 @@ mod test {
             let chunk_len = pt.len() / 3;
             let mut buffer = vec![0; pt.len()];
 
-            init_ctx!(ctx, &key, &iv);
+            init_ctx!(AesGcm, ctx, &key, &iv);
             let mut ctx = ctx.unwrap();
             ctx.decrypt(&ct[..chunk_len], &mut buffer[..chunk_len])
                 .unwrap();
@@ -500,7 +487,7 @@ mod test {
             let chunk_len = pt.len() / 3;
 
             let mut buffer = ct;
-            init_ctx!(ctx, &key, &iv);
+            init_ctx!(AesGcm, ctx, &key, &iv);
             let mut ctx = ctx.unwrap();
             ctx.decrypt_in_place(&mut buffer[..chunk_len]).unwrap();
             ctx.auth(aad.get(..7).unwrap_or(&[])).unwrap();

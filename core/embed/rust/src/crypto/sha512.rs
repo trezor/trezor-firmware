@@ -1,6 +1,9 @@
 use core::pin::Pin;
 
-use super::{ffi, memory::Memory};
+use super::{
+    ffi,
+    memory::{init_ctx, Memory},
+};
 
 use zeroize::Zeroize as _;
 
@@ -41,22 +44,8 @@ impl Drop for Sha512<'_> {
     }
 }
 
-macro_rules! init_ctx {
-    ($name:ident) => {
-        // assign the backing memory to $name...
-        let mut $name = crate::crypto::sha512::Sha512::memory();
-        // ... then make it inaccessible by overwriting the binding, and pin it
-        #[allow(unused_mut)]
-        let mut $name = unsafe {
-            crate::crypto::sha512::Sha512::new(core::pin::Pin::new_unchecked(&mut $name))
-        };
-    };
-}
-
-pub(crate) use init_ctx;
-
 pub fn digest_into(data: &[u8], out: &mut Digest) {
-    init_ctx!(ctx);
+    init_ctx!(Sha512, ctx);
     ctx.update(data);
     ctx.finalize_into(out);
 }
@@ -103,7 +92,7 @@ mod test {
         let mut out = [0u8; DIGEST_SIZE];
         let mut out_hex = [0u8; DIGEST_SIZE * 2];
 
-        init_ctx!(ctx);
+        init_ctx!(Sha512, ctx);
         ctx.finalize_into(&mut out);
         hexlify(&out, &mut out_hex);
 

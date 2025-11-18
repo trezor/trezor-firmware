@@ -1,4 +1,4 @@
-use super::sha256;
+use super::{memory::init_ctx, sha256};
 
 /// Calculate a Merkle root based on a leaf element and a proof of inclusion.
 ///
@@ -7,7 +7,7 @@ pub fn merkle_root(elem: &[u8], proof: &[sha256::Digest]) -> sha256::Digest {
     let mut out = sha256::Digest::default();
 
     // hash the leaf element
-    sha256::init_ctx!(ctx);
+    init_ctx!(sha256::Sha256, ctx);
     ctx.update(&[0x00]);
     ctx.update(elem);
     ctx.finalize_into(&mut out);
@@ -19,7 +19,7 @@ pub fn merkle_root(elem: &[u8], proof: &[sha256::Digest]) -> sha256::Digest {
         } else {
             (proof_elem, &out)
         };
-        sha256::init_ctx!(ctx);
+        init_ctx!(sha256::Sha256, ctx);
         ctx.update(&[0x01]);
         ctx.update(min);
         ctx.update(max);
