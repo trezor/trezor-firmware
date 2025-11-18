@@ -2,5 +2,17 @@
 [target.x86_64-unknown-linux-gnu]
 rustflags = ["-C", "relocation-model=pic", "--cfg", "log_level=\"trace\""]
 
-[target.armv7-unknown-linux-gnueabihf]
-rustflags = ["-C", "relocation-model=static", "--cfg", "log_level=\"trace\""]
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "relocation-model=pic", "--cfg", "log_level=\"trace\""]
+
+[target.thumbv7em-none-eabihf]
+linker = "rust-lld"
+rustflags = [
+    "-C", "relocation-model=ropi-rwpi",
+    "-C", "link-arg=-Tmemory.x",
+    "-C", "link-arg=--emit-relocs",
+    "-C", "link-arg=-z",
+    "-C", "link-arg=max-page-size=0x20",
+    "-C", "link-arg=--no-dynamic-linker",
+    "--cfg", "log_level=\"trace\""
+]
