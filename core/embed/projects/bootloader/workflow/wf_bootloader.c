@@ -105,7 +105,7 @@ typedef enum {
 // for the result.
 static screen_t handle_intro(const fw_info_t* fw,
                              workflow_result_t* out_result) {
-  intro_result_t ui = ui_screen_intro(fw->vhdr, fw->hdr, fw->firmware_present);
+  intro_result_t ui = ui_screen_intro(&fw->vhdr, fw->hdr, fw->firmware_present);
   if (ui == INTRO_MENU) return SCREEN_MENU;
   if (ui == INTRO_HOST) return SCREEN_WAIT_FOR_HOST;
   // no other valid INTRO result -> fatal
