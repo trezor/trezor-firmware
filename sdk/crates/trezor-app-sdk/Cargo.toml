@@ -10,6 +10,7 @@ crate-type = ["rlib"]
 trezor-structs = { path = "../trezor-structs" }
 rkyv = { version = "0.8", default-features = false, features = ["alloc"] }
 once_cell = { version = "1.20", default-features = false, features = ["critical-section"] }
+critical-section = "1.2.0"
 
 [build-dependencies]
 quote = "1.0"
