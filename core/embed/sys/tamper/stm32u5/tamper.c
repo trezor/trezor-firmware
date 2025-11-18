@@ -24,6 +24,7 @@
 #include <sys/mpu.h>
 #include <sys/systick.h>
 #include <sys/tamper.h>
+#include <util/rsod.h>
 
 #ifdef SECURE_MODE
 
@@ -198,9 +199,54 @@ void tamper_external_enable(void) {
 #endif
 }
 
+void tamper_build_pminfo(systask_postmortem_t* pminfo, uint32_t tamper_sr) {
+  const char* title = "TAMPER";
+
+  memset(pminfo, 0, sizeof(*pminfo));
+  pminfo->reason = TASK_TERM_REASON_ERROR;
+  memcpy(pminfo->error.title, title, strlen(title));
+
+#ifndef BOARDLOADER
+
+  const char* reason = "UNKNOWN";
+  if (tamper_sr & TAMP_SR_TAMP1F) {
+    reason = "INPUT1";
+  } else if (tamper_sr & TAMP_SR_TAMP2F) {
+    reason = "INPUT2";
+  } else if (tamper_sr & TAMP_SR_ITAMP1F) {
+    reason = "VOLTAGE";
+  } else if (tamper_sr & TAMP_SR_ITAMP2F) {
+    reason = "TEMPERATURE";
+  } else if (tamper_sr & TAMP_SR_ITAMP3F) {
+    reason = "LSE CLOCK";
+  } else if (tamper_sr & TAMP_SR_ITAMP5F) {
+    reason = "RTC OVERFLOW";
+  } else if (tamper_sr & TAMP_SR_ITAMP6F) {
+    reason = "SWD ACCESS";
+  } else if (tamper_sr & TAMP_SR_ITAMP7F) {
+    reason = "ANALOG WDG1";
+  } else if (tamper_sr & TAMP_SR_ITAMP8F) {
+    reason = "MONO COUNTER";
+  } else if (tamper_sr & TAMP_SR_ITAMP9F) {
+    reason = "CRYPTO ERROR";
+  } else if (tamper_sr & TAMP_SR_ITAMP11F) {
+    reason = "IWDG";
+  } else if (tamper_sr & TAMP_SR_ITAMP12F) {
+    reason = "ANALOG WDG2";
+  } else if (tamper_sr & TAMP_SR_ITAMP13F) {
+    reason = "ANALOG WDG3";
+  }
+  memcpy(pminfo->error.message, reason, strlen(reason));
+#endif
+}
+
 // Interrupt handle for all tamper events
 // It displays an error message
 void TAMP_IRQHandler(void) {
+  // tamper erases part of RAM so we need to reconfigure whatever is to be used,
+  // such as re-initialize MPU as it is used in reboot_with_rsod
+  mpu_init();
+
   mpu_reconfig(MPU_MODE_DEFAULT);
 
   // Disable external tamper, as its level detected
@@ -209,41 +255,16 @@ void TAMP_IRQHandler(void) {
   TAMP->CR1 &= ~TAMP_CR1_TAMP2E;
 #endif
 
-  uint32_t sr = TAMP->SR;
-  TAMP->SCR = sr;
+  uint32_t tamper_sr = TAMP->SR;
+  TAMP->SCR = tamper_sr;
 
-#ifdef BOARDLOADER
-  error_shutdown_ex("TAMPER", NULL, NULL);
+  systask_postmortem_t pminfo;
+  tamper_build_pminfo(&pminfo, tamper_sr);
+
+#if defined(USE_BOOTARGS_RSOD) && !defined(BOARDLOADER)
+  reboot_with_rsod(&pminfo);
 #else
-  const char* reason = "UNKNOWN";
-  if (sr & TAMP_SR_TAMP1F) {
-    reason = "INPUT1";
-  } else if (sr & TAMP_SR_TAMP2F) {
-    reason = "INPUT2";
-  } else if (sr & TAMP_SR_ITAMP1F) {
-    reason = "VOLTAGE";
-  } else if (sr & TAMP_SR_ITAMP2F) {
-    reason = "TEMPERATURE";
-  } else if (sr & TAMP_SR_ITAMP3F) {
-    reason = "LSE CLOCK";
-  } else if (sr & TAMP_SR_ITAMP5F) {
-    reason = "RTC OVERFLOW";
-  } else if (sr & TAMP_SR_ITAMP6F) {
-    reason = "SWD ACCESS";
-  } else if (sr & TAMP_SR_ITAMP7F) {
-    reason = "ANALOG WDG1";
-  } else if (sr & TAMP_SR_ITAMP8F) {
-    reason = "MONO COUNTER";
-  } else if (sr & TAMP_SR_ITAMP9F) {
-    reason = "CRYPTO ERROR";
-  } else if (sr & TAMP_SR_ITAMP11F) {
-    reason = "IWDG";
-  } else if (sr & TAMP_SR_ITAMP12F) {
-    reason = "ANALOG WDG2";
-  } else if (sr & TAMP_SR_ITAMP13F) {
-    reason = "ANALOG WDG3";
-  }
-  error_shutdown_ex("TAMPER", reason, NULL);
+  rsod_panic_handler(&pminfo);
 #endif
 }
 
