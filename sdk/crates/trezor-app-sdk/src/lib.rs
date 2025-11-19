@@ -123,7 +123,7 @@ pub extern "C" fn applet_main(api_get: TrezorApiGetter) -> c_int {
     trace!("IPC registered");
 
     // Call the user's app function
-    let result = unsafe { app() };
+    let result = app();
     info!("Finishing request");
     _ = request_finish();
 
@@ -160,4 +160,9 @@ fn eh_personality() -> ! {
 #[no_mangle]
 unsafe extern "C" fn _Unwind_Resume() {
     core::intrinsics::unreachable();
+}
+
+#[cfg(not(target_os = "none"))]
+#[unsafe(no_mangle)]
+pub extern "C" fn main() {
 }
