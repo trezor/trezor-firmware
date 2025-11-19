@@ -409,6 +409,55 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_NFC
+
+bool nfc_backup_get_events__verified(nfc_backup_event_t *events) {
+  if (!probe_write_access(events, sizeof(*events))) {
+    goto access_violation;
+  }
+
+  return nfc_backup_get_events(events);
+}
+
+bool nfc_backup_get_state__verified(nfc_backup_state_t *state) {
+  if (!probe_write_access(state, sizeof(*state))) {
+    goto access_violation;
+  }
+
+  return nfc_backup_get_state(state);
+}
+
+bool nfc_backup_read_system_info__verified(
+    nfc_backup_system_info_t *system_info) {
+  if (!probe_write_access(system_info, sizeof(*system_info))) {
+    goto access_violation;
+  }
+
+  return nfc_backup_read_system_info(system_info);
+}
+
+bool nfc_backup_read_data__verified(uint16_t block_number, uint8_t *data,
+                                    size_t data_size) {
+  if (!probe_write_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  return nfc_backup_read_data(block_number, data, data_size);
+}
+
+bool nfc_backup_write_data__verified(uint16_t block_number, const uint8_t *data,
+                                     size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  return nfc_backup_write_data(block_number, data, data_size);
+}
+
+#endif  // USE_NFC
+
+// ---------------------------------------------------------------------
+
 #ifdef USE_OPTIGA
 
 optiga_sign_result __wur optiga_sign__verified(

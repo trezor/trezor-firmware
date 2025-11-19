@@ -390,6 +390,53 @@ bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
 #endif  // USE_HAPTIC
 
 // =============================================================================
+// nfc_backup.h
+// =============================================================================
+
+#ifdef USE_NFC
+
+#include <io/nfc_backup.h>
+
+bool nfc_backup_start_discovery(void) {
+  return (bool)syscall_invoke0(SYSCALL_NFC_BACKUP_START_DISCOVERY);
+}
+
+void nfc_backup_stop_discovery(void) {
+  syscall_invoke0(SYSCALL_NFC_BACKUP_STOP_DISCOVERY);
+}
+
+bool nfc_backup_get_events(nfc_backup_event_t *event) {
+  return (bool)syscall_invoke1((uint32_t)event, SYSCALL_NFC_BACKUP_GET_EVENTS);
+}
+
+bool nfc_backup_get_state(nfc_backup_state_t *state) {
+  return (bool)syscall_invoke1((uint32_t)state, SYSCALL_NFC_BACKUP_GET_STATE);
+}
+
+bool nfc_backup_read_system_info(nfc_backup_system_info_t *system_info) {
+  return (bool)syscall_invoke1((uint32_t)system_info,
+                               SYSCALL_NFC_BACKUP_READ_SYSTEM_INFO);
+}
+
+bool nfc_backup_read_data(uint16_t block_number, uint8_t *data,
+                          size_t data_size) {
+  return (bool)syscall_invoke3(start_block, (uint32_t)data, num_blocks,
+                               SYSCALL_NFC_BACKUP_READ_DATA);
+}
+
+bool nfc_backup_write_data(uint16_t block_number, const uint8_t *data,
+                           size_t data_size) {
+  return (bool)syscall_invoke3(start_block, (uint32_t)data, num_blocks,
+                               SYSCALL_NFC_BACKUP_WRITE_DATA);
+}
+
+bool nfc_backup_wipe_memory(void) {
+  return (bool)syscall_invoke0(SYSCALL_NFC_BACKUP_WIPE_MEMORY);
+}
+
+#endif  // USE_NFC
+
+// =============================================================================
 // optiga.h
 // =============================================================================
 
