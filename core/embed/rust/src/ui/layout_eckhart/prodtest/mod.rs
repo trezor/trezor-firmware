@@ -9,14 +9,14 @@ use crate::ui::{
         TouchEvent,
         TouchEvent::{TouchEnd, TouchMove, TouchStart},
     },
-    geometry::{Alignment, Offset, Rect},
+    geometry::{Alignment, Offset, Point, Rect},
     layout::simplified::{process_frame_event, show},
     shape::{self, render_on_display},
     ui_prodtest::{ProdtestLayoutType, ProdtestUI},
 };
 use heapless::Vec;
 
-use super::{cshape::ScreenBorder, fonts, prodtest::welcome::Welcome, UIEckhart};
+use super::{cshape::ScreenBorder, fonts, prodtest::welcome::Welcome, theme, UIEckhart};
 
 #[allow(clippy::large_enum_variant)]
 pub enum ProdtestLayout {
@@ -109,6 +109,51 @@ impl ProdtestUI for UIEckhart {
                 .with_fg(Color::white())
                 .with_bg(Color::white())
                 .render(target);
+        });
+
+        display::refresh();
+    }
+
+    fn screen_prodtest_nfc(tag_connected: bool) {
+        display::sync();
+
+        render_on_display(None, Some(Color::black()), |target| {
+            shape::Bar::new(Rect::from_center_and_size(
+                screen().center(),
+                Offset::new(330, 5),
+            ))
+            .with_fg(Color::white())
+            .with_thickness(3)
+            .render(target);
+
+            shape::Bar::new(Rect::from_center_and_size(
+                screen().center(),
+                Offset::new(5, 330),
+            ))
+            .with_fg(Color::white())
+            .with_thickness(3)
+            .render(target);
+
+            shape::Circle::new(screen().center(), 150)
+                .with_thickness(5)
+                .with_bg(if tag_connected {
+                    theme::BLUE
+                } else {
+                    Color::black()
+                })
+                .with_fg(Color::white())
+                .render(target);
+
+            shape::Text::new(
+                screen()
+                    .center()
+                    .ofs(Offset::new(0, fonts::FONT_SATOSHI_REGULAR_22.height / 2)),
+                "Place NFC tag",
+                fonts::FONT_SATOSHI_REGULAR_22,
+            )
+            .with_fg(Color::white())
+            .with_align(Alignment::Center)
+            .render(target);
         });
 
         display::refresh();
