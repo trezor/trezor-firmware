@@ -18,7 +18,7 @@ current_indent = 0
 current_class = None
 current_method = None
 current_package = None
-current_method_is_overload = False
+current_decorators = []
 
 
 def split_to_parts(line, mod_desc=None):
@@ -26,7 +26,7 @@ def split_to_parts(line, mod_desc=None):
     global current_class
     global current_method
     global current_package
-    global current_method_is_overload
+    global current_decorators
 
     if line.startswith("package: "):
         current_package = line[9:].strip()
@@ -37,8 +37,8 @@ def split_to_parts(line, mod_desc=None):
         current_class = None
         return
 
-    if line == "@overload\n":
-        current_method_is_overload = True
+    if line.startswith("@"):
+        current_decorators.append(line)
         return
 
     if line.startswith("class "):
@@ -58,9 +58,9 @@ def split_to_parts(line, mod_desc=None):
             yield (current_package, "\n")
             current_indent = 4
 
-        if current_method_is_overload:
-            yield (current_package, current_indent * " " + "@overload\n")
-            current_method_is_overload = False
+        for decorator in current_decorators:
+            yield (current_package, current_indent * " " + decorator)
+        current_decorators.clear()
 
     if not line.strip():
         yield (current_package, "\n")
