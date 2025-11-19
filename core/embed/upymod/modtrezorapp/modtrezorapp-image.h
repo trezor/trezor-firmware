@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <py/obj.h>
+#include <py/runtime.h>
+
 #include <trezor_rtl.h>
 
 #include <util/app_loader.h>
@@ -29,7 +32,7 @@
 ///     """
 typedef struct _mp_obj_AppImage_t {
   mp_obj_base_t base;
-  app_cache_image_t *image;
+  app_cache_image_t* image;
 } mp_obj_AppImage_t;
 
 /// def write(self, offset: int, data: AnyBytes) -> None:
@@ -38,8 +41,8 @@ typedef struct _mp_obj_AppImage_t {
 ///     """
 STATIC mp_obj_t mod_trezorapp_AppImage_write(mp_obj_t self, mp_obj_t offset_obj,
                                              mp_obj_t data_obj) {
-  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
-  app_cache_image_t *image = o->image;
+  mp_obj_AppImage_t* o = MP_OBJ_TO_PTR(self);
+  app_cache_image_t* image = o->image;
 
   mp_buffer_info_t bufinfo = {0};
   mp_get_buffer_raise(data_obj, &bufinfo, MP_BUFFER_READ);
@@ -64,7 +67,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_obj,
 ///     """
 STATIC mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
                                                 mp_obj_t accept_obj) {
-  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_AppImage_t* o = MP_OBJ_TO_PTR(self);
 
   bool accept = mp_obj_is_true(accept_obj);
 
@@ -87,5 +90,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorapp_AppImage_locals_dict,
 STATIC const mp_obj_type_t mod_trezorapp_AppImage_type = {
     {&mp_type_type},
     .name = MP_QSTR_AppImage,
-    .locals_dict = (void *)&mod_trezorapp_AppImage_locals_dict,
+    .locals_dict = (void*)&mod_trezorapp_AppImage_locals_dict,
 };

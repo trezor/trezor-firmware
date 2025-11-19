@@ -361,8 +361,8 @@ enum MessageType {
     // External Apps
     MessageType_ExtAppLoad = 9200 [(wire_in) = true];
     MessageType_ExtAppLoaded = 9201 [(wire_out) = true];
-    MessageType_ExtAppRun = 9202 [(wire_in) = true];
-    MessageType_ExtAppResult = 9203 [(wire_out) = true];
+    MessageType_ExtAppMessage = 9202 [(wire_in) = true];
+    MessageType_ExtAppResponse = 9203 [(wire_out) = true];
 
     // Funny Coin
     MessageType_FunnycoinGetPublicKey = 9204 [(wire_in) = true];

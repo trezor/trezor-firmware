@@ -98,7 +98,7 @@ def _find_message_handler_module(msg_type: int) -> str:
     # extapp
     if msg_type == MessageType.ExtAppLoad:
         return "apps.extapp.load"
-    if msg_type == MessageType.ExtAppRun:
+    if msg_type == MessageType.ExtAppMessage:
         return "apps.extapp.run"
 
     # misc

@@ -27,6 +27,11 @@ class AppTask:
     App task structure.
     """
 
+    def __init__(self, task_id: int) -> None:
+        """
+        Creates an app task object for the given internal task ID.
+        """
+
     def id(self) -> int:
         """
         Returns the task id.

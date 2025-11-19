@@ -1,28 +1,57 @@
-from trezor.messages import ExtAppLoad, ExtAppLoaded, Failure
-from trezor.crypto.hashlib import sha256
+from typing import TYPE_CHECKING
+
+import ustruct
+
+from storage import cache_common as cc
+from storage.cache import get_sessionless_cache
+
+from trezor import app
+from trezor.crypto import random
+from trezor.wire import context
+
+from trezor.messages import ExtAppLoad, ExtAppLoaded, DataChunkRequest, DataChunkAck
+from trezor.wire.errors import DataError
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
 
 
-async def load(msg: ExtAppLoad) -> ExtAppLoaded | Failure:
+async def _load_image(hash: AnyBytes, size: int) -> None:
+    image = app.create_image(hash, size)
+    offset = 0
+    while offset < size:
+        chunk = (
+            await context.call(
+                DataChunkRequest(
+                    data_length=min(size - offset, 1024), data_offset=offset
+                ),
+                DataChunkAck,
+            )
+        ).data_chunk
+        if len(chunk) != min(size - offset, 1024):
+            raise DataError("Data length mismatch")
+        image.write(offset, chunk)
+        offset += len(chunk)
+    image.finalize(True)
+
+
+async def load(msg: ExtAppLoad) -> ExtAppLoaded:
     from trezor import app
 
-    """Load external application from a host path and return its hash.
-
-    Note: On emulator, `msg.path` should point to the .so file on the host filesystem.
-    This handler currently computes and returns the binary hash; the actual loading
-    is performed when the app is spawned (see extapp.run and app_cache).
-    """
+    """Load external application from a host and return its hash."""
     try:
-        path = msg.path or ""
-        h = sha256()
-        # Read the file and compute SHA-256 digest
-        with open(path, "rb") as f:
-            while True:
-                chunk = f.read(4096)
-                if not chunk:
-                    break
-                h.update(chunk)
-        final_hash = h.digest()
-        app.load_file(final_hash, path)
-        return ExtAppLoaded(hash=final_hash)
+        task = app.spawn_task(msg.hash)
+    except RuntimeError as e:
+        pass
+
+    try:
+        await _load_image(msg.hash, msg.size)
     except Exception as e:
-        return Failure(message=f"ExtApp load failed: {e}")
+        raise DataError(f"ExtApp load failed: {e}") from e
+    else:
+        task = app.spawn_task(msg.hash)
+
+    instance_id = random.uniform(2**32)
+    cache_entry = ustruct.pack("<BI", task.id(), instance_id)
+    get_sessionless_cache().set(cc.APP_EXTAPP_IDS, cache_entry)
+    return ExtAppLoaded(instance_id=instance_id)

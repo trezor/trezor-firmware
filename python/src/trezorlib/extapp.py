@@ -14,8 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Union
-from pathlib import Path
+from typing import TYPE_CHECKING
+from hashlib import sha256
 
 from . import messages
 
@@ -23,36 +23,19 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
-def load(session: "Session", path: Union[str, Path]) -> bytes:
+def load(session: "Session", data: bytes) -> int:
     """Load an external application onto the device.
 
     Returns:
-        Hash of the loaded app (bytes)
+        Instance ID of the loaded app
     """
+    hash = sha256(data).digest()
     resp = session.call(
-        messages.ExtAppLoad(path=str(path)),
-        expect=messages.ExtAppLoaded,
+        messages.ExtAppLoad(hash=hash, size=len(data)),
     )
-    return bytes(resp.hash or b"")
+    while isinstance(resp, messages.DataChunkRequest):
+        chunk = data[resp.data_offset : resp.data_offset + resp.data_length]
+        resp = session.call(messages.DataChunkAck(data_chunk=chunk))
 
-
-def run(
-    session: "Session",
-    hash: bytes,
-    fn_id: int,
-    data: bytes = b"",
-) -> messages.ExtAppResult:
-    """Run an external application (starts IPC responder on device).
-
-    Args:
-        hash: Hash of the app to run
-        fn_id: Function ID to invoke
-        data: Serialized function arguments (optional)
-
-    Returns:
-        ExtAppResult message from the device
-    """
-    return session.call(
-        messages.ExtAppRun(hash=hash, fn_id=fn_id, data=data),
-        expect=messages.ExtAppResult,
-    )
+    resp = messages.ExtAppLoaded.ensure_isinstance(resp)
+    return resp.instance_id
