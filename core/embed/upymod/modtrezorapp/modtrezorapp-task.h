@@ -21,7 +21,7 @@
 
 #include <io/app_loader.h>
 
-/// package: trezorapp.__init__
+/// package: trezorapp
 
 /// class AppTask:
 ///     """
