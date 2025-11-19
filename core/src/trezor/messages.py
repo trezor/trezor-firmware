@@ -4214,12 +4214,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ExtAppLoad(protobuf.MessageType):
-        path: "str"
+        hash: "AnyBytes"
+        size: "int"
 
         def __init__(
             self,
             *,
-            path: "str",
+            hash: "AnyBytes",
+            size: "int",
         ) -> None:
             pass
 
@@ -4228,12 +4230,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ExtAppLoaded(protobuf.MessageType):
-        hash: "AnyBytes"
+        instance_id: "int"
 
         def __init__(
             self,
             *,
-            hash: "AnyBytes",
+            instance_id: "int",
         ) -> None:
             pass
 
@@ -4241,36 +4243,40 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppLoaded"]:
             return isinstance(msg, cls)
 
-    class ExtAppRun(protobuf.MessageType):
-        hash: "AnyBytes"
-        fn_id: "int"
+    class ExtAppMessage(protobuf.MessageType):
+        instance_id: "int"
+        message_id: "int"
         data: "AnyBytes"
 
         def __init__(
             self,
             *,
-            hash: "AnyBytes",
-            fn_id: "int",
+            instance_id: "int",
+            message_id: "int",
             data: "AnyBytes",
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppRun"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppMessage"]:
             return isinstance(msg, cls)
 
-    class ExtAppResult(protobuf.MessageType):
+    class ExtAppResponse(protobuf.MessageType):
+        message_id: "int"
         data: "AnyBytes"
+        finished: "bool"
 
         def __init__(
             self,
             *,
+            message_id: "int",
             data: "AnyBytes",
+            finished: "bool | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppResult"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["ExtAppResponse"]:
             return isinstance(msg, cls)
 
     class FunnycoinGetPublicKey(protobuf.MessageType):
