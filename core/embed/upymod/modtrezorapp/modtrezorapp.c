@@ -103,6 +103,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorapp_globals_table[] = {
      MP_ROM_PTR(&mod_trezorapp_spawn_task_obj)},
     {MP_ROM_QSTR(MP_QSTR_create_image),
      MP_ROM_PTR(&mod_trezorapp_create_image_obj)},
+    {MP_ROM_QSTR(MP_QSTR_AppTask), MP_ROM_PTR(&mod_trezorapp_AppTask_type)},
+    {MP_ROM_QSTR(MP_QSTR_AppImage), MP_ROM_PTR(&mod_trezorapp_AppImage_type)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,

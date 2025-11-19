@@ -100,8 +100,8 @@ trezor_message_impl! {
     BenchmarkResult => MessageType_BenchmarkResult,
     ExtAppLoad => MessageType_ExtAppLoad,
     ExtAppLoaded => MessageType_ExtAppLoaded,
-    ExtAppRun => MessageType_ExtAppRun,
-    ExtAppResult => MessageType_ExtAppResult,
+    ExtAppMessage => MessageType_ExtAppMessage,
+    ExtAppResponse => MessageType_ExtAppResponse,
     FunnycoinGetPublicKey => MessageType_FunnycoinGetPublicKey,
     FunnycoinPublicKey => MessageType_FunnycoinPublicKey,
 }

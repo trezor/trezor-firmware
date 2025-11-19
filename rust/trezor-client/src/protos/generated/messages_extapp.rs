@@ -28,8 +28,10 @@ const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_7_2;
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct ExtAppLoad {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppLoad.path)
-    pub path: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppLoad.hash)
+    pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppLoad.size)
+    pub size: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.extapps.ExtAppLoad.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -46,49 +48,73 @@ impl ExtAppLoad {
         ::std::default::Default::default()
     }
 
-    // required string path = 1;
+    // required bytes hash = 1;
 
-    pub fn path(&self) -> &str {
-        match self.path.as_ref() {
+    pub fn hash(&self) -> &[u8] {
+        match self.hash.as_ref() {
             Some(v) => v,
-            None => "",
+            None => &[],
         }
     }
 
-    pub fn clear_path(&mut self) {
-        self.path = ::std::option::Option::None;
+    pub fn clear_hash(&mut self) {
+        self.hash = ::std::option::Option::None;
     }
 
-    pub fn has_path(&self) -> bool {
-        self.path.is_some()
+    pub fn has_hash(&self) -> bool {
+        self.hash.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_path(&mut self, v: ::std::string::String) {
-        self.path = ::std::option::Option::Some(v);
+    pub fn set_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.hash = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_path(&mut self) -> &mut ::std::string::String {
-        if self.path.is_none() {
-            self.path = ::std::option::Option::Some(::std::string::String::new());
+    pub fn mut_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.hash.is_none() {
+            self.hash = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.path.as_mut().unwrap()
+        self.hash.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_path(&mut self) -> ::std::string::String {
-        self.path.take().unwrap_or_else(|| ::std::string::String::new())
+    pub fn take_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required uint32 size = 2;
+
+    pub fn size(&self) -> u32 {
+        self.size.unwrap_or(0)
+    }
+
+    pub fn clear_size(&mut self) {
+        self.size = ::std::option::Option::None;
+    }
+
+    pub fn has_size(&self) -> bool {
+        self.size.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_size(&mut self, v: u32) {
+        self.size = ::std::option::Option::Some(v);
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "path",
-            |m: &ExtAppLoad| { &m.path },
-            |m: &mut ExtAppLoad| { &mut m.path },
+            "hash",
+            |m: &ExtAppLoad| { &m.hash },
+            |m: &mut ExtAppLoad| { &mut m.hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "size",
+            |m: &ExtAppLoad| { &m.size },
+            |m: &mut ExtAppLoad| { &mut m.size },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppLoad>(
             "ExtAppLoad",
@@ -102,7 +128,10 @@ impl ::protobuf::Message for ExtAppLoad {
     const NAME: &'static str = "ExtAppLoad";
 
     fn is_initialized(&self) -> bool {
-        if self.path.is_none() {
+        if self.hash.is_none() {
+            return false;
+        }
+        if self.size.is_none() {
             return false;
         }
         true
@@ -112,7 +141,10 @@ impl ::protobuf::Message for ExtAppLoad {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.path = ::std::option::Option::Some(is.read_string()?);
+                    self.hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                16 => {
+                    self.size = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -126,8 +158,11 @@ impl ::protobuf::Message for ExtAppLoad {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.path.as_ref() {
-            my_size += ::protobuf::rt::string_size(1, &v);
+        if let Some(v) = self.hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.size {
+            my_size += ::protobuf::rt::uint32_size(2, v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -135,8 +170,11 @@ impl ::protobuf::Message for ExtAppLoad {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.path.as_ref() {
-            os.write_string(1, v)?;
+        if let Some(v) = self.hash.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.size {
+            os.write_uint32(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -155,13 +193,15 @@ impl ::protobuf::Message for ExtAppLoad {
     }
 
     fn clear(&mut self) {
-        self.path = ::std::option::Option::None;
+        self.hash = ::std::option::Option::None;
+        self.size = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static ExtAppLoad {
         static instance: ExtAppLoad = ExtAppLoad {
-            path: ::std::option::Option::None,
+            hash: ::std::option::Option::None,
+            size: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -189,8 +229,8 @@ impl ::protobuf::reflect::ProtobufValue for ExtAppLoad {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct ExtAppLoaded {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppLoaded.hash)
-    pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppLoaded.instance_id)
+    pub instance_id: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.extapps.ExtAppLoaded.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -207,49 +247,32 @@ impl ExtAppLoaded {
         ::std::default::Default::default()
     }
 
-    // required bytes hash = 1;
+    // required uint32 instance_id = 1;
 
-    pub fn hash(&self) -> &[u8] {
-        match self.hash.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
+    pub fn instance_id(&self) -> u32 {
+        self.instance_id.unwrap_or(0)
     }
 
-    pub fn clear_hash(&mut self) {
-        self.hash = ::std::option::Option::None;
+    pub fn clear_instance_id(&mut self) {
+        self.instance_id = ::std::option::Option::None;
     }
 
-    pub fn has_hash(&self) -> bool {
-        self.hash.is_some()
+    pub fn has_instance_id(&self) -> bool {
+        self.instance_id.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_hash(&mut self, v: ::std::vec::Vec<u8>) {
-        self.hash = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.hash.is_none() {
-            self.hash = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.hash.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_hash(&mut self) -> ::std::vec::Vec<u8> {
-        self.hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn set_instance_id(&mut self, v: u32) {
+        self.instance_id = ::std::option::Option::Some(v);
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "hash",
-            |m: &ExtAppLoaded| { &m.hash },
-            |m: &mut ExtAppLoaded| { &mut m.hash },
+            "instance_id",
+            |m: &ExtAppLoaded| { &m.instance_id },
+            |m: &mut ExtAppLoaded| { &mut m.instance_id },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppLoaded>(
             "ExtAppLoaded",
@@ -263,7 +286,7 @@ impl ::protobuf::Message for ExtAppLoaded {
     const NAME: &'static str = "ExtAppLoaded";
 
     fn is_initialized(&self) -> bool {
-        if self.hash.is_none() {
+        if self.instance_id.is_none() {
             return false;
         }
         true
@@ -272,8 +295,8 @@ impl ::protobuf::Message for ExtAppLoaded {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                10 => {
-                    self.hash = ::std::option::Option::Some(is.read_bytes()?);
+                8 => {
+                    self.instance_id = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -287,8 +310,8 @@ impl ::protobuf::Message for ExtAppLoaded {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.hash.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
+        if let Some(v) = self.instance_id {
+            my_size += ::protobuf::rt::uint32_size(1, v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -296,8 +319,8 @@ impl ::protobuf::Message for ExtAppLoaded {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.hash.as_ref() {
-            os.write_bytes(1, v)?;
+        if let Some(v) = self.instance_id {
+            os.write_uint32(1, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -316,13 +339,13 @@ impl ::protobuf::Message for ExtAppLoaded {
     }
 
     fn clear(&mut self) {
-        self.hash = ::std::option::Option::None;
+        self.instance_id = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static ExtAppLoaded {
         static instance: ExtAppLoaded = ExtAppLoaded {
-            hash: ::std::option::Option::None,
+            instance_id: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -346,85 +369,68 @@ impl ::protobuf::reflect::ProtobufValue for ExtAppLoaded {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.extapps.ExtAppRun)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapps.ExtAppMessage)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct ExtAppRun {
+pub struct ExtAppMessage {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppRun.hash)
-    pub hash: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppRun.fn_id)
-    pub fn_id: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppRun.data)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppMessage.instance_id)
+    pub instance_id: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppMessage.message_id)
+    pub message_id: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppMessage.data)
     pub data: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapps.ExtAppRun.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapps.ExtAppMessage.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a ExtAppRun {
-    fn default() -> &'a ExtAppRun {
-        <ExtAppRun as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppMessage {
+    fn default() -> &'a ExtAppMessage {
+        <ExtAppMessage as ::protobuf::Message>::default_instance()
     }
 }
 
-impl ExtAppRun {
-    pub fn new() -> ExtAppRun {
+impl ExtAppMessage {
+    pub fn new() -> ExtAppMessage {
         ::std::default::Default::default()
     }
 
-    // required bytes hash = 1;
+    // required uint32 instance_id = 1;
 
-    pub fn hash(&self) -> &[u8] {
-        match self.hash.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
+    pub fn instance_id(&self) -> u32 {
+        self.instance_id.unwrap_or(0)
     }
 
-    pub fn clear_hash(&mut self) {
-        self.hash = ::std::option::Option::None;
+    pub fn clear_instance_id(&mut self) {
+        self.instance_id = ::std::option::Option::None;
     }
 
-    pub fn has_hash(&self) -> bool {
-        self.hash.is_some()
+    pub fn has_instance_id(&self) -> bool {
+        self.instance_id.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_hash(&mut self, v: ::std::vec::Vec<u8>) {
-        self.hash = ::std::option::Option::Some(v);
+    pub fn set_instance_id(&mut self, v: u32) {
+        self.instance_id = ::std::option::Option::Some(v);
     }
 
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.hash.is_none() {
-            self.hash = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.hash.as_mut().unwrap()
+    // required uint32 message_id = 2;
+
+    pub fn message_id(&self) -> u32 {
+        self.message_id.unwrap_or(0)
     }
 
-    // Take field
-    pub fn take_hash(&mut self) -> ::std::vec::Vec<u8> {
-        self.hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn clear_message_id(&mut self) {
+        self.message_id = ::std::option::Option::None;
     }
 
-    // required uint32 fn_id = 2;
-
-    pub fn fn_id(&self) -> u32 {
-        self.fn_id.unwrap_or(0)
-    }
-
-    pub fn clear_fn_id(&mut self) {
-        self.fn_id = ::std::option::Option::None;
-    }
-
-    pub fn has_fn_id(&self) -> bool {
-        self.fn_id.is_some()
+    pub fn has_message_id(&self) -> bool {
+        self.message_id.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_fn_id(&mut self, v: u32) {
-        self.fn_id = ::std::option::Option::Some(v);
+    pub fn set_message_id(&mut self, v: u32) {
+        self.message_id = ::std::option::Option::Some(v);
     }
 
     // required bytes data = 3;
@@ -467,36 +473,36 @@ impl ExtAppRun {
         let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "hash",
-            |m: &ExtAppRun| { &m.hash },
-            |m: &mut ExtAppRun| { &mut m.hash },
+            "instance_id",
+            |m: &ExtAppMessage| { &m.instance_id },
+            |m: &mut ExtAppMessage| { &mut m.instance_id },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "fn_id",
-            |m: &ExtAppRun| { &m.fn_id },
-            |m: &mut ExtAppRun| { &mut m.fn_id },
+            "message_id",
+            |m: &ExtAppMessage| { &m.message_id },
+            |m: &mut ExtAppMessage| { &mut m.message_id },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "data",
-            |m: &ExtAppRun| { &m.data },
-            |m: &mut ExtAppRun| { &mut m.data },
+            |m: &ExtAppMessage| { &m.data },
+            |m: &mut ExtAppMessage| { &mut m.data },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppRun>(
-            "ExtAppRun",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppMessage>(
+            "ExtAppMessage",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for ExtAppRun {
-    const NAME: &'static str = "ExtAppRun";
+impl ::protobuf::Message for ExtAppMessage {
+    const NAME: &'static str = "ExtAppMessage";
 
     fn is_initialized(&self) -> bool {
-        if self.hash.is_none() {
+        if self.instance_id.is_none() {
             return false;
         }
-        if self.fn_id.is_none() {
+        if self.message_id.is_none() {
             return false;
         }
         if self.data.is_none() {
@@ -508,11 +514,11 @@ impl ::protobuf::Message for ExtAppRun {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                10 => {
-                    self.hash = ::std::option::Option::Some(is.read_bytes()?);
+                8 => {
+                    self.instance_id = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 16 => {
-                    self.fn_id = ::std::option::Option::Some(is.read_uint32()?);
+                    self.message_id = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 26 => {
                     self.data = ::std::option::Option::Some(is.read_bytes()?);
@@ -529,10 +535,10 @@ impl ::protobuf::Message for ExtAppRun {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.hash.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
+        if let Some(v) = self.instance_id {
+            my_size += ::protobuf::rt::uint32_size(1, v);
         }
-        if let Some(v) = self.fn_id {
+        if let Some(v) = self.message_id {
             my_size += ::protobuf::rt::uint32_size(2, v);
         }
         if let Some(v) = self.data.as_ref() {
@@ -544,10 +550,10 @@ impl ::protobuf::Message for ExtAppRun {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.hash.as_ref() {
-            os.write_bytes(1, v)?;
+        if let Some(v) = self.instance_id {
+            os.write_uint32(1, v)?;
         }
-        if let Some(v) = self.fn_id {
+        if let Some(v) = self.message_id {
             os.write_uint32(2, v)?;
         }
         if let Some(v) = self.data.as_ref() {
@@ -565,21 +571,21 @@ impl ::protobuf::Message for ExtAppRun {
         &mut self.special_fields
     }
 
-    fn new() -> ExtAppRun {
-        ExtAppRun::new()
+    fn new() -> ExtAppMessage {
+        ExtAppMessage::new()
     }
 
     fn clear(&mut self) {
-        self.hash = ::std::option::Option::None;
-        self.fn_id = ::std::option::Option::None;
+        self.instance_id = ::std::option::Option::None;
+        self.message_id = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static ExtAppRun {
-        static instance: ExtAppRun = ExtAppRun {
-            hash: ::std::option::Option::None,
-            fn_id: ::std::option::Option::None,
+    fn default_instance() -> &'static ExtAppMessage {
+        static instance: ExtAppMessage = ExtAppMessage {
+            instance_id: ::std::option::Option::None,
+            message_id: ::std::option::Option::None,
             data: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -587,46 +593,69 @@ impl ::protobuf::Message for ExtAppRun {
     }
 }
 
-impl ::protobuf::MessageFull for ExtAppRun {
+impl ::protobuf::MessageFull for ExtAppMessage {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppRun").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppMessage").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for ExtAppRun {
+impl ::std::fmt::Display for ExtAppMessage {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for ExtAppRun {
+impl ::protobuf::reflect::ProtobufValue for ExtAppMessage {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.extapps.ExtAppResult)
+// @@protoc_insertion_point(message:hw.trezor.messages.extapps.ExtAppResponse)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct ExtAppResult {
+pub struct ExtAppResponse {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppResult.data)
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppResponse.message_id)
+    pub message_id: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppResponse.data)
     pub data: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.extapps.ExtAppResponse.finished)
+    pub finished: ::std::option::Option<bool>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapps.ExtAppResult.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.extapps.ExtAppResponse.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a ExtAppResult {
-    fn default() -> &'a ExtAppResult {
-        <ExtAppResult as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a ExtAppResponse {
+    fn default() -> &'a ExtAppResponse {
+        <ExtAppResponse as ::protobuf::Message>::default_instance()
     }
 }
 
-impl ExtAppResult {
-    pub fn new() -> ExtAppResult {
+impl ExtAppResponse {
+    pub fn new() -> ExtAppResponse {
         ::std::default::Default::default()
     }
 
-    // required bytes data = 1;
+    // required uint32 message_id = 1;
+
+    pub fn message_id(&self) -> u32 {
+        self.message_id.unwrap_or(0)
+    }
+
+    pub fn clear_message_id(&mut self) {
+        self.message_id = ::std::option::Option::None;
+    }
+
+    pub fn has_message_id(&self) -> bool {
+        self.message_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_message_id(&mut self, v: u32) {
+        self.message_id = ::std::option::Option::Some(v);
+    }
+
+    // required bytes data = 2;
 
     pub fn data(&self) -> &[u8] {
         match self.data.as_ref() {
@@ -662,26 +691,58 @@ impl ExtAppResult {
         self.data.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bool finished = 3;
+
+    pub fn finished(&self) -> bool {
+        self.finished.unwrap_or(false)
+    }
+
+    pub fn clear_finished(&mut self) {
+        self.finished = ::std::option::Option::None;
+    }
+
+    pub fn has_finished(&self) -> bool {
+        self.finished.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_finished(&mut self, v: bool) {
+        self.finished = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "data",
-            |m: &ExtAppResult| { &m.data },
-            |m: &mut ExtAppResult| { &mut m.data },
+            "message_id",
+            |m: &ExtAppResponse| { &m.message_id },
+            |m: &mut ExtAppResponse| { &mut m.message_id },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppResult>(
-            "ExtAppResult",
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "data",
+            |m: &ExtAppResponse| { &m.data },
+            |m: &mut ExtAppResponse| { &mut m.data },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "finished",
+            |m: &ExtAppResponse| { &m.finished },
+            |m: &mut ExtAppResponse| { &mut m.finished },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ExtAppResponse>(
+            "ExtAppResponse",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for ExtAppResult {
-    const NAME: &'static str = "ExtAppResult";
+impl ::protobuf::Message for ExtAppResponse {
+    const NAME: &'static str = "ExtAppResponse";
 
     fn is_initialized(&self) -> bool {
+        if self.message_id.is_none() {
+            return false;
+        }
         if self.data.is_none() {
             return false;
         }
@@ -691,8 +752,14 @@ impl ::protobuf::Message for ExtAppResult {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                10 => {
+                8 => {
+                    self.message_id = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                18 => {
                     self.data = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                24 => {
+                    self.finished = ::std::option::Option::Some(is.read_bool()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -706,8 +773,14 @@ impl ::protobuf::Message for ExtAppResult {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.message_id {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
         if let Some(v) = self.data.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.finished {
+            my_size += 1 + 1;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -715,8 +788,14 @@ impl ::protobuf::Message for ExtAppResult {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.message_id {
+            os.write_uint32(1, v)?;
+        }
         if let Some(v) = self.data.as_ref() {
-            os.write_bytes(1, v)?;
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.finished {
+            os.write_bool(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -730,50 +809,56 @@ impl ::protobuf::Message for ExtAppResult {
         &mut self.special_fields
     }
 
-    fn new() -> ExtAppResult {
-        ExtAppResult::new()
+    fn new() -> ExtAppResponse {
+        ExtAppResponse::new()
     }
 
     fn clear(&mut self) {
+        self.message_id = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
+        self.finished = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static ExtAppResult {
-        static instance: ExtAppResult = ExtAppResult {
+    fn default_instance() -> &'static ExtAppResponse {
+        static instance: ExtAppResponse = ExtAppResponse {
+            message_id: ::std::option::Option::None,
             data: ::std::option::Option::None,
+            finished: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for ExtAppResult {
+impl ::protobuf::MessageFull for ExtAppResponse {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppResult").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ExtAppResponse").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for ExtAppResult {
+impl ::std::fmt::Display for ExtAppResponse {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for ExtAppResult {
+impl ::protobuf::reflect::ProtobufValue for ExtAppResponse {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-extapp.proto\x12\x1ahw.trezor.messages.extapps\x1a\roptio\
-    ns.proto\"\x20\n\nExtAppLoad\x12\x12\n\x04path\x18\x01\x20\x02(\tR\x04pa\
-    th\"\"\n\x0cExtAppLoaded\x12\x12\n\x04hash\x18\x01\x20\x02(\x0cR\x04hash\
-    \"H\n\tExtAppRun\x12\x12\n\x04hash\x18\x01\x20\x02(\x0cR\x04hash\x12\x13\
-    \n\x05fn_id\x18\x02\x20\x02(\rR\x04fnId\x12\x12\n\x04data\x18\x03\x20\
-    \x02(\x0cR\x04data\"\"\n\x0cExtAppResult\x12\x12\n\x04data\x18\x01\x20\
-    \x02(\x0cR\x04dataB>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMes\
-    sageExtApp\x80\xa6\x1d\x01\
+    ns.proto\"4\n\nExtAppLoad\x12\x12\n\x04hash\x18\x01\x20\x02(\x0cR\x04has\
+    h\x12\x12\n\x04size\x18\x02\x20\x02(\rR\x04size\"/\n\x0cExtAppLoaded\x12\
+    \x1f\n\x0binstance_id\x18\x01\x20\x02(\rR\ninstanceId\"c\n\rExtAppMessag\
+    e\x12\x1f\n\x0binstance_id\x18\x01\x20\x02(\rR\ninstanceId\x12\x1d\n\nme\
+    ssage_id\x18\x02\x20\x02(\rR\tmessageId\x12\x12\n\x04data\x18\x03\x20\
+    \x02(\x0cR\x04data\"f\n\x0eExtAppResponse\x12\x1d\n\nmessage_id\x18\x01\
+    \x20\x02(\rR\tmessageId\x12\x12\n\x04data\x18\x02\x20\x02(\x0cR\x04data\
+    \x12!\n\x08finished\x18\x03\x20\x01(\x08:\x05falseR\x08finishedB>\n#com.\
+    satoshilabs.trezor.lib.protobufB\x13TrezorMessageExtApp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -795,8 +880,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             let mut messages = ::std::vec::Vec::with_capacity(4);
             messages.push(ExtAppLoad::generated_message_descriptor_data());
             messages.push(ExtAppLoaded::generated_message_descriptor_data());
-            messages.push(ExtAppRun::generated_message_descriptor_data());
-            messages.push(ExtAppResult::generated_message_descriptor_data());
+            messages.push(ExtAppMessage::generated_message_descriptor_data());
+            messages.push(ExtAppResponse::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
