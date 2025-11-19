@@ -2,16 +2,23 @@
 
 #include <trezor_types.h>
 
+/// Represents a parsed version string in the format:
+/// "major.minor.patch[.build_num]" where build_num is optional and defaults to
+/// 0 if absent.
+typedef struct {
+  uint8_t major;
+  uint8_t minor;
+  uint16_t revision;
+  uint32_t build_num;  // optional part after, 0 if absent
+} nrf_app_version_t;
+
 bool smp_echo(const char* text, uint8_t text_len);
 
 void smp_reset(void);
 
-/// Get the nRF app version string.
-///
-/// @param version_buf Buffer to write the version string (null-terminated)
-/// @param buf_len Size of the buffer
-/// @return Number of bytes written (excluding null terminator), or 0 on error
-size_t smp_image_version_get(char* version_buf, size_t buf_len);
+/// Fills nrf_app_version_t with the version of the active nRF app image.
+/// Returns true on success, false on failure.
+bool smp_image_version_get(nrf_app_version_t* out);
 
 void smp_process_rx_byte(uint8_t byte);
 
