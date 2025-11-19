@@ -181,19 +181,19 @@ async def get_keychain(
 
 def with_slip44_keychain(
     *patterns: str,
-    slip44_id: int,
+    slip44_id: int | None = None,
     curve: str = "secp256k1",
     allow_testnet: bool = True,
     slip21_namespaces: Iterable[paths.Slip21Path] = (),
 ) -> Callable[[HandlerWithKeychain[MsgIn, MsgOut]], Handler[MsgIn, MsgOut]]:
-    if not patterns:
-        raise ValueError  # specify a pattern
-
-    slip_44_ids = (slip44_id, 1) if allow_testnet else slip44_id
+    if slip44_id is not None:
+        slip44_ids = (slip44_id, 1) if allow_testnet else slip44_id
+    else:
+        slip44_ids = tuple()
 
     schemas = []
     for pattern in patterns:
-        schemas.append(paths.PathSchema.parse(pattern, slip_44_ids))
+        schemas.append(paths.PathSchema.parse(pattern, slip44_ids))
     schemas = [s.copy() for s in schemas]
 
     def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:

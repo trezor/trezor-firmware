@@ -3,18 +3,21 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import PaymentNotification, Success
 
+    from apps.common.keychain import Keychain
+
+from apps.common.keychain import with_slip44_keychain
 from apps.common.paths import address_n_to_str
 
 # this module implements SLIP-0024 payment requests for crypto purchases using fiat
 
 
-async def payment_notification(msg: PaymentNotification) -> Success:
+@with_slip44_keychain(slip21_namespaces=[[b"SLIP-0024"]])
+async def payment_notification(msg: PaymentNotification, keychain: Keychain) -> Success:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_payment_request
     from trezor.ui.layouts.slip24 import Trade
     from trezor.wire import DataError
 
-    from apps.common.keychain import get_keychain
     from apps.common.payment_request import SLIP44_ID_UNDEFINED, PaymentRequestVerifier
 
     if msg.payment_req is None:
@@ -23,10 +26,7 @@ async def payment_notification(msg: PaymentNotification) -> Success:
     if msg.payment_req.amount is not None:
         raise DataError("Payment request amount must be missing")
 
-    slip21_keychain = await get_keychain("", [], [[b"SLIP-0024"]])
-    PaymentRequestVerifier(
-        msg.payment_req, SLIP44_ID_UNDEFINED, slip21_keychain
-    ).verify()
+    PaymentRequestVerifier(msg.payment_req, SLIP44_ID_UNDEFINED, keychain).verify()
 
     verified_payment_request = msg.payment_req
 
