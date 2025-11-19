@@ -8,12 +8,12 @@ class AppImage:
     Application image image.
     """
 
-    def write(self, offset: int, data: AnyBytes) -> None
+    def write(self, offset: int, data: AnyBytes) -> None:
         """
         Writes data to the application image at the specified offset.
         """
 
-    def finalize(self, bool accept) -> None:
+    def finalize(self, accept: bool) -> None:
         """
         Finalizes loading of the application image. If `accept` is true,
         the image is marked as loaded and will be available for execution.
@@ -44,21 +44,14 @@ class AppTask:
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def spawn_task(app_hash: bytes) -> AppTask:
+def spawn_task(app_hash: AnyBytes) -> AppTask:
     """
     Spawns an application task from the app cache.
     """
 
 
 # upymod/modtrezorapp/modtrezorapp.c
-def create_image(app_hash: bytes, size: int) -> AppImage:
+def create_image(app_hash: AnyBytes, size: int) -> AppImage:
     """
     Creates a new application image in the app cache.
-    """
-
-
-# upymod/modtrezorapp/modtrezorapp.c
-def load_file(app_hash: bytes, filename: Str) -> None:
-    """
-    Loads an application image from a file into the app cache.
     """
