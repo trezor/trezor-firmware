@@ -690,8 +690,8 @@ class MessageType(IntEnum):
     BenchmarkResult = 9103
     ExtAppLoad = 9200
     ExtAppLoaded = 9201
-    ExtAppRun = 9202
-    ExtAppResult = 9203
+    ExtAppMessage = 9202
+    ExtAppResponse = 9203
     FunnycoinGetPublicKey = 9204
     FunnycoinPublicKey = 9205
 
@@ -5662,63 +5662,72 @@ class EvoluDelegatedIdentityKey(protobuf.MessageType):
 class ExtAppLoad(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9200
     FIELDS = {
-        1: protobuf.Field("path", "string", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        path: "str",
-    ) -> None:
-        self.path = path
-
-
-class ExtAppLoaded(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 9201
-    FIELDS = {
         1: protobuf.Field("hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("size", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
         hash: "bytes",
+        size: "int",
     ) -> None:
         self.hash = hash
+        self.size = size
 
 
-class ExtAppRun(protobuf.MessageType):
+class ExtAppLoaded(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9201
+    FIELDS = {
+        1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        instance_id: "int",
+    ) -> None:
+        self.instance_id = instance_id
+
+
+class ExtAppMessage(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9202
     FIELDS = {
-        1: protobuf.Field("hash", "bytes", repeated=False, required=True),
-        2: protobuf.Field("fn_id", "uint32", repeated=False, required=True),
+        1: protobuf.Field("instance_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("message_id", "uint32", repeated=False, required=True),
         3: protobuf.Field("data", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        hash: "bytes",
-        fn_id: "int",
+        instance_id: "int",
+        message_id: "int",
         data: "bytes",
     ) -> None:
-        self.hash = hash
-        self.fn_id = fn_id
+        self.instance_id = instance_id
+        self.message_id = message_id
         self.data = data
 
 
-class ExtAppResult(protobuf.MessageType):
+class ExtAppResponse(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9203
     FIELDS = {
-        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+        1: protobuf.Field("message_id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("data", "bytes", repeated=False, required=True),
+        3: protobuf.Field("finished", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
         self,
         *,
+        message_id: "int",
         data: "bytes",
+        finished: Optional["bool"] = False,
     ) -> None:
+        self.message_id = message_id
         self.data = data
+        self.finished = finished
 
 
 class FunnycoinGetPublicKey(protobuf.MessageType):

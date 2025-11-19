@@ -24,18 +24,18 @@
 /// of protobuf runtime.
 const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_7_2;
 
-// @@protoc_insertion_point(message:hw.trezor.messages.funnycoin.FunnycoinGetPublicKey)
+// @@protoc_insertion_point(message:funnycoin.FunnycoinGetPublicKey)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct FunnycoinGetPublicKey {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.funnycoin.FunnycoinGetPublicKey.address_n)
+    // @@protoc_insertion_point(field:funnycoin.FunnycoinGetPublicKey.address_n)
     pub address_n: ::std::vec::Vec<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.funnycoin.FunnycoinGetPublicKey.coin_name)
+    // @@protoc_insertion_point(field:funnycoin.FunnycoinGetPublicKey.coin_name)
     pub coin_name: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.funnycoin.FunnycoinGetPublicKey.show_display)
+    // @@protoc_insertion_point(field:funnycoin.FunnycoinGetPublicKey.show_display)
     pub show_display: ::std::option::Option<bool>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.funnycoin.FunnycoinGetPublicKey.special_fields)
+    // @@protoc_insertion_point(special_field:funnycoin.FunnycoinGetPublicKey.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
@@ -240,16 +240,16 @@ impl ::protobuf::reflect::ProtobufValue for FunnycoinGetPublicKey {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.funnycoin.FunnycoinPublicKey)
+// @@protoc_insertion_point(message:funnycoin.FunnycoinPublicKey)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct FunnycoinPublicKey {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.funnycoin.FunnycoinPublicKey.xpub)
+    // @@protoc_insertion_point(field:funnycoin.FunnycoinPublicKey.xpub)
     pub xpub: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.funnycoin.FunnycoinPublicKey.public_key)
+    // @@protoc_insertion_point(field:funnycoin.FunnycoinPublicKey.public_key)
     pub public_key: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.funnycoin.FunnycoinPublicKey.special_fields)
+    // @@protoc_insertion_point(special_field:funnycoin.FunnycoinPublicKey.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
@@ -456,13 +456,12 @@ impl ::protobuf::reflect::ProtobufValue for FunnycoinPublicKey {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x18messages-funnycoin.proto\x12\x1chw.trezor.messages.funnycoin\"\x7f\
-    \n\x15FunnycoinGetPublicKey\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08\
-    addressN\x12&\n\tcoin_name\x18\x02\x20\x01(\t:\tFunnycoinR\x08coinName\
-    \x12!\n\x0cshow_display\x18\x03\x20\x01(\x08R\x0bshowDisplay\"G\n\x12Fun\
-    nycoinPublicKey\x12\x12\n\x04xpub\x18\x01\x20\x02(\tR\x04xpub\x12\x1d\n\
-    \npublic_key\x18\x02\x20\x01(\x0cR\tpublicKeyB=\n#com.satoshilabs.trezor\
-    .lib.protobufB\x16TrezorMessageFunnycoin\
+    \n\x18messages-funnycoin.proto\x12\tfunnycoin\"\x7f\n\x15FunnycoinGetPub\
+    licKey\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12&\n\tcoin\
+    _name\x18\x02\x20\x01(\t:\tFunnycoinR\x08coinName\x12!\n\x0cshow_display\
+    \x18\x03\x20\x01(\x08R\x0bshowDisplay\"G\n\x12FunnycoinPublicKey\x12\x12\
+    \n\x04xpub\x18\x01\x20\x02(\tR\x04xpub\x12\x1d\n\npublic_key\x18\x02\x20\
+    \x01(\x0cR\tpublicKey\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

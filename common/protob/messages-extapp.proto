@@ -10,14 +10,21 @@ import "options.proto";
 option (include_in_bitcoin_only) = true;
 
 /**
- * Request: Load an external application onto the device
+ * Request: Load an external application onto the device.
+ *
+ * If the app is present in the app cache, it will be loaded into memory.
+ * Otherwise, a DataChunkRequest flow will be initiated to download the app
+ * into Trezor.
+ *
  * @start
- * @next Success
- * @next Failure
+ * @next ExtAppLoaded
+ * @next DataChunkRequest
  */
 message ExtAppLoad {
-	// Path to the shared object (.so) library to load (emulator-only)
-	required string path = 1;
+	/// Hash of the app to load
+	required bytes hash = 1;
+	/// Size of the app to load
+	required uint32 size = 2;
 }
 
 /**
@@ -25,30 +32,34 @@ message ExtAppLoad {
  * @end
  */
 message ExtAppLoaded {
-	// Hash of the loaded app binary (implementation-defined, e.g., SHA-256)
-	required bytes hash = 1;
+	/// Instance ID of the loaded app, referred to in ExtAppRun
+	required uint32 instance_id = 1;
 }
 
 /**
- * Request: Run an external application (starts IPC responder)
+ * Request: Run a workflow in an external application.
+ *
  * @start
- * @next Success
- * @next Failure
+ * @next ExtAppResponse
  */
-message ExtAppRun {
-	// Hash of the app to run
-	required bytes hash = 1;
-	// Function ID to invoke
-	required uint32 fn_id = 2;
-	// Serialized function arguments
+message ExtAppMessage {
+	/// Instance ID of a loaded external application, result of ExtAppLoad.
+	required uint32 instance_id = 1;
+	/// Message ID to pass to the external app.
+	required uint32 message_id = 2;
+	/// Data to pass to the external app.
 	required bytes data = 3;
 }
 
 /**
- * Response: External application run result
- * @end
+ * Response: Response of a workflow in the external application.
+ * @next ExtAppMessage
  */
-message ExtAppResult {
-	// Serialized function result
-	required bytes data = 1;
+message ExtAppResponse {
+	/// Message ID of the response.
+	required uint32 message_id = 1;
+	/// Data returned by the external application.
+	required bytes data = 2;
+	/// Indicator whether the workflow is finished.
+	optional bool finished = 3 [default = false];
 }
