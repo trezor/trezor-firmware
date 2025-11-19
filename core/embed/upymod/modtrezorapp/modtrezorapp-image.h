@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <py/obj.h>
+#include <py/runtime.h>
+
 #include <trezor_rtl.h>
 
 #include <io/app_loader.h>
@@ -65,7 +68,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_obj,
 ///     """
 STATIC mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
                                                 mp_obj_t accept_obj) {
-  mp_obj_AppImage_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_AppImage_t* o = MP_OBJ_TO_PTR(self);
 
   bool accept = mp_obj_is_true(accept_obj);
 
@@ -90,5 +93,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorapp_AppImage_locals_dict,
 STATIC const mp_obj_type_t mod_trezorapp_AppImage_type = {
     {&mp_type_type},
     .name = MP_QSTR_AppImage,
-    .locals_dict = (void *)&mod_trezorapp_AppImage_locals_dict,
+    .locals_dict = (void*)&mod_trezorapp_AppImage_locals_dict,
 };

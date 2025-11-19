@@ -103,8 +103,8 @@ trezor_message_impl! {
     Telemetry => MessageType_Telemetry,
     ExtAppLoad => MessageType_ExtAppLoad,
     ExtAppLoaded => MessageType_ExtAppLoaded,
-    ExtAppRun => MessageType_ExtAppRun,
-    ExtAppResult => MessageType_ExtAppResult,
+    ExtAppMessage => MessageType_ExtAppMessage,
+    ExtAppResponse => MessageType_ExtAppResponse,
     FunnycoinGetPublicKey => MessageType_FunnycoinGetPublicKey,
     FunnycoinPublicKey => MessageType_FunnycoinPublicKey,
 }

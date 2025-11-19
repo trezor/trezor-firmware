@@ -650,7 +650,7 @@ if TYPE_CHECKING:
         Telemetry = 1101
         ExtAppLoad = 9200
         ExtAppLoaded = 9201
-        ExtAppRun = 9202
-        ExtAppResult = 9203
+        ExtAppMessage = 9202
+        ExtAppResponse = 9203
         FunnycoinGetPublicKey = 9204
         FunnycoinPublicKey = 9205
