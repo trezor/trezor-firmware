@@ -78,6 +78,7 @@
 
 #ifdef USE_NFC
 #include <io/nfc.h>
+#include <io/nfc_backup.h>
 #endif
 
 #ifdef USE_RGB_LED
