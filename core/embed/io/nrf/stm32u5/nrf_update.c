@@ -33,13 +33,6 @@
 #define IMAGE_HASH_LEN 32
 #define IMAGE_TLV_SHA256 0x10
 
-struct image_version {
-  uint8_t iv_major;
-  uint8_t iv_minor;
-  uint16_t iv_revision;
-  uint32_t iv_build_num;
-} __packed;
-
 struct image_header {
   uint32_t ih_magic;
   uint32_t ih_load_addr;
@@ -47,7 +40,7 @@ struct image_header {
   uint16_t ih_protect_tlv_size; /* Size of protected TLV area (bytes). */
   uint32_t ih_img_size;         /* Does not include header. */
   uint32_t ih_flags;            /* IMAGE_F_[...]. */
-  struct image_version ih_ver;
+  nrf_app_version_t ih_ver;
   uint32_t _pad1;
 } __packed;
 
@@ -107,6 +100,75 @@ static int read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
   return rc;
 }
 
+/**
+ * Read the image version from the image header.
+ *
+ * @param image_ptr  pointer to the binary image
+ * @param out_version   Pointer to nrf_app_version_t to receive the version
+ * @return 0 on success, or a negative errno on failure
+ */
+static int image_version_read(const uint8_t *image_ptr,
+                              nrf_app_version_t *out_version) {
+  int rc = -1;
+
+  struct image_header *hdr = (struct image_header *)image_ptr;
+
+  if (out_version != NULL) {
+    memcpy(out_version, &hdr->ih_ver, sizeof(nrf_app_version_t));
+    rc = 0;
+  }
+
+  return rc;
+}
+
+/**
+ * Read the image version from the nRF MCUboot via SMP serial recovery.
+ *
+ * @param out_version   Pointer to nrf_app_version_t to receive the version
+ * @return 0 on success, or a negative errno on failure
+ */
+static int nrf_smp_version_get(nrf_app_version_t *out_version) {
+  int rc = -1;
+
+  nrf_reboot_to_bootloader();
+  nrf_set_dfu_mode(true);
+
+  if (smp_image_version_get(out_version)) {
+    // Success - version string provided via SMP has been decoded and stored
+    // within "out_version" variable
+    rc = 0;
+  }
+
+  nrf_reboot();
+  nrf_set_dfu_mode(false);
+
+  return rc;
+}
+
+/**
+ * Comparison of two image versions.
+ *
+ * @param v1 Pointer to first nrf_app_version_t
+ * @param v2 Pointer to second nrf_app_version_t
+ * @return 0 when equal, 1 when v1 is greater, -1 when v2 is greater
+ */
+static int version_cmp(const nrf_app_version_t *v1,
+                       const nrf_app_version_t *v2) {
+  if (v1->major != v2->major) {
+    return (v1->major < v2->major) ? -1 : 1;
+  }
+  if (v1->minor != v2->minor) {
+    return (v1->minor < v2->minor) ? -1 : 1;
+  }
+  if (v1->revision != v2->revision) {
+    return (v1->revision < v2->revision) ? -1 : 1;
+  }
+  if (v1->build_num != v2->build_num) {
+    return (v1->build_num < v2->build_num) ? -1 : 1;
+  }
+  return 0;
+}
+
 bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
   nrf_info_t info = {0};
 
@@ -116,7 +178,16 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
     systick_delay_ms(500);
     try_cntr++;
     if (try_cntr > 3) {
-      // Assuming corrupted image, but we could also check comm with MCUboot
+      // Can't communicate with the App via SPI, trying SMP serial recovery over
+      // UART to nRF MCUboot
+      nrf_app_version_t image_version, smp_version;
+
+      if (image_version_read(image_ptr, &image_version) == 0 &&
+          nrf_smp_version_get(&smp_version) == 0) {
+        return version_cmp(&image_version, &smp_version) > 0;
+      }
+
+      // Assuming corrupted image
       return true;
     }
   }
