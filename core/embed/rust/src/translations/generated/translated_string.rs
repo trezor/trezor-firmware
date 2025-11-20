@@ -1555,9 +1555,9 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ripple__destination_tag_missing = 1168,  // "Destination tag is not set. Typically needed when sending to exchanges."
     words__comm_trouble = 1169,  // "Your Trezor is having trouble communicating with your connected device."
-    secure_sync__delegated_identity_key_no_thp = 1170,  // "Allow Trezor Suite to use Suite Sync with this Trezor?"
-    secure_sync__delegated_identity_key_thp = 1171,  // "Allow {0} on {1} to use Suite Sync with this Trezor?"
-    secure_sync__header = 1173,  // "Suite Sync"
+    suite_sync__delegated_identity_key_no_thp = 1170,  // "Allow Trezor Suite to use Suite Sync with this Trezor?"
+    suite_sync__delegated_identity_key_thp = 1171,  // "Allow {0} on {1} to use Suite Sync with this Trezor?"
+    suite_sync__header = 1173,  // "Suite Sync"
     words__note = 1174,  // "Note"
     words__fee_limit = 1175,  // "Fee limit"
     #[cfg(feature = "universal_fw")]
@@ -1572,6 +1572,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__confirm_contract = 1183,  // "Confirm contract"
     words__intent = 1184,  // "Intent"
+    suite_sync__rotate_key = 1185,  // "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?"
 }
 
 impl TranslatedString {
@@ -2764,6 +2765,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -3954,6 +3956,7 @@ impl TranslatedString {
                 21439,
                 21455,
                 21461,
+                21592,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5143,6 +5146,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6333,6 +6337,7 @@ impl TranslatedString {
                 21439,
                 21455,
                 21461,
+                21592,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7522,6 +7527,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8712,6 +8718,7 @@ impl TranslatedString {
                 21439,
                 21455,
                 21461,
+                21592,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -9901,6 +9908,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11091,6 +11099,7 @@ impl TranslatedString {
                 21439,
                 21455,
                 21461,
+                21592,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12281,6 +12290,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13471,6 +13481,7 @@ impl TranslatedString {
                 18667,
                 18683,
                 18689,
+                18820,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14660,6 +14671,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15850,6 +15862,7 @@ impl TranslatedString {
                 18667,
                 18683,
                 18689,
+                18820,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17039,6 +17052,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18229,6 +18243,7 @@ impl TranslatedString {
                 18667,
                 18683,
                 18689,
+                18820,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19418,6 +19433,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20608,6 +20624,7 @@ impl TranslatedString {
                 18667,
                 18683,
                 18689,
+                18820,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -21798,6 +21815,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -22988,6 +23006,7 @@ impl TranslatedString {
                 20523,
                 20539,
                 20545,
+                20676,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24177,6 +24196,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25367,6 +25387,7 @@ impl TranslatedString {
                 20523,
                 20539,
                 20545,
+                20676,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -26556,6 +26577,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27746,6 +27768,7 @@ impl TranslatedString {
                 20523,
                 20539,
                 20545,
+                20676,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -28935,6 +28958,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30125,6 +30149,7 @@ impl TranslatedString {
                 20523,
                 20539,
                 20545,
+                20676,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -31315,6 +31340,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -32505,6 +32531,7 @@ impl TranslatedString {
                 21232,
                 21248,
                 21254,
+                21385,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -33694,6 +33721,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34884,6 +34912,7 @@ impl TranslatedString {
                 21232,
                 21248,
                 21254,
+                21385,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -36073,6 +36102,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37263,6 +37293,7 @@ impl TranslatedString {
                 21232,
                 21248,
                 21254,
+                21385,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -38452,6 +38483,7 @@ impl TranslatedString {
                 "Voting",
                 "Confirm contract",
                 "Intent",
+                "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39642,6 +39674,7 @@ impl TranslatedString {
                 21232,
                 21248,
                 21254,
+                21385,
             ];
 
         }
@@ -40774,9 +40807,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_sd_card__use_different_card, Self::sd_card__use_different_card),
         (Qstr::MP_QSTR_sd_card__wanna_format, Self::sd_card__wanna_format),
         (Qstr::MP_QSTR_sd_card__wrong_sd_card, Self::sd_card__wrong_sd_card),
-        (Qstr::MP_QSTR_secure_sync__delegated_identity_key_no_thp, Self::secure_sync__delegated_identity_key_no_thp),
-        (Qstr::MP_QSTR_secure_sync__delegated_identity_key_thp, Self::secure_sync__delegated_identity_key_thp),
-        (Qstr::MP_QSTR_secure_sync__header, Self::secure_sync__header),
         (Qstr::MP_QSTR_send__cancel_sign, Self::send__cancel_sign),
         (Qstr::MP_QSTR_send__cancel_transaction, Self::send__cancel_transaction),
         (Qstr::MP_QSTR_send__confirm_sending, Self::send__confirm_sending),
@@ -41005,6 +41035,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_storage_msg__starting, Self::storage_msg__starting),
         (Qstr::MP_QSTR_storage_msg__verifying_pin, Self::storage_msg__verifying_pin),
         (Qstr::MP_QSTR_storage_msg__wrong_pin, Self::storage_msg__wrong_pin),
+        (Qstr::MP_QSTR_suite_sync__delegated_identity_key_no_thp, Self::suite_sync__delegated_identity_key_no_thp),
+        (Qstr::MP_QSTR_suite_sync__delegated_identity_key_thp, Self::suite_sync__delegated_identity_key_thp),
+        (Qstr::MP_QSTR_suite_sync__header, Self::suite_sync__header),
+        (Qstr::MP_QSTR_suite_sync__rotate_key, Self::suite_sync__rotate_key),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_tezos__baker_address, Self::tezos__baker_address),
         #[cfg(feature = "universal_fw")]

@@ -3,12 +3,13 @@ from common import *  # isort:skip
 
 
 @unittest.skipUnless(utils.USE_OPTIGA, "only needed with Optiga")
-class TestCheckDelegatedIdentityKey(unittest.TestCase):
+class TestCheckEvoluCommandsRegistrationRequest(unittest.TestCase):
 
-    def test_sign_registration_request(self):
+    def test_proof_sign_registration_request(self):
         from trezorutils import delegated_identity
         from ubinascii import unhexlify
 
+        from storage.device import get_delegated_identity_key_rotation_index
         from trezor.crypto.curve import nist256p1
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
@@ -33,13 +34,13 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
             write_compact_size(h, len(arg))
             h.extend(arg)
         proof = nist256p1.sign(
-            delegated_identity(),
+            delegated_identity(get_delegated_identity_key_rotation_index() or 0),
             h.get_digest(),
         )
 
         self.assertTrue(check_delegated_identity_proof(proof, header, arguments))
 
-    def test_sign_registration_request_invalid_size(self):
+    def test_proof_sign_registration_request_invalid_size(self):
         from ubinascii import unhexlify
 
         from trezor.wire import DataError
@@ -57,7 +58,7 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
         with self.assertRaises(DataError):
             _check_data(sign_request_challenge, sign_request_size)
 
-    def test_sign_registration_request_invalid_challenge(self):
+    def test_proof_sign_registration_request_invalid_challenge(self):
         from trezor.wire import DataError
 
         from apps.evolu.sign_registration_request import _check_data
@@ -68,9 +69,12 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
         with self.assertRaises(DataError):
             _check_data(sign_request_challenge, sign_request_size)
 
-    def test_get_evolu_node(self):
+
+class TestCheckEvoluCommandsGetNode(unittest.TestCase):
+    def test_proof_get_evolu_node(self):
         from trezorutils import delegated_identity
 
+        from storage.device import get_delegated_identity_key_rotation_index
         from trezor.crypto.curve import nist256p1
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
@@ -79,7 +83,6 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
         from apps.evolu.common import check_delegated_identity_proof
 
         # get_node
-
         header = b"EvoluGetNode"
 
         h = HashWriter(sha256())
@@ -87,7 +90,7 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
         h.extend(header)
 
         proof = nist256p1.sign(
-            delegated_identity(),
+            delegated_identity(get_delegated_identity_key_rotation_index() or 0),
             h.get_digest(),
         )
 

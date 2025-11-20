@@ -1,8 +1,19 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Sequence
+
+ROTATION_INDEX_LIMIT = const((1 << 16) - 1)
+
+
+def check_delegated_identity_rotation_index(rotation_index: int | None) -> None:
+    if rotation_index is not None:
+        if not 0 <= rotation_index <= ROTATION_INDEX_LIMIT:
+            raise ValueError(
+                f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
+            )
 
 
 def check_delegated_identity_proof(
@@ -12,13 +23,15 @@ def check_delegated_identity_proof(
 ) -> bool:
     from trezorutils import delegated_identity
 
+    from storage.device import get_delegated_identity_key_rotation_index
     from trezor.crypto.curve import nist256p1
     from trezor.crypto.hashlib import sha256
     from trezor.utils import HashWriter
 
     from apps.common.writers import write_compact_size
 
-    private_key = delegated_identity()
+    delegated_identity_rotation_index = get_delegated_identity_key_rotation_index() or 0
+    private_key = delegated_identity(delegated_identity_rotation_index)
     public_key = get_public_key_from_private_key(private_key)
 
     hash_writer = HashWriter(sha256())

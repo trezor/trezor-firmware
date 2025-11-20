@@ -17,7 +17,7 @@ pytestmark = [
 
 def test_evolu_get_node(client: Client):
     proof = get_proof(client, b"EvoluGetNode", [])
-    node = evolu.get_node(client.get_session(), proof=proof)
+    node = evolu.get_node(client.get_session(), proof=proof, node_rotation_index=0)
 
     # expected node for the SLIP-14 seed
     check_value = bytes.fromhex(
@@ -29,11 +29,14 @@ def test_evolu_get_node(client: Client):
 @pytest.mark.setup_client(
     # a different seed
     mnemonic="valve multiply shuffle venue then cruel genre venture fruit hammer sponsor luxury",
-    passphrase=False,
+    passphrase=True,
 )
-def test_evolu_get_node_different_seed(client: Client):
+@pytest.mark.parametrize("passphrase", ["", "TREZOR"])
+def test_evolu_get_node_different_seed(client: Client, passphrase: str):
     proof = get_proof(client, b"EvoluGetNode", [])
-    node = evolu.get_node(client.get_session(), proof=proof)
+    node = evolu.get_node(
+        client.get_session(passphrase=passphrase), proof=proof, node_rotation_index=0
+    )
 
     # expected node for the SLIP-14 seed
     check_value = bytes.fromhex(
@@ -51,7 +54,7 @@ def test_evolu_get_node_invalid_proof(client: Client):
         TrezorFailure,
         match="Invalid proof",
     ):
-        evolu.get_node(client.get_session(), proof=invalid_proof)
+        evolu.get_node(client.get_session(), proof=invalid_proof, node_rotation_index=0)
 
 
 def test_evolu_get_node_no_proof(client: Client):
@@ -59,7 +62,7 @@ def test_evolu_get_node_no_proof(client: Client):
         TrezorFailure,
         match="Invalid proof",
     ):
-        evolu.get_node(client.get_session(), proof=b"")
+        evolu.get_node(client.get_session(), proof=b"", node_rotation_index=0)
 
 
 def test_evolu_get_node_none_proof(client: Client):
@@ -67,4 +70,51 @@ def test_evolu_get_node_none_proof(client: Client):
         TrezorFailure,
         match="DataError: Failed to decode message: Missing required field. proof_of_delegated_identity",
     ):
-        evolu.get_node(client.get_session(), proof=None)  # type: ignore
+        evolu.get_node(client.get_session(), proof=None, node_rotation_index=0)  # type: ignore
+
+
+def test_evolu_get_node_index_change(client: Client):
+    proof = bytes.fromhex(
+        "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
+    )
+    node_index_0 = evolu.get_node(
+        client.get_session(), proof=proof, node_rotation_index=0
+    )
+    node_index_1 = evolu.get_node(
+        client.get_session(), proof=proof, node_rotation_index=1
+    )
+
+    assert node_index_0 != node_index_1
+
+
+def test_evolu_get_node_index_1(client: Client):
+    proof = bytes.fromhex(
+        "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
+    )
+    node = evolu.get_node(client.get_session(), proof=proof, node_rotation_index=1)
+
+    check_value = bytes.fromhex(
+        "8465c8de92d35053d4de324166f2fbf73281a64a9e63661a7f4617890743152ae4b3989931093f9f9dda0eb30f1949899f14dfb145a51ef0e611dc99a8a4c742"
+    )
+    assert node == check_value
+
+
+@pytest.mark.parametrize("rotation_index", [None, 0, 42])
+@pytest.mark.parametrize("node_rotation_index", [0, 1])
+def test_evolu_get_node_with_different_rotation_indices(
+    client: Client, rotation_index, node_rotation_index
+):
+    evolu.index_management(client.get_session(), rotation_index=rotation_index)
+    proof = get_proof(
+        client,
+        b"EvoluGetNode",
+        [],
+        rotation_index=rotation_index,
+    )
+    node = evolu.get_node(
+        client.get_session(), proof=proof, node_rotation_index=node_rotation_index
+    )
+
+    # the proof should be valid regardless of the rotation indices used in the proof generation and in the get_node call, so we just check that we get some value back
+    assert isinstance(node, bytes)
+    assert len(node) == 64

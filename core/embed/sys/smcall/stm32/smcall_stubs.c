@@ -221,8 +221,9 @@ void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 #ifdef USE_SECRET_KEYS
 #include <sec/secret_keys.h>
 
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  return (secbool)smcall_invoke1((uint32_t)dest,
+secbool secret_key_delegated_identity(uint16_t rotation_index,
+                                      uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  return (secbool)smcall_invoke2(rotation_index, (uint32_t)dest,
                                  SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
 }
 
