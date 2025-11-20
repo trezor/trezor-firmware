@@ -62,7 +62,7 @@ fn handle_get_public_key(request_data: &[u8]) -> Result<Vec<u8>> {
 }
 
 // Application entry point - receives raw bytes, returns raw bytes
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
     let str1 = String::from("title");
 
@@ -88,7 +88,7 @@ pub fn app() -> Result<()> {
 /// fn_id: function identifier
 /// data: serialized protobuf request
 /// Returns: serialized protobuf response
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn handle_call(fn_id: u32, data: *const u8, data_len: usize) -> *mut u8 {
     use trezor_app_sdk::low_level_api::ApiError;
 
