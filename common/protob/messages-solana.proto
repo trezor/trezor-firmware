@@ -2,7 +2,6 @@ syntax = "proto2";
 package hw.trezor.messages.solana;
 
 import "messages-common.proto";
-import "options.proto";
 
 /**
  * Request: Ask device for public key corresponding to address_n path
@@ -72,7 +71,7 @@ message SolanaSignTx {
     repeated uint32 address_n = 1;      // BIP-32 path to derive the key to sign with
     required bytes serialized_tx = 2;   // serialized tx to be signed
     optional SolanaTxAdditionalInfo additional_info = 3;
-    optional common.PaymentRequest payment_req = 4 [(experimental_field)=true]; // SLIP-24 payment request
+    optional common.PaymentRequest payment_req = 4; // SLIP-24 payment request
 }
 
 /**
