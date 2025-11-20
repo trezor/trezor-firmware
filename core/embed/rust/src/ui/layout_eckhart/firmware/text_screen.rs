@@ -116,12 +116,14 @@ where
     // which are implemented as part of swipe flows.
     // Once we have eventually replaced all these with new style "external menu",
     // we should get rid of this flag and the related debuglink code.
+    #[cfg(feature = "ui_debug")]
     pub fn with_flow_menu(mut self) -> Self {
         // Allow visiting this menu automatically by tests
-        #[cfg(feature = "ui_debug")]
-        {
-            self.has_flow_menu = true;
-        }
+        self.has_flow_menu = true;
+        self
+    }
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn with_flow_menu(self) -> Self {
         self
     }
 
