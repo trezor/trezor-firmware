@@ -5,11 +5,9 @@ fn main() {
     )
     .unwrap();
 
-    // On macOS, link to System framework to get memcpy, memset, etc.
-    // Check the TARGET OS, not the host OS
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
-
     if target_os == "macos" {
+        // On macOS, link to System framework to get memcpy, memset, etc.
         println!("cargo:rustc-link-lib=System");
     }
 }
