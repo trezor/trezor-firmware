@@ -47,6 +47,8 @@ pub struct TextScreen<T> {
     show_page_counter: bool,
 
     #[cfg(feature = "ui_debug")]
+    external_menu: bool,
+    #[cfg(feature = "ui_debug")]
     has_flow_menu: bool,
     // TODO: swipe handling
     // TODO: animations
@@ -75,6 +77,8 @@ where
             background: None,
             show_action_bar: false,
             show_page_counter: false,
+            #[cfg(feature = "ui_debug")]
+            external_menu: false,
             #[cfg(feature = "ui_debug")]
             has_flow_menu: false,
         }
@@ -109,6 +113,16 @@ where
 
     pub fn with_background(mut self, background: ScreenBackground) -> Self {
         self.background = Some(background);
+        self
+    }
+
+    #[cfg(feature = "ui_debug")]
+    pub fn with_external_menu(mut self, external_menu: bool) -> Self {
+        self.external_menu = external_menu;
+        self
+    }
+    #[cfg(not(feature = "ui_debug"))]
+    pub fn with_external_menu(self, _external_menu: bool) -> Self {
         self
     }
 
@@ -389,6 +403,7 @@ where
             t.int("page_limit", page_limit as i64);
         }
         t.int("page_count", self.content.pager().total() as i64);
+        t.bool("has_menu", self.external_menu);
         t.bool("has_flow_menu", self.has_flow_menu);
     }
 }
