@@ -516,7 +516,8 @@ impl FirmwareUI for UIEckhart {
         let mut screen = TextScreen::new(paragraphs)
             .with_header(header)
             .with_subtitle(subtitle.unwrap_or(TString::empty()))
-            .with_action_bar(action_bar);
+            .with_action_bar(action_bar)
+            .with_external_menu(external_menu);
         if page_counter {
             screen = screen.with_hint(Hint::new_page_counter())
         } else if let Some(warning_footer) = warning_footer {
@@ -997,7 +998,7 @@ impl FirmwareUI for UIEckhart {
             menu.item(Button::new_menu_item(*text, theme::menu_item_title()));
         }
         if let Some(text) = cancel {
-            menu.item(Button::new_menu_item(text, theme::menu_item_title_red()));
+            menu.item(Button::new_cancel_menu_item(text));
         }
         let screen = VerticalMenuScreen::new(menu)
             .with_header(Header::new(TString::empty()).with_close_button())
