@@ -21,7 +21,6 @@ from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 
-@pytest.mark.experimental
 @pytest.mark.models("core")
 def test_paymentnotification(session: Session):
     from ..payment_req import CoinPurchaseMemo, TextMemo, make_payment_request
