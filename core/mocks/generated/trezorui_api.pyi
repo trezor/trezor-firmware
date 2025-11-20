@@ -161,7 +161,7 @@ def confirm_value(
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    info: bool = True,
+    info: bool = False,
     hold: bool = False,
     chunkify: bool = False,
     page_counter: bool = False,
