@@ -24,9 +24,9 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
-def get_node(session: Session, proof: bytes) -> bytes:
+def get_node(session: Session, proof: bytes, index: int) -> bytes:
     return session.call(
-        messages.EvoluGetNode(proof_of_delegated_identity=proof),
+        messages.EvoluGetNode(proof_of_delegated_identity=proof, index=index),
         expect=messages.EvoluNode,
     ).data
 

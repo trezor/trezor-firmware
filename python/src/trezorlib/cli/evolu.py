@@ -34,14 +34,16 @@ def cli() -> None:
 
 @cli.command()
 @click.argument("proof", type=str)
+@click.option("--index", "-i", type=int, default=0)
 @with_session
 def get_node(
     session: Session,
     proof: str,
+    index: int,
 ) -> str:
     """Return the SLIP-21 node for Evolu."""
     proof_bytes = bytes.fromhex(proof)
-    return evolu.get_node(session, proof=proof_bytes).hex()
+    return evolu.get_node(session, proof=proof_bytes, index=index).hex()
 
 
 @cli.command()

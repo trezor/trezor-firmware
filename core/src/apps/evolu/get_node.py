@@ -38,14 +38,14 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite
 
-    return EvoluNode(data=await derive_evolu_node())
+    return EvoluNode(data=await derive_evolu_node(msg.index))
 
 
-async def derive_evolu_node() -> bytes:
+async def derive_evolu_node(index:int) -> bytes:
     from apps.common.seed import Slip21Node, get_seed
 
     seed = await get_seed()
     node = Slip21Node(seed)
-    node.derive_path(_EVOLU_KEY_PATH_PREFIX)
+    node.derive_path(_EVOLU_KEY_PATH_PREFIX + [index.to_bytes(4, "big")])
 
     return node.data
