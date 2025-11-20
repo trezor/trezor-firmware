@@ -7,7 +7,7 @@ from ecdsa import NIST256p, SigningKey
 from trezorlib import evolu
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
-from trezorlib.messages import ThpCredentialResponse
+from trezorlib.messages import EvoluDelegatedIdentityKey, ThpCredentialResponse
 from trezorlib.thp import curve25519
 
 from ...common import compact_size
@@ -18,7 +18,7 @@ TEST_host_static_public_key = curve25519.get_public_key(TEST_host_static_private
 
 
 def get_proof(client: Client, header: bytes, arguments: List[bytes]) -> bytes:
-    private_key = get_delegated_identity_key(client)
+    private_key = get_delegated_identity_key(client).private_key
     signing_key = SigningKey.from_string(private_key, curve=NIST256p)
 
     ctx = sha256()
@@ -74,14 +74,19 @@ def pair_and_get_invalid_credential(client: Client) -> ThpPairingResult:
     return pairing_result
 
 
-def get_delegated_identity_key(client: Client) -> bytes:
+def get_delegated_identity_key(
+    client: Client, rotation_index: int | None = None
+) -> EvoluDelegatedIdentityKey:
     if client.is_thp():
         pairing_data = pair_and_get_credential(client)
         return evolu.get_delegated_identity_key(
             client.get_session(),
             thp_credential=pairing_data.credential.credential,
+            rotation_index=rotation_index,
         )
     elif client.is_protocol_v1():
-        return evolu.get_delegated_identity_key(client.get_session())
+        return evolu.get_delegated_identity_key(
+            client.get_session(), rotation_index=rotation_index
+        )
     else:
         raise ValueError("Unsupported protocol version")

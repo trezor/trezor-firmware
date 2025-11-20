@@ -52,7 +52,7 @@ def test_evolu_sign_request_t2t1(client: Client):
 def test_evolu_sign_request(client: Client):
     if optiga_unavailable(client):
         pytest.xfail("Optiga is not available on this device.")
-    delegated_identity_key = get_delegated_identity_key(client)
+    delegated_identity_key = get_delegated_identity_key(client).private_key
     challenge = bytes.fromhex("1234")
     size = 10
     proposed_value = get_proof(
@@ -190,7 +190,7 @@ def test_evolu_sign_request_size_too_large(client: Client):
 def test_evolu_sign_request_data_higher_bound(client: Client):
     if optiga_unavailable(client):
         pytest.xfail("Optiga is not available on this device.")
-    delegated_identity_key = get_delegated_identity_key(client)
+    delegated_identity_key = get_delegated_identity_key(client).private_key
     challenge = b"\x12" * 255
     size = 0xFFFFFFFF
     proof = get_proof(

@@ -17,6 +17,7 @@ option (include_in_bitcoin_only) = true;
  */
 message EvoluGetNode {
   required bytes proof_of_delegated_identity = 1;
+  optional uint32 node_rotation_index = 2 [default = 0];
 }
 
 /**
@@ -58,6 +59,8 @@ message EvoluRegistrationRequest {
 message EvoluGetDelegatedIdentityKey {
     optional bytes thp_credential = 1; // THP credential so that we can display the host on the device
     reserved 2;   //  host_static_public_key is deprecated, the key stored in the channel cache is used instead
+    optional uint32 rotation_index = 3; // The required rotation index of the delegated identity key
+    optional bool rotate = 4; // If true, rotate the delegeated identity key and return it
 }
 
 /**
@@ -66,4 +69,23 @@ message EvoluGetDelegatedIdentityKey {
  */
 message EvoluDelegatedIdentityKey {
   required bytes private_key = 1;  // nist256p1 private key
+  optional uint32 rotation_index = 2;  // rotation index of the returned key
+}
+
+/**
+ * Request: Set or get the delegated identity key rotation index.
+ * @start
+ * @next EvoluIndexManagementResponse
+ * @next Failure
+ */
+message EvoluIndexManagement {
+    optional uint32 rotation_index = 1; // If the rotation index is not set, set it to this value
+}
+
+/**
+ * Response: The current delegated identity key rotation index.
+ * @end
+ */
+message EvoluIndexManagementResponse {
+  optional uint32 rotation_index = 1; // The current rotation index
 }

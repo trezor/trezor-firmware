@@ -1,9 +1,12 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import EvoluDelegatedIdentityKey, EvoluGetDelegatedIdentityKey
 
 from trezor import utils
+
+ROTATION_INDEX_LIMIT = const((1 << 16) - 1)
 
 
 async def get_delegated_identity_key(
@@ -33,14 +36,48 @@ async def get_delegated_identity_key(
 
     from trezor.messages import EvoluDelegatedIdentityKey
 
-    if utils.USE_THP:
-        await confirm_thp(msg)
+    if msg.rotate:
+        await rotate_index()
     else:
-        await confirm_no_thp()
+        if utils.USE_THP:
+            await confirm_thp(msg)
+        else:
+            await confirm_no_thp()
 
-    private_key = delegated_identity()
+    rotation_index = get_rotation_index(msg)
+    private_key = delegated_identity(
+        rotation_index if rotation_index is not None else 0
+    )
 
-    return EvoluDelegatedIdentityKey(private_key=private_key)
+    return EvoluDelegatedIdentityKey(
+        private_key=private_key, rotation_index=rotation_index
+    )
+
+
+async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
+    from trezor import TR
+    from trezor.ui.layouts import confirm_action
+    from trezor.wire.context import get_channel_context
+    from trezor.wire.errors import DataError
+
+    from apps.thp.credential_manager import decode_credential, validate_credential
+
+    if msg.thp_credential is None:
+        raise DataError("THP credential must be provided when THP is enabled")
+    credential_received = decode_credential(msg.thp_credential)
+    host_static_public_key = (
+        get_channel_context().channel_cache.get_host_static_public_key()
+    )
+    if not validate_credential(credential_received, host_static_public_key):
+        raise DataError("Invalid credential")
+
+    app_name = credential_received.cred_metadata.app_name
+    host_name = credential_received.cred_metadata.host_name
+    await confirm_action(
+        "secure_sync",
+        TR.suite_sync__header,
+        TR.suite_sync__delegated_identity_key_thp.format(app_name, host_name),
+    )
 
 
 async def confirm_no_thp() -> None:
@@ -49,35 +86,48 @@ async def confirm_no_thp() -> None:
 
     await confirm_action(
         "secure_sync",
-        TR.secure_sync__header,
-        TR.secure_sync__delegated_identity_key_no_thp,
+        TR.suite_sync__header,
+        TR.suite_sync__delegated_identity_key_no_thp,
     )
 
 
-if utils.USE_THP:
+def get_rotation_index(msg: EvoluGetDelegatedIdentityKey) -> int | None:
+    from storage.device import get_delegated_identity_key_rotation_index
+    from trezor.wire.errors import DataError
 
-    async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
-        from trezor import TR
-        from trezor.ui.layouts import confirm_action
-        from trezor.wire.context import get_channel_context
-        from trezor.wire.errors import DataError
+    rotation_index = get_delegated_identity_key_rotation_index()
+    rotation_index_int = rotation_index if rotation_index is not None else 0
 
-        from apps.thp.credential_manager import decode_credential, validate_credential
+    if isinstance(msg.rotation_index, int):
+        if msg.rotation_index <= rotation_index_int:
+            rotation_index = msg.rotation_index
+        else:
+            raise DataError(
+                f"Requested rotation index ({msg.rotation_index}) is higher than the current rotation index ({rotation_index})"
+            )
 
-        if msg.thp_credential is None:
-            raise DataError("THP credential must be provided when THP is enabled")
-        credential_received = decode_credential(msg.thp_credential)
-        host_static_public_key = (
-            get_channel_context().channel_cache.get_host_static_public_key()
-        )
+    return rotation_index
 
-        if not validate_credential(credential_received, host_static_public_key):
-            raise DataError("Invalid credential")
 
-        app_name = credential_received.cred_metadata.app_name
-        host_name = credential_received.cred_metadata.host_name
-        await confirm_action(
-            "secure_sync",
-            TR.secure_sync__header,
-            TR.secure_sync__delegated_identity_key_thp.format(app_name, host_name),
-        )
+async def rotate_index() -> None:
+    from storage.device import (
+        get_delegated_identity_key_rotation_index,
+        set_delegated_identity_key_rotation_index,
+    )
+    from trezor import TR
+    from trezor.ui.layouts import confirm_action
+    from trezor.wire.errors import DataError
+
+    rotation_index = get_delegated_identity_key_rotation_index()
+    if rotation_index is None:
+        rotation_index = 0
+    await confirm_action(
+        "secure_sync",
+        TR.suite_sync__header,
+        TR.suite_sync__rotate_key,
+    )
+
+    if rotation_index + 1 > ROTATION_INDEX_LIMIT:
+        raise DataError("Maximum rotation index reached")
+
+    set_delegated_identity_key_rotation_index(rotation_index + 1)
