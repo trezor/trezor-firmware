@@ -1382,6 +1382,24 @@ if not utils.BITCOIN_ONLY:
             br_code=ButtonRequestType.SignTx,
         )
 
+    def confirm_tron_tx(
+        amount: str,
+        fee: str,
+    ) -> Awaitable[None]:
+        amount_title = f"{TR.send__total_amount}:"
+        fee_title = TR.send__maximum_fee
+
+        return raise_if_cancelled(
+            trezorui_api.confirm_summary(
+                amount=amount,
+                amount_label=amount_title,
+                fee=fee,
+                fee_label=fee_title,
+            ),
+            br_name="confirm_cardano_tx",
+            br_code=ButtonRequestType.SignTx,
+        )
+
     async def confirm_ethereum_tx(
         recipient: str | None,
         total_amount: str,
