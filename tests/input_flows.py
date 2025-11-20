@@ -1448,7 +1448,10 @@ def lock_time_input_flow_eckhart(
 ) -> BRGeneratorType:
     yield  # confirm output
     debug.read_layout()
-    debug.press_yes()
+    debug.click(debug.screen_buttons.ok())
+    yield  # confirm output
+    debug.read_layout()
+    debug.click(debug.screen_buttons.ok())
 
     br = yield  # confirm locktime
     layout_assert_func(debug, br)
