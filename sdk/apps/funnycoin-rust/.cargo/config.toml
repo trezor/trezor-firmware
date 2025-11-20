@@ -3,7 +3,7 @@
 rustflags = ["-C", "relocation-model=pic", "--cfg", "log_level=\"trace\""]
 
 [target.aarch64-apple-darwin]
-rustflags = ["-C", "relocation-model=pic", "--cfg", "log_level=\"trace\""]
+rustflags = ["-C", "relocation-model=pic", "--cfg", "log_level=\"trace\"", "-C", "link-arg=-Wl,-export_dynamic"]
 
 [target.thumbv7em-none-eabihf]
 linker = "rust-lld"

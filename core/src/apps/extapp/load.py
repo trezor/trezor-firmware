@@ -51,7 +51,7 @@ async def load(msg: ExtAppLoad) -> ExtAppLoaded:
     else:
         task = app.spawn_task(msg.hash)
 
-    instance_id = random.uniform(2**32)
+    instance_id = random.uniform(2**32 - 1)
     cache_entry = ustruct.pack("<BI", task.id(), instance_id)
     get_sessionless_cache().set(cc.APP_EXTAPP_IDS, cache_entry)
     return ExtAppLoaded(instance_id=instance_id)
