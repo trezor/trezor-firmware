@@ -94,7 +94,7 @@ class FirmwareHeader(Struct):
         "_end_offset" / c.Tell,
 
         "_rebuild_header_len" / c.If(
-            c.this.version[0] > 1,
+            c.this.version[0] > 1,  # type: ignore [parameter "name" of type "str"]
             c.Pointer(
                 c.this._start_offset + 4,
                 c.Rebuild(c.Int32ul, c.this._end_offset - c.this._start_offset)
