@@ -120,7 +120,6 @@ def test_ripple_sign_invalid_fee(session: Session):
         ripple.sign_tx(session, parse_path("m/44h/144h/0h/0/2"), msg)
 
 
-@pytest.mark.experimental
 @pytest.mark.models("core")
 def test_signtx_payment_req(session: Session):
     from trezorlib import ethereum, misc

@@ -4060,7 +4060,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     gerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\
     \x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tch\
     ainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\
-    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xba\x07\n\x0ePayme\
+    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xb4\x07\n\x0ePayme\
     ntRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0ere\
     cipient_name\x18\x02\x20\x02(\tR\rrecipientName\x12R\n\x05memos\x18\x03\
     \x20\x03(\x0b2<.hw.trezor.messages.common.PaymentRequest.PaymentRequestM\
@@ -4081,9 +4081,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     CoinPurchaseMemo\x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08coinType\
     \x12\x16\n\x06amount\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\
     \x18\x03\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x04\x20\x03(\rR\
-    \x08addressN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03mac:\x04\x88\xb2\
-    \x19\x01J\x04\x08\x04\x10\x05B>\n#com.satoshilabs.trezor.lib.protobufB\
-    \x13TrezorMessageCommon\x80\xa6\x1d\x01\
+    \x08addressN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03macJ\x04\x08\x04\
+    \x10\x05B>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\
+    \x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
