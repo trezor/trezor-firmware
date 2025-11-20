@@ -4122,11 +4122,13 @@ if TYPE_CHECKING:
 
     class EvoluGetNode(protobuf.MessageType):
         proof_of_delegated_identity: "AnyBytes"
+        index: "int"
 
         def __init__(
             self,
             *,
             proof_of_delegated_identity: "AnyBytes",
+            index: "int | None" = None,
         ) -> None:
             pass
 

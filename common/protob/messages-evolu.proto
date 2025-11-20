@@ -17,6 +17,7 @@ option (include_in_bitcoin_only) = true;
  */
 message EvoluGetNode {
   required bytes proof_of_delegated_identity = 1;
+  optional uint32 index = 2 [default = 0];
 }
 
 /**
