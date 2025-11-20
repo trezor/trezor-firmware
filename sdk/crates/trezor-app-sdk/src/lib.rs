@@ -123,7 +123,7 @@ pub extern "C" fn applet_main(api_get: TrezorApiGetter) -> c_int {
     trace!("IPC registered");
 
     // Call the user's app function
-    let result = app();
+    let result = unsafe { app() };
     info!("Finishing request");
     _ = request_finish();
 
@@ -142,6 +142,7 @@ pub extern "C" fn applet_main(api_get: TrezorApiGetter) -> c_int {
     0
 }
 
+#[cfg(not(test))]
 #[panic_handler]
 fn panic_handler(_: &core::panic::PanicInfo<'_>) -> ! {
     core::intrinsics::abort();
@@ -152,6 +153,7 @@ fn panic_handler(_: &core::panic::PanicInfo<'_>) -> ! {
 //     core::intrinsics::abort();
 // }
 
+#[cfg(not(test))]
 #[lang = "eh_personality"]
 fn eh_personality() -> ! {
     loop {}
