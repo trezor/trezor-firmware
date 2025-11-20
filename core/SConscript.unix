@@ -788,7 +788,11 @@ if FROZEN:
         ])
     )
 
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/evolu/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/evolu/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/evolu/sign_registration_request.py',
+            ] if "optiga" not in FEATURES_AVAILABLE else [])
+    )
 
     if BENCHMARK:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/benchmark/*.py'))

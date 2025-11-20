@@ -26,9 +26,16 @@ if TYPE_CHECKING:
 
 
 @workflow()
-def get_node(session: Session, proof: bytes) -> bytes:
+def get_node(
+    session: Session,
+    proof: bytes,
+    node_rotation_index: Optional[int] = None,
+) -> bytes:
     return session.call(
-        messages.EvoluGetNode(proof_of_delegated_identity=proof),
+        messages.EvoluGetNode(
+            proof_of_delegated_identity=proof,
+            node_rotation_index=node_rotation_index,
+        ),
         expect=messages.EvoluNode,
     ).data
 
@@ -48,12 +55,27 @@ def sign_registration_request(
 
 def get_delegated_identity_key(
     session: Session,
+    rotation_index: Optional[int] = None,
     thp_credential: Optional[bytes] = None,
-) -> bytes:
-
+    rotate: Optional[bool] = False,
+) -> messages.EvoluDelegatedIdentityKey:
     return session.call(
         messages.EvoluGetDelegatedIdentityKey(
             thp_credential=thp_credential,
+            rotation_index=rotation_index,
+            rotate=rotate,
         ),
         expect=messages.EvoluDelegatedIdentityKey,
-    ).private_key
+    )
+
+
+def index_management(
+    session: Session,
+    rotation_index: Optional[int] = None,
+) -> messages.EvoluIndexManagementResponse:
+    return session.call(
+        messages.EvoluIndexManagement(
+            rotation_index=rotation_index,
+        ),
+        expect=messages.EvoluIndexManagementResponse,
+    )

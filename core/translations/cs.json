@@ -2153,9 +2153,6 @@
       "Delizia": "Nesprávná SD karta.",
       "Eckhart": ""
     },
-    "secure_sync__delegated_identity_key_no_thp": "Povolit Trezor Suite používat Suite Sync s tímto Trezorem?",
-    "secure_sync__delegated_identity_key_thp": "Povolit {0} na {1} používat Suite Sync s tímto Trezorem?",
-    "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Zrušit podpis",
     "send__cancel_transaction": "Zrušit transakci",
     "send__confirm_sending": "Odesílání částky",
@@ -2335,6 +2332,9 @@
       "Eckhart": "Ověřování PINu..."
     },
     "storage_msg__wrong_pin": "Špatný PIN",
+    "suite_sync__delegated_identity_key_no_thp": "Povolit Trezor Suite používat Suite Sync s tímto Trezorem?",
+    "suite_sync__delegated_identity_key_thp": "Povolit {0} na {1} používat Suite Sync s tímto Trezorem?",
+    "suite_sync__header": "Suite Sync",
     "tezos__baker_address": "Adresa bakera",
     "tezos__balance": "Zůstatek",
     "tezos__ballot": "Hlas",

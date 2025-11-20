@@ -773,7 +773,11 @@ if FROZEN:
         ])
     )
 
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/evolu/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/evolu/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/evolu/sign_registration_request.py'
+        ] if not ('optiga' in FEATURES_AVAILABLE) else [])
+    )  # TODO: refactor to `OPTIGA` after rebase
 
     if BENCHMARK:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/benchmark/*.py'))
