@@ -64,6 +64,7 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
   scheduler->waiting_task = scheduler->active_task;
   scheduler->task_id_map = 0x00000001;  // Kernel task is always present
   scheduler->lock = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+  scheduler->kernel_task.cv = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
 }
 
 systask_t* systask_active(void) {
