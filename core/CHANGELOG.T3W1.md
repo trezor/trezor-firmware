@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.9.5] (internal release)
+
+### Fixed
+- Fixed tamper RSOD not showing.  [#6165]
+
 ## [2.9.4] (19th November 2025)
 
 ### Added
@@ -70,3 +75,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6076]: https://github.com/trezor/trezor-firmware/pull/6076
 [#6096]: https://github.com/trezor/trezor-firmware/pull/6096
 [#6100]: https://github.com/trezor/trezor-firmware/pull/6100
+[#6165]: https://github.com/trezor/trezor-firmware/pull/6165
