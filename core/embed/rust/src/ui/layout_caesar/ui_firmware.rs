@@ -159,6 +159,7 @@ impl FirmwareUI for UICaesar {
         _page_counter: bool,
         _prompt_screen: bool,
         _cancel: bool,
+        _back_button: bool,
         _warning_footer: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -709,7 +710,6 @@ impl FirmwareUI for UICaesar {
         _description: Option<TString<'static>>,
         _extra: Option<TString<'static>>,
         _message: TString<'static>,
-        _amount: Option<TString<'static>>,
         _chunkify: bool,
         _text_mono: bool,
         _account_title: TString<'static>,
