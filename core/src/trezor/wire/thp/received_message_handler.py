@@ -109,9 +109,13 @@ async def _handle_state_handshake(
         if success and control_byte.get_ack_bit(ctrl_byte):
             # Newer Suite versions will send `handshake_init_req` with a non-zero ACK bit.
             # The device should not use ACK piggybacking with older Suite versions.
-            if __debug__:
-                ctx._log("THP peer supports ACK piggybacking")
             ABP.allow_ack_piggybacking(ctx.channel_cache)
+
+        if __debug__:
+            ctx._log(
+                "THP ACK piggybacking = ",
+                str(ABP.is_ack_piggybacking_allowed(ctx.channel_cache)),
+            )
 
         return success
 
