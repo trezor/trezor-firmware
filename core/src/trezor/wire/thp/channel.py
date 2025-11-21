@@ -70,10 +70,10 @@ class Reassembler:
         self.thp_read_buf = read_buf
         self.reset()
 
-    def reset(self) -> None:
+    def reset(self, message: memoryview | None = None) -> None:
         self.bytes_read: int = 0
         self.buffer_len: int = 0
-        self.message: memoryview | None = None
+        self.message = message
 
     def handle_packet(self, packet: memoryview) -> bool:
         """
@@ -241,6 +241,11 @@ class Channel:
         If `expected_ctrl_byte` is `None`, returns after the first received ACK.
         """
 
+        return_after_ack = expected_ctrl_byte is None
+        is_ack_piggybacking_allowed = ABP.is_ack_piggybacking_allowed(
+            self.channel_cache
+        )
+
         while True:
             # Handle an existing message (if already reassembled).
             # Otherwise, receive and reassemble a new one.
@@ -254,11 +259,20 @@ class Channel:
             # 1: Handle ACKs
             if control_byte.is_ack(ctrl_byte):
                 handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
-                if expected_ctrl_byte is None:
+                if return_after_ack:
+                    assert not payload
                     return payload
                 continue
 
-            if expected_ctrl_byte is None or not expected_ctrl_byte(ctrl_byte):
+            is_encrypted_transport = control_byte.is_encrypted_transport(ctrl_byte)
+            if is_ack_piggybacking_allowed and is_encrypted_transport:
+                handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
+                if return_after_ack and ABP.is_sending_allowed(self.channel_cache):
+                    # A valid piggybacked ACK has been received - keep the payload for the next `recv_payload()` call
+                    self.reassembler.reset(msg)
+                    return memoryview(b"")
+
+            if return_after_ack or not expected_ctrl_byte(ctrl_byte):
                 if __debug__:
                     self._log(
                         "Unexpected control byte - ignoring ",
@@ -414,6 +428,11 @@ class Channel:
         payload_len = len(payload) + CHECKSUM_LENGTH
         sync_bit = ABP.get_send_seq_bit(self.channel_cache)
         ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
+
+        if ABP.is_ack_piggybacking_allowed(self.channel_cache):
+            ack_bit = ABP.get_send_ack_bit(self.channel_cache)
+            ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ctrl_byte, ack_bit)
+
         header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
 
         async def _write_loop() -> None:

@@ -320,6 +320,7 @@ def sign_tx(
     elif preauthorized:
         session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
+    session.client.protocol._skip_ack = True
     res = session.call(signtx, expect=messages.TxRequest)
 
     # Prepare structure for signatures
@@ -410,6 +411,9 @@ def sign_tx(
                 )
 
             res = session.call(messages.TxAck(tx=msg), expect=messages.TxRequest)
+
+    session.client.protocol._send_ack_bit()
+    session.client.protocol._skip_ack = False
 
     for i, sig in zip(inputs, signatures):
         if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
