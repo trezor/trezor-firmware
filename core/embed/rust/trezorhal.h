@@ -54,6 +54,10 @@
 #include <sec/storage.h>
 #endif
 
+#ifdef BOOTLOADER
+#include "workflow/workflow_common.h"
+#endif
+
 #include "bip39.h"
 #include "rand.h"
 #include "slip39.h"
