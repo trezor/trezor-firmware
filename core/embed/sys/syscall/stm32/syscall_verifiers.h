@@ -112,6 +112,27 @@ bool unit_properties_get_sn__verified(uint8_t *device_sn,
                                       size_t *device_sn_size);
 
 // ---------------------------------------------------------------------
+
+#ifdef USE_NFC 
+
+#include <io/nfc_backup.h>
+
+bool nfc_backup_get_events__verified(nfc_backup_event_t *events);
+
+bool nfc_backup_get_state__verified(nfc_backup_state_t *state);
+
+bool nfc_backup_read_system_info__verified(
+    nfc_backup_system_info_t *system_info);
+
+bool nfc_backup_read_data__verified(uint16_t block_number, uint8_t *data,
+                                    size_t data_size);
+
+bool nfc_backup_write_data__verified(uint16_t block_number, const uint8_t *data,
+                                     size_t data_size);
+
+#endif  // USE_NFC
+
+// ---------------------------------------------------------------------
 #ifdef USE_OPTIGA
 
 #include <sec/optiga.h>
