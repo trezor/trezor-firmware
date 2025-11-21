@@ -166,7 +166,6 @@ SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/hmac.c',
     'vendor/trezor-crypto/hmac_drbg.c',
     'vendor/trezor-crypto/memzero.c',
-    'vendor/trezor-crypto/nem.c',
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/pbkdf2.c',
     'vendor/trezor-crypto/rand.c',
@@ -188,6 +187,10 @@ if EVERYTHING:
         'vendor/trezor-crypto/monero/serialize.c',
         'vendor/trezor-crypto/monero/xmr.c',
     ]
+    if TREZOR_MODEL == "T2T1":
+        SOURCE_MOD_CRYPTO += [
+            'vendor/trezor-crypto/nem.c',
+        ]
 
 # libsecp256k1-zkp
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
