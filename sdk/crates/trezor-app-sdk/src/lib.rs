@@ -144,7 +144,12 @@ pub extern "C" fn applet_main(api_get: TrezorApiGetter) -> c_int {
 
 #[cfg(not(test))]
 #[panic_handler]
-fn panic_handler(_: &core::panic::PanicInfo<'_>) -> ! {
+fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
+    Api::system_exit_fatal(
+        &format!("Panic: {}", info),
+        info.location().map_or("<unknown>", |loc| loc.file()),
+        info.location().map_or(0, |loc| loc.line() as i32),
+    ).ok();
     core::intrinsics::abort();
 }
 
