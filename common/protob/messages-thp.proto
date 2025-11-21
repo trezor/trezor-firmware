@@ -115,7 +115,7 @@ message ThpPairingRequestApproved {}
  * @next ThpCodeEntryCommitment
  */
 message ThpSelectMethod {
-    required ThpPairingMethod selected_pairing_method = 1;
+    required ThpPairingMethod selected_pairing_method = 1;  // Pairing method selected by the host
 }
 
 /**
