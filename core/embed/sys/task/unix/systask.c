@@ -116,7 +116,13 @@ static void systask_yield(void) {
 
   // Now the task called systask_yield() is active again
 
+  // Do not return to a killed task
+  if (current_task->killed) {
+    pthread_exit(0);
+  }
+
   // Process the pushed call first, if any
+  // (used to throw exceptions into the task)
   if (current_task->pushed_fn_call.fn != NULL) {
     invoke_pushed_fn_call(current_task);
   }
