@@ -415,6 +415,11 @@ class Channel:
         payload_len = len(payload) + CHECKSUM_LENGTH
         sync_bit = ABP.get_send_seq_bit(self.channel_cache)
         ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
+
+        if ABP.is_ack_piggybacking_allowed(self.channel_cache):
+            ack_bit = ABP.get_send_ack_bit(self.channel_cache)
+            ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ctrl_byte, ack_bit)
+
         header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
 
         async def _write_loop() -> None:
