@@ -92,12 +92,16 @@ def _send_chunked_data(
     language_data: bytes,
 ) -> None:
     response = request
+    session.client.protocol._skip_ack = True
     while not isinstance(response, messages.Success):
         response = messages.DataChunkRequest.ensure_isinstance(response)
         data_length = response.data_length
         data_offset = response.data_offset
         chunk = language_data[data_offset : data_offset + data_length]
         response = session.call(messages.DataChunkAck(data_chunk=chunk))
+
+    session.client.protocol._send_ack_bit()
+    session.client.protocol._skip_ack = False
 
 
 def change_language(
