@@ -22,7 +22,6 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/sysevent.h>
 #include <sys/systick.h>
 #include <sys/types.h>
 #include <util/image.h>
@@ -31,236 +30,74 @@
 #include "wire/wire_iface_usb.h"
 #include "workflow.h"
 
-#ifdef USE_HAPTIC
-#include <io/haptic.h>
-#endif
-
 #ifdef USE_BLE
 #include <wire/wire_iface_ble.h>
 #endif
 
-#ifdef USE_BUTTON
-#include <io/button.h>
-#endif
-
-#ifdef USE_POWER_MANAGER
-#include <io/display.h>
-#include <io/display_utils.h>
-#include <sys/power_manager.h>
-
-#define FADE_TIME_MS 30000
-#define SUSPEND_TIME_MS 40000
-
-#endif
-
-workflow_result_t workflow_host_control(const fw_info_t *fw,
-                                        c_layout_t *wait_layout,
-                                        uint32_t *ui_action_result,
-                                        protob_ios_t *ios) {
-  workflow_result_t result = WF_ERROR_FATAL;
-
-#ifdef USE_POWER_MANAGER
-  uint32_t button_deadline = 0;
-#ifdef USE_HAPTIC
-  bool button_haptic_played = false;
-#endif
-  uint32_t fade_deadline = ticks_timeout(FADE_TIME_MS);
-  uint32_t suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
-  bool faded = false;
-  int fade_value = display_get_backlight();
-#endif
-
-  sysevents_t awaited = {0};
-
-  if (ios != NULL) {
-    for (size_t i = 0; i < ios->count; i++) {
-      awaited.read_ready |= 1 << protob_get_iface_flag(&ios->ifaces[i]);
-    }
+workflow_result_t bootloader_process_comm(wire_iface_t *wire_iface) {
+  if (wire_iface == NULL) {
+    // continue with the event processing
+    return WF_OK;
   }
+
+  protob_io_t active_iface;
+  protob_init(&active_iface, wire_iface);
+
+  uint16_t msg_id = 0;
+  if (sectrue != protob_get_msg_header(&active_iface, &msg_id)) {
+    return WF_OK;
+  }
+
+  fw_info_t fw;
+  memset(&fw, 0, sizeof(fw));
+
+  switch (msg_id) {
+    case MessageType_MessageType_Initialize:
+      fw_check(&fw);
+      workflow_initialize(&active_iface, &fw);
+      // continue with the event processing
+      return WF_OK;
+      break;
+    case MessageType_MessageType_Ping:
+      workflow_ping(&active_iface);
+      // continue with the event processing
+      return WF_OK;
+      break;
+    case MessageType_MessageType_GetFeatures:
+      fw_check(&fw);
+      workflow_get_features(&active_iface, &fw);
+      // continue with the event processing
+      return WF_OK;
+      break;
+    case MessageType_MessageType_WipeDevice:
+      return workflow_wipe_device(&active_iface);
+      break;
+    case MessageType_MessageType_FirmwareErase:
+      return workflow_firmware_update(&active_iface);
+      break;
+#if defined LOCKABLE_BOOTLOADER
+    case MessageType_MessageType_UnlockBootloader:
+      return workflow_unlock_bootloader(&active_iface);
+      break;
+#endif
+    default:
+      recv_msg_unknown(&active_iface);
+      // continue with the event processing
+      return WF_OK;
+  }
+}
+
+workflow_result_t bootloader_process_usb(void) {
+  wire_iface_t *iface = usb_iface_get();
+  return bootloader_process_comm(iface);
+}
 
 #ifdef USE_BLE
-  awaited.read_ready |= 1 << SYSHANDLE_BLE;
-#endif
-#ifdef USE_BUTTON
-  awaited.read_ready |= 1 << SYSHANDLE_BUTTON;
-#endif
-#ifdef USE_TOUCH
-  awaited.read_ready |= 1 << SYSHANDLE_TOUCH;
-#endif
-#ifdef USE_POWER_MANAGER
-  awaited.read_ready |= 1 << SYSHANDLE_POWER_MANAGER;
-#endif
-
-  uint32_t res = screen_attach(wait_layout);
-
-  if (res != 0) {
-    if (ui_action_result != NULL) {
-      *ui_action_result = res;
-    }
-    result = WF_OK_UI_ACTION;
-    goto exit_host_control;
-  }
-
-  for (;;) {
-    sysevents_t signalled = {0};
-
-    sysevents_poll(&awaited, &signalled, ticks_timeout(100));
-
-#ifdef USE_POWER_MANAGER
-
-#ifdef USE_HAPTIC
-    if (button_deadline != 0 && !button_haptic_played &&
-        ticks_expired(button_deadline)) {
-      // we reached hibernation time
-      haptic_play(HAPTIC_BOOTLOADER_ENTRY);
-      button_haptic_played = true;
-    }
-#endif
-
-    if (signalled.read_ready == 0) {
-      pm_state_t pm_state = {0};
-
-      pm_get_state(&pm_state);
-
-      if (pm_state.usb_connected) {
-        fade_deadline = ticks_timeout(FADE_TIME_MS);
-        suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
-        continue;
-      }
-
-      // device idle.
-      if (!faded && ticks_expired(fade_deadline)) {
-        fade_value = display_get_backlight();
-        display_fade(fade_value, BACKLIGHT_LOW, 200);
-        faded = true;
-      }
-
-      if (ticks_expired(suspend_deadline)) {
-        pm_suspend(NULL);
-        screen_render(wait_layout);
-        display_fade(display_get_backlight(), fade_value, 200);
-        button_deadline = 0;
-        faded = false;
-        fade_deadline = ticks_timeout(FADE_TIME_MS);
-        suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
-      }
-      continue;
-    }
-
-    fade_deadline = ticks_timeout(FADE_TIME_MS);
-    suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
-    if (faded) {
-      display_fade(display_get_backlight(), fade_value, 200);
-      faded = false;
-    }
-
-    // in case of battery powered device, power button is handled by eventloop
-    if (signalled.read_ready & (1 << SYSHANDLE_BUTTON)) {
-      button_event_t btn_event = {0};
-      // todo this eats all button events, not only power button, so it needs to
-      //  be handled differently for button-based battery powered devices.
-      if (button_get_event(&btn_event) && btn_event.button == BTN_POWER) {
-        if (btn_event.event_type == BTN_EVENT_DOWN) {
-          button_deadline = ticks_timeout(3000);
-#ifdef USE_HAPTIC
-          button_haptic_played = false;
-#endif
-        } else if (btn_event.event_type == BTN_EVENT_UP &&
-                   button_deadline != 0) {
-          display_fade(display_get_backlight(), 0, 200);
-          if (ticks_expired(button_deadline)) {
-            // power button pressed for 3 seconds, we hibernate
-
-#ifdef USE_HAPTIC
-            if (!button_haptic_played) {
-              haptic_play(HAPTIC_BOOTLOADER_ENTRY);
-              button_haptic_played = true;
-            }
-#endif
-            pm_hibernate();
-          } else {
-            pm_suspend(NULL);
-            button_deadline = 0;
-            screen_render(wait_layout);
-            display_fade(display_get_backlight(), BACKLIGHT_NORMAL, 200);
-            faded = false;
-            fade_deadline = ticks_timeout(FADE_TIME_MS);
-            suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
-          }
-        }
-      }
-    }
-
-#else
-    if (signalled.read_ready == 0) {
-      continue;
-    }
-#endif
-
-    uint16_t msg_id = 0;
-    protob_io_t *active_iface = NULL;
-
-    if (ios != NULL) {
-      for (size_t i = 0; i < ios->count; i++) {
-        if (signalled.read_ready ==
-                (1 << protob_get_iface_flag(&ios->ifaces[i])) &&
-            sectrue == protob_get_msg_header(&ios->ifaces[i], &msg_id)) {
-          active_iface = &ios->ifaces[i];
-          break;
-        }
-      }
-    }
-
-    // no data, lets pass the event signal to UI
-    if (active_iface == NULL) {
-      uint32_t res = screen_event(wait_layout, &signalled);
-
-      if (res != 0) {
-        if (ui_action_result != NULL) {
-          *ui_action_result = res;
-        }
-        result = WF_OK_UI_ACTION;
-        goto exit_host_control;
-      }
-      continue;
-    }
-
-    switch (msg_id) {
-      case MessageType_MessageType_Initialize:
-        workflow_initialize(active_iface, fw);
-        // whatever the result, we stay here and continue
-        break;
-      case MessageType_MessageType_Ping:
-        workflow_ping(active_iface);
-        // whatever the result, we stay here and continue
-        break;
-      case MessageType_MessageType_GetFeatures:
-        workflow_get_features(active_iface, fw);
-        // whatever the result, we stay here and continue
-        break;
-      case MessageType_MessageType_WipeDevice:
-        result = workflow_wipe_device(active_iface);
-        goto exit_host_control;
-        break;
-      case MessageType_MessageType_FirmwareErase:
-        result = workflow_firmware_update(active_iface);
-        goto exit_host_control;
-        break;
-#if defined LOCKABLE_BOOTLOADER
-      case MessageType_MessageType_UnlockBootloader:
-        result = workflow_unlock_bootloader(active_iface);
-        goto exit_host_control;
-        break;
-#endif
-      default:
-        recv_msg_unknown(active_iface);
-        break;
-    }
-  }
-
-exit_host_control:
-  return result;
+workflow_result_t bootloader_process_ble(void) {
+  wire_iface_t *iface = ble_iface_get();
+  return bootloader_process_comm(iface);
 }
+#endif
 
 void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios) {
   size_t cnt = 1;
