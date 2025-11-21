@@ -54,6 +54,9 @@ pub mod smp;
 
 pub mod util;
 
+#[cfg(feature = "bootloader")]
+mod bootloader;
+
 #[cfg(feature = "debug")]
 #[cfg(not(test))]
 #[panic_handler]

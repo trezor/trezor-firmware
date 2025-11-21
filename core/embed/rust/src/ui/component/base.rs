@@ -329,6 +329,10 @@ pub enum Event {
     BLE(BLEEvent),
     #[cfg(feature = "power_manager")]
     PM(PMEvent),
+    USBWire,
+    USBDebug,
+    #[cfg(feature = "ble")]
+    BLEIface,
     USB(USBEvent),
     /// Previously requested timer was triggered. This invalidates the timer
     /// token (another timer has to be requested).

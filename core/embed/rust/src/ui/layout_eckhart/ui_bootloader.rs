@@ -1,11 +1,14 @@
-use crate::ui::{
-    component::{base::Component, text::TextStyle, Event, Label},
-    display::{self, toif::Toif, Color},
-    geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-    layout::simplified::{process_frame_event, render, run, show},
-    shape::{self, render_on_display},
-    ui_bootloader::{BootloaderLayoutType, BootloaderUI},
-    CommonUI,
+use crate::{
+    bootloader::run,
+    ui::{
+        component::{base::Component, text::TextStyle, Label},
+        display::{self, toif::Toif, Color},
+        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+        layout::simplified::show,
+        shape::{self, render_on_display},
+        ui_bootloader::BootloaderUI,
+        CommonUI,
+    },
 };
 
 use heapless::String;
@@ -89,70 +92,21 @@ impl UIEckhart {
     }
 }
 
-#[allow(clippy::large_enum_variant)]
-pub enum BootloaderLayout {
-    Welcome(BldWelcomeScreen),
-    Menu(BldMenuScreen),
-    Connect(ConnectScreen),
-    #[cfg(feature = "ble")]
-    PairingMode(PairingModeScreen),
-    #[cfg(feature = "ble")]
-    WirelessSetup(WirelessSetupScreen),
-}
-
-impl BootloaderLayoutType for BootloaderLayout {
-    fn event(&mut self, event: Option<Event>) -> u32 {
-        match self {
-            BootloaderLayout::Welcome(f) => process_frame_event::<BldWelcomeScreen>(f, event),
-            BootloaderLayout::Menu(f) => process_frame_event::<BldMenuScreen>(f, event),
-            BootloaderLayout::Connect(f) => process_frame_event::<ConnectScreen>(f, event),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::PairingMode(f) => process_frame_event::<PairingModeScreen>(f, event),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetup(f) => {
-                process_frame_event::<WirelessSetupScreen>(f, event)
-            }
-        }
+impl BootloaderUI for UIEckhart {
+    fn screen_welcome() -> (u32, u32) {
+        let mut screen = BldWelcomeScreen::new();
+        run(&mut screen, false, true)
     }
 
-    fn render(&mut self) {
-        match self {
-            BootloaderLayout::Welcome(f) => render(f),
-            BootloaderLayout::Menu(f) => render(f),
-            BootloaderLayout::Connect(f) => render(f),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::PairingMode(f) => render(f),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetup(f) => render(f),
-        }
-    }
-
-    fn show(&mut self) -> u32 {
-        match self {
-            BootloaderLayout::Welcome(f) => show(f, false),
-            BootloaderLayout::Menu(f) => show(f, true),
-            BootloaderLayout::Connect(f) => show(f, true),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::PairingMode(f) => show(f, true),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetup(f) => show(f, true),
-        }
-    }
-
-    fn init_welcome() -> Self {
-        let screen = BldWelcomeScreen::new();
-        Self::Welcome(screen)
-    }
-
-    fn init_menu(initial_setup: bool) -> Self {
+    fn screen_menu(initial_setup: bool, communication: bool) -> (u32, u32) {
         let mut screen = BldMenuScreen::new();
         if !initial_setup {
             screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
         }
-        Self::Menu(screen)
+        run(&mut screen, true, communication)
     }
 
-    fn init_connect(initial_setup: bool, auto_update: bool) -> Self {
+    fn screen_connect(initial_setup: bool, auto_update: bool) -> (u32, u32) {
         let mut screen = ConnectScreen::new(initial_setup);
         if auto_update {
             screen = screen.with_header(BldHeader::new("Bootloader".into()).with_menu_button());
@@ -160,27 +114,23 @@ impl BootloaderLayoutType for BootloaderLayout {
         if !initial_setup {
             screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
         }
-        Self::Connect(screen)
+        run(&mut screen, true, true)
     }
 
     #[cfg(feature = "ble")]
-    fn init_pairing_mode(initial_setup: bool, name: &'static str) -> Self {
+    fn screen_pairing_mode(initial_setup: bool, name: &'static str) -> (u32, u32) {
         let mut screen = PairingModeScreen::new(name.into());
         if !initial_setup {
             screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
         }
-        Self::PairingMode(screen)
+        run(&mut screen, true, false)
     }
 
     #[cfg(feature = "ble")]
-    fn init_wireless_setup(name: &'static str) -> Self {
-        let screen = WirelessSetupScreen::new(name.into());
-        Self::WirelessSetup(screen)
+    fn screen_wireless_setup(name: &'static str) -> (u32, u32) {
+        let mut screen = WirelessSetupScreen::new(name.into());
+        run(&mut screen, true, true)
     }
-}
-
-impl BootloaderUI for UIEckhart {
-    type CLayoutType = BootloaderLayout;
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
         let header_color = if initial_setup { GREEN_LIGHT } else { GREY };
@@ -286,7 +236,8 @@ impl BootloaderUI for UIEckhart {
             screen = screen.with_secondary_text(alert);
         }
 
-        run(&mut screen)
+        let (_, res) = run(&mut screen, true, false);
+        res
     }
 
     fn screen_wipe_confirm() -> u32 {
@@ -305,7 +256,8 @@ impl BootloaderUI for UIEckhart {
             .with_action_bar(BldActionBar::new_double(left, right))
             .with_screen_border(SCREEN_BORDER_RED);
 
-        run(&mut screen)
+        let (_, res) = run(&mut screen, true, false);
+        res
     }
 
     fn screen_unlock_bootloader_confirm() -> u32 {
@@ -325,7 +277,8 @@ impl BootloaderUI for UIEckhart {
             .with_action_bar(BldActionBar::new_double(left, right))
             .with_screen_border(SCREEN_BORDER_RED);
 
-        run(&mut screen)
+        let (_, res) = run(&mut screen, true, false);
+        res
     }
 
     fn screen_unlock_bootloader_success() {
@@ -340,7 +293,7 @@ impl BootloaderUI for UIEckhart {
         ))
         .with_screen_border(SCREEN_BORDER_RED);
 
-        run(&mut screen);
+        run(&mut screen, true, false);
     }
 
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
@@ -371,7 +324,8 @@ impl BootloaderUI for UIEckhart {
             );
         }
 
-        run(&mut screen)
+        let (_, res) = run(&mut screen, true, false);
+        res
     }
 
     fn screen_boot_stage_1(_fading: bool) {}
@@ -428,7 +382,7 @@ impl BootloaderUI for UIEckhart {
         ))
         .with_screen_border(SCREEN_BORDER_RED);
 
-        run(&mut screen);
+        run(&mut screen, true, false);
     }
 
     fn screen_wipe_fail() {
@@ -544,7 +498,8 @@ impl BootloaderUI for UIEckhart {
         if !initial_setup {
             screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
         }
-        run(&mut screen)
+        let (_, res) = run(&mut screen, true, false);
+        res
     }
 
     #[cfg(feature = "ble")]
@@ -553,7 +508,8 @@ impl BootloaderUI for UIEckhart {
         if !initial_setup {
             screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
         }
-        run(&mut screen)
+        let (_, res) = run(&mut screen, true, false);
+        res
     }
 
     #[cfg(feature = "power_manager")]
