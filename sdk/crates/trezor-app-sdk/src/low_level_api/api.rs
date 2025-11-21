@@ -322,9 +322,9 @@ impl ApiWrapper for Api {
                 let func = api.system_exit_fatal_ex.ok_or(ApiError::InvalidFunction)?;
                 unsafe {
                     func(
-                        message.as_ptr() as *const i8,
+                        message.as_ptr() as *const core::ffi::c_char,
                         message.len(),
-                        file.as_ptr() as *const i8,
+                        file.as_ptr() as *const core::ffi::c_char,
                         file.len(),
                         line,
                     )
