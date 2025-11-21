@@ -9,5 +9,9 @@ fn main() {
     if target_os == "macos" {
         // On macOS, link to System framework to get memcpy, memset, etc.
         println!("cargo:rustc-link-lib=System");
+    } else if target_os == "linux" {
+        // On Linux, link to C library to get __libc_start_main, memcpy, etc.
+        println!("cargo:rustc-link-lib=c");
+        println!("cargo:rustc-link-arg=-shared");
     }
 }
