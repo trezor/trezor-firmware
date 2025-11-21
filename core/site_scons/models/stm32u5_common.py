@@ -171,6 +171,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         sources += ["embed/util/app_loader/app_arena.c"]
         defines += [("USE_APP_LOADING", "1")]
         paths += ["embed/util/app_loader/inc"]
+        features_available.append("app_loading")
 
     if "usb" in features_wanted:
         sources += [
