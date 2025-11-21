@@ -209,8 +209,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_IPC_SEND: {
-      const ipc_message_t *msg = (const ipc_message_t *)args[0];
-      args[0] = ipc_send__verified(msg);
+      systask_id_t remote = (systask_id_t)args[0];
+      uint32_t fn = (uint32_t)args[1];
+      const void *data = (const void *)args[2];
+      size_t data_size = (size_t)args[3];
+      args[0] = ipc_send__verified(remote, fn, data, data_size);
     } break;
 #endif  // USE_IPC
 
@@ -897,6 +900,51 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint16_t *size = (uint16_t *)args[2];
       args[0] = tropic_data_read__verified(udata_slot, data, size);
     } break;
+#endif
+
+#ifdef USE_APP_LOADING
+    case SYSCALL_APP_TASK_SPAWN: {
+      const app_hash_t *hash = (const app_hash_t *)args[0];
+      systask_id_t *task_id = (systask_id_t *)args[1];
+      args[0] = app_task_spawn__verified(hash, task_id);
+    } break;
+
+    case SYSCALL_APP_TASK_IS_RUNNING: {
+      systask_id_t task_id = (systask_id_t)args[0];
+      args[0] = app_task_is_running(task_id);
+    } break;
+
+    case SYSCALL_APP_TASK_GET_PMINFO: {
+      systask_id_t task_id = (systask_id_t)args[0];
+      systask_postmortem_t *pminfo = (systask_postmortem_t *)args[1];
+      args[0] = app_task_get_pminfo__verified(task_id, pminfo);
+    } break;
+
+    case SYSCALL_APP_TASK_UNLOAD: {
+      systask_id_t task_id = (systask_id_t)args[0];
+      app_task_unload(task_id);
+    } break;
+
+    case SYSCALL_APP_CACHE_CREATE_IMAGE: {
+      const app_hash_t *hash = (const app_hash_t *)args[0];
+      size_t image_size = (size_t)args[1];
+      args[0] = (uintptr_t)app_cache_create_image__verified(hash, image_size);
+    } break;
+
+    case SYSCALL_APP_CACHE_WRITE_IMAGE: {
+      app_cache_image_t *image = (app_cache_image_t *)args[0];
+      uintptr_t offset = (uintptr_t)args[1];
+      const void *data = (const void *)args[2];
+      size_t size = (size_t)args[3];
+      args[0] = app_cache_write_image__verified(image, offset, data, size);
+    } break;
+
+    case SYSCALL_APP_CACHE_FINALIZE_IMAGE: {
+      app_cache_image_t *image = (app_cache_image_t *)args[0];
+      bool accept = (bool)args[1];
+      args[0] = app_cache_finalize_image(image, accept);
+    } break;
+
 #endif
 
     default:
