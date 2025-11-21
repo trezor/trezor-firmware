@@ -64,16 +64,18 @@ _WRITE_TIMEOUT = sleep(_WRITE_TIMEOUT_MS)
 # It allows interrupting a "stuck" THP workflow using a different channel on the same interface.
 _PREEMPT_TIMEOUT_MS = const(1_000)
 
+EMPTY_ACK_PAYLOAD = memoryview(b"")
+
 
 class Reassembler:
     def __init__(self, read_buf: ThpBuffer) -> None:
         self.thp_read_buf = read_buf
         self.reset()
 
-    def reset(self) -> None:
+    def reset(self, message: memoryview | None = None) -> None:
         self.bytes_read: int = 0
         self.buffer_len: int = 0
-        self.message: memoryview | None = None
+        self.message = message
 
     def handle_packet(self, packet: memoryview) -> bool:
         """
@@ -242,6 +244,8 @@ class Channel:
         """
 
         return_after_ack = expected_ctrl_byte is None
+        ack_piggybacking = ABP.is_ack_piggybacking_allowed(self.channel_cache)
+
         while True:
             # Handle an existing message (if already reassembled).
             # Otherwise, receive and reassemble a new one.
@@ -256,8 +260,16 @@ class Channel:
             if control_byte.is_ack(ctrl_byte):
                 handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
                 if return_after_ack:
-                    return payload
+                    assert not payload
+                    return EMPTY_ACK_PAYLOAD
                 continue
+
+            if ack_piggybacking and control_byte.is_encrypted_transport(ctrl_byte):
+                handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
+                if return_after_ack and ABP.is_sending_allowed(self.channel_cache):
+                    # A valid ACK has been received - keep the payload for the next `recv_payload()` call
+                    self.reassembler.reset(msg)
+                    return EMPTY_ACK_PAYLOAD
 
             if return_after_ack or not expected_ctrl_byte(ctrl_byte):
                 if __debug__:
