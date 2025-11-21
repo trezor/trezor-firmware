@@ -821,6 +821,9 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
 
+    if "app_loading" in FEATURES_AVAILABLE:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/extapp/*.py'))
+
     source_mpy = env.FrozenModule(
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
