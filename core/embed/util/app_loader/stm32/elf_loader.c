@@ -203,6 +203,8 @@ static void elf_unload_cb(applet_t* applet) {
 }
 
 bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
+  bool retval = false;
+
   applet_init(applet, NULL, NULL);
 
   // Make sure the entire ELF file is accessible
@@ -405,11 +407,22 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
     goto cleanup;
   }
 
-  return true;
+  retval = true;
 
 cleanup:
-  applet_unload(applet);
-  return false;
+
+  if (!retval) {
+    applet_unload(applet);
+  }
+
+  // Recover MPU state for the active task
+  systask_t* active_task = systask_active();
+  if (active_task->applet != NULL) {
+    applet_t* applet = (applet_t*)active_task->applet;
+    mpu_set_active_applet(&applet->layout);
+  }
+
+  return retval;
 }
 
 #endif  // KERNEL_MODE
