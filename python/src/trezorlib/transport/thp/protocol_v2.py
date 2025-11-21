@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import typing as t
@@ -52,6 +53,19 @@ if t.TYPE_CHECKING:
 MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 
+@contextlib.contextmanager
+def _ack_piggybacking_context(channel: ProtocolV2Channel) -> t.Iterator[None]:
+    assert not channel._skip_ack
+    channel._skip_ack = True
+    try:
+        yield
+    finally:
+        assert channel._skip_ack
+        channel._skip_ack = False
+        # interaction is over - make sure to ACK the last received message
+        channel._send_ack_bit()
+
+
 class ProtocolV2Channel(Channel):
     channel_id: int
     sync_bit_send: int
@@ -71,6 +85,8 @@ class ProtocolV2Channel(Channel):
     ) -> None:
         super().__init__(transport, mapping)
         self._reset_sync_bits()
+        self._support_ack_piggybacking = False
+        self._skip_ack = False
         if prepare_channel_without_pairing:
             # allow skipping unrelated response packets (e.g. in case of retransmissions)
             self._do_channel_allocation(retries=MAX_RETRANSMISSION_COUNT)
@@ -116,6 +132,9 @@ class ProtocolV2Channel(Channel):
         if not isinstance(features, messages.Features):
             raise exceptions.TrezorException("Unexpected response to GetFeatures")
         self._features = features
+
+    def interactive_context(self) -> contextlib.AbstractContextManager:
+        return _ack_piggybacking_context(self)
 
     def _send_message(
         self,
@@ -227,8 +246,15 @@ class ProtocolV2Channel(Channel):
 
     def _send_handshake_init_request(self, try_to_unlock: bool = True) -> None:
         payload = self._noise.write_message(bytes([try_to_unlock]))
+        ctrl_byte = control_byte.HANDSHAKE_INIT_REQ
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(
+            ctrl_byte=ctrl_byte, seq_bit=0
+        )
+        ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(
+            ctrl_byte=ctrl_byte, ack_bit=1
+        )
         ha_init_req_header = MessageHeader(
-            0, self.channel_id, len(payload) + CHECKSUM_LENGTH
+            ctrl_byte, self.channel_id, len(payload) + CHECKSUM_LENGTH
         )
 
         thp_io.write_payload_to_wire_and_add_checksum(
@@ -241,6 +267,7 @@ class ProtocolV2Channel(Channel):
         if not header.is_handshake_init_response():
             LOG.error("Received message is not a valid handshake init response message")
 
+        self._first_ack_bit = control_byte.get_ack_bit(header.ctrl_byte)
         self._send_ack_bit(bit=0)
         self._noise.read_message(payload)
         return payload
@@ -262,6 +289,13 @@ class ProtocolV2Channel(Channel):
         )
         message2 = self._noise.write_message(payload=msg_data)
 
+        ctrl_byte = control_byte.HANDSHAKE_COMP_REQ
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(
+            ctrl_byte=ctrl_byte, seq_bit=1
+        )
+        ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(
+            ctrl_byte=ctrl_byte, ack_bit=0
+        )
         ha_completion_req_header = MessageHeader(
             0x12,
             self.channel_id,
@@ -277,8 +311,16 @@ class ProtocolV2Channel(Channel):
     def _read_handshake_completion_response(self) -> None:
         # Read handshake completion response
         header, data = self._read_until_valid_crc_check()
+
         if not header.is_handshake_comp_response():
             LOG.error("Received message is not a valid handshake completion response")
+
+        # Does THP peer support ACK piggybacking? (#6135)
+        second_ack_bit = control_byte.get_ack_bit(header.ctrl_byte)
+        # We detected it using flipped ACK bit values (over THP handshake responses).
+        self._support_ack_piggybacking = self._first_ack_bit != second_ack_bit
+        LOG.debug("THP ACK piggybacking = %s", self._support_ack_piggybacking)
+
         trezor_state = self._noise.decrypt(bytes(data))
         assert trezor_state in TREZOR_STATES
         self._send_ack_bit(bit=1)
@@ -288,11 +330,14 @@ class ProtocolV2Channel(Channel):
         header, payload = self._read_until_valid_crc_check()
         if not header.is_ack() or len(payload) > 0:
             LOG.error("Received message is not a valid ACK")
+        LOG.debug("Received ACK %s", control_byte.get_ack_bit(header.ctrl_byte))
 
-    def _send_ack_bit(self, bit: int) -> None:
+    def _send_ack_bit(self, bit: int | None = None) -> None:
+        if bit is None:
+            bit = 1 - self.sync_bit_receive  # previously received sync bit
         if bit not in (0, 1):
             raise ValueError("Invalid ACK bit")
-        LOG.debug(f"sending ack {bit}")
+        LOG.debug("Sending ACK %s", bit)
         ctrl_byte = 0x20 if bit == 0 else 0x28
         header = MessageHeader(ctrl_byte, self.channel_id, 4)
         thp_io.write_payload_to_wire_and_add_checksum(self.transport, header, b"")
@@ -302,12 +347,13 @@ class ProtocolV2Channel(Channel):
         session_id: int,
         message_type: int,
         message_data: bytes,
-        ctrl_byte: int | None = None,
     ) -> None:
 
-        if ctrl_byte is None:
-            ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(0x04, self.sync_bit_send)
-            self.sync_bit_send = 1 - self.sync_bit_send
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(0x04, self.sync_bit_send)
+        self.sync_bit_send = 1 - self.sync_bit_send
+
+        ack_bit = 1 - self.sync_bit_receive  # previously received sync bit
+        ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ctrl_byte, ack_bit)
 
         sid = session_id.to_bytes(1, "big")
         msg_type = message_type.to_bytes(2, "big")
@@ -324,7 +370,8 @@ class ProtocolV2Channel(Channel):
         )
 
     def read_and_decrypt(
-        self, timeout: float | None = None
+        self,
+        timeout: float | None = None,
     ) -> t.Tuple[int, int, bytes]:
         while True:
             header, raw_payload = self._read_until_valid_crc_check(timeout)
@@ -332,6 +379,7 @@ class ProtocolV2Channel(Channel):
                 # Received message from different channel - discard
                 continue
             if control_byte.is_ack(header.ctrl_byte):
+                LOG.debug("Received ACK %s", control_byte.get_ack_bit(header.ctrl_byte))
                 continue
             if not header.is_encrypted_transport():
                 LOG.error(
@@ -348,7 +396,8 @@ class ProtocolV2Channel(Channel):
                 "from control byte",
                 hexlify(header.ctrl_byte.to_bytes(1, "big")).decode(),
             )
-            self._send_ack_bit(bit=seq_bit)
+            if not (self._support_ack_piggybacking and self._skip_ack):
+                self._send_ack_bit(bit=seq_bit)
 
             message = self._noise.decrypt(bytes(raw_payload))
             session_id = message[0]

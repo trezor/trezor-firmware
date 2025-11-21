@@ -320,96 +320,97 @@ def sign_tx(
     elif preauthorized:
         session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
-    res = session.call(signtx, expect=messages.TxRequest)
+    with session.client.protocol.interactive_context():
+        res = session.call(signtx, expect=messages.TxRequest)
 
-    # Prepare structure for signatures
-    signatures: List[Optional[bytes]] = [None] * len(inputs)
-    serialized_tx = b""
+        # Prepare structure for signatures
+        signatures: List[Optional[bytes]] = [None] * len(inputs)
+        serialized_tx = b""
 
-    def copy_tx_meta(tx: messages.TransactionType) -> messages.TransactionType:
-        tx_copy = copy(tx)
-        # clear fields
-        tx_copy.inputs_cnt = len(tx.inputs)
-        tx_copy.inputs = []
-        tx_copy.outputs_cnt = len(tx.bin_outputs or tx.outputs)
-        tx_copy.outputs = []
-        tx_copy.bin_outputs = []
-        tx_copy.extra_data_len = len(tx.extra_data or b"")
-        tx_copy.extra_data = None
-        return tx_copy
+        def copy_tx_meta(tx: messages.TransactionType) -> messages.TransactionType:
+            tx_copy = copy(tx)
+            # clear fields
+            tx_copy.inputs_cnt = len(tx.inputs)
+            tx_copy.inputs = []
+            tx_copy.outputs_cnt = len(tx.bin_outputs or tx.outputs)
+            tx_copy.outputs = []
+            tx_copy.bin_outputs = []
+            tx_copy.extra_data_len = len(tx.extra_data or b"")
+            tx_copy.extra_data = None
+            return tx_copy
 
-    this_tx = messages.TransactionType(
-        inputs=inputs,
-        outputs=outputs,
-        inputs_cnt=len(inputs),
-        outputs_cnt=len(outputs),
-        # pick either kw-provided or default value from the SignTx request
-        version=signtx.version,
-    )
+        this_tx = messages.TransactionType(
+            inputs=inputs,
+            outputs=outputs,
+            inputs_cnt=len(inputs),
+            outputs_cnt=len(outputs),
+            # pick either kw-provided or default value from the SignTx request
+            version=signtx.version,
+        )
 
-    R = messages.RequestType
-    while True:
-        # If there's some part of signed transaction, let's add it
-        if res.serialized:
-            if res.serialized.serialized_tx:
-                serialized_tx += res.serialized.serialized_tx
+        R = messages.RequestType
+        while True:
+            # If there's some part of signed transaction, let's add it
+            if res.serialized:
+                if res.serialized.serialized_tx:
+                    serialized_tx += res.serialized.serialized_tx
 
-            if res.serialized.signature_index is not None:
-                idx = res.serialized.signature_index
-                sig = res.serialized.signature
-                if signatures[idx] is not None:
-                    raise ValueError(f"Signature for index {idx} already filled")
-                signatures[idx] = sig
+                if res.serialized.signature_index is not None:
+                    idx = res.serialized.signature_index
+                    sig = res.serialized.signature
+                    if signatures[idx] is not None:
+                        raise ValueError(f"Signature for index {idx} already filled")
+                    signatures[idx] = sig
 
-        if res.request_type == R.TXFINISHED:
-            break
+            if res.request_type == R.TXFINISHED:
+                break
 
-        assert res.details is not None, "device did not provide details"
+            assert res.details is not None, "device did not provide details"
 
-        # Device asked for one more information, let's process it.
-        if res.details.tx_hash is not None:
-            if res.details.tx_hash not in prev_txes:
-                raise ValueError(
-                    f"Previous transaction {res.details.tx_hash.hex()} not available"
-                )
-            current_tx = prev_txes[res.details.tx_hash]
-        else:
-            current_tx = this_tx
-
-        if res.request_type == R.TXPAYMENTREQ:
-            assert res.details.request_index is not None
-            msg = payment_reqs[res.details.request_index]
-            res = session.call(msg, expect=messages.TxRequest)
-        else:
-            msg = messages.TransactionType()
-            if res.request_type == R.TXMETA:
-                msg = copy_tx_meta(current_tx)
-            elif res.request_type in (R.TXINPUT, R.TXORIGINPUT):
-                assert res.details.request_index is not None
-                msg.inputs = [current_tx.inputs[res.details.request_index]]
-            elif res.request_type == R.TXOUTPUT:
-                assert res.details.request_index is not None
-                if res.details.tx_hash:
-                    msg.bin_outputs = [
-                        current_tx.bin_outputs[res.details.request_index]
-                    ]
-                else:
-                    msg.outputs = [current_tx.outputs[res.details.request_index]]
-            elif res.request_type == R.TXORIGOUTPUT:
-                assert res.details.request_index is not None
-                msg.outputs = [current_tx.outputs[res.details.request_index]]
-            elif res.request_type == R.TXEXTRADATA:
-                assert res.details.extra_data_offset is not None
-                assert res.details.extra_data_len is not None
-                assert current_tx.extra_data is not None
-                o, l = res.details.extra_data_offset, res.details.extra_data_len
-                msg.extra_data = current_tx.extra_data[o : o + l]
+            # Device asked for one more information, let's process it.
+            if res.details.tx_hash is not None:
+                if res.details.tx_hash not in prev_txes:
+                    raise ValueError(
+                        f"Previous transaction {res.details.tx_hash.hex()} not available"
+                    )
+                current_tx = prev_txes[res.details.tx_hash]
             else:
-                raise exceptions.TrezorException(
-                    f"Unknown request type - {res.request_type}."
-                )
+                current_tx = this_tx
 
-            res = session.call(messages.TxAck(tx=msg), expect=messages.TxRequest)
+            if res.request_type == R.TXPAYMENTREQ:
+                assert res.details.request_index is not None
+                msg = payment_reqs[res.details.request_index]
+                res = session.call(msg, expect=messages.TxRequest)
+            else:
+                msg = messages.TransactionType()
+                if res.request_type == R.TXMETA:
+                    msg = copy_tx_meta(current_tx)
+                elif res.request_type in (R.TXINPUT, R.TXORIGINPUT):
+                    assert res.details.request_index is not None
+                    msg.inputs = [current_tx.inputs[res.details.request_index]]
+                elif res.request_type == R.TXOUTPUT:
+                    assert res.details.request_index is not None
+                    if res.details.tx_hash:
+                        msg.bin_outputs = [
+                            current_tx.bin_outputs[res.details.request_index]
+                        ]
+                    else:
+                        msg.outputs = [current_tx.outputs[res.details.request_index]]
+                elif res.request_type == R.TXORIGOUTPUT:
+                    assert res.details.request_index is not None
+                    msg.outputs = [current_tx.outputs[res.details.request_index]]
+                elif res.request_type == R.TXEXTRADATA:
+                    assert res.details.extra_data_offset is not None
+                    assert res.details.extra_data_len is not None
+                    assert current_tx.extra_data is not None
+                    o, l = res.details.extra_data_offset, res.details.extra_data_len
+                    msg.extra_data = current_tx.extra_data[o : o + l]
+                else:
+                    raise exceptions.TrezorException(
+                        f"Unknown request type - {res.request_type}."
+                    )
+
+                res = session.call(messages.TxAck(tx=msg), expect=messages.TxRequest)
 
     for i, sig in zip(inputs, signatures):
         if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:

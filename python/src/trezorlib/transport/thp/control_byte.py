@@ -53,6 +53,14 @@ def add_ack_bit_to_ctrl_byte(ctrl_byte: int, ack_bit: int) -> int:
     raise Exception("Unexpected acknowledgement bit")
 
 
+def get_ack_bit(ctrl_byte: int) -> Optional[int]:
+    if ctrl_byte & 0xE0 and not is_ack(ctrl_byte):
+        # not all message types contain ACK bit
+        return None
+
+    return (ctrl_byte & 0x08) >> 3
+
+
 def get_seq_bit(ctrl_byte: int) -> Optional[int]:
     if ctrl_byte & 0xE0:
         # not all message types contain SEQ bit
