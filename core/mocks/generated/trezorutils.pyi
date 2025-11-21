@@ -266,7 +266,13 @@ EMULATOR: bool
 BITCOIN_ONLY: bool
 """Whether the firmware is Bitcoin-only."""
 UI_LAYOUT: str
-"""UI layout identifier ("BOLT"-T, "CAESAR"-TS3, "DELIZIA"-TS5)."""
+"""
+UI layout identifier:
+* "BOLT"-T
+* "CAESAR"-TS3
+* "DELIZIA"-TS5
+* "ECKHART"-TS7
+"""
 USE_THP: bool
 """Whether the firmware supports Trezor-Host Protocol (version 2)."""
 NOTIFY_BOOT: int
