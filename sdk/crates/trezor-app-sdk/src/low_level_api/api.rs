@@ -95,8 +95,11 @@ pub(crate) trait ApiWrapper {
     /// Write to debug console
     fn dbg_console_write(data: &[u8]) -> Result<()>;
 
-    /// Exit the system with the given exit code
+    /// Exit the application with the given exit code
     fn system_exit(code: i32) -> Result<()>;
+
+    /// Exit the applicaiton with a fatal error message
+    fn system_exit_fatal(message: &str, file: &str, line: i32) -> Result<()>;
 }
 
 /// API wrapper that can be initialized from a getter function
@@ -310,6 +313,24 @@ impl ApiWrapper for Api {
                 unsafe { func(code as core::ffi::c_int) };
             }
         };
+        Ok(())
+    }
+
+    fn system_exit_fatal(message: &str, file: &str, line: i32) -> Result<()> {
+        match Self::get()? {
+            Api::V1(api) => {
+                let func = api.system_exit_fatal_ex.ok_or(ApiError::InvalidFunction)?;
+                unsafe {
+                    func(
+                        message.as_ptr() as *const i8,
+                        message.len(),
+                        file.as_ptr() as *const i8,
+                        file.len(),
+                        line,
+                    )
+                };
+            }
+        }
         Ok(())
     }
 }
