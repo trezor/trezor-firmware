@@ -26,6 +26,7 @@ fn build_dir() -> String {
 }
 
 const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
+    "-I../projects/bootloader",
     "-I../projects/unix",
     "-I../../build/unix",
     "-I../../vendor/micropython/ports/unix",
@@ -65,6 +66,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_HW_JPEG_DECODER",
     "-DUSE_STORAGE",
     "-DUSE_DBG_CONSOLE",
+    "-DBOOTLOADER",
 ];
 
 fn add_bindgen_macros<'a>(
@@ -495,7 +497,9 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("LOG_LEVEL_WARN")
         .allowlist_var("LOG_LEVEL_ERR")
         // c_layout
-        .allowlist_type("c_layout_t");
+        .allowlist_type("c_layout_t")
+        .allowlist_function("bootloader_process_ble")
+        .allowlist_function("bootloader_process_usb");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

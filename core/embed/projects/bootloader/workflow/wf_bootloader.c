@@ -41,12 +41,9 @@
 
 workflow_result_t workflow_menu(const fw_info_t* fw, protob_ios_t* ios) {
   while (true) {
-    c_layout_t layout;
-    memset(&layout, 0, sizeof(layout));
-    screen_menu(ui_get_initial_setup(), &layout);
     uint32_t ui_result = 0;
     workflow_result_t result =
-        workflow_host_control(fw, &layout, &ui_result, ios);
+        screen_menu(ui_get_initial_setup(), ios != NULL, &ui_result);
 
     if (result != WF_OK_UI_ACTION) {
       return result;
@@ -129,8 +126,6 @@ static screen_t handle_menu(const fw_info_t* fw,
 
 static screen_t handle_wait_for_host(const fw_info_t* fw,
                                      workflow_result_t* out_result) {
-  c_layout_t layout;
-  memset(&layout, 0, sizeof(layout));
   uint32_t ui_res = 0;
 
   protob_ios_t ios;
@@ -141,8 +136,7 @@ static screen_t handle_wait_for_host(const fw_info_t* fw,
   screen_t next_screen = SCREEN_WAIT_FOR_HOST;
 
   while (next_screen == SCREEN_WAIT_FOR_HOST) {
-    screen_connect(false, true, &layout);
-    workflow_result_t res = workflow_host_control(fw, &layout, &ui_res, &ios);
+    workflow_result_t res = screen_connect(false, true, &ui_res);
 
     switch (res) {
       case WF_OK_UI_ACTION: {

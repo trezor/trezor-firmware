@@ -21,25 +21,10 @@
 
 #include <trezor_types.h>
 
-#include <sys/sysevent.h>
 #include <util/image.h>
 
 #include "protob/protob.h"
-#include "rust_ui_bootloader.h"
-
-typedef enum {
-  WF_ERROR_FATAL = 0,
-  WF_ERROR = 0x11223344,
-  WF_OK = 0x7ABBCCDD,
-  WF_OK_REBOOT_SELECTED = 0x68A4DABF,
-  WF_OK_FIRMWARE_INSTALLED = 0x04D9D07F,
-  WF_OK_DEVICE_WIPED = 0x30DC3841,
-  WF_OK_BOOTLOADER_UNLOCKED = 0x23FCBD03,
-  WF_OK_UI_ACTION = 0xAABBCCEE,
-  WF_OK_PAIRING_COMPLETED = 0xAABBCCEF,
-  WF_OK_PAIRING_FAILED = 0xAABBCCF0,
-  WF_CANCELLED = 0x55667788,
-} workflow_result_t;
+#include "workflow_common.h"
 
 workflow_result_t workflow_firmware_update(protob_io_t *iface);
 
@@ -61,11 +46,6 @@ workflow_result_t workflow_menu(const fw_info_t *fw, protob_ios_t *ios);
 workflow_result_t workflow_bootloader(const fw_info_t *fw);
 
 workflow_result_t workflow_empty_device(void);
-
-workflow_result_t workflow_host_control(const fw_info_t *fw,
-                                        c_layout_t *wait_layout,
-                                        uint32_t *ui_action_result,
-                                        protob_ios_t *ios);
 
 workflow_result_t workflow_auto_update(const fw_info_t *fw);
 
