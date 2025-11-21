@@ -19,14 +19,20 @@
 
 #pragma once
 
-#include "codec_v1.h"
+typedef enum {
+  WF_ERROR_FATAL = 0,
+  WF_ERROR = 0x11223344,
+  WF_OK = 0x7ABBCCDD,
+  WF_OK_REBOOT_SELECTED = 0x68A4DABF,
+  WF_OK_FIRMWARE_INSTALLED = 0x04D9D07F,
+  WF_OK_DEVICE_WIPED = 0x30DC3841,
+  WF_OK_BOOTLOADER_UNLOCKED = 0x23FCBD03,
+  WF_OK_UI_ACTION = 0x5ABBCCEE,
+  WF_OK_PAIRING_COMPLETED = 0x5ABBCCEF,
+  WF_OK_PAIRING_FAILED = 0x3ABBCCF0,
+  WF_CANCELLED = 0x55667788,
+} workflow_result_t;
 
-wire_iface_t* ble_iface_init(void);
+workflow_result_t bootloader_process_usb(void);
 
-void ble_iface_deinit(void);
-
-bool ble_iface_start_pairing(void);
-
-void ble_iface_end_pairing(void);
-
-wire_iface_t* ble_iface_get(void);
+workflow_result_t bootloader_process_ble(void);

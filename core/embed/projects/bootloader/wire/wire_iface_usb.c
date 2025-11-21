@@ -97,3 +97,10 @@ void usb_iface_deinit(void) {
   memset(iface, 0, sizeof(wire_iface_t));
   usb_stop();
 }
+
+wire_iface_t* usb_iface_get(void) {
+  if (!g_usb_iface.initialized) {
+    return NULL;
+  }
+  return &g_usb_iface;
+}

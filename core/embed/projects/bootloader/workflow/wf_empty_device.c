@@ -68,10 +68,7 @@ workflow_result_t workflow_empty_device(void) {
   uint32_t ui_result = WELCOME_CANCEL;
   while (res == WF_CANCELLED ||
          (res == WF_OK_UI_ACTION && ui_result == WELCOME_CANCEL)) {
-    c_layout_t layout;
-    memset(&layout, 0, sizeof(layout));
-    screen_welcome(&layout);
-    res = workflow_host_control(NULL, &layout, &ui_result, &ios);
+    res = screen_welcome(&ui_result);
 #ifdef USE_BLE
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_PAIRING_MODE) {
       res = workflow_wireless_setup(NULL, &ios);

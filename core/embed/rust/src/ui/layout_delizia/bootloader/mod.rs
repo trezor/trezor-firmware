@@ -1,13 +1,5 @@
 use heapless::String;
 
-use crate::ui::{
-    component::Label,
-    display::{self, Color, Icon},
-    geometry::{Alignment, Offset, Point, Rect},
-    layout::simplified::{run, show},
-    ui_bootloader::BootloaderLayoutType,
-};
-
 use super::{
     bootloader::welcome::Welcome,
     component::{
@@ -20,32 +12,33 @@ use super::{
         backlight,
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
-            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD24, FIRE32,
-            FIRE40, RESULT_FW_INSTALL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL, TEXT_WIPE_BOLD,
-            TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40,
+            DOWNLOAD24, FIRE32, FIRE40, RESULT_FW_INSTALL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL,
+            TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
         },
         GREEN_LIGHT, GREY,
     },
     UIDelizia,
 };
 
-use crate::ui::{ui_bootloader::BootloaderUI, CommonUI};
-
-use crate::ui::{
-    display::{toif::Toif, LOADER_MAX},
-    geometry::Alignment2D,
-    shape,
-    shape::render_on_display,
+use crate::{
+    bootloader::run,
+    time::Duration,
+    trezorhal::time,
+    ui::{
+        component::Label,
+        display::{self, toif::Toif, Color, Icon, LOADER_MAX},
+        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+        layout::simplified::show,
+        shape,
+        shape::render_on_display,
+        ui_bootloader::BootloaderUI,
+        CommonUI,
+    },
 };
 
 use ufmt::uwrite;
 
-use super::theme::bootloader::BLD_WARN_COLOR;
-use crate::{
-    time::Duration,
-    trezorhal::time,
-    ui::{component::Event, layout::simplified::process_frame_event},
-};
 use connect::Connect;
 use intro::Intro;
 use menu::Menu;
@@ -128,60 +121,28 @@ impl UIDelizia {
     }
 }
 
-#[allow(clippy::large_enum_variant)]
-pub enum BootloaderLayout {
-    Welcome(Welcome),
-    Menu(Menu),
-    Connect(Connect),
-}
-
-impl BootloaderLayoutType for BootloaderLayout {
-    fn event(&mut self, event: Option<Event>) -> u32 {
-        match self {
-            BootloaderLayout::Welcome(f) => process_frame_event::<Welcome>(f, event),
-            BootloaderLayout::Menu(f) => process_frame_event::<Menu>(f, event),
-            BootloaderLayout::Connect(f) => process_frame_event::<Connect>(f, event),
-        }
-    }
-
-    fn show(&mut self) -> u32 {
-        match self {
-            BootloaderLayout::Welcome(f) => show(f, true),
-            BootloaderLayout::Menu(f) => show(f, true),
-            BootloaderLayout::Connect(f) => show(f, true),
-        }
-    }
-    fn init_welcome() -> Self {
+impl BootloaderUI for UIDelizia {
+    fn screen_welcome() -> (u32, u32) {
         // let the previous screen on for some time
         time::sleep(Duration::from_millis(1500));
-        Self::Welcome(Welcome::new())
+        let mut frame = Welcome::new();
+        run(&mut frame, true, true)
     }
 
-    fn init_menu(_initial_setup: bool) -> Self {
-        Self::Menu(Menu::new())
+    fn screen_menu(_initial_setup: bool, communication: bool) -> (u32, u32) {
+        let mut frame = Menu::new();
+        run(&mut frame, true, communication)
     }
 
-    fn init_connect(_initial_setup: bool, _auto_update: bool) -> Self {
-        Self::Connect(Connect::new(
+    fn screen_connect(_initial_setup: bool, _auto_update: bool) -> (u32, u32) {
+        let mut frame = Connect::new(
             "Waiting for host...",
             fonts::FONT_DEMIBOLD,
             BLD_TITLE_COLOR,
             BLD_BG,
-        ))
+        );
+        run(&mut frame, true, true)
     }
-
-    #[cfg(feature = "ble")]
-    fn init_pairing_mode(_initial_setup: bool, _name: &'static str) -> Self {
-        unimplemented!()
-    }
-
-    #[cfg(feature = "ble")]
-    fn init_wireless_setup(_name: &'static str) -> Self {
-        unimplemented!()
-    }
-}
-impl BootloaderUI for UIDelizia {
-    type CLayoutType = BootloaderLayout;
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
         let mut reboot_msg = BootloaderString::new();
@@ -291,7 +252,8 @@ impl BootloaderUI for UIDelizia {
             frame = frame.with_alert(alert);
         }
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 
     fn screen_wipe_confirm() -> u32 {
@@ -313,7 +275,8 @@ impl BootloaderUI for UIDelizia {
         let mut frame = Confirm::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg)
             .with_alert(alert);
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 
     fn screen_unlock_bootloader_confirm() -> u32 {
@@ -333,7 +296,8 @@ impl BootloaderUI for UIDelizia {
 
         let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg);
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 
     fn screen_unlock_bootloader_success() {
@@ -345,7 +309,7 @@ impl BootloaderUI for UIDelizia {
                 .vertically_centered(),
             true,
         );
-        run(&mut frame);
+        run(&mut frame, true, false);
     }
 
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
@@ -365,7 +329,8 @@ impl BootloaderUI for UIDelizia {
             fw_ok,
         );
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 
     fn screen_boot_stage_1(fading: bool) {
@@ -425,7 +390,7 @@ impl BootloaderUI for UIDelizia {
                 .vertically_centered(),
             true,
         );
-        run(&mut frame);
+        run(&mut frame, true, false);
     }
 
     fn screen_wipe_fail() {

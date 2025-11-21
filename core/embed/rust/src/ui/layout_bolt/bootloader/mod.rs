@@ -30,15 +30,16 @@ use super::{
     UIBolt,
 };
 use crate::{
+    bootloader::run,
     time::Duration,
     trezorhal::time,
     ui::{
-        component::{Event, Label},
+        component::Label,
         display::{self, toif::Toif, Color, Icon, LOADER_MAX},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        layout::simplified::{process_frame_event, run, show},
+        layout::simplified::show,
         shape::{self, render_on_display},
-        ui_bootloader::{BootloaderLayoutType, BootloaderUI},
+        ui_bootloader::BootloaderUI,
         CommonUI,
     },
 };
@@ -136,85 +137,29 @@ impl UIBolt {
     }
 }
 
-#[allow(clippy::large_enum_variant)]
-pub enum BootloaderLayout {
-    Welcome(Welcome),
-    Menu(Menu),
-    Connect(Connect),
-    #[cfg(feature = "ble")]
-    PairingMode(PairingMode),
-}
-
-impl BootloaderLayoutType for BootloaderLayout {
-    fn event(&mut self, event: Option<Event>) -> u32 {
-        match self {
-            BootloaderLayout::Welcome(f) => process_frame_event::<Welcome>(f, event),
-            BootloaderLayout::Menu(f) => process_frame_event::<Menu>(f, event),
-            BootloaderLayout::Connect(f) => process_frame_event::<Connect>(f, event),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::PairingMode(f) => process_frame_event::<PairingMode>(f, event),
-        }
-    }
-
-    fn show(&mut self) -> u32 {
-        match self {
-            BootloaderLayout::Welcome(f) => show(f, true),
-            BootloaderLayout::Menu(f) => show(f, true),
-            BootloaderLayout::Connect(f) => show(f, true),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::PairingMode(f) => show(f, true),
-        }
-    }
-
-    fn init_welcome() -> Self {
+impl BootloaderUI for UIBolt {
+    fn screen_welcome() -> (u32, u32) {
         // let the previous screen on for some time
         time::sleep(Duration::from_millis(1000));
-        Self::Welcome(Welcome::new())
+        let mut frame = Welcome::new();
+        run(&mut frame, true, true)
+    }
+    fn screen_menu(_initial_setup: bool, communication: bool) -> (u32, u32) {
+        let mut frame = Menu::new();
+        run(&mut frame, true, communication)
     }
 
-    fn init_menu(_initial_setup: bool) -> Self {
-        Self::Menu(Menu::new())
-    }
-
-    fn init_connect(initial_setup: bool, auto_update: bool) -> Self {
-        let frame = Connect::new(
+    fn screen_connect(initial_setup: bool, auto_update: bool) -> (u32, u32) {
+        let mut frame = Connect::new(
             "Waiting for host...",
             fonts::FONT_NORMAL,
             BLD_TITLE_COLOR,
             initial_setup,
             auto_update,
         );
-        Self::Connect(frame)
+        run(&mut frame, true, true)
     }
 
-    #[cfg(feature = "ble")]
-    fn init_pairing_mode(initial_setup: bool, _name: &'static str) -> Self {
-        let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-
-        let btn = if initial_setup {
-            Button::with_text("Cancel".into()).styled(button_initial())
-        } else {
-            Button::with_text("Cancel".into()).styled(button_bld())
-        };
-
-        let frame = PairingMode::new(
-            "Waiting for pairing...".into(),
-            fonts::FONT_NORMAL,
-            BLD_TITLE_COLOR,
-            bg,
-            btn,
-        );
-        Self::PairingMode(frame)
-    }
-
-    #[cfg(feature = "ble")]
-    fn init_wireless_setup(_name: &'static str) -> Self {
-        unimplemented!()
-    }
-}
-
-impl BootloaderUI for UIBolt {
-    type CLayoutType = BootloaderLayout;
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
         let mut reboot_msg = BootloaderString::new();
 
@@ -300,7 +245,8 @@ impl BootloaderUI for UIBolt {
             frame = frame.with_alert(alert);
         }
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 
     fn screen_wipe_confirm() -> u32 {
@@ -318,7 +264,8 @@ impl BootloaderUI for UIBolt {
         let mut frame = Confirm::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg)
             .with_alert(alert);
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 
     fn screen_unlock_bootloader_confirm() -> u32 {
@@ -346,7 +293,8 @@ impl BootloaderUI for UIBolt {
             fw_ok,
         );
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 
     fn screen_boot_stage_1(fading: bool) {
@@ -403,7 +351,7 @@ impl BootloaderUI for UIBolt {
                 .vertically_centered(),
             true,
         );
-        run(&mut frame);
+        run(&mut frame, true, false);
     }
 
     fn screen_wipe_fail() {
@@ -503,6 +451,26 @@ impl BootloaderUI for UIBolt {
     }
 
     #[cfg(feature = "ble")]
+    fn screen_pairing_mode(initial_setup: bool, _name: &'static str) -> (u32, u32) {
+        let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
+
+        let btn = if initial_setup {
+            Button::with_text("Cancel".into()).styled(button_initial())
+        } else {
+            Button::with_text("Cancel".into()).styled(button_bld())
+        };
+
+        let mut frame = PairingMode::new(
+            "Waiting for pairing...".into(),
+            fonts::FONT_NORMAL,
+            BLD_TITLE_COLOR,
+            bg,
+            btn,
+        );
+        run(&mut frame, true, false)
+    }
+
+    #[cfg(feature = "ble")]
     fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32 {
         let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
         let title = Label::centered("Pair device".into(), TEXT_NORMAL);
@@ -521,7 +489,8 @@ impl BootloaderUI for UIBolt {
 
         let mut frame = ConfirmPairing::new(bg, left, right, title, code);
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 
     #[cfg(feature = "ble")]
@@ -542,6 +511,7 @@ impl BootloaderUI for UIBolt {
             btn,
         );
 
-        run(&mut frame)
+        let (_, res) = run(&mut frame, true, false);
+        res
     }
 }
