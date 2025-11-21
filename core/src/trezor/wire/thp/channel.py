@@ -241,6 +241,7 @@ class Channel:
         If `expected_ctrl_byte` is `None`, returns after the first received ACK.
         """
 
+        return_after_ack = expected_ctrl_byte is None
         while True:
             # Handle an existing message (if already reassembled).
             # Otherwise, receive and reassemble a new one.
@@ -254,11 +255,11 @@ class Channel:
             # 1: Handle ACKs
             if control_byte.is_ack(ctrl_byte):
                 handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
-                if expected_ctrl_byte is None:
+                if return_after_ack:
                     return payload
                 continue
 
-            if expected_ctrl_byte is None or not expected_ctrl_byte(ctrl_byte):
+            if return_after_ack or not expected_ctrl_byte(ctrl_byte):
                 if __debug__:
                     self._log(
                         "Unexpected control byte - ignoring ",
