@@ -89,6 +89,7 @@
 #endif
 
 #include "bootui.h"
+#include "rust_ui_common.h"
 #include "ui_helpers.h"
 #include "version_check.h"
 #include "wire/wire_iface_usb.h"
@@ -512,6 +513,10 @@ int bootloader_main(void) {
   secbool stay_in_bootloader = boot_sequence();
 
   drivers_init(manufacturing_mode, &touch_initialized);
+
+#ifdef DISABLE_ANIMATION
+  disable_animation(true);
+#endif
 
 #ifdef USE_BOOTARGS_RSOD
   if (bootargs_get_command() == BOOT_COMMAND_SHOW_RSOD) {

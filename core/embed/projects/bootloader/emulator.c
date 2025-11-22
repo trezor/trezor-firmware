@@ -17,6 +17,7 @@
 #endif
 
 #include "emulator.h"
+#include "rust_ui_common.h"
 
 #undef FIRMWARE_START
 
@@ -39,10 +40,13 @@ bool storage_empty(const flash_area_t *area) {
 void usage(void) {
   printf("Usage: ./build/bootloader/bootloader_emu [options]\n");
   printf("Options:\n");
+  printf("  -a  disable animations\n");
   printf("  -s  stay in bootloader\n");
+  printf("  -w  wipe any firmware before booting\n");
   printf("  -e MESSAGE [TITLE [FOOTER]]  display error screen and stop\n");
   printf("  -c COLOR_VARIANT  set color variant\n");
   printf("  -b BITCOIN_ONLY  set bitcoin only flag\n");
+  printf("  -i IMAGE_FILE  path to firmware image file to be used\n");
   printf(
       "  -f FIRMWARE  run interaction-less update for the specified image\n");
 #ifdef LOCKABLE_BOOTLOADER
@@ -88,6 +92,23 @@ bool load_firmware(const char *filename, uint8_t *hash) {
   return true;
 }
 
+bool preload_firmware_image(const char *filename) {
+  static uint8_t fw_buffer[FIRMWARE_MAXSIZE];
+
+  FILE *file = fopen(filename, "rb");
+  if (!file) {
+    printf("Failed to open file '%s'\n", filename);
+    return false;
+  }
+  size_t read = fread(fw_buffer, 1, sizeof(fw_buffer), file);
+  fclose(file);
+
+  flash_area_erase(&FIRMWARE_AREA, NULL);
+
+  return sectrue == flash_area_write_data_padded(&FIRMWARE_AREA, 0, fw_buffer,
+                                                 read, 0x0, FIRMWARE_MAXSIZE);
+}
+
 static int sdl_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {
     case SDL_QUIT:
@@ -130,8 +151,11 @@ int main(int argc, char **argv) {
   uint8_t set_variant = 0xff;
   uint8_t color_variant = 0;
   uint8_t bitcoin_only = 0;
-  while ((opt = getopt(argc, argv, "hslec:b:f:")) != -1) {
+  while ((opt = getopt(argc, argv, "ahslewc:b:f:i:")) != -1) {
     switch (opt) {
+      case 'a':
+        disable_animation(true);
+        break;
       case 's':
         bootargs_set(BOOT_COMMAND_STOP_AND_WAIT, NULL, 0);
         break;
@@ -146,6 +170,16 @@ int main(int argc, char **argv) {
         set_variant = 1;
         bitcoin_only = atoi(optarg);
         break;
+      case 'i': {
+        if (!preload_firmware_image(optarg)) {
+          exit(1);
+        }
+      } break;
+      case 'w': {
+        if (sectrue != flash_area_erase(&FIRMWARE_AREA, NULL)) {
+          exit(1);
+        }
+      } break;
       case 'f': {
         uint8_t hash[BLAKE2S_DIGEST_LENGTH];
         if (!load_firmware(optarg, hash)) {
@@ -153,6 +187,7 @@ int main(int argc, char **argv) {
         }
         bootargs_set(BOOT_COMMAND_INSTALL_UPGRADE, hash, sizeof(hash));
       } break;
+
 #ifdef LOCKABLE_BOOTLOADER
       case 'l':
         secret_lock_bootloader();

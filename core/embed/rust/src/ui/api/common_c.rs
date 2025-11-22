@@ -5,6 +5,9 @@ use crate::ui::{CommonUI, ModelUI};
 
 use crate::{ui::shape, util::from_c_str};
 
+#[cfg(feature = "ui_debug")]
+use crate::ui::util::set_animation_disabled;
+
 #[no_mangle]
 extern "C" fn display_rsod_rust(
     title: *const cty::c_char,
@@ -35,3 +38,13 @@ extern "C" fn screen_boot_stage_2(fade_in: bool) {
 extern "C" fn screen_update() {
     ModelUI::screen_update();
 }
+
+#[no_mangle]
+#[cfg(feature = "ui_debug")]
+extern "C" fn disable_animation(disable: bool) {
+    set_animation_disabled(disable);
+}
+
+#[no_mangle]
+#[cfg(not(feature = "ui_debug"))]
+extern "C" fn disable_animation(_disable: bool) {}
