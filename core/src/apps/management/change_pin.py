@@ -38,8 +38,8 @@ async def change_pin(msg: ChangePin) -> Success:
     # get old pin
     curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)
 
-    # if changing pin, pre-check the entered pin before getting new pin
-    if curpin and not msg.remove:
+    # check the entered pin before getting new pin
+    if curpin:
         if not config.check_pin(curpin, salt):
             await error_pin_invalid()
 
@@ -50,7 +50,7 @@ async def change_pin(msg: ChangePin) -> Success:
         newpin = ""
 
     # write into storage
-    if not config.change_pin(curpin, newpin, salt, salt):
+    if not config.change_pin(newpin, salt):
         if newpin:
             await error_pin_matches_wipe_code()
         else:
