@@ -68,9 +68,10 @@ pub trait FirmwareUI {
         page_counter: bool,
         prompt_screen: bool,
         cancel: bool,
+        back_button: bool,
         warning_footer: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+    ) -> Result<impl LayoutMaybeTrace, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_value_intro(
         title: TString<'static>,
@@ -187,7 +188,6 @@ pub trait FirmwareUI {
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         message: TString<'static>,
-        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,

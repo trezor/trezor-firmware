@@ -167,6 +167,7 @@ def confirm_value(
     page_counter: bool = False,
     prompt_screen: bool = False,
     cancel: bool = False,
+    back_button: bool = False,
     warning_footer: str | None = None,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
@@ -355,7 +356,6 @@ def flow_confirm_output(
     message: str,
     description: str | None,
     extra: str | None,
-    amount: str | None,
     chunkify: bool,
     text_mono: bool,
     account_title: str,
