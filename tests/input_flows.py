@@ -1201,6 +1201,30 @@ def sign_tx_go_to_info_caesar(
     return "\n".join(screen_texts)
 
 
+class InputFlowSignTxBackFromAmount(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield  # confirm address
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield  # confirm amount
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.cancel())
+
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+
 class InputFlowSignTxInformation(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
