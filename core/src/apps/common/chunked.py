@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from trezor.messages import DataChunkAck, DataChunkRequest
 from trezor.wire import DataError
-from trezor.wire.context import call
+from trezor.wire.context import call, get_context
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -27,12 +27,13 @@ async def get_all_chunks(
     offset: int = 0,
     report: Callable[[int], None] | None = None,
 ) -> None:
-    data_left = length
-    # Requesting the data in chunks and storing them in the blob
-    while data_left > 0:
-        data_chunk = await get_data_chunk(data_left, offset)
-        buffer.extend(data_chunk)
-        data_left -= len(data_chunk)
-        offset += len(data_chunk)
-        if report is not None:
-            report((length - data_left) * 1000 // length)
+    with get_context().high_speed():
+        data_left = length
+        # Requesting the data in chunks and storing them in the blob
+        while data_left > 0:
+            data_chunk = await get_data_chunk(data_left, offset)
+            buffer.extend(data_chunk)
+            data_left -= len(data_chunk)
+            offset += len(data_chunk)
+            if report is not None:
+                report((length - data_left) * 1000 // length)

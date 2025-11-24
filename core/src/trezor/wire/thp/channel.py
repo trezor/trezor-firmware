@@ -26,7 +26,7 @@ from trezor import protobuf, utils, workflow
 from trezor.loop import Timeout, race, sleep
 from trezor.wire.context import UnexpectedMessageException
 
-from ..protocol_common import Message
+from ..protocol_common import HighSpeedContext, Message
 from . import ACK_MESSAGE, ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError
 from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, memory_manager
@@ -41,7 +41,8 @@ if __debug__:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
-    from typing import Any, Awaitable, Callable
+    from types import TracebackType
+    from typing import Any, Awaitable, Callable, Type
 
     from trezor.messages import ThpPairingCredential
     from trezor.wire import WireInterface
@@ -146,6 +147,26 @@ class ChannelPreemptedException(UnexpectedMessageException):
         super().__init__(msg=None)
 
 
+class _HighSpeed(HighSpeedContext):
+    def __init__(self, channel: "Channel") -> None:
+        self.channel = channel
+
+    def __enter__(self) -> None:
+        assert not self.channel._skip_acks
+        self.channel._skip_acks = True
+        return None
+
+    def __exit__(
+        self,
+        exc_type: Type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> bool:
+        assert self.channel._skip_acks
+        self.channel._skip_acks = False
+        return False
+
+
 class Channel:
     """
     THP protocol encrypted communication channel.
@@ -171,6 +192,7 @@ class Channel:
         self.sessions: dict[int, GenericSessionContext] = {}
         self.reassembler = Reassembler(self.read_buf)
         self.last_write_ms: int = utime.ticks_ms()
+        self._skip_acks: bool = False
 
         # Temporary objects
         self.credential: ThpPairingCredential | None = None
@@ -179,6 +201,9 @@ class Channel:
     @property
     def iface(self) -> WireInterface:
         return self.iface_ctx._iface
+
+    def high_speed(self) -> _HighSpeed:
+        return _HighSpeed(self)
 
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
@@ -290,7 +315,8 @@ class Channel:
                 continue
 
             # 3: Send ACK in response
-            await send_ack(self, ack_bit=seq_bit)
+            if not (ack_piggybacking and self._skip_acks):
+                await send_ack(self, ack_bit=seq_bit)
 
             ABP.set_expected_receive_seq_bit(self.channel_cache, 1 - seq_bit)
 

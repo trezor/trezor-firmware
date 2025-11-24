@@ -5,7 +5,8 @@ from trezor import protobuf
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from trezorio import WireInterface
-    from typing import Awaitable, Container, TypeVar, overload
+    from types import TracebackType
+    from typing import Awaitable, Container, Type, TypeVar, overload
 
     from storage.cache_common import DataCache
 
@@ -107,6 +108,25 @@ class Context:
     def cache(self) -> DataCache:
         """Access to the backing cache of the context, if the context has any."""
         ...
+
+    def high_speed(self) -> "HighSpeedContext":
+        """Return a context object for high-speed host communication."""
+        return HighSpeedContext()
+
+
+class HighSpeedContext:
+    """By default, do nothing."""
+
+    def __enter__(self) -> None:
+        return None
+
+    def __exit__(
+        self,
+        exc_type: Type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> bool:
+        return False
 
 
 class WireError(Exception):
