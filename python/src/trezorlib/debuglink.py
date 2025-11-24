@@ -1055,7 +1055,7 @@ class DebugUI:
             menu_layout = self.debuglink.read_layout()
             assert "ScrolledVerticalMenu" in menu_layout.all_components()
 
-    def _visit_menu_items(self) -> LayoutContent:
+    def visit_menu_items(self) -> LayoutContent:
         layout = self.debuglink.read_layout()
         if (
             not layout.has_menu()
@@ -1117,7 +1117,7 @@ class DebugUI:
                 self.debuglink.swipe_up()
 
         # Visit info menus (if exist)
-        layout = self._visit_menu_items()
+        layout = self.visit_menu_items()
 
         # Confirm current layout
         if self.debuglink.model is models.T3T1:
