@@ -14,50 +14,21 @@ pub struct AppVersion {
     pub build_num: u32,
 }
 
-/// Macro to generate overflow-safe decimal parsers for different integer types
-macro_rules! make_parser {
-    ($name:ident, $target:ty, $accumulator:ty) => {
-        fn $name(seg: &str) -> Option<$target> {
-            if seg.is_empty() {
-                return None;
-            }
-            let mut val: $accumulator = 0;
-            for b in seg.as_bytes() {
-                if *b < b'0' || *b > b'9' {
-                    return None;
-                }
-                val = val
-                    .checked_mul(10)?
-                    .checked_add((b - b'0') as $accumulator)?;
-                if val > <$target>::MAX as $accumulator {
-                    return None;
-                }
-            }
-            Some(val as $target)
-        }
-    };
-}
-
-// Generate the three parser functions
-make_parser!(parse_u8, u8, u16);
-make_parser!(parse_u16, u16, u32);
-make_parser!(parse_u32, u32, u64);
-
 /// Parse "<major>.<minor>.<revision>[.<build>]" into AppVersion (no allocation)
 /// Matches MCUboot image header version format
 /// Examples: "1.0.3", "1.0.3.0", "255.255.65535.4294967295"
 fn parse_app_version(s: &str) -> Option<AppVersion> {
     let mut parts = s.split('.');
 
-    let major = parse_u8(parts.next()?)?;
-    let minor = parse_u8(parts.next()?)?;
-    let revision = parse_u16(parts.next()?)?;
+    let major = parts.next()?.parse::<u8>().ok()?;
+    let minor = parts.next()?.parse::<u8>().ok()?;
+    let revision = parts.next()?.parse::<u16>().ok()?;
 
     // Build number is optional (defaults to 0 if absent)
-    let build_num = match parts.next() {
-        Some(b) if !b.is_empty() => parse_u32(b)?,
-        _ => 0,
-    };
+    let build_num = parts
+        .next()
+        .filter(|b| !b.is_empty())
+        .map_or(Some(0), |b| b.parse::<u32>().ok())?;
 
     // Reject if there are more than 4 parts
     if parts.next().is_some() {
