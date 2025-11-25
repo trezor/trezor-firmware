@@ -51,6 +51,7 @@ async def sign_registration_request(
 
     if not check_delegated_identity_proof(
         provided_proof=msg.proof_of_delegated_identity,
+        delegated_identity_rotation_index=0,  # this is happening right after the delegated_identity_key is generated and never more
         header=b"EvoluSignRegistrationRequest",
         arguments=[
             challenge_bytes,
@@ -93,7 +94,7 @@ def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
 
     from .common import get_public_key_from_private_key
 
-    private_key = delegated_identity()
+    private_key = delegated_identity(0)
     public_key = get_public_key_from_private_key(private_key)
 
     header = b"EvoluSignRegistrationRequestV1:"

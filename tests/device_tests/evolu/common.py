@@ -76,15 +76,16 @@ def pair_and_get_credential(client: Client) -> ThpPairingResult:
     return ThpPairingResult(session, credential_response)
 
 
-def get_delegated_identity_key(client: Client) -> bytes:
+def get_delegated_identity_key(client: Client, rotation_index: int = 0) -> bytes:
     if client.protocol_version == 2:
         pairing_data = pair_and_get_credential(client)
         return evolu.get_delegated_identity_key(
             client.get_session(),
             thp_credential=pairing_data.credential.credential,
             host_static_public_key=TEST_host_static_public_key,
-        )
+            rotation_index=rotation_index,
+        ).private_key
     elif client.protocol_version == 1:
-        return evolu.get_delegated_identity_key(client.get_session())
+        return evolu.get_delegated_identity_key(client.get_session()).private_key
     else:
         raise ValueError("Unsupported protocol version")

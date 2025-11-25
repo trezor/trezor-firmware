@@ -23,7 +23,8 @@
 
 #include <ecdsa.h>
 
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+secbool secret_key_delegated_identity(uint16_t rotation_index,
+                                      uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #ifdef SECURE_MODE
 
