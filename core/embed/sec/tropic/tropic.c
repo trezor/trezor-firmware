@@ -442,20 +442,16 @@ static bool get_change_pin_counter(uint32_t *change_pin_counter) {
 
   lt_ret_t ret = lt_mcounter_get(&drv->handle, TROPIC_CHANGE_COUNTER_SLOT,
                                  change_pin_counter);
-  if (ret == LT_L3_COUNTER_INVALID) {
+  if (ret == LT_OK) {
+    *change_pin_counter =
+        TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE - *change_pin_counter;
+  } else if (ret == LT_L3_COUNTER_INVALID) {
     // The counter has not been initialized yet
     *change_pin_counter = 0;
-    change_pin_counter_cached = *change_pin_counter;
-    is_change_pin_counter_cached = true;
-    return true;
-  }
-
-  if (ret != LT_OK) {
+  } else {
     return false;
   }
 
-  *change_pin_counter =
-      TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE - *change_pin_counter;
   change_pin_counter_cached = *change_pin_counter;
   is_change_pin_counter_cached = true;
 
