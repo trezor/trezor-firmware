@@ -35,6 +35,8 @@ def main():
 
     # Load the app and get its hash
     app_path = Path(__file__).parent.parent / "target" / "debug" / "funnycoin_rust"
+    #app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "debug" / "funnycoin_rust.min"
+    #app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "release" / "funnycoin_rust.min"
     print(f"\nLoading app from: {app_path}")
 
     session = client.get_seedless_session()
