@@ -483,7 +483,14 @@ static uint32_t get_return_addr(bool secure, bool privileged, uint32_t sp) {
   }
 #endif
 
-  return *ret_addr;
+  // We checked that ret_addr is valid, but kernel/secmon need not
+  // to have access to the entire memory region where the stack resides =>
+  // MPU temporarily to read the return address.
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_DISABLED);
+  uint32_t addr = *ret_addr;
+  mpu_restore(mode);
+
+  return addr;
 }
 
 // Terminate active task from fault/exception handler
