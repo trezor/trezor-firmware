@@ -59,8 +59,8 @@ pub fn run(
 
     if fade_transition {
         ModelUI::fadeout();
-        render(frame);
     }
+    render(frame);
     ModelUI::fadein();
 
     #[cfg(all(feature = "power_manager", feature = "haptic"))]
