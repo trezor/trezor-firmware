@@ -11,7 +11,7 @@ def test_evolu_get_node(session: Session):
     proof = bytes.fromhex(
         "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
     )
-    node = evolu.get_node(session, proof=proof, index=0)
+    node = evolu.get_node(session, proof=proof, node_index=0, dik_index=0)
 
     check_value = bytes.fromhex(
         "7b5fd3809dfafaf8b34aa8128a355e6f6dca6e5d8bd70948a3a1d9699d92749f9ba338eb28e6c29b03188bb3b0f93b3a4662fe6dda2a7e9ff8ceb8191a9035fd"
@@ -28,7 +28,7 @@ def test_evolu_get_node_invalid_proof(session: Session):
         TrezorFailure,
         match="Invalid proof",
     ):
-        evolu.get_node(session, proof=proof, index=0)
+        evolu.get_node(session, proof=proof, node_index=0, dik_index=0)
 
 
 def test_evolu_get_node_no_proof(session: Session):
@@ -36,7 +36,7 @@ def test_evolu_get_node_no_proof(session: Session):
         TrezorFailure,
         match="Invalid proof",
     ):
-        evolu.get_node(session, proof=b"", index=0)
+        evolu.get_node(session, proof=b"", node_index=0, dik_index=0)
 
 
 def test_evolu_get_node_none_proof(session: Session):
@@ -44,13 +44,14 @@ def test_evolu_get_node_none_proof(session: Session):
         TrezorFailure,
         match="DataError: Failed to decode message: Missing required field. proof_of_delegated_identity",
     ):
-        evolu.get_node(session, proof=None, index=0)  # type: ignore
+        evolu.get_node(session, proof=None, node_index=0, dik_index=0)  # type: ignore
+
 
 def test_evolu_get_node_index_change(session: Session):
     proof = bytes.fromhex(
         "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
     )
-    node_index_0 = evolu.get_node(session, proof=proof, index=0)
-    node_index_1 = evolu.get_node(session, proof=proof, index=1)
+    node_index_0 = evolu.get_node(session, proof=proof, node_index=0, dik_index=0)
+    node_index_1 = evolu.get_node(session, proof=proof, node_index=1, dik_index=0)
 
     assert node_index_0 != node_index_1

@@ -5561,17 +5561,20 @@ class EvoluGetNode(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2100
     FIELDS = {
         1: protobuf.Field("proof_of_delegated_identity", "bytes", repeated=False, required=True),
-        2: protobuf.Field("index", "uint32", repeated=False, required=False, default=0),
+        2: protobuf.Field("node_index", "uint32", repeated=False, required=False, default=0),
+        3: protobuf.Field("dik_index", "uint32", repeated=False, required=False, default=0),
     }
 
     def __init__(
         self,
         *,
         proof_of_delegated_identity: "bytes",
-        index: Optional["int"] = 0,
+        node_index: Optional["int"] = 0,
+        dik_index: Optional["int"] = 0,
     ) -> None:
         self.proof_of_delegated_identity = proof_of_delegated_identity
-        self.index = index
+        self.node_index = node_index
+        self.dik_index = dik_index
 
 
 class EvoluNode(protobuf.MessageType):
@@ -5630,6 +5633,7 @@ class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("thp_credential", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("host_static_public_key", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("dik_index", "uint32", repeated=False, required=False, default=0),
     }
 
     def __init__(
@@ -5637,9 +5641,11 @@ class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
         *,
         thp_credential: Optional["bytes"] = None,
         host_static_public_key: Optional["bytes"] = None,
+        dik_index: Optional["int"] = 0,
     ) -> None:
         self.thp_credential = thp_credential
         self.host_static_public_key = host_static_public_key
+        self.dik_index = dik_index
 
 
 class EvoluDelegatedIdentityKey(protobuf.MessageType):

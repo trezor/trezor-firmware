@@ -4105,13 +4105,15 @@ if TYPE_CHECKING:
 
     class EvoluGetNode(protobuf.MessageType):
         proof_of_delegated_identity: "AnyBytes"
-        index: "int"
+        node_index: "int"
+        dik_index: "int"
 
         def __init__(
             self,
             *,
             proof_of_delegated_identity: "AnyBytes",
-            index: "int | None" = None,
+            node_index: "int | None" = None,
+            dik_index: "int | None" = None,
         ) -> None:
             pass
 
@@ -4170,12 +4172,14 @@ if TYPE_CHECKING:
     class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
         thp_credential: "AnyBytes | None"
         host_static_public_key: "AnyBytes | None"
+        dik_index: "int"
 
         def __init__(
             self,
             *,
             thp_credential: "AnyBytes | None" = None,
             host_static_public_key: "AnyBytes | None" = None,
+            dik_index: "int | None" = None,
         ) -> None:
             pass
 

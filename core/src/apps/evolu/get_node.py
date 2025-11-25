@@ -32,16 +32,16 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
         raise NotInitialized("Device is not initialized")
 
     if not check_delegated_identity_proof(
-        bytes(msg.proof_of_delegated_identity), header=b"EvoluGetNode"
+        bytes(msg.proof_of_delegated_identity), msg.dik_index, header=b"EvoluGetNode"
     ):
         raise ValueError("Invalid proof")
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite
 
-    return EvoluNode(data=await derive_evolu_node(msg.index))
+    return EvoluNode(data=await derive_evolu_node(msg.node_index))
 
 
-async def derive_evolu_node(index:int) -> bytes:
+async def derive_evolu_node(index: int) -> bytes:
     from apps.common.seed import Slip21Node, get_seed
 
     seed = await get_seed()

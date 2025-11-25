@@ -62,6 +62,7 @@ def test_evolu_get_delegated_identity_is_constant(client: Client):
         EvoluGetDelegatedIdentityKey(
             thp_credential=credential_data.credential,
             host_static_public_key=TEST_host_static_public_key,
+            dik_index=0,
         ),
         expect=EvoluDelegatedIdentityKey,
     )
@@ -90,6 +91,7 @@ def test_evolu_get_delegated_identity_test_vector(client: Client):
         EvoluGetDelegatedIdentityKey(
             thp_credential=credential_data.credential,
             host_static_public_key=TEST_host_static_public_key,
+            dik_index=0,
         ),
         expect=EvoluDelegatedIdentityKey,
     )
@@ -97,4 +99,26 @@ def test_evolu_get_delegated_identity_test_vector(client: Client):
     private_key = response.private_key
     assert private_key == bytes.fromhex(
         "10e39ed3a40dd63a47a14608d4bccd4501170cf9f2188223208084d39c37b369"
+    )
+
+
+def test_evolu_get_delegated_identity_test_vector_index_1(client: Client):
+    # on emulator, the master key is all zeroes. So the delegated identity key is constant.
+
+    pairing_data = pair_and_get_credential(client)
+    credential_data = pairing_data.credential
+    session = pairing_data.session
+
+    response = session.call(
+        EvoluGetDelegatedIdentityKey(
+            thp_credential=credential_data.credential,
+            host_static_public_key=TEST_host_static_public_key,
+            dik_index=1,
+        ),
+        expect=EvoluDelegatedIdentityKey,
+    )
+
+    private_key = response.private_key
+    assert private_key == bytes.fromhex(
+        "5a03234776fb8a170185ad2ba54415640b26f164847a72f007d799fe7fb753b8"
     )

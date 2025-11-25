@@ -235,20 +235,21 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
                                  mod_trezorutils_firmware_vendor);
 
-/// def delegated_identity() -> bytes:
+/// def delegated_identity(index: int) -> bytes:
 ///     """
 ///     Returns the delegated identity key used for registration and space
-///     management at Evolu.
+///     management at Quota Manager.
 ///     """
-STATIC mp_obj_t mod_trezorutils_delegated_identity(void) {
+STATIC mp_obj_t mod_trezorutils_delegated_identity(mp_obj_t index) {
+  mp_uint_t rotation_index = trezor_obj_get_uint(index);
   uint8_t private_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
-  if (secret_key_delegated_identity(private_key) != sectrue) {
+  if (secret_key_delegated_identity(rotation_index, private_key) != sectrue) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to read delegated identity."));
   }
   return mp_obj_new_bytes(private_key, sizeof(private_key));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_delegated_identity_obj,
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_delegated_identity_obj,
                                  mod_trezorutils_delegated_identity);
 
 /// def unit_color() -> int | None:

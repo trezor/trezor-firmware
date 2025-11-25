@@ -220,12 +220,12 @@ access_violation:
 #include <sec/secret_keys.h>
 
 secbool secret_key_delegated_identity__verified(
-    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+    uint8_t index, uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   if (!probe_write_access(dest, ECDSA_PRIVATE_KEY_SIZE)) {
     goto access_violation;
   }
 
-  return secret_key_delegated_identity(dest);
+  return secret_key_delegated_identity(index, dest);
 
 access_violation:
   apptask_access_violation();

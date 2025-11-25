@@ -33,7 +33,7 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
             write_compact_size(h, len(arg))
             h.extend(arg)
         proof = nist256p1.sign(
-            delegated_identity(),
+            delegated_identity(index),
             h.get_digest(),
         )
 
@@ -87,7 +87,7 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
         h.extend(header)
 
         proof = nist256p1.sign(
-            delegated_identity(),
+            delegated_identity(index),
             h.get_digest(),
         )
 

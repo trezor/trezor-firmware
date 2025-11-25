@@ -442,8 +442,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif  // USE_OPTIGA
 
     case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
-      uint8_t *dest = (uint8_t *)args[0];
-      args[0] = secret_key_delegated_identity__verified(dest);
+      uint8_t index = args[0];
+      uint8_t *dest = (uint8_t *)args[1];
+      args[0] = secret_key_delegated_identity__verified(index, dest);
     } break;
 
     case SYSCALL_STORAGE_SETUP: {

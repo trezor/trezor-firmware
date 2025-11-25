@@ -37,6 +37,13 @@ secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
                                KEY_INDEX_MCU_DEVICE_AUTH, 0, dest);
 }
 
+secbool secret_key_delegated_identity(uint8_t rotation_index,
+                                      uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  uint16_t index = rotation_index << 8 | KEY_INDEX_DELEGATED_IDENTITY;
+  return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT, index,
+                                     dest);
+}
+
 #ifdef USE_OPTIGA
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
   _Static_assert(OPTIGA_PAIRING_SECRET_SIZE == SHA256_DIGEST_LENGTH);
@@ -47,11 +54,6 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
 secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
                                      KEY_INDEX_OPTIGA_MASKING, dest);
-}
-
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
-                                     KEY_INDEX_DELEGATED_IDENTITY, dest);
 }
 
 #endif  // USE_OPTIGA
@@ -186,9 +188,10 @@ secbool secret_key_master_key_get(secret_key_master_key_t* master_key) {
   return sectrue;
 }
 
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  return secret_key_derive_nist256p1(UNUSED_KEY_SLOT,
-                                     KEY_INDEX_DELEGATED_IDENTITY, dest);
+secbool secret_key_delegated_identity(uint8_t rotation_index,
+                                      uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  uint16_t index = rotation_index << 8 | KEY_INDEX_DELEGATED_IDENTITY;
+  return secret_key_derive_nist256p1(UNUSED_KEY_SLOT, index, dest);
 }
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
