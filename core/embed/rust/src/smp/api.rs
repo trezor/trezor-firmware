@@ -14,7 +14,7 @@ extern "C" fn smp_reset() {
     reset::send();
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct NrfAppVersion {
     pub major: u8,
     pub minor: u8,
