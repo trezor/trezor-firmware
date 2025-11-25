@@ -53,7 +53,7 @@
 #define TROPIC_MAC_AND_DESTROY_SLOTS_COUNT 64
 
 // The value by which the index of the first mac-and-destroy slot is shifted
-// before every pin change.The value is a coprime to
+// before every PIN change. The value is coprime to
 // TROPIC_MAC_AND_DESTROY_SLOTS_COUNT to ensure that
 // `get_mac_and_destroy_slot(i, change_pin_counter)` achieves the maximum
 // possible period in `change_pin_counter`.
