@@ -293,7 +293,7 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   pm_status_t status = pm_wait_to_stabilize(drv, PM_STABILIZATION_TIMEOUT_MS);
   if (status != PM_OK) {
     // timeout during state machine stabilization
-    return false;
+    return PM_TIMEOUT;
   }
 
   // TODO: Handle wake-up flags
