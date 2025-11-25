@@ -9,21 +9,25 @@ PHDRS {
 
 SECTIONS
 {
-  . = 0;
-
   .text : {
     *(.text .text.*)
-    *(.rodata .rodata.*)
     *(.dynsym) *(.dynstr) *(.hash)
   } :rx
+
+  .rodata : {
+    *(.rodata .rodata.*)
+    *(.data.rel.ro .data.rel.ro.*)
+  } : rx
 
   . = ALIGN(4);
   .data : {
     *(.data .data.*)
+    *(.sdata .sdata.*)
   } :rw
 
   .bss (NOLOAD) : {
     *(.bss .bss.* COMMON)
+    *(.sbss .sbss.*)
   } :rw
 
   .stack (NOLOAD) : {
@@ -32,9 +36,12 @@ SECTIONS
     _stack_section_end = .;
   } :rw
 
-  .rel.data : {
+  .rel : {
+    *(.rel.rodata)
     *(.rel.data)
   } :rel
 
-  /DISCARD/ : { *(.ARM.exidx*) *(.comment*) }
+  /DISCARD/ : {
+    *(.ARM.exidx*) *(.comment*)
+  }
 }
