@@ -49,12 +49,12 @@ secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
                                      KEY_INDEX_OPTIGA_MASKING, dest);
 }
 
+#endif  // USE_OPTIGA
+
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
                                      KEY_INDEX_DELEGATED_IDENTITY, dest);
 }
-
-#endif  // USE_OPTIGA
 
 #ifdef USE_TROPIC
 static secbool secret_key_derive_curve25519(uint8_t slot, uint16_t index,
