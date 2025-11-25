@@ -88,8 +88,8 @@
 #endif
 
 #include "bootui.h"
-#include "rust_ui_common.h"
 #include "fw_check.h"
+#include "rust_ui_common.h"
 #include "ui_helpers.h"
 #include "version_check.h"
 #include "wire/wire_iface_usb.h"
