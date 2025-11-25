@@ -458,7 +458,8 @@ static bool get_change_pin_counter(uint32_t *change_pin_counter) {
   return true;
 }
 
-static void get_change_pin_counter_time(uint32_t *time_ms) {
+static void get_change_pin_counter_time(uint32_t *time_ms,
+                                        bool is_change_pin_counter_cached) {
   if (!is_change_pin_counter_cached) {
     lt_mcounter_get_time(time_ms);
   }
@@ -540,7 +541,7 @@ cleanup:
 }
 
 void tropic_pin_stretch_time(uint32_t *time_ms) {
-  get_change_pin_counter_time(time_ms);
+  get_change_pin_counter_time(time_ms, is_change_pin_counter_cached);
   lt_mac_and_destroy_time(time_ms);
 }
 
@@ -585,7 +586,10 @@ cleanup:
 }
 
 void tropic_pin_reset_slots_time(uint32_t *time_ms, uint16_t pin_index) {
-  get_change_pin_counter_time(time_ms);
+  // When get_change_pin_counter() is called in tropic_pin_reset_slots(), the
+  // change pin counter will have already been cached by
+  // get_change_pin_counter_time() in tropic_pin_stretch()
+  get_change_pin_counter_time(time_ms, true);
   for (int i = 0; i <= pin_index; i++) {
     lt_mac_and_destroy_time(time_ms);
   }
@@ -657,7 +661,10 @@ cleanup:
 void tropic_pin_set_time(uint32_t *time_ms) {
   rng_fill_buffer_strong_time(time_ms);
   update_change_pin_counter_time(time_ms);
-  get_change_pin_counter_time(time_ms);
+  // When get_change_pin_counter() is called in tropic_pin_set(), the
+  // change pin counter will have already been cached by
+  // update_change_pin_counter() in tropic_pin_set()
+  get_change_pin_counter_time(time_ms, true);
   for (int i = 0; i < PIN_MAX_TRIES; i++) {
     lt_mac_and_destroy_time(time_ms);
     lt_mac_and_destroy_time(time_ms);
