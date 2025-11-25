@@ -18,6 +18,7 @@
  */
 
 #include <sys/power_manager.h>
+#include "rtl/error_handling.h"
 
 /// package: trezorio.pm
 
@@ -62,7 +63,10 @@ STATIC mp_obj_t mod_trezorio_pm_suspend() {
   wakeup_flags_t wakeup_flags = 0;
   pm_status_t res = pm_suspend(&wakeup_flags);
   if (res != PM_OK) {
-    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Failed to suspend"));
+    char msg[64];
+    snprintf(msg, sizeof(msg), "result code: %d", res);
+    error_shutdown_ex("SUSPEND ERROR", msg, NULL);
+    // mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Failed to suspend"));
   }
   return mp_obj_new_int_from_uint(wakeup_flags);
 }
