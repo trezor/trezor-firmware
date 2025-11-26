@@ -576,6 +576,8 @@ async def confirm_output(
     cancel_text: str | None = None,
     description: str | None = None,
 ) -> None:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu, interact_with_menu
+
     if address_label is not None:
         title = address_label
     elif title is not None:
@@ -585,32 +587,88 @@ async def confirm_output(
     else:
         title = TR.send__title_sending_to
 
-    await raise_if_not_confirmed(
-        trezorui_api.flow_confirm_output(
-            title=TR.words__send,
-            subtitle=title,
-            message=address,
-            extra=None,
-            amount=amount,
-            chunkify=chunkify,
-            text_mono=True,
-            account_title=TR.send__send_from,
-            account=source_account,
-            account_path=source_account_path,
-            address_item=None,
-            extra_item=None,
-            br_code=br_code,
-            br_name="confirm_output",
-            summary_items=None,
-            fee_items=None,
-            summary_title=None,
-            summary_br_name=None,
-            summary_br_code=None,
-            cancel_text=cancel_text,
-            description=description,
-        ),
-        br_name=None,
-    )
+    if amount is not None:
+        account_properties: list[PropertyType] = []
+        if source_account:
+            account_properties.append((TR.words__wallet, source_account, None))
+        if source_account_path:
+            account_properties.append(
+                (
+                    TR.address_details__derivation_path,
+                    source_account_path,
+                    None,
+                )
+            )
+        if account_properties:
+            menu_items = [
+                create_details(
+                    TR.address_details__account_info,
+                    account_properties,
+                    title=TR.address_details__account_info,
+                    subtitle=TR.send__send_from,
+                )
+            ]
+        else:
+            menu_items = []
+        menu = Menu.root(
+            menu_items,
+            cancel=TR.buttons__cancel,
+        )
+        while True:
+            address_layout = trezorui_api.confirm_value(
+                title=TR.words__send,
+                value=address,
+                description=description,
+                subtitle=title,
+                verb=TR.buttons__continue,
+                chunkify=chunkify,
+                page_counter=True,  # TODO: this is for test_cardano_sign_tx_show_details - maybe we can do without?
+                external_menu=True,
+            )
+            await confirm_with_menu(address_layout, menu, "confirm_output", br_code)
+
+            amount_layout = trezorui_api.confirm_value(
+                title=TR.words__send,
+                value=amount,
+                description=TR.words__amount,
+                is_data=False,
+                subtitle=title,
+                external_menu=True,
+                back_button=True,
+            )
+            if (
+                await interact_with_menu(amount_layout, menu, "confirm_output", br_code)
+                is BACK
+            ):
+                continue
+            else:
+                break
+    else:
+        await raise_if_not_confirmed(
+            trezorui_api.flow_confirm_output(
+                title=TR.words__send,
+                subtitle=title,
+                message=address,
+                extra=None,
+                chunkify=chunkify,
+                text_mono=True,
+                account_title=TR.send__send_from,
+                account=source_account,
+                account_path=source_account_path,
+                address_item=None,
+                extra_item=None,
+                br_code=br_code,
+                br_name="confirm_output",
+                summary_items=None,
+                fee_items=None,
+                summary_title=None,
+                summary_br_name=None,
+                summary_br_code=None,
+                cancel_text=cancel_text,
+                description=description,
+            ),
+            br_name=None,
+        )
 
 
 async def should_show_more(
@@ -1005,7 +1063,6 @@ if not utils.BITCOIN_ONLY:
                 description=None,
                 extra=None,
                 message=(recipient or TR.ethereum__new_contract),
-                amount=None,
                 chunkify=(chunkify if recipient else False),
                 text_mono=(True if recipient else False),
                 account_title=TR.send__send_from,
@@ -1204,7 +1261,6 @@ if not utils.BITCOIN_ONLY:
                 description=None,
                 extra=None,
                 message=intro_question,
-                amount=None,
                 chunkify=False,
                 text_mono=False,
                 account_title=TR.address_details__account_info,
@@ -1289,7 +1345,6 @@ if not utils.BITCOIN_ONLY:
                 description=description,
                 extra=TR.words__provider if vote_account else None,
                 message=vote_account,
-                amount=None,
                 chunkify=True,
                 text_mono=True,
                 account_title=TR.address_details__account_info,

@@ -547,7 +547,6 @@ impl FirmwareUI for UIDelizia {
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         message: TString<'static>,
-        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
@@ -577,15 +576,6 @@ impl FirmwareUI for UIDelizia {
         .with_swipeup_footer(None)
         .with_chunkify(chunkify)
         .with_text_mono(text_mono);
-
-        let confirm_amount = amount.map(|amount| {
-            ConfirmValue::new(TR::words__amount.into(), amount.into(), None)
-                .with_subtitle(subtitle)
-                .with_menu_button()
-                .with_swipeup_footer(None)
-                .with_text_mono(text_mono)
-                .with_swipe_down()
-        });
 
         let confirm_address = address_item.map(|address_item| {
             let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(address_item));
@@ -643,7 +633,6 @@ impl FirmwareUI for UIDelizia {
             account_path,
             br_name,
             br_code,
-            confirm_amount,
             confirm_address,
             confirm_extra,
             summary_items_params,

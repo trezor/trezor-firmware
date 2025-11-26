@@ -464,7 +464,7 @@ impl FirmwareUI for UIEckhart {
             return Err(Error::NotImplementedError);
         }
 
-        let paragraphs = ConfirmValueParams {
+        let mut paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
             extra: extra.unwrap_or("".into()),
             value: if value != Obj::const_none() {
@@ -479,12 +479,18 @@ impl FirmwareUI for UIEckhart {
             } else {
                 &theme::TEXT_MONO_MEDIUM_LIGHT
             },
-            description_font: &theme::TEXT_SMALL,
+            description_font: if subtitle.is_some() {
+                &theme::TEXT_SMALL_LIGHT
+            } else {
+                &theme::TEXT_SMALL
+            },
             extra_font: &theme::TEXT_SMALL,
         }
         .into_paragraphs()
-        .with_placement(LinearPlacement::vertical())
-        .with_spacing(theme::PROP_INNER_SPACING);
+        .with_placement(LinearPlacement::vertical());
+        if subtitle.is_none() {
+            paragraphs = paragraphs.with_spacing(theme::PROP_INNER_SPACING);
+        }
 
         let mut right_button = if hold {
             let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
@@ -661,7 +667,6 @@ impl FirmwareUI for UIEckhart {
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         message: TString<'static>,
-        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
@@ -792,7 +797,6 @@ impl FirmwareUI for UIEckhart {
             title,
             subtitle,
             main_paragraphs,
-            amount,
             br_name,
             br_code,
             account_title,
