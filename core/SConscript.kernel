@@ -391,6 +391,7 @@ VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_{vendor}.
 
 if BOOTLOADER_DEVEL:
     if UNSAFE_FW:
+        # the `_DEV` binaries below are built using `make build_secmon BOOTLOADER_DEVEL=1`
         SECMON = f'embed/models/{TREZOR_MODEL}/secmon/secmon_DEV.bin'
         SECMON_API = f'embed/models/{TREZOR_MODEL}/secmon/secmon_api_DEV.o'
     else:
