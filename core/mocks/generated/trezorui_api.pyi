@@ -356,7 +356,6 @@ def flow_confirm_output(
     message: str,
     description: str | None,
     extra: str | None,
-    amount: str | None,
     chunkify: bool,
     text_mono: bool,
     account_title: str,

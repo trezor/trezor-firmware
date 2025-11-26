@@ -188,7 +188,6 @@ pub trait FirmwareUI {
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         message: TString<'static>,
-        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
