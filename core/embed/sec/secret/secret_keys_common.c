@@ -82,7 +82,7 @@ secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
   // `slot` argument is not used unless SECRET_PRIVILEGED_MASTER_KEY_SLOT is
   // defined
 
-  _Static_assert(ECDSA_PRIVATE_KEY_SIZE == SHA256_DIGEST_LENGTH);
+  _Static_assert(ECDSA_PRIVATE_KEY_SIZE == SHA256_DIGEST_LENGTH, "ECDSA_PRIVATE_KEY_SIZE must be equal to SHA256_DIGEST_LENGTH");
 
   secbool ret = sectrue;
   bignum256 s = {0};
