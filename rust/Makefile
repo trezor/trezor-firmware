@@ -13,7 +13,7 @@ style:
 
 style_check:
 	@for D in $(CRATES); do ( \
-		echo "[STYLE $$D]"; \
+		echo "[STYLE_CHECK $$D]"; \
 		cd $$D; \
 		cargo fmt -- --check \
 	); done

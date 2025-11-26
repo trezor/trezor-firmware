@@ -1,0 +1,10 @@
+[package]
+name = "trezor-thp"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[dev-dependencies]
+heapless = { version = "0.9.2", default-features = false }
+hex = "0.4.3"
