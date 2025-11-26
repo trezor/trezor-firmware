@@ -123,9 +123,10 @@ impl FirmwareUI for UIDelizia {
         page_counter: bool,
         prompt_screen: bool,
         cancel: bool,
+        _back_button: bool,
         _warning_footer: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<impl LayoutMaybeTrace, Error> {
         if info && external_menu {
             return Err(Error::NotImplementedError);
         }
@@ -149,7 +150,6 @@ impl FirmwareUI for UIDelizia {
             .with_external_menu(external_menu)
             .with_hold(hold)
             .into_flow()
-            .and_then(LayoutObj::new_root)
     }
 
     fn confirm_value_intro(
