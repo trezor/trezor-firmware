@@ -134,10 +134,10 @@ COMMIT_HASH="$(git rev-parse "$TAG")"
 PRODUCTION=${PRODUCTION:-1}
 
 if which wget > /dev/null ; then
-  wget --no-config -nc -P ci/ "$CONTAINER_FS_URL"
+  wget --no-verbose --no-config -nc -P ci/ "$CONTAINER_FS_URL"
 else
   if ! [ -f "ci/$ALPINE_TARBALL" ]; then
-    curl -L -o "ci/$ALPINE_TARBALL" "$CONTAINER_FS_URL"
+    curl --no-progress-meter -L -o "ci/$ALPINE_TARBALL" "$CONTAINER_FS_URL"
   fi
 fi
 
@@ -228,7 +228,6 @@ echo
 
 $DOCKER run \
   --network=host \
-  -t \
   -v "$PWD:/local" \
   -v "$PWD/build:/build" \
   --name "$SNAPSHOT_NAME" \
