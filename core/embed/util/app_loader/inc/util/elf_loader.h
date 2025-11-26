@@ -26,8 +26,11 @@
 /**
  * Loads an ELF image using the system dynamic loader.
  *
+ * ELF file is expected to be loaded in SRAM in the block allocated
+ * in app_arena memory (SRAM).
+ *
  * @param applet Pointer to the applet_t structure to be initialized
- * @param elf_ptr Pointer to the pointer to the ELF image in memory
+ * @param elf_ptr Pointer to the pointer to the ELF image loaded in memory
  * @param elf_size Size of the ELF image in memory
  * @return true on success, false on failure
  */
