@@ -761,6 +761,7 @@ def show_properties(
     *,
     title: str,
     value: Sequence[PropertyType] | str,
+    subtitle: str | None = None,
 ) -> LayoutObj[None]:
     """Show a list of key-value pairs, or a monospace string."""
 

@@ -1155,6 +1155,7 @@ impl FirmwareUI for UIBolt {
 
     fn show_properties(
         _title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         _value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)

@@ -1831,9 +1831,17 @@ def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
     )
 
 
-def create_details(name: str, value: list[PropertyType] | str) -> Details:
+def create_details(
+    name: str,
+    value: list[PropertyType] | str,
+    title: str | None = None,
+    subtitle: str | None = None,
+) -> Details:
     from trezor.ui.layouts.menu import Details
 
     return Details.from_layout(
-        name, lambda: trezorui_api.show_properties(title=name, value=value)
+        name,
+        lambda: trezorui_api.show_properties(
+            title=(title or name), subtitle=subtitle, value=value
+        ),
     )

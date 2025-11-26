@@ -1296,6 +1296,7 @@ impl FirmwareUI for UICaesar {
 
     fn show_properties(
         title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
