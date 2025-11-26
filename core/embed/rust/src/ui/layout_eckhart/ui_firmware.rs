@@ -453,10 +453,14 @@ impl FirmwareUI for UIEckhart {
         page_counter: bool,
         _prompt_screen: bool,
         cancel: bool,
+        back_button: bool,
         warning_footer: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<impl LayoutMaybeTrace, Error> {
         if info && external_menu {
+            return Err(Error::NotImplementedError);
+        }
+        if cancel && back_button {
             return Err(Error::NotImplementedError);
         }
 
@@ -509,6 +513,8 @@ impl FirmwareUI for UIEckhart {
 
         let action_bar = if cancel {
             ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
+        } else if back_button {
+            ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), right_button)
         } else {
             ActionBar::new_single(right_button)
         };
@@ -523,7 +529,17 @@ impl FirmwareUI for UIEckhart {
         } else if let Some(warning_footer) = warning_footer {
             screen = screen.with_hint(Hint::new_warning_caution(warning_footer));
         }
-        LayoutObj::new(screen)
+        let screen = screen.map(move |msg| match msg {
+            TextScreenMsg::Cancelled => Some(if back_button {
+                FlowMsg::Back
+            } else {
+                FlowMsg::Cancelled
+            }),
+            TextScreenMsg::Menu => Some(FlowMsg::Info),
+            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+        });
+
+        flow::util::single_page(screen)
     }
 
     fn confirm_value_intro(
