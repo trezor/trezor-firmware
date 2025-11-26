@@ -128,16 +128,19 @@ impl FirmwareUI for UIBolt {
         _page_counter: bool,
         _prompt_screen: bool,
         _cancel: bool,
+        _back_button: bool,
         _warning_footer: Option<TString<'static>>,
         _external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        ConfirmValue::new(title, value, description, verb, verb_cancel, hold)
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let frame = ConfirmValue::new(title, value, description, verb, verb_cancel, hold)
             .with_text_mono(is_data)
             .with_subtitle(subtitle)
             .with_extra(extra)
             .with_chunkify(chunkify)
             .with_info_button(info)
-            .into_layout()
+            .into_frame()?;
+        let layout = RootComponent::new(frame);
+        Ok(layout)
     }
 
     fn confirm_value_intro(
@@ -1434,7 +1437,7 @@ impl ConfirmValue {
         self
     }
 
-    fn into_layout(self) -> Result<Gc<LayoutObj>, Error> {
+    fn into_frame(self) -> Result<Frame<ButtonPage<Paragraphs<ConfirmValueParams>>>, Error> {
         let description = self.description.unwrap_or("".into());
         let extra = self.extra.unwrap_or("".into());
         let paragraphs = ConfirmValueParams {
@@ -1473,7 +1476,11 @@ impl ConfirmValue {
         if self.info_button {
             frame = frame.with_info_button();
         }
-        LayoutObj::new(frame)
+        Ok(frame)
+    }
+
+    fn into_layout(self) -> Result<Gc<LayoutObj>, Error> {
+        LayoutObj::new(self.into_frame()?)
     }
 }
 

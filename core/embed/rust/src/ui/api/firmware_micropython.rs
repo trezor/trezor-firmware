@@ -165,13 +165,14 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let page_counter: bool = kwargs.get_or(Qstr::MP_QSTR_page_counter, false)?;
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, false)?;
         let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, false)?;
+        let back_button: bool = kwargs.get_or(Qstr::MP_QSTR_back_button, false)?;
         let warning_footer: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_warning_footer)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
         let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
-        let layout_obj = ModelUI::confirm_value(
+        let layout = ModelUI::confirm_value(
             title,
             value,
             description,
@@ -186,10 +187,12 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             page_counter,
             prompt_screen,
             cancel,
+            back_button,
             warning_footer,
             external_menu,
         )?;
-        Ok(layout_obj.into())
+
+        Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1542,6 +1545,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     page_counter: bool = False,
     ///     prompt_screen: bool = False,
     ///     cancel: bool = False,
+    ///     back_button: bool = False,
     ///     warning_footer: str | None = None,
     ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:

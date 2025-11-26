@@ -167,6 +167,7 @@ def confirm_value(
     page_counter: bool = False,
     prompt_screen: bool = False,
     cancel: bool = False,
+    back_button: bool = False,
     warning_footer: str | None = None,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
