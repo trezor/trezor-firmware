@@ -709,7 +709,6 @@ impl FirmwareUI for UICaesar {
         _description: Option<TString<'static>>,
         _extra: Option<TString<'static>>,
         _message: TString<'static>,
-        _amount: Option<TString<'static>>,
         _chunkify: bool,
         _text_mono: bool,
         _account_title: TString<'static>,
