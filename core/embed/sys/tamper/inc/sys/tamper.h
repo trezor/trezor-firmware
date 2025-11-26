@@ -35,4 +35,7 @@ uint8_t tamper_external_read(void);
 // Enable external tamper inputs
 void tamper_external_enable(void);
 
+// Disable external tamper inputs
+void tamper_external_disable(void);
+
 #endif  // SECURE_MODE

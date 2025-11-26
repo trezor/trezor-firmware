@@ -199,6 +199,12 @@ void tamper_external_enable(void) {
 #endif
 }
 
+void tamper_external_disable(void) {
+#ifdef TAMPER_INPUT_2
+  TAMP->CR1 &= ~TAMP_CR1_TAMP2E;
+#endif
+}
+
 void tamper_build_pminfo(systask_postmortem_t* pminfo, uint32_t tamper_sr) {
   const char* title = "TAMPER";
 
