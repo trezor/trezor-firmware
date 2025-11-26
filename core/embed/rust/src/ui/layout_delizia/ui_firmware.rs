@@ -1194,6 +1194,7 @@ impl FirmwareUI for UIDelizia {
 
     fn show_properties(
         title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         if Obj::is_str(value) {
