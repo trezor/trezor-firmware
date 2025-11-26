@@ -17,6 +17,7 @@ use super::{
 // props settings
 pub const PROP_INNER_SPACING: i16 = 12; // [px]
 pub const PROPS_SPACING: i16 = 16; // [px]
+pub const PROPS_SPACING_EXTRA: i16 = 20; // [px]
 pub const PROPS_KEY_FONT: TextStyle = TEXT_SMALL_LIGHT;
 pub const PROPS_VALUE_FONT: TextStyle = TEXT_MONO_LIGHT;
 pub const PROPS_VALUE_MONO_FONT: TextStyle = TEXT_MONO_LIGHT;

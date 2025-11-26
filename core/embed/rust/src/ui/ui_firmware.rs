@@ -444,6 +444,7 @@ pub trait FirmwareUI {
 
     fn show_properties(
         _title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         _value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 

@@ -1499,6 +1499,7 @@ impl FirmwareUI for UIEckhart {
 
     fn show_properties(
         title: TString<'static>,
+        subtitle: Option<TString<'static>>,
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut vec = ParagraphVecShort::new();
@@ -1506,27 +1507,47 @@ impl FirmwareUI for UIEckhart {
             let text: TString = value.try_into()?;
             unwrap!(vec.push(Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)));
         } else {
+            let mut first_item_is_address: Option<bool> = None;
             for property in IterBuf::new().try_iterate(value)? {
                 let [header, text, _is_data]: [Obj; 3] = util::iter_into_array(property)?;
+
                 let header = header
                     .try_into_option::<TString>()?
                     .unwrap_or_else(TString::empty);
+                if first_item_is_address.is_none() {
+                    // TODO: should be based on the first item's "property type" (when we have it)
+                    first_item_is_address = Some(header.is_empty());
+                }
+                let mut header_paragraph = Paragraph::new(
+                    if subtitle.is_none() {
+                        &theme::TEXT_SMALL
+                    } else {
+                        // subtitle is already quite prominent
+                        &theme::TEXT_SMALL_LIGHT
+                    },
+                    header,
+                )
+                .no_break();
+                if !first_item_is_address.unwrap_or(false) {
+                    // normal spacing between property keys and values
+                    // unless the first property is an address,
+                    // in which case less space looks better
+                    header_paragraph =
+                        header_paragraph.with_bottom_padding(theme::PROP_INNER_SPACING);
+                }
+                unwrap!(vec.push(header_paragraph));
+
                 let text = text
                     .try_into_option::<TString>()?
                     .unwrap_or_else(TString::empty);
-
-                unwrap!(vec.push(Paragraph::new(&theme::TEXT_SMALL, header)));
-                let mut value_paragraph = Paragraph::new(
-                    if header.is_empty() {
-                        &theme::TEXT_MONO_ADDRESS_CHUNKS
-                    } else {
-                        &theme::TEXT_MONO_LIGHT
-                    },
-                    text,
-                );
-                if header.is_empty() {
-                    value_paragraph = value_paragraph.with_bottom_padding(20);
-                }
+                // TODO: should be based on the "property type"
+                let value_paragraph = if header.is_empty() {
+                    Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)
+                        .with_bottom_padding(theme::PROPS_SPACING_EXTRA)
+                } else {
+                    Paragraph::new(&theme::TEXT_MONO_LIGHT, text)
+                        .with_bottom_padding(theme::PROPS_SPACING)
+                };
                 unwrap!(vec.push(value_paragraph));
             }
         };
@@ -1535,7 +1556,8 @@ impl FirmwareUI for UIEckhart {
             vec.into_paragraphs()
                 .with_placement(LinearPlacement::vertical()),
         )
-        .with_header(Header::new(title).with_close_button());
+        .with_header(Header::new(title).with_close_button())
+        .with_subtitle(subtitle.unwrap_or(TString::empty()));
 
         let obj = RootComponent::new(screen);
         Ok(obj)
