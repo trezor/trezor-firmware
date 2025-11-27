@@ -28,6 +28,10 @@
 
 #include "sys/sysevent_source.h"
 
+#ifdef DEBUGLINK
+#include "button_debug.h"
+#endif
+
 typedef struct {
   // Time of last update of pressed/released data
   uint64_t time;
@@ -47,10 +51,18 @@ static button_fsm_t g_button_tls[SYSTASK_MAX_TASKS];
 bool button_poll_init(void) {
   memset(g_button_tls, 0, sizeof(g_button_tls));
 
+#ifdef DEBUGLINK
+  button_debug_init();
+#endif
+
   return syshandle_register(SYSHANDLE_BUTTON, &g_button_handle_vmt, NULL);
 }
 
 void button_poll_deinit(void) {
+#ifdef DEBUGLINK
+  button_debug_deinit();
+#endif
+
   memset(g_button_tls, 0, sizeof(g_button_tls));
   syshandle_unregister(SYSHANDLE_BUTTON);
 }
@@ -117,6 +129,12 @@ bool button_get_event(button_event_t* event) {
   memset(event, 0, sizeof(*event));
 
   uint32_t new_state = button_get_state();
+
+  // #ifdef DEBUGLINK
+  //   bool debug_event_present = false;
+  //   uint32_t debug_state;
+  //   debug_event_present = button_debug_poll(&debug_state);
+  // #endif
 
   button_fsm_t* fsm = &g_button_tls[systask_id(systask_active())];
   return button_fsm_get_event(fsm, new_state, event);
