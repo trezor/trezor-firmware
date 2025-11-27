@@ -20,7 +20,6 @@
 #include "touch_debug.h"
 
 #include <io/touch.h>
-#include <stdio.h>
 #include <util/tsqueue.h>
 
 #define TOUCH_DEBUG_QUEUE_SIZE 8
@@ -28,12 +27,16 @@
 static uint32_t touch_debug_queue_items[TOUCH_DEBUG_QUEUE_SIZE];
 static tsqueue_entry_t touch_debug_queue_entries[TOUCH_DEBUG_QUEUE_SIZE];
 static tsqueue_t touch_debug_queue;
+static uint32_t touch_debug_state;
+static bool touch_debug_state_active;
 
 void touch_debug_init(void) {
   tsqueue_init(&touch_debug_queue, touch_debug_queue_entries,
                (uint8_t*)touch_debug_queue_items, sizeof(uint32_t),
                TOUCH_DEBUG_QUEUE_SIZE);
 }
+
+void touch_debug_deinit(void) { tsqueue_reset(&touch_debug_queue); }
 
 void touch_debug_start(uint32_t x, uint32_t y) {
   uint32_t event = TOUCH_START | touch_pack_xy(x, y);
@@ -57,27 +60,25 @@ void touch_debug_click(uint32_t x, uint32_t y) {
   tsqueue_enqueue(&touch_debug_queue, (uint8_t*)&event, sizeof(event), NULL);
 }
 
-uint32_t touch_debug_peek(void) {
+bool touch_debug_active(void) { return touch_debug_state_active; }
+
+uint32_t touch_debug_get_state(void) { return touch_debug_state; }
+
+void touch_debug_next(void) {
   if (tsqueue_empty(&touch_debug_queue)) {
-    return 0;
+    return;
   }
 
-  uint32_t event = 0;
+  uint32_t state = 0;
 
-  tsqueue_peek(&touch_debug_queue, (uint8_t*)&event, sizeof(event), NULL, NULL);
-
-  return event;
-}
-
-uint32_t touch_debug_poll(void) {
-  if (tsqueue_empty(&touch_debug_queue)) {
-    return 0;
-  }
-
-  uint32_t event = 0;
-
-  tsqueue_dequeue(&touch_debug_queue, (uint8_t*)&event, sizeof(event), NULL,
+  tsqueue_dequeue(&touch_debug_queue, (uint8_t*)&state, sizeof(state), NULL,
                   NULL);
 
-  return event;
+  touch_debug_state = state;
+
+  if (TOUCH_END & state) {
+    touch_debug_state_active = false;
+  } else {
+    touch_debug_state_active = true;
+  }
 }

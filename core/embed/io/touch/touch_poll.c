@@ -46,6 +46,8 @@ typedef struct {
   uint16_t last_x;
   // Previously reported y-coordinate
   uint16_t last_y;
+  // Debug state currently overrides the state
+  bool debug_active;
 } touch_fsm_t;
 
 // Touch state machine for each task
@@ -62,7 +64,13 @@ bool touch_poll_init(void) {
   return syshandle_register(SYSHANDLE_TOUCH, &g_touch_handle_vmt, NULL);
 }
 
-void touch_poll_deinit(void) { syshandle_unregister(SYSHANDLE_TOUCH); }
+void touch_poll_deinit(void) {
+  syshandle_unregister(SYSHANDLE_TOUCH);
+
+#ifdef DEBUGLINK
+  touch_debug_deinit();
+#endif
+}
 
 static void touch_fsm_clear(touch_fsm_t* fsm) {
   memset(fsm, 0, sizeof(touch_fsm_t));
@@ -175,17 +183,29 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
 uint32_t touch_get_event(void) {
   touch_fsm_t* fsm = &g_touch_tls[systask_id(systask_active())];
 
-  uint32_t touch_state = 0;
+  uint32_t touch_state = touch_get_state();
 
 #ifdef DEBUGLINK
-  touch_state = touch_debug_poll();
-#endif
-
-  if (touch_state == 0) {
-    touch_state = touch_get_state();
+  bool reinstate_state = false;
+  if (touch_debug_active()) {
+    touch_state = touch_debug_get_state();
+    fsm->debug_active = true;
   }
 
+  if (fsm->debug_active && !touch_debug_active()) {
+    touch_state = touch_debug_get_state();
+    fsm->debug_active = false;
+    reinstate_state = true;
+  }
+#endif
+
   uint32_t event = touch_fsm_get_event(fsm, touch_state);
+
+#ifdef DEBUGLINK
+  if (reinstate_state) {
+    fsm->state = touch_get_state();
+  }
+#endif
 
 #ifdef TOUCH_TRACE_EVENT
   if (event != 0) {
@@ -206,15 +226,11 @@ static void on_event_poll(void* context, bool read_awaited,
   UNUSED(write_awaited);
 
   if (read_awaited) {
-    uint32_t touch_state = 0;
+    uint32_t touch_state = touch_get_state();
 
 #ifdef DEBUGLINK
-    touch_state = touch_debug_peek();
+    touch_debug_next();
 #endif
-
-    if (touch_state == 0) {
-      touch_state = touch_get_state();
-    }
 
     syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
   }
@@ -225,6 +241,15 @@ static bool on_check_read_ready(void* context, systask_id_t task_id,
   touch_fsm_t* fsm = &g_touch_tls[task_id];
 
   uint32_t touch_state = *(uint32_t*)param;
+
+#ifdef DEBUGLINK
+  if (touch_debug_active() != fsm->debug_active) {
+    return true;
+  }
+  if (touch_debug_active() && touch_debug_get_state() != fsm->state) {
+    return true;
+  }
+#endif
 
   return touch_fsm_event_ready(fsm, touch_state);
 }

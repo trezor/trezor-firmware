@@ -23,12 +23,16 @@
 
 void touch_debug_init(void);
 
+void touch_debug_deinit(void);
+
 void touch_debug_start(uint32_t x, uint32_t y);
 
 void touch_debug_end(uint32_t x, uint32_t y);
 
 void touch_debug_click(uint32_t x, uint32_t y);
 
-uint32_t touch_debug_peek(void);
+void touch_debug_next(void);
 
-uint32_t touch_debug_poll(void);
+bool touch_debug_active(void);
+
+uint32_t touch_debug_get_state(void);
