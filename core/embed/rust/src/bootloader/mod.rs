@@ -29,6 +29,11 @@ use crate::{
 #[cfg(all(feature = "haptic", feature = "power_manager"))]
 use crate::trezorhal::haptic::{play, HapticEffect};
 
+#[cfg(feature = "debuglink")]
+use crate::trezorhal::bootloader::{
+    debuglink_notify_layout_change, debuglink_process, DebuglinkResult,
+};
+
 use heapless::Vec;
 
 #[cfg(feature = "power_manager")]
@@ -63,6 +68,11 @@ pub fn run(
     render(frame);
     ModelUI::fadein();
 
+    #[cfg(feature = "debuglink")]
+    {
+        debuglink_notify_layout_change();
+    }
+
     #[cfg(all(feature = "power_manager", feature = "haptic"))]
     let mut haptic_played = false;
     #[cfg(feature = "power_manager")]
@@ -88,6 +98,9 @@ pub fn run(
 
     #[cfg(feature = "power_manager")]
     unwrap!(ifaces.push(Syshandle::PowerManager));
+
+    #[cfg(feature = "debuglink")]
+    unwrap!(ifaces.push(Syshandle::UsbDebug));
 
     if communication {
         unwrap!(ifaces.push(Syshandle::UsbWire));
@@ -115,6 +128,17 @@ pub fn run(
             if faded {
                 ModelUI::fadein();
                 faded = false;
+            }
+
+            #[cfg(feature = "debuglink")]
+            if e == Event::USBDebug {
+                let res = debuglink_process();
+
+                if res == DebuglinkResult::Repaint {
+                    render(frame);
+                }
+
+                continue;
             }
 
             if e == Event::USBWire {

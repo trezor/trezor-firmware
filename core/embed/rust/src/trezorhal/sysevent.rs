@@ -146,12 +146,12 @@ pub fn parse_event(signalled: &sysevents_t) -> Option<Event> {
         }
     }
 
-    if signalled.read_ready & (1 << ffi::syshandle_t_SYSHANDLE_USB_WIRE) != 0 {
-        return Some(Event::USBWire);
-    }
-
     if signalled.read_ready & (1 << ffi::syshandle_t_SYSHANDLE_USB_DEBUG) != 0 {
         return Some(Event::USBDebug);
+    }
+
+    if signalled.read_ready & (1 << ffi::syshandle_t_SYSHANDLE_USB_WIRE) != 0 {
+        return Some(Event::USBWire);
     }
 
     #[cfg(feature = "ble")]

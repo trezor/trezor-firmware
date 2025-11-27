@@ -19,7 +19,15 @@
 
 #include <trezor_rtl.h>
 
+#ifdef USE_TOUCH
 #include <io/../../touch_debug.h>
+#endif
+
+#ifdef USE_BUTTON
+#include <io/../../button_debug.h>
+#endif
+
+#include "debuglink.h"
 
 #include <io/display_utils.h>
 
@@ -28,10 +36,6 @@
 #include "protob/protob_debug.h"
 #include "wire/debug_iface_usb.h"
 #include "workflow.h"
-
-#ifdef TREZOR_EMULATOR
-#include "emulator.h"
-#endif
 
 static protob_io_t g_debug_io;
 
@@ -106,10 +110,33 @@ static void debuglink_process_decision(protob_io_t *io) {
     }
   }
 #endif
+#ifdef USE_BUTTON
+  if (msg_recv.has_physical_button) {
+    switch (msg_recv.physical_button) {
+      case DebugPhysicalButton_LEFT_BTN: {
+        button_debug_click(BTN_LEFT);
+        break;
+      }
+      case DebugPhysicalButton_RIGHT_BTN: {
+        button_debug_click(BTN_RIGHT);
+        break;
+      }
+      case DebugPhysicalButton_MIDDLE_BTN: {
+        button_debug_press(BTN_LEFT);
+        button_debug_press(BTN_RIGHT);
+        button_debug_release(BTN_LEFT);
+        button_debug_release(BTN_RIGHT);
+        break;
+      }
+    }
+  }
+#endif
 }
 
-static void debuglink_process_record_screen(protob_io_t *io) {
+static debuglink_result_t debuglink_process_record_screen(protob_io_t *io) {
   DebugLinkRecordScreen msg;
+
+  debuglink_result_t res = DEBUGLINK_RESULT_NONE;
 
   char buffer[1024];
   memset(buffer, 0, sizeof(buffer));
@@ -121,16 +148,21 @@ static void debuglink_process_record_screen(protob_io_t *io) {
 
   if (dir_len > 0) {
     display_record_start((uint8_t *)buffer, dir_len, 0);
+    res = DEBUGLINK_RESULT_REPAINT;
   } else {
     display_record_stop();
   }
 
   send_msg_success(&g_debug_io, "success");
+
+  return res;
 }
 
-void debuglink_process(void) {
+debuglink_result_t debuglink_process(void) {
   fw_info_t fw = {0};
   fw_check(&fw);
+
+  debuglink_result_t res = DEBUGLINK_RESULT_NONE;
 
   uint16_t msg_id = 0;
   if (protob_get_msg_header(&g_debug_io, &msg_id) == sectrue) {
@@ -151,13 +183,15 @@ void debuglink_process(void) {
         debuglink_process_decision(&g_debug_io);
         break;
       case MessageType_MessageType_DebugLinkRecordScreen:
-        debuglink_process_record_screen(&g_debug_io);
+        res = debuglink_process_record_screen(&g_debug_io);
         break;
       default:
         send_msg_success(&g_debug_io, "success");
         break;
     }
   }
+
+  return res;
 }
 
 void debuglink_notify_layout_change(void) {

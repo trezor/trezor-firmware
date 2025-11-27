@@ -21,10 +21,15 @@
 
 #include <trezor_types.h>
 
+typedef enum {
+  DEBUGLINK_RESULT_REPAINT,
+  DEBUGLINK_RESULT_NONE,
+} debuglink_result_t;
+
 void debuglink_init(void);
 
 void debuglink_deinit(void);
 
-void debuglink_process(void);
+debuglink_result_t debuglink_process(void);
 
 void debuglink_notify_layout_change(void);
