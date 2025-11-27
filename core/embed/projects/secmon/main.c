@@ -52,6 +52,23 @@
 #include <sec/hash_processor.h>
 #endif
 
+// Configure and enable power for USB peripheral
+// (need to be called in secure mode since PWR and RCC peripheras are
+//  not accessible from non-secure mode)
+
+#if defined(USE_USB_HS) && !defined(USE_USB_HS_IN_FS)
+void usb_power_init(void) {
+  __HAL_RCC_PWR_CLK_ENABLE();
+  // Enable VDDUSB
+  HAL_PWREx_EnableVddUSB();
+  // Power-on USB PHY
+  HAL_PWREx_EnableUSBHSTranceiverSupply();
+  __HAL_RCC_PWR_CLK_DISABLE();
+}
+#else
+#error Not implemented
+#endif
+
 static void drivers_init(void) {
   flash_init();
 
@@ -91,6 +108,8 @@ static void drivers_init(void) {
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
+
+  usb_power_init();
 }
 
 // Secure monitor panic handler
