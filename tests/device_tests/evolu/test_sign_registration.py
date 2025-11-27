@@ -14,36 +14,9 @@ from trezorlib.models import TrezorModel
 
 from ...common import compact_size
 from .common import sign_proof, get_delegated_identity_key
+from ..check_signature import check_signature_optiga
 
 pytestmark = pytest.mark.models("core")
-
-
-def check_signature(
-    signature: bytes,
-    certificate_chain: Sequence[bytes],
-    model: TrezorModel,
-    data: bytes,
-) -> None:
-    from ..test_authenticate_device import OPTIGA_ROOT_PUBLIC_KEY, verify_cert_chain
-
-    certs = [x509.load_der_x509_certificate(cert) for cert in certificate_chain]
-    assert len(certs) >= 2  # at least one root and one device cert from Optiga
-
-    # Verify the last certificate in the certificate chain against trust anchor.
-    root_public_key = ec.EllipticCurvePublicKey.from_encoded_point(
-        ec.SECP256R1(), OPTIGA_ROOT_PUBLIC_KEY[model]
-    )
-    root_public_key.verify(
-        certs[-1].signature,
-        certs[-1].tbs_certificate_bytes,
-        certs[-1].signature_algorithm_parameters,
-    )
-
-    verify_cert_chain(certs, model.internal_name)
-
-    # Verify the signature of the challenge.
-    certs[0].public_key().verify(signature, data, ec.ECDSA(hashes.SHA256()))
-
 
 def signing_buffer(private_key: bytes, challenge: bytes, size: int) -> bytes:
     public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
@@ -99,7 +72,7 @@ def test_evolu_sign_request(client: Client):
     )
 
     data = signing_buffer(delegated_identity_key, challenge, size)
-    check_signature(response.signature, response.certificate_chain, client.model, data)
+    check_signature_optiga(response.signature, response.certificate_chain, client.model, data)
 
 
 @pytest.mark.models("safe")
@@ -226,4 +199,4 @@ def test_evolu_sign_request_data_higher_bound(client: Client):
     )
 
     data = signing_buffer(delegated_identity_key, challenge, size)
-    check_signature(response.signature, response.certificate_chain, client.model, data)
+    check_signature_optiga(response.signature, response.certificate_chain, client.model, data)
