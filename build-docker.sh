@@ -276,8 +276,8 @@ for TREZOR_MODEL in ${MODELS[@]}; do
       cd /reproducible-build/trezor-firmware/core
       $GIT_CLEAN_REPO
       uv run make clean vendor $MAKE_TARGETS QUIET_MODE=1
-      for item in bootloader firmware prodtest; do
-        if [ -f build/\$item/\$item.bin ]; then
+      for item in bootloader secmon firmware prodtest; do
+        if [ -s build/\$item/\$item.bin ]; then
           uv run ../python/tools/firmware-fingerprint.py \
                       -o build/\$item/\$item.bin.fingerprint \
                       build/\$item/\$item.bin
