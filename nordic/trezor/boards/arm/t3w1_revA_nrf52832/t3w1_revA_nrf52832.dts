@@ -112,27 +112,81 @@
 };
 
 &flash0 {
+    /*
+     * Flash Memory Layout - Managed by Partition Manager
+     * ===================================================
+     * 
+     * The actual flash memory layout is defined in pm_static.yml and managed
+     * by the Partition Manager (PM) at build time. The partition definitions
+     * below are PLACEHOLDERS required only to satisfy devicetree syntax and
+     * provide labels for PM to reference.
+     * 
+     * The 'reg' property values (0xDEAD, 0xBEEF, etc.) are intentionally
+     * invalid and will be OVERRIDDEN by Partition Manager during the build
+     * process based on pm_static.yml configuration.
+     * 
+     * Real Memory Layout (from pm_static.yml):
+     * ----------------------------------------
+     * mcuboot:           0x00000 - 0x10000  (64 KB)  - Bootloader
+     * custom_data:       0x10000 - 0x12000  (8 KB)   - Custom storage
+     * mcuboot_pad:       0x12000 - 0x12200  (512 B)  - Slot 0 header padding
+     * app (image-0):     0x12200 - 0x44000  (199.5 KB) - Primary application slot
+     * mcuboot_secondary: 0x44000 - 0x76000  (200 KB) - Secondary slot (DFU staging)
+     * settings_storage:  0x76000 - 0x80000  (40 KB)  - NVS/settings
+     * 
+     * Code Usage:
+     * -----------
+     * DO NOT use devicetree APIs (DT_REG_ADDR, etc.) to access partition
+     * addresses/sizes. Instead, use Partition Manager macros from pm_config.h:
+     * 
+     *   #include <pm_config.h>
+     *   uint32_t app_addr = PM_APP_ADDRESS;         // 0x12200
+     *   uint32_t app_size = PM_APP_SIZE;            // 0x31e00
+     *   uint32_t slot1_addr = PM_MCUBOOT_SECONDARY_ADDRESS; // 0x44000
+     * 
+     * Build Process:
+     * --------------
+     * 1. Devicetree preprocessing generates zephyr.dts (with placeholder values)
+     * 2. Partition Manager reads pm_static.yml and generates:
+     *    - pm_config.h (C macros with correct addresses/sizes)
+     *    - partitions.yml (runtime partition map)
+     *    - pm.config (Kconfig representation)
+     * 3. Compilation uses pm_config.h macros (correct values)
+     * 4. zephyr.dts retains placeholder values but is NOT used by runtime code
+     * 
+     * The labels below (boot_partition, slot0_partition, slot1_partition) are
+     * required for:
+     * - MCUboot's app.overlay to reference partitions
+     * - Partition Manager to match DTS labels to pm_static.yml entries
+     * - Zephyr's chosen node (zephyr,code-partition = &slot0_partition)
+     */
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
 
-	partitions {
-		compatible = "fixed-partitions";
-		#address-cells = <1>;
-		#size-cells = <1>;
+        /* Bootloader partition - actual: 0x0, size: 0x10000 */
+        boot_partition: partition@DEAD {
+            label = "mcuboot";
+            reg = <0xDEAD 0xBEEF>;  /* Placeholder - PM overrides from pm_static.yml */
+        };
 
-		boot_partition: partition@0 {
-			label = "mcuboot";
-			reg = <0x00000000 0xc000>;
-		};
-		custom_partition: partition@c000 {
-			label = "custom_data";
-			reg = <0x0000c000 0x2000>;
-		};
-		slot0_partition: partition@e000 {
-			label = "image-0";
-			reg = <0x0000e000 0x6c000>;
-		};
-		storage_partition: partition@7a000 {
-			label = "storage";
-			reg = <0x0007a000 0x00006000>;
-		};
-	};
+        /* Primary slot (slot 0) - actual: 0x12000, size: 0x32000 */
+        slot0_partition: partition@1DEAD {
+            label = "image-0";
+            reg = <0x1DEAD 0xBEEF>;  /* Placeholder - PM overrides from pm_static.yml */
+        };
+
+        /* Secondary slot (slot 1) for DFU - actual: 0x44000, size: 0x32000 */
+        slot1_partition: partition@2DEAD {
+            label = "image-1";
+            reg = <0x2DEAD 0xBEEF>;  /* Placeholder - PM overrides from pm_static.yml */
+        };
+
+        /*
+         * Note: Additional partitions (custom_data, settings_storage) are
+         * defined only in pm_static.yml and do not require DTS entries
+         * unless you need to access them via devicetree APIs (not recommended).
+         */
+    };
 };
