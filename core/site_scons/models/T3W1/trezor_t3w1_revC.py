@@ -100,6 +100,7 @@ def configure(
         ]
         if "usb_iface_debug" in features_wanted:
             sources += ["embed/io/touch/touch_debug.c"]
+            sources += ["embed/io/button/button_debug.c"]
 
     sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
     paths += ["embed/io/i2c_bus/inc"]
