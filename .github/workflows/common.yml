@@ -101,26 +101,18 @@ jobs:
       fail-fast: false
       matrix:
         model: [T1B1, T2T1, T2B1, T3B1, T3T1, T3W1]
+        target: [firmware, secmon, bootloader, prodtest]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - run: git checkout ${{ github.head_ref || github.ref_name }}
       - run: |
-          ./build-docker.sh --models ${{ matrix.model }} --targets firmware             ${{ github.head_ref || github.ref_name }}
-          cat build/fingerprints.md >> $GITHUB_STEP_SUMMARY
-      - run: |
-          ./build-docker.sh --models ${{ matrix.model }} --targets secmon     --no-init ${{ github.head_ref || github.ref_name }}
-          cat build/fingerprints.md >> $GITHUB_STEP_SUMMARY
-      - run: |
-          ./build-docker.sh --models ${{ matrix.model }} --targets bootloader --no-init ${{ github.head_ref || github.ref_name }}
-          cat build/fingerprints.md >> $GITHUB_STEP_SUMMARY
-      - run: |
-          ./build-docker.sh --models ${{ matrix.model }} --targets prodtest   --no-init ${{ github.head_ref || github.ref_name }}
+          ./build-docker.sh --models ${{ matrix.model }} --targets ${{ matrix.target }} ${{ github.head_ref || github.ref_name }}
           cat build/fingerprints.md >> $GITHUB_STEP_SUMMARY
       - uses: actions/upload-artifact@v4
         with:
-          name: reproducible-${{ matrix.model }}
+          name: reproducible-${{ matrix.model }}-${{ matrix.target }}
           path: |
             build/*/*/*.bin
           retention-days: 7
