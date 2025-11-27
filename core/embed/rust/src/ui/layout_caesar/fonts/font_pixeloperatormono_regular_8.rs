@@ -407,4 +407,5 @@ pub const Font_PixelOperatorMono_Regular_8_info: FontInfo = FontInfo {
     baseline: 1,
     glyph_data: &Font_PixelOperatorMono_Regular_8,
     glyph_nonprintable: &Font_PixelOperatorMono_Regular_8_glyph_nonprintable,
+    kernings: None,
 };
