@@ -275,16 +275,19 @@ for TREZOR_MODEL in ${MODELS[@]}; do
       set -e -o pipefail
       cd /reproducible-build/trezor-firmware/core
       $GIT_CLEAN_REPO
+      rm -rf /build/*
       uv run make clean vendor $MAKE_TARGETS QUIET_MODE=1
       for item in bootloader secmon firmware prodtest; do
         if [ -s build/\$item/\$item.bin ]; then
           uv run ../python/tools/firmware-fingerprint.py \
                       -o build/\$item/\$item.bin.fingerprint \
                       build/\$item/\$item.bin
+
+          # copy only the artifacts to the build output directory
+          mkdir /build/\$item/
+          cp -v build/\$item/\$item* /build/\$item/
         fi
       done
-      rm -rf /build/*
-      cp -r build/* /build
       chown -R $USER:$GROUP /build
 EOF
 
