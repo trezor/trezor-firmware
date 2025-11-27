@@ -1,29 +1,41 @@
+# Two-slot MCUboot layout for nRF52832 (512KB flash)
 mcuboot:
   address: 0x0
-  size: 0xc000
+  size: 0x10000          # 64KB bootloader
+
 custom_data:
-  address: 0xc000
-  size: 0x2000
+  address: 0x10000
+  size: 0x2000           # 8KB custom storage
+
+# Primary slot (slot 0)
 mcuboot_pad:
-  address: 0xe000
-  size: 0x200
+  address: 0x12000
+  size: 0x200            # 512B padding
+
 app:
-  address: 0xe200
-  size: 0x6be00
+  address: 0x12200
+  size: 0x31e00          # 199.5KB application
+
 mcuboot_primary:
   orig_span: &id001
   - mcuboot_pad
   - app
   span: *id001
-  address: 0xe000
-  size: 0x6c000
+  address: 0x12000
+  size: 0x32000          # Primary slot total: 200KB
+
 mcuboot_primary_app:
   orig_span: &id002
   - app
   span: *id002
-  address: 0xe200
-  size: 0x6be00
-settings_storage:
-  address: 0x7a000
-  size: 0x6000
+  address: 0x12200
+  size: 0x31e00
 
+# Secondary slot (slot 1) - for DFU image staging
+mcuboot_secondary:
+  address: 0x44000
+  size: 0x32000          # 200KB (same size as primary app)
+
+settings_storage:
+  address: 0x76000       # Adjusted for secondary slot
+  size: 0xa000           # 40KB settings storage
