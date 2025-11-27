@@ -476,6 +476,10 @@ echo "Built from commit $COMMIT_HASH"
 echo
 echo "Fingerprints:"
 
+function log_fingerprint() {
+  echo "\`$1\`" "$2" | tee -a build/fingerprints.md
+}
+
 # Display core and legacy fingerprints (if built)
 for VARIANT in core legacy; do
   for MODEL in ${MODELS[@]}; do
@@ -485,7 +489,7 @@ for VARIANT in core legacy; do
         if [ -f "$file" ]; then
           origfile="${file%.fingerprint}"
           fingerprint=$(tr -d '\n' < $file)
-          echo "$fingerprint $origfile"
+          log_fingerprint "$fingerprint" "$origfile"
         fi
       done
     done
@@ -500,7 +504,7 @@ if [ "$OPT_BUILD_NRF" -eq 1 ]; then
       if [ -f "$file" ]; then
         origfile="${file%.fingerprint}"
         fingerprint=$(tr -d '\n' < "$file")
-        echo "$fingerprint $origfile"
+        log_fingerprint "$fingerprint" "$origfile"
       fi
     done
   fi

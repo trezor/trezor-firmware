@@ -106,17 +106,18 @@ jobs:
         with:
           fetch-depth: 0
       - run: git checkout ${{ github.head_ref || github.ref_name }}
-      - run: ./build-docker.sh --models ${{ matrix.model }} --targets bootloader,firmware,prodtest ${{ github.head_ref || github.ref_name }}
-      - name: Show fingerprints
-        run: |
-          for file in build/*/*/*.fingerprint; do
-            if [ -f "$file" ]; then
-              origfile="${file%.fingerprint}"
-              fingerprint=$(tr -d '\n' < $file)
-              echo "\`$fingerprint\` $origfile" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-          cat $GITHUB_STEP_SUMMARY
+      - run: |
+          ./build-docker.sh --models ${{ matrix.model }} --targets firmware             ${{ github.head_ref || github.ref_name }}
+          cat build/fingerprints.md >> $GITHUB_STEP_SUMMARY
+      - run: |
+          ./build-docker.sh --models ${{ matrix.model }} --targets secmon     --no-init ${{ github.head_ref || github.ref_name }}
+          cat build/fingerprints.md >> $GITHUB_STEP_SUMMARY
+      - run: |
+          ./build-docker.sh --models ${{ matrix.model }} --targets bootloader --no-init ${{ github.head_ref || github.ref_name }}
+          cat build/fingerprints.md >> $GITHUB_STEP_SUMMARY
+      - run: |
+          ./build-docker.sh --models ${{ matrix.model }} --targets prodtest   --no-init ${{ github.head_ref || github.ref_name }}
+          cat build/fingerprints.md >> $GITHUB_STEP_SUMMARY
       - uses: actions/upload-artifact@v4
         with:
           name: reproducible-${{ matrix.model }}
