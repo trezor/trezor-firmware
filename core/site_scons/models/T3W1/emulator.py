@@ -113,6 +113,7 @@ def configure(
 
         if "usb_iface_debug" in features_wanted:
             sources += ["embed/io/touch/touch_debug.c"]
+            sources += ["embed/io/button/button_debug.c"]
 
     if "ble" in features_wanted:
         sources += ["embed/io/ble/unix/ble.c"]
