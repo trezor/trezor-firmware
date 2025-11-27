@@ -257,7 +257,7 @@ test_emu_ui_record_multicore: ## quickly record all screens
 
 
 test_bootloader_ui: ## run bootloader UI tests
-	$(PYTEST) $(TESTPATH)/click_tests/bootloader $(TESTOPTS) \
+	$(PYTEST) -s $(TESTPATH)/click_tests/bootloader $(TESTOPTS) \
 		--ui=test --ui-check-missing --do-master-diff --bootloader
 
 pylint: ## run pylint on application sources and tests
