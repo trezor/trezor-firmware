@@ -643,6 +643,24 @@ void tropic_pin_reset_slots_time(uint32_t *time_ms, uint16_t pin_index) {
   }
 }
 
+static lt_ret_t generate_correct_mac_and_destroy_output(
+    lt_handle_t *handle, uint16_t slot_index,
+    const uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE],
+    const uint8_t input[TROPIC_MAC_AND_DESTROY_SIZE],
+    uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE]) {
+  lt_ret_t res = lt_mac_and_destroy(handle, slot_index, reset_key, output);
+  if (res != LT_OK) {
+    return res;
+  }
+
+  return lt_mac_and_destroy(handle, slot_index, input, output);
+}
+
+static void generate_correct_mac_and_destroy_output_time(uint32_t *time_ms) {
+  lt_mac_and_destroy_time(time_ms);
+  lt_mac_and_destroy_time(time_ms);
+}
+
 bool tropic_pin_set(
     tropic_ui_progress_t ui_progress,
     uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE],
@@ -675,20 +693,16 @@ bool tropic_pin_set(
     mac_and_destroy_slot_t slot_index =
         get_mac_and_destroy_slot(i, change_pin_counter);
 
-    if (lt_mac_and_destroy(&drv->handle, slot_index, reset_key, output) !=
-        LT_OK) {
-      goto cleanup;
-    }
-
     hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, NULL, 0,
                 digest);
 
-    if (lt_mac_and_destroy(&drv->handle, slot_index, digest, digest) != LT_OK) {
+    if (generate_correct_mac_and_destroy_output(
+            &drv->handle, slot_index, reset_key, digest, output) != LT_OK) {
       goto cleanup;
     }
 
-    hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, digest,
-                sizeof(digest), stretched_pins[i]);
+    hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, output,
+                sizeof(output), stretched_pins[i]);
 
     if (lt_mac_and_destroy(&drv->handle, slot_index, reset_key, output) !=
         LT_OK) {
@@ -714,8 +728,7 @@ void tropic_pin_set_time(uint32_t *time_ms) {
   // update_change_pin_counter() in tropic_pin_set()
   get_change_pin_counter_time(time_ms, true);
   for (int i = 0; i < PIN_MAX_TRIES; i++) {
-    lt_mac_and_destroy_time(time_ms);
-    lt_mac_and_destroy_time(time_ms);
+    generate_correct_mac_and_destroy_output_time(time_ms);
     lt_mac_and_destroy_time(time_ms);
   }
 }
