@@ -44,6 +44,10 @@
 #define SYSLOG_bootutils_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
+#ifndef SYSLOG_button_debug_MAX_LOG_LEVEL
+#define SYSLOG_button_debug_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
 #ifndef SYSLOG_touch_driver_MAX_LOG_LEVEL
 #define SYSLOG_touch_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
