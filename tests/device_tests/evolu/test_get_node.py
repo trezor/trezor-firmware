@@ -2,26 +2,55 @@ import pytest
 
 from trezorlib import evolu
 from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
-pytestmark = pytest.mark.models("core")
+from .common import sign_proof, get_delegated_identity_key
+
+pytestmark = [
+    pytest.mark.models("core"),
+    # the tests vectors in this test are for the SLIP-14 seed. It should be initialized from `conftest.py` already but we set it explicitly to be sure
+    pytest.mark.setup_client(
+        mnemonic="all all all all all all all all all all all all", passphrase=False
+    ),
+]
 
 
-def test_evolu_get_node(session: Session):
-    proof = bytes.fromhex(
-        "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
-    )
-    node = evolu.get_node(session, proof=proof)
+def test_evolu_get_node(client: Client):
+    delegated_identity_key = get_delegated_identity_key(client)
+    proof = sign_proof(delegated_identity_key, b"EvoluGetNode", [])
+    node = evolu.get_node(client.get_session(), proof=proof)
 
+    # expected node for the SLIP-14 seed
     check_value = bytes.fromhex(
         "a81aaf51997b6ddfa33d11c038d6aba5f711754a2c823823ff8b777825cdbb32b0e71c301fa381c75081bd3bcc134b63306aa6fc9a9f52d835ad4df8cd507be6"
     )
     assert node == check_value
 
 
+@pytest.mark.setup_client(
+    # a different seed
+    mnemonic="valve multiply shuffle venue then cruel genre venture fruit hammer sponsor luxury",
+    passphrase=False,
+)
+def test_evolu_get_node_different_seed(client: Client):
+    delegated_identity_key = get_delegated_identity_key(client)
+    proof = sign_proof(delegated_identity_key, b"EvoluGetNode", [])
+    node = evolu.get_node(client.get_session(), proof=proof)
+
+    # expected node for the SLIP-14 seed
+    check_value = bytes.fromhex(
+        "a81aaf51997b6ddfa33d11c038d6aba5f711754a2c823823ff8b777825cdbb32b0e71c301fa381c75081bd3bcc134b63306aa6fc9a9f52d835ad4df8cd507be6"
+    )
+
+    # check that the generated node is different
+    assert node != check_value
+
+
 def test_evolu_get_node_invalid_proof(session: Session):
+    # zeroed last 2 bytes of the hardcoded proof => it should be invalid for every test
     proof = bytes.fromhex(
-        "1f354fbb47b4679c1cb0c2c6b96a27f9a147c61ec5ef6f6c42491c839f4b7a95792d099be0f138274e5ef7896058b4de4f383f497792bb157b925e2644a79a0000"  # altered last 2 bytes
+        "1f354fbb47b4679c1cb0c2c6b96a27f9a147c61ec5ef6f6c42491c839f4b7a95792d099be0f138274e5ef7896058b4de4f383f497792bb157b925e2644a79a0000"
     )
 
     with pytest.raises(
