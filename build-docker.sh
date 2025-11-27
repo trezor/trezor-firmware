@@ -285,7 +285,6 @@ for TREZOR_MODEL in ${MODELS[@]}; do
         fi
       done
       rm -rf /build/*
-      cp -r build/* /build
       chown -R $USER:$GROUP /build
 EOF
 
