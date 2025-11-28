@@ -17,16 +17,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <trezor_rtl.h>
 
-#include <sys/dbg_console.h>
+#include <sys/applet.h>
 
-void dbg_console_init(void) {}
+void applet_init(applet_t* applet, const applet_layout_t* layout,
+                 const applet_privileges_t* privileges) {
+  memset(applet, 0, sizeof(applet_t));
 
-ssize_t dbg_console_read(void *buffer, size_t buffer_size) { return 0; }
+  applet->layout = *layout;
+  applet->privileges = *privileges;
+}
 
-void dbg_console_write(const void *data, size_t data_size) {
-  int result = fwrite(data, 1, data_size, stdout);
-  fflush(stdout);
-  (void)result;
+void applet_run(applet_t* applet) { systask_yield_to(&applet->task); }
+
+void applet_stop(applet_t* applet) {}
+
+bool applet_is_alive(applet_t* applet) {
+  return systask_is_alive(&applet->task);
+}
+
+applet_t* applet_active(void) {
+  systask_t* task = systask_active();
+
+  if (task == NULL) {
+    return NULL;
+  }
+
+  return (applet_t*)task->applet;
 }
