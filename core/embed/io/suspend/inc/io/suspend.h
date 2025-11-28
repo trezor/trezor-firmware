@@ -30,6 +30,7 @@ typedef uint16_t wakeup_flags_t;
 #define WAKEUP_FLAG_NFC (1 << 3)    /** NFC event */
 #define WAKEUP_FLAG_RTC (1 << 4)    /** RTC wake-up timer */
 #define WAKEUP_FLAG_USB (1 << 5)    /** USB WIRE communication */
+#define WAKEUP_FLAG_TOUCH (1 << 6)  /** Touch pressed */
 
 /**
  * @brief Puts device into suspend mode (actually STOP2 mode on STM32U5)
