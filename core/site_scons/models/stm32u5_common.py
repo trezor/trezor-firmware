@@ -160,7 +160,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         paths += ["embed/sys/ipc/inc"]
 
     if "applet" in features_wanted:
-        sources += ["embed/sys/task/stm32/applet.c"]
+        sources += ["embed/sys/task/applet.c"]
         sources += ["embed/sys/task/stm32/coreapp.c"]
 
     if "app_loading" in features_wanted:
