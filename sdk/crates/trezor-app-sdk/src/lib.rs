@@ -12,7 +12,7 @@
 //! ```rust
 //! use trezor_app_sdk::{info, error, ui};
 //!
-//! #[no_mangle]
+//! #[unsafe(no_mangle)]
 //! pub extern "C" fn applet_main(api_get: trezor_app_sdk::TrezorApiGetter) -> i32 {
 //!     // Initialize the SDK
 //!     if let Err(e) = trezor_app_sdk::init(api_get) {
@@ -41,21 +41,23 @@
 //! ```
 
 #![no_std]
-#![feature(core_intrinsics, alloc_error_handler, lang_items)]
 #![allow(internal_features)]
+#![feature(core_intrinsics)]
+#![feature(lang_items)]
 
-extern crate alloc;
-
+mod critical_section;
+mod ipc;
 // Internal low-level API module
-pub mod low_level_api;
+mod low_level_api;
+mod sysevent;
 
 // Public modules
 pub mod log;
+pub mod print;
+pub mod service;
 pub mod ui;
+pub mod util;
 
-mod critical_section;
-
-use alloc::format;
 /// A wrapper which aligns its inner value to 4 bytes.
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(8))]
@@ -64,99 +66,82 @@ pub struct Align<T>(
     pub T,
 );
 
-// Re-export logging macros at the root
-pub use log::{Level, Logger, Record};
-
 // Re-export UI archived types
 pub use ui::{ArchivedTrezorUiEnum, ArchivedTrezorUiResult};
 
-use crate::ui::request_finish;
-use core::ffi::c_int;
-use low_level_api::{Api, ApiWrapper, TrezorApiGetter, TREZOR_API_VERSION_1};
+#[derive(ufmt::derive::uDebug)]
+pub enum Error {
+    ApiError(ApiError),
+    ServiceError,
+    InvalidFunction,
+    InvalidMessage,
+    Cancelled,
+}
+
+impl From<ApiError> for Error {
+    fn from(error: ApiError) -> Self {
+        Error::ApiError(error)
+    }
+}
+
+impl From<service::Error<'_>> for Error {
+    fn from(_error: service::Error) -> Self {
+        Error::ServiceError
+    }
+}
 
 // The application provides an unmangled Rust function `app` that returns Result<()>
-extern "Rust" {
-    fn app() -> Result<()>;
+unsafe extern "Rust" {
+    unsafe fn app() -> Result<()>;
 }
 
 /// Result type alias
 pub use low_level_api::ApiError;
-pub type Result<T> = core::result::Result<T, ApiError>;
+pub type Result<T> = core::result::Result<T, Error>;
+pub use ipc::IpcMessage;
 
-// Logger implementation
-struct AppLogger;
+static_service!(CORE_SERVICE, CoreApp, service::CoreIpcService, 2048);
 
-impl Logger for AppLogger {
-    fn log(&self, record: &Record) {
-        let timestamp = Api::systick_ms().unwrap_or(0);
-        let formatted = format!(
-            "[{:08}] {} [{}] {}\n",
-            timestamp,
-            record.level.as_str(),
-            record.module,
-            record.args
-        );
-        let _ = Api::dbg_console_write(formatted.as_bytes());
-    }
-}
-
-// Register the global logger
-#[no_mangle]
-fn __trezor_log_global_logger() -> &'static dyn Logger {
-    static LOGGER: AppLogger = AppLogger;
-    &LOGGER
-}
-
-#[no_mangle]
-pub extern "C" fn applet_main(api_get: TrezorApiGetter) -> c_int {
-    if let Err(e) = Api::init(api_get, TREZOR_API_VERSION_1) {
-        return e.to_c_int();
-    }
-
-    info!("Hello world!");
-
-    let mut ipc_buffer = Align([0u8; 200]);
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn applet_main(
+    api_get: low_level_api::ffi::trezor_api_getter_t,
+) -> cty::c_int {
+    trace!("Initializing API");
+    // SAFETY: trusting the caller of applet_main to provide us with a valid getter
+    unsafe { low_level_api::init(api_get) };
 
     info!("registering IPC");
-    Api::ipc_register(1, &mut ipc_buffer.0[..]).unwrap();
-
+    CORE_SERVICE.start();
     trace!("IPC registered");
 
     // Call the user's app function
     let result = unsafe { app() };
     info!("Finishing request");
-    _ = request_finish();
 
     match result {
         Ok(()) => {
             info!("Application completed successfully");
-            _ = Api::system_exit(0);
+            _ = low_level_api::system_exit();
         }
         Err(e) => {
-            let code = e.to_c_int();
-            error!("Application failed with error code: {}", code);
-            _ = Api::system_exit(code);
+            let mut error_buf = [0u8; 128];
+            let mut writer = util::SliceWriter::new(&mut error_buf);
+            _ = ufmt::uwrite!(writer, "Application failed with error code: {:?}", e);
+            error!("{}", writer.as_ref());
+            _ = low_level_api::system_exit_error("Error", writer.as_ref(), "");
         }
     }
-
-    0
 }
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
-    Api::system_exit_fatal(
-        &format!("Panic: {}", info),
+    low_level_api::system_exit_fatal(
+        info.message().as_str().unwrap_or("PANIC"),
         info.location().map_or("<unknown>", |loc| loc.file()),
         info.location().map_or(0, |loc| loc.line() as i32),
-    ).ok();
-    core::intrinsics::abort();
+    );
 }
-
-// #[alloc_error_handler]
-// fn alloc_error_handler(_: alloc::alloc::Layout) -> ! {
-//     core::intrinsics::abort();
-// }
 
 #[cfg(not(test))]
 #[lang = "eh_personality"]
@@ -164,12 +149,11 @@ fn eh_personality() -> ! {
     loop {}
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 unsafe extern "C" fn _Unwind_Resume() {
-    core::intrinsics::unreachable();
+    unsafe { core::intrinsics::unreachable() };
 }
 
 #[cfg(not(target_os = "none"))]
 #[unsafe(no_mangle)]
-pub extern "C" fn main() {
-}
+pub extern "C" fn main() {}

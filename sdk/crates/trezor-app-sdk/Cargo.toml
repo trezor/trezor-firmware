@@ -1,7 +1,7 @@
 [package]
 name = "trezor-app-sdk"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["rlib"]
@@ -9,14 +9,12 @@ crate-type = ["rlib"]
 [dependencies]
 trezor-structs = { path = "../trezor-structs" }
 rkyv = { version = "0.8", default-features = false, features = ["alloc"] }
-once_cell = { version = "1.20", default-features = false, features = ["critical-section"] }
 critical-section = "1.2.0"
+ufmt = "0.2.0"
+spin = "0.10.0"
+cty = "0.2.2"
+num_enum = { version = "0.7.5", default-features = false }
 
 [build-dependencies]
 quote = "1.0"
 syn = "2.0"
-
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = [
-    'cfg(log_level, values("off", "error", "warn", "info", "debug", "trace"))',
-] }
