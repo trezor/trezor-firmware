@@ -112,6 +112,7 @@ pub unsafe extern "C" fn applet_main(
 
     info!("registering IPC");
     CORE_SERVICE.start();
+    ui::init(&CORE_SERVICE);
     trace!("IPC registered");
 
     // Call the user's app function
@@ -124,7 +125,7 @@ pub unsafe extern "C" fn applet_main(
             _ = low_level_api::system_exit();
         }
         Err(e) => {
-            let mut error_buf = [0u8; 128];
+            let mut error_buf = [0u8; 256];
             let mut writer = util::SliceWriter::new(&mut error_buf);
             _ = ufmt::uwrite!(writer, "Application failed with error code: {:?}", e);
             error!("{}", writer.as_ref());
@@ -138,7 +139,7 @@ pub unsafe extern "C" fn applet_main(
 fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
     low_level_api::system_exit_fatal(
         info.message().as_str().unwrap_or("PANIC"),
-        info.location().map_or("<unknown>", |loc| loc.file()),
+        info.location().map_or("<unknown>", |loc| &loc.file()[20..]),
         info.location().map_or(0, |loc| loc.line() as i32),
     );
 }
