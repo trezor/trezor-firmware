@@ -141,8 +141,10 @@ void ipc_message_free(ipc_message_t *msg) {
   syscall_invoke1((uint32_t)msg, SYSCALL_IPC_FREE_MESSAGE);
 }
 
-bool ipc_send(const ipc_message_t *msg) {
-  return (bool)syscall_invoke1((uint32_t)msg, SYSCALL_IPC_SEND);
+bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
+              size_t data_size) {
+  return (bool)syscall_invoke4((uint32_t)remote, fn, (uint32_t)data, data_size,
+                               SYSCALL_IPC_SEND);
 }
 
 #endif  // USE_IPC
