@@ -83,7 +83,7 @@ fn ipc_ui_call_void(value: TrezorUiEnum) -> Result<()> {
 pub fn confirm_value(title: &str, content: &str) -> UiResult {
     let value = TrezorUiEnum::ConfirmAction {
         title: ShortString::from_str(title).unwrap(),
-        content: ShortString::from_str(content).unwrap(),
+        content: ShortString::from_str(&content[..50]).unwrap(),
     };
     ipc_ui_call_confirm(value)
 }
