@@ -81,6 +81,9 @@ if DBG_CONSOLE != "":
 if not TREZOR_MODEL in ['T3W1', 'D002']:
     FEATURES_WANTED += ["secure_mode"]
 
+if TREZOR_MODEL in ['T3W1']:
+    FEATURES_WANTED += ["app_loading"]
+
 if DISABLE_OPTIGA:
     # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
     if PRODUCTION:
