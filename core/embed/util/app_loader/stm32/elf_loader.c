@@ -300,7 +300,12 @@ static void elf_unload_cb(applet_t* applet) {
     // Clear applet data segment
     mpu_set_active_applet(&applet->layout);
     memset(ram_start, 0, ram_size);
-    mpu_set_active_applet(NULL);
+
+    systask_t* active_task = systask_active();
+    if (active_task->applet != NULL) {
+      applet_t* active_applet = (applet_t*)active_task->applet;
+      mpu_set_active_applet(&active_applet->layout);
+    }
 
     // Free applet RAM
     app_arena_free(ram_start);
