@@ -313,38 +313,16 @@ bool display_set_fb(uint32_t fb_addr) {
 
 // This implementation does not support `mode` parameter, it
 // behaves as if `mode` is always `DISPLAY_RESET_CONTENT`.
-bool display_init(display_content_mode_t mode) {
+static bool display_init_ll(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
-  if (drv->initialized) {
-    return true;
-  }
-
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
-
-#ifdef DISPLAY_PWREN_PIN
-  DISPLAY_PWREN_CLK_ENA();
-  HAL_GPIO_WritePin(DISPLAY_PWREN_PORT, DISPLAY_PWREN_PIN, GPIO_PIN_RESET);
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
-  GPIO_InitStructure.Pin = DISPLAY_PWREN_PIN;
-  HAL_GPIO_Init(DISPLAY_PWREN_PORT, &GPIO_InitStructure);
-#endif
-
 #ifdef DISPLAY_RESET_PIN
-  DISPLAY_RESET_CLK_ENA();
-  HAL_GPIO_WritePin(GPIOE, DISPLAY_RESET_PIN, GPIO_PIN_RESET);
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
-  GPIO_InitStructure.Pin = DISPLAY_RESET_PIN;
-  HAL_GPIO_Init(DISPLAY_RESET_PORT, &GPIO_InitStructure);
-
+  // Toggle the RESET pin
+  HAL_GPIO_WritePin(DISPLAY_RESET_PORT, DISPLAY_RESET_PIN, GPIO_PIN_RESET);
   systick_delay_ms(10);
   HAL_GPIO_WritePin(DISPLAY_RESET_PORT, DISPLAY_RESET_PIN, GPIO_PIN_SET);
   systick_delay_ms(120);
-#endif
+#endif  // DISPLAY_RESET_PIN
 
 #ifdef USE_BACKLIGHT
   backlight_init(BACKLIGHT_RESET, GAMMA_EXP);
@@ -357,27 +335,27 @@ bool display_init(display_content_mode_t mode) {
 #endif
 
   if (!display_pll_init()) {
-    goto cleanup;
+    return false;
   }
   if (!display_dsi_init(drv)) {
-    goto cleanup;
+    return false;
   }
   if (!display_ltdc_init(drv, fb_addr)) {
-    goto cleanup;
+    return false;
   }
 
   /* Start DSI */
   if (HAL_DSI_Start(&drv->hlcd_dsi) != HAL_OK) {
-    goto cleanup;
+    return false;
   }
 
   if (!panel_init(drv)) {
-    goto cleanup;
+    return false;
   }
 
   if (HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LINE_EVENT_GENERAL_LINE) !=
       HAL_OK) {
-    goto cleanup;
+    return false;
   }
 
   /* Enable LTDC interrupt */
@@ -416,6 +394,48 @@ bool display_init(display_content_mode_t mode) {
   drv->refresh_rate_timeout_set = true;
 #endif
 
+  return true;
+}
+
+// This implementation does not support `mode` parameter, it
+// behaves as if `mode` is always `DISPLAY_RESET_CONTENT`.
+bool display_init(display_content_mode_t mode) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (drv->initialized) {
+    return true;
+  }
+
+#ifdef DISPLAY_PWREN_PIN
+  {
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    DISPLAY_PWREN_CLK_ENA();
+    HAL_GPIO_WritePin(DISPLAY_PWREN_PORT, DISPLAY_PWREN_PIN, GPIO_PIN_RESET);
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Pin = DISPLAY_PWREN_PIN;
+    HAL_GPIO_Init(DISPLAY_PWREN_PORT, &GPIO_InitStructure);
+  }
+#endif
+
+#ifdef DISPLAY_RESET_PIN
+  {
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    DISPLAY_RESET_CLK_ENA();
+    HAL_GPIO_WritePin(DISPLAY_RESET_PORT, DISPLAY_RESET_PIN, GPIO_PIN_RESET);
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Pin = DISPLAY_RESET_PIN;
+    HAL_GPIO_Init(DISPLAY_RESET_PORT, &GPIO_InitStructure);
+  }
+#endif
+
+  if (!display_init_ll(mode)) {
+    goto cleanup;
+  }
+
   drv->initialized = true;
   return true;
 
@@ -426,7 +446,7 @@ cleanup:
 
 // This implementation does not support `mode` parameter, it
 // behaves as if `mode` is always `DISPLAY_RESET_CONTENT`.
-void display_deinit(display_content_mode_t mode) {
+static void display_deinit_ll(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
   gfx_bitblt_deinit();
@@ -448,6 +468,14 @@ void display_deinit(display_content_mode_t mode) {
   display_gfxmmu_deinit(drv);
 #endif
   display_pll_deinit();
+}
+
+// This implementation does not support `mode` parameter, it
+// behaves as if `mode` is always `DISPLAY_RESET_CONTENT`.
+void display_deinit(display_content_mode_t mode) {
+  display_driver_t *drv = &g_display_driver;
+
+  display_deinit_ll(mode);
 
 #ifdef DISPLAY_RESET_PIN
   // Release the RESET pin
@@ -603,6 +631,71 @@ void display_refresh_rate_config(void) {
   irq_unlock(key);
 }
 #endif  // REFRESH_RATE_SCALING_SUPPORTED
+
+#ifdef USE_SUSPEND
+void display_suspend(display_wakeup_params_t *wakeup_params) {
+#if TOUCH_WAKEUP_ENABLED == 1
+  display_driver_t *drv = &g_display_driver;
+
+  memset(wakeup_params, 0, sizeof(display_wakeup_params_t));
+
+  if (!drv->initialized) {
+    // The driver isn't initialized, wrong control flow applied
+    return;
+  }
+
+  if (!drv->suspended) {
+    drv->wakeup_params.backlight_level = display_get_backlight();
+
+    panel_suspend(drv);
+
+    display_deinit_ll(DISPLAY_RESET_CONTENT);
+
+    drv->suspended = true;
+  }
+
+  memcpy(wakeup_params, &drv->wakeup_params, sizeof(display_wakeup_params_t));
+#else
+  wakeup_params->backlight_level = display_get_backlight();
+  display_deinit(DISPLAY_RESET_CONTENT);
+#endif  // TOUCH_WAKEUP_ENABLED
+}
+
+void display_resume(const display_wakeup_params_t *wakeup_params) {
+#if TOUCH_WAKEUP_ENABLED == 1
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    // The driver isn't initialized, wrong control flow applied
+    return;
+  }
+
+  if (!drv->suspended) {
+    // The driver isn't suspended, nothing to resume
+    return;
+  }
+
+  if (!display_init_ll(DISPLAY_RESET_CONTENT)) {
+    goto cleanup;
+  }
+
+  if (!display_set_backlight(wakeup_params->backlight_level)) {
+    goto cleanup;
+  }
+
+  drv->suspended = false;
+
+  return;
+
+cleanup:
+  display_deinit(DISPLAY_RESET_CONTENT);
+  return;
+#else
+  display_init(DISPLAY_RESET_CONTENT);
+  display_set_backlight(wakeup_params->backlight_level);
+#endif  // TOUCH_WAKEUP_ENABLED
+}
+#endif  // USE_SUSPEND
 
 bool display_set_backlight(uint8_t level) {
   display_driver_t *drv = &g_display_driver;

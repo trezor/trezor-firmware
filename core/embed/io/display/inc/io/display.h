@@ -70,6 +70,24 @@ bool display_init(display_content_mode_t mode);
 // `display_init(DISPLAY_RETAIN_CONTENT)`.
 void display_deinit(display_content_mode_t mode);
 
+#ifdef USE_SUSPEND
+// Wakeup parameters used to restore display state after suspension.
+typedef struct {
+  // Backlight level
+  uint8_t backlight_level;
+} display_wakeup_params_t;
+
+// Suspends the display driver.
+//
+// Saves the current display state into `wakeup_params`.
+void display_suspend(display_wakeup_params_t *wakeup_params);
+
+// Resumes the display driver.
+//
+// Restores the display state from `wakeup_params`.
+void display_resume(const display_wakeup_params_t *wakeup_params);
+#endif  // USE_SUSPEND
+
 // Allows unprivileged access to the display framebuffer from
 // perspective of the GTZC (Global TrustZone Controller).
 void display_set_unpriv_access(bool unpriv);
