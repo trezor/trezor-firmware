@@ -1,13 +1,19 @@
 #![no_std]
 
-use rkyv::{Archive, Serialize};
+use rkyv::{Archive, Deserialize, Serialize};
 
 /// Unified-length String type, long enough for most simple use-cases.
 /// Stores the string as a fixed-size byte array with length for rkyv serialization.
-#[derive(Archive, Serialize, Copy, Clone)]
+#[derive(Archive, Serialize, Deserialize, Copy, Clone)]
 pub struct ShortString {
     pub data: [u8; 50],
     pub len: u8,
+}
+
+impl AsRef<str> for ShortString {
+    fn as_ref(&self) -> &str {
+        core::str::from_utf8(&self.data[..self.len as usize]).unwrap_or("#INVALID#")
+    }
 }
 
 pub type Prop = (ShortString, ShortString);
@@ -110,7 +116,7 @@ pub enum TrezorUiEnum {
 }
 
 /// Outgoing UI result message for IPC
-#[derive(Archive, Serialize)]
+#[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorUiResult {
     None,
     Confirmed,
