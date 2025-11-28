@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma GCC optimize("O0")
 
 #include <trezor_bsp.h>
 #include <trezor_model.h>
@@ -526,6 +527,14 @@ bool display_resume(const display_wakeup_params_t *wakeup_params) {
 cleanup:
   display_deinit(DISPLAY_RESET_CONTENT);
   return false;
+}
+
+void display_panel_suspend(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (drv->initialized && !drv->suspended) {
+    panel_suspend(drv);
+  }
 }
 #endif  // USE_SUSPEND
 
