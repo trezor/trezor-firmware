@@ -17,32 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_rtl.h>
+#pragma once
+
+#include <trezor_types.h>
 
 #include <sys/applet.h>
 
-void applet_init(applet_t* applet, const applet_layout_t* layout,
-                 const applet_privileges_t* privileges) {
-  memset(applet, 0, sizeof(applet_t));
-
-  applet->layout = *layout;
-  applet->privileges = *privileges;
-}
-
-void applet_run(applet_t* applet) { systask_yield_to(&applet->task); }
-
-void applet_stop(applet_t* applet) {}
-
-bool applet_is_alive(applet_t* applet) {
-  return systask_is_alive(&applet->task);
-}
-
-applet_t* applet_active(void) {
-  systask_t* task = systask_active();
-
-  if (task == NULL) {
-    return NULL;
-  }
-
-  return (applet_t*)task->applet;
-}
+/**
+ * Loads an ELF image using the system dynamic loader.
+ *
+ * ELF file is expected to be loaded in SRAM in the block allocated
+ * in app_arena memory (SRAM).
+ *
+ * @param applet Pointer to the applet_t structure to be initialized
+ * @param elf_ptr Pointer to the pointer to the ELF image loaded in memory
+ * @param elf_size Size of the ELF image in memory
+ * @return true on success, false on failure
+ */
+bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size);

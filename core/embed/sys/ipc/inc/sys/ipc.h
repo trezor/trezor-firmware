@@ -23,15 +23,10 @@
 
 #include <sys/systask.h>
 
-// IPC message is a callback from a previous request
-#define IPC_FN_CALLBACK 0x4000
-// IPC message is a response to a previous request
-#define IPC_FN_RETURN 0x8000
-
 typedef struct {
   systask_id_t remote;
   // Function code with flags (IPC_FN_xxx)
-  uint16_t fn;
+  uint32_t fn;
   // Pointer to the message payload data
   const void *data;
   // Size of the payload data
@@ -53,6 +48,9 @@ bool ipc_init(void);
 
 /**
  * @brief Registers a buffer for receiving IPC messages from a specific task.
+ *
+ * Buffer must be aligned to sizeof(size_t) bytes, otherwise the registration
+ * will fail.
  *
  * @param remote The remote task ID to register the buffer for.
  * @param buffer Pointer to the buffer to use for receiving messages.
@@ -96,19 +94,12 @@ void ipc_message_free(ipc_message_t *msg);
  * The call succeeds only if the remote task has registered a buffer for
  * receiving messages and there is enough space in that buffer.
  *
- * @param msg Pointer to the message to send.
+ * @param remote The destination task ID to send the message to.
+ * @param fn The function code for the message.
+ * @param data Pointer to the message payload data.
+ * @param data_size Size of the payload data in bytes.
+ *
  * @return true if the message was successfully sent
  */
-bool ipc_send(const ipc_message_t *msg);
-
-/**
- * @brief Sends an IPC request message and waits for a response.
- *
- * @param req Pointer to the request message to send.
- * @param rsp Pointer to the structure to store the received message.
- * @param timeout Maximum time to wait for a response in milliseconds.
- *
- * @return true if the response was successfully received within the timeout
- * period, false otherwise.
- */
-bool ipc_call(const ipc_message_t *req, ipc_message_t *rsp, uint32_t timeout);
+bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
+              size_t data_size);

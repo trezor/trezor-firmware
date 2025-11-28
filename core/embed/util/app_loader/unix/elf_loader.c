@@ -23,43 +23,78 @@
 #include <util/elf_loader.h>
 
 #include <dlfcn.h>
+#include <unistd.h>
 
-bool elf_load(applet_t *applet, const char *filename) {
-  applet_layout_t layout = {0};
+#ifdef USE_DBG_CONSOLE
+#include <sys/dbg_console.h>
+#endif
+
+static void elf_applet_unload(applet_t* applet) {
+  if (applet->handle != NULL) {
+    // Unload dynamic library
+    dlclose(applet->handle);
+  }
+}
+
+bool write_to_file(const char* filename, const void* elf_ptr, size_t elf_size) {
+  FILE* f = fopen(filename, "wb");
+
+  if (f == NULL) {
+    return false;
+  }
+
+  int rc = fwrite(elf_ptr, 1, elf_size, f);
+
+  fclose(f);
+
+  return rc == elf_size;
+}
+
+bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   applet_privileges_t privileges = {0};
 
-  applet_init(applet, &layout, &privileges);
+  applet_init(applet, &privileges, elf_applet_unload);
+
+  const char* filename = "/tmp/trezor_ext_app.so";
+
+  // Copy the image to the temporary file that will be
+  // unlinked just after it's loaded
+  if (!write_to_file(filename, elf_ptr, elf_size)) {
+    goto cleanup;
+  }
 
   applet->handle = dlopen(filename, RTLD_NOW);
 
+  unlink(filename);
+
   if (applet->handle == NULL) {
+#ifdef USE_DBG_CONSOLE
+    dbg_printf("elf_load: %s\n", dlerror());
+#endif
     // Failed to load the applet
-    return false;
+    goto cleanup;
   }
 
-  void *entrypoint = dlsym(applet->handle, "applet_main");
+  void* entrypoint = dlsym(applet->handle, "applet_main");
 
   if (entrypoint == NULL) {
     // Applet entry point not found
-    dlclose(applet->handle);
-    applet->handle = NULL;
-    return false;
+    goto cleanup;
   }
 
   if (!systask_init(&applet->task, 0, 0, 0, applet)) {
-    return false;
+    goto cleanup;
   }
 
   uintptr_t api_getter = (uintptr_t)coreapp_get_api_getter();
 
   if (!systask_push_call(&applet->task, entrypoint, api_getter, 0, 0)) {
-    return false;
+    goto cleanup;
   }
 
   return true;
-}
 
-void applet_unload(applet_t *applet) {
-  // Unload the applet
-  dlclose(applet->handle);
+cleanup:
+  applet_unload(applet);
+  return false;
 }

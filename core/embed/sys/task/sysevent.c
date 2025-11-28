@@ -275,7 +275,9 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
           mpu_set_active_applet(&applet->layout);
         }
 #endif
-        *poller->signalled_arg = poller->signalled;
+        if (poller->signalled_arg != NULL) {
+          *poller->signalled_arg = poller->signalled;
+        }
         remove_poller(dispatcher, prio);
         if (task == kernel_task) {
           return;
@@ -330,6 +332,33 @@ void sysevents_notify_task_killed(systask_t *task) {
       source->vmt->task_killed(source->context, task_id);
     }
   }
+}
+
+// Yields the active task and schedules it to be resumed
+//
+// Adds the current active taqsk to the polling list without waiting for any
+// specific events and with an immediate timeout of 0. This effectively
+// schedules the task to resume as soon as possible when the
+void sysevents_yield_and_reschedule(systask_t *task) {
+  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+
+  systask_t *active_task = systask_active();
+
+  if (active_task != systask_kernel()) {
+    uint32_t prio = dispatcher->pollers_count;
+
+    insert_poller(dispatcher, prio);
+
+    // Add task to the polling list
+    // (Do not wait for any events, just scschedule it)
+    dispatcher->pollers[prio].task = active_task;
+    dispatcher->pollers[prio].awaited = (sysevents_t){0};
+    dispatcher->pollers[prio].signalled = (sysevents_t){0};
+    dispatcher->pollers[prio].signalled_arg = NULL;
+    dispatcher->pollers[prio].deadline = ticks_timeout(0);
+  }
+
+  systask_yield_to(task);
 }
 
 #endif  // KERNEL_MODE
