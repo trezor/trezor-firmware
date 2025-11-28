@@ -23,15 +23,10 @@
 
 #include <sys/systask.h>
 
-// IPC message is a callback from a previous request
-#define IPC_FN_CALLBACK 0x4000
-// IPC message is a response to a previous request
-#define IPC_FN_RETURN 0x8000
-
 typedef struct {
   systask_id_t remote;
   // Function code with flags (IPC_FN_xxx)
-  uint16_t fn;
+  uint32_t fn;
   // Pointer to the message payload data
   const void *data;
   // Size of the payload data

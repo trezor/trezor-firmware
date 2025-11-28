@@ -37,7 +37,7 @@
 typedef struct {
   uint8_t free;
   systask_id_t remote;
-  uint16_t fn;
+  uint32_t fn;
   size_t size;
   uint8_t __attribute__((aligned(IPC_DATA_ALIGNMENT))) data[];
 } ipc_queue_item_t;
