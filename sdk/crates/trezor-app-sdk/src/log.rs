@@ -19,8 +19,6 @@
 //! RUSTFLAGS='--cfg log_level="info"' cargo build
 //! ```
 
-extern crate alloc;
-
 /// Log level enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
@@ -44,206 +42,147 @@ impl Level {
     }
 }
 
-/// Log record passed to the logger
-pub struct Record<'a> {
-    pub level: Level,
-    pub module: &'a str,
-    pub file: &'a str,
-    pub line: u32,
-    pub args: &'a str,
-}
-
-/// Logger trait - implement this for your custom backend
-pub trait Logger {
-    fn log(&self, record: &Record);
-}
-
 /// Helper function to format a log record with timestamp
 #[inline]
-pub fn format_with_timestamp(record: &Record, timestamp: u32) -> alloc::string::String {
-    alloc::format!(
-        "[{:08}] {} [{}] {}\n",
-        timestamp,
-        record.level.as_str(),
-        record.module,
-        record.args
-    )
+fn format_timestamp(buf: &mut [u8], mut timestamp: u32) -> &str {
+    buf.fill(b'0');
+    let mut rcursor = buf.len() - 1;
+    while timestamp > 0 {
+        buf[rcursor] = (timestamp % 10) as u8 + b'0';
+        timestamp /= 10;
+        if rcursor == 0 {
+            break;
+        }
+        rcursor -= 1;
+    }
+    // SAFETY: We just generated the data as ASCII digits.
+    unsafe { core::str::from_utf8_unchecked(buf) }
 }
 
-// Compile-time log level configuration
-pub const MAX_LOG_LEVEL: Level = {
-    #[cfg(log_level = "error")]
-    {
-        Level::Error
-    }
-    #[cfg(log_level = "warn")]
-    {
-        Level::Warn
-    }
-    #[cfg(log_level = "info")]
-    {
-        Level::Info
-    }
-    #[cfg(log_level = "debug")]
-    {
-        Level::Debug
-    }
-    #[cfg(log_level = "trace")]
-    {
-        Level::Trace
-    }
-    #[cfg(not(any(
-        log_level = "off",
-        log_level = "error",
-        log_level = "warn",
-        log_level = "info",
-        log_level = "debug",
-        log_level = "trace"
-    )))]
-    {
-        Level::Info
-    } // Default to Info
-};
+#[inline]
+pub fn __log_print_header(level: Level, module: &str) {
+    let timestamp = if low_level_api::is_initialized() {
+        low_level_api::systick_ms()
+    } else {
+        0
+    };
+    let mut timestamp_buf = [b'0'; 8];
+    let timestamp_str = format_timestamp(&mut timestamp_buf, timestamp);
+    let _ = ufmt::uwrite!(
+        crate::print::printer(),
+        "[{}] {} [{}] ",
+        timestamp_str,
+        level.as_str(),
+        module,
+    );
+}
 
 /// Internal logging function called by macros
-#[doc(hidden)]
-#[inline]
-pub fn __log(level: Level, module: &str, file: &str, line: u32, args: &str) {
-    #[cfg(not(log_level = "off"))]
-    {
-        let record = Record {
-            level,
-            module,
-            file,
-            line,
-            args,
-        };
-        __logger().log(&record);
-    }
-}
-
-/// Get the global logger instance
-#[doc(hidden)]
-pub fn __logger() -> &'static dyn Logger {
-    extern "Rust" {
-        fn __trezor_log_global_logger() -> &'static dyn Logger;
-    }
-    unsafe { __trezor_log_global_logger() }
-}
-
-/// Macro to define a global logger
-///
-/// ## Example
-///
-/// ```rust
-/// use trezor_app_sdk::log::{Logger, Record, global_logger};
-///
-/// struct MyLogger;
-///
-/// impl Logger for MyLogger {
-///     fn log(&self, record: &Record) {
-///         // Your implementation
-///     }
-/// }
-///
-/// global_logger!(MyLogger);
-/// ```
 #[macro_export]
-macro_rules! global_logger {
-    ($logger_type:ty) => {
-        #[no_mangle]
-        fn __trezor_log_global_logger() -> &'static dyn $crate::log::Logger {
-            static LOGGER: $logger_type = <$logger_type>::new();
-            &LOGGER
+macro_rules! log {
+    ($level:expr, $($args:tt)*) => {
+        #[cfg(not(log_level = "off"))]
+        {
+            $crate::log::__log_print_header($level, module_path!());
+            let _ = ufmt::uwrite!($crate::print::printer(), $($args)*);
+            $crate::print::print("\n");
         }
-    };
+    }
 }
-
-// Re-export at module level
-pub use global_logger;
 
 /// Logging macros with compile-time level filtering
 #[macro_export]
 macro_rules! error {
-    ($($arg:tt)*) => {{
-        #[cfg(not(log_level = "off"))]
-        if $crate::log::Level::Error <= $crate::log::MAX_LOG_LEVEL {
-            let msg = alloc::format!($($arg)*);
-            $crate::log::__log(
+    ($($arg:tt)*) => {
+        #[cfg(any(
+            log_level = "error",
+            log_level = "warn",
+            log_level = "info",
+            log_level = "debug",
+            log_level = "trace"
+        ))]
+        {
+            $crate::log::log!(
                 $crate::log::Level::Error,
-                module_path!(),
-                file!(),
-                line!(),
-                &msg
+                $($arg)*
             );
         }
-    }};
+    };
+}
+
+#[macro_export]
+macro_rules! warn_internal {
+    ($($arg:tt)*) => {
+        #[cfg(any(
+            log_level = "warn",
+            log_level = "info",
+            log_level = "debug",
+            log_level = "trace"
+        ))]
+        {
+            $crate::log::log!(
+                $crate::log::Level::Warn,
+                $($arg)*
+            );
+        }
+    };
 }
 
 #[macro_export]
 macro_rules! warn {
-    ($($arg:tt)*) => {{
-        #[cfg(not(log_level = "off"))]
-        if $crate::log::Level::Warn <= $crate::log::MAX_LOG_LEVEL {
-            let msg = alloc::format!($($arg)*);
-            $crate::log::__log(
-                $crate::log::Level::Warn,
-                module_path!(),
-                file!(),
-                line!(),
-                &msg
-            );
-        }
-    }};
+    ($($arg:tt)*) => {
+        $crate::log::warn_internal!($($arg)*);
+    };
 }
 
 #[macro_export]
 macro_rules! info {
-    ($($arg:tt)*) => {{
-        #[cfg(not(log_level = "off"))]
-        if $crate::log::Level::Info <= $crate::log::MAX_LOG_LEVEL {
-            let msg = alloc::format!($($arg)*);
-            $crate::log::__log(
+    ($($arg:tt)*) => {
+        #[cfg(any(
+            log_level = "info",
+            log_level = "debug",
+            log_level = "trace"
+        ))]
+        {
+            $crate::log::log!(
                 $crate::log::Level::Info,
-                module_path!(),
-                file!(),
-                line!(),
-                &msg
+                $($arg)*
             );
         }
-    }};
+    };
 }
 
 #[macro_export]
 macro_rules! debug {
-    ($($arg:tt)*) => {{
-        #[cfg(not(log_level = "off"))]
-        if $crate::log::Level::Debug <= $crate::log::MAX_LOG_LEVEL {
-            let msg = alloc::format!($($arg)*);
-            $crate::log::__log(
+    ($($arg:tt)*) => {
+        #[cfg(any(
+            log_level = "debug",
+            log_level = "trace"
+        ))]
+        {
+            $crate::log::log!(
                 $crate::log::Level::Debug,
-                module_path!(),
-                file!(),
-                line!(),
-                &msg
+                $($arg)*
             );
         }
-    }};
+    };
 }
 
 #[macro_export]
 macro_rules! trace {
-    ($($arg:tt)*) => {{
-        #[cfg(not(log_level = "off"))]
-        if $crate::log::Level::Trace <= $crate::log::MAX_LOG_LEVEL {
-            let msg = alloc::format!($($arg)*);
-            $crate::log::__log(
+    ($($arg:tt)*) => {
+        #[cfg(any(
+            log_level = "trace"
+        ))]
+        {
+            $crate::log::log!(
                 $crate::log::Level::Trace,
-                module_path!(),
-                file!(),
-                line!(),
-                &msg
+                $($arg)*
             );
         }
-    }};
+    };
 }
+
+use {crate::low_level_api};
+#[allow(unused_imports)]
+pub use {log, error, warn_internal, warn_internal as warn, info, debug, trace};
