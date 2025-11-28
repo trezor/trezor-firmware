@@ -23,12 +23,23 @@ pub const SYSHANDLE_IPC0: syshandle_t = 11;
 
 /// IPC message structure
 #[repr(C)]
-#[derive(uDebug, Copy, Clone, Default)]
+#[derive(uDebug, Copy, Clone)]
 pub struct ipc_message_t {
     pub remote: systask_id_t,
     pub fn_: ipc_fn_t,
     pub data: *const ::core::ffi::c_void,
     pub size: usize,
+}
+
+impl Default for ipc_message_t {
+    fn default() -> Self {
+        Self {
+            remote: 0,
+            fn_: 0,
+            data: core::ptr::null(),
+            size: 0,
+        }
+    }
 }
 
 /// System events structure with read/write ready masks
