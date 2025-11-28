@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize("O0")
+
 #ifdef KERNEL_MODE
 
 #include <trezor_model.h>
@@ -34,20 +36,21 @@
 // Alignment required for MPU regions
 #define MPU_ALIGNMENT 32
 
-#define GCC_PIC_SUPPORT
-#define CLANG_RWPI_SUPPORT
+static const Elf32_Phdr* elf_get_phdr(const Elf32_Ehdr* ehdr, uint32_t index) {
+  if (index >= ehdr->e_phnum) {
+    return NULL;
+  }
+  return (Elf32_Phdr*)((uintptr_t)ehdr + ehdr->e_phoff +
+                       index * ehdr->e_phentsize);
+}
 
-typedef struct {
-  size_t elf_size;
-
-  const Elf32_Ehdr* ehdr;
-  const Elf32_Phdr* ro_phdr;
-  const Elf32_Phdr* rw_phdr;
-  const Elf32_Phdr* dyn_phdr;
-
-  applet_layout_t layout;
-
-} elf_ctx_t;
+static const Elf32_Shdr* elf_get_shdr(const Elf32_Ehdr* ehdr, uint32_t index) {
+  if (index >= ehdr->e_shnum) {
+    return NULL;
+  }
+  return (Elf32_Shdr*)((uintptr_t)ehdr + ehdr->e_shoff +
+                       index * ehdr->e_shentsize);
+}
 
 static const Elf32_Ehdr* elf_read_header(const void* elf, size_t elf_size) {
   if (elf_size < sizeof(Elf32_Ehdr)) {
@@ -73,9 +76,7 @@ static const Elf32_Ehdr* elf_read_header(const void* elf, size_t elf_size) {
     return NULL;
   }
 
-  if (ehdr->e_type != ET_EXEC && ehdr->e_type != ET_DYN) {
-    // GCC PIC => ET_DYN
-    // CLANG ROPI/RWPI => ET_EXEC
+  if (ehdr->e_type != ET_EXEC) {
     return NULL;
   }
 
@@ -107,23 +108,17 @@ static const Elf32_Ehdr* elf_read_header(const void* elf, size_t elf_size) {
     return NULL;
   }
 
+  // Check all section references part of elf file
+  for (int i = 0; i < ehdr->e_shnum; ++i) {
+    const Elf32_Shdr* shdr = elf_get_shdr(ehdr, i);
+    if (shdr->sh_type != SHT_NOBITS &&
+        (shdr->sh_offset >= elf_size ||
+         shdr->sh_size > elf_size - shdr->sh_offset)) {
+      return NULL;
+    }
+  }
+
   return ehdr;
-}
-
-static const Elf32_Phdr* elf_get_phdr(const Elf32_Ehdr* ehdr, uint32_t index) {
-  if (index >= ehdr->e_phnum) {
-    return NULL;
-  }
-  return (Elf32_Phdr*)((uintptr_t)ehdr + ehdr->e_phoff +
-                       index * ehdr->e_phentsize);
-}
-
-static const Elf32_Shdr* elf_get_shdr(const Elf32_Ehdr* ehdr, uint32_t index) {
-  if (index >= ehdr->e_shnum) {
-    return NULL;
-  }
-  return (Elf32_Shdr*)((uintptr_t)ehdr + ehdr->e_shoff +
-                       index * ehdr->e_shentsize);
 }
 
 #define IS_RW_SEGMENT(phdr)     \
@@ -134,32 +129,16 @@ static const Elf32_Shdr* elf_get_shdr(const Elf32_Ehdr* ehdr, uint32_t index) {
   ((phdr)->p_type == PT_LOAD && \
    ((phdr)->p_flags & (PF_R | PF_X)) == (PF_R | PF_X))
 
-#define IS_DYN_SEGMENT(phdr) ((phdr)->p_type == PT_DYNAMIC)
-
 #define IS_IN_FILE_LIMIT(phdr, elf_size)              \
   ((phdr)->p_offset < elf_size &&                     \
    (phdr)->p_offset + (phdr)->p_filesz <= elf_size && \
    (phdr)->p_filesz <= (phdr)->p_memsz)
 
-static uint32_t elf_get_dyn_value(const elf_ctx_t* elf, uint32_t tag) {
-  const Elf32_Dyn* dyn =
-      (const Elf32_Dyn*)((uintptr_t)elf->ehdr + elf->dyn_phdr->p_offset);
-  const Elf32_Dyn* end = dyn + elf->dyn_phdr->p_filesz / sizeof(Elf32_Dyn);
-  while (dyn < end && dyn->d_tag != DT_NULL) {
-    if (dyn->d_tag == tag) {
-      return dyn->d_un.d_val;
-    }
-    dyn++;
-  }
-  return 0;
-}
-
-static const char* elf_get_shdr_name(const elf_ctx_t* elf,
+static const char* elf_get_shdr_name(const Elf32_Ehdr* ehdr,
                                      const Elf32_Shdr* shdr) {
-  const Elf32_Shdr* shstrtab = elf_get_shdr(elf->ehdr, elf->ehdr->e_shstrndx);
+  const Elf32_Shdr* shstrtab = elf_get_shdr(ehdr, ehdr->e_shstrndx);
 
-  const char* strings = (const char*)elf->ehdr + shstrtab->sh_offset;
-
+  const char* strings = (const char*)ehdr + shstrtab->sh_offset;
   // Ensure the name offset is within bounds
   if (shdr->sh_name >= shstrtab->sh_size) {
     return NULL;
@@ -176,15 +155,141 @@ static const char* elf_get_shdr_name(const elf_ctx_t* elf,
   return name;
 }
 
-static Elf32_Addr map_va(elf_ctx_t* elf, Elf32_Addr va) {
-  if (va >= elf->ro_phdr->p_vaddr &&
-      va <= elf->ro_phdr->p_vaddr + elf->ro_phdr->p_memsz) {
-    return elf->layout.code1.start + (va - elf->ro_phdr->p_vaddr);
-  } else if (va >= elf->rw_phdr->p_vaddr &&
-             va <= elf->rw_phdr->p_vaddr + elf->rw_phdr->p_memsz) {
-    return elf->layout.data1.start + (va - elf->rw_phdr->p_vaddr);
+static const Elf32_Phdr* elf_read_rw_phdr(const Elf32_Ehdr* ehdr,
+                                          size_t elf_size) {
+  const Elf32_Phdr* rw_phdr = NULL;
+
+  // Parse program headers, find RO, RW segments
+  for (int i = 0; i < ehdr->e_phnum; i++) {
+    const Elf32_Phdr* phdr = elf_get_phdr(ehdr, i);
+    if (IS_RW_SEGMENT(phdr)) {
+      if (rw_phdr != NULL || !IS_IN_FILE_LIMIT(phdr, elf_size)) {
+        // Multiple RW segments or invalid segment
+        return NULL;
+      }
+      rw_phdr = phdr;
+    }
+  }
+
+  // Check if the RW segment is present
+  if (rw_phdr == NULL) {
+    return NULL;
+  }
+
+  // Check if RO segment size is within elf file
+  if (rw_phdr->p_memsz < rw_phdr->p_filesz) {
+    return NULL;
+  }
+
+  return rw_phdr;
+}
+
+static const Elf32_Phdr* elf_read_ro_phdr(const Elf32_Ehdr* ehdr,
+                                          size_t elf_size) {
+  const Elf32_Phdr* ro_phdr = NULL;
+
+  // Parse program headers, search for RO segment
+  for (int i = 0; i < ehdr->e_phnum; i++) {
+    const Elf32_Phdr* phdr = elf_get_phdr(ehdr, i);
+    if (IS_RO_SEGMENT(phdr)) {
+      if (ro_phdr != NULL || !IS_IN_FILE_LIMIT(phdr, elf_size)) {
+        // Multiple RO segments or invalid segment
+        return NULL;
+      }
+      ro_phdr = phdr;
+    }
+  }
+
+  // Check if the RO segment is present
+  if (ro_phdr == NULL) {
+    return NULL;
+  }
+
+  // Check if RO segment size is within elf file
+  if (ro_phdr->p_memsz < ro_phdr->p_filesz) {
+    return NULL;
+  }
+
+  // Check if RO segment is aligned properly
+  if (!IS_ALIGNED((uint32_t)ehdr + ro_phdr->p_offset, MPU_ALIGNMENT)) {
+    return NULL;
+  }
+
+  return ro_phdr;
+}
+
+typedef struct {
+  uint32_t ro_size;
+  uint32_t ro_v_addr;
+  uint32_t ro_p_addr;
+
+  uint32_t rw_size;
+  uint32_t rw_v_addr;
+  uint32_t rw_p_addr;
+} va_mapping_t;
+
+static Elf32_Addr map_va(va_mapping_t* map, Elf32_Addr va) {
+  if (va >= map->ro_v_addr && va <= map->ro_v_addr + map->ro_size) {
+    return map->ro_p_addr + (va - map->ro_v_addr);
+  } else if (va >= map->rw_v_addr && va <= map->rw_v_addr + map->rw_size) {
+    return map->rw_p_addr + (va - map->rw_v_addr);
   }
   return 0;
+}
+
+static bool relocate_section(const Elf32_Ehdr* ehdr, const Elf32_Shdr* shdr,
+                             va_mapping_t* map) {
+  const Elf32_Rel* rel = (Elf32_Rel*)((uint32_t)ehdr + shdr->sh_offset);
+  const Elf32_Rel* rel_end = (Elf32_Rel*)((uint32_t)rel + shdr->sh_size);
+
+  // Get section we are relocating
+  const Elf32_Shdr* target_shdr = elf_get_shdr(ehdr, shdr->sh_info);
+  if (target_shdr == NULL) {
+    return false;
+  }
+
+  // Get target section boundaries
+  uint32_t target_start = map_va(map, target_shdr->sh_addr);
+  uint32_t target_end = target_start + target_shdr->sh_size;
+
+  while (rel < rel_end) {
+    if (ELF32_R_TYPE(rel->r_info) != R_ARM_ABS32) {
+      // Unsupported relocation type
+      return false;
+    }
+
+    // Get pointer to the relocated 32-bit word
+    uint32_t* mem_ptr = (uint32_t*)map_va(map, rel->r_offset);
+    if (mem_ptr == NULL) {
+      return false;
+    }
+
+    // Ensure the pointer is within the target section
+    if ((uint32_t)mem_ptr < target_start ||
+        (uint32_t)mem_ptr + 4 > target_end) {
+      return false;
+    }
+
+    // Relocate the 32-bit word
+    *mem_ptr = map_va(map, *mem_ptr);
+
+    ++rel;
+  }
+
+  return true;
+}
+
+static void get_stack_info(const Elf32_Ehdr* ehdr, uint32_t* stack_base,
+                           uint32_t* stack_size) {
+  for (int i = 0; i < ehdr->e_shnum; i++) {
+    const Elf32_Shdr* shdr = elf_get_shdr(ehdr, i);
+    const char* section_name = elf_get_shdr_name(ehdr, shdr);
+    if (section_name != NULL && strcmp(section_name, ".stack") == 0) {
+      *stack_base = shdr->sh_addr;
+      *stack_size = shdr->sh_size;
+      break;
+    }
+  }
 }
 
 static void elf_unload_cb(applet_t* applet) {
@@ -195,7 +300,12 @@ static void elf_unload_cb(applet_t* applet) {
     // Clear applet data segment
     mpu_set_active_applet(&applet->layout);
     memset(ram_start, 0, ram_size);
-    mpu_set_active_applet(NULL);
+
+    systask_t* active_task = systask_active();
+    if (active_task->applet != NULL) {
+      applet_t* active_applet = (applet_t*)active_task->applet;
+      mpu_set_active_applet(&active_applet->layout);
+    }
 
     // Free applet RAM
     app_arena_free(ram_start);
@@ -208,185 +318,101 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   applet_init(applet, NULL, NULL);
 
   // Make sure the entire ELF file is accessible
+  // (temporarily map it as data)
   const applet_layout_t temp_layout_1 = {
-      .code1 = {.start = (uintptr_t)elf_ptr, .size = elf_size},
+      .data1 = {.start = (uintptr_t)elf_ptr, .size = elf_size},
   };
   mpu_set_active_applet(&temp_layout_1);
 
-  elf_ctx_t elf = {0};
-
   // Read and validate ELF header
-  elf.ehdr = elf_read_header(elf_ptr, elf_size);
-  if (elf.ehdr == NULL) {
+  const Elf32_Ehdr* ehdr = elf_read_header(elf_ptr, elf_size);
+  if (ehdr == NULL) {
     goto cleanup;
   }
 
-  // Parse program headers, find RO, RW and DYN segments
-  for (int i = 0; i < elf.ehdr->e_phnum; i++) {
-    const Elf32_Phdr* phdr = elf_get_phdr(elf.ehdr, i);
-    if (IS_RO_SEGMENT(phdr)) {
-      if (elf.ro_phdr != NULL || !IS_IN_FILE_LIMIT(phdr, elf_size)) {
-        goto cleanup;
-      }
-      elf.ro_phdr = phdr;
-    } else if (IS_RW_SEGMENT(phdr)) {
-      if (elf.rw_phdr != NULL || !IS_IN_FILE_LIMIT(phdr, elf_size)) {
-        goto cleanup;
-      }
-      elf.rw_phdr = phdr;
-    } else if (IS_DYN_SEGMENT(phdr)) {
-      if (elf.dyn_phdr != NULL || !IS_IN_FILE_LIMIT(phdr, elf_size)) {
-        goto cleanup;
-      }
-      elf.dyn_phdr = phdr;
-    }
-  }
-
-  // Check if all required segments are present
-  // (elf.dyn_phdr required only from GCC PIC)
-  if (elf.ro_phdr == NULL || elf.rw_phdr == NULL /*|| elf.dyn_phdr == NULL*/) {
+  // Read and validate RO segment
+  const Elf32_Phdr* ro_phdr = elf_read_ro_phdr(ehdr, elf_size);
+  if (ro_phdr == NULL) {
     goto cleanup;
   }
 
-  // Check if RO segment size is within elf file
-  if (elf.ro_phdr->p_memsz < elf.ro_phdr->p_filesz) {
+  // Read and validate RW segment
+  const Elf32_Phdr* rw_phdr = elf_read_rw_phdr(ehdr, elf_size);
+  if (rw_phdr == NULL) {
     goto cleanup;
   }
-
-  // Check if RO segment is properly aligned
-  // !@#
 
   // Allocate RAM for RW segment
-  size_t ram_size = ALIGN_UP(elf.rw_phdr->p_memsz, MPU_ALIGNMENT);
+  size_t ram_size = ALIGN_UP(rw_phdr->p_memsz, MPU_ALIGNMENT);
   void* ram_ptr = app_arena_alloc(ram_size, APP_ALLOC_DATA);
   if (ram_ptr == NULL) {
     goto cleanup;
   }
 
   // Make sure ELF and allocated RAM are accessible
+  // (temporarily map it as data => we can apply relocation fixups)
   const applet_layout_t temp_layout_2 = {
-      .code1 = {.start = (uintptr_t)elf_ptr, .size = elf_size},
-      .data1 = {.start = (uintptr_t)ram_ptr, .size = ram_size},
+      .data1 = {.start = (uintptr_t)elf_ptr, .size = elf_size},
+      .data2 = {.start = (uintptr_t)ram_ptr, .size = ram_size},
   };
   mpu_set_active_applet(&temp_layout_2);
 
-  // Prepare applet memory layout
-  elf.layout.code1.start = (uintptr_t)elf.ehdr + elf.ro_phdr->p_offset;
-  elf.layout.code1.size = ALIGN_UP(elf.ro_phdr->p_filesz, MPU_ALIGNMENT);
-  elf.layout.data1.start = (uintptr_t)ram_ptr;
-  elf.layout.data1.size = ram_size;
+  // Clear the allocated RAM
+  memset(ram_ptr, 0, ram_size);
 
-  // It's intended to call coreapp functions directly so we have to make
-  // coreapp code and TLS areas accessible when the applet is running.
-  elf.layout.code2 = coreapp_get_code_area();
-  elf.layout.tls = coreapp_get_tls_area();
+  // Copy initialized data
+  memcpy(ram_ptr, (uint8_t*)elf_ptr + rw_phdr->p_offset, rw_phdr->p_filesz);
 
-  uint32_t sb_addr = (uintptr_t)ram_ptr;
-  uint32_t stack_base = 0;
-  uint32_t stack_size = 0;
-  uint32_t entrypoint = map_va(&elf, elf.ehdr->e_entry);
+  // Prepare VA -> PA mapping
+  va_mapping_t map = {
+      .ro_size = ro_phdr->p_memsz,
+      .ro_v_addr = ro_phdr->p_vaddr,
+      .ro_p_addr = (uintptr_t)elf_ptr + ro_phdr->p_offset,
+      .rw_size = rw_phdr->p_memsz,
+      .rw_v_addr = rw_phdr->p_vaddr,
+      .rw_p_addr = (uintptr_t)ram_ptr,
+  };
 
-#ifdef CLANG_RWPI_SUPPORT
-  uint32_t rel_data = 0;
-  uint32_t rel_data_size = 0;
-#endif
-
-  // Go through section headers - search for .got and .stack
-  for (int i = 0; i < elf.ehdr->e_shnum; i++) {
-    const Elf32_Shdr* shdr = elf_get_shdr(elf.ehdr, i);
-    const char* section_name = elf_get_shdr_name(&elf, shdr);
-    if (section_name != NULL) {
-      if (strcmp(section_name, ".stack") == 0) {
-        stack_base = map_va(&elf, shdr->sh_addr);
-        stack_size = shdr->sh_size;
+  // Apply relocation fixups
+  for (int i = 0; i < ehdr->e_shnum; i++) {
+    const Elf32_Shdr* shdr = elf_get_shdr(ehdr, i);
+    if (shdr->sh_type == SHT_REL) {
+      if (!relocate_section(ehdr, shdr, &map)) {
+        goto cleanup;
       }
-#ifdef GCC_PIC_SUPPORT
-      else if (strcmp(section_name, ".got") == 0) {
-        sb_addr = map_va(&elf, shdr->sh_addr);
-      }
-#endif
-#ifdef CLANG_RWPI_SUPPORT
-      else if (strcmp(section_name, ".rel.data") == 0) {
-        rel_data = (uint32_t)elf.ehdr + shdr->sh_offset;
-        rel_data_size = shdr->sh_size;
-      }
-#endif
     }
   }
 
+  // Get stack address and size
+  uint32_t stack_base = 0;
+  uint32_t stack_size = 0;
+  get_stack_info(ehdr, &stack_base, &stack_size);
+  stack_base = map_va(&map, stack_base);
+  if (stack_base == 0 || stack_size == 0) {
+    goto cleanup;
+  }
+
+  // Get static base address
+  uint32_t sb_addr = (uintptr_t)ram_ptr;
+
+  // Get entrypoint address
+  uint32_t entrypoint = map_va(&map, ehdr->e_entry);
+
+  // Initialize applet privileges
   applet_privileges_t app_privileges = {0};
 
   applet_init(applet, &app_privileges, elf_unload_cb);
 
-  applet->layout = elf.layout;
+  applet->layout = (applet_layout_t){
+      .code1.start = (uintptr_t)ehdr + ro_phdr->p_offset,
+      .code1.size = ro_phdr->p_memsz,
+      .data1.start = (uintptr_t)ram_ptr,
+      .data1.size = ram_size,
+      .code2 = coreapp_get_code_area(),  // app needs access to coreapp code
+      .tls = coreapp_get_tls_area(),     // app needs access to coreapp TLS
+  };
 
-  // Initialize RW segment
-  memset((void*)elf.layout.data1.start, 0, elf.rw_phdr->p_memsz);
-  memcpy((void*)elf.layout.data1.start,
-         (const uint8_t*)elf_ptr + elf.rw_phdr->p_offset,
-         elf.rw_phdr->p_filesz);
-
-  Elf32_Rel* rel = NULL;
-  Elf32_Rel* rel_end = NULL;
-
-#ifdef GCC_PIC_SUPPORT
-  if (elf.dyn_phdr != NULL) {
-    // Get relocation info
-    uint32_t relsz = elf_get_dyn_value(&elf, DT_RELSZ);
-    if (relsz > 0) {
-      Elf32_Addr relva = elf_get_dyn_value(&elf, DT_REL);
-      uint32_t relent = elf_get_dyn_value(&elf, DT_RELENT);
-
-      if (relent != sizeof(Elf32_Rel)) {
-        // Unexpected relocation entry size
-        goto cleanup;
-      }
-
-      rel = (Elf32_Rel*)(map_va(&elf, relva));
-      rel_end = (Elf32_Rel*)(map_va(&elf, relva + relsz));
-
-      if (rel == NULL || rel_end == NULL) {
-        // Relocation table is outside of mapped segments
-        goto cleanup;
-      }
-    }
-  }
-#endif
-
-#ifdef CLANG_RWPI_SUPPORT
-  if (rel == NULL) {
-    rel = (Elf32_Rel*)rel_data;
-    rel_end = (Elf32_Rel*)(rel_data + rel_data_size);
-  }
-#endif
-
-  // Limits of RW segment in memory
-  uint32_t* rw_start = (uint32_t*)ram_ptr;
-  uint32_t* rw_end = (uint32_t*)((uintptr_t)ram_ptr + elf.rw_phdr->p_memsz);
-
-  while (rel < rel_end) {
-    if (ELF32_R_TYPE(rel->r_info) != R_ARM_ABS32 &&
-        rel->r_info != R_ARM_RELATIVE) {
-      // Unsupported relocation type
-      goto cleanup;
-    }
-
-    // Get pointer to the relocated 32-bit word
-    uint32_t* mem_ptr = (uint32_t*)map_va(&elf, rel->r_offset);
-    if (mem_ptr == NULL) {
-      goto cleanup;
-    }
-
-    // Check if the pointer is within RW segment
-    if (mem_ptr < rw_start || mem_ptr + 1 > rw_end) {
-      goto cleanup;
-    }
-
-    // Relocate the 32-bit word
-    *mem_ptr = map_va(&elf, *mem_ptr);
-
-    ++rel;
-  }
+  ram_ptr = NULL;  // ownership transferred to applet
 
   // Enable access to applet memory regions
   mpu_set_active_applet(&applet->layout);
@@ -410,6 +436,10 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   retval = true;
 
 cleanup:
+
+  if (ram_ptr != NULL) {
+    app_arena_free(ram_ptr);
+  }
 
   if (!retval) {
     applet_unload(applet);
