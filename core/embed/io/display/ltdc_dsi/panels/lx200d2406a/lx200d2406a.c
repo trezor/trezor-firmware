@@ -250,4 +250,12 @@ bool panel_init(display_driver_t *drv) {
 
   return true;
 }
+
+#ifdef USE_SUSPEND
+bool panel_suspend(display_driver_t *drv) {
+  // TODO: Implement proper suspend sequence for this panel
+  return true;
+}
+#endif  // USE_SUSPEND
+
 #endif  // KERNEL_MODE
