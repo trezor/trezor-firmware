@@ -36,6 +36,19 @@ secbool touch_init(void);
 // The function deinitializes touch controller and powers it off.
 void touch_deinit();
 
+#ifdef USE_SUSPEND
+// Suspends the touch driver
+//
+// The function suspends the touch controller.
+void touch_suspend(void);
+
+// Resumes the touch driver
+//
+// The function resumes touch controller's normal functionality as it was
+// before suspension.
+void touch_resume(void);
+#endif  // USE_SUSPEND
+
 // Powers on/off the touch controller
 //
 // The function is used to test touch power supply during production.

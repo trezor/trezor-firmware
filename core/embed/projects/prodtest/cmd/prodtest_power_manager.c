@@ -97,6 +97,10 @@ void prodtest_pm_suspend(cli_t* cli) {
     strcat(flags_str, "RTC ");
   }
 
+  if (wakeup_flags & WAKEUP_FLAG_TOUCH) {
+    strcat(flags_str, "TOUCH ");
+  }
+
   if (wakeup_flags == 0) {
     cli_trace(cli, "Woken up by unknown reason.");
   }
