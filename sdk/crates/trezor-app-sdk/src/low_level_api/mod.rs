@@ -8,13 +8,6 @@
 //! - Advanced IPC operations not covered by the high-level API
 
 mod api;
-mod ffi;
+pub(crate) mod ffi;
 
-// Internal re-exports
-// pub(crate) use ffi::*;
-// pub(crate) use api::{Api, ApiWrapper, IpcMessage};
-
-// Public exports for advanced usage (like custom loggers)
-pub(crate) use api::{Api, ApiWrapper, IpcMessage};
-pub(crate) use ffi::{sysevents_t, trezor_api_getter_t as TrezorApiGetter, TREZOR_API_VERSION_1};
-pub use api::ApiError;
+pub use api::*;
