@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize("O0")
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -38,6 +40,8 @@
 #ifdef USE_SUSPEND
 #include <sys/suspend.h>
 #endif
+
+#include <sys/dbg_console.h>
 
 // #define TOUCH_TRACE_REGS
 
