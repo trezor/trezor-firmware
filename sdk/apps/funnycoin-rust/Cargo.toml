@@ -17,6 +17,9 @@ codegen-units = 1
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
 emballoc = "0.3.0"
 prost = { version = "0.14.1", default-features = false, features = ["derive"] }
+num_enum = { version = "0.7.5", default-features = false }
+ufmt = { version = "0.2.0", default-features = false }
+ufmt-utils = "0.2.0"
 
 [build-dependencies]
 prost-build = "0.14.1"

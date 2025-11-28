@@ -1,16 +1,17 @@
-use super::ffi::*;
-use crate::Result;
-use crate::{error, info, trace};
 use core::ffi::c_void;
-use once_cell::sync::OnceCell;
+
+use super::ffi::{self, ipc_message_t};
+use crate::log::info;
 
 extern crate alloc;
 
+pub const TREZOR_API_SUPPORTED_VERSION: u32 = ffi::TREZOR_API_VERSION_1;
+
 /// Global API singleton - initialized once and then immutable
-static API: OnceCell<Api> = OnceCell::new();
+pub static API: spin::Once<&'static ffi::trezor_api_v1_t> = spin::Once::new();
 
 /// API errors
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(ufmt::derive::uDebug, Clone, Copy, PartialEq, Eq)]
 pub enum ApiError {
     /// API not initialized
     NotInitialized,
@@ -37,300 +38,165 @@ impl ApiError {
     }
 }
 
-/// IPC message wrapper that ensures cleanup after use
-#[derive(Default)]
-pub(crate) struct IpcMessage {
-    pub inner: ipc_message_t,
-}
-
-impl IpcMessage {
-    /// Get reference to message
-    pub fn inner(&self) -> &ipc_message_t {
-        &self.inner
-    }
-
-    /// Get mutable reference to message
-    pub fn inner_mut(&mut self) -> &mut ipc_message_t {
-        &mut self.inner
-    }
-}
-
-impl Drop for IpcMessage {
-    fn drop(&mut self) {
-        trace!("Freeing IPC message from remote {}", self.inner.remote);
-        let _ = Api::ipc_message_free(&mut self.inner);
-    }
-}
-
-/// API wrapper trait
-pub(crate) trait ApiWrapper {
-    /// Register a buffer for receiving IPC messages from a specific task
-    fn ipc_register(remote: systask_id_t, buffer: &mut [u8]) -> Result<bool>;
-
-    /// Make synchronous IPC call with timeout
-    fn ipc_call(
-        remote: systask_id_t,
-        fn_: ipc_fn_t,
-        bytes: &[u8],
-        rsp: &mut IpcMessage,
-        timeout: u32,
-    ) -> Result<bool>;
-
-    /// Try to receive an IPC message (non-blocking)
-    fn ipc_try_receive(msg: &mut IpcMessage) -> Result<bool>;
-
-    /// Send an IPC message
-    fn ipc_send(remote: systask_id_t, fn_: ipc_fn_t, bytes: &[u8]) -> Result<bool>;
-
-    /// Poll for system events
-    fn sysevents_poll(
-        awaited: &sysevents_t,
-        signalled: &mut sysevents_t,
-        deadline: u32,
-    ) -> Result<()>;
-
-    /// Get system tick in milliseconds
-    fn systick_ms() -> Result<u32>;
-
-    /// Write to debug console
-    fn dbg_console_write(data: &[u8]) -> Result<()>;
-
-    /// Exit the application with the given exit code
-    fn system_exit(code: i32) -> Result<()>;
-
-    /// Exit the applicaiton with a fatal error message
-    fn system_exit_fatal(message: &str, file: &str, line: i32) -> Result<()>;
-}
-
-/// API wrapper that can be initialized from a getter function
+/// Initialize the global API singleton from getter function pointer
 ///
-/// This enum holds different versions of the API to support future extensions
-pub(crate) enum Api {
-    /// API version 1
-    V1(trezor_api_v1_t),
+/// This should be called once at the start of your applet_main with the
+/// api_get parameter passed by the firmware. Subsequent calls will fail.
+///
+/// # Safety
+///
+/// The `getter` must be a valid function pointer to the API getter function.
+pub unsafe fn init(getter: ffi::trezor_api_getter_t) {
+    API.call_once(|| {
+        info!(
+            "Initializing API with version {}",
+            TREZOR_API_SUPPORTED_VERSION
+        );
+        // SAFETY: Safe, assuming getter itself is ok.
+        let ptr = unsafe { getter(TREZOR_API_SUPPORTED_VERSION) };
+        // SAFETY: Getter returns null or a valid pointer to the API struct.
+        let v1_ptr = unsafe { (ptr as *const ffi::trezor_api_v1_t).as_ref() };
+        v1_ptr.expect("API getter returned null pointer")
+    });
+    crate::print::enable_api_printer();
 }
 
-impl Api {
-    /// Initialize the global API singleton from getter function pointer
-    ///
-    /// This should be called once at the start of your applet_main with the
-    /// api_get parameter passed by the firmware. Subsequent calls will fail.
-    ///
-    /// # Safety
-    /// The getter function must return a valid pointer to the requested API
-    pub fn init(getter: trezor_api_getter_t, version: u32) -> Result<()> {
-        trace!("Initializing API with version {}", version);
-        let ptr = unsafe { getter(version) };
-        if ptr.is_null() {
-            error!("API getter returned null pointer for version {}", version);
-            return Err(ApiError::UnsupportedVersion);
-        }
+pub fn is_initialized() -> bool {
+    API.get().is_some()
+}
 
-        let api_instance = match version {
-            TREZOR_API_VERSION_1 => {
-                trace!("Loading API v1");
-                let v1_ptr = ptr as *const trezor_api_v1_t;
-                unsafe { Self::V1(*v1_ptr) }
-            }
-            _ => {
-                error!("Unsupported API version: {}", version);
-                return Err(ApiError::UnsupportedVersion);
-            }
-        };
+/// Get a reference to the global API singleton
+#[inline]
+fn get_or_die() -> &'static ffi::trezor_api_v1_t {
+    API.get().expect("API not initialized")
+}
 
-        API.set(api_instance).map_err(|_| {
-            error!("API already initialized");
-            ApiError::Failed
-        })?;
+/// Free resources associated with a received IPC message
+///
+/// # Safety
+///
+/// Should only be called with the `ipc_message_t` struct exactly as returned by
+/// `ipc_try_receive`. The data pointed to by its `data` field may be
+/// invalidated and overwritten.
+pub unsafe fn ipc_message_free(mut msg: ipc_message_t) {
+    unsafe { (get_or_die().ipc_message_free)(&mut msg) };
+}
 
-        info!("API initialized successfully");
+/// Register an IPC inbox
+///
+/// # Safety
+///
+/// The pointer to `buffer` is registered in kernel, constituting effectively an
+/// indefinite mutable borrow. This function has no way to indicate that to the
+/// type system.
+///
+/// Therefore, the caller must ensure that the memory that `buffer` points to
+/// remains valid until the inbox is unregistered.
+pub unsafe fn ipc_register(
+    remote: ffi::systask_id_t,
+    buffer: *mut u8,
+    buf_len: usize,
+) -> Result<(), ApiError> {
+    let result = unsafe { (get_or_die().ipc_register)(remote, buffer as *mut c_void, buf_len) };
+    if result {
         Ok(())
-    }
-
-    /// Get a reference to the global API singleton
-    ///
-    /// Returns None if the API has not been initialized yet
-    fn get() -> Result<&'static Self> {
-        API.get().ok_or(ApiError::NotInitialized)
-    }
-
-    /// Free resources associated with a received IPC message
-    fn ipc_message_free(msg: &mut ipc_message_t) -> Result<()> {
-        match Self::get()? {
-            Api::V1(api) => {
-                if let Some(func) = api.ipc_message_free {
-                    unsafe { func(msg as *mut _) };
-                }
-            }
-        }
-        Ok(())
+    } else {
+        Err(ApiError::Failed)
     }
 }
 
-impl ApiWrapper for Api {
-    fn ipc_register(remote: systask_id_t, buffer: &mut [u8]) -> Result<bool> {
-        trace!(
-            "Registering IPC for remote task {} with buffer size {}",
-            remote,
-            buffer.len()
-        );
-        match Self::get()? {
-            Api::V1(api) => {
-                let func = api.ipc_register.ok_or(ApiError::InvalidFunction)?;
-                let result =
-                    unsafe { func(remote, buffer.as_mut_ptr() as *mut c_void, buffer.len()) };
-                trace!("IPC register result: {}", result);
-                Ok(result)
-            }
-        }
-    }
+/// Unregister an IPC inbox
+///
+/// # Safety
+///
+/// Safe to call from anywhere. No data is invalidated, this only causes the
+/// kernel to forget about it.
+pub fn ipc_unregister(remote: ffi::systask_id_t) {
+    unsafe { (get_or_die().ipc_unregister)(remote) };
+}
 
-    fn ipc_call(
-        remote: systask_id_t,
-        fn_: ipc_fn_t,
-        bytes: &[u8],
-        rsp: &mut IpcMessage,
-        timeout: u32,
-    ) -> Result<bool> {
-        trace!(
-            "IPC call to remote {} fn {} with {} bytes, timeout {}ms",
-            remote,
-            fn_,
-            bytes.len(),
-            timeout
-        );
-
-        if Api::ipc_send(remote, fn_, bytes)? == false {
-            error!("IPC send failed for remote {} fn {}", remote, fn_);
-            return Ok(false);
-        }
-
-        let handle: syshandle_t = SYSHANDLE_IPC0 + remote as syshandle_t;
-        let awaited = sysevents_t {
-            read_ready: 1u32 << handle,
-            ..sysevents_t::default()
-        };
-        let mut signalled = sysevents_t::default();
-        Api::sysevents_poll(&awaited, &mut signalled, timeout)?;
-
-        if (signalled.read_ready & (1u32 << handle)) != 0 {
-            // Read the IPC message
-            rsp.inner.remote = remote;
-            let result = Api::ipc_try_receive(rsp)?;
-            trace!(
-                "IPC call completed successfully, received {} bytes",
-                rsp.inner.size
-            );
-            return Ok(result);
-        }
-
-        error!("IPC call timeout after {}ms", timeout);
-        Ok(false)
-    }
-
-    fn ipc_try_receive(msg: &mut IpcMessage) -> Result<bool> {
-        match Self::get()? {
-            Api::V1(api) => {
-                let func = api.ipc_try_receive.ok_or(ApiError::InvalidFunction)?;
-                let result = unsafe { func(msg.inner_mut() as *mut _) };
-                if result {
-                    trace!(
-                        "IPC receive successful, got {} bytes from remote {}",
-                        msg.inner.size,
-                        msg.inner.remote
-                    );
-                }
-                Ok(result)
-            }
-        }
-    }
-
-    fn ipc_send(remote: systask_id_t, fn_: ipc_fn_t, bytes: &[u8]) -> Result<bool> {
-        trace!(
-            "Sending IPC message to remote {} fn {} ({} bytes)",
-            remote,
-            fn_,
-            bytes.len()
-        );
-        match Self::get()? {
-            Api::V1(api) => {
-                let func = api.ipc_send.ok_or(ApiError::InvalidFunction)?;
-                let result =
-                    unsafe { func(remote, fn_ as _, bytes.as_ptr() as *const c_void, bytes.len()) };
-                if result {
-                    trace!("IPC send successful");
-                } else {
-                    error!("IPC send returned false");
-                }
-                Ok(result)
-            }
-        }
-    }
-
-    fn sysevents_poll(
-        awaited: &sysevents_t,
-        signalled: &mut sysevents_t,
-        deadline: u32,
-    ) -> Result<()> {
-        match Self::get()? {
-            Api::V1(api) => {
-                if let Some(func) = api.sysevents_poll {
-                    unsafe { func(awaited as *const _, signalled as *mut _, deadline) };
-                }
-            }
-        }
+pub fn ipc_send(remote: ffi::systask_id_t, fn_: ffi::ipc_fn_t, bytes: &[u8]) -> Result<(), ApiError> {
+    let result = unsafe {
+        (get_or_die().ipc_send)(remote, fn_, bytes.as_ptr() as *const c_void, bytes.len())
+    };
+    if result {
         Ok(())
+    } else {
+        Err(ApiError::Failed)
     }
+}
 
-    fn systick_ms() -> Result<u32> {
-        let ticks = match Self::get()? {
-            Api::V1(api) => {
-                if let Some(func) = api.systick_ms {
-                    unsafe { func() }
-                } else {
-                    0
-                }
-            }
+/// Try to receive an IPC message from the specified remote task.
+///
+/// # Safety
+///
+/// The received data pointer will point into the buffer registered via
+/// `ipc_register` for the given remote.
+/// The result should be freed by calling `ipc_message_free`.
+pub fn ipc_try_receive(remote: ffi::systask_id_t) -> Result<ffi::ipc_message_t, ApiError> {
+    let mut msg = ffi::ipc_message_t::default();
+    msg.remote = remote;
+    let result = unsafe { (get_or_die().ipc_try_receive)(&mut msg) };
+    if result {
+        Ok(msg)
+    } else {
+        Err(ApiError::Failed)
+    }
+}
+
+pub fn sysevents_poll(awaited: &ffi::sysevents_t, signalled: &mut ffi::sysevents_t, deadline: u32) {
+    unsafe { (get_or_die().sysevents_poll)(awaited, signalled, deadline) };
+}
+
+pub fn systick_ms() -> u32 {
+    unsafe { (get_or_die().systick_ms)() }
+}
+
+pub fn dbg_console_write(data: &[u8]) {
+    unsafe { (get_or_die().dbg_console_write)(data.as_ptr() as *const c_void, data.len()) };
+}
+
+pub fn system_exit() -> ! {
+    if let Some(api) = API.get() {
+        // If the API was initialized, we call its system_exit function.
+        unsafe { (api.system_exit)(0) };
+    }
+    // If API is not initialized, or if `system_exit` returns despite not being
+    // supposed to, we abort.
+    core::intrinsics::abort();
+}
+
+pub fn system_exit_error(title: &str, message: &str, footer: &str) -> ! {
+    if let Some(api) = API.get() {
+        unsafe {
+            (api.system_exit_error_ex)(
+                title.as_ptr() as *const core::ffi::c_char,
+                title.len(),
+                message.as_ptr() as *const core::ffi::c_char,
+                message.len(),
+                footer.as_ptr() as *const core::ffi::c_char,
+                footer.len(),
+            )
         };
-        Ok(ticks)
     }
+    // If API is not initialized, or if `system_exit_error_ex` returns despite
+    // not being supposed to, we abort.
+    core::intrinsics::abort();
+}
 
-    fn dbg_console_write(data: &[u8]) -> Result<()> {
-        match Self::get()? {
-            Api::V1(api) => {
-                let func = api.dbg_console_write.ok_or(ApiError::InvalidFunction)?;
-                unsafe { func(data.as_ptr() as *const c_void, data.len()) };
-            }
+pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
+    if let Some(api) = API.get() {
+        unsafe {
+            (api.system_exit_fatal_ex)(
+                message.as_ptr() as *const core::ffi::c_char,
+                message.len(),
+                file.as_ptr() as *const core::ffi::c_char,
+                file.len(),
+                line,
+            )
         };
-        Ok(())
     }
-
-    fn system_exit(code: i32) -> Result<()> {
-        info!("System exit called with code: {}", code);
-        match Self::get()? {
-            Api::V1(api) => {
-                let func = api.system_exit.ok_or(ApiError::InvalidFunction)?;
-                unsafe { func(code as core::ffi::c_int) };
-            }
-        };
-        Ok(())
-    }
-
-    fn system_exit_fatal(message: &str, file: &str, line: i32) -> Result<()> {
-        match Self::get()? {
-            Api::V1(api) => {
-                let func = api.system_exit_fatal_ex.ok_or(ApiError::InvalidFunction)?;
-                unsafe {
-                    func(
-                        message.as_ptr() as *const core::ffi::c_char,
-                        message.len(),
-                        file.as_ptr() as *const core::ffi::c_char,
-                        file.len(),
-                        line,
-                    )
-                };
-            }
-        }
-        Ok(())
-    }
+    // If API is not initialized, or if `system_exit_fatal_ex` returns despite
+    // not being supposed to, we abort.
+    core::intrinsics::abort();
 }

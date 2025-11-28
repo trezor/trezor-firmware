@@ -3,21 +3,29 @@
 
 extern crate alloc;
 
-use alloc::format;
 use alloc::string::String;
 use alloc::vec;
-use alloc::vec::Vec;
-use prost::Message;
-use trezor_app_sdk::ui::{
-    confirm_properties, confirm_value, request_number, request_string, show_success, show_warning,
-};
-pub use trezor_app_sdk::{debug, error, info, trace, warn, Result};
+use prost::Message as _;
+use trezor_app_sdk::service::{self, CoreIpcService};
+use trezor_app_sdk::util::Timeout;
+use trezor_app_sdk::{CORE_SERVICE, Error, IpcMessage, Result, error, info, ui};
 
 // Include generated protobuf code
 mod funnycoin_proto {
     include!(concat!(env!("OUT_DIR"), "/funnycoin.rs"));
 }
 use funnycoin_proto::{FunnycoinGetPublicKey, FunnycoinPublicKey};
+use ufmt::derive::uDebug;
+use ufmt_utils::WriteAdapter;
+
+#[derive(uDebug, Copy, Clone, PartialEq, Eq, num_enum::FromPrimitive, num_enum::IntoPrimitive)]
+#[repr(u16)]
+enum FunnycoinMessages {
+    GetPublicKey = 0,
+    PublicKey = 1,
+    #[num_enum(catch_all)]
+    Unknown(u16),
+}
 
 #[global_allocator]
 static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
@@ -38,14 +46,27 @@ static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
 // }
 
 /// Handle GetPublicKey request
-fn handle_get_public_key(request_data: &[u8]) -> Result<Vec<u8>> {
-    use trezor_app_sdk::ApiError;
-
+fn handle_get_public_key(request_data: &[u8]) -> Result<()> {
     // Deserialize the request
-    let request =
-        FunnycoinGetPublicKey::decode(request_data).map_err(|_| ApiError::InvalidMessage)?;
+    let request = FunnycoinGetPublicKey::decode(request_data).map_err(|_| Error::InvalidMessage)?;
 
-    info!("GetPublicKey request for path: {:?}", request.address_n);
+    info!(
+        "GetPublicKey request for path: {:?}",
+        request.address_n.as_slice()
+    );
+
+    let mut confirm_msg = String::new();
+    let mut wa = WriteAdapter(&mut confirm_msg);
+    _ = ufmt::uwrite!(
+        wa,
+        "Confirm Public Key for path: {:?}",
+        request.address_n.as_slice()
+    );
+    match ui::confirm_value("Confirm Public Key", &confirm_msg) {
+        Ok(ui::TrezorUiResult::Confirmed) => (),
+        Ok(_) => return Err(Error::Cancelled),
+        Err(e) => return Err(e.into()),
+    }
 
     // In a real implementation, you would:
     // 1. Derive the key from the BIP-32 path
@@ -54,52 +75,41 @@ fn handle_get_public_key(request_data: &[u8]) -> Result<Vec<u8>> {
 
     // For now, create a dummy response
     let mut response = FunnycoinPublicKey::default();
-    response.xpub = format!("xpub_dummy_for_path_{:?}", request.address_n);
+    let mut slice = [0u8; 128];
+    let mut writer = trezor_app_sdk::util::SliceWriter::new(&mut slice);
+    _ = ufmt::uwrite!(
+        writer,
+        "xpub_dummy_for_path_{:?}",
+        request.address_n.as_slice()
+    );
+    response.xpub = String::from(writer.as_ref());
     response.public_key = Some(vec![0x04; 65]); // Dummy uncompressed public key
 
-    // Serialize the response
-    Ok(response.encode_to_vec())
+    let response_bytes = response.encode_to_vec();
+    let message = IpcMessage::new(FunnycoinMessages::PublicKey.into(), &response_bytes);
+    Ok(message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?)
 }
 
 // Application entry point - receives raw bytes, returns raw bytes
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
-    let str1 = String::from("title");
-
-    let number = request_number("Number Input", "Insert any number", 0, 0, 100)?;
-    let str = request_string("String Input")?;
-    let confirm = format!("Confirm Number: {}, String: {}?", number, str.as_str());
-    let strnum = format!("{}", number);
-    let props = [
-        ("Number Input", strnum.as_str()),
-        ("String Input", str.as_str()),
-    ];
-    confirm_value(&str1, &confirm)?;
-    warn!("User is about to confirm properties");
-    match confirm_properties("title", &props[..])? {
-        true => show_success("success", "operation confirmed")?,
-        false => show_warning("warning", "operation cancelled")?,
-    };
-
-    Ok(())
+    let message = CORE_SERVICE.receive(Timeout::max())?;
+    match message.service().into() {
+        CoreIpcService::WireStart => handle_wire_message(&message),
+        _ => {
+            error!("Invalid service invoked: {:?}, message id {:?}, data {:?}", message.service(), message.id(), message.data());
+            Err(Error::InvalidFunction)
+        }
+    }
 }
 
 /// Entry point for handling protobuf function calls
 /// fn_id: function identifier
 /// data: serialized protobuf request
 /// Returns: serialized protobuf response
-#[unsafe(no_mangle)]
-pub extern "C" fn handle_call(fn_id: u32, data: *const u8, data_len: usize) -> *mut u8 {
-    use trezor_app_sdk::low_level_api::ApiError;
-
-    // Convert raw pointer to slice
-    let request_data = unsafe { core::slice::from_raw_parts(data, data_len) };
-
-    let response = match fn_id {
-        0 => handle_get_public_key(request_data),
-        _ => Err(ApiError::InvalidFunction),
-    };
-
-    // For now, just return null - proper IPC handling will come later
-    core::ptr::null_mut()
+pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
+    match message.id().into() {
+        FunnycoinMessages::GetPublicKey => handle_get_public_key(message.data()),
+        _ => Err(Error::InvalidFunction),
+    }
 }
