@@ -48,10 +48,26 @@
 // Threshold for touch detection
 #define FT3168_REG_TH_GROUP 0x80
 
+// Monitor mode switch. Allow entry into monitor mode?
+// 0x01: Allow
+// 0x00: Disable
+#define FT3168_REG_G_CTRL 0x86
+
+// No touch to enter monitor delay. If no touch occurs within a specified time,
+// it enters MONITOR mode. This mode needs to be used in conjunction with the
+// "monitor mode switch" parameter. The unit is seconds.
+#define FT3168_REG_G_TIMEENTERMONITOR 0x87
+
 // Mode register
 // 0x00 - interrupt polling mode
 // 0x01 - interrupt trigger mode
 #define FT3168_REG_G_MODE 0xA4
+
+// Chip operating modes. Power consumption mode
+// 0x00: P_ACTIVE
+// 0x01: P_MONITOR
+// 0x03: P_HIBERNATE
+#define FT3168_REG_G_PMODE 0xA5
 
 // Firmware version
 #define FT3168_REG_FIRMID 0xA6
@@ -70,3 +86,27 @@
 // ------------------------------------------------------------
 
 #define FT3168_GESTURE_NONE 0x00
+
+// ------------------------------------------------------------
+// Monitor mode switch (see FT3168_REG_G_CTRL)
+// ------------------------------------------------------------
+
+#define FT3168_P_MONITOR_AUTO_ENTRY_ON 0x01
+#define FT3168_P_MONITOR_AUTO_ENTRY_OFF 0x00
+
+// ------------------------------------------------------------
+// Interrupt modes(see FT3168_REG_G_MODE)
+// ------------------------------------------------------------
+
+#define FT3168_INT_POL_MODE 0x00
+#define FT3168_INT_TRIG_MODE 0x01
+
+// ------------------------------------------------------------
+// Power modes (see FT3168_REG_G_PMODE)
+// ------------------------------------------------------------
+
+typedef enum {
+  P_ACTIVE_MODE = 0x00,
+  P_MONITOR_MODE = 0x01,
+  P_HIBERNATE_MODE = 0x03
+} power_mode_t;

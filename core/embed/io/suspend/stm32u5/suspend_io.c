@@ -71,14 +71,17 @@ void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
   rgb_led_set_color(RGBLED_OFF);
 #endif
 #ifdef USE_TOUCH
-  touch_deinit();
+  if (secfalse == touch_suspend()) {
+    // TODO: Handle error - log or return error status
+  }
 #endif
 #ifdef USE_BLE
   ble_suspend(&wakeup_params->ble);
 #endif
 #ifdef USE_DISPLAY
-  wakeup_params->backlight_level = display_get_backlight();
-  display_deinit(DISPLAY_RESET_CONTENT);
+  if (!display_suspend(&wakeup_params->display)) {
+    // TODO: Handle error - log or return error status
+  }
 #endif
 }
 
@@ -92,14 +95,17 @@ void suspend_drivers_phase2(void) {
 #endif
 }
 
+// Reinitialize all drivers that were stopped earlier
 void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_DISPLAY
-  // Reinitialize all drivers that were stopped earlier
-  display_init(DISPLAY_RESET_CONTENT);
-  display_set_backlight(wakeup_params->backlight_level);
+  if (!display_resume(&wakeup_params->display)) {
+    // TODO: Handle error - log or return error status
+  }
 #endif
 #ifdef USE_TOUCH
-  touch_init();
+  if (secfalse == touch_resume()) {
+    // TODO: Handle error - log or return error status
+  }
 #endif
 #ifdef USE_HAPTIC
   ts_t status = haptic_init();
