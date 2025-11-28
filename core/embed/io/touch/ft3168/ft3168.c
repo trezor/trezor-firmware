@@ -24,6 +24,8 @@
 
 #include <io/i2c_bus.h>
 #include <io/touch.h>
+#include <sys/irq.h>
+#include <sys/mpu.h>
 #include <sys/systick.h>
 #include "ft3168.h"
 
@@ -33,7 +35,13 @@
 
 #include "../touch_poll.h"
 
+#ifdef USE_SUSPEND
+#include <sys/suspend.h>
+#endif
+
 // #define TOUCH_TRACE_REGS
+
+#define AUTO_P_MONITOR_MODE_TRANSITION_TIME 1  // In seconds
 
 typedef struct {
   // Set if the driver is initialized
@@ -49,6 +57,13 @@ typedef struct {
   uint32_t read_ticks;
   // Last reported touch state
   uint32_t state;
+
+#ifdef USE_SUSPEND
+  // Set if the driver is currently suspended
+  secbool suspended;
+  // EXTI handle for touch interrupt line
+  EXTI_HandleTypeDef exti;
+#endif  // USE_SUSPEND
 
 } touch_driver_t;
 
@@ -138,6 +153,34 @@ static void ft3168_wake_up(i2c_bus_t* bus) {
   // Wait for the touch controller to wake up
   // (not sure if this is necessary, but it's safer to include it)
   systick_delay_ms(1);
+}
+
+// Sets the power mode of the touch controller.
+//
+// `mode` can be one of the following values:
+//   0x00 - P_ACTIVE_MODE
+//   0x01 - P_MONITOR_MODE
+//   0x03 - P_HIBERNATE_MODE
+// Returns `sectrue` if the config sequence succeeds or `secfalse` if it fails.
+static secbool ft3168_power_mode_set(i2c_bus_t* bus, power_mode_t mode) {
+  secbool ret = sectrue;
+
+  // Ensure the touch controller is awake
+  ft3168_wake_up(bus);
+
+  if (P_ACTIVE_MODE == mode) {
+    // Disable the automatic transition to monitor mode
+    ret &= ft3168_write_reg(bus, FT3168_REG_ID_G_CTRL, 0x00);
+  } else if (P_MONITOR_MODE == mode) {
+    // Enable the automatic transition to monitor mode (in case the touch
+    // controller wakes up when it shouldn't)
+    ret &= ft3168_write_reg(bus, FT3168_REG_ID_G_CTRL, 0x01);
+  }
+
+  // Set the touch controller to the specified power mode
+  ret &= ft3168_write_reg(bus, FT3168_REG_ID_G_PMODE, (uint8_t)mode);
+
+  return ret;
 }
 
 // Powers down the touch controller and puts all
@@ -249,6 +292,10 @@ static secbool ft3168_configure(i2c_bus_t* i2c_bus) {
       0x01,
       FT3168_REG_TH_GROUP,
       TOUCH_SENSITIVITY,
+      FT3168_REG_ID_G_CTRL,
+      0x00,  // Disable automatic transition to monitor mode
+      FT3168_REG_ID_G_TIMEENTERMONITOR,
+      AUTO_P_MONITOR_MODE_TRANSITION_TIME  // Set the time to enter monitor mode
   };
 
   _Static_assert(sizeof(config) % 2 == 0);
@@ -308,6 +355,17 @@ secbool touch_init(void) {
     goto cleanup;
   }
 
+#ifdef USE_SUSPEND
+  // Setup interrupt handler (enabled in touch_suspend())
+  EXTI_ConfigTypeDef EXTI_Config = {0};
+  EXTI_Config.GPIOSel = TOUCH_EXTI_INTERRUPT_GPIOSEL;
+  EXTI_Config.Line = TOUCH_EXTI_INTERRUPT_LINE;
+  EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
+  EXTI_Config.Trigger = EXTI_TRIGGER_RISING;
+  HAL_EXTI_SetConfigLine(&driver->exti, &EXTI_Config);
+  NVIC_SetPriority(TOUCH_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
+#endif  // USE_SUSPEND
+
   driver->init_ticks = systick_ms();
   driver->read_ticks = driver->init_ticks;
   driver->initialized = sectrue;
@@ -321,6 +379,13 @@ cleanup:
 
 void touch_deinit(void) {
   touch_driver_t* driver = &g_touch_driver;
+
+#ifdef USE_SUSPEND
+  // Disable the interrupt
+  NVIC_DisableIRQ(TOUCH_EXTI_INTERRUPT_NUM);
+  HAL_EXTI_ClearConfigLine(&driver->exti);
+#endif  // USE_SUSPEND
+
   touch_poll_deinit();
   i2c_bus_close(driver->i2c_bus);
   if (sectrue == driver->initialized) {
@@ -328,6 +393,78 @@ void touch_deinit(void) {
   }
   memset(driver, 0, sizeof(touch_driver_t));
 }
+
+#ifdef USE_SUSPEND
+// Watchout, the display_deinit() deinitializes even the DISPLAY_PWREN_PIN
+// which switches the power off for the touch controller as well. It also
+// deinitializes the common reset pin which resets the touch controller.
+secbool touch_suspend(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue != driver->initialized) {
+    // The driver isn't initialized, wrong control flow applied, return error
+    return secfalse;
+  }
+
+  if (sectrue == driver->suspended) {
+    // The driver is already suspended
+    return sectrue;
+  }
+
+  touch_poll_deinit();
+
+  // Enable the interrupt to wake up on touch
+  __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_EXTI_INTERRUPT_PIN);
+  NVIC_EnableIRQ(TOUCH_EXTI_INTERRUPT_NUM);
+
+  // Set the touch driver to monitor mode
+  if (secfalse == ft3168_power_mode_set(driver->i2c_bus, P_MONITOR_MODE)) {
+    goto cleanup;
+  }
+
+  driver->suspended = sectrue;
+
+  return sectrue;
+
+cleanup:
+  touch_deinit();
+  return secfalse;
+}
+
+secbool touch_resume(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue != driver->initialized) {
+    // The driver isn't initialized, wrong control flow applied, return error
+    return secfalse;
+  }
+
+  if (secfalse == driver->suspended) {
+    // The driver isn't suspended, nothing to resume
+    return sectrue;
+  }
+
+  // Disable the interrupt for normal operation
+  NVIC_DisableIRQ(TOUCH_EXTI_INTERRUPT_NUM);
+
+  // Set the touch driver to active mode
+  if (secfalse == ft3168_power_mode_set(driver->i2c_bus, P_ACTIVE_MODE)) {
+    goto cleanup;
+  }
+
+  if (!touch_poll_init()) {
+    goto cleanup;
+  }
+
+  driver->suspended = secfalse;
+
+  return sectrue;
+
+cleanup:
+  touch_deinit();
+  return secfalse;
+}
+#endif  // USE_SUSPEND
 
 void touch_power_set(bool on) {
   if (on) {
@@ -522,5 +659,25 @@ uint32_t touch_get_state(void) {
 
   return driver->state;
 }
+
+#ifdef USE_SUSPEND
+void TOUCH_EXTI_INTERRUPT_HANDLER(void) {
+  IRQ_LOG_ENTER();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+
+  touch_driver_t* driver = &g_touch_driver;
+
+  // Clear the EXTI line pending bit
+  __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_EXTI_INTERRUPT_PIN);
+
+  if (sectrue == driver->initialized && sectrue == driver->suspended) {
+    // Inform the powerctl module about touch press
+    wakeup_flags_set(WAKEUP_FLAG_TOUCH);
+  }
+
+  mpu_restore(mpu_mode);
+  IRQ_LOG_EXIT();
+}
+#endif  // USE_SUSPEND
 
 #endif  // KERNEL_MODE

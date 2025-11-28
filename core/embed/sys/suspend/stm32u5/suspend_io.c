@@ -125,7 +125,7 @@ void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
   rgb_led_set_color(RGBLED_OFF);
 #endif
 #ifdef USE_TOUCH
-  touch_deinit();
+  touch_suspend();
 #endif
 #ifdef USE_BLE
   ble_suspend(&wakeup_params->ble);
@@ -153,7 +153,7 @@ void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
   display_set_backlight(wakeup_params->backlight_level);
 #endif
 #ifdef USE_TOUCH
-  touch_init();
+  touch_resume();
 #endif
 #ifdef USE_HAPTIC
   haptic_init();

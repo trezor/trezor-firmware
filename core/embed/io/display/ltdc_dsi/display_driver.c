@@ -431,12 +431,12 @@ void display_deinit(display_content_mode_t mode) {
 
 #ifdef DISPLAY_RESET_PIN
   // Release the RESET pin
-  HAL_GPIO_DeInit(DISPLAY_RESET_PORT, DISPLAY_RESET_PIN);
+  // HAL_GPIO_DeInit(DISPLAY_RESET_PORT, DISPLAY_RESET_PIN);
 #endif
 
 #ifdef DISPLAY_PWREN_PIN
   // Release PWREN pin and switch display power off
-  HAL_GPIO_DeInit(DISPLAY_PWREN_PORT, DISPLAY_PWREN_PIN);
+  // HAL_GPIO_DeInit(DISPLAY_PWREN_PORT, DISPLAY_PWREN_PIN);
 #endif
 
   memset(drv, 0, sizeof(display_driver_t));
