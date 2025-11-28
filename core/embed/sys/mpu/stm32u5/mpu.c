@@ -342,8 +342,6 @@ void mpu_set_active_applet(const applet_layout_t* layout) {
 
   mpu_disable();
 
-  drv->app_tls = layout->tls;
-
   if (layout != NULL) {
     // clang-format off
     if (layout->code1.start != 0 && layout->code1.size != 0) {
@@ -383,7 +381,7 @@ void mpu_set_active_applet(const applet_layout_t* layout) {
 
   // Remember the TLS area of the active applet
   // (used in region #7 in MPU_APP mode)
-  drv->app_tls = layout->tls;
+  drv->app_tls = layout ? layout->tls : (mpu_area_t){0};
 
   mpu_update_region7(drv->mode);
 
