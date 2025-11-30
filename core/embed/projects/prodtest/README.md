@@ -1298,6 +1298,116 @@ nfc-write-card [<timeout_ms>]
 OK
 ```
 
+### nfc-backup-monitor
+Activates the NFC reader and reports NFC backup events to the console.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-backup-monitor
+# NFC backup tag connected.
+# NFC backup tag disconnected.
+# NFC backup tag connected.
+# NFC backup tag disconnected.
+# Aborted.
+OK
+```
+
+### nfc-backup-read-info
+Activates NFC reader and reads the backup system info when a tag is connected.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-backup-read-info
+# UID: 8E8D80E9010802E0
+# DSFID: 0x00
+# AFI: 0x00
+# Memory size: 320 bytes
+# IC reference: 0x08
+OK 8E8D80E9010802E0 0x00 0x00 320 0x08
+```
+
+### nfc-backup-enable-silent-mode
+Activates the NFC reader and enables the NFC backup to boot into silent mode when the tag is connected. In silent mode, NFC readers won't be able to interact with the tag unless they perform specific set of operations during tag boot up. This will not affect any operation with Trezor NFC backup driver, however, the tag wont be visible for any standard NFC readers such as mobile phone.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-backup-enable-silent-mode
+OK
+```
+
+### nfc-backup-disable-silent-mode
+Activates the NFC reader and disables the NFC backup to boot into silent mode when the tag is connected. In silent mode, NFC readers won't be able to interact with the tag unless they perform specific set of operations during tag boot up. This will not affect any operation with Trezor NFC backup driver, however, the tag wont be visible for any standard NFC readers such as mobile phone.
+
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-backup-disable-silent-mode
+OK
+```
+
+### nfc-backup-store-secret
+Activates NFC reader and store the secret phrese on the connected tag.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-backup-store-secret <secret>
+OK
+```
+
+### nfc-backup-read-secret
+Activates NFC reader and read the secret phrese from the connected tag.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-backup-read-secret
+# NFC backup secret: secret_phrase
+OK
+```
+
+### nfc-backup-dump-memory
+Activates NFC reader and dumps the connected tag`s memory to the console.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-backup-dump-memory
+# Block 000: 44 61 76 69
+# Block 001: 64 73 5F 73
+# Block 002: 65 63 72 65
+# Block 003: 74 00 00 00
+# Block 004: 00 00 00 00
+# Block 005: 00 00 00 00
+~~~~~~~~~~~~~~~~~~~~~~~~
+# Block 078: 00 00 00 00
+# Block 079: 00 00 00 00
+OK
+```
+
+### nfc-backup-wipe-memory
+Activates NFC reader and wipes the connected NFC backup tag`s memory.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-backup-wipe-memory
+# NFC backup memory wiped.
+OK
+```
+
 ### unit-test-run
 Prodtest have capability to verify the overall firmware functionality by running built-in unit tests which should excercise the basic
 features of the firmware drivers. This command will run all registered unit tests and return 'OK' if all tests passed.

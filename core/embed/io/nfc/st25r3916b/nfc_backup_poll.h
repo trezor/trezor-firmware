@@ -19,12 +19,6 @@
 
 #pragma once
 
-#include <trezor_types.h>
+bool nfc_backup_poll_init(void);
 
-bool nfc_spi_init(void);
-
-void nfc_spi_deinit(void);
-
-HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t *tx_data,
-                                           uint8_t *rx_data, uint16_t length);
-void nfc_ext_irq_set_callback(void (*cb)(void));
+void nfc_backup_poll_deinit(void);

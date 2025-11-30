@@ -60,13 +60,8 @@ typedef enum {
 
 typedef struct {
   bool initialized;
-  // SPI driver
-  SPI_HandleTypeDef hspi;
-  // NFC IRQ pin callback
-  void (*nfc_irq_callback)(void);
-  EXTI_HandleTypeDef hEXTI;
-  rfalNfcDiscoverParam disc_params;
   bool rfal_initialized;
+  rfalNfcDiscoverParam disc_params;
   nfc_state_t last_nfc_state;
 } st25r3916b_driver_t;
 
@@ -137,66 +132,7 @@ nfc_status_t nfc_init() {
 
   memset(drv, 0, sizeof(st25r3916b_driver_t));
 
-  // Enable clock of relevant peripherals
-  // SPI + GPIO ports
-  NFC_SPI_FORCE_RESET();
-  NFC_SPI_RELEASE_RESET();
-  NFC_SPI_CLK_EN();
-  NFC_SPI_MISO_CLK_EN();
-  NFC_SPI_MOSI_CLK_EN();
-  NFC_SPI_SCK_CLK_EN();
-  NFC_SPI_NSS_CLK_EN();
-
-  // SPI peripheral pin config
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = NFC_SPI_PIN_AF;
-
-  GPIO_InitStruct.Pin = NFC_SPI_MISO_PIN;
-  HAL_GPIO_Init(NFC_SPI_MISO_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = NFC_SPI_MOSI_PIN;
-  HAL_GPIO_Init(NFC_SPI_MOSI_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = NFC_SPI_SCK_PIN;
-  HAL_GPIO_Init(NFC_SPI_SCK_PORT, &GPIO_InitStruct);
-
-  // NSS pin controlled by software, set as classical GPIO
-  GPIO_InitTypeDef GPIO_InitStruct_nss = {0};
-  GPIO_InitStruct_nss.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct_nss.Pull = GPIO_NOPULL;
-  GPIO_InitStruct_nss.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct_nss.Pin = NFC_SPI_NSS_PIN;
-  HAL_GPIO_Init(NFC_SPI_NSS_PORT, &GPIO_InitStruct_nss);
-
-  // NFC IRQ pin
-  GPIO_InitTypeDef GPIO_InitStructure_int = {0};
-  GPIO_InitStructure_int.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStructure_int.Pull = GPIO_PULLDOWN;
-  GPIO_InitStructure_int.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure_int.Pin = NFC_INT_PIN;
-  HAL_GPIO_Init(NFC_INT_PORT, &GPIO_InitStructure_int);
-
-  memset(&drv->hspi, 0, sizeof(drv->hspi));
-
-  drv->hspi.Instance = NFC_SPI_INSTANCE;
-  drv->hspi.Init.Mode = SPI_MODE_MASTER;
-  drv->hspi.Init.BaudRatePrescaler =
-      SPI_BAUDRATEPRESCALER_32;  // TODO: Calculate frequency precisly.
-  drv->hspi.Init.DataSize = SPI_DATASIZE_8BIT;
-  drv->hspi.Init.Direction = SPI_DIRECTION_2LINES;
-  drv->hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
-  drv->hspi.Init.CLKPhase = SPI_PHASE_2EDGE;
-  drv->hspi.Init.NSS = SPI_NSS_SOFT;  // For RFAL lib purpose, use software NSS
-  drv->hspi.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
-  drv->hspi.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-
-  HAL_StatusTypeDef status;
-  status = HAL_SPI_Init(&drv->hspi);
-
-  if (status != HAL_OK) {
+  if (!nfc_spi_init()) {
     goto cleanup;
   }
 
@@ -211,24 +147,6 @@ nfc_status_t nfc_init() {
   }
 
   drv->rfal_initialized = true;
-
-  // Initialize EXTI for NFC IRQ pin
-  EXTI_ConfigTypeDef EXTI_Config = {0};
-  EXTI_Config.GPIOSel = NFC_EXTI_INTERRUPT_GPIOSEL;
-  EXTI_Config.Line = NFC_EXTI_INTERRUPT_LINE;
-  EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
-  EXTI_Config.Trigger = EXTI_TRIGGER_RISING;
-  status = HAL_EXTI_SetConfigLine(&drv->hEXTI, &EXTI_Config);
-
-  if (status != HAL_OK) {
-    goto cleanup;
-  }
-
-  NVIC_SetPriority(NFC_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
-  __HAL_GPIO_EXTI_CLEAR_FLAG(NFC_INT_PIN);
-  NVIC_ClearPendingIRQ(NFC_EXTI_INTERRUPT_NUM);
-  NVIC_EnableIRQ(NFC_EXTI_INTERRUPT_NUM);
-
   drv->initialized = true;
   drv->last_nfc_state = NFC_STATE_NOT_ACTIVE;
 
@@ -250,21 +168,12 @@ void nfc_deinit(void) {
     }
   }
 
-  HAL_EXTI_ClearConfigLine(&drv->hEXTI);
-  NVIC_DisableIRQ(NFC_EXTI_INTERRUPT_NUM);
-
   if (drv->rfal_initialized) {
     rfalDeinitialize();
     drv->rfal_initialized = false;
   }
 
-  HAL_SPI_DeInit(&drv->hspi);
-
-  HAL_GPIO_DeInit(NFC_SPI_MISO_PORT, NFC_SPI_MISO_PIN);
-  HAL_GPIO_DeInit(NFC_SPI_MOSI_PORT, NFC_SPI_MOSI_PIN);
-  HAL_GPIO_DeInit(NFC_SPI_SCK_PORT, NFC_SPI_SCK_PIN);
-  HAL_GPIO_DeInit(NFC_SPI_NSS_PORT, NFC_SPI_NSS_PIN);
-  HAL_GPIO_DeInit(NFC_INT_PORT, NFC_INT_PIN);
+  nfc_spi_deinit();
 
   memset(drv, 0, sizeof(st25r3916b_driver_t));
 }
@@ -581,38 +490,6 @@ nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
   }
 
   return NFC_OK;
-}
-
-HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t *tx_data,
-                                           uint8_t *rx_data, uint16_t length) {
-  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
-  HAL_StatusTypeDef status;
-
-  if ((tx_data != NULL) && (rx_data == NULL)) {
-    status = HAL_SPI_Transmit(&drv->hspi, (uint8_t *)tx_data, length, 1000);
-  } else if ((tx_data == NULL) && (rx_data != NULL)) {
-    status = HAL_SPI_Receive(&drv->hspi, rx_data, length, 1000);
-  } else {
-    status = HAL_SPI_TransmitReceive(&drv->hspi, (uint8_t *)tx_data, rx_data,
-                                     length, 1000);
-  }
-
-  return status;
-}
-
-void nfc_ext_irq_set_callback(void (*cb)(void)) {
-  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
-  drv->nfc_irq_callback = cb;
-}
-
-void NFC_EXTI_INTERRUPT_HANDLER(void) {
-  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
-
-  // Clear the EXTI line pending bit
-  __HAL_GPIO_EXTI_CLEAR_FLAG(NFC_INT_PIN);
-  if (drv->nfc_irq_callback != NULL) {
-    drv->nfc_irq_callback();
-  }
 }
 
 static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev) {
