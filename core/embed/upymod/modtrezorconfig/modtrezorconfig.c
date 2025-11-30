@@ -152,48 +152,35 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
                                  mod_trezorconfig_get_pin_rem);
 
 /// def change_pin(
-///     oldpin: str,
 ///     newpin: str,
-///     old_ext_salt: AnyBytes | None,
 ///     new_ext_salt: AnyBytes | None,
 /// ) -> bool:
 ///     """
 ///     Change PIN and external salt. Returns True on success, False on failure.
+///     Has to be run with unlocked storage.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
                                             const mp_obj_t *args) {
-  mp_buffer_info_t oldpin = {0};
-  mp_get_buffer_raise(args[0], &oldpin, MP_BUFFER_READ);
-
   mp_buffer_info_t newpin = {0};
-  mp_get_buffer_raise(args[1], &newpin, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[0], &newpin, MP_BUFFER_READ);
 
   mp_buffer_info_t ext_salt_b = {0};
-  const uint8_t *old_ext_salt = NULL;
-  if (args[2] != mp_const_none) {
-    mp_get_buffer_raise(args[2], &ext_salt_b, MP_BUFFER_READ);
-    if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
-      mp_raise_msg(&mp_type_ValueError,
-                   MP_ERROR_TEXT("Invalid length of external salt."));
-    old_ext_salt = ext_salt_b.buf;
-  }
   const uint8_t *new_ext_salt = NULL;
-  if (args[3] != mp_const_none) {
-    mp_get_buffer_raise(args[3], &ext_salt_b, MP_BUFFER_READ);
+  if (args[1] != mp_const_none) {
+    mp_get_buffer_raise(args[1], &ext_salt_b, MP_BUFFER_READ);
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
       mp_raise_msg(&mp_type_ValueError,
                    MP_ERROR_TEXT("Invalid length of external salt."));
     new_ext_salt = ext_salt_b.buf;
   }
 
-  if (sectrue != storage_change_pin(oldpin.buf, oldpin.len, newpin.buf,
-                                    newpin.len, old_ext_salt, new_ext_salt)) {
+  if (sectrue != storage_change_pin(newpin.buf, newpin.len, new_ext_salt)) {
     return mp_const_false;
   }
   return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 4,
-                                           4, mod_trezorconfig_change_pin);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 2,
+                                           2, mod_trezorconfig_change_pin);
 
 /// def ensure_not_wipe_code(pin: str) -> None:
 ///     """

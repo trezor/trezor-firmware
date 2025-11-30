@@ -60,13 +60,12 @@ def get_pin_rem() -> int:
 
 # upymod/modtrezorconfig/modtrezorconfig.c
 def change_pin(
-    oldpin: str,
     newpin: str,
-    old_ext_salt: AnyBytes | None,
     new_ext_salt: AnyBytes | None,
 ) -> bool:
     """
     Change PIN and external salt. Returns True on success, False on failure.
+    Has to be run with unlocked storage.
     """
 
 
