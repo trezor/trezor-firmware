@@ -8,7 +8,7 @@ from trezor.wire import message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import failure, handle_single_message
 
-from ..protocol_common import Context, Message
+from ..protocol_common import Context, HighSpeedContext, Message
 from . import SessionState
 
 if TYPE_CHECKING:
@@ -115,6 +115,9 @@ class GenericSessionContext(Context):
         return self.channel.write(msg, self.session_id)
 
     def get_session_state(self) -> SessionState: ...
+
+    def high_speed(self) -> HighSpeedContext:
+        return self.channel.high_speed()
 
 
 class SeedlessSessionContext(GenericSessionContext):

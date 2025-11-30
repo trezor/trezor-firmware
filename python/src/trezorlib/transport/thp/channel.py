@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import typing as t
 
 from ... import messages
@@ -39,3 +40,6 @@ class Channel:
 
     def update_features(self) -> None:
         raise NotImplementedError
+
+    def interactive_context(self) -> contextlib.AbstractContextManager:
+        return contextlib.nullcontext()
