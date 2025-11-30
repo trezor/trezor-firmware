@@ -89,6 +89,22 @@ impl Fragmenter {
         let crc_done = self.crc_offset >= CHECKSUM_LEN;
         payload_done && crc_done
     }
+
+    /// Shortcut to serialize packet into buffer known to be large enough.
+    pub fn single(
+        header: Header,
+        sb: SyncBits,
+        payload: &[u8],
+        dest: &mut [u8],
+        is_host: bool,
+    ) -> Result<()> {
+        let mut fragmenter = Fragmenter::new(header, sb, payload)?;
+        fragmenter.next(&payload, dest, is_host)?;
+        if !fragmenter.is_done() {
+            return Err(Error::InsufficientBuffer);
+        }
+        Ok(())
+    }
 }
 
 pub struct Reassembler {
@@ -170,6 +186,25 @@ impl Reassembler {
             return Err(Error::InvalidDigest);
         }
         Ok(length_no_checksum)
+    }
+
+    pub fn header(&self) -> Header {
+        self.header.clone()
+    }
+
+    // Shortcut to deserialize single packet message.
+    pub fn single<'a>(
+        buffer: &[u8],
+        dest: &'a mut [u8],
+        is_host: bool,
+    ) -> Result<(Header, &'a [u8])> {
+        let reassembler = Reassembler::new(buffer, dest, is_host)?;
+        if !reassembler.is_done() {
+            return Err(Error::MalformedData);
+        }
+        let reply_len = reassembler.verify(dest)?;
+        let header = reassembler.header;
+        Ok((header, &dest[..reply_len]))
     }
 }
 

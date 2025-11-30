@@ -11,7 +11,7 @@ const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
 
 /// Represents packet header, i.e. control byte, channel id and possibly payload length.
 /// Please note that `seq_bit` and `ack_bit` which are also part of the header are handled separately.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Header {
     Continuation {
         channel_id: u16,
@@ -45,7 +45,7 @@ pub enum Header {
     },
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum HandshakeMessage {
     InitiationRequest,
     InitiationResponse,
@@ -270,8 +270,24 @@ impl Header {
         Self::Ack { channel_id }
     }
 
+    pub const fn new_ping() -> Self {
+        Self::Ping
+    }
+
+    pub const fn new_pong() -> Self {
+        Self::Pong
+    }
+
     pub const fn is_continuation(&self) -> bool {
         matches!(self, Self::Continuation { .. })
+    }
+
+    pub const fn is_ping(&self) -> bool {
+        matches!(self, Self::Ping)
+    }
+
+    pub const fn is_pong(&self) -> bool {
+        matches!(self, Self::Pong)
     }
 }
 
