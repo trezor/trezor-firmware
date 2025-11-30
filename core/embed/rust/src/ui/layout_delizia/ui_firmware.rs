@@ -123,9 +123,10 @@ impl FirmwareUI for UIDelizia {
         page_counter: bool,
         prompt_screen: bool,
         cancel: bool,
+        _back_button: bool,
         _warning_footer: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<impl LayoutMaybeTrace, Error> {
         if info && external_menu {
             return Err(Error::NotImplementedError);
         }
@@ -149,7 +150,6 @@ impl FirmwareUI for UIDelizia {
             .with_external_menu(external_menu)
             .with_hold(hold)
             .into_flow()
-            .and_then(LayoutObj::new_root)
     }
 
     fn confirm_value_intro(
@@ -547,7 +547,6 @@ impl FirmwareUI for UIDelizia {
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         message: TString<'static>,
-        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
@@ -577,15 +576,6 @@ impl FirmwareUI for UIDelizia {
         .with_swipeup_footer(None)
         .with_chunkify(chunkify)
         .with_text_mono(text_mono);
-
-        let confirm_amount = amount.map(|amount| {
-            ConfirmValue::new(TR::words__amount.into(), amount.into(), None)
-                .with_subtitle(subtitle)
-                .with_menu_button()
-                .with_swipeup_footer(None)
-                .with_text_mono(text_mono)
-                .with_swipe_down()
-        });
 
         let confirm_address = address_item.map(|address_item| {
             let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(address_item));
@@ -643,7 +633,6 @@ impl FirmwareUI for UIDelizia {
             account_path,
             br_name,
             br_code,
-            confirm_amount,
             confirm_address,
             confirm_extra,
             summary_items_params,
@@ -1193,6 +1182,7 @@ impl FirmwareUI for UIDelizia {
 
     fn show_properties(
         title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         if Obj::is_str(value) {

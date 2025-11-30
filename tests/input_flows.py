@@ -1217,9 +1217,11 @@ class InputFlowSignTxBackFromAmount(InputFlowBase):
         self.debug.read_layout()
         self.debug.click(self.debug.screen_buttons.cancel())
 
+        yield
         self.debug.read_layout()
         self.debug.click(self.debug.screen_buttons.ok())
 
+        yield
         self.debug.read_layout()
         self.debug.click(self.debug.screen_buttons.ok())
 
