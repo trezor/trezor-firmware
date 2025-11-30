@@ -16,7 +16,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -161,7 +161,7 @@ ReturnCode rfalIso15693VCDCode(uint8_t* buffer, uint16_t length, bool sendCrc, b
     {
         sof = ISO15693_DAT_SOF_1_4;
         eof = ISO15693_DAT_EOF_1_4;
-        txFunc = rfalIso15693PhyVCDCode1Of4;
+        txFunc = &rfalIso15693PhyVCDCode1Of4;
         *subbit_total_length = (
                 ( 1U  /* SOF */
                   + ((length + (uint16_t)crc_len) * 4U)
@@ -175,7 +175,7 @@ ReturnCode rfalIso15693VCDCode(uint8_t* buffer, uint16_t length, bool sendCrc, b
     {
         sof = ISO15693_DAT_SOF_1_256;
         eof = ISO15693_DAT_EOF_1_256;
-        txFunc = rfalIso15693PhyVCDCode1Of256;
+        txFunc = &rfalIso15693PhyVCDCode1Of256;
         *subbit_total_length = (
                 ( 1U  /* SOF */
                   + ((length + (uint16_t)crc_len) * 64U) 
@@ -243,7 +243,7 @@ ReturnCode rfalIso15693VCDCode(uint8_t* buffer, uint16_t length, bool sendCrc, b
         if ((0U==crc) && (length != 0U))
         {
             crc = rfalCrcCalculateCcitt( (uint16_t) ((picopassMode) ? 0xE012U : 0xFFFFU),        /* In PicoPass Mode a different Preset Value is used   */
-                                                    ((picopassMode) ? (buffer + 1U) : buffer),   /* CMD byte is not taken into account in PicoPass mode */
+                                                    ((picopassMode) ? (&buffer[1]) : buffer),   /* CMD byte is not taken into account in PicoPass mode */
                                                     ((picopassMode) ? (length - 1U) : length));  /* CMD byte is not taken into account in PicoPass mode */
             
             crc = (uint16_t)((picopassMode) ? crc : ~crc);

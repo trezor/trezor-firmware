@@ -16,7 +16,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -74,6 +74,9 @@
 #define RFAL_ST25xV_PWD_LEN              8U     /*!< Password length                                                   */
 #define RFAL_ST25xV_MBPOINTER_LEN        1U     /*!< Read Message MBPointer length                                     */
 #define RFAL_ST25xV_NUMBYTES_LEN         1U     /*!< Read Message Number of Bytes length                               */
+#define RFAL_ST25TV512C_FID_LEN          1U     /*!< FID length                                                        */
+#define RFAL_ST25TV512C_PID_LEN          1U     /*!< PID length                                                        */
+#define RFAL_ST25TV512C_WR_CFG_DATA_LEN  4U     /*!< Write Configuration  data length                                  */
 
 #define RFAL_ST25TV02K_TBOOT_RF          1U     /*!< RF Boot time (Minimum time from carrier generation to first data) */
 #define RFAL_ST25TV02K_TRF_OFF           2U     /*!< RF OFF time                                                       */
@@ -551,6 +554,47 @@ ReturnCode rfalST25xVPollerReadMessage( uint8_t flags, const uint8_t* uid, uint8
 ReturnCode rfalST25xVPollerFastReadMessage( uint8_t flags, const uint8_t* uid, uint8_t mbPointer, uint8_t numBytes, uint8_t* rxBuf, uint16_t rxBufLen, uint16_t *rcvLen )
 {
     return rfalST25xVPollerGenericReadMessage(RFAL_NFCV_CMD_FAST_READ_MESSAGE, flags, uid, mbPointer, numBytes, rxBuf, rxBufLen, rcvLen );
+}
+
+/*******************************************************************************/
+ReturnCode rfalST25TV512CPollerReadConfiguration(uint8_t flags, const uint8_t* uid, uint8_t fid, uint8_t pid, uint8_t* rxBuf, uint16_t rxBufLen, uint16_t *rcvLen )
+{
+    uint8_t            param[RFAL_ST25TV512C_FID_LEN + RFAL_ST25TV512C_PID_LEN];
+    uint8_t            paramLen;
+    
+    paramLen = 0;
+    
+    /* Compute Request Data */
+    param[paramLen++] = fid;
+    param[paramLen++] = pid;
+    
+    return rfalNfcvPollerTransceiveReq( RFAL_NFCV_CMD_READ_CONFIGURATION, flags, RFAL_NFCV_ST_IC_MFG_CODE, uid, param, paramLen, rxBuf, rxBufLen, rcvLen );
+}
+
+/*******************************************************************************/
+ReturnCode rfalST25TV512CPollerWriteConfiguration(uint8_t flags, const uint8_t* uid, uint8_t fid, uint8_t pid, const uint8_t *data, uint8_t dataLen )
+{
+    uint8_t            param[RFAL_ST25TV512C_FID_LEN + RFAL_ST25TV512C_PID_LEN + RFAL_ST25TV512C_WR_CFG_DATA_LEN];
+    uint8_t            paramLen;
+    uint16_t           rcvLen;
+    rfalNfcvGenericRes res;
+        
+    if( (dataLen > RFAL_ST25TV512C_WR_CFG_DATA_LEN) || (data == NULL) )
+    {
+        return RFAL_ERR_PARAM;
+    }
+    paramLen = 0U;
+    
+    param[paramLen++] = fid;
+    param[paramLen++] = pid;
+    
+    if( dataLen > 0U )
+    {
+        RFAL_MEMCPY(&param[paramLen], data, dataLen);
+    }
+    paramLen += dataLen;
+    
+    return rfalNfcvPollerTransceiveReq( RFAL_NFCV_CMD_WRITE_CONFIGURATION, flags, RFAL_NFCV_ST_IC_MFG_CODE, uid, param, paramLen, (uint8_t*)&res, sizeof(rfalNfcvGenericRes), &rcvLen );
 }
 
 #endif /* RFAL_FEATURE_ST25xV */
