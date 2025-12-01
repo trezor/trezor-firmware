@@ -243,6 +243,8 @@ app_cache_image_t* app_cache_lock_image(const app_hash_t* hash, void** ptr,
     return NULL;
   }
 
+  image->locked = true;
+
   *ptr = image->image_data;
   *size = image->image_size;
   return image;
