@@ -26,6 +26,7 @@ use rkyv::to_bytes;
 use trezor_structs::{PropsList, ShortString, TrezorUiEnum};
 pub use trezor_structs::TrezorUiResult;
 
+use crate::error;
 use crate::ipc::IpcMessage;
 use crate::service::{CoreIpcService, Error, IpcRemote};
 use crate::util::Timeout;
@@ -61,9 +62,13 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
 
 /// Send a UI call and expect a boolean confirmation result
 fn ipc_ui_call_confirm(value: TrezorUiEnum) -> UiResult {
-    match ipc_ui_call(&value)? {
-        TrezorUiResult::Confirmed => Ok(TrezorUiResult::Confirmed),
-        _ => Ok(TrezorUiResult::Cancelled),
+    match ipc_ui_call(&value) {
+        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
+        Ok(_) => Ok(TrezorUiResult::Cancelled),
+        Err(e) => {
+            error!("UI error: {:?}", e);
+            Err(e)
+        }
     }
 }
 

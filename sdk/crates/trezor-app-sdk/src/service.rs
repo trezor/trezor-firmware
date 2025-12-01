@@ -26,6 +26,7 @@ pub struct IpcRemote<'a, T> {
     _service_type: PhantomData<T>,
 }
 
+#[derive(ufmt::derive::uDebug)]
 pub enum Error<'a> {
     Timeout,
     FailedToSend,
