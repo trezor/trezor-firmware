@@ -63,12 +63,18 @@ extern const void nrf_app_size;
 
 #endif
 
+#include <sys/ipc.h>
+
+uint32_t ipc_buffer[1024];  // !@# for tests
+
 int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
     rsod_gui(info);
     system_exit(0);
   }
+
+  ipc_register(2, ipc_buffer, sizeof(ipc_buffer));  // !@# test
 
   bool fading = DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT;
 
