@@ -9,7 +9,7 @@ This document defines the format and internal workings of the communication prot
 # Table of contents
 
 - [Introduction](#introduction)
-  - [Example happy path](#example-happy-path)
+  - [Connection process diagram](#connection-process-diagram)
 - [Data transfer layer](#data-transfer-layer)
   - [USB](#usb)
   - [Bluetooth](#bluetooth)
@@ -72,7 +72,7 @@ This protocol is designed to be compatible with various means of data transfer, 
 
 ![THP layers](./images/layersTHP-v24.svg)
 
-## Example happy-path
+## Connection process diagram
 
 ```mermaid
 sequenceDiagram
@@ -99,7 +99,7 @@ sequenceDiagram
         Trezor ->> host: EndResponse()
         end
     end
-    Note over host,Trezor: Encrypted transport
+    Note over host,Trezor: Application layer - Encrypted transport
 ```
 
 # Data transfer layer
