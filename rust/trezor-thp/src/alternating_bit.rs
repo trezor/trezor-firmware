@@ -1,6 +1,4 @@
-pub const ACK_BIT: u8 = 0x08;
-pub const SEQ_BIT: u8 = 0x10;
-pub const SYNC_MASK: u8 = ACK_BIT | SEQ_BIT;
+use crate::control_byte::{ACK_BIT, SEQ_BIT};
 
 #[derive(Clone, Copy)]
 pub struct SyncBits(u8);

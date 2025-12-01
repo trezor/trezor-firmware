@@ -28,8 +28,8 @@ impl Fragmenter {
     }
 
     pub fn next(&mut self, payload: &[u8], dest: &mut [u8], is_host: bool) -> Result<bool> {
-        let packet_size = dest.len();
-        if packet_size < Header::INIT_LEN + 1 {
+        const MIN_PACKET_SIZE: usize = Header::new_ack(0).header_len() + 1;
+        if dest.len() < MIN_PACKET_SIZE {
             return Err(Error::InsufficientBuffer);
         }
         if payload.len() + CHECKSUM_LEN != self.header.payload_len().into() {

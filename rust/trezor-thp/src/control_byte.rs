@@ -1,4 +1,4 @@
-use crate::alternating_bit::{SYNC_MASK, SyncBits};
+use crate::alternating_bit::SyncBits;
 
 pub const CODEC_V1: u8 = 0x3F;
 pub const CONTINUATION_PACKET: u8 = 0x80;
@@ -20,6 +20,10 @@ pub const CHANNEL_ALLOCATION_RES: u8 = 0x41;
 pub const ERROR: u8 = 0x42;
 pub const PING: u8 = 0x43;
 pub const PONG: u8 = 0x44;
+
+pub const ACK_BIT: u8 = 0x08;
+pub const SEQ_BIT: u8 = 0x10;
+pub const SYNC_MASK: u8 = ACK_BIT | SEQ_BIT;
 
 #[derive(Clone, Copy)]
 pub struct ControlByte(u8);
