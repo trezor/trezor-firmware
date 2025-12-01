@@ -1,5 +1,6 @@
 //! Trezor Host Protocol implementation in Rust.
 
+#![no_std]
 #![forbid(unsafe_code)]
 
 pub mod alternating_bit;

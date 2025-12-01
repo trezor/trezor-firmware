@@ -172,7 +172,7 @@ impl<T: Default> Default for ChannelSync<T> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::sync::atomic::{AtomicU32, Ordering};
+    use core::sync::atomic::{AtomicU32, Ordering};
 
     fn ts() -> u32 {
         static COUNTER: AtomicU32 = AtomicU32::new(0);

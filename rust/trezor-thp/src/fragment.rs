@@ -204,6 +204,11 @@ impl Reassembler {
 #[cfg(test)]
 mod test {
     use super::*;
+    use heapless::Vec;
+
+    const MAX_FRAGMENTS: usize = 256;
+    const MAX_PACKET: usize = 128;
+    const MAX_MESSAGE: usize = 8096;
 
     fn fragment(
         header: Header,
@@ -211,22 +216,23 @@ mod test {
         input: &[u8],
         packet_size: usize,
         is_host: bool,
-    ) -> Vec<Vec<u8>> {
+    ) -> Vec<Vec<u8, MAX_PACKET>, MAX_FRAGMENTS> {
         let mut packets = Vec::new();
         let mut fragmenter = Fragmenter::new(header, sb, input).expect("fragmenter");
         while !fragmenter.is_done() {
-            let mut packet = vec![0u8; packet_size];
+            let mut packet = Vec::new();
+            packet.resize(packet_size, 0u8).unwrap();
             fragmenter
                 .next(input, packet.as_mut_slice(), is_host)
                 .expect("next");
-            packets.push(packet);
+            packets.push(packet).unwrap();
         }
         packets
     }
 
-    fn assemble(packets: &Vec<Vec<u8>>, is_host: bool) -> Vec<u8> {
-        let length_estimate = packets.into_iter().map(|p| p.len()).sum::<usize>() + CHECKSUM_LEN;
-        let mut received = vec![0u8; length_estimate];
+    fn assemble(packets: &[Vec<u8, MAX_PACKET>], is_host: bool) -> Vec<u8, MAX_MESSAGE> {
+        let mut received = Vec::new();
+        received.resize(MAX_MESSAGE, 0u8).unwrap();
         let mut reassembler =
             Reassembler::new(packets[0].as_slice(), received.as_mut_slice(), is_host)
                 .expect("reassembler");
@@ -334,7 +340,7 @@ mod test {
 
     #[test]
     fn test_write_longer_payload() {
-        let data: Vec<u8> = (0..=255).collect();
+        let data: Vec<u8, 256> = (0..=255).collect();
         let header = Header::new_encrypted(CHANNEL_ID, &data);
         let packets = fragment(header, SyncBits::new(), &data, PACKET_LEN, false);
         assert_eq!(packets.len(), LONGER_PAYLOAD_EXPECTED.len());
@@ -346,7 +352,7 @@ mod test {
 
     #[test]
     fn test_write_even_longer_payload() {
-        let data: Vec<u8> = (0..2048u16)
+        let data: Vec<u8, 2048> = (0..2048u16)
             .map(|n| u8::try_from(n & 0xff).unwrap())
             .collect();
         let header = Header::new_encrypted(CHANNEL_ID, &data);
