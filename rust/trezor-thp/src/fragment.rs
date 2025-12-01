@@ -15,7 +15,7 @@ pub struct Fragmenter {
 
 impl Fragmenter {
     pub fn new(header: Header, sync_bits: SyncBits, payload: &[u8]) -> Result<Self> {
-        if payload.len() + CHECKSUM_LEN != header.payload_len() {
+        if payload.len() + CHECKSUM_LEN != header.payload_len().into() {
             return Err(Error::UnexpectedInput);
         }
         Ok(Self {
@@ -32,7 +32,7 @@ impl Fragmenter {
         if packet_size < Header::INIT_LEN + 1 {
             return Err(Error::InsufficientBuffer);
         }
-        if payload.len() + CHECKSUM_LEN != self.header.payload_len() {
+        if payload.len() + CHECKSUM_LEN != self.header.payload_len().into() {
             // buffer changed since new
             return Err(Error::UnexpectedInput);
         }
@@ -78,7 +78,7 @@ impl Fragmenter {
     }
 
     pub fn is_done(&self) -> bool {
-        let payload_done = self.offset + CHECKSUM_LEN >= self.header.payload_len();
+        let payload_done = self.offset + CHECKSUM_LEN >= self.header.payload_len().into();
         let crc_done = self.crc_offset >= CHECKSUM_LEN;
         payload_done && crc_done
     }
@@ -113,7 +113,7 @@ impl Reassembler {
             return Err(Error::UnexpectedInput);
         }
 
-        let payload_len = header.payload_len();
+        let payload_len = header.payload_len().into();
         if buffer.len() < payload_len {
             return Err(Error::InsufficientBuffer);
         }
@@ -124,7 +124,7 @@ impl Reassembler {
         let nbytes = after_header.len(); // Header::parse strips padding
         buffer[..nbytes].copy_from_slice(after_header);
 
-        let checksum_bytes = (header.payload_len() - CHECKSUM_LEN).min(nbytes);
+        let checksum_bytes = (payload_len - CHECKSUM_LEN).min(nbytes);
         checksum.update(&after_header[..checksum_bytes]);
 
         Ok(Self {
@@ -144,7 +144,7 @@ impl Reassembler {
             return Err(Error::OutOfBounds);
         }
 
-        let payload_len = self.header.payload_len();
+        let payload_len = self.header.payload_len().into();
         if buffer.len() < payload_len {
             return Err(Error::InsufficientBuffer); // buffer changed since new()
         }
@@ -161,7 +161,7 @@ impl Reassembler {
     }
 
     pub fn is_done(&self) -> bool {
-        self.offset >= self.header.payload_len()
+        self.offset >= self.header.payload_len().into()
     }
 
     pub fn verify(&self, buffer: &[u8]) -> Result<usize> {
@@ -169,7 +169,8 @@ impl Reassembler {
             return Err(Error::InvalidDigest);
         }
         let computed_checksum = self.checksum.finalize();
-        let length_no_checksum = self.header.payload_len().saturating_sub(CHECKSUM_LEN);
+        let length_no_checksum =
+            usize::from(self.header.payload_len()).saturating_sub(CHECKSUM_LEN);
         let received_checksum = *buffer
             .get(length_no_checksum..)
             .ok_or(Error::InvalidDigest)?

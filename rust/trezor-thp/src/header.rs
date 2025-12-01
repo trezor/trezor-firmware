@@ -1,9 +1,10 @@
 use crate::alternating_bit::SyncBits;
 use crate::control_byte::{self, ControlByte};
-use crate::crc32::CHECKSUM_LEN;
+use crate::crc32;
 use crate::error::{self, Error, Result};
 
-const NONCE_LEN: usize = 8;
+const CHECKSUM_LEN: u16 = crc32::CHECKSUM_LEN as u16;
+const NONCE_LEN: u16 = 8;
 const MAX_PAYLOAD_LEN: u16 = 60000;
 
 const MAX_CHANNEL_ID: u16 = 0xFFEF;
@@ -197,7 +198,7 @@ impl Header {
         if dest.len() < Self::INIT_LEN {
             return None;
         }
-        let length = self.payload_len() as u16;
+        let length = self.payload_len();
         dest[0] = self.control_byte(sync_bits, is_host)?.into();
         dest[1..3].copy_from_slice(&self.channel_id().to_be_bytes());
         dest[3..5].copy_from_slice(&length.to_be_bytes());
@@ -220,13 +221,13 @@ impl Header {
     }
 
     /// Payload length including checksum. Messages without checksum return 0.
-    pub fn payload_len(&self) -> usize {
+    pub const fn payload_len(&self) -> u16 {
         match self {
             Self::Continuation { .. } => 0,
             Self::Ack { .. } => CHECKSUM_LEN,
             Self::CodecV1Request { .. } | Self::CodecV1Response => 0,
             Self::ChannelAllocationRequest => NONCE_LEN + CHECKSUM_LEN,
-            Self::ChannelAllocationResponse { payload_len } => (*payload_len).into(),
+            Self::ChannelAllocationResponse { payload_len } => *payload_len,
             Self::TransportError { .. } => 1 + CHECKSUM_LEN,
             Self::Ping => NONCE_LEN + CHECKSUM_LEN,
             Self::Pong => NONCE_LEN + CHECKSUM_LEN,
@@ -234,11 +235,18 @@ impl Header {
                 phase: _,
                 channel_id: _,
                 payload_len,
-            } => (*payload_len).into(),
+            } => *payload_len,
             Self::Encrypted {
                 channel_id: _,
                 payload_len,
-            } => (*payload_len).into(),
+            } => *payload_len,
+        }
+    }
+
+    pub const fn header_len(&self) -> usize {
+        match self {
+            Self::Continuation { .. } => Self::CONT_LEN,
+            _ => Self::INIT_LEN,
         }
     }
 
@@ -250,7 +258,7 @@ impl Header {
         // FIXME validate payload length, channel id?
         Self::Encrypted {
             channel_id,
-            payload_len: (payload.len() + CHECKSUM_LEN) as u16,
+            payload_len: payload.len() as u16 + CHECKSUM_LEN,
         }
     }
 
