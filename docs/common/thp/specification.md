@@ -78,14 +78,28 @@ This protocol is designed to be compatible with various means of data transfer, 
 sequenceDiagram
   participant host
   participant Trezor
-  host ->> Trezor: ChannelAllocationRequest(nonce)
-  Trezor ->> host: ChannelAllocationResponse(nonce, cid, device_properties)
-  host ->> Trezor: HandshakeInitiationRequest(host_ephemeral_pubkey)
-  Trezor ->> host: HandshakeInitiationResponse(trezor_ephemeral_pubkey, encrypted_trezor_static_pubkey)
-  host ->> Trezor: HandshakeCompletionRequest(encrypted_host_static_pubkey, encrypted_payload)
-  Trezor ->> host: HandshakeCompletionResponse(encrypted_trezor_state)
-  host ->> Trezor: EndRequest()
-  Trezor ->> host: EndResponse()
+  rect rgb(35, 35, 35)   
+    Note right of host: Channel allocation layer
+    rect rgb(25,25,25)
+
+        host ->> Trezor: ChannelAllocationRequest(nonce)
+        Trezor ->> host: ChannelAllocationResponse(nonce, cid, device_properties)
+    end
+  end
+    rect rgb(35, 35, 35)   
+        Note right of host: Secure channel layer
+        rect rgb(25,25,25)
+            host ->> Trezor: HandshakeInitiationRequest(host_ephemeral_pubkey)
+            Trezor ->> host: HandshakeInitiationResponse(trezor_ephemeral_pubkey, encrypted_trezor_static_pubkey)
+            host ->> Trezor: HandshakeCompletionRequest(encrypted_host_static_pubkey, encrypted_payload)
+            Trezor ->> host: HandshakeCompletionResponse(encrypted_trezor_state)
+            Note over host,Trezor: Pairing [conditional]
+            Note over host,Trezor: Credential issuance [optional]
+        host ->> Trezor: EndRequest()
+        Trezor ->> host: EndResponse()
+        end
+    end
+    Note over host,Trezor: Encrypted transport
 ```
 
 # Data transfer layer
