@@ -162,10 +162,7 @@ impl Header {
 
     fn control_byte(&self, sync_bits: SyncBits, is_host: bool) -> Option<ControlByte> {
         let cb = match self {
-            Self::Continuation { .. } => {
-                // no sync bits
-                return Some(ControlByte::from(control_byte::CONTINUATION_PACKET));
-            }
+            Self::Continuation { .. } => control_byte::CONTINUATION_PACKET,
             Self::Ack { .. } => control_byte::ACK_MESSAGE,
             Self::ChannelAllocationRequest if is_host => control_byte::CHANNEL_ALLOCATION_REQ,
             Self::ChannelAllocationResponse { .. } if !is_host => {
@@ -178,7 +175,13 @@ impl Header {
             Self::Encrypted { .. } => control_byte::ENCRYPTED_TRANSPORT,
             _ => return None,
         };
-        let cb = ControlByte::from(cb).with_sync_bits(sync_bits);
+        let mut cb = ControlByte::from(cb);
+        if self.is_ack() && sync_bits.seq_bit() {
+            // ACK has no seq_bit
+            return None;
+        } else if self.is_ack() || self.is_encrypted() || self.is_handshake() {
+            cb = cb.with_sync_bits(sync_bits)
+        }
         Some(cb)
     }
 
@@ -290,6 +293,18 @@ impl Header {
     pub const fn is_pong(&self) -> bool {
         matches!(self, Self::Pong)
     }
+
+    pub const fn is_handshake(&self) -> bool {
+        matches!(self, Self::Handshake { .. })
+    }
+
+    pub const fn is_encrypted(&self) -> bool {
+        matches!(self, Self::Encrypted { .. })
+    }
+
+    pub const fn is_ack(&self) -> bool {
+        matches!(self, Self::Ack { .. })
+    }
 }
 
 impl HandshakeMessage {
@@ -395,8 +410,8 @@ mod test {
     #[test]
     fn test_serialize_sync() {
         for (bytes, header) in VECTORS_GOOD {
-            if header.is_continuation() {
-                continue; // no sync bits in CONT or v1
+            if !header.is_encrypted() && !header.is_handshake() {
+                continue; // no sync bits
             }
             let bytes = hex::decode(bytes).unwrap();
             let mut buffer = [0u8; 256];
