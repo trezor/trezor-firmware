@@ -9,6 +9,7 @@ This document defines the format and internal workings of the communication prot
 # Table of contents
 
 - [Introduction](#introduction)
+  - [Example happy path](#example-happy-path)
 - [Data transfer layer](#data-transfer-layer)
   - [USB](#usb)
   - [Bluetooth](#bluetooth)
@@ -70,6 +71,22 @@ This protocol is designed to be compatible with various means of data transfer, 
 - **L4 Application** handles sessions and the encoding of application messages in Protocol Buffers wire format. It is described in [sessions.md](sessions.md)
 
 ![THP layers](./images/layersTHP-v24.svg)
+
+## Example happy-path
+
+```mermaid
+sequenceDiagram
+  participant host
+  participant Trezor
+  host ->> Trezor: ChannelAllocationRequest(nonce)
+  Trezor ->> host: ChannelAllocationResponse(nonce, cid, device_properties)
+  host ->> Trezor: HandshakeInitiationRequest(host_ephemeral_pubkey)
+  Trezor ->> host: HandshakeInitiationResponse(trezor_ephemeral_pubkey, encrypted_trezor_static_pubkey)
+  host ->> Trezor: HandshakeCompletionRequest(encrypted_host_static_pubkey, encrypted_payload)
+  Trezor ->> host: HandshakeCompletionResponse(encrypted_trezor_state)
+  host ->> Trezor: EndRequest()
+  Trezor ->> host: EndResponse()
+```
 
 # Data transfer layer
 
