@@ -15,7 +15,6 @@ pub const HANDSHAKE_COMP_REQ: u8 = 0x02;
 pub const HANDSHAKE_COMP_RES: u8 = 0x03;
 pub const ENCRYPTED_TRANSPORT: u8 = 0x04;
 
-// mask 0xFF
 pub const CHANNEL_ALLOCATION_REQ: u8 = 0x40;
 pub const CHANNEL_ALLOCATION_RES: u8 = 0x41;
 pub const ERROR: u8 = 0x42;

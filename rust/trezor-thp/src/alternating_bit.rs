@@ -53,12 +53,6 @@ impl Default for SyncBits {
     }
 }
 
-// sender side:
-// (waiting for ack or timeout | can send)
-// heres message -> okay send it, save timestamp, ask me again in timestamp2 | still waiting for (ack|timeout)
-// got ack -> (message was delivered, delete timestamp | ignore this ack)
-// isdelivered? -> yes | timedout, send again, askagain
-
 /// Alternating Bit Protocol state for a single channel.
 pub struct ChannelSync<T> {
     /// Stores timestamp of the last sent message that hasn't been ACKed.

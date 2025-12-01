@@ -23,10 +23,15 @@ impl From<u8> for TransportError {
 
 #[derive(Debug)]
 pub enum Error {
+    /// Numeric field has forbidden value.
     OutOfBounds,
+    /// Invalid data/operation from crate user.
     UnexpectedInput,
+    /// Invalid data from the wire.
     MalformedData,
+    /// Checksum doesn't match.
     InvalidDigest,
+    /// Provided buffer is too small.
     InsufficientBuffer,
 }
 

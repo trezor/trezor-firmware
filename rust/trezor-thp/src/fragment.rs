@@ -5,13 +5,6 @@ use crate::{
     error::{Error, Result},
 };
 
-pub const fn fragment_count(payload_len: usize, packet_size: usize) -> usize {
-    let init_size = packet_size.saturating_sub(Header::INIT_LEN);
-    let cont_size = packet_size.saturating_sub(Header::CONT_LEN);
-    let continued = payload_len - init_size;
-    1 + continued / cont_size // always at least one fragment
-}
-
 pub struct Fragmenter {
     header: Header,
     sync_bits: SyncBits,
@@ -99,7 +92,7 @@ impl Fragmenter {
         is_host: bool,
     ) -> Result<()> {
         let mut fragmenter = Fragmenter::new(header, sb, payload)?;
-        fragmenter.next(&payload, dest, is_host)?;
+        fragmenter.next(payload, dest, is_host)?;
         if !fragmenter.is_done() {
             return Err(Error::InsufficientBuffer);
         }
@@ -173,15 +166,15 @@ impl Reassembler {
 
     pub fn verify(&self, buffer: &[u8]) -> Result<usize> {
         if !self.is_done() {
-            return Err(Error::OutOfBounds);
+            return Err(Error::InvalidDigest);
         }
         let computed_checksum = self.checksum.finalize();
         let length_no_checksum = self.header.payload_len().saturating_sub(CHECKSUM_LEN);
         let received_checksum = *buffer
             .get(length_no_checksum..)
-            .ok_or(Error::OutOfBounds)?
+            .ok_or(Error::InvalidDigest)?
             .first_chunk::<CHECKSUM_LEN>()
-            .ok_or(Error::OutOfBounds)?;
+            .ok_or(Error::InvalidDigest)?;
         if computed_checksum != received_checksum {
             return Err(Error::InvalidDigest);
         }

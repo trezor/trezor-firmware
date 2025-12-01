@@ -184,12 +184,7 @@ impl Header {
     }
 
     /// Serialize header to a buffer. Returns length of the result on success.
-    pub fn to_bytes<'a>(
-        &self,
-        sync_bits: SyncBits,
-        dest: &'a mut [u8],
-        is_host: bool,
-    ) -> Option<usize> {
+    pub fn to_bytes(&self, sync_bits: SyncBits, dest: &mut [u8], is_host: bool) -> Option<usize> {
         if let Self::Continuation { channel_id } = self {
             return if dest.len() < Self::CONT_LEN {
                 None
