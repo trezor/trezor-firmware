@@ -100,7 +100,7 @@ impl<T: Default> ChannelSync<T> {
     /// Call after receiving an ACK message.
     pub fn send_mark_delivered(&mut self, sb: SyncBits) {
         if self.sync_send == sb.ack_bit() {
-            self.sync_send = !self.sync_send;
+            self.sync_send.increment();
             self.last_send = None;
         }
     }
@@ -122,7 +122,7 @@ impl<T: Default> ChannelSync<T> {
     /// Caller needs to send ACK with the returned SyncBits.
     pub fn receive_acknowledge(&mut self) -> Option<SyncBits> {
         let sb = SyncBits::new().with_ack_bit(self.sync_receive);
-        self.sync_receive = !self.sync_receive;
+        self.sync_receive.increment();
         Some(sb)
     }
 
@@ -164,6 +164,16 @@ impl<T: Default> ChannelSync<T> {
 impl<T: Default> Default for ChannelSync<T> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+trait BoolExt {
+    fn increment(&mut self);
+}
+
+impl BoolExt for bool {
+    fn increment(&mut self) {
+        *self = !*self;
     }
 }
 
