@@ -120,10 +120,10 @@ impl<T: Default> ChannelSync<T> {
 
     /// Call after receiving last fragment and successfully verifying CRC of the message.
     /// Caller needs to send ACK with the returned SyncBits.
-    pub fn receive_acknowledge(&mut self) -> Option<SyncBits> {
+    pub fn receive_acknowledge(&mut self) -> SyncBits {
         let sb = SyncBits::new().with_ack_bit(self.sync_receive);
         self.sync_receive.increment();
-        Some(sb)
+        sb
     }
 
     /// Serialize for storage.
@@ -201,7 +201,7 @@ mod test {
         // H->T
         let ok = trezor_sync.receive_start(sb);
         assert!(ok);
-        let sb = trezor_sync.receive_acknowledge().unwrap();
+        let sb = trezor_sync.receive_acknowledge();
         assert_eq!(sb.ack_bit(), false);
         // T->H ACK
         host_sync.send_mark_delivered(sb);
@@ -216,7 +216,7 @@ mod test {
         // T->H
         let ok = host_sync.receive_start(sb);
         assert!(ok);
-        let sb = host_sync.receive_acknowledge().unwrap();
+        let sb = host_sync.receive_acknowledge();
         assert_eq!(sb.ack_bit(), false);
         // H->T ACK
         trezor_sync.send_mark_delivered(sb);
@@ -240,7 +240,7 @@ mod test {
             assert_eq!(sb.seq_bit(), expected);
             assert!(!a_sync.can_send());
             assert!(b_sync.receive_start(sb));
-            let sb = b_sync.receive_acknowledge().unwrap();
+            let sb = b_sync.receive_acknowledge();
             assert_eq!(sb.ack_bit(), expected);
             a_sync.send_mark_delivered(sb);
             assert!(a_sync.can_send());

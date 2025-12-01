@@ -131,35 +131,33 @@ impl Header {
         payload_len: u16,
         is_host: bool,
     ) -> Result<Option<Self>> {
-        let mut res = None;
-        if cb.is_ack() {
-            res = Some(Self::Ack { channel_id });
+        let res = if cb.is_ack() {
+            Self::Ack { channel_id }
         } else if cb.is_error() {
-            res = Some(Self::TransportError {
+            Self::TransportError {
                 channel_id,
                 error_code: error::TransportError::from(
                     *buffer.get(Self::INIT_LEN).ok_or(Error::MalformedData)?,
                 ),
-            });
+            }
         } else if channel_id == BROADCAST_CHANNEL_ID {
             if cb.is_channel_allocation_request() && !is_host {
-                res = Some(Header::ChannelAllocationRequest);
+                Header::ChannelAllocationRequest
             } else if cb.is_ping() && !is_host {
-                res = Some(Header::Ping);
+                Header::Ping
             } else if cb.is_pong() && is_host {
-                res = Some(Header::Pong);
-            }
-        }
-        if let Some(h) = res {
-            // here would be a good place to check CRC if we decide
-            // not to push fixed packets through Reassembler
-            if h.payload_len() == payload_len.into() {
-                return Ok(Some(h));
+                Header::Pong
             } else {
-                return Err(Error::MalformedData);
+                return Ok(None);
             }
+        } else {
+            return Ok(None);
+        };
+        if res.payload_len() == payload_len {
+            Ok(Some(res))
+        } else {
+            Err(Error::MalformedData)
         }
-        Ok(None)
     }
 
     fn control_byte(&self, sync_bits: SyncBits, is_host: bool) -> Option<ControlByte> {
