@@ -66,8 +66,8 @@ fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
 }
 
 impl Header {
-    pub const INIT_LEN: usize = 5;
-    pub const CONT_LEN: usize = 3;
+    const INIT_LEN: usize = 5;
+    const CONT_LEN: usize = 3;
 
     /// Parse header from a byte slice. Return remaining subslice on success.
     /// Note: sync bits are discarded and need to be obtained from input buffer separately.

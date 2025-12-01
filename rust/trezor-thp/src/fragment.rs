@@ -119,7 +119,7 @@ impl Reassembler {
         }
 
         let mut checksum = Crc32::new();
-        checksum.update(&input[..Header::INIT_LEN]);
+        checksum.update(&input[..header.header_len()]);
 
         let nbytes = after_header.len(); // Header::parse strips padding
         buffer[..nbytes].copy_from_slice(after_header);
