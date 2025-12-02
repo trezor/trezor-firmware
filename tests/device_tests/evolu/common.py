@@ -7,12 +7,20 @@ from ecdsa import NIST256p, SigningKey
 from trezorlib import evolu
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.messages import ThpCredentialResponse
+from trezorlib.messages import (
+    ThpCredentialRequest,
+    ThpCredentialResponse,
+    ThpEndRequest,
+    ThpEndResponse,
+)
 from trezorlib.transport.thp import curve25519
 
 from ...common import compact_size
+from ..thp.connect import prepare_protocol_for_pairing
+from ..thp.test_pairing import nfc_pairing
 
-TEST_host_static_private_key = curve25519.get_private_key(os.urandom(32))
+TEST_randomness = os.urandom(32)
+TEST_host_static_private_key = curve25519.get_private_key(TEST_randomness)
 TEST_host_static_public_key = curve25519.get_public_key(TEST_host_static_private_key)
 
 
@@ -47,17 +55,7 @@ class ThpPairingResult:
 
 
 def pair_and_get_credential(client: Client) -> ThpPairingResult:
-    from trezorlib.messages import (
-        ThpCredentialRequest,
-        ThpCredentialResponse,
-        ThpEndRequest,
-        ThpEndResponse,
-    )
-
-    from ..thp.connect import prepare_protocol_for_pairing
-    from ..thp.test_pairing import nfc_pairing
-
-    protocol = prepare_protocol_for_pairing(client)
+    protocol = prepare_protocol_for_pairing(client, TEST_randomness)
     nfc_pairing(client, protocol)
     protocol._send_message(
         ThpCredentialRequest(
@@ -76,13 +74,26 @@ def pair_and_get_credential(client: Client) -> ThpPairingResult:
     return ThpPairingResult(session, credential_response)
 
 
+def pair_and_get_invalid_credential(client: Client) -> ThpPairingResult:
+    pairing_result = pair_and_get_credential(client)
+    credential = pairing_result.credential.credential
+
+    # Corrupt the credential to make it invalid
+    invalid_credential = (
+        credential[:-2]
+        + bytes([credential[-2] ^ 0xFF])
+        + bytes([credential[-1] ^ 0xFF])
+    )
+    pairing_result.credential.credential = invalid_credential
+    return pairing_result
+
+
 def get_delegated_identity_key(client: Client) -> bytes:
     if client.protocol_version == 2:
         pairing_data = pair_and_get_credential(client)
         return evolu.get_delegated_identity_key(
             client.get_session(),
             thp_credential=pairing_data.credential.credential,
-            host_static_public_key=TEST_host_static_public_key,
         )
     elif client.protocol_version == 1:
         return evolu.get_delegated_identity_key(client.get_session())

@@ -70,13 +70,11 @@ def sign_registration_request(
 
 
 @click.option("--credential", "-c", type=str)
-@click.option("--pubkey", "-p", type=str)
 @cli.command()
 @with_session
 def get_delegated_identity_key(
     session: Session,
     credential: Optional[str] = None,
-    pubkey: Optional[str] = None,
 ) -> str:
     """
     Request the delegated identity key of this device.
@@ -85,10 +83,8 @@ def get_delegated_identity_key(
     """
 
     thp_credential = bytes.fromhex(credential) if credential else None
-    host_static_public_key = bytes.fromhex(pubkey) if pubkey else None
 
     return evolu.get_delegated_identity_key(
         session=session,
         thp_credential=thp_credential,
-        host_static_public_key=host_static_public_key,
     ).hex()
