@@ -24,8 +24,8 @@
 
 #include <io/touch.h>
 #include <sys/i2c_bus.h>
-#include <sys/logging.h>
 #include <sys/irq.h>
+#include <sys/logging.h>
 #include <sys/mpu.h>
 #include <sys/systick.h>
 #include "ft3168.h"
