@@ -34,7 +34,11 @@ mod welcome;
 
 mod connect;
 
-use crate::{time::Duration, trezorhal::time, ui::ui_bootloader::BootloaderUI};
+use crate::{
+    time::Duration,
+    trezorhal::time,
+    ui::{ui_bootloader::BootloaderUI, util::animation_disabled},
+};
 use connect::Connect;
 use intro::Intro;
 use menu::Menu;
@@ -58,6 +62,7 @@ impl UICaesar {
         bg_color: Color,
         icon: Option<(Icon, Color)>,
     ) {
+        let progress = if animation_disabled() { 0 } else { progress };
         let progress = if progress < 20 { 20 } else { progress };
 
         display::sync();
