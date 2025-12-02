@@ -1298,6 +1298,79 @@ nfc-write-card [<timeout_ms>]
 OK
 ```
 
+### nfc-storage-monitor
+Activates the NFC reader and reports NFC storage events to the console.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-storage-monitor
+# NFC storage device connected.
+# NFC storage device disconnected.
+# NFC storage device connected.
+# NFC storage device disconnected.
+# Aborted.
+OK
+```
+
+### nfc-storage-store-secret
+Activates NFC reader and store the secret phrese on the connected storage device.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-storage-store-secret <secret>
+OK
+```
+
+### nfc-storage-read-secret
+Activates NFC reader and read the secret phrese from the connected storage device.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-storage-read-secret
+# NFC storage secret: secret_phrase
+OK
+```
+
+### nfc-storage-dump-memory
+Activates NFC reader and dumps the connected storage device memory to the console.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-storage-dump-memory
+# 00000000: 74 68 69 73
+# 00000004: 5F 69 73 5F
+# 00000008: 74 68 65 5F
+# 0000000C: 6B 65 79 5F
+# 00000010: 74 6F 5F 68
+# 00000014: 65 61 72 74
+# 00000018: 5F 6F 66 5F
+~~~~~~~~~~~~~~~~~~~~~~~~
+# 00000134: 00 00 00 00
+# 00000138: 00 00 00 00
+# 0000013C: 00 00 00 00
+OK
+```
+
+### nfc-storage-wipe-memory
+Activates NFC reader and wipes the connected NFC storage device memory.
+
+Press Ctrl+C to abort NFC reading
+
+Example:
+```
+> nfc-storage-wipe-memory
+# NFC storage memory wiped.
+OK
+```
+
 ### unit-test-run
 Prodtest have capability to verify the overall firmware functionality by running built-in unit tests which should excercise the basic
 features of the firmware drivers. This command will run all registered unit tests and return 'OK' if all tests passed.

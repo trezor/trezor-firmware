@@ -54,6 +54,11 @@ extern "C" fn screen_prodtest_show_text(text: *const cty::c_char, text_len: u8) 
 }
 
 #[no_mangle]
+extern "C" fn screen_prodtest_nfc(tag_connected: bool) {
+    ModelUI::screen_prodtest_nfc(tag_connected);
+}
+
+#[no_mangle]
 extern "C" fn screen_prodtest_border() {
     ModelUI::screen_prodtest_border();
 }

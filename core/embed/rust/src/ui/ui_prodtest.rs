@@ -18,6 +18,8 @@ pub trait ProdtestUI {
 
     fn screen_prodtest_border();
 
+    fn screen_prodtest_nfc(tag_connected: bool);
+
     fn screen_prodtest_bars(colors: &str);
 
     #[cfg(feature = "touch")]

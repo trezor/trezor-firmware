@@ -80,6 +80,10 @@
 #include <io/nfc.h>
 #endif
 
+#ifdef USE_NFC_STORAGE
+#include <io/nfc_storage.h>
+#endif
+
 #ifdef USE_RGB_LED
 #include <io/rgb_led.h>
 #endif
