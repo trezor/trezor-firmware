@@ -161,7 +161,6 @@ def _address_n(purpose, coin, account, script_type):
     return res
 
 
-@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "coin, account, purpose, script_type, descriptors", VECTORS_DESCRIPTORS
 )
@@ -169,8 +168,9 @@ def test_descriptors(
     session: Session, coin, account, purpose, script_type, descriptors
 ):
     with session.client as client:
-        IF = InputFlowShowXpubQRCode(session.client)
-        client.set_input_flow(IF.get())
+        if session.client.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session.client)
+            client.set_input_flow(IF.get())
 
         address_n = _address_n(purpose, coin, account, script_type)
         res = btc.get_public_node(

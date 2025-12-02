@@ -126,12 +126,27 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     return;
   }
 
+  if (coin->xpub_magic) {
+    char tmp_xpub[XPUB_MAXLEN] = {0};
+    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, tmp_xpub,
+                            sizeof(tmp_xpub));
+
+    size_t descriptor_len = descriptor_format(
+        script_type, root_fingerprint, msg->address_n, msg->address_n_count,
+        tmp_xpub, resp->descriptor, sizeof(resp->descriptor));
+    resp->has_descriptor = (descriptor_len > 0);
+  }
+
   if (msg->has_show_display && msg->show_display) {
     int page = 0;
     bool qrcode = false;
 
     while (page < 2) {
-      layoutXPUB(resp->xpub, page, qrcode);
+      char *show_xpub = resp->xpub;
+      if (script_type == InputScriptType_SPENDTAPROOT && resp->has_descriptor) {
+        show_xpub = resp->descriptor;
+      }
+      layoutXPUB(show_xpub, page, qrcode);
       bool confirmed =
           protectButton(ButtonRequestType_ButtonRequest_PublicKey, false);
 

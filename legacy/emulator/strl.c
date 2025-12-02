@@ -42,3 +42,11 @@ size_t strlcat(char *dst, const char *src, size_t size) {
 }
 
 #endif
+
+char *itoa(int i, char *dest, int base) {
+  if (base != 10) {
+    return dest;
+  }
+  int n = sprintf(dest, "%d", i);
+  return dest + n;
+}

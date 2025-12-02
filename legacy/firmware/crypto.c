@@ -32,6 +32,7 @@
 #include "secp256k1.h"
 #include "segwit_addr.h"
 #include "sha2.h"
+#include "util.h"
 
 #if !BITCOIN_ONLY
 #include "cash_addr.h"
@@ -974,4 +975,140 @@ bool multisig_uses_single_path(const MultisigRedeemScriptType *multisig) {
     }
     return true;
   }
+}
+
+// descriptor checksum manually translated from
+// https://github.com/bitcoin-core/HWI/blob/master/hwilib/descriptor.py
+
+static const char INPUT_CHARSET[] =
+    "0123456789()[],'/*abcdefgh@:$%{}"
+    "IJKLMNOPQRSTUVWXYZ&+-.;<=>?!^_|~"
+    "ijklmnopqrstuvwxyzABCDEFGH`#\"\\ ";
+static const char CHECKSUM_CHARSET[] = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+static const size_t DESCRIPTOR_CHECKSUM_LEN = 8;
+
+static uint64_t descriptor_polymod(uint64_t c, uint8_t val) {
+  uint64_t c0 = c >> 35;
+  c = ((c & 0x7FFFFFFFF) << 5) ^ val;
+  if (c0 & 1) {
+    c ^= 0xF5DEE51989;
+  }
+  if (c0 & 2) {
+    c ^= 0xA9FDCA3312;
+  }
+  if (c0 & 4) {
+    c ^= 0x1BAB10E32D;
+  }
+  if (c0 & 8) {
+    c ^= 0x3706B1677A;
+  }
+  if (c0 & 16) {
+    c ^= 0x644D626FFD;
+  }
+  return c;
+}
+
+bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
+                         char dest[DESCRIPTOR_CHECKSUM_LEN]) {
+  uint64_t c = 1;
+  uint8_t cls = 0;
+  uint8_t clscount = 0;
+
+  for (size_t i = 0; i < descriptor_len; i++) {
+    char *pos_ptr = strchr(INPUT_CHARSET, descriptor[i]);
+    size_t pos = pos_ptr - INPUT_CHARSET;
+    if (pos >= sizeof(INPUT_CHARSET)) {
+      return false;
+    }
+    c = descriptor_polymod(c, pos & 31);
+    cls = cls * 3 + (pos >> 5);
+    clscount += 1;
+    if (clscount == 3) {
+      c = descriptor_polymod(c, cls);
+      cls = 0;
+      clscount = 0;
+    }
+  }
+  if (clscount > 0) {
+    c = descriptor_polymod(c, cls);
+  }
+  for (size_t j = 0; j < 8; j++) {
+    c = descriptor_polymod(c, 0);
+  }
+  c ^= 1;
+  for (size_t j = 0; j < DESCRIPTOR_CHECKSUM_LEN; j++) {
+    size_t pos = (c >> (5 * (7 - j))) & 31;
+    if (pos >= sizeof(CHECKSUM_CHARSET)) {
+      return false;
+    }
+    dest[j] = CHECKSUM_CHARSET[pos];
+  }
+  return true;
+}
+
+static size_t remaining(size_t written, size_t capacity) {
+  return (written > capacity ? 0 : (capacity - written));
+}
+
+size_t descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
+                         const uint32_t address_n[], size_t address_n_count,
+                         const char *xpub, char *dest, size_t capacity) {
+  size_t written = 0;
+
+  if (script_type == InputScriptType_SPENDADDRESS) {
+    strlcpy(dest, "pkh([", capacity);
+    written += 5;
+  } else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
+    strlcpy(dest, "sh(wpkh([", capacity);
+    written += 9;
+  } else if (script_type == InputScriptType_SPENDWITNESS) {
+    strlcpy(dest, "wpkh([", capacity);
+    written += 6;
+  } else if (script_type == InputScriptType_SPENDTAPROOT) {
+    strlcpy(dest, "tr([", capacity);
+    written += 4;
+  } else {
+    return 0;
+  }
+  uint32hex(root_fingerprint, &dest[written]);
+  written += 8;
+
+  for (size_t i = 0; i < address_n_count; i++) {
+    strlcpy(&dest[written], "/", remaining(written, capacity));
+    written++;
+
+    if (written + 17 > capacity) {
+      return 0;
+    }
+    int32_t unhardened = address_n[i] & PATH_UNHARDEN_MASK;
+    char *result = itoa(unhardened, &dest[written], 10);
+    written += result - (dest + written);
+
+    if (address_n[i] & PATH_HARDENED) {
+      strlcpy(&dest[written], "h", remaining(written, capacity));
+      written++;
+    }
+  }
+
+  strlcpy(&dest[written], "]", remaining(written, capacity));
+  written++;
+  strlcpy(&dest[written], xpub, remaining(written, capacity));
+  written += strlen(xpub);
+  strlcpy(&dest[written], "/<0;1>/*)", remaining(written, capacity));
+  written += 9;
+
+  if (script_type == InputScriptType_SPENDP2SHWITNESS) {
+    strlcpy(&dest[written], ")", remaining(written, capacity));
+    written++;
+  }
+
+  char csum[DESCRIPTOR_CHECKSUM_LEN + 1] = {};
+  if (descriptor_checksum(dest, written, csum)) {
+    strlcpy(&dest[written], "#", remaining(written, capacity));
+    written += 1;
+    strlcpy(&dest[written], csum, remaining(written, capacity));
+    written += DESCRIPTOR_CHECKSUM_LEN;
+  }
+
+  return written;
 }
