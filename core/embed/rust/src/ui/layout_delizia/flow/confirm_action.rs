@@ -109,6 +109,7 @@ impl FlowController for ConfirmAction {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Action, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Action, Direction::Down) => self.return_msg(FlowMsg::Back),
             _ => self.do_nothing(),
         }
     }
@@ -138,6 +139,7 @@ impl FlowController for ConfirmActionWithConfirmation {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Action, Direction::Up) => Self::Confirmation.swipe(direction),
+            (Self::Action, Direction::Down) => self.return_msg(FlowMsg::Back),
             (Self::Confirmation, Direction::Down) => Self::Action.swipe(direction),
             _ => self.do_nothing(),
         }
@@ -170,6 +172,7 @@ impl FlowController for ConfirmActionWithMenu {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Action, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Action, Direction::Down) => self.return_msg(FlowMsg::Back),
             _ => self.do_nothing(),
         }
     }
@@ -202,6 +205,7 @@ impl FlowController for ConfirmActionWithMenuAndConfirmation {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Action, Direction::Up) => Self::Confirmation.swipe(direction),
+            (Self::Action, Direction::Down) => self.return_msg(FlowMsg::Back),
             (Self::Confirmation, Direction::Down) => Self::Action.swipe(direction),
             _ => self.do_nothing(),
         }
@@ -264,6 +268,7 @@ pub fn new_confirm_action(
         },
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
         hold,
+        false,
         None,
         0,
         false,
@@ -276,6 +281,7 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
     hold: bool,
+    swipe_down: bool,
     frame_margin: usize,
     page_counter: bool,
 ) -> Result<SwipeFlow, error::Error> {
@@ -286,6 +292,9 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
         .with_margin(frame_margin)
         .with_swipeup_footer(strings.footer_description)
         .with_vertical_pages();
+    if swipe_down {
+        content = content.with_swipe(Direction::Down, SwipeSettings::Default);
+    }
 
     content = match extra {
         ConfirmActionExtra::ExternalMenu => content.with_menu_button().with_external_menu(),
@@ -449,11 +458,13 @@ fn create_confirm(
 }
 
 #[inline(never)]
+#[allow(clippy::too_many_arguments)]
 pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>(
     content: T,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
     hold: bool,
+    swipe_down: bool,
     page_limit: Option<u16>,
     frame_margin: usize,
     page_counter: bool,
@@ -463,6 +474,7 @@ pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>
         extra,
         strings,
         hold,
+        swipe_down,
         frame_margin,
         page_counter,
     )

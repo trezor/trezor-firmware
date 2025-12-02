@@ -102,6 +102,7 @@ impl FirmwareUI for UIDelizia {
             ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, Some(subtitle), None, None),
             false,
+            false,
             None,
             0,
             false,
@@ -123,7 +124,7 @@ impl FirmwareUI for UIDelizia {
         page_counter: bool,
         prompt_screen: bool,
         cancel: bool,
-        _back_button: bool,
+        back_button: bool,
         _warning_footer: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -146,6 +147,7 @@ impl FirmwareUI for UIDelizia {
             .with_chunkify(chunkify)
             .with_page_counter(page_counter)
             .with_cancel(cancel)
+            .with_swipe_down(back_button)
             .with_prompt(prompt_screen)
             .with_external_menu(external_menu)
             .with_hold(hold)
@@ -205,6 +207,7 @@ impl FirmwareUI for UIDelizia {
                     Some(TR::homescreen__settings_title.into()),
                 ),
                 false,
+                false,
                 None,
                 0,
                 false,
@@ -241,6 +244,7 @@ impl FirmwareUI for UIDelizia {
                 Some(TR::coinjoin__title.into()),
             ),
             true,
+            false,
             None,
             0,
             false,
@@ -269,6 +273,7 @@ impl FirmwareUI for UIDelizia {
             FormattedText::new(ops).vertically_centered(),
             ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, Some(title)),
+            false,
             false,
             None,
             0,
@@ -338,6 +343,7 @@ impl FirmwareUI for UIDelizia {
             ),
             ConfirmActionStrings::new(title, None, None, Some(title)),
             true,
+            false,
             None,
             0,
             false,
@@ -460,6 +466,7 @@ impl FirmwareUI for UIDelizia {
             ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, subtitle, None, hold.then_some(title)),
             hold,
+            false,
             None,
             0,
             false,
@@ -499,6 +506,7 @@ impl FirmwareUI for UIDelizia {
                 ConfirmActionMenuStrings::new().with_verb_info(Some(verb_info)),
             ),
             ConfirmActionStrings::new(title, None, None, None).with_footer_description(Some(verb)),
+            false,
             false,
             None,
             0,
