@@ -1518,13 +1518,13 @@ impl FirmwareUI for UIEckhart {
                     .unwrap_or_else(TString::empty);
                 if first_item_is_address.is_none() {
                     // TODO: should be based on the first item's "property type" (when we have it)
-                    first_item_is_address = Some(header == TString::empty());
+                    first_item_is_address = Some(header.is_empty());
                 }
                 let mut header_paragraph = Paragraph::new(
                     if subtitle.is_none() {
                         &theme::TEXT_SMALL
                     } else {
-                        // subtitle is already quite proeminent
+                        // subtitle is already quite prominent
                         &theme::TEXT_SMALL_LIGHT
                     },
                     header,
@@ -1542,20 +1542,14 @@ impl FirmwareUI for UIEckhart {
                 let text = text
                     .try_into_option::<TString>()?
                     .unwrap_or_else(TString::empty);
-                let value_paragraph = Paragraph::new(
-                    if header.is_empty() {
-                        // TODO: should be based on the "property type"
-                        &theme::TEXT_MONO_ADDRESS_CHUNKS
-                    } else {
-                        &theme::TEXT_MONO_LIGHT
-                    },
-                    text,
-                )
-                .with_bottom_padding(if header.is_empty() {
-                    20
+                // TODO: should be based on the "property type"
+                let value_paragraph = if header.is_empty() {
+                    Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)
+                        .with_bottom_padding(theme::PROPS_SPACING_EXTRA)
                 } else {
-                    theme::PROPS_SPACING
-                });
+                    Paragraph::new(&theme::TEXT_MONO_LIGHT, text)
+                        .with_bottom_padding(theme::PROPS_SPACING)
+                };
                 unwrap!(vec.push(value_paragraph));
             }
         };
