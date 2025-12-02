@@ -33,6 +33,7 @@ use crate::{
         shape,
         shape::render_on_display,
         ui_bootloader::BootloaderUI,
+        util::animation_disabled,
         CommonUI,
     },
 };
@@ -70,6 +71,8 @@ impl UIDelizia {
             Self::fadeout();
         }
         display::sync();
+
+        let progress = if animation_disabled() { 0 } else { progress };
 
         render_on_display(None, Some(bg_color), |target| {
             shape::Text::new(PROGRESS_TEXT_ORIGIN, text, fonts::FONT_DEMIBOLD)

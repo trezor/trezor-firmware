@@ -40,6 +40,7 @@ use crate::{
         layout::simplified::show,
         shape::{self, render_on_display},
         ui_bootloader::BootloaderUI,
+        util::animation_disabled,
         CommonUI,
     },
 };
@@ -72,6 +73,8 @@ impl UIBolt {
             Self::fadeout();
         }
         display::sync();
+
+        let progress = if animation_disabled() { 0 } else { progress };
 
         render_on_display(None, Some(bg_color), |target| {
             shape::Text::new(
