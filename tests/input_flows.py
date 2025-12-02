@@ -1208,17 +1208,50 @@ class InputFlowSignTxBackFromAmount(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def input_flow_eckhart(self) -> BRGeneratorType:
-        yield  # confirm address
-        self.debug.read_layout()
-        self.debug.click(self.debug.screen_buttons.ok())
+    def input_flow_delizia(self) -> BRGeneratorType:
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__address in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_up()
 
-        yield  # confirm amount
-        self.debug.read_layout()
-        self.debug.click(self.debug.screen_buttons.cancel())
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__amount in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_down()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__address in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_up()
 
         yield
         self.debug.read_layout()
+        self.debug.swipe_up()
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__send in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__amount in layout.text_content()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.click(self.debug.screen_buttons.cancel())
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__send in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
         self.debug.click(self.debug.screen_buttons.ok())
 
         yield
