@@ -143,9 +143,9 @@ impl<R: Role> Header<R> {
         } else if cb.is_error() {
             Self::TransportError {
                 channel_id,
-                error_code: error::TransportError::from(
+                error_code: error::TransportError::try_from(
                     *buffer.get(Self::INIT_LEN).ok_or(Error::MalformedData)?,
-                ),
+                )?,
             }
         } else if channel_id == BROADCAST_CHANNEL_ID {
             if cb.is_channel_allocation_request() && !R::is_host() {
