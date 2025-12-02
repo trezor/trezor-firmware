@@ -1404,10 +1404,6 @@ class TrezorClientDebugLink(TrezorClient):
         self.pin_callback = get_pin
         self.button_callback = self.ui.button_request
 
-        # protocol = ProtocolV1Channel(debug_transport, mapping.DEFAULT_MAPPING)
-        #
-        # super().__init__(transport, app_name=app_name, host_name=host_name, protocol=protocol)
-
         super().__init__(
             transport, app_name=app_name, host_name=host_name, bootloader=bootloader
         )

@@ -41,7 +41,7 @@ pub enum DebuglinkResult {
 pub fn debuglink_process() -> DebuglinkResult {
     unsafe {
         unwrap!(
-            DebuglinkResult::from_u32(ffi::debuglink_process()),
+            DebuglinkResult::from_u32(ffi::debuglink_process() as _),
             "Invalid debuglink result"
         )
     }
