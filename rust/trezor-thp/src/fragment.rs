@@ -1,3 +1,4 @@
+use crate::Role;
 use crate::alternating_bit::SyncBits;
 use crate::header::Header;
 use crate::{
@@ -5,16 +6,16 @@ use crate::{
     error::{Error, Result},
 };
 
-pub struct Fragmenter {
-    header: Header,
+pub struct Fragmenter<R: Role> {
+    header: Header<R>,
     sync_bits: SyncBits,
     offset: usize,
     checksum: Crc32,
     crc_offset: usize,
 }
 
-impl Fragmenter {
-    pub fn new(header: Header, sync_bits: SyncBits, payload: &[u8]) -> Result<Self> {
+impl<R: Role> Fragmenter<R> {
+    pub fn new(header: Header<R>, sync_bits: SyncBits, payload: &[u8]) -> Result<Self> {
         if payload.len() + CHECKSUM_LEN != header.payload_len().into() {
             return Err(Error::UnexpectedInput);
         }
@@ -27,8 +28,8 @@ impl Fragmenter {
         })
     }
 
-    pub fn next(&mut self, payload: &[u8], dest: &mut [u8], is_host: bool) -> Result<bool> {
-        const MIN_PACKET_SIZE: usize = Header::new_ack(0).header_len() + 1;
+    pub fn next(&mut self, payload: &[u8], dest: &mut [u8]) -> Result<bool> {
+        const MIN_PACKET_SIZE: usize = Header::<crate::Device>::new_ack(0).header_len() + 1;
         if dest.len() < MIN_PACKET_SIZE {
             return Err(Error::InsufficientBuffer);
         }
@@ -43,14 +44,14 @@ impl Fragmenter {
         let header_len = if self.offset == 0 {
             let header_len = self
                 .header
-                .to_bytes(self.sync_bits, dest, is_host)
+                .to_bytes(self.sync_bits, dest)
                 .ok_or(Error::UnexpectedInput)?;
             self.checksum.update(&dest[..header_len]);
             header_len
         } else {
-            let cont_header = Header::new_continuation(self.header.channel_id());
+            let cont_header = Header::<R>::new_continuation(self.header.channel_id());
             cont_header
-                .to_bytes(SyncBits::new(), dest, is_host)
+                .to_bytes(SyncBits::new(), dest)
                 .ok_or(Error::UnexpectedInput)?
         };
         let mut rest = &mut dest[header_len..];
@@ -84,15 +85,9 @@ impl Fragmenter {
     }
 
     /// Shortcut to serialize packet into buffer known to be large enough.
-    pub fn single(
-        header: Header,
-        sb: SyncBits,
-        payload: &[u8],
-        dest: &mut [u8],
-        is_host: bool,
-    ) -> Result<()> {
-        let mut fragmenter = Fragmenter::new(header, sb, payload)?;
-        fragmenter.next(payload, dest, is_host)?;
+    pub fn single(header: Header<R>, sb: SyncBits, payload: &[u8], dest: &mut [u8]) -> Result<()> {
+        let mut fragmenter = Self::new(header, sb, payload)?;
+        fragmenter.next(payload, dest)?;
         if !fragmenter.is_done() {
             return Err(Error::InsufficientBuffer);
         }
@@ -100,15 +95,15 @@ impl Fragmenter {
     }
 }
 
-pub struct Reassembler {
-    header: Header,
+pub struct Reassembler<R: Role> {
+    header: Header<R>,
     offset: usize,
     checksum: Crc32,
 }
 
-impl Reassembler {
-    pub fn new(input: &[u8], buffer: &mut [u8], is_host: bool) -> Result<Self> {
-        let (header, after_header) = Header::parse(input, is_host)?;
+impl<R: Role> Reassembler<R> {
+    pub fn new(input: &[u8], buffer: &mut [u8]) -> Result<Self> {
+        let (header, after_header) = Header::parse(input)?;
         if header.is_continuation() {
             return Err(Error::UnexpectedInput);
         }
@@ -134,8 +129,8 @@ impl Reassembler {
         })
     }
 
-    pub fn update(&mut self, input: &[u8], buffer: &mut [u8], is_host: bool) -> Result<()> {
-        let (header, after_header) = Header::parse(input, is_host)?;
+    pub fn update(&mut self, input: &[u8], buffer: &mut [u8]) -> Result<()> {
+        let (header, after_header) = Header::<R>::parse(input)?;
         if !header.is_continuation() {
             return Err(Error::UnexpectedInput);
         }
@@ -182,17 +177,13 @@ impl Reassembler {
         Ok(length_no_checksum)
     }
 
-    pub fn header(&self) -> Header {
+    pub fn header(&self) -> Header<R> {
         self.header.clone()
     }
 
     // Shortcut to deserialize single packet message.
-    pub fn single<'a>(
-        buffer: &[u8],
-        dest: &'a mut [u8],
-        is_host: bool,
-    ) -> Result<(Header, &'a [u8])> {
-        let reassembler = Reassembler::new(buffer, dest, is_host)?;
+    pub fn single<'a>(buffer: &[u8], dest: &'a mut [u8]) -> Result<(Header<R>, &'a [u8])> {
+        let reassembler = Self::new(buffer, dest)?;
         if !reassembler.is_done() {
             return Err(Error::MalformedData);
         }
@@ -205,42 +196,39 @@ impl Reassembler {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::{Device, Host};
     use heapless::Vec;
 
     const MAX_FRAGMENTS: usize = 256;
     const MAX_PACKET: usize = 128;
     const MAX_MESSAGE: usize = 8096;
 
-    fn fragment(
-        header: Header,
+    fn fragment<R: Role>(
+        header: Header<R>,
         sb: SyncBits,
         input: &[u8],
         packet_size: usize,
-        is_host: bool,
     ) -> Vec<Vec<u8, MAX_PACKET>, MAX_FRAGMENTS> {
         let mut packets = Vec::new();
-        let mut fragmenter = Fragmenter::new(header, sb, input).expect("fragmenter");
+        let mut fragmenter = Fragmenter::<R>::new(header, sb, input).expect("fragmenter");
         while !fragmenter.is_done() {
             let mut packet = Vec::new();
             packet.resize(packet_size, 0u8).unwrap();
-            fragmenter
-                .next(input, packet.as_mut_slice(), is_host)
-                .expect("next");
+            fragmenter.next(input, packet.as_mut_slice()).expect("next");
             packets.push(packet).unwrap();
         }
         packets
     }
 
-    fn assemble(packets: &[Vec<u8, MAX_PACKET>], is_host: bool) -> Vec<u8, MAX_MESSAGE> {
+    fn assemble<R: Role>(packets: &[Vec<u8, MAX_PACKET>]) -> Vec<u8, MAX_MESSAGE> {
         let mut received = Vec::new();
         received.resize(MAX_MESSAGE, 0u8).unwrap();
-        let mut reassembler =
-            Reassembler::new(packets[0].as_slice(), received.as_mut_slice(), is_host)
-                .expect("reassembler");
+        let mut reassembler = Reassembler::<R>::new(packets[0].as_slice(), received.as_mut_slice())
+            .expect("reassembler");
         for p in packets.iter().skip(1) {
             assert!(!reassembler.is_done());
             reassembler
-                .update(p.as_slice(), received.as_mut_slice(), is_host)
+                .update(p.as_slice(), received.as_mut_slice())
                 .expect("update");
         }
         assert!(reassembler.is_done());
@@ -253,17 +241,16 @@ mod test {
     fn test_roundtrip() {
         const DATA: &'static [u8] = b"The Quick Brown Fox Jumps Over the Lazy Dog The Quick Brown Fox Jumps Over the Lazy Dog";
         const PACKET_SIZE: usize = 13;
-        const IS_HOST: bool = false;
 
         for i in 0..DATA.len() {
             let source = &DATA[..i];
             let channel_id = i as u16;
-            let header = Header::new_encrypted(channel_id, source);
+            let header = Header::<Host>::new_encrypted(channel_id, source);
 
-            let packets = fragment(header, SyncBits::new(), source, PACKET_SIZE, IS_HOST);
+            let packets = fragment(header, SyncBits::new(), source, PACKET_SIZE);
             // println!("message len: {}, packets: {}", i, packets.len());
             // packets.iter().for_each(|p| println!("{}", hex::encode(&p)));
-            let assembled = assemble(&packets, !IS_HOST);
+            let assembled = assemble::<Device>(&packets);
 
             let expected_hex = hex::encode(source);
             let received_hex = hex::encode(assembled.as_slice());
@@ -324,8 +311,8 @@ mod test {
 
     #[test]
     fn test_write_empty_payload() {
-        let header = Header::new_encrypted(CHANNEL_ID, &[]);
-        let packets = fragment(header, SyncBits::new(), &[], PACKET_LEN, false);
+        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &[]);
+        let packets = fragment(header, SyncBits::new(), &[], PACKET_LEN);
         assert_eq!(packets.len(), 1);
         assert_eq!(hex::encode(&packets[0]), EMPTY_PAYLOAD_EXPECTED);
     }
@@ -333,8 +320,8 @@ mod test {
     #[test]
     fn test_write_short_payload() {
         let data = &[0x07];
-        let header = Header::new_encrypted(CHANNEL_ID, data);
-        let packets = fragment(header, SyncBits::new(), data, PACKET_LEN, false);
+        let header = Header::<Device>::new_encrypted(CHANNEL_ID, data);
+        let packets = fragment(header, SyncBits::new(), data, PACKET_LEN);
         assert_eq!(packets.len(), 1);
         assert_eq!(hex::encode(&packets[0]), SHORT_PAYLOAD_EXPECTED);
     }
@@ -342,8 +329,8 @@ mod test {
     #[test]
     fn test_write_longer_payload() {
         let data: Vec<u8, 256> = (0..=255).collect();
-        let header = Header::new_encrypted(CHANNEL_ID, &data);
-        let packets = fragment(header, SyncBits::new(), &data, PACKET_LEN, false);
+        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &data);
+        let packets = fragment(header, SyncBits::new(), &data, PACKET_LEN);
         assert_eq!(packets.len(), LONGER_PAYLOAD_EXPECTED.len());
         packets
             .iter()
@@ -356,8 +343,8 @@ mod test {
         let data: Vec<u8, 2048> = (0..2048u16)
             .map(|n| u8::try_from(n & 0xff).unwrap())
             .collect();
-        let header = Header::new_encrypted(CHANNEL_ID, &data);
-        let packets = fragment(header, SyncBits::new(), &data, PACKET_LEN, false);
+        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &data);
+        let packets = fragment(header, SyncBits::new(), &data, PACKET_LEN);
         assert_eq!(packets.len(), EVEN_LONGER_PAYLOADS_EXPECTED.len());
         packets
             .iter()

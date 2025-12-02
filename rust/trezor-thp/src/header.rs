@@ -1,7 +1,10 @@
+use crate::Role;
 use crate::alternating_bit::SyncBits;
 use crate::control_byte::{self, ControlByte};
 use crate::crc32;
 use crate::error::{self, Error, Result};
+
+use core::marker::PhantomData;
 
 const CHECKSUM_LEN: u16 = crc32::CHECKSUM_LEN as u16;
 const NONCE_LEN: u16 = 8;
@@ -13,12 +16,13 @@ const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
 /// Represents packet header, i.e. control byte, channel id and possibly payload length.
 /// Please note that `seq_bit` and `ack_bit` which are also part of the header are handled separately.
 #[derive(Clone, Debug, PartialEq)]
-pub enum Header {
+pub enum Header<R: Role> {
     Continuation {
         channel_id: u16,
     },
     Ack {
         channel_id: u16,
+        _phantom: PhantomData<R>,
     },
     CodecV1Request {
         is_continuation: bool,
@@ -65,17 +69,17 @@ fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
     Ok((u16::from_be_bytes(*bytes), rest))
 }
 
-impl Header {
+impl<R: Role> Header<R> {
     const INIT_LEN: usize = 5;
     const CONT_LEN: usize = 3;
 
     /// Parse header from a byte slice. Return remaining subslice on success.
     /// Note: sync bits are discarded and need to be obtained from input buffer separately.
-    pub fn parse(buffer: &[u8], is_host: bool) -> Result<(Self, &[u8])> {
+    pub fn parse(buffer: &[u8]) -> Result<(Self, &[u8])> {
         let (first_byte, rest) = buffer.split_first().ok_or(Error::MalformedData)?;
         let cb = ControlByte::from(*first_byte);
         if cb.is_codec_v1() {
-            if is_host {
+            if R::is_host() {
                 return Ok((Header::CodecV1Response, &[]));
             } else {
                 let is_continuation = !matches!(rest.get(..2), Some(b"##"));
@@ -96,10 +100,10 @@ impl Header {
         // strip padding if there is any
         let without_padding = rest.len().min(payload_len.into());
         let rest = &rest[..without_padding];
-        if let Some(fixed) = Self::parse_fixed(buffer, cb, channel_id, payload_len, is_host)? {
+        if let Some(fixed) = Self::parse_fixed(buffer, cb, channel_id, payload_len)? {
             return Ok((fixed, rest));
         }
-        if let Some(phase) = HandshakeMessage::from_u8(cb.into(), is_host) {
+        if let Some(phase) = HandshakeMessage::from_u8::<R>(cb.into()) {
             return Ok((
                 Self::Handshake {
                     phase,
@@ -118,7 +122,8 @@ impl Header {
                 rest,
             ));
         }
-        if is_host && channel_id == BROADCAST_CHANNEL_ID && cb.is_channel_allocation_response() {
+        if R::is_host() && channel_id == BROADCAST_CHANNEL_ID && cb.is_channel_allocation_response()
+        {
             return Ok((Self::ChannelAllocationResponse { payload_len }, rest));
         }
         Err(Error::MalformedData)
@@ -129,10 +134,12 @@ impl Header {
         cb: ControlByte,
         channel_id: u16,
         payload_len: u16,
-        is_host: bool,
     ) -> Result<Option<Self>> {
         let res = if cb.is_ack() {
-            Self::Ack { channel_id }
+            Self::Ack {
+                channel_id,
+                _phantom: PhantomData,
+            }
         } else if cb.is_error() {
             Self::TransportError {
                 channel_id,
@@ -141,11 +148,11 @@ impl Header {
                 ),
             }
         } else if channel_id == BROADCAST_CHANNEL_ID {
-            if cb.is_channel_allocation_request() && !is_host {
+            if cb.is_channel_allocation_request() && !R::is_host() {
                 Header::ChannelAllocationRequest
-            } else if cb.is_ping() && !is_host {
+            } else if cb.is_ping() && !R::is_host() {
                 Header::Ping
-            } else if cb.is_pong() && is_host {
+            } else if cb.is_pong() && R::is_host() {
                 Header::Pong
             } else {
                 return Ok(None);
@@ -160,18 +167,18 @@ impl Header {
         }
     }
 
-    fn control_byte(&self, sync_bits: SyncBits, is_host: bool) -> Option<ControlByte> {
+    fn control_byte(&self, sync_bits: SyncBits) -> Option<ControlByte> {
         let cb = match self {
             Self::Continuation { .. } => control_byte::CONTINUATION_PACKET,
             Self::Ack { .. } => control_byte::ACK_MESSAGE,
-            Self::ChannelAllocationRequest if is_host => control_byte::CHANNEL_ALLOCATION_REQ,
-            Self::ChannelAllocationResponse { .. } if !is_host => {
+            Self::ChannelAllocationRequest if R::is_host() => control_byte::CHANNEL_ALLOCATION_REQ,
+            Self::ChannelAllocationResponse { .. } if !R::is_host() => {
                 control_byte::CHANNEL_ALLOCATION_RES
             }
             Self::TransportError { .. } => control_byte::ERROR,
-            Self::Ping if is_host => control_byte::PING,
-            Self::Pong if !is_host => control_byte::PONG,
-            Self::Handshake { phase, .. } => phase.to_u8(is_host)?,
+            Self::Ping if R::is_host() => control_byte::PING,
+            Self::Pong if !R::is_host() => control_byte::PONG,
+            Self::Handshake { phase, .. } => phase.to_u8::<R>()?,
             Self::Encrypted { .. } => control_byte::ENCRYPTED_TRANSPORT,
             _ => return None,
         };
@@ -186,7 +193,7 @@ impl Header {
     }
 
     /// Serialize header to a buffer. Returns length of the result on success.
-    pub fn to_bytes(&self, sync_bits: SyncBits, dest: &mut [u8], is_host: bool) -> Option<usize> {
+    pub fn to_bytes(&self, sync_bits: SyncBits, dest: &mut [u8]) -> Option<usize> {
         if let Self::Continuation { channel_id } = self {
             return if dest.len() < Self::CONT_LEN {
                 None
@@ -200,7 +207,7 @@ impl Header {
             return None;
         }
         let length = self.payload_len();
-        dest[0] = self.control_byte(sync_bits, is_host)?.into();
+        dest[0] = self.control_byte(sync_bits)?.into();
         dest[1..3].copy_from_slice(&self.channel_id().to_be_bytes());
         dest[3..5].copy_from_slice(&length.to_be_bytes());
         Some(Self::INIT_LEN)
@@ -209,7 +216,7 @@ impl Header {
     pub const fn channel_id(&self) -> u16 {
         match self {
             Self::Continuation { channel_id } => *channel_id,
-            Self::Ack { channel_id } => *channel_id,
+            Self::Ack { channel_id, .. } => *channel_id,
             Self::TransportError { channel_id, .. } => *channel_id,
             Self::Handshake {
                 phase: _,
@@ -271,7 +278,10 @@ impl Header {
     }
 
     pub const fn new_ack(channel_id: u16) -> Self {
-        Self::Ack { channel_id }
+        Self::Ack {
+            channel_id,
+            _phantom: PhantomData,
+        }
     }
 
     pub const fn new_ping() -> Self {
@@ -308,23 +318,35 @@ impl Header {
 }
 
 impl HandshakeMessage {
-    pub fn from_u8(val: u8, is_host: bool) -> Option<Self> {
+    pub fn from_u8<R: Role>(val: u8) -> Option<Self> {
         let masked = val & control_byte::DATA_MASK;
         Some(match masked {
-            control_byte::HANDSHAKE_INIT_REQ if !is_host => HandshakeMessage::InitiationRequest,
-            control_byte::HANDSHAKE_INIT_RES if is_host => HandshakeMessage::InitiationResponse,
-            control_byte::HANDSHAKE_COMP_REQ if !is_host => HandshakeMessage::CompletionRequest,
-            control_byte::HANDSHAKE_COMP_RES if is_host => HandshakeMessage::CompletionResponse,
+            control_byte::HANDSHAKE_INIT_REQ if !R::is_host() => {
+                HandshakeMessage::InitiationRequest
+            }
+            control_byte::HANDSHAKE_INIT_RES if R::is_host() => {
+                HandshakeMessage::InitiationResponse
+            }
+            control_byte::HANDSHAKE_COMP_REQ if !R::is_host() => {
+                HandshakeMessage::CompletionRequest
+            }
+            control_byte::HANDSHAKE_COMP_RES if R::is_host() => {
+                HandshakeMessage::CompletionResponse
+            }
             _ => return None,
         })
     }
 
-    pub fn to_u8(&self, is_host: bool) -> Option<u8> {
+    pub fn to_u8<R: Role>(&self) -> Option<u8> {
         Some(match self {
-            HandshakeMessage::InitiationRequest if is_host => control_byte::HANDSHAKE_INIT_REQ,
-            HandshakeMessage::InitiationResponse if !is_host => control_byte::HANDSHAKE_INIT_RES,
-            HandshakeMessage::CompletionRequest if is_host => control_byte::HANDSHAKE_COMP_REQ,
-            HandshakeMessage::CompletionResponse if !is_host => control_byte::HANDSHAKE_COMP_RES,
+            HandshakeMessage::InitiationRequest if R::is_host() => control_byte::HANDSHAKE_INIT_REQ,
+            HandshakeMessage::InitiationResponse if !R::is_host() => {
+                control_byte::HANDSHAKE_INIT_RES
+            }
+            HandshakeMessage::CompletionRequest if R::is_host() => control_byte::HANDSHAKE_COMP_REQ,
+            HandshakeMessage::CompletionResponse if !R::is_host() => {
+                control_byte::HANDSHAKE_COMP_RES
+            }
             _ => return None,
         })
     }
@@ -334,8 +356,55 @@ impl HandshakeMessage {
 mod test {
     use super::*;
     use crate::error::TransportError;
+    use crate::{Device, Host};
 
-    const VECTORS_GOOD: &[(&str, Header)] = &[
+    impl<R: Role> Header<R> {
+        fn transmute<S: Role>(&self) -> Header<S> {
+            let s = self.clone();
+            match s {
+                Self::Continuation { channel_id } => Header::<S>::Continuation { channel_id },
+                Self::Ack { channel_id, .. } => Header::<S>::Ack {
+                    channel_id,
+                    _phantom: PhantomData,
+                },
+                Self::CodecV1Request { is_continuation } => {
+                    Header::<S>::CodecV1Request { is_continuation }
+                }
+                Self::CodecV1Response => Header::<S>::CodecV1Response,
+                Self::ChannelAllocationRequest => Header::<S>::ChannelAllocationRequest,
+                Self::ChannelAllocationResponse { payload_len } => {
+                    Header::<S>::ChannelAllocationResponse { payload_len }
+                }
+                Self::TransportError {
+                    channel_id,
+                    error_code,
+                } => Header::<S>::TransportError {
+                    channel_id,
+                    error_code,
+                },
+                Self::Ping => Header::<S>::Ping,
+                Self::Pong => Header::<S>::Pong,
+                Self::Handshake {
+                    phase,
+                    channel_id,
+                    payload_len,
+                } => Header::<S>::Handshake {
+                    phase,
+                    channel_id,
+                    payload_len,
+                },
+                Self::Encrypted {
+                    channel_id,
+                    payload_len,
+                } => Header::<S>::Encrypted {
+                    channel_id,
+                    payload_len,
+                },
+            }
+        }
+    }
+
+    const VECTORS_GOOD: &[(&str, Header<Device>)] = &[
         ("801234", Header::Continuation { channel_id: 0x1234 }),
         (
             "80ffff",
@@ -344,13 +413,8 @@ mod test {
             },
         ),
         ("8012345678", Header::Continuation { channel_id: 0x1234 }),
-        ("201337000463061764", Header::Ack { channel_id: 0x1337 }),
-        (
-            "20ffff000460132e1c",
-            Header::Ack {
-                channel_id: BROADCAST_CHANNEL_ID,
-            },
-        ),
+        ("201337000463061764", Header::new_ack(0x1337)),
+        ("20ffff000460132e1c", Header::new_ack(BROADCAST_CHANNEL_ID)),
         (
             "041337000457479ea0",
             Header::Encrypted {
@@ -385,10 +449,10 @@ mod test {
     fn test_parse_good() {
         for (input, expected) in VECTORS_GOOD {
             let input = hex::decode(input).unwrap();
-            let (header_device, _) = Header::parse(&input, false).expect("parse1");
+            let (header_device, _) = Header::<Device>::parse(&input).expect("parse1");
             assert_eq!(header_device, *expected);
-            let (header_host, _) = Header::parse(&input, true).expect("parse2");
-            assert_eq!(header_host, *expected);
+            let (header_host, _) = Header::<Host>::parse(&input).expect("parse2");
+            assert_eq!(header_host, expected.transmute());
         }
     }
 
@@ -398,10 +462,13 @@ mod test {
             let bytes = hex::decode(bytes).unwrap();
             let mut buffer = [0u8; 256];
             let sb = SyncBits::new();
-            let len = header.to_bytes(sb, &mut buffer, false).expect("to_bytes1");
+            let len = header.to_bytes(sb, &mut buffer).expect("to_bytes1");
             assert!(len > 0);
             assert_eq!(&buffer[..len], &bytes[..len]);
-            let len = header.to_bytes(sb, &mut buffer, true).expect("to_bytes2");
+            let len = header
+                .transmute::<Host>()
+                .to_bytes(sb, &mut buffer)
+                .expect("to_bytes2");
             assert!(len > 0);
             assert_eq!(&buffer[..len], &bytes[..len]);
         }
@@ -416,13 +483,13 @@ mod test {
             let bytes = hex::decode(bytes).unwrap();
             let mut buffer = [0u8; 256];
             let sb = SyncBits::new().with_seq_bit(true);
-            let len = header.to_bytes(sb, &mut buffer, false).expect("to_bytes");
+            let len = header.to_bytes(sb, &mut buffer).expect("to_bytes");
             assert!(len > 0);
             assert_ne!(&buffer[..len], &bytes[..len]);
         }
     }
 
-    const VECTORS_GOOD_DEVICE: &[(&str, Header)] = &[
+    const VECTORS_GOOD_DEVICE: &[(&str, Header<Device>)] = &[
         // ("3f2323", Header::CodecV1Request { is_continuation: false }),
         // ("3f6666", Header::CodecV1Request { is_continuation: true }),
         (
@@ -452,22 +519,25 @@ mod test {
     fn test_role_device() {
         for (bytes, header) in VECTORS_GOOD_DEVICE {
             let bytes = hex::decode(bytes).unwrap();
-            let (parsed_header, _) = Header::parse(&bytes, false).expect("parse");
+            let (parsed_header, _) = Header::<Device>::parse(&bytes).expect("parse");
             assert_eq!(parsed_header, *header);
-            let res = Header::parse(&bytes, true);
+            let res = Header::<Host>::parse(&bytes);
             assert!(res.is_err());
 
             let mut buffer = [0u8; 256];
             let sb = SyncBits::new();
-            let len = header.to_bytes(sb, &mut buffer, true).expect("to_bytes");
+            let len = header
+                .transmute::<Host>()
+                .to_bytes(sb, &mut buffer)
+                .expect("to_bytes");
             assert!(len > 0);
             assert_eq!(&buffer[..len], &bytes[..len]);
-            let res = header.to_bytes(sb, &mut buffer, false);
+            let res = header.to_bytes(sb, &mut buffer);
             assert!(res.is_none());
         }
     }
 
-    const VECTORS_GOOD_HOST: &[(&str, Header)] = &[
+    const VECTORS_GOOD_HOST: &[(&str, Header<Host>)] = &[
         (
             "41ffff029aaaaaaaaaaaaaaaaab67b3b6b",
             Header::ChannelAllocationResponse { payload_len: 666 },
@@ -495,17 +565,20 @@ mod test {
     fn test_role_host() {
         for (bytes, header) in VECTORS_GOOD_HOST {
             let bytes = hex::decode(bytes).unwrap();
-            let (parsed_header, _) = Header::parse(&bytes, true).expect("parse");
+            let (parsed_header, _) = Header::<Host>::parse(&bytes).expect("parse");
             assert_eq!(parsed_header, *header);
-            let res = Header::parse(&bytes, false);
+            let res = Header::<Device>::parse(&bytes);
             assert!(res.is_err());
 
             let mut buffer = [0u8; 256];
             let sb = SyncBits::new();
-            let len = header.to_bytes(sb, &mut buffer, false).expect("to_bytes");
+            let len = header
+                .transmute::<Device>()
+                .to_bytes(sb, &mut buffer)
+                .expect("to_bytes");
             assert!(len > 0);
             assert_eq!(&buffer[..len], &bytes[..len]);
-            let res = header.to_bytes(sb, &mut buffer, true);
+            let res = header.to_bytes(sb, &mut buffer);
             assert!(res.is_none());
         }
     }
@@ -526,9 +599,9 @@ mod test {
     fn test_parse_bad() {
         for v in VECTORS_BAD_SHORT.iter().chain(VECTORS_BAD) {
             let v = hex::decode(v).unwrap();
-            let res = Header::parse(&v, false);
+            let res = Header::<Device>::parse(&v);
             assert!(res.is_err());
-            let res = Header::parse(&v, true);
+            let res = Header::<Host>::parse(&v);
             assert!(res.is_err());
         }
     }

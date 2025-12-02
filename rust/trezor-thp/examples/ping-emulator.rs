@@ -3,12 +3,12 @@ use std::net::{SocketAddr, UdpSocket};
 use std::str::FromStr;
 
 use trezor_thp::{
+    Host,
     alternating_bit::SyncBits,
     fragment::{Fragmenter, Reassembler},
     header::Header,
 };
 
-const IS_HOST: bool = true;
 const REPEAT: u8 = 1;
 const PACKET_LEN: usize = 64;
 
@@ -24,13 +24,13 @@ pub fn main() -> std::io::Result<()> {
     for i in 0..REPEAT {
         let nonce = [i; 8]; // not a good nonce
         let sb = SyncBits::new(); // no ABP for ping
-        Fragmenter::single(Header::new_ping(), sb, &nonce, &mut sockbuf, IS_HOST).unwrap();
+        Fragmenter::<Host>::single(Header::new_ping(), sb, &nonce, &mut sockbuf).unwrap();
         socket.send_to(&sockbuf, &emu_addr)?;
 
         let (reply_len, _src_addr) = socket.recv_from(&mut sockbuf).unwrap();
         assert!(reply_len > 0);
         let (header, payload) =
-            Reassembler::single(&sockbuf[..reply_len], &mut reply_data, IS_HOST).unwrap();
+            Reassembler::<Host>::single(&sockbuf[..reply_len], &mut reply_data).unwrap();
 
         if header.is_pong() && payload == &nonce {
             println!("Pong OK");
