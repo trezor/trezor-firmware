@@ -409,6 +409,55 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_NFC_STORAGE
+
+bool nfc_storage_get_events__verified(nfc_storage_event_t *events) {
+  if (!probe_write_access(events, sizeof(*events))) {
+    goto access_violation;
+  }
+
+  return nfc_storage_get_events(events);
+}
+
+bool nfc_storage_get_state__verified(nfc_storage_state_t *state) {
+  if (!probe_write_access(state, sizeof(*state))) {
+    goto access_violation;
+  }
+
+  return nfc_storage_get_state(state);
+}
+
+bool nfc_storage_device_get_mem_struct__verified(
+    nfc_storage_mem_struct_t *mem_struct) {
+  if (!probe_write_access(mem_struct, sizeof(*mem_struct))) {
+    goto access_violation;
+  }
+
+  return nfc_storage_device_get_mem_struct(mem_struct);
+}
+
+bool nfc_storage_device_read_data__verified(uint32_t addr, uint8_t *data,
+                                            size_t data_size) {
+  if (!probe_write_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  return nfc_storage_device_read_data(addr, data, data_size);
+}
+
+bool nfc_storage_device_write_data__verified(uint32_t addr, const uint8_t *data,
+                                             size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  return nfc_storage_device_write_data(addr, data, data_size);
+}
+
+#endif  // USE_NFC_STORAGE
+
+// ---------------------------------------------------------------------
+
 #ifdef USE_OPTIGA
 
 optiga_sign_result __wur optiga_sign__verified(

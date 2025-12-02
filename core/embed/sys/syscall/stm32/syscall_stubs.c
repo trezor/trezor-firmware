@@ -392,6 +392,59 @@ bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
 #endif  // USE_HAPTIC
 
 // =============================================================================
+// nfc_storage.h
+// =============================================================================
+
+#ifdef USE_NFC_STORAGE
+
+#include <io/nfc_storage.h>
+
+bool nfc_storage_register_device(nfc_storage_type_t type) {
+  return (bool)syscall_invoke1((uint32_t)type,
+                               SYSCALL_NFC_STORAGE_REGISTER_DEVICE);
+}
+
+bool nfc_storage_start_discovery(void) {
+  return (bool)syscall_invoke0(SYSCALL_NFC_STORAGE_START_DISCOVERY);
+}
+
+void nfc_storage_stop_discovery(void) {
+  syscall_invoke0(SYSCALL_NFC_STORAGE_STOP_DISCOVERY);
+}
+
+bool nfc_storage_get_events(nfc_storage_event_t *event) {
+  return (bool)syscall_invoke1((uint32_t)event, SYSCALL_NFC_STORAGE_GET_EVENTS);
+}
+
+bool nfc_storage_get_state(nfc_storage_state_t *state) {
+  return (bool)syscall_invoke1((uint32_t)state, SYSCALL_NFC_STORAGE_GET_STATE);
+}
+
+bool nfc_storage_device_get_mem_struct(
+    nfc_storage_get_mem_struct_t *mem_struct) {
+  return (bool)syscall_invoke1((uint32_t)mem_struct,
+                               SYSCALL_NFC_STORAGE_GET_MEM_STRUCT);
+}
+
+bool nfc_storage_device_read_data(uint32_t addr, uint8_t *data,
+                                  size_t data_size) {
+  return (bool)syscall_invoke3(addr, (uint32_t)data, data_size,
+                               SYSCALL_NFC_STORAGE_READ_DATA);
+}
+
+bool nfc_storage_device_write_data(uint32_t addr, const uint8_t *data,
+                                   size_t data_size) {
+  return (bool)syscall_invoke3(addr, (uint32_t)data, data_size,
+                               SYSCALL_NFC_STORAGE_WRITE_DATA);
+}
+
+bool nfc_storage_device_wipe_memory(void) {
+  return (bool)syscall_invoke0(SYSCALL_NFC_STORAGE_WIPE_MEMORY);
+}
+
+#endif  // USE_NFC_STORAGE
+
+// =============================================================================
 // optiga.h
 // =============================================================================
 
