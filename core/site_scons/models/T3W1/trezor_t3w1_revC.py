@@ -180,9 +180,6 @@ def configure(
 
     if "nfc" in features_wanted:
         sources += ["embed/io/nfc/st25r3916b/nfc.c"]
-        sources += ["embed/io/nfc/st25r3916b/nfc_backup.c"]
-        sources += ["embed/io/nfc/st25r3916b/nfc_backup_poll.c"]
-        sources += ["embed/io/nfc/st25r3916b/nfc_spi.c"]
         sources += ["embed/io/nfc/st25r3916b/ndef.c"]
         sources += ["embed/io/nfc/st25r3916b/card_emulation.c"]
         sources += ["embed/io/nfc/rfal/source/st25r3916/rfal_rfst25r3916.c"]
