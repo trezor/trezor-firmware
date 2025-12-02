@@ -636,10 +636,10 @@ async def confirm_output(
                 external_menu=True,
                 back_button=True,
             )
-            if (
-                await interact_with_menu(amount_layout, menu, "confirm_output", br_code)
-                is BACK
-            ):
+            amount_response = await interact_with_menu(
+                amount_layout, menu, "confirm_output", br_code
+            )
+            if amount_response is BACK:
                 continue
             else:
                 break

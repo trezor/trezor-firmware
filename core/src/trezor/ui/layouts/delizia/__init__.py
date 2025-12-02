@@ -25,6 +25,7 @@ BR_CODE_OTHER = ButtonRequestType.Other  # global_import_cache
 CONFIRMED = trezorui_api.CONFIRMED
 CANCELLED = trezorui_api.CANCELLED
 INFO = trezorui_api.INFO
+BACK = trezorui_api.BACK
 
 
 def confirm_action(
@@ -614,28 +615,33 @@ async def confirm_output(
             ]
         else:
             info_items = []
-
-        await confirm_value(
-            TR.words__address,
-            address,
-            description or "",
-            "confirm_output",
-            br_code,
-            subtitle=title,
-            chunkify=chunkify,
-            cancel_text=TR.send__cancel_sign,
-            info_items=info_items,
-        )
-        await confirm_value(
-            TR.words__amount,
-            amount,
-            "",
-            "confirm_output",
-            br_code,
-            subtitle=title,
-            cancel_text=TR.send__cancel_sign,
-            info_items=info_items,
-        )
+        while True:
+            await confirm_value(
+                TR.words__address,
+                address,
+                description or "",
+                "confirm_output",
+                br_code,
+                subtitle=title,
+                chunkify=chunkify,
+                cancel_text=TR.send__cancel_sign,
+                info_items=info_items,
+            )
+            amount_response = await confirm_value(
+                TR.words__amount,
+                amount,
+                description="",
+                br_name="confirm_output",
+                br_code=br_code,
+                subtitle=title,
+                cancel_text=TR.send__cancel_sign,
+                info_items=info_items,
+                can_go_back=True,
+            )
+            if amount_response is BACK:
+                continue
+            else:
+                break
     else:
         await raise_if_not_confirmed(
             trezorui_api.flow_confirm_output(
@@ -834,6 +840,7 @@ def confirm_value(
     verb: str | None = None,
     subtitle: str | None = None,
     hold: bool = False,
+    can_go_back: bool = False,
     is_data: bool = True,
     chunkify: bool = False,
     info_items: (
@@ -856,6 +863,7 @@ def confirm_value(
         hold=hold,
         chunkify=chunkify,
         cancel=cancel,
+        back_button=can_go_back,
         external_menu=True,
     )
 

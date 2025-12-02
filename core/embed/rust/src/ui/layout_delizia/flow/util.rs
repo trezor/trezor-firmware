@@ -154,8 +154,8 @@ impl ConfirmValue {
         self
     }
 
-    pub const fn with_swipe_down(mut self) -> Self {
-        self.swipe_down = true;
+    pub const fn with_swipe_down(mut self, swipe_down: bool) -> Self {
+        self.swipe_down = swipe_down;
         self
     }
 
@@ -337,6 +337,7 @@ impl ConfirmValue {
             )
             .with_footer_description(self.footer_description),
             self.hold,
+            self.swipe_down,
             self.page_limit,
             self.frame_margin,
             self.page_counter,
