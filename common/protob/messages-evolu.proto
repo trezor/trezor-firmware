@@ -57,7 +57,7 @@ message EvoluRegistrationRequest {
  */
 message EvoluGetDelegatedIdentityKey {
     optional bytes thp_credential = 1; // THP credential so that we can display the host on the device
-    optional bytes host_static_public_key = 2; // Host static public key for THP so that we can validate the credentials
+    reserved 2;   //  host_static_public_key is deprecated, the key stored in the channel cache is used instead
 }
 
 /**

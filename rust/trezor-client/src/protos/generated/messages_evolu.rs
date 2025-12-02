@@ -789,8 +789,6 @@ pub struct EvoluGetDelegatedIdentityKey {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluGetDelegatedIdentityKey.thp_credential)
     pub thp_credential: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluGetDelegatedIdentityKey.host_static_public_key)
-    pub host_static_public_key: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.evolu.EvoluGetDelegatedIdentityKey.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -843,54 +841,13 @@ impl EvoluGetDelegatedIdentityKey {
         self.thp_credential.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bytes host_static_public_key = 2;
-
-    pub fn host_static_public_key(&self) -> &[u8] {
-        match self.host_static_public_key.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_host_static_public_key(&mut self) {
-        self.host_static_public_key = ::std::option::Option::None;
-    }
-
-    pub fn has_host_static_public_key(&self) -> bool {
-        self.host_static_public_key.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_host_static_public_key(&mut self, v: ::std::vec::Vec<u8>) {
-        self.host_static_public_key = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_host_static_public_key(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.host_static_public_key.is_none() {
-            self.host_static_public_key = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.host_static_public_key.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_host_static_public_key(&mut self) -> ::std::vec::Vec<u8> {
-        self.host_static_public_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "thp_credential",
             |m: &EvoluGetDelegatedIdentityKey| { &m.thp_credential },
             |m: &mut EvoluGetDelegatedIdentityKey| { &mut m.thp_credential },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "host_static_public_key",
-            |m: &EvoluGetDelegatedIdentityKey| { &m.host_static_public_key },
-            |m: &mut EvoluGetDelegatedIdentityKey| { &mut m.host_static_public_key },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EvoluGetDelegatedIdentityKey>(
             "EvoluGetDelegatedIdentityKey",
@@ -913,9 +870,6 @@ impl ::protobuf::Message for EvoluGetDelegatedIdentityKey {
                 10 => {
                     self.thp_credential = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                18 => {
-                    self.host_static_public_key = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -931,9 +885,6 @@ impl ::protobuf::Message for EvoluGetDelegatedIdentityKey {
         if let Some(v) = self.thp_credential.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
-        if let Some(v) = self.host_static_public_key.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -942,9 +893,6 @@ impl ::protobuf::Message for EvoluGetDelegatedIdentityKey {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.thp_credential.as_ref() {
             os.write_bytes(1, v)?;
-        }
-        if let Some(v) = self.host_static_public_key.as_ref() {
-            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -964,14 +912,12 @@ impl ::protobuf::Message for EvoluGetDelegatedIdentityKey {
 
     fn clear(&mut self) {
         self.thp_credential = ::std::option::Option::None;
-        self.host_static_public_key = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static EvoluGetDelegatedIdentityKey {
         static instance: EvoluGetDelegatedIdentityKey = EvoluGetDelegatedIdentityKey {
             thp_credential: ::std::option::Option::None,
-            host_static_public_key: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1166,12 +1112,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     uire\x12=\n\x1bproof_of_delegated_identity\x18\x03\x20\x02(\x0cR\x18proo\
     fOfDelegatedIdentity\"e\n\x18EvoluRegistrationRequest\x12+\n\x11certific\
     ate_chain\x18\x01\x20\x03(\x0cR\x10certificateChain\x12\x1c\n\tsignature\
-    \x18\x02\x20\x02(\x0cR\tsignature\"z\n\x1cEvoluGetDelegatedIdentityKey\
-    \x12%\n\x0ethp_credential\x18\x01\x20\x01(\x0cR\rthpCredential\x123\n\
-    \x16host_static_public_key\x18\x02\x20\x01(\x0cR\x13hostStaticPublicKey\
-    \"<\n\x19EvoluDelegatedIdentityKey\x12\x1f\n\x0bprivate_key\x18\x01\x20\
-    \x02(\x0cR\nprivateKeyB=\n#com.satoshilabs.trezor.lib.protobufB\x12Trezo\
-    rMessageEvolu\x80\xa6\x1d\x01\
+    \x18\x02\x20\x02(\x0cR\tsignature\"K\n\x1cEvoluGetDelegatedIdentityKey\
+    \x12%\n\x0ethp_credential\x18\x01\x20\x01(\x0cR\rthpCredentialJ\x04\x08\
+    \x02\x10\x03\"<\n\x19EvoluDelegatedIdentityKey\x12\x1f\n\x0bprivate_key\
+    \x18\x01\x20\x02(\x0cR\nprivateKeyB=\n#com.satoshilabs.trezor.lib.protob\
+    ufB\x12TrezorMessageEvolu\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
