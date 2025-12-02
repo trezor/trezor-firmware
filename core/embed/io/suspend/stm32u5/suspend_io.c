@@ -79,8 +79,9 @@ void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
   ble_suspend(&wakeup_params->ble);
 #endif
 #ifdef USE_DISPLAY
-  wakeup_params->backlight_level = display_get_backlight();
-  display_deinit(DISPLAY_RESET_CONTENT);
+  if (!display_suspend(&wakeup_params->display)) {
+    // TODO: Handle error - log or return error status
+  }
 #endif
 }
 
@@ -94,11 +95,12 @@ void suspend_drivers_phase2(void) {
 #endif
 }
 
+// Reinitialize all drivers that were stopped earlier
 void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_DISPLAY
-  // Reinitialize all drivers that were stopped earlier
-  display_init(DISPLAY_RESET_CONTENT);
-  display_set_backlight(wakeup_params->backlight_level);
+  if (!display_resume(&wakeup_params->display)) {
+    // TODO: Handle error - log or return error status
+  }
 #endif
 #ifdef USE_TOUCH
   if (secfalse == touch_resume()) {
