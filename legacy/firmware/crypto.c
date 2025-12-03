@@ -1008,8 +1008,8 @@ static uint64_t descriptor_polymod(uint64_t c, uint8_t val) {
   return c;
 }
 
-bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
-                         char dest[DESCRIPTOR_CHECKSUM_LEN]) {
+static bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
+                                char dest[DESCRIPTOR_CHECKSUM_LEN]) {
   uint64_t c = 1;
   uint8_t cls = 0;
   uint8_t clscount = 0;
