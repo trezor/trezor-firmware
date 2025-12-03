@@ -102,8 +102,6 @@ typedef struct {
 // The callback may be called from any context, including interrupt context.
 typedef void (*systask_error_handler_t)(const systask_postmortem_t* pminfo);
 
-#ifdef KERNEL_MODE
-
 // Maximum number of tasks that can be created
 // 1. kernel
 // 2. coreapp
@@ -111,6 +109,8 @@ typedef void (*systask_error_handler_t)(const systask_postmortem_t* pminfo);
 
 // Zero-based task ID (up SYSTASK_MAX_TASKS - 1)
 typedef uint8_t systask_id_t;
+
+#ifdef KERNEL_MODE
 
 // Task context used by the kernel to save the state of each task
 // when switching between them
