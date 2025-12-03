@@ -37,6 +37,8 @@ typedef struct {
   mpu_area_t stack;
   // TLS area
   mpu_area_t tls;
+  // API interface getter
+  void* api_getter;
   // Unprivileged SAES input buffer
   void* saes_input;
   // Unprivileged SAES output buffer
@@ -71,5 +73,9 @@ mpu_area_t coreapp_get_code_area(void);
 mpu_area_t coreapp_get_tls_area(void);
 
 #endif  // TREZOR_EMULATOR
+
+#ifdef USE_APP_LOADING
+void* coreapp_get_api_getter(void);
+#endif
 
 #endif  // KERNEL_MODE
