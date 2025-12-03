@@ -3,7 +3,7 @@ import binascii
 import pytest
 
 from trezorlib import messages, protobuf, tron
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.tron, pytest.mark.models("core")]
 
 
 @parametrize_using_common_fixtures("tron/sign_tx.json")
-def test_sign_tx(client: Client, parameters, result):
+def test_sign_tx(session: Session, parameters, result):
     def make_contract(contract):
         type_name = contract["_message_type"]
         assert type_name.startswith("Tron") and type_name.endswith("Contract")
@@ -29,5 +29,5 @@ def test_sign_tx(client: Client, parameters, result):
     assert parsed_tx == tx
     assert parsed_contract == contract
 
-    response = tron.sign_tx(client, tx, contract, address_n)
+    response = tron.sign_tx(session, tx, contract, address_n)
     assert response.signature == binascii.unhexlify(result["signature"])

@@ -22,14 +22,14 @@ message TronGetAddress {
  * @end
  */
 message TronAddress {
-    required string address = 1;  // Tron address in Base32 encoding
+    required string address = 1;  // Tron address in Base58 encoding
     optional bytes mac = 2;       // Address authentication code
 }
 
 /**
- * Request: ask device to sign Stellar transaction
+ * Request: ask device to sign Tron transaction
  * @start
- * @next StellarTxOpRequest
+ * @next TronContractRequest
  */
 message TronSignTx {
     repeated uint32 address_n = 1;       // BIP-32 path to derive the key from master node
@@ -38,7 +38,7 @@ message TronSignTx {
     required sint64 expiration = 4;      // Transaction expiration time, beyond which the transaction will no longer be packed
     optional bytes data = 5;             // Transaction memo. (256 bytes maximum, this is a Trezor limitation, not a Tron protocol limitation)
     required sint64 timestamp = 6;       // Transaction timestamp, set as the transaction creation time
-    optional sint64 fee_limit = 7;       // The maximum energy cost allowed for the execution of smart contract transactions. Only deploying and triggering smart contract transactions need to be set, others not
+    optional sint64 fee_limit = 7;       // Not TRX. Maximum Energy cost. Only for deploying or triggering smart contracts.
 }
 
 /**
@@ -54,6 +54,7 @@ message TronContractRequest {
  */
 message TronTransferContract {
     // https://developers.tron.network/docs/tron-contracttype#2-transfercontract
+    // TODO: Use bytes. To be reused in TronRawTransaction
     required string owner_address = 1;  // Sender's address, base58_checked encoding
     required string to_address = 2;     // Recipient's address, base58_checked encoding
     required sint64 amount = 3;         // Transfer amount (in SUN)
@@ -97,11 +98,12 @@ message TronRawTransaction {
             required bytes value = 2;     // The serialized value of the contract parameter, e.g., TronTransferContract
         }
 
-        required TronRawContractType type = 1;
-        required TronRawParameter parameter = 2;
-
         enum TronRawContractType {
             TransferContract = 1;
         }
+
+        required TronRawContractType type = 1;
+        required TronRawParameter parameter = 2;
+
     }
 }

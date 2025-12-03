@@ -73,14 +73,14 @@ def get_authenticated_address(
 
 
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     tx: messages.TronSignTx,
     contract: "TronMessageType",
     address_n: "Address",
 ) -> messages.TronSignature:
     tx.address_n = address_n
-    resp = client.call(tx)
+    resp = session.call(tx)
     messages.TronContractRequest.ensure_isinstance(resp)
-    resp = client.call(contract)
+    resp = session.call(contract)
     resp = messages.TronSignature.ensure_isinstance(resp)
     return resp

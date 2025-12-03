@@ -39,18 +39,17 @@ def get_address(
 @click.option(
     "-n",
     "--address",
-    required=False,
+    required=True,
     help=PATH_HELP,
-    default=tron.DEFAULT_BIP32_PATH,
 )
 @click.argument("raw_data_hex", type=str)
-@with_client
-def sign_tx(client: "TrezorClient", raw_data_hex: str, address: str) -> str:
+@with_session
+def sign_tx(session: "Session", address: str, raw_data_hex: str) -> str:
     """Sign a raw transaction."""
 
     raw_data = bytes.fromhex(raw_data_hex)
     tx, contract = tron.from_raw_data(raw_data)
     address_n = tools.parse_path(address)
-    signed_tx = tron.sign_tx(client, tx, contract, address_n)
+    signed_tx = tron.sign_tx(session, tx, contract, address_n)
 
     return signed_tx.signature.hex()

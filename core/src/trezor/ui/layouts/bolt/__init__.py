@@ -1448,6 +1448,7 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
+    # TODO: Add Energy and Bandwidth option
     def confirm_tron_tx(
         amount: str,
         fee: str,
