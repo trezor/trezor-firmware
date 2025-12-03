@@ -32,6 +32,7 @@ if __debug__:
             DebugLinkPairingInfo,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
+            DebugLinkSetLogFilter,
             DebugLinkState,
             WipeDevice,
         )
@@ -418,6 +419,17 @@ if __debug__:
             ]
         )
 
+    async def dispatch_DebugLinkSetLogFilter(
+        msg: DebugLinkSetLogFilter,
+    ) -> Success:
+        if utils.USE_DBG_CONSOLE:
+            from trezor.utils import set_log_filter
+
+            set_log_filter(msg.filter or "")
+            return Success()
+        else:
+            raise wire.UnexpectedMessage("Debug console not supported")
+
     async def dispatch_WipeDevice(msg: WipeDevice) -> None:
         """Wipe the device and restart the event loop."""
         from storage import wipe
@@ -543,6 +555,7 @@ if __debug__:
         MessageType.DebugLinkWatchLayout: _no_op,
         MessageType.DebugLinkResetDebugEvents: _no_op,
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
+        MessageType.DebugLinkSetLogFilter: dispatch_DebugLinkSetLogFilter,
         MessageType.WipeDevice: dispatch_WipeDevice,
     }
 
