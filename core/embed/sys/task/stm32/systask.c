@@ -457,7 +457,7 @@ static uint32_t get_return_addr(bool secure, bool privileged, uint32_t sp) {
 
   // Verify that ret_addr is in a readable region for
   // the context that caused the exception.
-#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+#ifdef SECMON
   // In Secure-Monitor mode, use CMSE intrinsics to check:
   // - CMSE_MPU_READ indicates we only need read access
   // - CMSE_MPU_UNPRIV if the fault originated from an unprivileged context
