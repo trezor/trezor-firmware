@@ -35,6 +35,9 @@ if TYPE_CHECKING:
 
     T = TypeVar("T")
 
+    if utils.USE_THP:
+        from trezor.wire.thp.channel import Channel
+
 
 class UnexpectedMessageException(Exception):
     """A message was received that is not part of the current workflow.
@@ -114,6 +117,16 @@ def get_context() -> Context:
     if CURRENT_CONTEXT is None:
         raise NoWireContext
     return CURRENT_CONTEXT
+
+if utils.USE_THP:
+
+    def get_channel_context() -> Channel:
+        from trezor.wire.thp.session_context import GenericSessionContext
+
+        ctx = get_context()
+        if not isinstance(ctx, GenericSessionContext):
+            raise Exception  # Something more pls...
+        return ctx.channel
 
 
 def with_context(ctx: Context, workflow: loop.Task) -> Generator:

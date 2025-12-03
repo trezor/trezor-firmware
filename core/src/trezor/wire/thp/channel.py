@@ -225,6 +225,12 @@ class Channel:
             required_key=CHANNEL_HOST_STATIC_PUBKEY,
         )
 
+    def get_host_static_public_key(self) -> bytes:
+        key = self.channel_cache.get(CHANNEL_HOST_STATIC_PUBKEY)
+        if key is None:
+            raise Exception  # Something more specific
+        return key
+
     # READ and DECRYPT
 
     async def recv_payload(

@@ -45,15 +45,14 @@ async def get_delegated_identity_key(
 async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
     from trezor import TR
     from trezor.ui.layouts import confirm_action
+    from trezor.wire.context import get_channel_context
 
     from apps.thp.credential_manager import decode_credential, validate_credential
 
     if msg.thp_credential is None:
         raise ValueError("THP credentials must be provided when THP is enabled")
     credential_received = decode_credential(msg.thp_credential)
-    host_static_public_key = get_host_static_public_key()
-    if host_static_public_key is None:
-        raise ValueError("Host static public key must be provided when THP is enabled")
+    host_static_public_key = get_channel_context().get_host_static_public_key()
 
     if not validate_credential(credential_received, host_static_public_key):
         raise ValueError("Invalid credential")
@@ -76,8 +75,3 @@ async def confirm_no_thp() -> None:
         TR.secure_sync__header,
         TR.secure_sync__delegated_identity_key_no_thp,
     )
-
-def get_host_static_public_key() -> bytes | None:
-    from trezor.wire import context
-    from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY
-    return context.cache_get(CHANNEL_HOST_STATIC_PUBKEY)
