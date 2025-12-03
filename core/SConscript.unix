@@ -24,6 +24,7 @@ if BENCHMARK and PYOPT != '0':
   exit(1)
 
 FEATURES_WANTED = [
+    "applet",
     "ble",
     "display",
     "dma2d",
@@ -253,6 +254,7 @@ SOURCE_MOD += [
 ]
 
 CPPDEFINES_MOD += [
+    'KERNEL',
     'TRANSLATIONS',
     'FANCY_FATAL_ERROR',
     ]
@@ -407,6 +409,7 @@ SOURCE_UNIX = [
     'embed/projects/unix/main_main.c',
     'embed/projects/unix/main.c',
     'embed/projects/unix/profile.c',
+    'embed/projects/unix/rust_c_setup.c',
     'vendor/micropython/ports/unix/alloc.c',
     'vendor/micropython/ports/unix/gccollect.c',
     'vendor/micropython/ports/unix/input.c',
