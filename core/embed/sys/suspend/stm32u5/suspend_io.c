@@ -167,12 +167,13 @@ void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_BLE
   ble_resume(&wakeup_params->ble);
 #endif
+
+  resume_secure_drivers();
+
 #ifdef USE_OPTIGA
   // Optiga kernel part of resume routine
   optiga_resume();
 #endif
-
-  resume_secure_drivers();
 }
 
 #endif  // KERNEL_MODE
