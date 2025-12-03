@@ -53,17 +53,6 @@ void rgb_led_init(void) {
 
   rgb_led_set_default_pin_state();
 
-  uint32_t deadline = ticks_timeout(HSI_TIMEOUT_VALUE);
-
-  // enable HSI clock
-  RCC->CR |= RCC_CR_HSION;
-  // wait until the HSI is on
-  while ((RCC->CR & RCC_CR_HSIRDY) != RCC_CR_HSIRDY) {
-    if (ticks_expired(deadline)) {
-      return;
-    }
-  }
-
   // select HSI as LPTIM clock source
   __HAL_RCC_LPTIM1_CONFIG(RCC_LPTIM1CLKSOURCE_HSI);
   __HAL_RCC_LPTIM34_CONFIG(RCC_LPTIM34CLKSOURCE_HSI);
