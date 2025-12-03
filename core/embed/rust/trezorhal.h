@@ -6,6 +6,7 @@
 #include <io/display.h>
 #include <io/display_utils.h>
 #include <io/usb.h>
+#include <rtl/logging.h>
 #include <rtl/secbool.h>
 #include <sys/irq.h>
 #include <sys/sysevent.h>

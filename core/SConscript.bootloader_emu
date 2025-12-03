@@ -7,6 +7,7 @@ import tools, models, ui
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = 'emulator'
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 
 if not models.has_emulator(TREZOR_MODEL):
     # skip bootloader build
@@ -32,6 +33,9 @@ FEATURES_WANTED = [
     "usb",
     "usb_iface_wire",
     ]
+
+if DBG_CONSOLE != "":
+    FEATURES_WANTED += ["dbg_console"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []

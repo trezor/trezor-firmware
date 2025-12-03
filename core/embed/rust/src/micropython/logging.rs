@@ -1,62 +1,78 @@
-use core::str::from_utf8;
+use crate::micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr};
 
+#[cfg(feature = "dbg_console")]
 use crate::{
     error::Error,
-    micropython::{
-        buffer::StrBuffer, map::Map, module::Module, obj::Obj, print::print, qstr::Qstr, util,
-    },
-    strutil,
-    trezorhal::time::ticks_ms,
+    micropython::{buffer::StrBuffer, util},
+    trezorhal::syslog::{syslog_start_record, syslog_write_chunk, LogLevel},
 };
 
-fn _log(level: &str, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
+#[cfg(feature = "dbg_console")]
+fn _log(level: LogLevel, args: &[Obj], kwargs: &Map) -> Result<Obj, Error> {
     let [module, fmt, fmt_args @ ..] = args else {
         return Err(Error::TypeError);
     };
-    {
-        let millis = ticks_ms();
-        let seconds = millis / 1000;
-        let mut millis_str = [b'0'; 3];
-        let len = unwrap!(strutil::format_i64((millis % 1000).into(), &mut millis_str)).len();
-        millis_str.rotate_left(len);
-        let log_prefix = uformat!(len: 128, "{}.{} \x1b[35m{}\x1b[0m \x1b[{}\x1b[0m ",
-            seconds, unwrap!(from_utf8(&millis_str)), StrBuffer::try_from(*module)?.as_ref(), level,
-        );
-        print(&log_prefix);
-    }
 
-    if let Ok(iface_obj) = kwargs.get(Qstr::MP_QSTR_iface) {
-        if iface_obj != Obj::const_none() {
-            let iface_type = iface_obj.type_().ok_or(Error::TypeError)?;
-            let iface_prefix = uformat!(len: 128, "\x1b[93m[{}]\x1b[0m ", iface_type.name());
-            print(&iface_prefix);
+    let module_name = StrBuffer::try_from(*module)?;
+
+    if syslog_start_record(module_name.as_ref(), level) {
+        if let Ok(iface_obj) = kwargs.get(Qstr::MP_QSTR_iface) {
+            if iface_obj != Obj::const_none() {
+                let iface_type = iface_obj.type_().ok_or(Error::TypeError)?;
+                let iface_prefix = uformat!(len: 128, "\x1b[93m[{}]\x1b[0m ", iface_type.name());
+                syslog_write_chunk(iface_prefix.as_ref(), false);
+            }
         }
+
+        let msg: StrBuffer = util::modulo_format(*fmt, fmt_args)?.try_into()?;
+        syslog_write_chunk(msg.as_ref(), true);
     }
 
-    let msg: StrBuffer = util::modulo_format(*fmt, fmt_args)?.try_into()?;
-    print(msg.as_ref());
-    print("\n");
     Ok(Obj::const_none())
 }
 
 extern "C" fn py_debug(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |args: &[Obj], kwargs: &Map| _log("32mDEBUG", args, kwargs);
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+    #[cfg(feature = "dbg_console")]
+    {
+        let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Debug, args, kwargs);
+        unsafe {
+            util::try_with_args_and_kwargs(n_args, args, kwargs, block);
+        }
+    }
+    Obj::const_none()
 }
 
 extern "C" fn py_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |args: &[Obj], kwargs: &Map| _log("36mINFO", args, kwargs);
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+    #[cfg(feature = "dbg_console")]
+    {
+        let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Info, args, kwargs);
+        unsafe {
+            util::try_with_args_and_kwargs(n_args, args, kwargs, block);
+        }
+    }
+    Obj::const_none()
 }
 
 extern "C" fn py_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |args: &[Obj], kwargs: &Map| _log("33mWARNING", args, kwargs);
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+    #[cfg(feature = "dbg_console")]
+    {
+        let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Warn, args, kwargs);
+        unsafe {
+            util::try_with_args_and_kwargs(n_args, args, kwargs, block);
+        }
+    }
+    Obj::const_none()
 }
 
 extern "C" fn py_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |args: &[Obj], kwargs: &Map| _log("31mERROR", args, kwargs);
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+    #[cfg(feature = "dbg_console")]
+    {
+        let block = |args: &[Obj], kwargs: &Map| _log(LogLevel::Error, args, kwargs);
+        unsafe {
+            util::try_with_args_and_kwargs(n_args, args, kwargs, block);
+        }
+    }
+    Obj::const_none()
 }
 
 #[no_mangle]

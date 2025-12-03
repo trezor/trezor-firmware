@@ -57,6 +57,21 @@ ssize_t dbg_console_write__verified(const void *data, size_t data_size);
 #endif
 
 // ---------------------------------------------------------------------
+#ifdef USE_DBG_CONSOLE
+
+#include <rtl/logging.h>
+
+bool syslog_start_record__verified(const log_source_t *source,
+                                   log_level_t level);
+
+ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
+                                     bool end_record);
+
+bool syslog_set_filter__verified(const char *module_name, log_level_t level);
+
+#endif
+
+// ---------------------------------------------------------------------
 #include <sys/bootutils.h>
 
 void reboot_and_upgrade__verified(const uint8_t hash[32]);
