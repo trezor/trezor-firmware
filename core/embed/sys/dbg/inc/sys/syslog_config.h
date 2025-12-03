@@ -19,6 +19,10 @@
  */
 #pragma once
 
+#ifdef TREZOR_EMULATOR
+#define SYSLOG_DEFAULT_LOG_LEVEL LOG_LEVEL_INF
+#endif
+
 // Maximum default log level for all modules if not overriden in
 // by defining SYSLOG_<module_name>_MAX_LOG_LEVEL during compilation
 #ifndef SYSLOG_DEFAULT_LOG_LEVEL
@@ -28,8 +32,28 @@
 // Maximum default log level for specific modules
 // (can be overriden by defining SYSLOG_<module_name>_MAX_LOG_LEVEL)
 
+#ifndef SYSLOG_emulator_MAX_LOG_LEVEL
+#define SYSLOG_emulator_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
+#ifndef SYSLOG_coreapp_main_MAX_LOG_LEVEL
+#define SYSLOG_coreapp_main_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
+#ifndef SYSLOG_bootutils_MAX_LOG_LEVEL
+#define SYSLOG_bootutils_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
 #ifndef SYSLOG_touch_driver_MAX_LOG_LEVEL
 #define SYSLOG_touch_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
+#ifndef SYSLOG_display_driver_MAX_LOG_LEVEL
+#define SYSLOG_display_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
+#ifndef SYSLOG_ble_driver_MAX_LOG_LEVEL
+#define SYSLOG_ble_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
 // Optiga command log is relatively quiet

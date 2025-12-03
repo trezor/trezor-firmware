@@ -29,6 +29,7 @@
 
 #include <io/display.h>
 #include <io/unix/sdl_display.h>
+#include <rtl/logging.h>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -38,6 +39,8 @@
 #ifdef USE_POWER_MANAGER
 #include "suspend_overlay.h"
 #endif
+
+LOG_DECLARE(display_driver)
 
 #define EMULATOR_BORDER 16
 
@@ -110,7 +113,7 @@ bool display_init(display_content_mode_t mode) {
   }
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-    printf("%s\n", SDL_GetError());
+    LOG_ERR("%s", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
   atexit(display_exit_handler);
@@ -135,12 +138,12 @@ bool display_init(display_content_mode_t mode) {
       );
   free(window_title_alloc);
   if (!drv->window) {
-    printf("%s\n", SDL_GetError());
+    LOG_ERR("%s", SDL_GetError());
     error_shutdown("SDL_CreateWindow error");
   }
   drv->renderer = SDL_CreateRenderer(drv->window, -1, SDL_RENDERER_SOFTWARE);
   if (!drv->renderer) {
-    printf("%s\n", SDL_GetError());
+    LOG_ERR("%s", SDL_GetError());
     SDL_DestroyWindow(drv->window);
     error_shutdown("SDL_CreateRenderer error");
   }
