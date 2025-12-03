@@ -21,7 +21,7 @@
 
 #include <io/display.h>
 #include <io/display_utils.h>
-#include <rtl/mini_printf.h>
+#include <rtl/strutils.h>
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
@@ -31,12 +31,18 @@
 
 // common shared functions
 
-static void format_ver(const char *format, uint32_t version, char *buffer,
-                       size_t buffer_len) {
-  mini_snprintf(buffer, buffer_len, format, (int)(version & 0xFF),
-                (int)((version >> 8) & 0xFF), (int)((version >> 16) & 0xFF)
-                // ignore build field (int)((version >> 24) & 0xFF)
-  );
+#define VERSION_STRING_LEN 16
+
+// Formats version number encoded as uint32_t into string
+// "X.Y.Z". Buffers smaller than needed will result in truncated output.
+static void format_ver(uint32_t version, char *buffer, size_t buffer_len) {
+  buffer[0] = '\0';
+  cstr_append_int32(buffer, buffer_len, (version & 0xFF));
+  cstr_append(buffer, buffer_len, ".");
+  cstr_append_int32(buffer, buffer_len, ((version >> 8) & 0xFF));
+  cstr_append(buffer, buffer_len, ".");
+  cstr_append_int32(buffer, buffer_len, ((version >> 16) & 0xFF));
+  // ignore build field
 }
 
 // boot UI
@@ -61,10 +67,10 @@ void ui_screen_boot(const vendor_header *const vhdr,
 
 uint32_t ui_screen_intro(const vendor_header *const vhdr,
                          const image_header *const hdr, bool fw_ok) {
-  char bld_ver[32];
-  char ver_str[64];
-  format_ver("%d.%d.%d", VERSION_UINT32, bld_ver, sizeof(bld_ver));
-  format_ver("%d.%d.%d", hdr->version, ver_str, sizeof(ver_str));
+  char bld_ver[VERSION_STRING_LEN];
+  char ver_str[VERSION_STRING_LEN];
+  format_ver(VERSION_UINT32, bld_ver, sizeof(bld_ver));
+  format_ver(hdr->version, ver_str, sizeof(ver_str));
 
   return screen_intro(bld_ver, vhdr->vstr, vhdr->vstr_len, ver_str, fw_ok);
 }
@@ -78,9 +84,9 @@ confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
                                            secbool is_newinstall,
                                            int version_cmp) {
   uint8_t fingerprint[32];
-  char ver_str[64];
+  char ver_str[VERSION_STRING_LEN];
   get_image_fingerprint(hdr, fingerprint);
-  format_ver("%d.%d.%d", hdr->version, ver_str, sizeof(ver_str));
+  format_ver(hdr->version, ver_str, sizeof(ver_str));
   return screen_install_confirm(vhdr->vstr, vhdr->vstr_len, ver_str,
                                 fingerprint, should_keep_seed == sectrue,
 
