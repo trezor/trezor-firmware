@@ -6,36 +6,34 @@ use crate::{
     error::{Error, Result},
 };
 
-pub struct Fragmenter<R: Role> {
+pub struct Fragmenter<'a, R: Role> {
     header: Header<R>,
     sync_bits: SyncBits,
+    payload: &'a [u8],
     offset: usize,
     checksum: Crc32,
     crc_offset: usize,
 }
 
-impl<R: Role> Fragmenter<R> {
-    pub fn new(header: Header<R>, sync_bits: SyncBits, payload: &[u8]) -> Result<Self> {
+impl<'a, R: Role> Fragmenter<'a, R> {
+    pub fn new(header: Header<R>, sync_bits: SyncBits, payload: &'a [u8]) -> Result<Self> {
         if payload.len() + CHECKSUM_LEN != header.payload_len().into() {
             return Err(Error::UnexpectedInput);
         }
         Ok(Self {
             header,
             sync_bits,
+            payload,
             offset: 0,
             checksum: Crc32::new(),
             crc_offset: 0,
         })
     }
 
-    pub fn next(&mut self, payload: &[u8], dest: &mut [u8]) -> Result<bool> {
+    pub fn next(&mut self, dest: &mut [u8]) -> Result<bool> {
         const MIN_PACKET_SIZE: usize = Header::<crate::Device>::new_ack(0).header_len() + 1;
         if dest.len() < MIN_PACKET_SIZE {
             return Err(Error::InsufficientBuffer);
-        }
-        if payload.len() + CHECKSUM_LEN != self.header.payload_len().into() {
-            // buffer changed since new
-            return Err(Error::UnexpectedInput);
         }
         if self.is_done() {
             return Ok(false);
@@ -56,8 +54,8 @@ impl<R: Role> Fragmenter<R> {
         };
         let mut rest = &mut dest[header_len..];
 
-        if self.offset < payload.len() {
-            let source = &payload[self.offset..];
+        if self.offset < self.payload.len() {
+            let source = &self.payload[self.offset..];
             let nbytes = source.len().min(rest.len());
             rest[..nbytes].copy_from_slice(&source[..nbytes]);
             self.checksum.update(&source[..nbytes]);
@@ -65,7 +63,7 @@ impl<R: Role> Fragmenter<R> {
             rest = &mut rest[nbytes..];
         }
 
-        if self.offset >= payload.len() && self.crc_offset < CHECKSUM_LEN {
+        if self.offset >= self.payload.len() && self.crc_offset < CHECKSUM_LEN {
             let crc = self.checksum.finalize();
             let crc = crc.get(self.crc_offset..).ok_or(Error::UnexpectedInput)?;
             let nbytes = crc.len().min(rest.len());
@@ -85,9 +83,14 @@ impl<R: Role> Fragmenter<R> {
     }
 
     /// Shortcut to serialize packet into buffer known to be large enough.
-    pub fn single(header: Header<R>, sb: SyncBits, payload: &[u8], dest: &mut [u8]) -> Result<()> {
+    pub fn single(
+        header: Header<R>,
+        sb: SyncBits,
+        payload: &'a [u8],
+        dest: &mut [u8],
+    ) -> Result<()> {
         let mut fragmenter = Self::new(header, sb, payload)?;
-        fragmenter.next(payload, dest)?;
+        fragmenter.next(dest)?;
         if !fragmenter.is_done() {
             return Err(Error::InsufficientBuffer);
         }
@@ -214,7 +217,7 @@ mod test {
         while !fragmenter.is_done() {
             let mut packet = Vec::new();
             packet.resize(packet_size, 0u8).unwrap();
-            fragmenter.next(input, packet.as_mut_slice()).expect("next");
+            fragmenter.next(packet.as_mut_slice()).expect("next");
             packets.push(packet).unwrap();
         }
         packets
