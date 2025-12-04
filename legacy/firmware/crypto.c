@@ -1066,7 +1066,7 @@ bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
     return false;
   }
   // (see layout2.c) /    i   '
-  char path_str[8 * (1 + 10 + 1) + 1];
+  char path_str[8 * (1 + 10 + 1) + 1] = {0};
   size_t off = 0;
   for (size_t i = 0; i < address_n_count; i++) {
     uint32_t unhardened = address_n[i] & PATH_UNHARDEN_MASK;
@@ -1080,7 +1080,10 @@ bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
   int written = snprintf(dest, dest_size, "%s([%08" PRIx32 "%s]%s/<0;1>/*)%s#",
                          type, root_fingerprint, path_str, xpub, terminator);
   if (written > 1 && written + DESCRIPTOR_CHECKSUM_LEN < dest_size) {
-    return descriptor_checksum(dest, written - 1, &dest[written]);
+    if (descriptor_checksum(dest, written - 1, &dest[written])) {
+      return true;
+    }
   }
+  memset(dest, 0, dest_size);
   return false;
 }
