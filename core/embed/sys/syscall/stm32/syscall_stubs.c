@@ -108,8 +108,8 @@ ssize_t dbg_console_read(void *buffer, size_t buffer_size) {
                          SYSCALL_DBG_CONSOLE_READ);
 }
 
-void dbg_console_write(const void *data, size_t data_size) {
-  syscall_invoke2((uint32_t)data, data_size, SYSCALL_DBG_CONSOLE_WRITE);
+ssize_t dbg_console_write(const void *data, size_t data_size) {
+  return syscall_invoke2((uint32_t)data, data_size, SYSCALL_DBG_CONSOLE_WRITE);
 }
 
 #endif  // USE_DBG_CONSOLE

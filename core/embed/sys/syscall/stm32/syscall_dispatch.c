@@ -181,7 +181,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_DBG_CONSOLE_WRITE: {
       const void *data = (const void *)args[0];
       size_t data_size = (size_t)args[1];
-      dbg_console_write__verified(data, data_size);
+      args[0] = dbg_console_write__verified(data, data_size);
     } break;
 #endif
 
