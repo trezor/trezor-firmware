@@ -61,6 +61,10 @@ async def handle_received_message(channel: Channel) -> bool:
             return False
         elif state is ChannelState.TH1:
             await _handle_state_handshake(channel)
+            if channel.reassembler.message is not None:
+                # `HandshakeCompletionResponse`'s ACK may be piggybacked over the first pairing request.
+                # We should keep the event loop running to avoid unnecessary retransmission.
+                return True
             return channel.get_channel_state() == ChannelState.TC1
         if __debug__:
             channel._log("Invalid channel state", logger=log.error)
