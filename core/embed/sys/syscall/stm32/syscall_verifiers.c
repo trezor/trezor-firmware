@@ -1327,4 +1327,60 @@ access_violation:
 }
 #endif
 
+#ifdef USE_APP_LOADING
+
+bool app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id) {
+  if (!probe_read_access(hash, sizeof(*hash))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(task_id, sizeof(*task_id))) {
+    goto access_violation;
+  }
+
+  return app_task_spawn(hash, task_id);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool app_task_get_pminfo__verified(systask_id_t task_id,
+                                   systask_postmortem_t *pminfo) {
+  if (!probe_write_access(pminfo, sizeof(*pminfo))) {
+    goto access_violation;
+  }
+
+  return app_task_get_pminfo(task_id, pminfo);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+app_cache_image_t *app_cache_create_image__verified(const app_hash_t *hash,
+                                                    size_t image_size) {
+  if (!probe_read_access(hash, sizeof(*hash))) {
+    goto access_violation;
+  }
+
+  return app_cache_create_image(hash, image_size);
+
+access_violation:
+  apptask_access_violation();
+  return NULL;
+}
+
+bool app_cache_write_image__verified(app_cache_image_t *image, uintptr_t offset,
+                                     const void *data, size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+  return app_cache_write_image(image, offset, data, data_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_APP_LOADING
+
 #endif  // KERNEL
