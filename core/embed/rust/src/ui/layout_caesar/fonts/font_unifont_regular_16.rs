@@ -407,4 +407,5 @@ pub const Font_Unifont_Regular_16_info: FontInfo = FontInfo {
     baseline: 2,
     glyph_data: &Font_Unifont_Regular_16,
     glyph_nonprintable: &Font_Unifont_Regular_16_glyph_nonprintable,
+    kernings: None,
 };
