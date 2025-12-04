@@ -1017,10 +1017,10 @@ static bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
 
   for (size_t i = 0; i < descriptor_len; i++) {
     char *pos_ptr = strchr(INPUT_CHARSET, descriptor[i]);
-    size_t pos = pos_ptr - INPUT_CHARSET;
-    if (pos >= sizeof(INPUT_CHARSET)) {
+    if (!pos_ptr) {
       return false;
     }
+    size_t pos = pos_ptr - INPUT_CHARSET;
     c = descriptor_polymod(c, pos & 31);
     cls = cls * 3 + (pos >> 5);
     clscount += 1;
