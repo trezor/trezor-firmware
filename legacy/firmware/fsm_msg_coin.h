@@ -131,10 +131,9 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic, tmp_xpub,
                             sizeof(tmp_xpub));
 
-    size_t descriptor_len = descriptor_format(
+    resp->has_descriptor = descriptor_format(
         script_type, root_fingerprint, msg->address_n, msg->address_n_count,
         tmp_xpub, resp->descriptor, sizeof(resp->descriptor));
-    resp->has_descriptor = (descriptor_len > 0);
   }
 
   if (msg->has_show_display && msg->show_display) {

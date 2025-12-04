@@ -18,6 +18,7 @@
  */
 
 #include "crypto.h"
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include "address.h"
@@ -1046,69 +1047,39 @@ static bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
   return true;
 }
 
-static size_t remaining(size_t written, size_t capacity) {
-  return (written > capacity ? 0 : (capacity - written));
-}
-
-size_t descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
-                         const uint32_t address_n[], size_t address_n_count,
-                         const char *xpub, char *dest, size_t capacity) {
-  size_t written = 0;
-
+bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
+                       const uint32_t address_n[], size_t address_n_count,
+                       const char *xpub, char *dest, size_t dest_size) {
+  char *type = NULL;
+  char *terminator = "";
   if (script_type == InputScriptType_SPENDADDRESS) {
-    strlcpy(dest, "pkh([", capacity);
-    written += 5;
+    type = "pkh";
   } else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
-    strlcpy(dest, "sh(wpkh([", capacity);
-    written += 9;
+    type = "sh(wpkh";
+    terminator = ")";
   } else if (script_type == InputScriptType_SPENDWITNESS) {
-    strlcpy(dest, "wpkh([", capacity);
-    written += 6;
+    type = "wpkh";
   } else if (script_type == InputScriptType_SPENDTAPROOT) {
-    strlcpy(dest, "tr([", capacity);
-    written += 4;
+    type = "tr";
   } else {
-    return 0;
+    return false;
   }
-  uint32hex(root_fingerprint, &dest[written]);
-  written += 8;
-
+  // (see layout2.c) /    i   '
+  char path_str[8 * (1 + 10 + 1) + 1];
+  size_t off = 0;
   for (size_t i = 0; i < address_n_count; i++) {
-    strlcpy(&dest[written], "/", remaining(written, capacity));
-    written++;
-
-    if (written + 17 > capacity) {
-      return 0;
-    }
-    int32_t unhardened = address_n[i] & PATH_UNHARDEN_MASK;
-    char *result = itoa(unhardened, &dest[written], 10);
-    written += result - (dest + written);
-
-    if (address_n[i] & PATH_HARDENED) {
-      strlcpy(&dest[written], "h", remaining(written, capacity));
-      written++;
+    uint32_t unhardened = address_n[i] & PATH_UNHARDEN_MASK;
+    bool is_hardened = address_n[i] & PATH_HARDENED;
+    off += snprintf(&path_str[off], sizeof(path_str) - off, "/%" PRIu32 "%s",
+                    unhardened, is_hardened ? "h" : "");
+    if (off + 1 >= sizeof(path_str)) {
+      return false;
     }
   }
-
-  strlcpy(&dest[written], "]", remaining(written, capacity));
-  written++;
-  strlcpy(&dest[written], xpub, remaining(written, capacity));
-  written += strlen(xpub);
-  strlcpy(&dest[written], "/<0;1>/*)", remaining(written, capacity));
-  written += 9;
-
-  if (script_type == InputScriptType_SPENDP2SHWITNESS) {
-    strlcpy(&dest[written], ")", remaining(written, capacity));
-    written++;
+  int written = snprintf(dest, dest_size, "%s([%08" PRIx32 "%s]%s/<0;1>/*)%s#",
+                         type, root_fingerprint, path_str, xpub, terminator);
+  if (written > 1 && written + DESCRIPTOR_CHECKSUM_LEN < dest_size) {
+    return descriptor_checksum(dest, written - 1, &dest[written]);
   }
-
-  char csum[DESCRIPTOR_CHECKSUM_LEN + 1] = {};
-  if (descriptor_checksum(dest, written, csum)) {
-    strlcpy(&dest[written], "#", remaining(written, capacity));
-    written += 1;
-    strlcpy(&dest[written], csum, remaining(written, capacity));
-    written += DESCRIPTOR_CHECKSUM_LEN;
-  }
-
-  return written;
+  return false;
 }

@@ -24,11 +24,10 @@ inline void delay(uint32_t wait) {
 }
 
 static const char *hexdigits = "0123456789ABCDEF";
-static const char *hexdigits_lower = "0123456789abcdef";
 
 void uint32hex(uint32_t num, char *str) {
   for (uint32_t i = 0; i < 8; i++) {
-    str[i] = hexdigits_lower[(num >> (28 - i * 4)) & 0xF];
+    str[i] = hexdigits[(num >> (28 - i * 4)) & 0xF];
   }
 }
 
