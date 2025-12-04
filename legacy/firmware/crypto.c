@@ -1018,7 +1018,7 @@ static bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
 
   for (size_t i = 0; i < descriptor_len; i++) {
     char *pos_ptr = strchr(INPUT_CHARSET, descriptor[i]);
-    if (!pos_ptr) {
+    if (!pos_ptr || !*pos_ptr) {
       return false;
     }
     size_t pos = pos_ptr - INPUT_CHARSET;
