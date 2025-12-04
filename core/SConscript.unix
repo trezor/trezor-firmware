@@ -420,7 +420,10 @@ SOURCE_UNIX = [
 ]
 
 if "app_loading" in FEATURES_WANTED:
-    SOURCE_UNIX += ['embed/api/trezor_api_v1_impl.c']
+    SOURCE_UNIX += [
+        'embed/api/trezor_api_v1_impl.c',
+        'embed/upymod/modtrezorapp/modtrezorapp.c',
+    ]
 
 
 TRANSLATION_DATA = [
