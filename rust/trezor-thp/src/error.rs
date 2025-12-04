@@ -1,4 +1,5 @@
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
+#[cfg_attr(test, derive(Debug))]
 #[repr(u8)]
 pub enum TransportError {
     TransportBusy = 1,
@@ -21,7 +22,7 @@ impl TryFrom<u8> for TransportError {
     }
 }
 
-#[derive(Debug)]
+#[cfg_attr(test, derive(Debug))]
 pub enum Error {
     /// Numeric field has forbidden value.
     OutOfBounds,

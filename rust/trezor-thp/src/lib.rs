@@ -14,7 +14,8 @@ pub trait Role: Clone + PartialEq {
     fn is_host() -> bool;
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq)]
+#[cfg_attr(test, derive(Debug))]
 pub struct Host;
 
 impl Role for Host {
@@ -23,7 +24,8 @@ impl Role for Host {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq)]
+#[cfg_attr(test, derive(Debug))]
 pub struct Device;
 
 impl Role for Device {

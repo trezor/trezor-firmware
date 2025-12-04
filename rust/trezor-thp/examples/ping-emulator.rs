@@ -24,13 +24,13 @@ pub fn main() -> std::io::Result<()> {
     for i in 0..REPEAT {
         let nonce = [i; 8]; // not a good nonce
         let sb = SyncBits::new(); // no ABP for ping
-        Fragmenter::<Host>::single(Header::new_ping(), sb, &nonce, &mut sockbuf).unwrap();
+        Fragmenter::<Host>::single(Header::new_ping(), sb, &nonce, &mut sockbuf).unwrap_or_else(|_| panic!("failed to fragment PING"));
         socket.send_to(&sockbuf, &emu_addr)?;
 
-        let (reply_len, _src_addr) = socket.recv_from(&mut sockbuf).unwrap();
+        let (reply_len, _src_addr) = socket.recv_from(&mut sockbuf).unwrap_or_else(|_| panic!("failed to receive response"));
         assert!(reply_len > 0);
         let (header, payload) =
-            Reassembler::<Host>::single(&sockbuf[..reply_len], &mut reply_data).unwrap();
+            Reassembler::<Host>::single(&sockbuf[..reply_len], &mut reply_data).unwrap_or_else(|_| panic!("failed to reassemble PONG"));
 
         if header.is_pong() && payload == &nonce {
             println!("Pong OK");
