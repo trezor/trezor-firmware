@@ -222,10 +222,9 @@ static void kernel_loop(applet_t *coreapp) {
 static void show_rsod(const systask_postmortem_t *pminfo) {
 #ifdef RSOD_IN_COREAPP
   applet_t coreapp;
-  coreapp_init(&coreapp);
 
   // Reset and run the coreapp in RSOD mode
-  if (coreapp_reset(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
+  if (coreapp_init(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
     // Run the applet & wait for it to finish
     applet_run(&coreapp);
     // Loop until the coreapp is terminated
@@ -285,10 +284,9 @@ int main(void) {
 
   // Initialize coreapp task
   applet_t coreapp;
-  coreapp_init(&coreapp);
 
   // Reset and run the coreapp
-  if (!coreapp_reset(&coreapp, 0, NULL, 0)) {
+  if (!coreapp_init(&coreapp, 0, NULL, 0)) {
     error_shutdown("Cannot start coreapp");
   }
 
