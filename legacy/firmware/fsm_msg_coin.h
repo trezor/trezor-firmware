@@ -127,7 +127,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   }
 
   if (coin->xpub_magic) {
-    char tmp_xpub[XPUB_MAXLEN] = {0};
+    char tmp_xpub[XPUB_MAXLEN + 1] = {0};
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic, tmp_xpub,
                             sizeof(tmp_xpub));
 
