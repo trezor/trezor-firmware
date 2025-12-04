@@ -36,7 +36,9 @@
 #include <sys/power_manager.h>
 #endif
 
-#include "embed/upymod/trezorobj.h"
+#ifdef USE_IPC
+#include <sys/ipc.h>
+#endif
 
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
@@ -128,6 +130,20 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     if (signalled.read_ready == 0 && signalled.write_ready == 0) {
       return mp_const_false;
     }
+
+#ifdef USE_IPC
+    if (signalled.read_ready & (1 << SYSHANDLE_IPC2)) {
+      ipc_message_t message = {.remote = 2};
+      if (ipc_try_receive(&message)) {
+        mp_obj_IpcMessage_t *o =
+            mp_obj_malloc(mp_obj_IpcMessage_t, &mod_trezorio_IpcMessage_type);
+        o->message = message;
+        ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_IPC2);
+        ret->items[1] = MP_OBJ_FROM_PTR(o);
+        return mp_const_true;
+      }
+    }
+#endif
 
 #ifdef USE_TOUCH
     if (signalled.read_ready & (1 << SYSHANDLE_TOUCH)) {
