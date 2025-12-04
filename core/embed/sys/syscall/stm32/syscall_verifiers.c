@@ -120,6 +120,65 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_IPC
+
+bool ipc_register__verified(systask_id_t origin, void *buffer, size_t size) {
+  if (!probe_write_access(buffer, size)) {
+    goto access_violation;
+  }
+
+  return ipc_register(origin, buffer, size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool ipc_try_receive__verified(ipc_message_t *msg) {
+  if (!probe_write_access(msg, sizeof(*msg))) {
+    goto access_violation;
+  }
+
+  return ipc_try_receive(msg);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+void ipc_message_free__verified(ipc_message_t *msg) {
+  if (!probe_read_access(msg, sizeof(*msg))) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(msg->data, msg->size)) {
+    goto access_violation;
+  }
+
+  ipc_message_free(msg);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
+                        size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  return ipc_send(remote, fn, data, data_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_IPC
+
+// ---------------------------------------------------------------------
+
 bool boot_image_check__verified(const boot_image_t *image) {
   if (!probe_read_access(image, sizeof(*image))) {
     goto access_violation;

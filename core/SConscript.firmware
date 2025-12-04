@@ -58,6 +58,7 @@ FEATURES_WANTED = [
     "dma2d",
     "haptic",
     "input",
+    "ipc",
     "optiga",
     "power_manager",
     "rgb_led",
