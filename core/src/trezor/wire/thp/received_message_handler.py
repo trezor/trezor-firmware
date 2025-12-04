@@ -62,7 +62,8 @@ async def handle_received_message(channel: Channel) -> bool:
             return False
         elif state is ChannelState.TH1:
             await _handle_state_handshake(channel)
-            return channel.get_channel_state() == ChannelState.TC1
+            # keep the event loop running, to prevent restransmission when THP ACK piggybacking is enabled.
+            return True
         if __debug__:
             channel._log("Invalid channel state", logger=log.error)
     except ThpUnallocatedSessionError as e:
