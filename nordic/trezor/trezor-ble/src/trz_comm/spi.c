@@ -84,6 +84,7 @@ void gpio_callback_handler(const struct device *dev, struct gpio_callback *cb,
                            uint32_t pins) {
   if (pins & BIT(spi_ready.pin)) {
     if (k_sem_count_get(&spi_can_send) == 0) {
+      LOG_INF("k_sem_give(&spi_can_send);");
       k_sem_give(&spi_can_send);
     }
   }
@@ -156,6 +157,8 @@ void spi_thread(void) {
   for (;;) {
     /* Wait indefinitely for signal to process */
     k_sem_take(&spi_can_send, K_FOREVER);
+
+    LOG_INF("k_sem_take(&spi_can_send, K_FOREVER);");
 
     trz_packet_t *buf = k_fifo_get(&fifo_spi_tx_data, K_NO_WAIT);
 

@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize("O0")
+
 #ifdef KERNEL_MODE
 #ifdef USE_SMP
 
@@ -29,6 +31,8 @@
 #include "../nrf_internal.h"
 #include "rust_smp.h"
 #include "sha2.h"
+
+#include <sys/dbg_console.h>
 
 #define IMAGE_HASH_LEN 32
 #define IMAGE_TLV_SHA256 0x10
@@ -44,6 +48,7 @@ struct image_header {
   uint32_t _pad1;
 } __packed;
 
+#if 1
 /**
  * Read the SHA-256 image hash from the TLV trailer of the given flash slot.
  *
@@ -99,7 +104,9 @@ static bool read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
 
   return ret;
 }
+#endif
 
+#if 1
 /**
  * Read the image version from the image header.
  *
@@ -131,6 +138,8 @@ static bool nrf_smp_version_get(nrf_app_version_t *out_version) {
 
   nrf_reboot_to_bootloader();
   nrf_set_dfu_mode(true);
+
+  systick_delay_ms(1); // TODO: wait?
 
   if (smp_image_version_get(out_version)) {
     // Success - version string provided via SMP has been decoded and stored
@@ -167,27 +176,63 @@ static int version_cmp(const nrf_app_version_t *v1,
   }
   return 0;
 }
+#endif
 
 bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3000000; i++) {
+#if 1
     nrf_info_t info;
     uint8_t expected_hash[SHA256_DIGEST_LENGTH];
 
     if (nrf_get_info(&info) == true &&
         read_image_sha256(image_ptr, image_len, expected_hash) == true) {
+      dbg_printf("MCU FW nRF FW version SPI: %u.%u.%u.%u\n", info.version_major,
+          info.version_minor, info.version_patch, info.version_tweak);
+#if 0
       return memcmp(info.hash, expected_hash, SHA256_DIGEST_LENGTH) != 0;
+#endif
     }
+#if 1
+    else {
+      // Failed to get version
+      dbg_printf("Failed to retrieve version SPI\n");
+    }
+#endif
+#endif
 
+#if 1
     // Can't communicate with the App via SPI, trying SMP serial recovery over
     // UART to nRF MCUboot
     nrf_app_version_t smp_version, image_version;
 
     if (nrf_smp_version_get(&smp_version) == true &&
         image_version_read(image_ptr, &image_version) == true) {
+        dbg_printf("nRF FW version: %u.%u.%u.%u\n", image_version.major,
+                  image_version.minor, image_version.revision,
+                  image_version.build_num);
+        dbg_printf("MCU FW nRF FW version SMP: %u.%u.%u.%u\n", smp_version.major,
+                  smp_version.minor, smp_version.revision, smp_version.build_num);          
+#if 0
       return version_cmp(&image_version, &smp_version) != 0;
+#else
+      UNUSED(version_cmp(&image_version, &smp_version));
+#endif
     }
+#if 1
+    else {
+      // Failed to get version
+      dbg_printf("Failed to retrieve version SMP\n");    
+    }
+#endif
+#else
+    nrf_reboot();
+#endif
 
-    systick_delay_ms(100);  // TODO: is it necessary?
+#if 1
+    systick_delay_ms(2500);
+#else
+    systick_delay_ms(100);
+#endif
   }
 
   // Assuming corrupted image, force update

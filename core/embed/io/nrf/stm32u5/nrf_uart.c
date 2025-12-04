@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize("O0")
+
 #ifdef KERNEL_MODE
 
 #include <trezor_bsp.h>
@@ -28,6 +30,9 @@
 #include "../nrf_internal.h"
 #include "rust_smp.h"
 #include "sys/systick.h"
+
+#include <string.h>
+#include <sys/dbg_console.h>
 
 extern nrf_driver_t g_nrf_driver;
 
@@ -112,6 +117,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
   if (drv->initialized && urt == &drv->urt) {
 #ifdef USE_SMP
     if (nrf_is_dfu_mode()) {
+#if 0
+      dbg_printf("%c", drv->urt_rx_byte);
+#endif
+
       smp_process_rx_byte(drv->urt_rx_byte);
       HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
       return;
@@ -184,6 +193,14 @@ bool nrf_send_uart_data(const uint8_t *data, uint32_t len,
   }
 
   drv->dfu_tx_pending = true;
+
+#if 0
+  uint8_t data_temp[100];
+  memcpy(data_temp, data, len);
+  data_temp[len] = '\0';
+  dbg_printf("%s:%s(..) executed, UART data TX: %d %s\n", __FILE_NAME__,
+             __func__, len, data_temp);
+#endif
 
   HAL_UART_Transmit_IT(&drv->urt, data, len);
 
