@@ -836,6 +836,8 @@ if FROZEN:
     if PYOPT == '0':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'prof/*.py'))
 
+    if "app_loading" in FEATURES_AVAILABLE:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/extapp/*.py'))
 
     source_mpy = env.FrozenModule(
         source=SOURCE_PY,
