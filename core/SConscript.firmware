@@ -263,7 +263,6 @@ SOURCE_MOD += [
     'embed/gfx/fonts/font_bitmap.c',
     'embed/gfx/gfx_color.c',
     'embed/gfx/gfx_draw.c',
-    'embed/gfx/terminal.c',
     'embed/io/display/display_utils.c',
     'embed/util/image/boot_image_embdata.c',
     'embed/util/image/image.c',
