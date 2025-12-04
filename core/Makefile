@@ -48,7 +48,7 @@ TREZOR_DISABLE_ANIMATION ?= $(if $(filter 0,$(PYOPT)),1,0)
 STORAGE_INSECURE_TESTING_MODE ?= 0
 UI_PERFORMANCE_OVERLAY ?= 0
 DBG_CONSOLE ?=
-EXTAPP_SUPPORT ?= 0
+EXTAPP_SUPPORT ?= 1
 
 # If set, VCP writes will be blocking, in order to allow reliable debug data transmission over VCP.
 # Disabled by default, to prevent debug firmware from getting stuck while writing log messages (if the host is not reading them).
