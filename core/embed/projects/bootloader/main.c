@@ -381,7 +381,6 @@ void real_jump_to_firmware(void) {
 
   ensure(check_firmware_min_version(hdr->monotonic),
          "Firmware downgrade protection");
-  ensure_firmware_min_version(hdr->monotonic);
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
                               &FIRMWARE_AREA),
@@ -405,9 +404,18 @@ void real_jump_to_firmware(void) {
 
   ensure(check_secmon_header_sig(secmon_hdr), "Invalid secmon signature");
 
+  ensure(check_secmon_min_version(secmon_hdr->monotonic),
+         "Secmon downgrade protection");
+
   ensure(check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
                                &FIRMWARE_AREA),
          "Secmon is corrupted");
+#endif
+
+  // ensure minimal versions are properly stored for both firmware and secmon
+  ensure_firmware_min_version(hdr->monotonic);
+#ifdef USE_SECMON_VERIFICATION
+  ensure_secmon_min_version(secmon_hdr->monotonic);
 #endif
 
   secbool provisioning_access =
