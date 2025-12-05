@@ -7,6 +7,7 @@ import tools, models, ui
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = 'emulator'
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 
 FEATURE_FLAGS = {
     "AES_GCM": True,
@@ -35,6 +36,9 @@ FEATURES_WANTED = [
     "usb",
     "usb_iface_vcp",
 ]
+
+if DBG_CONSOLE != "":
+    FEATURES_WANTED += ["dbg_console"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []

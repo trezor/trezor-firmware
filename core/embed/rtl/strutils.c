@@ -112,3 +112,73 @@ bool cstr_encode_hex(char* dst, size_t dst_len, const void* src,
 
   return true;
 }
+
+bool cstr_append(char* dst, size_t dst_len, const char* src) {
+  while (*dst != '\0' && dst_len > 1) {
+    dst++;
+    dst_len--;
+  }
+
+  while (*src != '\0' && dst_len > 1) {
+    *dst++ = *src++;
+    dst_len--;
+  }
+
+  if (dst_len > 1) {
+    *dst = '\0';
+  }
+
+  return *src == '\0';
+}
+
+bool cstr_append_uint32(char* dst, size_t dst_len, uint32_t value) {
+  char buffer[12] = "";
+  char* p = buffer + sizeof(buffer) - 1;
+
+  *p = '\0';
+
+  if (value == 0) {
+    *(--p) = '0';
+  } else {
+    while (value > 0) {
+      *(--p) = (char)('0' + value % 10);
+      value /= 10;
+    }
+  }
+
+  return cstr_append(dst, dst_len, p);
+}
+
+bool cstr_append_int32(char* dst, size_t dst_len, int32_t value) {
+  char buffer[12] = "";
+  char* p = buffer + sizeof(buffer) - 1;
+  bool negative = false;
+
+  *p = '\0';
+
+  if (value == 0) {
+    *(--p) = '0';
+  } else {
+    while (value > 0) {
+      *(--p) = (char)('0' + value % 10);
+      value /= 10;
+    }
+  }
+
+  if (negative) {
+    *(--p) = '-';
+  }
+
+  return cstr_append(dst, dst_len, p);
+}
+
+bool cstr_append_uint32_hex(char* dst, size_t dst_len, uint32_t value) {
+  char temp[sizeof(value) * 2 + 1];
+  for (int i = 2 * sizeof(value) - 1; i >= 0; i--) {
+    const char hex[] = "0123456789ABCDEF";
+    temp[i] = hex[value & 0x0F];
+    value >>= 4;
+  }
+  temp[sizeof(temp) - 1] = '\0';
+  return cstr_append(dst, dst_len, temp);
+}

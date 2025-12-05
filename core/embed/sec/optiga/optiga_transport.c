@@ -28,12 +28,16 @@
 #include <trezor_rtl.h>
 
 #include <io/i2c_bus.h>
+#include <rtl/logging.h>
+#include <rtl/strutils.h>
 #include <sec/optiga_hal.h>
 #include <sec/optiga_transport.h>
 #include <sys/systick.h>
 #include "aes/aesccm.h"
 #include "memzero.h"
 #include "tls_prf.h"
+
+LOG_DECLARE(optiga_transport)
 
 // Maximum possible packet size that can be transmitted.
 #define OPTIGA_MAX_PACKET_SIZE (OPTIGA_DATA_REG_LEN - 5)
@@ -143,33 +147,32 @@ static uint8_t sec_chan_buffer[OPTIGA_MAX_APDU_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
     {0};
 static size_t sec_chan_size = 0;
 
-#if PRODUCTION
-#define OPTIGA_LOG(prefix, data, data_size)
-#else
-static optiga_log_hex_t log_hex = NULL;
-void optiga_transport_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
-#define OPTIGA_LOG(prefix, data, data_size)                                  \
-  if (log_hex != NULL) {                                                     \
-    static uint8_t prev_data[4];                                             \
-    static size_t prev_size = 0;                                             \
-    static bool repeated = false;                                            \
-    if (prev_size == data_size && memcmp(data, prev_data, data_size) == 0) { \
-      if (!repeated) {                                                       \
-        repeated = true;                                                     \
-        log_hex(prefix "(REPEATED) ", data, data_size);                      \
-      }                                                                      \
-    } else {                                                                 \
-      repeated = false;                                                      \
-      if (data_size <= sizeof(prev_data)) {                                  \
-        memcpy(prev_data, data, data_size);                                  \
-        prev_size = data_size;                                               \
-      } else {                                                               \
-        prev_size = 0;                                                       \
-      }                                                                      \
-      log_hex(prefix, data, data_size);                                      \
-    }                                                                        \
+static void optiga_log_transport(const char *prefix, const uint8_t *data,
+                                 size_t data_size) {
+  if (LOG_MODULE_MAX_LEVEL >= LOG_LEVEL_DBG) {
+    static uint8_t prev_data[4];
+    static size_t prev_size = 0;
+    static bool repeated = false;
+    if (prev_size == data_size && memcmp(data, prev_data, data_size) == 0) {
+      if (!repeated) {
+        repeated = true;
+        char prefix_buf[16] = "";
+        cstr_append(prefix_buf, sizeof(prefix_buf), prefix);
+        cstr_append(prefix_buf, sizeof(prefix_buf), " (REPEATED)");
+        LOG_HEXDUMP_DBG(prefix_buf, data, data_size);
+      }
+    } else {
+      repeated = false;
+      if (data_size <= sizeof(prev_data)) {
+        memcpy(prev_data, data, data_size);
+        prev_size = data_size;
+      } else {
+        prev_size = 0;
+      }
+      LOG_HEXDUMP_DBG(prefix, data, data_size);
+    }
   }
-#endif
+}
 
 void optiga_set_ui_progress(optiga_ui_progress_t f) { ui_progress = f; }
 
@@ -220,7 +223,7 @@ void optiga_transport_close_channel(void) {
 }
 
 static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {
-  OPTIGA_LOG(">>>", data, data_size)
+  optiga_log_transport(">>>", data, data_size);
 
   i2c_op_t ops[] = {
       {
@@ -272,7 +275,7 @@ static optiga_result optiga_i2c_read(uint8_t *buffer, uint16_t buffer_size) {
     systick_delay_ms(1);
 
     if (I2C_STATUS_OK == i2c_bus_submit_and_wait(i2c_bus, &pkt)) {
-      OPTIGA_LOG("<<<", buffer, buffer_size)
+      optiga_log_transport("<<<", buffer, buffer_size);
       return OPTIGA_SUCCESS;
     }
   }

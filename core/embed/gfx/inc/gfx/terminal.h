@@ -23,7 +23,13 @@
 #include <gfx/gfx_color.h>
 
 void term_set_color(gfx_color_t fgcolor, gfx_color_t bgcolor);
-void term_print(const char *text, int textlen);
+
+void term_nprint(const char *text, int textlen);
+
+void term_print(const char *text);
+
+void term_print_int32(int32_t value);
+
 void term_printf(const char *fmt, ...)
     __attribute__((__format__(__printf__, 1, 2)));
 

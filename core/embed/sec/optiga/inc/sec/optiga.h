@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_OPTIGA_H
-#define TREZORHAL_OPTIGA_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -110,5 +109,3 @@ bool __wur optiga_pin_get_rem(uint32_t *ctr);
 bool __wur optiga_pin_decrease_rem_v4(uint32_t count);
 
 bool __wur optiga_pin_decrease_rem(uint32_t count);
-
-#endif

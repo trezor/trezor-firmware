@@ -1833,6 +1833,10 @@ def optiga_set_sec_max(session: "Session") -> None:
     session.call(messages.DebugLinkOptigaSetSecMax(), expect=messages.Success)
 
 
+def set_log_filter(debug: DebugLink, filter: str) -> None:
+    debug._call(messages.DebugLinkSetLogFilter(filter=filter))
+
+
 class DisplayStyle(Enum):
     Hidden = "Hidden"
     Shown = "Shown"

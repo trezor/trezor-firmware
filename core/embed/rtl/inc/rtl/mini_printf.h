@@ -1,51 +1,54 @@
-// clang-format off
-
 /*
- * The Minimal snprintf() implementation
+ * This file is part of the Trezor project, https://trezor.io/
  *
- * Copyright (c) 2013 Michal Ludvig <michal@logix.cz>
- * All rights reserved.
+ * Copyright (c) SatoshiLabs
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the auhor nor the names of its contributors
- *       may be used to endorse or promote products derived from this software
- *       without specific prior written permission.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#ifndef __MINI_PRINTF__
-#define __MINI_PRINTF__
+#pragma once
 
 #include <trezor_types.h>
 
 #include <stdarg.h>
 
-#ifdef __cplusplus
-extern "C" {
+// Disable float support to save space
+#define PRINTF_DISABLE_SUPPORT_FLOAT
+
+#if defined(BOARDLOADER) && defined(TREZOR_MODEL_T3T1)
+// Disable long long support in the bootloader to save space
+#define PRINTF_DISABLE_SUPPORT_LONG_LONG
 #endif
 
-int mini_vsnprintf(char* buffer, unsigned int buffer_len, const char *fmt, va_list va) __attribute__ ((__format__ (__printf__, 3, 0)));
-int mini_snprintf(char* buffer, unsigned int buffer_len, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
+/**
+ * Tiny snprintf/vsnprintf implementation
+ *
+ * @param buffer A pointer to the buffer where to store the formatted string
+ * @param count The maximum number of characters to store in the buffer,
+ * including a terminating null character
+ * @param format A string that specifies the format of the output
+ * @param va A value identifying a variable arguments list
+ * @return The number of characters that COULD have been written into the
+ * buffer, not counting the terminating null character. A value equal or larger
+ * than count indicates truncation. Only when the returned value is non-negative
+ * and less than count, the string has been completely written.
+ */
+int snprintf_(char* buffer, size_t count, const char* format, ...)
+    __attribute__((__format__(__printf__, 3, 4)));
 
-#ifdef __cplusplus
-}
-#endif
+int vsnprintf_(char* buffer, size_t count, const char* format, va_list va)
+    __attribute__((__format__(__printf__, 3, 0)));
 
-#endif
+#define mini_vsnprintf vsnprintf_
+#define mini_snprintf snprintf_

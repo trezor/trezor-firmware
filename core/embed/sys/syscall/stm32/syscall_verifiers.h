@@ -52,7 +52,22 @@ void system_exit_fatal__verified(const char *message, size_t message_len,
 
 ssize_t dbg_console_read__verified(void *buffer, size_t buffer_size);
 
-void dbg_console_write__verified(const void *data, size_t data_size);
+ssize_t dbg_console_write__verified(const void *data, size_t data_size);
+
+#endif
+
+// ---------------------------------------------------------------------
+#ifdef USE_DBG_CONSOLE
+
+#include <rtl/logging.h>
+
+bool syslog_start_record__verified(const log_source_t *source,
+                                   log_level_t level);
+
+ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
+                                     bool end_record);
+
+bool syslog_set_filter__verified(const char *module_name, log_level_t level);
 
 #endif
 

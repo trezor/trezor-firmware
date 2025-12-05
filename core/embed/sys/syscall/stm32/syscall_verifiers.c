@@ -104,16 +104,59 @@ access_violation:
   return -1;
 }
 
-void dbg_console_write__verified(const void *data, size_t data_size) {
+ssize_t dbg_console_write__verified(const void *data, size_t data_size) {
   if (!probe_read_access(data, data_size)) {
     goto access_violation;
   }
 
-  dbg_console_write(data, data_size);
-  return;
+  return dbg_console_write(data, data_size);
 
 access_violation:
   apptask_access_violation();
+  return -1;
+}
+
+#endif  // USE_DBG_CONSOLE
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_DBG_CONSOLE
+
+bool syslog_start_record__verified(const log_source_t *source,
+                                   log_level_t level) {
+  if (!probe_read_access(source, sizeof(*source))) {
+    goto access_violation;
+  }
+
+  return syslog_start_record(source, level);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
+                                     bool end_record) {
+  if (!probe_read_access(text, text_len)) {
+    goto access_violation;
+  }
+
+  return syslog_write_chunk(text, text_len, end_record);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
+bool syslog_set_filter__verified(const char *module_name, log_level_t level) {
+  if (!probe_read_access(module_name, strlen(module_name))) {
+    goto access_violation;
+  }
+
+  return syslog_set_filter(module_name, level);
+
+access_violation:
+  apptask_access_violation();
+  return false;
 }
 
 #endif  // USE_DBG_CONSOLE

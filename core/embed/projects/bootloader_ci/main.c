@@ -26,7 +26,6 @@
 #include <io/display.h>
 #include <io/usb.h>
 #include <io/usb_config.h>
-#include <rtl/mini_printf.h>
 #include <sec/random_delays.h>
 #include <sec/rng.h>
 #include <sys/bootargs.h>

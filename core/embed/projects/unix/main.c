@@ -39,7 +39,6 @@
 #include <io/display.h>
 #include <io/usb_config.h>
 #include <sec/secret.h>
-#include <sys/dbg_console.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
 #include <util/flash.h>
@@ -67,6 +66,10 @@
 #include <sec/tropic.h>
 #endif
 
+#ifdef USE_DBG_CONSOLE
+#include <sys/dbg_console.h>
+#endif
+
 #include "py/builtin.h"
 #include "py/compile.h"
 #include "py/gc.h"
@@ -89,7 +92,9 @@ long heap_size = 1024 * 1024 * (sizeof(mp_uint_t) / 4);
 
 STATIC void stderr_print_strn(void *env, const char *str, size_t len) {
   (void)env;
+#ifdef USE_DBG_CONSOLE
   dbg_console_write(str, len);
+#endif
   mp_uos_dupterm_tx_strn(str, len);
 }
 

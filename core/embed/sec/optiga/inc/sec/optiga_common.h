@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_OPTIGA_COMMON_H
-#define TREZORHAL_OPTIGA_COMMON_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -38,10 +37,3 @@ typedef enum _optiga_result {
 } optiga_result;
 
 typedef secbool (*optiga_ui_progress_t)(void);
-
-#if !PRODUCTION
-typedef void (*optiga_log_hex_t)(const char *prefix, const uint8_t *data,
-                                 size_t data_size);
-#endif
-
-#endif
