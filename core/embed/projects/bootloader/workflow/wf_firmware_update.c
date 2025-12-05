@@ -70,6 +70,7 @@ typedef enum {
   UPLOAD_ERR_INVALID_SECMON_HEADER_SIG = -19,
   UPLOAD_ERR_INVALID_SECMON_MODEL = -20,
   UPLOAD_ERR_INVALID_SECMON_HASH = -21,
+  UPLOAD_ERR_INVALID_SECMON_VERSION = -23,
   UPLOAD_ERR_SECMON_TOO_BIG = -22,
 } upload_status_t;
 
@@ -287,6 +288,12 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          "Invalid secmon signature");
         return UPLOAD_ERR_INVALID_SECMON_HEADER_SIG;
+      }
+
+      if (sectrue != check_secmon_min_version(secmon_hdr->monotonic)) {
+        send_msg_failure(iface, FailureType_Failure_ProcessError,
+                         "Secmon downgrade protection");
+        return UPLOAD_ERR_INVALID_SECMON_VERSION;
       }
 
       ctx->secmon_code_size = secmon_hdr->codelen;

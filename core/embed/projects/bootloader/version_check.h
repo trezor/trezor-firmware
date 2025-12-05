@@ -37,3 +37,12 @@ secbool check_firmware_min_version(uint8_t check_version);
 // Ensures firmware version is stored in monotonic counter
 // If the version cannot be written, the function will shutdown the device
 void ensure_firmware_min_version(uint8_t version);
+
+// This functions checks if the secmon version is at least the minimum
+// required version, returns sectrue if check_version is higher or equal to the
+// stored version
+secbool check_secmon_min_version(uint8_t check_version);
+
+// Ensures secmon version is stored in monotonic counter
+// If the version cannot be written, the function will shutdown the device
+void ensure_secmon_min_version(uint8_t version);

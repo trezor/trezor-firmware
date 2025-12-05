@@ -30,6 +30,7 @@
 typedef enum {
   MONOCTR_BOOTLOADER_VERSION = 0,
   MONOCTR_FIRMWARE_VERSION = 1,
+  MONOCTR_SECMON_VERSION = 2,
 } monoctr_type_t;
 
 // Write a new value to the monotonic counter

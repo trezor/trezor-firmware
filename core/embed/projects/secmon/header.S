@@ -19,7 +19,8 @@ g_header:
     .byte VERSION_BUILD              // vbuild
     .word HW_MODEL                   // type of the designated hardware
     .byte HW_REVISION                // revision of the designated hardware
-    . = . + 3                       // reserved
+    .byte SECMON_MONOTONIC_VERSION   // monotonic version of the binary
+    . = . + 2                        // reserved
     . = . + 32                       // hash of entire secmon
     . = . + 391                      // reserved
     .byte 0                          // sigmask
