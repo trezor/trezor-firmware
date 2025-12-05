@@ -125,4 +125,8 @@ void slip21_derive_path(Slip21Node *inout, const uint8_t *label,
 const uint8_t *slip21_key(const Slip21Node *node);
 bool multisig_uses_single_path(const MultisigRedeemScriptType *multisig);
 
+bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
+                       const uint32_t address_n[], size_t address_n_count,
+                       const char *xpub, char *dest, size_t dest_size);
+
 #endif
