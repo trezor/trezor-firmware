@@ -44,3 +44,17 @@ void ensure_firmware_min_version(uint8_t version) {
   ensure(monoctr_read(MONOCTR_FIRMWARE_VERSION, &val), NULL);
   ensure(sectrue * (val == version), "Firmware downgrade protection");
 }
+
+secbool check_secmon_min_version(uint8_t check_version) {
+  uint8_t min_version = 0;
+  ensure(monoctr_read(MONOCTR_SECMON_VERSION, &min_version), "monoctr read");
+
+  return (check_version >= min_version) * sectrue;
+}
+
+void ensure_secmon_min_version(uint8_t version) {
+  monoctr_write(MONOCTR_SECMON_VERSION, version);
+  uint8_t val = 0;
+  ensure(monoctr_read(MONOCTR_SECMON_VERSION, &val), NULL);
+  ensure(sectrue * (val == version), "Firmware downgrade protection");
+}
