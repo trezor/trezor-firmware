@@ -218,7 +218,7 @@ async def confirm_tx_data(
             token_address,
             chunkify=bool(msg.chunkify),
         )
-    else:
+    else:  # THIS MUST BE TRANSFER?
         assert value is not None
 
         recipient_str = (
@@ -319,8 +319,6 @@ async def _handle_known_contract_calls(
     SC_FUNC_SIG_BYTES = constants.SC_FUNC_SIG_BYTES
     SC_ARGUMENT_BYTES = constants.SC_ARGUMENT_BYTES
     SC_ARGUMENT_ADDRESS_BYTES = constants.SC_ARGUMENT_ADDRESS_BYTES
-    SC_FUNC_SIG_APPROVE = constants.SC_FUNC_SIG_APPROVE
-    SC_FUNC_SIG_TRANSFER = constants.SC_FUNC_SIG_TRANSFER
 
     token = None
     token_address = None
@@ -332,35 +330,17 @@ async def _handle_known_contract_calls(
         return token, token_address, None, recipient, value
     func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
 
-    if (
-        len(msg.to) in (40, 42)
-        and len(msg.value) == 0
-        and msg.data_length == 68
-        and len(data_initial_chunk) == 68
-        and func_sig in (SC_FUNC_SIG_TRANSFER, SC_FUNC_SIG_APPROVE)
-    ):
-        # The two functions happen to have the exact same parameters, so we treat them together.
-        # This will need to be made into a more generic solution eventually.
-        # arg0: address, Address, 20 bytes (left padded with zeroes)
-        # arg1: value, uint256, 32 bytes
-
-        if data_reader.remaining_count() < SC_ARGUMENT_BYTES * 2:
-            return token, token_address, None, recipient, value
-        arg0 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-        assert all(
-            byte == 0 for byte in arg0[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
-        )
-        recipient = bytes(arg0[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :])
-        arg1 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-        if func_sig == SC_FUNC_SIG_APPROVE and all(byte == 255 for byte in arg1):
-            # "Unlimited" approval (all bits set) is a special case
-            # which we encode as value=None internally.
-            value = None
-        else:
-            value = int.from_bytes(arg1, "big")
-
-        token = definitions.get_token(address_bytes)
-        token_address = address_bytes
+    for known_display_format in [
+        constants.APPROVE_DISPLAY_FORMAT,
+        constants.TRANSFER_DISPLAY_FORMAT,
+    ]:
+        # * parse function signature ie "approve(address,uint256)" to extract parameters - we will have exactly 2 parameters for both approve and transfer,
+        # but instead of that being hardcoded, it now comes from the definition
+        # * use the FieldFormats in `known_display_format` to format the parameters
+        # * use confirm_action, confirm_properties, etc to confirm the fields and intent
+        # Note: don't forget to confirm unknown tokens
+        # * return something (a boolean?) to let the rest of the confimation flow know that we already confirmed the calldata here
+        pass
 
     return token, token_address, func_sig, recipient, value
 
