@@ -101,7 +101,7 @@ bool pmic_enter_shipmode(void);
 //
 // The function returns `false` if the measurement cannot be started
 // (e.g. because the previous measurement is still in progress or
-// the the driver is not initialized).
+// the driver is not initialized).
 bool pmic_measure(pmic_report_callback_t callback, void* context);
 
 // Synchroneous version of the `pmic_measure` function.
