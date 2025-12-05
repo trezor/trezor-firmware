@@ -511,4 +511,9 @@ cleanup:
   return success;
 }
 
+bool backup_ram_kernel_accessible(uint16_t key) {
+  return (key == BACKUP_RAM_KEY_PM_RECOVERY ||
+          key == BACKUP_RAM_KEY_BLE_SETTINGS);
+}
+
 #endif  // SECURE_MODE

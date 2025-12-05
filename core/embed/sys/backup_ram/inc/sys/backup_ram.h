@@ -127,3 +127,10 @@ bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
  */
 bool backup_ram_read(uint16_t key, void* buffer, size_t buffer_size,
                      size_t* data_size);
+
+/**
+ * @brief Determines if a key is accessible by the kernel.
+ * @param key Key to check
+ * @return true if the key is accessible by the kernel, false otherwise
+ */
+bool backup_ram_kernel_accessible(uint16_t key);
