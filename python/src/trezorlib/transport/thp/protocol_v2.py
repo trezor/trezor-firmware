@@ -71,6 +71,7 @@ class ProtocolV2Channel(Channel):
     ) -> None:
         super().__init__(transport, mapping)
         self._reset_sync_bits()
+        self._support_ack_piggybacking = False
         if prepare_channel_without_pairing:
             # allow skipping unrelated response packets (e.g. in case of retransmissions)
             self._do_channel_allocation(retries=MAX_RETRANSMISSION_COUNT)
@@ -185,6 +186,19 @@ class ProtocolV2Channel(Channel):
 
         channel_id = int.from_bytes(payload[8:10], "big")
         device_properties = payload[10:]
+
+        dp = self.mapping.decode_without_wire_type(
+            messages.ThpDeviceProperties, device_properties
+        )
+        assert isinstance(dp, messages.ThpDeviceProperties)
+        version = (dp.protocol_version_major, dp.protocol_version_minor)
+        self._support_ack_piggybacking = version >= (2, 1)
+        LOG.debug(
+            "THP version=%s ACK piggybacking=%s",
+            "{}.{}".format(*version),
+            self._support_ack_piggybacking,
+        )
+
         return (channel_id, device_properties)
 
     def _init_noise(
@@ -227,8 +241,16 @@ class ProtocolV2Channel(Channel):
 
     def _send_handshake_init_request(self, try_to_unlock: bool = True) -> None:
         payload = self._noise.write_message(bytes([try_to_unlock]))
+        ctrl_byte = control_byte.HANDSHAKE_INIT_REQ
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(
+            ctrl_byte=ctrl_byte, seq_bit=0
+        )
+        if self._support_ack_piggybacking:
+            ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(
+                ctrl_byte=ctrl_byte, ack_bit=1
+            )
         ha_init_req_header = MessageHeader(
-            0, self.channel_id, len(payload) + CHECKSUM_LENGTH
+            ctrl_byte, self.channel_id, len(payload) + CHECKSUM_LENGTH
         )
 
         thp_io.write_payload_to_wire_and_add_checksum(
@@ -241,7 +263,8 @@ class ProtocolV2Channel(Channel):
         if not header.is_handshake_init_response():
             LOG.error("Received message is not a valid handshake init response message")
 
-        self._send_ack_bit(bit=0)
+        if not self._support_ack_piggybacking:
+            self._send_ack_bit(bit=0)
         self._noise.read_message(payload)
         return payload
 
@@ -262,6 +285,14 @@ class ProtocolV2Channel(Channel):
         )
         message2 = self._noise.write_message(payload=msg_data)
 
+        ctrl_byte = control_byte.HANDSHAKE_COMP_REQ
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(
+            ctrl_byte=ctrl_byte, seq_bit=1
+        )
+        if self._support_ack_piggybacking:
+            ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(
+                ctrl_byte=ctrl_byte, ack_bit=0
+            )
         ha_completion_req_header = MessageHeader(
             0x12,
             self.channel_id,
@@ -281,18 +312,20 @@ class ProtocolV2Channel(Channel):
             LOG.error("Received message is not a valid handshake completion response")
         trezor_state = self._noise.decrypt(bytes(data))
         assert trezor_state in TREZOR_STATES
-        self._send_ack_bit(bit=1)
+        if not self._support_ack_piggybacking:
+            self._send_ack_bit(bit=1)
         self._is_paired = trezor_state != TREZOR_STATE_UNPAIRED
 
     def _read_ack(self) -> None:
         header, payload = self._read_until_valid_crc_check()
         if not header.is_ack() or len(payload) > 0:
             LOG.error("Received message is not a valid ACK")
+        LOG.debug("Received ACK %s", control_byte.get_ack_bit(header.ctrl_byte))
 
     def _send_ack_bit(self, bit: int) -> None:
         if bit not in (0, 1):
             raise ValueError("Invalid ACK bit")
-        LOG.debug(f"sending ack {bit}")
+        LOG.debug("Sending ACK %s", bit)
         ctrl_byte = 0x20 if bit == 0 else 0x28
         header = MessageHeader(ctrl_byte, self.channel_id, 4)
         thp_io.write_payload_to_wire_and_add_checksum(self.transport, header, b"")
@@ -302,12 +335,15 @@ class ProtocolV2Channel(Channel):
         session_id: int,
         message_type: int,
         message_data: bytes,
-        ctrl_byte: int | None = None,
     ) -> None:
 
-        if ctrl_byte is None:
-            ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(0x04, self.sync_bit_send)
-            self.sync_bit_send = 1 - self.sync_bit_send
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(0x04, self.sync_bit_send)
+        self.sync_bit_send = 1 - self.sync_bit_send
+
+        if self._support_ack_piggybacking:
+            ack_bit = 1 - self.sync_bit_receive  # previously received sync bit
+            ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ctrl_byte, ack_bit)
+            LOG.debug("Piggybacking ACK bit %d", ack_bit)
 
         sid = session_id.to_bytes(1, "big")
         msg_type = message_type.to_bytes(2, "big")
@@ -332,6 +368,7 @@ class ProtocolV2Channel(Channel):
                 # Received message from different channel - discard
                 continue
             if control_byte.is_ack(header.ctrl_byte):
+                LOG.debug("Received ACK %s", control_byte.get_ack_bit(header.ctrl_byte))
                 continue
             if not header.is_encrypted_transport():
                 LOG.error(
@@ -348,6 +385,7 @@ class ProtocolV2Channel(Channel):
                 "from control byte",
                 hexlify(header.ctrl_byte.to_bytes(1, "big")).decode(),
             )
+            # TODO: it is OK to piggyback THP ACKs, except the last one (#6153)
             self._send_ack_bit(bit=seq_bit)
 
             message = self._noise.decrypt(bytes(raw_payload))
