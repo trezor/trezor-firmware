@@ -37,50 +37,9 @@
 #include "memzero.h"
 #include "pb/messages.pb.h"
 #include "protob.h"
+#include "protob_common.h"
 #include "version.h"
 #include "wire/codec_v1.h"
-
-#define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
-#define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
-  { msg_send.FIELD = VALUE; }
-#define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) \
-  {                                         \
-    msg_send.has_##FIELD = true;            \
-    msg_send.FIELD = VALUE;                 \
-  }
-#define MSG_SEND_ASSIGN_STRING(FIELD, VALUE)                    \
-  {                                                             \
-    msg_send.has_##FIELD = true;                                \
-    memzero(msg_send.FIELD, sizeof(msg_send.FIELD));            \
-    strncpy(msg_send.FIELD, VALUE, sizeof(msg_send.FIELD) - 1); \
-  }
-#define MSG_SEND_ASSIGN_STRING_LEN(FIELD, VALUE, LEN)                     \
-  {                                                                       \
-    msg_send.has_##FIELD = true;                                          \
-    memzero(msg_send.FIELD, sizeof(msg_send.FIELD));                      \
-    strncpy(msg_send.FIELD, VALUE, MIN(LEN, sizeof(msg_send.FIELD) - 1)); \
-  }
-#define MSG_SEND_ASSIGN_BYTES(FIELD, VALUE, LEN)                  \
-  {                                                               \
-    msg_send.has_##FIELD = true;                                  \
-    memzero(msg_send.FIELD.bytes, sizeof(msg_send.FIELD.bytes));  \
-    memcpy(msg_send.FIELD.bytes, VALUE,                           \
-           MIN(LEN, sizeof(msg_send.FIELD.bytes)));               \
-    msg_send.FIELD.size = MIN(LEN, sizeof(msg_send.FIELD.bytes)); \
-  }
-#define MSG_SEND(TYPE)                                                       \
-  codec_send_msg(iface->wire, MessageType_MessageType_##TYPE, TYPE##_fields, \
-                 &msg_send)
-
-#define MSG_RECV_INIT(TYPE) TYPE msg_recv = TYPE##_init_default
-#define MSG_RECV_CALLBACK(FIELD, CALLBACK, ARGUMENT) \
-  {                                                  \
-    msg_recv.FIELD.funcs.decode = &CALLBACK;         \
-    msg_recv.FIELD.arg = (void *)ARGUMENT;           \
-  }
-#define MSG_RECV(TYPE)                                                        \
-  codec_recv_message(iface->wire, iface->msg_size, iface->buf, TYPE##_fields, \
-                     &msg_recv)
 
 secbool send_user_abort(protob_io_t *iface, const char *msg) {
   MSG_SEND_INIT(Failure);
