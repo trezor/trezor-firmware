@@ -79,6 +79,16 @@ jobs:
       # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
       - run: nix-shell --arg fullDeps true --run "unset LD_LIBRARY_PATH && cd python && uv run tox"
 
+  rust_test:
+    name: Rust crates test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "make -C rust check"
+
   storage_test:
     name: Storage test
     # TODO: only for changes in storage/
