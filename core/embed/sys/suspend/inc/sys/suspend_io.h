@@ -19,6 +19,10 @@
 
 #pragma once
 
+#ifdef USE_DISPLAY
+#include <io/display.h>
+#endif
+
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
@@ -40,9 +44,9 @@ void suspend_cpu(void);
  *        used to restore them after wake-up.
  */
 typedef struct {
-#ifdef USE_BACKLIGHT
-  /** Backlight level */
-  uint8_t backlight_level;
+#ifdef USE_DISPLAY
+  /** State of the display driver */
+  display_wakeup_params_t display;
 #endif
 #ifdef USE_BLE
   /** State of the ble driver */

@@ -7,6 +7,7 @@ WAKEUP_FLAG_BLE: int
 WAKEUP_FLAG_NFC: int
 WAKEUP_FLAG_RTC: int
 WAKEUP_FLAG_USB: int
+WAKEUP_FLAG_TOUCH: int
 
 # Power manager event flags:
 EVENT_POWER_STATUS_CHANGED: int
@@ -29,7 +30,7 @@ def suspend() -> int:
     """
     Suspends the device. Returns wakeup flag. Raises RuntimeError on
     failure.
-    Wakeup flags: BUTTON=1, POWER=2, BLE=4, NFC=8, RTC=16
+    Wakeup flags: BUTTON=1, POWER=2, BLE=4, NFC=8, RTC=16, USB=32, TOUCH=64
     """
 
 
