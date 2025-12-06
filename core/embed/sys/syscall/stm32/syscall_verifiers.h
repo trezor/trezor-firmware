@@ -112,6 +112,26 @@ bool unit_properties_get_sn__verified(uint8_t *device_sn,
                                       size_t *device_sn_size);
 
 // ---------------------------------------------------------------------
+
+#ifdef USE_NFC_STORAGE
+
+#include <io/nfc_storage.h>
+
+bool nfc_storage_get_events__verified(nfc_storage_event_t *events);
+
+bool nfc_storage_get_state__verified(nfc_storage_state_t *state);
+
+bool nfc_storage_device_get_mem_struct(nfc_storage_mem_struct_t *mem_struct);
+
+bool nfc_storage_device_read_data__verified(uint32_t addr, uint8_t *data,
+                                            size_t data_size);
+
+bool nfc_storage_device_write_data__verified(uint32_t addr, const uint8_t *data,
+                                             size_t data_size);
+
+#endif  // USE_NFC_STORAGE
+
+// ---------------------------------------------------------------------
 #ifdef USE_OPTIGA
 
 #include <sec/optiga.h>

@@ -56,6 +56,10 @@
 #include <io/haptic.h>
 #endif
 
+#ifdef USE_NFC_STORAGE
+#include <io/nfc_storage.h>
+#endif
+
 #ifdef USE_HW_JPEG_DECODER
 #include <gfx/jpegdec.h>
 #endif
@@ -400,6 +404,57 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint16_t duration_ms = (uint16_t)args[1];
       args[0] = haptic_play_custom(amplitude_pct, duration_ms);
     } break;
+#endif
+
+#ifdef USE_NFC
+
+    case SYSCALL_NFC_STORAGE_REGISTER_DEVICE: {
+      nfc_storage_type_t type = (nfc_storage_type_t)args[0];
+      args[0] = nfc_storage_register_device(type);
+    } break;
+
+    case SYSCALL_NFC_STORAGE_START_DISCOVERY: {
+      args[0] = nfc_storage_start_discovery();
+    } break;
+
+    case SYSCALL_NFC_STORAGE_STOP_DISCOVERY: {
+      nfc_storage_stop_discovery();
+    } break;
+
+    case SYSCALL_NFC_STORAGE_GET_EVENTS: {
+      nfc_storage_event_t *event = (nfc_storage_event_t *)args[0];
+      nfc_storage_get_events__verified(event);
+    } break;
+
+    case SYSCALL_NFC_STORAGE_GET_STATE: {
+      nfc_storage_state_t *state = (nfc_storage_state_t *)args[0];
+      nfc_storage_get_state__verified(state);
+    } break;
+
+    case SYSCALL_NFC_STORAGE_GET_MEM_STRUCT: {
+      nfc_storage_mem_struct_t *mem_struct =
+          (nfc_storage_mem_struct_t *)args[0];
+      args[0] = nfc_storage_device_get_mem_struct__verified(mem_struct);
+    } break;
+
+    case SYSCALL_NFC_STORAGE_READ_DATA: {
+      uint32_t addr = args[0];
+      uint8_t *data = (uint8_t *)args[1];
+      size_t data_size = args[2];
+      args[0] = nfc_storage_device_read_data__verified(addr, data, data_size);
+    } break;
+
+    case SYSCALL_NFC_STORAGE_WRITE_DATA: {
+      uint32_t addr = args[0];
+      const uint8_t *data = (const uint8_t *)args[1];
+      size_t data_size = args[2];
+      args[0] = nfc_storage_device_write_data__verified(addr, data, data_size);
+    } break;
+
+    case SYSCALL_NFC_STORAGE_WIPE_MEMORY: {
+      args[0] = nfc_storage_device_wipe_memory();
+    } break;
+
 #endif
 
 #ifdef USE_OPTIGA
