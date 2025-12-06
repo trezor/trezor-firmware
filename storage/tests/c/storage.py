@@ -55,11 +55,8 @@ class Storage:
         if new_ext_salt is not None and len(new_ext_salt) != EXTERNAL_SALT_LEN:
             raise ValueError
         return sectrue == self.lib.storage_change_pin(
-            oldpin.encode(),
-            len(oldpin),
             newpin.encode(),
             len(newpin),
-            old_ext_salt,
             new_ext_salt,
         )
 

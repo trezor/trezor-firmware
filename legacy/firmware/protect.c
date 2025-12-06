@@ -289,7 +289,7 @@ bool protectChangePin(bool removal) {
     }
   }
 
-  bool ret = config_changePin(old_pin, new_pin);
+  bool ret = config_changePin(new_pin);
   memzero(old_pin, sizeof(old_pin));
   memzero(new_pin, sizeof(new_pin));
   if (ret == false) {
