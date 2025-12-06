@@ -260,10 +260,13 @@
     #define platformLedToggle( port, pin )             /*!< Toggles the given LED                         */
 #endif /* platformLedToggle */                                                                            
 
-
 #ifndef platformGetSysTick                                                                                
     #define platformGetSysTick()                       /*!< Get System Tick ( 1 tick = 1 ms)              */
 #endif /* platformGetSysTick */                                                                           
+
+#ifndef platformTimerGetRemaining                                                                              
+    #define platformTimerGetRemaining( timer )         (0U) /*!< Gets the remaining time until expiration    */
+#endif /* platformTimerGetRemaining */                                                                         
 
 #ifndef platformTimerDestroy                                                                              
     #define platformTimerDestroy( timer )              /*!< Stops and released the given timer            */

@@ -115,25 +115,24 @@ void st25r3916CheckForReceivedInterrupts( void )
     irqStatus = ST25R3916_IRQ_MASK_NONE;
     RFAL_MEMSET( iregs, (int32_t)(ST25R3916_IRQ_MASK_ALL & 0xFFU), ST25R3916_INT_REGS_LEN );
     
-    
     /* In case the IRQ is Edge (not Level) triggered read IRQs until done */
-   while( platformGpioIsHigh( ST25R_INT_PORT, ST25R_INT_PIN ) )
-   {
-       st25r3916ReadMultipleRegisters( ST25R3916_REG_IRQ_MAIN, iregs, ST25R3916_INT_REGS_LEN );
+    while( platformGpioIsHigh( ST25R_INT_PORT, ST25R_INT_PIN ) )
+    {
+        st25r3916ReadMultipleRegisters( ST25R3916_REG_IRQ_MAIN, iregs, ST25R3916_INT_REGS_LEN );
        
-       irqStatus |= (uint32_t)iregs[0];
-       irqStatus |= (uint32_t)iregs[1]<<8;
-       irqStatus |= (uint32_t)iregs[2]<<16;
-       irqStatus |= (uint32_t)iregs[3]<<24;
-   }
-   
-   /* Forward all interrupts, even masked ones to application */
-   platformProtectST25RIrqStatus();
-   st25r3916interrupt.status |= irqStatus;
-   platformUnprotectST25RIrqStatus();
-   
-   /* Send an IRQ event to LED handling */
-   st25r3916ledEvtIrq( st25r3916interrupt.status );
+        irqStatus |= (uint32_t)iregs[0];
+        irqStatus |= (uint32_t)iregs[1]<<8;
+        irqStatus |= (uint32_t)iregs[2]<<16;
+        irqStatus |= (uint32_t)iregs[3]<<24;
+    }
+
+    /* Forward all interrupts, even masked ones to application */
+    platformProtectST25RIrqStatus();
+    st25r3916interrupt.status |= irqStatus;
+    platformUnprotectST25RIrqStatus();
+
+    /* Send an IRQ event to LED handling */
+    st25r3916ledEvtIrq( st25r3916interrupt.status );
 }
 
 

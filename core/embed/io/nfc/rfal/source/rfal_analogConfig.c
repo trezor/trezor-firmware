@@ -16,7 +16,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -40,7 +40,7 @@
 #include "rfal_platform.h"
 
 
-
+#define RFAL_TEST_REG         0x0080U      /*!< Test Register indicator  */
 
 /* Check whether the Default Analog settings are to be used or custom ones */
 #ifdef RFAL_ANALOG_CONFIG_CUSTOM
@@ -57,7 +57,6 @@
  */
 
 
-#define RFAL_TEST_REG         0x0080U      /*!< Test Register indicator  */    
 
 /*
  ******************************************************************************
@@ -172,7 +171,7 @@ ReturnCode rfalAnalogConfigListWriteRaw( const uint8_t *configTbl, uint16_t conf
     
 #else
     
-    // If Analog Configuration Update is to be disabled
+    /* If Analog Configuration Update is to be disabled */
     RFAL_NO_WARNING(configTbl);
     RFAL_NO_WARNING(configTblSize);
     return RFAL_ERR_REQUEST;
@@ -191,9 +190,9 @@ ReturnCode rfalAnalogConfigListWrite( uint8_t more, const rfalAnalogConfig *conf
     uint8_t configSize;
 
     if( true == gRfalAnalogConfigMgmt.ready )
-    {   /* First Update to the Configuration list. */
-        gRfalAnalogConfigMgmt.ready = false;   // invalidate the config List
-        gRfalAnalogConfigMgmt.configTblSize = 0; // Clear the config List
+    {   /* First Update to the Configuration list */
+        gRfalAnalogConfigMgmt.ready = false;      /* Invalidate the config List */
+        gRfalAnalogConfigMgmt.configTblSize = 0;  /* Clear the config List      */
     }
 
     configId = RFAL_GETU16(config->id);
@@ -235,7 +234,7 @@ ReturnCode rfalAnalogConfigListWrite( uint8_t more, const rfalAnalogConfig *conf
     
 #else
     
-    // If Analog Configuration Update is to be disabled
+    /* If Analog Configuration Update is to be disabled */
     RFAL_NO_WARNING(config);
     RFAL_NO_WARNING(more);
     return RFAL_ERR_DISABLED;
