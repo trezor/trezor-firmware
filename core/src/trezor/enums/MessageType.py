@@ -269,3 +269,7 @@ if not utils.BITCOIN_ONLY:
     NostrEventSignature = 2004
     TronGetAddress = 2200
     TronAddress = 2201
+    TronSignTx = 2202
+    TronSignature = 2203
+    TronContractRequest = 2204
+    TronTransferContract = 2205

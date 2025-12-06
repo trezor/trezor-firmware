@@ -1382,6 +1382,24 @@ if not utils.BITCOIN_ONLY:
             br_code=ButtonRequestType.SignTx,
         )
 
+    # TODO: Add Energy and Bandwidth option
+    def confirm_tron_tx(
+        amount: str,
+        fee: str,
+    ) -> Awaitable[None]:
+        fee_title = TR.send__maximum_fee
+
+        return raise_if_not_confirmed(
+            trezorui_api.confirm_summary(
+                amount=amount,
+                amount_label=TR.send__total_amount,
+                fee=fee,
+                fee_label=TR.send__maximum_fee,
+            ),
+            br_name="confirm_tron_tx",
+            br_code=ButtonRequestType.SignTx,
+        )
+
     async def confirm_ethereum_tx(
         recipient: str | None,
         total_amount: str,
