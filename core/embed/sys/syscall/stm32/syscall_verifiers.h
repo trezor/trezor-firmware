@@ -54,7 +54,24 @@ ssize_t dbg_console_read__verified(void *buffer, size_t buffer_size);
 
 void dbg_console_write__verified(const void *data, size_t data_size);
 
-#endif
+#endif  // USE_DBG_CONSOLE
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_IPC
+
+#include <sys/ipc.h>
+
+bool ipc_register__verified(systask_id_t origin, void *buffer, size_t size);
+
+bool ipc_try_receive__verified(ipc_message_t *msg);
+
+void ipc_message_free__verified(ipc_message_t *msg);
+
+bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
+                        size_t data_size);
+
+#endif  // USE_IPC
 
 // ---------------------------------------------------------------------
 #include <sys/bootutils.h>
@@ -304,6 +321,23 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 
 bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
                                 uint16_t *size);
+
+#endif
+
+#ifdef USE_APP_LOADING
+
+#include <util/app_loader.h>
+
+bool app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id);
+
+bool app_task_get_pminfo__verified(systask_id_t task_id,
+                                   systask_postmortem_t *pminfo);
+
+app_cache_image_t *app_cache_create_image__verified(const app_hash_t *hash,
+                                                    size_t image_size);
+
+bool app_cache_write_image__verified(app_cache_image_t *image, uintptr_t offset,
+                                     const void *data, size_t data_size);
 
 #endif
 

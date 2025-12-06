@@ -18,7 +18,6 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 
 #include <sys/dbg_console.h>
 
@@ -27,6 +26,7 @@ void dbg_console_init(void) {}
 ssize_t dbg_console_read(void *buffer, size_t buffer_size) { return 0; }
 
 void dbg_console_write(const void *data, size_t data_size) {
-  int result = write(STDERR_FILENO, data, data_size);
+  int result = fwrite(data, 1, data_size, stdout);
+  fflush(stdout);
   (void)result;
 }

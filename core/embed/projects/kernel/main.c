@@ -38,6 +38,11 @@
 #include <util/rsod.h>
 #include <util/unit_properties.h>
 
+#ifdef USE_APP_LOADING
+#include <util/app_cache.h>
+#include <util/app_loader.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -189,6 +194,11 @@ void drivers_init() {
 #ifdef USE_USB
   usb_configure(NULL);
 #endif
+
+#ifdef USE_APP_LOADING
+  app_cache_init();
+  app_loader_init();
+#endif
 }
 
 // Kernel task main loop
@@ -222,16 +232,15 @@ static void kernel_loop(applet_t *coreapp) {
 static void show_rsod(const systask_postmortem_t *pminfo) {
 #ifdef RSOD_IN_COREAPP
   applet_t coreapp;
-  coreapp_init(&coreapp);
 
   // Reset and run the coreapp in RSOD mode
-  if (coreapp_reset(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
+  if (coreapp_init(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
     // Run the applet & wait for it to finish
     applet_run(&coreapp);
     // Loop until the coreapp is terminated
     kernel_loop(&coreapp);
     // Release the coreapp resources
-    applet_stop(&coreapp);
+    applet_unload(&coreapp);
 
     if (coreapp.task.pminfo.reason == TASK_TERM_REASON_EXIT) {
       // RSOD was shown successfully
@@ -285,10 +294,9 @@ int main(void) {
 
   // Initialize coreapp task
   applet_t coreapp;
-  coreapp_init(&coreapp);
 
   // Reset and run the coreapp
-  if (!coreapp_reset(&coreapp, 0, NULL, 0)) {
+  if (!coreapp_init(&coreapp, 0, NULL, 0)) {
     error_shutdown("Cannot start coreapp");
   }
 
@@ -298,7 +306,7 @@ int main(void) {
   // Loop until the coreapp is terminated
   kernel_loop(&coreapp);
   // Release the coreapp resources
-  applet_stop(&coreapp);
+  applet_unload(&coreapp);
 
 #ifndef USE_BOOTARGS_RSOD
   // Coreapp crashed, show RSOD

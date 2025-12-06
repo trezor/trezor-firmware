@@ -249,6 +249,8 @@ USE_POWER_MANAGER: bool
 """Whether the hardware has a battery."""
 USE_NRF: bool
 """Whether the hardware has a nRF chip."""
+USE_APP_LOADING: bool
+"""Whether the firmware supports loading 3rd-party applications."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str
