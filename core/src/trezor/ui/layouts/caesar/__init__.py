@@ -1387,8 +1387,6 @@ if not utils.BITCOIN_ONLY:
         amount: str,
         fee: str,
     ) -> Awaitable[None]:
-        fee_title = TR.send__maximum_fee
-
         return raise_if_not_confirmed(
             trezorui_api.confirm_summary(
                 amount=amount,

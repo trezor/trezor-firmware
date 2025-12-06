@@ -35,7 +35,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
         await confirm_blob(
             "confirm_tx_note",
             TR.words__note,
-            msg.data.decode("utf-8", "replace"),
+            bytes(msg.data).decode("utf-8", "replace"),
             chunkify=False,
         )
 
