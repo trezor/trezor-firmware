@@ -218,6 +218,12 @@ class Channel:
         if __debug__:
             self._log("Was any channel replaced? ", str(was_any_replaced))
 
+    def get_host_static_public_key(self) -> bytes:
+        key = self.channel_cache.get(CHANNEL_HOST_STATIC_PUBKEY)
+        if key is None:
+            raise Exception("Host static public key is not set in the channel cache.")
+        return key
+
     def is_channel_to_replace(self) -> bool:
         return is_there_a_channel_to_replace(
             new_channel=self.channel_cache,
