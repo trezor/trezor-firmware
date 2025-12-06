@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import EvoluGetNode, EvoluNode
 
-_EVOLU_KEY_PATH_PREFIX = [b"TREZOR", b"Evolu"]
+_EVOLU_KEY_PATH_PREFIX = [b"TREZOR", b"Evolu Index"]
 
 
 async def get_node(msg: EvoluGetNode) -> EvoluNode:
@@ -32,20 +32,22 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
         raise NotInitialized("Device is not initialized")
 
     if not check_delegated_identity_proof(
-        bytes(msg.proof_of_delegated_identity), header=b"EvoluGetNode"
+        bytes(msg.proof_of_delegated_identity),
+        msg.delegated_identity_rotation_index,
+        header=b"EvoluGetNode",
     ):
         raise ValueError("Invalid proof")
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite
 
-    return EvoluNode(data=await derive_evolu_node())
+    return EvoluNode(data=await derive_evolu_node(msg.node_rotation_index))
 
 
-async def derive_evolu_node() -> bytes:
+async def derive_evolu_node(index: int) -> bytes:
     from apps.common.seed import Slip21Node, get_seed
 
     seed = await get_seed()
     node = Slip21Node(seed)
-    node.derive_path(_EVOLU_KEY_PATH_PREFIX)
+    node.derive_path(_EVOLU_KEY_PATH_PREFIX + [str(index).encode()])
 
     return node.data

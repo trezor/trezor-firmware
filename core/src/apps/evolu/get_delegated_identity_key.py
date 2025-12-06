@@ -37,7 +37,7 @@ async def get_delegated_identity_key(
     else:
         await confirm_no_thp()
 
-    private_key = delegated_identity()
+    private_key = delegated_identity(msg.rotation_index)
 
     return EvoluDelegatedIdentityKey(private_key=private_key)
 

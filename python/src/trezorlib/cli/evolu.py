@@ -34,14 +34,23 @@ def cli() -> None:
 
 @cli.command()
 @click.argument("proof", type=str)
+@click.option("--node_index", "-n", type=int, default=0)
+@click.option("--delegated_identity_rotation_index", "-d", type=int, default=0)
 @with_session
 def get_node(
     session: Session,
     proof: str,
+    node_index: int,
+    delegated_identity_rotation_index: int,
 ) -> str:
     """Return the SLIP-21 node for Evolu."""
     proof_bytes = bytes.fromhex(proof)
-    return evolu.get_node(session, proof=proof_bytes).hex()
+    return evolu.get_node(
+        session,
+        proof=proof_bytes,
+        node_rotation_index=node_index,
+        delegated_identity_rotation_index=delegated_identity_rotation_index,
+    ).hex()
 
 
 @cli.command()
@@ -71,12 +80,14 @@ def sign_registration_request(
 
 @click.option("--credential", "-c", type=str)
 @click.option("--pubkey", "-p", type=str)
+@click.option("--rotation_index", "-i", type=int, default=0)
 @cli.command()
 @with_session
 def get_delegated_identity_key(
     session: Session,
     credential: Optional[str] = None,
     pubkey: Optional[str] = None,
+    rotation_index: int = 0,
 ) -> str:
     """
     Request the delegated identity key of this device.
@@ -89,6 +100,7 @@ def get_delegated_identity_key(
 
     return evolu.get_delegated_identity_key(
         session=session,
+        rotation_index=rotation_index,
         thp_credential=thp_credential,
         host_static_public_key=host_static_public_key,
     ).hex()

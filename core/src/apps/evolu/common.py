@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 def check_delegated_identity_proof(
     provided_proof: AnyBytes,
+    delegated_identity_rotation_index: int,
     header: AnyBytes,
     arguments: Sequence[AnyBytes] | None = None,
 ) -> bool:
@@ -18,7 +19,7 @@ def check_delegated_identity_proof(
 
     from apps.common.writers import write_compact_size
 
-    private_key = delegated_identity()
+    private_key = delegated_identity(delegated_identity_rotation_index)
     public_key = get_public_key_from_private_key(private_key)
 
     hash_writer = HashWriter(sha256())

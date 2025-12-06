@@ -24,9 +24,18 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
-def get_node(session: Session, proof: bytes) -> bytes:
+def get_node(
+    session: Session,
+    proof: bytes,
+    node_rotation_index: int,
+    delegated_identity_rotation_index: int,
+) -> bytes:
     return session.call(
-        messages.EvoluGetNode(proof_of_delegated_identity=proof),
+        messages.EvoluGetNode(
+            proof_of_delegated_identity=proof,
+            node_rotation_index=node_rotation_index,
+            delegated_identity_rotation_index=delegated_identity_rotation_index,
+        ),
         expect=messages.EvoluNode,
     ).data
 
@@ -46,6 +55,7 @@ def sign_registration_request(
 
 def get_delegated_identity_key(
     session: Session,
+    rotation_index: int,
     thp_credential: Optional[bytes] = None,
     host_static_public_key: Optional[bytes] = None,
 ) -> bytes:
@@ -54,6 +64,7 @@ def get_delegated_identity_key(
         messages.EvoluGetDelegatedIdentityKey(
             thp_credential=thp_credential,
             host_static_public_key=host_static_public_key,
+            rotation_index=rotation_index,
         ),
         expect=messages.EvoluDelegatedIdentityKey,
     ).private_key

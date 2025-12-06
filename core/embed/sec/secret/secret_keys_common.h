@@ -43,9 +43,11 @@
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
+                              uint16_t rotation_index,
                               uint8_t dest[SHA256_DIGEST_LENGTH]);
 
 secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
+                                    uint16_t rotation_index,
                                     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #endif  // SECURE_MODE
