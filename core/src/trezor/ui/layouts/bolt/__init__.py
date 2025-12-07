@@ -783,6 +783,7 @@ def confirm_address(
         br_code,
         subtitle=subtitle,
         verb=(verb or TR.buttons__confirm),
+        chunkify=chunkify,
     )
 
 
