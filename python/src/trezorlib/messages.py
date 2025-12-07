@@ -8643,16 +8643,16 @@ class TronContractRequest(protobuf.MessageType):
 class TronTransferContract(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2205
     FIELDS = {
-        1: protobuf.Field("owner_address", "string", repeated=False, required=True),
-        2: protobuf.Field("to_address", "string", repeated=False, required=True),
-        3: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("to_address", "bytes", repeated=False, required=True),
+        3: protobuf.Field("amount", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        owner_address: "str",
-        to_address: "str",
+        owner_address: "bytes",
+        to_address: "bytes",
         amount: "int",
     ) -> None:
         self.owner_address = owner_address
@@ -8721,26 +8721,6 @@ class TronRawContract(protobuf.MessageType):
     ) -> None:
         self.type = type
         self.parameter = parameter
-
-
-class TronRawTransferContract(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
-        2: protobuf.Field("to_address", "bytes", repeated=False, required=True),
-        3: protobuf.Field("amount", "uint64", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        owner_address: "bytes",
-        to_address: "bytes",
-        amount: "int",
-    ) -> None:
-        self.owner_address = owner_address
-        self.to_address = to_address
-        self.amount = amount
 
 
 class TronRawParameter(protobuf.MessageType):

@@ -52,12 +52,12 @@ message TronContractRequest {
  * Request: ask device to confirm this operation type
  * @next TronSignature
  */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L32-L36
 message TronTransferContract {
     // https://developers.tron.network/docs/tron-contracttype#2-transfercontract
-    // TODO: Use bytes. To be reused in TronRawTransaction
-    required string owner_address = 1;  // Sender's address, base58_checked encoding
-    required string to_address = 2;     // Recipient's address, base58_checked encoding
-    required sint64 amount = 3;         // Transfer amount (in SUN)
+    required bytes owner_address = 1;  // Sender's address, base58_checked encoding
+    required bytes to_address = 2;     // Recipient's address, base58_checked encoding
+    required uint64 amount = 3;        // Transfer amount (in SUN)
 }
 
 /**
@@ -86,12 +86,6 @@ message TronRawTransaction {
 
     // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L337-L385
     message TronRawContract {
-        // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L32-L36
-        message TronRawTransferContract {
-            required bytes owner_address = 1;
-            required bytes to_address = 2;
-            required uint64 amount = 3;
-        }
 
         message TronRawParameter {
             required string type_url = 1; // e.g., "type.googleapis.com/protocol.TransferContract"

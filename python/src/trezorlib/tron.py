@@ -1,7 +1,7 @@
 import io
 from typing import TYPE_CHECKING, Any, Tuple
 
-from . import messages, tools
+from . import messages
 from .protobuf import load_message
 
 if TYPE_CHECKING:
@@ -17,7 +17,6 @@ def from_raw_data(
     raw_data: bytes,
 ) -> Tuple[messages.TronSignTx, "TronMessageType"]:
     raw_tx = load_message(io.BytesIO(raw_data), messages.TronRawTransaction)
-
     tx = messages.TronSignTx(
         ref_block_bytes=raw_tx.ref_block_bytes,
         ref_block_hash=raw_tx.ref_block_hash,
@@ -34,11 +33,11 @@ def from_raw_data(
     if contract_type == messages.TronRawContractType.TransferContract:
         raw_contract = load_message(
             io.BytesIO(raw_tx.contract[0].parameter.value),
-            messages.TronRawTransferContract,
+            messages.TronTransferContract,
         )
         contract = messages.TronTransferContract(
-            to_address=_encode_address(raw_contract.to_address),
-            owner_address=_encode_address(raw_contract.owner_address),
+            to_address=raw_contract.to_address,
+            owner_address=raw_contract.owner_address,
             amount=raw_contract.amount,
         )
     else:
@@ -47,8 +46,8 @@ def from_raw_data(
     return tx, contract
 
 
-def _encode_address(address: bytes) -> str:
-    return tools.b58check_encode(address)
+# def _encode_address(address: bytes) -> str:
+#     return tools.b58check_encode(address)
 
 
 # ====== Client functions ====== #

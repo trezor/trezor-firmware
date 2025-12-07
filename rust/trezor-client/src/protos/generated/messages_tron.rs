@@ -956,11 +956,11 @@ impl ::protobuf::reflect::ProtobufValue for TronContractRequest {
 pub struct TronTransferContract {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTransferContract.owner_address)
-    pub owner_address: ::std::option::Option<::std::string::String>,
+    pub owner_address: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTransferContract.to_address)
-    pub to_address: ::std::option::Option<::std::string::String>,
+    pub to_address: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTransferContract.amount)
-    pub amount: ::std::option::Option<i64>,
+    pub amount: ::std::option::Option<u64>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.tron.TronTransferContract.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -977,12 +977,12 @@ impl TronTransferContract {
         ::std::default::Default::default()
     }
 
-    // required string owner_address = 1;
+    // required bytes owner_address = 1;
 
-    pub fn owner_address(&self) -> &str {
+    pub fn owner_address(&self) -> &[u8] {
         match self.owner_address.as_ref() {
             Some(v) => v,
-            None => "",
+            None => &[],
         }
     }
 
@@ -995,30 +995,30 @@ impl TronTransferContract {
     }
 
     // Param is passed by value, moved
-    pub fn set_owner_address(&mut self, v: ::std::string::String) {
+    pub fn set_owner_address(&mut self, v: ::std::vec::Vec<u8>) {
         self.owner_address = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_owner_address(&mut self) -> &mut ::std::string::String {
+    pub fn mut_owner_address(&mut self) -> &mut ::std::vec::Vec<u8> {
         if self.owner_address.is_none() {
-            self.owner_address = ::std::option::Option::Some(::std::string::String::new());
+            self.owner_address = ::std::option::Option::Some(::std::vec::Vec::new());
         }
         self.owner_address.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_owner_address(&mut self) -> ::std::string::String {
-        self.owner_address.take().unwrap_or_else(|| ::std::string::String::new())
+    pub fn take_owner_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.owner_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // required string to_address = 2;
+    // required bytes to_address = 2;
 
-    pub fn to_address(&self) -> &str {
+    pub fn to_address(&self) -> &[u8] {
         match self.to_address.as_ref() {
             Some(v) => v,
-            None => "",
+            None => &[],
         }
     }
 
@@ -1031,27 +1031,27 @@ impl TronTransferContract {
     }
 
     // Param is passed by value, moved
-    pub fn set_to_address(&mut self, v: ::std::string::String) {
+    pub fn set_to_address(&mut self, v: ::std::vec::Vec<u8>) {
         self.to_address = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_to_address(&mut self) -> &mut ::std::string::String {
+    pub fn mut_to_address(&mut self) -> &mut ::std::vec::Vec<u8> {
         if self.to_address.is_none() {
-            self.to_address = ::std::option::Option::Some(::std::string::String::new());
+            self.to_address = ::std::option::Option::Some(::std::vec::Vec::new());
         }
         self.to_address.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_to_address(&mut self) -> ::std::string::String {
-        self.to_address.take().unwrap_or_else(|| ::std::string::String::new())
+    pub fn take_to_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.to_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // required sint64 amount = 3;
+    // required uint64 amount = 3;
 
-    pub fn amount(&self) -> i64 {
+    pub fn amount(&self) -> u64 {
         self.amount.unwrap_or(0)
     }
 
@@ -1064,7 +1064,7 @@ impl TronTransferContract {
     }
 
     // Param is passed by value, moved
-    pub fn set_amount(&mut self, v: i64) {
+    pub fn set_amount(&mut self, v: u64) {
         self.amount = ::std::option::Option::Some(v);
     }
 
@@ -1114,13 +1114,13 @@ impl ::protobuf::Message for TronTransferContract {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.owner_address = ::std::option::Option::Some(is.read_string()?);
+                    self.owner_address = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 18 => {
-                    self.to_address = ::std::option::Option::Some(is.read_string()?);
+                    self.to_address = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 24 => {
-                    self.amount = ::std::option::Option::Some(is.read_sint64()?);
+                    self.amount = ::std::option::Option::Some(is.read_uint64()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1135,13 +1135,13 @@ impl ::protobuf::Message for TronTransferContract {
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
         if let Some(v) = self.owner_address.as_ref() {
-            my_size += ::protobuf::rt::string_size(1, &v);
+            my_size += ::protobuf::rt::bytes_size(1, &v);
         }
         if let Some(v) = self.to_address.as_ref() {
-            my_size += ::protobuf::rt::string_size(2, &v);
+            my_size += ::protobuf::rt::bytes_size(2, &v);
         }
         if let Some(v) = self.amount {
-            my_size += ::protobuf::rt::sint64_size(3, v);
+            my_size += ::protobuf::rt::uint64_size(3, v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -1150,13 +1150,13 @@ impl ::protobuf::Message for TronTransferContract {
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.owner_address.as_ref() {
-            os.write_string(1, v)?;
+            os.write_bytes(1, v)?;
         }
         if let Some(v) = self.to_address.as_ref() {
-            os.write_string(2, v)?;
+            os.write_bytes(2, v)?;
         }
         if let Some(v) = self.amount {
-            os.write_sint64(3, v)?;
+            os.write_uint64(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1961,264 +1961,6 @@ pub mod tron_raw_transaction {
 
     /// Nested message and enums of message `TronRawContract`
     pub mod tron_raw_contract {
-        // @@protoc_insertion_point(message:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawTransferContract)
-        #[derive(PartialEq,Clone,Default,Debug)]
-        pub struct TronRawTransferContract {
-            // message fields
-            // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawTransferContract.owner_address)
-            pub owner_address: ::std::option::Option<::std::vec::Vec<u8>>,
-            // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawTransferContract.to_address)
-            pub to_address: ::std::option::Option<::std::vec::Vec<u8>>,
-            // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawTransferContract.amount)
-            pub amount: ::std::option::Option<u64>,
-            // special fields
-            // @@protoc_insertion_point(special_field:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawTransferContract.special_fields)
-            pub special_fields: ::protobuf::SpecialFields,
-        }
-
-        impl<'a> ::std::default::Default for &'a TronRawTransferContract {
-            fn default() -> &'a TronRawTransferContract {
-                <TronRawTransferContract as ::protobuf::Message>::default_instance()
-            }
-        }
-
-        impl TronRawTransferContract {
-            pub fn new() -> TronRawTransferContract {
-                ::std::default::Default::default()
-            }
-
-            // required bytes owner_address = 1;
-
-            pub fn owner_address(&self) -> &[u8] {
-                match self.owner_address.as_ref() {
-                    Some(v) => v,
-                    None => &[],
-                }
-            }
-
-            pub fn clear_owner_address(&mut self) {
-                self.owner_address = ::std::option::Option::None;
-            }
-
-            pub fn has_owner_address(&self) -> bool {
-                self.owner_address.is_some()
-            }
-
-            // Param is passed by value, moved
-            pub fn set_owner_address(&mut self, v: ::std::vec::Vec<u8>) {
-                self.owner_address = ::std::option::Option::Some(v);
-            }
-
-            // Mutable pointer to the field.
-            // If field is not initialized, it is initialized with default value first.
-            pub fn mut_owner_address(&mut self) -> &mut ::std::vec::Vec<u8> {
-                if self.owner_address.is_none() {
-                    self.owner_address = ::std::option::Option::Some(::std::vec::Vec::new());
-                }
-                self.owner_address.as_mut().unwrap()
-            }
-
-            // Take field
-            pub fn take_owner_address(&mut self) -> ::std::vec::Vec<u8> {
-                self.owner_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
-            }
-
-            // required bytes to_address = 2;
-
-            pub fn to_address(&self) -> &[u8] {
-                match self.to_address.as_ref() {
-                    Some(v) => v,
-                    None => &[],
-                }
-            }
-
-            pub fn clear_to_address(&mut self) {
-                self.to_address = ::std::option::Option::None;
-            }
-
-            pub fn has_to_address(&self) -> bool {
-                self.to_address.is_some()
-            }
-
-            // Param is passed by value, moved
-            pub fn set_to_address(&mut self, v: ::std::vec::Vec<u8>) {
-                self.to_address = ::std::option::Option::Some(v);
-            }
-
-            // Mutable pointer to the field.
-            // If field is not initialized, it is initialized with default value first.
-            pub fn mut_to_address(&mut self) -> &mut ::std::vec::Vec<u8> {
-                if self.to_address.is_none() {
-                    self.to_address = ::std::option::Option::Some(::std::vec::Vec::new());
-                }
-                self.to_address.as_mut().unwrap()
-            }
-
-            // Take field
-            pub fn take_to_address(&mut self) -> ::std::vec::Vec<u8> {
-                self.to_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
-            }
-
-            // required uint64 amount = 3;
-
-            pub fn amount(&self) -> u64 {
-                self.amount.unwrap_or(0)
-            }
-
-            pub fn clear_amount(&mut self) {
-                self.amount = ::std::option::Option::None;
-            }
-
-            pub fn has_amount(&self) -> bool {
-                self.amount.is_some()
-            }
-
-            // Param is passed by value, moved
-            pub fn set_amount(&mut self, v: u64) {
-                self.amount = ::std::option::Option::Some(v);
-            }
-
-            pub(in super::super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-                let mut fields = ::std::vec::Vec::with_capacity(3);
-                let mut oneofs = ::std::vec::Vec::with_capacity(0);
-                fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-                    "owner_address",
-                    |m: &TronRawTransferContract| { &m.owner_address },
-                    |m: &mut TronRawTransferContract| { &mut m.owner_address },
-                ));
-                fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-                    "to_address",
-                    |m: &TronRawTransferContract| { &m.to_address },
-                    |m: &mut TronRawTransferContract| { &mut m.to_address },
-                ));
-                fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-                    "amount",
-                    |m: &TronRawTransferContract| { &m.amount },
-                    |m: &mut TronRawTransferContract| { &mut m.amount },
-                ));
-                ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TronRawTransferContract>(
-                    "TronRawTransaction.TronRawContract.TronRawTransferContract",
-                    fields,
-                    oneofs,
-                )
-            }
-        }
-
-        impl ::protobuf::Message for TronRawTransferContract {
-            const NAME: &'static str = "TronRawTransferContract";
-
-            fn is_initialized(&self) -> bool {
-                if self.owner_address.is_none() {
-                    return false;
-                }
-                if self.to_address.is_none() {
-                    return false;
-                }
-                if self.amount.is_none() {
-                    return false;
-                }
-                true
-            }
-
-            fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
-                while let Some(tag) = is.read_raw_tag_or_eof()? {
-                    match tag {
-                        10 => {
-                            self.owner_address = ::std::option::Option::Some(is.read_bytes()?);
-                        },
-                        18 => {
-                            self.to_address = ::std::option::Option::Some(is.read_bytes()?);
-                        },
-                        24 => {
-                            self.amount = ::std::option::Option::Some(is.read_uint64()?);
-                        },
-                        tag => {
-                            ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
-                        },
-                    };
-                }
-                ::std::result::Result::Ok(())
-            }
-
-            // Compute sizes of nested messages
-            #[allow(unused_variables)]
-            fn compute_size(&self) -> u64 {
-                let mut my_size = 0;
-                if let Some(v) = self.owner_address.as_ref() {
-                    my_size += ::protobuf::rt::bytes_size(1, &v);
-                }
-                if let Some(v) = self.to_address.as_ref() {
-                    my_size += ::protobuf::rt::bytes_size(2, &v);
-                }
-                if let Some(v) = self.amount {
-                    my_size += ::protobuf::rt::uint64_size(3, v);
-                }
-                my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
-                self.special_fields.cached_size().set(my_size as u32);
-                my_size
-            }
-
-            fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-                if let Some(v) = self.owner_address.as_ref() {
-                    os.write_bytes(1, v)?;
-                }
-                if let Some(v) = self.to_address.as_ref() {
-                    os.write_bytes(2, v)?;
-                }
-                if let Some(v) = self.amount {
-                    os.write_uint64(3, v)?;
-                }
-                os.write_unknown_fields(self.special_fields.unknown_fields())?;
-                ::std::result::Result::Ok(())
-            }
-
-            fn special_fields(&self) -> &::protobuf::SpecialFields {
-                &self.special_fields
-            }
-
-            fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
-                &mut self.special_fields
-            }
-
-            fn new() -> TronRawTransferContract {
-                TronRawTransferContract::new()
-            }
-
-            fn clear(&mut self) {
-                self.owner_address = ::std::option::Option::None;
-                self.to_address = ::std::option::Option::None;
-                self.amount = ::std::option::Option::None;
-                self.special_fields.clear();
-            }
-
-            fn default_instance() -> &'static TronRawTransferContract {
-                static instance: TronRawTransferContract = TronRawTransferContract {
-                    owner_address: ::std::option::Option::None,
-                    to_address: ::std::option::Option::None,
-                    amount: ::std::option::Option::None,
-                    special_fields: ::protobuf::SpecialFields::new(),
-                };
-                &instance
-            }
-        }
-
-        impl ::protobuf::MessageFull for TronRawTransferContract {
-            fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
-                static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-                descriptor.get(|| super::super::file_descriptor().message_by_package_relative_name("TronRawTransaction.TronRawContract.TronRawTransferContract").unwrap()).clone()
-            }
-        }
-
-        impl ::std::fmt::Display for TronRawTransferContract {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-                ::protobuf::text_format::fmt(self, f)
-            }
-        }
-
-        impl ::protobuf::reflect::ProtobufValue for TronRawTransferContract {
-            type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
-        }
-
         // @@protoc_insertion_point(message:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawParameter)
         #[derive(PartialEq,Clone,Default,Debug)]
         pub struct TronRawParameter {
@@ -2512,27 +2254,24 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x05\x20\x01(\x0cR\x04data\x12\x1c\n\ttimestamp\x18\x06\x20\x02(\x12\
     R\ttimestamp\x12\x1b\n\tfee_limit\x18\x07\x20\x01(\x12R\x08feeLimit\"\
     \x15\n\x13TronContractRequest\"r\n\x14TronTransferContract\x12#\n\rowner\
-    _address\x18\x01\x20\x02(\tR\x0cownerAddress\x12\x1d\n\nto_address\x18\
-    \x02\x20\x02(\tR\ttoAddress\x12\x16\n\x06amount\x18\x03\x20\x02(\x12R\
+    _address\x18\x01\x20\x02(\x0cR\x0cownerAddress\x12\x1d\n\nto_address\x18\
+    \x02\x20\x02(\x0cR\ttoAddress\x12\x16\n\x06amount\x18\x03\x20\x02(\x04R\
     \x06amount\"-\n\rTronSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0c\
-    R\tsignature\"\xf8\x05\n\x12TronRawTransaction\x12&\n\x0fref_block_bytes\
+    R\tsignature\"\x81\x05\n\x12TronRawTransaction\x12&\n\x0fref_block_bytes\
     \x18\x01\x20\x02(\x0cR\rrefBlockBytes\x12$\n\x0eref_block_hash\x18\x04\
     \x20\x02(\x0cR\x0crefBlockHash\x12\x1e\n\nexpiration\x18\x08\x20\x02(\
     \x04R\nexpiration\x12\x12\n\x04data\x18\n\x20\x01(\x0cR\x04data\x12W\n\
     \x08contract\x18\x0b\x20\x03(\x0b2;.hw.trezor.messages.tron.TronRawTrans\
     action.TronRawContractR\x08contract\x12\x1c\n\ttimestamp\x18\x0e\x20\x02\
     (\x04R\ttimestamp\x12\x1b\n\tfee_limit\x18\x12\x20\x01(\x04R\x08feeLimit\
-    \x1a\xcb\x03\n\x0fTronRawContract\x12c\n\x04type\x18\x01\x20\x02(\x0e2O.\
+    \x1a\xd4\x02\n\x0fTronRawContract\x12c\n\x04type\x18\x01\x20\x02(\x0e2O.\
     hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContra\
     ctTypeR\x04type\x12j\n\tparameter\x18\x02\x20\x02(\x0b2L.hw.trezor.messa\
     ges.tron.TronRawTransaction.TronRawContract.TronRawParameterR\tparameter\
-    \x1au\n\x17TronRawTransferContract\x12#\n\rowner_address\x18\x01\x20\x02\
-    (\x0cR\x0cownerAddress\x12\x1d\n\nto_address\x18\x02\x20\x02(\x0cR\ttoAd\
-    dress\x12\x16\n\x06amount\x18\x03\x20\x02(\x04R\x06amount\x1aC\n\x10Tron\
-    RawParameter\x12\x19\n\x08type_url\x18\x01\x20\x02(\tR\x07typeUrl\x12\
-    \x14\n\x05value\x18\x02\x20\x02(\x0cR\x05value\"+\n\x13TronRawContractTy\
-    pe\x12\x14\n\x10TransferContract\x10\x01B8\n#com.satoshilabs.trezor.lib.\
-    protobufB\x11TrezorMessageTron\
+    \x1aC\n\x10TronRawParameter\x12\x19\n\x08type_url\x18\x01\x20\x02(\tR\
+    \x07typeUrl\x12\x14\n\x05value\x18\x02\x20\x02(\x0cR\x05value\"+\n\x13Tr\
+    onRawContractType\x12\x14\n\x10TransferContract\x10\x01B8\n#com.satoshil\
+    abs.trezor.lib.protobufB\x11TrezorMessageTron\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -2550,7 +2289,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(10);
+            let mut messages = ::std::vec::Vec::with_capacity(9);
             messages.push(TronGetAddress::generated_message_descriptor_data());
             messages.push(TronAddress::generated_message_descriptor_data());
             messages.push(TronSignTx::generated_message_descriptor_data());
@@ -2559,7 +2298,6 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(TronSignature::generated_message_descriptor_data());
             messages.push(TronRawTransaction::generated_message_descriptor_data());
             messages.push(tron_raw_transaction::TronRawContract::generated_message_descriptor_data());
-            messages.push(tron_raw_transaction::tron_raw_contract::TronRawTransferContract::generated_message_descriptor_data());
             messages.push(tron_raw_transaction::tron_raw_contract::TronRawParameter::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(1);
             enums.push(tron_raw_transaction::tron_raw_contract::TronRawContractType::generated_enum_descriptor_data());

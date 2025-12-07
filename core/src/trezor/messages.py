@@ -6845,15 +6845,15 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class TronTransferContract(protobuf.MessageType):
-        owner_address: "str"
-        to_address: "str"
+        owner_address: "AnyBytes"
+        to_address: "AnyBytes"
         amount: "int"
 
         def __init__(
             self,
             *,
-            owner_address: "str",
-            to_address: "str",
+            owner_address: "AnyBytes",
+            to_address: "AnyBytes",
             amount: "int",
         ) -> None:
             pass
@@ -6916,24 +6916,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TronRawContract"]:
-            return isinstance(msg, cls)
-
-    class TronRawTransferContract(protobuf.MessageType):
-        owner_address: "AnyBytes"
-        to_address: "AnyBytes"
-        amount: "int"
-
-        def __init__(
-            self,
-            *,
-            owner_address: "AnyBytes",
-            to_address: "AnyBytes",
-            amount: "int",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TronRawTransferContract"]:
             return isinstance(msg, cls)
 
     class TronRawParameter(protobuf.MessageType):

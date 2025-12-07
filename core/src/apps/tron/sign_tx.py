@@ -6,7 +6,7 @@ from trezor.wire import DataError
 
 from apps.common.keychain import with_slip44_keychain
 
-from . import CURVE, PATTERN, SLIP44_ID, consts, converter, layout
+from . import CURVE, PATTERN, SLIP44_ID, consts, layout
 
 if TYPE_CHECKING:
     from trezor.messages import TronRawContract, TronSignature, TronSignTx
@@ -68,19 +68,17 @@ async def process_contract(
     contract: consts.TronMessageType,
 ) -> tuple[TronRawContract, str]:
     from trezor.enums import TronRawContractType
-
-    total_send = parameter = contract_type = None
+    total_send = contract_type = None
 
     if messages.TronTransferContract.is_type_of(contract):
         contract_type = TronRawContractType.TransferContract
         await layout.confirm_transfer_contract(contract)
-        parameter = converter.convert_transfer_contract(contract)
         total_send = layout.format_trx_amount(contract.amount)
     else:
         # TODO: Allow unkown contract blind signing.
         raise DataError("Tron: contract type unknown")
 
-    serialized_parameter = dump_message_buffer(parameter)
+    serialized_parameter = dump_message_buffer(contract)
     raw_contract = messages.TronRawContract(
         type=contract_type,
         parameter=messages.TronRawParameter(
