@@ -1513,7 +1513,7 @@
     "recovery__dry_run_bip39_valid_mismatch": "La c. seg. de la billetera indicada es válida pero no coincide con la de este dispositivo.",
     "recovery__dry_run_invalid_backup_entered": "La c. seg. de la billetera es inválida",
     "recovery__dry_run_slip39_valid_all_shares": "Todos los fragmentos son válidos y pertenecen a la c. seg. del dispositivo",
-    "recovery__dry_run_slip39_valid_match": "Los fragmentos de recuperación ingresados son válidos pero no coinciden con lo que se encuentra en este dispositivo.",
+    "recovery__dry_run_slip39_valid_match": "Los fragmentos de recuperación ingresados son válidos y coinciden con lo que se encuentra en este dispositivo.",
     "recovery__dry_run_slip39_valid_mismatch": {
       "Bolt": "Los fragmentos de recuperación ingresados son válidos pero no coinciden con lo que se encuentra en este dispositivo.",
       "Caesar": "Los fragmentos de recuperación ingresados son válidos pero no coinciden con lo que se encuentra en este dispositivo.",
