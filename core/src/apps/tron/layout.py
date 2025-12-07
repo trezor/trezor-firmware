@@ -15,9 +15,7 @@ def format_trx_amount(amount: int) -> str:
 
 
 async def confirm_transfer_contract(msg: TronTransferContract) -> None:
-    to_address = base58.encode(msg.to_address)
-    if to_address[0] == "T":
-        raise ValueError("Tron: TransferContract: Invalid 'to_address'")
+    to_address = base58.encode_check(msg.to_address)
     await layouts.confirm_address(
         TR.send__title_sending_to,
         to_address,
