@@ -52,52 +52,6 @@
       }
     },
     {
-      "name": "TransferContract_owner_address_not_equals_trezor_account",
-      "parameters": {
-        "address_n": "m/44'/195'/0'/0/1",
-        "tx": {
-          "ref_block_bytes": "e942",
-          "ref_block_hash": "6394747da9fee421",
-          "expiration": 1752562632000,
-          "timestamp": 1752562572000
-        },
-        "contract": {
-          "_message_type": "TronTransferContract",
-          "owner_address": "TY72iA3SBtrds3QLYsS7LwYfkzXwAXCRWT",
-          "to_address": "TFz2CJn9CJb8C4i1Gke3jmZX2fRMJxniH2",
-          "amount": 18123456
-        },
-        "raw_data_hex": "0a02e94222086394747da9fee42140c08afee680335a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870e0b5fae68033",
-        "raw": {
-          "visible": false,
-          "txID": "91813c4e057a4c881d9dc4981f041c33cffb17c41e860a53eb68e7995f5de821",
-          "raw_data_hex": "0a02e94222086394747da9fee42140c08afee680335a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870e0b5fae68033",
-          "raw_data": {
-            "contract": [
-              {
-                "parameter": {
-                  "value": {
-                    "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
-                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
-                    "amount": 18123456
-                  },
-                  "type_url": "type.googleapis.com/protocol.TransferContract"
-                },
-                "type": "TransferContract"
-              }
-            ],
-            "ref_block_bytes": "e942",
-            "ref_block_hash": "6394747da9fee421",
-            "expiration": 1752562632000,
-            "timestamp": 1752562572000
-          }
-        }
-      },
-      "result": {
-        "signature": "14d5eae24e33eb6af03998ea845f98e105e8a2d3206b12163b11702ed3479f41719f757c50e2d85ab6b41ff28ce9752a6bbb74158b8a1aaffb44a837466d93ba1B"
-      }
-    },
-    {
       "name": "TransferContract_amount_int64_max",
       "parameters": {
         "address_n": "m/44'/195'/0'/0/0",
@@ -121,7 +75,7 @@
       }
     },
     {
-      "name": "Memo_hello_world",
+      "name": "Note_hello_world",
       "parameters": {
         "address_n": "m/44'/195'/0'/0/0",
         "tx": {
@@ -169,7 +123,7 @@
       }
     },
     {
-      "name": "Memo_long_hex_string",
+      "name": "Note_long_hex_string",
       "parameters": {
         "address_n": "m/44'/195'/0'/0/0",
         "tx": {

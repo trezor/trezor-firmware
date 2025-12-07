@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezor.ui.layouts as layouts
-from trezor import strings
+from trezor import strings, TR
 
 from . import consts
 
@@ -14,8 +14,8 @@ def format_trx_amount(amount: int) -> str:
 
 
 async def confirm_transfer_contract(msg: TronTransferContract) -> None:
-    await layouts.confirm_output(
+    await layouts.confirm_address(
+        TR.send__title_sending_to,
         msg.to_address,
-        format_trx_amount(msg.amount),
         chunkify=True,
     )
