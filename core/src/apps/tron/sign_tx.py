@@ -68,6 +68,7 @@ async def process_contract(
     contract: consts.TronMessageType,
 ) -> tuple[TronRawContract, str]:
     from trezor.enums import TronRawContractType
+
     total_send = contract_type = None
 
     if messages.TronTransferContract.is_type_of(contract):

@@ -1,10 +1,10 @@
 import binascii
 
 import pytest
-from trezorlib.exceptions import TrezorFailure
 
 from trezorlib import messages, protobuf, tron
 from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures

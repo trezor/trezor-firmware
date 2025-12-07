@@ -847,7 +847,7 @@ def confirm_address(
         description,
         verb=verb,
         br_code=br_code,
-        chunkify=chunkify
+        chunkify=chunkify,
     )
 
 

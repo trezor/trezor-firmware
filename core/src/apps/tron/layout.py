@@ -1,11 +1,10 @@
 from typing import TYPE_CHECKING
 
 import trezor.ui.layouts as layouts
-from trezor import strings, TR
+from trezor import TR, strings
 from trezor.crypto import base58
 
 from . import consts
-
 
 if TYPE_CHECKING:
     from trezor.messages import TronTransferContract
