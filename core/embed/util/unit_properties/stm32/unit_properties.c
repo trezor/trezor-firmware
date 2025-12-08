@@ -41,8 +41,6 @@ static unit_properties_driver_t g_unit_properties_driver = {
     .initialized = false,
 };
 
-#ifdef TREZOR_MODEL_T2T1
-
 // Parse two digit number from the string.
 //
 // Returns -1 if the string is not a valid two-digit number.
@@ -56,7 +54,7 @@ static inline int parse_two_digits(const char* str) {
 // Reads the production date from the OTP block.
 //
 // Returns `false` in case of and flash read error.
-static bool get_production_date(int* year) {
+static bool get_production_date(int* year, int* month, int* day) {
   *year = -1;
 
   uint8_t otp_data[FLASH_OTP_BLOCK_SIZE];
@@ -78,13 +76,13 @@ static bool get_production_date(int* year) {
 
     if (i >= 0 && str[i] == '-') {
       *year = parse_two_digits(&str[i + 1]);
+      *month = parse_two_digits(&str[i + 3]);
+      *day = parse_two_digits(&str[i + 5]);
     }
   }
 
   return true;
 }
-
-#endif  // TREZOR_MODEL_T2T1
 
 // Reads and parses the unit properties from the OTP block.
 //
@@ -134,12 +132,17 @@ static bool detect_properties(unit_properties_t* props) {
       break;
   }
 
+  int production_year = 0, production_month = 0, production_day = 0;
+  get_production_date(&production_year, &production_month, &production_day);
+  props->production_date.year = 2000 + production_year;
+  props->production_date.month = production_month;
+  props->production_date.day = production_day;
+
   props->sd_hotswap_enabled = true;
 #ifdef TREZOR_MODEL_T2T1
   // Early produced TTs have a HW bug that prevents hotswapping of the SD card,
   // lets check the build data and decide based on that.
-  int production_year;
-  get_production_date(&production_year);
+
   if (production_year <= 18) {
     props->sd_hotswap_enabled = false;
   }

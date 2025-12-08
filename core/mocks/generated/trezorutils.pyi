@@ -97,6 +97,14 @@ def unit_packaging() -> int | None:
     """
     Returns the packaging version of the unit.
     """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def unit_production_date() -> tuple[int, int, int] | None:
+    """
+    Returns the unit production date as (year, month, day), or None if
+    unavailable.
+    """
 if utils.USE_SERIAL_NUMBER:
     def serial_number() -> str:
         """

@@ -52,6 +52,7 @@ from trezorutils import (  # noqa: F401
     unit_btconly,
     unit_color,
     unit_packaging,
+    unit_production_date,
 )
 
 if USE_NRF:
