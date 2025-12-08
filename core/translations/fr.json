@@ -2242,8 +2242,8 @@
       "Delizia": "Mauvaise carte SD.",
       "Eckhart": ""
     },
-    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
-    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "secure_sync__delegated_identity_key_no_thp": "Autoriser Trezor Suite à utiliser Suite Sync avec ce Trezor ?",
+    "secure_sync__delegated_identity_key_thp": "Autoriser {0} sur {1} à utiliser Suite Sync avec ce Trezor ?",
     "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Annuler la signature",
     "send__cancel_transaction": "Annuler la transaction",

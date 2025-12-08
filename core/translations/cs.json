@@ -37,7 +37,7 @@
   },
   "translations": {
     "addr_mismatch__contact_support_at": {
-      "Bolt": "Kontaktujte naši podporu na",
+      "Bolt": "Prosím, kontaktujte podporu Trezoru na",
       "Caesar": "Kontaktujte naši podporu na",
       "Delizia": "Kontaktujte naši podporu na",
       "Eckhart": "Prosím, kontaktujte naši podporu na"
@@ -1862,8 +1862,8 @@
       "Delizia": "Nesprávná karta SD.",
       "Eckhart": ""
     },
-    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
-    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "secure_sync__delegated_identity_key_no_thp": "Povolit Trezor Suite používat Suite Sync s tímto Trezorem?",
+    "secure_sync__delegated_identity_key_thp": "Povolit {0} na {1} používat Suite Sync s tímto Trezorem?",
     "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Zrušit podpis",
     "send__cancel_transaction": "Zrušit transakci",
