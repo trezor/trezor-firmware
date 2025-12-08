@@ -20,6 +20,9 @@
  */
 
 #include "ethereum.h"
+
+#include <stdio.h>
+
 #include "address.h"
 #include "crypto.h"
 #include "ecdsa.h"
@@ -312,32 +315,38 @@ static void send_signature(void) {
 
   ethereum_signing_abort();
 }
+
+struct ethereum_amount {
+  char value[64];
+  char unit[16];
+};
+
 /* Format a 256 bit number (amount in wei) into a human readable format
  * using standard ethereum units.
- * The buffer must be at least 25 bytes.
  */
 static void ethereumFormatAmount(const bignum256 *amnt,
-                                 const EthereumTokenInfo *token, char *buf,
-                                 int buflen, bool use_gwei) {
+                                 const EthereumTokenInfo *token, bool use_gwei,
+                                 struct ethereum_amount *result) {
   bignum256 bn1e9 = {0};
   bn_read_uint32(1000000000, &bn1e9);
 
-  char suffix[50] = {' ', 0};
   int decimals = 18;
+  const char *symbol = chain_suffix;
   if (token) {
-    strlcpy(suffix + 1, token->symbol, sizeof(suffix) - 1);
+    symbol = token->symbol;
     decimals = token->decimals;
   } else if (use_gwei) {
     // "per gas" fees should always use Gwei
-    strlcpy(suffix + 1, "Gwei", sizeof(suffix) - 1);
+    symbol = "Gwei";
     decimals = 9;
   } else if (bn_is_less(amnt, &bn1e9)) {
-    strlcpy(suffix + 1, "Wei", sizeof(suffix) - 1);
+    symbol = "Wei";
     decimals = 0;
-  } else {
-    strlcpy(suffix + 1, chain_suffix, sizeof(suffix) - 1);
   }
-  bn_format(amnt, NULL, suffix, decimals, 0, false, ',', buf, buflen);
+  bn_format(amnt, NULL, "", decimals, 0, false, ',', result->value,
+            sizeof(result->value));
+  // Truncate the symbol, if it is too long:
+  strlcpy(result->unit, symbol, sizeof(result->unit));
 }
 
 static void parse_bignum256(const uint8_t *value, uint32_t value_len,
@@ -353,22 +362,20 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
   bignum256 val = {0};
   parse_bignum256(value, value_len, &val);
 
-  char amount[64] = {0};
+  char _to1[19] = {0};
+  char _to2[19] = {0};
+  char _to3[20] = {0};
+
+  struct ethereum_amount amount = {.value = "", .unit = ""};
   if (token == NULL) {
     if (bn_is_zero(&val)) {
-      strcpy(amount, _("message"));
+      strcpy(amount.value, _("message"));
     } else {
-      ethereumFormatAmount(&val, NULL, amount, sizeof(amount),
-                           /*use_gwei=*/false);
+      ethereumFormatAmount(&val, NULL, /*use_gwei=*/false, &amount);
     }
   } else {
-    ethereumFormatAmount(&val, token, amount, sizeof(amount),
-                         /*use_gwei=*/false);
+    ethereumFormatAmount(&val, token, /*use_gwei=*/false, &amount);
   }
-
-  char _to1[] = "to ____________";
-  char _to2[] = "_______________";
-  char _to3[] = "_______________?";
 
   if (to_len) {
     char to_str[43] = {0};
@@ -385,9 +392,20 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
     }
 
     ethereum_address_checksum(to, to_str, rskip60, chain_id);
-    memcpy(_to1 + 3, to_str, 12);
-    memcpy(_to2, to_str + 12, 15);
-    memcpy(_to3, to_str + 27, 15);
+
+    const size_t prefix_size = snprintf(_to1, sizeof(_to1), "%s%sto ",
+                                        amount.unit, *amount.unit ? " " : "");
+
+    // copy only the part that should fit into `_to1`
+    strlcpy(_to1 + prefix_size, to_str, sizeof(_to1) - prefix_size);
+    size_t offset = strlen(_to1 + prefix_size);
+
+    // copy the next part into `_to2`
+    strlcpy(_to2, to_str + offset, sizeof(_to2));
+    offset += strlen(_to2);
+
+    // copy the last part and '?' into `_to3`
+    snprintf(_to3, sizeof(_to3), "%s?", to_str + offset);
   } else {
     strlcpy(_to1, _("to new contract?"), sizeof(_to1));
     strlcpy(_to2, "", sizeof(_to2));
@@ -395,7 +413,7 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
   }
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    _("Send"), amount, _to1, _to2, _to3, NULL);
+                    _("Send"), amount.value, _to1, _to2, _to3, NULL);
 }
 
 static void layoutEthereumData(const uint8_t *data, uint32_t len,
@@ -433,31 +451,33 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
                               const uint8_t *gas_limit, uint32_t gas_limit_len,
                               bool is_token) {
   bignum256 val = {0}, gas = {0};
-  char tx_value[32] = {0};
-  char gas_value[32] = {0};
-
-  memzero(tx_value, sizeof(tx_value));
-  memzero(gas_value, sizeof(gas_value));
 
   parse_bignum256(gas_price, gas_price_len, &val);
   parse_bignum256(gas_limit, gas_limit_len, &gas);
   bn_multiply(&val, &gas, &secp256k1.prime);
 
-  ethereumFormatAmount(&gas, NULL, gas_value, sizeof(gas_value),
-                       /*use_gwei=*/false);
+  struct ethereum_amount gas_amount = {.value = "", .unit = ""};
+  ethereumFormatAmount(&gas, NULL, /*use_gwei=*/false, &gas_amount);
 
   parse_bignum256(value, value_len, &val);
 
+  struct ethereum_amount tx_amount = {.value = "", .unit = ""};
   if (bn_is_zero(&val)) {
-    strcpy(tx_value, is_token ? _("token") : _("message"));
+    strcpy(tx_amount.value, is_token ? _("token") : _("message"));
   } else {
-    ethereumFormatAmount(&val, NULL, tx_value, sizeof(tx_value),
-                         /*use_gwei=*/false);
+    ethereumFormatAmount(&val, NULL, /*use_gwei=*/false, &tx_amount);
   }
 
+  char _line1[32] = {0};
+  char _line2[32] = {0};
+
+  snprintf(_line1, sizeof(_line1), "%s%s%s", tx_amount.unit,
+           *tx_amount.unit ? " " : "", _("paying up to"));
+  snprintf(_line2, sizeof(_line2), "%s%s%s", gas_amount.unit,
+           *gas_amount.unit ? " " : "", _("for gas?"));
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    _("Really send"), tx_value, _("paying up to"), gas_value,
-                    _("for gas?"), NULL);
+                    _("Really send"), tx_amount.value, _line1, gas_amount.value,
+                    _line2, NULL);
 }
 
 static void layoutEthereumFeeEIP1559(const char *description,
@@ -466,7 +486,7 @@ static void layoutEthereumFeeEIP1559(const char *description,
                                      const uint8_t *multiplier_bytes,
                                      uint32_t multiplier_len, bool use_gwei) {
   bignum256 amount_val = {0};
-  char amount_str[32] = {0};
+  char amount_str[80] = {0};
 
   parse_bignum256(amount_bytes, amount_len, &amount_val);
 
@@ -477,8 +497,9 @@ static void layoutEthereumFeeEIP1559(const char *description,
     bn_multiply(&multiplier_val, &amount_val, &secp256k1.prime);
   }
 
-  ethereumFormatAmount(&amount_val, NULL, amount_str, sizeof(amount_str),
-                       use_gwei);
+  struct ethereum_amount amount = {.value = "", .unit = ""};
+  ethereumFormatAmount(&amount_val, NULL, use_gwei, &amount);
+  snprintf(amount_str, sizeof(amount_str), "%s %s", amount.value, amount.unit);
 
   layoutDialogSwipeWrapping(&bmp_icon_question, _("Cancel"), _("Confirm"),
                             _("Confirm fee"), description, amount_str);
@@ -643,10 +664,10 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
       params->data_initial_chunk_bytes + SC_FUNC_SIG_BYTES;
 
   bignum256 value = {0}, source = {0};
-  char value_str[64] = {0};
+  struct ethereum_amount amount = {.value = "", .unit = ""};
   const char *_line1 = NULL;
   const char *_line2 = NULL;
-  const char *_line3 = NULL;
+  char _line3[32] = {0};
   switch (op) {
     case ETH_STAKING_STAKE:
       // stake args:
@@ -659,11 +680,11 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
         return false;
       }
       parse_bignum256(params->value_bytes, params->value_size, &value);
-      ethereumFormatAmount(&value, NULL, value_str, sizeof(value_str),
-                           /*use_gwei=*/false);
+      ethereumFormatAmount(&value, NULL, /*use_gwei=*/false, &amount);
       _line1 = _("Stake");
-      _line2 = value_str;
-      _line3 = _("on Everstake?");
+      _line2 = amount.value;
+      snprintf(_line3, sizeof(_line3), "%s %s", amount.unit,
+               _("on Everstake?"));
       break;
     case ETH_STAKING_UNSTAKE:
       // unstake args:
@@ -678,11 +699,11 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
         return false;
       }
       bn_read_be(args_bytes, &value);
-      ethereumFormatAmount(&value, NULL, value_str, sizeof(value_str),
-                           /*use_gwei=*/false);
+      ethereumFormatAmount(&value, NULL, /*use_gwei=*/false, &amount);
       _line1 = _("Unstake");
-      _line2 = value_str;
-      _line3 = _("from Everstake?");
+      _line2 = amount.value;
+      snprintf(_line3, sizeof(_line3), "%s %s", amount.unit,
+               _("from Everstake?"));
       break;
     case ETH_STAKING_CLAIM:
       // claim has no args
