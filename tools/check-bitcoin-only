@@ -22,7 +22,10 @@ IFS="
 "
 for altcoin in $ALTCOINS; do
     # echo :"$altcoin":
-    if strings "$1" | grep -i "$altcoin" | grep -vi ${GREP_ARGS[@]} ; then
+    FOUND=$(strings "$1" | grep -iw "$altcoin" | grep -vi ${GREP_ARGS[@]})
+    if [ -n "$FOUND" ]; then
+        echo "Found altcoin string '$altcoin':"
+        echo "$FOUND"
         RETURN=1
     fi
 done
