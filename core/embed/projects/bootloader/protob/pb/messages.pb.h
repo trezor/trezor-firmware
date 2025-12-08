@@ -100,6 +100,10 @@ typedef struct _Features {
     bool usb_connected;
     bool has_wireless_connected;
     bool wireless_connected;
+    bool has_build_version;
+    uint32_t build_version;
+    bool has_fw_build;
+    uint32_t fw_build;
 } Features;
 
 typedef struct _Ping {
@@ -187,7 +191,7 @@ extern "C" {
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
 #define WipeDevice_init_default                  {0}
-#define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define Ping_init_default                        {false, ""}
 #define Success_init_default                     {false, ""}
 #define Failure_init_default                     {false, _FailureType_MIN, false, ""}
@@ -200,7 +204,7 @@ extern "C" {
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
 #define WipeDevice_init_zero                     {0}
-#define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define Ping_init_zero                           {false, ""}
 #define Success_init_zero                        {false, ""}
 #define Failure_init_zero                        {false, _FailureType_MIN, false, ""}
@@ -237,6 +241,8 @@ extern "C" {
 #define Features_firmware_corrupted_tag          56
 #define Features_usb_connected_tag               59
 #define Features_wireless_connected_tag          60
+#define Features_build_version_tag               61
+#define Features_fw_build_tag                    62
 #define Ping_message_tag                         1
 #define Success_message_tag                      1
 #define Failure_code_tag                         1
@@ -289,7 +295,9 @@ X(a, STATIC,   OPTIONAL, UINT32,   unit_packaging,   51) \
 X(a, STATIC,   OPTIONAL, UINT32,   soc,              55) \
 X(a, STATIC,   OPTIONAL, BOOL,     firmware_corrupted,  56) \
 X(a, STATIC,   OPTIONAL, BOOL,     usb_connected,    59) \
-X(a, STATIC,   OPTIONAL, BOOL,     wireless_connected,  60)
+X(a, STATIC,   OPTIONAL, BOOL,     wireless_connected,  60) \
+X(a, STATIC,   OPTIONAL, UINT32,   build_version,    61) \
+X(a, STATIC,   OPTIONAL, UINT32,   fw_build,         62)
 #define Features_CALLBACK NULL
 #define Features_DEFAULT NULL
 
@@ -375,7 +383,7 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 #define ButtonAck_size                           0
 #define ButtonRequest_size                       2
 #define Failure_size                             260
-#define Features_size                            513
+#define Features_size                            527
 #define FirmwareErase_size                       6
 #define FirmwareRequest_size                     12
 #define GetFeatures_size                         0

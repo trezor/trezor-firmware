@@ -2038,6 +2038,7 @@ if TYPE_CHECKING:
         major_version: "int"
         minor_version: "int"
         patch_version: "int"
+        build_version: "int | None"
         bootloader_mode: "bool | None"
         device_id: "str | None"
         pin_protection: "bool | None"
@@ -2056,6 +2057,7 @@ if TYPE_CHECKING:
         fw_major: "int | None"
         fw_minor: "int | None"
         fw_patch: "int | None"
+        fw_build: "int | None"
         fw_vendor: "str | None"
         unfinished_backup: "bool | None"
         no_backup: "bool | None"
@@ -2100,6 +2102,7 @@ if TYPE_CHECKING:
             patch_version: "int",
             capabilities: "list[Capability] | None" = None,
             vendor: "str | None" = None,
+            build_version: "int | None" = None,
             bootloader_mode: "bool | None" = None,
             device_id: "str | None" = None,
             pin_protection: "bool | None" = None,
@@ -2118,6 +2121,7 @@ if TYPE_CHECKING:
             fw_major: "int | None" = None,
             fw_minor: "int | None" = None,
             fw_patch: "int | None" = None,
+            fw_build: "int | None" = None,
             fw_vendor: "str | None" = None,
             unfinished_backup: "bool | None" = None,
             no_backup: "bool | None" = None,
