@@ -96,18 +96,18 @@ static bool syslog_filter_match(const log_source_t* source, log_level_t level) {
       }
     }
 
+    // Skip spaces
+    while (*p == ' ') {
+      p++;
+    }
+
     // Module name matched?
-    if (s == s_end) {
+    if (s == s_end && (*p == '+' || *p == '-' || *p == '\0')) {
       if (op == '-' && level >= threshold) {
         included = false;
       } else if (level <= threshold) {
         included = true;
       }
-    }
-
-    // Skip spaces
-    while (*p == ' ') {
-      p++;
     }
   }
 
