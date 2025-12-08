@@ -173,12 +173,17 @@ layout.
 The best choice is to always use the `interact()` function to take care of
 `ButtonRequest`s. Explicitly sending `ButtonRequest`s is not supported.
 
-`ButtonRequest`s sent from Rust get sent as part of the `Attached` state transition,
-which can only happen when the layout is already running.
+There are two mechanisms for sending `ButtonRequest`s:
 
-TODO: instead of relying on `interact()`, it may be better to pass the `ButtonRequest`
-inside the layout object and enqueue it so that when the respective Rust layout is
-`Attached`, the outside-provided `ButtonRequest` is used.
+1. **From Python**: The `interact()` function passes the `ButtonRequest` inside the
+   layout. This enqueues the request so that when the respective Rust layout
+   transitions to `Attached` state, the provided `ButtonRequest` is sent.
+
+2. **From Rust**: A `Component` can be wrapped in `SendButtonRequest`, which sends the
+   `ButtonRequest` when the component receives an `Event::Attach`.
+
+Both mechanisms ensure that `ButtonRequest`s are only sent when the layout is already
+in **RUNNING** state and the Rust layout is `Attached`.
 
 ## Debuglink
 
