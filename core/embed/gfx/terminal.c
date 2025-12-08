@@ -152,11 +152,6 @@ static void term_redraw_rows(int start_row, int row_count) {
 void term_nprint(const char *text, int textlen) {
   static uint8_t row = 0, col = 0;
 
-  // determine text length if not provided
-  if (textlen < 0) {
-    textlen = strlen(text);
-  }
-
   // print characters to internal buffer (terminal_fb)
   for (int i = 0; i < textlen; i++) {
     switch (text[i]) {
