@@ -19,7 +19,19 @@
 
 #pragma once
 
-#include <printf/printf.h>
+#if defined(BOARDLOADER) && defined(TREZOR_MODEL_T3T1)
+// Disable long long support in the bootloader to save space
+#define PRINTF_SUPPORT_LONG_LONG 0
+#else
+#define PRINTF_SUPPORT_LONG_LONG 1
+#endif
 
-#define mini_vsnprintf vsnprintf_
-#define mini_snprintf snprintf_
+#define PRINTF_SUPPORT_DECIMAL_SPECIFIERS 0
+#define PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS 0
+#define PRINTF_SUPPORT_WRITEBACK_SPECIFIER 1
+#define PRINTF_SUPPORT_MSVC_STYLE_INTEGER_SPECIFIERS 0
+#define PRINTF_USE_DOUBLE_INTERNALLY 0
+#define PRINTF_INTEGER_BUFFER_SIZE 32
+#define PRINTF_DECIMAL_BUFFER_SIZE 0
+
+static inline void putchar_(char c) {}
