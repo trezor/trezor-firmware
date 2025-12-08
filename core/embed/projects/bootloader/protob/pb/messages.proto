@@ -54,6 +54,7 @@ message Features {
     required uint32 major_version = 2;          // major version of the firmware/bootloader, e.g. 1
     required uint32 minor_version = 3;          // minor version of the firmware/bootloader, e.g. 0
     required uint32 patch_version = 4;          // patch version of the firmware/bootloader, e.g. 0
+    optional uint32 build_version = 61;          // build version of the firmware/bootloader, e.g. 0
     optional bool bootloader_mode = 5;          // is device in bootloader mode?
     optional string device_id = 6;              // device's unique identifier
     optional string language = 9;               // device language
@@ -65,6 +66,7 @@ message Features {
     optional uint32 fw_major = 22;              // reported firmware version if in bootloader mode
     optional uint32 fw_minor = 23;              // reported firmware version if in bootloader mode
     optional uint32 fw_patch = 24;              // reported firmware version if in bootloader mode
+    optional uint32 fw_build = 62;              // reported firmware version if in bootloader mode
     optional string fw_vendor = 25;             // reported firmware vendor if in bootloader mode
     // optional bytes fw_vendor_keys = 26;      // obsoleted, use fw_vendor
     optional string internal_model = 44;        // internal model name

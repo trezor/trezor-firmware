@@ -111,6 +111,7 @@ secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw) {
   MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, VERSION_MINOR);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, VERSION_PATCH);
+  MSG_SEND_ASSIGN_VALUE(build_version, VERSION_BUILD);
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
   MSG_SEND_ASSIGN_STRING(model, MODEL_NAME);
   MSG_SEND_ASSIGN_STRING(internal_model, MODEL_INTERNAL_NAME);
@@ -119,6 +120,7 @@ secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw) {
     MSG_SEND_ASSIGN_VALUE(fw_major, (fw->hdr->version & 0xFF));
     MSG_SEND_ASSIGN_VALUE(fw_minor, ((fw->hdr->version >> 8) & 0xFF));
     MSG_SEND_ASSIGN_VALUE(fw_patch, ((fw->hdr->version >> 16) & 0xFF));
+    MSG_SEND_ASSIGN_VALUE(fw_build, ((fw->hdr->version >> 24) & 0xFF));
     MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, fw->vhdr.vstr, fw->vhdr.vstr_len);
     MSG_SEND_ASSIGN_VALUE(firmware_corrupted, sectrue != fw->firmware_present);
   } else {
