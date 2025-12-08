@@ -43,12 +43,11 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/rng/unix/rng.c",
         "embed/sec/rng/rng_common.c",
         "embed/sec/time_estimate/unix/time_estimate.c",
-        "embed/sys/dbg/dbg_console.c",
-        "embed/sys/dbg/unix/dbg_console_backend.c",
         "embed/sys/mpu/unix/mpu.c",
         "embed/sys/notify/notify.c",
         "embed/sys/startup/unix/bootutils.c",
         "embed/sys/task/sysevent.c",
+        "embed/sys/task/system.c",
         "embed/sys/task/unix/sdl_event.c",
         "embed/sys/task/unix/system.c",
         "embed/sys/task/unix/systask.c",
@@ -61,6 +60,14 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/fwutils/fwutils.c",
         "embed/util/unit_properties/unix/unit_properties.c",
     ]
+
+    if "dbg_console" in features_wanted:
+        sources += [
+            "embed/sys/dbg/dbg_console.c",
+            "embed/sys/dbg/unix/dbg_console_backend.c",
+        ]
+        paths += ["embed/sys/dbg/inc"]
+        defines += [("USE_DBG_CONSOLE", "1")]
 
     if "usb" in features_wanted:
         sources += [
@@ -79,5 +86,26 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
             defines += [("USE_USB_IFACE_WEBAUTHN", "1")]
         if "usb_iface_vcp" in features_wanted:
             defines += [("USE_USB_IFACE_VCP", "1")]
+
+    if "ipc" in features_wanted:
+        sources += [
+            "embed/sys/ipc/ipc.c",
+            "embed/sys/ipc/unix/ipc_memcpy.c",
+        ]
+        defines += [("USE_IPC", "1")]
+        paths += ["embed/sys/ipc/inc"]
+
+    if "applet" in features_wanted:
+        sources += ["embed/sys/task/applet.c"]
+        sources += ["embed/sys/task/unix/coreapp.c"]
+
+    if "app_loading" in features_wanted:
+        sources += ["embed/util/app_loader/unix/elf_loader.c"]
+        sources += ["embed/util/app_loader/app_cache.c"]
+        sources += ["embed/util/app_loader/app_task.c"]
+        sources += ["embed/util/app_loader/app_arena.c"]
+        defines += [("USE_APP_LOADING", "1")]
+        paths += ["embed/util/app_loader/inc"]
+        features_available.append("app_loading")
 
     return features_available

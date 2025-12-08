@@ -37,6 +37,8 @@ typedef struct {
   mpu_area_t stack;
   // TLS area
   mpu_area_t tls;
+  // API interface getter
+  void* api_getter;
   // Unprivileged SAES input buffer
   void* saes_input;
   // Unprivileged SAES output buffer
@@ -45,20 +47,35 @@ typedef struct {
   void* saes_callback;
 } coreapp_header_t;
 
-// Initializes the coreapp applet structure
-void coreapp_init(applet_t* applet);
+#ifdef TREZOR_EMULATOR
 
-// Resets the coreapp and prepares it for execution from its entry point.
+// Initializes the coreapp and prepares it for execution from its entry point.
 //
 // Coreapp does not start immediately, it needs to be run by
 // `applet_run()` after calling this function.
 //
-// Returns `true` if the applet was successfully reset.
-bool coreapp_reset(applet_t* applet, uint32_t cmd, const void* arg,
-                   size_t arg_size);
+// Returns `true` if the applet was successfully initialized.
+bool coreapp_init(applet_t* applet, int argc, char** argv);
+
+#else
+
+// Initializes the coreapp and prepares it for execution from its entry point.
+//
+// Coreapp does not start immediately, it needs to be run by
+// `applet_run()` after calling this function.
+//
+// Returns `true` if the applet was successfully initialized.
+bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
+                  size_t arg_size);
 
 mpu_area_t coreapp_get_code_area(void);
 
 mpu_area_t coreapp_get_tls_area(void);
+
+#endif  // TREZOR_EMULATOR
+
+#ifdef USE_APP_LOADING
+void* coreapp_get_api_getter(void);
+#endif
 
 #endif  // KERNEL_MODE
