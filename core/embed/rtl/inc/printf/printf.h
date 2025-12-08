@@ -1,3 +1,6 @@
+// clang-format off
+// source: https://github.com/eyalroz/printf/blob/v6.3.0/src/printf/printf.h
+
 /**
  * @author (c) Eyal Rozenberg <eyalroz1@gmx.com>
  *             2021-2024, Haifa, Palestine/Israel
@@ -39,9 +42,9 @@
 #ifndef PRINTF_H_
 #define PRINTF_H_
 
-#ifdef PRINTF_INCLUDE_CONFIG_H
+//#ifdef PRINTF_INCLUDE_CONFIG_H
 #include "printf_config.h"
-#endif
+//#endif
 
 #ifdef __cplusplus
 # include <cstdarg>
