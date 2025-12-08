@@ -2077,8 +2077,8 @@
       "Delizia": "Cartão SD incorreto.",
       "Eckhart": ""
     },
-    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
-    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "secure_sync__delegated_identity_key_no_thp": "Permitir que o Trezor Suite use Suite Sync com este Trezor?",
+    "secure_sync__delegated_identity_key_thp": "Permitir que {0} em {1} use Suite Sync com este Trezor?",
     "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Cancelar assinatura",
     "send__cancel_transaction": "Cancelar transação",
