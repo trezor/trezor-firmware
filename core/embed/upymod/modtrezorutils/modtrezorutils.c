@@ -290,6 +290,35 @@ STATIC mp_obj_t mod_trezorutils_unit_packaging(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_packaging_obj,
                                  mod_trezorutils_unit_packaging);
 
+/// def unit_production_date() -> tuple[int, int, int] | None:
+///     """
+///     Returns the unit production date as (year, month, day), or None if
+///     unavailable.
+///     """
+STATIC mp_obj_t mod_trezorutils_unit_production_date(void) {
+  const unit_properties_t *props = unit_properties();
+  if (props == NULL) {
+    return mp_const_none;
+  }
+
+  const uint16_t year = props->production_date.year;
+  const uint8_t month = props->production_date.month;
+  const uint8_t day = props->production_date.day;
+
+  // If any field is zero, consider the date unavailable
+  if (year == 0 || month == 0 || day == 0) {
+    return mp_const_none;
+  }
+
+  mp_obj_t items[3];
+  items[0] = mp_obj_new_int(year);
+  items[1] = mp_obj_new_int(month);
+  items[2] = mp_obj_new_int(day);
+  return mp_obj_new_tuple(3, items);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_production_date_obj,
+                                 mod_trezorutils_unit_production_date);
+
 #if USE_SERIAL_NUMBER
 
 /// if utils.USE_SERIAL_NUMBER:
@@ -804,6 +833,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_unit_packaging_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_btconly),
      MP_ROM_PTR(&mod_trezorutils_unit_btconly_obj)},
+    {MP_ROM_QSTR(MP_QSTR_unit_production_date),
+     MP_ROM_PTR(&mod_trezorutils_unit_production_date_obj)},
 #if USE_SERIAL_NUMBER
     {MP_ROM_QSTR(MP_QSTR_serial_number),
      MP_ROM_PTR(&mod_trezorutils_serial_number_obj)},
