@@ -403,4 +403,5 @@ pub const Font_RobotoMono_Medium_20_info: FontInfo = FontInfo {
     baseline: 5,
     glyph_data: &Font_RobotoMono_Medium_20,
     glyph_nonprintable: &Font_RobotoMono_Medium_20_glyph_nonprintable,
+    kernings: None,
 };
