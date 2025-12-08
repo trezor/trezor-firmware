@@ -19,7 +19,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     from trezor import TR
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
-    from trezor.ui.layouts import confirm_blob, confirm_tron_tx, show_continue_in_app
+    from trezor.ui.layouts import confirm_blob, confirm_tron_send, show_continue_in_app
     from trezor.wire.context import call_any
 
     from apps.common import paths
@@ -43,7 +43,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     raw_contract, total_send = await process_contract(contract)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "contract" of type "TronMessageType" in function "process_contract"]
 
     # TODO: Add Bandwidth and Energy estimate to TronSignTx. Show them here instead.
-    await confirm_tron_tx(total_send, layout.format_trx_amount(0))
+    await confirm_tron_send(total_send)
 
     raw_tx = messages.TronRawTransaction(
         ref_block_bytes=msg.ref_block_bytes,

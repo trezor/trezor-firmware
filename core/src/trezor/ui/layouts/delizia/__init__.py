@@ -1370,13 +1370,12 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-    # TODO: Add Energy and Bandwidth option
-    def confirm_tron_tx(
+    def confirm_tron_send(
         amount: str,
-        fee: str,
     ) -> Awaitable[None]:
         amount_title = TR.send__total_amount
-        fee_title = TR.send__maximum_fee
+        fee_title = ""
+        fee = ""
 
         return _confirm_summary(
             amount,
@@ -1384,7 +1383,7 @@ if not utils.BITCOIN_ONLY:
             fee,
             fee_title,
             extra_items=None,
-            br_name="confirm_tron_tx",
+            br_name="confirm_tron_send",
             br_code=ButtonRequestType.SignTx,
         )
 
