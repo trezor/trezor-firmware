@@ -25,6 +25,7 @@ BR_CODE_OTHER = ButtonRequestType.Other  # global_import_cache
 CONFIRMED = trezorui_api.CONFIRMED
 CANCELLED = trezorui_api.CANCELLED
 INFO = trezorui_api.INFO
+BACK = trezorui_api.BACK
 
 
 def confirm_action(
@@ -592,32 +593,82 @@ async def confirm_output(
     else:
         title = TR.send__title_sending_to
 
-    await raise_if_not_confirmed(
-        trezorui_api.flow_confirm_output(
-            title=TR.words__address,
-            subtitle=title,
-            message=address,
-            extra=None,
-            amount=amount,
-            chunkify=chunkify,
-            text_mono=True,
-            account_title=TR.send__send_from,
-            account=source_account,
-            account_path=source_account_path,
-            address_item=None,
-            extra_item=None,
-            br_code=br_code,
-            br_name="confirm_output",
-            summary_items=None,
-            fee_items=None,
-            summary_title=None,
-            summary_br_name=None,
-            summary_br_code=None,
-            cancel_text=cancel_text,
-            description=description,
-        ),
-        br_name=None,
-    )
+    if amount is not None:
+        account_properties: list[PropertyType] = []
+        if source_account:
+            account_properties.append((TR.words__account, source_account, None))
+        if source_account_path:
+            account_properties.append(
+                (
+                    TR.address_details__derivation_path,
+                    source_account_path,
+                    None,
+                )
+            )
+        if account_properties:
+            info_pages = [
+                (
+                    TR.address_details__account_info,
+                    account_properties,
+                    TR.send__send_from,
+                )
+            ]
+        else:
+            info_pages = []
+
+        while True:
+            await confirm_value(
+                TR.words__address,
+                address,
+                description or "",
+                "confirm_output",
+                br_code,
+                subtitle=title,
+                chunkify=chunkify,
+                cancel_text=TR.send__cancel_sign,
+                info_pages=info_pages,
+            )
+            amount_response = await confirm_value(
+                TR.words__amount,
+                amount,
+                description="",
+                br_name="confirm_output",
+                br_code=br_code,
+                subtitle=title,
+                cancel_text=TR.send__cancel_sign,
+                info_pages=info_pages,
+                can_go_back=True,
+            )
+            if amount_response is BACK:
+                continue
+            else:
+                break
+    else:
+        await raise_if_not_confirmed(
+            trezorui_api.flow_confirm_output(
+                title=TR.words__address,
+                subtitle=title,
+                message=address,
+                extra=None,
+                chunkify=chunkify,
+                text_mono=True,
+                account_title=TR.send__send_from,
+                account=source_account,
+                account_path=source_account_path,
+                address_item=None,
+                extra_item=None,
+                br_code=br_code,
+                br_name="confirm_output",
+                summary_items=None,
+                fee_items=None,
+                summary_title=None,
+                summary_br_name=None,
+                summary_br_code=None,
+                cancel_text=cancel_text,
+                description=description,
+            ),
+            br_name=None,
+        )
 
 
 async def should_show_more(
@@ -790,10 +841,13 @@ def confirm_value(
     verb: str | None = None,
     subtitle: str | None = None,
     hold: bool = False,
+    can_go_back: bool = False,
     is_data: bool = True,
     chunkify: bool = False,
     info_items: Iterable[PropertyType] | None = None,
+    info_pages: Iterable[tuple[str, list[PropertyType], str | None]] | None = None,
     cancel: bool = False,
+    cancel_text: str | None = None,
 ) -> Awaitable[ui.UiResult]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
@@ -809,13 +863,20 @@ def confirm_value(
         hold=hold,
         chunkify=chunkify,
         cancel=cancel,
+        back_button=can_go_back,
         external_menu=True,
     )
 
     info_items = info_items or []
+    info_pages = info_pages or []
+    menu_items = []
+    for k, v, _is_data in info_items:
+        menu_items.append(create_details(str(k), str(v)))
+    for name, properties, page_title in info_pages:
+        menu_items.append(create_details(str(name), properties, page_title))
     menu = Menu.root(
-        (create_details(str(name), str(value)) for name, value, _is_data in info_items),
-        cancel=TR.buttons__cancel,
+        menu_items,
+        cancel=(cancel_text or TR.buttons__cancel),
     )
     return interact_with_menu(main, menu, br_name, br_code)
 
@@ -993,7 +1054,6 @@ if not utils.BITCOIN_ONLY:
                 description=None,
                 extra=None,
                 message=(recipient or TR.ethereum__new_contract),
-                amount=None,
                 chunkify=(chunkify if recipient else False),
                 text_mono=True,
                 account_title=TR.send__send_from,
@@ -1175,7 +1235,6 @@ if not utils.BITCOIN_ONLY:
                 description=None,
                 extra=None,
                 message=intro_question,
-                amount=None,
                 chunkify=False,
                 text_mono=False,
                 account_title=TR.address_details__account_info,
@@ -1268,7 +1327,6 @@ if not utils.BITCOIN_ONLY:
                 description=description,
                 extra=f"\n{TR.words__provider}:" if vote_account else None,
                 message=vote_account,
-                amount=None,
                 chunkify=True,
                 text_mono=True,
                 account_title=TR.address_details__account_info,
@@ -1795,9 +1853,11 @@ def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
     )
 
 
-def create_details(name: str, value: list[PropertyType] | str) -> Details:
+def create_details(
+    name: str, value: list[PropertyType] | str, title: str | None = None
+) -> Details:
     from trezor.ui.layouts.menu import Details
 
     return Details.from_layout(
-        name, lambda: trezorui_api.show_properties(title=name, value=value)
+        name, lambda: trezorui_api.show_properties(title=(title or name), value=value)
     )
