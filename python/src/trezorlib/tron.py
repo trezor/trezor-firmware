@@ -46,10 +46,6 @@ def from_raw_data(
     return tx, contract
 
 
-# def _encode_address(address: bytes) -> str:
-#     return tools.b58check_encode(address)
-
-
 # ====== Client functions ====== #
 
 

@@ -42,7 +42,6 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     contract = await call_any(messages.TronContractRequest(), *consts.contract_types)
     raw_contract, total_send = await process_contract(contract)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "contract" of type "TronMessageType" in function "process_contract"]
 
-    # TODO: Add Bandwidth and Energy estimate to TronSignTx. Show them here instead.
     await confirm_tron_send(total_send)
 
     raw_tx = messages.TronRawTransaction(

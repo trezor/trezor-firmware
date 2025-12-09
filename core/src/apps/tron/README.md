@@ -2,7 +2,7 @@
 
 Tron is an EVM like netwrok that allows for nearly free token transfers like `USDT` etc. It achieves this by using `Bandwidth` and `Energy` for transfers, instead of `Gas` in Ethereum. `Bandwidth` is used for native `TRX` transfer, while `Energy` is used for `TRC-20` tokens like `Tether - USDT` etc.
 
-It uses `Protobuff` for encoding its transactions. Each transaction contains its main operation as a `contract`[^1] along with supported data like expiration timestamp, block hash reference[^2], etc.
+It uses `Protobuf` for encoding its transactions. Each transaction contains its main operation as a `contract`[^1] along with supported data like expiration timestamp, block hash reference[^2], etc.
 
 [`TronWeb` implementation](https://github.com/tronprotocol/tronweb) should be used as source of truth. The documentation on [tron.network](developers.tron.network) and [Tronprotocol](https://github.com/tronprotocol) were incorrect in some places.
 
