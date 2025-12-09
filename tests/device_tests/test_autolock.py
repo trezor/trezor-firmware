@@ -140,10 +140,11 @@ def test_autolock_cancels_ui(session: Session):
     assert isinstance(resp, messages.Failure)
     assert resp.code == messages.FailureType.ActionCancelled
 
-    debug = session.debug_client.debug
-    debug.press_yes()
-    debug.synchronize_at("PinKeyboard")
-    debug.input(PIN4)
+    # Unlock the device
+    with session.client as client:
+        client.use_pin_sequence([PIN4])
+        session.ensure_unlocked()
+
     # re-trigger auto-lock
     time.sleep(10.5)
     resp = session.call_raw(
