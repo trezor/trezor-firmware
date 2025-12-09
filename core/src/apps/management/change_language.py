@@ -76,7 +76,11 @@ async def do_change_language(
     if header.total_len != data_length:
         raise DataError("Invalid data length")
 
-    if header.version != expected_version:
+    # Translation blob format may not change when VERSION_BUILD is bumped.
+    # Compare only (VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH):
+    if len(header.version) != 4 or len(expected_version) != 4:
+        raise DataError("Invalid version format")
+    if header.version[:3] != expected_version[:3]:
         raise DataError("Translations version mismatch")
 
     current_header = translations.TranslationsHeader.load_from_flash()
