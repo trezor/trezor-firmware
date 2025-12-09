@@ -22,7 +22,8 @@
 #include <trezor_types.h>
 
 /**
- * @brief Record current battery temperature (in Celsius) into telemetry storage.
+ * @brief Record current battery temperature (in Celsius) into telemetry
+ * storage.
  *
  * Updates persisted min/max values:
  *  - minimum can only decrease
