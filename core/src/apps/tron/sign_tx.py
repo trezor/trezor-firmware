@@ -26,7 +26,6 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
     await paths.validate_path(keychain, msg.address_n)
     node = keychain.derive(msg.address_n)
-    private_key = node.private_key()
 
     # It is also not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
     if msg.data:
@@ -56,7 +55,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     serialized_tx = dump_message_buffer(raw_tx)
 
     w_hash = sha256(serialized_tx).digest()
-    signature = secp256k1.sign(private_key, w_hash, False)
+    signature = secp256k1.sign(node.private_key(), w_hash, False)
     signature = signature[1:65] + signature[0:1]
 
     show_continue_in_app(TR.send__transaction_signed)

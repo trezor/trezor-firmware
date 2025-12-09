@@ -123,7 +123,7 @@
       }
     },
     {
-      "name": "Note_long_string",
+      "name": "Note_too_long_string",
       "parameters": {
         "address_n": "m/44'/195'/0'/0/0",
         "tx": {
