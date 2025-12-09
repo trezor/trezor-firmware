@@ -416,11 +416,9 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       telemetry_update_battery_temp__verified(temp);
     } break;
 
-    case SMCALL_TELEMETRY_GET_BATT_TEMP_MIN_MAX: {
-      float *out_min_c = (float *)args[0];
-      float *out_max_c = (float *)args[1];
-      args[0] =
-          telemetry_get_battery_temp_min_max__verified(out_min_c, out_max_c);
+    case SMCALL_TELEMETRY_GET: {
+      telemetry_data_t *out = (telemetry_data_t *)args[0];
+      args[0] = telemetry_get__verified(out);
     } break;
 #endif  // USE_TELEMETRY
 

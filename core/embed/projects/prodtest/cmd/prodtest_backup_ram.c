@@ -59,6 +59,8 @@ static void prodtest_backup_ram_list(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+#if !PRODUCTION
+
 static void prodtest_backup_ram_erase(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -74,8 +76,6 @@ static void prodtest_backup_ram_erase(cli_t* cli) {
 
   cli_ok(cli, "");
 }
-
-#if !PRODUCTION
 
 static void prodtest_backup_ram_read(cli_t* cli) {
   if (cli_arg_count(cli) != 1) {
