@@ -424,9 +424,8 @@ void telemetry_update_battery_temp(float temp_c) {
   smcall_invoke1(float_to_u32.u, SMCALL_TELEMETRY_UPDATE_BATT_TEMP);
 }
 
-bool telemetry_get_battery_temp_min_max(float *out_min_c, float *out_max_c) {
-  return (bool)smcall_invoke2((uint32_t)out_min_c, (uint32_t)out_max_c,
-                              SMCALL_TELEMETRY_GET_BATT_TEMP_MIN_MAX);
+bool telemetry_get(telemetry_data_t *out) {
+  return (bool)smcall_invoke1((uint32_t)out, SMCALL_TELEMETRY_GET);
 }
 
 #endif

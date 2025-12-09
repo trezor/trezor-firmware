@@ -173,8 +173,8 @@ secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
 
 void telemetry_update_battery_temp__verified(float temp_c);
 
-bool telemetry_get_battery_temp_min_max__verified(float *out_min_c,
-                                                  float *out_max_c);
+bool telemetry_get__verified(telemetry_data_t *out);
+
 #endif  // USE_TELEMETRY
 
 #endif  // SECMON

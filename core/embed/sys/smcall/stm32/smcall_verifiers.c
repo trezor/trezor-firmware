@@ -583,16 +583,12 @@ void telemetry_update_battery_temp__verified(float temp_c) {
   telemetry_update_battery_temp(temp_c);
 }
 
-bool telemetry_get_battery_temp_min_max__verified(float *out_min_c,
-                                                  float *out_max_c) {
-  if (out_min_c && !probe_write_access(out_min_c, sizeof(*out_min_c))) {
-    goto access_violation;
-  }
-  if (out_max_c && !probe_write_access(out_max_c, sizeof(*out_max_c))) {
+bool telemetry_get__verified(telemetry_data_t *out) {
+  if (out != NULL && !probe_write_access(out, sizeof(*out))) {
     goto access_violation;
   }
 
-  return telemetry_get_battery_temp_min_max(out_min_c, out_max_c);
+  return telemetry_get(out);
 
 access_violation:
   apptask_access_violation();
