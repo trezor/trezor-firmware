@@ -24,6 +24,7 @@
 /** Global keys for items stored in the backup RAM */
 #define BACKUP_RAM_KEY_PM_RECOVERY 0x0001   // Power management recovery data
 #define BACKUP_RAM_KEY_BLE_SETTINGS 0x0002  // BLE settings
+#define BACKUP_RAM_KEY_TELEMETRY 0x0003  // Telemetry data (min/max temps etc.)
 
 /** Maximum size of data stored under a single key in backup RAM */
 #define BACKUP_RAM_MAX_KEY_DATA_SIZE 512
