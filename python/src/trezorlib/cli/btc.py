@@ -499,8 +499,3 @@ def verify_message(
     return btc.verify_message(
         session, coin, address, signature_bytes, message, chunkify=chunkify
     )
-
-
-#
-# deprecated interactive signing
-# ALL BELOW is legacy code and will be dropped
