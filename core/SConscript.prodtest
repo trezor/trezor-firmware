@@ -142,6 +142,10 @@ if 'boot_ucb' in FEATURES_AVAILABLE:
         'vendor/sphincsplus/ref/thash_sha2_simple.c',
         'vendor/sphincsplus/ref/utils.c',
         'vendor/sphincsplus/ref/wots.c',
+        'vendor/sphincsplus/ref/merkle.c',
+        'vendor/sphincsplus/ref/wotsx1.c',
+        'vendor/sphincsplus/ref/utilsx1.c',
+
     ]
 
 SOURCE_MLDSA = [
@@ -222,6 +226,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_tropic.c',
     'embed/projects/prodtest/cmd/prodtest_unit_test.c',
     'embed/projects/prodtest/cmd/prodtest_wpc.c',
+    'embed/projects/prodtest/cmd/prodtest_slhdsa.c',
     'embed/projects/prodtest/cmd/secure_channel.c',
 ]
 
