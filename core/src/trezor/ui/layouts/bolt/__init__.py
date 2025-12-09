@@ -1449,9 +1449,7 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-    def confirm_tron_send(
-        amount: str
-    ) -> Awaitable[None]:
+    def confirm_tron_send(amount: str) -> Awaitable[None]:
         amount_title = f"{TR.send__total_amount}:"
         fee_title = ""
         fee = ""

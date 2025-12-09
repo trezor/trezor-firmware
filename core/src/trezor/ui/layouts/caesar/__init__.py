@@ -1383,9 +1383,7 @@ if not utils.BITCOIN_ONLY:
             br_code=ButtonRequestType.SignTx,
         )
 
-    def confirm_tron_send(
-        amount: str
-    ) -> Awaitable[None]:
+    def confirm_tron_send(amount: str) -> Awaitable[None]:
         return raise_if_not_confirmed(
             trezorui_api.confirm_summary(
                 amount=amount,
