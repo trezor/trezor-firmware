@@ -27,6 +27,7 @@ FEATURES_WANTED = [
     "secure_domain",
     "secure_mode",
     "suspend",
+    "telemetry",
     "usb",
     "usb_iface_wire",
     ]

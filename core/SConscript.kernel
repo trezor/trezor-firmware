@@ -60,6 +60,7 @@ FEATURES_WANTED = [
     "smp",
     "storage",
     "suspend",
+    "telemetry",
     "tropic",
     "usb",
     "usb_iface_wire",

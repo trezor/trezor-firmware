@@ -237,6 +237,11 @@ def configure(
         paths += ["embed/util/hw_revision/inc"]
         sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
 
+    if "telemetry" in features_wanted:
+        sources += ["embed/util/telemetry/telemetry.c"]
+        paths += ["embed/util/telemetry/inc"]
+        defines += [("USE_TELEMETRY", "1")]
+
     defines += [
         "FRAMEBUFFER",
         "DISPLAY_RGBA8888",
