@@ -1513,7 +1513,7 @@
     "recovery__dry_run_bip39_valid_mismatch": "La c. seg. de la billetera indicada es válida pero no coincide con la de este dispositivo.",
     "recovery__dry_run_invalid_backup_entered": "La c. seg. de la billetera es inválida",
     "recovery__dry_run_slip39_valid_all_shares": "Todos los fragmentos son válidos y pertenecen a la c. seg. del dispositivo",
-    "recovery__dry_run_slip39_valid_match": "Los fragmentos de recuperación ingresados son válidos pero no coinciden con lo que se encuentra en este dispositivo.",
+    "recovery__dry_run_slip39_valid_match": "Los fragmentos de recuperación ingresados son válidos y coinciden con lo que se encuentra en el dispositivo.",
     "recovery__dry_run_slip39_valid_mismatch": {
       "Bolt": "Los fragmentos de recuperación ingresados son válidos pero no coinciden con lo que se encuentra en este dispositivo.",
       "Caesar": "Los fragmentos de recuperación ingresados son válidos pero no coinciden con lo que se encuentra en este dispositivo.",
@@ -1952,8 +1952,8 @@
       "Delizia": "Tarjeta SD incorrecta.",
       "Eckhart": ""
     },
-    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
-    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "secure_sync__delegated_identity_key_no_thp": "¿Permitir que Trezor Suite use Suite Sync con este Trezor?",
+    "secure_sync__delegated_identity_key_thp": "¿Permitir que {0} en {1} use Suite Sync con este Trezor?",
     "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Cancelar firma",
     "send__cancel_transaction": "Cancelar transacción",
@@ -2390,7 +2390,7 @@
     "words__cancel_and_exit": "Cancelar y salir",
     "words__cancel_question": "¿Cancelar?",
     "words__chain": "Cadena",
-    "words__comm_trouble": "Tu Trezor está teniendo problemas al comunicarse con tu dispositivo conectado.",
+    "words__comm_trouble": "Tu Trezor está teniendo problemas para comunicarse con tu dispositivo conectado.",
     "words__confirm": "Confirmar",
     "words__confirm_fee": "Confirmar comisión",
     "words__connect": "Conectar",

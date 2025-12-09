@@ -2547,8 +2547,8 @@
       "Delizia": "Falsche SD-Karte.",
       "Eckhart": ""
     },
-    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
-    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "secure_sync__delegated_identity_key_no_thp": "Trezor Suite erlauben, Suite Sync mit diesem Trezor zu verwenden?",
+    "secure_sync__delegated_identity_key_thp": "{0} auf {1} erlauben, Suite Sync mit diesem Trezor zu verwenden?",
     "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Signieren abbrechen",
     "send__cancel_transaction": "Transaktion abbrechen",
@@ -3068,7 +3068,12 @@
       "Delizia": "",
       "Eckhart": "TROPIC01 ist eine neue Generation des Open-Source Secure-Element-Chips, entwickelt für transparente und auditierbare Hardware-Sicherheit."
     },
-    "tutorial__use_trezor": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\n\rWeiter rechts.",
+    "tutorial__use_trezor": {
+      "Bolt": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\n\nWeiter rechts.",
+      "Caesar": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\nWeiter rechts.",
+      "Delizia": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\n\nWeiter rechts.",
+      "Eckhart": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\n\nWeiter rechts."
+    },
     "tutorial__welcome_press_right": "Willkommen bei Trezor. Drücke rechts, um fortzufahren.",
     "tutorial__welcome_safe5": {
       "Bolt": "",
