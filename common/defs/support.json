@@ -116,7 +116,7 @@
       "misc:tADA": "not implemented",
       "misc:tXRP": "not implemented",
       "eth:tHOL:17000": "Deprecated testnet",
-      "misc:TRX": "WIP: Partial support in Debug build"
+      "misc:TRX": "not implemented"
     }
   },
   "T2B1": {
