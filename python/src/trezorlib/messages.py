@@ -3207,6 +3207,7 @@ class Features(protobuf.MessageType):
         2: protobuf.Field("major_version", "uint32", repeated=False, required=True),
         3: protobuf.Field("minor_version", "uint32", repeated=False, required=True),
         4: protobuf.Field("patch_version", "uint32", repeated=False, required=True),
+        61: protobuf.Field("build_version", "uint32", repeated=False, required=False, default=None),
         5: protobuf.Field("bootloader_mode", "bool", repeated=False, required=False, default=None),
         6: protobuf.Field("device_id", "string", repeated=False, required=False, default=None),
         7: protobuf.Field("pin_protection", "bool", repeated=False, required=False, default=None),
@@ -3226,6 +3227,7 @@ class Features(protobuf.MessageType):
         22: protobuf.Field("fw_major", "uint32", repeated=False, required=False, default=None),
         23: protobuf.Field("fw_minor", "uint32", repeated=False, required=False, default=None),
         24: protobuf.Field("fw_patch", "uint32", repeated=False, required=False, default=None),
+        62: protobuf.Field("fw_build", "uint32", repeated=False, required=False, default=None),
         25: protobuf.Field("fw_vendor", "string", repeated=False, required=False, default=None),
         27: protobuf.Field("unfinished_backup", "bool", repeated=False, required=False, default=None),
         28: protobuf.Field("no_backup", "bool", repeated=False, required=False, default=None),
@@ -3271,6 +3273,7 @@ class Features(protobuf.MessageType):
         patch_version: "int",
         capabilities: Optional[Sequence["Capability"]] = None,
         vendor: Optional["str"] = None,
+        build_version: Optional["int"] = None,
         bootloader_mode: Optional["bool"] = None,
         device_id: Optional["str"] = None,
         pin_protection: Optional["bool"] = None,
@@ -3290,6 +3293,7 @@ class Features(protobuf.MessageType):
         fw_major: Optional["int"] = None,
         fw_minor: Optional["int"] = None,
         fw_patch: Optional["int"] = None,
+        fw_build: Optional["int"] = None,
         fw_vendor: Optional["str"] = None,
         unfinished_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
@@ -3330,6 +3334,7 @@ class Features(protobuf.MessageType):
         self.minor_version = minor_version
         self.patch_version = patch_version
         self.vendor = vendor
+        self.build_version = build_version
         self.bootloader_mode = bootloader_mode
         self.device_id = device_id
         self.pin_protection = pin_protection
@@ -3349,6 +3354,7 @@ class Features(protobuf.MessageType):
         self.fw_major = fw_major
         self.fw_minor = fw_minor
         self.fw_patch = fw_patch
+        self.fw_build = fw_build
         self.fw_vendor = fw_vendor
         self.unfinished_backup = unfinished_backup
         self.no_backup = no_backup

@@ -161,7 +161,6 @@ def _address_n(purpose, coin, account, script_type):
     return res
 
 
-@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "coin, account, purpose, script_type, descriptors", VECTORS_DESCRIPTORS
 )
@@ -169,8 +168,9 @@ def test_descriptors(
     session: Session, coin, account, purpose, script_type, descriptors
 ):
     with session.client as client:
-        IF = InputFlowShowXpubQRCode(session.client)
-        client.set_input_flow(IF.get())
+        if session.client.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session.client)
+            client.set_input_flow(IF.get())
 
         address_n = _address_n(purpose, coin, account, script_type)
         res = btc.get_public_node(
@@ -199,3 +199,21 @@ def test_descriptors_trezorlib(
             session, coin, account, purpose, script_type, show_display=True
         )
         assert res == descriptors
+
+
+def test_descriptors_unsupported(session: Session):
+    with session.client as client:
+        if session.client.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session.client)
+            client.set_input_flow(IF.get())
+
+        address_n = [H_(45), H_(0)]
+        res = btc.get_public_node(
+            session,
+            address_n,
+            show_display=True,
+            coin_name="Bitcoin",
+            script_type=messages.InputScriptType.SPENDMULTISIG,
+            ignore_xpub_magic=True,
+        )
+        assert res.descriptor is None

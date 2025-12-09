@@ -18,6 +18,8 @@
  */
 
 #include "crypto.h"
+#include <inttypes.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "address.h"
@@ -28,14 +30,18 @@
 #include "curves.h"
 #include "hmac.h"
 #include "layout.h"
+#include "memzero.h"
 #include "pbkdf2.h"
 #include "secp256k1.h"
 #include "segwit_addr.h"
 #include "sha2.h"
+#include "util.h"
 
 #if !BITCOIN_ONLY
 #include "cash_addr.h"
 #endif
+
+#define MAX_MULTISIG_PUBKEY_COUNT 15
 
 uint32_t ser_length(uint32_t len, uint8_t *out) {
   if (len < 253) {
@@ -378,7 +384,7 @@ uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
                                const MultisigRedeemScriptType *multisig,
                                uint8_t *pubkeys) {
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
-  if (n < 1 || n > 15) {
+  if (n < 1 || n > MAX_MULTISIG_PUBKEY_COUNT) {
     return 0;
   }
 
@@ -401,13 +407,12 @@ uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
 int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
                               const MultisigRedeemScriptType *multisig,
                               const uint8_t *pubkey) {
-  uint32_t n = cryptoMultisigPubkeyCount(multisig);
-
-  uint8_t pubkeys[33 * n];
+  uint8_t pubkeys[33 * MAX_MULTISIG_PUBKEY_COUNT];
   if (!cryptoMultisigPubkeys(coin, multisig, pubkeys)) {
     return -1;
   }
 
+  uint32_t n = cryptoMultisigPubkeyCount(multisig);
   for (size_t i = 0; i < n; i++) {
     if (memcmp(pubkeys + i * 33, pubkey, 33) == 0) {
       return i;
@@ -436,12 +441,12 @@ static int comparePubnodesLexicographically(const void *first,
 
 int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
                               uint8_t *hash) {
-  static const HDNodeType *pubnodes[15];
+  static const HDNodeType *pubnodes[MAX_MULTISIG_PUBKEY_COUNT];
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
-  if (n < 1 || n > 15) {
+  if (n < 1 || n > MAX_MULTISIG_PUBKEY_COUNT) {
     return 0;
   }
-  if (multisig->m < 1 || multisig->m > 15) {
+  if (multisig->m < 1 || multisig->m > MAX_MULTISIG_PUBKEY_COUNT) {
     return 0;
   }
   for (uint32_t i = 0; i < n; i++) {
@@ -974,4 +979,114 @@ bool multisig_uses_single_path(const MultisigRedeemScriptType *multisig) {
     }
     return true;
   }
+}
+
+// descriptor checksum manually translated from
+// https://github.com/bitcoin-core/HWI/blob/master/hwilib/descriptor.py
+
+static const char INPUT_CHARSET[] =
+    "0123456789()[],'/*abcdefgh@:$%{}"
+    "IJKLMNOPQRSTUVWXYZ&+-.;<=>?!^_|~"
+    "ijklmnopqrstuvwxyzABCDEFGH`#\"\\ ";
+static const char CHECKSUM_CHARSET[] = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+static const size_t DESCRIPTOR_CHECKSUM_LEN = 8;
+
+static uint64_t descriptor_polymod(uint64_t c, uint8_t val) {
+  uint64_t c0 = c >> 35;
+  c = ((c & 0x7FFFFFFFF) << 5) ^ val;
+  if (c0 & 1) {
+    c ^= 0xF5DEE51989;
+  }
+  if (c0 & 2) {
+    c ^= 0xA9FDCA3312;
+  }
+  if (c0 & 4) {
+    c ^= 0x1BAB10E32D;
+  }
+  if (c0 & 8) {
+    c ^= 0x3706B1677A;
+  }
+  if (c0 & 16) {
+    c ^= 0x644D626FFD;
+  }
+  return c;
+}
+
+static bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
+                                char dest[DESCRIPTOR_CHECKSUM_LEN]) {
+  uint64_t c = 1;
+  uint8_t cls = 0;
+  uint8_t clscount = 0;
+
+  for (size_t i = 0; i < descriptor_len; i++) {
+    const char *const pos_ptr = strchr(INPUT_CHARSET, descriptor[i]);
+    if (!pos_ptr || !*pos_ptr) {
+      return false;
+    }
+    size_t pos = pos_ptr - INPUT_CHARSET;
+    c = descriptor_polymod(c, pos & 31);
+    cls = cls * 3 + (pos >> 5);
+    clscount += 1;
+    if (clscount == 3) {
+      c = descriptor_polymod(c, cls);
+      cls = 0;
+      clscount = 0;
+    }
+  }
+  if (clscount > 0) {
+    c = descriptor_polymod(c, cls);
+  }
+  for (size_t j = 0; j < 8; j++) {
+    c = descriptor_polymod(c, 0);
+  }
+  c ^= 1;
+  for (size_t j = 0; j < DESCRIPTOR_CHECKSUM_LEN; j++) {
+    size_t pos = (c >> (5 * (7 - j))) & 31;
+    if (pos >= sizeof(CHECKSUM_CHARSET)) {
+      return false;
+    }
+    dest[j] = CHECKSUM_CHARSET[pos];
+  }
+  return true;
+}
+
+bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
+                       const uint32_t address_n[], size_t address_n_count,
+                       const char *xpub, char *dest, size_t dest_size) {
+  const char *type = NULL;
+  const char *terminator = "";
+  if (script_type == InputScriptType_SPENDADDRESS) {
+    type = "pkh";
+  } else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
+    type = "sh(wpkh";
+    terminator = ")";
+  } else if (script_type == InputScriptType_SPENDWITNESS) {
+    type = "wpkh";
+  } else if (script_type == InputScriptType_SPENDTAPROOT) {
+    type = "tr";
+  } else {
+    return false;
+  }
+  // (see layout2.c) /    i   '
+  char path_str[8 * (1 + 10 + 1) + 1] = {0};
+  size_t off = 0;
+  for (size_t i = 0; i < address_n_count; i++) {
+    uint32_t unhardened = address_n[i] & PATH_UNHARDEN_MASK;
+    bool is_hardened = address_n[i] & PATH_HARDENED;
+    off += snprintf(&path_str[off], sizeof(path_str) - off, "/%" PRIu32 "%s",
+                    unhardened, is_hardened ? "h" : "");
+    if (off + 1 >= sizeof(path_str)) {
+      return false;
+    }
+  }
+  int written = snprintf(dest, dest_size, "%s([%08" PRIx32 "%s]%s/<0;1>/*)%s#",
+                         type, root_fingerprint, path_str, xpub, terminator);
+  if (written > 1 && written + DESCRIPTOR_CHECKSUM_LEN < dest_size) {
+    // checksum is not computed over the `#` separator
+    if (descriptor_checksum(dest, written - 1, &dest[written])) {
+      return true;
+    }
+  }
+  memzero(dest, dest_size);
+  return false;
 }

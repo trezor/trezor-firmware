@@ -94,13 +94,14 @@ defs_check: ## check validity of coin definitions and protobuf files
 ruststyle:
 	@echo [RUSTFMT]
 	@cd core/embed/rust ; cargo fmt
-	@cd rust/trezor-client ; cargo fmt
+	make -C rust style
 
 ruststyle_check:
 	rustfmt --version
 	@echo [RUSTFMT]
 	@cd core/embed/rust ; cargo fmt -- --check
-	@cd rust/trezor-client ; cargo fmt -- --check
+	make -C rust style_check
+
 
 typecheck: pyright
 

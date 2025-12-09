@@ -10,8 +10,6 @@ pub use ethereum::*;
 
 #[cfg(feature = "solana")]
 mod solana;
-#[cfg(feature = "solana")]
-pub use solana::*;
 
 pub mod common;
 pub use common::*;

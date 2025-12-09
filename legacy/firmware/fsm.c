@@ -331,7 +331,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
       default: {  // show XPUBs
         int index = (screen - 2) / 2;
         int page = (screen - 2) % 2;
-        char xpub[XPUB_MAXLEN] = {0};
+        char xpub[XPUB_MAXLEN + 1] = {0};
         const HDNodeType *node_ptr = NULL;
         if (multisig->nodes_count) {  // use multisig->nodes
           node_ptr = &(multisig->nodes[index]);
