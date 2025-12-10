@@ -26,6 +26,29 @@
 
 #include <../vendor/sphincsplus/ref/api.h>
 
+int g_sha256_perfc_init_calls;
+int g_sha256_perfc_inc_blocks_calls;
+int g_sha256_perfc_inc_blocks;
+int g_sha256_perfc_finalize_calls;
+int g_sha256_perfc_finalize_bytes;
+
+static void clear_perf_counters() {
+  g_sha256_perfc_init_calls = 0;
+  g_sha256_perfc_inc_blocks_calls = 0;
+  g_sha256_perfc_inc_blocks = 0;
+  g_sha256_perfc_finalize_calls = 0;
+  g_sha256_perfc_finalize_bytes = 0;
+}
+
+static void trace_perf_counters(cli_t* cli) {
+  cli_trace(cli, "SHA256 performance counters:");
+  cli_trace(cli, "  init calls:           %d", g_sha256_perfc_init_calls);
+  cli_trace(cli, "  inc blocks calls:     %d", g_sha256_perfc_inc_blocks_calls);
+  cli_trace(cli, "  inc blocks processed: %d", g_sha256_perfc_inc_blocks);
+  cli_trace(cli, "  finalize calls:       %d", g_sha256_perfc_finalize_calls);
+  cli_trace(cli, "  finalize bytes:       %d", g_sha256_perfc_finalize_bytes);
+}
+
 static void prodtest_test_slhdsa(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -54,19 +77,23 @@ static void prodtest_test_slhdsa(cli_t* cli) {
 
   cli_trace(cli, "Signing message using SLHDSA...");
 
+  clear_perf_counters();
   start = systick_ms();
   crypto_sign_signature(sig, &sig_len, msg, sizeof(msg), sec_key);
   duration = systick_ms() - start;
 
   cli_trace(cli, "Signed in %u.%u s", duration / 1000, duration % 1000);
+  trace_perf_counters(cli);
 
   cli_trace(cli, "Verifying signature using SLHDSA...");
 
+  clear_perf_counters();
   start = systick_ms();
   int rc = crypto_sign_verify(sig, sig_len, msg, sizeof(msg), pub_key);
   duration = systick_ms() - start;
 
   cli_trace(cli, "Verified in %u.%u s", duration / 1000, duration % 1000);
+  trace_perf_counters(cli);
 
   cli_trace(cli, "Signature verification result: %s",
             (rc == 0) ? "OK" : "FAIL");
@@ -92,7 +119,7 @@ void prodtest_test_hash(cli_t* cli) {
   xsha256_init(&ctx2);
 #endif
 
-  xsha256_update(&ctx1, (const uint8_t*) test_vec, strlen(test_vec));
+  xsha256_update(&ctx1, (const uint8_t*)test_vec, strlen(test_vec));
 
 #if XSHA256_CONTEXT_SAVING
   const char* test_vec2 =
@@ -105,7 +132,6 @@ void prodtest_test_hash(cli_t* cli) {
 
   cli_ok_hexdata(cli, digest, sizeof(digest));
 }
-
 
 // clang-format off
 PRODTEST_CLI_CMD(
