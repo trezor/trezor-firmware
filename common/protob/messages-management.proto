@@ -619,8 +619,8 @@ message RebootToBootloader {
     optional BootCommand boot_command = 1 [default=STOP_AND_WAIT];
     // Firmware header to be flashed after rebooting to bootloader
     optional bytes firmware_header = 2;
-    // Length of language blob to be installed before upgrading firmware
-    optional uint32 language_data_length = 3 [default=0];
+    // Deprecated (length of language blob to be installed before upgrading firmware)
+    reserved 3;
 
     enum BootCommand {
         // Go to bootloader menu
