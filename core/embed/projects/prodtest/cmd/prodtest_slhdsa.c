@@ -21,6 +21,7 @@
 
 #include <rtl/cli.h>
 #include <sec/rng.h>
+#include <sec/xsha256.h>
 #include <sys/systick.h>
 
 #include <../vendor/sphincsplus/ref/api.h>
@@ -77,10 +78,46 @@ void randombytes(unsigned char* x, unsigned long long xlen) {
   rng_fill_buffer(x, xlen);
 }
 
+void prodtest_test_hash(cli_t* cli) {
+  const char* test_vec = cli_arg(cli, "test-vector");
+
+  uint8_t digest[32];
+
+  xsha256_ctx_t ctx1;
+  xsha256_init(&ctx1);
+
+#if XSHA256_CONTEXT_SAVING
+  // Test context saving/restoring
+  xsha256_ctx_t ctx2;
+  xsha256_init(&ctx2);
+#endif
+
+  xsha256_update(&ctx1, (const uint8_t*) test_vec, strlen(test_vec));
+
+#if XSHA256_CONTEXT_SAVING
+  const char* test_vec2 =
+      "xxx232132130-391oakjdlksjfodkjfssdlkfns<;"
+      "fdsfposdfspdofispdofisdopfidspfoisf";
+  xsha256_update(&ctx2, (const uint8_t*)test_vec2, strlen(test_vec2));
+#endif
+
+  xsha256_digest(&ctx1, digest);
+
+  cli_ok_hexdata(cli, digest, sizeof(digest));
+}
+
+
 // clang-format off
 PRODTEST_CLI_CMD(
   .name = "test-slhdsa",
   .func = prodtest_test_slhdsa,
   .info = "Perform SLHDSA self-test",
   .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "test-hash",
+  .func = prodtest_test_hash,
+  .info = "Test hardware hash unit",
+  .args = "<test-vector>"
 );

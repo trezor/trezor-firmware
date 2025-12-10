@@ -83,6 +83,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
 
     sources += [
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
+        "embed/sec/hash_processor/stm32u5/xsha256.c",
         "embed/sec/monoctr/stm32u5/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",
         "embed/sec/rng/stm32/rng.c",
