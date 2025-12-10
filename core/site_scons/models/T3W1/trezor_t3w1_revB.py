@@ -208,7 +208,6 @@ def configure(
         sources += ["vendor/libtropic/src/lt_l2_frame_check.c"]
         sources += ["vendor/libtropic/src/lt_l3_process.c"]
         sources += ["vendor/libtropic/src/lt_random.c"]
-        sources += ["vendor/libtropic/src/lt_secure_memzero.c"]
         sources += ["vendor/libtropic/src/lt_tr01_attrs.c"]
 
         paths += ["embed/sec/tropic/inc"]

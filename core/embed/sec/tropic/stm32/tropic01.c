@@ -23,6 +23,7 @@
 
 #include <libtropic.h>
 
+#include <memzero.h>
 #include <sec/rng.h>
 #include <sec/tropic.h>
 #include <sys/systick.h>
@@ -199,6 +200,10 @@ lt_ret_t lt_port_random_bytes(lt_l2_state_t *s2, void *buff, size_t count) {
   rng_fill_buffer((uint8_t *)buff, count);
 
   return LT_OK;
+}
+
+void lt_secure_memzero(void *const ptr, const size_t count) {
+  memzero(ptr, count);
 }
 
 #endif
