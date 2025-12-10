@@ -191,32 +191,24 @@ def configure(
     if "tropic" in features_wanted:
         sources += ["embed/sec/tropic/tropic.c"]
         sources += ["embed/sec/tropic/stm32/tropic01.c"]
+        sources += ["vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_aesgcm.c"]
+        sources += ["vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_common.c"]
+        sources += ["vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_hmac_sha256.c"]
+        sources += ["vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_sha256.c"]
+        sources += ["vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_x25519.c"]
         sources += ["vendor/libtropic/src/libtropic.c"]
+        sources += ["vendor/libtropic/src/libtropic_l2.c"]
+        sources += ["vendor/libtropic/src/libtropic_l3.c"]
         sources += ["vendor/libtropic/src/lt_asn1_der.c"]
         sources += ["vendor/libtropic/src/lt_crc16.c"]
-        sources += ["vendor/libtropic/src/lt_l1_port_wrap.c"]
-        sources += ["vendor/libtropic/src/lt_l1.c"]
-        sources += ["vendor/libtropic/src/lt_l2.c"]
-        sources += ["vendor/libtropic/src/lt_l2_frame_check.c"]
-        sources += ["vendor/libtropic/src/lt_l3.c"]
-        sources += ["vendor/libtropic/src/lt_l3_process.c"]
         sources += ["vendor/libtropic/src/lt_hkdf.c"]
+        sources += ["vendor/libtropic/src/lt_l1.c"]
+        sources += ["vendor/libtropic/src/lt_l1_port_wrap.c"]
+        sources += ["vendor/libtropic/src/lt_l2_frame_check.c"]
+        sources += ["vendor/libtropic/src/lt_l3_process.c"]
         sources += ["vendor/libtropic/src/lt_random.c"]
-        sources += [
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_aesgcm.c"
-        ]
-        sources += [
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_ecdsa.c"
-        ]
-        sources += [
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_ed25519.c"
-        ]
-        sources += [
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_sha256.c"
-        ]
-        sources += [
-            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_x25519.c"
-        ]
+        sources += ["vendor/libtropic/src/lt_secure_memzero.c"]
+        sources += ["vendor/libtropic/src/lt_tr01_attrs.c"]
         paths += ["embed/sec/tropic/inc"]
         paths += ["vendor/libtropic/include"]
         paths += ["vendor/libtropic/src"]

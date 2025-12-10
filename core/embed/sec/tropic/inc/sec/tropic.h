@@ -38,14 +38,14 @@
 
 // Pairing key used by prodtest to inject the privileged and unprivileged
 // pairing keys.
-#define TROPIC_FACTORY_PAIRING_KEY_SLOT 0  // PAIRING_KEY_SLOT_INDEX_0
+#define TROPIC_FACTORY_PAIRING_KEY_SLOT 0  // TR01_PAIRING_KEY_SLOT_INDEX_0
 
 // Pairing key used by the HSM to inject the attestation FIDO key and generate
 // the device key, and by unofficial firwmare.
-#define TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT 1  // PAIRING_KEY_SLOT_INDEX_1
+#define TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT 1  // TR01_PAIRING_KEY_SLOT_INDEX_1
 
 // Pairing key used by official firmware.
-#define TROPIC_PRIVILEGED_PAIRING_KEY_SLOT 2  // PAIRING_KEY_SLOT_INDEX_2
+#define TROPIC_PRIVILEGED_PAIRING_KEY_SLOT 2  // TR01_PAIRING_KEY_SLOT_INDEX_2
 
 #define TROPIC_MAC_AND_DESTROY_SIZE 32
 
@@ -65,7 +65,7 @@ void tropic_deinit(void);
 #include "libtropic.h"
 lt_handle_t* tropic_get_handle(void);
 
-lt_ret_t tropic_custom_session_start(pkey_index_t pairing_key_index);
+lt_ret_t tropic_custom_session_start(lt_pkey_index_t pairing_key_index);
 
 lt_ret_t tropic_session_invalidate(void);
 
