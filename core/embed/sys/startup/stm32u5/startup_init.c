@@ -69,6 +69,28 @@ uint32_t SystemCoreClock = DEFAULT_FREQ * 1000000U;
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
 
+#ifndef SECURE_MODE
+
+// The following functions replace ST HAL routines from
+// stm32u5xx_hal_rcc.c and stm32u5xx_hal_rcc_ex.c that are not safe to call in
+// non-secure mode (e.g. the kernel running in non-secure mode),
+// because the RCC peripheral is not fully accessible.
+
+// Clocks are fully configured by secure monitor and the kernel can
+// rely on SystemCoreClock variable being set correctly.
+
+uint32_t HAL_RCC_GetHCLKFreq(void) { return SystemCoreClock; }
+
+uint32_t HAL_RCC_GetSysClockFreq(void) { return SystemCoreClock; }
+
+uint32_t HAL_RCCEx_GetPeriphCLKFreq(uint64_t PeriphClk) {
+  ensure(sectrue * (PeriphClk == RCC_PERIPHCLK_USART3),
+         "Only USART3 supported");
+  return SystemCoreClock;
+}
+
+#endif  // SECURE_MODE
+
 // This function replaces calls to universal, but flash-wasting
 //  function HAL_RCC_OscConfig.
 //

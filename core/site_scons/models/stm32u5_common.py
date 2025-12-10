@@ -70,8 +70,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pwr.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pwr_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_ramcfg.c",
-        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rcc.c",
-        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rcc_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rtc.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rtc_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_spi.c",
@@ -80,6 +78,12 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_tim_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_fmc.c",
     ]
+
+    if "secure_mode" in features_wanted:
+        sources += [
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rcc.c",
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rcc_ex.c",
+        ]
 
     sources += [
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
