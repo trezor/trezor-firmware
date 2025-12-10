@@ -26,6 +26,10 @@
 
 #include "ed25519-donna/ed25519.h"
 
+// Max size of data slot fixed to 444 B for backwards compatibility. From
+// Tropic's (RISCV) FW version >=2.0.0, 475 B can be utilized from each slot.
+#define TROPIC_SLOT_MAX_SIZE_V1 (444)
+
 // FIDO attestation key and certificate.
 #define TROPIC_FIDO_CERT_FIRST_SLOT 0
 #define TROPIC_FIDO_CERT_SLOT_COUNT 3

@@ -498,7 +498,7 @@ access_violation:
 
 bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
                                 uint16_t *size) {
-  if (!probe_write_access(data, R_MEM_DATA_SIZE_MAX)) {
+  if (!probe_write_access(data, TROPIC_SLOT_MAX_SIZE_V1)) {
     goto access_violation;
   }
 
