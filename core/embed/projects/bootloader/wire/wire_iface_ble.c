@@ -171,15 +171,19 @@ bool ble_iface_start_pairing(void) {
   static const char DIGITS[] = "0123456789";
   static const char UPPERCASE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-  char triplet[4] = {get_random_from_charset(UPPERCASE),
-                     get_random_from_charset(DIGITS),
-                     get_random_from_charset(UPPERCASE), '\0'};
+  char suffix[] = {
+      ' ',
+      '(',
+      get_random_from_charset(UPPERCASE),
+      get_random_from_charset(DIGITS),
+      get_random_from_charset(UPPERCASE),
+      ')',
+      '\0',
+  };
 
   char adv_name[BLE_ADV_NAME_LEN] = "";
   cstr_append(adv_name, sizeof(adv_name), MODEL_FULL_NAME);
-  cstr_append(adv_name, sizeof(adv_name), " (");
-  cstr_append(adv_name, sizeof(adv_name), triplet);
-  cstr_append(adv_name, sizeof(adv_name), ")");
+  cstr_append(adv_name, sizeof(adv_name), suffix);
 
   if (!ble_enter_pairing_mode((const uint8_t*)adv_name,
                               strnlen(adv_name, BLE_ADV_NAME_LEN))) {
