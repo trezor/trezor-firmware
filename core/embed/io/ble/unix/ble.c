@@ -323,14 +323,14 @@ bool ble_get_event(ble_event_t *event) {
       send_to_emu(' ');
       break;
     case BLE_CONNECTION_CHANGED:
-      LOG_ERR("CONNECTION_CHANGED not implemented");
+      LOG_WARN("CONNECTION_CHANGED not implemented");
       break;
     case BLE_EMULATOR_PING:
       send_to_emu(' ');
       return ble_get_event(event);  // do not forward to app
       break;
     default:
-      LOG_ERR("unknown event type");
+      LOG_WARN("unknown event type");
       break;
   }
 
