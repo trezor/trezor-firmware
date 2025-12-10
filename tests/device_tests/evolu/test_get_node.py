@@ -1,7 +1,7 @@
 import pytest
 
 from trezorlib import evolu
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 
 pytestmark = pytest.mark.models("core")

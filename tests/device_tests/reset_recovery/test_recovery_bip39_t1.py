@@ -25,7 +25,10 @@ from ...common import MNEMONIC12
 PIN4 = "1234"
 PIN6 = "789456"
 
-pytestmark = [pytest.mark.models("legacy"), pytest.mark.setup_client(uninitialized=True)]
+pytestmark = [
+    pytest.mark.models("legacy"),
+    pytest.mark.setup_client(uninitialized=True),
+]
 
 
 def test_pin_passphrase(session: Session):

@@ -30,7 +30,7 @@ class RefundMemo:
 
 @dataclass
 class CoinPurchaseMemo:
-    amount: int
+    amount: str
     coin_name: str
     slip44: int
     address_n: list[int]

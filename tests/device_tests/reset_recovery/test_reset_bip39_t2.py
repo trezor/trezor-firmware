@@ -19,8 +19,8 @@ from mnemonic import Mnemonic
 
 from trezorlib import device, messages
 from trezorlib.btc import get_public_node
-from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import DebugSession as Session, TrezorTestContext
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutType, TrezorTestContext
 from trezorlib.exceptions import TrezorFailure
 
 from ...common import EXTERNAL_ENTROPY, MNEMONIC12, MOCK_GET_ENTROPY, generate_entropy

@@ -19,9 +19,8 @@ from typing import Any
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.debuglink import message_filters
+from trezorlib.debuglink import LayoutType, message_filters
 from trezorlib.exceptions import Cancelled
 from trezorlib.tools import parse_path
 

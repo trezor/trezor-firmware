@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import debuglink, device, models
+from trezorlib import debuglink, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.messages import BackupType

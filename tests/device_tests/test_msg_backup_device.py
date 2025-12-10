@@ -19,8 +19,8 @@ import pytest
 import shamir_mnemonic as shamir
 
 from trezorlib import device, messages
-from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import (
@@ -99,8 +99,7 @@ def test_backup_slip39_single(session: Session):
         IF = InputFlowBip39Backup(
             session,
             confirm_success=(
-                session.layout_type
-                not in (LayoutType.Delizia, LayoutType.Eckhart)
+                session.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart)
             ),
         )
         client.set_input_flow(IF.get())

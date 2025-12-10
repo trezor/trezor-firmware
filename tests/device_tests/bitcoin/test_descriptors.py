@@ -202,9 +202,9 @@ def test_descriptors_trezorlib(
 
 
 def test_descriptors_unsupported(session: Session):
-    with session.client as client:
-        if session.client.model != models.T1B1:
-            IF = InputFlowShowXpubQRCode(session.client)
+    with session.test_ctx as client:
+        if session.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session)
             client.set_input_flow(IF.get())
 
         address_n = [H_(45), H_(0)]

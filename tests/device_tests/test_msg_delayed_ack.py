@@ -23,7 +23,7 @@ def test_delayed_ack(session: Session):
     assert isinstance(br, messages.ButtonRequest)
     assert br.code == messages.ButtonRequestType.ProtectCall
     # confirm layout before ButtonAck is sent
-    session.debug_client.debug.press_yes()
+    session.debug.press_yes()
     # "waiting" screen should be shown after 2 seconds on Core models
     # (following https://github.com/trezor/trezor-firmware/issues/5884)
     time.sleep(2.5)

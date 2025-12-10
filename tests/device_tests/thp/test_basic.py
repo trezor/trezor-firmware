@@ -1,12 +1,11 @@
 import pytest
 
-from trezorlib import messages
+from trezorlib import messages, protocol_v1
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.mapping import DEFAULT_MAPPING
-from trezorlib.transport import Transport, Timeout
-from trezorlib import protocol_v1
-from trezorlib.thp.message import Message
 from trezorlib.thp import control_byte, thp_io
+from trezorlib.thp.message import Message
+from trezorlib.transport import Timeout, Transport
 
 pytestmark = [
     pytest.mark.protocol("thp"),

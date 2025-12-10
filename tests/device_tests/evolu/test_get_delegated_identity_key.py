@@ -1,7 +1,7 @@
 import pytest
 
 from trezorlib import evolu
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 pytestmark = [pytest.mark.models("core"), pytest.mark.protocol("protocol_v1")]
 

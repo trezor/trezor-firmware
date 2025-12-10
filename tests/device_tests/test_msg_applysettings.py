@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from trezorlib import btc, device, exceptions, messages, misc, models
-from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.tools import parse_path
 
