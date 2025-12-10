@@ -166,7 +166,7 @@ impl ValueKeypad {
 
     fn get_button_border(&self, idx: usize) -> Rect {
         // Make sure the key is within bounds.
-        debug_assert!(idx < MAX_KEYS);
+        debug_assert!(idx <= MAX_KEYS);
         match idx {
             0 => Rect::from_top_left_and_size(self.area.top_left(), Self::BUTTON_SIZE),
             1 => Rect::from_center_and_size(
@@ -189,7 +189,7 @@ impl ValueKeypad {
     }
 
     fn get_touch_expand(&self, idx: usize) -> Insets {
-        debug_assert!(idx < MAX_KEYS); // Ensure the index is within bounds.
+        debug_assert!(idx <= MAX_KEYS); // Ensure the index is within bounds.
 
         let vertical_spacing = (self.area.height() - Self::BUTTON_SIZE.y * Self::ROWS as i16)
             / (Self::ROWS as i16 - 1);
