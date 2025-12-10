@@ -50,7 +50,7 @@ ssize_t dbg_console_read(void* buffer, size_t buffer_size);
  * @brief Write data to the debugging console.
  *
  * The function may be blocking, depending on the backend implementation
- * and it's configuration. If called from interrupt context, the function
+ * and its configuration. If called from interrupt context, the function
  * is always non-blocking.
  *
  * @param data Pointer to the data to write.

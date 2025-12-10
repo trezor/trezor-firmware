@@ -72,7 +72,7 @@ static ssize_t sysview_write(const void *data, size_t data_size) {
 #if 0
   SEGGER_RTT_Write(0, data, data_size);
 #endif
-  return MAX(data_size, sizeof(str) - 1);
+  return MIN(data_size, sizeof(str) - 1);
 }
 #endif
 
