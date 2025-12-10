@@ -85,7 +85,6 @@ def configure(
             "vendor/libtropic/src/lt_l2_frame_check.c",
             "vendor/libtropic/src/lt_l3_process.c",
             "vendor/libtropic/src/lt_random.c",
-            "vendor/libtropic/src/lt_secure_memzero.c",
             "vendor/libtropic/src/lt_tr01_attrs.c",
         ]
         paths += ["embed/sec/tropic/inc"]
