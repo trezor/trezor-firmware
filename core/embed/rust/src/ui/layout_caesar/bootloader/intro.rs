@@ -106,7 +106,7 @@ impl<'a> Component for Intro<'a> {
             .with_fg(BLD_FG)
             .render(target);
 
-        shape::ToifImage::new(area.top_left(), ICON_WARN_TITLE.toif)
+        shape::ToifImage::new(area.top_right(), ICON_WARN_TITLE.toif)
             .with_align(Alignment2D::TOP_RIGHT)
             .with_fg(BLD_FG)
             .render(target);
