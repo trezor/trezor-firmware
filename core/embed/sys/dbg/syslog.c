@@ -129,13 +129,6 @@ static const char* log_level_str(log_level_t level) {
   }
 }
 
-#ifndef TREZOR_EMULATOR
-static inline bool in_thread_context(void) {
-  uint32_t ipsr = __get_IPSR();
-  return (ipsr == 0 || ipsr == 11);  // Thread mode or SVCall
-}
-#endif
-
 bool syslog_start_record(const log_source_t* source, log_level_t level) {
   syslog_t* syslog = &g_syslog;
 
