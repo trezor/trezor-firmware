@@ -1206,7 +1206,7 @@ static lt_ret_t data_write(lt_handle_t* h, uint16_t first_slot,
 
   const size_t prefix_length = 2;
   const size_t prefixed_data_length = data_length + prefix_length;
-  const size_t total_slots_length = R_MEM_DATA_SIZE_MAX * slots_count;
+  const size_t total_slots_length = TROPIC_SLOT_MAX_SIZE_V1 * slots_count;
   if (prefixed_data_length > total_slots_length) {
     return LT_PARAM_ERR;
   }
@@ -1233,12 +1233,12 @@ static lt_ret_t data_write(lt_handle_t* h, uint16_t first_slot,
     }
 
     ret = lt_r_mem_data_write(h, slot, prefixed_data + position,
-                              R_MEM_DATA_SIZE_MAX);
+                              TROPIC_SLOT_MAX_SIZE_V1);
     if (ret != LT_OK) {
       return ret;
     }
 
-    position += R_MEM_DATA_SIZE_MAX;
+    position += TROPIC_SLOT_MAX_SIZE_V1;
     slot += 1;
   }
 
@@ -1257,7 +1257,7 @@ static lt_ret_t data_read(lt_handle_t* h, uint16_t first_slot,
   //   * It uses unnecessary amount of memory.
   //   * It reads from a data slot even if there is no data to be read.
 
-  const size_t total_slots_length = R_MEM_DATA_SIZE_MAX * slots_count;
+  const size_t total_slots_length = TROPIC_SLOT_MAX_SIZE_V1 * slots_count;
   uint8_t prefixed_data[total_slots_length];
   size_t position = 0;
   uint16_t slot = first_slot;
@@ -1265,16 +1265,16 @@ static lt_ret_t data_read(lt_handle_t* h, uint16_t first_slot,
   while (slot <= last_data_slot) {
     uint16_t slot_length = 0;
     lt_ret_t ret = lt_r_mem_data_read(h, slot, prefixed_data + position,
-                                      R_MEM_DATA_SIZE_MAX, &slot_length);
+                                      TROPIC_SLOT_MAX_SIZE_V1, &slot_length);
     if (ret != LT_OK) {
       return ret;
     }
 
-    if (slot_length != R_MEM_DATA_SIZE_MAX) {
+    if (slot_length != TROPIC_SLOT_MAX_SIZE_V1) {
       return LT_FAIL;
     }
 
-    position += R_MEM_DATA_SIZE_MAX;
+    position += TROPIC_SLOT_MAX_SIZE_V1;
     slot += 1;
   }
 
@@ -1317,7 +1317,7 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   }
 
   size_t certificate_length = 0;
-  uint8_t certificate[R_MEM_DATA_SIZE_MAX * slots_count];
+  uint8_t certificate[TROPIC_SLOT_MAX_SIZE_V1 * slots_count];
   if (!cli_arg_hex(cli, "hex-data", certificate, sizeof(certificate),
                    &certificate_length)) {
     if (certificate_length == sizeof(certificate)) {
@@ -1356,7 +1356,7 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   }
 
   size_t certificate_read_length = 0;
-  uint8_t certificate_read[R_MEM_DATA_SIZE_MAX * slots_count];
+  uint8_t certificate_read[TROPIC_SLOT_MAX_SIZE_V1 * slots_count];
   ret = data_read(tropic_handle, first_slot, slots_count, certificate_read,
                   sizeof(certificate_read), &certificate_read_length);
   if (ret != LT_OK || certificate_read_length != certificate_length ||
@@ -1386,7 +1386,7 @@ static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
     return;
   }
 
-  uint8_t certificate[R_MEM_DATA_SIZE_MAX * slots_count];
+  uint8_t certificate[TROPIC_SLOT_MAX_SIZE_V1 * slots_count];
   size_t certificate_length = 0;
   ret = data_read(tropic_get_handle(), first_slot, slots_count, certificate,
                   sizeof(certificate), &certificate_length);
