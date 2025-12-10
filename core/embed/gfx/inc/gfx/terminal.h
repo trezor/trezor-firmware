@@ -34,7 +34,7 @@
 void term_set_color(gfx_color_t fgcolor, gfx_color_t bgcolor);
 
 /**
- * Printf text of given length to the terminal.
+ * Prints a text of given length to the terminal.
  *
  * @param text Text to print.
  * @param textlen Number of characters to print from the text.
@@ -42,21 +42,21 @@ void term_set_color(gfx_color_t fgcolor, gfx_color_t bgcolor);
 void term_nprint(const char *text, int textlen);
 
 /**
- * Print null-terminated text to the terminal.
+ * Prints null-terminated text to the terminal.
  *
  * @param text Text to print.
  */
 void term_print(const char *text);
 
 /**
- * Print a 32-bit integer in decimal format to the terminal.
+ * Prints a 32-bit integer in decimal format to the terminal.
  *
  * @param value Integer value to print.
  */
 void term_print_int32(int32_t value);
 
 /**
- * printf-style formatted text output to the terminal.
+ * Prints printf-style formatted text to the terminal.
  *
  * The function internally uses `mini_vsnprintf` to format the text.
  *
