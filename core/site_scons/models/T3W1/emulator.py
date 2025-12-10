@@ -73,7 +73,7 @@ def configure(
             "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_hmac_sha256.c",
             "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_sha256.c",
             "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_x25519.c",
-            "vendor/libtropic/hal/port/unix/lt_port_unix_tcp.c",
+            "vendor/libtropic/hal/posix/tcp/libtropic_port_posix_tcp.c",
             "vendor/libtropic/src/libtropic.c",
             "vendor/libtropic/src/libtropic_l2.c",
             "vendor/libtropic/src/libtropic_l3.c",
