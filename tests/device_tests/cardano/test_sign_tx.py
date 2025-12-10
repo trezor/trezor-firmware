@@ -17,8 +17,8 @@
 import pytest
 
 from trezorlib import btc, cardano, device, messages, misc
-from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path

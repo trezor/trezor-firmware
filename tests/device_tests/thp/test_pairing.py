@@ -5,7 +5,6 @@ from hashlib import sha256
 from unittest.mock import patch
 
 import pytest
-from trezorlib.thp.credentials import StaticCredential
 import typing_extensions as tx
 
 from tests.common import get_test_address
@@ -29,12 +28,14 @@ from trezorlib.messages import (
     ThpSelectMethod,
 )
 from trezorlib.models import T2T1
-from trezorlib.thp import pairing, curve25519, channel
+from trezorlib.thp import channel, curve25519, pairing
+from trezorlib.thp.credentials import StaticCredential
 
 from .connect import (
+    break_channel,
+    nfc_pairing,
     prepare_channel_for_handshake,
     prepare_channel_for_pairing,
-    break_channel,
 )
 
 if t.TYPE_CHECKING:
@@ -155,32 +156,13 @@ def test_pairing_cancel_2(client: Client) -> None:
 
 def test_pairing_nfc(client: Client) -> None:
     prepare_channel_for_pairing(client)
-    _nfc_pairing(client)
+    nfc_pairing(client)
     client.pairing.finish()
-
-
-def _nfc_pairing(client: Client) -> None:
-    assert isinstance(client.pairing, pairing.PairingController)
-    method = pairing.Nfc(client.pairing)
-
-    # NFC screen shown
-
-    # Read `nfc_secret` and `handshake_hash` from Trezor using debuglink
-    pairing_info = client.debug.pairing_info(
-        thp_channel_id=client.channel.channel_id.to_bytes(2, "big"),
-        handshake_hash=client.channel.handshake_hash,
-        nfc_secret_host=method.nfc_host_secret,
-    )
-    assert pairing_info.handshake_hash is not None
-    assert pairing_info.nfc_secret_trezor is not None
-    assert pairing_info.handshake_hash[:16] == client.channel.handshake_hash[:16]
-
-    method.send_nfc_tag(pairing_info.nfc_secret_trezor)
 
 
 def test_connection_confirmation_cancel(client: Client) -> None:
     prepare_channel_for_pairing(client)
-    _nfc_pairing(client)
+    nfc_pairing(client)
 
     # Request credential with confirmation after pairing
     credential = client.pairing.request_credential()
@@ -209,7 +191,7 @@ def test_connection_confirmation_cancel(client: Client) -> None:
 
 def test_autoconnect_credential_request_cancel(client: Client) -> None:
     prepare_channel_for_pairing(client)
-    _nfc_pairing(client)
+    nfc_pairing(client)
 
     # Request credential with confirmation after pairing
     credential = client.pairing.request_credential()
@@ -237,7 +219,7 @@ def test_autoconnect_credential_request_cancel(client: Client) -> None:
 
 def test_credential_phase(client: Client) -> None:
     prepare_channel_for_pairing(client)
-    _nfc_pairing(client)
+    nfc_pairing(client)
 
     # Request credential with confirmation after pairing
     credential = client.pairing.request_credential(autoconnect=False)
@@ -300,7 +282,7 @@ def test_credential_phase(client: Client) -> None:
 
 def test_credential_request_in_encrypted_transport_phase(client: Client) -> None:
     prepare_channel_for_pairing(client)
-    _nfc_pairing(client)
+    nfc_pairing(client)
 
     # Request credential with confirmation after pairing
     credential = client.pairing.request_credential()
@@ -363,7 +345,7 @@ def test_channel_replacement(client: Client) -> None:
 
 def test_credential_for_different_key(client: Client) -> None:
     prepare_channel_for_pairing(client)
-    _nfc_pairing(client)
+    nfc_pairing(client)
 
     assert client.pairing.state is pairing.ControllerLifecycle.PAIRING_COMPLETED
     assert client.channel.state is channel.ChannelState.CREDENTIAL_PHASE
