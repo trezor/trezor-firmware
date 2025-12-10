@@ -3949,7 +3949,6 @@ class RebootToBootloader(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("boot_command", "BootCommand", repeated=False, required=False, default=BootCommand.STOP_AND_WAIT),
         2: protobuf.Field("firmware_header", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("language_data_length", "uint32", repeated=False, required=False, default=0),
     }
 
     def __init__(
@@ -3957,11 +3956,9 @@ class RebootToBootloader(protobuf.MessageType):
         *,
         boot_command: Optional["BootCommand"] = BootCommand.STOP_AND_WAIT,
         firmware_header: Optional["bytes"] = None,
-        language_data_length: Optional["int"] = 0,
     ) -> None:
         self.boot_command = boot_command
         self.firmware_header = firmware_header
-        self.language_data_length = language_data_length
 
 
 class GetNonce(protobuf.MessageType):
