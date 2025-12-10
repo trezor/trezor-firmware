@@ -124,7 +124,7 @@ bool cstr_append(char* dst, size_t dst_len, const char* src) {
     dst_len--;
   }
 
-  if (dst_len > 1) {
+  if (dst_len > 0) {
     *dst = '\0';
   }
 
