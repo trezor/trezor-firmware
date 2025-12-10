@@ -42,7 +42,8 @@ static void format_ver(uint32_t version, char *buffer, size_t buffer_len) {
   cstr_append_int32(buffer, buffer_len, ((version >> 8) & 0xFF));
   cstr_append(buffer, buffer_len, ".");
   cstr_append_int32(buffer, buffer_len, ((version >> 16) & 0xFF));
-  // ignore build field
+  cstr_append(buffer, buffer_len, ".");
+  cstr_append_int32(buffer, buffer_len, ((version >> 24) & 0xFF));
 }
 
 // boot UI
