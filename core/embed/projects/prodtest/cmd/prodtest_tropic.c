@@ -38,7 +38,7 @@
 #include "fw_CPU.h"
 #include "fw_SPECT.h"
 #include "libtropic.h"
-#include "lt_l2.h"
+#include "libtropic_l2.h"
 
 #include <sec/tropic.h>
 
@@ -485,7 +485,7 @@ static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
-  uint8_t version[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
+  uint8_t version[TR01_L2_GET_INFO_RISCV_FW_SIZE] = {0};
   if (lt_get_info_riscv_fw_ver(tropic_handle, version) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get RISCV FW version");
     return;
@@ -503,7 +503,7 @@ static void prodtest_tropic_get_spect_fw_version(cli_t* cli) {
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
-  uint8_t version[LT_L2_GET_INFO_SPECT_FW_SIZE];
+  uint8_t version[TR01_L2_GET_INFO_SPECT_FW_SIZE];
   if (lt_get_info_spect_fw_ver(tropic_handle, version) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get SPECT FW version");
     return;
@@ -623,7 +623,7 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
   return TROPIC_LOCKED_TRUE;
 }
 
-static lt_ret_t pairing_key_write(lt_handle_t* handle, pkey_index_t slot,
+static lt_ret_t pairing_key_write(lt_handle_t* handle, lt_pkey_index_t slot,
                                   const ed25519_secret_key public_key) {
   // If this function returns `LT_OK`, it is ensured that the pairing key
   // `public_key` is written in the slot `slot`.
@@ -683,7 +683,7 @@ static bool tropic_is_paired(cli_t* cli) {
   curve25519_key public_read = {0};
   ret = lt_pairing_key_read(tropic_handle, public_read,
                             TROPIC_FACTORY_PAIRING_KEY_SLOT);
-  if (ret != LT_L3_PAIRING_KEY_INVALID) {
+  if (ret != LT_L3_SLOT_INVALID) {
     if (cli != NULL) {
       cli_error(cli, CLI_ERROR,
                 "`lt_pairing_key_read()` for factory pairing key failed with "
@@ -694,9 +694,9 @@ static bool tropic_is_paired(cli_t* cli) {
   }
 
   // Read the fourth pairing key to ensure it is empty.
-  ret =
-      lt_pairing_key_read(tropic_handle, public_read, PAIRING_KEY_SLOT_INDEX_3);
-  if (ret != LT_L3_PAIRING_KEY_EMPTY) {
+  ret = lt_pairing_key_read(tropic_handle, public_read,
+                            TR01_PAIRING_KEY_SLOT_INDEX_3);
+  if (ret != LT_L3_SLOT_EMPTY) {
     if (cli != NULL) {
       cli_error(cli, CLI_ERROR,
                 "`lt_pairing_key_read()` for pairing key slot 3 failed with "
@@ -715,13 +715,13 @@ cleanup:
 static void prodtest_tropic_pair(cli_t* cli) {
   // If this functions successfully completes, it is ensured that:
   //  * The public tropic key is written to MCU's flash.
-  //  * The factory pairing key in tropic's `PAIRING_KEY_SLOT_INDEX_0` is
+  //  * The factory pairing key in tropic's `TR01_PAIRING_KEY_SLOT_INDEX_0` is
   //  invalidated.
   //  * The unprivileged pairing key is written to tropic's
-  //  `PAIRING_KEY_SLOT_INDEX_1`.
+  //  `TR01_PAIRING_KEY_SLOT_INDEX_1`.
   //  * The privileged pairing key is written to tropic's
-  //  `PAIRING_KEY_SLOT_INDEX_2`.
-  //  * The pairing key in tropic's `PAIRING_KEY_SLOT_INDEX_3` is empty.
+  //  `TR01_PAIRING_KEY_SLOT_INDEX_2`.
+  //  * The pairing key in tropic's `TR01_PAIRING_KEY_SLOT_INDEX_3` is empty.
   // This function is:
   //   * idempotent (it can be called multiple times without changing the state
   //   of the device),
@@ -1056,7 +1056,7 @@ static void prodtest_tropic_send_command(cli_t* cli) {
     return;
   }
 
-  uint8_t input[L2_MAX_FRAME_SIZE] = {0};
+  uint8_t input[TR01_L2_MAX_FRAME_SIZE] = {0};
   size_t input_length = 0;
   if (!cli_arg_hex(cli, "hex-data", input, sizeof(input), &input_length)) {
     if (input_length == sizeof(input)) {
@@ -1094,7 +1094,7 @@ static void prodtest_tropic_send_command(cli_t* cli) {
     return;
   }
 
-  uint8_t output[L2_MAX_FRAME_SIZE] = {0};
+  uint8_t output[TR01_L2_MAX_FRAME_SIZE] = {0};
   ret = lt_l2_recv_encrypted_res(&l2_state, output, sizeof(output));
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
@@ -1200,7 +1200,7 @@ static lt_ret_t data_write(lt_handle_t* h, uint16_t first_slot,
                            uint16_t slots_count, uint8_t* data,
                            size_t data_length) {
   const uint16_t last_data_slot = first_slot + slots_count - 1;
-  if (slots_count == 0 || last_data_slot > R_MEM_DATA_SLOT_MAX) {
+  if (slots_count == 0 || last_data_slot > TR01_R_MEM_DATA_SLOT_MAX) {
     return LT_PARAM_ERR;
   }
 
@@ -1249,7 +1249,7 @@ static lt_ret_t data_read(lt_handle_t* h, uint16_t first_slot,
                           uint16_t slots_count, uint8_t* data,
                           size_t max_data_length, size_t* data_length) {
   const uint16_t last_data_slot = first_slot + slots_count - 1;
-  if (slots_count == 0 || last_data_slot > R_MEM_DATA_SLOT_MAX) {
+  if (slots_count == 0 || last_data_slot > TR01_R_MEM_DATA_SLOT_MAX) {
     return LT_PARAM_ERR;
   }
 
@@ -1264,8 +1264,8 @@ static lt_ret_t data_read(lt_handle_t* h, uint16_t first_slot,
 
   while (slot <= last_data_slot) {
     uint16_t slot_length = 0;
-    lt_ret_t ret =
-        lt_r_mem_data_read(h, slot, prefixed_data + position, &slot_length);
+    lt_ret_t ret = lt_r_mem_data_read(h, slot, prefixed_data + position,
+                                      R_MEM_DATA_SIZE_MAX, &slot_length);
     if (ret != LT_OK) {
       return ret;
     }
@@ -1414,7 +1414,7 @@ static void prodtest_tropic_certdev_read(cli_t* cli) {
   cert_read(cli, TROPIC_DEVICE_CERT_FIRST_SLOT, TROPIC_DEVICE_CERT_SLOT_COUNT);
 }
 
-static void pubkey_read(cli_t* cli, ecc_slot_t slot,
+static void pubkey_read(cli_t* cli, lt_ecc_slot_t slot,
                         const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE]) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -1434,10 +1434,10 @@ static void pubkey_read(cli_t* cli, ecc_slot_t slot,
 
   uint8_t public_key[ECDSA_PUBLIC_KEY_SIZE] = {0x04};
   lt_ecc_curve_type_t curve_type = 0;
-  ecc_key_origin_t origin = 0;
-  ret = lt_ecc_key_read(tropic_get_handle(), slot, &public_key[1], &curve_type,
-                        &origin);
-  if (ret != LT_OK || curve_type != CURVE_P256) {
+  lt_ecc_key_origin_t origin = 0;
+  ret = lt_ecc_key_read(tropic_get_handle(), slot, &public_key[1],
+                        ECDSA_PUBLIC_KEY_SIZE - 1, &curve_type, &origin);
+  if (ret != LT_OK || curve_type != TR01_CURVE_P256) {
     cli_error(cli, CLI_ERROR, "lt_ecc_key_read error %d.", ret);
     return;
   }
@@ -1468,8 +1468,8 @@ static void prodtest_tropic_keyfido_read(cli_t* cli) {
 }
 
 static void prodtest_tropic_update_fw(cli_t* cli) {
-#define FW_APP_UPDATE_BANK FW_BANK_FW1
-#define FW_SPECT_UPDATE_BANK FW_BANK_SPECT1
+#define FW_APP_UPDATE_BANK TR01_FW_BANK_FW1
+#define FW_SPECT_UPDATE_BANK TR01_FW_BANK_SPECT1
 
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -1500,15 +1500,10 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 
   // For firmware update chip must be rebooted into MAINTENANCE mode.
   cli_trace(cli, "Rebooting into Maintenance mode");
-  lt_ret_t ret = lt_reboot(h, LT_MODE_MAINTENANCE);
+  lt_ret_t ret = lt_reboot(h, TR01_MAINTENANCE_REBOOT);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "lt_reboot() failed, ret=%s",
               lt_ret_verbose(ret));
-    return;
-  }
-
-  if (h->l2.mode != LT_MODE_MAINTENANCE) {
-    cli_error(cli, CLI_ERROR, "Chip couldn't get into MAINTENANCE mode");
     return;
   }
 
@@ -1533,23 +1528,16 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 
   // To read firmware versions chip must be rebooted into application mode.
   cli_trace(cli, "Rebooting into Application mode");
-  ret = lt_reboot(h, LT_MODE_APP);
+  ret = lt_reboot(h, TR01_REBOOT);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "lt_reboot() failed, ret=%s",
               lt_ret_verbose(ret));
     goto cleanup;
   }
 
-  if (h->l2.mode != LT_MODE_APP) {
-    cli_error(cli, CLI_ERROR,
-              "Device couldn't get into APP mode, APP and SPECT firmwares in "
-              "fw banks are not valid or banks are empty");
-    goto cleanup;
-  }
-
   cli_trace(cli, "Reading RISC-V FW version");
 
-  uint8_t risc_fw_ver[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
+  uint8_t risc_fw_ver[TR01_L2_GET_INFO_RISCV_FW_SIZE] = {0};
   ret = lt_get_info_riscv_fw_ver(h, risc_fw_ver);
 
   if (ret != LT_OK) {
@@ -1563,7 +1551,7 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
             risc_fw_ver[3], risc_fw_ver[2], risc_fw_ver[1], risc_fw_ver[0]);
 
   cli_trace(cli, "Reading SPECT FW version");
-  uint8_t spect_fw_ver[LT_L2_GET_INFO_SPECT_FW_SIZE] = {0};
+  uint8_t spect_fw_ver[TR01_L2_GET_INFO_SPECT_FW_SIZE] = {0};
   ret = lt_get_info_spect_fw_ver(h, spect_fw_ver);
 
   if (ret != LT_OK) {
