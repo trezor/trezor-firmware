@@ -1,6 +1,6 @@
 # TRON
 
-Tron is an EVM like netwrok that allows for nearly free token transfers like `USDT` etc. It achieves this by using `Bandwidth` and `Energy` for transfers, instead of `Gas` in Ethereum. `Bandwidth` is used for native `TRX` transfer, while `Energy` is used for `TRC-20` tokens like `Tether - USDT` etc.
+Tron is an EVM like network that allows for nearly free token transfers like `USDT` etc. It achieves this by using `Bandwidth` and `Energy` for transfers, instead of `Gas` in Ethereum. `Bandwidth` is used for native `TRX` transfer, while `Energy` is used for `TRC-20` tokens like `Tether - USDT` etc.
 
 It uses `Protobuf` for encoding its transactions. Each transaction contains its main operation as a `contract`[^1] along with supported data like expiration timestamp, block hash reference[^2], etc.
 
@@ -8,7 +8,7 @@ It uses `Protobuf` for encoding its transactions. Each transaction contains its 
 
 ## Implementation Notes
 
-Any Transaction begins by sending `TronSignTx` message that contains the header information, including the BIP32 path to the key (e.g. `m/44h/195h/0h/0/0`). Trezor then awaits the contract to be included in the transaction as another message (e.g. `TronTransferContract`). When a valid contract is received, Trezor signs the `raw_data` part of the final transaction and sends the signature in the `TronSignature` message.
+Transaction signing begins by sending `TronSignTx` message that contains the header information, including the BIP32 path to the key (e.g. `m/44h/195h/0h/0/0`). Trezor then awaits the contract to be included in the transaction as another message (e.g. `TronTransferContract`). When a valid contract is received, Trezor signs the `raw_data` part of the final transaction and sends the signature in the `TronSignature` message.
 
 ## Fees
 

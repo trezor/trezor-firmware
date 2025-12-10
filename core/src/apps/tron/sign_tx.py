@@ -10,6 +10,7 @@ from . import CURVE, PATTERN, SLIP44_ID, consts, layout
 
 if TYPE_CHECKING:
     from trezor.messages import TronRawContract, TronSignature, TronSignTx
+    from trezor.protobuf import MessageType
 
     from apps.common.keychain import Keychain
 
@@ -38,8 +39,8 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
             chunkify=False,
         )
 
-    contract = await call_any(messages.TronContractRequest(), *consts.contract_types)
-    raw_contract, total_send = await process_contract(contract)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "contract" of type "TronMessageType" in function "process_contract"]
+    contract = await call_any(messages.TronContractRequest(), *consts.CONTRACT_TYPES)
+    raw_contract, total_send = await process_contract(contract)
 
     await confirm_tron_send(total_send)
 
@@ -63,7 +64,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
 
 async def process_contract(
-    contract: consts.TronMessageType,
+    contract: MessageType,
 ) -> tuple[TronRawContract, str]:
     from trezor.enums import TronRawContractType
 
