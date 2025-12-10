@@ -101,8 +101,8 @@ where
         self.page_swipe.allow_right = self.scrollbar.has_previous_page();
         self.page_swipe.allow_left = self.scrollbar.has_next_page();
 
-        let current_account = (self.get_account)(self.active_page());
-        self.account_name = Paragraph::new(&theme::TEXT_MONO, current_account).into_paragraphs();
+        self.account_name
+            .update((self.get_account)(self.active_page()));
 
         // Redraw the page.
         ctx.request_paint();
