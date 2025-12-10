@@ -179,9 +179,7 @@ def test_share_info_between_shares(session: Session):
 
 def test_noabort(session: Session):
     with session.test_ctx as client:
-        IF = InputFlowSlip39BasicRecoveryNoAbort(
-            session, MNEMONIC_SLIP39_BASIC_20_3of6
-        )
+        IF = InputFlowSlip39BasicRecoveryNoAbort(session, MNEMONIC_SLIP39_BASIC_20_3of6)
         client.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
         session.refresh_features()

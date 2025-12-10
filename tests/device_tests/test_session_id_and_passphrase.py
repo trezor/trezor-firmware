@@ -21,13 +21,11 @@ import random
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import DebugSession as Session
-from trezorlib.debuglink import TrezorTestContext
+from trezorlib.debuglink import LayoutType, TrezorTestContext
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import FailureType, SafetyCheckLevel
-from trezorlib.tools import parse_path
 from trezorlib.protocol_v1 import SessionV1, TrezorClientV1
+from trezorlib.tools import parse_path
 
 from .. import translations as TR
 
@@ -249,6 +247,8 @@ def test_max_sessions_with_passphrases(test_ctx: TrezorTestContext):
         # un-invalidate the session object
         sessions[passphrase].id = e.value.from_message.session_id
         sessions[passphrase].is_invalid = False
+        test_ctx.client._last_active_session = sessions[passphrase]
+
         _get_xpub(sessions[passphrase], passphrase="whatever")  # passphrase is prompted
 
 
