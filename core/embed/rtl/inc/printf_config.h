@@ -19,13 +19,6 @@
 
 #pragma once
 
-#if defined(BOARDLOADER) && defined(TREZOR_MODEL_T3T1)
-// Disable long long support in the bootloader to save space
-#define PRINTF_SUPPORT_LONG_LONG 0
-#else
-#define PRINTF_SUPPORT_LONG_LONG 1
-#endif
-
 #define PRINTF_SUPPORT_DECIMAL_SPECIFIERS 0
 #define PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS 0
 #define PRINTF_SUPPORT_WRITEBACK_SPECIFIER 1
