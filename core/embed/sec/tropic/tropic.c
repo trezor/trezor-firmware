@@ -420,7 +420,7 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
   }
 
   lt_ret_t res = lt_r_mem_data_read(&drv->handle, udata_slot, data,
-                                    R_MEM_DATA_SIZE_MAX, size);
+                                    TROPIC_SLOT_MAX_SIZE_V1, size);
   return res == LT_OK;
 }
 
@@ -809,6 +809,12 @@ bool tropic_pin_set_kek_masks(
 
   uint16_t masked_kek_slot = get_kek_masks_slot(drv);
 
+  // Size of masks need to be smaller than TROPIC_SLOT_MAX_SIZE_V1 for
+  // backwards compatibility. See definition of TROPIC_SLOT_MAX_SIZE_V1 for
+  // more details.
+  _Static_assert(TROPIC_SLOT_MAX_SIZE_V1 >= sizeof(masks),
+                 "masks buffer too big");
+
   if (TROPIC_RETRY_COMMAND(lt_r_mem_data_erase_write(
           &drv->handle, masked_kek_slot, masks, sizeof(masks))) != LT_OK) {
     goto cleanup;
@@ -840,16 +846,16 @@ bool tropic_pin_unmask_kek(
     goto cleanup;
   }
 
-  uint8_t masks[R_MEM_DATA_SIZE_MAX] = {0};
+  uint8_t masks[TROPIC_SLOT_MAX_SIZE_V1] = {0};
   _Static_assert(
-      R_MEM_DATA_SIZE_MAX >= PIN_MAX_TRIES * TROPIC_MAC_AND_DESTROY_SIZE,
-      "R_MEM_DATA_SIZE_MAX too small");
+      TROPIC_SLOT_MAX_SIZE_V1 >= PIN_MAX_TRIES * TROPIC_MAC_AND_DESTROY_SIZE,
+      "TROPIC_SLOT_MAX_SIZE_V1 too small");
   uint16_t length = 0;
 
   uint16_t masked_kek_slot = get_kek_masks_slot(drv);
 
   if (TROPIC_RETRY_COMMAND(lt_r_mem_data_read(&drv->handle, masked_kek_slot,
-                                              masks, R_MEM_DATA_SIZE_MAX,
+                                              masks, TROPIC_SLOT_MAX_SIZE_V1,
                                               &length)) != LT_OK) {
     goto cleanup;
   }
@@ -883,7 +889,7 @@ bool tropic_data_multi_size(uint16_t first_slot, size_t *data_length) {
     return false;
   }
 
-  uint8_t prefixed_data[R_MEM_DATA_SIZE_MAX];
+  uint8_t prefixed_data[TROPIC_SLOT_MAX_SIZE_V1];
   uint16_t slot_length = 0;
   if (!tropic_data_read(first_slot, prefixed_data, &slot_length)) {
     return false;
@@ -909,7 +915,7 @@ bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
   }
 
   uint16_t slot = first_slot;
-  uint8_t slot_buffer[R_MEM_DATA_SIZE_MAX] = {0};
+  uint8_t slot_buffer[TROPIC_SLOT_MAX_SIZE_V1] = {0};
   uint16_t slot_length = 0;
   if (!tropic_data_read(slot, slot_buffer, &slot_length)) {
     return false;
@@ -922,8 +928,8 @@ bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
 
   size_t out_length = slot_buffer[0] << 8 | slot_buffer[1];
   uint16_t occupied_slot_count =
-      (out_length + prefix_length + R_MEM_DATA_SIZE_MAX - 1) /
-      R_MEM_DATA_SIZE_MAX;
+      (out_length + prefix_length + TROPIC_SLOT_MAX_SIZE_V1 - 1) /
+      TROPIC_SLOT_MAX_SIZE_V1;
   if (out_length > max_data_length || occupied_slot_count > slot_count) {
     return false;
   }
@@ -941,7 +947,7 @@ bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
   uint16_t last_data_slot = first_slot + occupied_slot_count - 1;
   while (slot < last_data_slot) {
     // Non-terminal slots must be used to their full capacity.
-    if (slot_length != R_MEM_DATA_SIZE_MAX) {
+    if (slot_length != TROPIC_SLOT_MAX_SIZE_V1) {
       return false;
     }
 
