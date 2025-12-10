@@ -152,21 +152,23 @@ bool cstr_append_uint32(char* dst, size_t dst_len, uint32_t value) {
 bool cstr_append_int32(char* dst, size_t dst_len, int32_t value) {
   char buffer[12] = "";
   char* p = buffer + sizeof(buffer) - 1;
-  bool negative = false;
 
   *p = '\0';
 
   if (value == 0) {
     *(--p) = '0';
   } else {
-    while (value > 0) {
-      *(--p) = (char)('0' + value % 10);
-      value /= 10;
-    }
-  }
+    bool negative = value < 0;
+    uint32_t abs_value = negative ? -value : value;
 
-  if (negative) {
-    *(--p) = '-';
+    while (abs_value > 0) {
+      *(--p) = (char)('0' + abs_value % 10);
+      abs_value /= 10;
+    }
+
+    if (negative) {
+      *(--p) = '-';
+    }
   }
 
   return cstr_append(dst, dst_len, p);
