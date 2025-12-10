@@ -26,7 +26,8 @@ from unittest import mock
 import pytest
 
 from trezorlib import btc, messages, models, tools
-from trezorlib.debuglink import LayoutType, TrezorTestContext as Client
+from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import TrezorTestContext as Client
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import MarkDecorator

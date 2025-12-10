@@ -2,6 +2,7 @@ import time
 from unittest.mock import Mock
 
 import pytest
+
 from trezorlib import messages
 from trezorlib.debuglink import DebugSession
 from trezorlib.thp.client import TrezorClientThp

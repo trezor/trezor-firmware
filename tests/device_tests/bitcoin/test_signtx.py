@@ -174,8 +174,8 @@ def test_one_one_fee_back_from_amount(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
-        IF = InputFlowSignTxBackFromAmount(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowSignTxBackFromAmount(session)
         client.set_input_flow(IF.get())
 
         client.set_expected_responses(
@@ -749,7 +749,7 @@ def test_fee_rate_overflow(session: Session):
         amount=100_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),

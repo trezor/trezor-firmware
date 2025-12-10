@@ -10,7 +10,7 @@ from pathlib import Path
 
 from trezorlib import cosi, device, models
 from trezorlib._internal import translations
-from trezorlib.debuglink import LayoutType, DebugSession
+from trezorlib.debuglink import DebugSession, LayoutType
 
 from . import common
 

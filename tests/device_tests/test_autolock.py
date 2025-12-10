@@ -133,7 +133,7 @@ def test_autolock_cancels_ui(session: Session):
 
     if session.model is models.T3W1:
         # T3W1 device will suspend - wake it up using a DebugLink message
-        session.debug_client.debug.state(messages.DebugWaitType.IMMEDIATE)
+        session.debug.state(messages.DebugWaitType.IMMEDIATE)
 
     resp = session.read()
 

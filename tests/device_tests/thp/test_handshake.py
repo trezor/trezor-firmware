@@ -2,9 +2,8 @@ import pytest
 
 from trezorlib.debuglink import TrezorTestContext
 from trezorlib.exceptions import DeviceLockedError
-from trezorlib.thp.pairing import PairingController
 from trezorlib.thp.client import TrezorClientThp
-from trezorlib.transport.udp import UdpTransport
+from trezorlib.thp.pairing import PairingController
 
 from .connect import prepare_channel_for_handshake
 

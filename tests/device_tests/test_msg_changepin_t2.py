@@ -16,18 +16,18 @@
 
 import pytest
 
-from trezorlib import btc, device, messages
+from trezorlib import device, messages
 from trezorlib.client import MAX_PIN_LENGTH
-from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
+from ..common import get_test_address
 from ..input_flows import (
     InputFlowCodeChangeFail,
     InputFlowNewCodeMismatch,
     InputFlowWrongPIN,
 )
-from ..common import get_test_address
 
 PIN4 = "1234"
 PIN60 = "789456" * 10

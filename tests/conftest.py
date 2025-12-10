@@ -19,9 +19,9 @@ from __future__ import annotations
 import logging
 import os
 import typing as t
+from dataclasses import asdict, dataclass
 from enum import IntEnum
 from pathlib import Path
-from dataclasses import dataclass, asdict
 
 import pytest
 import xdist
@@ -51,7 +51,7 @@ if t.TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
     from trezorlib._internal.emulator import Emulator
-    from trezorlib.client import Session, TrezorClient
+    from trezorlib.client import Session
 
 
 HERE = Path(__file__).resolve().parent

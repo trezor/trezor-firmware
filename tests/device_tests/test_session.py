@@ -16,11 +16,10 @@
 
 import pytest
 
-from trezorlib import cardano, exceptions, messages, models, btc
-from trezorlib import protocol_v1
+from trezorlib import btc, cardano, exceptions, messages, models, protocol_v1
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext
-from trezorlib.exceptions import TrezorFailure, InvalidSessionError
+from trezorlib.exceptions import InvalidSessionError, TrezorFailure
 from trezorlib.tools import parse_path
 
 from ..common import get_test_address
@@ -36,7 +35,6 @@ DATA_ERROR_ON_DEVICE = "Providing passphrase in message is not allowed when PASS
 @pytest.mark.setup_client(pin=PIN4, passphrase="")
 def test_clear_session(test_ctx: TrezorTestContext):
     is_t1 = test_ctx.model is models.T1B1
-    v1 = test_ctx.is_protocol_v1()
     if test_ctx.is_protocol_v1():
         # SessionV1.derive()
         init_responses = [
@@ -238,6 +236,7 @@ def test_derive_cardano_running_session(test_ctx: TrezorTestContext):
         session_2.initialize(derive_cardano=False)
 
     session_2.is_invalid = False
+    test_ctx.client._last_active_session = session_2
     with pytest.raises(TrezorFailure, match="not enabled"):
         cardano.get_public_key(session_2, parse_path("m/44h/1815h/0h"))
 

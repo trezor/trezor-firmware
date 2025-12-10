@@ -19,7 +19,6 @@ from typing import Any
 import pytest
 
 from trezorlib import device, exceptions, messages, models
-from trezorlib.protobuf import MessageType
 from trezorlib.debuglink import DebugSession as Session
 
 from ...common import MNEMONIC12
@@ -49,7 +48,10 @@ def do_recover_legacy(session: Session, mnemonic: list[str]) -> None:
     # if the call succeeded, check that all words have been used
     assert all(m is None for m in mnemonic)
 
-def do_recover_core(session: Session, mnemonic: list[str], mismatch: bool = False) -> None:
+
+def do_recover_core(
+    session: Session, mnemonic: list[str], mismatch: bool = False
+) -> None:
     with session.test_ctx as client:
         client.watch_layout()
         IF = InputFlowBip39RecoveryDryRun(session, mnemonic, mismatch=mismatch)

@@ -1,9 +1,8 @@
 import pytest
 
 from trezorlib import tron
-from trezorlib.debuglink import Cancelled
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorFailure
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -21,7 +20,7 @@ def test_get_address(session: Session, parameters, result):
 
 @parametrize_using_common_fixtures("tron/get_address.json")
 def test_get_address_chunkify_details(session: Session, parameters, result):
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowShowAddressQRCode(client)
         client.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
@@ -41,6 +40,6 @@ def test_get_address_cancel_show(session: Session):
         yield
         session.cancel()
 
-    with pytest.raises(Cancelled), session.client as client:
+    with pytest.raises(Cancelled), session.test_ctx as client:
         client.set_input_flow(input_flow)
         tron.get_address(session, address_n, show_display=True)

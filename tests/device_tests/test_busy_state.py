@@ -19,8 +19,8 @@ import time
 import pytest
 
 from trezorlib import btc, device
-from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutType
 from trezorlib.tools import parse_path
 
 PIN = "1234"
@@ -30,10 +30,7 @@ def _assert_busy(session: Session, should_be_busy: bool, screen: str = "Homescre
     assert session.features.busy is should_be_busy
     if session.layout_type is not LayoutType.T1:
         if should_be_busy:
-            assert (
-                "CoinJoinProgress"
-                in session.debug.read_layout().all_components()
-            )
+            assert "CoinJoinProgress" in session.debug.read_layout().all_components()
         else:
             assert session.debug.read_layout().main_component() == screen
 
@@ -41,11 +38,7 @@ def _assert_busy(session: Session, should_be_busy: bool, screen: str = "Homescre
 @pytest.mark.setup_client(pin=PIN)
 def test_busy_state(session: Session):
 
-    screen = (
-        "Homescreen"
-        if session.layout_type is LayoutType.Eckhart
-        else "Lockscreen"
-    )
+    screen = "Homescreen" if session.layout_type is LayoutType.Eckhart else "Lockscreen"
     _assert_busy(session, False, screen)
     assert session.features.unlocked is False
 

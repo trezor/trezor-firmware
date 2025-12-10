@@ -10,8 +10,8 @@ from trezorlib.transport import udp
 
 if t.TYPE_CHECKING:
     from trezorlib._internal.emulator import Emulator
-    from trezorlib.debuglink import DebugLink
     from trezorlib.client import Session
+    from trezorlib.debuglink import DebugLink
     from trezorlib.debuglink import TrezorTestContext as Client
     from trezorlib.messages import Features
 

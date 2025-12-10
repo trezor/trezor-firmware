@@ -1,11 +1,11 @@
+import threading
+import time
+
 import pytest
 
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.thp.channel import Channel
 from trezorlib.thp.exceptions import ThpError, ThpErrorCode
-
-import time
-import threading
 
 pytestmark = [pytest.mark.protocol("thp")]
 
@@ -29,6 +29,7 @@ def test_concurrent_handshakes(client: Client) -> None:
         # The second host should not be able to interrupt the first host's handshake immediately
         channel_2.open([])
     assert err.value.code == ThpErrorCode.TRANSPORT_BUSY
+
 
 def test_concurrent_handshakes_busy_retries(client: Client) -> None:
     channel_1 = _new_channel(client)
