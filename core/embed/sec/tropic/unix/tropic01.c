@@ -20,6 +20,7 @@
 
 #include <trezor_rtl.h>
 
+#include <memzero.h>
 #include <sec/tropic.h>
 
 bool tropic_hal_init(void) { return true; }
@@ -30,6 +31,10 @@ void tropic_set_ui_progress(tropic_ui_progress_t ui_progress) {
   if (ui_progress != NULL) {
     ui_progress();
   }
+}
+
+void lt_secure_memzero(void *const ptr, const size_t count) {
+  memzero(ptr, count);
 }
 
 #endif
