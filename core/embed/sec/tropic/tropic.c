@@ -31,9 +31,9 @@
 
 #ifdef TREZOR_EMULATOR
 #include <arpa/inet.h>
-#include <libtropic/hal/port/unix/lt_port_unix_tcp.h>
+#include <libtropic/hal/posix/tcp/libtropic_port_posix_tcp.h>
 #include <time.h>
-#endif
+#endif  // TREZOR_EMULATOR
 
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
@@ -119,7 +119,7 @@ typedef struct {
                                       // session_started is true.
   lt_handle_t handle;
 #ifdef TREZOR_EMULATOR
-  lt_dev_unix_tcp_t device;
+  lt_dev_posix_tcp_t device;
 #endif
 } tropic_driver_t;
 
