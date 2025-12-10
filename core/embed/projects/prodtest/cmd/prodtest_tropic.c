@@ -25,6 +25,7 @@
 
 #include <rtl/cli.h>
 #include <sec/tropic.h>
+#include <sys/rng.h>
 #include <sys/systick.h>
 
 #include <sec/secret.h>
@@ -1582,6 +1583,149 @@ cleanup:
   tropic_deinit();
 }
 
+static void prodtest_tropic_stress_test(cli_t* cli) {
+  if (cli_arg_count(cli) > 4) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint32_t start_session_iterations = 10;
+  uint32_t mac_and_destroy_slot_count = TROPIC_MAC_AND_DESTROY_SLOTS_COUNT;
+  uint32_t mac_and_destroy_per_slot_iterations = 3;
+  uint32_t signing_iterations = 10;
+
+  if (cli_arg_count(cli) != 0) {
+    if (!cli_arg_uint32(cli, "start-session-iterations",
+                        &start_session_iterations)) {
+      cli_error_arg(cli, "Expecting number of start-session iterations.");
+      return;
+    }
+    if (!cli_arg_uint32(cli, "mac-and-destroy-slot-count",
+                        &mac_and_destroy_slot_count) ||
+        mac_and_destroy_slot_count > TROPIC_MAC_AND_DESTROY_SLOTS_COUNT) {
+      cli_error_arg(cli,
+                    "Expecting number of MAC-and-destroy slots in range 0-%d.",
+                    TROPIC_MAC_AND_DESTROY_SLOTS_COUNT);
+      return;
+    }
+    if (!cli_arg_uint32(cli, "mac-and-destroy-per-slot-iterations",
+                        &mac_and_destroy_per_slot_iterations)) {
+      cli_error_arg(cli,
+                    "Expecting number of MAC-and-destroy iterations per slot.");
+      return;
+    }
+    if (!cli_arg_uint32(cli, "signing-iterations", &signing_iterations)) {
+      cli_error_arg(cli, "Expecting number of signing iterations.");
+      return;
+    }
+  }
+
+  cli_trace(cli, "Start-session iterations: %d", start_session_iterations);
+  cli_trace(cli, "MAC-and-destroy slot count: %d", mac_and_destroy_slot_count);
+  cli_trace(cli, "MAC-and-destroy iterations per slot: %d",
+            mac_and_destroy_per_slot_iterations);
+  cli_trace(cli, "Signing iterations: %d", signing_iterations);
+
+  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+
+  lt_ret_t res = LT_FAIL;
+  lt_pkey_index_t pairing_key_index = -1;
+
+  // Find an available pairing key
+  for (lt_pkey_index_t i = TROPIC_FACTORY_PAIRING_KEY_SLOT;
+       i <= TROPIC_PRIVILEGED_PAIRING_KEY_SLOT; i++) {
+    res = tropic_custom_session_start(i);
+    if (res == LT_OK) {
+      pairing_key_index = i;
+      break;
+    }
+    if (res != LT_L2_HSK_ERR) {
+      cli_error(
+          cli, CLI_ERROR,
+          "`tropic_custom_session_start() for key %d failed with error '%s'", i,
+          lt_ret_verbose(res));
+      return;
+    }
+  }
+
+  if (pairing_key_index == -1) {
+    cli_error(cli, CLI_ERROR, "No pairing key is available");
+    return;
+  }
+
+  cli_trace(cli, "Established session using pairing key %d", pairing_key_index);
+
+  // Test `lt_session_start()`
+  for (int i = 0; i < start_session_iterations; i++) {
+    res = tropic_session_invalidate();
+    if (res != LT_OK) {
+      cli_error(
+          cli, CLI_ERROR,
+          "`Call #%d of tropic_session_invalidate() failed with error '%s'",
+          i + 1, lt_ret_verbose(res));
+      return;
+    }
+    res = tropic_custom_session_start(pairing_key_index);
+    if (res != LT_OK) {
+      cli_error(cli, CLI_ERROR,
+                "Call #%d of `tropic_custom_session_start()"
+                "failed with error '%s'",
+                i + 1, lt_ret_verbose(res));
+      return;
+    }
+  }
+
+  // Test `lt_mac_and_destroy()`
+  for (int slot_index = TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED;
+       slot_index < TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED +
+                        mac_and_destroy_slot_count;
+       slot_index++) {
+    for (int i = 0; i < mac_and_destroy_per_slot_iterations; i++) {
+      uint8_t buffer[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+      rng_fill_buffer(buffer, sizeof(buffer));
+      res = lt_mac_and_destroy(tropic_get_handle(), slot_index, buffer, buffer);
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "Call #%d of `lt_mac_and_destroy()` for slot %d failed "
+                  "with error '%s'",
+                  i + 1, slot_index, lt_ret_verbose(res));
+        return;
+      }
+    }
+  }
+
+  // Test `lt_ecc_key_generate()`
+  uint8_t message[32] = {0};
+  ed25519_signature signature = {0};
+  lt_ecc_slot_t ecc_slot = TR01_ECC_SLOT_31;
+  res = lt_ecc_key_generate(tropic_get_handle(), ecc_slot, TR01_CURVE_ED25519);
+  if (res != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_ecc_key_generate()` failed with error '%s'",
+              lt_ret_verbose(res));
+    return;
+  }
+  for (int i = 0; i < signing_iterations; i++) {
+    rng_fill_buffer(message, sizeof(message));
+    res = lt_ecc_eddsa_sign(tropic_get_handle(), ecc_slot, message,
+                            sizeof(message), signature);
+    if (res != LT_OK) {
+      cli_error(cli, CLI_ERROR,
+                "Call #%d of `lt_ecc_eddsa_sign()` failed with error '%s'",
+                i + 1, lt_ret_verbose(res));
+      lt_ecc_key_erase(tropic_get_handle(), ecc_slot);
+      return;
+    }
+  }
+  res = lt_ecc_key_erase(tropic_get_handle(), ecc_slot);
+  if (res != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_ecc_key_erase()` failed with error '%s'",
+              lt_ret_verbose(res));
+    return;
+  }
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -1701,6 +1845,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_tropic_update_fw,
   .info = "Update tropic FW to embedded binary",
   .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-stress-test",
+  .func = prodtest_tropic_stress_test,
+  .info = "Run stress test for Tropic",
+  .args = "[<start-session-iterations> <mac-and-destroy-slot-count> <mac-and-destroy-per-slot-iterations> <signing-iterations>]"
 );
 
 #endif
