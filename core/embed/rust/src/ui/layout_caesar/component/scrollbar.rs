@@ -46,7 +46,7 @@ impl ScrollBar {
 
     /// Page count will be given later as it is not available yet.
     pub fn to_be_filled_later() -> Self {
-        Self::new(0)
+        Self::new(1)
     }
 
     pub const fn dots_width(dots_shown: u16) -> i16 {
