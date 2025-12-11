@@ -208,5 +208,6 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("FidoConfirm");
+        t.string("account_name", *self.account_name.content());
     }
 }

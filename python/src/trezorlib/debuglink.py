@@ -307,7 +307,7 @@ class LayoutContent(UnstructuredJSONReader):
         """Getting raw paragraphs as sent from Rust."""
         return self.find_unique_value_by_key("paragraphs", default=None, only_type=list)
 
-    def tt_check_seed_button_contents(self) -> list[str]:
+    def bolt_check_seed_button_contents(self) -> list[str]:
         """Getting list of button contents."""
         buttons: list[str] = []
         button_objects = self.find_objects_with_key_and_value("component", "Button")
@@ -317,6 +317,12 @@ class LayoutContent(UnstructuredJSONReader):
             elif "text" in button:
                 buttons.append(button["text"])
         return buttons
+
+    def bolt_fido_confirm_account(self) -> str | None:
+        """Getting the current account name for FIDO on Bolt."""
+        fido_confirm = self.find_unique_object_with_key_and_value("component", "FidoConfirm")
+        if fido_confirm:
+            return fido_confirm["account_name"]
 
     def button_contents(self) -> list[str]:
         """Getting list of button contents."""
@@ -424,7 +430,7 @@ class LayoutContent(UnstructuredJSONReader):
         """Get current page index of the layout."""
         return self.find_unique_value_by_key("active_page", default=0, only_type=int)
 
-    def tt_pin_digits_order(self) -> str:
+    def bolt_pin_digits_order(self) -> str:
         """In what order the PIN buttons are shown on the screen. Only for TT."""
         return self.top_level_value("digits_order") or "no digits order"
 
