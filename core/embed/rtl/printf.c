@@ -40,6 +40,10 @@
  * THE SOFTWARE.
  */
 
+#if PRODUCTION && !defined(TREZOR_PRODTEST)
+#error Avoid using printf in production firmware/bootloader/boardloader
+#endif
+
 /*
  * Define this globally (e.g. gcc -DPRINTF_INCLUDE_CONFIG_H=1 ...) to include the
  * printf_config.h header file
