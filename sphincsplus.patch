@@ -1,0 +1,226 @@
+diff --git a/ref/context.h b/ref/context.h
+index aded564..149cb8b 100644
+--- a/ref/context.h
++++ b/ref/context.h
+@@ -11,7 +11,7 @@ typedef struct {
+ 
+ #ifdef SPX_SHA2
+     // sha256 state that absorbed pub_seed
+-    uint8_t state_seeded[40];
++    uint8_t state_seeded[SPX_SHA256_CTX_BYTES];
+ 
+ # if SPX_SHA512
+     // sha512 state that absorbed pub_seed
+diff --git a/ref/hash_sha2.c b/ref/hash_sha2.c
+index 67098e6..aff846a 100644
+--- a/ref/hash_sha2.c
++++ b/ref/hash_sha2.c
+@@ -39,12 +39,12 @@ void initialize_hash_function(spx_ctx *ctx)
+ void prf_addr(unsigned char *out, const spx_ctx *ctx,
+               const uint32_t addr[8])
+ {
+-    uint8_t sha2_state[40];
++    uint8_t sha2_state[SPX_SHA256_CTX_BYTES];
+     unsigned char buf[SPX_SHA256_ADDR_BYTES + SPX_N];
+     unsigned char outbuf[SPX_SHA256_OUTPUT_BYTES];
+ 
+     /* Retrieve precomputed state containing pub_seed */
+-    memcpy(sha2_state, ctx->state_seeded, 40 * sizeof(uint8_t));
++    memcpy(sha2_state, ctx->state_seeded, SPX_SHA256_CTX_BYTES);
+ 
+     /* Remainder: ADDR^c ‖ SK.seed */
+     memcpy(buf, addr, SPX_SHA256_ADDR_BYTES);
+@@ -71,7 +71,7 @@ void gen_message_random(unsigned char *R, const unsigned char *sk_prf,
+     (void)ctx;
+ 
+     unsigned char buf[SPX_SHAX_BLOCK_BYTES + SPX_SHAX_OUTPUT_BYTES];
+-    uint8_t state[8 + SPX_SHAX_OUTPUT_BYTES];
++    uint8_t state[SPX_SHA256_CTX_BYTES];
+     int i;
+ 
+ #if SPX_N > SPX_SHAX_BLOCK_BYTES
+@@ -143,7 +143,7 @@ void hash_message(unsigned char *digest, uint64_t *tree, uint32_t *leaf_idx,
+ 
+     unsigned char buf[SPX_DGST_BYTES];
+     unsigned char *bufp = buf;
+-    uint8_t state[8 + SPX_SHAX_OUTPUT_BYTES];
++    uint8_t state[SPX_SHA256_CTX_BYTES];
+ 
+     shaX_inc_init(state);
+ 
+diff --git a/ref/params.h b/ref/params.h
+index 1d7f9c9..691e9c2 100644
+--- a/ref/params.h
++++ b/ref/params.h
+@@ -1,5 +1,14 @@
+ #define str(s) #s
+ #define xstr(s) str(s)
+ 
++#define XSHA256_ACCELERATION
++
++#ifdef XSHA256_ACCELERATION
++#include <sec/xsha256.h>
++#define SPX_SHA256_CTX_BYTES sizeof(xsha256_ctx_t)
++#else
++#define SPX_SHA256_CTX_BYTES 40
++#endif
++
+ #include xstr(params/params-PARAMS.h)
+ 
+diff --git a/ref/sha2.c b/ref/sha2.c
+index ef73047..61eb447 100644
+--- a/ref/sha2.c
++++ b/ref/sha2.c
+@@ -9,6 +9,13 @@
+ #include "utils.h"
+ #include "sha2.h"
+ 
++extern int g_sha256_perfc_init_calls;
++extern int g_sha256_perfc_inc_blocks_calls;
++extern int g_sha256_perfc_inc_blocks;
++extern int g_sha256_perfc_finalize_calls;
++extern int g_sha256_perfc_finalize_bytes;
++
++
+ static uint32_t load_bigendian_32(const uint8_t *x) {
+     return (uint32_t)(x[3]) | (((uint32_t)(x[2])) << 8) |
+            (((uint32_t)(x[1])) << 16) | (((uint32_t)(x[0])) << 24);
+@@ -129,7 +136,7 @@ static void store_bigendian_64(uint8_t *x, uint64_t u) {
+     b = a; \
+     a = T1 + T2;
+ 
+-static size_t crypto_hashblocks_sha256(uint8_t *statebytes,
++/*!@# static*/ size_t crypto_hashblocks_sha256(uint8_t *statebytes,
+                                        const uint8_t *in, size_t inlen) {
+     uint32_t state[8];
+     uint32_t a;
+@@ -428,7 +435,7 @@ static int crypto_hashblocks_sha512(unsigned char *statebytes,const unsigned cha
+     f += state[5];
+     g += state[6];
+     h += state[7];
+-  
++
+     state[0] = a;
+     state[1] = b;
+     state[2] = c;
+@@ -455,7 +462,7 @@ static int crypto_hashblocks_sha512(unsigned char *statebytes,const unsigned cha
+ }
+ 
+ 
+-static const uint8_t iv_256[32] = {
++/*!@# static*/ const uint8_t iv_256[32] = {
+     0x6a, 0x09, 0xe6, 0x67, 0xbb, 0x67, 0xae, 0x85,
+     0x3c, 0x6e, 0xf3, 0x72, 0xa5, 0x4f, 0xf5, 0x3a,
+     0x51, 0x0e, 0x52, 0x7f, 0x9b, 0x05, 0x68, 0x8c,
+@@ -472,12 +479,19 @@ static const uint8_t iv_512[64] = {
+ };
+ 
+ void sha256_inc_init(uint8_t *state) {
++    g_sha256_perfc_init_calls++;
++
++#ifdef XSHA256_ACCELERATION
++    xsha256_init((xsha256_ctx_t*)state);
++#else
+     for (size_t i = 0; i < 32; ++i) {
+         state[i] = iv_256[i];
+     }
+     for (size_t i = 32; i < 40; ++i) {
+         state[i] = 0;
+     }
++#endif
++
+ }
+ 
+ void sha512_inc_init(uint8_t *state) {
+@@ -490,12 +504,19 @@ void sha512_inc_init(uint8_t *state) {
+ }
+ 
+ void sha256_inc_blocks(uint8_t *state, const uint8_t *in, size_t inblocks) {
++    g_sha256_perfc_inc_blocks_calls += 1;
++    g_sha256_perfc_inc_blocks += inblocks;
++
++#ifndef XSHA256_ACCELERATION
+     uint64_t bytes = load_bigendian_64(state + 32);
+ 
+     crypto_hashblocks_sha256(state, in, 64 * inblocks);
+     bytes += 64 * inblocks;
+ 
+     store_bigendian_64(state + 32, bytes);
++#else
++    xsha256_update((xsha256_ctx_t*)state, in, 64 * inblocks);
++#endif
+ }
+ 
+ void sha512_inc_blocks(uint8_t *state, const uint8_t *in, size_t inblocks) {
+@@ -508,6 +529,10 @@ void sha512_inc_blocks(uint8_t *state, const uint8_t *in, size_t inblocks) {
+ }
+ 
+ void sha256_inc_finalize(uint8_t *out, uint8_t *state, const uint8_t *in, size_t inlen) {
++    g_sha256_perfc_finalize_calls++;
++    g_sha256_perfc_finalize_bytes += inlen;
++
++#ifndef XSHA256_ACCELERATION
+     uint8_t padded[128];
+     uint64_t bytes = load_bigendian_64(state + 32) + inlen;
+ 
+@@ -552,6 +577,11 @@ void sha256_inc_finalize(uint8_t *out, uint8_t *state, const uint8_t *in, size_t
+     for (size_t i = 0; i < 32; ++i) {
+         out[i] = state[i];
+     }
++#else
++    xsha256_final((xsha256_ctx_t*)state, out, in, inlen);
++    // xsha256_update((xsha256_ctx_t*)state, in, inlen);
++    // xsha256_digest((xsha256_ctx_t*)state, out);
++#endif
+ 
+ }
+ 
+@@ -605,7 +635,7 @@ void sha512_inc_finalize(uint8_t *out, uint8_t *state, const uint8_t *in, size_t
+ }
+ 
+ void sha256(uint8_t *out, const uint8_t *in, size_t inlen) {
+-    uint8_t state[40];
++    uint8_t state[SPX_SHA256_CTX_BYTES];
+ 
+     sha256_inc_init(state);
+     sha256_inc_finalize(out, state, in, inlen);
+diff --git a/ref/thash_sha2_robust.c b/ref/thash_sha2_robust.c
+index 67ca3da..befc206 100644
+--- a/ref/thash_sha2_robust.c
++++ b/ref/thash_sha2_robust.c
+@@ -27,7 +27,7 @@ void thash(unsigned char *out, const unsigned char *in, unsigned int inblocks,
+     unsigned char outbuf[SPX_SHA256_OUTPUT_BYTES];
+     SPX_VLA(uint8_t, bitmask, inblocks * SPX_N);
+     SPX_VLA(uint8_t, buf, SPX_N + SPX_SHA256_OUTPUT_BYTES + inblocks*SPX_N);
+-    uint8_t sha2_state[40];
++    uint8_t sha2_state[SPX_SHA256_CTX_BYTES];
+     unsigned int i;
+ 
+     memcpy(buf, ctx->pub_seed, SPX_N);
+@@ -35,7 +35,7 @@ void thash(unsigned char *out, const unsigned char *in, unsigned int inblocks,
+     mgf1_256(bitmask, inblocks * SPX_N, buf, SPX_N + SPX_SHA256_ADDR_BYTES);
+ 
+     /* Retrieve precomputed state containing pub_seed */
+-    memcpy(sha2_state, ctx->state_seeded, 40 * sizeof(uint8_t));
++    memcpy(sha2_state, ctx->state_seeded, SPX_SHA256_CTX_BYTES);
+ 
+     for (i = 0; i < inblocks * SPX_N; i++) {
+         buf[SPX_N + SPX_SHA256_ADDR_BYTES + i] = in[i] ^ bitmask[i];
+diff --git a/ref/thash_sha2_simple.c b/ref/thash_sha2_simple.c
+index da58896..019de1a 100644
+--- a/ref/thash_sha2_simple.c
++++ b/ref/thash_sha2_simple.c
+@@ -26,11 +26,11 @@ void thash(unsigned char *out, const unsigned char *in, unsigned int inblocks,
+ #endif
+ 
+     unsigned char outbuf[SPX_SHA256_OUTPUT_BYTES];
+-    uint8_t sha2_state[40];
++    uint8_t sha2_state[SPX_SHA256_CTX_BYTES];
+     SPX_VLA(uint8_t, buf, SPX_SHA256_ADDR_BYTES + inblocks*SPX_N);
+ 
+     /* Retrieve precomputed state containing pub_seed */
+-    memcpy(sha2_state, ctx->state_seeded, 40 * sizeof(uint8_t));
++    memcpy(sha2_state, ctx->state_seeded, SPX_SHA256_CTX_BYTES);
+ 
+     memcpy(buf, addr, SPX_SHA256_ADDR_BYTES);
+     memcpy(buf + SPX_SHA256_ADDR_BYTES, in, inblocks * SPX_N);
