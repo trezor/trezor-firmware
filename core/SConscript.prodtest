@@ -279,7 +279,7 @@ env.Replace(
     '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
     '-fsingle-precision-constant -fdata-sections -ffunction-sections '
     '-ffreestanding '
-    '-fstack-protector-all '
+    #'-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS=['-Tbuild/prodtest/memory.ld', '-Wl,--gc-sections', '-Wl,--print-memory-usage', '-Wl,-Map=build/prodtest/prodtest.map', '-Wl,--warn-common'],
