@@ -525,7 +525,8 @@ void drivers_init(uint16_t tropic_model_port) {
 #endif
 
 #ifdef USE_TROPIC
-  tropic_init(tropic_model_port);
+  ensure(tropic_init(tropic_model_port) ? sectrue : secfalse,
+         "tropic initialization failed");
 #endif
 
   usb_configure(NULL);
