@@ -97,7 +97,8 @@ bool syslog_set_filter(const char* filter, size_t filter_len);
  * @param args  Variable arguments list
  */
 void syslog_vprintf(const log_source_t* source, log_level_t level,
-                    const char* fmt, va_list args);
+                    const char* fmt, va_list args)
+    __attribute__((format(printf, 3, 0)));
 
 /**
  * Logs a message (printf-style)
@@ -111,7 +112,7 @@ void syslog_vprintf(const log_source_t* source, log_level_t level,
  * @param ...   Variable arguments
  */
 void syslog_printf(const log_source_t* source, log_level_t level,
-                   const char* fmt, ...);
+                   const char* fmt, ...) __attribute__((format(printf, 3, 4)));
 
 /**
  * Logs a hex dump of binary data and an optional prefix string
