@@ -194,7 +194,7 @@ impl SwipeFlow {
 
         let mut attach = false;
 
-        let event = if self.allow_swipe {
+        let mut event = if self.allow_swipe {
             let page = self.current_page();
             let pager = page.get_pager();
             let config = page.get_swipe_config().with_pager(pager);
@@ -232,8 +232,8 @@ impl SwipeFlow {
                 // swipe end.
                 if attach {
                     if let Event::Swipe(SwipeEvent::End(dir)) = event {
-                        self.current_page_mut()
-                            .event(ctx, Event::Attach(AttachType::Swipe(dir)));
+                        event = Event::Attach(AttachType::Swipe(dir));
+                        self.current_page_mut().event(ctx, event);
                     }
                 }
 
