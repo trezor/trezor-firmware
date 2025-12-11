@@ -320,7 +320,9 @@ class LayoutContent(UnstructuredJSONReader):
 
     def bolt_fido_confirm_account(self) -> str | None:
         """Getting the current account name for FIDO on Bolt."""
-        fido_confirm = self.find_unique_object_with_key_and_value("component", "FidoConfirm")
+        fido_confirm = self.find_unique_object_with_key_and_value(
+            "component", "FidoConfirm"
+        )
         if fido_confirm:
             return fido_confirm["account_name"]
 
@@ -2259,8 +2261,8 @@ class ButtonActions:
         click_amount = BUTTON_LETTERS_BIP39[idx].index(letter) + 1
         return self.debuglink.screen_buttons.mnemonic_from_index(idx), click_amount
 
-    def navigate_to_menu_item(self, idx: int) -> None:
-        """Navigate to the nth item in the vertical menu. Starts from 0."""
+    def navigate_to_menu_item(self, idx: int) -> str | None:
+        """Navigate to the nth item in the vertical menu. Starts from 0. Returns the selected item text."""
         item_buttons = self.debuglink.screen_buttons.vertical_menu_items()
         layout = self.debuglink.read_layout()
         if self.debuglink.layout_type is LayoutType.Delizia:
@@ -2276,7 +2278,11 @@ class ButtonActions:
                     )
                 # click the correct item
                 new_idx = idx % items_per_screen
+                selected_item_text = (
+                    self.debuglink.read_layout().vertical_menu_content()[new_idx]
+                )
                 self.debuglink.click(item_buttons[new_idx])
+                return selected_item_text
             elif "ScrolledVerticalMenu" in layout.all_components():
                 _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()
                 menu = layout.find_unique_value_by_key(
@@ -2298,24 +2304,46 @@ class ButtonActions:
                         in self.debuglink.read_layout().all_components()
                     )
                     new_idx = idx % items_per_screen
+                    menu = self.debuglink.read_layout().find_unique_value_by_key(
+                        key="menu_items", default=None, only_type=dict
+                    )
+                    selected_item = menu["current"][new_idx]
+                    selected_item_text = selected_item.get(
+                        "item", selected_item.get("cancel")
+                    )
                     self.debuglink.click(item_buttons[new_idx])
+                    return selected_item_text
                 # single-screen variant
                 else:
                     assert len(item_buttons) > idx
+                    selected_item_text = (
+                        self.debuglink.read_layout().vertical_menu_content()[idx]
+                    )
                     self.debuglink.click(item_buttons[idx])
+                    return selected_item_text
             # single-screen static menu
             # FIXME: remove this when the ScrollableVerticalMenu is implemented everywhere
             else:
                 assert len(item_buttons) > idx
+                button_objects = (
+                    self.debuglink.read_layout().find_objects_with_key_and_value(
+                        "component", "Button"
+                    )
+                )
+                selected_button = button_objects[idx]
+                selected_item_text = selected_button.get("text")
                 self.debuglink.click(item_buttons[idx])
-
+                return selected_item_text
         elif self.debuglink.layout_type is LayoutType.Eckhart:
             assert "VerticalMenu" in layout.all_components()
             # swipe up until the idx item gets to the first position
             for _ in range(idx):
                 self.debuglink.swipe_up()
-            assert "VerticalMenu" in self.debuglink.read_layout().all_components()
+            l = self.debuglink.read_layout()
+            assert "VerticalMenu" in l.all_components()
             # click the first item
+            selected_item_text = l.vertical_menu_content()[idx]
             self.debuglink.click(item_buttons[0])
+            return selected_item_text
         else:
             raise ValueError("Wrong layout type")
