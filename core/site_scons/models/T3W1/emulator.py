@@ -90,7 +90,6 @@ def configure(
         paths += ["embed/sec/tropic/inc"]
         paths += ["vendor/libtropic/include"]
         paths += ["vendor/libtropic/src"]
-        defines += ["USE_TREZOR_CRYPTO"]
 
         features_available.append("tropic")
         defines += [("USE_TROPIC", "1")]
