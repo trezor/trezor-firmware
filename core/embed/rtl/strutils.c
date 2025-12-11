@@ -93,10 +93,10 @@ bool cstr_decode_hex(const char* str, uint8_t* dst, size_t dst_len,
   return *cstr_skip_whitespace(str) == '\0';
 }
 
+static const char hex_chars[] = "0123456789ABCDEF";
+
 bool cstr_encode_hex(char* dst, size_t dst_len, const void* src,
                      size_t src_len) {
-  static const char hex[] = "0123456789ABCDEF";
-
   if (dst_len < src_len * 2 + 1) {
     if (dst_len > 0) {
       dst[0] = '\0';
@@ -105,8 +105,8 @@ bool cstr_encode_hex(char* dst, size_t dst_len, const void* src,
   }
 
   for (size_t i = 0; i < src_len; i++) {
-    dst[i * 2] = hex[((uint8_t*)src)[i] >> 4];
-    dst[i * 2 + 1] = hex[((uint8_t*)src)[i] & 0x0F];
+    dst[i * 2] = hex_chars[((uint8_t*)src)[i] >> 4];
+    dst[i * 2 + 1] = hex_chars[((uint8_t*)src)[i] & 0x0F];
   }
   dst[src_len * 2] = '\0';
 
@@ -177,8 +177,7 @@ bool cstr_append_int32(char* dst, size_t dst_len, int32_t value) {
 bool cstr_append_uint32_hex(char* dst, size_t dst_len, uint32_t value) {
   char temp[sizeof(value) * 2 + 1];
   for (int i = 2 * sizeof(value) - 1; i >= 0; i--) {
-    const char hex[] = "0123456789ABCDEF";
-    temp[i] = hex[value & 0x0F];
+    temp[i] = hex_chars[value & 0x0F];
     value >>= 4;
   }
   temp[sizeof(temp) - 1] = '\0';
