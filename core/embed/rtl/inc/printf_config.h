@@ -19,7 +19,12 @@
 
 #pragma once
 
-#include <printf/printf.h>
+#define PRINTF_SUPPORT_DECIMAL_SPECIFIERS 0
+#define PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS 0
+#define PRINTF_SUPPORT_WRITEBACK_SPECIFIER 1
+#define PRINTF_SUPPORT_MSVC_STYLE_INTEGER_SPECIFIERS 0
+#define PRINTF_USE_DOUBLE_INTERNALLY 0
+#define PRINTF_INTEGER_BUFFER_SIZE 32
+#define PRINTF_DECIMAL_BUFFER_SIZE 0
 
-#define mini_vsnprintf vsnprintf_
-#define mini_snprintf snprintf_
+static inline void putchar_(char c) {}

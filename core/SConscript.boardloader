@@ -97,7 +97,7 @@ SOURCE_MOD += [
     'embed/util/rsod/rsod.c',
     'embed/util/scm_revision/scm_revision.c',
     'embed/rtl/error_handling.c',
-    'embed/rtl/mini_printf.c',
+    'embed/rtl/printf.c',
     'embed/rtl/strutils.c',
 ]
 
