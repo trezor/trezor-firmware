@@ -19,7 +19,6 @@
 
 #include <trezor_rtl.h>
 
-#include <rtl/mini_printf.h>
 #include <sys/bootutils.h>
 #include <sys/system.h>
 
@@ -71,11 +70,9 @@ void __attribute__((noreturn)) show_wipe_code_screen(void) {
 
   const char *title = "Wipe code entered";
 
-  mini_snprintf(info.title, sizeof(info.title), "%s", title);
-  mini_snprintf(info.message, sizeof(info.message), "%s",
-                ALL_DATA_ERASED_MESSAGE);
-  mini_snprintf(info.footer, sizeof(info.footer), "%s",
-                RECONNECT_DEVICE_MESSAGE);
+  strncpy(info.title, title, sizeof(info.title) - 1);
+  strncpy(info.message, ALL_DATA_ERASED_MESSAGE, sizeof(info.message) - 1);
+  strncpy(info.footer, RECONNECT_DEVICE_MESSAGE, sizeof(info.footer) - 1);
 
   reboot_and_wipe(&info);
 
@@ -108,11 +105,9 @@ void __attribute__((noreturn)) show_pin_too_many_screen(void) {
 
   const char *title = "Pin attempts exceeded";
 
-  mini_snprintf(info.title, sizeof(info.title), "%s", title);
-  mini_snprintf(info.message, sizeof(info.message), "%s",
-                ALL_DATA_ERASED_MESSAGE);
-  mini_snprintf(info.footer, sizeof(info.footer), "%s",
-                RECONNECT_DEVICE_MESSAGE);
+  strncpy(info.title, title, sizeof(info.title) - 1);
+  strncpy(info.message, ALL_DATA_ERASED_MESSAGE, sizeof(info.message) - 1);
+  strncpy(info.footer, RECONNECT_DEVICE_MESSAGE, sizeof(info.footer) - 1);
 
   reboot_and_wipe(&info);
   while (1)

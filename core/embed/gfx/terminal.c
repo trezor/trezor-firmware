@@ -24,6 +24,7 @@
 #include <gfx/terminal.h>
 #include <io/display.h>
 #include <rtl/mini_printf.h>
+#include <rtl/strutils.h>
 
 #include "fonts/font_bitmap.h"
 
@@ -148,13 +149,8 @@ static void term_redraw_rows(int start_row, int row_count) {
 }
 
 // display text using bitmap font
-void term_print(const char *text, int textlen) {
+void term_nprint(const char *text, int textlen) {
   static uint8_t row = 0, col = 0;
-
-  // determine text length if not provided
-  if (textlen < 0) {
-    textlen = strlen(text);
-  }
 
   // print characters to internal buffer (terminal_fb)
   for (int i = 0; i < textlen; i++) {
@@ -210,16 +206,19 @@ void term_print(const char *text, int textlen) {
   display_refresh();
 }
 
-// variadic term_print
+void term_print(const char *text) { term_nprint(text, strlen(text)); }
+
+void term_print_int32(int32_t value) {
+  char buf[12] = "";
+  cstr_append_int32(buf, sizeof(buf), value);
+  term_print(buf);
+}
+
 void term_printf(const char *fmt, ...) {
-  if (!strchr(fmt, '%')) {
-    term_print(fmt, strlen(fmt));
-  } else {
-    va_list va;
-    va_start(va, fmt);
-    char buf[256] = {0};
-    int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
-    term_print(buf, len);
-    va_end(va);
-  }
+  va_list va;
+  va_start(va, fmt);
+  char buf[256] = {0};
+  int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
+  term_nprint(buf, len);
+  va_end(va);
 }

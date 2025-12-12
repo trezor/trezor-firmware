@@ -92,43 +92,45 @@ static uint32_t check_sdcard(void) {
   return 0;
 }
 
-static void progress_callback(int pos, int len) { term_printf("."); }
+static void progress_callback(int pos, int len) { term_print("."); }
 
 static secbool copy_sdcard(void) {
   display_set_backlight(255);
 
-  term_printf("Trezor Boardloader\n");
-  term_printf("==================\n\n");
+  term_print("Trezor Boardloader\n");
+  term_print("==================\n\n");
 
-  term_printf("bootloader found on the SD card\n\n");
-  term_printf("applying bootloader in 10 seconds\n\n");
-  term_printf("unplug now if you want to abort\n\n");
+  term_print("bootloader found on the SD card\n\n");
+  term_print("applying bootloader in 10 seconds\n\n");
+  term_print("unplug now if you want to abort\n\n");
 
   uint32_t codelen;
 
   for (int i = 10; i >= 0; i--) {
-    term_printf("%d ", i);
+    term_print_int32(i);
+    term_print(" ");
+
     hal_delay(1000);
     codelen = check_sdcard();
     if (0 == codelen) {
-      term_printf("\n\nno SD card, aborting\n");
+      term_print("\n\nno SD card, aborting\n");
       return secfalse;
     }
   }
 
-  term_printf("\n\nerasing flash:\n\n");
+  term_print("\n\nerasing flash:\n\n");
 
   // erase all flash (except boardloader)
   if (sectrue != erase_device(progress_callback)) {
-    term_printf(" failed\n");
+    term_print(" failed\n");
     return secfalse;
   }
-  term_printf(" done\n\n");
+  term_print(" done\n\n");
 
   ensure(flash_unlock_write(), NULL);
 
   // copy bootloader from SD card to Flash
-  term_printf("copying new bootloader from SD card\n\n");
+  term_print("copying new bootloader from SD card\n\n");
 
   ensure(flash_area_write_data(&BOOTLOADER_AREA, 0, sdcard_buf,
                                IMAGE_HEADER_SIZE + codelen),
@@ -136,8 +138,8 @@ static secbool copy_sdcard(void) {
 
   ensure(flash_lock_write(), NULL);
 
-  term_printf("\ndone\n\n");
-  term_printf("Unplug the device and remove the SD card\n");
+  term_print("\ndone\n\n");
+  term_print("Unplug the device and remove the SD card\n");
 
   return sectrue;
 }
