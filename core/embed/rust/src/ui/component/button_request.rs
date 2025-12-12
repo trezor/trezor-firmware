@@ -7,32 +7,22 @@ use crate::ui::{
 #[cfg(all(feature = "micropython", feature = "touch"))]
 use crate::ui::component::swipe_detect::SwipeConfig;
 
-/// Component that sends a ButtonRequest after receiving Event::Attach. The
-/// request is either sent only once or on every Event::Attach configured by
-/// `policy`.
+/// Component that sends a ButtonRequest after receiving Event::Attach.
+/// The request is sent only once.
 #[derive(Clone)]
 pub struct SendButtonRequest<T> {
     button_request: Option<ButtonRequest>,
     pub inner: T,
-    policy: SendButtonRequestPolicy,
-}
-
-#[derive(Clone)]
-pub enum SendButtonRequestPolicy {
-    OnAttachOnce,
-    OnAttachAlways,
 }
 
 impl<T> SendButtonRequest<T> {
     pub const fn new(
         button_request: ButtonRequest,
         inner: T,
-        policy: SendButtonRequestPolicy,
     ) -> Self {
         Self {
             button_request: Some(button_request),
             inner,
-            policy,
         }
     }
 }
@@ -46,17 +36,8 @@ impl<T: Component> Component for SendButtonRequest<T> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if matches!(event, Event::Attach(_)) {
-            match self.policy {
-                SendButtonRequestPolicy::OnAttachOnce => {
-                    if let Some(br) = self.button_request.take() {
-                        ctx.send_button_request(br.code, br.name)
-                    }
-                }
-                SendButtonRequestPolicy::OnAttachAlways => {
-                    if let Some(br) = self.button_request {
-                        ctx.send_button_request(br.code, br.name);
-                    }
-                }
+            if let Some(br) = self.button_request.take() {
+                ctx.send_button_request(br.code, br.name)
             }
         }
         self.inner.event(ctx, event)
@@ -86,18 +67,11 @@ impl<T: crate::trace::Trace> crate::trace::Trace for SendButtonRequest<T> {
 }
 
 pub trait ButtonRequestExt {
-    fn one_button_request(self, br: ButtonRequest) -> SendButtonRequest<Self>
+    fn with_button_request(self, br: ButtonRequest) -> SendButtonRequest<Self>
     where
         Self: Sized,
     {
-        SendButtonRequest::new(br, self, SendButtonRequestPolicy::OnAttachOnce)
-    }
-
-    fn repeated_button_request(self, br: ButtonRequest) -> SendButtonRequest<Self>
-    where
-        Self: Sized,
-    {
-        SendButtonRequest::new(br, self, SendButtonRequestPolicy::OnAttachAlways)
+        SendButtonRequest::new(br, self)
     }
 }
 

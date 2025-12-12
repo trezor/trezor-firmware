@@ -99,7 +99,7 @@ pub fn new_show_share_words(
     .with_subtitle(TR::words__instructions.into())
     .with_swipeup_footer(text_footer)
     .map_to_button_msg()
-    .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
+    .with_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
     .with_pages(move |_| nwords + 2);
 
     let content_words = Frame::left_aligned(

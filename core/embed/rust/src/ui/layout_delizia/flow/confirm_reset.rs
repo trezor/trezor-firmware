@@ -110,7 +110,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .with_menu_button()
         .with_swipeup_footer(None)
         .map_to_button_msg()
-        .one_button_request(br);
+        .with_button_request(br);
 
     let content_menu = Frame::left_aligned(
         TString::empty(),
@@ -133,7 +133,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .with_footer(TR::instructions__hold_to_confirm.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::Default)
         .map(super::util::map_to_confirm)
-        .one_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
+        .with_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
 
         let mut res = SwipeFlow::new(&ConfirmResetCreate::Intro)?;
         res.add_page(&ConfirmResetCreate::Intro, content_intro)?

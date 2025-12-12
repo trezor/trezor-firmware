@@ -138,7 +138,7 @@ pub fn new_show_share_words_flow(
         res.add_page(
             &ShowShareWords::Instruction,
             instruction
-                .one_button_request(br)
+                .with_button_request(br)
                 .with_pages(move |_| nwords + 2),
         )?
         .add_page(&ShowShareWords::ShareWords, share_words)?
@@ -149,7 +149,7 @@ pub fn new_show_share_words_flow(
             .add_page(
                 &ShowShareWords::ShareWords,
                 share_words
-                    .one_button_request(br)
+                    .with_button_request(br)
                     .with_pages(move |_| nwords + 1),
             )?
     };

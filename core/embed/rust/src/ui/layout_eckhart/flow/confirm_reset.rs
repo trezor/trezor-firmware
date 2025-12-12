@@ -85,7 +85,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             _ => None,
         })
-        .one_button_request(br);
+        .with_button_request(br);
 
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::<ShortMenuVec>::empty()

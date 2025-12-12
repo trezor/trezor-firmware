@@ -115,7 +115,7 @@ pub fn new_receive(
             .with_swipeup_footer(None)
             .with_vertical_pages()
             .map_to_button_msg()
-            .one_button_request(ButtonRequest::from_num(br_code, br_name))
+            .with_button_request(ButtonRequest::from_num(br_code, br_name))
             // Count tap-to-confirm screen towards page count
             .with_pages(|address_pages| address_pages + 1);
 

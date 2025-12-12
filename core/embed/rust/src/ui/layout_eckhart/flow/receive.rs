@@ -140,7 +140,7 @@ pub fn new_receive(
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
         })
-        .one_button_request(ButtonRequest::from_num(br_code, br_name));
+        .with_button_request(ButtonRequest::from_num(br_code, br_name));
 
     // Menu
     let content_menu = VerticalMenuScreen::new(

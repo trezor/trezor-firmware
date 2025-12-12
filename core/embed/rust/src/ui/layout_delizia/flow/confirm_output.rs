@@ -215,7 +215,7 @@ pub fn new_confirm_output(
     let main_content = confirm_main
         .with_flow_menu(true)
         .into_layout()?
-        .one_button_request(ButtonRequest::from_num(br_code, br_name));
+        .with_button_request(ButtonRequest::from_num(br_code, br_name));
 
     // MainMenu
     let mut main_menu = VerticalMenu::empty();
@@ -249,7 +249,7 @@ pub fn new_confirm_output(
     let res = if let Some(confirm_amount) = confirm_amount {
         let confirm_amount = confirm_amount
             .into_layout()?
-            .one_button_request(ButtonRequest::from_num(br_code, br_name));
+            .with_button_request(ButtonRequest::from_num(br_code, br_name));
 
         let mut flow = SwipeFlow::new(&ConfirmOutputWithAmount::Address)?;
         flow.add_page(&ConfirmOutputWithAmount::Address, main_content)?
@@ -262,7 +262,7 @@ pub fn new_confirm_output(
         // Summary
         let content_summary = summary_items_params
             .into_layout()?
-            .one_button_request(ButtonRequest::from_num(
+            .with_button_request(ButtonRequest::from_num(
                 summary_br_code.unwrap(),
                 summary_br_name.unwrap(),
             ))

@@ -181,7 +181,7 @@ pub fn new_continue_recovery_homepage(
             .with_menu_button()
             .with_swipeup_footer(footer_description)
             .map_to_button_msg()
-            .repeated_button_request(ButtonRequest::new(
+            .with_button_request(ButtonRequest::new(
                 ButtonRequestCode::RecoveryHomepage,
                 "recovery".into(),
             ))
@@ -197,7 +197,7 @@ pub fn new_continue_recovery_homepage(
             .with_cancel_button()
             .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
             .map_to_button_msg()
-            .repeated_button_request(ButtonRequest::new(
+            .with_button_request(ButtonRequest::new(
                 ButtonRequestCode::ProtectCall,
                 "abort_recovery".into(),
             ));
@@ -256,7 +256,7 @@ pub fn new_continue_recovery_homepage(
         .with_swipe(Direction::Up, SwipeSettings::Default)
         .with_vertical_pages()
         .map_to_button_msg()
-        .repeated_button_request(ButtonRequest::new(
+        .with_button_request(ButtonRequest::new(
             ButtonRequestCode::Other,
             "show_shares".into(),
         ))
