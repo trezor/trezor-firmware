@@ -25,6 +25,7 @@
     - [Translation data format](core/misc/translations.md)
     - [UI Layout lifecycle](core/misc/layout-lifecycle.md)
     - [Optiga configuration](core/misc/optiga.md)
+    - [Logging for debugging purposes](core/misc/logging.md)
 - [Legacy](legacy/index.md)
     - [Firmware format](legacy/firmware-format.md)
 - [Python](python/index.md)
