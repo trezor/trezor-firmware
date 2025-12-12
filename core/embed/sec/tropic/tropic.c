@@ -47,11 +47,6 @@
 #define TROPIC_KEK_MASKS_PRIVILEGED_SLOT 128
 #define TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT 256
 
-// Mac-and-destroy slots used in PIN verification
-#define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED 0
-#define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED 64
-#define TROPIC_MAC_AND_DESTROY_SLOTS_COUNT 64
-
 // The value by which the index of the first mac-and-destroy slot is shifted
 // before every PIN change. The value is coprime to
 // TROPIC_MAC_AND_DESTROY_SLOTS_COUNT to ensure that

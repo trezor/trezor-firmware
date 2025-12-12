@@ -24,6 +24,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
+#include <sec/rng.h>
 #include <sec/tropic.h>
 #include <sys/systick.h>
 
@@ -1583,6 +1584,109 @@ cleanup:
   tropic_deinit();
 }
 
+static void prodtest_tropic_stress_test(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+
+  lt_ret_t res = LT_FAIL;
+  pkey_index_t pairing_key_index = -1;
+
+  // Find which pairing key is available
+  for (pkey_index_t i = TROPIC_FACTORY_PAIRING_KEY_SLOT;
+       i <= TROPIC_PRIVILEGED_PAIRING_KEY_SLOT; i++) {
+    res = tropic_custom_session_start(i);
+    if (res == LT_OK) {
+      pairing_key_index = i;
+      break;
+    }
+    if (res != LT_L2_HSK_ERR) {
+      cli_error(
+          cli, CLI_ERROR,
+          "`tropic_custom_session_start() for key %d failed with error %d", i,
+          res);
+      return;
+    }
+  }
+
+  if (pairing_key_index == -1) {
+    cli_error(cli, CLI_ERROR, "No pairing key is available");
+    return;
+  }
+
+  // Test `lt_session_start`
+  for (int i = 0; i < 10; i++) {
+    res = tropic_session_invalidate();
+    if (res != LT_OK) {
+      cli_error(
+          cli, CLI_ERROR,
+          "`%d. repetition of tropic_session_invalidate() failed with error %d",
+          i + 1, res);
+      return;
+    }
+    res = tropic_custom_session_start(pairing_key_index);
+    if (res != LT_OK) {
+      cli_error(cli, CLI_ERROR,
+                "%d. repetition of `tropic_custom_session_start() for key %d "
+                "failed with error %d",
+                i + 1, pairing_key_index, res);
+      return;
+    }
+  }
+
+  // Test `lt_mac_and_destroy`
+  for (int slot_index = TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
+       slot_index < TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT +
+                        TROPIC_MAC_AND_DESTROY_SLOTS_COUNT;
+       slot_index++) {
+    for (int i = 0; i < 3; i++) {
+      uint8_t buffer[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+      rng_fill_buffer(buffer, sizeof(buffer));
+      res = lt_mac_and_destroy(tropic_get_handle(), slot_index, buffer, buffer);
+      if (res != LT_OK) {
+        cli_error(cli, CLI_ERROR,
+                  "%d. repetition of `lt_mac_and_destroy()` for slot %d failed "
+                  "with error %d",
+                  i + 1, slot_index, res);
+        return;
+      }
+    }
+  }
+
+  // Test `lt_ecc_key_generate`
+  uint8_t message[32] = {0};
+  ed25519_signature signature = {0};
+  ecc_slot_t ecc_slot = ECC_SLOT_31;
+  res = lt_ecc_key_generate(tropic_get_handle(), ecc_slot, CURVE_ED25519);
+  if (res != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_ecc_key_generate()` failed with error %d",
+              res);
+    return;
+  }
+  for (int i = 0; i < 10; i++) {
+    rng_fill_buffer(message, sizeof(message));
+    res = lt_ecc_eddsa_sign(tropic_get_handle(), ecc_slot, message,
+                            sizeof(message), signature);
+    if (res != LT_OK) {
+      cli_error(cli, CLI_ERROR,
+                "%d. repetition of `lt_ecc_eddsa_sign()` failed with error %d",
+                i + 1, res);
+      lt_ecc_key_erase(tropic_get_handle(), ecc_slot);
+      return;
+    }
+  }
+  res = lt_ecc_key_erase(tropic_get_handle(), ecc_slot);
+  if (res != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_ecc_key_erase()` failed with error %d", res);
+    return;
+  }
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -1701,6 +1805,13 @@ PRODTEST_CLI_CMD(
   .name = "tropic-update-fw",
   .func = prodtest_tropic_update_fw,
   .info = "Update tropic FW to embedded binary",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-stress-test",
+  .func = prodtest_tropic_stress_test,
+  .info = "Run stress test for Tropic",
   .args = ""
 );
 
