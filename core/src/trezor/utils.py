@@ -24,6 +24,7 @@ from trezorutils import (  # noqa: F401
     USE_BACKLIGHT,
     USE_BLE,
     USE_BUTTON,
+    USE_DBG_CONSOLE,
     USE_HAPTIC,
     USE_NRF,
     USE_OPTIGA,
@@ -57,6 +58,9 @@ from trezorutils import (  # noqa: F401
 
 if USE_NRF:
     from trezorutils import nrf_get_version  # noqa: F401
+
+if USE_DBG_CONSOLE:
+    from trezorutils import set_log_filter  # noqa: F401
 
 if USE_SERIAL_NUMBER:
     from trezorutils import serial_number  # noqa: F401

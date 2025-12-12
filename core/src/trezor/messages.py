@@ -3085,6 +3085,20 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkGcInfo"]:
             return isinstance(msg, cls)
 
+    class DebugLinkSetLogFilter(protobuf.MessageType):
+        filter: "str | None"
+
+        def __init__(
+            self,
+            *,
+            filter: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetLogFilter"]:
+            return isinstance(msg, cls)
+
     class DebugLinkGcInfoItem(protobuf.MessageType):
         name: "str"
         value: "int"

@@ -35,6 +35,8 @@
 #include "embed/upymod/trezorobj.h"
 
 #include <io/usb.h>
+#include <rtl/logging.h>
+
 #include <sec/secret_keys.h>
 #include <sys/bootutils.h>
 #include <sys/notify.h>
@@ -684,6 +686,21 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_nrf_get_version_obj,
                                  mod_trezorutils_nrf_get_version);
 #endif
 
+#ifdef USE_DBG_CONSOLE
+/// def set_log_filter(filter: str) -> None:
+///     """
+///     Sets filter string for syslog
+///     """
+STATIC mp_obj_t mod_trezorutils_set_log_filter(mp_obj_t filter) {
+  mp_buffer_info_t filter_buf = {0};
+  mp_get_buffer_raise(filter, &filter_buf, MP_BUFFER_READ);
+  syslog_set_filter(filter_buf.buf, filter_buf.len);
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_set_log_filter_obj,
+                                 mod_trezorutils_set_log_filter);
+#endif
+
 STATIC const mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION), (const byte *)SCM_REVISION};
 
@@ -742,6 +759,8 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware has a battery."""
 /// USE_NRF: bool
 /// """Whether the hardware has a nRF chip."""
+/// USE_DBG_CONSOLE: bool
+/// """Whether a debug console is enabled."""
 /// MODEL: str
 /// """Model name."""
 /// MODEL_FULL_NAME: str
@@ -824,6 +843,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #ifdef USE_NRF
     {MP_ROM_QSTR(MP_QSTR_nrf_get_version),
      MP_ROM_PTR(&mod_trezorutils_nrf_get_version_obj)},
+#endif
+#ifdef USE_DBG_CONSOLE
+    {MP_ROM_QSTR(MP_QSTR_set_log_filter),
+     MP_ROM_PTR(&mod_trezorutils_set_log_filter_obj)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_delegated_identity),
      MP_ROM_PTR(&mod_trezorutils_delegated_identity_obj)},
@@ -924,6 +947,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_NRF), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_NRF), mp_const_false},
+#endif
+#ifdef USE_DBG_CONSOLE
+    {MP_ROM_QSTR(MP_QSTR_USE_DBG_CONSOLE), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_DBG_CONSOLE), mp_const_false},
 #endif
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_PTR(&mod_trezorutils_model_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_MODEL_FULL_NAME),

@@ -144,6 +144,7 @@ enum MessageType {
     MessageType_DebugLinkGcInfo = 9010 [(bitcoin_only) = true, (wire_debug_out) = true];
     MessageType_DebugLinkGetPairingInfo = 9011 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkPairingInfo = 9012 [(bitcoin_only) = true, (wire_debug_out) = true];
+    MessageType_DebugLinkSetLogFilter = 9013 [(bitcoin_only) = true, (wire_debug_in) = true];
 
     // Ethereum
     MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];
