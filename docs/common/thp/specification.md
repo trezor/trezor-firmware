@@ -79,7 +79,7 @@ sequenceDiagram
   participant host
   participant Trezor
   rect rgb(35, 35, 35)   
-    Note right of host: Channel allocation layer
+    Note right of host: Transport layer
     rect rgb(25,25,25)
 
         host ->> Trezor: ChannelAllocationRequest(nonce)
@@ -654,7 +654,7 @@ When the message HandshakeInitiationResponse(*trezor_ephemeral_pubkey*, *encrypt
         - Set *state* = STATE_PAIRED.
         - Set *host_pairing_credential* = *credential*.
     - If not found, then do the following:
-        - Generate a new tuple (*host_static_privkey*, *host_static_pubkey*) and associate it with the *trezor_static_pubkey*
+        - Generate a new tuple (*host_static_privkey*, *host_static_pubkey*).
         - Set *state* = STATE_UNPAIRED.
         - Set *host_pairing_credential* = *None* (the optional field *host_pairing_credential* in the protobuf message is omitted).
 12. Set *encrypted_host_static_pubkey* = AES-GCM-ENCRYPT(*key*=*k*, *IV*=0^95 || 1, *ad*=*h*, *plaintext*=*host_static_pubkey*).
@@ -1275,7 +1275,7 @@ The behavior of the host in the state HC0 is defined as follows:
 The behavior of the host in the state HC1 is defined as follows:
 
 - When the message CredentialResponse(*trezor_static_pubkey*, *credential*) is received, take the following actions:
-    1. Append (*trezor_static_pubkey*, *credential*) to *credentials*.
+    1. Append (*trezor_static_pubkey*, *credential*) to *credentials*. If the host uses multiple static key-pairs, associate the tuple (*host_static_privkey*, *host_static_pubkey*) generated for this connection with the *trezor_static_pubkey*.
     
     Then take one of the following actions:
     
