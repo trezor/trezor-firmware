@@ -35,7 +35,7 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
-    . = ALIGN(512);
+    . = ALIGN(4);
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
@@ -44,7 +44,7 @@ SECTIONS {
 
   .data : ALIGN(4) {
     *(.data*);
-    . = ALIGN(512);
+    . = ALIGN(4);
   } >MAIN_RAM AT>FLASH
 
   /DISCARD/ : {
