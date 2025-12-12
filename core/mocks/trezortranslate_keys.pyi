@@ -1090,6 +1090,7 @@ class TR:
     words__name: str = "Name"
     words__no: str = "No"
     words__not_recommended: str = "Not recommended!"
+    words__note: str = "Note"
     words__off: str = "OFF"
     words__on: str = "ON"
     words__operation_cancelled: str = "Operation cancelled"

@@ -1,0 +1,174 @@
+{
+  "comment": "raw field is used only for debugging.",
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "name": "TransferContract",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "e942",
+          "ref_block_hash": "6394747da9fee421",
+          "expiration": 1752562632000,
+          "timestamp": 1752562572000
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 18123456
+        },
+        "raw_data_hex": "0a02e94222086394747da9fee42140c08afee680335a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870e0b5fae68033",
+        "raw": {
+          "visible": false,
+          "txID": "91813c4e057a4c881d9dc4981f041c33cffb17c41e860a53eb68e7995f5de821",
+          "raw_data_hex": "0a02e94222086394747da9fee42140c08afee680335a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870e0b5fae68033",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "amount": 18123456
+                  },
+                  "type_url": "type.googleapis.com/protocol.TransferContract"
+                },
+                "type": "TransferContract"
+              }
+            ],
+            "ref_block_bytes": "e942",
+            "ref_block_hash": "6394747da9fee421",
+            "expiration": 1752562632000,
+            "timestamp": 1752562572000
+          }
+        }
+      },
+      "result": {
+        "signature": "a7f8602b02413e9dded0170daa5b4ada9a2679198af276be456f4faea1bc326f5070789bec5e6471de3f726f4fe0c9daced8df183e4a62804db26d5650c59a521C"
+      }
+    },
+    {
+      "name": "TransferContract_amount_int64_max",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "0fc4",
+          "ref_block_hash": "9643b084bc8b5cde",
+          "expiration": 1752568944000,
+          "timestamp": 1752571244333
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 9223372036854775807
+        },
+        "raw_data_hex": "0a020fc422089643b084bc8b5cde4080abffe980335a6d080112690a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412380a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318ffffffffffffffff7f70adde8beb8033",
+        "comment": "tornweb JavaScript SDK does not support big integers"
+      },
+      "result": {
+        "signature": "36db819a6c50b8c770ff1067a2753692fa8c8bfa7efde8ddfc2f891f7053d9955f6ffd0ee7d6217b448ac3515d97f6877159b721f2a78da78d1fcc10c1019dd51b"
+      }
+    },
+    {
+      "name": "Note_hello_world",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "ea2a",
+          "ref_block_hash": "d43320ee5a8b677f",
+          "expiration": 1752563334000,
+          "timestamp": 1752563274000,
+          "data": "68656c6c6f20776f726c6421"
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 18123456
+        },
+        "raw_data_hex": "0a02ea2a2208d43320ee5a8b677f40f0f6a8e78033520c68656c6c6f20776f726c64215a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d2087090a2a5e78033",
+        "raw": {
+          "txID": "2b166e72fe1cfb71345d5061d15e10ac2cc5ee3bb85b5ad34a14c9bf112b8372",
+          "raw_data": {
+            "data": "68656c6c6f20776f726c6421",
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "amount": 18123456,
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TransferContract"
+                },
+                "type": "TransferContract"
+              }
+            ],
+            "ref_block_bytes": "ea2a",
+            "ref_block_hash": "d43320ee5a8b677f",
+            "expiration": 1752563334000,
+            "timestamp": 1752563274000
+          },
+          "raw_data_hex": "0a02ea2a2208d43320ee5a8b677f40f0f6a8e78033520c68656c6c6f20776f726c64215a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d2087090a2a5e78033",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "7b43c3e8977db4f5475656eec2e643bf1549d923f29c28c009c85b51556a78602aa0f3f2780cb19655dfa8d4eb2102a3c6b3440ce5b7448a814c860cdc925dd21C"
+      }
+    },
+    {
+      "name": "Note_too_long_string",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "ea54",
+          "ref_block_hash": "e5ae03970dae489a",
+          "expiration": 1752563466000,
+          "timestamp": 1752563406000,
+          "data": "e7fb3e7e39d4c650449e8d80c2731c4cc7fe0c7888a189a6eb1ead3621729a3ae8578299b2a1a35edf5ce3d9ae732cc4f202a34304900156ab37a78917609ae58dae01cb4de5ed98ff79a56e7f0e41f6042d3a734ae3b438209294a8a1899ddd4dee47c1cc86a0b2bf7d57d8457dfeed5fc2a24cd553c08a831f10a02ce5fb776d287e71e6a1a899ae966a0928f01ce6d3c4b0ee5151872c6dd80fefbfb79cff1949bfb5aba76b624e4c58eadf6c8ad97680e34d50807dc628dce44b39f3f405d5da406eb109cabdfc8c782be22f39c2e8814946e69977781fd66c691416b2785f41b508db37e819257751ee97794a57d7a8db5fb4b2cfce6031b76874922010"
+        },
+        "contract": {
+          "_message_type": "TronTransferContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283",
+          "amount": 18123456
+        },
+        "raw_data_hex": "0a02ea542208e5ae03970dae489a4090feb0e78033528002e7fb3e7e39d4c650449e8d80c2731c4cc7fe0c7888a189a6eb1ead3621729a3ae8578299b2a1a35edf5ce3d9ae732cc4f202a34304900156ab37a78917609ae58dae01cb4de5ed98ff79a56e7f0e41f6042d3a734ae3b438209294a8a1899ddd4dee47c1cc86a0b2bf7d57d8457dfeed5fc2a24cd553c08a831f10a02ce5fb776d287e71e6a1a899ae966a0928f01ce6d3c4b0ee5151872c6dd80fefbfb79cff1949bfb5aba76b624e4c58eadf6c8ad97680e34d50807dc628dce44b39f3f405d5da406eb109cabdfc8c782be22f39c2e8814946e69977781fd66c691416b2785f41b508db37e819257751ee97794a57d7a8db5fb4b2cfce6031b768749220105a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870b0a9ade78033",
+        "raw": {
+          "txID": "005fe60597b52c7d9e021795f084ca7da323f4fc08a406292443ce7a4d480dc5",
+          "raw_data": {
+            "data": "e7fb3e7e39d4c650449e8d80c2731c4cc7fe0c7888a189a6eb1ead3621729a3ae8578299b2a1a35edf5ce3d9ae732cc4f202a34304900156ab37a78917609ae58dae01cb4de5ed98ff79a56e7f0e41f6042d3a734ae3b438209294a8a1899ddd4dee47c1cc86a0b2bf7d57d8457dfeed5fc2a24cd553c08a831f10a02ce5fb776d287e71e6a1a899ae966a0928f01ce6d3c4b0ee5151872c6dd80fefbfb79cff1949bfb5aba76b624e4c58eadf6c8ad97680e34d50807dc628dce44b39f3f405d5da406eb109cabdfc8c782be22f39c2e8814946e69977781fd66c691416b2785f41b508db37e819257751ee97794a57d7a8db5fb4b2cfce6031b768749220105a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870b0a9ade78033",
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "amount": 18123456,
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "to_address": "4141f82674a30ae1328745d08afe2d1a0a24195283"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TransferContract"
+                },
+                "type": "TransferContract"
+              }
+            ],
+            "ref_block_bytes": "ea54",
+            "ref_block_hash": "e5ae03970dae489a",
+            "expiration": 1752563466000,
+            "timestamp": 1752563406000
+          },
+          "raw_data_hex": "0a02ea542208e5ae03970dae489a4090feb0e78033528002e7fb3e7e39d4c650449e8d80c2731c4cc7fe0c7888a189a6eb1ead3621729a3ae8578299b2a1a35edf5ce3d9ae732cc4f202a34304900156ab37a78917609ae58dae01cb4de5ed98ff79a56e7f0e41f6042d3a734ae3b438209294a8a1899ddd4dee47c1cc86a0b2bf7d57d8457dfeed5fc2a24cd553c08a831f10a02ce5fb776d287e71e6a1a899ae966a0928f01ce6d3c4b0ee5151872c6dd80fefbfb79cff1949bfb5aba76b624e4c58eadf6c8ad97680e34d50807dc628dce44b39f3f405d5da406eb109cabdfc8c782be22f39c2e8814946e69977781fd66c691416b2785f41b508db37e819257751ee97794a57d7a8db5fb4b2cfce6031b768749220105a68080112640a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154141f82674a30ae1328745d08afe2d1a0a2419528318c095d20870b0a9ade78033",
+          "visible": false
+        }
+      },
+      "result": {
+        "error_message": ".*"
+      }
+    }
+  ]
+}

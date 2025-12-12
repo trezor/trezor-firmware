@@ -132,6 +132,7 @@ def get_features() -> Features:
             Capability.Ripple,
             Capability.Stellar,
             Capability.Tezos,
+            Capability.Tron,
             Capability.U2F,
             Capability.Shamir,
             Capability.ShamirGroups,

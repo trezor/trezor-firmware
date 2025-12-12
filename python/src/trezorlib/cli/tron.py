@@ -33,3 +33,23 @@ def get_address(
     """Get Tron address"""
     address_n = tools.parse_path(address)
     return tron.get_address(session, address_n, show_display, chunkify)
+
+
+@cli.command()
+@click.option(
+    "-n",
+    "--address",
+    required=True,
+    help=PATH_HELP,
+)
+@click.argument("raw_data_hex", type=str)
+@with_session
+def sign_tx(session: "Session", address: str, raw_data_hex: str) -> str:
+    """Sign a raw transaction."""
+
+    raw_data = bytes.fromhex(raw_data_hex)
+    tx, contract = tron.from_raw_data(raw_data)
+    address_n = tools.parse_path(address)
+    signed_tx = tron.sign_tx(session, tx, contract, address_n)
+
+    return signed_tx.signature.hex()

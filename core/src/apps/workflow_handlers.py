@@ -128,6 +128,12 @@ def _find_message_handler_module(msg_type: int) -> str:
             if msg_type == MessageType.NostrSignEvent:
                 return "apps.nostr.sign_event"
 
+            # tron
+            if msg_type == MessageType.TronGetAddress:
+                return "apps.tron.get_address"
+            if msg_type == MessageType.TronSignTx:
+                return "apps.tron.sign_tx"
+
         if msg_type == MessageType.SetU2FCounter:
             return "apps.management.set_u2f_counter"
         if msg_type == MessageType.GetNextU2FCounter:
@@ -224,10 +230,6 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.solana.get_address"
         if msg_type == MessageType.SolanaSignTx:
             return "apps.solana.sign_tx"
-
-        # tron
-        if msg_type == MessageType.TronGetAddress:
-            return "apps.tron.get_address"
 
     raise ValueError
 
