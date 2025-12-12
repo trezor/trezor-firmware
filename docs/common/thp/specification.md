@@ -78,7 +78,7 @@ This protocol is designed to be compatible with various means of data transfer, 
 sequenceDiagram
   participant host
   participant Trezor
-  rect rgb(35, 35, 35)   
+  rect rgb(35, 35, 35)
     Note right of host: Transport layer
     rect rgb(25,25,25)
 
@@ -86,7 +86,7 @@ sequenceDiagram
         Trezor ->> host: ChannelAllocationResponse(nonce, cid, device_properties)
     end
   end
-    rect rgb(35, 35, 35)   
+    rect rgb(35, 35, 35)
         Note right of host: Secure channel layer
         rect rgb(25,25,25)
             host ->> Trezor: HandshakeInitiationRequest(host_ephemeral_pubkey)
@@ -217,9 +217,9 @@ The receiver reassembles the *transport payload with CRC* by concatenating the p
 
 If a new initiation packet is received on a given channel before enough continuation packets have been received to reassemble the previous transport payload on that channel, then the receiver will discard the previous *transport payload with CRC* and begin reassembling the new *transport payload with CRC*.
 
-If an initiation packet is received on a channel CID2 while reassembling the *transport payload with CRC* on a different channel CID1, then the receiver should reassemble both transport payloads with CRC in parallel independently for each channel. 
+If an initiation packet is received on a channel CID2 while reassembling the *transport payload with CRC* on a different channel CID1, then the receiver should reassemble both transport payloads with CRC in parallel independently for each channel.
 
-If the receiver is not able to reassemble multiple payloads in parallel, then it should measure the time that elapsed since the last packet was received on channel CID1. If that time exceeds MIN_CONTINUATION_WAIT_MS, it should abort the reassembly of the *transport payload with CRC*, discard any previously reassembled data and begin reassembling the transport payload on channel CID2. If MIN_CONTINUATION_WAIT_MS is not exceeded, then it should notify the allocation layer to send a TRANSPORT_BUSY error on channel CID2. 
+If the receiver is not able to reassemble multiple payloads in parallel, then it should measure the time that elapsed since the last packet was received on channel CID1. If that time exceeds MIN_CONTINUATION_WAIT_MS, it should abort the reassembly of the *transport payload with CRC*, discard any previously reassembled data and begin reassembling the transport payload on channel CID2. If MIN_CONTINUATION_WAIT_MS is not exceeded, then it should notify the allocation layer to send a TRANSPORT_BUSY error on channel CID2.
 
 If a continuation packet is received on a given channel when none is expected on that channel, then the receiver will discard the continuation packet.
 
@@ -242,7 +242,7 @@ The receiver validates the CRC. If invalid, then the transport payload is discar
 
 The allocation layer handles the establishment and release of channels and transport error handling. Host applications initiate communication with Trezor by requesting the establishment of a channel. The Trezor is responsible for the allocation of a unique channel identifier to each host application.
 
-If Trezor receives a transport payload with a channel identifier that is not allocated, it will respond with an UNALLOCATED_CHANNEL error using the same channel identifier. Note: Implementation can respond to not allocated channel already after receiving an initiation packet (with unknown/unallocated CID). 
+If Trezor receives a transport payload with a channel identifier that is not allocated, it will respond with an UNALLOCATED_CHANNEL error using the same channel identifier. Note: Implementation can respond to not allocated channel already after receiving an initiation packet (with unknown/unallocated CID).
 
 A host application will ignore any data transmitted on a channel that has not been allocated to it.
 
@@ -330,7 +330,7 @@ It is possible that some packets are lost by the Data transfer layer (L1). In or
 
 The *Alternating Bit Protocol* (ABP) is a protocol between a sender and a receiver over an unreliable channel. The channel is unreliable in the sense that it can discard or duplicate messages, but it cannot change their order or content. The protocol guarantees the eventual and non-duplicative delivery of messages.
 
-After sending a message, the sender doesn't send any further messages until it receives an *acknowledgement message* (ACK). After receiving a valid message, the receiver sends an ACK. If the ACK does not reach the sender before a timeout, the sender re-transmits the message. THP uses a 1-bit sequence number that is part of the header of the initialization packet. This sequence number alternates (from 0 to 1) in subsequent messages. When the receiver sends an ACK, it includes the sequence number of the message it received. 
+After sending a message, the sender doesn't send any further messages until it receives an *acknowledgement message* (ACK). After receiving a valid message, the receiver sends an ACK. If the ACK does not reach the sender before a timeout, the sender re-transmits the message. THP uses a 1-bit sequence number that is part of the header of the initialization packet. This sequence number alternates (from 0 to 1) in subsequent messages. When the receiver sends an ACK, it includes the sequence number of the message it received.
 
 The receiver can detect duplicated frames by checking if the message sequence numbers alternate. If two subsequent messages have the same sequence number, they are duplicates, and the second message is discarded. Similarly, if two subsequent ACKs reference the same sequence number, they are acknowledging the same message.
 
@@ -446,14 +446,14 @@ The connection process involves the following steps:
 4. If the host and the Trezor have not paired in the past, they mutually authenticate to protect against man-in-the-middle (MITM) attacks, see [Pairing phase](#pairing-phase).
 5. After a successful pairing/connection, the host can ask Trezor for a long-time pairing credential. The credential allows the host to skip the pairing procedure when connecting from the same app and the same host device in the future, see [Credential phase](#credential-phase).
 
-Trezor keeps a state machine of the channel. The possible states are the following: 
+Trezor keeps a state machine of the channel. The possible states are the following:
 - UNALLOCATED: Trezor does not recognize a channel with given `channel id`.
 - Handshake states - TH1, TH2: Channel is in a *handshake phase*.
 - Pairing states - TP0, TP1, TP2, TP3a, TP3b, TP3c, TP4: Channel is in a *pairing phase*.
 - TC1: Channel is in a *credential phase*.
 - ENCRYPTED_TRANSPORT: Channel is fully prepared for encrypted application communication.
 
-Similarly, Host state machine has the following states: UNALLOCATED, HH0, HH1, HH2, HP0, HP1, HP2, HP3a, HP3b, HP4, HP5, HP6, HP7, HC0, HC1, ENCRYPTED_TRANSPORT. 
+Similarly, Host state machine has the following states: UNALLOCATED, HH0, HH1, HH2, HP0, HP1, HP2, HP3a, HP3b, HP4, HP5, HP6, HP7, HC0, HC1, ENCRYPTED_TRANSPORT.
 The meaning of the UNALLOCATED and ENCRYPTED_TRANSPORT states is the same for both the Trezor and the host. Detailed information about the handshake, pairing, and credential phase states is provided in their respective sections.
 
 The Trezor and the host each have a static X25519 key pair that they use to mutually authenticate one another when establishing a secure communication channel. The Trezor’s static key pair is denoted by $(S_{T,pub}, S_{T,priv})$ and the host’s static key pair is denoted $(S_{H,pub}, S_{H,priv})$. The process for establishing the secure channel is referred to as a *handshake*. This process results in a pair of AES encryption keys $k_{req}$ and $k_{resp}$, which are used to encrypt request messages sent by the host to the Trezor and responses from Trezor to the host. During the handshake, the parties determine whether they have paired in the past. If not, then a pairing phase follows the handshake. After these phases have been successfully completed, the parties enter the application traffic phase.
@@ -622,7 +622,7 @@ Let *pairing_methods* be the pairing methods supported by the Trezor (retrieved 
       HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;paired] ---> HC1
       HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;not&nbsp;paired] ---> HP0
     ```
-    
+
 
 ### State HH0
 
@@ -771,13 +771,13 @@ message ThpNfcTagTrezor {
 flowchart TD
 	selected_method[selected method]
 	style selected_method stroke-dasharray: 2 ,2
-	
+
 	subgraph "TP3" [" "]
 			TP3a
 		  TP3b
 			TP3c
 	end
-	
+
   TP0 -- "in:&nbspStartPairingRequest<br>out:&nbspStartPairingRequestAck" --> TP1
   TP1 -- "in:&nbsp;SelectMethod" --> selected_method
   TP2 -- "in:&nbsp;CodeEntryChallenge<br>out:&nbsp;CodeEntryCpaceTrezor" --> TP3a
@@ -785,7 +785,7 @@ flowchart TD
   selected_method -- "[selected_method&nbsp;==&nbsp;CodeEntry and&nbsp;it&nbsp;WAS&nbsp;selected&nbsp;before]<br>out:&nbsp;PairingPreparationsFinished" --> TP3a
   selected_method -- "[selected_method&nbsp;==&nbsp;QrCode]<br>out:&nbsp;PairingPreparationsFinished" --> TP3b
   selected_method -- "[selected_method&nbsp;==&nbsp;Nfc]<br>out:&nbsp;PairingPreparationsFinished" --> TP3c
-  TP3 -- "in:&nbsp;SelectMethod" --> selected_method  
+  TP3 -- "in:&nbsp;SelectMethod" --> selected_method
   TP3a -- "in:&nbsp;CodeEntryCpaceHostTag <br>out:&nbsp;CodeEntrySecret" --> TC1
   TP3b -- "in:&nbsp;QrCodeTag<br>out:&nbsp;QrCodeSecret" --> TC1
   TP3c -- "in:&nbsp;NfcTagHost<br>out:&nbsp;NfcTagTrezor" --> TC1
@@ -797,13 +797,13 @@ flowchart TD
 flowchart TD
 	selected_method[selected method]
 	style selected_method stroke-dasharray: 2 ,2
-	
+
 		subgraph "TP3" [" "]
 			TP3a
 		  TP3b
 			TP3c
 	end
-	
+
   TP0 -- "in:&nbspStartPairingRequest<br>out:&nbspStartPairingRequestAck" --> TP1
   TP2 -- "in:&nbsp;CodeEntryChallenge<br>out:&nbsp;CodeEntryCpaceTrezor" --> TP3a
   TP1 -- "in:&nbsp;SelectMethod" --> selected_method
@@ -812,8 +812,8 @@ flowchart TD
     selected_method -- "[selected_method&nbsp;==&nbsp;QrCode]<br>out:&nbsp;PairingPreparationsFinished" --> TP3b
       selected_method -- "[selected_method&nbsp;==&nbsp;Nfc]<br>out:&nbsp;PairingPreparationsFinished" --> TP3c
   TP3a -- "in:&nbsp;SelectMethod" --> selected_method
-  TP3b -- "in:&nbsp;SelectMethod" --> selected_method  
-  TP3c -- "in:&nbsp;SelectMethod" --> selected_method  
+  TP3b -- "in:&nbsp;SelectMethod" --> selected_method
+  TP3c -- "in:&nbsp;SelectMethod" --> selected_method
   TP3a -- "in:&nbsp;CodeEntryCpaceHostTag <br>out:&nbsp;CodeEntrySecret" --> TC1
   TP3b -- "in:&nbsp;QrCodeTag<br>out:&nbsp;QrCodeSecret" --> TC1
   TP3c -- "in:&nbsp;NfcTagHost<br>out:&nbsp;NfcTagTrezor" --> TC1
@@ -883,7 +883,7 @@ The behavior of Trezor in the state TP2is defined as follows:
 - When the message CodeEntryCpaceHostTag(*cpace_host_public_key*, *tag*) is received, take the following actions:
     1. Clear the screen.
     2. Set *shared_secret* = X25519(*cpace_trezor_private_key*, *cpace_host_public_key*).
-    3. Assert that *tag* == SHA-256(*shared_secret*). 
+    3. Assert that *tag* == SHA-256(*shared_secret*).
     4. Send the message CodeEntrySecret(*secret*) to the host.
     5. Transition to the state TC1
 
@@ -1036,7 +1036,7 @@ The behavior of the host in the state HP7 is defined as follows:
 sequenceDiagram
   participant host
   participant Trezor
-  host ->> Trezor: SelectMethod[Nfc]  
+  host ->> Trezor: SelectMethod[Nfc]
   note over Trezor: secret_T = random_bytes(16)
   Trezor ->> host: PairingPreparationsFinished
   note over host: secret_H = random_bytes(16)
@@ -1058,8 +1058,8 @@ sequenceDiagram
 sequenceDiagram
   participant host
   participant Trezor
-  
-  host ->> Trezor: SelectMethod[QrCode]  
+
+  host ->> Trezor: SelectMethod[QrCode]
   note over Trezor: secret = random_bytes(16)
   note over Trezor: code = sha256(PairingMethod_QrCode || handshake_hash_T || secret)[:16]
   Trezor ->> host: PairingPreparationsFinished
@@ -1079,7 +1079,7 @@ sequenceDiagram
 sequenceDiagram
   participant host - first time
   participant Trezor
-  
+
   host - first time ->> Trezor: SelectMethod[CodeEntry]
   note over Trezor: secret = random_bytes(16)
   note over Trezor: commitment = sha256(secret)
@@ -1096,16 +1096,16 @@ sequenceDiagram
   note over Trezor: assert tag == sha256(shared_secret)
   Trezor ->> host - first time: secret
   note over host - first time: assert commitment == sha256(secret)
-  note over host - first time: assert code == SHA-256(PairingMethod_CodeEntry || handshake_hash_H || secret || challenge) % 1 000 000 (BigEndian) 
+  note over host - first time: assert code == SHA-256(PairingMethod_CodeEntry || handshake_hash_H || secret || challenge) % 1 000 000 (BigEndian)
 ```
 
 ```mermaid
 sequenceDiagram
   participant host - second (or more) time
   participant Trezor
-  
+
   host - second (or more) time ->> Trezor: SelectMethod[CodeEntry]
-  
+
   Trezor ->> host - second (or more) time : PairingPreparationsFinished
   Trezor -->> host - second (or more) time : code (user rewrites code from Trezor to host)
   note over host - second (or more) time : pregenerator = sha512(prefix || code || padding || handshake_hash_H || 0x00)[:32]<br>generator = ELLIGATOR2(pregenerator)<br>cpace_host_private_key = random_bytes(32)<br>cpace_host_public_key = X25519(cpace_host_private_key, generator)<br>shared_secret = X25519(cpace_trezor_private_key, cpace_host_public_key)<br>tag=sha256(shared_secret)
@@ -1114,7 +1114,7 @@ sequenceDiagram
   note over Trezor: assert tag == sha256(shared_secret)
   Trezor ->> host - second (or more) time : secret
   note over host - second (or more) time : assert commitment == sha256(secret)
-  note over host - second (or more) time : assert code == SHA-256(PairingMethod_CodeEntry || handshake_hash_H || secret || challenge) % 1 000 000 (BigEndian) 
+  note over host - second (or more) time : assert code == SHA-256(PairingMethod_CodeEntry || handshake_hash_H || secret || challenge) % 1 000 000 (BigEndian)
 ```
 
 ### Combined diagram
@@ -1125,7 +1125,7 @@ sequenceDiagram
   participant Trezor
   participant host - first time
   participant host - second or more time
-  
+
   host - first time ->> Trezor: SelectMethod[CodeEntry]
   note over Trezor: secret = random_bytes(16)
   note over Trezor: commitment = sha256(secret)
@@ -1136,7 +1136,7 @@ sequenceDiagram
   note over Trezor: pregenerator = sha512(prefix || code || padding || handshake_hash_T || 0x00)[:32]<br>generator = ELLIGATOR2(pregenerator)<br>cpace_trezor_private_key = random_bytes(32)<br>cpace_trezor_public_key = X25519(cpace_trezor_private_key, generator)
   Trezor ->> host - first time: cpace_trezor_public_key
   host - second or more time ->> Trezor: SelectMethod[CodeEntry]
-  Trezor ->> host - second or more time: PairingPreparationFinished 
+  Trezor ->> host - second or more time: PairingPreparationFinished
   Trezor -->> host: code (user rewrites code from Trezor to host)
   note over host: pregenerator = sha512(prefix || code || padding || handshake_hash_H || 0x00)[:32]<br>generator = ELLIGATOR2(pregenerator)<br>cpace_host_private_key = random_bytes(32)<br>cpace_host_public_key = X25519(cpace_host_private_key, generator)<br>shared_secret = X25519(cpace_trezor_private_key, cpace_host_public_key)<br>tag=sha256(shared_secret)
   host ->> Trezor: cpace_host_public_key, tag
@@ -1144,7 +1144,7 @@ sequenceDiagram
   note over Trezor: assert tag == sha256(shared_secret)
   Trezor ->> host: secret
   note over host: assert commitment == sha256(secret)
-  note over host: assert code == SHA-256(PairingMethod_CodeEntry || handshake_hash_H || secret || challenge) % 1 000 000 (BigEndian) 
+  note over host: assert code == SHA-256(PairingMethod_CodeEntry || handshake_hash_H || secret || challenge) % 1 000 000 (BigEndian)
 ```
 
 ## Credential phase
@@ -1198,7 +1198,7 @@ message AuthenticatedCredentialData {
 
 ### Credential authentication key
 
-For credential issuance and validation, a credential authentication key (*cred_auth_key*) is used. This key is derived from two components - *device secret* and a counter (*cred_auth_key_counter*). The *device secret* is independent of seed and is generated randomly first time it is needed. The *cred_auth_key_counter* is 4 bytes big endian initiated to zero. 
+For credential issuance and validation, a credential authentication key (*cred_auth_key*) is used. This key is derived from two components - *device secret* and a counter (*cred_auth_key_counter*). The *device secret* is independent of seed and is generated randomly first time it is needed. The *cred_auth_key_counter* is 4 bytes big endian initiated to zero.
 
 ### Credential validation
 
@@ -1228,13 +1228,13 @@ The host can request an autoconnect credential by sending the *ThpCredentialRequ
 
 ## Trezor’s state machine
 
-    
+
 ```mermaid
-graph TD 
+graph TD
     TC1 -- in: CredentialRequest<br>out: CredentialResponse --> TC1
     TC1 -- in: EndRequest<br>out: EndResponse --> TS["transport state"]
 ```
-    
+
 
 ### State TC1
 
@@ -1265,9 +1265,9 @@ The behavior of the host in the state HC0 is defined as follows:
 
 - Take the following actions:
     1. Send CredentialRequest(*host_static_pubkey*) to the Trezor. Transition to the state HC1
-    
+
     OR
-    
+
     1. Exit the Credential phase by sending EndRequest() to Trezor. Transition to state HC2.
 
 ### State HC1
@@ -1276,13 +1276,13 @@ The behavior of the host in the state HC1 is defined as follows:
 
 - When the message CredentialResponse(*trezor_static_pubkey*, *credential*) is received, take the following actions:
     1. Append (*trezor_static_pubkey*, *credential*) to *credentials*. If the host uses multiple static key-pairs, associate the tuple (*host_static_privkey*, *host_static_pubkey*) generated for this connection with the *trezor_static_pubkey*.
-    
+
     Then take one of the following actions:
-    
+
     1. Send the message EndRequest() to the Trezor and transition to the state HC2.
-    
+
     OR
-    
+
     1. Send another message CredentialRequest(*host_static_pubkey*) to the Trezor. Keep the state HC1
 
 ### State HC2
