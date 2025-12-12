@@ -21,14 +21,26 @@
 
 #include <sys/bootutils.h>
 
-// Shows WIPE CODE ENTERED screeen and shuts down the device.
+/**
+ * Shows RSOD screen with "Wipe code entered" message
+ * and shuts down the device.
+ */
 void __attribute__((noreturn)) show_wipe_code_screen(void);
 
-// Shows TOO MANY PIN ATTEMPTS screen and shuts down the device.
+/**
+ * Shows RSOD screen with "Pin attempts exceeded" message
+ * and shuts down the device.
+ */
 void __attribute__((noreturn)) show_pin_too_many_screen(void);
 
-// Shows INSTALL RESTRICTED screen and shuts down the device.
+/**
+ * Shows RSOD screen with "Install restricted" message
+ * and shuts down the device.
+ */
 void __attribute__((noreturn)) show_install_restricted_screen(void);
 
-// Shows wipe information screen
+/**
+ * Shows RSOD screen with "Device wiped" message
+ * and shuts down the device.
+ */
 void show_wipe_info(const bootutils_wipe_info_t *info);
