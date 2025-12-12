@@ -140,10 +140,12 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     if "dbg_console" in features_wanted:
         sources += [
             "embed/sys/dbg/dbg_console.c",
+            "embed/sys/dbg/syslog.c",
             "embed/sys/dbg/stm32/dbg_console_backend.c",
         ]
         paths += ["embed/sys/dbg/inc"]
         defines += [("USE_DBG_CONSOLE", "1")]
+        features_available.append("dbg_console")
 
         if env.get("DBG_CONSOLE") == "VCP" and "usb" in features_wanted:
             features_wanted += ["usb_iface_vcp"]

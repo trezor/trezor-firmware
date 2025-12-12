@@ -45,6 +45,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../io/rgb_led/inc",
     "-I../io/usb/inc",
     "-I../sec/storage/inc",
+    "-I../sys/dbg/inc",
     "-I../sys/time/inc",
     "-I../sys/task/inc",
     "-I../sys/power_manager/inc",
@@ -63,6 +64,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_NRF",
     "-DUSE_HW_JPEG_DECODER",
     "-DUSE_STORAGE",
+    "-DUSE_DBG_CONSOLE",
 ];
 
 fn add_bindgen_macros<'a>(
@@ -483,6 +485,15 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("irq_unlock_fn")
         // nrf
         .allowlist_function("nrf_send_uart_data")
+        // syslog
+        .allowlist_function("syslog_start_record")
+        .allowlist_function("syslog_write_chunk")
+        .allowlist_type("log_source_t")
+        .allowlist_type("log_level_t")
+        .allowlist_var("LOG_LEVEL_DBG")
+        .allowlist_var("LOG_LEVEL_INF")
+        .allowlist_var("LOG_LEVEL_WARN")
+        .allowlist_var("LOG_LEVEL_ERR")
         // c_layout
         .allowlist_type("c_layout_t");
 

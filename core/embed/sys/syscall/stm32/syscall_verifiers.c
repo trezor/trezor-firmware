@@ -120,6 +120,49 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_DBG_CONSOLE
+
+bool syslog_start_record__verified(const log_source_t *source,
+                                   log_level_t level) {
+  if (!probe_read_access(source, sizeof(*source))) {
+    goto access_violation;
+  }
+
+  return syslog_start_record(source, level);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
+                                     bool end_record) {
+  if (!probe_read_access(text, text_len)) {
+    goto access_violation;
+  }
+
+  return syslog_write_chunk(text, text_len, end_record);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
+bool syslog_set_filter__verified(const char *module_name, log_level_t level) {
+  if (!probe_read_access(module_name, strlen(module_name))) {
+    goto access_violation;
+  }
+
+  return syslog_set_filter(module_name, level);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_DBG_CONSOLE
+
+// ---------------------------------------------------------------------
+
 bool boot_image_check__verified(const boot_image_t *image) {
   if (!probe_read_access(image, sizeof(*image))) {
     goto access_violation;

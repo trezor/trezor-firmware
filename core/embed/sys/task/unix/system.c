@@ -22,10 +22,13 @@
 #include <stdlib.h>
 
 #include <sys/bootutils.h>
-#include <sys/dbg_console.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
+
+#ifdef USE_DBG_CONSOLE
+#include <sys/dbg_console.h>
+#endif
 
 systask_error_handler_t g_error_handler = NULL;
 
@@ -33,7 +36,9 @@ void system_init(systask_error_handler_t error_handler) {
   g_error_handler = error_handler;
   systick_init();
   systimer_init();
+#ifdef USE_DBG_CONSOLE
   dbg_console_init();
+#endif
 }
 
 void system_deinit(void) { systick_deinit(); }

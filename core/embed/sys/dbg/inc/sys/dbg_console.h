@@ -65,7 +65,8 @@ ssize_t dbg_console_write(const void* data, size_t data_size);
  * @param fmt Format string.
  * @param args Variable argument list.
  */
-void dbg_console_vprintf(const char* fmt, va_list args);
+void dbg_console_vprintf(const char* fmt, va_list args)
+    __attribute__((format(printf, 1, 0)));
 
 /**
  * @brief printf-like function for debugging.
@@ -76,7 +77,8 @@ void dbg_console_vprintf(const char* fmt, va_list args);
  * @param fmt Format string.
  * @param ... Variable arguments.
  */
-void dbg_console_printf(const char* fmt, ...);
+void dbg_console_printf(const char* fmt, ...)
+    __attribute__((format(printf, 1, 2)));
 
 /**
  * @brief Short alias for `dbg_console_printf()`.

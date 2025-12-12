@@ -115,6 +115,31 @@ ssize_t dbg_console_write(const void *data, size_t data_size) {
 #endif  // USE_DBG_CONSOLE
 
 // =============================================================================
+// logging.h
+// =============================================================================
+
+#ifdef USE_DBG_CONSOLE
+
+#include <rtl/logging.h>
+
+bool syslog_start_record(const log_source_t *source, log_level_t level) {
+  return (bool)syscall_invoke2((uint32_t)source, level,
+                               SYSCALL_SYSLOG_START_RECORD);
+}
+
+ssize_t syslog_write_chunk(const char *text, size_t text_len, bool end_record) {
+  return (ssize_t)syscall_invoke3((uint32_t)text, text_len, end_record,
+                                  SYSCALL_SYSLOG_WRITE_CHUNK);
+}
+
+bool syslog_set_filter(const char *filter, size_t filter_len) {
+  return (bool)syscall_invoke2((uint32_t)filter, filter_len,
+                               SYSCALL_SYSLOG_SET_FILTER);
+}
+
+#endif
+
+// =============================================================================
 // boot_image.h
 // =============================================================================
 
