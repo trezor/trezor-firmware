@@ -25,6 +25,7 @@
 #include <sys/systick.h>
 #include <util/flash.h>
 #include <util/flash_utils.h>
+#include <util/rsod_special.h>
 
 #if defined(LOCKABLE_BOOTLOADER) || USE_STORAGE_HWKEY
 #include <sec/secret.h>

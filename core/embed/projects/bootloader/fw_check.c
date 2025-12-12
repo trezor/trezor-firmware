@@ -20,6 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/bootutils.h>
 #include <util/flash.h>
 #include <util/flash_otp.h>
 #include <util/image.h>

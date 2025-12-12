@@ -140,6 +140,7 @@ SOURCE_MOD += [
     'embed/util/image/boot_image.c',
     'embed/util/image/image.c',
     'embed/util/rsod/rsod.c',
+    'embed/util/rsod/rsod_special.c',
     'embed/util/scm_revision/scm_revision.c',
     'embed/rtl/cli.c',
     'embed/rtl/error_handling.c',
