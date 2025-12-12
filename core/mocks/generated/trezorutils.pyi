@@ -229,6 +229,13 @@ def nrf_get_version() -> VersionTuple:
     """
     Reads version of nRF firmware
     """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def set_log_filter(filter: str) -> None:
+    """
+    Sets filter string for syslog
+    """
 SCM_REVISION: bytes
 """Git commit hash of the firmware."""
 VERSION: VersionTuple
@@ -257,6 +264,8 @@ USE_POWER_MANAGER: bool
 """Whether the hardware has a battery."""
 USE_NRF: bool
 """Whether the hardware has a nRF chip."""
+USE_DBG_CONSOLE: bool
+"""Whether a debug console is enabled."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str

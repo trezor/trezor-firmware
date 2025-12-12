@@ -531,6 +531,7 @@ class MessageType(IntEnum):
     DebugLinkGcInfo = 9010
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
+    DebugLinkSetLogFilter = 9013
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4403,6 +4404,20 @@ class DebugLinkGcInfo(protobuf.MessageType):
         items: Optional[Sequence["DebugLinkGcInfoItem"]] = None,
     ) -> None:
         self.items: Sequence["DebugLinkGcInfoItem"] = items if items is not None else []
+
+
+class DebugLinkSetLogFilter(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9013
+    FIELDS = {
+        1: protobuf.Field("filter", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        filter: Optional["str"] = None,
+    ) -> None:
+        self.filter = filter
 
 
 class DebugLinkGcInfoItem(protobuf.MessageType):

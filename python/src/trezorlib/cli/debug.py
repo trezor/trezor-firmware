@@ -18,10 +18,11 @@ from typing import TYPE_CHECKING, Union
 
 import click
 
-from ..debuglink import TrezorClientDebugLink
+from ..debuglink import DebugLink, TrezorClientDebugLink
 from ..debuglink import optiga_set_sec_max as debuglink_optiga_set_sec_max
 from ..debuglink import prodtest_t1 as debuglink_prodtest_t1
 from ..debuglink import record_screen
+from ..debuglink import set_log_filter as debuglink_set_log_filter
 from ..transport.session import Session
 from . import with_session
 
@@ -71,3 +72,15 @@ def prodtest_t1(session: "Session") -> None:
 def optiga_set_sec_max(session: "Session") -> None:
     """Set Optiga's security event counter to maximum."""
     debuglink_optiga_set_sec_max(session)
+
+
+@cli.command()
+@click.argument("filter", required=False)
+@with_session(seedless=True)
+def set_log_filter(session: "Session", filter: str) -> None:
+    """Set logging filter string."""
+    debug_transport = session.client.protocol.transport.find_debug()
+    debug_transport.open()
+    debug = DebugLink(transport=debug_transport)
+    debuglink_set_log_filter(debug, filter)
+    debug_transport.close()
