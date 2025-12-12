@@ -58,7 +58,7 @@ void term_print_int32(int32_t value);
 /**
  * Prints printf-style formatted text to the terminal.
  *
- * The function internally uses `mini_vsnprintf` to format the text.
+ * The function internally uses `vsnprintf_` to format the text.
  *
  * @param fmt Format string (printf-style).
  * @param ... Additional arguments for formatting.

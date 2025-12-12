@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <rtl/mini_printf.h>
+#include <rtl/printf.h>
 #include <sec/secret.h>
 #include <util/flash_otp.h>
 
@@ -79,7 +79,7 @@ static void prodtest_otp_variant_read(cli_t* cli) {
     if (i != 0) {
       *dst++ = ' ';
     }
-    mini_snprintf(dst, buffer_size, "%d", block[i]);
+    snprintf_(dst, buffer_size, "%d", block[i]);
     dst += strlen(dst);
     buffer_size -= strlen(dst);
   }

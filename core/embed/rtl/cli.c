@@ -1,7 +1,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <rtl/mini_printf.h>
+#include <rtl/printf.h>
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -29,7 +29,7 @@ void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,
 
 static void cli_vprintf(cli_t* cli, const char* format, va_list args) {
   char buffer[CLI_LINE_BUFFER_SIZE];
-  mini_vsnprintf(buffer, sizeof(buffer), format, args);
+  vsnprintf_(buffer, sizeof(buffer), format, args);
   cli->write(cli->callback_context, buffer, strlen(buffer));
 }
 

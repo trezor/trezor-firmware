@@ -24,7 +24,7 @@
 #include <stdlib.h>
 
 #include <rtl/cli.h>
-#include <rtl/mini_printf.h>
+#include <rtl/printf.h>
 #include <rtl/unit_test.h>
 #include <rust_ui_prodtest.h>
 #include <sys/backup_ram.h>
@@ -171,13 +171,13 @@ void prodtest_pm_fuel_gauge_monitor(cli_t* cli) {
                  (int)(report.battery_soc * 100),
                  (int)(report.battery_soc * 10000) % 100);
 
-    mini_snprintf(screen_text_buf, 100, "%d.%03dV %d.%03dmA %d.%02d ",
-                  (int)report.battery_voltage_v,
-                  (int)(report.battery_voltage_v * 1000) % 1000,
-                  (int)report.battery_current_ma,
-                  abs((int)(report.battery_current_ma * 1000) % 1000),
-                  (int)(report.battery_soc * 100),
-                  (int)(report.battery_soc * 10000) % 100);
+    snprintf_(screen_text_buf, 100, "%d.%03dV %d.%03dmA %d.%02d ",
+              (int)report.battery_voltage_v,
+              (int)(report.battery_voltage_v * 1000) % 1000,
+              (int)report.battery_current_ma,
+              abs((int)(report.battery_current_ma * 1000) % 1000),
+              (int)(report.battery_soc * 100),
+              (int)(report.battery_soc * 10000) % 100);
 
     screen_prodtest_show_text(screen_text_buf, strlen(screen_text_buf));
 
