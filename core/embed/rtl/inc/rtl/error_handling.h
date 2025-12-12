@@ -203,17 +203,28 @@ __fatal_error(const char *msg, const char *file, int line);
 //   TS_RETURN;
 // }
 
-// Declares a status variable and initializes it to `TS_OK`.
-// This variable is used to store the status
+/**
+ * Declares a status variable and initializes it to `TS_OK`.
+ *
+ * The defined variable is in subsequent macros used to track the
+ * status within a function.
+ */
 #define TS_DECLARE __attribute__((unused)) ts_t __status = TS_OK;
 
-// Returns the current status.
+/**
+ * Returns the most recently stored status value.
+ */
 #define TS_RETURN    \
   do {               \
     return __status; \
   } while (0)
 
-// Jumps to `error` label if status is not `TS_OK`.
+/**
+ * Checks the status, if it indicates an error, set
+ * status variable and jumps to `cleanup` label.
+ *
+ * @param status status value to check
+ */
 #define TS_CHECK_OK(status)  \
   do {                       \
     ts_t _status = status;   \
@@ -223,7 +234,13 @@ __fatal_error(const char *msg, const char *file, int line);
     }                        \
   } while (0)
 
-// Jumps to `error` label if the condition is not `true`.
+/**
+ * Checks the condition, if it is not `true`, set status variable
+ * and jumps to `cleanup` label.
+ *
+ * @param cond Condition to check
+ * @param status status value to set if condition is not true
+ */
 #define TS_CHECK(cond, status) \
   do {                         \
     if (!(cond)) {             \
@@ -232,17 +249,27 @@ __fatal_error(const char *msg, const char *file, int line);
     }                          \
   } while (0)
 
-// Jumps to `error` label if the condition is not `true`.
-// Sets the status to `TS_ERROR_ARG`.
-#define TS_CHECK_ARG(cond)     \
-  do {                         \
-    if (!(cond)) {             \
-      __status = TS_ERROR_ARG; \
-      goto cleanup;            \
-    }                          \
+/**
+ * Checks the condition, if it is not `true`, set status variable
+ * to `TS_EINVAL` and jumps to `cleanup` label.
+ *
+ * @param cond Condition to check
+ */
+#define TS_CHECK_ARG(cond)  \
+  do {                      \
+    if (!(cond)) {          \
+      __status = TS_EINVAL; \
+      goto cleanup;         \
+    }                       \
   } while (0)
 
-// Jumps to `error` label if the condition is not `sectrue`.
+/**
+ * Checks the (secbool) condition, if it is not `sectrue`, set
+ * status variable and jumps to `cleanup` label.
+ *
+ * @param seccond Security condition to check
+ * @param status status value to set if condition is not sectrue
+ */
 #define TS_CHECK_SEC(seccond, status) \
   do {                                \
     if ((seccond) != sectrue) {       \
