@@ -49,10 +49,15 @@ ssize_t dbg_console_read(void* buffer, size_t buffer_size);
 /**
  * @brief Write data to the debugging console.
  *
+ * The function may be blocking, depending on the backend implementation
+ * and its configuration. If called from interrupt context, the function
+ * is always non-blocking.
+ *
  * @param data Pointer to the data to write.
  * @param data_size Size of the data in bytes.
+ * @return Number of bytes written, or a negative error code on failure.
  */
-void dbg_console_write(const void* data, size_t data_size);
+ssize_t dbg_console_write(const void* data, size_t data_size);
 
 /**
  * @brief vprintf-like function for debugging.
@@ -64,6 +69,9 @@ void dbg_console_vprintf(const char* fmt, va_list args);
 
 /**
  * @brief printf-like function for debugging.
+ *
+ * If possible, consider using `LOG_xxx()` macro instead of this function.
+ * These macros provide standardized message formatting and filtering.
  *
  * @param fmt Format string.
  * @param ... Variable arguments.

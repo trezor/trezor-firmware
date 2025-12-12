@@ -49,7 +49,7 @@ void dbg_console_init(void) {
 ssize_t dbg_console_read(void *buffer, size_t buffer_size) { return 0; }
 
 #ifdef USE_DBG_CONSOLE_SWO
-static void itm_swo_write(const void *data, size_t data_size) {
+static ssize_t itm_swo_write(const void *data, size_t data_size) {
   irq_key_t irq_key = irq_lock();
 
   for (size_t i = 0; i < data_size; i++) {
@@ -57,11 +57,12 @@ static void itm_swo_write(const void *data, size_t data_size) {
   }
 
   irq_unlock(irq_key);
+  return data_size;
 }
 #endif
 
 #ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
-static void sysview_write(const void *data, size_t data_size) {
+static ssize_t sysview_write(const void *data, size_t data_size) {
 #if 1
   static char str[512];
   strncpy(str, (const char *)data, sizeof(str) - 1);
@@ -71,29 +72,36 @@ static void sysview_write(const void *data, size_t data_size) {
 #if 0
   SEGGER_RTT_Write(0, data, data_size);
 #endif
+  return MIN(data_size, sizeof(str) - 1);
 }
 #endif
 
 #ifdef USE_DBG_CONSOLE_VCP
-static void usb_vcp_write(const void *data, size_t data_size) {
+static ssize_t usb_vcp_write(const void *data, size_t data_size) {
 #ifdef BLOCK_ON_VCP
-  syshandle_write_blocking(SYSHANDLE_USB_VCP, data, data_size, 1000);
+  // In thread mode, we can wait for the VCP to be ready.
+  // In interrupt context, we must not block.
+  uint32_t ipsr = __get_IPSR();
+  bool thread_mode = (ipsr == 0 || ipsr == 11);  // Thread mode or SVCall
+  uint32_t timeout = thread_mode ? 1000 : 0;
+  return syshandle_write_blocking(SYSHANDLE_USB_VCP, data, data_size, timeout);
 #else
-  syshandle_write(SYSHANDLE_USB_VCP, data, data_size);
+  return syshandle_write(SYSHANDLE_USB_VCP, data, data_size);
 #endif
 }
 #endif
 
-void dbg_console_write(const void *data, size_t data_size) {
+ssize_t dbg_console_write(const void *data, size_t data_size) {
 #ifdef USE_DBG_CONSOLE_SWO
-  itm_swo_write(data, data_size);
+  return itm_swo_write(data, data_size);
 #endif
 #ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
-  sysview_write(data, data_size);
+  return sysview_write(data, data_size);
 #endif
 #ifdef USE_DBG_CONSOLE_VCP
-  usb_vcp_write(data, data_size);
+  return usb_vcp_write(data, data_size);
 #endif
+  return -1;
 }
 
 #endif  // KERNEL_MODE
