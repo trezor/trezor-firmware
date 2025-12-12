@@ -20,6 +20,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
 #include <sys/systick.h>
