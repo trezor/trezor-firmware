@@ -175,32 +175,32 @@ void __attribute__((noreturn))
 __fatal_error(const char *msg, const char *file, int line);
 
 // ----------------------------------------------------
-// TS_INIT, TS_RETURN and VERIFY_XXX() macros define
+// TSH_DECLARE, TSH_RETURN and TSH_CHECK_xxx() macros define
 // a simple error handling mechanism
 //
 // Example:
 //
 // ts_t my_function(int arg) {
 //   // initialize verify mechanism
-//   TS_DECLARE;
+//   TSH_DECLARE;
 //
 //   // check arguments
-//   TS_CHECK_ARG(arg > 0);
+//   TSH_CHECK_ARG(arg > 0);
 //
 //   ts_t status;
 //
 //   // verify success
 //   status = some_function();
-//   TS_CHECK_OK(status);
+//   TSH_CHECK_OK(status);
 //
 //   // verify condition
-//   TS_CHECK(another_function() != 0, TS_ERROR_IO);
+//   TSH_CHECK(another_function() != 0, TS_ERROR_IO);
 //
 //  cleanup:
 //
 //   // clean up code comes here
 //
-//   TS_RETURN;
+//   TSH_RETURN;
 // }
 
 /**
@@ -209,12 +209,12 @@ __fatal_error(const char *msg, const char *file, int line);
  * The defined variable is in subsequent macros used to track the
  * status within a function.
  */
-#define TS_DECLARE __attribute__((unused)) ts_t __status = TS_OK;
+#define TSH_DECLARE __attribute__((unused)) ts_t __status = TS_OK;
 
 /**
  * Returns the most recently stored status value.
  */
-#define TS_RETURN    \
+#define TSH_RETURN   \
   do {               \
     return __status; \
   } while (0)
@@ -225,7 +225,7 @@ __fatal_error(const char *msg, const char *file, int line);
  *
  * @param status status value to check
  */
-#define TS_CHECK_OK(status)  \
+#define TSH_CHECK_OK(status) \
   do {                       \
     ts_t _status = status;   \
     if (ts_error(_status)) { \
@@ -241,12 +241,12 @@ __fatal_error(const char *msg, const char *file, int line);
  * @param cond Condition to check
  * @param status status value to set if condition is not true
  */
-#define TS_CHECK(cond, status) \
-  do {                         \
-    if (!(cond)) {             \
-      __status = status;       \
-      goto cleanup;            \
-    }                          \
+#define TSH_CHECK(cond, status) \
+  do {                          \
+    if (!(cond)) {              \
+      __status = status;        \
+      goto cleanup;             \
+    }                           \
   } while (0)
 
 /**
@@ -255,7 +255,7 @@ __fatal_error(const char *msg, const char *file, int line);
  *
  * @param cond Condition to check
  */
-#define TS_CHECK_ARG(cond)  \
+#define TSH_CHECK_ARG(cond) \
   do {                      \
     if (!(cond)) {          \
       __status = TS_EINVAL; \
@@ -270,10 +270,10 @@ __fatal_error(const char *msg, const char *file, int line);
  * @param seccond Security condition to check
  * @param status status value to set if condition is not sectrue
  */
-#define TS_CHECK_SEC(seccond, status) \
-  do {                                \
-    if ((seccond) != sectrue) {       \
-      __status = status;              \
-      goto cleanup;                   \
-    }                                 \
+#define TSH_CHECK_SEC(seccond, status) \
+  do {                                 \
+    if ((seccond) != sectrue) {        \
+      __status = status;               \
+      goto cleanup;                    \
+    }                                  \
   } while (0)
