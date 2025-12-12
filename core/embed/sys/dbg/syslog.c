@@ -20,7 +20,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/logging.h>
-#include <rtl/mini_printf.h>
+#include <rtl/printf.h>
 #include <rtl/strutils.h>
 #include <sys/dbg_console.h>
 #include <sys/systick.h>
@@ -226,7 +226,7 @@ void syslog_vprintf(const log_source_t* source, log_level_t level,
                     const char* fmt, va_list args) {
   if (syslog_start_record(source, level)) {
     char msg[160];
-    size_t msg_len = mini_vsnprintf(msg, sizeof(msg), fmt, args);
+    size_t msg_len = vsnprintf_(msg, sizeof(msg), fmt, args);
     syslog_write_chunk(msg, msg_len, true);
   }
 }

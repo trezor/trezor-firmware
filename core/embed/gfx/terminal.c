@@ -23,7 +23,7 @@
 #include <gfx/gfx_draw.h>
 #include <gfx/terminal.h>
 #include <io/display.h>
-#include <rtl/mini_printf.h>
+#include <rtl/printf.h>
 #include <rtl/strutils.h>
 
 #include "fonts/font_bitmap.h"
@@ -218,7 +218,7 @@ void term_printf(const char *fmt, ...) {
   va_list va;
   va_start(va, fmt);
   char buf[256] = {0};
-  int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
+  int len = vsnprintf_(buf, sizeof(buf), fmt, va);
   term_nprint(buf, len);
   va_end(va);
 }

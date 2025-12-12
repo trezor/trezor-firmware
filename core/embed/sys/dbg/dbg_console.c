@@ -19,12 +19,12 @@
 
 #include <trezor_rtl.h>
 
-#include <rtl/mini_printf.h>
+#include <rtl/printf.h>
 #include <sys/dbg_console.h>
 
 void dbg_console_vprintf(const char *fmt, va_list args) {
   char temp[160];
-  mini_vsnprintf(temp, sizeof(temp), fmt, args);
+  vsnprintf_(temp, sizeof(temp), fmt, args);
   dbg_console_write(temp, strnlen(temp, sizeof(temp)));
 }
 
