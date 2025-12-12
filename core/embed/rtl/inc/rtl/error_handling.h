@@ -173,3 +173,110 @@ void __attribute__((noreturn)) error_shutdown(const char *message);
  */
 void __attribute__((noreturn))
 __fatal_error(const char *msg, const char *file, int line);
+
+/*
+ * TSH_DECLARE, TSH_RETURN and TSH_CHECK_xxx() macros define
+ * a simple error handling mechanism
+ *
+ * Example:
+ *
+ * // Preferably use `__wur` attribute to ensure that the return value
+ * // is not ignored
+ * ts_t __wur my_function(int arg) {
+ *   // Initialize verify mechanism
+ *   TSH_DECLARE;
+ *
+ *   // Check arguments
+ *   TSH_CHECK_ARG(arg > 0);
+ *
+ *   ts_t status;
+ *
+ *   // Verify success
+ *   status = some_function();
+ *   TSH_CHECK_OK(status);
+ *
+ *   // Verify condition
+ *   TSH_CHECK(another_function() != 0, TS_ERROR_IO);
+ *
+ *  cleanup:
+ *
+ *   // clean up code comes here
+ *
+ *   TSH_RETURN;
+ * }
+ */
+
+/**
+ * Declares a status variable and initializes it to `TS_OK`.
+ *
+ * The defined variable is in subsequent macros used to track the
+ * status within a function.
+ */
+#define TSH_DECLARE __attribute__((unused)) ts_t __status = TS_OK;
+
+/**
+ * Returns the most recently stored status value.
+ */
+#define TSH_RETURN   \
+  do {               \
+    return __status; \
+  } while (0)
+
+/**
+ * Checks the status, if it indicates an error, set
+ * status variable and jumps to `cleanup` label.
+ *
+ * @param status status value to check
+ */
+#define TSH_CHECK_OK(status) \
+  do {                       \
+    ts_t _status = status;   \
+    if (ts_error(_status)) { \
+      __status = _status;    \
+      goto cleanup;          \
+    }                        \
+  } while (0)
+
+/**
+ * Checks the condition, if it is not `true`, set status variable
+ * and jumps to `cleanup` label.
+ *
+ * @param cond Condition to check
+ * @param status status value to set if condition is not true
+ */
+#define TSH_CHECK(cond, status) \
+  do {                          \
+    if (!(cond)) {              \
+      __status = status;        \
+      goto cleanup;             \
+    }                           \
+  } while (0)
+
+/**
+ * Checks the condition, if it is not `true`, set status variable
+ * to `TS_EINVAL` and jumps to `cleanup` label.
+ *
+ * @param cond Condition to check
+ */
+#define TSH_CHECK_ARG(cond) \
+  do {                      \
+    if (!(cond)) {          \
+      __status = TS_EINVAL; \
+      goto cleanup;         \
+    }                       \
+  } while (0)
+
+/**
+ * Checks the (secbool) condition, if it is not `sectrue`, set
+ * status variable and jumps to `cleanup` label.
+ *
+ * @param seccond Security condition to check
+ * @param status status value to set if condition is not sectrue
+ */
+#define TSH_CHECK_SEC(seccond, status) \
+  do {                                 \
+    if ((seccond) != sectrue) {        \
+      __status = status;               \
+      goto cleanup;                    \
+    }                                  \
+  } while (0)
