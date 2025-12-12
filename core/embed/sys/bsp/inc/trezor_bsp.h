@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZOR_BSP_H
-#define TREZOR_BSP_H
+#pragma once
 
 // Trezor 'board support package' (BSP) header file that includes
 // all necessary headers for the specific board including STM32 HAL and
@@ -27,10 +26,25 @@
 // This file should be only included by driver implementations and
 // should not be included by application code.
 
+#include <rtl/error_handling.h>
+
 #include TREZOR_BOARD
 
 #ifndef TREZOR_EMULATOR
 #include STM32_HAL_H
-#endif
 
-#endif  // TREZOR_BOARD_H
+// HAL status code helpers
+static inline ts_t hal_status_to_ts(HAL_StatusTypeDef hal_status) {
+  switch (hal_status) {
+    case HAL_OK:
+      return TS_OK;
+    case HAL_BUSY:
+      return TS_EBUSY;
+    case HAL_TIMEOUT:
+      return TS_ETIMEDOUT;
+    default:
+      return TS_EIO;
+  }
+}
+
+#endif

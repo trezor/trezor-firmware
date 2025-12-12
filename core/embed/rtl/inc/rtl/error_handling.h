@@ -19,7 +19,82 @@
 
 #pragma once
 
-#include <sys/bootutils.h>
+#include <errno.h>
+
+// Suppresses the intellisense error in VSCode
+#ifndef __FILE_NAME__
+#define __FILE_NAME__ __FILE__
+#endif
+
+// Status code type
+typedef struct {
+  // Do not access this field directly,
+  // use `ts_ok()` and `ts_error()` macros.
+  int code;
+} ts_t;
+
+// OK status code (signalling success or no error)
+#define TS_OK ts_make(0)
+
+#define TS_EINVAL ts_make(EINVAL)
+#define TS_ENOMEM ts_make(ENOMEM)
+#define TS_ENOENT ts_make(ENOENT)
+#define TS_EBUSY ts_make(EBUSY)
+#define TS_ETIMEDOUT ts_make(ETIMEDOUT)
+#define TS_EIO ts_make(EIO)
+#define TS_EBADMSG ts_make(EBADMSG)
+
+// #define TS_SPECIFIC_BASE 1000
+// #define TS_ERROR ts_make(TS_SPECIFIC_BASE + 0) // Generic error
+
+// Extracts the code integer value from status structure.
+#define ts_code(status) ((status).code)
+
+// Converts integer to status structure.
+#define ts_make(value) ((const ts_t){(value)})
+
+// Returns `true` if status code is `TS_OK`
+#define ts_ok(status) (ts_code(status) == ts_code(TS_OK))
+
+// Returns `true` if status code is NOT `TS_OK`
+#define ts_error(status) (ts_code(status) != ts_code(TS_OK))
+
+// Returns `true` if both status codes are equal
+#define ts_eq(status1, status2) (ts_code(status1) == ts_code(status2))
+
+// Returns a string representation of the status code.
+//
+// TS_OK -> "OK"
+// TS_ERROR -> "ERROR"
+// ...
+const char *ts_string(ts_t status);
+
+// Ensures that status code is `TS_OK`.
+// If not, it shows an error message and shuts down the device.
+#define ensure_ok(status, msg)                     \
+  do {                                             \
+    if (!ts_ok(status)) {                          \
+      __fatal_error(msg, __FILE_NAME__, __LINE__); \
+    }                                              \
+  } while (0)
+
+// Ensures that condition is evaluated as `true`.
+// If not, it shows an error message and shuts down the device.
+#define ensure_true(cond, msg)                     \
+  do {                                             \
+    if (!(cond)) {                                 \
+      __fatal_error(msg, __FILE_NAME__, __LINE__); \
+    }                                              \
+  } while (0)
+
+// Ensures that condition is evaluated as `sectrue`.
+// If not, it shows an error message and shuts down the device.
+#define ensure(seccond, msg)                       \
+  do {                                             \
+    if ((seccond) != sectrue) {                    \
+      __fatal_error(msg, __FILE_NAME__, __LINE__); \
+    }                                              \
+  } while (0)
 
 // Shows an error message and shuts down the device.
 //

@@ -34,6 +34,28 @@ void __attribute__((noreturn, used)) __stack_chk_fail(void) {
   error_shutdown("(SS)");
 }
 
+const char *ts_string(ts_t status) {
+  if (ts_eq(status, TS_OK)) {
+    return "OK";
+  } else if (ts_eq(status, TS_EINVAL)) {
+    return "EINVAL";
+  } else if (ts_eq(status, TS_ENOMEM)) {
+    return "ENOMEM";
+  } else if (ts_eq(status, TS_ENOENT)) {
+    return "ENOENT";
+  } else if (ts_eq(status, TS_EBUSY)) {
+    return "EBUSY";
+  } else if (ts_eq(status, TS_ETIMEDOUT)) {
+    return "ETIMEDOUT";
+  } else if (ts_eq(status, TS_EIO)) {
+    return "EIO";
+  } else if (ts_eq(status, TS_EBADMSG)) {
+    return "EBADMSG";
+  } else {
+    return "?ERROR";
+  }
+}
+
 void __attribute__((noreturn))
 error_shutdown_ex(const char *title, const char *message, const char *footer) {
   system_exit_error(title, message, footer);
