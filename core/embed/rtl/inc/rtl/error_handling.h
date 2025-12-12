@@ -19,38 +19,261 @@
 
 #pragma once
 
-#include <sys/bootutils.h>
+#include <errno.h>
 
-// Shows an error message and shuts down the device.
-//
-// If the title is NULL, it will be set to "INTERNAL ERROR".
-// If the message is NULL, it will be ignored.
-// If the footer is NULL, it will be set to "PLEASE VISIT TREZOR.IO/RSOD".
+// Suppresses the intellisense error in VSCode
+#ifndef __FILE_NAME__
+#define __FILE_NAME__ __FILE__
+#endif
+
+/** Status code type */
+typedef struct {
+  // Do not access this field directly,
+  // use `ts_ok()` and `ts_error()` macros.
+  int code;
+} ts_t;
+
+/** OK status code (signalling success or no error) */
+#define TS_OK ts_make(0)
+
+#define TS_EINVAL ts_make(EINVAL)
+#define TS_ENOMEM ts_make(ENOMEM)
+#define TS_ENOENT ts_make(ENOENT)
+#define TS_EBUSY ts_make(EBUSY)
+#define TS_ETIMEDOUT ts_make(ETIMEDOUT)
+#define TS_EIO ts_make(EIO)
+#define TS_EBADMSG ts_make(EBADMSG)
+
+// #define TS_SPECIFIC_BASE 1000
+// #define TS_ERROR ts_make(TS_SPECIFIC_BASE + 0) // Generic error
+
+/**
+ * Extracts the code integer value from status structure.
+ *
+ * @param status Status structure
+ * @return Integer status code
+ */
+#define ts_code(status) ((status).code)
+
+/**
+ * Converts integer to status structure.
+ *
+ * @param value Integer status code
+ * @return Status structure
+ */
+#define ts_make(value) ((const ts_t){(value)})
+
+/**
+ * Check if status code is `TS_OK`.
+ *
+ * @param status Status structure
+ * @return true if status is OK
+ */
+#define ts_ok(status) (ts_code(status) == ts_code(TS_OK))
+
+/**
+ * Checks if status code is not `TS_OK`.
+ *
+ * @param status Status structure
+ * @return true if status is an error
+ */
+#define ts_error(status) (ts_code(status) != ts_code(TS_OK))
+
+/**
+ * Checks if both status codes are equal.
+ *
+ * @param status1 First status structure
+ * @param status2 Second status structure
+ * @return true if both status codes are equal
+ */
+#define ts_eq(status1, status2) (ts_code(status1) == ts_code(status2))
+
+/**
+ * Returns a string representation of the status code.
+ *
+ * TS_OK -> "OK"
+ * TS_Exxx -> "Exxx"
+ *
+ * @param status Status structure
+ * @return String representation of the status code
+ */
+const char *ts_string(ts_t status);
+
+/**
+ * Ensures that status code is `TS_OK`. If not, it shows an error message
+ * and shuts down the device.
+ *
+ * @param status Status structure
+ * @param msg Error message to show if status is not OK
+ */
+#define ensure_ok(status, msg)                     \
+  do {                                             \
+    if (!ts_ok(status)) {                          \
+      __fatal_error(msg, __FILE_NAME__, __LINE__); \
+    }                                              \
+  } while (0)
+
+/**
+ * Ensures that condition is evaluated as `true`. If not, it shows
+ * an error message and shuts down the device.
+ *
+ * @param cond Condition to check
+ * @param msg Error message to show if condition is not true
+ */
+#define ensure_true(cond, msg)                     \
+  do {                                             \
+    if (!(cond)) {                                 \
+      __fatal_error(msg, __FILE_NAME__, __LINE__); \
+    }                                              \
+  } while (0)
+
+/**
+ * Ensures that condition is evaluated as `sectrue`. If not, it shows
+ * an error message and shuts down the device.
+ *
+ * @param seccond Security condition to check
+ * @param msg Error message to show if condition is not sectrue
+ */
+#define ensure(seccond, msg)                       \
+  do {                                             \
+    if ((seccond) != sectrue) {                    \
+      __fatal_error(msg, __FILE_NAME__, __LINE__); \
+    }                                              \
+  } while (0)
+
+/**
+ * Shows an error message and shuts down the device.
+ *
+ * @param title Title of the error message (defaults to
+ *  "INTERNAL ERROR" if NULL)
+ * @param message Main error message (defaults to no message if NULL)
+ * @param footer Footer of the error message (defaults to
+ *  "PLEASE VISIT TREZOR.IO/RSOD" if NULL)
+ */
 void __attribute__((noreturn))
 error_shutdown_ex(const char *title, const char *message, const char *footer);
 
-// Shows an error message and shuts down the device.
-//
-// Same as `error_shutdown_ex()` but with a default header and footer.
+/**
+ * Shows an error message and shuts down the device.
+ *
+ * @param message Main error message (defaults to no message if NULL)
+ */
 void __attribute__((noreturn)) error_shutdown(const char *message);
 
-// Do not use this function directly, use the `ensure()` macro instead.
+/**
+ * Shows a fatal error message with file and line information,
+ * and shuts down the device.
+ *
+ * Do not use this function directly, use the `ensure_xxx() or
+ * assert() macros instead.
+ *
+ * @param msg Error message
+ * @param file Source file name where the error occurred
+ * @param line Line number in the source file where the error occurred
+ */
 void __attribute__((noreturn))
 __fatal_error(const char *msg, const char *file, int line);
 
-// Checks for an expression and if it is false, shows an error message
-// and shuts down the device.
-#define ensure(expr, msg) \
-  (((expr) == sectrue) ? (void)0 : __fatal_error(msg, __FILE_NAME__, __LINE__))
+// ----------------------------------------------------
+// TSH_DECLARE, TSH_RETURN and TSH_CHECK_xxx() macros define
+// a simple error handling mechanism
+//
+// Example:
+//
+// ts_t my_function(int arg) {
+//   // initialize verify mechanism
+//   TSH_DECLARE;
+//
+//   // check arguments
+//   TSH_CHECK_ARG(arg > 0);
+//
+//   ts_t status;
+//
+//   // verify success
+//   status = some_function();
+//   TSH_CHECK_OK(status);
+//
+//   // verify condition
+//   TSH_CHECK(another_function() != 0, TS_ERROR_IO);
+//
+//  cleanup:
+//
+//   // clean up code comes here
+//
+//   TSH_RETURN;
+// }
 
-// Shows WIPE CODE ENTERED screeen and shuts down the device.
-void __attribute__((noreturn)) show_wipe_code_screen(void);
+/**
+ * Declares a status variable and initializes it to `TS_OK`.
+ *
+ * The defined variable is in subsequent macros used to track the
+ * status within a function.
+ */
+#define TSH_DECLARE __attribute__((unused)) ts_t __status = TS_OK;
 
-// Shows TOO MANY PIN ATTEMPTS screen and shuts down the device.
-void __attribute__((noreturn)) show_pin_too_many_screen(void);
+/**
+ * Returns the most recently stored status value.
+ */
+#define TSH_RETURN   \
+  do {               \
+    return __status; \
+  } while (0)
 
-// Shows INSTALL RESTRICTED screen and shuts down the device.
-void __attribute__((noreturn)) show_install_restricted_screen(void);
+/**
+ * Checks the status, if it indicates an error, set
+ * status variable and jumps to `cleanup` label.
+ *
+ * @param status status value to check
+ */
+#define TSH_CHECK_OK(status) \
+  do {                       \
+    ts_t _status = status;   \
+    if (ts_error(_status)) { \
+      __status = _status;    \
+      goto cleanup;          \
+    }                        \
+  } while (0)
 
-// Shows wipe information screen
-void show_wipe_info(const bootutils_wipe_info_t *info);
+/**
+ * Checks the condition, if it is not `true`, set status variable
+ * and jumps to `cleanup` label.
+ *
+ * @param cond Condition to check
+ * @param status status value to set if condition is not true
+ */
+#define TSH_CHECK(cond, status) \
+  do {                          \
+    if (!(cond)) {              \
+      __status = status;        \
+      goto cleanup;             \
+    }                           \
+  } while (0)
+
+/**
+ * Checks the condition, if it is not `true`, set status variable
+ * to `TS_EINVAL` and jumps to `cleanup` label.
+ *
+ * @param cond Condition to check
+ */
+#define TSH_CHECK_ARG(cond) \
+  do {                      \
+    if (!(cond)) {          \
+      __status = TS_EINVAL; \
+      goto cleanup;         \
+    }                       \
+  } while (0)
+
+/**
+ * Checks the (secbool) condition, if it is not `sectrue`, set
+ * status variable and jumps to `cleanup` label.
+ *
+ * @param seccond Security condition to check
+ * @param status status value to set if condition is not sectrue
+ */
+#define TSH_CHECK_SEC(seccond, status) \
+  do {                                 \
+    if ((seccond) != sectrue) {        \
+      __status = status;               \
+      goto cleanup;                    \
+    }                                  \
+  } while (0)

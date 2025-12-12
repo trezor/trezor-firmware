@@ -19,32 +19,28 @@
 
 #pragma once
 
-// Trezor 'board support package' (BSP) header file that includes
-// all necessary headers for the specific board including STM32 HAL and
-// pin definitions.
-//
-// This file should be only included by driver implementations and
-// should not be included by application code.
+#include <sys/bootutils.h>
 
-#include <rtl/error_handling.h>
+/**
+ * Shows RSOD screen with "Wipe code entered" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_wipe_code_screen(void);
 
-#include TREZOR_BOARD
+/**
+ * Shows RSOD screen with "Pin attempts exceeded" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_pin_too_many_screen(void);
 
-#ifndef TREZOR_EMULATOR
-#include STM32_HAL_H
+/**
+ * Shows RSOD screen with "Install restricted" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_install_restricted_screen(void);
 
-// HAL status code helpers
-static inline ts_t hal_status_to_ts(HAL_StatusTypeDef hal_status) {
-  switch (hal_status) {
-    case HAL_OK:
-      return TS_OK;
-    case HAL_BUSY:
-      return TS_EBUSY;
-    case HAL_TIMEOUT:
-      return TS_ETIMEDOUT;
-    default:
-      return TS_EIO;
-  }
-}
-
-#endif
+/**
+ * Shows RSOD screen with "Device wiped" message
+ * and shuts down the device.
+ */
+void show_wipe_info(const bootutils_wipe_info_t *info);

@@ -22,29 +22,38 @@
 #include <sys/bootutils.h>
 #include <sys/system.h>
 
-#ifdef FANCY_FATAL_ERROR
-#include "rust_ui_common.h"
-#endif
-
 #ifndef TREZOR_EMULATOR
 // Stack check guard value set in startup code.
 // This is used if stack protection is enabled.
 THREAD_LOCAL uint32_t __stack_chk_guard = 0;
 #endif
 
-#define ALL_DATA_ERASED_MESSAGE "All data has been erased from the device"
-
-#ifdef TREZOR_MODEL_T3W1
-// empty message for T3W1 so that it falls to the more appropriate default
-#define RECONNECT_DEVICE_MESSAGE ""
-#else
-#define RECONNECT_DEVICE_MESSAGE "Please reconnect\nthe device"
-#endif
-
 // Calls to this function are inserted by the compiler
 // when stack protection is enabled.
 void __attribute__((noreturn, used)) __stack_chk_fail(void) {
   error_shutdown("(SS)");
+}
+
+const char *ts_string(ts_t status) {
+  if (ts_eq(status, TS_OK)) {
+    return "OK";
+  } else if (ts_eq(status, TS_EINVAL)) {
+    return "EINVAL";
+  } else if (ts_eq(status, TS_ENOMEM)) {
+    return "ENOMEM";
+  } else if (ts_eq(status, TS_ENOENT)) {
+    return "ENOENT";
+  } else if (ts_eq(status, TS_EBUSY)) {
+    return "EBUSY";
+  } else if (ts_eq(status, TS_ETIMEDOUT)) {
+    return "ETIMEDOUT";
+  } else if (ts_eq(status, TS_EIO)) {
+    return "EIO";
+  } else if (ts_eq(status, TS_EBADMSG)) {
+    return "EBADMSG";
+  } else {
+    return "?ERROR";
+  }
 }
 
 void __attribute__((noreturn))
@@ -63,59 +72,4 @@ __fatal_error(const char *msg, const char *file, int line) {
   system_exit_fatal(msg, file, line);
   while (1)
     ;
-}
-
-void __attribute__((noreturn)) show_wipe_code_screen(void) {
-  bootutils_wipe_info_t info = {0};
-
-  const char *title = "Wipe code entered";
-
-  strncpy(info.title, title, sizeof(info.title) - 1);
-  strncpy(info.message, ALL_DATA_ERASED_MESSAGE, sizeof(info.message) - 1);
-  strncpy(info.footer, RECONNECT_DEVICE_MESSAGE, sizeof(info.footer) - 1);
-
-  reboot_and_wipe(&info);
-
-  while (1)
-    ;
-}
-
-#ifdef FANCY_FATAL_ERROR
-void show_wipe_info(const bootutils_wipe_info_t *info) {
-  const char *title = "Device wiped";
-  const char *message = ALL_DATA_ERASED_MESSAGE;
-  const char *footer = "Please visit trezor.io/rsod";
-
-  if (info->title[0] != '\0') {
-    title = info->title;
-  }
-  if (info->message[0] != '\0') {
-    message = info->message;
-  }
-  if (info->footer[0] != '\0') {
-    footer = info->footer;
-  }
-
-  display_rsod_rust(title, message, footer);
-}
-#endif
-
-void __attribute__((noreturn)) show_pin_too_many_screen(void) {
-  bootutils_wipe_info_t info = {0};
-
-  const char *title = "Pin attempts exceeded";
-
-  strncpy(info.title, title, sizeof(info.title) - 1);
-  strncpy(info.message, ALL_DATA_ERASED_MESSAGE, sizeof(info.message) - 1);
-  strncpy(info.footer, RECONNECT_DEVICE_MESSAGE, sizeof(info.footer) - 1);
-
-  reboot_and_wipe(&info);
-  while (1)
-    ;
-}
-
-void __attribute__((noreturn)) show_install_restricted_screen(void) {
-  error_shutdown_ex("Install restricted",
-                    "Installation of custom firmware is currently restricted.",
-                    "Please visit trezor.io/bootloader");
 }

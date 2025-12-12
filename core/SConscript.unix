@@ -247,6 +247,7 @@ SOURCE_MOD += [
     'embed/util/image/image.c',
     'embed/util/translations/translations.c',
     'embed/util/rsod/rsod.c',
+    'embed/util/rsod/rsod_special.c',
     'embed/util/scm_revision/scm_revision.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/printf.c',

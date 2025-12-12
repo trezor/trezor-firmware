@@ -220,6 +220,7 @@ SOURCE_MOD += [
     'embed/util/image/boot_image.c',
     'embed/util/image/image.c',
     'embed/util/rsod/rsod.c',
+    'embed/util/rsod/rsod_special.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/printf.c',
     'embed/rtl/strutils.c',

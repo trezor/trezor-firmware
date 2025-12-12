@@ -25,6 +25,7 @@
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/systick.h>
+#include <util/rsod_special.h>
 
 LOG_DECLARE(bootutils)
 
