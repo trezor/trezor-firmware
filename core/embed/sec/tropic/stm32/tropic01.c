@@ -39,10 +39,12 @@ static tropic_ui_progress_t ui_progress = NULL;
 void tropic_set_ui_progress(tropic_ui_progress_t f) { ui_progress = f; }
 
 void tropic01_reset(void) {
+  HAL_GPIO_WritePin(TROPIC01_SPI_NSS_PORT, TROPIC01_SPI_NSS_PIN,
+                    GPIO_PIN_RESET);
   HAL_GPIO_WritePin(TROPIC01_PWR_PORT, TROPIC01_PWR_PIN, GPIO_PIN_SET);
   systick_delay_ms(10);
   HAL_GPIO_WritePin(TROPIC01_PWR_PORT, TROPIC01_PWR_PIN, GPIO_PIN_RESET);
-  systick_delay_ms(10);
+  HAL_GPIO_WritePin(TROPIC01_SPI_NSS_PORT, TROPIC01_SPI_NSS_PIN, GPIO_PIN_SET);
 }
 
 lt_ret_t lt_port_init(lt_l2_state_t *s2) {
