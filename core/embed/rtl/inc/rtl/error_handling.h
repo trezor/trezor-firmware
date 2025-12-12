@@ -112,3 +112,80 @@ void __attribute__((noreturn)) error_shutdown(const char *message);
 // Do not use this function directly, use the `ensure()` macro instead.
 void __attribute__((noreturn))
 __fatal_error(const char *msg, const char *file, int line);
+
+// ----------------------------------------------------
+// TS_INIT, TS_RETURN and VERIFY_XXX() macros define
+// a simple error handling mechanism
+//
+// Example:
+//
+// ts_t my_function(int arg) {
+//   // initialize verify mechanism
+//   TS_DECLARE;
+//
+//   // check arguments
+//   TS_CHECK_ARG(arg > 0);
+//
+//   ts_t status;
+//
+//   // verify success
+//   status = some_function();
+//   TS_CHECK_OK(status);
+//
+//   // verify condition
+//   TS_CHECK(another_function() != 0, TS_ERROR_IO);
+//
+//  cleanup:
+//
+//   // clean up code comes here
+//
+//   TS_RETURN;
+// }
+
+// Declares a status variable and initializes it to `TS_OK`.
+// This variable is used to store the status
+#define TS_DECLARE __attribute__((unused)) ts_t __status = TS_OK;
+
+// Returns the current status.
+#define TS_RETURN    \
+  do {               \
+    return __status; \
+  } while (0)
+
+// Jumps to `error` label if status is not `TS_OK`.
+#define TS_CHECK_OK(status)  \
+  do {                       \
+    ts_t _status = status;   \
+    if (ts_error(_status)) { \
+      __status = _status;    \
+      goto cleanup;          \
+    }                        \
+  } while (0)
+
+// Jumps to `error` label if the condition is not `true`.
+#define TS_CHECK(cond, status) \
+  do {                         \
+    if (!(cond)) {             \
+      __status = status;       \
+      goto cleanup;            \
+    }                          \
+  } while (0)
+
+// Jumps to `error` label if the condition is not `true`.
+// Sets the status to `TS_ERROR_ARG`.
+#define TS_CHECK_ARG(cond)     \
+  do {                         \
+    if (!(cond)) {             \
+      __status = TS_ERROR_ARG; \
+      goto cleanup;            \
+    }                          \
+  } while (0)
+
+// Jumps to `error` label if the condition is not `sectrue`.
+#define TS_CHECK_SEC(seccond, status) \
+  do {                                \
+    if ((seccond) != sectrue) {       \
+      __status = status;              \
+      goto cleanup;                   \
+    }                                 \
+  } while (0)
