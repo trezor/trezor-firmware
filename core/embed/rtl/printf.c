@@ -1,3 +1,6 @@
+// clang-format off
+// source: https://github.com/eyalroz/printf/blob/v6.3.0/src/printf/printf.c
+
 /**
  * @author (c) Eyal Rozenberg <eyalroz1@gmx.com>
  *             2021-2024, Haifa, Palestine/Israel
@@ -37,13 +40,17 @@
  * THE SOFTWARE.
  */
 
+#if PRODUCTION && !defined(TREZOR_PRODTEST)
+#error Avoid using printf in production firmware/bootloader/boardloader
+#endif
+
 /*
  * Define this globally (e.g. gcc -DPRINTF_INCLUDE_CONFIG_H=1 ...) to include the
  * printf_config.h header file
  */
-#if PRINTF_INCLUDE_CONFIG_H
+//#if PRINTF_INCLUDE_CONFIG_H
 #include "printf_config.h"
-#endif
+//#endif
 
 #include <printf/printf.h>
 
