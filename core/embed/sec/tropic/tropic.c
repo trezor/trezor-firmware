@@ -94,8 +94,8 @@ static bool is_retryable(lt_ret_t ret) {
         break;                                                        \
       }                                                               \
       if (TROPIC_RETRY_COMMAND_res == LT_L1_CHIP_ALARM_MODE) {        \
-        tropic_deinit();                                              \
         tropic01_reset();                                             \
+        tropic_deinit();                                              \
         tropic_init();                                                \
         tropic_wait_for_ready();                                      \
         if (TROPIC_RETRY_COMMAND_session_started) {                   \
