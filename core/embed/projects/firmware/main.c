@@ -34,6 +34,7 @@
 #include "ports/stm32/pendsv.h"
 
 #include <io/display.h>
+#include <rtl/logging.h>
 #include <sys/linker_utils.h>
 #include <sys/notify.h>
 #include <sys/systask.h>
@@ -62,6 +63,8 @@ extern const void nrf_app_end;
 extern const void nrf_app_size;
 
 #endif
+
+LOG_DECLARE(coreapp_main)
 
 int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
@@ -125,7 +128,7 @@ int main_func(uint32_t cmd, void *arg) {
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
-  printf("CORE: Preparing stack\n");
+  LOG_INF("Preparing stack");
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.
   mp_stack_set_top(&_stack_section_end);
@@ -138,22 +141,22 @@ int main_func(uint32_t cmd, void *arg) {
 #endif
 
   // GC init
-  printf("CORE: Starting GC\n");
+  LOG_INF("Starting GC");
   gc_init(&_heap_start, &_heap_end);
 
   // Interpreter init
-  printf("CORE: Starting interpreter\n");
+  LOG_INF("Starting interpreter");
   mp_init();
   mp_obj_list_init(mp_sys_argv, 0);
   mp_obj_list_init(mp_sys_path, 0);
   mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__dot_frozen));
 
   // Execute the main script
-  printf("CORE: Executing main script\n");
+  LOG_INF("Executing main script");
   pyexec_frozen_module("main.py");
 
   // Clean up
-  printf("CORE: Main script finished, cleaning up\n");
+  LOG_INF("Main script finished, cleaning up");
   mp_deinit();
 
   // Python code shouldn't ever exit, avoid black screen if it does

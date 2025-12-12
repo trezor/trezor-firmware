@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_OPTIGA_COMMANDS_H
-#define TREZORHAL_OPTIGA_COMMANDS_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -258,9 +257,3 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]);
 optiga_result optiga_clear_all_auto_states(void);
 optiga_result optiga_reset_counter(uint16_t oid, uint32_t limit);
 void optiga_reset_counter_time(uint32_t *time_ms);
-
-#if !PRODUCTION
-void optiga_command_set_log_hex(optiga_log_hex_t f);
-#endif
-
-#endif

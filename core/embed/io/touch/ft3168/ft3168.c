@@ -24,6 +24,7 @@
 
 #include <io/i2c_bus.h>
 #include <io/touch.h>
+#include <rtl/logging.h>
 #include <sys/systick.h>
 #include "ft3168.h"
 
@@ -32,6 +33,8 @@
 #endif
 
 #include "../touch_poll.h"
+
+LOG_DECLARE(touch_driver)
 
 // #define TOUCH_TRACE_REGS
 
@@ -433,8 +436,8 @@ void trace_regs(uint8_t* regs) {
 
   uint32_t time = systicks_ms() % 10000;
 
-  printf("%04ld [gesture=%02X, nb_touches=%d, flags=%c, x=%3d, y=%3d]\r\n",
-         time, gesture, nb_touches, event, x, y);
+  LOG_DBG("%04ld [gesture=%02X, nb_touches=%d, flags=%c, x=%3d, y=%3d]\r\n",
+          time, gesture, nb_touches, event, x, y);
 }
 #endif
 
