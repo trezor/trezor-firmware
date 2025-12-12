@@ -28,6 +28,7 @@
 #include <sys/mpu.h>
 #include <util/flash.h>
 #include <util/flash_utils.h>
+#include <util/rsod_special.h>
 #include "memzero.h"
 
 #ifdef SECURE_MODE

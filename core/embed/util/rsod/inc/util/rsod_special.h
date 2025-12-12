@@ -21,19 +21,26 @@
 
 #include <sys/bootutils.h>
 
-// Shows an error message and shuts down the device.
-//
-// If the title is NULL, it will be set to "INTERNAL ERROR".
-// If the message is NULL, it will be ignored.
-// If the footer is NULL, it will be set to "PLEASE VISIT TREZOR.IO/RSOD".
-void __attribute__((noreturn))
-error_shutdown_ex(const char *title, const char *message, const char *footer);
+/**
+ * Shows RSOD screen with "Wipe code entered" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_wipe_code_screen(void);
 
-// Shows an error message and shuts down the device.
-//
-// Same as `error_shutdown_ex()` but with a default header and footer.
-void __attribute__((noreturn)) error_shutdown(const char *message);
+/**
+ * Shows RSOD screen with "Pin attempts exceeded" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_pin_too_many_screen(void);
 
-// Do not use this function directly, use the `ensure()` macro instead.
-void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line);
+/**
+ * Shows RSOD screen with "Install restricted" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_install_restricted_screen(void);
+
+/**
+ * Shows RSOD screen with "Device wiped" message
+ * and shuts down the device.
+ */
+void show_wipe_info(const bootutils_wipe_info_t *info);
