@@ -402,16 +402,17 @@ class RecoveryFlow:
         self.debug.synchronize_at("VerticalMenu")
         self.debug.button_actions.navigate_to_menu_item(0)
         br = yield
+        assert br.name == "show_shares"
+        assert br.code == B.Other
         # Scroll through remaining share pages
         assert br.pages is not None
         for _ in range(br.pages - 1):
             if self.client.layout_type is LayoutType.Delizia:
                 self.debug.swipe_up()
+                assert br == (yield)
             elif self.client.layout_type is LayoutType.Eckhart:
                 self.debug.click(self.debug.screen_buttons.ok())
 
-        assert br.name == "show_shares"
-        assert br.code == B.Other
         # Getting back to the homepage
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.click(self.debug.screen_buttons.menu())
