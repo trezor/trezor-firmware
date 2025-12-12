@@ -1,7 +1,28 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <trezor_rtl.h>
+
 #include <io/ble.h>
 #include <io/unix/sock.h>
+#include <rtl/logging.h>
 #include <sys/sysevent_source.h>
-#include <trezor_rtl.h>
 
 #include <arpa/inet.h>
 #include <stdlib.h>
@@ -9,6 +30,8 @@
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
+
+LOG_DECLARE(ble_driver)
 
 static const uint16_t DATA_PORT_OFFSET = 4;  // see usb_config.c
 static const uint16_t EVENT_PORT_OFFSET = 5;
@@ -111,7 +134,7 @@ bool ble_init(void) {
 
 cleanup:
   memset(drv, 0, sizeof(ble_driver_t));
-  printf("unix/ble: init failed\n");
+  LOG_ERR("init failed");
   return false;
 }
 
@@ -156,7 +179,7 @@ static bool send_to_emu(char cmdtype) {
 
   ssize_t r = sock_sendto(&drv->event_sock, &command, sizeof(command));
   if (r != sizeof(command)) {
-    printf("unix/ble: failed to write command %c: %zd\n", cmdtype, r);
+    LOG_ERR("failed to write command %c: %zd", cmdtype, r);
   }
 
   return true;
@@ -210,7 +233,7 @@ bool ble_erase_bonds(void) {
   if (!drv->initialized) {
     return false;
   }
-  printf("unix/ble: erase bonds\n");
+  LOG_INF("erase bonds");
   memset(drv->bonds, 0, sizeof(drv->bonds));
   drv->bonds_len = 0;
   drv->connected = false;
@@ -260,7 +283,7 @@ bool ble_get_event(ble_event_t *event) {
   if (r <= 0) {
     return false;
   } else if (r > sizeof(ble_event_t)) {
-    printf("unix/ble: event packet too long: %zd\n", r);
+    LOG_ERR("event packet too long: %zd", r);
     return false;
   }
 
@@ -300,14 +323,14 @@ bool ble_get_event(ble_event_t *event) {
       send_to_emu(' ');
       break;
     case BLE_CONNECTION_CHANGED:
-      printf("unix/ble: CONNECTION_CHANGED not implemented\n");
+      LOG_WARN("CONNECTION_CHANGED not implemented");
       break;
     case BLE_EMULATOR_PING:
       send_to_emu(' ');
       return ble_get_event(event);  // do not forward to app
       break;
     default:
-      printf("unix/ble: unknown event type\n");
+      LOG_WARN("unknown event type");
       break;
   }
 
@@ -373,7 +396,7 @@ bool ble_write(const uint8_t *data, uint16_t len) {
   }
 
   if (!drv->connected) {
-    printf("unix/ble: ble_write while disconnected\n");
+    LOG_ERR("ble_write while disconnected");
     return false;
   }
 
@@ -397,7 +420,7 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
   }
 
   if (!drv->connected) {
-    printf("unix/ble: ble_read while disconnected\n");
+    LOG_ERR("ble_read while disconnected");
     return false;
   }
 
@@ -419,7 +442,7 @@ bool ble_get_mac(bt_le_addr_t *addr) {
     return false;
   }
 
-  printf("unix/ble: ble_get_mac not implemented\n");
+  LOG_WARN("ble_get_mac not implemented");
   for (size_t i = 0; i < sizeof(addr->addr); i++) {
     addr->addr[i] = i + 0xe1;
   }
@@ -437,7 +460,7 @@ uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
 }
 
 void ble_set_high_speed(bool enable) {
-  printf("unix/ble: set_high_speed not implemented\n");
+  LOG_WARN("set_high_speed not implemented");
 }
 
 bool ble_unpair(const bt_le_addr_t *addr) {
@@ -452,7 +475,7 @@ bool ble_unpair(const bt_le_addr_t *addr) {
 }
 
 void ble_notify(const uint8_t *data, size_t len) {
-  printf("unix/ble: ble_notify not implemented\n");
+  LOG_WARN("ble_notify not implemented");
 }
 
 void ble_set_enabled(bool enabled) {
