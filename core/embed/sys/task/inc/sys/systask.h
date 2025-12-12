@@ -80,7 +80,7 @@ typedef struct {
 
     // Arguments passed to `systask_exit_fatal()`
     struct {
-      uint32_t line;
+      int32_t line;
       char file[64];
       char expr[64];
     } fatal;

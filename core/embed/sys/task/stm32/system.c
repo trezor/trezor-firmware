@@ -20,7 +20,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <rtl/mini_printf.h>
+#include <rtl/strutils.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/linker_utils.h>
@@ -177,7 +177,6 @@ __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
 
 #ifdef STM32U5
 const char* system_fault_message(const system_fault_t* fault) {
-  static char message[48] = {0};
   const char* fault_type = "FAULT";
   switch (fault->irqn) {
     case HardFault_IRQn:
@@ -202,13 +201,16 @@ const char* system_fault_message(const system_fault_t* fault) {
       fault_type = "CS";
       break;
   }
-  mini_snprintf(message, sizeof(message), "%s @ 0x%08X", fault_type,
-                (unsigned int)fault->pc);
+
+  static char message[48] = "";
+  cstr_append(message, sizeof(message), fault_type);
+  cstr_append(message, sizeof(message), " @ 0x");
+  cstr_append_uint32_hex(message, sizeof(message), fault->pc);
+
   return message;
 }
 #else   // STM32U5
 const char* system_fault_message(const system_fault_t* fault) {
-  static char message[48] = {0};
   const char* fault_type = "FAULT";
   switch (fault->irqn) {
     case HardFault_IRQn:
@@ -227,8 +229,12 @@ const char* system_fault_message(const system_fault_t* fault) {
       fault_type = "CS";
       break;
   }
-  mini_snprintf(message, sizeof(message), "%s @ 0x%08X", fault_type,
-                (unsigned int)fault->pc);
+
+  static char message[48] = "";
+  cstr_append(message, sizeof(message), fault_type);
+  cstr_append(message, sizeof(message), " @ 0x");
+  cstr_append_uint32_hex(message, sizeof(message), fault->pc);
+
   return message;
 }
 #endif  // STM32U5
