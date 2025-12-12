@@ -43,8 +43,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/rng/unix/rng.c",
         "embed/sec/rng/rng_common.c",
         "embed/sec/time_estimate/unix/time_estimate.c",
-        "embed/sys/dbg/dbg_console.c",
-        "embed/sys/dbg/unix/dbg_console_backend.c",
         "embed/sys/mpu/unix/mpu.c",
         "embed/sys/notify/notify.c",
         "embed/sys/startup/unix/bootutils.c",
@@ -79,5 +77,15 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
             defines += [("USE_USB_IFACE_WEBAUTHN", "1")]
         if "usb_iface_vcp" in features_wanted:
             defines += [("USE_USB_IFACE_VCP", "1")]
+
+    if "dbg_console" in features_wanted:
+        sources += [
+            "embed/sys/dbg/dbg_console.c",
+            "embed/sys/dbg/syslog.c",
+            "embed/sys/dbg/unix/dbg_console_backend.c",
+        ]
+        paths += ["embed/sys/dbg/inc"]
+        defines += [("USE_DBG_CONSOLE", "1")]
+        features_available.append("dbg_console")
 
     return features_available

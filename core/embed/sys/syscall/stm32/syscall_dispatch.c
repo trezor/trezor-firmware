@@ -183,6 +183,26 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t data_size = (size_t)args[1];
       args[0] = dbg_console_write__verified(data, data_size);
     } break;
+
+    case SYSCALL_SYSLOG_START_RECORD: {
+      const log_source_t *source = (const log_source_t *)args[0];
+      uint8_t level = (uint8_t)args[1];
+      args[0] = syslog_start_record__verified(source, level);
+    } break;
+
+    case SYSCALL_SYSLOG_WRITE_CHUNK: {
+      const char *text = (const char *)args[0];
+      size_t text_len = (size_t)args[1];
+      bool end_record = (bool)args[2];
+      args[0] = syslog_write_chunk__verified(text, text_len, end_record);
+    } break;
+
+    case SYSCALL_SYSLOG_SET_FILTER: {
+      const char *filter = (const char *)args[0];
+      size_t filter_len = (size_t)args[1];
+      args[0] = syslog_set_filter__verified(filter, filter_len);
+    } break;
+
 #endif
 
     case SYSCALL_BOOT_IMAGE_CHECK: {
