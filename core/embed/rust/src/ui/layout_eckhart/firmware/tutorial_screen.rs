@@ -110,7 +110,7 @@ impl Component for TutorialWelcomeScreen {
 
         #[cfg(feature = "rgb_led")]
         if !loader_running {
-            ScreenBackground::new(Some(LED_COLOR), None).render(target);
+            ScreenBackground::new(None).render(target, None);
             target.set_led_state(LedState::Static(LED_COLOR));
         }
 

@@ -19,7 +19,7 @@ pub enum Gradient {
     #[cfg(feature = "micropython")]
     HomescreenBase,
     #[cfg(feature = "micropython")]
-    ScreenLEDSim(Color),
+    ScreenLEDSim(Color, u8),
 }
 
 impl Gradient {
@@ -52,7 +52,9 @@ fn render_gradient<'s>(
         #[cfg(feature = "micropython")]
         Gradient::HomescreenBase => render_homescreen_base(target, area, step_size),
         #[cfg(feature = "micropython")]
-        Gradient::ScreenLEDSim(color) => render_led_simulation(target, area, step_size, color),
+        Gradient::ScreenLEDSim(color, alpha) => {
+            render_led_simulation(target, area, step_size, color, alpha)
+        }
     }
 }
 
@@ -148,6 +150,7 @@ fn render_led_simulation<'a>(
     area: Rect,
     step_size: u16,
     color: Color,
+    alpha: u8,
 ) {
     let color = match color {
         theme::LED_WHITE => theme::GREY_LIGHT,
@@ -159,26 +162,34 @@ fn render_led_simulation<'a>(
         theme::LED_BLUE => theme::BLUE,
         _ => color,
     };
+
+    // Calculate scaling factor from alpha parameter
+    let scale = alpha as f32 / 255.0;
+
     // Vertical gradient (color intensity fading from bottom to top)
     for (slice, factor) in iter_slices(area, Axis::Vertical, step_size) {
         // Gradient 1 (Overall intensity: 35%)
         // Stops:     0%,  40%
         // Opacity: 100%,  20%
         let factor_grad_1 = (factor / 0.4).clamp(0.2, 1.0);
+        let alpha_grad_1 = u8::lerp(89, u8::MIN, factor_grad_1);
+        let scaled_alpha_grad_1 = (alpha_grad_1 as f32 * scale) as u8;
 
         shape::Bar::new(slice)
             .with_bg(color)
-            .with_alpha(u8::lerp(89, u8::MIN, factor_grad_1))
+            .with_alpha(scaled_alpha_grad_1)
             .render(target);
 
         // Gradient 2 (Overall intensity: 70%)
         // Stops:     2%, 63%
         // Opacity: 100%,  0%
         let factor_grad_2 = normalize_factor(factor, 0.02, 0.63);
-        let alpha = u8::lerp(179, u8::MIN, factor_grad_2);
+        let alpha_grad_2 = u8::lerp(179, u8::MIN, factor_grad_2);
+        let scaled_alpha_grad_2 = (alpha_grad_2 as f32 * scale) as u8;
+
         shape::Bar::new(slice)
             .with_bg(color)
-            .with_alpha(alpha)
+            .with_alpha(scaled_alpha_grad_2)
             .render(target);
     }
 
@@ -190,9 +201,11 @@ fn render_led_simulation<'a>(
         let x_half_width = (area.width() / 2) as f32;
         let dist_from_mid = (slice.x0 - x_mid).abs() as f32 / x_half_width;
 
+        let alpha_horiz = u8::lerp(u8::MIN, u8::MAX, dist_from_mid);
+
         shape::Bar::new(slice)
             .with_bg(theme::BG)
-            .with_alpha(u8::lerp(u8::MIN, u8::MAX, dist_from_mid))
+            .with_alpha(alpha_horiz)
             .render(target);
     }
 }

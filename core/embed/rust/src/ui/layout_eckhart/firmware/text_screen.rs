@@ -218,7 +218,7 @@ where
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if let Some(background) = &self.background {
-            background.render(target);
+            background.render(target, None);
         }
         self.header.render(target);
         self.subtitle.render(target);

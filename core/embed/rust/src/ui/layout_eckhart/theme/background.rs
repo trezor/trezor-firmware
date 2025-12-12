@@ -11,17 +11,14 @@ use super::super::{
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ScreenBackground {
-    /// LED color for the simulation
-    led_color: Option<Color>,
     /// Step size for the gradient (1 = full quality, higher = faster but lower
     /// quality)
     step_size: u16,
 }
 
 impl ScreenBackground {
-    pub fn new(led_color: Option<Color>, step_size: Option<u16>) -> Self {
+    pub fn new(step_size: Option<u16>) -> Self {
         Self {
-            led_color,
             step_size: step_size.unwrap_or(1),
         }
     }
@@ -30,7 +27,8 @@ impl ScreenBackground {
     ///
     /// # Arguments
     /// * `target` - The renderer to draw to
-    pub fn render<'s>(&self, target: &mut impl Renderer<'s>) {
+    /// * `led_simulation` - Optional LED color for the LED simulation layer
+    pub fn render<'s>(&self, target: &mut impl Renderer<'s>, led_simulation: Option<(Color, u8)>) {
         // Layer 1: Base Solid Colour
         shape::Bar::new(SCREEN)
             .with_bg(theme::GREY_EXTRA_DARK)
@@ -39,10 +37,14 @@ impl ScreenBackground {
         // Layer 2: Base Gradient overlay
         Gradient::HomescreenBase.render(target, SCREEN, self.step_size);
 
-        if let Some(led_color) = self.led_color {
+        if let Some((led_color, led_alpha)) = led_simulation {
             // Layer 3: (Optional) LED lightning simulation
             let gradient_area = SCREEN.inset(Insets::bottom(theme::ACTION_BAR_HEIGHT));
-            Gradient::ScreenLEDSim(led_color).render(target, gradient_area, self.step_size);
+            Gradient::ScreenLEDSim(led_color, led_alpha).render(
+                target,
+                gradient_area,
+                self.step_size,
+            );
         }
 
         // Layer 4: Tile pattern

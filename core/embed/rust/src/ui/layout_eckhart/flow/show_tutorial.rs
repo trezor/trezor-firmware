@@ -117,7 +117,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_action_bar(ActionBar::new_single(Button::with_homebar_content(Some(
         TR::tutorial__tap_to_start.into(),
     ))))
-    .with_background(ScreenBackground::new(None, None))
+    .with_background(ScreenBackground::new(None))
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         _ => None,
