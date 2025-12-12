@@ -104,16 +104,16 @@ access_violation:
   return -1;
 }
 
-void dbg_console_write__verified(const void *data, size_t data_size) {
+ssize_t dbg_console_write__verified(const void *data, size_t data_size) {
   if (!probe_read_access(data, data_size)) {
     goto access_violation;
   }
 
-  dbg_console_write(data, data_size);
-  return;
+  return dbg_console_write(data, data_size);
 
 access_violation:
   apptask_access_violation();
+  return -1;
 }
 
 #endif  // USE_DBG_CONSOLE
