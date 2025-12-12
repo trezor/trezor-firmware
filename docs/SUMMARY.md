@@ -37,7 +37,7 @@
   - [Trezor-Host protocol](common/thp/index.md)
     - [Specification](common/thp/specification.md)
     - [Sessions](common/thp/sessions.md)
-  - [Bitcoin signing](common/communication/bitcoin-signing.md)
+  - [Bitcoin signing](common/bitcoin-signing.md)
   - [Reproducible builds](common/reproducible-build.md)
   - [Message Workflows](common/message-workflows.md)
   - [External definitions](common/external-definitions.md)
