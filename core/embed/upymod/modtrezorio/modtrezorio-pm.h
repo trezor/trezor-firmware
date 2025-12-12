@@ -28,6 +28,7 @@
 /// WAKEUP_FLAG_NFC: int
 /// WAKEUP_FLAG_RTC: int
 /// WAKEUP_FLAG_USB: int
+/// WAKEUP_FLAG_TOUCH: int
 ///
 /// # Power manager event flags:
 /// EVENT_POWER_STATUS_CHANGED: int
@@ -56,7 +57,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_soc_obj, mod_trezorio_pm_soc);
 ///     """
 ///     Suspends the device. Returns wakeup flag. Raises RuntimeError on
 ///     failure.
-///     Wakeup flags: BUTTON=1, POWER=2, BLE=4, NFC=8, RTC=16
+///     Wakeup flags: BUTTON=1, POWER=2, BLE=4, NFC=8, RTC=16, USB=32, TOUCH=64
 ///     """
 STATIC mp_obj_t mod_trezorio_pm_suspend() {
   wakeup_flags_t wakeup_flags = 0;
@@ -135,6 +136,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_NFC), MP_ROM_INT(WAKEUP_FLAG_NFC)},
     {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_RTC), MP_ROM_INT(WAKEUP_FLAG_RTC)},
     {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_USB), MP_ROM_INT(WAKEUP_FLAG_USB)},
+    {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_TOUCH), MP_ROM_INT(WAKEUP_FLAG_TOUCH)},
 
     // Power manager event flags
     {MP_ROM_QSTR(MP_QSTR_EVENT_POWER_STATUS_CHANGED), MP_ROM_INT(1 << 0)},

@@ -23,6 +23,8 @@
 #include <trezor_bsp.h>
 #include <trezor_types.h>
 
+#include <io/display.h>
+
 #include "../fb_queue/fb_queue.h"
 
 #ifdef DISPLAY_PANEL_LX200D2406A
@@ -68,6 +70,13 @@ typedef struct {
   GFXMMU_HandleTypeDef hlcd_gfxmmu;
 #endif
 
+#if defined(KERNEL_MODE) && defined(USE_SUSPEND)
+  // Set if the driver is currently suspended
+  secbool suspended;
+  // Display wakeup parameters
+  display_wakeup_params_t display;
+#endif  // KERNEL_MODE && USE_SUSPEND
+
 } display_driver_t;
 
 extern display_driver_t g_display_driver;
@@ -87,6 +96,10 @@ static inline uint32_t is_mode_exception(void) {
 void display_ensure_refreshed(void);
 
 bool panel_init(display_driver_t *drv);
+
+#ifdef USE_SUSPEND
+bool panel_suspend(display_driver_t *drv);
+#endif  // USE_SUSPEND
 
 #ifdef DISPLAY_GFXMMU
 const uint32_t *panel_lut_get(void);
