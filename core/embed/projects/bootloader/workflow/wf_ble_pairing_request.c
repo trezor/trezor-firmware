@@ -58,12 +58,9 @@ workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw) {
   rgb_led_effect_start(RGB_LED_EFFECT_PAIRING, 0);
 #endif
 
-  c_layout_t layout;
-  memset(&layout, 0, sizeof(layout));
-  screen_pairing_mode(ui_get_initial_setup(), name, strlen(name), &layout);
-
   uint32_t code = 0;
-  workflow_result_t res = workflow_host_control(fw, &layout, &code, NULL);
+  workflow_result_t res =
+      screen_pairing_mode(ui_get_initial_setup(), name, strlen(name), &code);
 
 #ifdef USE_RGB_LED
   rgb_led_effect_stop();
@@ -140,12 +137,8 @@ workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
   rgb_led_effect_start(RGB_LED_EFFECT_PAIRING, 0);
 #endif
 
-  c_layout_t layout;
-  memset(&layout, 0, sizeof(layout));
-  screen_wireless_setup(name, strlen(name), &layout);
-
   uint32_t code = 0;
-  workflow_result_t res = workflow_host_control(fw, &layout, &code, ios);
+  workflow_result_t res = screen_wireless_setup(name, strlen(name), &code);
 
 #ifdef USE_RGB_LED
   rgb_led_effect_stop();

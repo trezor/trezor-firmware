@@ -1,24 +1,19 @@
-use crate::ui::component::Event;
+pub trait BootloaderUI {
+    fn screen_welcome() -> (u32, u32);
 
-pub trait BootloaderLayoutType {
-    fn event(&mut self, event: Option<Event>) -> u32;
+    fn screen_menu(initial_setup: bool, communication: bool) -> (u32, u32);
 
-    fn render(&mut self) {
+    fn screen_connect(initial_setup: bool, auto_update: bool) -> (u32, u32);
+
+    #[cfg(feature = "ble")]
+    fn screen_pairing_mode(_initial_setup: bool, _name: &'static str) -> (u32, u32) {
         unimplemented!();
     }
 
-    fn show(&mut self) -> u32;
-    fn init_welcome() -> Self;
-    fn init_menu(initial_setup: bool) -> Self;
-    fn init_connect(initial_setup: bool, auto_update: bool) -> Self;
     #[cfg(feature = "ble")]
-    fn init_pairing_mode(initial_setup: bool, name: &'static str) -> Self;
-    #[cfg(feature = "ble")]
-    fn init_wireless_setup(name: &'static str) -> Self;
-}
-
-pub trait BootloaderUI {
-    type CLayoutType: BootloaderLayoutType;
+    fn screen_wireless_setup(_name: &'static str) -> (u32, u32) {
+        unimplemented!();
+    }
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool);
 
@@ -70,10 +65,14 @@ pub trait BootloaderUI {
     );
 
     #[cfg(feature = "ble")]
-    fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32;
+    fn screen_confirm_pairing(_code: u32, _initial_setup: bool) -> u32 {
+        unimplemented!();
+    }
 
     #[cfg(feature = "ble")]
-    fn screen_pairing_mode_finalizing(initial_setup: bool) -> u32;
+    fn screen_pairing_mode_finalizing(_initial_setup: bool) -> u32 {
+        unimplemented!();
+    }
 
     #[cfg(feature = "power_manager")]
     fn screen_bootloader_entry_progress(_progress: u16, _initialize: bool) {

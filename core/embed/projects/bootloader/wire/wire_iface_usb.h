@@ -24,4 +24,6 @@
 
 wire_iface_t *usb_iface_init(secbool usb21_landing);
 
+wire_iface_t *usb_iface_get(void);
+
 void usb_iface_deinit(void);
