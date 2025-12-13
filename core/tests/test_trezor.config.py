@@ -100,11 +100,7 @@ class TestConfig(unittest.TestCase):
             with self.assertRaises(ValueError):
                 config.set(PINAPP, PINKEY, b"value")
 
-            self.assertTrue(config.change_pin(old_pin, new_pin, None, None))
-
-            # Old PIN cannot be used to change the current PIN.
-            if old_pin != new_pin:
-                self.assertFalse(config.change_pin(old_pin, "666", None, None))
+            self.assertTrue(config.change_pin(new_pin, None))
 
             # Storage remains unlocked.
             self.assertEqual(config.get(1, 1), b"value")
@@ -139,8 +135,8 @@ class TestConfig(unittest.TestCase):
         config.wipe()
         self.assertTrue(config.unlock("", None))
         config.set(1, 1, b"value")
-        self.assertFalse(config.change_pin("", "", salt1, None))
-        self.assertTrue(config.change_pin("", "000", None, salt1))
+        self.assertFalse(config.unlock("", salt1))
+        self.assertTrue(config.change_pin("000", salt1))
         self.assertEqual(config.get(1, 1), b"value")
 
         # Disable PIN and change SD salt.
@@ -148,7 +144,7 @@ class TestConfig(unittest.TestCase):
         self.assertFalse(config.unlock("000", None))
         self.assertIsNone(config.get(1, 1))
         self.assertTrue(config.unlock("000", salt1))
-        self.assertTrue(config.change_pin("000", "", salt1, salt2))
+        self.assertTrue(config.change_pin("", salt2))
         self.assertEqual(config.get(1, 1), b"value")
 
         # Disable SD salt.
@@ -156,7 +152,7 @@ class TestConfig(unittest.TestCase):
         self.assertFalse(config.unlock("000", salt2))
         self.assertIsNone(config.get(1, 1))
         self.assertTrue(config.unlock("", salt2))
-        self.assertTrue(config.change_pin("", "", salt2, None))
+        self.assertTrue(config.change_pin("", None))
         self.assertEqual(config.get(1, 1), b"value")
 
         # Check that PIN and SD salt are disabled.

@@ -95,9 +95,7 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
 secbool storage_has_pin(void);
 secbool storage_pin_fails_increase(void);
 uint32_t storage_get_pin_rem(void);
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
+secbool storage_change_pin(const uint8_t *newpin, size_t newpin_len,
                            const uint8_t *new_ext_salt);
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len);
 secbool storage_has_wipe_code(void);

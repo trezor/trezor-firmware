@@ -158,9 +158,7 @@ void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback);
 secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
                                  const uint8_t *ext_salt);
 
-secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
-                                     const uint8_t *newpin, size_t newpin_len,
-                                     const uint8_t *old_ext_salt,
+secbool storage_change_pin__verified(const uint8_t *newpin, size_t newpin_len,
                                      const uint8_t *new_ext_salt);
 
 void storage_ensure_not_wipe_code__verified(const uint8_t *pin, size_t pin_len);
