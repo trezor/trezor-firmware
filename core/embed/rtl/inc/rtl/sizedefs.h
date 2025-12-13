@@ -59,7 +59,7 @@
     (((addr) & ((align)-1)) == 0); \
   })
 
-// Ensures that that 'addr' is properly aligned to 'align', which
+// Ensures that 'addr' is properly aligned to 'align', which
 // must be a power of two.
 #define ENSURE_ALIGNMENT(addr, align) \
   _Static_assert(IS_ALIGNED(addr, align), "Address must be aligned")
