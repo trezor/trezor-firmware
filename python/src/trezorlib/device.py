@@ -605,18 +605,15 @@ def reboot_to_bootloader(
     session: "Session",
     boot_command: messages.BootCommand = messages.BootCommand.STOP_AND_WAIT,
     firmware_header: Optional[bytes] = None,
-    language_data: bytes = b"",
 ) -> str | None:
-    response = session.call(
+    ret = session.call(
         messages.RebootToBootloader(
             boot_command=boot_command,
             firmware_header=firmware_header,
-            language_data_length=len(language_data),
-        )
+        ),
+        expect=messages.Success,
     )
-    if isinstance(response, messages.DataChunkRequest):
-        response = _send_chunked_data(session, response, language_data)
-    return _return_success(messages.Success(message=""))
+    return _return_success(ret)
 
 
 def show_device_tutorial(session: "Session") -> str | None:

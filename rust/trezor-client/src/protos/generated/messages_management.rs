@@ -10405,8 +10405,6 @@ pub struct RebootToBootloader {
     pub boot_command: ::std::option::Option<::protobuf::EnumOrUnknown<reboot_to_bootloader::BootCommand>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.firmware_header)
     pub firmware_header: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.management.RebootToBootloader.language_data_length)
-    pub language_data_length: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.RebootToBootloader.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -10481,27 +10479,8 @@ impl RebootToBootloader {
         self.firmware_header.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional uint32 language_data_length = 3;
-
-    pub fn language_data_length(&self) -> u32 {
-        self.language_data_length.unwrap_or(0u32)
-    }
-
-    pub fn clear_language_data_length(&mut self) {
-        self.language_data_length = ::std::option::Option::None;
-    }
-
-    pub fn has_language_data_length(&self) -> bool {
-        self.language_data_length.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_language_data_length(&mut self, v: u32) {
-        self.language_data_length = ::std::option::Option::Some(v);
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "boot_command",
@@ -10512,11 +10491,6 @@ impl RebootToBootloader {
             "firmware_header",
             |m: &RebootToBootloader| { &m.firmware_header },
             |m: &mut RebootToBootloader| { &mut m.firmware_header },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "language_data_length",
-            |m: &RebootToBootloader| { &m.language_data_length },
-            |m: &mut RebootToBootloader| { &mut m.language_data_length },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RebootToBootloader>(
             "RebootToBootloader",
@@ -10542,9 +10516,6 @@ impl ::protobuf::Message for RebootToBootloader {
                 18 => {
                     self.firmware_header = ::std::option::Option::Some(is.read_bytes()?);
                 },
-                24 => {
-                    self.language_data_length = ::std::option::Option::Some(is.read_uint32()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -10563,9 +10534,6 @@ impl ::protobuf::Message for RebootToBootloader {
         if let Some(v) = self.firmware_header.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
-        if let Some(v) = self.language_data_length {
-            my_size += ::protobuf::rt::uint32_size(3, v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -10577,9 +10545,6 @@ impl ::protobuf::Message for RebootToBootloader {
         }
         if let Some(v) = self.firmware_header.as_ref() {
             os.write_bytes(2, v)?;
-        }
-        if let Some(v) = self.language_data_length {
-            os.write_uint32(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -10600,7 +10565,6 @@ impl ::protobuf::Message for RebootToBootloader {
     fn clear(&mut self) {
         self.boot_command = ::std::option::Option::None;
         self.firmware_header = ::std::option::Option::None;
-        self.language_data_length = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -10608,7 +10572,6 @@ impl ::protobuf::Message for RebootToBootloader {
         static instance: RebootToBootloader = RebootToBootloader {
             boot_command: ::std::option::Option::None,
             firmware_header: ::std::option::Option::None,
-            language_data_length: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -12447,31 +12410,30 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNext\
     U2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\
     \x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14Preauthorized\
-    Request\"\x15\n\x13CancelAuthorization\"\x9a\x02\n\x12RebootToBootloader\
+    Request\"\x15\n\x13CancelAuthorization\"\xeb\x01\n\x12RebootToBootloader\
     \x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.manage\
     ment.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\
-    \n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\x123\n\x14\
-    language_data_length\x18\x03\x20\x01(\r:\x010R\x12languageDataLength\"5\
-    \n\x0bBootCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UP\
-    GRADE\x10\x01\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\n\x05nonce\x18\
-    \x01\x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\
-    \x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03m\
-    ac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x02(\x0cR\
-    \x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBootloader\"%\n\r\
-    SetBrightness\x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"\x11\n\
-    \x0fGetSerialNumber\"3\n\x0cSerialNumber\x12#\n\rserial_number\x18\x01\
-    \x20\x02(\tR\x0cserialNumber*\x99\x01\n\nBackupType\x12\t\n\x05Bip39\x10\
-    \0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\
-    \x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_B\
-    asic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\x05*\
-    G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlway\
-    s\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDisplayRotation\
-    \x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\x10\xb4\
-    \x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\n\x04To\
-    if\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\n\x0cRe\
-    coveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\x10\x01\
-    \x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.satoshilabs.trezor.li\
-    b.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\x01\
+    \n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBo\
+    otCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\
+    \x10\x01J\x04\x08\x03\x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\
+    \n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\ta\
+    ddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\
+    \x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\
+    \x20\x02(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBoo\
+    tloader\"%\n\rSetBrightness\x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05va\
+    lue\"\x11\n\x0fGetSerialNumber\"3\n\x0cSerialNumber\x12#\n\rserial_numbe\
+    r\x18\x01\x20\x02(\tR\x0cserialNumber*\x99\x01\n\nBackupType\x12\t\n\x05\
+    Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanc\
+    ed\x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Sl\
+    ip39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\
+    \x10\x05*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPr\
+    omptAlways\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDisplay\
+    Rotation\x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\
+    \x10\xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\
+    \n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\
+    \n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\
+    \x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.satoshilabs.t\
+    rezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
