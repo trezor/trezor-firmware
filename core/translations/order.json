@@ -1169,8 +1169,8 @@
   "1167": "ble__must_be_enabled",
   "1168": "ripple__destination_tag_missing",
   "1169": "words__comm_trouble",
-  "1170": "secure_sync__delegated_identity_key_no_thp",
-  "1171": "secure_sync__delegated_identity_key_thp",
-  "1172": "secure_sync__evolu_node_no_optiga",
-  "1173": "secure_sync__header"
+  "1170": "suite_sync__delegated_identity_key_no_thp",
+  "1171": "suite_sync__delegated_identity_key_thp",
+  "1172": "suite_sync__header",
+  "1173": "suite_sync__rotate_key"
 }

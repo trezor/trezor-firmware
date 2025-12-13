@@ -2547,9 +2547,6 @@
       "Delizia": "Falsche SD-Karte.",
       "Eckhart": ""
     },
-    "secure_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
-    "secure_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
-    "secure_sync__header": "Suite Sync",
     "send__cancel_sign": "Signieren abbrechen",
     "send__cancel_transaction": "Transaktion abbrechen",
     "send__confirm_sending": "Betrag senden",
@@ -2844,6 +2841,9 @@
       "Eckhart": "PIN überprüfen..."
     },
     "storage_msg__wrong_pin": "Falscher PIN",
+    "suite_sync__delegated_identity_key_no_thp": "Allow Trezor Suite to use Suite Sync with this Trezor?",
+    "suite_sync__delegated_identity_key_thp": "Allow {0} on {1} to use Suite Sync with this Trezor?",
+    "suite_sync__header": "Suite Sync",
     "tezos__baker_address": "Baker-Adresse",
     "tezos__balance": "Guthaben:",
     "tezos__ballot": "Abstimmung:",

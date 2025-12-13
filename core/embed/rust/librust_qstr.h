@@ -772,9 +772,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_sd_card__use_different_card;
   MP_QSTR_sd_card__wanna_format;
   MP_QSTR_sd_card__wrong_sd_card;
-  MP_QSTR_secure_sync__delegated_identity_key_no_thp;
-  MP_QSTR_secure_sync__delegated_identity_key_thp;
-  MP_QSTR_secure_sync__header;
   MP_QSTR_select_menu;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
@@ -854,6 +851,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_storage_msg__wrong_pin;
   MP_QSTR_subtext;
   MP_QSTR_subtitle;
+  MP_QSTR_suite_sync__delegated_identity_key_no_thp;
+  MP_QSTR_suite_sync__delegated_identity_key_thp;
+  MP_QSTR_suite_sync__header;
+  MP_QSTR_suite_sync__rotate_key;
   MP_QSTR_summary_br_code;
   MP_QSTR_summary_br_name;
   MP_QSTR_summary_items;

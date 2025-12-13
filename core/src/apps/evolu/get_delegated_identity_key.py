@@ -31,15 +31,43 @@ async def get_delegated_identity_key(
 
     from trezor import utils
     from trezor.messages import EvoluDelegatedIdentityKey
+    from trezor.ui.layouts import confirm_action
 
-    if utils.USE_THP:
-        await confirm_thp(msg)
+    if msg.index_management:
+        index = index_management(msg)
+        return EvoluDelegatedIdentityKey(private_key=b"", rotation_index=index)
+
+    if msg.rotate:
+        from trezor import TR
+
+        rotation_index = get_rotation_index(msg)
+        if rotation_index is None:
+            raise ValueError(
+                "Cannot rotate delegated identity key without a stored rotation index."
+            )
+
+        await confirm_action(
+            "secure_sync",
+            TR.suite_sync__header,
+            TR.suite_sync__rotate_key,
+        )
+
+        set_rotation_index(rotation_index + 1)
     else:
-        await confirm_no_thp()
+        if utils.USE_THP:
+            await confirm_thp(msg)
+        else:
+            await confirm_no_thp()
 
-    private_key = delegated_identity()
+    rotation_index = get_rotation_index(msg)
+    if rotation_index is None:
+        private_key = delegated_identity(0)
+    else:
+        private_key = delegated_identity(rotation_index)
 
-    return EvoluDelegatedIdentityKey(private_key=private_key)
+    return EvoluDelegatedIdentityKey(
+        private_key=private_key, rotation_index=rotation_index
+    )
 
 
 async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
@@ -62,8 +90,8 @@ async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
     host_name = credential_received.cred_metadata.host_name
     await confirm_action(
         "secure_sync",
-        TR.secure_sync__header,
-        TR.secure_sync__delegated_identity_key_thp.format(app_name, host_name),
+        TR.suite_sync__header,
+        TR.suite_sync__delegated_identity_key_thp.format(app_name, host_name),
     )
 
 
@@ -73,6 +101,45 @@ async def confirm_no_thp() -> None:
 
     await confirm_action(
         "secure_sync",
-        TR.secure_sync__header,
-        TR.secure_sync__delegated_identity_key_no_thp,
+        TR.suite_sync__header,
+        TR.suite_sync__delegated_identity_key_no_thp,
     )
+
+
+def get_rotation_index(msg: EvoluGetDelegatedIdentityKey) -> int | None:
+    from storage.device import get_delegated_identity_key_rotation_index
+
+    rotation_index = get_delegated_identity_key_rotation_index()
+
+    if isinstance(msg.rotation_index, int):
+        if rotation_index is None:
+            rotation_index = msg.rotation_index
+            set_rotation_index(rotation_index)
+        if msg.rotation_index <= rotation_index:
+            return msg.rotation_index
+        else:
+            raise ValueError(
+                f"Provided rotation index {msg.rotation_index} is greater than the stored rotation index {rotation_index}."
+            )
+
+    return rotation_index
+
+
+def index_management(msg: EvoluGetDelegatedIdentityKey) -> int | None:
+    from storage.device import get_delegated_identity_key_rotation_index
+
+    stored_index = get_delegated_identity_key_rotation_index()
+    if stored_index is not None:
+        return stored_index
+    else:
+        if msg.rotation_index is None:
+            return None
+        else:
+            set_rotation_index(msg.rotation_index)
+            return msg.rotation_index
+
+
+def set_rotation_index(index: int) -> None:
+    from storage.device import set_delegated_identity_key_rotation_index
+
+    set_delegated_identity_key_rotation_index(index)

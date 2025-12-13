@@ -11,7 +11,7 @@ def test_evolu_get_node(session: Session):
     proof = bytes.fromhex(
         "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
     )
-    node = evolu.get_node(session, proof=proof)
+    node = evolu.get_node(session, proof=proof, node_rotation_index=0)
 
     check_value = bytes.fromhex(
         "a81aaf51997b6ddfa33d11c038d6aba5f711754a2c823823ff8b777825cdbb32b0e71c301fa381c75081bd3bcc134b63306aa6fc9a9f52d835ad4df8cd507be6"
@@ -28,7 +28,7 @@ def test_evolu_get_node_invalid_proof(session: Session):
         TrezorFailure,
         match="Invalid proof",
     ):
-        evolu.get_node(session, proof=proof)
+        evolu.get_node(session, proof=proof, node_rotation_index=0)
 
 
 def test_evolu_get_node_no_proof(session: Session):
@@ -36,7 +36,7 @@ def test_evolu_get_node_no_proof(session: Session):
         TrezorFailure,
         match="Invalid proof",
     ):
-        evolu.get_node(session, proof=b"")
+        evolu.get_node(session, proof=b"", node_rotation_index=0)
 
 
 def test_evolu_get_node_none_proof(session: Session):
@@ -44,4 +44,26 @@ def test_evolu_get_node_none_proof(session: Session):
         TrezorFailure,
         match="DataError: Failed to decode message: Missing required field. proof_of_delegated_identity",
     ):
-        evolu.get_node(session, proof=None)  # type: ignore
+        evolu.get_node(session, proof=None, node_rotation_index=0)  # type: ignore
+
+
+def test_evolu_get_node_index_change(session: Session):
+    proof = bytes.fromhex(
+        "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
+    )
+    node_index_0 = evolu.get_node(session, proof=proof, node_rotation_index=0)
+    node_index_1 = evolu.get_node(session, proof=proof, node_rotation_index=1)
+
+    assert node_index_0 != node_index_1
+
+
+def test_evolu_get_node_index_1(session: Session):
+    proof = bytes.fromhex(
+        "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
+    )
+    node = evolu.get_node(session, proof=proof, node_rotation_index=1)
+
+    check_value = bytes.fromhex(
+        "8465c8de92d35053d4de324166f2fbf73281a64a9e63661a7f4617890743152ae4b3989931093f9f9dda0eb30f1949899f14dfb145a51ef0e611dc99a8a4c742"
+    )
+    assert node == check_value

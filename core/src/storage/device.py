@@ -51,6 +51,7 @@ if utils.USE_POWER_MANAGER:
 _DISABLE_BLUETOOTH        = const(0x24)  # bool (0x01 or empty)
 if not utils.BITCOIN_ONLY:
     _BINARY_MNEMONIC = const(0x25)  # bytes
+_DELEGEATED_IDENTITY_KEY_ROTATION_INDEX = const(0x26)  # int
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -536,3 +537,22 @@ if utils.USE_THP:
         across reboots, unlike storage.cache.
         """
         return common.get(_NAMESPACE, THP_PAIRED_NAMES)
+
+
+def get_delegated_identity_key_rotation_index() -> int | None:
+    """
+    Get the current delegated identity key rotation index.
+    """
+    rotation_index = common.get_uint16(
+        _NAMESPACE, _DELEGEATED_IDENTITY_KEY_ROTATION_INDEX
+    )
+    return rotation_index
+
+
+def set_delegated_identity_key_rotation_index(rotation_index: int) -> None:
+    """
+    Set the current delegated identity key rotation index.
+    """
+    common.set_uint16(
+        _NAMESPACE, _DELEGEATED_IDENTITY_KEY_ROTATION_INDEX, rotation_index
+    )
