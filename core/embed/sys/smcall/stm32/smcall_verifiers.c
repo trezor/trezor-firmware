@@ -525,6 +525,10 @@ bool backup_ram_read__verified(uint16_t key, void *buffer, size_t buffer_size,
     goto access_violation;
   }
 
+  if (!backup_ram_kernel_accessible(key)) {
+    goto access_violation;
+  }
+
   return backup_ram_read(key, buffer, buffer_size, data_size);
 access_violation:
   apptask_access_violation();
@@ -534,6 +538,10 @@ access_violation:
 bool backup_ram_write__verified(uint16_t key, backup_ram_item_type_t type,
                                 const void *data, size_t data_size) {
   if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  if (!backup_ram_kernel_accessible(key)) {
     goto access_violation;
   }
 
@@ -565,5 +573,31 @@ access_violation:
 }
 
 #endif
+
+#ifdef USE_TELEMETRY
+#include <util/telemetry.h>
+
+// Telemetry verifiers
+void telemetry_update_battery_temp__verified(float temp_c) {
+  // No pointers to verify; simple value pass-through
+  telemetry_update_battery_temp(temp_c);
+}
+
+bool telemetry_get_battery_temp_min_max__verified(float *out_min_c,
+                                                  float *out_max_c) {
+  if (out_min_c && !probe_write_access(out_min_c, sizeof(*out_min_c))) {
+    goto access_violation;
+  }
+  if (out_max_c && !probe_write_access(out_max_c, sizeof(*out_max_c))) {
+    goto access_violation;
+  }
+
+  return telemetry_get_battery_temp_min_max(out_min_c, out_max_c);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+#endif  // USE_TELEMETRY
 
 #endif  // SECMON

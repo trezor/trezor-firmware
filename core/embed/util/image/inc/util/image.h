@@ -147,7 +147,8 @@ typedef struct {
   uint32_t version;
   uint32_t hw_model;
   uint8_t hw_revision;
-  uint8_t reserved_0[3];
+  uint8_t monotonic;
+  uint8_t reserved_0[2];
   uint8_t hash[32];
   uint8_t reserved_1[391];
   uint8_t sigmask;
