@@ -30,6 +30,11 @@ EXTRA_FILES = [
     VENDOR_CONFIG_DIR / "tropic01_ese_public_key_1.pem",
 ]
 
+# Version of the RISCV Firmware (also know as Application FW)
+RISCV_FW_MAJOR = 1
+RISCV_FW_MINOR = 0
+RISCV_FW_PATCH = 0
+
 
 @click.command()
 @click.option("--check", is_flag=True)
@@ -92,6 +97,13 @@ def generate_config(check: bool) -> None:
                 data += b"\x00" * (SLOT_LEN - len(data))
             user_data[TROPIC_DEVICE_CERT_FIRST_SLOT + i] = {"value": data}
 
+    # Set RISC-V FW version
+    riscv_fw_version = (
+        b"\x00"
+        + RISCV_FW_PATCH.to_bytes(1, "little")
+        + RISCV_FW_MINOR.to_bytes(1, "little")
+        + RISCV_FW_MAJOR.to_bytes(1, "little")
+    )
     config_dict = {
         "s_t_priv": "tropic01_ese_private_key_1.pem",
         "s_t_pub": "tropic01_ese_public_key_1.pem",
@@ -106,6 +118,7 @@ def generate_config(check: bool) -> None:
                 "origin": 2,  # imported key
             }
         },
+        "riscv_fw_version": riscv_fw_version,
     }
 
     config = yaml.dump(config_dict)
