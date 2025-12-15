@@ -66,6 +66,8 @@
 #define TROPIC_CHANGE_COUNTER_SLOT MCOUNTER_INDEX_4
 #define TROPIC_CHANGE_COUNTER_SLOT_MAX_VALUE 0xfffffffe
 
+#define TROPIC_SENSORS_CONFIGURATION 0x00
+
 #ifdef TREZOR_EMULATOR
 #define TROPIC_RETRY_COMMAND(command) command
 #else
@@ -713,6 +715,32 @@ static void generate_correct_mac_and_destroy_output_time(uint32_t *time_ms) {
   lt_mac_and_destroy_time(time_ms);
 }
 
+bool tropic_check_detectors() {
+  tropic_driver_t *drv = &g_tropic_driver;
+  lt_ret_t ret = LT_FAIL;
+
+  uint32_t reversible_configuration = 0;
+  ret = lt_r_config_read(&drv->handle, CONFIGURATION_OBJECTS_CFG_SENSORS_ADDR,
+                         &reversible_configuration);
+  if (ret != LT_OK) {
+    return false;
+  }
+
+  uint32_t ireversible_configuration = 0;
+  ret = lt_i_config_read(&drv->handle, CONFIGURATION_OBJECTS_CFG_SENSORS_ADDR,
+                         &ireversible_configuration);
+  if (ret != LT_OK) {
+    return false;
+  }
+
+  if ((reversible_configuration & ireversible_configuration) !=
+      TROPIC_SENSORS_CONFIGURATION) {
+    return false;
+  }
+
+  return true;
+}
+
 bool tropic_pin_set(
     tropic_ui_progress_t ui_progress,
     uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE],
@@ -723,6 +751,10 @@ bool tropic_pin_set(
   tropic_set_ui_progress(ui_progress);
 
   if (!tropic_session_start()) {
+    goto cleanup;
+  }
+
+  if (!tropic_check_detectors()) {
     goto cleanup;
   }
 
