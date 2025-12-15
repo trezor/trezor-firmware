@@ -1,8 +1,6 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import utils
-
 
 class TestUtils(unittest.TestCase):
     def test_chunks(self):

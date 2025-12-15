@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 from storage import device
-from trezor import config, utils
+from trezor import config
 
 
 class TestConfig(unittest.TestCase):
