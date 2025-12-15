@@ -1,8 +1,6 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import utils
-
 if utils.USE_SD_CARD:
     from trezorio import fatfs, sdcard
 
