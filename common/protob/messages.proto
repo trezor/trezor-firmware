@@ -353,6 +353,10 @@ enum MessageType {
     MessageType_TronGetAddress = 2200 [(wire_in) = true];
     MessageType_TronAddress = 2201 [(wire_out) = true];
 
+    // Miniscript
+    MessageType_Policy = 2301 [(wire_in) = true];
+    MessageType_PolicyRegistration = 2302 [(wire_out) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];

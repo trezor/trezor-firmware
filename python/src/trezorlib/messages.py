@@ -685,6 +685,8 @@ class MessageType(IntEnum):
     EvoluDelegatedIdentityKey = 2105
     TronGetAddress = 2200
     TronAddress = 2201
+    Policy = 2301
+    PolicyRegistration = 2302
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -1709,6 +1711,46 @@ class AuthorizeCoinJoin(protobuf.MessageType):
         self.coin_name = coin_name
         self.script_type = script_type
         self.amount_unit = amount_unit
+
+
+class Policy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2301
+    FIELDS = {
+        1: protobuf.Field("name", "string", repeated=False, required=True),
+        2: protobuf.Field("template", "string", repeated=False, required=True),
+        3: protobuf.Field("xpubs", "string", repeated=True, required=False, default=None),
+        4: protobuf.Field("blocks", "uint32", repeated=False, required=True),
+        5: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
+    }
+
+    def __init__(
+        self,
+        *,
+        name: "str",
+        template: "str",
+        blocks: "int",
+        xpubs: Optional[Sequence["str"]] = None,
+        coin_name: Optional["str"] = 'Bitcoin',
+    ) -> None:
+        self.xpubs: Sequence["str"] = xpubs if xpubs is not None else []
+        self.name = name
+        self.template = template
+        self.blocks = blocks
+        self.coin_name = coin_name
+
+
+class PolicyRegistration(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2302
+    FIELDS = {
+        1: protobuf.Field("mac", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        mac: "bytes",
+    ) -> None:
+        self.mac = mac
 
 
 class HDNodePathType(protobuf.MessageType):

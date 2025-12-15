@@ -596,3 +596,26 @@ message AuthorizeCoinJoin {
     optional InputScriptType script_type = 7 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional AmountUnit amount_unit = 8 [default=BITCOIN];              // show amounts in
 }
+
+/**
+ * Request: Represents a policy
+ * @start
+ * @next PolicyRegistration
+ * @next Failure
+ */
+message Policy {
+    required string name = 1;
+    required string template = 2;
+    repeated string xpubs = 3;
+    required uint32 blocks = 4;
+    optional string coin_name = 5 [default='Bitcoin'];
+}
+
+/**
+ * Response: Contains the policy mac
+ * @end
+ */
+message PolicyRegistration {
+  required bytes mac = 1;
+}
+

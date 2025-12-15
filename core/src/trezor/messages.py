@@ -925,6 +925,42 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthorizeCoinJoin"]:
             return isinstance(msg, cls)
 
+    class Policy(protobuf.MessageType):
+        name: "str"
+        template: "str"
+        xpubs: "list[str]"
+        blocks: "int"
+        coin_name: "str"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+            template: "str",
+            blocks: "int",
+            xpubs: "list[str] | None" = None,
+            coin_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Policy"]:
+            return isinstance(msg, cls)
+
+    class PolicyRegistration(protobuf.MessageType):
+        mac: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            mac: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PolicyRegistration"]:
+            return isinstance(msg, cls)
+
     class HDNodePathType(protobuf.MessageType):
         node: "HDNodeType"
         address_n: "list[int]"
