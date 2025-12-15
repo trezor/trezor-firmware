@@ -28,6 +28,7 @@
 #include "hmac.h"
 
 #include <libtropic.h>
+#include <libtropic/cal/trezor_crypto/libtropic_trezor_crypto.h>
 
 #ifdef TREZOR_EMULATOR
 #include <arpa/inet.h>
@@ -118,6 +119,7 @@ typedef struct {
   lt_pkey_index_t pairing_key_index;  // This field is valid only if
                                       // session_started is true.
   lt_handle_t handle;
+  lt_ctx_trezor_crypto_t crypto_ctx;
 #ifdef TREZOR_EMULATOR
   lt_dev_posix_tcp_t device;
 #endif
@@ -334,6 +336,9 @@ bool tropic_init(void) {
   drv->device.port = port;
   drv->handle.l2.device = &drv->device;
 #endif
+
+  // Initialize crypto context
+  drv->handle.l3.crypto_ctx = &drv->crypto_ctx;
 
   if (lt_init(&drv->handle) != LT_OK) {
     return false;
