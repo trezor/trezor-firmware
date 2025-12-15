@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.9.6] (4th December 2025)
+
+### Fixed
+- [T3W1] Fixed Stellar Amount and Bitcoin lock time font.  [#6109]
+- [T3W1] Make sure to increment THP `seq_bit`.  [#6138]
+- [T3W1] Don't stall THP handling during PIN unlock.  [#6145]
+
 ## [2.9.5] (28th November 2025)
 
 ### Fixed
@@ -1324,4 +1331,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6076]: https://github.com/trezor/trezor-firmware/pull/6076
 [#6096]: https://github.com/trezor/trezor-firmware/pull/6096
 [#6100]: https://github.com/trezor/trezor-firmware/pull/6100
+[#6109]: https://github.com/trezor/trezor-firmware/pull/6109
+[#6138]: https://github.com/trezor/trezor-firmware/pull/6138
+[#6145]: https://github.com/trezor/trezor-firmware/pull/6145
 [#6165]: https://github.com/trezor/trezor-firmware/pull/6165
