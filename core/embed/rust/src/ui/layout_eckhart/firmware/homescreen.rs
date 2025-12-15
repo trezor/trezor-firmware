@@ -106,13 +106,7 @@ impl Homescreen {
     }
 
     fn homebar_content(bootscreen: bool, locked: bool) -> ButtonContent {
-        let text = if bootscreen {
-            Some(TR::instructions__tap_to_start.into())
-        } else if locked {
-            Some(TR::lockscreen__unlock.into())
-        } else {
-            None
-        };
+        let text = (bootscreen || locked).then_some(TR::lockscreen__unlock.into());
         ButtonContent::HomeBar(text)
     }
 
