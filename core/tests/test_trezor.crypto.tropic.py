@@ -12,17 +12,18 @@ class TestCryptoTropic(unittest.TestCase):
         self.assertEqual(tropic.ping("HeLlO!"), "HeLlO!")
 
     def test_sign(self):
+        key_index = 31
         try:
-            tropic.sign(0, "ASD")
+            tropic.sign(key_index, "ASD")
             assert False
         except tropic.TropicError as e:
             # key is not generated yet
             self.assertIn("lt_ecc_eddsa_sign failed", str(e).lower())
 
-        tropic.key_generate(0)
+        tropic.key_generate(key_index)
 
         # signing should work now that we have a key
-        self.assertEqual(len(tropic.sign(0, "a" * 32)), 64)
+        self.assertEqual(len(tropic.sign(key_index, "a" * 32)), 64)
 
 
 if __name__ == "__main__":
