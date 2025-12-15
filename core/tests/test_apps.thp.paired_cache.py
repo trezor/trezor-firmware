@@ -1,6 +1,6 @@
 # flake8: noqa: F403,F405
 from common import *  # isort: skip
-from trezor import config, utils
+from trezor import config
 
 if utils.USE_THP:
     from storage.device import get_thp_paired_names
