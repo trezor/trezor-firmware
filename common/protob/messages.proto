@@ -358,6 +358,10 @@ enum MessageType {
     MessageType_TronTransferContract = 2205 [(wire_in) = true];
     MessageType_TronTriggerSmartContract = 2206 [(wire_in) = true];
 
+    // Miniscript
+    MessageType_Policy = 2301 [(wire_in) = true];
+    MessageType_PolicyRegistration = 2302 [(wire_out) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];

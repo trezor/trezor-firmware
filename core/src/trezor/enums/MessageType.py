@@ -275,3 +275,5 @@ if not utils.BITCOIN_ONLY:
     TronContractRequest = 2204
     TronTransferContract = 2205
     TronTriggerSmartContract = 2206
+    Policy = 2301
+    PolicyRegistration = 2302

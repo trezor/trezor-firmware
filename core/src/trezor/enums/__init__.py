@@ -642,6 +642,8 @@ if TYPE_CHECKING:
         TronContractRequest = 2204
         TronTransferContract = 2205
         TronTriggerSmartContract = 2206
+        Policy = 2301
+        PolicyRegistration = 2302
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
