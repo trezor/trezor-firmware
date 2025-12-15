@@ -447,3 +447,23 @@ def authorize_coinjoin(
         ),
         expect=messages.Success,
     )
+
+def register_policy(
+    session: "Session",
+    coin_name: str,
+    name: str,
+    template: str,
+    xpubs: list[str],
+    blocks: int,
+) -> messages.Policy:
+    return session.call(
+        messages.Policy(
+            name=name,
+            template=template,
+            xpubs=xpubs,
+            blocks=blocks,
+            coin_name=coin_name,
+        ),
+        expect=messages.PolicyRegistration,
+    )
+

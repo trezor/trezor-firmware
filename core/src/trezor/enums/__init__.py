@@ -665,6 +665,8 @@ if TYPE_CHECKING:
         TronUnfreezeBalanceV2Contract = 2208
         TronWithdrawUnfreeze = 2209
         TronVoteWitnessContract = 2210
+        Policy = 2301
+        PolicyRegistration = 2302
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

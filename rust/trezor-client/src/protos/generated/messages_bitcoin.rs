@@ -11874,6 +11874,497 @@ impl ::protobuf::reflect::ProtobufValue for AuthorizeCoinJoin {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.Policy)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct Policy {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.name)
+    pub name: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.template)
+    pub template: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.xpubs)
+    pub xpubs: ::std::vec::Vec<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.blocks)
+    pub blocks: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.coin_name)
+    pub coin_name: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.Policy.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a Policy {
+    fn default() -> &'a Policy {
+        <Policy as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Policy {
+    pub fn new() -> Policy {
+        ::std::default::Default::default()
+    }
+
+    // required string name = 1;
+
+    pub fn name(&self) -> &str {
+        match self.name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_name(&mut self) {
+        self.name = ::std::option::Option::None;
+    }
+
+    pub fn has_name(&self) -> bool {
+        self.name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        if self.name.is_none() {
+            self.name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        self.name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string template = 2;
+
+    pub fn template(&self) -> &str {
+        match self.template.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_template(&mut self) {
+        self.template = ::std::option::Option::None;
+    }
+
+    pub fn has_template(&self) -> bool {
+        self.template.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_template(&mut self, v: ::std::string::String) {
+        self.template = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_template(&mut self) -> &mut ::std::string::String {
+        if self.template.is_none() {
+            self.template = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.template.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_template(&mut self) -> ::std::string::String {
+        self.template.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required uint32 blocks = 4;
+
+    pub fn blocks(&self) -> u32 {
+        self.blocks.unwrap_or(0)
+    }
+
+    pub fn clear_blocks(&mut self) {
+        self.blocks = ::std::option::Option::None;
+    }
+
+    pub fn has_blocks(&self) -> bool {
+        self.blocks.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_blocks(&mut self, v: u32) {
+        self.blocks = ::std::option::Option::Some(v);
+    }
+
+    // optional string coin_name = 5;
+
+    pub fn coin_name(&self) -> &str {
+        match self.coin_name.as_ref() {
+            Some(v) => v,
+            None => "Bitcoin",
+        }
+    }
+
+    pub fn clear_coin_name(&mut self) {
+        self.coin_name = ::std::option::Option::None;
+    }
+
+    pub fn has_coin_name(&self) -> bool {
+        self.coin_name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_coin_name(&mut self, v: ::std::string::String) {
+        self.coin_name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_coin_name(&mut self) -> &mut ::std::string::String {
+        if self.coin_name.is_none() {
+            self.coin_name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.coin_name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_coin_name(&mut self) -> ::std::string::String {
+        self.coin_name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "name",
+            |m: &Policy| { &m.name },
+            |m: &mut Policy| { &mut m.name },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "template",
+            |m: &Policy| { &m.template },
+            |m: &mut Policy| { &mut m.template },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "xpubs",
+            |m: &Policy| { &m.xpubs },
+            |m: &mut Policy| { &mut m.xpubs },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "blocks",
+            |m: &Policy| { &m.blocks },
+            |m: &mut Policy| { &mut m.blocks },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "coin_name",
+            |m: &Policy| { &m.coin_name },
+            |m: &mut Policy| { &mut m.coin_name },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Policy>(
+            "Policy",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for Policy {
+    const NAME: &'static str = "Policy";
+
+    fn is_initialized(&self) -> bool {
+        if self.name.is_none() {
+            return false;
+        }
+        if self.template.is_none() {
+            return false;
+        }
+        if self.blocks.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.name = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.template = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.xpubs.push(is.read_string()?);
+                },
+                32 => {
+                    self.blocks = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                42 => {
+                    self.coin_name = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.name.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.template.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        for value in &self.xpubs {
+            my_size += ::protobuf::rt::string_size(3, &value);
+        };
+        if let Some(v) = self.blocks {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        if let Some(v) = self.coin_name.as_ref() {
+            my_size += ::protobuf::rt::string_size(5, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.name.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.template.as_ref() {
+            os.write_string(2, v)?;
+        }
+        for v in &self.xpubs {
+            os.write_string(3, &v)?;
+        };
+        if let Some(v) = self.blocks {
+            os.write_uint32(4, v)?;
+        }
+        if let Some(v) = self.coin_name.as_ref() {
+            os.write_string(5, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> Policy {
+        Policy::new()
+    }
+
+    fn clear(&mut self) {
+        self.name = ::std::option::Option::None;
+        self.template = ::std::option::Option::None;
+        self.xpubs.clear();
+        self.blocks = ::std::option::Option::None;
+        self.coin_name = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static Policy {
+        static instance: Policy = Policy {
+            name: ::std::option::Option::None,
+            template: ::std::option::Option::None,
+            xpubs: ::std::vec::Vec::new(),
+            blocks: ::std::option::Option::None,
+            coin_name: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for Policy {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Policy").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for Policy {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Policy {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.PolicyRegistration)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct PolicyRegistration {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.PolicyRegistration.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.PolicyRegistration.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a PolicyRegistration {
+    fn default() -> &'a PolicyRegistration {
+        <PolicyRegistration as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl PolicyRegistration {
+    pub fn new() -> PolicyRegistration {
+        ::std::default::Default::default()
+    }
+
+    // required bytes mac = 1;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &PolicyRegistration| { &m.mac },
+            |m: &mut PolicyRegistration| { &mut m.mac },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<PolicyRegistration>(
+            "PolicyRegistration",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for PolicyRegistration {
+    const NAME: &'static str = "PolicyRegistration";
+
+    fn is_initialized(&self) -> bool {
+        if self.mac.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> PolicyRegistration {
+        PolicyRegistration::new()
+    }
+
+    fn clear(&mut self) {
+        self.mac = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static PolicyRegistration {
+        static instance: PolicyRegistration = PolicyRegistration {
+            mac: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for PolicyRegistration {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("PolicyRegistration").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for PolicyRegistration {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for PolicyRegistration {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.bitcoin.InputScriptType)
 pub enum InputScriptType {
@@ -12455,8 +12946,13 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     nR\x08coinName\x12Z\n\x0bscript_type\x18\x07\x20\x01(\x0e2+.hw.trezor.me\
     ssages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12P\n\x0ba\
     mount_unit\x18\x08\x20\x01(\x0e2&.hw.trezor.messages.bitcoin.AmountUnit:\
-    \x07BITCOINR\namountUnit*~\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRES\
-    S\x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\
+    \x07BITCOINR\namountUnit\"\x8c\x01\n\x06Policy\x12\x12\n\x04name\x18\x01\
+    \x20\x02(\tR\x04name\x12\x1a\n\x08template\x18\x02\x20\x02(\tR\x08templa\
+    te\x12\x14\n\x05xpubs\x18\x03\x20\x03(\tR\x05xpubs\x12\x16\n\x06blocks\
+    \x18\x04\x20\x02(\rR\x06blocks\x12$\n\tcoin_name\x18\x05\x20\x01(\t:\x07\
+    BitcoinR\x08coinName\"&\n\x12PolicyRegistration\x12\x10\n\x03mac\x18\x01\
+    \x20\x02(\x0cR\x03mac*~\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRESS\
+    \x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\
     \x12\x10\n\x0cSPENDWITNESS\x10\x03\x12\x14\n\x10SPENDP2SHWITNESS\x10\x04\
     \x12\x10\n\x0cSPENDTAPROOT\x10\x05*\x99\x01\n\x10OutputScriptType\x12\
     \x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01\x12\
@@ -12487,7 +12983,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(40);
+            let mut messages = ::std::vec::Vec::with_capacity(42);
             messages.push(MultisigRedeemScriptType::generated_message_descriptor_data());
             messages.push(GetPublicKey::generated_message_descriptor_data());
             messages.push(PublicKey::generated_message_descriptor_data());
@@ -12515,6 +13011,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(GetOwnershipProof::generated_message_descriptor_data());
             messages.push(OwnershipProof::generated_message_descriptor_data());
             messages.push(AuthorizeCoinJoin::generated_message_descriptor_data());
+            messages.push(Policy::generated_message_descriptor_data());
+            messages.push(PolicyRegistration::generated_message_descriptor_data());
             messages.push(multisig_redeem_script_type::HDNodePathType::generated_message_descriptor_data());
             messages.push(sign_tx::CoinJoinRequest::generated_message_descriptor_data());
             messages.push(tx_request::TxRequestDetailsType::generated_message_descriptor_data());
