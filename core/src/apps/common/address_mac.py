@@ -42,3 +42,28 @@ def get_address_mac(
     write_compact_size(mac, len(address_bytes))
     write_bytes_unchecked(mac, address_bytes)
     return mac.get_digest()
+
+
+def get_policy_mac(policy_name: str, script: str, slip44: int, address_n: Bip32Path, keychain: Keychain) -> bytes:
+    from trezor.crypto import hmac
+
+    from .writers import write_bytes_unchecked, write_compact_size, write_uint32_le
+
+    node = keychain.derive_slip21([b"SLIP-0024", b"TODO"])
+
+    mac = utils.HashWriter(hmac(hmac.SHA256, node.key()))
+
+    write_uint32_le(mac, slip44)
+    write_compact_size(mac, len(address_n))
+    for n in address_n:
+        write_uint32_le(mac, n)
+    policy_name_bytes = policy_name.encode()
+    write_compact_size(mac, len(policy_name_bytes))
+    write_bytes_unchecked(mac, policy_name_bytes)
+    script_bytes = script.encode()
+    write_compact_size(mac, len(script_bytes))
+    write_bytes_unchecked(mac, script_bytes)
+
+    return mac.get_digest()
+
+

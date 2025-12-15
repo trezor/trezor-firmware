@@ -170,6 +170,24 @@ def get_authenticated_address(
     )
 
 
+def register_policy(
+    session: "Session",
+    coin_name: str,
+    n: "Address",
+    name: str,
+    script: str,
+) -> messages.Policy:
+    return session.call(
+        messages.RegisterPolicy(
+            address_n=n,
+            coin_name=coin_name,
+            name=name,
+            script=script,
+        ),
+        expect=messages.Policy,
+    )
+
+
 def get_ownership_id(
     session: "Session",
     coin_name: str,
