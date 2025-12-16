@@ -667,6 +667,7 @@ if TYPE_CHECKING:
         TronVoteWitnessContract = 2210
         Policy = 2301
         PolicyRegistration = 2302
+        GetPolicyAddress = 2303
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

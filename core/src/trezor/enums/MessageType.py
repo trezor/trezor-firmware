@@ -290,3 +290,4 @@ if not utils.BITCOIN_ONLY:
     TronVoteWitnessContract = 2210
     Policy = 2301
     PolicyRegistration = 2302
+    GetPolicyAddress = 2303

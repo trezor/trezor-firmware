@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ... import bip32
@@ -37,3 +38,60 @@ def test_registerpolicy(session: Session):
         ).mac
         == b"<{\x93\xc8\t\n\xda\xd4F\x98#\xd0\x99\xe8jI\x07Naa\x87e\xa2!\xf6}p\xeb\xcd\xa5O\x00"
     )
+
+
+def test_getpolicyaddress(session: Session):
+    policy_name = "Basic inheritance policy"
+    policy_template = "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@0/<2;3>/*),older(1))))"
+    policy_xpubs = [
+        "tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg",
+        "tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb",
+    ]
+    policy_blocks = 1
+    policy_registration = btc.register_policy(
+        session, "Testnet", policy_name, policy_template, policy_xpubs, policy_blocks
+    )
+
+    mac = policy_registration.mac
+
+    address = btc.get_policy_address(
+        session,
+        "Testnet",
+        policy_name,
+        policy_template,
+        policy_xpubs,
+        policy_blocks,
+        mac,
+        0,
+        False,
+        show_display=True,
+    ).address
+
+    print(address)
+
+    # altered_mac = bytes([mac[0] ^ 1]) + mac[1:]
+    # with pytest.raises(TrezorFailure, match="Invalid MAC"):
+    #     btc.get_policy_address(
+    #         session,
+    #         "Bitcoin",
+    #         policy_name,
+    #         policy_template,
+    #         policy_xpubs,
+    #         policy_blocks,
+    #         altered_mac,
+    #         0,
+    #         False,
+    #     )
+    #
+    # with pytest.raises(TrezorFailure, match="Invalid MAC"):
+    #     btc.get_policy_address(
+    #         session,
+    #         "Bitcoin",
+    #         policy_name + " 2",
+    #         policy_template,
+    #         policy_xpubs,
+    #         policy_blocks,
+    #         mac,
+    #         0,
+    #         False,
+    #     )
