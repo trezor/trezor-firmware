@@ -7,6 +7,46 @@ use bitcoin::{
 
 pub use crate::protos::InputScriptType;
 
+#[derive(PartialEq, Eq)]
+pub struct WalletPubKey {
+    pub inner: bip32::Xpub,
+    pub source: bip32::KeySource,
+}
+
+impl std::str::FromStr for WalletPubKey {
+    type Err = bip32::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (keysource_str, xpub_str) = s
+            .strip_prefix('[')
+            .and_then(|s| s.rsplit_once(']'))
+            .ok_or(bip32::Error::InvalidDerivationPathFormat)?;
+        let (f_str, path_str) = keysource_str.split_once('/').unwrap_or((keysource_str, ""));
+        let fingerprint = bip32::Fingerprint::from_str(f_str)
+            .map_err(|_| bip32::Error::InvalidDerivationPathFormat)?;
+        let derivation_path = if path_str.is_empty() {
+            bip32::DerivationPath::master()
+        } else {
+            bip32::DerivationPath::from_str(&format!("m/{}", path_str))?
+        };
+        Ok(WalletPubKey {
+            inner: bip32::Xpub::from_str(xpub_str)?,
+            source: (fingerprint, derivation_path),
+        })
+    }
+}
+
+impl core::fmt::Display for WalletPubKey {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let (fg, path) = &self.source;
+        if path.is_master() {
+            write!(f, "[{}]{}", fg, self.inner,)
+        } else {
+            write!(f, "[{}/{}]{}", fg, path, self.inner,)
+        }
+    }
+}
+
 impl Trezor {
     pub fn get_public_key(
         &mut self,
@@ -37,6 +77,23 @@ impl Trezor {
         req.set_show_display(show_display);
         req.set_script_type(script_type);
         self.call(req, Box::new(|_, m| parse_address(m.address())))
+    }
+
+    pub fn register_policy(
+        &mut self,
+        name: String,
+        template: String,
+        primary: WalletPubKey,
+        recovery: WalletPubKey,
+        recovery_delay: u32,
+    ) -> Result<TrezorResponse<'_, Option<Vec<u8>>, protos::PolicyRegistration>> {
+        let mut req = protos::Policy::new();
+        req.set_name(name);
+        req.set_template(template);
+        req.xpubs.push(primary.to_string());
+        req.xpubs.push(recovery.to_string());
+        req.set_blocks(recovery_delay);
+        self.call(req, Box::new(|_, m| Ok(m.mac)))
     }
 
     pub fn sign_tx(
