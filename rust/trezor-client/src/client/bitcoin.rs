@@ -93,6 +93,7 @@ impl Trezor {
         req.xpubs.push(primary.to_string());
         req.xpubs.push(recovery.to_string());
         req.set_blocks(recovery_delay);
+        req.set_coin_name(utils::coin_name(bitcoin::Network::Testnet)?);
         self.call(req, Box::new(|_, m| Ok(m.mac)))
     }
 
@@ -109,7 +110,9 @@ impl Trezor {
         network: Network,
         show_display: bool,
     ) -> Result<TrezorResponse<'_, Address, protos::Address>> {
-        let mut policy = protos::Policy::new();
+        let mut req = protos::GetPolicyAddress::new();
+
+        let policy = req.policy.mut_or_insert_default();
         policy.set_name(name);
         policy.set_template(template);
         policy.xpubs.push(primary.to_string());
@@ -117,8 +120,7 @@ impl Trezor {
         policy.set_blocks(recovery_delay);
         policy.set_coin_name(utils::coin_name(network)?);
 
-        let mut req = protos::GetPolicyAddress::new();
-        req.set_policy(policy);
+
         req.set_mac(mac);
         req.set_index(index);
         req.set_change(change);
