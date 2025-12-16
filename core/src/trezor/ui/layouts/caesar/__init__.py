@@ -69,6 +69,7 @@ def confirm_action(
     br_code: ButtonRequestType = BR_CODE_OTHER,
     prompt_screen: bool = False,  # unused on caesar
     prompt_title: str | None = None,
+    extra_menu_items: list[tuple[str, str]] | None = None,  # unused on caesar
 ) -> Awaitable[None]:
     verb = verb or TR.buttons__confirm  # def_arg
     if description is not None and description_param is not None:
