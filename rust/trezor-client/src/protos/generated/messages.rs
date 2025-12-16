@@ -553,6 +553,8 @@ pub enum MessageType {
     MessageType_Policy = 2301,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_PolicyRegistration)
     MessageType_PolicyRegistration = 2302,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_GetPolicyAddress)
+    MessageType_GetPolicyAddress = 2303,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -835,6 +837,7 @@ impl ::protobuf::Enum for MessageType {
             2201 => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             2301 => ::std::option::Option::Some(MessageType::MessageType_Policy),
             2302 => ::std::option::Option::Some(MessageType::MessageType_PolicyRegistration),
+            2303 => ::std::option::Option::Some(MessageType::MessageType_GetPolicyAddress),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1108,6 +1111,7 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_TronAddress" => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             "MessageType_Policy" => ::std::option::Option::Some(MessageType::MessageType_Policy),
             "MessageType_PolicyRegistration" => ::std::option::Option::Some(MessageType::MessageType_PolicyRegistration),
+            "MessageType_GetPolicyAddress" => ::std::option::Option::Some(MessageType::MessageType_GetPolicyAddress),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1380,6 +1384,7 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_TronAddress,
         MessageType::MessageType_Policy,
         MessageType::MessageType_PolicyRegistration,
+        MessageType::MessageType_GetPolicyAddress,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1658,10 +1663,11 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_TronAddress => 260,
             MessageType::MessageType_Policy => 261,
             MessageType::MessageType_PolicyRegistration => 262,
-            MessageType::MessageType_BenchmarkListNames => 263,
-            MessageType::MessageType_BenchmarkNames => 264,
-            MessageType::MessageType_BenchmarkRun => 265,
-            MessageType::MessageType_BenchmarkResult => 266,
+            MessageType::MessageType_GetPolicyAddress => 263,
+            MessageType::MessageType_BenchmarkListNames => 264,
+            MessageType::MessageType_BenchmarkNames => 265,
+            MessageType::MessageType_BenchmarkRun => 266,
+            MessageType::MessageType_BenchmarkResult => 267,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1680,7 +1686,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xa3]\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xcc]\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1981,11 +1987,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ype_TronGetAddress\x10\x98\x11\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17Messag\
     eType_TronAddress\x10\x99\x11\x1a\x04\x98\xb5\x18\x01\x12\x1d\n\x12Messa\
     geType_Policy\x10\xfd\x11\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_\
-    PolicyRegistration\x10\xfe\x11\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessage\
-    Type_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessa\
-    geType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18Message\
-    Type_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType\
-    _BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x08\xc8\xf3\x18\
+    PolicyRegistration\x10\xfe\x11\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessage\
+    Type_GetPolicyAddress\x10\xff\x11\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMess\
+    ageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMe\
+    ssageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18Mess\
+    ageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageT\
+    ype_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x08\xc8\xf3\x18\
     \x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\
     \x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\
     \x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\

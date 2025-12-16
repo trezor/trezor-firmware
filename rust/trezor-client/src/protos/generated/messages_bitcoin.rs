@@ -12365,6 +12365,322 @@ impl ::protobuf::reflect::ProtobufValue for PolicyRegistration {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.GetPolicyAddress)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct GetPolicyAddress {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.policy)
+    pub policy: ::protobuf::MessageField<Policy>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.show_display)
+    pub show_display: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.chunkify)
+    pub chunkify: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.coin_name)
+    pub coin_name: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.GetPolicyAddress.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a GetPolicyAddress {
+    fn default() -> &'a GetPolicyAddress {
+        <GetPolicyAddress as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl GetPolicyAddress {
+    pub fn new() -> GetPolicyAddress {
+        ::std::default::Default::default()
+    }
+
+    // required bytes mac = 2;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bool show_display = 3;
+
+    pub fn show_display(&self) -> bool {
+        self.show_display.unwrap_or(false)
+    }
+
+    pub fn clear_show_display(&mut self) {
+        self.show_display = ::std::option::Option::None;
+    }
+
+    pub fn has_show_display(&self) -> bool {
+        self.show_display.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_show_display(&mut self, v: bool) {
+        self.show_display = ::std::option::Option::Some(v);
+    }
+
+    // optional bool chunkify = 4;
+
+    pub fn chunkify(&self) -> bool {
+        self.chunkify.unwrap_or(false)
+    }
+
+    pub fn clear_chunkify(&mut self) {
+        self.chunkify = ::std::option::Option::None;
+    }
+
+    pub fn has_chunkify(&self) -> bool {
+        self.chunkify.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_chunkify(&mut self, v: bool) {
+        self.chunkify = ::std::option::Option::Some(v);
+    }
+
+    // optional string coin_name = 5;
+
+    pub fn coin_name(&self) -> &str {
+        match self.coin_name.as_ref() {
+            Some(v) => v,
+            None => "Bitcoin",
+        }
+    }
+
+    pub fn clear_coin_name(&mut self) {
+        self.coin_name = ::std::option::Option::None;
+    }
+
+    pub fn has_coin_name(&self) -> bool {
+        self.coin_name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_coin_name(&mut self, v: ::std::string::String) {
+        self.coin_name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_coin_name(&mut self) -> &mut ::std::string::String {
+        if self.coin_name.is_none() {
+            self.coin_name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.coin_name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_coin_name(&mut self) -> ::std::string::String {
+        self.coin_name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Policy>(
+            "policy",
+            |m: &GetPolicyAddress| { &m.policy },
+            |m: &mut GetPolicyAddress| { &mut m.policy },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &GetPolicyAddress| { &m.mac },
+            |m: &mut GetPolicyAddress| { &mut m.mac },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "show_display",
+            |m: &GetPolicyAddress| { &m.show_display },
+            |m: &mut GetPolicyAddress| { &mut m.show_display },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "chunkify",
+            |m: &GetPolicyAddress| { &m.chunkify },
+            |m: &mut GetPolicyAddress| { &mut m.chunkify },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "coin_name",
+            |m: &GetPolicyAddress| { &m.coin_name },
+            |m: &mut GetPolicyAddress| { &mut m.coin_name },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<GetPolicyAddress>(
+            "GetPolicyAddress",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for GetPolicyAddress {
+    const NAME: &'static str = "GetPolicyAddress";
+
+    fn is_initialized(&self) -> bool {
+        if self.policy.is_none() {
+            return false;
+        }
+        if self.mac.is_none() {
+            return false;
+        }
+        for v in &self.policy {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.policy)?;
+                },
+                18 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                24 => {
+                    self.show_display = ::std::option::Option::Some(is.read_bool()?);
+                },
+                32 => {
+                    self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                42 => {
+                    self.coin_name = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.policy.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.show_display {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.chunkify {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.coin_name.as_ref() {
+            my_size += ::protobuf::rt::string_size(5, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.policy.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.show_display {
+            os.write_bool(3, v)?;
+        }
+        if let Some(v) = self.chunkify {
+            os.write_bool(4, v)?;
+        }
+        if let Some(v) = self.coin_name.as_ref() {
+            os.write_string(5, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> GetPolicyAddress {
+        GetPolicyAddress::new()
+    }
+
+    fn clear(&mut self) {
+        self.policy.clear();
+        self.mac = ::std::option::Option::None;
+        self.show_display = ::std::option::Option::None;
+        self.chunkify = ::std::option::Option::None;
+        self.coin_name = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static GetPolicyAddress {
+        static instance: GetPolicyAddress = GetPolicyAddress {
+            policy: ::protobuf::MessageField::none(),
+            mac: ::std::option::Option::None,
+            show_display: ::std::option::Option::None,
+            chunkify: ::std::option::Option::None,
+            coin_name: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for GetPolicyAddress {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("GetPolicyAddress").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for GetPolicyAddress {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GetPolicyAddress {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.bitcoin.InputScriptType)
 pub enum InputScriptType {
@@ -12951,19 +13267,24 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     te\x12\x14\n\x05xpubs\x18\x03\x20\x03(\tR\x05xpubs\x12\x16\n\x06blocks\
     \x18\x04\x20\x02(\rR\x06blocks\x12$\n\tcoin_name\x18\x05\x20\x01(\t:\x07\
     BitcoinR\x08coinName\"&\n\x12PolicyRegistration\x12\x10\n\x03mac\x18\x01\
-    \x20\x02(\x0cR\x03mac*~\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRESS\
-    \x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\
-    \x12\x10\n\x0cSPENDWITNESS\x10\x03\x12\x14\n\x10SPENDP2SHWITNESS\x10\x04\
-    \x12\x10\n\x0cSPENDTAPROOT\x10\x05*\x99\x01\n\x10OutputScriptType\x12\
-    \x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01\x12\
-    \x11\n\rPAYTOMULTISIG\x10\x02\x12\x11\n\rPAYTOOPRETURN\x10\x03\x12\x10\n\
-    \x0cPAYTOWITNESS\x10\x04\x12\x14\n\x10PAYTOP2SHWITNESS\x10\x05\x12\x10\n\
-    \x0cPAYTOTAPROOT\x10\x06*.\n\x16DecredStakingSpendType\x12\t\n\x05SSGen\
-    \x10\0\x12\t\n\x05SSRTX\x10\x01*J\n\nAmountUnit\x12\x0b\n\x07BITCOIN\x10\
-    \0\x12\x10\n\x0cMILLIBITCOIN\x10\x01\x12\x10\n\x0cMICROBITCOIN\x10\x02\
-    \x12\x0b\n\x07SATOSHI\x10\x03*8\n\x14MultisigPubkeysOrder\x12\r\n\tPRESE\
-    RVED\x10\0\x12\x11\n\rLEXICOGRAPHIC\x10\x01B?\n#com.satoshilabs.trezor.l\
-    ib.protobufB\x14TrezorMessageBitcoin\x80\xa6\x1d\x01\
+    \x20\x02(\x0cR\x03mac\"\xc5\x01\n\x10GetPolicyAddress\x12:\n\x06policy\
+    \x18\x01\x20\x02(\x0b2\".hw.trezor.messages.bitcoin.PolicyR\x06policy\
+    \x12\x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac\x12!\n\x0cshow_display\
+    \x18\x03\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x04\x20\
+    \x01(\x08R\x08chunkify\x12$\n\tcoin_name\x18\x05\x20\x01(\t:\x07BitcoinR\
+    \x08coinName*~\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRESS\x10\0\x12\
+    \x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\x12\x10\n\
+    \x0cSPENDWITNESS\x10\x03\x12\x14\n\x10SPENDP2SHWITNESS\x10\x04\x12\x10\n\
+    \x0cSPENDTAPROOT\x10\x05*\x99\x01\n\x10OutputScriptType\x12\x10\n\x0cPAY\
+    TOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01\x12\x11\n\rPAYTOMUL\
+    TISIG\x10\x02\x12\x11\n\rPAYTOOPRETURN\x10\x03\x12\x10\n\x0cPAYTOWITNESS\
+    \x10\x04\x12\x14\n\x10PAYTOP2SHWITNESS\x10\x05\x12\x10\n\x0cPAYTOTAPROOT\
+    \x10\x06*.\n\x16DecredStakingSpendType\x12\t\n\x05SSGen\x10\0\x12\t\n\
+    \x05SSRTX\x10\x01*J\n\nAmountUnit\x12\x0b\n\x07BITCOIN\x10\0\x12\x10\n\
+    \x0cMILLIBITCOIN\x10\x01\x12\x10\n\x0cMICROBITCOIN\x10\x02\x12\x0b\n\x07\
+    SATOSHI\x10\x03*8\n\x14MultisigPubkeysOrder\x12\r\n\tPRESERVED\x10\0\x12\
+    \x11\n\rLEXICOGRAPHIC\x10\x01B?\n#com.satoshilabs.trezor.lib.protobufB\
+    \x14TrezorMessageBitcoin\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -12983,7 +13304,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(42);
+            let mut messages = ::std::vec::Vec::with_capacity(43);
             messages.push(MultisigRedeemScriptType::generated_message_descriptor_data());
             messages.push(GetPublicKey::generated_message_descriptor_data());
             messages.push(PublicKey::generated_message_descriptor_data());
@@ -13013,6 +13334,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(AuthorizeCoinJoin::generated_message_descriptor_data());
             messages.push(Policy::generated_message_descriptor_data());
             messages.push(PolicyRegistration::generated_message_descriptor_data());
+            messages.push(GetPolicyAddress::generated_message_descriptor_data());
             messages.push(multisig_redeem_script_type::HDNodePathType::generated_message_descriptor_data());
             messages.push(sign_tx::CoinJoinRequest::generated_message_descriptor_data());
             messages.push(tx_request::TxRequestDetailsType::generated_message_descriptor_data());
