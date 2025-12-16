@@ -42,4 +42,3 @@ def get_address_mac(
     write_compact_size(mac, len(address_bytes))
     write_bytes_unchecked(mac, address_bytes)
     return mac.get_digest()
-
