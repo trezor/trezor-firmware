@@ -961,6 +961,32 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PolicyRegistration"]:
             return isinstance(msg, cls)
 
+    class GetPolicyAddress(protobuf.MessageType):
+        policy: "Policy"
+        mac: "AnyBytes"
+        index: "int"
+        change: "bool"
+        show_display: "bool | None"
+        chunkify: "bool | None"
+        coin_name: "str"
+
+        def __init__(
+            self,
+            *,
+            policy: "Policy",
+            mac: "AnyBytes",
+            index: "int",
+            change: "bool",
+            show_display: "bool | None" = None,
+            chunkify: "bool | None" = None,
+            coin_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["GetPolicyAddress"]:
+            return isinstance(msg, cls)
+
     class HDNodePathType(protobuf.MessageType):
         node: "HDNodeType"
         address_n: "list[int]"

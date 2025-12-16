@@ -190,6 +190,33 @@ def register_policy(
     )
 
 
+def get_policy_address(
+    session: "Session",
+    coin_name: str,
+    policy_name: str,
+    template: str,
+    xpubs: list[str],
+    blocks: int,
+    mac: bytes,
+    index: int,
+    change: bool,
+    show_display: bool = False,
+    chunkify: bool = False,
+) -> messages.Address:
+    return session.call(
+        messages.GetPolicyAddress(
+            policy=messages.Policy(name=policy_name, template=template, xpubs=xpubs, blocks=blocks, coin_name=coin_name),
+            mac=mac,
+            index=index,
+            change=change,
+            show_display=show_display,
+            coin_name=coin_name,
+            chunkify=chunkify,
+        ),
+        expect=messages.Address,
+    )
+
+
 def get_ownership_id(
     session: "Session",
     coin_name: str,

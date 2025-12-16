@@ -356,6 +356,7 @@ enum MessageType {
     // Miniscript
     MessageType_Policy = 2301 [(wire_in) = true];
     MessageType_PolicyRegistration = 2302 [(wire_out) = true];
+    MessageType_GetPolicyAddress = 2303 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

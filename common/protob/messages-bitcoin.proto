@@ -619,3 +619,19 @@ message PolicyRegistration {
   required bytes mac = 1;
 }
 
+/**
+ * Request: Ask device for address corresponding to a registered policy
+ * @start
+ * @next Address
+ * @next Failure
+ */
+message GetPolicyAddress {
+    required Policy policy = 1;
+    required bytes mac = 2;
+    required uint32 index = 3;
+    required bool change = 4;
+    optional bool show_display = 5;                                     // optionally show on display before sending the result
+    optional bool chunkify = 6;                                         // display the address in chunks of 4 characters
+    optional string coin_name = 7 [default='Bitcoin'];
+}
+
