@@ -44,13 +44,22 @@ typedef struct {
   // IBAT_MEAS_STATUS register value
   // (for debugging purposes, see the datasheet)
   uint8_t ibat_meas_status;
-  // BUCKSTATUS register value
+  // BCHGCHARGESTATUS register value
   // (for debugging purposes, see the datasheet)
   uint8_t charge_status;
   uint8_t charge_err;
   uint8_t charge_sensor_err;
   uint8_t buck_status;
   uint8_t usb_status;
+  // NTC disconnection flag
+  bool ntc_disconnected;
+  // battery disconnected flag
+  bool battery_disconnected;
+  // Charging phase flags decoded from charge_status
+  // - cc_phase: Constant-Current phase (charge_status bit 3)
+  // - cv_phase: Constant-Voltage phase (charge_status bit 5)
+  bool cc_phase;
+  bool cv_phase;
 } pmic_report_t;
 
 typedef void (*pmic_report_callback_t)(void* context, pmic_report_t* report);

@@ -45,6 +45,15 @@
 // Delay inserted between the ADC trigger and the readout [ms]
 #define NPM1300_ADC_READOUT_DELAY 80
 
+// Minimum temperature that counts as valid data
+#define NPM1300_NTC_TEMP_VALID_MIN (-80.0)
+
+// Minimum temperature that counts as valid data
+#define NPM1300_NTC_TEMP_VALID_MAX (100.0)
+
+// Minimum battery voltage that counts as valid data
+#define NPM1300_BATT_VOLTAGE_VALID_MIN (0.5)
+
 // NPM1300 FSM states
 typedef enum {
   NPM1300_STATE_IDLE = 0,
@@ -687,6 +696,11 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   // VBAT is scaled by the voltage divider ratio and ADC resolution.
   report->vbat = (vbat_adc * 5.0) / 1023.0;
 
+  // if the battery voltage is below the accepted minimum, flag the battery as
+  // disconnected
+  report->battery_disconnected =
+      (report->vbat < NPM1300_BATT_VOLTAGE_VALID_MIN);
+
   // Calculate the temperature from the NTC (thermistor).
   // Beta value for the thermistor is specified as 3380.
   // The equation is derived from the NPM1300 datasheet.
@@ -694,6 +708,11 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   report->ntc_temp =
       1 / (1 / 298.15 - (1 / beta) * logf(1024.0 / ntc_adc - 1)) - 298.15 +
       25.0;
+
+  // if the temperature is below the accepted minimum, flag the NTC as
+  // disconnected
+  report->ntc_disconnected = (report->ntc_temp < NPM1300_NTC_TEMP_VALID_MIN ||
+                              report->ntc_temp > NPM1300_NTC_TEMP_VALID_MAX);
 
   // Calculate the die temperature from the die ADC reading.
   // The equation is derived from the NPM1300 datasheet.
@@ -709,6 +728,10 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   report->buck_status = r->buck_status;
   report->usb_status = r->usb_status;
   report->charge_status = r->charging_status;
+  // Decode and expose charging phase flags
+  // Bit 3 -> Constant-Current phase, Bit 4 -> Constant-Voltage phase
+  report->cc_phase = (r->charging_status & 0x08) != 0;
+  report->cv_phase = (r->charging_status & 0x10) != 0;
   report->charge_err = r->charging_err;
   report->charge_sensor_err = r->charging_sensor_err;
 }
