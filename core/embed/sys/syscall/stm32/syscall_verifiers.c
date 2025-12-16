@@ -163,6 +163,65 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_IPC
+
+bool ipc_register__verified(systask_id_t origin, void *buffer, size_t size) {
+  if (!probe_write_access(buffer, size)) {
+    goto access_violation;
+  }
+
+  return ipc_register(origin, buffer, size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool ipc_try_receive__verified(ipc_message_t *msg) {
+  if (!probe_write_access(msg, sizeof(*msg))) {
+    goto access_violation;
+  }
+
+  return ipc_try_receive(msg);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+void ipc_message_free__verified(ipc_message_t *msg) {
+  if (!probe_read_access(msg, sizeof(*msg))) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(msg->data, msg->size)) {
+    goto access_violation;
+  }
+
+  ipc_message_free(msg);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+bool ipc_send__verified(systask_id_t remote, uint32_t fn, const void *data,
+                        size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  return ipc_send(remote, fn, data, data_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_IPC
+
+// ---------------------------------------------------------------------
+
 bool boot_image_check__verified(const boot_image_t *image) {
   if (!probe_read_access(image, sizeof(*image))) {
     goto access_violation;
@@ -1310,5 +1369,61 @@ access_violation:
   return false;
 }
 #endif
+
+#ifdef USE_APP_LOADING
+
+bool app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id) {
+  if (!probe_read_access(hash, sizeof(*hash))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(task_id, sizeof(*task_id))) {
+    goto access_violation;
+  }
+
+  return app_task_spawn(hash, task_id);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool app_task_get_pminfo__verified(systask_id_t task_id,
+                                   systask_postmortem_t *pminfo) {
+  if (!probe_write_access(pminfo, sizeof(*pminfo))) {
+    goto access_violation;
+  }
+
+  return app_task_get_pminfo(task_id, pminfo);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+app_cache_image_t *app_cache_create_image__verified(const app_hash_t *hash,
+                                                    size_t image_size) {
+  if (!probe_read_access(hash, sizeof(*hash))) {
+    goto access_violation;
+  }
+
+  return app_cache_create_image(hash, image_size);
+
+access_violation:
+  apptask_access_violation();
+  return NULL;
+}
+
+bool app_cache_write_image__verified(app_cache_image_t *image, uintptr_t offset,
+                                     const void *data, size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+  return app_cache_write_image(image, offset, data, data_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_APP_LOADING
 
 #endif  // KERNEL

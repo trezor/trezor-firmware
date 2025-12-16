@@ -30,114 +30,23 @@
 #include <sys/dbg_console.h>
 #endif
 
-systask_error_handler_t g_error_handler = NULL;
+#ifdef USE_IPC
+#include <sys/ipc.h>
+#endif
 
 void system_init(systask_error_handler_t error_handler) {
-  g_error_handler = error_handler;
   systick_init();
   systimer_init();
+  systask_scheduler_init(error_handler);
+#ifdef USE_IPC
+  ipc_init();
+#endif
 #ifdef USE_DBG_CONSOLE
   dbg_console_init();
 #endif
 }
 
 void system_deinit(void) { systick_deinit(); }
-
-void system_exit(int exitcode) {
-  if (g_error_handler != NULL) {
-    systask_postmortem_t pminfo = {0};
-
-    pminfo.reason = TASK_TERM_REASON_EXIT;
-    pminfo.exit.code = exitcode;
-
-    if (g_error_handler != NULL) {
-      g_error_handler(&pminfo);
-    }
-  }
-
-  // We reach this point only if g_error_handler is NULL or
-  // if it returns. Neither is expected to happen.
-  reboot_device();
-}
-
-void system_exit_error_ex(const char* title, size_t title_len,
-                          const char* message, size_t message_len,
-                          const char* footer, size_t footer_len) {
-  fprintf(stderr, "ERROR: %.*s\n", (int)message_len, message);
-  fflush(stderr);
-
-  if (g_error_handler != NULL) {
-    systask_postmortem_t pminfo = {0};
-    size_t len;
-
-    pminfo.reason = TASK_TERM_REASON_ERROR;
-
-    len = MIN(title_len, sizeof(pminfo.error.title) - 1);
-    strncpy(pminfo.error.title, title, len);
-
-    len = MIN(message_len, sizeof(pminfo.error.message) - 1);
-    strncpy(pminfo.error.message, message, len);
-
-    len = MIN(footer_len, sizeof(pminfo.error.footer) - 1);
-    strncpy(pminfo.error.footer, footer, len);
-
-    if (g_error_handler != NULL) {
-      g_error_handler(&pminfo);
-    }
-  }
-
-  // We reach this point only if g_error_handler is NULL or
-  // if it returns. Neither is expected to happen.
-  reboot_device();
-}
-
-void system_exit_error(const char* title, const char* message,
-                       const char* footer) {
-  size_t title_len = title != NULL ? strlen(title) : 0;
-  size_t message_len = message != NULL ? strlen(message) : 0;
-  size_t footer_len = footer != NULL ? strlen(footer) : 0;
-
-  system_exit_error_ex(title, title_len, message, message_len, footer,
-                       footer_len);
-}
-
-void system_exit_fatal_ex(const char* message, size_t message_len,
-                          const char* file, size_t file_len, int line) {
-  fprintf(stderr, "ERROR: %s\n", message);
-  if (file) {
-    fprintf(stderr, "FILE: %s:%d\n", file, line);
-  }
-  fflush(stderr);
-
-  if (g_error_handler != NULL) {
-    systask_postmortem_t pminfo = {0};
-    size_t len;
-
-    pminfo.reason = TASK_TERM_REASON_FATAL;
-
-    len = MIN(file_len, sizeof(pminfo.fatal.file) - 1);
-    strncpy(pminfo.fatal.file, file, len);
-
-    len = MIN(message_len, sizeof(pminfo.fatal.expr) - 1);
-    strncpy(pminfo.fatal.expr, message, len);
-
-    pminfo.fatal.line = line;
-
-    if (g_error_handler != NULL) {
-      g_error_handler(&pminfo);
-    }
-  }
-
-  // We reach this point only if g_error_handler is NULL or
-  // if it returns. Neither is expected to happen.
-  reboot_device();
-}
-
-void system_exit_fatal(const char* message, const char* file, int line) {
-  size_t message_len = message != NULL ? strlen(message) : 0;
-  size_t file_len = file != NULL ? strlen(file) : 0;
-  system_exit_fatal_ex(message, message_len, file, file_len, line);
-}
 
 const char* system_fault_message(const system_fault_t* fault) {
   // Not used in simulator

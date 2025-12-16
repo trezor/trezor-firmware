@@ -47,6 +47,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/notify/notify.c",
         "embed/sys/startup/unix/bootutils.c",
         "embed/sys/task/sysevent.c",
+        "embed/sys/task/system.c",
         "embed/sys/task/unix/sdl_event.c",
         "embed/sys/task/unix/system.c",
         "embed/sys/task/unix/systask.c",
@@ -87,5 +88,26 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         paths += ["embed/sys/dbg/inc"]
         defines += [("USE_DBG_CONSOLE", "1")]
         features_available.append("dbg_console")
+
+    if "ipc" in features_wanted:
+        sources += [
+            "embed/sys/ipc/ipc.c",
+            "embed/sys/ipc/unix/ipc_memcpy.c",
+        ]
+        defines += [("USE_IPC", "1")]
+        paths += ["embed/sys/ipc/inc"]
+
+    if "applet" in features_wanted:
+        sources += ["embed/sys/task/applet.c"]
+        sources += ["embed/sys/task/unix/coreapp.c"]
+
+    if "app_loading" in features_wanted:
+        sources += ["embed/util/app_loader/unix/elf_loader.c"]
+        sources += ["embed/util/app_loader/app_cache.c"]
+        sources += ["embed/util/app_loader/app_task.c"]
+        sources += ["embed/util/app_loader/app_arena.c"]
+        defines += [("USE_APP_LOADING", "1")]
+        paths += ["embed/util/app_loader/inc"]
+        features_available.append("app_loading")
 
     return features_available
