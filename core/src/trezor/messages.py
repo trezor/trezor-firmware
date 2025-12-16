@@ -964,6 +964,8 @@ if TYPE_CHECKING:
     class GetPolicyAddress(protobuf.MessageType):
         policy: "Policy"
         mac: "AnyBytes"
+        index: "int"
+        change: "bool"
         show_display: "bool | None"
         chunkify: "bool | None"
         coin_name: "str"
@@ -973,6 +975,8 @@ if TYPE_CHECKING:
             *,
             policy: "Policy",
             mac: "AnyBytes",
+            index: "int",
+            change: "bool",
             show_display: "bool | None" = None,
             chunkify: "bool | None" = None,
             coin_name: "str | None" = None,

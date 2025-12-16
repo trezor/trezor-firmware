@@ -59,6 +59,8 @@ def test_getpolicyaddress(session: Session):
         policy_xpubs,
         policy_blocks,
         mac,
+        0,
+        False,
     )
 
     altered_mac = bytes([mac[0] ^ 1]) + mac[1:]
@@ -71,6 +73,8 @@ def test_getpolicyaddress(session: Session):
             policy_xpubs,
             policy_blocks,
             altered_mac,
+            0,
+            False,
         )
 
     with pytest.raises(TrezorFailure, match="Invalid MAC"):
@@ -82,4 +86,6 @@ def test_getpolicyaddress(session: Session):
             policy_xpubs,
             policy_blocks,
             mac,
+            0,
+            False,
         )

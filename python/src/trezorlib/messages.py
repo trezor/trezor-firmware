@@ -1759,9 +1759,11 @@ class GetPolicyAddress(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("policy", "Policy", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=True),
-        3: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
-        4: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
-        5: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
+        3: protobuf.Field("index", "uint32", repeated=False, required=True),
+        4: protobuf.Field("change", "bool", repeated=False, required=True),
+        5: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+        6: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        7: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
     }
 
     def __init__(
@@ -1769,12 +1771,16 @@ class GetPolicyAddress(protobuf.MessageType):
         *,
         policy: "Policy",
         mac: "bytes",
+        index: "int",
+        change: "bool",
         show_display: Optional["bool"] = None,
         chunkify: Optional["bool"] = None,
         coin_name: Optional["str"] = 'Bitcoin',
     ) -> None:
         self.policy = policy
         self.mac = mac
+        self.index = index
+        self.change = change
         self.show_display = show_display
         self.chunkify = chunkify
         self.coin_name = coin_name

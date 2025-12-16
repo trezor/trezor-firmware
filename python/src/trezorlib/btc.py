@@ -198,6 +198,8 @@ def get_policy_address(
     xpubs: list[str],
     blocks: int,
     mac: bytes,
+    index: int,
+    change: bool,
     show_display: bool = False,
     chunkify: bool = False,
 ) -> messages.Address:
@@ -205,6 +207,8 @@ def get_policy_address(
         messages.GetPolicyAddress(
             policy=messages.Policy(name=policy_name, template=template, xpubs=xpubs, blocks=blocks, coin_name=coin_name),
             mac=mac,
+            index=index,
+            change=change,
             show_display=show_display,
             chunkify=chunkify,
         ),

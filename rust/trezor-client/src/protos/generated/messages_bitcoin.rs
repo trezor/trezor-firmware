@@ -12373,6 +12373,10 @@ pub struct GetPolicyAddress {
     pub policy: ::protobuf::MessageField<Policy>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.mac)
     pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.index)
+    pub index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.change)
+    pub change: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.show_display)
     pub show_display: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetPolicyAddress.chunkify)
@@ -12431,7 +12435,45 @@ impl GetPolicyAddress {
         self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bool show_display = 3;
+    // required uint32 index = 3;
+
+    pub fn index(&self) -> u32 {
+        self.index.unwrap_or(0)
+    }
+
+    pub fn clear_index(&mut self) {
+        self.index = ::std::option::Option::None;
+    }
+
+    pub fn has_index(&self) -> bool {
+        self.index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_index(&mut self, v: u32) {
+        self.index = ::std::option::Option::Some(v);
+    }
+
+    // required bool change = 4;
+
+    pub fn change(&self) -> bool {
+        self.change.unwrap_or(false)
+    }
+
+    pub fn clear_change(&mut self) {
+        self.change = ::std::option::Option::None;
+    }
+
+    pub fn has_change(&self) -> bool {
+        self.change.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_change(&mut self, v: bool) {
+        self.change = ::std::option::Option::Some(v);
+    }
+
+    // optional bool show_display = 5;
 
     pub fn show_display(&self) -> bool {
         self.show_display.unwrap_or(false)
@@ -12450,7 +12492,7 @@ impl GetPolicyAddress {
         self.show_display = ::std::option::Option::Some(v);
     }
 
-    // optional bool chunkify = 4;
+    // optional bool chunkify = 6;
 
     pub fn chunkify(&self) -> bool {
         self.chunkify.unwrap_or(false)
@@ -12469,7 +12511,7 @@ impl GetPolicyAddress {
         self.chunkify = ::std::option::Option::Some(v);
     }
 
-    // optional string coin_name = 5;
+    // optional string coin_name = 7;
 
     pub fn coin_name(&self) -> &str {
         match self.coin_name.as_ref() {
@@ -12506,7 +12548,7 @@ impl GetPolicyAddress {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut fields = ::std::vec::Vec::with_capacity(7);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Policy>(
             "policy",
@@ -12517,6 +12559,16 @@ impl GetPolicyAddress {
             "mac",
             |m: &GetPolicyAddress| { &m.mac },
             |m: &mut GetPolicyAddress| { &mut m.mac },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "index",
+            |m: &GetPolicyAddress| { &m.index },
+            |m: &mut GetPolicyAddress| { &mut m.index },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "change",
+            |m: &GetPolicyAddress| { &m.change },
+            |m: &mut GetPolicyAddress| { &mut m.change },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "show_display",
@@ -12551,6 +12603,12 @@ impl ::protobuf::Message for GetPolicyAddress {
         if self.mac.is_none() {
             return false;
         }
+        if self.index.is_none() {
+            return false;
+        }
+        if self.change.is_none() {
+            return false;
+        }
         for v in &self.policy {
             if !v.is_initialized() {
                 return false;
@@ -12569,12 +12627,18 @@ impl ::protobuf::Message for GetPolicyAddress {
                     self.mac = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 24 => {
-                    self.show_display = ::std::option::Option::Some(is.read_bool()?);
+                    self.index = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 32 => {
+                    self.change = ::std::option::Option::Some(is.read_bool()?);
+                },
+                40 => {
+                    self.show_display = ::std::option::Option::Some(is.read_bool()?);
+                },
+                48 => {
                     self.chunkify = ::std::option::Option::Some(is.read_bool()?);
                 },
-                42 => {
+                58 => {
                     self.coin_name = ::std::option::Option::Some(is.read_string()?);
                 },
                 tag => {
@@ -12596,6 +12660,12 @@ impl ::protobuf::Message for GetPolicyAddress {
         if let Some(v) = self.mac.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.index {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.change {
+            my_size += 1 + 1;
+        }
         if let Some(v) = self.show_display {
             my_size += 1 + 1;
         }
@@ -12603,7 +12673,7 @@ impl ::protobuf::Message for GetPolicyAddress {
             my_size += 1 + 1;
         }
         if let Some(v) = self.coin_name.as_ref() {
-            my_size += ::protobuf::rt::string_size(5, &v);
+            my_size += ::protobuf::rt::string_size(7, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -12617,14 +12687,20 @@ impl ::protobuf::Message for GetPolicyAddress {
         if let Some(v) = self.mac.as_ref() {
             os.write_bytes(2, v)?;
         }
-        if let Some(v) = self.show_display {
-            os.write_bool(3, v)?;
+        if let Some(v) = self.index {
+            os.write_uint32(3, v)?;
         }
-        if let Some(v) = self.chunkify {
+        if let Some(v) = self.change {
             os.write_bool(4, v)?;
         }
+        if let Some(v) = self.show_display {
+            os.write_bool(5, v)?;
+        }
+        if let Some(v) = self.chunkify {
+            os.write_bool(6, v)?;
+        }
         if let Some(v) = self.coin_name.as_ref() {
-            os.write_string(5, v)?;
+            os.write_string(7, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -12645,6 +12721,8 @@ impl ::protobuf::Message for GetPolicyAddress {
     fn clear(&mut self) {
         self.policy.clear();
         self.mac = ::std::option::Option::None;
+        self.index = ::std::option::Option::None;
+        self.change = ::std::option::Option::None;
         self.show_display = ::std::option::Option::None;
         self.chunkify = ::std::option::Option::None;
         self.coin_name = ::std::option::Option::None;
@@ -12655,6 +12733,8 @@ impl ::protobuf::Message for GetPolicyAddress {
         static instance: GetPolicyAddress = GetPolicyAddress {
             policy: ::protobuf::MessageField::none(),
             mac: ::std::option::Option::None,
+            index: ::std::option::Option::None,
+            change: ::std::option::Option::None,
             show_display: ::std::option::Option::None,
             chunkify: ::std::option::Option::None,
             coin_name: ::std::option::Option::None,
@@ -13267,24 +13347,25 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     te\x12\x14\n\x05xpubs\x18\x03\x20\x03(\tR\x05xpubs\x12\x16\n\x06blocks\
     \x18\x04\x20\x02(\rR\x06blocks\x12$\n\tcoin_name\x18\x05\x20\x01(\t:\x07\
     BitcoinR\x08coinName\"&\n\x12PolicyRegistration\x12\x10\n\x03mac\x18\x01\
-    \x20\x02(\x0cR\x03mac\"\xc5\x01\n\x10GetPolicyAddress\x12:\n\x06policy\
+    \x20\x02(\x0cR\x03mac\"\xf3\x01\n\x10GetPolicyAddress\x12:\n\x06policy\
     \x18\x01\x20\x02(\x0b2\".hw.trezor.messages.bitcoin.PolicyR\x06policy\
-    \x12\x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac\x12!\n\x0cshow_display\
-    \x18\x03\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x04\x20\
-    \x01(\x08R\x08chunkify\x12$\n\tcoin_name\x18\x05\x20\x01(\t:\x07BitcoinR\
-    \x08coinName*~\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRESS\x10\0\x12\
-    \x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\x12\x10\n\
-    \x0cSPENDWITNESS\x10\x03\x12\x14\n\x10SPENDP2SHWITNESS\x10\x04\x12\x10\n\
-    \x0cSPENDTAPROOT\x10\x05*\x99\x01\n\x10OutputScriptType\x12\x10\n\x0cPAY\
-    TOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01\x12\x11\n\rPAYTOMUL\
-    TISIG\x10\x02\x12\x11\n\rPAYTOOPRETURN\x10\x03\x12\x10\n\x0cPAYTOWITNESS\
-    \x10\x04\x12\x14\n\x10PAYTOP2SHWITNESS\x10\x05\x12\x10\n\x0cPAYTOTAPROOT\
-    \x10\x06*.\n\x16DecredStakingSpendType\x12\t\n\x05SSGen\x10\0\x12\t\n\
-    \x05SSRTX\x10\x01*J\n\nAmountUnit\x12\x0b\n\x07BITCOIN\x10\0\x12\x10\n\
-    \x0cMILLIBITCOIN\x10\x01\x12\x10\n\x0cMICROBITCOIN\x10\x02\x12\x0b\n\x07\
-    SATOSHI\x10\x03*8\n\x14MultisigPubkeysOrder\x12\r\n\tPRESERVED\x10\0\x12\
-    \x11\n\rLEXICOGRAPHIC\x10\x01B?\n#com.satoshilabs.trezor.lib.protobufB\
-    \x14TrezorMessageBitcoin\x80\xa6\x1d\x01\
+    \x12\x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac\x12\x14\n\x05index\x18\
+    \x03\x20\x02(\rR\x05index\x12\x16\n\x06change\x18\x04\x20\x02(\x08R\x06c\
+    hange\x12!\n\x0cshow_display\x18\x05\x20\x01(\x08R\x0bshowDisplay\x12\
+    \x1a\n\x08chunkify\x18\x06\x20\x01(\x08R\x08chunkify\x12$\n\tcoin_name\
+    \x18\x07\x20\x01(\t:\x07BitcoinR\x08coinName*~\n\x0fInputScriptType\x12\
+    \x10\n\x0cSPENDADDRESS\x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\
+    \x08EXTERNAL\x10\x02\x12\x10\n\x0cSPENDWITNESS\x10\x03\x12\x14\n\x10SPEN\
+    DP2SHWITNESS\x10\x04\x12\x10\n\x0cSPENDTAPROOT\x10\x05*\x99\x01\n\x10Out\
+    putScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHA\
+    SH\x10\x01\x12\x11\n\rPAYTOMULTISIG\x10\x02\x12\x11\n\rPAYTOOPRETURN\x10\
+    \x03\x12\x10\n\x0cPAYTOWITNESS\x10\x04\x12\x14\n\x10PAYTOP2SHWITNESS\x10\
+    \x05\x12\x10\n\x0cPAYTOTAPROOT\x10\x06*.\n\x16DecredStakingSpendType\x12\
+    \t\n\x05SSGen\x10\0\x12\t\n\x05SSRTX\x10\x01*J\n\nAmountUnit\x12\x0b\n\
+    \x07BITCOIN\x10\0\x12\x10\n\x0cMILLIBITCOIN\x10\x01\x12\x10\n\x0cMICROBI\
+    TCOIN\x10\x02\x12\x0b\n\x07SATOSHI\x10\x03*8\n\x14MultisigPubkeysOrder\
+    \x12\r\n\tPRESERVED\x10\0\x12\x11\n\rLEXICOGRAPHIC\x10\x01B?\n#com.satos\
+    hilabs.trezor.lib.protobufB\x14TrezorMessageBitcoin\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
