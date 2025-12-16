@@ -96,6 +96,38 @@ impl Trezor {
         self.call(req, Box::new(|_, m| Ok(m.mac)))
     }
 
+    pub fn get_policy_address(
+        &mut self,
+        name: String,
+        template: String,
+        primary: WalletPubKey,
+        recovery: WalletPubKey,
+        recovery_delay: u32,
+        mac: Vec<u8>,
+        index: u32,
+        change: bool,
+        network: Network,
+        show_display: bool,
+    ) -> Result<TrezorResponse<'_, Address, protos::Address>> {
+        let mut policy = protos::Policy::new();
+        policy.set_name(name);
+        policy.set_template(template);
+        policy.xpubs.push(primary.to_string());
+        policy.xpubs.push(recovery.to_string());
+        policy.set_blocks(recovery_delay);
+        policy.set_coin_name(utils::coin_name(network)?);
+
+        let mut req = protos::GetPolicyAddress::new();
+        req.set_policy(policy);
+        req.set_mac(mac);
+        req.set_index(index);
+        req.set_change(change);
+        req.set_show_display(show_display);
+        req.set_coin_name(utils::coin_name(network)?);
+
+        self.call(req, Box::new(|_, m| parse_address(m.address())))
+    }
+
     pub fn sign_tx(
         &mut self,
         psbt: &psbt::Psbt,
