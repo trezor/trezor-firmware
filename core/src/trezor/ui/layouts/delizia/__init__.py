@@ -43,6 +43,7 @@ def confirm_action(
     br_code: ButtonRequestType = BR_CODE_OTHER,
     prompt_screen: bool = False,
     prompt_title: str | None = None,
+    extra_menu_items: list[tuple[str, str]] = None,
 ) -> Awaitable[ui.UiResult]:
     from trezor.ui.layouts.menu import Menu, interact_with_menu
 
@@ -65,6 +66,7 @@ def confirm_action(
     )
 
     if prompt_screen or hold:
+        assert extra_menu_items is None
         # Note: multi-step confirm (prompt_screen/hold)
         # can't work with external menus yet
         return interact(
@@ -74,7 +76,11 @@ def confirm_action(
             exc,
         )
     else:
+        menu_items = []
+        for k, v in extra_menu_items or []:
+            menu_items.append(create_details(k, v))
         menu = Menu.root(
+            menu_items,
             cancel=verb_cancel or TR.buttons__cancel,
         )
 
