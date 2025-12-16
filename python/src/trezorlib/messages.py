@@ -685,7 +685,7 @@ class MessageType(IntEnum):
     EvoluDelegatedIdentityKey = 2105
     TronGetAddress = 2200
     TronAddress = 2201
-    RegisterPolicy = 2301
+    Policy = 2301
     PolicyRegistration = 2302
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
@@ -1713,13 +1713,13 @@ class AuthorizeCoinJoin(protobuf.MessageType):
         self.amount_unit = amount_unit
 
 
-class RegisterPolicy(protobuf.MessageType):
+class Policy(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2301
     FIELDS = {
         1: protobuf.Field("name", "string", repeated=False, required=True),
-        2: protobuf.Field("script", "string", repeated=False, required=True),
+        2: protobuf.Field("template", "string", repeated=False, required=True),
         3: protobuf.Field("xpubs", "string", repeated=True, required=False, default=None),
-        4: protobuf.Field("blocks", "uint64", repeated=False, required=True),
+        4: protobuf.Field("blocks", "uint32", repeated=False, required=True),
         5: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
     }
 
@@ -1727,14 +1727,14 @@ class RegisterPolicy(protobuf.MessageType):
         self,
         *,
         name: "str",
-        script: "str",
+        template: "str",
         blocks: "int",
         xpubs: Optional[Sequence["str"]] = None,
         coin_name: Optional["str"] = 'Bitcoin',
     ) -> None:
         self.xpubs: Sequence["str"] = xpubs if xpubs is not None else []
         self.name = name
-        self.script = script
+        self.template = template
         self.blocks = blocks
         self.coin_name = coin_name
 

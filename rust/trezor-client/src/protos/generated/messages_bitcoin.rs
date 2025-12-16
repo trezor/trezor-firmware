@@ -11874,33 +11874,33 @@ impl ::protobuf::reflect::ProtobufValue for AuthorizeCoinJoin {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.RegisterPolicy)
+// @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.Policy)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct RegisterPolicy {
+pub struct Policy {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.RegisterPolicy.name)
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.name)
     pub name: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.RegisterPolicy.script)
-    pub script: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.RegisterPolicy.xpubs)
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.template)
+    pub template: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.xpubs)
     pub xpubs: ::std::vec::Vec<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.RegisterPolicy.blocks)
-    pub blocks: ::std::option::Option<u64>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.RegisterPolicy.coin_name)
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.blocks)
+    pub blocks: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Policy.coin_name)
     pub coin_name: ::std::option::Option<::std::string::String>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.RegisterPolicy.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.Policy.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a RegisterPolicy {
-    fn default() -> &'a RegisterPolicy {
-        <RegisterPolicy as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a Policy {
+    fn default() -> &'a Policy {
+        <Policy as ::protobuf::Message>::default_instance()
     }
 }
 
-impl RegisterPolicy {
-    pub fn new() -> RegisterPolicy {
+impl Policy {
+    pub fn new() -> Policy {
         ::std::default::Default::default()
     }
 
@@ -11940,45 +11940,45 @@ impl RegisterPolicy {
         self.name.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // required string script = 2;
+    // required string template = 2;
 
-    pub fn script(&self) -> &str {
-        match self.script.as_ref() {
+    pub fn template(&self) -> &str {
+        match self.template.as_ref() {
             Some(v) => v,
             None => "",
         }
     }
 
-    pub fn clear_script(&mut self) {
-        self.script = ::std::option::Option::None;
+    pub fn clear_template(&mut self) {
+        self.template = ::std::option::Option::None;
     }
 
-    pub fn has_script(&self) -> bool {
-        self.script.is_some()
+    pub fn has_template(&self) -> bool {
+        self.template.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_script(&mut self, v: ::std::string::String) {
-        self.script = ::std::option::Option::Some(v);
+    pub fn set_template(&mut self, v: ::std::string::String) {
+        self.template = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_script(&mut self) -> &mut ::std::string::String {
-        if self.script.is_none() {
-            self.script = ::std::option::Option::Some(::std::string::String::new());
+    pub fn mut_template(&mut self) -> &mut ::std::string::String {
+        if self.template.is_none() {
+            self.template = ::std::option::Option::Some(::std::string::String::new());
         }
-        self.script.as_mut().unwrap()
+        self.template.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_script(&mut self) -> ::std::string::String {
-        self.script.take().unwrap_or_else(|| ::std::string::String::new())
+    pub fn take_template(&mut self) -> ::std::string::String {
+        self.template.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // required uint64 blocks = 4;
+    // required uint32 blocks = 4;
 
-    pub fn blocks(&self) -> u64 {
+    pub fn blocks(&self) -> u32 {
         self.blocks.unwrap_or(0)
     }
 
@@ -11991,7 +11991,7 @@ impl RegisterPolicy {
     }
 
     // Param is passed by value, moved
-    pub fn set_blocks(&mut self, v: u64) {
+    pub fn set_blocks(&mut self, v: u32) {
         self.blocks = ::std::option::Option::Some(v);
     }
 
@@ -12036,45 +12036,45 @@ impl RegisterPolicy {
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "name",
-            |m: &RegisterPolicy| { &m.name },
-            |m: &mut RegisterPolicy| { &mut m.name },
+            |m: &Policy| { &m.name },
+            |m: &mut Policy| { &mut m.name },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "script",
-            |m: &RegisterPolicy| { &m.script },
-            |m: &mut RegisterPolicy| { &mut m.script },
+            "template",
+            |m: &Policy| { &m.template },
+            |m: &mut Policy| { &mut m.template },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "xpubs",
-            |m: &RegisterPolicy| { &m.xpubs },
-            |m: &mut RegisterPolicy| { &mut m.xpubs },
+            |m: &Policy| { &m.xpubs },
+            |m: &mut Policy| { &mut m.xpubs },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "blocks",
-            |m: &RegisterPolicy| { &m.blocks },
-            |m: &mut RegisterPolicy| { &mut m.blocks },
+            |m: &Policy| { &m.blocks },
+            |m: &mut Policy| { &mut m.blocks },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "coin_name",
-            |m: &RegisterPolicy| { &m.coin_name },
-            |m: &mut RegisterPolicy| { &mut m.coin_name },
+            |m: &Policy| { &m.coin_name },
+            |m: &mut Policy| { &mut m.coin_name },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RegisterPolicy>(
-            "RegisterPolicy",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Policy>(
+            "Policy",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for RegisterPolicy {
-    const NAME: &'static str = "RegisterPolicy";
+impl ::protobuf::Message for Policy {
+    const NAME: &'static str = "Policy";
 
     fn is_initialized(&self) -> bool {
         if self.name.is_none() {
             return false;
         }
-        if self.script.is_none() {
+        if self.template.is_none() {
             return false;
         }
         if self.blocks.is_none() {
@@ -12090,13 +12090,13 @@ impl ::protobuf::Message for RegisterPolicy {
                     self.name = ::std::option::Option::Some(is.read_string()?);
                 },
                 18 => {
-                    self.script = ::std::option::Option::Some(is.read_string()?);
+                    self.template = ::std::option::Option::Some(is.read_string()?);
                 },
                 26 => {
                     self.xpubs.push(is.read_string()?);
                 },
                 32 => {
-                    self.blocks = ::std::option::Option::Some(is.read_uint64()?);
+                    self.blocks = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 42 => {
                     self.coin_name = ::std::option::Option::Some(is.read_string()?);
@@ -12116,14 +12116,14 @@ impl ::protobuf::Message for RegisterPolicy {
         if let Some(v) = self.name.as_ref() {
             my_size += ::protobuf::rt::string_size(1, &v);
         }
-        if let Some(v) = self.script.as_ref() {
+        if let Some(v) = self.template.as_ref() {
             my_size += ::protobuf::rt::string_size(2, &v);
         }
         for value in &self.xpubs {
             my_size += ::protobuf::rt::string_size(3, &value);
         };
         if let Some(v) = self.blocks {
-            my_size += ::protobuf::rt::uint64_size(4, v);
+            my_size += ::protobuf::rt::uint32_size(4, v);
         }
         if let Some(v) = self.coin_name.as_ref() {
             my_size += ::protobuf::rt::string_size(5, &v);
@@ -12137,14 +12137,14 @@ impl ::protobuf::Message for RegisterPolicy {
         if let Some(v) = self.name.as_ref() {
             os.write_string(1, v)?;
         }
-        if let Some(v) = self.script.as_ref() {
+        if let Some(v) = self.template.as_ref() {
             os.write_string(2, v)?;
         }
         for v in &self.xpubs {
             os.write_string(3, &v)?;
         };
         if let Some(v) = self.blocks {
-            os.write_uint64(4, v)?;
+            os.write_uint32(4, v)?;
         }
         if let Some(v) = self.coin_name.as_ref() {
             os.write_string(5, v)?;
@@ -12161,23 +12161,23 @@ impl ::protobuf::Message for RegisterPolicy {
         &mut self.special_fields
     }
 
-    fn new() -> RegisterPolicy {
-        RegisterPolicy::new()
+    fn new() -> Policy {
+        Policy::new()
     }
 
     fn clear(&mut self) {
         self.name = ::std::option::Option::None;
-        self.script = ::std::option::Option::None;
+        self.template = ::std::option::Option::None;
         self.xpubs.clear();
         self.blocks = ::std::option::Option::None;
         self.coin_name = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static RegisterPolicy {
-        static instance: RegisterPolicy = RegisterPolicy {
+    fn default_instance() -> &'static Policy {
+        static instance: Policy = Policy {
             name: ::std::option::Option::None,
-            script: ::std::option::Option::None,
+            template: ::std::option::Option::None,
             xpubs: ::std::vec::Vec::new(),
             blocks: ::std::option::Option::None,
             coin_name: ::std::option::Option::None,
@@ -12187,20 +12187,20 @@ impl ::protobuf::Message for RegisterPolicy {
     }
 }
 
-impl ::protobuf::MessageFull for RegisterPolicy {
+impl ::protobuf::MessageFull for Policy {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("RegisterPolicy").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Policy").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for RegisterPolicy {
+impl ::std::fmt::Display for Policy {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for RegisterPolicy {
+impl ::protobuf::reflect::ProtobufValue for Policy {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -12946,13 +12946,13 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     nR\x08coinName\x12Z\n\x0bscript_type\x18\x07\x20\x01(\x0e2+.hw.trezor.me\
     ssages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\x12P\n\x0ba\
     mount_unit\x18\x08\x20\x01(\x0e2&.hw.trezor.messages.bitcoin.AmountUnit:\
-    \x07BITCOINR\namountUnit\"\x90\x01\n\x0eRegisterPolicy\x12\x12\n\x04name\
-    \x18\x01\x20\x02(\tR\x04name\x12\x16\n\x06script\x18\x02\x20\x02(\tR\x06\
-    script\x12\x14\n\x05xpubs\x18\x03\x20\x03(\tR\x05xpubs\x12\x16\n\x06bloc\
-    ks\x18\x04\x20\x02(\x04R\x06blocks\x12$\n\tcoin_name\x18\x05\x20\x01(\t:\
-    \x07BitcoinR\x08coinName\"&\n\x12PolicyRegistration\x12\x10\n\x03mac\x18\
-    \x01\x20\x02(\x0cR\x03mac*~\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRE\
-    SS\x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\
+    \x07BITCOINR\namountUnit\"\x8c\x01\n\x06Policy\x12\x12\n\x04name\x18\x01\
+    \x20\x02(\tR\x04name\x12\x1a\n\x08template\x18\x02\x20\x02(\tR\x08templa\
+    te\x12\x14\n\x05xpubs\x18\x03\x20\x03(\tR\x05xpubs\x12\x16\n\x06blocks\
+    \x18\x04\x20\x02(\rR\x06blocks\x12$\n\tcoin_name\x18\x05\x20\x01(\t:\x07\
+    BitcoinR\x08coinName\"&\n\x12PolicyRegistration\x12\x10\n\x03mac\x18\x01\
+    \x20\x02(\x0cR\x03mac*~\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRESS\
+    \x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\
     \x12\x10\n\x0cSPENDWITNESS\x10\x03\x12\x14\n\x10SPENDP2SHWITNESS\x10\x04\
     \x12\x10\n\x0cSPENDTAPROOT\x10\x05*\x99\x01\n\x10OutputScriptType\x12\
     \x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01\x12\
@@ -13011,7 +13011,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(GetOwnershipProof::generated_message_descriptor_data());
             messages.push(OwnershipProof::generated_message_descriptor_data());
             messages.push(AuthorizeCoinJoin::generated_message_descriptor_data());
-            messages.push(RegisterPolicy::generated_message_descriptor_data());
+            messages.push(Policy::generated_message_descriptor_data());
             messages.push(PolicyRegistration::generated_message_descriptor_data());
             messages.push(multisig_redeem_script_type::HDNodePathType::generated_message_descriptor_data());
             messages.push(sign_tx::CoinJoinRequest::generated_message_descriptor_data());

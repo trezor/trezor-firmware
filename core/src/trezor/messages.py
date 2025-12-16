@@ -925,9 +925,9 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["AuthorizeCoinJoin"]:
             return isinstance(msg, cls)
 
-    class RegisterPolicy(protobuf.MessageType):
+    class Policy(protobuf.MessageType):
         name: "str"
-        script: "str"
+        template: "str"
         xpubs: "list[str]"
         blocks: "int"
         coin_name: "str"
@@ -936,7 +936,7 @@ if TYPE_CHECKING:
             self,
             *,
             name: "str",
-            script: "str",
+            template: "str",
             blocks: "int",
             xpubs: "list[str] | None" = None,
             coin_name: "str | None" = None,
@@ -944,7 +944,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["RegisterPolicy"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["Policy"]:
             return isinstance(msg, cls)
 
     class PolicyRegistration(protobuf.MessageType):

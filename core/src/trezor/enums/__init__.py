@@ -632,7 +632,7 @@ if TYPE_CHECKING:
         EvoluDelegatedIdentityKey = 2105
         TronGetAddress = 2200
         TronAddress = 2201
-        RegisterPolicy = 2301
+        Policy = 2301
         PolicyRegistration = 2302
         BenchmarkListNames = 9100
         BenchmarkNames = 9101

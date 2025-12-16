@@ -174,14 +174,14 @@ def register_policy(
     session: "Session",
     coin_name: str,
     name: str,
-    script: str,
+    template: str,
     xpubs: list[str],
     blocks: int,
 ) -> messages.Policy:
     return session.call(
-        messages.RegisterPolicy(
+        messages.Policy(
             name=name,
-            script=script,
+            template=template,
             xpubs=xpubs,
             blocks=blocks,
             coin_name=coin_name,

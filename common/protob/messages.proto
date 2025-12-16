@@ -354,7 +354,7 @@ enum MessageType {
     MessageType_TronAddress = 2201 [(wire_out) = true];
 
     // Miniscript
-    MessageType_RegisterPolicy = 2301 [(wire_in) = true];
+    MessageType_Policy = 2301 [(wire_in) = true];
     MessageType_PolicyRegistration = 2302 [(wire_out) = true];
 
     // Benchmark

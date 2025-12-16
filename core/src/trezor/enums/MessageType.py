@@ -270,5 +270,5 @@ if not utils.BITCOIN_ONLY:
     NostrEventSignature = 2004
     TronGetAddress = 2200
     TronAddress = 2201
-    RegisterPolicy = 2301
+    Policy = 2301
     PolicyRegistration = 2302
