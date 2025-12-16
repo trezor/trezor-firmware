@@ -97,6 +97,7 @@ trezor_message_impl! {
     ThpCredentialResponse => MessageType_ThpCredentialResponse,
     Policy => MessageType_Policy,
     PolicyRegistration => MessageType_PolicyRegistration,
+    GetPolicyAddress => MessageType_GetPolicyAddress,
     BenchmarkListNames => MessageType_BenchmarkListNames,
     BenchmarkNames => MessageType_BenchmarkNames,
     BenchmarkRun => MessageType_BenchmarkRun,

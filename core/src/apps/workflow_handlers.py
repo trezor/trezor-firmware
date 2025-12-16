@@ -86,6 +86,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.bitcoin.get_address"
     if msg_type == MessageType.Policy:
         return "apps.bitcoin.register_policy"
+    if msg_type == MessageType.GetPolicyAddress:
+        return "apps.bitcoin.get_policy_address"
     if msg_type == MessageType.GetOwnershipId:
         return "apps.bitcoin.get_ownership_id"
     if msg_type == MessageType.GetOwnershipProof:

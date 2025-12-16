@@ -277,3 +277,4 @@ if not utils.BITCOIN_ONLY:
     TronTriggerSmartContract = 2206
     Policy = 2301
     PolicyRegistration = 2302
+    GetPolicyAddress = 2303

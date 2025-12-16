@@ -563,6 +563,8 @@ pub enum MessageType {
     MessageType_Policy = 2301,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_PolicyRegistration)
     MessageType_PolicyRegistration = 2302,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_GetPolicyAddress)
+    MessageType_GetPolicyAddress = 2303,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -850,6 +852,7 @@ impl ::protobuf::Enum for MessageType {
             2206 => ::std::option::Option::Some(MessageType::MessageType_TronTriggerSmartContract),
             2301 => ::std::option::Option::Some(MessageType::MessageType_Policy),
             2302 => ::std::option::Option::Some(MessageType::MessageType_PolicyRegistration),
+            2303 => ::std::option::Option::Some(MessageType::MessageType_GetPolicyAddress),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1128,6 +1131,7 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_TronTriggerSmartContract" => ::std::option::Option::Some(MessageType::MessageType_TronTriggerSmartContract),
             "MessageType_Policy" => ::std::option::Option::Some(MessageType::MessageType_Policy),
             "MessageType_PolicyRegistration" => ::std::option::Option::Some(MessageType::MessageType_PolicyRegistration),
+            "MessageType_GetPolicyAddress" => ::std::option::Option::Some(MessageType::MessageType_GetPolicyAddress),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1405,6 +1409,7 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_TronTriggerSmartContract,
         MessageType::MessageType_Policy,
         MessageType::MessageType_PolicyRegistration,
+        MessageType::MessageType_GetPolicyAddress,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1688,10 +1693,11 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_TronTriggerSmartContract => 265,
             MessageType::MessageType_Policy => 266,
             MessageType::MessageType_PolicyRegistration => 267,
-            MessageType::MessageType_BenchmarkListNames => 268,
-            MessageType::MessageType_BenchmarkNames => 269,
-            MessageType::MessageType_BenchmarkRun => 270,
-            MessageType::MessageType_BenchmarkResult => 271,
+            MessageType::MessageType_GetPolicyAddress => 268,
+            MessageType::MessageType_BenchmarkListNames => 269,
+            MessageType::MessageType_BenchmarkNames => 270,
+            MessageType::MessageType_BenchmarkRun => 271,
+            MessageType::MessageType_BenchmarkResult => 272,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1710,7 +1716,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xf6^\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x9f_\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2017,16 +2023,17 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     essageType_TronTriggerSmartContract\x10\x9e\x11\x1a\x04\x90\xb5\x18\x01\
     \x12\x1d\n\x12MessageType_Policy\x10\xfd\x11\x1a\x04\x90\xb5\x18\x01\x12\
     )\n\x1eMessageType_PolicyRegistration\x10\xfe\x11\x1a\x04\x98\xb5\x18\
-    \x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\
-    \x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\
-    \x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\
-    \x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\
-    \x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\
-    \x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\
-    \x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\
-    \x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\
-    \x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.li\
-    b.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    \x01\x12'\n\x1cMessageType_GetPolicyAddress\x10\xff\x11\x1a\x04\x90\xb5\
+    \x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\
+    \xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\
+    \xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\
+    \x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\
+    \x1d\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\
+    \x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\
+    \xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\
+    \x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\
+    \x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezo\
+    r.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
