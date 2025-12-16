@@ -23,25 +23,31 @@
 
 #include "battery_model.h"
 
-// fuel gauge state structure
+/**
+ * @brief Fuel gauge state structure
+ */
 typedef struct {
-  battery_model_t model;
+  battery_model_t model;  ///< Battery model parameters
 
-  // State estimate (SOC)
-  float soc;
-  // Latched SOC (the one that gets reported)
-  float soc_latched;
-  // Error covariance
-  float P;
-  // Filter parameters
-  float R;             // Measurement noise variance
-  float Q;             // Process noise variance
-  float R_aggressive;  // Aggressive measurement noise variance
-  float Q_aggressive;  // Aggressive process noise variance
+  /** @name State estimates */
+  /**@{*/
+  float soc;          ///< State of charge estimate (0.0 to 1.0)
+  float soc_latched;  ///< Latched SOC (the one that gets reported)
+  float P;            ///< Error covariance
+  /**@}*/
+
+  /** @name Filter parameters */
+  /**@{*/
+  float R;             ///< Measurement noise variance
+  float Q;             ///< Process noise variance
+  float R_aggressive;  ///< Aggressive measurement noise variance
+  float Q_aggressive;  ///< Aggressive process noise variance
+  /**@}*/
 } fuel_gauge_state_t;
 
 /**
- * Initialize the fuel gauge state
+ * @brief Initialize the fuel gauge state
+ *
  * @param state Pointer to EKF state structure
  * @param R Measurement noise variance
  * @param Q Process noise variance
@@ -53,20 +59,23 @@ void fuel_gauge_init(fuel_gauge_state_t* state, float R, float Q,
                      float R_aggressive, float Q_aggressive, float P_init);
 
 /**
- * Reset the EKF state
+ * @brief Reset the EKF state
+ *
  * @param state Pointer to EKF state structure
  */
 void fuel_gauge_reset(fuel_gauge_state_t* state);
 
 /**
- * Set SOC directly
+ * @brief Set SOC directly
+ *
  * @param state Pointer to EKF state structure
  * @param soc State of charge (0.0 to 1.0)
  */
 void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P);
 
 /**
- * Make initial SOC guess based on OCV
+ * @brief Make initial SOC guess based on OCV
+ *
  * @param state Pointer to EKF state structure
  * @param voltage_V Current battery voltage (V)
  * @param current_mA Current battery current (mA), positive for discharge
@@ -76,9 +85,10 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
                               float current_mA, float temperature);
 
 /**
- * Update the fuel gauge with new measurements
+ * @brief Update the fuel gauge with new measurements
+ *
  * @param state Pointer to EKF state structure
- * @param dt Time step in milliseconds
+ * @param dt_ms Time step in milliseconds
  * @param voltage_V Current battery voltage (V)
  * @param current_mA Current battery current (mA), positive for discharge
  * @param temperature Battery temperature (°C)

@@ -758,6 +758,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = pm_hibernate();
     } break;
 
+    case SYSCALL_POWER_MANAGER_CHARGING_ENABLE: {
+      args[0] = pm_charging_enable();
+    } break;
+
+    case SYSCALL_POWER_MANAGER_CHARGING_DISABLE: {
+      args[0] = pm_charging_disable();
+    } break;
+
     case SYSCALL_POWER_MANAGER_GET_STATE: {
       pm_state_t *status = (pm_state_t *)args[0];
       args[0] = pm_get_state__verified(status);
