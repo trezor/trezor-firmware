@@ -686,7 +686,7 @@ class MessageType(IntEnum):
     TronGetAddress = 2200
     TronAddress = 2201
     RegisterPolicy = 2301
-    Policy = 2302
+    PolicyRegistration = 2302
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -1718,8 +1718,9 @@ class RegisterPolicy(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("name", "string", repeated=False, required=True),
         2: protobuf.Field("script", "string", repeated=False, required=True),
-        3: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
-        5: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        3: protobuf.Field("xpubs", "string", repeated=True, required=False, default=None),
+        4: protobuf.Field("blocks", "uint64", repeated=False, required=True),
+        5: protobuf.Field("coin_name", "string", repeated=False, required=False, default='Bitcoin'),
     }
 
     def __init__(
@@ -1727,16 +1728,18 @@ class RegisterPolicy(protobuf.MessageType):
         *,
         name: "str",
         script: "str",
-        address_n: Optional[Sequence["int"]] = None,
+        blocks: "int",
+        xpubs: Optional[Sequence["str"]] = None,
         coin_name: Optional["str"] = 'Bitcoin',
     ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.xpubs: Sequence["str"] = xpubs if xpubs is not None else []
         self.name = name
         self.script = script
+        self.blocks = blocks
         self.coin_name = coin_name
 
 
-class Policy(protobuf.MessageType):
+class PolicyRegistration(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2302
     FIELDS = {
         1: protobuf.Field("mac", "bytes", repeated=False, required=True),

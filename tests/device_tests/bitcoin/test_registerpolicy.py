@@ -27,6 +27,13 @@ from ...input_flows import InputFlowConfirmAllWarnings
 
 def test_registerpolicy(session: Session):
     assert (
-        btc.register_policy(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), "Simple policy", "OP_SOMETHING").mac
-        == b'\x08\xffV\xe2L\xfa\x0c\xff\xc0P\xf7\xb0\x93\xf8\xc2\x0b\xd0\xc3\xe4\x91\xdbE\xab\x1e\x83\x02/\xfe\xbe\x0c\x0c\xe2'
+        btc.register_policy(
+            session,
+            "Bitcoin",
+            "Basic inheritance",
+            "wsh(or_d(pk(@0)...))",
+            ["XPUB1", "XPUB2"],
+            20,
+        ).mac
+        == b"\xb8\xb86\xf11\x0b\xc2\x89\xd3\xad\xef\x90\xa8.\xd2\xab\xcd\x03\xee\xf6\x1an\xdf\x06\xcd\xcd\xf9\x10\xc9\x17\xb12"
     )

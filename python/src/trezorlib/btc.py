@@ -173,18 +173,20 @@ def get_authenticated_address(
 def register_policy(
     session: "Session",
     coin_name: str,
-    n: "Address",
     name: str,
     script: str,
+    xpubs: list[str],
+    blocks: int,
 ) -> messages.Policy:
     return session.call(
         messages.RegisterPolicy(
-            address_n=n,
-            coin_name=coin_name,
             name=name,
             script=script,
+            xpubs=xpubs,
+            blocks=blocks,
+            coin_name=coin_name,
         ),
-        expect=messages.Policy,
+        expect=messages.PolicyRegistration,
     )
 
 

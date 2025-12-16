@@ -633,7 +633,7 @@ if TYPE_CHECKING:
         TronGetAddress = 2200
         TronAddress = 2201
         RegisterPolicy = 2301
-        Policy = 2302
+        PolicyRegistration = 2302
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

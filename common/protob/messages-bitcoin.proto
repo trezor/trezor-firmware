@@ -600,21 +600,22 @@ message AuthorizeCoinJoin {
 /**
  * Request: Ask device to register a policy
  * @start
- * @next Policy
+ * @next PolicyRegistration
  * @next Failure
  */
 message RegisterPolicy {
     required string name = 1;
     required string script = 2;
-    optional string coin_name = 3 [default='Bitcoin'];                  // coin to use for verifying
-    repeated uint32 address_n = 5;          // path to derive pubkeys from nodes
+    repeated string xpubs = 3;
+    required uint64 blocks = 4;
+    optional string coin_name = 5 [default='Bitcoin'];
 }
 
 /**
  * Response: Contains the policy mac
  * @end
  */
-message Policy {
+message PolicyRegistration {
   required bytes mac = 1;
 }
 

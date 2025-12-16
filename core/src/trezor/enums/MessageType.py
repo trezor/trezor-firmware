@@ -271,4 +271,4 @@ if not utils.BITCOIN_ONLY:
     TronGetAddress = 2200
     TronAddress = 2201
     RegisterPolicy = 2301
-    Policy = 2302
+    PolicyRegistration = 2302

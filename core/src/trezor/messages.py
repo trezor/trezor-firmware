@@ -928,15 +928,17 @@ if TYPE_CHECKING:
     class RegisterPolicy(protobuf.MessageType):
         name: "str"
         script: "str"
+        xpubs: "list[str]"
+        blocks: "int"
         coin_name: "str"
-        address_n: "list[int]"
 
         def __init__(
             self,
             *,
             name: "str",
             script: "str",
-            address_n: "list[int] | None" = None,
+            blocks: "int",
+            xpubs: "list[str] | None" = None,
             coin_name: "str | None" = None,
         ) -> None:
             pass
@@ -945,7 +947,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["RegisterPolicy"]:
             return isinstance(msg, cls)
 
-    class Policy(protobuf.MessageType):
+    class PolicyRegistration(protobuf.MessageType):
         mac: "AnyBytes"
 
         def __init__(
@@ -956,7 +958,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["Policy"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["PolicyRegistration"]:
             return isinstance(msg, cls)
 
     class HDNodePathType(protobuf.MessageType):
