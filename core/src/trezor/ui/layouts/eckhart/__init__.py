@@ -44,6 +44,7 @@ def confirm_action(
     br_code: ButtonRequestType = BR_CODE_OTHER,
     prompt_screen: bool = False,
     prompt_title: str | None = None,
+    extra_menu_items: list[tuple[str, str]] | None = None,  # unused on eckhart
 ) -> Awaitable[None]:
     if description is not None and description_param is not None:
         description = description.format(description_param)
