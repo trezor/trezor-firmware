@@ -219,6 +219,7 @@ pm_status_t pm_get_state(pm_state_t* state) {
 
   state->usb_connected = drv->usb_connected;
   state->wireless_connected = drv->wireless_connected;
+  state->ntc_connected = !drv->pmic_data.ntc_disconnected;
 
   if (pm_is_charging()) {
     state->charging_status = PM_BATTERY_CHARGING;
@@ -228,8 +229,46 @@ pm_status_t pm_get_state(pm_state_t* state) {
     state->charging_status = PM_BATTERY_IDLE;
   }
 
+  // Charging-limited detection with 5s filter
+  // Conditions to consider:
+  //  - Only when charging
+  //  - Only when PMIC reports constant-current phase (decoded flag)
+  //  - Consider measured current vs target with a small margin
+  //  - Assert after predicate holds continuously for >= 5000 ms
+  //  - Clear immediately when predicate breaks or not charging
+  const bool is_charging = (state->charging_status == PM_BATTERY_CHARGING);
+  const float MAX_DIFF_MA = 15;  // tolerance below target current
+  const uint32_t FILTER_ASSERT_MS = 5000;
+
+  bool predicate = false;
+  if (is_charging) {
+    const bool cc_phase = drv->pmic_data.cc_phase;
+    float iabs_ma = drv->pmic_data.ibat;
+    if (iabs_ma < 0.0f) {
+      iabs_ma = -iabs_ma;  // ibat < 0 => charging
+    }
+    predicate = cc_phase && (iabs_ma < (drv->i_chg_target_ma - MAX_DIFF_MA));
+  }
+
+  if (predicate) {
+    uint32_t now = systick_ms();
+    if (drv->charging_limited_start_ms == 0U) {
+      drv->charging_limited_start_ms = now;
+    } else if (!drv->charging_limited_latched &&
+               (now - drv->charging_limited_start_ms) >= FILTER_ASSERT_MS) {
+      drv->charging_limited_latched = true;
+    }
+  } else {
+    drv->charging_limited_start_ms = 0U;
+    drv->charging_limited_latched = false;
+  }
+
+  state->charging_limited = drv->charging_limited_latched;
+
   state->power_status = drv->state;
   state->soc = drv->soc_ceiled;
+  state->battery_temp = drv->pmic_data.ntc_temp;
+  state->battery_ocv = drv->battery_ocv;
 
   irq_unlock(irq_key);
 

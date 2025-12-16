@@ -68,6 +68,11 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
   state->soc_latched = state->soc;
 }
 
+float fuel_gauge_get_ocv(fuel_gauge_state_t* state, float voltage_V,
+                         float current_mA, float temperature) {
+  return battery_meas_to_ocv(&state->model, voltage_V, current_mA, temperature);
+}
+
 float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms,
                         float voltage_V, float current_mA, float temperature) {
   if (current_mA == 0.0f) {

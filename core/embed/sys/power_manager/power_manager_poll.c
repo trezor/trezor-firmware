@@ -23,6 +23,7 @@
 
 #include <sys/power_manager.h>
 #include <sys/sysevent_source.h>
+#include <sys/systick.h>
 
 #include "power_manager_poll.h"
 
@@ -31,6 +32,14 @@ typedef struct {
   pm_state_t last_state;
   // Pending events
   pm_event_t events;
+
+  // Jump detection state for battery temperature
+  float temp_anchor;
+  uint32_t t_temp_anchor_ms;
+
+  // Jump detection state for battery open-circuit voltage (OCV)
+  float ocv_anchor;
+  uint32_t t_ocv_anchor_ms;
 
 } pm_fsm_t;
 
@@ -64,6 +73,72 @@ static bool pm_fsm_update(pm_fsm_t* fsm, pm_state_t* new_state) {
     fsm->events.flags.soc_updated = true;
   }
 
+  // Detect battery temperature jump
+  {
+    const uint32_t now = systick_ms();
+
+    if (fsm->t_temp_anchor_ms == 0U) {
+      fsm->temp_anchor = new_state->battery_temp;
+      fsm->t_temp_anchor_ms = now;
+    }
+
+    float delta = new_state->battery_temp - fsm->temp_anchor;
+    if (delta < 0.0f) {
+      delta = -delta;
+    }
+
+    const uint32_t elapsed = now - fsm->t_temp_anchor_ms;
+    const float TEMP_JUMP_THRESHOLD_C = 5.0f;
+    const uint32_t TEMP_JUMP_WINDOW_MS = 5000;  // 5 seconds
+
+    bool within_window = (elapsed <= TEMP_JUMP_WINDOW_MS);
+    bool over_threshold = (delta >= TEMP_JUMP_THRESHOLD_C);
+
+    if (within_window && over_threshold) {
+      fsm->events.flags.battery_temp_jump_detected = true;
+      // Reset anchor to new value to avoid cascading triggers
+      fsm->temp_anchor = new_state->battery_temp;
+      fsm->t_temp_anchor_ms = now;
+    } else if (!within_window) {
+      // Slide the anchor window forward
+      fsm->temp_anchor = new_state->battery_temp;
+      fsm->t_temp_anchor_ms = now;
+    }
+  }
+
+  // Detect battery OCV jump
+  {
+    const uint32_t now = systick_ms();
+
+    if (fsm->t_ocv_anchor_ms == 0U) {
+      fsm->ocv_anchor = new_state->battery_ocv;
+      fsm->t_ocv_anchor_ms = now;
+    }
+
+    float delta = new_state->battery_ocv - fsm->ocv_anchor;
+    if (delta < 0.0f) {
+      delta = -delta;
+    }
+
+    const uint32_t elapsed = now - fsm->t_ocv_anchor_ms;
+    const float OCV_JUMP_THRESHOLD_V = 0.50f;  // 500 mV
+    const uint32_t OCV_JUMP_WINDOW_MS = 5000;  // 5 seconds
+
+    bool within_window = (elapsed <= OCV_JUMP_WINDOW_MS);
+    bool over_threshold = (delta >= OCV_JUMP_THRESHOLD_V);
+
+    if (within_window && over_threshold) {
+      fsm->events.flags.battery_ocv_jump_detected = true;
+      // Reset anchor to new value to avoid cascading triggers
+      fsm->ocv_anchor = new_state->battery_ocv;
+      fsm->t_ocv_anchor_ms = now;
+    } else if (!within_window) {
+      // Slide the anchor window forward
+      fsm->ocv_anchor = new_state->battery_ocv;
+      fsm->t_ocv_anchor_ms = now;
+    }
+  }
+
   if (new_state->usb_connected != fsm->last_state.usb_connected) {
     fsm->events.flags.usb_connected_changed = true;
   }
@@ -78,6 +153,14 @@ static bool pm_fsm_update(pm_fsm_t* fsm, pm_state_t* new_state) {
 
   if (new_state->charging_status != fsm->last_state.charging_status) {
     fsm->events.flags.charging_status_changed = true;
+  }
+
+  if (new_state->ntc_connected != fsm->last_state.ntc_connected) {
+    fsm->events.flags.ntc_connected_changed = true;
+  }
+
+  if (new_state->charging_limited != fsm->last_state.charging_limited) {
+    fsm->events.flags.charging_limited_changed = true;
   }
 
   fsm->last_state = *new_state;
