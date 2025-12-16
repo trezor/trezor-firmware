@@ -43,7 +43,7 @@ def confirm_action(
     br_code: ButtonRequestType = BR_CODE_OTHER,
     prompt_screen: bool = False,
     prompt_title: str | None = None,
-    extra_menu_items: list[tuple[str, str]] = None,
+    extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> Awaitable[ui.UiResult]:
     from trezor.ui.layouts.menu import Menu, interact_with_menu
 
