@@ -95,6 +95,7 @@ def test_end_session(test_ctx: TrezorTestContext):
     session.close()
     # avoid trezorlib's check
     session.is_invalid = False
+    session.client._last_active_session = session
     with pytest.raises(InvalidSessionError), test_ctx:
         test_ctx.set_expected_responses([messages.Failure])
         get_test_address(session)
@@ -123,6 +124,8 @@ def test_cannot_resume_ended_session(test_ctx: TrezorTestContext):
     assert session.id == session_id
 
     session.close()
+    # avoid trezorlib's check
+    session.is_invalid = False
     with pytest.raises(exceptions.InvalidSessionError):
         session.initialize()
 
