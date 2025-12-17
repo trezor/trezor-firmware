@@ -416,7 +416,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__tap;
   MP_QSTR_instructions__tap_to_confirm;
   MP_QSTR_instructions__tap_to_continue;
-  MP_QSTR_instructions__tap_to_start;
   MP_QSTR_instructions__view_all_data;
   MP_QSTR_instructions_verb;
   MP_QSTR_interface;

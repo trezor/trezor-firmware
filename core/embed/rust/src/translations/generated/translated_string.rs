@@ -1240,7 +1240,6 @@ pub enum TranslatedString {
     instructions__learn_more = 893,  // "Learn more"
     instructions__shares_continue_with_x_template = 894,  // "Continue with Share #{0}"
     instructions__shares_start_with_1 = 895,  // "Start with share #1"
-    instructions__tap_to_start = 896,  // "Tap to start"
     passphrase__title_passphrase = 897,  // "Passphrase"
     recovery__dry_run_backup_not_on_this_device = 898,  // "Wallet backup not on this device"
     recovery__dry_run_invalid_backup_entered = 899,  // "Invalid wallet backup entered"
@@ -4300,7 +4299,6 @@ impl TranslatedString {
             (Self::instructions__learn_more, "Learn more"),
             (Self::instructions__shares_continue_with_x_template, "Continue with Share #{0}"),
             (Self::instructions__shares_start_with_1, "Start with share #1"),
-            (Self::instructions__tap_to_start, "Tap to start"),
             (Self::passphrase__title_passphrase, "Passphrase"),
             (Self::recovery__dry_run_backup_not_on_this_device, "Wallet backup not on this device"),
             (Self::recovery__dry_run_invalid_backup_entered, "Invalid wallet backup entered"),
@@ -5764,7 +5762,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_instructions__tap, Self::instructions__tap),
         (Qstr::MP_QSTR_instructions__tap_to_confirm, Self::instructions__tap_to_confirm),
         (Qstr::MP_QSTR_instructions__tap_to_continue, Self::instructions__tap_to_continue),
-        (Qstr::MP_QSTR_instructions__tap_to_start, Self::instructions__tap_to_start),
         (Qstr::MP_QSTR_instructions__view_all_data, Self::instructions__view_all_data),
         (Qstr::MP_QSTR_joint__title, Self::joint__title),
         (Qstr::MP_QSTR_joint__to_the_total_amount, Self::joint__to_the_total_amount),
