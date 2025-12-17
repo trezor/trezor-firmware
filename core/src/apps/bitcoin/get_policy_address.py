@@ -81,7 +81,7 @@ async def get_policy_address(
     if msg.show_display:
         await show_address(
             address,
-            title="Policy-based address",
+            title=msg.policy.name,
             network=coin.coin_name,
             br_name="/bitcoin/miniscript/get_policy_address",
         )
