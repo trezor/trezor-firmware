@@ -551,11 +551,51 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
                                  mod_trezorcrypto_bip32_from_seed);
 
+/// def deserialize_public(xpub: str, version: int, curve_name: str) -> HDNode:
+///     """
+///     Deserialize a base58-encoded extended public key into an HDNode.
+///     """
+STATIC mp_obj_t
+mod_trezorcrypto_bip32_deserialize_public(size_t n_args, const mp_obj_t *args) {
+  mp_buffer_info_t xpub = {0};
+  mp_get_buffer_raise(args[0], &xpub, MP_BUFFER_READ);
+
+  uint32_t version = trezor_obj_get_uint(args[1]);
+
+  mp_buffer_info_t curve_name = {0};
+  mp_get_buffer_raise(args[2], &curve_name, MP_BUFFER_READ);
+
+  if (curve_name.len == 0) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid curve name"));
+  }
+
+  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
+  o->base.type = &mod_trezorcrypto_HDNode_type;
+
+  uint32_t fingerprint = 0;
+  int result = hdnode_deserialize_public((const char *)xpub.buf, version,
+                                         (const char *)curve_name.buf,
+                                         &o->hdnode, &fingerprint);
+
+  if (result != 0) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to deserialize xpub"));
+  }
+
+  o->fingerprint = fingerprint;
+
+  return MP_OBJ_FROM_PTR(o);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_bip32_deserialize_public_obj, 3, 3,
+    mod_trezorcrypto_bip32_deserialize_public);
+
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip32)},
     {MP_ROM_QSTR(MP_QSTR_HDNode), MP_ROM_PTR(&mod_trezorcrypto_HDNode_type)},
     {MP_ROM_QSTR(MP_QSTR_from_seed),
      MP_ROM_PTR(&mod_trezorcrypto_bip32_from_seed_obj)},
+    {MP_ROM_QSTR(MP_QSTR_deserialize_public),
+     MP_ROM_PTR(&mod_trezorcrypto_bip32_deserialize_public_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_bip32_globals,
                             mod_trezorcrypto_bip32_globals_table);
