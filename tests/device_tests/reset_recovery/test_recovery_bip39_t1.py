@@ -18,9 +18,10 @@ import pytest
 
 from trezorlib import device, messages
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext
 from trezorlib.tools import parse_path
 
-from ...common import MNEMONIC12
+from ...common import MNEMONIC12, get_test_address
 
 PIN4 = "1234"
 PIN6 = "789456"
@@ -31,7 +32,8 @@ pytestmark = [
 ]
 
 
-def test_pin_passphrase(session: Session):
+def test_pin_passphrase(test_ctx: TrezorTestContext):
+    session = test_ctx.get_seedless_session()
     debug = session.debug
     mnemonic = MNEMONIC12.split(" ")
     ret = session.call_raw(
@@ -80,21 +82,32 @@ def test_pin_passphrase(session: Session):
     assert mnemonic == [None] * 12
 
     # Mnemonic is the same
-    session.refresh_features()
     assert debug.state().mnemonic_secret == MNEMONIC12.encode()
 
-    assert session.features.pin_protection is True
-    assert session.features.passphrase_protection is True
+    with test_ctx:
+        test_ctx.set_expected_responses(
+            [
+                # -> Initialize
+                messages.Features,
+                # -> GetPublicKey (via `derive()`)
+                messages.PassphraseRequest,
+                # -> PassphraseAck (via `derive()`)
+                messages.PublicKey,
+                # -> GetFeatures (via `refresh_features()` via `derive()`)
+                messages.Features,
+                # -> GetAddress (below)
+                messages.Address,
+            ]
+        )
+        session = test_ctx.get_session()
+        assert session.features.pin_protection is True
+        assert session.features.passphrase_protection is True
+        # Do passphrase-protected action, PassphraseRequest should be raised
+        get_test_address(session)
 
-    # Do passphrase-protected action, PassphraseRequest should be raised
-    resp = session.call_raw(
-        messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0"))
-    )
-    assert isinstance(resp, messages.PassphraseRequest)
-    session.call_raw(messages.Cancel())
 
-
-def test_nopin_nopassphrase(session: Session):
+def test_nopin_nopassphrase(test_ctx: TrezorTestContext):
+    session = test_ctx.get_seedless_session()
     mnemonic = MNEMONIC12.split(" ")
     ret = session.call_raw(
         messages.RecoveryDevice(
@@ -132,9 +145,9 @@ def test_nopin_nopassphrase(session: Session):
     assert mnemonic == [None] * 12
 
     # Mnemonic is the same
-    session.refresh_features()
     assert debug.state().mnemonic_secret == MNEMONIC12.encode()
 
+    session = test_ctx.get_session()
     assert session.features.pin_protection is False
     assert session.features.passphrase_protection is False
 

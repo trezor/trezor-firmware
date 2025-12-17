@@ -19,7 +19,7 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.client import MAX_PIN_LENGTH
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ..common import get_test_address
 
@@ -61,6 +61,7 @@ def test_set_pin(session: Session):
                 messages.PinMatrixRequest,
                 messages.PinMatrixRequest,
                 messages.Success,
+                messages.Features,
             ]
         )
         device.change_pin(session)
@@ -87,6 +88,7 @@ def test_change_pin(session: Session):
                 messages.PinMatrixRequest,
                 messages.PinMatrixRequest,
                 messages.Success,
+                messages.Features,
             ]
         )
         device.change_pin(session)
@@ -111,6 +113,7 @@ def test_remove_pin(session: Session):
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
                 messages.PinMatrixRequest,
                 messages.Success,
+                messages.Features,
             ]
         )
         device.change_pin(session, remove=True)
@@ -187,6 +190,16 @@ def test_set_invalid(session: Session, invalid_pin):
 
     # Ensure the invalid PIN is detected
     assert isinstance(ret, messages.Failure)
+
+    # For the "string overflow" failure, the PIN flow on T1 did not stop!
+    # We could send a smaller `PinMatrixAck` and it would pick up where it left off.
+    # The test code assumes that the failure aborted whatever was on,
+    # but in that special case that is not what happens.
+    # Sending an Initialize message is valid in such case but the session id
+    # is not processed, which triggers a failure.
+    # Instead, we properly terminate the PIN flow with a Cancel
+    with pytest.raises(Cancelled):
+        session.call(messages.Cancel())
 
     # Check that there's still no PIN protection now
     session.refresh_features()

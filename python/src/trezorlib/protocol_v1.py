@@ -105,7 +105,6 @@ class SessionV1(client.Session["TrezorClientV1", t.Optional[bytes]]):
     ) -> None:
         super().__init__(client, id=id)
         self.seedless = seedless
-        self.is_invalid = False
 
     def __str__(self) -> str:
         return f"SessionV1(id={self.id.hex() if self.id else '(none)'})"
@@ -124,6 +123,9 @@ class SessionV1(client.Session["TrezorClientV1", t.Optional[bytes]]):
         - activate an existing session, and/or trigger an InvalidSessionError
           if the session has expired.
         """
+        if self.is_invalid:
+            raise exceptions.InvalidSessionError(self.id)
+
         # notify the client that this is now the active session
         self.client._last_active_session = self
         LOG.info("Activating session %s", self, extra={"session": self})
@@ -291,6 +293,7 @@ class TrezorClientV1(client.TrezorClient[SessionV1]):
             # return the features that we got from Initialize()
             session = self._get_any_session()
             return session.initialize()
+        assert not self._last_active_session.is_invalid
         return super()._get_features()
 
     def _get_session(
@@ -344,9 +347,9 @@ def probe(
     transport: Transport, *, mapping: ProtobufMapping = mapping.DEFAULT_MAPPING
 ) -> bool:
     """Probe the transport to see if it supports protocol v1."""
-    ping_msg = messages.Ping(message="protocol-v1-test")
-    ping_msg_type, ping_msg_bytes = mapping.encode(ping_msg)
-    write(transport, ping_msg_type, ping_msg_bytes)
+    cancel_msg = messages.Cancel()
+    cancel_msg_type, cancel_msg_bytes = mapping.encode(cancel_msg)
+    write(transport, cancel_msg_type, cancel_msg_bytes)
     resp_type, resp_bytes = read(transport)
     resp = mapping.decode(resp_type, resp_bytes)
     if isinstance(resp, messages.Failure):
