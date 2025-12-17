@@ -11,13 +11,12 @@ impl Dict {
     /// Allocate a new dictionary on the GC heap, empty, but with a capacity of
     /// `capacity` items.
     pub fn alloc_with_capacity(capacity: usize) -> Result<Gc<Self>, Error> {
-        catch_exception(|| unsafe {
-            // SAFETY: We expect that `ffi::mp_obj_new_dict` either returns a GC-allocated
-            // pointer to `ffi::mp_obj_dict_t` or raises.
-            // EXCEPTION: Will raise if allocation fails.
-            let ptr = ffi::mp_obj_new_dict(capacity);
-            Gc::from_raw(ptr.as_ptr().cast())
-        })
+        // SAFETY: We expect that `ffi::mp_obj_new_dict` either returns a GC-allocated
+        // pointer to `ffi::mp_obj_dict_t` or raises.
+        // EXCEPTION: Will raise if allocation fails.
+        let ptr = catch_exception!(unsafe { ffi::mp_obj_new_dict } => { capacity })?;
+        // SAFETY: `ptr` is a freshly created dict
+        Ok(unsafe { Gc::from_raw(ptr.as_ptr().cast()) })
     }
 
     /// Constructs a dictionary definition by taking ownership of given [`Map`].
