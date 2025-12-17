@@ -114,3 +114,10 @@ def from_seed(seed: AnyBytes, curve_name: str) -> HDNode:
     """
     Construct a BIP0032 HD node from a BIP0039 seed value.
     """
+
+
+# upymod/modtrezorcrypto/modtrezorcrypto-bip32.h
+def deserialize_public(xpub: str, version: int, curve_name: str) -> HDNode:
+    """
+    Deserialize a base58-encoded extended public key into an HDNode.
+    """
