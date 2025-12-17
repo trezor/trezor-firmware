@@ -89,10 +89,16 @@ def _get_session(
     return test_ctx._wrap_session(session)  # type: ignore
 
 
+def _initialize_ok(session: SessionV1) -> bool:
+    session.client._last_active_session = session
+    resp = session.call_raw(messages.Initialize(session_id=session.id))
+    features = messages.Features.ensure_isinstance(resp)
+    return features.session_id == session.id
+
+
 @pytest.mark.setup_client(passphrase=True)
 def test_session_with_passphrase(test_ctx: TrezorTestContext):
     session = _get_session(test_ctx)
-    session_id = session.id
 
     # GetPublicKey requires passphrase and since it is not cached,
     # Trezor will prompt for it.
@@ -101,14 +107,13 @@ def test_session_with_passphrase(test_ctx: TrezorTestContext):
     # Call Initialize again, this time with the received session id and then call
     # GetPublicKey. The passphrase should be cached now so Trezor must
     # not ask for it again, whilst returning the same xpub.
-    session.initialize()
-    assert session.id == session_id
+    assert _initialize_ok(session)
     assert _get_xpub(session) == XPUB_PASSPHRASES["A"]
 
     # If we set session id in Initialize to None, the cache will be cleared
     # and Trezor will ask for the passphrase again.
     session_2 = _get_session(test_ctx)
-    assert session_2.id != session_id
+    assert session_2.id != session.id
     assert _get_xpub(session_2, passphrase="A") == XPUB_PASSPHRASES["A"]
 
     # Unknown session id leads to FailedSessionResumption in trezorlib.
@@ -121,7 +126,7 @@ def test_session_with_passphrase(test_ctx: TrezorTestContext):
     assert session_3.id is not None
     assert len(session_3.id) == 32
     assert session_3.id != b"X" * 32
-    assert session_3.id != session_id
+    assert session_3.id != session.id
     assert session_3.id != session_2.id
     assert _get_xpub(session_3, passphrase="A") == XPUB_PASSPHRASES["A"]
 
@@ -130,43 +135,36 @@ def test_session_with_passphrase(test_ctx: TrezorTestContext):
 def test_multiple_sessions(test_ctx: TrezorTestContext):
     # start SESSIONS_STORED sessions
     SESSIONS_STORED = 10
-    session_ids = []
     sessions = []
     for _ in range(SESSIONS_STORED):
         session = _get_session(test_ctx)
         sessions.append(session)
-        session_ids.append(session.id)
 
     # Resume each session
     for i in range(SESSIONS_STORED):
-        sessions[i].initialize()
-        assert session_ids[i] == sessions[i].id
+        assert _initialize_ok(sessions[i])
 
     # Creating a new session replaces the least-recently-used session
     test_ctx.get_session()
 
     # Resuming session 1 through SESSIONS_STORED will still work
     for i in range(1, SESSIONS_STORED):
-        sessions[i].initialize()
-        assert session_ids[i] == sessions[i].id
+        assert _initialize_ok(sessions[i])
 
     # Resuming session 0 will not work
-    with pytest.raises(exceptions.InvalidSessionError):
-        sessions[0].initialize()
+    assert not _initialize_ok(sessions[0])
 
     # New session bumped out the least-recently-used anonymous session.
     # Resuming session 1 through SESSIONS_STORED will still work
     for i in range(1, SESSIONS_STORED):
-        sessions[i].initialize()
-        assert session_ids[i] == sessions[i].id
+        assert _initialize_ok(sessions[i])
 
     # Creating a new session replaces session_ids[0] again
     _get_session(test_ctx)
 
     # Resuming all sessions one by one will in turn bump out the previous session.
     for i in range(SESSIONS_STORED):
-        with pytest.raises(exceptions.InvalidSessionError):
-            sessions[i].initialize()
+        assert not _initialize_ok(sessions[i])
 
 
 @pytest.mark.setup_client(passphrase=True)
@@ -225,12 +223,12 @@ def test_max_sessions_with_passphrases(test_ctx: TrezorTestContext):
     for _ in range(20):
         random.shuffle(shuffling)
         for passphrase in shuffling:
-            sessions[passphrase].initialize()
+            assert _initialize_ok(sessions[passphrase])
             assert _get_xpub(sessions[passphrase]) == XPUB_PASSPHRASES[passphrase]
 
     # make sure the usage order is the reverse of the creation order
     for passphrase in reversed(passphrases):
-        sessions[passphrase].initialize()
+        assert _initialize_ok(sessions[passphrase])
         assert _get_xpub(sessions[passphrase]) == XPUB_PASSPHRASES[passphrase]
 
     # creating one more session will exceed the limit
@@ -240,14 +238,7 @@ def test_max_sessions_with_passphrases(test_ctx: TrezorTestContext):
 
     # restoring the sessions in reverse will evict the next-up session
     for passphrase in reversed(passphrases):
-        with pytest.raises(exceptions.InvalidSessionError) as e:
-            sessions[passphrase].initialize()
-        assert isinstance(e.value.from_message, messages.Features)
-        assert e.value.from_message.session_id != sessions[passphrase].id
-        # un-invalidate the session object
-        sessions[passphrase].id = e.value.from_message.session_id
-        sessions[passphrase].is_invalid = False
-        test_ctx.client._last_active_session = sessions[passphrase]
+        assert not _initialize_ok(sessions[passphrase])
 
         _get_xpub(sessions[passphrase], passphrase="whatever")  # passphrase is prompted
 
