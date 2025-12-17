@@ -492,7 +492,10 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
             elif isinstance(resp, messages.ButtonRequest):
                 resp = self._callback_button(session, resp)
             elif isinstance(resp, messages.Failure):
-                if resp.code == messages.FailureType.ActionCancelled:
+                if resp.code in (
+                    messages.FailureType.ActionCancelled,
+                    messages.FailureType.PinCancelled,
+                ):
                     raise exceptions.Cancelled
                 elif resp.code == messages.FailureType.InvalidSession:
                     raise exceptions.InvalidSessionError(session.id)

@@ -22,8 +22,9 @@ from slip10 import SLIP10
 
 from trezorlib import device, messages
 from trezorlib.btc import get_public_node
+from trezorlib.debuglink import DebugLink
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.debuglink import TrezorTestContext as Client
+from trezorlib.debuglink import TrezorTestContext
 from trezorlib.tools import parse_path
 
 from ...common import (
@@ -236,8 +237,8 @@ def test_already_initialized(session: Session):
 
 
 class Bip39InputFlow:
-    def __init__(self, client: Client):
-        self.client = client
+    def __init__(self, debug: DebugLink):
+        self.debug = debug
         self.mnemonic = None
 
     def _get_mnemonic(
@@ -247,15 +248,15 @@ class Bip39InputFlow:
         for _ in range(strength // 32 * 3):
             br = yield
             assert br.code == messages.ButtonRequestType.ConfirmWord
-            mnemonic.append(self.client.debug.read_reset_word())
-            self.client.debug.press_yes()
+            mnemonic.append(self.debug.read_reset_word())
+            self.debug.press_yes()
         return mnemonic
 
     def input_flow_bip39_reset_backup(self, strength: int) -> BRGeneratorType:
         # 1. Confirm Reset
         br = yield
         assert br.code == messages.ButtonRequestType.ProtectCall
-        self.client.debug.press_yes()
+        self.debug.press_yes()
 
         mnemonic_write = yield from self._get_mnemonic(strength)
         mnemonic_check = yield from self._get_mnemonic(strength)
@@ -265,12 +266,13 @@ class Bip39InputFlow:
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_entropy_check(session: Session):
+def test_reset_entropy_check(test_ctx: TrezorTestContext):
     strength = 256  # 24 words
 
-    with session.test_ctx as client:
-        IF = Bip39InputFlow(client)
-        client.set_input_flow(IF.input_flow_bip39_reset_backup(strength))
+    session = test_ctx.get_seedless_session()
+    with test_ctx:
+        IF = Bip39InputFlow(test_ctx.debug)
+        test_ctx.set_input_flow(IF.input_flow_bip39_reset_backup(strength))
         # No PIN, no passphrase
         path_xpubs = device.setup(
             session,
@@ -284,19 +286,21 @@ def test_reset_entropy_check(session: Session):
         )
 
     # Check that the displayed mnemonic is identical to the stored one.
-    assert IF.mnemonic.encode("utf-8") == client.debug.state().mnemonic_secret
+    assert IF.mnemonic.encode("utf-8") == test_ctx.debug.state().mnemonic_secret
 
     # Check that the device is properly initialized.
-    assert client.features.initialized is True
+    assert test_ctx.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        test_ctx.features.backup_availability
+        == messages.BackupAvailability.NotAvailable
     )
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
+    assert test_ctx.features.pin_protection is False
+    assert test_ctx.features.passphrase_protection is False
 
     seed = Mnemonic.to_seed(IF.mnemonic, passphrase="")
     slip10 = SLIP10.from_seed(seed)
 
+    session = test_ctx.get_session()
     for path, xpub in path_xpubs:
         # Check that the device returns the same XPUBs as those from the entropy check.
         res = get_public_node(session, path)
@@ -311,6 +315,7 @@ def test_entropy_check(session: Session):
     with session.test_ctx as client:
         client.set_expected_responses(
             [
+                messages.Features,
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
                 messages.EntropyRequest,
                 messages.EntropyCheckReady,
@@ -325,6 +330,7 @@ def test_entropy_check(session: Session):
                 messages.PublicKey,
                 messages.PublicKey,
                 messages.Success,
+                messages.Features,
             ]
         )
         device.setup(
@@ -344,9 +350,11 @@ def test_no_entropy_check(session: Session):
     with session.test_ctx as client:
         client.set_expected_responses(
             [
+                messages.Features,
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
                 messages.EntropyRequest,
                 messages.Success,
+                messages.Features,
             ]
         )
         device.setup(

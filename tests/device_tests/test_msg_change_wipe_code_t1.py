@@ -51,7 +51,9 @@ def _set_wipe_code(session: Session, pin, wipe_code):
 
         client.use_pin_sequence(pins)
         client.set_expected_responses(
-            [messages.ButtonRequest()] + pin_matrices + [messages.Success]
+            [messages.ButtonRequest()]
+            + pin_matrices
+            + [messages.Success, messages.Features]
         )
         device.change_wipe_code(session)
 
@@ -199,5 +201,8 @@ def test_set_wipe_code_invalid(session: Session, invalid_wipe_code: str):
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no wipe code protection.
+    session.cancel()
+    messages.Failure.ensure_isinstance(session.read())
+
     session.ensure_unlocked()
     assert session.features.wipe_code_protection is False

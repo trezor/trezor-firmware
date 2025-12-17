@@ -1497,26 +1497,9 @@ class TrezorTestContext:
         This function will call `Ping` and read responses until it locates a `Success`
         with the expected text. This means that we are reading up-to-date responses.
         """
-        import secrets
-
-        if isinstance(self, protocol_v1.TrezorClientV1):
-            with self._get_any_session() as session:
-                if self.model is models.T1B1:
-                    # Start by canceling whatever is on screen. This will work to cancel T1 PIN
-                    # prompt, which is in TINY mode and does not respond to `Ping`.
-                    session.write(messages.Cancel())
-
-                message = "SYNC" + secrets.token_hex(8)
-                session.write(messages.Ping(message=message))
-                success = messages.Success(message=message)
-                while True:
-                    try:
-                        if session.read() == success:
-                            return
-                    except Exception:
-                        pass
-
-        elif isinstance(self, TrezorClientThp):
+        if self.is_protocol_v1():
+            protocol_v1.sync_responses(self.transport)
+        else:
             self.channel.sync_responses()
 
     def mnemonic_callback(self, _: t.Any) -> str:

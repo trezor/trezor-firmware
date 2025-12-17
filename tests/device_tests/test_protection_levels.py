@@ -295,7 +295,7 @@ def test_reset_device(session: Session):
     assert session.features.passphrase_protection is False
     with session.test_ctx as client:
         client.set_expected_responses(
-            [messages.ButtonRequest]
+            [messages.Features, messages.ButtonRequest]
             + [messages.EntropyRequest]
             + [messages.ButtonRequest] * 24
             + [messages.Success, messages.Features]
@@ -309,7 +309,6 @@ def test_reset_device(session: Session):
             entropy_check_count=0,
             _get_entropy=MOCK_GET_ENTROPY,
         )
-        session.call(messages.GetFeatures())
 
     with pytest.raises(TrezorFailure):
         # This must fail, because device is already initialized
@@ -332,9 +331,9 @@ def test_recovery_device(session: Session):
     session.test_ctx.use_mnemonic(MNEMONIC12)
     with session.test_ctx as client:
         client.set_expected_responses(
-            [messages.ButtonRequest]
+            [messages.Features, messages.ButtonRequest]
             + [messages.WordRequest] * 24
-            + [messages.Success]  # , messages.Features]
+            + [messages.Success, messages.Features]
         )
 
         device.recover(
