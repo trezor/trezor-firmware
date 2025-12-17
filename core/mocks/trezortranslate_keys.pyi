@@ -450,7 +450,6 @@ class TR:
     instructions__tap: str = "Tap"
     instructions__tap_to_confirm: str = "Tap to confirm"
     instructions__tap_to_continue: str = "Tap to continue"
-    instructions__tap_to_start: str = "Tap to start"
     instructions__view_all_data: str = "View all data in the menu."
     joint__title: str = "Joint transaction"
     joint__to_the_total_amount: str = "To the total amount:"
