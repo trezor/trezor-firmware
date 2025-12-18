@@ -68,7 +68,7 @@ def lower_models_minimum_version(func):
         models.T2T1 = dataclasses.replace(models.T2T1, minimum_version=(2, 0, 0))
         models.TREZOR_ONE = models.T1B1
         models.TREZOR_T = models.T2T1
-        models.ALL_MODELS = {models.T1B1, models.T2T1}
+        models.ALL_MODELS = {models.T1B1, models.T2T1, models.T3W1}
 
         try:
             result = func(*args, **kwargs)
@@ -399,6 +399,8 @@ def test_upgrade_shamir_recovery(
     tag: str | None,
     model: str | None,
 ):
+    if model == "T3W1":
+        pytest.xfail("Debug-entering of shares is not implemented for T3W1.")
     with (
         EmulatorWrapper(gen, tag, model) as emu,
         BackgroundDeviceHandler(emu.client) as device_handler,
@@ -414,6 +416,8 @@ def test_upgrade_shamir_recovery(
         recovery_old.confirm_recovery(debug)
         recovery_old.select_number_of_words(debug, version_from_tag(tag))
         layout = recovery_old.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
+        if emu.client.model.internal_name == "T3W1":
+            pytest.xfail("Debug-entering of shares is not implemented for T3W1.")
         if not debug.legacy_ui and not debug.legacy_debug:
             assert (
                 "1 of 3 shares entered" in layout.text_content()

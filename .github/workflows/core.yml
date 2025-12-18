@@ -383,7 +383,7 @@ jobs:
       matrix:
         # FIXME: T3B1 https://github.com/trezor/trezor-firmware/issues/2724
         # FIXME: T3T1 https://github.com/trezor/trezor-firmware/issues/3595
-        model: [T2T1]
+        model: [T2T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_UPGRADE_TEST: core
