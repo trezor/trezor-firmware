@@ -23,7 +23,7 @@ import time
 from typing import Iterable, List
 
 from ..log import DUMP_PACKETS
-from ..models import TREZORS, TrezorModel
+from ..models import ALL_MODELS, TrezorModel
 from . import UDEV_RULES_STR, DeviceIsBusy, Timeout, Transport, TransportException
 
 LOG = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ class WebUsbTransport(Transport):
             atexit.register(cls.context.close)
 
         if models is None:
-            models = TREZORS
+            models = ALL_MODELS
         usb_ids = [id for model in models for id in model.usb_ids]
         devices: List["WebUsbTransport"] = []
         for dev in cls.context.getDeviceIterator(skip_on_error=True):

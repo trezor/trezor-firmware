@@ -127,7 +127,9 @@ TREZOR_SAFE5 = T3T1
 TREZOR_DISC1 = DISC1
 TREZOR_DISC2 = DISC2
 
-TREZORS = frozenset({T1B1, T2T1, T2B1, T3T1, T3B1, T3W1, DISC1, DISC2})
+LEGACY_MODELS = frozenset({T1B1})
+CORE_MODELS = frozenset({T2T1, T2B1, T3T1, T3B1, T3W1, DISC1, DISC2})
+ALL_MODELS = LEGACY_MODELS | CORE_MODELS
 
 
 def by_name(name: str | None) -> TrezorModel | None:
@@ -138,7 +140,7 @@ def by_name(name: str | None) -> TrezorModel | None:
     """
     if name is None:
         return T1B1
-    for model in TREZORS:
+    for model in ALL_MODELS:
         if model.name == name:
             return model
     return None
@@ -152,7 +154,7 @@ def by_internal_name(name: str | None) -> TrezorModel | None:
     """
     if name is None:
         return None
-    for model in TREZORS:
+    for model in ALL_MODELS:
         if model.internal_name == name:
             return model
     return None
