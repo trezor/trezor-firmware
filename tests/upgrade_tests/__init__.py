@@ -20,7 +20,9 @@ from typing import List, Tuple
 import pytest
 from _pytest.mark.structures import MarkDecorator
 
-from ..emulators import ALL_TAGS, LOCAL_BUILD_PATHS
+from trezorlib.models import CORE_MODELS, LEGACY_MODELS, T1B1, T2T1, by_internal_name
+
+from ..emulators import ALL_TAGS, LOCAL_BUILD_PATHS, gen_from_model
 
 SELECTED_GENS = [
     gen.strip() for gen in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",") if gen
@@ -67,48 +69,65 @@ def for_all(
     Usage example:
 
     >>> @for_all()
-    >>> def test_runs_for_all_old_versions(gen, tag):
+    >>> def test_runs_for_all_old_versions(gen, tag, model):
     >>>     assert True
 
-    Arguments can be "core" and "legacy", and you can specify core_minimum_version and
-    legacy_minimum_version as triplets.
+    Arguments can be trezor models (e.g."T1B1" and "T2T1") or aliases "core" and "legacy",
+    and you can specify core_minimum_version and legacy_minimum_version as triplets.
 
     The test function should have arguments `gen` ("core" or "legacy") and `tag`
     (version tag usable in EmulatorWrapper call)
     """
+    models = []
+    gens = set()
+    for item in args:
+        if item == "core":
+            models.extend(CORE_MODELS)
+            gens.add("core")
+        elif item == "legacy":
+            models.extend(LEGACY_MODELS)
+            gens.add("legacy")
+        else:
+            models.append(by_internal_name(item))
+            gens.add(gen_from_model(item))
+
     if not args:
-        args = ("core", "legacy")
+        gens = ["core", "legacy"]
+        models = [T1B1, T2T1]
 
     # If any gens were selected, use them. If none, select all.
-    enabled_gens = SELECTED_GENS or args
+    enabled_gens = SELECTED_GENS or list(gens)
 
-    all_params: list[tuple[str, str | None]] = []
-    for gen in args:
-        if gen == "legacy":
+    all_params: set[tuple[str, str | None, str | None]] = set()
+    for model in models:
+        if model in LEGACY_MODELS:
             minimum_version = legacy_minimum_version
-        elif gen == "core":
+        elif model in CORE_MODELS:
             minimum_version = core_minimum_version
         else:
             raise ValueError
 
+        gen = gen_from_model(model.internal_name)
         if gen not in enabled_gens:
             continue
         try:
-            for tag in ALL_TAGS[gen]:
+            for tag in ALL_TAGS[model.internal_name]:
                 tag_version = version_from_tag(tag)
                 if tag_version is not None and tag_version < minimum_version:
                     continue
-                all_params.append((gen, tag))
+                all_params.add((gen, tag, model.internal_name))
 
-            # at end, add None tag, which is the current master
-            all_params.append((gen, None))
+            # At the end, add (gen, None, None), which is the current master.
+            # The same (gen, None, None) can be added multiple times as there are
+            # more models than gens. That is why all_params is defined as a set.
+            all_params.add((gen, None, None))
         except KeyError:
             pass
 
     if not all_params:
         return pytest.mark.skip("no versions are applicable")
 
-    return pytest.mark.parametrize("gen, tag", all_params)
+    return pytest.mark.parametrize("gen, tag, model", all_params)
 
 
 def for_tags(*args: Tuple[str, List[str]]) -> "MarkDecorator":

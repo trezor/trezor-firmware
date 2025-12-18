@@ -13,14 +13,16 @@
 #
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+from __future__ import annotations
 
 import os
 import tempfile
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Sequence, Tuple
 
 from trezorlib._internal.emulator import CoreEmulator, Emulator, LegacyEmulator
+from trezorlib.models import CORE_MODELS, LEGACY_MODELS, by_internal_name
 
 ROOT = Path(__file__).resolve().parent.parent
 BINDIR = ROOT / "tests" / "emulators"
@@ -37,6 +39,15 @@ ENV = {"SDL_VIDEODRIVER": "dummy"}
 TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
 
 
+def gen_from_model(model_internal_name: str) -> str:
+    model = by_internal_name(model_internal_name)
+    if model in LEGACY_MODELS:
+        return "legacy"
+    if model in CORE_MODELS:
+        return "core"
+    raise ValueError(f"Unknown model: {model_internal_name}")
+
+
 def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
     if tag is not None and tag.startswith("v") and len(tag.split(".")) == 3:
         version = ".".join(str(i) for i in version_tuple)
@@ -44,23 +55,19 @@ def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
             raise RuntimeError(f"Version mismatch: tag {tag} reports version {version}")
 
 
-def filename_from_tag(gen: str, tag: str) -> Path:
-    return BINDIR / f"trezor-emu-{gen}-{tag}"
+def get_emulator_path(gen: str, model: str, tag: str) -> Path:
+    return BINDIR / model / f"trezor-emu-{gen}-{model}-{tag}"
 
 
-def get_tags() -> Dict[str, List[str]]:
-    files = list(BINDIR.iterdir())
-    if not files:
-        raise ValueError(
-            "No files found. Use download_emulators.sh to download emulators."
-        )
+def get_tags() -> dict[str, list[str]]:
+    files = [p for p in BINDIR.glob("*/trezor-emu-*") if p.is_file()]
 
     result = defaultdict(list)
     for f in sorted(files):
         try:
-            # example: "trezor-emu-core-v2.1.1" or "trezor-emu-core-v2.1.1-46ab42fw"
-            _, _, gen, tag = f.name.split("-", maxsplit=3)
-            result[gen].append(tag)
+            # example: "trezor-emu-core-T2T1-v2.0.8" or "trezor-emu-core-T2T1-v2.0.8-46ab42fw"
+            _, _, _, model, tag = f.name.split("-", maxsplit=4)
+            result[model].append(tag)
         except ValueError:
             pass
     return result
@@ -90,19 +97,22 @@ def _get_port(worker_id: int) -> int:
 
 
 class EmulatorWrapper:
+
     def __init__(
         self,
         gen: str,
-        tag: Optional[str] = None,
-        storage: Optional[bytes] = None,
+        tag: str | None = None,
+        model: str | None = None,
+        storage: bytes | None = None,
         worker_id: int = 0,
         headless: bool = True,
         auto_interact: bool = True,
         main_args: Sequence[str] = ("-m", "main"),
         launch_tropic_model: bool = False,
     ) -> None:
-        if tag is not None:
-            executable = filename_from_tag(gen, tag)
+
+        if tag is not None and model is not None:
+            executable = get_emulator_path(gen, model, tag)
         else:
             executable = LOCAL_BUILD_PATHS[gen]
 

@@ -13,10 +13,11 @@
 #
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+from __future__ import annotations
 
 import dataclasses
 import functools
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 import pytest
 from shamir_mnemonic import shamir
@@ -59,7 +60,7 @@ def lower_models_minimum_version(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        original_trezors = models.TREZORS.copy()
+        original_trezors = models.ALL_MODELS.copy()
         original_t1b1 = models.T1B1
         original_t2t1 = models.T2T1
 
@@ -67,7 +68,7 @@ def lower_models_minimum_version(func):
         models.T2T1 = dataclasses.replace(models.T2T1, minimum_version=(2, 0, 0))
         models.TREZOR_ONE = models.T1B1
         models.TREZOR_T = models.T2T1
-        models.TREZORS = {models.T1B1, models.T2T1}
+        models.ALL_MODELS = {models.T1B1, models.T2T1}
 
         try:
             result = func(*args, **kwargs)
@@ -76,7 +77,7 @@ def lower_models_minimum_version(func):
             models.T2T1 = original_t2t1
             models.TREZOR_ONE = models.T1B1
             models.TREZOR_T = models.T2T1
-            models.TREZORS = original_trezors
+            models.ALL_MODELS = original_trezors
         return result
 
     return wrapper
@@ -110,7 +111,11 @@ def _get_session(client: "Client", passphrase: str | object = "") -> "Session":
 
 @for_all()
 @lower_models_minimum_version
-def test_upgrade_load(gen: str, tag: str) -> None:
+def test_upgrade_load(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+) -> None:
     def asserts(client: "Client"):
         client.refresh_features()
         assert not client.features.pin_protection
@@ -122,7 +127,7 @@ def test_upgrade_load(gen: str, tag: str) -> None:
             == ADDRESS
         )
 
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tag, model) as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -141,7 +146,11 @@ def test_upgrade_load(gen: str, tag: str) -> None:
 
 @for_all("legacy")
 @lower_models_minimum_version
-def test_upgrade_load_pin(gen: str, tag: str) -> None:
+def test_upgrade_load_pin(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+) -> None:
     PIN = "1234"
 
     def asserts(client: "Client") -> None:
@@ -154,7 +163,7 @@ def test_upgrade_load_pin(gen: str, tag: str) -> None:
             session = client.get_session()
             assert btc.get_address(session, "Bitcoin", PATH) == ADDRESS
 
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tag, model) as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -195,7 +204,7 @@ def test_storage_upgrade_progressive(gen: str, tags: List[str]):
         client.use_pin_sequence([PIN])
         assert btc.get_address(client.get_session(), "Bitcoin", PATH) == ADDRESS
 
-    with EmulatorWrapper(gen, tags[0]) as emu:
+    with EmulatorWrapper(gen, tags[0], model="T1B1") as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -208,7 +217,7 @@ def test_storage_upgrade_progressive(gen: str, tags: List[str]):
         storage = emu.get_storage()
 
     for tag in tags[1:]:
-        with EmulatorWrapper(gen, tag, storage=storage) as emu:
+        with EmulatorWrapper(gen, tag, model="T1B1", storage=storage) as emu:
             storage = emu.get_storage()
 
     with EmulatorWrapper(gen, storage=storage) as emu:
@@ -218,7 +227,11 @@ def test_storage_upgrade_progressive(gen: str, tags: List[str]):
 
 @for_all("legacy", legacy_minimum_version=(1, 9, 0))
 @lower_models_minimum_version
-def test_upgrade_wipe_code(gen: str, tag: str):
+def test_upgrade_wipe_code(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+):
     PIN = "1234"
     WIPE_CODE = "4321"
 
@@ -230,7 +243,7 @@ def test_upgrade_wipe_code(gen: str, tag: str):
         client.use_pin_sequence([PIN])
         assert btc.get_address(client.get_session(), "Bitcoin", PATH) == ADDRESS
 
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tag, model) as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -266,7 +279,11 @@ def test_upgrade_wipe_code(gen: str, tag: str):
 
 @for_all("legacy")
 @lower_models_minimum_version
-def test_upgrade_reset(gen: str, tag: str):
+def test_upgrade_reset(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+):
     def asserts(client: "Client"):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
@@ -276,7 +293,7 @@ def test_upgrade_reset(gen: str, tag: str):
         assert not client.features.unfinished_backup
         assert not client.features.no_backup
 
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tag, model) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             strength=STRENGTH,
@@ -299,7 +316,11 @@ def test_upgrade_reset(gen: str, tag: str):
 
 @for_all()
 @lower_models_minimum_version
-def test_upgrade_reset_skip_backup(gen: str, tag: str):
+def test_upgrade_reset_skip_backup(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+):
     def asserts(client: "Client"):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
@@ -309,7 +330,7 @@ def test_upgrade_reset_skip_backup(gen: str, tag: str):
         assert not client.features.unfinished_backup
         assert not client.features.no_backup
 
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tag, model) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             strength=STRENGTH,
@@ -333,7 +354,11 @@ def test_upgrade_reset_skip_backup(gen: str, tag: str):
 
 @for_all(legacy_minimum_version=(1, 7, 2))
 @lower_models_minimum_version
-def test_upgrade_reset_no_backup(gen: str, tag: str):
+def test_upgrade_reset_no_backup(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+):
     def asserts(client: "Client"):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
@@ -343,7 +368,7 @@ def test_upgrade_reset_no_backup(gen: str, tag: str):
         assert not client.features.unfinished_backup
         assert client.features.no_backup
 
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tag, model) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             strength=STRENGTH,
@@ -369,9 +394,13 @@ def test_upgrade_reset_no_backup(gen: str, tag: str):
 # Although Shamir was introduced in 2.1.2 already, the debug instrumentation was not present until 2.1.9.
 @for_all("core", core_minimum_version=(2, 1, 9))
 @lower_models_minimum_version
-def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
+def test_upgrade_shamir_recovery(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+):
     with (
-        EmulatorWrapper(gen, tag) as emu,
+        EmulatorWrapper(gen, tag, model) as emu,
         BackgroundDeviceHandler(emu.client) as device_handler,
     ):
         assert emu.client.features.recovery_status == RecoveryStatus.Nothing
@@ -424,8 +453,12 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
 
 @for_all("core", core_minimum_version=(2, 1, 9))
 @lower_models_minimum_version
-def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
-    with EmulatorWrapper(gen, tag) as emu:
+def test_upgrade_shamir_backup(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+):
+    with EmulatorWrapper(gen, tag, model) as emu:
         session = emu.client.get_seedless_session()
         # Generate a new encrypted master secret and record it.
         device.setup(
@@ -496,9 +529,13 @@ def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
 
 @for_all(legacy_minimum_version=(1, 8, 4), core_minimum_version=(2, 1, 9))
 @lower_models_minimum_version
-def test_upgrade_u2f(gen: str, tag: str):
+def test_upgrade_u2f(
+    gen: str,
+    tag: str | None,
+    model: str | None,
+):
     """Check U2F counter stayed the same after an upgrade."""
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tag, model) as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -528,7 +565,8 @@ def test_upgrade_u2f(gen: str, tag: str):
 )
 def test_cardano_address_does_not_change_by_upgrade(
     gen: str,
-    tag: Optional[str],
+    tag: str,
+    model: str,
     backup_type: BackupType,
     derivation_type: CardanoDerivationType,
 ):
@@ -547,7 +585,7 @@ def test_cardano_address_does_not_change_by_upgrade(
         # SLIP-39 was not implemented for Cardano in v2.1.2
         return
 
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tag, model) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             pin_protection=False,
@@ -571,8 +609,8 @@ def test_cardano_address_does_not_change_by_upgrade(
 
 if __name__ == "__main__":
     if not ALL_TAGS:
-        print("No versions found. Remember to run download_emulators.sh")
-    for k, v in ALL_TAGS.items():
-        print(f"Found versions for {k}: {v}")
+        print("No emulators found. Remember to run download_emulators.sh")
+    for model, tag in ALL_TAGS.items():
+        print(f"Found versions for {model}: {tag}")
     print()
     print(f"Use `pytest {__file__}` to run tests")

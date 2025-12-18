@@ -187,8 +187,8 @@ def _find_client(request: pytest.FixtureRequest, interact: bool) -> Client:
 
 class ModelsFilter:
     MODEL_SHORTCUTS = {
-        "core": models.TREZORS - {models.T1B1},
-        "legacy": {models.T1B1},
+        "core": models.CORE_MODELS,
+        "legacy": models.LEGACY_MODELS,
         "t1": {models.T1B1},
         "t2": {models.T2T1},
         "tt": {models.T2T1},
@@ -201,7 +201,7 @@ class ModelsFilter:
 
     def __init__(self, node: Node) -> None:
         markers = node.iter_markers("models")
-        self.models = set(models.TREZORS)
+        self.models = set(models.ALL_MODELS)
         for marker in markers:
             self._refine_by_marker(marker)
 

@@ -7,10 +7,13 @@ from typing import TypeAlias
 
 import click
 import requests
-from emulators import ALL_MODELS, gen_from_model
+from emulators import gen_from_model
+
+from trezorlib.models import ALL_MODELS
 
 EmulatorDict: TypeAlias = dict[str, list[str]]
 
+ALL_MODEL_NAMES = sorted(m.internal_name for m in ALL_MODELS)
 
 OLDEST_AVAILABLE = {
     "legacy": (1, 6, 2),
@@ -126,7 +129,7 @@ def get_emulators_for_model(model: str, firmwares: EmulatorDict) -> list[Emulato
 
 
 def download_emulators_for_model(model: str) -> None:
-    if model not in ALL_MODELS:
+    if model not in ALL_MODEL_NAMES:
         raise ValueError(f"Unknown model: {model}")
 
     all_releases = get_all_releases()
@@ -138,7 +141,7 @@ def download_emulators_for_model(model: str) -> None:
 
 
 @click.command()
-@click.argument("model", type=click.Choice(ALL_MODELS, case_sensitive=True))
+@click.argument("model", type=click.Choice(ALL_MODEL_NAMES, case_sensitive=True))
 def main(model: str) -> None:
     """
     Download all available emulators for a given Trezor model.
