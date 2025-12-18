@@ -175,7 +175,7 @@ jobs:
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "tests/download_emulators.sh"
+      - run: nix-shell --run "tests/download_emulators.sh T1B1"
       - run: nix-shell --run "uv run pytest tests/upgrade_tests"
 
   legacy_hwi_test:
