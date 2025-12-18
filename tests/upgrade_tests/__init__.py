@@ -78,6 +78,10 @@ def for_all(
     The test function should have arguments `gen` ("core" or "legacy") and `tag`
     (version tag usable in EmulatorWrapper call)
     """
+    if not ALL_TAGS:
+        raise ValueError(
+            "No files found. Use download_emulators.sh to download emulators."
+        )
     models = []
     gens = set()
     for item in args:
