@@ -217,12 +217,14 @@ SOURCE_MOD += [
     'embed/util/image/image.c',
     'embed/util/rsod/rsod_special.c',
     'embed/rtl/error_handling.c',
-    'embed/rtl/printf.c',
     'embed/rtl/strutils.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+if not PRODUCTION:
+    SOURCE_MOD += ['embed/rtl/printf.c']
 
 CPPDEFINES_MOD += [
     'TRANSLATIONS',

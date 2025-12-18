@@ -6,6 +6,8 @@ import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
+PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = 'emulator'
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 
@@ -97,12 +99,14 @@ SOURCE_MOD += [
     'embed/util/rsod/rsod_special.c',
     'embed/util/scm_revision/scm_revision.c',
     'embed/rtl/error_handling.c',
-    'embed/rtl/printf.c',
     'embed/rtl/strutils.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+if not PRODUCTION:
+    SOURCE_MOD += ['embed/rtl/printf.c']
 
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
