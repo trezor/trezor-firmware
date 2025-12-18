@@ -399,7 +399,7 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "tests/download_emulators.sh"
+      - run: nix-shell --run "tests/download_emulators.sh ${{ matrix.model }}"
       - run: nix-shell --run "uv run pytest tests/upgrade_tests"
       - uses: actions/upload-artifact@v4
         with:
