@@ -72,10 +72,6 @@ def filename_from_tag(gen: str, model: str, tag: str) -> Path:
 
 def get_tags() -> dict[str, list[str]]:
     files = [p for p in BINDIR.rglob("*") if p.is_file()]
-    if not files:
-        raise ValueError(
-            "No files found. Use download_emulators.sh to download emulators."
-        )
 
     result = defaultdict(list)
     for f in sorted(files):
