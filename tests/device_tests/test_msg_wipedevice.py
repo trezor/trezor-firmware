@@ -21,14 +21,26 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import load_device
 
-from ..common import get_test_address
+from ..common import MNEMONIC12, get_test_address
 
 PIN4 = "1234"
 
 
-@pytest.mark.setup_client(passphrase=True)
 def test_wipe_device(client: Client):
+    # explicitly wipe and configure up the client, in order to get
+    # correct reseeding behavior. see also `test_basic.py::test_device_id_different`
+    device.wipe(client.get_seedless_session())
+    client = client.get_new_client()
+    load_device(
+        client.get_seedless_session(),
+        mnemonic=MNEMONIC12,
+        pin=None,
+        passphrase_protection=True,
+        label="test",
+    )
+
     assert client.features.initialized is True
     assert client.features.label == "test"
     assert client.features.passphrase_protection is True
