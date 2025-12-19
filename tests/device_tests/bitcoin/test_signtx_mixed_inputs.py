@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -60,7 +60,7 @@ def test_non_segwit_segwit_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -99,7 +99,7 @@ def test_segwit_non_segwit_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -146,7 +146,7 @@ def test_segwit_non_segwit_segwit_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -191,7 +191,7 @@ def test_non_segwit_segwit_non_segwit_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())

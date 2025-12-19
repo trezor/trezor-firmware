@@ -23,7 +23,7 @@ from .. import cardano, messages, tools
 from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44h/1815h/0h/0/0"
 
@@ -62,7 +62,7 @@ def cli() -> None:
 @click.option("-i", "--include-network-id", is_flag=True)
 @click.option("-C", "--chunkify", is_flag=True)
 @click.option("-T", "--tag-cbor-sets", is_flag=True)
-@with_session(derive_cardano=True)
+@with_session(cardano=True)
 def sign_tx(
     session: "Session",
     file: TextIO,
@@ -208,7 +208,7 @@ def sign_tx(
     default=messages.CardanoDerivationType.ICARUS,
 )
 @click.option("-C", "--chunkify", is_flag=True)
-@with_session(derive_cardano=True)
+@with_session(cardano=True)
 def get_address(
     session: "Session",
     address: str,
@@ -281,7 +281,7 @@ def get_address(
     default=messages.CardanoDerivationType.ICARUS,
 )
 @click.option("-d", "--show-display", is_flag=True)
-@with_session(derive_cardano=True)
+@with_session(cardano=True)
 def get_public_key(
     session: "Session",
     address: str,
@@ -309,7 +309,7 @@ def get_public_key(
     type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
     default=messages.CardanoDerivationType.ICARUS,
 )
-@with_session(derive_cardano=True)
+@with_session(cardano=True)
 def get_native_script_hash(
     session: "Session",
     file: TextIO,
@@ -333,7 +333,7 @@ def get_native_script_hash(
     type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
     default=messages.CardanoDerivationType.ICARUS,
 )
-@with_session(derive_cardano=True)
+@with_session(cardano=True)
 def sign_message(
     session: "Session",
     file: TextIO,

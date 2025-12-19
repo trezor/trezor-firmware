@@ -24,7 +24,7 @@ from ..transport.ble import BleProxy
 from . import with_session
 
 if TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 
 @click.group(name="ble")

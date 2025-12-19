@@ -19,7 +19,7 @@ from typing import Optional
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import H_, parse_path
 
 from ... import bip32
@@ -263,7 +263,7 @@ def test_external_external(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(_responses(session, INP1, INP2))
         btc.sign_tx(
             session,
@@ -288,7 +288,7 @@ def test_external_internal(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             _responses(
                 session,
@@ -299,7 +299,7 @@ def test_external_internal(session: Session):
             )
         )
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(session.client)
+            IF = InputFlowConfirmAllWarnings(session)
             client.set_input_flow(IF.get())
         btc.sign_tx(
             session,
@@ -324,7 +324,7 @@ def test_internal_external(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             _responses(
                 session,
@@ -335,7 +335,7 @@ def test_internal_external(session: Session):
             )
         )
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(session.client)
+            IF = InputFlowConfirmAllWarnings(session)
             client.set_input_flow(IF.get())
         btc.sign_tx(
             session,
@@ -360,7 +360,7 @@ def test_multisig_external_external(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(_responses(session, INP1, INP2))
         btc.sign_tx(
             session,
@@ -393,7 +393,7 @@ def test_multisig_change_match_first(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             _responses(session, INP1, INP2, change_indices=[1])
         )
@@ -428,7 +428,7 @@ def test_multisig_change_match_second(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             _responses(session, INP1, INP2, change_indices=[2])
         )
@@ -464,7 +464,7 @@ def test_sorted_multisig_change_match_first(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             _responses(session, INP4, INP5, change_indices=[1])
         )
@@ -499,7 +499,7 @@ def test_multisig_mismatch_multisig_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(_responses(session, INP1, INP2))
         btc.sign_tx(
             session,
@@ -532,7 +532,7 @@ def test_sorted_multisig_mismatch_multisig_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(_responses(session, INP4, INP5))
         btc.sign_tx(
             session,
@@ -568,7 +568,7 @@ def test_multisig_mismatch_multisig_change_different_paths(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(_responses(session, INP1, INP2))
         btc.sign_tx(
             session,
@@ -601,7 +601,7 @@ def test_multisig_mismatch_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(_responses(session, INP1, INP3))
         btc.sign_tx(
             session,
@@ -635,7 +635,7 @@ def test_sorted_multisig_mismatch_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(_responses(session, INP4, INP6))
         btc.sign_tx(
             session,

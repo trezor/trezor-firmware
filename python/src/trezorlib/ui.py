@@ -23,7 +23,7 @@ import click
 from mnemonic import Mnemonic
 
 from . import device, messages
-from .client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
+from .client import MAX_PIN_LENGTH
 from .exceptions import Cancelled
 from .messages import PinMatrixRequestType, WordRequestType
 
@@ -170,23 +170,6 @@ class ScriptUI:
         else:
             pin = pin[1:]
             return pin
-
-    @staticmethod
-    def get_passphrase(available_on_device: bool) -> str | object:
-        if available_on_device:
-            print("?PASSPHRASE available_on_device")
-        else:
-            print("?PASSPHRASE")
-
-        passphrase = input()
-        if passphrase == "CANCEL":
-            raise Cancelled from None
-        elif passphrase == "ON_DEVICE":
-            return PASSPHRASE_ON_DEVICE
-        elif not passphrase.startswith(":"):
-            raise RuntimeError("Sent passphrase must start with ':'")
-        else:
-            return passphrase[1:]
 
 
 def mnemonic_words(

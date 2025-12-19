@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SdProtectOperationType as Op
 
@@ -36,8 +36,7 @@ def test_sd_format(session: Session):
 
 @pytest.mark.sd_card(formatted=False)
 def test_sd_no_format(session: Session):
-    client = session.client
-    debug = client.debug
+    debug = session.debug
 
     def input_flow():
         yield  # enable SD protection?
@@ -46,7 +45,7 @@ def test_sd_no_format(session: Session):
         yield  # format SD card
         debug.press_no()
 
-    with client, pytest.raises(TrezorFailure) as e:
+    with session.test_ctx as client, pytest.raises(TrezorFailure) as e:
         client.set_input_flow(input_flow)
         device.sd_protect(session, Op.ENABLE)
 
@@ -56,8 +55,7 @@ def test_sd_no_format(session: Session):
 @pytest.mark.sd_card
 @pytest.mark.setup_client(pin=PIN)
 def test_sd_protect_unlock(session: Session):
-    client = session.client
-    debug = client.debug
+    debug = session.debug
     layout = debug.read_layout
 
     def input_flow_enable_sd_protect():
@@ -78,7 +76,7 @@ def test_sd_protect_unlock(session: Session):
         assert TR.sd_card__enabled in layout().text_content()
         debug.press_yes()
 
-    with client:
+    with session.test_ctx as client:
         client.watch_layout()
         client.set_input_flow(input_flow_enable_sd_protect)
         device.sd_protect(session, Op.ENABLE)
@@ -104,7 +102,7 @@ def test_sd_protect_unlock(session: Session):
         assert TR.pin__changed in layout().text_content()
         debug.press_yes()
 
-    with client:
+    with session.test_ctx as client:
         client.watch_layout()
         client.set_input_flow(input_flow_change_pin)
         device.change_pin(session)
@@ -127,7 +125,7 @@ def test_sd_protect_unlock(session: Session):
         )
         debug.press_no()  # close
 
-    with client, pytest.raises(TrezorFailure) as e:
+    with session.test_ctx as client, pytest.raises(TrezorFailure) as e:
         client.watch_layout()
         client.set_input_flow(input_flow_change_pin_format)
         device.change_pin(session)

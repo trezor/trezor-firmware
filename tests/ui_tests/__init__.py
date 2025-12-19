@@ -9,7 +9,7 @@ import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 
 LOG = logging.getLogger(__name__)
 
@@ -60,8 +60,7 @@ def screen_recording(
     # may be lost due to an event loop restart.
     client.sync_responses()
     try:
-        # reseed (again) immediately before recording, so that we get consistent randomness
-        # in the test itself.
+        # reseed right before recording to ensure consistent randomness.
         client.debug.reseed(0)
         client.debug.start_recording(str(testcase.actual_dir))
         yield

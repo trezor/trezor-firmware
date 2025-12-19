@@ -19,40 +19,43 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Sequence
 
 from . import messages
-from .tools import _return_success
+from .tools import workflow
 
 if TYPE_CHECKING:
-    from .transport.session import Session
+    from .client import Session
 
 
+@workflow()
 def list_credentials(session: "Session") -> Sequence[messages.WebAuthnCredential]:
     return session.call(
         messages.WebAuthnListResidentCredentials(), expect=messages.WebAuthnCredentials
     ).credentials
 
 
-def add_credential(session: "Session", credential_id: bytes) -> str | None:
-    ret = session.call(
+@workflow()
+def add_credential(session: "Session", credential_id: bytes) -> None:
+    session.call(
         messages.WebAuthnAddResidentCredential(credential_id=credential_id),
         expect=messages.Success,
     )
-    return _return_success(ret)
 
 
-def remove_credential(session: "Session", index: int) -> str | None:
-    ret = session.call(
+@workflow()
+def remove_credential(session: "Session", index: int) -> None:
+    session.call(
         messages.WebAuthnRemoveResidentCredential(index=index), expect=messages.Success
     )
-    return _return_success(ret)
 
 
-def set_counter(session: "Session", u2f_counter: int) -> str | None:
-    ret = session.call(
+@workflow()
+def set_counter(session: "Session", u2f_counter: int) -> None:
+    session.call(
         messages.SetU2FCounter(u2f_counter=u2f_counter), expect=messages.Success
     )
-    return _return_success(ret)
 
 
+@workflow()
 def get_next_counter(session: "Session") -> int:
-    ret = session.call(messages.GetNextU2FCounter(), expect=messages.NextU2FCounter)
-    return ret.u2f_counter
+    return session.call(
+        messages.GetNextU2FCounter(), expect=messages.NextU2FCounter
+    ).u2f_counter

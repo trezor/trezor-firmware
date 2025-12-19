@@ -58,7 +58,6 @@ def test_wipe(device_handler: "BackgroundDeviceHandler"):
     # Wait for the homescreen to appear
     debug.synchronize_at("Homescreen")
 
-    device_handler.client = device_handler.client.get_new_client()
     features = device_handler.features()
     assert features.initialized is False
     assert features.pin_protection is False

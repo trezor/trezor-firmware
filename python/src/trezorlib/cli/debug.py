@@ -18,12 +18,12 @@ from typing import TYPE_CHECKING, Union
 
 import click
 
-from ..debuglink import DebugLink, TrezorClientDebugLink
+from ..client import Session
+from ..debuglink import DebugLink, TrezorTestContext
 from ..debuglink import optiga_set_sec_max as debuglink_optiga_set_sec_max
 from ..debuglink import prodtest_t1 as debuglink_prodtest_t1
 from ..debuglink import record_screen
 from ..debuglink import set_log_filter as debuglink_set_log_filter
-from ..transport.session import Session
 from . import with_session
 
 if TYPE_CHECKING:
@@ -52,9 +52,8 @@ def record_screen_from_connection(
 ) -> None:
     """Record screen helper to transform TrezorConnection into TrezorClientDebugLink."""
     transport = obj.get_transport()
-    debug_client = TrezorClientDebugLink(transport, auto_interact=False)
+    debug_client = TrezorTestContext(transport=transport, auto_interact=False)
     record_screen(debug_client, directory, report_func=click.echo)
-    debug_client.close_transport()
 
 
 @cli.command()

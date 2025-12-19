@@ -17,17 +17,20 @@
 from typing import TYPE_CHECKING
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
-    from .transport.session import Session
+    from .client import Session
 
 
+@workflow()
 def list_names(
     session: "Session",
 ) -> messages.BenchmarkNames:
     return session.call(messages.BenchmarkListNames(), expect=messages.BenchmarkNames)
 
 
+@workflow()
 def run(session: "Session", name: str) -> messages.BenchmarkResult:
     return session.call(
         messages.BenchmarkRun(name=name), expect=messages.BenchmarkResult

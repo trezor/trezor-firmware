@@ -20,7 +20,7 @@ from hashlib import sha256
 import pytest
 
 from trezorlib import messages, nostr
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.models("core")]

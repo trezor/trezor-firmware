@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.eos import get_public_key
 from trezorlib.tools import parse_path
 
@@ -29,8 +29,8 @@ from ...input_flows import InputFlowShowXpubQRCode
 @pytest.mark.models("t2t1")
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_eos_get_public_key(session: Session):
-    with session.client as client:
-        IF = InputFlowShowXpubQRCode(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowShowXpubQRCode(session)
         client.set_input_flow(IF.get())
         public_key = get_public_key(
             session, parse_path("m/44h/194h/0h/0/0"), show_display=True

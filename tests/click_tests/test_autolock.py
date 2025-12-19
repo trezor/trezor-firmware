@@ -201,14 +201,12 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     else:
         raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
-    client = session.client
-
     def sleepy_filter(msg: MessageType) -> MessageType:
         time.sleep(10.1)
-        client.set_filter(messages.TxAck, None)
+        session.test_ctx.set_filter(messages.TxAck, None)
         return msg
 
-    with client:
+    with session.test_ctx as client:
         client.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
         # don't wait for layout change, to avoid "layout deadlock detected" error
@@ -576,14 +574,12 @@ def test_autolock_does_not_interrupt_preauthorized(
         no_fee_indices=[],
     )
 
-    client = session.client
-
     def sleepy_filter(msg: MessageType) -> MessageType:
         time.sleep(10.1)
-        client.set_filter(messages.SignTx, None)
+        session.test_ctx.set_filter(messages.SignTx, None)
         return msg
 
-    with client:
+    with session.test_ctx as client:
         # Start DoPreauthorized flow when device is unlocked. Wait 10s before
         # delivering SignTx, by that time autolock timer should have fired.
         client.set_filter(messages.SignTx, sleepy_filter)

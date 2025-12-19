@@ -22,8 +22,9 @@ from slip10 import SLIP10
 
 from trezorlib import device, messages
 from trezorlib.btc import get_public_node
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugLink
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext
 from trezorlib.tools import parse_path
 
 from ...common import (
@@ -37,7 +38,7 @@ pytestmark = pytest.mark.models("legacy")
 
 
 def reset_device(session: Session, strength: int):
-    debug = session.client.debug
+    debug = session.debug
     # No PIN, no passphrase
     ret = session.call_raw(
         messages.ResetDevice(
@@ -64,8 +65,8 @@ def reset_device(session: Session, strength: int):
     mnemonic = []
     for _ in range(strength // 32 * 3):
         assert isinstance(ret, messages.ButtonRequest)
-        mnemonic.append(session.client.debug.read_reset_word())
-        session.client.debug.press_yes()
+        mnemonic.append(session.debug.read_reset_word())
+        session.debug.press_yes()
         session.call_raw(messages.ButtonAck())
 
     mnemonic = " ".join(mnemonic)
@@ -76,7 +77,7 @@ def reset_device(session: Session, strength: int):
     mnemonic = []
     for _ in range(strength // 32 * 3):
         assert isinstance(ret, messages.ButtonRequest)
-        mnemonic.append(session.client.debug.read_reset_word())
+        mnemonic.append(session.debug.read_reset_word())
         debug.press_yes()
         resp = session.call_raw(messages.ButtonAck())
 
@@ -102,21 +103,18 @@ def reset_device(session: Session, strength: int):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_reset_device_128(session: Session):
     reset_device(session, 128)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_reset_device_192(session: Session):
     reset_device(session, 192)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_reset_device_256_pin(session: Session):
-    debug = session.client.debug
+    debug = session.debug
     strength = 256
 
     ret = session.call_raw(
@@ -195,9 +193,8 @@ def test_reset_device_256_pin(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_failed_pin(session: Session):
-    debug = session.client.debug
+    debug = session.debug
     strength = 128
 
     ret = session.call_raw(
@@ -240,8 +237,8 @@ def test_already_initialized(session: Session):
 
 
 class Bip39InputFlow:
-    def __init__(self, client: Client):
-        self.client = client
+    def __init__(self, debug: DebugLink):
+        self.debug = debug
         self.mnemonic = None
 
     def _get_mnemonic(
@@ -251,15 +248,15 @@ class Bip39InputFlow:
         for _ in range(strength // 32 * 3):
             br = yield
             assert br.code == messages.ButtonRequestType.ConfirmWord
-            mnemonic.append(self.client.debug.read_reset_word())
-            self.client.debug.press_yes()
+            mnemonic.append(self.debug.read_reset_word())
+            self.debug.press_yes()
         return mnemonic
 
     def input_flow_bip39_reset_backup(self, strength: int) -> BRGeneratorType:
         # 1. Confirm Reset
         br = yield
         assert br.code == messages.ButtonRequestType.ProtectCall
-        self.client.debug.press_yes()
+        self.debug.press_yes()
 
         mnemonic_write = yield from self._get_mnemonic(strength)
         mnemonic_check = yield from self._get_mnemonic(strength)
@@ -269,13 +266,13 @@ class Bip39InputFlow:
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
-def test_reset_entropy_check(session: Session):
+def test_reset_entropy_check(test_ctx: TrezorTestContext):
     strength = 256  # 24 words
 
-    with session.client as client:
-        IF = Bip39InputFlow(client)
-        client.set_input_flow(IF.input_flow_bip39_reset_backup(strength))
+    session = test_ctx.get_seedless_session()
+    with test_ctx:
+        IF = Bip39InputFlow(test_ctx.debug)
+        test_ctx.set_input_flow(IF.input_flow_bip39_reset_backup(strength))
         # No PIN, no passphrase
         path_xpubs = device.setup(
             session,
@@ -289,20 +286,21 @@ def test_reset_entropy_check(session: Session):
         )
 
     # Check that the displayed mnemonic is identical to the stored one.
-    assert IF.mnemonic.encode("utf-8") == client.debug.state().mnemonic_secret
+    assert IF.mnemonic.encode("utf-8") == test_ctx.debug.state().mnemonic_secret
 
     # Check that the device is properly initialized.
-    assert client.features.initialized is True
+    assert test_ctx.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        test_ctx.features.backup_availability
+        == messages.BackupAvailability.NotAvailable
     )
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
+    assert test_ctx.features.pin_protection is False
+    assert test_ctx.features.passphrase_protection is False
 
     seed = Mnemonic.to_seed(IF.mnemonic, passphrase="")
     slip10 = SLIP10.from_seed(seed)
 
-    session = session.client.get_session()
+    session = test_ctx.get_session()
     for path, xpub in path_xpubs:
         # Check that the device returns the same XPUBs as those from the entropy check.
         res = get_public_node(session, path)
@@ -313,11 +311,11 @@ def test_reset_entropy_check(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_entropy_check(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
+                messages.Features,
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
                 messages.EntropyRequest,
                 messages.EntropyCheckReady,
@@ -332,6 +330,7 @@ def test_entropy_check(session: Session):
                 messages.PublicKey,
                 messages.PublicKey,
                 messages.Success,
+                messages.Features,
             ]
         )
         device.setup(
@@ -347,14 +346,15 @@ def test_entropy_check(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_no_entropy_check(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
+                messages.Features,
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
                 messages.EntropyRequest,
                 messages.Success,
+                messages.Features,
             ]
         )
         device.setup(

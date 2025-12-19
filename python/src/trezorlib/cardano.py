@@ -35,7 +35,7 @@ from . import messages as m
 from . import tools
 
 if TYPE_CHECKING:
-    from .transport.session import Session
+    from .client import Session
 
 PROTOCOL_MAGICS = {
     "mainnet": 764824073,
@@ -840,6 +840,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def get_authenticated_address(
     session: "Session",
     address_parameters: m.CardanoAddressParametersType,
@@ -862,6 +863,7 @@ def get_authenticated_address(
     )
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def get_public_key(
     session: "Session",
     address_n: List[int],
@@ -878,6 +880,7 @@ def get_public_key(
     )
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def get_native_script_hash(
     session: "Session",
     native_script: m.CardanoNativeScript,
@@ -894,6 +897,7 @@ def get_native_script_hash(
     )
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def sign_tx(
     session: "Session",
     signing_mode: m.CardanoTxSigningMode,
@@ -1019,6 +1023,7 @@ def sign_tx(
     return sign_tx_response
 
 
+@tools.workflow(capability=m.Capability.Cardano)
 def sign_message(
     session: "Session",
     signing_path: Path,

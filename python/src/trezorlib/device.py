@@ -28,10 +28,10 @@ from slip10 import SLIP10
 
 from . import messages
 from .exceptions import Cancelled, TrezorException
-from .tools import Address, _deprecation_retval_helper, _return_success, parse_path
+from .tools import Address, parse_path, workflow
 
 if TYPE_CHECKING:
-    from .transport.session import Session
+    from .client import Session
 
 
 RECOVERY_BACK = "\x08"  # backspace character, sent literally
@@ -41,6 +41,7 @@ ENTROPY_CHECK_MIN_VERSION = (2, 8, 7)
 HOMESCREEN_STREAMING_MIN_VERSION = (2, 8, 11)
 
 
+@workflow()
 def apply_settings(
     session: "Session",
     label: Optional[str] = None,
@@ -55,7 +56,7 @@ def apply_settings(
     experimental_features: Optional[bool] = None,
     hide_passphrase_from_host: Optional[bool] = None,
     haptic_feedback: Optional[bool] = None,
-) -> str | None:
+) -> None:
     if language is not None:
         warnings.warn(
             "language ignored. Use change_language() to set device language.",
@@ -78,12 +79,10 @@ def apply_settings(
         settings.homescreen_length = len(homescreen)
         response = session.call(settings, expect=messages.DataChunkRequest)
         _send_chunked_data(session, response, homescreen)
-        out = messages.Success()
     else:
         settings.homescreen = homescreen
-        out = session.call(settings, expect=messages.Success)
+        session.call(settings, expect=messages.Success)
     session.refresh_features()
-    return _return_success(out)
 
 
 def _send_chunked_data(
@@ -100,11 +99,12 @@ def _send_chunked_data(
         response = session.call(messages.DataChunkAck(data_chunk=chunk))
 
 
+@workflow()
 def change_language(
     session: "Session",
     language_data: bytes,
     show_display: bool | None = None,
-) -> str | None:
+) -> None:
     data_length = len(language_data)
     msg = messages.ChangeLanguage(data_length=data_length, show_display=show_display)
 
@@ -115,41 +115,39 @@ def change_language(
     else:
         messages.Success.ensure_isinstance(response)
     session.refresh_features()  # changing the language in features
-    return _return_success(messages.Success(message="Language changed."))
 
 
-def apply_flags(session: "Session", flags: int) -> str | None:
-    out = session.call(messages.ApplyFlags(flags=flags), expect=messages.Success)
+@workflow()
+def apply_flags(session: "Session", flags: int) -> None:
+    session.call(messages.ApplyFlags(flags=flags), expect=messages.Success)
     session.refresh_features()
-    return _return_success(out)
 
 
-def change_pin(session: "Session", remove: bool = False) -> str | None:
-    ret = session.call(messages.ChangePin(remove=remove), expect=messages.Success)
+@workflow()
+def change_pin(session: "Session", remove: bool = False) -> None:
+    session.call(messages.ChangePin(remove=remove), expect=messages.Success)
     session.refresh_features()
-    return _return_success(ret)
 
 
-def change_wipe_code(session: "Session", remove: bool = False) -> str | None:
-    ret = session.call(messages.ChangeWipeCode(remove=remove), expect=messages.Success)
+@workflow()
+def change_wipe_code(session: "Session", remove: bool = False) -> None:
+    session.call(messages.ChangeWipeCode(remove=remove), expect=messages.Success)
     session.refresh_features()
-    return _return_success(ret)
 
 
-def sd_protect(
-    session: "Session", operation: messages.SdProtectOperationType
-) -> str | None:
-    ret = session.call(messages.SdProtect(operation=operation), expect=messages.Success)
+@workflow()
+def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -> None:
+    session.call(messages.SdProtect(operation=operation), expect=messages.Success)
     session.refresh_features()
-    return _return_success(ret)
 
 
-def wipe(session: "Session") -> str | None:
-    ret = session.call(messages.WipeDevice(), expect=messages.Success)
-    session.invalidate()
-    return _return_success(ret)
+@workflow()
+def wipe(session: "Session") -> None:
+    session.call(messages.WipeDevice(), expect=messages.Success)
+    session.client._invalidate()
 
 
+@workflow()
 def recover(
     session: "Session",
     word_count: int = 24,
@@ -163,7 +161,7 @@ def recover(
     u2f_counter: Optional[int] = None,
     *,
     type: Optional[messages.RecoveryType] = None,
-) -> messages.Success | None:
+) -> None:
     if language is not None:
         warnings.warn(
             "language ignored. Use change_language() to set device language.",
@@ -229,8 +227,6 @@ def recover(
     res = messages.Success.ensure_isinstance(res)
     # reinitialize the device
     session.refresh_features()
-
-    return _deprecation_retval_helper(res)
 
 
 def is_slip39_backup_type(backup_type: messages.BackupType) -> bool:
@@ -318,13 +314,12 @@ def reset(
         backup_type=backup_type,
     )
 
-    return _return_success(messages.Success(message="Initialized"))
-
 
 def _get_external_entropy() -> bytes:
     return secrets.token_bytes(32)
 
 
+@workflow()
 def setup(
     session: "Session",
     *,
@@ -563,12 +558,13 @@ def _reset_with_entropycheck(
     return xpubs
 
 
+@workflow()
 def backup(
     session: "Session",
     group_threshold: Optional[int] = None,
     groups: Iterable[tuple[int, int]] = (),
-) -> str | None:
-    ret = session.call(
+) -> None:
+    session.call(
         messages.BackupDevice(
             group_threshold=group_threshold,
             groups=[
@@ -579,14 +575,14 @@ def backup(
         expect=messages.Success,
     )
     session.refresh_features()
-    return _return_success(ret)
 
 
-def cancel_authorization(session: "Session") -> str | None:
-    ret = session.call(messages.CancelAuthorization(), expect=messages.Success)
-    return _return_success(ret)
+@workflow()
+def cancel_authorization(session: "Session") -> None:
+    session.call(messages.CancelAuthorization(), expect=messages.Success)
 
 
+@workflow()
 def unlock_path(session: "Session", n: "Address") -> bytes:
     resp = session.call(
         messages.UnlockPath(address_n=n), expect=messages.UnlockedPathRequest
@@ -601,12 +597,13 @@ def unlock_path(session: "Session", n: "Address") -> bytes:
         raise TrezorException("Unexpected response in UnlockPath flow")
 
 
+@workflow()
 def reboot_to_bootloader(
     session: "Session",
     boot_command: messages.BootCommand = messages.BootCommand.STOP_AND_WAIT,
     firmware_header: Optional[bytes] = None,
     language_data: bytes = b"",
-) -> str | None:
+) -> None:
     response = session.call(
         messages.RebootToBootloader(
             boot_command=boot_command,
@@ -616,30 +613,30 @@ def reboot_to_bootloader(
     )
     if isinstance(response, messages.DataChunkRequest):
         response = _send_chunked_data(session, response, language_data)
-    return _return_success(messages.Success(message=""))
 
 
-def show_device_tutorial(session: "Session") -> str | None:
-    ret = session.call(messages.ShowDeviceTutorial(), expect=messages.Success)
-    return _return_success(ret)
+@workflow()
+def show_device_tutorial(session: "Session") -> None:
+    session.call(messages.ShowDeviceTutorial(), expect=messages.Success)
 
 
-def unlock_bootloader(session: "Session") -> str | None:
-    ret = session.call(messages.UnlockBootloader(), expect=messages.Success)
-    return _return_success(ret)
+@workflow()
+def unlock_bootloader(session: "Session") -> None:
+    session.call(messages.UnlockBootloader(), expect=messages.Success)
 
 
-def set_busy(session: "Session", expiry_ms: Optional[int]) -> str | None:
+@workflow()
+def set_busy(session: "Session", expiry_ms: Optional[int]) -> None:
     """Sets or clears the busy state of the device.
 
     In the busy state the device shows a "Do not disconnect" message instead of the homescreen.
     Setting `expiry_ms=None` clears the busy state.
     """
-    ret = session.call(messages.SetBusy(expiry_ms=expiry_ms), expect=messages.Success)
+    session.call(messages.SetBusy(expiry_ms=expiry_ms), expect=messages.Success)
     session.refresh_features()
-    return _return_success(ret)
 
 
+@workflow()
 def authenticate(session: "Session", challenge: bytes) -> messages.AuthenticityProof:
     return session.call(
         messages.AuthenticateDevice(challenge=challenge),
@@ -647,11 +644,12 @@ def authenticate(session: "Session", challenge: bytes) -> messages.AuthenticityP
     )
 
 
-def set_brightness(session: "Session", value: Optional[int] = None) -> str | None:
-    ret = session.call(messages.SetBrightness(value=value), expect=messages.Success)
-    return _return_success(ret)
+@workflow()
+def set_brightness(session: "Session", value: Optional[int] = None) -> None:
+    session.call(messages.SetBrightness(value=value), expect=messages.Success)
 
 
+@workflow()
 def get_serial_number(session: "Session") -> str:
     ret = session.call(messages.GetSerialNumber(), expect=messages.SerialNumber)
     return ret.serial_number
