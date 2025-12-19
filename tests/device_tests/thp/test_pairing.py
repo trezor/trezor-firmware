@@ -3,6 +3,7 @@ import time
 import typing as t
 from hashlib import sha256
 from unittest.mock import patch
+from contextlib import contextmanager
 
 import pytest
 import typing_extensions as tx
@@ -46,12 +47,12 @@ MT = t.TypeVar("MT", bound=protobuf.MessageType)
 pytestmark = [pytest.mark.protocol("thp")]
 
 
-@pytest.fixture
-def deterministic_urandom() -> t.Generator[None, None, None]:
+@contextmanager
+def deterministic_secrets() -> t.Generator[None, None, None]:
     def mock_urandom(n: int) -> bytes:
         return bytes((i % 256 for i in range(n)))
 
-    with patch("os.urandom", side_effect=mock_urandom):
+    with patch("secrets.token_bytes", side_effect=mock_urandom):
         yield
 
 
@@ -84,8 +85,9 @@ def test_pairing_qr_code(client: Client) -> None:
 @pytest.mark.filterwarnings(
     "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
 )
+@deterministic_secrets()
 def test_pairing_code_entry(client: Client) -> None:
-    prepare_channel_for_pairing(client)
+    prepare_channel_for_pairing(client, fixed_entropy=True)
     method = pairing.CodeEntry(client.pairing)
 
     # Code Entry code shown
@@ -102,8 +104,9 @@ def test_pairing_code_entry(client: Client) -> None:
 @pytest.mark.filterwarnings(
     "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
 )
+@deterministic_secrets()
 def test_pairing_code_entry_cancel(client: Client) -> None:
-    prepare_channel_for_pairing(client)
+    prepare_channel_for_pairing(client, fixed_entropy=True)
     client.pairing.start()
     session = client.pairing.session
     session.call(
