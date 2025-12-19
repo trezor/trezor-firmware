@@ -52,9 +52,20 @@ def test_device_id_same(client: Client):
 
 
 def test_device_id_different(client: Client):
+    # Device id is pre-configured in storage when we get it.
+    # Depending on when exactly we reseed (for ui test consistency purposes),
+    # we may or may not generate the same device id from the same randomness.
+    #
+    # To avoid the problem, this test and similar that depend on device id
+    # must explicitly wipe at start.
+    session = client.get_seedless_session()
+    device.wipe(session)
+
+    client = client.get_new_client()
     session = client.get_seedless_session()
     id1 = client.features.device_id
     device.wipe(session)
+
     client = client.get_new_client()
     session = client.get_seedless_session()
 
