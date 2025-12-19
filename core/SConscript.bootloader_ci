@@ -30,7 +30,6 @@ SOURCE_MOD_CRYPTO = []
 CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
-RUST_UI_FEATURES = []
 
 env = Environment(
     ENV=os.environ,
@@ -117,8 +116,6 @@ SOURCE_NANOPB = [
     'vendor/nanopb/pb_decode.c',
     'vendor/nanopb/pb_encode.c',
 ]
-
-ui.init_ui(TREZOR_MODEL, "bootloader", RUST_UI_FEATURES)
 
 SOURCE_BOOTLOADER = [
     'embed/projects/bootloader_ci/bootui.c',
