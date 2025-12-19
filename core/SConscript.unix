@@ -2,7 +2,6 @@
 # fmt: off
 
 import os
-import shlex
 import tools, models, ui
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')

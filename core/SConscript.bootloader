@@ -1,7 +1,6 @@
 # pylint: disable=E0602
 
 import os
-import shlex
 import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
