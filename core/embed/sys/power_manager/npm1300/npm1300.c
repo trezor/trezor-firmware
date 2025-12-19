@@ -24,6 +24,7 @@
 
 #include <io/i2c_bus.h>
 #include <sys/irq.h>
+#include <sys/mpu.h>
 #include <sys/pmic.h>
 #include <sys/systimer.h>
 
@@ -983,17 +984,23 @@ static void npm1300_i2c_callback(void* context, i2c_packet_t* packet) {
 }
 
 void NPM1300_EXTI_INTERRUPT_HANDLER(void) {
+  IRQ_LOG_ENTER();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   // Clear the EXTI line pending bit
   __HAL_GPIO_EXTI_CLEAR_FLAG(NPM1300_INT_PIN);
 
   if (!drv->initialized) {
+    mpu_restore(mpu_mode);
+    IRQ_LOG_EXIT();
     return;
   }
 
   drv->clear_events_requested = true;
   npm1300_fsm_continue(drv);
+  mpu_restore(mpu_mode);
+  IRQ_LOG_EXIT();
 }
 
 // npm1300 driver FSM continuation function that decides what to do next
