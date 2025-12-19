@@ -1,9 +1,13 @@
 use super::{geometry::Rect, CommonUI};
 
-#[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
+#[cfg(any(
+    feature = "ui_debug_overlay",
+    feature = "ui_performance_overlay",
+    feature = "ui_dev_overlay"
+))]
 use super::shape;
 
-#[cfg(feature = "ui_debug_overlay")]
+#[cfg(any(feature = "ui_debug_overlay", feature = "ui_dev_overlay"))]
 use super::{display::Color, geometry::Offset};
 
 #[cfg(feature = "ui_performance_overlay")]
@@ -29,6 +33,9 @@ use component::{ErrorScreen, WelcomeScreen};
 
 pub struct UICaesar {}
 
+#[cfg(any(feature = "ui_debug_overlay", feature = "ui_dev_overlay"))]
+const OVERLAY_MARKER_SIZE: Offset = Offset::uniform(constant::SCREEN.width() / 30);
+
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
 
@@ -49,13 +56,9 @@ impl CommonUI for UICaesar {
 
     #[cfg(feature = "ui_debug_overlay")]
     fn render_debug_overlay<'s>(target: &mut impl shape::Renderer<'s>) {
-        const RECT_SIZE: i16 = constant::SCREEN.width() / 30;
-        let r = Rect::from_top_left_and_size(
-            Self::SCREEN.top_right() - Offset::x(RECT_SIZE),
-            Offset::new(RECT_SIZE, RECT_SIZE),
-        );
+        let r = Rect::from_top_right_and_size(Self::SCREEN.top_right(), OVERLAY_MARKER_SIZE);
         shape::Bar::new(r)
-            .with_bg(Color::rgb(0xff, 0, 0))
+            .with_bg(Color::rgb(255, 0, 0))
             .render(target);
     }
 
@@ -65,5 +68,13 @@ impl CommonUI for UICaesar {
         _info: PerformanceOverlay,
     ) {
         // Not implemented
+    }
+
+    #[cfg(feature = "ui_dev_overlay")]
+    fn render_dev_overlay<'s>(target: &mut impl shape::Renderer<'s>) {
+        let r = Rect::from_top_left_and_size(Self::SCREEN.top_left(), OVERLAY_MARKER_SIZE);
+        shape::Bar::new(r)
+            .with_bg(Color::rgb(0, 255, 0))
+            .render(target);
     }
 }
