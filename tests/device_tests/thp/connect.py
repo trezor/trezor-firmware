@@ -41,16 +41,22 @@ def prepare_channel_for_handshake(test_ctx: TrezorTestContext) -> None:
 
 def prepare_channel_for_pairing(
     test_ctx: TrezorTestContext,
-    host_static_privkey: bytes | None = None,
     credential: Credential | None = None,
+    host_static_privkey: bytes | None = None,
+    fixed_entropy: bool = False,
 ) -> None:
     """Create a fresh channel, perform the handshake using the provided fixed entropy
     and credentials, and leave it in the pairing phase.
     """
     # set up a fresh channel
     prepare_channel_for_handshake(test_ctx)
+    assert host_static_privkey is None or not fixed_entropy, "don't use both"
     if host_static_privkey is not None:
         test_ctx.channel._init_noise(static_privkey=host_static_privkey)
+    elif fixed_entropy:
+        test_ctx.channel._init_noise(
+            static_privkey=b"\x12" * 32, ephemeral_privkey=b"\x24" * 32
+        )
     credentials = []
     if credential is not None:
         credentials.append(credential)
