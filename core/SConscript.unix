@@ -963,6 +963,8 @@ if EVERYTHING:
     features.append('universal_fw')
 if not PRODUCTION:
     features.append('dev_keys')
+if BOOTLOADER_DEVEL:
+    features.append('ui_dev_overlay')
 
 rust = tools.add_rust_lib(
     env=env,
