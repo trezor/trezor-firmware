@@ -8,6 +8,7 @@ EXCEPTIONS+=( "derive_cardano" )  # field name in Initialize message
 # BIP39 or SLIP39 words that have "dash" and "ripple" in them
 EXCEPTIONS+=( "dash" "ripple" )
 EXCEPTIONS+=( "base" ) # name EVM chain
+EXCEPTIONS+=( "strong" ) # Gives false positive for TRON
 
 GREP_ARGS=()
 for exception in "${EXCEPTIONS[@]}"; do
@@ -22,7 +23,10 @@ IFS="
 "
 for altcoin in $ALTCOINS; do
     # echo :"$altcoin":
-    if strings "$1" | grep -i "$altcoin" | grep -vi ${GREP_ARGS[@]} ; then
+    FOUND=$(strings "$1" | grep -i "$altcoin" | grep -vi ${GREP_ARGS[@]})
+    if [ -n "$FOUND" ]; then
+        echo "Found altcoin string '$altcoin':"
+        echo "$FOUND"
         RETURN=1
     fi
 done
