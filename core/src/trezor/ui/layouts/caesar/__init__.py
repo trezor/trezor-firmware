@@ -1501,6 +1501,20 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
+    if __debug__:
+
+        def confirm_tron_send(amount: str) -> Awaitable[None]:
+            return raise_if_not_confirmed(
+                trezorui_api.confirm_summary(
+                    amount=amount,
+                    amount_label=TR.send__total_amount,
+                    fee="",
+                    fee_label="",
+                ),
+                br_name="confirm_tron_send",
+                br_code=ButtonRequestType.SignTx,
+            )
+
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:
     return confirm_properties(
