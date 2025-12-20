@@ -1015,6 +1015,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__name;
   MP_QSTR_words__no;
   MP_QSTR_words__not_recommended;
+  MP_QSTR_words__note;
   MP_QSTR_words__off;
   MP_QSTR_words__on;
   MP_QSTR_words__operation_cancelled;

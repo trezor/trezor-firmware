@@ -69,6 +69,7 @@ if TYPE_CHECKING:
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import ThpMessageType  # noqa: F401
     from trezor.enums import ThpPairingMethod  # noqa: F401
+    from trezor.enums import TronRawContractType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
 
     class BenchmarkListNames(protobuf.MessageType):
@@ -6827,6 +6828,128 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TronAddress"]:
+            return isinstance(msg, cls)
+
+    class TronSignTx(protobuf.MessageType):
+        address_n: "list[int]"
+        ref_block_bytes: "AnyBytes"
+        ref_block_hash: "AnyBytes"
+        expiration: "int"
+        data: "AnyBytes | None"
+        timestamp: "int"
+        fee_limit: "int | None"
+
+        def __init__(
+            self,
+            *,
+            ref_block_bytes: "AnyBytes",
+            ref_block_hash: "AnyBytes",
+            expiration: "int",
+            timestamp: "int",
+            address_n: "list[int] | None" = None,
+            data: "AnyBytes | None" = None,
+            fee_limit: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronSignTx"]:
+            return isinstance(msg, cls)
+
+    class TronContractRequest(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronContractRequest"]:
+            return isinstance(msg, cls)
+
+    class TronTransferContract(protobuf.MessageType):
+        owner_address: "AnyBytes"
+        to_address: "AnyBytes"
+        amount: "int"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+            to_address: "AnyBytes",
+            amount: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronTransferContract"]:
+            return isinstance(msg, cls)
+
+    class TronSignature(protobuf.MessageType):
+        signature: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            signature: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronSignature"]:
+            return isinstance(msg, cls)
+
+    class TronRawTransaction(protobuf.MessageType):
+        ref_block_bytes: "AnyBytes"
+        ref_block_hash: "AnyBytes"
+        expiration: "int"
+        data: "AnyBytes | None"
+        contract: "list[TronRawContract]"
+        timestamp: "int"
+        fee_limit: "int | None"
+
+        def __init__(
+            self,
+            *,
+            ref_block_bytes: "AnyBytes",
+            ref_block_hash: "AnyBytes",
+            expiration: "int",
+            timestamp: "int",
+            contract: "list[TronRawContract] | None" = None,
+            data: "AnyBytes | None" = None,
+            fee_limit: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronRawTransaction"]:
+            return isinstance(msg, cls)
+
+    class TronRawContract(protobuf.MessageType):
+        type: "TronRawContractType"
+        parameter: "TronRawParameter"
+
+        def __init__(
+            self,
+            *,
+            type: "TronRawContractType",
+            parameter: "TronRawParameter",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronRawContract"]:
+            return isinstance(msg, cls)
+
+    class TronRawParameter(protobuf.MessageType):
+        type_url: "str"
+        value: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            type_url: "str",
+            value: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronRawParameter"]:
             return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):
