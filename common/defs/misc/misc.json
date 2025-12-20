@@ -103,5 +103,12 @@
         "slip44": 501,
         "curve": "ed25519",
         "decimals": 9
+    },
+    {
+        "name": "Tron",
+        "shortcut": "TRX",
+        "slip44": 195,
+        "curve": "secp256k1",
+        "decimals": 6
     }
 ]
