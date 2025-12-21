@@ -169,6 +169,54 @@
       "result": {
         "error_message": ".*"
       }
+    },
+    {
+      "name": "TriggerSmartContract_USDT_transfer",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "dae0",
+          "ref_block_hash": "9ab5c70b3a11405f",
+          "expiration": 1766454906000,
+          "fee_limit": 50000000,
+          "timestamp": 1766453046721
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb450",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+        },
+        "raw_data_hex": "0a02dae022089ab5c70b3a11405f409099abc7b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb45070c1dbb9c6b433900180e1eb17",
+        "raw": {
+          "txID": "3b76769f2fae94ffad214967c013b714110f26c740b4bf2d5702069d125353de",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb450",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "dae0",
+            "ref_block_hash": "9ab5c70b3a11405f",
+            "expiration": 1766454906000,
+            "fee_limit": 50000000,
+            "timestamp": 1766453046721
+          },
+          "raw_data_hex": "0a02dae022089ab5c70b3a11405f409099abc7b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb45070c1dbb9c6b433900180e1eb17",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "f99e2f704c78b07d49fcfa4cc7cd032635807f9a1f09b57adc2232cac38d0d42428008bd9953944e0276123ee6851a266078df9c68e5c4db158be05377dadd7b1C"
+      }
     }
   ]
 }

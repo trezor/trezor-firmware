@@ -1173,5 +1173,6 @@
   "1171": "secure_sync__delegated_identity_key_thp",
   "1172": "secure_sync__evolu_node_no_optiga",
   "1173": "secure_sync__header",
-  "1174": "words__note"
+  "1174": "words__note",
+  "1175": "words__fee_limit"
 }

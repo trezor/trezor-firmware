@@ -1451,10 +1451,11 @@ if not utils.BITCOIN_ONLY:
 
     if __debug__:
 
-        def confirm_tron_send(amount: str) -> Awaitable[None]:
-            amount_title = f"{TR.send__total_amount}:"
-            fee_title = ""
-            fee = ""
+        def confirm_tron_send(amount: str | None, fee: str | None) -> Awaitable[None]:
+            amount_title = f"{TR.send__total_amount}:" if amount else ""
+            amount = amount or ""
+            fee_title = f"{TR.words__fee_limit}:" if fee else ""
+            fee = fee or ""
 
             return _confirm_summary(
                 amount,

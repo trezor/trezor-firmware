@@ -1076,6 +1076,7 @@ class TR:
     words__enabled: str = "Enabled"
     words__error: str = "Error"
     words__fee: str = "Fee"
+    words__fee_limit: str = "Fee limit"
     words__forget: str = "Forget"
     words__from: str = "from"
     words__good_to_know: str = "Good to know"

@@ -28,7 +28,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     await paths.validate_path(keychain, msg.address_n)
     node = keychain.derive(msg.address_n)
 
-    # It is also not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
+    # It is not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
     if msg.data:
         if len(msg.data) > consts.MAX_DATA_LENGTH:
             raise DataError("Tron: data field too long")
@@ -39,10 +39,20 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
             chunkify=False,
         )
 
+    # https://developers.tron.network/docs/feelimit
+    fee_limit = msg.fee_limit or 0
+    if fee_limit > consts.MAX_FEE_LIMIT:
+        raise DataError("Tron: fees too high")
+
     contract = await call_any(messages.TronContractRequest(), *consts.CONTRACT_TYPES)
     raw_contract, total_send = await process_contract(contract)
 
-    await confirm_tron_send(total_send)
+    fee_string = (
+        layout.format_energy_amount(fee_limit)
+        if messages.TronTriggerSmartContract.is_type_of(contract)
+        else None
+    )
+    await confirm_tron_send(total_send, fee_string)
 
     raw_tx = messages.TronRawTransaction(
         ref_block_bytes=msg.ref_block_bytes,
@@ -57,7 +67,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
     w_hash = sha256(serialized_tx).digest()
     signature = secp256k1.sign(node.private_key(), w_hash, False)
-    signature = signature[1:65] + signature[0:1]
+    signature = signature[1:65] + signature[0:1]  # r || s || v
 
     show_continue_in_app(TR.send__transaction_signed)
     return messages.TronSignature(signature=signature)
@@ -65,7 +75,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
 async def process_contract(
     contract: MessageType,
-) -> tuple[TronRawContract, str]:
+) -> tuple[TronRawContract, str | None]:
     from trezor.enums import TronRawContractType
 
     total_send = contract_type = None
@@ -74,8 +84,11 @@ async def process_contract(
         contract_type = TronRawContractType.TransferContract
         await layout.confirm_transfer_contract(contract)
         total_send = layout.format_trx_amount(contract.amount)
+    elif messages.TronTriggerSmartContract.is_type_of(contract):
+        contract_type = TronRawContractType.TriggerSmartContract
+        await layout.trigger_unkown_smart_contract(contract)
+        # TODO: Extract from contract.data to total_send
     else:
-        # TODO: Allow unkown contract blind signing.
         raise DataError("Tron: contract type unknown")
 
     serialized_parameter = dump_message_buffer(contract)

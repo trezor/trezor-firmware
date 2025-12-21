@@ -426,6 +426,7 @@ class ThpPairingMethod(IntEnum):
 
 class TronRawContractType(IntEnum):
     TransferContract = 1
+    TriggerSmartContract = 31
 
 
 class MessageType(IntEnum):
@@ -694,6 +695,7 @@ class MessageType(IntEnum):
     TronSignature = 2203
     TronContractRequest = 2204
     TronTransferContract = 2205
+    TronTriggerSmartContract = 2206
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -8679,6 +8681,35 @@ class TronTransferContract(protobuf.MessageType):
         self.owner_address = owner_address
         self.to_address = to_address
         self.amount = amount
+
+
+class TronTriggerSmartContract(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2206
+    FIELDS = {
+        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("contract_address", "bytes", repeated=False, required=True),
+        4: protobuf.Field("data", "bytes", repeated=False, required=True),
+        3: protobuf.Field("call_value", "sint64", repeated=False, required=False, default=None),
+        5: protobuf.Field("call_token_value", "sint64", repeated=False, required=False, default=None),
+        6: protobuf.Field("token_id", "sint64", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        owner_address: "bytes",
+        contract_address: "bytes",
+        data: "bytes",
+        call_value: Optional["int"] = None,
+        call_token_value: Optional["int"] = None,
+        token_id: Optional["int"] = None,
+    ) -> None:
+        self.owner_address = owner_address
+        self.contract_address = contract_address
+        self.data = data
+        self.call_value = call_value
+        self.call_token_value = call_token_value
+        self.token_id = token_id
 
 
 class TronSignature(protobuf.MessageType):
