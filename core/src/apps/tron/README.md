@@ -1,4 +1,4 @@
-# TRON
+# TRON [WIP]
 
 Tron is an EVM like network that allows for nearly free token transfers like `USDT` etc. It achieves this by using `Bandwidth` and `Energy` for transfers, instead of `Gas` in Ethereum. `Bandwidth` is used for native `TRX` transfer, while `Energy` is used for `TRC-20` tokens like `Tether - USDT` etc.
 
@@ -17,14 +17,18 @@ The `Bandwidth` consumed for processing any transaction is equal to the size of 
 
 ### Capping fees
 
-TRON only allows a maximum limit on the `Energy` resource using the `fee_limit` field in any transaction, and not on `TRX` or `Bandwidth`.
-Thus for native TRX transfer via `TransferContract`, we do not show any fees to the user on the device. The host application like Trezor Suite, should display potential resource consumption numbers. We can show the `fee_limit` on the device when we start supporting Smart contract calls.
+TRON only allows a maximum limit on the Energy **cost** using the `fee_limit` field in any transaction. It is displayed in `SUN` and only limits the `TRX` to be burned when the `Energy` is insufficient.
+
+TRON also allows for [energy cost sharing](https://developers.tron.network/docs/energy-consumption-mechanism#tron-energy-sharing-mechanism) between the caller and the deployer of the smartcontract. The `fee_limit` only applies to the caller.
+
+For native TRX transfer via `TransferContract`, there is no way to cap the `Bandwidth` consumption or tentative `TRX` that could be burned to make up for `Bandwidth` deficit.
+Therefore, we do not show any fees to the user on the device. The host application like Trezor Suite, should display potential resource consumption numbers.
 
 ## Features supported
 
 - [X] Generate addresses for Receiving `TRX` or other tokens.
 - [X] `TransferContract`: Sending `TRX`
-- [ ] `TriggerSmartContract`: Send `USDT`, `USDD`, etc.
+- [X] `TriggerSmartContract`: Send `USDT`, `USDD`, etc.
 - [ ] `FreezeBalanceV2`: Stake `TRX` to get more `Bandwidth` or `Energy`
 - [ ] `UnfreezeBalanceV2`: Unstake frozen `TRX`
 
@@ -33,3 +37,12 @@ Thus for native TRX transfer via `TransferContract`, we do not show any fees to 
 [^1]: It is encoded as a list to support multiple contracts in a transaction in future. Currently only one contract is supported per transaction.
 [^2]: TRON uses block hash reference for avoiding cross-chain replay attacks unlike using chain_ID while signing [EIP-155]
 [^3]: There are other fees charged for using other features like `1 TRX` for adding a `Note` to the transaction, etc.
+
+
+## Appendix
+
+### Explanation for the 2 step message
+
+- Tron using Protobuf is _almost_ a blessing.
+- The simplest design would be to send the transaction protobuf message, parse it correctly and sign it. The only missing info in that message would be the key derivation path. If we plug it in the transaction message itself, it would disturb the final protobuf encoding (There would be a way to remove it and re-encode but that's not necessarily better).
+- So the natural second idea would be to send the derivation path prior to the transaction. Having compromised with the 2 step message already, we can make it prettier by sending the 'top part' of the transaction along with the derivation path. This 'top part' is contract agnostic, thus making it a pretty denominator to any command we (will) support. The second message thus simply becomes the contract.

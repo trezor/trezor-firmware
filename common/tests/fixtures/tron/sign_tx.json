@@ -217,6 +217,152 @@
       "result": {
         "error_message": "Tron: data field too long"
       }
+    },
+    {
+      "name": "TriggerSmartContract_USDT_transfer",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "dae0",
+          "ref_block_hash": "9ab5c70b3a11405f",
+          "expiration": 1766454906000,
+          "fee_limit": 50000000,
+          "timestamp": 1766453046721
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb450",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+        },
+        "raw_data_hex": "0a02dae022089ab5c70b3a11405f409099abc7b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb45070c1dbb9c6b433900180e1eb17",
+        "raw": {
+          "txID": "3b76769f2fae94ffad214967c013b714110f26c740b4bf2d5702069d125353de",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb450",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "4142a1e39aefa49290f2b3f9ed688d7cecf86cd6e0"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "dae0",
+            "ref_block_hash": "9ab5c70b3a11405f",
+            "expiration": 1766454906000,
+            "fee_limit": 50000000,
+            "timestamp": 1766453046721
+          },
+          "raw_data_hex": "0a02dae022089ab5c70b3a11405f409099abc7b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812154142a1e39aefa49290f2b3f9ed688d7cecf86cd6e02244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a000000000000000000000000000000000000000000000000000000000013bb45070c1dbb9c6b433900180e1eb17",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "f99e2f704c78b07d49fcfa4cc7cd032635807f9a1f09b57adc2232cac38d0d42428008bd9953944e0276123ee6851a266078df9c68e5c4db158be05377dadd7b1C"
+      }
+    }
+    ,
+    {
+      "name": "TriggerSmartContract_USDD_transfer",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "30a2",
+          "ref_block_hash": "2d8cae7382b48775",
+          "expiration": 1766521434000,
+          "fee_limit": 50000000,
+          "timestamp": 1766519576813
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d00000",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "41d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c76"
+        },
+        "raw_data_hex": "0a0230a222082d8cae7382b487754090df87e7b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121541d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c762244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d0000070edb196e6b433900180e1eb17",
+        "raw": {
+          "visible": false,
+          "txID": "547eb950894b04fb3d6d66d4b34562d59525ffeef363836b0ad696f37a5d8ce6",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d00000",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "41d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c76"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "30a2",
+            "ref_block_hash": "2d8cae7382b48775",
+            "expiration": 1766521434000,
+            "fee_limit": 50000000,
+            "timestamp": 1766519576813
+          }
+        }
+      },
+      "result": {
+        "signature": "6147d601b05fc3c2da8c33e303d4f2a866f5f6da424a87dd89c31ed92cbac204151d5ae4a316be889cc48f1cefefc742959f2eab40e62ff8a890c726dcb4be5d1B"
+      }
+    }
+    ,
+    {
+      "name": "TriggerSmartContract_USDD_fee_too_high",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "339a",
+          "ref_block_hash": "f3ac5279ff8e1b6b",
+          "expiration": 1766523738000,
+          "fee_limit": 15000000001,
+          "timestamp": 1766521878167
+        },
+        "contract": {
+          "_message_type": "TronTriggerSmartContract",
+          "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d00000",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "contract_address": "41d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c76"
+        },
+        "raw_data_hex": "0a02339a2208f3ac5279ff8e1b6b4090af94e8b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121541d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c762244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d000007097eda2e7b433900181acc7f037",
+        "raw": {
+          "visible": false,
+          "txID": "e7bd2d37525df5734fa6f32ca5f1494e3b3ad14c5463a788eed70fcecdbb528f",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "data": "a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d00000",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "contract_address": "41d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c76"
+                  },
+                  "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
+                },
+                "type": "TriggerSmartContract"
+              }
+            ],
+            "ref_block_bytes": "339a",
+            "ref_block_hash": "f3ac5279ff8e1b6b",
+            "expiration": 1766523738000,
+            "fee_limit": 15000000001,
+            "timestamp": 1766521878167
+          },
+          "raw_data_hex": "0a02339a2208f3ac5279ff8e1b6b4090af94e8b4335aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121541d4a4b0bc1d69cdeb238e8604ead1b03ac0ed7c762244a9059cbb000000000000000000000000d093f24888ab06073a4bdffbb8107db1ea9dc0a0000000000000000000000000000000000000000000000001158e460913d000007097eda2e7b433900181acc7f037",
+          "visible": false
+        }
+      },
+      "result": {
+        "error_message": "Tron: fees too high"
+      }
     }
   ]
 }
