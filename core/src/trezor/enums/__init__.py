@@ -373,6 +373,7 @@ if TYPE_CHECKING:
 
     class TronRawContractType(IntEnum):
         TransferContract = 1
+        TriggerSmartContract = 31
 
     class MessageType(IntEnum):
         Initialize = 0
@@ -640,6 +641,7 @@ if TYPE_CHECKING:
         TronSignature = 2203
         TronContractRequest = 2204
         TronTransferContract = 2205
+        TronTriggerSmartContract = 2206
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

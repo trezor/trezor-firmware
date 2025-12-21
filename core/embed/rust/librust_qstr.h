@@ -1003,6 +1003,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__enabled;
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
+  MP_QSTR_words__fee_limit;
   MP_QSTR_words__forget;
   MP_QSTR_words__from;
   MP_QSTR_words__good_to_know;

@@ -1503,13 +1503,13 @@ if not utils.BITCOIN_ONLY:
 
     if __debug__:
 
-        def confirm_tron_send(amount: str) -> Awaitable[None]:
+        def confirm_tron_send(amount: str | None, fee: str | None) -> Awaitable[None]:
             return raise_if_not_confirmed(
                 trezorui_api.confirm_summary(
-                    amount=amount,
-                    amount_label=TR.send__total_amount,
-                    fee="",
-                    fee_label="",
+                    amount=amount or "",
+                    amount_label=TR.send__total_amount if amount else "",
+                    fee=fee or "",
+                    fee_label=TR.words__fee_limit if fee else "",
                 ),
                 br_name="confirm_tron_send",
                 br_code=ButtonRequestType.SignTx,

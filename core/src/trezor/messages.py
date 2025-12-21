@@ -6878,6 +6878,24 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TronTransferContract"]:
             return isinstance(msg, cls)
 
+    class TronTriggerSmartContract(protobuf.MessageType):
+        owner_address: "AnyBytes"
+        contract_address: "AnyBytes"
+        data: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+            contract_address: "AnyBytes",
+            data: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronTriggerSmartContract"]:
+            return isinstance(msg, cls)
+
     class TronSignature(protobuf.MessageType):
         signature: "AnyBytes"
 
