@@ -274,3 +274,4 @@ if not utils.BITCOIN_ONLY:
     TronSignature = 2203
     TronContractRequest = 2204
     TronTransferContract = 2205
+    TronTriggerSmartContract = 2206

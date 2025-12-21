@@ -1560,6 +1560,7 @@ pub enum TranslatedString {
     secure_sync__delegated_identity_key_thp = 1171,  // "Allow {0} on {1} to use Suite Sync with this Trezor?"
     secure_sync__header = 1173,  // "Suite Sync"
     words__note = 1174,  // "Note"
+    words__fee_limit = 1175,  // "Fee limit"
 }
 
 impl TranslatedString {
@@ -5077,6 +5078,7 @@ impl TranslatedString {
             (Self::secure_sync__delegated_identity_key_thp, "Allow {0} on {1} to use Suite Sync with this Trezor?"),
             (Self::secure_sync__header, "Suite Sync"),
             (Self::words__note, "Note"),
+            (Self::words__fee_limit, "Fee limit"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -6573,6 +6575,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__enabled, Self::words__enabled),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),
+        (Qstr::MP_QSTR_words__fee_limit, Self::words__fee_limit),
         (Qstr::MP_QSTR_words__forget, Self::words__forget),
         (Qstr::MP_QSTR_words__from, Self::words__from),
         (Qstr::MP_QSTR_words__good_to_know, Self::words__good_to_know),

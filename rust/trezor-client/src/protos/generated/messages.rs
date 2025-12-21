@@ -557,6 +557,8 @@ pub enum MessageType {
     MessageType_TronContractRequest = 2204,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronTransferContract)
     MessageType_TronTransferContract = 2205,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronTriggerSmartContract)
+    MessageType_TronTriggerSmartContract = 2206,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -841,6 +843,7 @@ impl ::protobuf::Enum for MessageType {
             2203 => ::std::option::Option::Some(MessageType::MessageType_TronSignature),
             2204 => ::std::option::Option::Some(MessageType::MessageType_TronContractRequest),
             2205 => ::std::option::Option::Some(MessageType::MessageType_TronTransferContract),
+            2206 => ::std::option::Option::Some(MessageType::MessageType_TronTriggerSmartContract),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1116,6 +1119,7 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_TronSignature" => ::std::option::Option::Some(MessageType::MessageType_TronSignature),
             "MessageType_TronContractRequest" => ::std::option::Option::Some(MessageType::MessageType_TronContractRequest),
             "MessageType_TronTransferContract" => ::std::option::Option::Some(MessageType::MessageType_TronTransferContract),
+            "MessageType_TronTriggerSmartContract" => ::std::option::Option::Some(MessageType::MessageType_TronTriggerSmartContract),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1390,6 +1394,7 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_TronSignature,
         MessageType::MessageType_TronContractRequest,
         MessageType::MessageType_TronTransferContract,
+        MessageType::MessageType_TronTriggerSmartContract,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1670,10 +1675,11 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_TronSignature => 262,
             MessageType::MessageType_TronContractRequest => 263,
             MessageType::MessageType_TronTransferContract => 264,
-            MessageType::MessageType_BenchmarkListNames => 265,
-            MessageType::MessageType_BenchmarkNames => 266,
-            MessageType::MessageType_BenchmarkRun => 267,
-            MessageType::MessageType_BenchmarkResult => 268,
+            MessageType::MessageType_TronTriggerSmartContract => 265,
+            MessageType::MessageType_BenchmarkListNames => 266,
+            MessageType::MessageType_BenchmarkNames => 267,
+            MessageType::MessageType_BenchmarkRun => 268,
+            MessageType::MessageType_BenchmarkResult => 269,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1692,7 +1698,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xfb]\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xac^\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1995,17 +2001,18 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ype_TronSignTx\x10\x9a\x11\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType\
     _TronSignature\x10\x9b\x11\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageType\
     _TronContractRequest\x10\x9c\x11\x1a\x04\x98\xb5\x18\x01\x12+\n\x20Messa\
-    geType_TronTransferContract\x10\x9d\x11\x1a\x04\x90\xb5\x18\x01\x12)\n\
-    \x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\
-    \n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\
-    \x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1b\
-    MessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x08\xc8\
-    \xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\
-    \x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\
-    \x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\
-    \x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\
-    \x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezo\
-    rMessage\x80\xa6\x1d\x01\
+    geType_TronTransferContract\x10\x9d\x11\x1a\x04\x90\xb5\x18\x01\x12/\n$M\
+    essageType_TronTriggerSmartContract\x10\x9e\x11\x1a\x04\x90\xb5\x18\x01\
+    \x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\
+    \x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\
+    \x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\
+    \x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\
+    \x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\x10\
+    J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\
+    \x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\
+    \x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\
+    \x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protob\
+    ufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

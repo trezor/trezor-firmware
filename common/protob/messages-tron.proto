@@ -12,7 +12,7 @@ option java_outer_classname = "TrezorMessageTron";
  * @next Failure
  */
 message TronGetAddress {
-    repeated uint32 address_n = 1;   // BIP-32 path to derive the key from master node
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
     optional bool show_display = 2;  // Optionally show on display before sending the result
     optional bool chunkify = 3;      // display the address in chunks of 4 characters
 }
@@ -22,42 +22,59 @@ message TronGetAddress {
  * @end
  */
 message TronAddress {
-    required string address = 1;  // Tron address in Base58Check encoding
+    required string address = 1; // Tron address in Base58Check encoding
     optional bytes mac = 2;       // Address authentication code
 }
 
 /**
- * Request: ask device to sign Tron transaction
+ * Request: Ask device to sign Tron transaction. Provides mandatory contract-agnostic transaction details.
  * @start
  * @next TronContractRequest
  */
 message TronSignTx {
-    repeated uint32 address_n = 1;       // BIP-32 path to derive the key from master node
-    required bytes ref_block_bytes = 2;  // The height of the transaction reference block, using the 6th to 8th (exclusive) bytes of the reference block height, a total of 2 bytes
-    required bytes ref_block_hash = 3;   // The hash of the transaction reference block
-    required sint64 expiration = 4;      // Transaction expiration time, beyond which the transaction will no longer be packed
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    required bytes ref_block_bytes = 2; // The height of the transaction reference block, using the 6th to 8th (exclusive) bytes of the reference block height, a total of 2 bytes
+    required bytes ref_block_hash = 3; // The hash of the transaction reference block
+    required sint64 expiration = 4; // Transaction expiration time, beyond which the transaction will no longer be packed
     optional bytes data = 5;             // Transaction memo. (256 bytes maximum, this is a Trezor limitation, not a Tron protocol limitation)
-    required sint64 timestamp = 6;       // Transaction timestamp, set as the transaction creation time
+    required sint64 timestamp = 6; // Transaction timestamp, set as the transaction creation time
     optional sint64 fee_limit = 7;       // Not TRX. Maximum Energy cost. Only for deploying or triggering smart contracts.
 }
 
 /**
- * Response: device is ready for client to send the next operation
+ * Response: Device ready to receive contract details
  * @next TronTransferContract
  */
 message TronContractRequest {
 }
 
 /**
- * Request: ask device to confirm this operation type
+ * Request: Fill in TransferContract details
  * @next TronSignature
  */
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L32-L36
 message TronTransferContract {
     // https://developers.tron.network/docs/tron-contracttype#2-transfercontract
-    required bytes owner_address = 1;  // Sender's address, Base58Check encoding
-    required bytes to_address = 2;     // Recipient's address, Base58Check encoding
-    required uint64 amount = 3;        // Transfer amount (in SUN)
+    required bytes owner_address = 1; // Sender's address, Base58Check encoding
+    required bytes to_address = 2; // Recipient's address, Base58Check encoding
+    required uint64 amount = 3; // Transfer amount (in SUN)
+}
+
+
+/**
+ * Request: Fill in TriggerSmartContract details
+ * @next TronSignature
+ */
+ //https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/smart_contract.proto#L74
+message TronTriggerSmartContract {
+    required bytes owner_address = 1; // Sender account, signs transaction
+    required bytes contract_address = 2; // Target smart contract address
+    required bytes data = 4; // ABI-encoded function call data
+
+    // Only relevant for TRC10 token transfers.
+    optional sint64 call_value = 3;         // TRX value sent (SUN)
+    optional sint64 call_token_value = 5;   // TRC10 token amount
+    optional sint64 token_id = 6;           // TRC10 token identifier
 }
 
 /**
@@ -65,7 +82,7 @@ message TronTransferContract {
  * @end
  */
 message TronSignature {
-    required bytes signature = 1;  // Signature of the transaction
+    required bytes signature = 1; // Signature of the transaction
 }
 
 
@@ -89,11 +106,12 @@ message TronRawTransaction {
 
         message TronRawParameter {
             required string type_url = 1; // e.g., "type.googleapis.com/protocol.TransferContract"
-            required bytes value = 2;     // The serialized value of the contract parameter, e.g., TronTransferContract
+            required bytes value = 2; // The serialized value of the contract parameter, e.g., TronTransferContract
         }
 
         enum TronRawContractType {
             TransferContract = 1;
+            TriggerSmartContract = 31;
         }
 
         required TronRawContractType type = 1;
@@ -101,3 +119,4 @@ message TronRawTransaction {
 
     }
 }
+
