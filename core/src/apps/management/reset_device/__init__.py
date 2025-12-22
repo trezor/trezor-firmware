@@ -78,7 +78,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     # request and set new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm()
-        if not config.change_pin("", newpin, None, None):
+        if not config.change_pin(newpin, None):
             raise ProcessError("Failed to set PIN")
 
     prev_int_entropy = None

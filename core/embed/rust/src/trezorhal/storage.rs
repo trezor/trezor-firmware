@@ -134,20 +134,12 @@ pub fn unlock(pin: &str, salt: Option<&ExternalSalt>) -> bool {
 /// Change PIN and/or external salt.
 /// Returns true if the PIN + salt combination is correct and the change was
 /// successful.
-pub fn change_pin(
-    old_pin: &str,
-    new_pin: &str,
-    old_salt: Option<&ExternalSalt>,
-    new_salt: Option<&ExternalSalt>,
-) -> bool {
+pub fn change_pin(new_pin: &str, new_salt: Option<&ExternalSalt>) -> bool {
     ffi::sectrue
         == unsafe {
             ffi::storage_change_pin(
-                old_pin.as_ptr() as *const _,
-                old_pin.len(),
                 new_pin.as_ptr() as *const _,
                 new_pin.len(),
-                old_salt.map(|s| s.as_ptr()).unwrap_or(ptr::null()),
                 new_salt.map(|s| s.as_ptr()).unwrap_or(ptr::null()),
             )
         }
@@ -333,8 +325,8 @@ mod tests {
 
         assert!(!unlock("1234", None));
 
-        //unlock("", None);
-        assert!(change_pin("", "1234", None, None));
+        unlock("", None);
+        assert!(change_pin("1234", None));
         assert!(has_pin());
 
         lock();

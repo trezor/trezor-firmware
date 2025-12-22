@@ -1702,21 +1702,18 @@ end:
   return rem_mcu;
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
+secbool storage_change_pin(const uint8_t *newpin, size_t newpin_len,
                            const uint8_t *new_ext_salt) {
-  if (sectrue != initialized || oldpin == NULL || newpin == NULL) {
+  if (sectrue != initialized || newpin == NULL) {
     return secfalse;
   }
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 
-  ui_progress_init(STORAGE_PIN_OP_CHANGE);
-  ui_message =
-      (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
+  ui_progress_init(STORAGE_PIN_OP_SET);
+  ui_message = newpin_len == 0 ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
-  secbool ret = unlock(oldpin, oldpin_len, old_ext_salt);
+  secbool ret = storage_is_unlocked();
   if (sectrue != ret) {
     goto end;
   }

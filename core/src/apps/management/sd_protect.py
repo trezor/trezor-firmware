@@ -75,7 +75,9 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
     salt, salt_auth_key, salt_tag = _make_salt()
     await _set_salt(salt, salt_tag)
 
-    if not config.change_pin(pin, pin, None, salt):
+    if config.unlock(pin, None):
+        config.change_pin(pin, salt)
+    else:
         # Wrong PIN. Clean up the prepared salt file.
         try:
             storage_sd_salt.remove_sd_salt()
@@ -106,7 +108,9 @@ async def _sd_protect_disable(msg: SdProtect) -> Success:
     pin, salt = await request_pin_and_sd_salt(TR.pin__enter)
 
     # Check PIN and remove salt.
-    if not config.change_pin(pin, pin, salt, None):
+    if config.unlock(pin, salt):
+        config.change_pin(pin, None)
+    else:
         await error_pin_invalid()
 
     storage_device.set_sd_salt_auth_key(None)
@@ -141,8 +145,9 @@ async def _sd_protect_refresh(msg: SdProtect) -> Success:
     new_salt, new_auth_key, new_salt_tag = _make_salt()
     await _set_salt(new_salt, new_salt_tag, stage=True)
 
-    if not config.change_pin(pin, pin, old_salt, new_salt):
+    if not config.unlock(pin, old_salt):
         await error_pin_invalid()
+    config.change_pin(pin, new_salt)
 
     storage_device.set_sd_salt_auth_key(new_auth_key)
 

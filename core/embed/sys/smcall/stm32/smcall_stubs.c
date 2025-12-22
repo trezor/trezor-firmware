@@ -255,12 +255,9 @@ uint32_t storage_get_pin_rem(void) {
   return smcall_invoke0(SMCALL_STORAGE_GET_PIN_REM);
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
+secbool storage_change_pin(const uint8_t *newpin, size_t newpin_len,
                            const uint8_t *new_ext_salt) {
-  return (secbool)smcall_invoke6((uint32_t)oldpin, oldpin_len, (uint32_t)newpin,
-                                 newpin_len, (uint32_t)old_ext_salt,
+  return (secbool)smcall_invoke3((uint32_t)newpin, newpin_len,
                                  (uint32_t)new_ext_salt,
                                  SMCALL_STORAGE_CHANGE_PIN);
 }
