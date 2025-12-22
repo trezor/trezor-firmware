@@ -54,11 +54,13 @@ class Storage:
             return False
         if new_ext_salt is not None and len(new_ext_salt) != EXTERNAL_SALT_LEN:
             raise ValueError
-        return sectrue == self.lib.storage_change_pin(
+        ret = self.lib.storage_change_pin(
             newpin.encode(),
             len(newpin),
             new_ext_salt,
         )
+        print(f"Returned from self.lib.storage_change_pin with {sectrue == ret} And btw I am in C")
+        return sectrue == ret
 
     def get(self, key: int) -> bytes:
         val_len = c.c_uint16()

@@ -1556,17 +1556,22 @@ uint32_t storage_get_pin_rem(void) {
   return PIN_MAX_TRIES - ctr_mcu;
 }
 
-secbool storage_change_pin(const uint8_t *newpin, size_t newpin_len,
+secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
+                           const uint8_t *newpin, size_t newpin_len,
+                           const uint8_t *old_ext_salt,
                            const uint8_t *new_ext_salt) {
-  if (sectrue != initialized || newpin == NULL) {
+  if (sectrue != initialized || oldpin == NULL || newpin == NULL) {
     return secfalse;
   }
 
   ui_total = 2 * PIN_DERIVE_MS;
   ui_rem = ui_total;
   ui_message =
-      (newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
+      (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
+  if (sectrue != unlock(oldpin, oldpin_len, old_ext_salt)) {
+    return secfalse;
+  }
 
   // Fail if the new PIN is the same as the wipe code.
   if (sectrue != is_not_wipe_code(newpin, newpin_len)) {

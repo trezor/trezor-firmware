@@ -19,9 +19,8 @@ def test_init_pin(nc_class):
 def test_change_pin(nc_class):
     sc, sp = common.init(nc_class, unlock=True)
     for s in (sc, sp):
-        assert s.unlock("")
         assert s.change_pin("", "222")
-        assert not s.unlock("9999")  # invalid PIN
+        assert not s.change_pin("9999", "")  # invalid PIN
         assert s.unlock("222")
         assert s.change_pin("222", "99999")
         assert s.change_pin("99999", "Trezor")
