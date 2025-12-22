@@ -102,6 +102,10 @@ class TestConfig(unittest.TestCase):
 
             self.assertTrue(config.change_pin(new_pin, None))
 
+            # Old PIN cannot be used to unlock the device.
+            if old_pin != new_pin:
+                self.assrtFalse(config.unlock(old_pin, None))
+
             # Storage remains unlocked.
             self.assertEqual(config.get(1, 1), b"value")
 
