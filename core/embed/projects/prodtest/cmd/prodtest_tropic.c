@@ -486,8 +486,10 @@ static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   uint8_t version[TR01_L2_GET_INFO_RISCV_FW_SIZE] = {0};
-  if (lt_get_info_riscv_fw_ver(tropic_handle, version) != LT_OK) {
-    cli_error(cli, CLI_ERROR, "Unable to get RISCV FW version");
+  lt_ret_t ret = lt_get_info_riscv_fw_ver(tropic_handle, version);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "lt_get_info_riscv_fw_ver() failed with error %d",
+              ret);
     return;
   }
 
@@ -504,8 +506,10 @@ static void prodtest_tropic_get_spect_fw_version(cli_t* cli) {
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   uint8_t version[TR01_L2_GET_INFO_SPECT_FW_SIZE];
-  if (lt_get_info_spect_fw_ver(tropic_handle, version) != LT_OK) {
-    cli_error(cli, CLI_ERROR, "Unable to get SPECT FW version");
+  lt_ret_t ret = lt_get_info_spect_fw_ver(tropic_handle, version);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "lt_get_info_spect_fw_ver() failed with error %d",
+              ret);
     return;
   }
 
@@ -522,8 +526,10 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   struct lt_chip_id_t chip_id;
-  if (lt_get_info_chip_id(tropic_handle, &chip_id) != LT_OK) {
-    cli_error(cli, CLI_ERROR, "Unable to get CHIP ID");
+  lt_ret_t ret = lt_get_info_chip_id(tropic_handle, &chip_id);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "lt_get_info_chip_id() failed with error %d",
+              ret);
     return;
   }
 
@@ -590,6 +596,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
       // The Tropic pairing process was initiated but probably failed midway.
       return TROPIC_LOCKED_FALSE;
     } else {
+      cli_error(cli, CLI_ERROR,
+                "`tropic_custom_session_start()` failed with error %d", ret);
       return TROPIC_LOCKED_ERROR;
     }
   }
@@ -783,7 +791,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
   curve25519_key privileged_private = {0};
   if (secret_key_tropic_pairing_privileged(privileged_private) != sectrue) {
     cli_error(cli, CLI_ERROR,
-              "`secret_key_tropic_pairing_unprivileged()` failed.");
+              "`secret_key_tropic_pairing_privileged()` failed.");
     goto cleanup;
   }
   curve25519_key privileged_public = {0};
@@ -1391,7 +1399,7 @@ static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   ret = data_read(tropic_get_handle(), first_slot, slots_count, certificate,
                   sizeof(certificate), &certificate_length);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR, "Unable to read certificate");
+    cli_error(cli, CLI_ERROR, "Reading certificate failed with error %d", ret);
     return;
   }
 
