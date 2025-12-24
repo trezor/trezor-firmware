@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import io, utils
+from trezor import io
 
 
 class TestTrezorIoSdcard(unittest.TestCase):

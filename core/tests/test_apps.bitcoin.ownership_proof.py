@@ -1,4 +1,5 @@
-from common import unhexlify, unittest  # isort:skip
+# flake8: noqa: F403,F405
+from common import *  # isort:skip
 
 from trezor.crypto import bip39
 from trezor.enums import InputScriptType
