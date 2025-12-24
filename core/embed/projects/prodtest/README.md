@@ -1215,6 +1215,10 @@ secure-channel-handshake-2 e08e84b91413ad8f7b07853c8ce4c1b5547a12d9dd65f30e3adaa
 OK
 ```
 
+### tropic-stress-test
+
+Runs a Tropic stress test that repeatedly calls `lt_session_start()`, `lt_mac_and_destroy()` and `lt_ecc_key_generate()` to test that Tropic doesn't enter alarm mode.
+
 ### wpc-info
 Retrieves detailed information from the wireless power receiver, including chip identification, firmware version, configuration settings, and error status.
 
