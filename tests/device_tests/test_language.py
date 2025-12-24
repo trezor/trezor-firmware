@@ -241,6 +241,24 @@ def test_full_language_change(session: Session, lang: str):
     )
 
 
+def test_build_version_mismatch(session: Session):
+    assert session.features.language == "en-US"
+    # Translations build version is allowed to differ from FW build version.
+    # Change the build version to one not matching the current device
+    version = session.version
+    assert len(session.version) == 3
+    version = version + (1,)
+    blob = prepare_blob("cs", session.model, version)
+    device.change_language(
+        session,
+        language_data=sign_blob(blob),
+    )
+    assert session.features.language == "cs-CZ"
+    _check_ping_screen_texts(
+        session, get_ping_title("cs"), get_ping_button("cs", session.client)
+    )
+
+
 def test_language_is_removed_after_wipe(client: Client):
     session = client.get_session()
     assert session.features.language == "en-US"
