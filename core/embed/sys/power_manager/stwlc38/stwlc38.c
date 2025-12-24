@@ -22,6 +22,7 @@
 
 #include <io/i2c_bus.h>
 #include <sys/irq.h>
+#include <sys/mpu.h>
 #include <sys/systimer.h>
 
 #include "stwlc38.h"
@@ -366,12 +367,17 @@ static void stwlc38_i2c_callback(void *context, i2c_packet_t *packet) {
 }
 
 void STWLC38_EXTI_INTERRUPT_HANDLER(void) {
+  IRQ_LOG_ENTER();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+
   stwlc38_driver_t *drv = &g_stwlc38_driver;
 
   // Clear the EXTI line pending bit
   __HAL_GPIO_EXTI_CLEAR_FLAG(STWLC38_INT_PIN);
 
   if (!drv->initialized) {
+    mpu_restore(mpu_mode);
+    IRQ_LOG_EXIT();
     return;
   }
 
@@ -379,6 +385,9 @@ void STWLC38_EXTI_INTERRUPT_HANDLER(void) {
     drv->report_readout_requested = true;
     stwlc38_fsm_continue(drv);
   }
+
+  mpu_restore(mpu_mode);
+  IRQ_LOG_EXIT();
 }
 
 static void stwlc38_fsm_continue(stwlc38_driver_t *drv) {
