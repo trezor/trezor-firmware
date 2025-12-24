@@ -60,6 +60,9 @@ def screen_recording(
     # may be lost due to an event loop restart.
     client.sync_responses()
     try:
+        # reseed (again) immediately before recording, so that we get consistent randomness
+        # in the test itself.
+        client.debug.reseed(0)
         client.debug.start_recording(str(testcase.actual_dir))
         yield
     finally:
