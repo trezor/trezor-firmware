@@ -43,6 +43,9 @@ pub mod sysevent;
 #[cfg(feature = "power_manager")]
 pub mod power_manager;
 
+#[cfg(feature = "bootloader")]
+pub mod bootloader;
+
 #[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod layout_buf;
 

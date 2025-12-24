@@ -31,10 +31,17 @@ use crate::ui::event::ButtonEvent;
 
 #[derive(PartialEq, Debug, Eq, Clone, Copy)]
 pub enum Syshandle {
+    UsbWire = ffi::syshandle_t_SYSHANDLE_USB_WIRE as _,
+    UsbDebug = ffi::syshandle_t_SYSHANDLE_USB_DEBUG as _,
+    UsbWebauthn = ffi::syshandle_t_SYSHANDLE_USB_WEBAUTHN as _,
+    UsbVcp = ffi::syshandle_t_SYSHANDLE_USB_VCP as _,
+    BleIface = ffi::syshandle_t_SYSHANDLE_BLE_IFACE_0 as _,
+    PowerManager = ffi::syshandle_t_SYSHANDLE_POWER_MANAGER as _,
     Button = ffi::syshandle_t_SYSHANDLE_BUTTON as _,
     Touch = ffi::syshandle_t_SYSHANDLE_TOUCH as _,
+    Usb = ffi::syshandle_t_SYSHANDLE_USB as _,
     Ble = ffi::syshandle_t_SYSHANDLE_BLE as _,
-    PowerManager = ffi::syshandle_t_SYSHANDLE_POWER_MANAGER as _,
+    Syscall = ffi::syshandle_t_SYSHANDLE_SYSCALL as _,
 }
 
 impl Syshandle {
@@ -137,6 +144,19 @@ pub fn parse_event(signalled: &sysevents_t) -> Option<Event> {
             let pm_event = pm_parse_event(pm_event);
             return Some(Event::PM(pm_event));
         }
+    }
+
+    if signalled.read_ready & (1 << ffi::syshandle_t_SYSHANDLE_USB_WIRE) != 0 {
+        return Some(Event::USBWire);
+    }
+
+    if signalled.read_ready & (1 << ffi::syshandle_t_SYSHANDLE_USB_DEBUG) != 0 {
+        return Some(Event::USBDebug);
+    }
+
+    #[cfg(feature = "ble")]
+    if signalled.read_ready & (1 << ffi::syshandle_t_SYSHANDLE_BLE_IFACE_0) != 0 {
+        return Some(Event::BLEIface);
     }
 
     None
