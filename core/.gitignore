@@ -1,4 +1,5 @@
 build/
+build_cache/
 build-docker/
 .sconsign.dblite
 compile_commands.json

@@ -1,3 +1,5 @@
+CacheDir('build_cache')
+
 # pylint: disable=E0602
 Decider('content-timestamp')
 SetOption('max_drift', 10)
