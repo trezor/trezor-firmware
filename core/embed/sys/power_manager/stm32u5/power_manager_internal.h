@@ -97,16 +97,25 @@ typedef struct {
   uint8_t soc_target;
   bool soc_target_reached;
   float target_battery_ocv_v_tau;
+  float battery_ocv;
 
   // Battery charging state
   bool charging_enabled;
   uint16_t i_chg_target_ma;
   uint16_t i_chg_max_limit_ma;
 
+  // Charging-limited detection filter state
+  // - charging_limited_latched: current filtered state exposed to pm_state_t
+  // - charging_limited_start_ms: timestamp when low-current-in-CC predicate
+  //   started being true (0 when not timing)
+  bool charging_limited_latched;
+  uint32_t charging_limited_start_ms;
+
 #ifdef PM_ENABLE_TEMP_CONTROL
   // Temp controller
   uint32_t temp_control_timeout;
   uint16_t i_chg_temp_limit_ma;
+  bool temp_control_active;
 #endif
 
   // Power source hardware state

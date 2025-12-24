@@ -480,6 +480,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("pm_get_state")
         .allowlist_function("pm_suspend")
         .allowlist_function("pm_hibernate")
+        .allowlist_function("pm_charging_enable")
+        .allowlist_function("pm_charging_disable")
         // irq
         .allowlist_function("irq_lock_fn")
         .allowlist_function("irq_unlock_fn")

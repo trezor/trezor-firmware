@@ -57,7 +57,13 @@ typedef union {
     bool charging_status_changed : 1;
     bool usb_connected_changed : 1;
     bool wireless_connected_changed : 1;
+    bool ntc_connected_changed : 1;
+    bool charging_limited_changed : 1;
+    bool temp_control_active_changed : 1;
 
+    // Jump detection events (fast changes within a short time window)
+    bool battery_temp_jump_detected : 1;
+    bool battery_ocv_jump_detected : 1;
     bool soc_updated : 1;
   } flags;
 } pm_event_t;
@@ -66,9 +72,17 @@ typedef union {
 typedef struct {
   bool usb_connected;
   bool wireless_connected;
+  bool ntc_connected;
+  bool charging_limited;
+  bool temp_control_active;
   pm_charging_status_t charging_status;
   pm_power_status_t power_status;
   uint8_t soc;
+
+  // used for detection of unexpected changes
+  float battery_ocv;
+  float battery_temp;
+
 } pm_state_t;
 
 /* Power system report */

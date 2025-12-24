@@ -82,6 +82,10 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   // Run battery charging controller
   pm_charging_controller(drv);
 
+  drv->battery_ocv =
+      fuel_gauge_get_ocv(&drv->fuel_gauge, drv->pmic_data.vbat,
+                         drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+
   if (!drv->fuel_gauge_initialized) {
     // Fuel gauge not initialized yet, battery SoC not available, sample the
     // battery data into the circular buffer.
@@ -100,7 +104,7 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
                                PM_SELF_DISG_RATE_SUSPEND_MA, 25.0f);
 
       // TODO: Currently in suspend mode we use single self-discharge rate
-      // but in practive the discharge rate may change in case some components
+      // but in practice the discharge rate may change in case some components
       // remains active. Since the device is very likely to stay in suspend
       // mode for limited time, for now we decided to neglect this. but in
       // the future we may want to distinguish between different suspend modes
@@ -126,7 +130,9 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
       drv->fully_charged = true;
       fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
     } else {
-      drv->fully_charged = false;
+      if (drv->pmic_data.ibat > 0) {
+        drv->fully_charged = false;
+      }
     }
 
     // Ceil the float soc to user-friendly integer
@@ -186,6 +192,10 @@ void pm_charging_controller(pm_driver_t* drv) {
 #ifdef PM_ENABLE_TEMP_CONTROL
   pm_temperature_controller(drv);
 #endif
+
+  if (drv->pmic_data.ntc_disconnected) {
+    drv->i_chg_target_ma = 0;
+  }
 
   if (drv->soc_target == 100) {
     drv->soc_target_reached = false;
@@ -267,6 +277,9 @@ static void pm_temperature_controller(pm_driver_t* drv) {
   if (drv->i_chg_target_ma > drv->i_chg_temp_limit_ma) {
     // Limit the charging current by temperature controller
     drv->i_chg_target_ma = drv->i_chg_temp_limit_ma;
+    drv->temp_control_active = true;
+  } else {
+    drv->temp_control_active = false;
   }
 }
 
