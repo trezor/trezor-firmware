@@ -405,6 +405,10 @@ void real_jump_to_firmware(void) {
 
   ensure(check_secmon_header_sig(secmon_hdr), "Invalid secmon signature");
 
+  ensure(check_secmon_min_version(secmon_hdr->monotonic),
+         "Secmon downgrade protection");
+  ensure_secmon_min_version(secmon_hdr->monotonic);
+
   ensure(check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
                                &FIRMWARE_AREA),
          "Secmon is corrupted");
