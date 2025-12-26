@@ -1,24 +1,18 @@
 #!/usr/bin/env bash
 set -e
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 <model>"
+  exit 1
+fi
 
-SITE="https://data.trezor.io/dev/firmware/releases/emulators/"
-cd "$(dirname "$0")"
+MODEL="$1"
 
-# download all emulators without index files, without directories and only if not present
-wget -e robots=off \
-    --no-verbose \
-    --no-clobber \
-    --no-parent \
-    --no-directories \
-    --no-host-directories \
-    --recursive \
-    --reject "index.html*" \
-    --reject "-arm" \
-    -P emulators/ \
-    $SITE
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 
-chmod u+x emulators/trezor-emu-*
+# download emulators for the given model if not already present
+uv run python download_emulators_new.py "$MODEL"
 
 cd ..
 # are we in Nix(OS)?
-command -v nix-shell >/dev/null && nix-shell --run 'NIX_BINTOOLS=$NIX_BINTOOLS_FOR_TARGET autoPatchelf tests/emulators'
+command -v nix-shell >/dev/null && nix-shell --run 'NIX_BINTOOLS=$NIX_BINTOOLS_FOR_TARGET autoPatchelf tests/emulators/$MODEL'

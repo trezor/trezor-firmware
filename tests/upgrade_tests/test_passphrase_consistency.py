@@ -46,8 +46,8 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
-def emulator(gen: str, tag: str) -> Iterator[Emulator]:
-    with EmulatorWrapper(gen, tag) as emu:
+def emulator(gen: str, tag: str, model: str) -> Iterator[Emulator]:
+    with EmulatorWrapper(gen, tag, model) as emu:
         # set up a passphrase-protected device
         device.setup(
             emu.client.get_seedless_session(),
