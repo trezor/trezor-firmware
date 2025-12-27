@@ -3,3 +3,4 @@
 # isort:skip_file
 
 TransferContract = 1
+TriggerSmartContract = 31
