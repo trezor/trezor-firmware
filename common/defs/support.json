@@ -115,7 +115,8 @@
       "misc:XTZ": "not implemented",
       "misc:tADA": "not implemented",
       "misc:tXRP": "not implemented",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "eth:tHOL:17000": "Deprecated testnet",
+      "misc:TRX": "not implemented"
     }
   },
   "T2B1": {
@@ -234,7 +235,8 @@
       "nem:PAC:CHS": "not for T2B1 (#2793)",
       "nem:PAC:HRT": "not for T2B1 (#2793)",
       "nem:XEM": "not for T2B1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "eth:tHOL:17000": "Deprecated testnet",
+      "misc:TRX": "WIP: Partial support in Debug build"
     }
   },
   "T2T1": {
@@ -353,7 +355,8 @@
       "bitcoin:TRC": "address_type collides with Bitcoin",
       "bitcoin:tPART": "incompatible fork",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "eth:tHOL:17000": "Deprecated testnet",
+      "misc:TRX": "WIP: Partial support in Debug build"
     }
   },
   "T3B1": {
@@ -472,7 +475,8 @@
       "nem:PAC:CHS": "not for T3B1 (#2793)",
       "nem:PAC:HRT": "not for T3B1 (#2793)",
       "nem:XEM": "not for T3B1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "eth:tHOL:17000": "Deprecated testnet",
+      "misc:TRX": "WIP: Partial support in Debug build"
     }
   },
   "T3T1": {
@@ -591,7 +595,8 @@
       "nem:PAC:CHS": "not for T3T1 (#2793)",
       "nem:PAC:HRT": "not for T3T1 (#2793)",
       "nem:XEM": "not for T3T1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "eth:tHOL:17000": "Deprecated testnet",
+      "misc:TRX": "WIP: Partial support in Debug build"
     }
   },
   "T3W1": {
@@ -710,7 +715,8 @@
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
       "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "eth:tHOL:17000": "Deprecated testnet",
+      "misc:TRX": "WIP: Partial support in Debug build"
     }
   },
 
@@ -830,7 +836,8 @@
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
       "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "eth:tHOL:17000": "Deprecated testnet",
+      "misc:TRX": "WIP: Partial support in Debug build"
     }
   },
 
@@ -950,7 +957,8 @@
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
       "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet"
+      "eth:tHOL:17000": "Deprecated testnet",
+      "misc:TRX": "WIP: Partial support in Debug build"
     }
   }
 }
