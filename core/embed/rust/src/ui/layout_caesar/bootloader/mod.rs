@@ -364,7 +364,7 @@ impl BootloaderUI for UICaesar {
             // Draw vendor image if it's valid and has size of 24x24
             if let Ok(toif) = Toif::new(vendor_img) {
                 if (toif.width() == 24) && (toif.height() == 24) {
-                    let pos = Point::new((constant::WIDTH - 22) / 2, 0);
+                    let pos = Point::new(constant::WIDTH / 2, 0);
                     shape::ToifImage::new(pos, toif)
                         .with_align(Alignment2D::TOP_CENTER)
                         .with_fg(BLD_FG)
