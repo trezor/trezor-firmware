@@ -310,7 +310,6 @@ impl TextLayout {
         }
 
         while !remaining_text.is_empty() {
-            let is_last_line = cursor.y + self.style.text_font.line_height() > self.bottom_y();
             let mut force_next_page = false;
 
             // Check if we have not reached the maximum number of lines we want to draw.
@@ -319,6 +318,11 @@ impl TextLayout {
                     force_next_page = true;
                 }
             }
+
+            let is_last_line =
+                (cursor.y + self.style.text_font.line_height() + self.style.line_spacing
+                    > self.bottom_y())
+                    || force_next_page;
 
             let line_ending_space = if is_last_line {
                 self.style.ellipsis_width()
@@ -340,9 +344,10 @@ impl TextLayout {
                 // Last chunk on the page should not be rendered, put just ellipsis there
                 // Chunks is last when the next chunk would not fit on the page horizontally or
                 // the span doesn't cover the whole chunk size
+
                 let is_last_chunk = (2 * span.advance.x - chunk_config.x_offset) > remaining_width
                     || span.length < usize::from(chunk_config.chunk_size);
-                if (is_last_line || force_next_page)
+                if is_last_line
                     && is_last_chunk
                     && remaining_text.len() > chunk_config.chunk_size.into()
                 {
@@ -386,8 +391,9 @@ impl TextLayout {
                 if span.insert_hyphen_before_line_break {
                     sink.hyphen(*cursor, self);
                 }
-                // Check the amount of vertical space we have left --- or manually force the
-                // next page.
+
+                // Cannot be is_last_line since it includes self.style.line_spacing which is
+                // moot for page break.
                 if force_next_page || cursor.y + span.advance.y > self.bottom_y() {
                     // Not enough space on this page.
                     if !remaining_text.is_empty() {
@@ -401,9 +407,6 @@ impl TextLayout {
                         if should_append_ellipsis {
                             sink.ellipsis(*cursor, self);
                         }
-                        // TODO: This does not work in case we are the last
-                        // fitting text token on the line, with more text tokens
-                        // following and `text.is_empty() == true`.
                     }
 
                     // Report we are out of bounds and quit.
@@ -733,13 +736,25 @@ impl Span {
         while let Some((i, ch)) = char_indices_iter.next() {
             let char_width = text_font.char_width(ch);
 
-            // When there is a set chunk size and we reach it,
-            // adjust the line advances and return the line.
+            // All chunkification logic goes here.
             if let Some(chunkify_config) = chunks {
-                if i == usize::from(chunkify_config.chunk_size) {
-                    line.advance.y = 0;
-                    line.advance.x += chunkify_config.x_offset;
-                    return line;
+                let final_index = text.len().min(usize::from(chunkify_config.chunk_size));
+                let chunk_width = text_font.text_width(&text[..final_index]);
+                if chunk_width <= max_width {
+                    return Self {
+                        length: final_index,
+                        advance: Offset::x(chunk_width + chunkify_config.x_offset),
+                        insert_hyphen_before_line_break: false,
+                        skip_next_chars: 0,
+                    };
+                } else {
+                    // We cannot fit the chunk on this line, line break.
+                    return Self {
+                        length: 0,
+                        advance: Offset::y(text_font.line_height()),
+                        insert_hyphen_before_line_break: false,
+                        skip_next_chars: 0,
+                    };
                 }
             }
 
