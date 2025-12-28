@@ -948,6 +948,7 @@ impl FirmwareUI for UIBolt {
         _haptics_enabled: Option<bool>,
         _led_enabled: Option<bool>,
         _about_items: Obj,
+        _production_year: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }

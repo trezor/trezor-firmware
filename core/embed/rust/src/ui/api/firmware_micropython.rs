@@ -985,6 +985,9 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             .try_into_option()?;
         let led_enabled: Option<bool> = kwargs.get(Qstr::MP_QSTR_led_enabled)?.try_into_option()?;
         let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
+        let production_year: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_production_year)?
+            .try_into_option()?;
         let layout = ModelUI::show_device_menu(
             init_submenu_idx,
             backup_failed,
@@ -1001,6 +1004,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             haptics_enabled,
             led_enabled,
             about_items,
+            production_year,
         )?;
 
         let layout_obj = LayoutObj::new_root(layout)?;
@@ -1977,6 +1981,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     haptics_enabled: bool | None,
     ///     led_enabled: bool | None,
     ///     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
+    ///     production_year: str | None,
     /// ) -> LayoutObj[UiResult | tuple[int, int | None, int]]:
     ///     """Show the device menu. Result is either CANCELLED or a tuple (action, action_arg, parent_menu_id)."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),

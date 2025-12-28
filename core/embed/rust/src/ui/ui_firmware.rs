@@ -376,6 +376,7 @@ pub trait FirmwareUI {
         haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,
+        production_year: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_pairing_device_name(

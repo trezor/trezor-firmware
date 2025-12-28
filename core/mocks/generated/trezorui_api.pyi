@@ -639,6 +639,7 @@ def show_device_menu(
     haptics_enabled: bool | None,
     led_enabled: bool | None,
     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
+    production_year: str | None,
 ) -> LayoutObj[UiResult | tuple[int, int | None, int]]:
     """Show the device menu. Result is either CANCELLED or a tuple (action, action_arg, parent_menu_id)."""
 
