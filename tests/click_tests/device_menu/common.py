@@ -30,15 +30,18 @@ if TYPE_CHECKING:
 PIN4 = "1234"
 
 REGULATORY_AREAS = [
+    "Europe",
     "United States",
     "",  # additional information to the US regulations
     "Canada",
-    "Europe",
+    "Argentina",
     "Australia",
-    "Ukraine",
-    # "Japan",
+    "Japan",
+    "Singapore",
     "South Korea",
+    "South Korea",  # additional page for South Korea
     "Taiwan",
+    "Ukraine",
 ]
 
 AUTOLOCK_DELAY_USB_DEFAULT_MS = 10 * 60 * 1000  # 10 minutes

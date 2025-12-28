@@ -187,14 +187,24 @@ include_icon!(ICON_TROPIC, "layout_eckhart/res/tropic.toif");
 include_icon!(ICON_SECURED, "layout_eckhart/res/secured.toif");
 
 // Regulatory screen icons
-include_icon!(ICON_UKRAINE, "layout_eckhart/res/ukraine.toif");
-include_icon!(ICON_JAPAN, "layout_eckhart/res/japan.toif");
-include_icon!(ICON_JAPAN_2, "layout_eckhart/res/japan_2.toif");
-include_icon!(ICON_KOREA, "layout_eckhart/res/korea_full.toif");
-include_icon!(ICON_EUROPE, "layout_eckhart/res/europe.toif");
-include_icon!(ICON_RCM, "layout_eckhart/res/rcm.toif");
-include_icon!(ICON_FCC, "layout_eckhart/res/fcc.toif");
-include_icon!(ICON_TAIWAN, "layout_eckhart/res/taiwan.toif");
+include_icon!(
+    ICON_ARGENTINA,
+    "layout_eckhart/res/regulatory/argentina.toif"
+);
+include_icon!(ICON_EUROPE, "layout_eckhart/res/regulatory/europe.toif");
+include_icon!(ICON_FCC, "layout_eckhart/res/regulatory/fcc.toif");
+include_icon!(ICON_JAPAN_1, "layout_eckhart/res/regulatory/japan_1.toif");
+include_icon!(ICON_JAPAN_2, "layout_eckhart/res/regulatory/japan_2.toif");
+include_icon!(ICON_KOREA_1, "layout_eckhart/res/regulatory/korea_1.toif");
+include_icon!(ICON_KOREA_2, "layout_eckhart/res/regulatory/korea_2.toif");
+include_icon!(ICON_KOREA_3, "layout_eckhart/res/regulatory/korea_3.toif");
+include_icon!(ICON_RCM, "layout_eckhart/res/regulatory/rcm.toif");
+include_icon!(
+    ICON_SINGAPORE,
+    "layout_eckhart/res/regulatory/singapore.toif"
+);
+include_icon!(ICON_TAIWAN, "layout_eckhart/res/regulatory/taiwan.toif");
+include_icon!(ICON_UKRAINE, "layout_eckhart/res/regulatory/ukraine.toif");
 
 // Square icon for BLE connection items
 include_icon!(ICON_SQUARE, "layout_eckhart/res/square.toif");

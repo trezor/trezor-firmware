@@ -272,6 +272,9 @@ pub struct DeviceMenuScreen {
 
     // Integer argument for DeviceMenuMsg::RefreshMenu and DeviceMenuMsg::UnpairDevice
     pub result_arg: Option<u8>,
+
+    // Production year string for Regulatory screen
+    production_year: Option<TString<'static>>,
 }
 
 impl DeviceMenuScreen {
@@ -292,6 +295,7 @@ impl DeviceMenuScreen {
         haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,
+        production_year: Option<TString<'static>>,
     ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
@@ -302,6 +306,7 @@ impl DeviceMenuScreen {
             subscreens: Vec::new(),
             submenu_index: [None; MAX_SUBMENUS],
             result_arg: None,
+            production_year,
         };
 
         if pin_enabled.is_some()
@@ -882,7 +887,8 @@ impl DeviceMenuScreen {
                 );
             }
             Subscreen::RegulatoryScreen => {
-                *self.active_screen.deref_mut() = ActiveScreen::Regulatory(RegulatoryScreen::new());
+                *self.active_screen.deref_mut() =
+                    ActiveScreen::Regulatory(RegulatoryScreen::new(self.production_year));
             }
             Subscreen::BackupInfoScreen => {
                 *self.active_screen.deref_mut() = ActiveScreen::BackupInfo(

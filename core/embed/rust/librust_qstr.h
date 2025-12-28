@@ -554,6 +554,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pm_event;
   MP_QSTR_prefill;
   MP_QSTR_prefill_word;
+  MP_QSTR_production_year;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;
   MP_QSTR_progress__loading_transaction;

@@ -1221,6 +1221,7 @@ impl FirmwareUI for UIEckhart {
         haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,
+        production_year: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             init_submenu_idx,
@@ -1238,6 +1239,7 @@ impl FirmwareUI for UIEckhart {
             haptics_enabled,
             led_enabled,
             about_items,
+            production_year,
         )?);
         Ok(layout)
     }

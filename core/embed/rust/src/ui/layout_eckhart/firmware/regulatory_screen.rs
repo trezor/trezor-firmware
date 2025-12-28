@@ -1,4 +1,5 @@
 use crate::{
+    strutil::TString,
     translations::TR,
     ui::{
         component::{
@@ -35,15 +36,22 @@ pub enum RegulatoryMsg {
 }
 
 struct RegulatoryZone {
+    /// Name of the regulatory zone.
     name: Option<&'static str>,
+    /// Main regulatory text content for this zone.
     content: &'static str,
+    /// First icon to display for this regulatory zone.
     icon1: Option<Icon>,
+    /// Second icon to display for this regulatory zone.
     icon2: Option<Icon>,
+    /// When true, the production year should be displayed for this regulatory
+    /// zone below the last icon.
+    production_year: bool,
 }
 
 impl RegulatoryScreen {
-    pub fn new() -> Self {
-        let content = RegulatoryContent::new();
+    pub fn new(production_year: Option<TString<'static>>) -> Self {
+        let content = RegulatoryContent::new(production_year);
         let mut action_bar = ActionBar::new_paginate_only();
         // Set action bar page counter
         action_bar.update(content.pager());
@@ -145,73 +153,105 @@ impl crate::trace::Trace for RegulatoryScreen {
 struct RegulatoryContent {
     area: Rect,
     pager: Pager,
+    production_year: Option<TString<'static>>,
 }
 
 impl RegulatoryContent {
-    const SCREENS: usize = 8;
-    const ZONES: [RegulatoryZone; RegulatoryContent::SCREENS] = [
+    const SCREENS: usize = 12;
+    /// Regulatory zones data. EU, US, CA first, then alphabetical order.
+    const ZONES: [RegulatoryZone; Self::SCREENS] = [
+        RegulatoryZone {
+            name: Some("Europe / UK"),
+            content: "Trezor Company s.r.o.\nKundratka 2359/17a\nPrague 8, Czech Republic",
+            icon1: Some(theme::ICON_EUROPE),
+            icon2: None,
+            production_year: false,
+        },
         RegulatoryZone {
             name: Some("United States"),
             content: "FCC ID: VUI-TS7A01",
             icon1: Some(theme::ICON_FCC),
             icon2: None,
+            production_year: false,
         },
         RegulatoryZone {
             name: None,
             content: "This device complies with Part 15 of the FCC Rules. Operation is subject to two conditions: (1) it may not cause harmful interference, and (2) it must accept any interference, including that which causes undesired operation.",
             icon1: None,
             icon2: None,
+            production_year: false,
         },
         RegulatoryZone {
             name: Some("Canada"),
             content: "IC: 7582A-TS7A01\nCAN ICES-003(B) /\nNMB-003(B)",
             icon1: None,
             icon2: None,
+            production_year: false,
         },
         RegulatoryZone {
-            name: Some("Europe / UK"),
-            content: "Trezor Company s.r.o.\nKundratka 2359/17a\nPrague 8, Czech Republic",
-            icon1: Some(theme::ICON_EUROPE),
+            name: Some("Argentina"),
+            content: "",
+            icon1: Some(theme::ICON_ARGENTINA),
             icon2: None,
+            production_year: false,
         },
         RegulatoryZone {
             name: Some("Australia /\nNew Zealand"),
             content: "",
             icon1: Some(theme::ICON_RCM),
             icon2: None,
+            production_year: false,
         },
         RegulatoryZone {
-            name: Some("Ukraine"),
+            name: Some("Japan"),
             content: "",
-            icon1: Some(theme::ICON_UKRAINE),
-            icon2: None,
+            icon1: Some(theme::ICON_JAPAN_1),
+            icon2: Some(theme::ICON_JAPAN_2),
+            production_year: false,
         },
-        // TODO: add Japan when certification completed
-        // RegulatoryZone {
-        //     name: Some("Japan"),
-        //     content: "",
-        //     icon1: Some(theme::ICON_JAPAN),
-        //     icon2: Some(theme::ICON_JAPAN_2),
-        // },
+        RegulatoryZone {
+            name: Some("Singapore"),
+            content: "",
+            icon1: Some(theme::ICON_SINGAPORE),
+            icon2: None,
+            production_year: false,
+        },
         RegulatoryZone {
             name: Some("South Korea"),
             content: "",
-            icon1: Some(theme::ICON_KOREA),
+            icon1: Some(theme::ICON_KOREA_1),
             icon2: None,
+            production_year: true,
+        },
+        RegulatoryZone {
+            name: Some("South Korea"),
+            content: "",
+            icon1: Some(theme::ICON_KOREA_2),
+            icon2: Some(theme::ICON_KOREA_3),
+            production_year: false,
         },
         RegulatoryZone {
             name: Some("Taiwan"),
             content: "",
             icon1: Some(theme::ICON_TAIWAN),
             icon2: None,
+            production_year: false,
+        },
+        RegulatoryZone {
+            name: Some("Ukraine"),
+            content: "",
+            icon1: Some(theme::ICON_UKRAINE),
+            icon2: None,
+            production_year: false,
         },
     ];
 
-    pub fn new() -> Self {
+    pub fn new(production_year: Option<TString<'static>>) -> Self {
         let pager = Pager::new(Self::SCREENS as u16);
         Self {
             area: Rect::zero(),
             pager,
+            production_year,
         }
     }
 
@@ -305,11 +345,29 @@ impl Component for RegulatoryContent {
             rest
         };
 
-        if let Some(icon2) = zone.icon2 {
+        let rest = if let Some(icon2) = zone.icon2 {
             ToifImage::new(rest.top_left(), icon2.toif)
                 .with_align(Alignment2D::TOP_LEFT)
                 .with_fg(theme::GREY_LIGHT)
                 .render(target);
+            rest.split_top(icon2.toif.height()).1
+        } else {
+            rest
+        };
+
+        if zone.production_year {
+            self.production_year
+                .unwrap_or_else(|| TString::from_str("(N/A)"))
+                .map(|t| {
+                    self.render_from_top(
+                        rest,
+                        theme::TEXT_SMALL_GREY,
+                        Alignment::Start,
+                        t,
+                        theme::TEXT_VERTICAL_SPACING,
+                        target,
+                    );
+                });
         }
     }
 }

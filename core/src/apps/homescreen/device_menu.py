@@ -30,6 +30,14 @@ def _get_hostinfo(
     return (mac, None)
 
 
+def _get_production_year() -> str | None:
+    production_date = utils.unit_production_date()
+    if production_date is None:
+        return None
+    year, _, _ = production_date
+    return f"({year})"
+
+
 def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None:
     if connected_addr is None:
         return None
@@ -106,6 +114,7 @@ async def handle_device_menu() -> None:
             firmware_version = ".".join(map(str, utils.VERSION))
 
         firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
+        production_year = _get_production_year()
 
         menu_result = await interact(
             trezorui_api.show_device_menu(
@@ -142,6 +151,7 @@ async def handle_device_menu() -> None:
                     (TR.homescreen__firmware_type, firmware_type, False),
                     (TR.ble__version, bluetooth_version, False),
                 ],
+                production_year=production_year,
             ),
             "device_menu",
             raise_on_cancel=None,
