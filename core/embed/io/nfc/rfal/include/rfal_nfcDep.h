@@ -17,7 +17,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -69,11 +69,12 @@
     
 /* If module is disabled remove the need for the user to set lengths */
 #if !RFAL_FEATURE_NFC_DEP
+    /*  PRQA S 0841 2 # MISRA 20.5 - #undef used to ease user defined configuration and memory optimization */ /*  PRQA S 0847 2 # MISRA 20.5 - #undef used to ease user defined configuration and memory optimization */
     #undef RFAL_FEATURE_NFC_DEP_BLOCK_MAX_LEN
     #undef RFAL_FEATURE_NFC_DEP_PDU_MAX_LEN
 
-    #define RFAL_FEATURE_NFC_DEP_BLOCK_MAX_LEN   1U      /*!< NFC-DEP Block/Payload length, set to "none" */
-    #define RFAL_FEATURE_NFC_DEP_PDU_MAX_LEN     1U      /*!< NFC-DEP PDU length, set to "none"           */
+    #define RFAL_FEATURE_NFC_DEP_BLOCK_MAX_LEN   2U      /*!< NFC-DEP Block/Payload length, set to "none" */ /* MISRA: Some compilers treat an array of length one declared as the final member of a struct as a flexible array member.*/
+    #define RFAL_FEATURE_NFC_DEP_PDU_MAX_LEN     2U      /*!< NFC-DEP PDU length, set to "none"           */ /* MISRA: Some compilers treat an array of length one declared as the final member of a struct as a flexible array member.*/
 #endif /* !RFAL_FEATURE_NFC_DEP  */
 
 /*

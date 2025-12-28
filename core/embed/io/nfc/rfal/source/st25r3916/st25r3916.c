@@ -383,6 +383,24 @@ ReturnCode st25r3916AdjustRegulators( uint16_t* result_mV )
 
 
 /*******************************************************************************/
+ReturnCode st25r3916SetRegulators( uint8_t regulation )
+{
+    /* Check valid setting */
+    if( regulation > (ST25R3916_REG_REGULATOR_CONTROL_rege_mask>>ST25R3916_REG_REGULATOR_CONTROL_rege_shift) )
+    {
+        return RFAL_ERR_PARAM;
+    }
+   
+    st25r3916ChangeRegisterBits( ST25R3916_REG_REGULATOR_CONTROL, ST25R3916_REG_REGULATOR_CONTROL_rege_mask, (regulation<<ST25R3916_REG_REGULATOR_CONTROL_rege_shift) );
+    
+    /* Set voltages to be manually defined by rege setting */
+    st25r3916SetRegisterBits( ST25R3916_REG_REGULATOR_CONTROL, ST25R3916_REG_REGULATOR_CONTROL_reg_s );
+
+    return RFAL_ERR_NONE;
+}
+
+
+/*******************************************************************************/
 ReturnCode st25r3916MeasureAmplitude( uint8_t* result )
 {
     return st25r3916ExecuteCommandAndGetResult( ST25R3916_CMD_MEASURE_AMPLITUDE, ST25R3916_REG_AD_RESULT, ST25R3916_TOUT_MEASURE_AMPLITUDE, result );
@@ -400,6 +418,11 @@ ReturnCode st25r3916MeasurePhase( uint8_t* result )
 ReturnCode st25r3916MeasureCapacitance( uint8_t* result )
 {
 #ifdef ST25R3916B
+    if( result != NULL )
+    {
+        *result = 0;
+    }
+
     return RFAL_ERR_NOTSUPP;
 #else
     return st25r3916ExecuteCommandAndGetResult( ST25R3916_CMD_MEASURE_CAPACITANCE, ST25R3916_REG_AD_RESULT, ST25R3916_TOUT_MEASURE_CAPACITANCE, result );
@@ -411,6 +434,11 @@ ReturnCode st25r3916MeasureCapacitance( uint8_t* result )
 ReturnCode st25r3916CalibrateCapacitiveSensor( uint8_t* result )
 {
 #ifdef ST25R3916B
+    if( result != NULL )
+    {
+        *result = 0;
+    }
+
     return RFAL_ERR_NOTSUPP;
 #else
     ReturnCode ret;
