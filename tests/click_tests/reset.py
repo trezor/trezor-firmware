@@ -201,8 +201,8 @@ def confirm_words(debug: "DebugLink", words: list[str], skip_intro=False) -> Non
         debug.press_right()
         layout = debug.read_layout()
         for _ in range(3):
-            # "SELECT 2ND WORD"
-            #         ^
+            # "SELECT WORD 2 of 20"
+            #              ^
             word_pos_match = re.search(r"\d+", layout.title())
             assert word_pos_match is not None
             word_pos = int(word_pos_match.group(0))

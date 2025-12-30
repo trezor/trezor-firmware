@@ -77,8 +77,6 @@ async def select_word(
     count: int,
     group_index: int | None = None,
 ) -> str:
-    from trezor.strings import format_ordinal
-
     # It may happen (with a very low probability)
     # that there will be less than three unique words to choose from.
     # In that case, duplicating the last word to make it three.
@@ -86,11 +84,12 @@ async def select_word(
     while len(words) < 3:
         words.append(words[-1])
 
-    word_ordinal = format_ordinal(checked_index + 1)
     result = await interact(
         trezorui_api.select_word(
             title="",
-            description=TR.reset__select_word_template.format(word_ordinal),
+            description=TR.reset__select_word_x_of_y_template.format(
+                checked_index + 1, count
+            ),
             words=(words[0].lower(), words[1].lower(), words[2].lower()),
         ),
         None,
