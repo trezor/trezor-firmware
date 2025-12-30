@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.9.6] (December 10th 2025)
+## [2.9.6] (10th December 2025)
 
 ### Fixed
 - Fixed Stellar Amount and Bitcoin lock time font.  [#6109]
