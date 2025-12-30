@@ -34,13 +34,7 @@ from trezor.wire.errors import (
     SilentError,
     UnexpectedMessage,
 )
-from trezor.wire.thp import (
-    ChannelState,
-    ThpError,
-    crypto,
-    get_enabled_pairing_methods,
-    ui,
-)
+from trezor.wire.thp import ChannelState, crypto, get_enabled_pairing_methods, ui
 from trezor.wire.thp.paired_cache import cache_host_info
 from trezor.wire.thp.pairing_context import PairingContext
 
@@ -305,17 +299,15 @@ async def _handle_code_entry_cpace(
 
     if TYPE_CHECKING:
         assert ThpCodeEntryCpaceHostTag.is_type_of(message)
-    if message.cpace_host_public_key is None:
-        raise ThpError(
-            "Message ThpCodeEntryCpaceHostTag is missing cpace_host_public_key"
-        )
+    if len(message.cpace_host_public_key) != 32:
+        raise DataError("CPACE host public key must be 32 bytes long")
     if message.tag is None:
-        raise ThpError("Message ThpCodeEntryCpaceHostTag is missing tag")
+        raise DataError("Message ThpCodeEntryCpaceHostTag is missing a tag")
 
     ctx.cpace.compute_shared_secret(message.cpace_host_public_key)
     expected_tag = sha256(ctx.cpace.shared_secret).digest()
     if expected_tag != message.tag:
-        raise ThpError("Unexpected Code Entry Tag")
+        raise DataError("Unexpected Code Entry Tag")
 
     if ctx.code_entry_secret is None:
         raise FirmwareError(message="Failed to create code entry secret")
@@ -338,7 +330,7 @@ async def _handle_qr_code_tag(
     sha_ctx.update(ctx.code_qr_code)
     expected_tag = sha_ctx.digest()
     if expected_tag != message.tag:
-        raise ThpError("Unexpected QR Code Tag")
+        raise DataError("Unexpected QR Code Tag")
 
     if ctx.qr_code_secret is None:
         raise FirmwareError(message="Failed to create qr code secret")
@@ -366,10 +358,10 @@ async def _handle_nfc_tag(
     sha_ctx.update(ctx.nfc_secret)
     expected_tag = sha_ctx.digest()
     if expected_tag != message.tag:
-        raise ThpError("Unexpected NFC Unidirectional Tag")
+        raise DataError("Unexpected NFC Unidirectional Tag")
 
     if ctx.handshake_hash_host[:16] != ctx.channel_ctx.get_handshake_hash()[:16]:
-        raise ThpError("Handshake hash mismatch")
+        raise DataError("Handshake hash mismatch")
 
     sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
     sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
@@ -478,9 +470,9 @@ def _check_state(ctx: PairingContext, *allowed_states: ChannelState) -> None:
 
 def _check_method_is_allowed(ctx: PairingContext, method: ThpPairingMethod) -> None:
     if method not in get_enabled_pairing_methods(ctx.iface):
-        raise ThpError("Unexpected pairing method")
+        raise DataError("Unexpected pairing method")
 
 
 def _check_method_is_selected(ctx: PairingContext, method: ThpPairingMethod) -> None:
     if method is not ctx.selected_method:
-        raise ThpError("Not selected pairing method")
+        raise DataError("Not selected pairing method")

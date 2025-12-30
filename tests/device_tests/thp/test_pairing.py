@@ -178,6 +178,117 @@ def test_pairing_code_entry(
 @pytest.mark.filterwarnings(
     "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
 )
+def test_pairing_code_entry_invalid_cpace_key(
+    client: Client, deterministic_urandom: None  # noqa:F811
+) -> None:
+    # start from a clean slate:
+    protocol = prepare_protocol_for_pairing(
+        client,
+        host_static_randomness=os.urandom(32),
+        host_ephemeral_randomness=os.urandom(64)[-32:],
+    )
+
+    handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
+
+    protocol._send_message(
+        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry)
+    )
+
+    protocol._read_message(ThpCodeEntryCommitment)
+
+    challenge = os.urandom(16)
+    protocol._send_message(ThpCodeEntryChallenge(challenge=challenge))
+
+    cpace_trezor = protocol._read_message(ThpCodeEntryCpaceTrezor)
+    cpace_trezor_public_key = cpace_trezor.cpace_trezor_public_key
+
+    # Code Entry code shown
+
+    pairing_info = client.debug.pairing_info(
+        thp_channel_id=protocol.channel_id.to_bytes(2, "big")
+    )
+    code = pairing_info.code_entry_code
+
+    cpace = Cpace(handshake_hash=protocol.handshake_hash)
+    cpace.random_bytes = os.urandom
+    cpace.generate_keys_and_secret(
+        f"{code:06}".encode("ascii"), cpace_trezor_public_key
+    )
+    sha_ctx = sha256(cpace.shared_secret)
+    tag = sha_ctx.digest()
+    invalid_key = b"\x00" * 32
+    protocol._send_message(
+        ThpCodeEntryCpaceHostTag(
+            cpace_host_public_key=invalid_key,
+            tag=tag,
+        )
+    )
+
+    failure = protocol._read_message(Failure)
+    assert failure == Failure(
+        code=FailureType.DataError, message="Unexpected Code Entry Tag"
+    )
+
+
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+def test_pairing_code_entry_invalid_cpace_key_length(
+    client: Client, deterministic_urandom: None  # noqa:F811
+) -> None:
+    # start from a clean slate:
+    protocol = prepare_protocol_for_pairing(
+        client,
+        host_static_randomness=os.urandom(32),
+        host_ephemeral_randomness=os.urandom(64)[-32:],
+    )
+
+    handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
+
+    protocol._send_message(
+        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry)
+    )
+
+    protocol._read_message(ThpCodeEntryCommitment)
+
+    challenge = os.urandom(16)
+    protocol._send_message(ThpCodeEntryChallenge(challenge=challenge))
+
+    cpace_trezor = protocol._read_message(ThpCodeEntryCpaceTrezor)
+    cpace_trezor_public_key = cpace_trezor.cpace_trezor_public_key
+
+    # Code Entry code shown
+
+    pairing_info = client.debug.pairing_info(
+        thp_channel_id=protocol.channel_id.to_bytes(2, "big")
+    )
+    code = pairing_info.code_entry_code
+
+    cpace = Cpace(handshake_hash=protocol.handshake_hash)
+    cpace.random_bytes = os.urandom
+    cpace.generate_keys_and_secret(
+        f"{code:06}".encode("ascii"), cpace_trezor_public_key
+    )
+    sha_ctx = sha256(cpace.shared_secret)
+    tag = sha_ctx.digest()
+
+    protocol._send_message(
+        ThpCodeEntryCpaceHostTag(
+            cpace_host_public_key=cpace.host_public_key[0:16],
+            tag=tag,
+        )
+    )
+
+    failure = protocol._read_message(Failure)
+    assert failure == Failure(
+        code=FailureType.DataError,
+        message="CPACE host public key must be 32 bytes long",
+    )
+
+
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
 def test_pairing_code_entry_cancel(
     client: Client, deterministic_urandom: None  # noqa:F811
 ) -> None:
