@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.14.0 [21st January 2026]
+
+### Added
+- Send BIP-380 descriptor in GetPublicKey response.  [#3576]
+
+### Changed
+- Deprecate ETH Holesky testnet and use Hoodi testnet instead.  [#5942]
+
+### Fixed
+- Fix cancellation handling during `GetPublicKey`.  [#5133]
+- Use network symbol instead of EVM network shortcut.  [#5194]
+- Make sure EVM symbol is visible.  [#5204]
+- Increase access list capacity of Ethereum EIP1559 transactions from 8 to 12.  [#5257]
+
 ## 1.13.1 [21st May 2025]
 
 ### Added
@@ -643,6 +657,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2743]: https://github.com/trezor/trezor-firmware/pull/2743
 [#3043]: https://github.com/trezor/trezor-firmware/pull/3043
 [#3216]: https://github.com/trezor/trezor-firmware/pull/3216
+[#3576]: https://github.com/trezor/trezor-firmware/pull/3576
 [#3691]: https://github.com/trezor/trezor-firmware/pull/3691
 [#3949]: https://github.com/trezor/trezor-firmware/pull/3949
 [#4093]: https://github.com/trezor/trezor-firmware/pull/4093
@@ -651,3 +666,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4396]: https://github.com/trezor/trezor-firmware/pull/4396
 [#4851]: https://github.com/trezor/trezor-firmware/pull/4851
 [#4932]: https://github.com/trezor/trezor-firmware/pull/4932
+[#5133]: https://github.com/trezor/trezor-firmware/pull/5133
+[#5194]: https://github.com/trezor/trezor-firmware/pull/5194
+[#5204]: https://github.com/trezor/trezor-firmware/pull/5204
+[#5257]: https://github.com/trezor/trezor-firmware/pull/5257
+[#5942]: https://github.com/trezor/trezor-firmware/pull/5942
