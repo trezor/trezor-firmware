@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.9.7] (21st January 2026)
+
+### Added
+- Reset Tropic and retry command when alarm mode is detected.  [#6104]
+- Introduce wear leveling of mac-and-destroy slots in Tropic.  [#6136]
+- Added version build number to Features message.  [#6225]
+
+### Changed
+- Update Regulatory screen in the device menu.  [#6281]
+
+### Fixed
+- Allow loading translations with different BUILD_VERSION.  [#6228]
+- Change bootscreen homebar text to 'Unlock'.  [#6257]
+- Fixed address chunkification in certain cases.  [#6279]
+
+### Security
+- Fixed side-channel vulnerability in BIP-39 mnemonic processing.
+
 ## [2.9.6] (10th December 2025)
 
 ### Fixed
@@ -83,8 +101,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6076]: https://github.com/trezor/trezor-firmware/pull/6076
 [#6096]: https://github.com/trezor/trezor-firmware/pull/6096
 [#6100]: https://github.com/trezor/trezor-firmware/pull/6100
+[#6104]: https://github.com/trezor/trezor-firmware/pull/6104
 [#6109]: https://github.com/trezor/trezor-firmware/pull/6109
+[#6136]: https://github.com/trezor/trezor-firmware/pull/6136
 [#6138]: https://github.com/trezor/trezor-firmware/pull/6138
 [#6145]: https://github.com/trezor/trezor-firmware/pull/6145
 [#6165]: https://github.com/trezor/trezor-firmware/pull/6165
 [#6186]: https://github.com/trezor/trezor-firmware/pull/6186
+[#6225]: https://github.com/trezor/trezor-firmware/pull/6225
+[#6228]: https://github.com/trezor/trezor-firmware/pull/6228
+[#6257]: https://github.com/trezor/trezor-firmware/pull/6257
+[#6279]: https://github.com/trezor/trezor-firmware/pull/6279
+[#6281]: https://github.com/trezor/trezor-firmware/pull/6281
