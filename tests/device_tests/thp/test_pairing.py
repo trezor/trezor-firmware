@@ -1,4 +1,5 @@
 import os
+import random
 import time
 import typing as t
 from hashlib import sha256
@@ -56,10 +57,8 @@ pytestmark = [pytest.mark.protocol("protocol_v2")]
 
 @pytest.fixture
 def deterministic_urandom() -> t.Generator[None, None, None]:
-    def mock_urandom(n: int) -> bytes:
-        return bytes((i % 256 for i in range(n)))
-
-    with patch("os.urandom", side_effect=mock_urandom):
+    rng = random.Random(0)
+    with patch("os.urandom", side_effect=rng.randbytes):
         yield
 
 
