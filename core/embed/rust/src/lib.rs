@@ -63,10 +63,11 @@ pub mod util;
 fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
     // Filling at least the file and line information, if available.
     // TODO: find out how to display message from panic_info.message()
+    let msg = panic_info.message().as_str().unwrap_or("rs");
     if let Some(location) = panic_info.location() {
-        trezorhal::fatal_error::__fatal_error("rs", location.file(), location.line());
+        trezorhal::fatal_error::__fatal_error(msg, location.file(), location.line());
     } else {
-        trezorhal::fatal_error::__fatal_error("rs", "", 0);
+        trezorhal::fatal_error::__fatal_error(msg, "", 0);
     }
 }
 
