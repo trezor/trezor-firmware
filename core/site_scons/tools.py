@@ -153,9 +153,11 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
     # Determine the profile build flags.
     if profile == "release":
         profile = "--release"
+        is_debug = False
         RUST_LIBDIR = f"build/{build}/rust/{RUST_TARGET}/release"
     else:
         profile = ""
+        is_debug = True
         RUST_LIBDIR = f"build/{build}/rust/{RUST_TARGET}/debug"
     RUST_LIBPATH = f"{RUST_LIBDIR}/lib{RUST_LIB}.a"
 
@@ -168,9 +170,14 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
             f"--target-dir=../../build/{build}/rust",
             "--no-default-features",
             "--features " + ",".join(lib_features),
-            "-Z build-std=core",
-            "-Z build-std-features=panic_immediate_abort",
         ]
+        if not (build == "unix" and is_debug):
+            # Keep panic mechanism on debug emulator (for `debug_assert!`)
+            cargo_opts += [
+                "-Z build-std=core",
+                "-Z build-std-features=panic_immediate_abort",
+            ]
+
         build_cmd = f"cargo build {profile} " + " ".join(cargo_opts)
 
         unstable_rustc_flags = [
