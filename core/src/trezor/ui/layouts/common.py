@@ -134,5 +134,20 @@ async def with_info(
             raise RuntimeError  # unexpected result
 
 
+async def confirm_linear_flow(
+    *confirm_factories: Callable[[], Awaitable[ui.UiResult]]
+) -> None:
+    i = 0
+    while i < len(confirm_factories):
+        layout = confirm_factories[i]()
+        res = await layout
+        if res is trezorui_api.CONFIRMED:
+            i += 1
+        elif res is trezorui_api.BACK and i > 0:
+            i -= 1
+        else:
+            raise ActionCancelled
+
+
 def draw_simple(layout: trezorui_api.LayoutObj[Any]) -> None:
     ui.Layout(layout).start()

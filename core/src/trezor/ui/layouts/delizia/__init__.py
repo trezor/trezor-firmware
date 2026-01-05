@@ -5,7 +5,13 @@ from trezor import TR, ui, utils, workflow
 from trezor.enums import ButtonRequestType, RecoveryType
 from trezor.wire import ActionCancelled
 
-from ..common import draw_simple, interact, raise_if_not_confirmed, with_info
+from ..common import (
+    confirm_linear_flow,
+    draw_simple,
+    interact,
+    raise_if_not_confirmed,
+    with_info,
+)
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
@@ -615,8 +621,8 @@ async def confirm_output(
             ]
         else:
             info_items = []
-        while True:
-            await confirm_value(
+        await confirm_linear_flow(
+            lambda: confirm_value(
                 TR.words__address,
                 address,
                 description or "",
@@ -626,8 +632,8 @@ async def confirm_output(
                 chunkify=chunkify,
                 cancel_text=TR.send__cancel_sign,
                 info_items=info_items,
-            )
-            amount_response = await confirm_value(
+            ),
+            lambda: confirm_value(
                 TR.words__amount,
                 amount,
                 description="",
@@ -637,11 +643,8 @@ async def confirm_output(
                 cancel_text=TR.send__cancel_sign,
                 info_items=info_items,
                 can_go_back=True,
-            )
-            if amount_response is BACK:
-                continue
-            else:
-                break
+            ),
+        )
     else:
         await raise_if_not_confirmed(
             trezorui_api.flow_confirm_output(
