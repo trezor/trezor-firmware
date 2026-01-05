@@ -5,7 +5,13 @@ from trezor import TR, ui, utils, workflow
 from trezor.enums import ButtonRequestType, RecoveryType
 from trezor.wire import ActionCancelled
 
-from ..common import draw_simple, interact, raise_if_not_confirmed, with_info
+from ..common import (
+    confirm_linear_flow,
+    draw_simple,
+    interact,
+    raise_if_not_confirmed,
+    with_info,
+)
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
@@ -576,7 +582,7 @@ async def confirm_output(
     cancel_text: str | None = None,
     description: str | None = None,
 ) -> None:
-    from trezor.ui.layouts.menu import Menu, confirm_with_menu, interact_with_menu
+    from trezor.ui.layouts.menu import Menu, interact_with_menu
 
     if address_label is not None:
         title = address_label
@@ -610,39 +616,37 @@ async def confirm_output(
             ]
         else:
             menu_items = []
+
         menu = Menu.root(
             menu_items,
             cancel=TR.buttons__cancel,
         )
-        while True:
-            address_layout = trezorui_api.confirm_value(
-                title=TR.words__send,
-                value=address,
-                description=description,
-                subtitle=title,
-                verb=TR.buttons__continue,
-                chunkify=chunkify,
-                page_counter=True,  # TODO: this is for test_cardano_sign_tx_show_details - maybe we can do without?
-                external_menu=True,
-            )
-            await confirm_with_menu(address_layout, menu, "confirm_output", br_code)
 
-            amount_layout = trezorui_api.confirm_value(
-                title=TR.words__send,
-                value=amount,
-                description=TR.words__amount,
-                is_data=False,
-                subtitle=title,
-                external_menu=True,
-                back_button=True,
-            )
-            amount_response = await interact_with_menu(
-                amount_layout, menu, "confirm_output", br_code
-            )
-            if amount_response is BACK:
-                continue
-            else:
-                break
+        address_layout = trezorui_api.confirm_value(
+            title=TR.words__send,
+            value=address,
+            description=description,
+            subtitle=title,
+            verb=TR.buttons__continue,
+            chunkify=chunkify,
+            page_counter=True,  # TODO: this is for test_cardano_sign_tx_show_details - maybe we can do without?
+            external_menu=True,
+        )
+
+        amount_layout = trezorui_api.confirm_value(
+            title=TR.words__send,
+            value=amount,
+            description=TR.words__amount,
+            is_data=False,
+            subtitle=title,
+            external_menu=True,
+            back_button=True,
+        )
+
+        await confirm_linear_flow(
+            lambda: interact_with_menu(address_layout, menu, "confirm_output", br_code),
+            lambda: interact_with_menu(amount_layout, menu, "confirm_output", br_code),
+        )
     else:
         await raise_if_not_confirmed(
             trezorui_api.flow_confirm_output(
