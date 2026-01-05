@@ -213,7 +213,7 @@ fi  # init
 cat <<EOF >> "$SCRIPT_NAME"
   $GIT_CLEAN_REPO
   git submodule update --init --recursive
-  uv sync
+  uv sync --locked
   cd core/embed/rust
   cargo fetch
 
