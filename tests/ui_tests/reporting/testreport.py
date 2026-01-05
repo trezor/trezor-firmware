@@ -27,7 +27,9 @@ from dominate.util import text
 from ..common import FixturesType, TestCase, TestResult
 from . import download, html
 from .common import (
+    GIF_SCRIPT,
     REPORTS_PATH,
+    SCRIPT,
     document,
     generate_master_diff_report,
     get_diff,
@@ -91,6 +93,8 @@ def index() -> Path:
 
     title = "UI Test report " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     doc = document(title=title, index=True)
+    with doc.head:
+        script(type="text/javascript", src="testreport.js")
 
     with doc:
         h1("UI Test report")
@@ -111,13 +115,13 @@ def index() -> Path:
             with t.ul():
                 with t.li():
                     t.span("new", style="color: blue")
-                    t.button("clear all", onclick="resetState('all')")
+                    t.button("clear all", id="reset-state-all")
                 with t.li():
                     t.span("marked OK", style="color: grey")
-                    t.button("clear", onclick="resetState('ok')")
+                    t.button("clear", id="reset-state-ok")
                 with t.li():
                     t.span("marked BAD", style="color: darkred")
-                    t.button("clear", onclick="resetState('bad')")
+                    t.button("clear", id="reset-state-bad")
 
         html.report_links(failed_tests, TESTREPORT_PATH, actual_hashes)
 
@@ -127,6 +131,7 @@ def index() -> Path:
         h2("Passed", style="color: green;")
         html.report_links(passed_tests, TESTREPORT_PATH)
 
+    html.write_raw(TESTREPORT_PATH, GIF_SCRIPT + SCRIPT, "testreport.js")
     return html.write(TESTREPORT_PATH, doc, "index.html")
 
 
@@ -222,9 +227,7 @@ def differing_screens() -> None:
     model = recent_ui_failures[0].test.model if recent_ui_failures else None
     doc = document(title="Differing screens", model=model)
     with doc.head:
-        script(
-            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
-        )
+        script(type="text/javascript", src="testreport.js")
     with doc:
         with table(border=1, width=600):
             with tr():
@@ -330,9 +333,7 @@ def failed(result: TestResult) -> Path:
         title=result.test.id, actual_hash=result.actual_hash, model=result.test.model
     )
     with doc.head:
-        script(
-            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
-        )
+        script(type="text/javascript", src="../testreport.js")
 
     with doc:
 
@@ -341,9 +342,9 @@ def failed(result: TestResult) -> Path:
         with div(id="markbox", _class="script-hidden"):
             p("Click a button to mark the test result as:")
             with div(id="buttons"):
-                t.button("OK", id="mark-ok", onclick="markState('ok')")
-                t.button("OK & UPDATE", id="mark-update", onclick="markState('update')")
-                t.button("BAD", id="mark-bad", onclick="markState('bad')")
+                t.button("OK", id="mark-ok")
+                t.button("OK & UPDATE", id="mark-update")
+                t.button("BAD", id="mark-bad")
 
         if download_failed:
             with p():
@@ -379,7 +380,8 @@ def recorded(result: TestResult, header: str = "Recorded", dir: str = "passed") 
     _copy_deduplicated(result.test)
 
     doc = document(title=result.test.id, model=result.test.model)
-
+    with doc.head:
+        script(type="text/javascript", src="../testreport.js")
     with doc:
         _header(result.test.id, result.actual_hash, result.actual_hash)
 
@@ -392,5 +394,4 @@ def recorded(result: TestResult, header: str = "Recorded", dir: str = "passed") 
                 with tr():
                     td(index)
                     html.image_column(screen, TESTREPORT_PATH / dir, img_id=str(index))
-
     return html.write(TESTREPORT_PATH / dir, doc, result.test.id + ".html")

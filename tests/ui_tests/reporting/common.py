@@ -121,10 +121,7 @@ def document(
     doc = dominate.document(title=title)
     style = t.style()
     style.add_raw_string(STYLE)
-    script = t.script()
-    script.add_raw_string(GIF_SCRIPT)
-    script.add_raw_string(SCRIPT)
-    doc.head.add(style, script)
+    doc.head.add(style)
 
     if actual_hash is not None:
         doc.body["data-actual-hash"] = actual_hash
@@ -169,9 +166,7 @@ def _create_testcase_html_diff_file(
     test_name = test_case.id
     doc = document(title=test_name, model=test_case.model)
     with doc.head:
-        script(
-            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
-        )
+        script(type="text/javascript", src="../testreport.js")
     with doc:
         h1(test_name)
         p("This UI test differs from master.", style="color: grey; font-weight: bold;")
@@ -205,9 +200,7 @@ def _differing_screens_report(
 
     doc = document(title="Master differing screens", model=model)
     with doc.head:
-        script(
-            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
-        )
+        script(type="text/javascript", src="testreport.js")
     with doc:
         with table(border=1, width=600):
             with tr():
