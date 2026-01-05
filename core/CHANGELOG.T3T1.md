@@ -4,12 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.9.7] (21st January 2026)
+## [2.10.0] (21st January 2026)
 
 ### Added
 - Added version build number to Features message.  [#6225]
-
-### Changed
 
 ### Fixed
 - Allow loading translations with different BUILD_VERSION.  [#6228]

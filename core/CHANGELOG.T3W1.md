@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.9.7] (21st January 2026)
+## [2.10.0] (21st January 2026)
 
 ### Added
 - Reset Tropic and retry command when alarm mode is detected.  [#6104]
