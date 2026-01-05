@@ -43,9 +43,13 @@ def report_links(
                 td(a(test.name, href=path))
 
 
-def write(fixture_test_path: Path, doc: document, filename: str) -> Path:
-    (fixture_test_path / filename).write_text(doc.render())
+def write_raw(fixture_test_path: Path, doc: str, filename: str) -> Path:
+    (fixture_test_path / filename).write_text(doc)
     return fixture_test_path / filename
+
+
+def write(fixture_test_path: Path, doc: document, filename: str) -> Path:
+    return write_raw(fixture_test_path, doc.render(), filename)
 
 
 def image_column(hash: str | None, cur_dir: Path, img_id: str | None = None) -> None:
@@ -89,7 +93,7 @@ def image_link(
         src=_relative_path(cur_dir, path),
         title=title,
         loading="lazy",
-        onload="imageLoaded(this)",
+        _class="image-link",
     )
 
 
@@ -114,7 +118,7 @@ def collapsible_rows(rows, cur_dir):
         with tr(bgcolor="yellow"):
             with td(colspan=3, _class="showLink"):
                 span(f"{len(rows)} hidden")
-                a("show all", href="#", onclick="return showAllHidden()")
+                a("show all", _class="show-all-hidden", href="#")
 
 
 def diff_table(diff: Iterable[tuple[str | None, str | None]], cur_dir: Path) -> None:

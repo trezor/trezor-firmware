@@ -33,7 +33,10 @@ runs:
         # rename all model/job-speficific report files, so they won't be overwritten during upload
         cd $OUTDIR
         for F in *; do
-          if [ -f "$F" ]; then
+          # skip renaming since it has the same contents for all jobs
+          if [ "$F" = "testreport.js" ]; then
+            echo "Skip $F"
+          elif [ -f "$F" ]; then
             mv -v $F $MODELJOB-$F
           fi
         done
