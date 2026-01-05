@@ -1506,8 +1506,8 @@ if not utils.BITCOIN_ONLY:
 
     if __debug__:
 
-        def confirm_tron_send(amount: str | None, fee: str | None) -> Awaitable[None]:
-            return raise_if_not_confirmed(
+        async def confirm_tron_send(amount: str | None, fee: str | None) -> None:
+            await raise_if_not_confirmed(
                 trezorui_api.confirm_summary(
                     amount=amount or "",
                     amount_label=TR.send__total_amount if amount else "",
@@ -1516,6 +1516,63 @@ if not utils.BITCOIN_ONLY:
                 ),
                 br_name="confirm_tron_send",
                 br_code=ButtonRequestType.SignTx,
+            )
+
+        # TODO: #6359 Reword the TR strings to be ETH agnostic.
+        async def confirm_tron_approve(
+            recipient_addr: str,
+            total_amount: str,
+            maximum_fee: str,
+            chunkify: bool = False,
+        ) -> None:
+
+            br_name = "confirm_tron_approve"
+
+            await confirm_action(
+                br_name,
+                TR.ethereum__approve_intro_title,
+                TR.ethereum__approve_intro,
+                verb=TR.buttons__continue,
+            )
+            await confirm_value(
+                TR.ethereum__approve_to,
+                recipient_addr,
+                "",
+                chunkify=chunkify,
+                br_name=br_name,
+                verb=TR.buttons__continue,
+                cancel=True,
+            )
+
+            properties: list[PropertyType] = [
+                (
+                    f"{TR.ethereum__approve_amount_allowance}:",
+                    total_amount,
+                    False,
+                ),
+                (f"{TR.words__chain}:", "Tron", True),
+            ]
+
+            await confirm_properties(
+                br_name,
+                TR.ethereum__approve,
+                properties,
+                None,
+                False,
+                verb=TR.buttons__continue,
+            )
+
+            await raise_if_not_confirmed(
+                trezorui_api.confirm_summary(
+                    amount=None,
+                    amount_label=None,
+                    fee=maximum_fee,
+                    fee_label=f"{TR.send__maximum_fee}:",
+                    title=TR.words__title_summary,
+                    account_title=TR.address_details__account_info,
+                    extra_title=TR.confirm_total__title_fee,
+                ),
+                br_name=br_name,
             )
 
 

@@ -3,10 +3,15 @@ from typing import TYPE_CHECKING
 
 import trezor.ui.layouts as layouts
 from trezor import TR, strings
-from trezor.crypto import base58
+
+from .helpers import get_encoded_address
 
 if TYPE_CHECKING:
-    from trezor.messages import TronTransferContract, TronTriggerSmartContract
+    from trezor.messages import (
+        EthereumTokenInfo,
+        TronTransferContract,
+        TronTriggerSmartContract,
+    )
 
 
 def format_trx_amount(amount: int) -> str:
@@ -16,12 +21,17 @@ def format_trx_amount(amount: int) -> str:
     return f"{strings.format_amount(amount, _TRX_AMOUNT_DECIMALS)} TRX"
 
 
+def format_token_amount(amount: int, token: EthereumTokenInfo) -> str:
+    return f"{strings.format_amount(amount, token.decimals)} {token.symbol}"
+
+
 def format_energy_amount(amount: int) -> str:
     return f"{strings.format_amount(amount, 0)} SUN"
 
 
 async def confirm_transfer_contract(contract: TronTransferContract) -> None:
-    to_address = base58.encode_check(contract.to_address)
+    to_address = get_encoded_address(contract.to_address)
+
     await layouts.confirm_address(
         TR.send__title_sending_to,
         to_address,
@@ -29,22 +39,25 @@ async def confirm_transfer_contract(contract: TronTransferContract) -> None:
     )
 
 
-async def confirm_unkown_smart_contract(contract: TronTriggerSmartContract) -> None:
+# TODO: Refactor ETH references to crypto-neutral references.
+async def confirm_unknown_smart_contract(
+    contract: TronTriggerSmartContract, fee_limit: int
+) -> None:
 
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import (
         confirm_address,
         confirm_blob,
         confirm_ethereum_unknown_contract_warning,
+        confirm_tron_send,
     )
 
-    # TODO: Ethereum references should be given a more generic name
     await confirm_ethereum_unknown_contract_warning(TR.words__send)
 
-    contract_address = base58.encode_check(contract.contract_address)
+    contract_address = get_encoded_address(contract.contract_address)
     await confirm_address(
-        TR.ethereum__token_contract,
-        contract_address,
+        title=TR.ethereum__token_contract,
+        address=contract_address,
         chunkify=True,
     )
 
@@ -57,4 +70,19 @@ async def confirm_unkown_smart_contract(contract: TronTriggerSmartContract) -> N
         verb_cancel=TR.send__cancel_sign,
         br_code=ButtonRequestType.SignTx,
         ask_pagination=True,
+    )
+
+    await confirm_tron_send(None, format_energy_amount(fee_limit))
+
+
+async def confirm_known_trc20_smart_contract(
+    recipient_addr: bytes, amount: int, fee_limit: int, token: EthereumTokenInfo
+) -> None:
+    from trezor.ui.layouts import confirm_tron_approve
+
+    await confirm_tron_approve(
+        recipient_addr=get_encoded_address(recipient_addr),
+        total_amount=format_token_amount(amount, token),
+        maximum_fee=format_energy_amount(fee_limit),
+        chunkify=True,
     )
