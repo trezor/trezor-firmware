@@ -1210,11 +1210,12 @@ static bool check_ethereum_slip44_unhardened(
   if (is_unknown_network(network)) {
     // Allow Ethereum or testnet paths for unknown networks.
     return slip44 == 60 || slip44 == 1;
-  } else if (network->slip44 != 60 && network->slip44 != 1) {
-    // Allow cross-signing with Ethereum unless it's testnet.
+  } else if (network->slip44 != 60) {
+    // Allow cross-signing with Ethereum for all non-mainnet networks.
     return (slip44 == network->slip44 || slip44 == 60);
   } else {
-    return (slip44 == network->slip44);
+    // Allow slip44 = 1 for legacy testnets
+    return (slip44 == network->slip44 || slip44 == 1);
   }
 }
 

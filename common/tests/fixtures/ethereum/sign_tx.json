@@ -174,8 +174,7 @@
                 "sig_v": 1120132,
                 "sig_r": "6f8af79a48a022476b2837d2155f82cf9b93da7464b20a54b16c4d9760f8511a",
                 "sig_s": "77ebd93a6795947c4e273edd6620d085443c4744feca908b39ddb41ffcc3f150"
-            },
-            "skip_models": ["t1"]
+            }
         },
         {
             "name": "Hoodi Testnet, mainnet path",
@@ -194,8 +193,7 @@
                 "sig_v": 1120131,
                 "sig_r": "7b6895910a73fcd71fbd4451304670fa1477b430552de35c746f140c9c8f5d77",
                 "sig_s": "7365f33b29cbfbec637982b4e3967c3d70c8aa29d36d67f52109dcd6fc162562"
-            },
-            "skip_models": ["t1"]
+            }
         }
     ]
 }
