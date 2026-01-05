@@ -1466,8 +1466,8 @@ if not utils.BITCOIN_ONLY:
 
     if __debug__:
 
-        def confirm_tron_send(amount: str | None, fee: str | None) -> Awaitable[None]:
-            return _confirm_summary(
+        async def confirm_tron_send(amount: str | None, fee: str | None) -> None:
+            await _confirm_summary(
                 amount or "",
                 TR.send__total_amount if amount else "",
                 fee or "",
@@ -1475,6 +1475,61 @@ if not utils.BITCOIN_ONLY:
                 extra_items=None,
                 br_name="confirm_tron_send",
                 br_code=ButtonRequestType.SignTx,
+            )
+
+        # TODO: #6359 Reword the TR strings to be ETH agnostic.
+        async def confirm_tron_approve(
+            recipient_addr: str,
+            total_amount: str,
+            maximum_fee: str,
+            chunkify: bool = False,
+        ) -> None:
+
+            br_name = "confirm_tron_approve"
+            title = TR.ethereum__approve_intro_title
+
+            await confirm_action(
+                br_name,
+                title,
+                TR.ethereum__approve_intro,
+                verb=TR.buttons__continue,
+            )
+            await confirm_value(
+                title,
+                recipient_addr,
+                "",
+                subtitle=TR.ethereum__approve_to,
+                chunkify=chunkify,
+                br_name=br_name,
+                verb=TR.buttons__continue,
+                cancel=True,
+            )
+
+            properties: list[PropertyType] = [
+                (
+                    f"{TR.ethereum__approve_amount_allowance}:",
+                    total_amount,
+                    False,
+                ),
+                (f"{TR.words__chain}:", "Tron", True),
+            ]
+
+            await confirm_properties(
+                br_name,
+                title,
+                properties,
+                None,
+                False,
+                verb=TR.buttons__continue,
+            )
+
+            await _confirm_summary(
+                None,
+                None,
+                maximum_fee,
+                f"{TR.send__maximum_fee}:",
+                title,
+                None,
             )
 
 

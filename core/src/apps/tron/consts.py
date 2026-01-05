@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 TYPE_URL_TEMPLATE = "type.googleapis.com/protocol."
 
+# TODO: Use TypeVar like ethereum/keychain.py:MsgInSignTx
 CONTRACT_TYPES = (
     MessageType.TronTransferContract,
     MessageType.TronTriggerSmartContract,
