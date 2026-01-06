@@ -1,6 +1,6 @@
 #!/bin/bash
 
-APP=funnycoin_rust
+APP=ethereum_rust
 # TARGET=thumbv7em-none-eabihf
 TARGET=
 
