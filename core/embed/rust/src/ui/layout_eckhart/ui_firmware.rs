@@ -35,7 +35,7 @@ use crate::{
     util::interpolate,
 };
 
-use trezor_structs::ArchivedTrezorUiEnum;
+use trezor_structs::{ArchivedShortString, ArchivedTrezorUiEnum};
 
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
@@ -1739,24 +1739,21 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn process_ipc_message(data: &[u8]) -> Result<Gc<LayoutObj>, Error> {
+        // Safe helper to convert archived string to TString using Deref
+        fn tstr_from_archived(s: &ArchivedShortString) -> TString<'static> {
+            unsafe { StrBuffer::from_ptr_and_len(s.data.as_ptr(), s.len as usize) }.into()
+        }
+
         // Deserialize the rkyv archived data directly from the static buffer
         let archived = unsafe { rkyv::access_unchecked::<ArchivedTrezorUiEnum>(data) };
 
-        // Access the archived data zero-copy using StrBuffer::from_ptr_and_len
+        // Access the archived data zero-copy using safe Deref access
         match archived {
             ArchivedTrezorUiEnum::ConfirmAction { title, content } => {
-                // Create StrBuffers pointing directly to the archived data
-                // This is safe because the data has 'static lifetime
-                let title_buf =
-                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
-                let content_buf = unsafe {
-                    StrBuffer::from_ptr_and_len(content.data.as_ptr(), content.len as usize)
-                };
-
-                // Convert StrBuffers to TString for the API
+                // Use safe Deref trait instead of raw pointers
                 let layout = Self::confirm_action(
-                    title_buf.into(),
-                    Some(content_buf.into()),
+                    tstr_from_archived(title),
+                    Some(tstr_from_archived(content)),
                     None,  // description
                     None,  // subtitle
                     None,  // verb
@@ -1771,12 +1768,6 @@ impl FirmwareUI for UIEckhart {
                 LayoutObj::new_root(layout)
             }
             ArchivedTrezorUiEnum::ConfirmProperties { title, props } => {
-                // Create StrBuffers pointing directly to the archived data
-                // This is safe because the data has 'static lifetime
-                let title_buf =
-                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
-
-                // Build array of tuples for properties list
                 let mut tuple_objs = heapless::Vec::<Obj, 5>::new();
                 for i in 0..(props.len as usize) {
                     let str1 = unsafe {
@@ -1801,12 +1792,10 @@ impl FirmwareUI for UIEckhart {
                     unwrap!(tuple_objs.push(prop));
                 }
 
-                // Create List from tuples
                 let items = List::alloc(&tuple_objs)?;
 
-                // Convert StrBuffers to TString for the API
                 let layout = Self::confirm_properties(
-                    title_buf.into(),
+                    tstr_from_archived(title),
                     None,
                     items.into(),
                     true,
@@ -1815,57 +1804,23 @@ impl FirmwareUI for UIEckhart {
                 )?;
                 LayoutObj::new_root(layout)
             }
-            ArchivedTrezorUiEnum::Warning { title, content } => {
-                // Create StrBuffers pointing directly to the archived data
-                // This is safe because the data has 'static lifetime
-                let title_buf =
-                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
-                let content_buf = unsafe {
-                    StrBuffer::from_ptr_and_len(content.data.as_ptr(), content.len as usize)
-                };
-
-                // Convert StrBuffers to TString for the API
-                Self::show_warning(
-                    title_buf.into(),
-                    TR::buttons__continue.into(),
-                    content_buf.into(),
-                    TString::empty(),
-                    false,
-                    false,
-                )
-            }
-            ArchivedTrezorUiEnum::Success { title, content } => {
-                // Create StrBuffers pointing directly to the archived data
-                // This is safe because the data has 'static lifetime
-                let title_buf =
-                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
-                let content_buf = unsafe {
-                    StrBuffer::from_ptr_and_len(content.data.as_ptr(), content.len as usize)
-                };
-
-                // Convert StrBuffers to TString for the API
-                Self::show_success(
-                    title_buf.into(),
-                    TR::buttons__continue.into(),
-                    content_buf.into(),
-                    false,
-                    0,
-                )
-            }
+            ArchivedTrezorUiEnum::Warning { title, content } => Self::show_warning(
+                tstr_from_archived(title),
+                TR::buttons__continue.into(),
+                tstr_from_archived(content),
+                TString::empty(),
+                false,
+                false,
+            ),
+            ArchivedTrezorUiEnum::Success { title, content } => Self::show_success(
+                tstr_from_archived(title),
+                TR::buttons__continue.into(),
+                tstr_from_archived(content),
+                false,
+                0,
+            ),
             ArchivedTrezorUiEnum::RequestString { prompt } => {
-                // Create StrBuffers pointing directly to the archived data
-                // This is safe because the data has 'static lifetime
-                let prompt_buf = unsafe {
-                    StrBuffer::from_ptr_and_len(prompt.data.as_ptr(), prompt.len as usize)
-                };
-
-                // Convert StrBuffers to TString for the API
-                let layout = Self::request_string(
-                    prompt_buf.into(),
-                    50, // max_len
-                    false,
-                    None,
-                )?;
+                let layout = Self::request_string(tstr_from_archived(prompt), 50, false, None)?;
 
                 LayoutObj::new_root(layout)
             }
@@ -1876,22 +1831,12 @@ impl FirmwareUI for UIEckhart {
                 min,
                 max,
             } => {
-                // Create StrBuffers pointing directly to the archived data
-                // This is safe because the data has 'static lifetime
-                let title_buf =
-                    unsafe { StrBuffer::from_ptr_and_len(title.data.as_ptr(), title.len as usize) };
-                let content_buf = unsafe {
-                    StrBuffer::from_ptr_and_len(content.data.as_ptr(), content.len as usize)
-                };
-
-                // Convert StrBuffers to TString for the API
-                // Dereference archived u32 values to get normal u32
                 let layout = Self::request_number(
-                    title_buf.into(),
+                    tstr_from_archived(title),
                     (*initial).into(),
                     (*min).into(),
                     (*max).into(),
-                    Some(content_buf.into()),
+                    Some(tstr_from_archived(content)),
                     Some(|_| TString::empty()),
                 )?;
 

@@ -17,14 +17,13 @@
 //! let amount = ui::request_number("Amount", "Enter amount", 0, 0, 100)?;
 //! ```
 
-use rkyv::api::low::deserialize;
-
 // Re-export the archived types for convenience
 pub use rkyv::Archived;
+use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
-use trezor_structs::{PropsList, ShortString, TrezorUiEnum};
 pub use trezor_structs::TrezorUiResult;
+use trezor_structs::{PropsList, ShortString, TrezorUiEnum};
 
 use crate::error;
 use crate::ipc::IpcMessage;
@@ -55,11 +54,12 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
     let bytes = to_bytes::<Failure>(value).unwrap();
     let message = IpcMessage::new(0, &bytes);
     let result = services_or_die().call(CoreIpcService::Ui, &message, Timeout::max())?;
-    let archived = unsafe { rkyv::access_unchecked::<ArchivedTrezorUiResult>(result.data()) };
+
+    // Safe validation using bytecheck before accessing archived data
+    let archived = rkyv::access::<ArchivedTrezorUiResult, Failure>(result.data()).unwrap();
     let deserialized = deserialize::<TrezorUiResult, Failure>(archived).unwrap();
     Ok(deserialized)
 }
-
 /// Send a UI call and expect a boolean confirmation result
 fn ipc_ui_call_confirm(value: TrezorUiEnum) -> UiResult {
     match ipc_ui_call(&value) {
