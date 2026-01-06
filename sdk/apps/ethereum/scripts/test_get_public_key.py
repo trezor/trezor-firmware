@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Test script for Funnycoin GetPublicKey via external app interface.
+Test script for Ethereum GetPublicKey via external app interface.
 
 This script:
-1. Serializes a FunnycoinGetPublicKey protobuf message
+1. Serializes an EthereumGetPublicKey protobuf message
 2. Calls trezorctl extapp run with the serialized data
-3. Deserializes the FunnycoinPublicKey response
+3. Deserializes the EthereumPublicKey response
 """
 
 import io
@@ -19,9 +19,8 @@ def main():
     client = get_default_client()
 
     # Create the GetPublicKey request
-    request = messages.FunnycoinGetPublicKey(
-        address_n=[0x8000002C, 0x80000000, 0x80000000],  # m/44'/0'/0'
-        coin_name="Funnycoin",
+    request = messages.EthereumGetPublicKey(
+        address_n=[0x8000002C, 0x80000000, 0x80000000],  # m/44'/60'/0' (Ethereum)
         show_display=False,
     )
 
@@ -34,27 +33,23 @@ def main():
     print(f"Serialized ({len(request_data)} bytes): {request_data.hex()}")
 
     # Load the app and get its hash
-    app_path = Path(__file__).parent.parent / "target" / "debug" / "funnycoin_rust"
-    # app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "debug" / "funnycoin_rust.min"
-    # app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "release" / "funnycoin_rust.min"
+    app_path = Path(__file__).parent.parent / "target" / "debug" / "ethereum_rust"
+    #app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "debug" / "ethereum_rust.min"
+    #app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "release" / "ethereum_rust.min"
     print(f"\nLoading app from: {app_path}")
 
     session = client.get_seedless_session()
     instance_id = extapp.load(session, app_path.read_bytes())
 
-    print(f"App loaded with instance ID: {instance_id}\n")
-
     request = messages.ExtAppMessage(
-        instance_id=2617994019,
+        instance_id=instance_id,
         message_id=0,
         data=request_data,
     )
     resp = session.call(request, expect=messages.ExtAppResponse)
 
-    print(f"Response {resp}:")
-
     buf = io.BytesIO(resp.data)
-    response = protobuf.load_message(buf, messages.FunnycoinPublicKey)
+    response = protobuf.load_message(buf, messages.EthereumPublicKey)
     print(protobuf.format_message(response))
 
 

@@ -180,3 +180,9 @@ funnycoin_build:
 
 funnycoin_get_public_key:
 	@cd sdk/apps/funnycoin-rust/scripts ; ./test_get_public_key.py
+
+ethereum_build:
+	@cd sdk/apps/ethereum ; cargo build
+
+ethereum_get_public_key:
+	@cd sdk/apps/ethereum/scripts ; ./test_get_public_key.py
