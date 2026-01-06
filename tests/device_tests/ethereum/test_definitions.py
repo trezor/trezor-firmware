@@ -70,6 +70,16 @@ def test_slip44_external(session: Session) -> None:
     )
 
 
+def test_slip44_cross_sign(session: Session) -> None:
+    # any non-Ethereum mainnet network can use Ethereum derivation paths
+    network = definitions.encode_eth_network(chain_id=999, slip44=1)
+    params = DEFAULT_TX_PARAMS.copy()
+    params.update(n=parse_path("m/44h/60h/0h/0/0"), chain_id=999)
+    ethereum.sign_tx(
+        session, **params, definitions=definitions.make_eth_defs(network, None)
+    )
+
+
 def test_slip44_external_disallowed(session: Session) -> None:
     # network definition does not allow a different SLIP44
     network = definitions.encode_eth_network(chain_id=66666, slip44=66666)
