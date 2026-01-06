@@ -44,8 +44,9 @@ typedef struct {
 #define TS_EIO ts_make(EIO)
 #define TS_EBADMSG ts_make(EBADMSG)
 
-// #define TS_SPECIFIC_BASE 1000
-// #define TS_ERROR ts_make(TS_SPECIFIC_BASE + 0) // Generic error
+/** List of Trezor-specific error codes with offset from 2000 to avoid mixing
+ * with standard errno codes */
+#define TS_ENOINIT ts_make(2000) /* Not initialized */
 
 /**
  * Extracts the code integer value from status structure.
