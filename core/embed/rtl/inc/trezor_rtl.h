@@ -33,7 +33,6 @@
 #include <string.h>
 
 #include "rtl/compiler_traits.h"
-#include "rtl/error_handling.h"
 
 #ifndef MIN_8bits
 #define MIN_8bits(a, b)                  \
