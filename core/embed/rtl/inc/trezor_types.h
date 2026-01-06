@@ -31,4 +31,5 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#include "rtl/error_handling.h"
 #include "rtl/secbool.h"
