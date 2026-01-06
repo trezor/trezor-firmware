@@ -3,8 +3,8 @@
 #include "model_version.h"
 
 #define VERSION_MAJOR 2
-#define VERSION_MINOR 9
-#define VERSION_PATCH 8
+#define VERSION_MINOR 10
+#define VERSION_PATCH 1
 #define VERSION_BUILD 0
 
 #define FIX_VERSION_MAJOR 2
