@@ -33,7 +33,7 @@
   },
   "header": {
     "language": "es-ES",
-    "version": "2.9.8"
+    "version": "2.10.1"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Contacta con atención al cliente de Trezor en",
