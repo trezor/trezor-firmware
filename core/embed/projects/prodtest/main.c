@@ -144,6 +144,8 @@ static bool g_rgbled_control_disabled = false;
 void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
+  ts_t status;
+
   parse_boardloader_capabilities();
   unit_properties_init();
 
@@ -182,7 +184,9 @@ static void drivers_init(void) {
   sbu_init();
 #endif
 #ifdef USE_HAPTIC
-  haptic_init();
+  status = haptic_init();
+  if (ts_error(status)) {
+  }
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();

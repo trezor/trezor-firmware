@@ -170,7 +170,8 @@ void drivers_init() {
 #endif
 
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status = haptic_init();
+  ensure_ok(status, "haptic driver initialization failed");
 #endif
 
 #ifdef USE_BLE

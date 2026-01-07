@@ -161,7 +161,8 @@ static secbool boot_sequence(void) {
 #endif
 
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status = haptic_init();
+  ensure_ok(status, "Haptic driver initialization failed");
 #endif
 
 #ifdef USE_RTC
