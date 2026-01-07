@@ -34,58 +34,59 @@ typedef enum {
 
 #ifdef KERNEL_MODE
 
-// Initializes the haptic driver
-//
-// The function initializes the GPIO pins and the hardware
-// peripherals used by the haptic driver.
-//
-// Returns `true` if the initialization was successful.
-bool haptic_init(void);
+/**
+ * @brief Initializes the haptic driver
+ *
+ * The function initializes the GPIO pins and the hardware
+ * peripherals used by the haptic driver.
+ *
+ * @return TS_OK if the initialization was successful
+ */
+ts_t __wur haptic_init(void);
 
-// Deinitializes the haptic driver
-//
-// The function deinitializes the hardware peripherals used by the
-// haptic driver so the device can be eventually put into a low-power mode.
+/**
+ * @brief Deinitializes the haptic driver
+ *
+ * The function deinitializes the hardware peripherals used by the
+ * haptic driver.
+ */
 void haptic_deinit(void);
 
 #endif  // KERNEL_MODE
 
-// Enables or disables the haptic driver
-//
-// When the driver is disabled, it does not play any haptic effects
-// and potentially can put the controller into a low-power mode.
-//
-// The driver is enabled by default (after initialization).
-void haptic_set_enabled(bool enabled);
+/**
+ * @brief Enables/disables the haptic driver
+ *
+ * @param enabled If `true`, enables the haptic driver; if `false`, disables it
+ * @return TS_OK if the operation was successful
+ */
+ts_t haptic_set_enabled(bool enabled);
 
-// Returns `true` if haptic driver is enabled
+/**
+ * @brief Gets tha haptic driver enable state
+ *
+ * @return true if the haptic driver is enabled
+ */
 bool haptic_get_enabled(void);
 
-// Tests the haptic driver, playing at maximum amplitude for the given duration
-//
-// This function is used during production testing to verify that the haptic
-// motor is working correctly.
-//
-// Returns `true` if the test effect was successfully started.
-bool haptic_test(uint16_t duration_ms);
+/**
+ * @brief Plays selected haptic effect
+ *
+ * The function stops playing any currently running effect and
+ * starts playing the specified effect.
+ *
+ * @return TS_OK if the effect was successfully started
+ */
+ts_t haptic_play(haptic_effect_t effect);
 
-// Plays one of haptic effects
-//
-// The function stops playing any currently running effect and
-// starts playing the specified effect.
-//
-// Returns `true` if the effect was successfully started.
-bool haptic_play(haptic_effect_t effect);
-
-// Starts the haptic motor with a specified amplitude (in percent) for a
-// specified duration (in milliseconds).
-//
-// The function stops playing any currently running effect and
-// starts playing the specified effect.
-//
-// The function can be invoked repeatedly during the specified duration
-// (`duration_ms`) to modify the amplitude dynamically, allowing
-// the creation of customized haptic effects.
-//
-// Returns `true` if the effect was successfully started.
-bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms);
+/**
+ * @brief Resonates the haptic motor with specified amplitude (in percent) and
+ * duration (in milliseconds)
+ *
+ * The function can be invoked repeatedly during the specified duration
+ * (`duration_ms`) to modify the amplitude dynamically, allowing
+ * the creation of customized haptic effects.
+ *
+ * @return TS_OK if the effect was successfully started
+ */
+ts_t haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms);

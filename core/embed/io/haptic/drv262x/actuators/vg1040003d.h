@@ -19,8 +19,32 @@
 
 #pragma once
 
+/* Actuator type: ACTUATOR_LRA or ACTUATOR_ERM */
 #define ACTUATOR_LRA
+
+/* Actuator control mode: ACTUATOR_CLOSED_LOOP or ACTUATOR_OPEN_LOOP */
 #define ACTUATOR_OPEN_LOOP
 
+/* Actuator resonant frequency */
+#define ACTUATOR_FREQUENCY_HZ (260)
+#define ACTUATOR_VOLTAGE (0.7)
+
 #define ACTUATOR_LRA_PERIOD (239)
+
+// V = (20.58 * 10^(-3) * RATED_VOLTAGE) / sqrt (1 - (4 * tSAMPLE_TIME + 300 *
+// 10^(-6)) * fLRA) where tSAMPLE_TIME = 300us, by default
+#define ACTUATOR_RATED_VOLTAGE (27)
+
+// V = 21.32 * 10^(-3) * OD_CLAMP * sqrt(1 - fLRA * 800 * 10^(-6))
 #define ACTUATOR_OD_CLAMP (126)
+
+#define ACTUATOR_FB_BRK_FACTOR 3
+#define ACTUATOR_LOOP_GAIN 1
+#define ACTUATOR_BEMF_GAIN 2
+
+// DRIVE_TIME ~= (0.5 * (1000/ACTUATOR_FREQUENCY_HZ) - 0.5) / 0.1
+#define ACTUATOR_DRIVE_TIME 16
+#define ACTUATOR_IDISS_TIME 1
+#define ACTUATOR_BLANK_TIME 1
+#define ACTUATOR_SAMPLE_TIME 3
+#define ACTUATOR_ZC_DET_TIME 0
