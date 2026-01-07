@@ -184,8 +184,7 @@ static void drivers_init(void) {
 #ifdef USE_HAPTIC
   ts_t status;
   status = haptic_init();
-  if (ts_error(status)) {
-  }
+  UNUSED(status);
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();

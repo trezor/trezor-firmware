@@ -23,12 +23,15 @@
 
 #include <io/haptic.h>
 #include <io/i2c_bus.h>
+#include <rtl/logging.h>
 #include <sys/systick.h>
 
 #include "drv262x.h"
 
 // Actuator configuration
 #include DRV262X_ACTUATOR
+
+LOG_DECLARE(haptic_driver);
 
 #ifdef KERNEL_MODE
 
@@ -592,6 +595,7 @@ ts_t haptic_init(void) {
   TSH_RETURN;
 
 cleanup:
+  LOG_WARN("Haptic driver initialization failed, cleaning up");
   haptic_deinit();
   TSH_RETURN;
 }
