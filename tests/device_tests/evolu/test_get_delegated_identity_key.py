@@ -15,6 +15,8 @@ def test_evolu_get_delegated_identity_is_constant(session: Session):
 
 
 def test_evolu_get_delegated_identity_test_vector(session: Session):
+    if session.features.fw_vendor != "EMULATOR":
+        pytest.skip("Only for emulator")
     # on emulator, the master key is all zeroes. So the delegated identity key is constant.
     private_key = evolu.get_delegated_identity_key(session)
     assert private_key == bytes.fromhex(
