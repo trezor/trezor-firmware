@@ -53,10 +53,9 @@ def busy_expiry_ms() -> int:
     return expiry_ms if expiry_ms > 0 else 0
 
 
-def _language_version_matches() -> bool | None:
+def _language_version_matches() -> bool:
     """
     Whether translation blob version matches firmware version.
-    Returns None if there is no blob.
     """
     from trezor import translations
 
