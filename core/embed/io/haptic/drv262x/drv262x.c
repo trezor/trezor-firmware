@@ -30,8 +30,6 @@
 // Actuator configuration
 #include HAPTIC_ACTUATOR
 
-#pragma GCC optimize("O0")
-
 #ifdef KERNEL_MODE
 
 // Maximum amplitude of the vibration effect

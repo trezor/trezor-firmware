@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <trezor_rtl.h>
+#include <trezor_types.h>
 
 typedef enum {
   // Effect at the start of a button press
