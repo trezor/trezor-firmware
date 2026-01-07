@@ -47,6 +47,7 @@ typedef struct {
 /** List of Trezor-specific error codes with offset from 2000 to avoid mixing
  * with standard errno codes */
 #define TS_ENOINIT ts_make(2000) /* Not initialized */
+#define TS_ENOEN ts_make(2001)   /* Not enabled */
 
 /**
  * Extracts the code integer value from status structure.
