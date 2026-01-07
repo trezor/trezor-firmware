@@ -25,9 +25,11 @@
 #include <rtl/cli.h>
 
 static void prodtest_haptic_test(cli_t* cli) {
-  uint32_t duration = 0;  // ms
+  uint32_t duration_ms = 0;  // ms
 
-  if (!cli_arg_uint32(cli, "duration", &duration)) {
+  ts_t status;
+
+  if (!cli_arg_uint32(cli, "duration", &duration_ms)) {
     cli_error_arg(cli, "Expecting time in milliseconds.");
     return;
   }
@@ -37,15 +39,16 @@ static void prodtest_haptic_test(cli_t* cli) {
     return;
   }
 
-  if (!haptic_init()) {
+  status = haptic_init();
+  if (ts_error(status)) {
     cli_error(cli, CLI_ERROR, "Haptic driver initialization failed.");
     return;
   }
 
-  haptic_play(HAPTIC_BUTTON_PRESS);
+  cli_trace(cli, "Running haptic feedback test for %d ms...", duration_ms);
 
-  cli_trace(cli, "Running haptic feedback test for %d ms...", duration);
-  if (!haptic_test(duration)) {
+  status = haptic_play_custom(100, duration_ms);
+  if (ts_error(status)) {
     cli_error(cli, CLI_ERROR, "Haptic feedback test failed.");
     return;
   }
