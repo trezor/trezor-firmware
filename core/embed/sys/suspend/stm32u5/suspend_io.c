@@ -156,7 +156,8 @@ void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
   touch_init();
 #endif
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status = haptic_init();
+  ensure_ok(status, "haptic driver initialization failed");
 #endif
 #ifdef USE_RGB_LED
   rgb_led_resume(&wakeup_params->rgb_led);
