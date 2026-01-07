@@ -51,6 +51,11 @@ const char *ts_string(ts_t status) {
     return "EIO";
   } else if (ts_eq(status, TS_EBADMSG)) {
     return "EBADMSG";
+    // Trezor-specific error codes
+  } else if (ts_eq(status, TS_ENOINIT)) {
+    return "ENOINIT";
+  } else if (ts_eq(status, TS_ENOEN)) {
+    return "ENOEN";
   } else {
     return "?ERROR";
   }

@@ -182,7 +182,10 @@ static void drivers_init(void) {
   sbu_init();
 #endif
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status;
+  status = haptic_init();
+  if (ts_error(status)) {
+  }
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();
