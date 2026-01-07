@@ -111,11 +111,11 @@ const image_header *read_image_header(const uint8_t *const data,
   // lowest bit is used for breaking compatibility between old TT bootloaders
   // and non TT images
   //  which is evaluated in check_image_model function
-  if ((hdr->expiry & 0xFFFFFFFE) != 0) return secfalse;
+  if ((hdr->expiry & 0xFFFFFFFE) != 0) return NULL;
 
-  if (hdr->codelen > (maxsize - hdr->hdrlen)) return secfalse;
-  if ((hdr->hdrlen + hdr->codelen) < 4 * 1024) return secfalse;
-  if ((hdr->hdrlen + hdr->codelen) % 512 != 0) return secfalse;
+  if (hdr->codelen > (maxsize - hdr->hdrlen)) return NULL;
+  if ((hdr->hdrlen + hdr->codelen) < 4 * 1024) return NULL;
+  if ((hdr->hdrlen + hdr->codelen) % 512 != 0) return NULL;
 
   return hdr;
 }
