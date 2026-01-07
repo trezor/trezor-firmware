@@ -86,3 +86,9 @@ extern "C" fn screen_prodtest_draw(events: *const cty::uint32_t, events_len: u32
 
     ModelUI::screen_prodtest_draw(v);
 }
+
+#[no_mangle]
+#[cfg(feature = "touch")]
+extern "C" fn screen_prodtest_haptic_test(pressed: bool, x: cty::uint16_t, y: cty::uint16_t) {
+    ModelUI::screen_prodtest_haptic_test(pressed.into(), x, y);
+}

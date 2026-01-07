@@ -21,3 +21,5 @@ void screen_prodtest_touch(int16_t x0, int16_t y0, int16_t w, int16_t h);
 void screen_prodtest_border(void);
 
 void screen_prodtest_draw(uint32_t* events, uint32_t events_len);
+
+void screen_prodtest_haptic_test(bool pressed, uint16_t x, uint16_t y);

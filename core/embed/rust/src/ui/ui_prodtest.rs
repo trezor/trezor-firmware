@@ -25,4 +25,7 @@ pub trait ProdtestUI {
 
     #[cfg(feature = "touch")]
     fn screen_prodtest_draw(events: Vec<TouchEvent, 256>);
+
+    #[cfg(feature = "touch")]
+    fn screen_prodtest_haptic_test(pressed: bool, x: u16, y: u16);
 }
