@@ -27,7 +27,7 @@ use super::{
         component::{Frame, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
         flow, theme,
     },
-    ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
+    ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionOptions, ConfirmActionStrings,
 };
 
 pub struct ConfirmValue {
@@ -336,11 +336,12 @@ impl ConfirmValue {
                 self.prompt.then_some(self.title),
             )
             .with_footer_description(self.footer_description),
-            self.hold,
-            self.swipe_down,
-            self.page_limit,
-            self.frame_margin,
-            self.page_counter,
+            ConfirmActionOptions::new()
+                .with_hold(self.hold)
+                .with_swipe_down(self.swipe_down)
+                .with_page_limit(self.page_limit)
+                .with_frame_margin(self.frame_margin)
+                .with_page_counter(self.page_counter),
         )
     }
 

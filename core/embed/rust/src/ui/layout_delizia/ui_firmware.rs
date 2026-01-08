@@ -43,7 +43,7 @@ use super::{
     },
     flow::{
         self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
-        ConfirmActionStrings, ConfirmValue, ShowInfoParams,
+        ConfirmActionOptions, ConfirmActionStrings, ConfirmValue, ShowInfoParams,
     },
     fonts, theme, UIDelizia,
 };
@@ -101,11 +101,7 @@ impl FirmwareUI for UIDelizia {
             TradeScreen::new(sell_amount, buy_amount),
             ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, Some(subtitle), None, None),
-            false,
-            false,
-            None,
-            0,
-            false,
+            ConfirmActionOptions::new(),
         )
     }
 
@@ -206,11 +202,7 @@ impl FirmwareUI for UIDelizia {
                     None,
                     Some(TR::homescreen__settings_title.into()),
                 ),
-                false,
-                false,
-                None,
-                0,
-                false,
+                ConfirmActionOptions::new(),
             )?
         } else {
             if !check_homescreen_format(image) {
@@ -243,11 +235,7 @@ impl FirmwareUI for UIDelizia {
                 None,
                 Some(TR::coinjoin__title.into()),
             ),
-            true,
-            false,
-            None,
-            0,
-            false,
+            ConfirmActionOptions::new().with_hold(true),
         )?;
         Ok(flow)
     }
@@ -273,11 +261,7 @@ impl FirmwareUI for UIDelizia {
             FormattedText::new(ops).vertically_centered(),
             ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, None, None, Some(title)),
-            false,
-            false,
-            None,
-            0,
-            false,
+            ConfirmActionOptions::new(),
         )?;
         Ok(flow)
     }
@@ -342,11 +326,7 @@ impl FirmwareUI for UIDelizia {
                     .with_verb_info(Some(TR::words__title_information.into())),
             ),
             ConfirmActionStrings::new(title, None, None, Some(title)),
-            true,
-            false,
-            None,
-            0,
-            false,
+            ConfirmActionOptions::new().with_hold(true),
         )?;
         Ok(flow)
     }
@@ -465,11 +445,7 @@ impl FirmwareUI for UIDelizia {
             paragraphs.into_paragraphs(),
             ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
             ConfirmActionStrings::new(title, subtitle, None, hold.then_some(title)),
-            hold,
-            false,
-            None,
-            0,
-            false,
+            ConfirmActionOptions::new().with_hold(hold),
         )?;
         Ok(flow)
     }
@@ -506,11 +482,7 @@ impl FirmwareUI for UIDelizia {
                 ConfirmActionMenuStrings::new().with_verb_info(Some(verb_info)),
             ),
             ConfirmActionStrings::new(title, None, None, None).with_footer_description(Some(verb)),
-            false,
-            false,
-            None,
-            0,
-            false,
+            ConfirmActionOptions::new(),
         )?;
         Ok(flow)
     }

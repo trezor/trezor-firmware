@@ -68,6 +68,51 @@ impl ConfirmActionStrings {
     }
 }
 
+pub struct ConfirmActionOptions {
+    hold: bool,
+    swipe_down: bool,
+    page_limit: Option<u16>,
+    page_counter: bool,
+    frame_margin: usize,
+}
+
+impl ConfirmActionOptions {
+    pub fn new() -> Self {
+        Self {
+            hold: false,
+            swipe_down: false,
+            page_limit: None,
+            page_counter: false,
+            frame_margin: 0,
+        }
+    }
+
+    pub fn with_hold(mut self, hold: bool) -> Self {
+        self.hold = hold;
+        self
+    }
+
+    pub fn with_swipe_down(mut self, swipe_down: bool) -> Self {
+        self.swipe_down = swipe_down;
+        self
+    }
+
+    pub fn with_page_limit(mut self, page_limit: Option<u16>) -> Self {
+        self.page_limit = page_limit;
+        self
+    }
+
+    pub fn with_page_counter(mut self, page_counter: bool) -> Self {
+        self.page_counter = page_counter;
+        self
+    }
+
+    pub fn with_frame_margin(mut self, frame_margin: usize) -> Self {
+        self.frame_margin = frame_margin;
+        self
+    }
+}
+
 #[derive(PartialEq)]
 pub struct ConfirmActionMenuStrings {
     verb_cancel: TString<'static>,
@@ -267,11 +312,7 @@ pub fn new_confirm_action(
             ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_cancel(verb_cancel))
         },
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
-        hold,
-        false,
-        None,
-        0,
-        false,
+        ConfirmActionOptions::new().with_hold(hold),
     )
 }
 
@@ -280,19 +321,16 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     content: SwipeContent<SwipePage<T>>,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
-    hold: bool,
-    swipe_down: bool,
-    frame_margin: usize,
-    page_counter: bool,
+    options: ConfirmActionOptions,
 ) -> Result<SwipeFlow, error::Error> {
     let (prompt_screen, prompt_pages, flow, page) =
-        create_flow(strings.title, strings.prompt_screen, hold, &extra);
+        create_flow(strings.title, strings.prompt_screen, options.hold, &extra);
 
     let mut content = Frame::left_aligned(strings.title, content)
-        .with_margin(frame_margin)
+        .with_margin(options.frame_margin)
         .with_swipeup_footer(strings.footer_description)
         .with_vertical_pages();
-    if swipe_down {
+    if options.swipe_down {
         content = content.with_swipe(Direction::Down, SwipeSettings::Default);
     }
 
@@ -302,7 +340,7 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
         ConfirmActionExtra::Cancel => content.with_cancel_button(),
     };
 
-    if page_counter {
+    if options.page_counter {
         fn footer_update_fn<T: Component + Paginate>(
             content: &SwipeContent<SwipePage<T>>,
             ctx: &mut EventCtx,
@@ -348,7 +386,7 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
             &mut flow,
             &extra,
             strings.subtitle,
-            hold,
+            options.hold,
             prompt_title,
             prompt_state,
         )?;
@@ -458,24 +496,16 @@ fn create_confirm(
 }
 
 #[inline(never)]
-#[allow(clippy::too_many_arguments)]
 pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>(
     content: T,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
-    hold: bool,
-    swipe_down: bool,
-    page_limit: Option<u16>,
-    frame_margin: usize,
-    page_counter: bool,
+    options: ConfirmActionOptions,
 ) -> Result<SwipeFlow, error::Error> {
     new_confirm_action_uni(
-        SwipeContent::new(SwipePage::vertical(content).with_limit(page_limit)),
+        SwipeContent::new(SwipePage::vertical(content).with_limit(options.page_limit)),
         extra,
         strings,
-        hold,
-        swipe_down,
-        frame_margin,
-        page_counter,
+        options,
     )
 }
