@@ -20,7 +20,7 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         EthereumTxAck,
     )
-    from trezor.ui.layouts import PropertyType
+    from trezor.ui.layouts import PropertyType, StrPropertyType
 
     from apps.common.keychain import Keychain
     from apps.common.payment_request import PaymentRequestVerifier
@@ -149,7 +149,7 @@ async def confirm_tx_data(
     defs: Definitions,
     address_bytes: bytes,
     maximum_fee: str,
-    fee_items: Iterable[PropertyType],
+    fee_items: Iterable[StrPropertyType],
     data_total_len: int,
     payment_req_verifier: PaymentRequestVerifier | None,
 ) -> None:

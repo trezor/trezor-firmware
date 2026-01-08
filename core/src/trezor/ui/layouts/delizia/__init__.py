@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import StellarAsset
 
-    from ..common import ExceptionType, PropertyType
+    from ..common import ExceptionType, PropertyType, StrPropertyType
     from ..menu import Details
     from ..slip24 import Refund, Trade
 
@@ -497,9 +497,9 @@ async def confirm_payment_request(
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[Refund],
     trades: list[Trade],
-    account_items: list[PropertyType] | None,
+    account_items: list[StrPropertyType] | None,
     transaction_fee: str | None,
-    fee_info_items: Iterable[PropertyType] | None,
+    fee_info_items: Iterable[StrPropertyType] | None,
     extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -536,7 +536,7 @@ async def confirm_payment_request(
             create_details(TR.address__title_provider_address, recipient_address)
         )
     for refund in refunds:
-        refund_account_items: list[PropertyType] = [("", refund.address, None)]
+        refund_account_items: list[StrPropertyType] = [("", refund.address, None)]
         if refund.account:
             refund_account_items.append((TR.words__account, refund.account, None))
         if refund.account_path:
@@ -600,7 +600,7 @@ async def confirm_output(
         title = TR.send__title_sending_to
 
     if amount is not None:
-        account_properties: list[PropertyType] = []
+        account_properties: list[StrPropertyType] = []
         if source_account:
             account_properties.append((TR.words__account, source_account, None))
         if source_account_path:
@@ -847,7 +847,7 @@ def confirm_value(
     is_data: bool = True,
     chunkify: bool = False,
     info_items: (
-        Iterable[tuple[str, StrOrBytes | list[PropertyType], str | None]] | None
+        Iterable[tuple[str, str | list[StrPropertyType], str | None]] | None
     ) = None,
     cancel: bool = False,
     cancel_text: str | None = None,
@@ -873,9 +873,7 @@ def confirm_value(
     info_items = info_items or []
     menu_items = []
     for name, p, page_title in info_items:
-        menu_items.append(
-            create_details(str(name), p if isinstance(p, list) else str(p), page_title)
-        )
+        menu_items.append(create_details(name, p, page_title))
     menu = Menu.root(
         menu_items,
         cancel=(cancel_text or TR.buttons__cancel),
@@ -1000,7 +998,7 @@ async def confirm_trade(
         buy_amount=trade.buy_amount,
     )
 
-    account_items: list[PropertyType] = [("", trade.address, None)]
+    account_items: list[StrPropertyType] = [("", trade.address, None)]
     if trade.account:
         account_items.append((TR.words__account, trade.account, None))
     if trade.account_path:
@@ -1266,7 +1264,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_recipient(
         recipient: str,
         title: str,
-        items: Iterable[PropertyType] = (),
+        items: Iterable[StrPropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     ) -> Awaitable[ui.UiResult]:
@@ -1277,7 +1275,7 @@ if not utils.BITCOIN_ONLY:
             br_name=br_name,
             br_code=br_code,
             verb=TR.buttons__continue,
-            info_items=[(str(k), str(v), None) for k, v, _ in items],
+            info_items=[(k or "", v or "", None) for k, v, _ in items],
         )
 
     def confirm_solana_tx(
@@ -1310,15 +1308,15 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: PropertyType | None,
-        amount_item: PropertyType | None,
-        fee_item: PropertyType,
-        fee_details: Iterable[PropertyType],
-        blockhash_item: PropertyType,
+        stake_item: StrPropertyType | None,
+        amount_item: StrPropertyType | None,
+        fee_item: StrPropertyType,
+        fee_details: Iterable[StrPropertyType],
+        blockhash_item: StrPropertyType,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        summary_items: list[PropertyType] = []
+        summary_items: list[StrPropertyType] = []
         if amount_item:
             summary_items.append(amount_item)
         summary_items.append(fee_item)
@@ -1869,7 +1867,7 @@ def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
 
 
 def create_details(
-    name: str, value: list[PropertyType] | str, title: str | None = None
+    name: str, value: list[StrPropertyType] | str, title: str | None = None
 ) -> Details:
     from trezor.ui.layouts.menu import Details
 

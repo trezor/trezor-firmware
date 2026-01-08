@@ -8,7 +8,7 @@ from trezor.wire import ActionCancelled
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, Coroutine, Literal, TypeVar, overload
 
-    from trezorui_api import PropertyType  # noqa: F401
+    from trezorui_api import PropertyType, StrPropertyType  # noqa: F401
 
     ExceptionType = BaseException | type[BaseException]
 

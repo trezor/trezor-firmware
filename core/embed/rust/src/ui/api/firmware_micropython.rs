@@ -1368,6 +1368,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// from trezor.enums import ButtonRequestType, RecoveryType
     ///
     /// PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
+    /// StrPropertyType = tuple[str | None, str | None, bool | None]
     /// T = TypeVar("T")
     ///
     /// class LayoutObj(Generic[T]):
