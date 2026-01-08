@@ -46,19 +46,13 @@ pub struct ConfirmValue {
     cancel_button: bool,
     menu_button: bool,
     prompt: bool,
-    hold: bool,
     chunkify: bool,
     text_mono: bool,
-    page_counter: bool,
-    page_limit: Option<u16>,
     classic_ellipsis: bool,
-    swipe_up: bool,
-    swipe_down: bool,
-    swipe_right: bool,
-    frame_margin: usize,
     cancel: bool,
     external_menu: bool,
     flow_menu: bool,
+    options: ConfirmActionOptions,
 }
 
 impl ConfirmValue {
@@ -83,19 +77,13 @@ impl ConfirmValue {
             cancel_button: false,
             menu_button: false,
             prompt: false,
-            hold: false,
             chunkify: false,
             text_mono: true,
-            page_counter: false,
-            page_limit: None,
             classic_ellipsis: false,
-            swipe_up: false,
-            swipe_down: false,
-            swipe_right: false,
-            frame_margin: 0,
             cancel: false,
             external_menu: false,
             flow_menu: false,
+            options: ConfirmActionOptions::new(),
         }
     }
 
@@ -144,26 +132,6 @@ impl ConfirmValue {
         self
     }
 
-    pub const fn with_hold(mut self, hold: bool) -> Self {
-        self.hold = hold;
-        self
-    }
-
-    pub const fn with_swipe_up(mut self) -> Self {
-        self.swipe_up = true;
-        self
-    }
-
-    pub const fn with_swipe_down(mut self, swipe_down: bool) -> Self {
-        self.swipe_down = swipe_down;
-        self
-    }
-
-    pub const fn with_frame_margin(mut self, frame_margin: usize) -> Self {
-        self.frame_margin = frame_margin;
-        self
-    }
-
     pub const fn with_footer_description(
         mut self,
         footer_description: Option<TString<'static>>,
@@ -187,22 +155,12 @@ impl ConfirmValue {
         self
     }
 
-    pub const fn with_footer(
-        mut self,
-        instruction: TString<'static>,
-        description: Option<TString<'static>>,
-    ) -> Self {
-        self.footer_instruction = Some(instruction);
+    pub fn with_swipeup_footer(mut self, description: Option<TString<'static>>) -> Self {
+        self.footer_instruction =
+            Some(TString::from_translation(TR::instructions__tap_to_continue));
         self.footer_description = description;
+        self.options = self.options.with_swipe_up(true);
         self
-    }
-
-    pub const fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
-        self.with_footer(
-            TString::from_translation(TR::instructions__tap_to_continue),
-            description,
-        )
-        .with_swipe_up()
     }
 
     pub const fn with_chunkify(mut self, chunkify: bool) -> Self {
@@ -215,16 +173,6 @@ impl ConfirmValue {
         self
     }
 
-    pub fn with_page_counter(mut self, page_counter: bool) -> Self {
-        self.page_counter = page_counter;
-        self
-    }
-
-    pub const fn with_page_limit(mut self, page_limit: Option<u16>) -> Self {
-        self.page_limit = page_limit;
-        self
-    }
-
     pub const fn with_classic_ellipsis(mut self, classic_ellipsis: bool) -> Self {
         self.classic_ellipsis = classic_ellipsis;
         self
@@ -232,6 +180,11 @@ impl ConfirmValue {
 
     pub const fn with_description_font(mut self, description_font: &'static TextStyle) -> Self {
         self.description_font = description_font;
+        self
+    }
+
+    pub fn with_options(mut self, options: ConfirmActionOptions) -> Self {
+        self.options = options;
         self
     }
 
@@ -276,16 +229,12 @@ impl ConfirmValue {
             frame = frame.with_flow_menu();
         }
 
-        if self.swipe_up {
+        if self.options.swipe_up {
             frame = frame.with_swipe(Direction::Up, SwipeSettings::Default);
         }
 
-        if self.swipe_down {
+        if self.options.swipe_down {
             frame = frame.with_swipe(Direction::Down, SwipeSettings::Default);
-        }
-
-        if self.swipe_right {
-            frame = frame.with_swipe(Direction::Right, SwipeSettings::Default);
         }
 
         frame = frame.with_vertical_pages();
@@ -336,12 +285,7 @@ impl ConfirmValue {
                 self.prompt.then_some(self.title),
             )
             .with_footer_description(self.footer_description),
-            ConfirmActionOptions::new()
-                .with_hold(self.hold)
-                .with_swipe_down(self.swipe_down)
-                .with_page_limit(self.page_limit)
-                .with_frame_margin(self.frame_margin)
-                .with_page_counter(self.page_counter),
+            self.options,
         )
     }
 

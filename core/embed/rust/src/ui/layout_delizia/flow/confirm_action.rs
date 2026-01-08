@@ -69,11 +69,12 @@ impl ConfirmActionStrings {
 }
 
 pub struct ConfirmActionOptions {
-    hold: bool,
-    swipe_down: bool,
-    page_limit: Option<u16>,
-    page_counter: bool,
-    frame_margin: usize,
+    pub hold: bool,
+    pub swipe_down: bool,
+    pub swipe_up: bool,
+    pub page_limit: Option<u16>,
+    pub page_counter: bool,
+    pub frame_margin: usize,
 }
 
 impl ConfirmActionOptions {
@@ -81,6 +82,7 @@ impl ConfirmActionOptions {
         Self {
             hold: false,
             swipe_down: false,
+            swipe_up: false,
             page_limit: None,
             page_counter: false,
             frame_margin: 0,
@@ -94,6 +96,11 @@ impl ConfirmActionOptions {
 
     pub fn with_swipe_down(mut self, swipe_down: bool) -> Self {
         self.swipe_down = swipe_down;
+        self
+    }
+
+    pub fn with_swipe_up(mut self, swipe_up: bool) -> Self {
+        self.swipe_up = swipe_up;
         self
     }
 

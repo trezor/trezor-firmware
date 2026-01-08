@@ -141,12 +141,15 @@ impl FirmwareUI for UIDelizia {
             })
             .with_extra(extra)
             .with_chunkify(chunkify)
-            .with_page_counter(page_counter)
             .with_cancel(cancel)
-            .with_swipe_down(back_button)
             .with_prompt(prompt_screen)
             .with_external_menu(external_menu)
-            .with_hold(hold)
+            .with_options(
+                ConfirmActionOptions::new()
+                    .with_page_counter(page_counter)
+                    .with_hold(hold)
+                    .with_swipe_down(back_button),
+            )
             .into_flow()
     }
 
@@ -172,10 +175,13 @@ impl FirmwareUI for UIDelizia {
         .with_verb_cancel(verb_cancel)
         .with_footer_description(verb)
         .with_chunkify(chunkify)
-        .with_page_limit(Some(1))
         .with_classic_ellipsis(true)
-        .with_frame_margin(CONFIRM_VALUE_INTRO_MARGIN)
-        .with_hold(hold)
+        .with_options(
+            ConfirmActionOptions::new()
+                .with_page_limit(Some(1))
+                .with_frame_margin(CONFIRM_VALUE_INTRO_MARGIN)
+                .with_hold(hold),
+        )
         .into_flow()
         .and_then(LayoutObj::new_root)
     }
