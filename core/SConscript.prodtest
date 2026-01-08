@@ -197,6 +197,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_ble.c',
     'embed/projects/prodtest/cmd/prodtest_bootloader.c',
     'embed/projects/prodtest/cmd/prodtest_button.c',
+    'embed/projects/prodtest/cmd/prodtest_crc.c',
     'embed/projects/prodtest/cmd/prodtest_display.c',
     'embed/projects/prodtest/cmd/prodtest_prodtest.c',
     'embed/projects/prodtest/cmd/prodtest_backup_ram.c',
