@@ -746,6 +746,26 @@ prodtest-homescreen
 OK
 ```
 
+### prodtest-mem-write
+Parses hex data from the argument and stores it into an 8kB RAM buffer.
+
+`prodtest-mem-write <hexdata>`
+
+Example:
+```
+prodtest-mem-write 01020304
+OK
+```
+
+### prodtest-mem-read
+Reads back the data currently stored in the RAM buffer and outputs it as hex.
+
+Example:
+```
+prodtest-mem-read
+OK 01020304
+```
+
 ### secrets-init
 Generates random secrets and stores them in the protected storage.
 
