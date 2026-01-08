@@ -1,0 +1,1 @@
+Avoid dropping WebUSB chunks in case of a timeout.
