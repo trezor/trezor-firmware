@@ -79,6 +79,28 @@ rgbled-set 0 255 0
 OK
 ```
 
+### CRC Checksum
+
+The CLI supports an optional CRC checksum for commands and responses to ensure data integrity over the communication link.
+
+When CRC is enabled, every command MUST include a CRC-32 checksum at the end of the line, preceded by a space.
+
+Command Format:
+`<command> [<args>] <CRC32>`
+
+The checksum is calculated using the standard CRC-32 algorithm (polynomial `0xEDB88320`, initial value `0xFFFFFFFF`, and final XOR `0xFFFFFFFF`) over the command string excluding the ` <CRC32>` suffix.
+
+The device also appends the checksum to every response line (including `OK`, `ERROR`, `PROGRESS`, and `#` traces).
+
+Response Format:
+`<response> <CRC32>`
+
+Example with CRC enabled:
+```
+ping ABC 70417631
+OK ABC E7193F16
+```
+
 ## List of commands
 
 ### help
@@ -269,6 +291,24 @@ The `display-text` command draws text to the screen
 Example:
 ```
 display-text hello_world
+OK
+```
+
+### crc-enable
+Enables CRC check for CLI commands. Once enabled, the device expects all subsequent commands to include a CRC-32 checksum. The response to `crc-enable` itself already includes the CRC checksum.
+
+Example:
+```
+crc-enable
+OK @C09F27E9
+```
+
+### crc-disable
+Disables CRC check for CLI commands. The command itself must still include the CRC checksum if CRC was previously enabled.
+
+Example:
+```
+crc-disable @939BC008
 OK
 ```
 

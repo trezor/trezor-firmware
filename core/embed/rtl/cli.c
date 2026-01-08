@@ -11,12 +11,27 @@
 #define ESC_COLOR_GRAY "\e[37m"
 #define ESC_COLOR_RESET "\e[39m"
 
+#define CRC32_INITIAL 0xFFFFFFFF
+#define CRC32_POLYNOMIAL 0xEDB88320
+
+static uint32_t cli_crc32(uint32_t crc, const void* data, size_t size) {
+  const uint8_t* p = (const uint8_t*)data;
+  while (size--) {
+    crc ^= *p++;
+    for (int i = 0; i < 8; i++) {
+      crc = (crc >> 1) ^ (CRC32_POLYNOMIAL & (-(crc & 1)));
+    }
+  }
+  return crc;
+}
+
 bool cli_init(cli_t* cli, cli_read_cb_t read, cli_write_cb_t write,
               void* callback_context) {
   memset(cli, 0, sizeof(cli_t));
   cli->read = read;
   cli->write = write;
   cli->callback_context = callback_context;
+  cli->response_crc = CRC32_INITIAL;
 
   return true;
 }
@@ -29,8 +44,19 @@ void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,
 
 static void cli_vprintf(cli_t* cli, const char* format, va_list args) {
   char buffer[CLI_LINE_BUFFER_SIZE];
-  vsnprintf_(buffer, sizeof(buffer), format, args);
-  cli->write(cli->callback_context, buffer, strlen(buffer));
+  int len = vsnprintf_(buffer, sizeof(buffer), format, args);
+  if (len < 0) return;
+
+  size_t write_len = (size_t)len;
+  if (write_len >= sizeof(buffer)) {
+    write_len = sizeof(buffer) - 1;
+  }
+
+  if (cli->crc_req) {
+    cli->response_crc = cli_crc32(cli->response_crc, buffer, write_len);
+  }
+
+  cli->write(cli->callback_context, buffer, write_len);
 }
 
 static void cli_printf(cli_t* cli, const char* format, ...) {
@@ -38,6 +64,20 @@ static void cli_printf(cli_t* cli, const char* format, ...) {
   va_start(args, format);
   cli_vprintf(cli, format, args);
   va_end(args);
+}
+
+static void cli_printf_newline(cli_t* cli) {
+  if (cli->crc_req) {
+    uint32_t final_crc = ~cli->response_crc;
+    cli->crc_req = false;
+    cli_printf(cli, " %08X", final_crc);
+    cli->crc_req = true;
+  }
+  bool old_crc_req = cli->crc_req;
+  cli->crc_req = false;
+  cli_printf(cli, "\r\n");
+  cli->crc_req = old_crc_req;
+  cli->response_crc = CRC32_INITIAL;
 }
 
 void cli_vtrace(cli_t* cli, const char* format, va_list args) {
@@ -57,7 +97,7 @@ void cli_vtrace(cli_t* cli, const char* format, va_list args) {
     cli_vprintf(cli, format, args);
   }
 
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 }
 
 void cli_trace(cli_t* cli, const char* format, ...) {
@@ -87,7 +127,7 @@ void cli_ok(cli_t* cli, const char* format, ...) {
     cli_vprintf(cli, format, args);
     va_end(args);
   }
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 
   cli->final_status = true;
 }
@@ -110,7 +150,7 @@ void cli_ok_hexdata(cli_t* cli, const void* data, size_t size) {
       cli_printf(cli, "%02X", ((uint8_t*)data)[i]);
     }
   }
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 
   cli->final_status = true;
 }
@@ -136,7 +176,7 @@ static void cli_verror(cli_t* cli, const char* code, const char* format,
     cli_printf(cli, "\"");
   }
 
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 
   cli->final_status = true;
 }
@@ -180,7 +220,7 @@ void cli_progress(cli_t* cli, const char* format, ...) {
     cli_vprintf(cli, format, args);
   }
 
-  cli_printf(cli, "\r\n");
+  cli_printf_newline(cli);
 
   va_end(args);
 }
@@ -188,6 +228,10 @@ void cli_progress(cli_t* cli, const char* format, ...) {
 void cli_abort(cli_t* cli) { cli->aborted = true; }
 
 bool cli_aborted(cli_t* cli) { return cli->aborted; }
+
+void cli_enable_crc(cli_t* cli) { cli->crc_req = true; }
+
+void cli_disable_crc(cli_t* cli) { cli->crc_req = false; }
 
 // Finds a command record by name
 //
@@ -496,6 +540,7 @@ static void cli_clear_line(cli_t* cli) {
   cli->line_cursor = 0;
   cli->hist_idx = 0;
   cli->hist_prefix = 0;
+  cli->response_crc = CRC32_INITIAL;
   memset(cli->line_buffer, 0, sizeof(cli->line_buffer));
 }
 
@@ -539,6 +584,7 @@ void cli_process_command(cli_t* cli, const cli_command_t* cmd) {
   cli->current_cmd = cmd;
   cli->final_status = false;
   cli->aborted = false;
+  cli->response_crc = CRC32_INITIAL;
 
   // Call the command handler
   cmd->func(cli);
@@ -575,6 +621,37 @@ const cli_command_t* cli_process_io(cli_t* cli) {
   if (res < 0) {
     cli_error(cli, CLI_ERROR_FATAL, "Input line too long.");
     goto cleanup;
+  }
+
+  // Handle optional CRC check
+  if (cli->crc_req) {
+    size_t len = strlen(cli->line_buffer);
+    if (len >= 9) {
+      char* space = &cli->line_buffer[len - 9];
+      if (*space == ' ') {
+        uint32_t received_crc;
+        if (cstr_parse_uint32(space + 1, 16, &received_crc)) {
+          uint32_t calculated_crc =
+              ~cli_crc32(CRC32_INITIAL, cli->line_buffer, len - 9);
+          if (calculated_crc == received_crc) {
+            *space = '\0';
+          } else {
+            cli_error(cli, CLI_ERROR_INVALID_CRC, "Expected %08X, got %08X",
+                      calculated_crc, received_crc);
+            goto cleanup;
+          }
+        } else {
+          cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
+          goto cleanup;
+        }
+      } else {
+        cli_error(cli, CLI_ERROR_INVALID_CRC, "CRC suffix missing");
+        goto cleanup;
+      }
+    } else {
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Line too short for CRC");
+      goto cleanup;
+    }
   }
 
   cli_history_add(cli, cli->line_buffer);
