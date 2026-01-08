@@ -77,7 +77,7 @@ typedef enum {
   CONNECT_PAIRING_MODE = 2,
   CONNECT_MENU = 3,
 } connect_result_t;
-uint32_t screen_connect(bool initial_setup, bool auto_update,
+uint32_t screen_connect(bool initial_setup, bool show_menu,
                         uint32_t* ui_result);
 
 typedef enum {
