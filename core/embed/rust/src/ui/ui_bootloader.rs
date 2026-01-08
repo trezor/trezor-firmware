@@ -3,7 +3,7 @@ pub trait BootloaderUI {
 
     fn screen_menu(initial_setup: bool, communication: bool) -> (u32, u32);
 
-    fn screen_connect(initial_setup: bool, auto_update: bool) -> (u32, u32);
+    fn screen_connect(initial_setup: bool, show_menu: bool) -> (u32, u32);
 
     #[cfg(feature = "ble")]
     fn screen_pairing_mode(_initial_setup: bool, _name: &'static str) -> (u32, u32) {

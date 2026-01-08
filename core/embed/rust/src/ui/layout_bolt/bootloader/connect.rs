@@ -35,7 +35,7 @@ pub struct Connect {
 }
 
 impl Connect {
-    pub fn new<T>(message: T, font: Font, fg: Color, initial_setup: bool, auto_update: bool) -> Self
+    pub fn new<T>(message: T, font: Font, fg: Color, initial_setup: bool, show_menu: bool) -> Self
     where
         T: Into<TString<'static>>,
     {
@@ -57,7 +57,7 @@ impl Connect {
             )
         };
 
-        let menu = if auto_update { Some(menu_btn) } else { None };
+        let menu = if show_menu { Some(menu_btn) } else { None };
 
         let mut instance = Self {
             fg,

@@ -151,10 +151,10 @@ extern "C" fn screen_install_progress(
 #[no_mangle]
 extern "C" fn screen_connect(
     initial_setup: bool,
-    auto_update: bool,
+    show_menu: bool,
     ui_action_result: *mut u32,
 ) -> u32 {
-    let (res, ui_res) = ModelUI::screen_connect(initial_setup, auto_update);
+    let (res, ui_res) = ModelUI::screen_connect(initial_setup, show_menu);
     unsafe {
         *ui_action_result = ui_res;
     }
