@@ -140,6 +140,11 @@ struct cli {
    * finish as soon as possible with an CLI_ERROR_ABORT
    */
   volatile bool aborted;
+
+  /** CRC of the current response line */
+  uint32_t response_crc;
+  /** CRC was requested for the current command */
+  bool crc_req;
 };
 
 /** Initializes the command line structure */
@@ -248,3 +253,17 @@ void cli_abort(cli_t* cli);
 
 /** Returns true if `cli_abort()` was called */
 bool cli_aborted(cli_t* cli);
+
+/**
+ * Enables CRC check for the CLI.
+ *
+ * When enabled, every line received from the host must be suffixed with
+ * " <CRC32>" and every line sent to the host will be suffixed with
+ * " <CRC32>".
+ */
+void cli_enable_crc(cli_t* cli);
+
+/**
+ * Disables CRC check for the CLI.
+ */
+void cli_disable_crc(cli_t* cli);
