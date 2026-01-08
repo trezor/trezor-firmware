@@ -62,7 +62,10 @@ class BackgroundDeviceHandler:
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
 
-        with self.debuglink().wait_for_layout_change():
+        if not self.client.is_bootloader():
+            with self.debuglink().wait_for_layout_change():
+                self.task = self._pool.submit(self.client.get_session, *args, **kwargs)
+        else:
             self.task = self._pool.submit(self.client.get_session, *args, **kwargs)
 
     def run_with_session(
@@ -134,6 +137,10 @@ class BackgroundDeviceHandler:
             self.task = None
 
     def features(self) -> "Features":
+
+        if self.client.is_bootloader():
+            return self.debuglink().get_features()
+
         if self.task is not None:
             raise RuntimeError("Cannot query features while task is running")
         self.client.refresh_features()

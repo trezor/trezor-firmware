@@ -233,7 +233,10 @@ class TestCase:
     @classmethod
     def build(cls, client: Client, request: pytest.FixtureRequest) -> Self:
         name, group = _get_test_name_and_group(request.node.nodeid)
-        full_language = client.features.language
+        if client.features.bootloader_mode:
+            full_language = "en"
+        else:
+            full_language = client.features.language
         assert full_language
         language = full_language[:2]
         return cls(

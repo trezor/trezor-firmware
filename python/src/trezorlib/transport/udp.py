@@ -75,10 +75,18 @@ class UdpTransport(Transport):
         cls, _models: Iterable["TrezorModel"] | None = None
     ) -> Iterable["UdpTransport"]:
         default_path = f"{cls.DEFAULT_HOST}:{cls.DEFAULT_PORT}"
+        debug_path = f"{cls.DEFAULT_HOST}:{cls.DEFAULT_PORT + 1}"
+
         try:
             return [cls._try_path(default_path)]
         except TransportException:
-            return []
+            try:
+                cls._try_path(debug_path)
+                d = cls(default_path)
+                d.open()
+                return [d]
+            except TransportException:
+                return []
 
     @classmethod
     def find_by_path(cls, path: str, prefix_search: bool = False) -> "UdpTransport":
