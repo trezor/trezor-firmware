@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import PaymentRequest, SolanaTokenInfo
-    from trezor.ui.layouts import PropertyType
+    from trezor.ui.layouts import PropertyType, StrPropertyType
 
     from .definitions import Definitions
     from .transaction import Fee
@@ -45,7 +45,7 @@ def _format_path(path: list[int]) -> str:
 
 def _get_address_reference_props(
     address: AddressReference, display_name: str
-) -> Sequence[PropertyType]:
+) -> Sequence[StrPropertyType]:
     return (
         (
             TR.solana__is_provided_via_lookup_table_template.format(display_name),
@@ -329,7 +329,7 @@ async def confirm_token_transfer(
     fee: Fee,
     blockhash: bytes,
 ) -> None:
-    items: list[PropertyType] = []
+    items: list[StrPropertyType] = []
     if token_account != destination_account:
         items.append(
             (TR.solana__associated_token_account, base58.encode(token_account), True)
@@ -358,8 +358,8 @@ async def confirm_token_transfer(
     await confirm_custom_transaction(amount, decimals, token.symbol, fee)
 
 
-def _fee_ui_info(fee: Fee | None) -> tuple[str, str, list[PropertyType]]:
-    fee_items: list[PropertyType] = []
+def _fee_ui_info(fee: Fee | None) -> tuple[str, str, list[StrPropertyType]]:
+    fee_items: list[StrPropertyType] = []
     if fee is None:
         fee_title = f"{TR.solana__max_fees_rent}:"
         fee_str = TR.words__unknown
@@ -572,7 +572,7 @@ async def confirm_payment_request(
             raise wire.DataError("Unrecognized memo type in payment request memo.")
 
     account_path = address_n_to_str(address_n) if address_n else None
-    account_items: list[PropertyType] = []
+    account_items: list[StrPropertyType] = []
     if account_path:
         account_items.append((TR.address_details__derivation_path, account_path, True))
 

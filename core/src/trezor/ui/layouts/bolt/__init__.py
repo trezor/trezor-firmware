@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import StellarAsset
 
-    from ..common import ExceptionType, PropertyType
+    from ..common import ExceptionType, PropertyType, StrPropertyType
     from ..slip24 import Refund, Trade
 
 
@@ -492,9 +492,9 @@ async def confirm_payment_request(
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[Refund],
     trades: list[Trade],
-    account_items: list[PropertyType] | None,
+    account_items: list[StrPropertyType] | None,
     transaction_fee: str | None,
-    fee_info_items: Iterable[PropertyType] | None,
+    fee_info_items: Iterable[StrPropertyType] | None,
     extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
     from ..slip24 import is_swap
@@ -512,7 +512,7 @@ async def confirm_payment_request(
             "confirm_payment_request",
         )
 
-    menu_items: list[PropertyType] = []
+    menu_items: list[StrPropertyType] = []
     if recipient_address is not None:
         menu_items.append((TR.address__title_provider_address, recipient_address, None))
     for refund in refunds:
@@ -834,7 +834,7 @@ def confirm_value(
     subtitle: str | None = None,
     hold: bool = False,
     is_data: bool = True,
-    info_items: Iterable[PropertyType] | None = None,
+    info_items: Iterable[StrPropertyType] | None = None,
     info_title: str | None = None,
     chunkify: bool = False,
     chunkify_info: bool = False,
@@ -1219,7 +1219,7 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
         # intro
-        items: list[PropertyType] = [("", address, None)]
+        items: list[StrPropertyType] = [("", address, None)]
         await confirm_value(
             title,
             intro_question,
@@ -1268,7 +1268,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_recipient(
         recipient: str,
         title: str,
-        items: Iterable[PropertyType] = (),
+        items: Iterable[StrPropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     ) -> Awaitable[None]:
@@ -1313,11 +1313,11 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: PropertyType | None,
-        amount_item: PropertyType | None,
-        fee_item: PropertyType,
-        fee_details: Iterable[PropertyType],
-        blockhash_item: PropertyType,
+        stake_item: StrPropertyType | None,
+        amount_item: StrPropertyType | None,
+        fee_item: StrPropertyType,
+        fee_details: Iterable[StrPropertyType],
+        blockhash_item: StrPropertyType,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
@@ -1356,10 +1356,10 @@ if not utils.BITCOIN_ONLY:
         await with_info(confirm_layout, info_layout, br_name, br_code)
 
         await _confirm_summary(
-            amount=str(amount),
+            amount=amount or "",
             amount_label=amount_label,
-            fee=str(fee),
-            fee_label=str(fee_label),
+            fee=fee or "",
+            fee_label=fee_label or "",
             account_items=None,
             title=title,
             extra_title=TR.confirm_total__title_fee,

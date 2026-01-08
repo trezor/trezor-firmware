@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import StellarAsset
 
-    from ..common import ExceptionType, PropertyType
+    from ..common import ExceptionType, PropertyType, StrPropertyType
     from ..menu import Details
     from ..slip24 import Refund, Trade
 
@@ -557,9 +557,9 @@ async def confirm_payment_request(
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[Refund],
     trades: list[Trade],
-    account_items: list[PropertyType],
+    account_items: list[StrPropertyType],
     transaction_fee: str | None,
-    fee_info_items: Iterable[PropertyType] | None,
+    fee_info_items: Iterable[StrPropertyType] | None,
     extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -584,7 +584,7 @@ async def confirm_payment_request(
             create_details(TR.address__title_provider_address, recipient_address)
         )
     for refund in refunds:
-        refund_account_items: list[PropertyType] = [("", refund.address, None)]
+        refund_account_items: list[StrPropertyType] = [("", refund.address, None)]
         if refund.account:
             refund_account_items.append((TR.words__account, refund.account, None))
         if refund.account_path:
@@ -931,7 +931,7 @@ def confirm_value(
     verb_cancel: str | None = None,
     hold: bool = False,
     is_data: bool = True,
-    info_items: Iterable[PropertyType] | None = None,
+    info_items: Iterable[StrPropertyType] | None = None,
     chunkify: bool = False,
     chunkify_info: bool = False,
     cancel: bool = False,
@@ -983,7 +983,7 @@ def confirm_value(
         )
 
     menu = Menu.root(
-        Details.from_layout(str(name), item_factory(str(name), str(value)))
+        Details.from_layout(name or "", item_factory(name or "", value or ""))
         for name, value, _is_data in info_items
     )
     return confirm_with_menu(main, menu, br_name, br_code)
@@ -1048,7 +1048,7 @@ async def confirm_trade(
         external_menu=True,
     )
 
-    account_items: list[PropertyType] = [("", trade.address, None)]
+    account_items: list[StrPropertyType] = [("", trade.address, None)]
     if trade.account:
         account_items.append((TR.words__account, trade.account, None))
     if trade.account_path:
@@ -1209,7 +1209,7 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
         # intro
-        items: list[PropertyType] = [(address_title, address, None)]
+        items: list[StrPropertyType] = [(address_title, address, None)]
         await confirm_value(
             title,
             intro_question,
@@ -1255,7 +1255,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_recipient(
         recipient: str,
         title: str,
-        items: Iterable[PropertyType] = (),
+        items: Iterable[StrPropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     ) -> Awaitable[None]:
@@ -1301,11 +1301,11 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: PropertyType | None,
-        amount_item: PropertyType | None,
-        fee_item: PropertyType,
-        fee_details: list[PropertyType],
-        blockhash_item: PropertyType,
+        stake_item: StrPropertyType | None,
+        amount_item: StrPropertyType | None,
+        fee_item: StrPropertyType,
+        fee_details: list[StrPropertyType],
+        blockhash_item: StrPropertyType,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
@@ -1319,8 +1319,11 @@ if not utils.BITCOIN_ONLY:
         else:
             amount_label, amount, _is_data = amount_item
             fee_label, fee, _is_data = fee_item
+            fee_label = fee_label or ""
+            fee = fee or ""
+        amount = amount or ""
 
-        items: list[PropertyType] = []
+        items: list[StrPropertyType] = []
         if stake_item is not None:
             items.append(stake_item)
         items.append(blockhash_item)
@@ -1340,18 +1343,18 @@ if not utils.BITCOIN_ONLY:
             external_menu=True,
         )
         menu = Menu.root(
-            create_details(str(name), str(value)) for name, value, _is_data in items
+            create_details(name or "", value or "") for name, value, _is_data in items
         )
         await confirm_with_menu(main, menu, br_name, br_code)
 
         main = trezorui_api.confirm_summary(
-            amount=str(amount),
+            amount=amount,
             amount_label=amount_label,
-            fee=str(fee),
-            fee_label=str(fee_label),
+            fee=fee,
+            fee_label=fee_label,
             external_menu=True,
         )
-        account_details: list[PropertyType] = [
+        account_details: list[StrPropertyType] = [
             (f"{TR.words__account}:", account, None),
             (TR.address_details__derivation_path_colon, account_path, None),
         ]
@@ -1359,7 +1362,7 @@ if not utils.BITCOIN_ONLY:
             (TR.confirm_total__title_fee, fee_details),
             (TR.address_details__account_info, account_details),
         ]
-        menu = Menu.root(create_details(str(name), props) for name, props in iter)
+        menu = Menu.root(create_details(name, props) for name, props in iter)
         await confirm_with_menu(main, menu, br_name, br_code)
 
     def confirm_cardano_tx(
@@ -1949,7 +1952,7 @@ def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[Non
     )
 
 
-def create_details(name: str, value: list[PropertyType] | str) -> Details:
+def create_details(name: str, value: list[StrPropertyType] | str) -> Details:
     from trezor.ui.layouts.menu import Details
 
     return Details.from_layout(

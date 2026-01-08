@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from trezor.enums import AmountUnit
     from trezor.messages import PaymentRequest, TxOutput
-    from trezor.ui.layouts import PropertyType
+    from trezor.ui.layouts import StrPropertyType
 
     from apps.common.coininfo import CoinInfo
     from apps.common.paths import Bip32Path
@@ -207,7 +207,7 @@ async def show_payment_request_details(
 
     account = account_label(coin, address_n)
     account_path = address_n_to_str(address_n) if address_n else None
-    account_items: list[PropertyType] = []
+    account_items: list[StrPropertyType] = []
     if account:
         account_items.append((TR.words__account, account, True))
     if account_path:

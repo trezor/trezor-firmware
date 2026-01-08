@@ -3,6 +3,7 @@ from buffer_types import *
 from trezor import utils
 from trezor.enums import ButtonRequestType, RecoveryType
 PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
+StrPropertyType = tuple[str | None, str | None, bool | None]
 T = TypeVar("T")
 
 
