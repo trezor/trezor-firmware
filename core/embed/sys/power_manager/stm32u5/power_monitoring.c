@@ -25,6 +25,10 @@
 #include <sys/systick.h>
 #include <trezor_rtl.h>
 
+#ifdef USE_TELEMETRY
+#include <util/telemetry.h>
+#endif
+
 #include "../fuel_gauge/battery_model.h"
 #include "../fuel_gauge/fuel_gauge.h"
 #include "../stwlc38/stwlc38.h"
@@ -76,6 +80,11 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 
   // Get wireless charger data
   stwlc38_get_report(&drv->wireless_data);
+
+#ifdef USE_TELEMETRY
+  // Update telemetry with current battery temperature
+  telemetry_update_battery_temp(drv->pmic_data.ntc_temp);
+#endif
 
   pm_parse_power_source_state(drv);
 

@@ -407,4 +407,27 @@ secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
 
 #endif
 
+#ifdef USE_TELEMETRY
+
+// =============================================================================
+// telemetry.h
+// =============================================================================
+
+#include <util/telemetry.h>
+
+void telemetry_update_battery_temp(float temp_c) {
+  union {
+    float f;
+    uint32_t u;
+  } float_to_u32 = {.f = temp_c};
+
+  smcall_invoke1(float_to_u32.u, SMCALL_TELEMETRY_UPDATE_BATT_TEMP);
+}
+
+bool telemetry_get(telemetry_data_t *out) {
+  return (bool)smcall_invoke1((uint32_t)out, SMCALL_TELEMETRY_GET);
+}
+
+#endif
+
 #endif  // defined(KERNEL) && defined(USE_SECMON_LAYOUT)

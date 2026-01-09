@@ -164,4 +164,17 @@ secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
                                               size_t mac_len);
 #endif
 
+#ifdef USE_TELEMETRY
+// ---------------------------------------------------------------------
+// Telemetry
+// ---------------------------------------------------------------------
+
+#include <util/telemetry.h>
+
+void telemetry_update_battery_temp__verified(float temp_c);
+
+bool telemetry_get__verified(telemetry_data_t *out);
+
+#endif  // USE_TELEMETRY
+
 #endif  // SECMON

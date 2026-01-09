@@ -112,6 +112,7 @@ void fw_check(fw_info_t *fw_info) {
   volatile secbool secmon_model_valid = secfalse;
   volatile secbool secmon_header_sig_valid = secfalse;
   volatile secbool secmon_contents_valid = secfalse;
+  volatile secbool secmon_version_ok = secfalse;
 
   if (sectrue == fw_info->header_present) {
     secmon_header_present =
@@ -129,8 +130,12 @@ void fw_check(fw_info_t *fw_info) {
   }
 
   if (sectrue == secmon_header_sig_valid) {
+    secmon_version_ok = check_secmon_min_version(secmon_hdr->monotonic);
+  }
+
+  if (sectrue == secmon_version_ok) {
     secmon_contents_valid = secbool_and(
-        secmon_header_sig_valid,
+        secmon_version_ok,
         check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
                               &FIRMWARE_AREA));
     secmon_valid = secmon_contents_valid;

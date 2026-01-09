@@ -43,6 +43,7 @@ FEATURES_WANTED = [
     "secure_mode",
     "storage",
     "suspend",
+    "telemetry",
     "tropic",
     "nrf_auth"
     ]

@@ -403,6 +403,25 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 #endif  // USE_BACKUP_RAM
 
+#ifdef USE_TELEMETRY
+    // ------------------------------------------------------------------
+    // Telemetry
+    case SMCALL_TELEMETRY_UPDATE_BATT_TEMP: {
+      union {
+        float f;
+        uint32_t u;
+      } u32_to_float = {.u = args[0]};
+
+      float temp = u32_to_float.f;
+      telemetry_update_battery_temp__verified(temp);
+    } break;
+
+    case SMCALL_TELEMETRY_GET: {
+      telemetry_data_t *out = (telemetry_data_t *)args[0];
+      args[0] = telemetry_get__verified(out);
+    } break;
+#endif  // USE_TELEMETRY
+
     default:
       system_exit_fatal("Invalid smcall", __FILE__, __LINE__);
       break;
