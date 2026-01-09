@@ -68,6 +68,24 @@ const char* cstr_skip_whitespace(const char* str);
 bool cstr_starts_with(const char* str, const char* prefix);
 
 /**
+ * Returns true if the null-terminated C-string ends with the suffix.
+ *
+ * @param str The null-terminated C-string to check
+ * @param suffix The suffix to look for
+ * @return true if the string ends with the suffix, false otherwise
+ */
+bool cstr_ends_with(const char* str, const char* suffix);
+
+/**
+ * Removes the suffix from the null-terminated C-string if it exists.
+ *
+ * @param str The null-terminated C-string to modify
+ * @param suffix The suffix to remove
+ * @return true if the suffix was found and removed, false otherwise
+ */
+bool cstr_remove_suffix(char* str, const char* suffix);
+
+/**
  * Decodes the string as a hexadecimal string and writes the binary data to the
  * destination buffer.
  *

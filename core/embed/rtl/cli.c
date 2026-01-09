@@ -11,6 +11,9 @@
 #define ESC_COLOR_GRAY "\e[37m"
 #define ESC_COLOR_RESET "\e[39m"
 
+#define CLI_CRC_PREFIX "checked-"
+#define CLI_CRC_LENGTH 8
+
 #define CRC32_INITIAL 0xFFFFFFFF
 #define CRC32_POLYNOMIAL 0xEDB88320
 
@@ -229,9 +232,9 @@ void cli_abort(cli_t* cli) { cli->aborted = true; }
 
 bool cli_aborted(cli_t* cli) { return cli->aborted; }
 
-void cli_enable_crc(cli_t* cli) { cli->crc_req = true; }
+void cli_enable_crc(cli_t* cli) { cli->crc_auto = true; }
 
-void cli_disable_crc(cli_t* cli) { cli->crc_req = false; }
+void cli_disable_crc(cli_t* cli) { cli->crc_auto = false; }
 
 // Finds a command record by name
 //
@@ -541,6 +544,7 @@ static void cli_clear_line(cli_t* cli) {
   cli->hist_idx = 0;
   cli->hist_prefix = 0;
   cli->response_crc = CRC32_INITIAL;
+  cli->crc_req = cli->crc_auto;
   memset(cli->line_buffer, 0, sizeof(cli->line_buffer));
 }
 
@@ -569,6 +573,12 @@ static bool cli_split_args(cli_t* cli) {
 
   cli->cmd_name = cstr_token(&buf);
   cli->args_count = 0;
+
+  // Single crc check?
+  if (cstr_starts_with(cli->line_buffer, CLI_CRC_PREFIX)) {
+    cli->cmd_name += strlen(CLI_CRC_PREFIX);
+    cli->crc_req = true;
+  }
 
   while (*buf != '\0' && cli->args_count < CLI_MAX_ARGS) {
     const char* arg = cstr_token(&buf);
@@ -623,38 +633,16 @@ const cli_command_t* cli_process_io(cli_t* cli) {
     goto cleanup;
   }
 
-  // Handle optional CRC check
-  if (cli->crc_req) {
-    size_t len = strlen(cli->line_buffer);
-    if (len >= 9) {
-      char* space = &cli->line_buffer[len - 9];
-      if (*space == ' ') {
-        uint32_t received_crc;
-        if (cstr_parse_uint32(space + 1, 16, &received_crc)) {
-          uint32_t calculated_crc =
-              ~cli_crc32(CRC32_INITIAL, cli->line_buffer, len - 9);
-          if (calculated_crc == received_crc) {
-            *space = '\0';
-          } else {
-            cli_error(cli, CLI_ERROR_INVALID_CRC, "Expected %08X, got %08X",
-                      calculated_crc, received_crc);
-            goto cleanup;
-          }
-        } else {
-          cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
-          goto cleanup;
-        }
-      } else {
-        cli_error(cli, CLI_ERROR_INVALID_CRC, "CRC suffix missing");
-        goto cleanup;
-      }
-    } else {
-      cli_error(cli, CLI_ERROR_INVALID_CRC, "Line too short for CRC");
-      goto cleanup;
-    }
-  }
-
   cli_history_add(cli, cli->line_buffer);
+
+  // Calculate CRC of the command line (excluding the expected CRC suffix)
+  // (we may not use the value if crc is not requested)
+  size_t crc_offset = cstr_starts_with(cli->line_buffer, CLI_CRC_PREFIX)
+                          ? strlen(CLI_CRC_PREFIX)
+                          : 0;
+  uint32_t calculated_crc =
+      ~cli_crc32(CRC32_INITIAL, cli->line_buffer + crc_offset,
+                 MAX((int)cli->line_len - (int)crc_offset - CLI_CRC_LENGTH, 0));
 
   // Split command line into arguments
   if (!cli_split_args(cli)) {
@@ -684,6 +672,34 @@ const cli_command_t* cli_process_io(cli_t* cli) {
       cli_trace(cli, "Exiting interactive mode...");
     }
     goto cleanup;
+  }
+
+  if (cli->crc_req) {
+    if (cli->args_count < 1) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "CRC suffix missing");
+      goto cleanup;
+    }
+
+    uint32_t crc = 0;
+
+    const char* crc_str = cli_nth_arg(cli, cli->args_count - 1);
+
+    if (strlen(crc_str) != CLI_CRC_LENGTH ||
+        !cstr_parse_uint32(crc_str, 16, &crc)) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
+      goto cleanup;
+    }
+
+    if (calculated_crc != crc) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Expected %08X, got %08X",
+                calculated_crc, crc);
+      goto cleanup;
+    }
+
+    --cli->args_count;
   }
 
   // Find the command handler
@@ -728,7 +744,7 @@ static int find_arg(const cli_command_t* cmd, const char* name) {
 
     // Extract argument name
     const char* s = p;
-    while (*p != '\0' && (*p != '>' && *p != ']')) {
+    while (*p != '\0' && *p != '>' && *p != ']') {
       p++;
     }
 
