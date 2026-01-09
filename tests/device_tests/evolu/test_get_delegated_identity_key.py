@@ -1,22 +1,27 @@
 import pytest
 
-from trezorlib import evolu
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
-pytestmark = [pytest.mark.models("core"), pytest.mark.protocol("protocol_v1")]
+from .common import get_delegated_identity_key
+
+pytestmark = [pytest.mark.models("core")]
 
 
-def test_evolu_get_delegated_identity_is_constant(session: Session):
-    private_key = evolu.get_delegated_identity_key(session)
+def test_evolu_get_delegated_identity_is_constant(client: Client):
+    private_key = get_delegated_identity_key(client)
     assert len(private_key) == 32
 
-    private_key_2 = evolu.get_delegated_identity_key(session)
+    private_key_2 = get_delegated_identity_key(client)
     assert private_key_2 == private_key
 
 
-def test_evolu_get_delegated_identity_test_vector(session: Session):
+def test_evolu_get_delegated_identity_test_vector(client: Client):
     # on emulator, the master key is all zeroes. So the delegated identity key is constant.
-    private_key = evolu.get_delegated_identity_key(session)
+    if client.get_session().features.fw_vendor != "EMULATOR":
+        pytest.skip("Only for emulator")
+
+    private_key = get_delegated_identity_key(client)
+    # hardcoded expected value for the emulator with zeroed master key
     assert private_key == bytes.fromhex(
         "10e39ed3a40dd63a47a14608d4bccd4501170cf9f2188223208084d39c37b369"
     )
