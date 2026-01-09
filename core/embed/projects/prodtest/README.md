@@ -79,6 +79,39 @@ rgbled-set 0 255 0
 OK
 ```
 
+### CRC Checksum
+
+The CLI supports an optional CRC checksum for commands and responses to ensure data integrity over the communication link.
+
+When CRC is enabled, every command MUST include a CRC-32 checksum at the end of the line, preceded by a space.
+
+Command Format:
+`<command> [<args>] <CRC32>` or `<command>&crc [<args> <CRC32>]`
+
+The checksum is calculated using the standard CRC-32 algorithm (polynomial `0xEDB88320`, initial value `0xFFFFFFFF`, and final XOR `0xFFFFFFFF`) over the command string excluding the suffix. In the `<command>&crc <args> <CRC32>` format, the `<CRC32>` is the checksum of the entire string before it (including the `&crc` and arguments).
+
+The device also appends the checksum to every response line (including `OK`, `ERROR`, `PROGRESS`, and `#` traces).
+
+Response Format:
+`<response> <CRC32>`
+
+Example with CRC enabled:
+```
+ping ABC 3240F7DC
+OK ABC 24DA4527
+```
+
+Example with `&` alternative (enforces CRC for a single command even if CRC is otherwise disabled):
+```
+ping&crc ABC 62E5DE12
+OK ABC 24DA4527
+```
+If the command has no arguments, the format is `<command>&crc <CRC32>`:
+```
+ping&crc D720F16C
+OK  D38BF920
+```
+
 ## List of commands
 
 ### help
@@ -269,6 +302,24 @@ The `display-text` command draws text to the screen
 Example:
 ```
 display-text hello_world
+OK
+```
+
+### crc-enable
+Enables CRC check for CLI commands. Once enabled, the device expects all subsequent commands to include a CRC-32 checksum. The response to `crc-enable` itself already includes the CRC checksum.
+
+Example:
+```
+crc-enable
+OK @C09F27E9
+```
+
+### crc-disable
+Disables CRC check for CLI commands. The command itself must still include the CRC checksum if CRC was previously enabled.
+
+Example:
+```
+crc-disable @939BC008
 OK
 ```
 
@@ -693,6 +744,26 @@ Example:
 ```
 prodtest-homescreen
 OK
+```
+
+### prodtest-mem-write
+Parses hex data from the argument and stores it into an 8kB RAM buffer.
+
+`prodtest-mem-write <hexdata>`
+
+Example:
+```
+prodtest-mem-write 01020304
+OK
+```
+
+### prodtest-mem-read
+Reads back the data currently stored in the RAM buffer and outputs it as hex.
+
+Example:
+```
+prodtest-mem-read
+OK 01020304
 ```
 
 ### secrets-init
