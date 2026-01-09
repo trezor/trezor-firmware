@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import storage.sd_salt as storage_sd_salt
-from trezor import TR, config
+from trezor import TR, config, wire
 from trezor.enums import SdProtectOperationType
 from trezor.messages import Success
 from trezor.ui.layouts import show_success
@@ -71,11 +71,14 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
     else:
         pin = ""
 
+    if not config.unlock(pin, None):
+        await error_pin_invalid()
+
     # Check PIN and prepare salt file.
     salt, salt_auth_key, salt_tag = _make_salt()
     await _set_salt(salt, salt_tag)
 
-    if not config.change_pin(pin, pin, None, salt):
+    if not config.change_pin(pin, salt):
         # Wrong PIN. Clean up the prepared salt file.
         try:
             storage_sd_salt.remove_sd_salt()
@@ -84,7 +87,7 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
             # SD-protection. If it fails for any reason, we suppress the
             # exception, because primarily we need to raise wire.PinInvalid.
             pass
-        await error_pin_invalid()
+        raise wire.ProcessError("Failed to set salt on SD card")
 
     storage_device.set_sd_salt_auth_key(salt_auth_key)
 
@@ -106,8 +109,10 @@ async def _sd_protect_disable(msg: SdProtect) -> Success:
     pin, salt = await request_pin_and_sd_salt(TR.pin__enter)
 
     # Check PIN and remove salt.
-    if not config.change_pin(pin, pin, salt, None):
+    if not config.unlock(pin, salt):
         await error_pin_invalid()
+    if not config.change_pin(pin, None):
+        raise wire.FirmwareError("Failed to remove SD salt")
 
     storage_device.set_sd_salt_auth_key(None)
 
@@ -141,8 +146,10 @@ async def _sd_protect_refresh(msg: SdProtect) -> Success:
     new_salt, new_auth_key, new_salt_tag = _make_salt()
     await _set_salt(new_salt, new_salt_tag, stage=True)
 
-    if not config.change_pin(pin, pin, old_salt, new_salt):
+    if not config.unlock(pin, old_salt):
         await error_pin_invalid()
+    if not config.change_pin(pin, new_salt):
+        raise wire.FirmwareError("Failed to set new SD salt")
 
     storage_device.set_sd_salt_auth_key(new_auth_key)
 

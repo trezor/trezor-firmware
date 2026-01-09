@@ -254,14 +254,10 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 
     case SMCALL_STORAGE_CHANGE_PIN: {
-      const uint8_t *oldpin = (const uint8_t *)args[0];
-      size_t oldpin_len = args[1];
-      const uint8_t *newpin = (const uint8_t *)args[2];
-      size_t newpin_len = args[3];
-      const uint8_t *old_ext_salt = (const uint8_t *)args[4];
-      const uint8_t *new_ext_salt = (const uint8_t *)args[5];
-      args[0] = storage_change_pin__verified(
-          oldpin, oldpin_len, newpin, newpin_len, old_ext_salt, new_ext_salt);
+      const uint8_t *newpin = (const uint8_t *)args[0];
+      size_t newpin_len = args[1];
+      const uint8_t *new_ext_salt = (const uint8_t *)args[2];
+      args[0] = storage_change_pin__verified(newpin, newpin_len, new_ext_salt);
     } break;
 
     case SMCALL_STORAGE_ENSURE_NOT_WIPE_CODE: {
