@@ -28,6 +28,7 @@ from ...input_flows import (
     InputFlowLockTimeBlockHeight,
     InputFlowLockTimeDatetime,
     InputFlowSignTxBackFromAmount,
+    InputFlowSignTxCancelFromAmount,
     InputFlowSignTxHighFee,
     InputFlowSignTxInformation,
     InputFlowSignTxInformationCancel,
@@ -206,6 +207,32 @@ def test_one_one_fee_back_from_amount(session: Session):
         hash_link="https://btc1.trezor.io/api/tx/b893aeed4b12227b6f5348d7f6cb84ba2cda2ba70a41933a25f363b9d2fc2cf9",
         tx_hex="0100000001b5f59e2273c85b93aa9deff9bba5d7deace78610d3b0fb892a7ba6d86f36ac0d000000006b483045022100dd4dd136a70371bc9884c3c51fd52f4aed9ab8ee98f3ac7367bb19e6538096e702200c56be09c4359fc7eb494b4bdf8f2b72706b0575c4021373345b593e9661c7b6012103d7f3a07085bee09697cf03125d5c8760dfed65403dba787f1d1d8b1251af2cbeffffffff0148c40000000000001976a91419140511436e947448be994ab7fda9f98623e68e88ac00000000",
     )
+
+
+@pytest.mark.models(
+    "t3t1", "t3w1", reason="Cannot cancel from Amount screen on Bolt & Caesar"
+)
+def test_one_one_fee_cancel_from_amount(session: Session):
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with session.client as client, pytest.raises(Cancelled):
+        IF = InputFlowSignTxCancelFromAmount(session.client)
+        client.set_input_flow(IF.get())
+
+        btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
 
 
 def test_testnet_one_two_fee(session: Session):

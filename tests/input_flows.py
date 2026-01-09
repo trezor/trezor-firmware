@@ -1228,6 +1228,41 @@ class InputFlowSignTxBackFromAmount(InputFlowBase):
         self.debug.press_yes()
 
 
+class InputFlowSignTxCancelFromAmount(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_delizia(self) -> BRGeneratorType:
+        yield  # confirm address
+        layout = self.debug.read_layout()
+        assert TR.words__address in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_up()
+
+        yield  # amount screen
+        layout = self.debug.read_layout()
+        assert TR.words__amount in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.button_actions.navigate_to_menu_item(1)  # click Cancel
+        self.debug.synchronize_at("PromptScreen")
+        self.debug.click(self.debug.screen_buttons.tap_to_confirm())
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield  # confirm address
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield  # amount screen
+        self.debug.read_layout()
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.button_actions.navigate_to_menu_item(1)  # click Cancel
+        self.debug.synchronize_at("TextScreen")
+        self.debug.click(self.debug.screen_buttons.ok())
+
+
 class InputFlowSignTxInformation(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
