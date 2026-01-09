@@ -1208,18 +1208,53 @@ class InputFlowSignTxBackFromAmount(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
 
-    def input_flow_eckhart(self) -> BRGeneratorType:
-        yield  # confirm address
+    def input_flow_delizia(self) -> BRGeneratorType:
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__address in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_up()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__amount in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_down()
+
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__address in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
+        self.debug.swipe_up()
+
+        yield
         self.debug.read_layout()
+        self.debug.swipe_up()
+
+        yield
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__send in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
         self.debug.click(self.debug.screen_buttons.ok())
 
-        yield  # confirm amount
-        self.debug.read_layout()
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__amount in layout.text_content()
+        assert TR.words__recipient + " #1" in layout.title()
         self.debug.click(self.debug.screen_buttons.cancel())
 
-        self.debug.read_layout()
+        yield
+        layout = self.debug.read_layout()
+        assert TR.words__send in layout.title()
+        assert TR.words__recipient + " #1" in layout.title()
         self.debug.click(self.debug.screen_buttons.ok())
 
+        yield
         self.debug.read_layout()
         self.debug.click(self.debug.screen_buttons.ok())
 
@@ -1245,7 +1280,7 @@ class InputFlowSignTxCancelFromAmount(InputFlowBase):
         assert TR.words__recipient + " #1" in layout.title()
 
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.button_actions.navigate_to_menu_item(1)  # click Cancel
+        self.debug.button_actions.navigate_to_menu_item(0)  # click Cancel
         self.debug.synchronize_at("PromptScreen")
         self.debug.click(self.debug.screen_buttons.tap_to_confirm())
 

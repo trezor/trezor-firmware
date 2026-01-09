@@ -74,58 +74,6 @@ impl FlowController for ConfirmOutput {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum ConfirmOutputWithAmount {
-    Address,
-    AddressMenu,
-    AddressAccountInfo,
-    AddressCancel,
-    Amount,
-    AmountMenu,
-    AmountAccountInfo,
-    AmountCancel,
-    Cancelled,
-}
-
-impl FlowController for ConfirmOutputWithAmount {
-    #[inline]
-    fn index(&'static self) -> usize {
-        *self as usize
-    }
-
-    fn handle_swipe(&'static self, _direction: Direction) -> Decision {
-        self.do_nothing()
-    }
-
-    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
-        match (self, msg) {
-            (Self::Address, FlowMsg::Confirmed) => Self::Amount.goto(),
-            (Self::Address, FlowMsg::Info) => Self::AddressMenu.goto(),
-            (Self::AddressMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => Self::AddressCancel.goto(),
-            (Self::AddressMenu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => {
-                Self::AddressAccountInfo.goto()
-            }
-            (Self::AddressAccountInfo, FlowMsg::Cancelled) => Self::AddressMenu.goto(),
-            (Self::AddressMenu, FlowMsg::Cancelled) => Self::Address.goto(),
-            (Self::AddressCancel, FlowMsg::Confirmed) => Self::Cancelled.goto(),
-            (Self::AddressCancel, FlowMsg::Cancelled) => Self::AddressMenu.goto(),
-            (Self::Amount, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Amount, FlowMsg::Cancelled) => Self::Address.goto(),
-            (Self::Amount, FlowMsg::Info) => Self::AmountMenu.goto(),
-            (Self::AmountMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => Self::AmountCancel.goto(),
-            (Self::AmountMenu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => {
-                Self::AmountAccountInfo.goto()
-            }
-            (Self::AmountAccountInfo, FlowMsg::Cancelled) => Self::AmountMenu.goto(),
-            (Self::AmountMenu, FlowMsg::Cancelled) => Self::Amount.goto(),
-            (Self::AmountCancel, FlowMsg::Confirmed) => Self::Cancelled.goto(),
-            (Self::AmountCancel, FlowMsg::Cancelled) => Self::AmountMenu.goto(),
-            (Self::Cancelled, _) => self.return_msg(FlowMsg::Cancelled),
-            _ => self.do_nothing(),
-        }
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmOutputWithSummary {
     Main,
     MainMenu,
@@ -254,7 +202,6 @@ pub fn new_confirm_output(
     title: Option<TString<'static>>,
     subtitle: Option<TString<'static>>,
     main_paragraphs: ParagraphVecShort<'static>,
-    amount: Option<TString<'static>>,
     br_name: TString<'static>,
     br_code: u16,
     account_title: TString<'static>,
@@ -310,77 +257,7 @@ pub fn new_confirm_output(
     ))
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let res = if let Some(amount) = amount {
-        let amount_paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::words__amount).no_break(),
-            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount),
-        ]);
-
-        let content_amount = TextScreen::new(
-            amount_paragraphs
-                .into_paragraphs()
-                .with_placement(LinearPlacement::vertical()),
-        )
-        .with_flow_menu()
-        .with_header(Header::new(TR::words__send.into()).with_menu_button())
-        .with_action_bar(ActionBar::new_double(
-            Button::with_icon(theme::ICON_CHEVRON_UP),
-            Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
-        ))
-        .with_subtitle(subtitle.unwrap_or(TString::empty()))
-        .map(|msg| match msg {
-            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-            TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-            TextScreenMsg::Menu => Some(FlowMsg::Info),
-        })
-        .one_button_request(ButtonRequest::from_num(br_code, br_name));
-
-        let mut flow = SwipeFlow::new(&ConfirmOutputWithAmount::Address)?;
-        flow.add_page(&ConfirmOutputWithAmount::Address, content_main)?
-            .add_page(
-                &ConfirmOutputWithAmount::AddressMenu,
-                content_main_menu(
-                    address_title,
-                    address_menu_item,
-                    account_menu_item,
-                    cancel_menu_label,
-                ),
-            )?
-            .add_page(
-                &ConfirmOutputWithAmount::AddressAccountInfo,
-                content_menu_info(
-                    TR::address_details__account_info.into(),
-                    account_subtitle,
-                    account_paragraphs
-                        .clone()
-                        .map_or_else(ParagraphVecShort::new, |p| p),
-                ),
-            )?
-            .add_page(&ConfirmOutputWithAmount::AddressCancel, content_cancel())?
-            .add_page(&ConfirmOutputWithAmount::Amount, content_amount)?
-            .add_page(
-                &ConfirmOutputWithAmount::AmountMenu,
-                content_main_menu(
-                    address_title,
-                    address_menu_item,
-                    account_menu_item,
-                    cancel_menu_label,
-                ),
-            )?
-            .add_page(
-                &ConfirmOutputWithAmount::AmountAccountInfo,
-                content_menu_info(
-                    account_title,
-                    account_subtitle,
-                    account_paragraphs
-                        .clone()
-                        .map_or_else(ParagraphVecShort::new, |p| p),
-                ),
-            )?
-            .add_page(&ConfirmOutputWithAmount::AmountCancel, content_cancel())?
-            .add_page(&ConfirmOutputWithAmount::Cancelled, content_cancelled)?;
-        flow
-    } else if let Some(summary_paragraphs) = summary_paragraphs {
+    let res = if let Some(summary_paragraphs) = summary_paragraphs {
         // Summary
         let content_summary = TextScreen::new(
             summary_paragraphs

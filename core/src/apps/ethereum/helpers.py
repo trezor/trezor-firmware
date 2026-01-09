@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from typing import Iterable
 
     from trezor.messages import EthereumFieldType, EthereumTokenInfo
-    from trezor.ui.layouts import PropertyType
+    from trezor.ui.layouts import StrPropertyType
 
     from .networks import EthereumNetworkInfo
 
@@ -133,7 +133,7 @@ def decode_typed_data(data: AnyBytes, type_name: str) -> str:
 
 def get_fee_items_regular(
     gas_price: int, gas_limit: int, network: EthereumNetworkInfo
-) -> Iterable[PropertyType]:
+) -> Iterable[StrPropertyType]:
     # regular
     gas_limit_str = TR.ethereum__units_template.format(gas_limit)
     gas_price_str = format_ethereum_amount(
@@ -151,7 +151,7 @@ def get_fee_items_eip1559(
     max_priority_fee: int,
     gas_limit: int,
     network: EthereumNetworkInfo,
-) -> Iterable[PropertyType]:
+) -> Iterable[StrPropertyType]:
     # EIP-1559
     gas_limit_str = TR.ethereum__units_template.format(gas_limit)
     max_gas_fee_str = format_ethereum_amount(

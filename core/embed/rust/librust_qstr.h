@@ -279,6 +279,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_coinjoin_authorized;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
+  MP_QSTR_confirm_cancel;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;

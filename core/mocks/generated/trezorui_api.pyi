@@ -3,6 +3,7 @@ from buffer_types import *
 from trezor import utils
 from trezor.enums import ButtonRequestType, RecoveryType
 PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
+StrPropertyType = tuple[str | None, str | None, bool | None]
 T = TypeVar("T")
 
 
@@ -167,6 +168,7 @@ def confirm_value(
     page_counter: bool = False,
     prompt_screen: bool = False,
     cancel: bool = False,
+    back_button: bool = False,
     warning_footer: str | None = None,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
@@ -355,7 +357,6 @@ def flow_confirm_output(
     message: str,
     description: str | None,
     extra: str | None,
-    amount: str | None,
     chunkify: bool,
     text_mono: bool,
     account_title: str,
@@ -761,6 +762,7 @@ def show_properties(
     *,
     title: str,
     value: Sequence[PropertyType] | str,
+    subtitle: str | None = None,
 ) -> LayoutObj[None]:
     """Show a list of key-value pairs, or a monospace string."""
 
@@ -835,6 +837,12 @@ def show_warning(
     danger: bool = False,  # unused on bolt
 ) -> LayoutObj[UiResult]:
     """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def confirm_cancel() -> LayoutObj[UiResult]:
+    """Ask the user to confirm the cancellation (or cancel the cancellation and go back to
+    the previous flow)"""
 
 
 # rust/src/ui/api/firmware_micropython.rs

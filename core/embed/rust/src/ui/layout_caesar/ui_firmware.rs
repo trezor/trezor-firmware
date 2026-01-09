@@ -159,9 +159,10 @@ impl FirmwareUI for UICaesar {
         _page_counter: bool,
         _prompt_screen: bool,
         _cancel: bool,
+        _back_button: bool,
         _warning_footer: Option<TString<'static>>,
         _external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
             extra: extra.unwrap_or("".into()),
@@ -179,15 +180,14 @@ impl FirmwareUI for UICaesar {
         }
         .into_paragraphs();
 
-        let layout = content_in_button_page(
+        content_in_button_page(
             title,
             paragraphs,
             verb.unwrap_or(TR::buttons__confirm.into()),
             verb_cancel,
             hold,
             false,
-        )?;
-        LayoutObj::new_root(layout)
+        )
     }
 
     fn confirm_value_intro(
@@ -709,7 +709,6 @@ impl FirmwareUI for UICaesar {
         _description: Option<TString<'static>>,
         _extra: Option<TString<'static>>,
         _message: TString<'static>,
-        _amount: Option<TString<'static>>,
         _chunkify: bool,
         _text_mono: bool,
         _account_title: TString<'static>,
@@ -1297,6 +1296,7 @@ impl FirmwareUI for UICaesar {
 
     fn show_properties(
         title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();

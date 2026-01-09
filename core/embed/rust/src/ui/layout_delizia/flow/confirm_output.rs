@@ -67,43 +67,6 @@ impl FlowController for ConfirmOutput {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum ConfirmOutputWithAmount {
-    Address,
-    Amount,
-    Menu,
-    AccountInfo,
-    CancelTap,
-}
-
-impl FlowController for ConfirmOutputWithAmount {
-    #[inline]
-    fn index(&'static self) -> usize {
-        *self as usize
-    }
-
-    fn handle_swipe(&'static self, direction: Direction) -> Decision {
-        match (self, direction) {
-            (Self::Address, Direction::Up) => Self::Amount.swipe(direction),
-            (Self::Amount, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Amount, Direction::Down) => Self::Address.swipe(direction),
-            _ => self.do_nothing(),
-        }
-    }
-
-    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
-        match (self, msg) {
-            (_, FlowMsg::Info) => Self::Menu.goto(),
-            (Self::Menu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => Self::CancelTap.swipe_left(),
-            (Self::Menu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => Self::AccountInfo.goto(),
-            (Self::Menu, FlowMsg::Cancelled) => Self::Address.swipe_right(),
-            (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
-            (_, FlowMsg::Cancelled) => Self::Menu.goto(),
-            _ => self.do_nothing(),
-        }
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmOutputWithSummary {
     Main,
     MainMenu,
@@ -202,7 +165,6 @@ pub fn new_confirm_output(
     account_path: Option<TString<'static>>,
     br_name: TString<'static>,
     br_code: u16,
-    confirm_amount: Option<ConfirmValue>,
     confirm_address: Option<ConfirmValue>,
     confirm_extra: Option<ConfirmValue>,
     summary_items_params: Option<ShowInfoParams>,
@@ -246,19 +208,7 @@ pub fn new_confirm_output(
     let ac = AddressDetails::new(account_title, account, account_path)?;
     let account_content = ac.map(|_| Some(FlowMsg::Cancelled));
 
-    let res = if let Some(confirm_amount) = confirm_amount {
-        let confirm_amount = confirm_amount
-            .into_layout()?
-            .one_button_request(ButtonRequest::from_num(br_code, br_name));
-
-        let mut flow = SwipeFlow::new(&ConfirmOutputWithAmount::Address)?;
-        flow.add_page(&ConfirmOutputWithAmount::Address, main_content)?
-            .add_page(&ConfirmOutputWithAmount::Amount, confirm_amount)?
-            .add_page(&ConfirmOutputWithAmount::Menu, content_main_menu)?
-            .add_page(&ConfirmOutputWithAmount::AccountInfo, account_content)?
-            .add_page(&ConfirmOutputWithAmount::CancelTap, get_cancel_page())?;
-        flow
-    } else if let Some(summary_items_params) = summary_items_params {
+    let res = if let Some(summary_items_params) = summary_items_params {
         // Summary
         let content_summary = summary_items_params
             .into_layout()?

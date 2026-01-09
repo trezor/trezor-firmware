@@ -453,14 +453,18 @@ impl FirmwareUI for UIEckhart {
         page_counter: bool,
         _prompt_screen: bool,
         cancel: bool,
+        back_button: bool,
         warning_footer: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
+    ) -> Result<impl LayoutMaybeTrace, Error> {
         if info && external_menu {
             return Err(Error::NotImplementedError);
         }
+        if cancel && back_button {
+            return Err(Error::NotImplementedError);
+        }
 
-        let paragraphs = ConfirmValueParams {
+        let mut paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
             extra: extra.unwrap_or("".into()),
             value: if value != Obj::const_none() {
@@ -475,12 +479,18 @@ impl FirmwareUI for UIEckhart {
             } else {
                 &theme::TEXT_MONO_MEDIUM_LIGHT
             },
-            description_font: &theme::TEXT_SMALL,
+            description_font: if subtitle.is_some() {
+                &theme::TEXT_SMALL_LIGHT
+            } else {
+                &theme::TEXT_SMALL
+            },
             extra_font: &theme::TEXT_SMALL,
         }
         .into_paragraphs()
-        .with_placement(LinearPlacement::vertical())
-        .with_spacing(theme::PROP_INNER_SPACING);
+        .with_placement(LinearPlacement::vertical());
+        if subtitle.is_none() {
+            paragraphs = paragraphs.with_spacing(theme::PROP_INNER_SPACING);
+        }
 
         let mut right_button = if hold {
             let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
@@ -509,6 +519,8 @@ impl FirmwareUI for UIEckhart {
 
         let action_bar = if cancel {
             ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
+        } else if back_button {
+            ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), right_button)
         } else {
             ActionBar::new_single(right_button)
         };
@@ -523,7 +535,17 @@ impl FirmwareUI for UIEckhart {
         } else if let Some(warning_footer) = warning_footer {
             screen = screen.with_hint(Hint::new_warning_caution(warning_footer));
         }
-        LayoutObj::new(screen)
+        let screen = screen.map(move |msg| match msg {
+            TextScreenMsg::Cancelled => Some(if back_button {
+                FlowMsg::Back
+            } else {
+                FlowMsg::Cancelled
+            }),
+            TextScreenMsg::Menu => Some(FlowMsg::Info),
+            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+        });
+
+        flow::util::single_page(screen)
     }
 
     fn confirm_value_intro(
@@ -645,7 +667,6 @@ impl FirmwareUI for UIEckhart {
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         message: TString<'static>,
-        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
@@ -776,7 +797,6 @@ impl FirmwareUI for UIEckhart {
             title,
             subtitle,
             main_paragraphs,
-            amount,
             br_name,
             br_code,
             account_title,
@@ -1483,6 +1503,7 @@ impl FirmwareUI for UIEckhart {
 
     fn show_properties(
         title: TString<'static>,
+        subtitle: Option<TString<'static>>,
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut vec = ParagraphVecShort::new();
@@ -1490,27 +1511,47 @@ impl FirmwareUI for UIEckhart {
             let text: TString = value.try_into()?;
             unwrap!(vec.push(Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)));
         } else {
+            let mut first_item_is_address: Option<bool> = None;
             for property in IterBuf::new().try_iterate(value)? {
                 let [header, text, _is_data]: [Obj; 3] = util::iter_into_array(property)?;
+
                 let header = header
                     .try_into_option::<TString>()?
                     .unwrap_or_else(TString::empty);
+                if first_item_is_address.is_none() {
+                    // TODO: should be based on the first item's "property type" (when we have it)
+                    first_item_is_address = Some(header.is_empty());
+                }
+                let mut header_paragraph = Paragraph::new(
+                    if subtitle.is_none() {
+                        &theme::TEXT_SMALL
+                    } else {
+                        // subtitle is already quite prominent
+                        &theme::TEXT_SMALL_LIGHT
+                    },
+                    header,
+                )
+                .no_break();
+                if !first_item_is_address.unwrap_or(false) {
+                    // normal spacing between property keys and values
+                    // unless the first property is an address,
+                    // in which case less space looks better
+                    header_paragraph =
+                        header_paragraph.with_bottom_padding(theme::PROP_INNER_SPACING);
+                }
+                unwrap!(vec.push(header_paragraph));
+
                 let text = text
                     .try_into_option::<TString>()?
                     .unwrap_or_else(TString::empty);
-
-                unwrap!(vec.push(Paragraph::new(&theme::TEXT_SMALL, header)));
-                let mut value_paragraph = Paragraph::new(
-                    if header.is_empty() {
-                        &theme::TEXT_MONO_ADDRESS_CHUNKS
-                    } else {
-                        &theme::TEXT_MONO_LIGHT
-                    },
-                    text,
-                );
-                if header.is_empty() {
-                    value_paragraph = value_paragraph.with_bottom_padding(20);
-                }
+                // TODO: should be based on the "property type"
+                let value_paragraph = if header.is_empty() {
+                    Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)
+                        .with_bottom_padding(theme::PROPS_SPACING_EXTRA)
+                } else {
+                    Paragraph::new(&theme::TEXT_MONO_LIGHT, text)
+                        .with_bottom_padding(theme::PROPS_SPACING)
+                };
                 unwrap!(vec.push(value_paragraph));
             }
         };
@@ -1519,7 +1560,8 @@ impl FirmwareUI for UIEckhart {
             vec.into_paragraphs()
                 .with_placement(LinearPlacement::vertical()),
         )
-        .with_header(Header::new(title).with_close_button());
+        .with_header(Header::new(title).with_close_button())
+        .with_subtitle(subtitle.unwrap_or(TString::empty()));
 
         let obj = RootComponent::new(screen);
         Ok(obj)

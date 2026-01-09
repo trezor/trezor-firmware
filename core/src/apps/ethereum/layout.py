@@ -27,7 +27,7 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         PaymentRequest,
     )
-    from trezor.ui.layouts import PropertyType
+    from trezor.ui.layouts import PropertyType, StrPropertyType
 
 
 async def require_confirm_approve(
@@ -115,7 +115,7 @@ async def require_confirm_payment_request(
     verified_payment_req: PaymentRequest,
     address_n: list[int],
     maximum_fee: str,
-    fee_info_items: Iterable[PropertyType],
+    fee_info_items: Iterable[StrPropertyType],
     chain_id: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
@@ -163,7 +163,7 @@ async def require_confirm_payment_request(
             raise wire.DataError("Unrecognized memo type in payment request memo.")
 
     account, account_path = get_account_and_path(address_n)
-    account_items: list[PropertyType] = []
+    account_items: list[StrPropertyType] = []
     if account:
         account_items.append((TR.words__account, account, True))
     if account_path:
