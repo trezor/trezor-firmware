@@ -120,7 +120,7 @@ ssize_t dbg_console_write(const void *data, size_t data_size) {
 
 #ifdef USE_DBG_CONSOLE
 
-#include <rtl/logging.h>
+#include <sys/logging.h>
 
 bool syslog_start_record(const log_source_t *source, log_level_t level) {
   return (bool)syscall_invoke2((uint32_t)source, level,
@@ -143,7 +143,7 @@ bool syslog_set_filter(const char *filter, size_t filter_len) {
 // boot_image.h
 // =============================================================================
 
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 
 bool boot_image_check(const boot_image_t *image) {
   return (bool)syscall_invoke1((uint32_t)image, SYSCALL_BOOT_IMAGE_CHECK);
@@ -181,7 +181,7 @@ void reboot_device(void) {
 // notify.h
 // =============================================================================
 
-#include <sys/notify.h>
+#include <io/notify.h>
 
 void notify_send(notification_event_t event) {
   syscall_invoke1((uint32_t)event, SYSCALL_NOTIFY_SEND);
@@ -293,7 +293,7 @@ secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 // unit_properties.h
 // =============================================================================
 
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 void unit_properties_get(unit_properties_t *props) {
   syscall_invoke1((uint32_t)props, SYSCALL_UNIT_PROPERTIES_GET);
@@ -567,7 +567,7 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
 // translations.h
 // =============================================================================
 
-#include <util/translations.h>
+#include <io/translations.h>
 
 bool translations_write(const uint8_t *data, uint32_t offset, uint32_t len) {
   return (bool)syscall_invoke3((uint32_t)data, offset, len,
@@ -589,7 +589,7 @@ uint32_t translations_area_bytesize(void) {
 // rng.h
 // =============================================================================
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 
 void rng_fill_buffer(void *buffer, size_t buffer_size) {
   syscall_invoke2((uint32_t)buffer, buffer_size, SYSCALL_RNG_FILL_BUFFER);
@@ -604,7 +604,7 @@ bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
 // fwutils.h
 // =============================================================================
 
-#include <util/fwutils.h>
+#include <sec/fwutils.h>
 
 secbool firmware_get_vendor(char *buff, size_t buff_size) {
   return syscall_invoke2((uint32_t)buff, buff_size,
@@ -742,7 +742,7 @@ void nrf_reboot(void) { syscall_invoke0(SYSCALL_NRF_REBOOT); }
 
 #ifdef USE_POWER_MANAGER
 
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 
 pm_status_t pm_suspend(wakeup_flags_t *wakeup_reason) {
   return (pm_status_t)syscall_invoke1((uint32_t)wakeup_reason,
@@ -771,7 +771,7 @@ bool pm_get_events(pm_event_t *events) {
 
 #ifdef USE_HW_JPEG_DECODER
 
-#include <gfx/jpegdec.h>
+#include <io/jpegdec.h>
 
 bool jpegdec_open(void) { return (bool)syscall_invoke0(SYSCALL_JPEGDEC_OPEN); }
 
@@ -804,7 +804,7 @@ bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
 
 #ifdef USE_DMA2D
 
-#include <gfx/dma2d_bitblt.h>
+#include <io/dma2d_bitblt.h>
 
 void dma2d_wait(void) { syscall_invoke0(SYSCALL_DMA2D_WAIT); }
 

@@ -20,18 +20,18 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/notify.h>
+#include <io/notify.h>
+#include <sec/image.h>
+#include <sys/flash_utils.h>
 #include <sys/systick.h>
 #include <sys/types.h>
-#include <util/flash_utils.h>
-#include <util/image.h>
 
 #ifdef USE_STORAGE_HWKEY
 #include <sec/secret.h>
 #endif
 
 #ifdef USE_BACKUP_RAM
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #endif
 
 #ifdef USE_BLE

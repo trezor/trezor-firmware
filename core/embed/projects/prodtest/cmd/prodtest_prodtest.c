@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <util/fwutils.h>
+#include <sec/fwutils.h>
 
 #ifdef USE_BLE
 #include "prodtest_ble.h"

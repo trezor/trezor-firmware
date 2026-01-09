@@ -62,8 +62,8 @@ def configure(
     ]
 
     if "boot_ucb" in features_wanted:
-        sources += ["embed/util/image/boot_header.c"]
-        sources += ["embed/util/image/boot_ucb.c"]
+        sources += ["embed/sec/image/boot_header.c"]
+        sources += ["embed/sec/image/boot_ucb.c"]
         defines += [("USE_BOOT_UCB", "1")]
         features_available.append("boot_ucb")
 
@@ -99,15 +99,15 @@ def configure(
             ("USE_BUTTON", "1"),
         ]
 
-    sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
-    paths += ["embed/io/i2c_bus/inc"]
+    sources += ["embed/sys/i2c_bus/stm32u5/i2c_bus.c"]
+    paths += ["embed/sys/i2c_bus/inc"]
     defines += [("USE_I2C", "1")]
 
     sources += [
-        "embed/sys/backup_ram/backup_ram_crc.c",
-        "embed/sys/backup_ram/stm32u5/backup_ram.c",
+        "embed/sec/backup_ram/backup_ram_crc.c",
+        "embed/sec/backup_ram/stm32u5/backup_ram.c",
     ]
-    paths += ["embed/sys/backup_ram/inc"]
+    paths += ["embed/sec/backup_ram/inc"]
     defines += [("USE_BACKUP_RAM", "1")]
 
     if "rtc" in features_wanted:
@@ -234,8 +234,8 @@ def configure(
 
     if "hw_revision" in features_wanted:
         defines += [("USE_HW_REVISION", "1")]
-        paths += ["embed/util/hw_revision/inc"]
-        sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
+        paths += ["embed/sec/hw_revision/inc"]
+        sources += ["embed/sec/hw_revision/stm32/hw_revision.c"]
 
     defines += [
         "FRAMEBUFFER",
@@ -253,12 +253,12 @@ def configure(
         "USE_DMA2D",
     ]
     features_available.append("dma2d")
-    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+    sources += ["embed/io/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
     defines += ["USE_HW_JPEG_DECODER"]
     features_available.append("hw_jpeg_decoder")
     sources += [
-        "embed/gfx/jpegdec/stm32u5/jpegdec.c",
+        "embed/io/gfx/jpegdec/stm32u5/jpegdec.c",
     ]
 
     defines += [
@@ -270,31 +270,35 @@ def configure(
     ]
 
     if ("pmic" in features_wanted) or ("power_manager" in features_wanted):
-        sources += ["embed/sys/power_manager/npm1300/npm1300.c"]
-        paths += ["embed/sys/power_manager/inc"]
+        sources += ["embed/io/power_manager/npm1300/npm1300.c"]
+        paths += ["embed/io/power_manager/inc"]
         defines += ["USE_PMIC"]
         features_available.append("pmic")
 
     if "suspend" in features_wanted:
         sources += [
-            "embed/sys/suspend/stm32u5/suspend.c",
-            "embed/sys/suspend/stm32u5/suspend_io.c",
+            "embed/io/suspend/stm32u5/suspend.c",
+            "embed/io/suspend/stm32u5/suspend_io.c",
+            "embed/sec/suspend/stm32u5/suspend_io.c",
         ]
-        paths += ["embed/sys/suspend/inc"]
+        paths += [
+            "embed/io/suspend/inc",
+            "embed/sec/suspend/inc",
+        ]
         defines += [("USE_SUSPEND", "1")]
 
     if "power_manager" in features_wanted:
         sources += [
-            "embed/sys/power_manager/stm32u5/power_manager.c",
-            "embed/sys/power_manager/stm32u5/power_monitoring.c",
-            "embed/sys/power_manager/stm32u5/power_states.c",
-            "embed/sys/power_manager/fuel_gauge/fuel_gauge.c",
-            "embed/sys/power_manager/fuel_gauge/battery_model.c",
-            "embed/sys/power_manager/stwlc38/stwlc38.c",
-            "embed/sys/power_manager/stwlc38/stwlc38_patching.c",
-            "embed/sys/power_manager/power_manager_poll.c",
+            "embed/io/power_manager/stm32u5/power_manager.c",
+            "embed/io/power_manager/stm32u5/power_monitoring.c",
+            "embed/io/power_manager/stm32u5/power_states.c",
+            "embed/io/power_manager/fuel_gauge/fuel_gauge.c",
+            "embed/io/power_manager/fuel_gauge/battery_model.c",
+            "embed/io/power_manager/stwlc38/stwlc38.c",
+            "embed/io/power_manager/stwlc38/stwlc38_patching.c",
+            "embed/io/power_manager/power_manager_poll.c",
         ]
-        paths += ["embed/sys/power_manager/inc"]
+        paths += ["embed/io/power_manager/inc"]
         defines += [("USE_POWER_MANAGER", "1")]
         features_available.append("power_manager")
 

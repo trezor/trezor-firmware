@@ -22,11 +22,11 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <io/suspend.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
 #include <sys/rtc.h>
 #include <sys/rtc_scheduler.h>
-#include <sys/suspend.h>
 
 // RTC driver structure
 typedef struct {

@@ -20,12 +20,12 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/notify.h>
+#include <io/notify.h>
+#include <sec/image.h>
 #include <sys/types.h>
-#include <util/image.h>
 
 #ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 #endif
 
 #ifdef USE_BLE

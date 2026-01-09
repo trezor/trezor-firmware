@@ -49,7 +49,7 @@ def configure(
         paths += ["embed/io/display/inc"]
         defines += [("USE_DISPLAY", "1")]
 
-        sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+        sources += ["embed/io/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
         sources += [
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
@@ -75,11 +75,11 @@ def configure(
     defines += [("USE_SDRAM", "1")]
 
     if "input" in features_wanted:
-        sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]
+        sources += ["embed/sys/i2c_bus/stm32f4/i2c_bus.c"]
         sources += ["embed/io/touch/stmpe811/stmpe811.c"]
         sources += ["embed/io/touch/stmpe811/touch.c"]
         sources += ["embed/io/touch/touch_poll.c"]
-        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/sys/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         defines += [

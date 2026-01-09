@@ -21,26 +21,26 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
-#include <sec/rng.h>
+#include <io/rsod.h>
+#include <sec/board_capabilities.h>
+#include <sec/option_bytes.h>
 #include <sec/secret.h>
 #include <sys/bootutils.h>
+#include <sys/flash.h>
 #include <sys/reset_flags.h>
+#include <sys/rng.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/board_capabilities.h>
-#include <util/flash.h>
-#include <util/option_bytes.h>
-#include <util/rsod.h>
 
 #ifdef USE_BOOT_UCB
-#include <util/boot_header.h>
-#include <util/boot_ucb.h>
+#include <sec/boot_header.h>
+#include <sec/boot_ucb.h>
 #else
-#include <util/image.h>
+#include <sec/image.h>
 #endif
 
 #ifdef USE_PMIC
-#include <sys/pmic.h>
+#include <io/pmic.h>
 #endif
 
 #ifdef USE_PVD
@@ -52,7 +52,7 @@
 #endif
 
 #ifdef USE_TAMPER
-#include <sys/tamper.h>
+#include <sec/tamper.h>
 #endif
 
 #include "bld_version.h"

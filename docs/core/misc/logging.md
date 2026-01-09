@@ -58,7 +58,7 @@ To enable logging from C code, the `.c` file must:
 Example in `my_module.c`:
 
 ```c
-#include <rtl/logging.h>
+#include <sys/logging.h>
 
 LOG_DECLARE(my_module)
 ```

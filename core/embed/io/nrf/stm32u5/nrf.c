@@ -23,16 +23,16 @@
 #include <trezor_rtl.h>
 
 #include <io/nrf.h>
-#include <sec/rng.h>
+#include <io/tsqueue.h>
 #include <sec/secret_keys.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/rng.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
-#include <util/tsqueue.h>
 
 #ifdef USE_SUSPEND
-#include <sys/suspend.h>
+#include <io/suspend.h>
 #endif
 
 #include "../crc8.h"

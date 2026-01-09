@@ -20,20 +20,20 @@
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 
+#include <sec/board_capabilities.h>
+#include <sec/boot_image.h>
+#include <sec/option_bytes.h>
 #include <sec/random_delays.h>
 #include <sec/secure_aes.h>
+#include <sec/unit_properties.h>
 #include <sys/bootutils.h>
+#include <sys/flash.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
-#include <util/board_capabilities.h>
-#include <util/boot_image.h>
-#include <util/flash.h>
-#include <util/option_bytes.h>
-#include <util/unit_properties.h>
 
 #ifdef USE_BACKUP_RAM
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #endif
 
 #ifdef USE_OPTIGA
@@ -41,7 +41,7 @@
 #endif
 
 #ifdef USE_TAMPER
-#include <sys/tamper.h>
+#include <sec/tamper.h>
 #endif
 
 #ifdef USE_TROPIC

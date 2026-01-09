@@ -17,9 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sec/unit_properties.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
-#include <util/unit_properties.h>
 
 #include "common.h"
 

@@ -2,21 +2,21 @@
 
 #include <trezor_model.h>
 
-#include <gfx/gfx_bitblt.h>
 #include <io/display.h>
 #include <io/display_utils.h>
+#include <io/gfx_bitblt.h>
+#include <io/translations.h>
 #include <io/usb.h>
-#include <rtl/logging.h>
 #include <rtl/secbool.h>
+#include <sys/flash.h>
 #include <sys/irq.h>
+#include <sys/logging.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
-#include <util/flash.h>
-#include <util/translations.h>
 #include "rust_types.h"
 
 #ifdef USE_HW_JPEG_DECODER
-#include <gfx/jpegdec.h>
+#include <io/jpegdec.h>
 #endif
 
 #ifdef USE_BLE
@@ -44,11 +44,11 @@
 #endif
 
 #ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 #endif
 
 #ifdef USE_SUSPEND
-#include <sys/suspend.h>
+#include <io/suspend.h>
 #endif
 
 #ifdef USE_STORAGE

@@ -22,8 +22,8 @@
 #include <trezor_types.h>
 
 #include <io/nrf.h>
+#include <io/tsqueue.h>
 #include <sys/systimer.h>
-#include <util/tsqueue.h>
 
 #define TX_QUEUE_SIZE (8)
 

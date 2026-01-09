@@ -22,23 +22,23 @@
 
 #include <io/display.h>
 #include <io/display_utils.h>
+#include <io/notify.h>
+#include <io/rsod.h>
 #include <io/usb_config.h>
+#include <sec/image.h>
 #include <sec/random_delays.h>
+#include <sec/rsod_special.h>
 #include <sec/secret.h>
+#include <sec/unit_properties.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
-#include <sys/notify.h>
+#include <sys/flash_utils.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/types.h>
-#include <util/flash_utils.h>
-#include <util/image.h>
-#include <util/rsod.h>
-#include <util/rsod_special.h>
-#include <util/unit_properties.h>
 
 #ifdef USE_BOOT_UCB
-#include <util/boot_ucb.h>
+#include <sec/boot_ucb.h>
 #endif
 
 #ifdef USE_PVD
@@ -48,7 +48,7 @@
 #include <io/touch.h>
 #endif
 #ifdef USE_BACKUP_RAM
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #endif
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -66,13 +66,13 @@
 #include <sys/rtc.h>
 #endif
 #ifdef USE_TAMPER
-#include <sys/tamper.h>
+#include <sec/tamper.h>
 #endif
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
 #ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 #endif
 #ifdef USE_HAPTIC
 #include <io/haptic.h>

@@ -66,10 +66,10 @@ def configure(
         paths += ["embed/io/backlight/inc"]
 
     if "input" in features_wanted:
-        sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]
+        sources += ["embed/sys/i2c_bus/stm32f4/i2c_bus.c"]
         sources += ["embed/io/touch/ft6x36/ft6x36.c"]
         sources += ["embed/io/touch/touch_poll.c"]
-        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/sys/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         defines += [("USE_TOUCH", "1")]
@@ -94,7 +94,7 @@ def configure(
 
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D"]
-        sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+        sources += ["embed/io/gfx/bitblt/stm32/dma2d_bitblt.c"]
         sources += [
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
         ]

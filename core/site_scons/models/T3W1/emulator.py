@@ -119,23 +119,23 @@ def configure(
         defines += [("USE_BLE", "1")]
 
     sources += [
-        "embed/sys/power_manager/unix/power_manager.c",
+        "embed/io/power_manager/unix/power_manager.c",
     ]
     defines += [("USE_POWER_MANAGER", "1")]
-    paths += ["embed/sys/power_manager/inc"]
+    paths += ["embed/io/power_manager/inc"]
     features_available.append("power_manager")
 
-    paths += ["embed/sys/suspend/inc"]
+    paths += ["embed/io/suspend/inc"]
 
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 
-    sources += ["embed/util/flash/stm32u5/flash_layout.c"]
+    sources += ["embed/sys/flash/stm32u5/flash_layout.c"]
 
     defines += ["USE_HW_JPEG_DECODER"]
     features_available.append("hw_jpeg_decoder")
     sources += [
-        "embed/gfx/jpegdec/unix/jpegdec.c",
+        "embed/io/gfx/jpegdec/unix/jpegdec.c",
     ]
 
     if "serial_number" in features_wanted:

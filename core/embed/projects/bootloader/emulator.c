@@ -6,11 +6,11 @@
 #include <SDL.h>
 
 #include <io/display.h>
-#include <rtl/logging.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
-#include <util/flash.h>
-#include <util/flash_otp.h>
+#include <sys/flash.h>
+#include <sys/flash_otp.h>
+#include <sys/logging.h>
 #include "bootui.h"
 
 #ifdef LOCKABLE_BOOTLOADER

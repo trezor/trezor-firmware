@@ -54,8 +54,8 @@ def configure(
     ]
 
     if "boot_ucb" in features_wanted:
-        sources += ["embed/util/image/boot_header.c"]
-        sources += ["embed/util/image/boot_ucb.c"]
+        sources += ["embed/sec/image/boot_header.c"]
+        sources += ["embed/sec/image/boot_ucb.c"]
         defines += [("USE_BOOT_UCB", "1")]
         features_available.append("boot_ucb")
 
@@ -77,11 +77,11 @@ def configure(
         paths += ["embed/io/backlight/inc"]
 
     if "input" in features_wanted:
-        sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
+        sources += ["embed/sys/i2c_bus/stm32u5/i2c_bus.c"]
         sources += ["embed/io/touch/sitronix/touch.c"]
         sources += ["embed/io/touch/sitronix/sitronix.c"]
         sources += ["embed/io/touch/touch_poll.c"]
-        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/sys/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         defines += [
@@ -103,7 +103,7 @@ def configure(
 
     defines += ["USE_DMA2D"]
     features_available.append("dma2d")
-    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+    sources += ["embed/io/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
     defines += [
         "USE_HASH_PROCESSOR=1",

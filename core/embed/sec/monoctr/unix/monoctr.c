@@ -21,7 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <sec/monoctr.h>
-#include <util/flash_otp.h>
+#include <sys/flash_otp.h>
 
 static int get_otp_block(monoctr_type_t type) {
   switch (type) {

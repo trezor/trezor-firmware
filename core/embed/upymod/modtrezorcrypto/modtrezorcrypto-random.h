@@ -21,7 +21,7 @@
 
 #include "embed/upymod/trezorobj.h"
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include "rand.h"
 
 /// package: trezorcrypto.random

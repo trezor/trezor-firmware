@@ -68,14 +68,14 @@ def configure(
         defines += [("USE_SBU", "1")]
 
     if "optiga" in features_wanted:
-        sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
+        sources += ["embed/sys/i2c_bus/stm32u5/i2c_bus.c"]
         sources += ["embed/sec/optiga/stm32/optiga_hal.c"]
         sources += ["embed/sec/optiga/optiga.c"]
         sources += ["embed/sec/optiga/optiga_commands.c"]
         sources += ["embed/sec/optiga/optiga_init.c"]
         sources += ["embed/sec/optiga/optiga_transport.c"]
         sources += ["vendor/trezor-crypto/hash_to_curve.c"]
-        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/sys/i2c_bus/inc"]
         paths += ["embed/sec/optiga/inc"]
         features_available.append("optiga")
         defines += [
@@ -90,8 +90,8 @@ def configure(
 
     if "hw_revision" in features_wanted:
         defines += [("USE_HW_REVISION", "1")]
-        paths += ["embed/util/hw_revision/inc"]
-        sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
+        paths += ["embed/sec/hw_revision/inc"]
+        sources += ["embed/sec/hw_revision/stm32/hw_revision.c"]
 
     defines += [
         ("USE_HASH_PROCESSOR", "1"),

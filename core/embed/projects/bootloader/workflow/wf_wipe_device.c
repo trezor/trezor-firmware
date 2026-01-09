@@ -20,15 +20,15 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/notify.h>
-#include <util/flash_utils.h>
+#include <io/notify.h>
+#include <sys/flash_utils.h>
 
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
 
 #ifdef USE_BACKUP_RAM
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #endif
 
 #ifdef USE_RGB_LED

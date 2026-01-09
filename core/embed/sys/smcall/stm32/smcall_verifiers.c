@@ -388,7 +388,7 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 
 void rng_fill_buffer__verified(void *buffer, size_t buffer_size) {
   if (!probe_write_access(buffer, buffer_size)) {

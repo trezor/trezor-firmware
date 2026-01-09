@@ -2,14 +2,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/terminal.h>
+#include <io/terminal.h>
 
 #include <io/display.h>
+#include <sec/image.h>
 #include <sys/bootutils.h>
+#include <sys/flash.h>
+#include <sys/flash_utils.h>
 #include <sys/systick.h>
-#include <util/flash.h>
-#include <util/flash_utils.h>
-#include <util/image.h>
 
 #include "memzero.h"
 

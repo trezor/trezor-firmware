@@ -33,7 +33,7 @@
 #endif
 
 #ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 #endif
 
 #include "embed/upymod/trezorobj.h"

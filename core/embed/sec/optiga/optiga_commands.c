@@ -27,9 +27,9 @@
 
 #include <trezor_rtl.h>
 
-#include <rtl/logging.h>
 #include <sec/optiga_commands.h>
 #include <sec/optiga_transport.h>
+#include <sys/logging.h>
 #include "der.h"
 #include "ecdsa.h"
 #include "hmac.h"

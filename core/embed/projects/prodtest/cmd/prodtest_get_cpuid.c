@@ -21,7 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <util/cpuid.h>
+#include <sys/cpuid.h>
 
 static void prodtest_get_cpuid(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {

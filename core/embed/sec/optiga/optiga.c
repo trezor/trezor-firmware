@@ -25,7 +25,7 @@
 #include <sec/optiga.h>
 #include <sec/optiga_commands.h>
 #include <sec/optiga_transport.h>
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
 #include <sec/storage.h>
 #include "ecdsa.h"

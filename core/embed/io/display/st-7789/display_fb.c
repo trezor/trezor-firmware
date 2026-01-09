@@ -21,8 +21,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/gfx_bitblt.h>
 #include <io/display.h>
+#include <io/gfx_bitblt.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
 

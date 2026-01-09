@@ -39,7 +39,7 @@ void bootargs_get_args(boot_args_t *args) {
 // boot_image.h
 // =============================================================================
 
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 
 bool boot_image_check(const boot_image_t *image) {
   return (bool)smcall_invoke1((uint32_t)image, SMCALL_BOOT_IMAGE_CHECK);
@@ -53,7 +53,7 @@ void boot_image_replace(const boot_image_t *image) {
 // board_capabilities.h
 // =============================================================================
 
-#include <util/board_capabilities.h>
+#include <sec/board_capabilities.h>
 
 uint32_t get_board_name(void) { return smcall_invoke0(SMCALL_GET_BOARD_NAME); }
 
@@ -109,7 +109,7 @@ void reboot_with_rsod(const systask_postmortem_t *pminfo) {
 
 #ifdef USE_SUSPEND
 
-#include <sys/suspend_io.h>
+#include <sec/suspend_io.h>
 
 void suspend_cpu(void) { smcall_invoke0(SMCALL_SUSPEND_CPU); }
 
@@ -127,7 +127,7 @@ void resume_secure_drivers(void) {
 // unit_properties.h
 // =============================================================================
 
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 void unit_properties_get(unit_properties_t *props) {
   smcall_invoke1((uint32_t)props, SMCALL_UNIT_PROPERTIES_GET);
@@ -313,7 +313,7 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
 // rng.h
 // =============================================================================
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 
 void rng_fill_buffer(void *buffer, size_t buffer_size) {
   smcall_invoke2((uint32_t)buffer, buffer_size, SMCALL_RNG_FILL_BUFFER);
@@ -328,7 +328,7 @@ bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
 // fwutils.h
 // =============================================================================
 
-#include <util/fwutils.h>
+#include <sec/fwutils.h>
 
 secbool firmware_get_vendor(char *buff, size_t buff_size) {
   return smcall_invoke2((uint32_t)buff, buff_size, SMCALL_FIRMWARE_GET_VENDOR);
@@ -375,7 +375,7 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
 
 #ifdef USE_BACKUP_RAM
 
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 
 uint16_t backup_ram_search(uint16_t min_key) {
   return (bool)smcall_invoke1(min_key, SMCALL_BACKUP_RAM_SEARCH);

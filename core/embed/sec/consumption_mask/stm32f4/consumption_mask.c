@@ -20,8 +20,8 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <sec/rng.h>
 #include <sys/mpu.h>
+#include <sys/rng.h>
 
 #ifdef KERNEL_MODE
 

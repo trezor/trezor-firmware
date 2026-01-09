@@ -8,8 +8,8 @@
 
 #include <io/display.h>
 #include <sec/secret.h>
-#include <util/flash.h>
-#include <util/flash_otp.h>
+#include <sys/flash.h>
+#include <sys/flash_otp.h>
 
 int prodtest_main(void);
 

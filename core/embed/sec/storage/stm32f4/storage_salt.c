@@ -22,9 +22,9 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/rng.h>
+#include <sys/flash_otp.h>
 #include <sys/mpu.h>
-#include <util/flash_otp.h>
+#include <sys/rng.h>
 
 #include "stm32f4xx_ll_utils.h"
 

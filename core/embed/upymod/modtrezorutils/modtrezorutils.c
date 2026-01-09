@@ -26,7 +26,7 @@
 #include "py/objstr.h"
 #include "py/runtime.h"
 
-#include <util/image.h>
+#include <sec/image.h>
 #include "version.h"
 
 #if MICROPY_PY_TREZORUTILS
@@ -35,14 +35,14 @@
 #include "embed/upymod/trezorobj.h"
 
 #include <io/usb.h>
-#include <rtl/logging.h>
+#include <sys/logging.h>
 
+#include <io/notify.h>
+#include <rtl/scm_revision.h>
+#include <sec/fwutils.h>
 #include <sec/secret_keys.h>
+#include <sec/unit_properties.h>
 #include <sys/bootutils.h>
-#include <sys/notify.h>
-#include <util/fwutils.h>
-#include <util/scm_revision.h>
-#include <util/unit_properties.h>
 #include "blake2s.h"
 #include "memzero.h"
 

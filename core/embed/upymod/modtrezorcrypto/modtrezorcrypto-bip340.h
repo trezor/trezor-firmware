@@ -19,7 +19,7 @@
 
 #if USE_SECP256K1_ZKP
 
-#include <sec/rng.h>
+#include <sys/rng.h>
 
 #include "py/objstr.h"
 

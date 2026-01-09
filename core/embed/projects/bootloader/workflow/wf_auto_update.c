@@ -21,8 +21,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/notify.h>
-#include <util/image.h>
+#include <io/notify.h>
+#include <sec/image.h>
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"

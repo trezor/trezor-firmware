@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include <util/image.h>
+#include <sec/image.h>
 
 #include "protob/protob.h"
 #include "workflow_common.h"

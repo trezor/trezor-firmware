@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include <io/i2c_bus.h>
+#include <sys/i2c_bus.h>
 
 typedef struct {
   uint16_t TouchDetected;

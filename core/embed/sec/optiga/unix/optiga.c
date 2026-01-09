@@ -21,8 +21,8 @@
 
 #include <sec/optiga.h>
 #include <sec/optiga_common.h>
-#include <sec/rng.h>
 #include <sec/storage.h>
+#include <sys/rng.h>
 
 #include "ecdsa.h"
 #include "nist256p1.h"

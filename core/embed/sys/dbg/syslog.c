@@ -19,10 +19,10 @@
 
 #include <trezor_rtl.h>
 
-#include <rtl/logging.h>
 #include <rtl/printf.h>
 #include <rtl/strutils.h>
 #include <sys/dbg_console.h>
+#include <sys/logging.h>
 #include <sys/systick.h>
 
 #ifndef TREZOR_EMULATOR

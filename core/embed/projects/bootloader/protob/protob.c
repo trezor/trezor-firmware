@@ -23,15 +23,15 @@
 #include <pb.h>
 #include <pb_decode.h>
 
-#include <util/image.h>
-#include <util/unit_properties.h>
+#include <sec/image.h>
+#include <sec/unit_properties.h>
 
 #if LOCKABLE_BOOTLOADER
 #include <sec/secret.h>
 #endif
 
 #ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 #endif
 
 #include "memzero.h"

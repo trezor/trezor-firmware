@@ -37,14 +37,14 @@
 #include <unistd.h>
 
 #include <io/display.h>
+#include <io/rsod.h>
 #include <io/usb_config.h>
 #include <sec/secret.h>
+#include <sec/unit_properties.h>
+#include <sys/flash.h>
+#include <sys/flash_otp.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
-#include <util/flash.h>
-#include <util/flash_otp.h>
-#include <util/rsod.h>
-#include <util/unit_properties.h>
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
 #include "genhdr/mpversion.h"

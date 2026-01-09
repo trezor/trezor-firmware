@@ -29,7 +29,7 @@
 
 #include <io/display.h>
 #include <io/unix/sdl_display.h>
-#include <rtl/logging.h>
+#include <sys/logging.h>
 
 #include <SDL.h>
 #include <SDL_image.h>

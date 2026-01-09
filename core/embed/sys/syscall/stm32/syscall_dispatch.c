@@ -23,22 +23,22 @@
 
 #include <trezor_rtl.h>
 
-#include <gfx/dma2d_bitblt.h>
 #include <io/display.h>
+#include <io/dma2d_bitblt.h>
+#include <io/notify.h>
+#include <io/translations.h>
 #include <io/usb.h>
-#include <sec/rng.h>
+#include <sec/fwutils.h>
+#include <sec/rng_strong.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
+#include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
-#include <sys/notify.h>
 #include <sys/sysevent.h>
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/fwutils.h>
-#include <util/translations.h>
-#include <util/unit_properties.h>
 
 #ifdef USE_BLE
 #include <io/ble.h>
@@ -57,7 +57,7 @@
 #endif
 
 #ifdef USE_HW_JPEG_DECODER
-#include <gfx/jpegdec.h>
+#include <io/jpegdec.h>
 #endif
 
 #ifdef USE_OPTIGA
@@ -65,7 +65,7 @@
 #endif
 
 #ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 #endif
 
 #ifdef USE_RGB_LED
@@ -81,7 +81,7 @@
 #endif
 
 #if PRODUCTION || BOOTLOADER_QA
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 #endif
 
 #include "syscall_context.h"

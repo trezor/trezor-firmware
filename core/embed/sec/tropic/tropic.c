@@ -20,7 +20,7 @@
 #include <trezor_rtl.h>
 #include <trezor_types.h>
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
 #include <sys/systick.h>

@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include <util/image.h>
+#include <sec/image.h>
 
 #include "rust_ui_bootloader.h"
 

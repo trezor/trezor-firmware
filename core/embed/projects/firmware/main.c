@@ -34,13 +34,13 @@
 #include "ports/stm32/pendsv.h"
 
 #include <io/display.h>
-#include <rtl/logging.h>
+#include <io/notify.h>
+#include <io/rsod.h>
+#include <sec/boot_image.h>
 #include <sys/linker_utils.h>
-#include <sys/notify.h>
+#include <sys/logging.h>
 #include <sys/systask.h>
 #include <sys/system.h>
-#include <util/boot_image.h>
-#include <util/rsod.h>
 #include "rust_ui_common.h"
 
 #include <blake2s.h>

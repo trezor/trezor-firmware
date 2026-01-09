@@ -21,7 +21,7 @@
 
 #include <io/ble.h>
 #include <io/unix/sock.h>
-#include <rtl/logging.h>
+#include <sys/logging.h>
 #include <sys/sysevent_source.h>
 
 #include <arpa/inet.h>
