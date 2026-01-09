@@ -22,6 +22,7 @@
 
 #include <gfx/gfx_bitblt.h>
 #include <io/display.h>
+#include <rtl/logging.h>
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
@@ -170,7 +171,8 @@ void drivers_init() {
 #endif
 
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status = haptic_init();
+  (void)status;
 #endif
 
 #ifdef USE_BLE

@@ -26,6 +26,7 @@
 #include <io/usb.h>
 #include <io/usb_config.h>
 #include <rtl/cli.h>
+#include <rtl/logging.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <util/board_capabilities.h>
@@ -182,7 +183,9 @@ static void drivers_init(void) {
   sbu_init();
 #endif
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status;
+  status = haptic_init();
+  (void)status;
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();

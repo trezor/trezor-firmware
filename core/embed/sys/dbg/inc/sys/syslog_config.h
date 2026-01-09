@@ -44,12 +44,20 @@
 #define SYSLOG_bootutils_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
+#ifndef SYSLOG_suspend_MAX_LOG_LEVEL
+#define SYSLOG_suspend_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
 #ifndef SYSLOG_touch_driver_MAX_LOG_LEVEL
 #define SYSLOG_touch_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
 #ifndef SYSLOG_display_driver_MAX_LOG_LEVEL
 #define SYSLOG_display_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
+#ifndef SYSLOG_haptic_driver_MAX_LOG_LEVEL
+#define SYSLOG_haptic_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
 #ifndef SYSLOG_ble_driver_MAX_LOG_LEVEL

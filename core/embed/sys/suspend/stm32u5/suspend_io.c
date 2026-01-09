@@ -21,9 +21,12 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <rtl/logging.h>
 #include <sys/irq.h>
 #include <sys/suspend_io.h>
 #include <sys/systick.h>
+
+LOG_DECLARE(suspend);
 
 #ifdef USE_BLE
 #include <io/ble.h>
@@ -156,7 +159,11 @@ void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
   touch_init();
 #endif
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status;
+  status = haptic_init();
+  if (ts_error(status)) {
+    LOG_ERR("haptic driver init failed");
+  }
 #endif
 #ifdef USE_RGB_LED
   rgb_led_resume(&wakeup_params->rgb_led);

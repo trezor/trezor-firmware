@@ -398,28 +398,27 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #ifdef USE_HAPTIC
     case SYSCALL_HAPTIC_SET_ENABLED: {
       bool enabled = (args[0] != 0);
-      haptic_set_enabled(enabled);
+      ts_t status = haptic_set_enabled(enabled);
+      args[0] = ts_code(status);
     } break;
 
     case SYSCALL_HAPTIC_GET_ENABLED: {
       args[0] = haptic_get_enabled();
     } break;
 
-    case SYSCALL_HAPTIC_TEST: {
-      uint16_t duration_ms = (uint16_t)args[0];
-      args[0] = haptic_test(duration_ms);
-    } break;
-
     case SYSCALL_HAPTIC_PLAY: {
       haptic_effect_t effect = (haptic_effect_t)args[0];
-      args[0] = haptic_play(effect);
+      ts_t status = haptic_play(effect);
+      args[0] = ts_code(status);
     } break;
 
     case SYSCALL_HAPTIC_PLAY_CUSTOM: {
       int8_t amplitude_pct = (int8_t)args[0];
       uint16_t duration_ms = (uint16_t)args[1];
-      args[0] = haptic_play_custom(amplitude_pct, duration_ms);
+      ts_t status = haptic_play_custom(amplitude_pct, duration_ms);
+      args[0] = ts_code(status);
     } break;
+
 #endif
 
 #ifdef USE_OPTIGA

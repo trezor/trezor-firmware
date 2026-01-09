@@ -23,6 +23,7 @@
 #include <io/display.h>
 #include <io/display_utils.h>
 #include <io/usb_config.h>
+#include <rtl/logging.h>
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sys/bootargs.h>
@@ -161,7 +162,8 @@ static secbool boot_sequence(void) {
 #endif
 
 #ifdef USE_HAPTIC
-  haptic_init();
+  ts_t status = haptic_init();
+  (void)status;
 #endif
 
 #ifdef USE_RTC

@@ -118,7 +118,7 @@ def configure(
 
     if "haptic" in features_wanted:
         sources += [
-            "embed/io/haptic/drv2625/drv2625.c",
+            "embed/io/haptic/drv262x/drv262x.c",
         ]
         paths += ["embed/io/haptic/inc"]
         features_available.append("haptic")
