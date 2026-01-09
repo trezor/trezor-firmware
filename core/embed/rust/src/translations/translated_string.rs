@@ -8,11 +8,19 @@ use crate::micropython::qstr::Qstr;
 
 impl TranslatedString {
     pub(super) fn untranslated(self) -> &'static str {
-        // DATA_MAP must be sorted by its first element
-        match Self::DATA_MAP.binary_search_by(|(key, _)| key.cmp(&self)) {
-            Ok(index) => Self::DATA_MAP[index].1,
-            Err(_) => fatal_error!("not found"),
+        for blob in Self::BLOBS {
+            // `offsets` must be sorted by its first element
+            let index = match blob.offsets.binary_search_by(|(key, _)| key.cmp(&self)) {
+                Ok(index) => index,
+                Err(_) => continue,
+            };
+            let start_offset = index
+                .checked_sub(1)
+                .map_or(0, |prev_index| blob.offsets[prev_index].1);
+            let end_offset = blob.offsets[index].1;
+            return &blob.text[start_offset.into()..end_offset.into()];
         }
+        fatal_error!("not found");
     }
 
     pub fn translate<'a>(self, source: Option<&'a Translations>) -> &'a str {
@@ -81,16 +89,23 @@ mod test {
     }
 
     #[test]
-    fn test_sorted_data_map() {
-        for pair in TranslatedString::DATA_MAP.windows(2) {
-            assert!(pair[0].0 < pair[1].0)
+    fn test_sorted_offsets() {
+        for blob in TranslatedString::BLOBS {
+            for pair in blob.offsets.windows(2) {
+                assert!(pair[0].0 < pair[1].0)
+            }
         }
     }
 
     #[test]
-    fn test_lookup_data_map() {
-        for &(name, value) in TranslatedString::DATA_MAP {
-            assert_eq!(name.untranslated(), value);
+    fn test_lookup_untranslated_text() {
+        for blob in TranslatedString::BLOBS {
+            let mut prev_offset = 0;
+            for &(name, offset) in blob.offsets {
+                let expected = &blob.text[prev_offset.into()..offset.into()];
+                assert_eq!(name.untranslated(), expected);
+                prev_offset = offset;
+            }
         }
     }
 

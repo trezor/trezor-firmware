@@ -6,6 +6,11 @@
 #[cfg(feature = "micropython")]
 use crate::micropython::qstr::Qstr;
 
+pub struct StringsBlob {
+    pub text: &'static str,
+    pub offsets: &'static [(TranslatedString, u16)],
+}
+
 #[derive(Copy, Clone, FromPrimitive, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 #[cfg_attr(test, derive(Debug))]
@@ -1562,3524 +1567,4652 @@ pub enum TranslatedString {
     words__note = 1174,  // "Note"
 }
 
-impl TranslatedString {
-    pub const DATA_MAP: &'static [(Self, &'static str)] = &[
-            (Self::addr_mismatch__contact_support_at, "Please contact Trezor support at"),
-            (Self::addr_mismatch__key_mismatch, "Key mismatch?"),
-            (Self::addr_mismatch__mismatch, "Address mismatch?"),
-            (Self::addr_mismatch__support_url, "trezor.io/support"),
-            (Self::addr_mismatch__wrong_derivation_path, "Wrong derivation path for selected account."),
-            (Self::addr_mismatch__xpub_mismatch, "XPUB mismatch?"),
-            (Self::address__public_key, "Public key"),
-            (Self::address__title_cosigner, "Cosigner"),
-            (Self::address__title_receive_address, "Receive address"),
-            (Self::address__title_yours, "Yours"),
-            (Self::address_details__derivation_path_colon, "Derivation path:"),
-            (Self::address_details__title_receive_address, "Receive address"),
-            (Self::address_details__title_receiving_to, "Receiving to"),
-            (Self::authenticate__confirm_template, "Allow connected app to check the authenticity of your {0}?"),
-            (Self::authenticate__header, "Authenticate device"),
-            (Self::auto_lock__change_template, "Auto-lock Trezor after {0} of inactivity?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::auto_lock__title, "Auto-lock delay"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::auto_lock__title, "Auto-lock delay"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::auto_lock__title, "Auto-lock delay"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::auto_lock__title, "Auto-lock"),
-            (Self::backup__can_back_up_anytime, "You can back up your Trezor once, at any time."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
-            #[cfg(feature = "layout_delizia")]
-            (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::backup__it_should_be_backed_up, "Back up your new wallet now."),
-            (Self::backup__it_should_be_backed_up_now, "It should be backed up now!"),
-            (Self::backup__new_wallet_created, "Wallet created.\n"),
-            (Self::backup__new_wallet_successfully_created, "Wallet created successfully."),
-            (Self::backup__recover_anytime, "You can use your backup to recover your wallet at any time."),
-            (Self::backup__title_backup_wallet, "Back up wallet"),
-            (Self::backup__title_skip, "Skip backup"),
-            (Self::backup__want_to_skip, "Are you sure you want to skip the backup?"),
-            (Self::bitcoin__commitment_data, "Commitment data"),
-            (Self::bitcoin__confirm_locktime, "Confirm locktime"),
-            (Self::bitcoin__create_proof_of_ownership, "Do you want to create a proof of ownership?"),
-            (Self::bitcoin__high_mining_fee_template, "The mining fee of\n{0}\nis unexpectedly high."),
-            (Self::bitcoin__locktime_no_effect, "Locktime is set but will have no effect."),
-            (Self::bitcoin__locktime_set_to, "Locktime set to"),
-            (Self::bitcoin__locktime_set_to_blockheight, "Locktime set to blockheight"),
-            (Self::bitcoin__lot_of_change_outputs, "A lot of change-outputs."),
-            (Self::bitcoin__multiple_accounts, "Multiple accounts"),
-            (Self::bitcoin__new_fee_rate, "New fee rate:"),
-            (Self::bitcoin__simple_send_of, "Simple send of"),
-            (Self::bitcoin__ticket_amount, "Ticket amount"),
-            (Self::bitcoin__title_confirm_details, "Confirm details"),
-            (Self::bitcoin__title_finalize_transaction, "Finalize transaction"),
-            (Self::bitcoin__title_high_mining_fee, "High mining fee"),
-            (Self::bitcoin__title_meld_transaction, "Meld transaction"),
-            (Self::bitcoin__title_modify_amount, "Modify amount"),
-            (Self::bitcoin__title_payjoin, "Payjoin"),
-            (Self::bitcoin__title_proof_of_ownership, "Proof of ownership"),
-            (Self::bitcoin__title_purchase_ticket, "Purchase ticket"),
-            (Self::bitcoin__title_update_transaction, "Update transaction"),
-            (Self::bitcoin__unknown_path, "Unknown path"),
-            (Self::bitcoin__unknown_transaction, "Unknown transaction"),
-            (Self::bitcoin__unusually_high_fee, "Unusually high fee."),
-            (Self::bitcoin__unverified_external_inputs, "The transaction contains unverified external inputs."),
-            (Self::bitcoin__valid_signature, "The signature is valid."),
-            (Self::bitcoin__voting_rights, "Voting rights to"),
-            (Self::buttons__abort, "Abort"),
-            (Self::buttons__access, "Access"),
-            (Self::buttons__again, "Again"),
-            (Self::buttons__allow, "Allow"),
-            (Self::buttons__back, "Back"),
-            (Self::buttons__back_up, "Back up"),
-            (Self::buttons__cancel, "Cancel"),
-            (Self::buttons__change, "Change"),
-            (Self::buttons__check, "Check"),
-            (Self::buttons__check_again, "Check again"),
-            (Self::buttons__close, "Close"),
-            (Self::buttons__confirm, "Confirm"),
-            (Self::buttons__continue, "Continue"),
-            (Self::buttons__details, "Details"),
-            (Self::buttons__enable, "Enable"),
-            (Self::buttons__enter, "Enter"),
-            (Self::buttons__enter_share, "Enter share"),
-            (Self::buttons__export, "Export"),
-            (Self::buttons__format, "Format"),
-            (Self::buttons__go_back, "Go back"),
-            (Self::buttons__hold_to_confirm, "Hold to confirm"),
-            (Self::buttons__info, "Info"),
-            (Self::buttons__install, "Install"),
-            (Self::buttons__more_info, "More info"),
-            (Self::buttons__ok_i_understand, "Ok, I understand"),
-            (Self::buttons__purchase, "Purchase"),
-            (Self::buttons__quit, "Quit"),
-            (Self::buttons__restart, "Restart"),
-            (Self::buttons__retry, "Retry"),
-            (Self::buttons__select, "Select"),
-            (Self::buttons__set, "Set"),
-            (Self::buttons__show_all, "Show all"),
-            (Self::buttons__show_details, "Show details"),
-            (Self::buttons__show_words, "Show words"),
-            (Self::buttons__skip, "Skip"),
-            (Self::buttons__try_again, "Try again"),
-            (Self::buttons__turn_off, "Turn off"),
-            (Self::buttons__turn_on, "Turn on"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__addr_base, "Base"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__addr_enterprise, "Enterprise"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__addr_legacy, "Legacy"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__addr_pointer, "Pointer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__addr_reward, "Reward"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__address_no_staking, "address - no staking rewards."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__amount_burned_decimals_unknown, "Amount burned (decimals unknown):"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__amount_minted_decimals_unknown, "Amount minted (decimals unknown):"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__amount_sent_decimals_unknown, "Amount sent (decimals unknown):"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__anonymous_pool, "Pool has no metadata (anonymous pool)"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__asset_fingerprint, "Asset fingerprint:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__auxiliary_data_hash, "Auxiliary data hash:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__block, "Block"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__catalyst, "Catalyst"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__certificate, "Certificate"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__change_output, "Change output"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__check_all_items, "Check all items carefully."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__choose_level_of_details, "Choose level of details:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__collateral_input_id, "Collateral input ID:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__collateral_input_index, "Collateral input index:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__collateral_output_contains_tokens, "The collateral return output contains tokens."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__collateral_return, "Collateral return"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirm_signing_stake_pool, "Confirm signing the stake pool registration as an owner."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirm_transaction, "Confirm transaction"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirming_a_multisig_transaction, "Confirming a multisig transaction."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirming_a_plutus_transaction, "Confirming a Plutus transaction."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirming_pool_registration, "Confirming pool registration as owner."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirming_transaction, "Confirming a transaction."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__cost, "Cost"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__credential_mismatch, "Credential doesn't match payment credential."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__datum_hash, "Datum hash:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__delegating_to, "Delegating to:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__for_account_and_index_template, "for account {0} and index {1}:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__for_account_template, "for account {0}:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__for_key_hash, "for key hash:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__for_script, "for script:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__inline_datum, "Inline datum"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__input_id, "Input ID:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__input_index, "Input index:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__intro_text_change, "The following address is a change address. Its"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__intro_text_owned_by_device, "The following address is owned by this device. Its"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__intro_text_registration_payment, "The vote key registration payment address is owned by this device. Its"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__key_hash, "key hash"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__margin, "Margin"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__multisig_path, "multi-sig path"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__nested_scripts_template, "Contains {0} nested scripts."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__network, "Network:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__no_output_tx, "Transaction has no outputs, network cannot be verified."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__nonce, "Nonce:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__other, "other"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__path, "path"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__pledge, "Pledge"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__pointer, "pointer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__policy_id, "Policy ID"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__pool_metadata_hash, "Pool metadata hash:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__pool_metadata_url, "Pool metadata url:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__pool_owner, "Pool owner:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__pool_reward_account, "Pool reward account:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__reference_input_id, "Reference input ID:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__reference_input_index, "Reference input index:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__reference_script, "Reference script"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__required_signer, "Required signer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__reward, "reward"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__reward_address, "Address is a reward address."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__reward_eligibility_warning, "Warning: The address is not a payment address, it is not eligible for rewards."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__rewards_go_to, "Rewards go to:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script, "script"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_all, "All"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_any, "Any"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_data_hash, "Script data hash:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_hash, "Script hash:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_invalid_before, "Invalid before"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_invalid_hereafter, "Invalid hereafter"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_key, "Key"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_n_of_k, "N of K"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__script_reward, "script reward"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__sending, "Sending"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__show_simple, "Show Simple"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__sign_tx_path_template, "Sign transaction with {0}"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__stake_delegation, "Stake delegation"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__stake_deregistration, "Stake key deregistration"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__stake_pool_registration, "Stakepool registration"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__stake_pool_registration_pool_id, "Stake pool registration\nPool ID:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__stake_registration, "Stake key registration"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__staking_key_for_account, "Staking key for account"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__to_pool, "to pool:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__token_minting_path, "token minting path"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__total_collateral, "Total collateral:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__transaction, "Transaction"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__transaction_contains_minting_or_burning, "The transaction contains minting or burning of tokens."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__transaction_contains_script_address_no_datum, "The following transaction output contains a script address, but does not contain a datum."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__transaction_id, "Transaction ID:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__transaction_no_collateral_input, "The transaction contains no collateral inputs. Plutus script will not be able to run."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__transaction_no_script_data_hash, "The transaction contains no script data hash. Plutus script will not be able to run."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__transaction_output_contains_tokens, "The following transaction output contains tokens."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__ttl, "TTL:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__unknown_collateral_amount, "Unknown collateral amount."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__unusual_path, "Path is unusual."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__valid_since, "Valid since:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__verify_script, "Verify script"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__vote_key_registration, "Vote key registration (CIP-36)"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__vote_public_key, "Vote public key:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__voting_purpose, "Voting purpose:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__warning, "Warning"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__weight, "Weight:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__withdrawal_for_address_template, "Confirm withdrawal for {0} address:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__x_of_y_signatures_template, "Requires {0} out of {1} signatures."),
-            (Self::coinjoin__access_account, "Access your coinjoin account?"),
-            (Self::coinjoin__do_not_disconnect, "Do not disconnect your Trezor!"),
-            (Self::coinjoin__max_mining_fee, "Max mining fee"),
-            (Self::coinjoin__max_rounds, "Max rounds"),
-            (Self::coinjoin__title, "Authorize coinjoin"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::coinjoin__title_progress, "Coinjoin in progress"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::coinjoin__title_progress, "Coinjoin in progress"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::coinjoin__title_progress, "Coinjoin in progress"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::coinjoin__title_progress, "Coinjoin in progress..."),
-            (Self::coinjoin__waiting_for_others, "Waiting for others"),
-            (Self::confirm_total__fee_rate_colon, "Fee rate:"),
-            (Self::confirm_total__sending_from_account, "Sending from account:"),
-            (Self::confirm_total__title_fee, "Fee info"),
-            (Self::confirm_total__title_sending_from, "Sending from"),
-            #[cfg(feature = "debug")]
-            (Self::debug__loading_seed, "Loading seed"),
-            #[cfg(feature = "debug")]
-            (Self::debug__loading_seed_not_recommended, "Loading private seed is not recommended."),
-            (Self::device_name__change_template, "Change device name to {0}?"),
-            (Self::device_name__title, "Device name"),
-            (Self::entropy__send, "Do you really want to send entropy?"),
-            (Self::entropy__title_confirm, "Confirm entropy"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__about_to_sign_template, "You are about to sign {0}."),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__about_to_sign_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__about_to_sign_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__about_to_sign_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__action_name, "Action Name:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__action_name, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__action_name, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__action_name, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__arbitrary_data, "Arbitrary data"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__arbitrary_data, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__arbitrary_data, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__arbitrary_data, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__buy_ram, "Buy RAM"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__buy_ram, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__buy_ram, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__buy_ram, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__bytes, "Bytes:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__bytes, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__bytes, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__bytes, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__cancel_vote, "Cancel vote"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__cancel_vote, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__cancel_vote, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__cancel_vote, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__checksum, "Checksum:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__checksum, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__checksum, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__checksum, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__code, "Code:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__code, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__code, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__code, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__contract, "Contract:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__contract, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__contract, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__contract, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__cpu, "CPU:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__cpu, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__cpu, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__cpu, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__creator, "Creator:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__creator, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__creator, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__creator, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__delegate, "Delegate"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__delegate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__delegate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__delegate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__delete_auth, "Delete Auth"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__delete_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__delete_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__delete_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__from, "From:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__from, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__from, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__from, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__link_auth, "Link Auth"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__link_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__link_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__link_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__memo, "Memo"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__memo, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__memo, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__memo, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__name, "Name:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__name, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__name, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__name, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__net, "NET:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__net, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__net, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__net, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__new_account, "New account"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__new_account, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__new_account, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__new_account, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__owner, "Owner:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__owner, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__owner, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__owner, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__parent, "Parent:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__parent, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__parent, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__parent, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__payer, "Payer:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__payer, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__payer, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__payer, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__permission, "Permission:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__permission, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__permission, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__permission, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__proxy, "Proxy:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__proxy, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__proxy, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__proxy, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__receiver, "Receiver:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__receiver, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__receiver, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__receiver, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__refund, "Refund"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__refund, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__refund, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__refund, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__requirement, "Requirement:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__requirement, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__requirement, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__requirement, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__sell_ram, "Sell RAM"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__sell_ram, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__sell_ram, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__sell_ram, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__sender, "Sender:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__sender, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__sender, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__sender, ""),
-            (Self::send__sign_transaction, "Sign transaction"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__threshold, "Threshold:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__threshold, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__threshold, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__threshold, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__to, "To:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__to, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__to, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__to, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__transfer, "Transfer:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__transfer, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__transfer, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__transfer, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__type, "Type:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__type, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__type, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__type, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__undelegate, "Undelegate"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__undelegate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__undelegate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__undelegate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__unlink_auth, "Unlink Auth"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__unlink_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__unlink_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__unlink_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__update_auth, "Update Auth"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__update_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__update_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__update_auth, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__vote_for_producers, "Vote for producers"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__vote_for_producers, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__vote_for_producers, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__vote_for_producers, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__vote_for_proxy, "Vote for proxy"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__vote_for_proxy, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__vote_for_proxy, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__vote_for_proxy, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::eos__voter, "Voter:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::eos__voter, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::eos__voter, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::eos__voter, ""),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__amount_sent, "Amount sent:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__data_size_template, "Size: {0} bytes"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__gas_limit, "Gas limit"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__gas_price, "Gas price"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__max_gas_price, "Max fee per gas"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__name_and_version, "Name and version"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__new_contract, "New contract will be deployed"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__no_message_field, "No message field"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__priority_fee, "Max priority fee"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__show_full_array, "Show full array"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__show_full_domain, "Show full domain"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__show_full_message, "Show full message"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__show_full_struct, "Show full struct"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__sign_eip712, "Really sign EIP-712 typed data?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_input_data, "Input data"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_confirm_domain, "Confirm domain"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_confirm_message, "Confirm message"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_confirm_struct, "Confirm struct"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_confirm_typed_data, "Confirm typed data"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_signing_address, "Signing address"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__units_template, "{0} units"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__unknown_token, "Unknown token"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__valid_signature, "The signature is valid."),
-            (Self::experimental_mode__enable, "Enable experimental features?"),
-            (Self::experimental_mode__only_for_dev, "Only for development and beta testing!"),
-            (Self::experimental_mode__title, "Experimental mode"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__already_registered, "Already registered"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__device_already_registered, "This device is already registered with this application."),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__device_already_registered_with_template, "This device is already registered with {0}."),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__device_not_registered, "This device is not registered with this application."),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::fido__does_not_belong, "The credential you are trying to import does\nnot belong to this authenticator."),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::fido__does_not_belong, "The credential you are trying to import does\nnot belong to this authenticator."),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::fido__does_not_belong, "The credential you are trying to import does\nnot belong to this authenticator."),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::fido__does_not_belong, "The credential you are trying to import does not belong to this authenticator."),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::fido__erase_credentials, "erase all credentials?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::fido__erase_credentials, "erase all credentials?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::fido__erase_credentials, "erase all credentials?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::fido__erase_credentials, "Delete all of the saved credentials?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__export_credentials, "Export information about the credentials stored on this device?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__not_registered, "Not registered"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__not_registered_with_template, "This device is not registered with\n{0}."),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__please_enable_pin_protection, "Please enable PIN protection."),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_authenticate, "FIDO2 authenticate"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_import_credential, "Import credential"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_list_credentials, "List credentials"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_register, "FIDO2 register"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_remove_credential, "Remove credential"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_reset, "FIDO2 reset"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_u2f_auth, "U2F authenticate"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_u2f_register, "U2F register"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_verify_user, "FIDO2 verify user"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__unable_to_verify_user, "Unable to verify user."),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__wanna_erase_credentials, "Do you really want to erase all credentials?"),
-            (Self::firmware_update__title, "Update firmware"),
-            (Self::firmware_update__title_fingerprint, "FW fingerprint"),
-            (Self::homescreen__click_to_connect, "Click to Connect"),
-            (Self::homescreen__click_to_unlock, "Click to Unlock"),
-            (Self::homescreen__title_backup_failed, "Backup failed"),
-            (Self::homescreen__title_backup_needed, "Backup needed"),
-            (Self::homescreen__title_coinjoin_authorized, "Coinjoin authorized"),
-            (Self::homescreen__title_experimental_mode, "Experimental mode"),
-            (Self::homescreen__title_no_usb_connection, "No USB connection"),
-            (Self::homescreen__title_pin_not_set, "PIN not set"),
-            (Self::homescreen__title_seedless, "Seedless"),
-            (Self::homescreen__title_set, "Change wallpaper"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::inputs__back, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::inputs__back, "BACK"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::inputs__back, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::inputs__back, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::inputs__cancel, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::inputs__cancel, "CANCEL"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::inputs__cancel, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::inputs__cancel, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::inputs__delete, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::inputs__delete, "DELETE"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::inputs__delete, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::inputs__delete, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::inputs__enter, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::inputs__enter, "ENTER"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::inputs__enter, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::inputs__enter, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::inputs__return, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::inputs__return, "RETURN"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::inputs__return, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::inputs__return, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::inputs__show, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::inputs__show, "SHOW"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::inputs__show, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::inputs__show, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::inputs__space, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::inputs__space, "SPACE"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::inputs__space, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::inputs__space, ""),
-            (Self::joint__title, "Joint transaction"),
-            (Self::joint__to_the_total_amount, "To the total amount:"),
-            (Self::joint__you_are_contributing, "You are contributing:"),
-            (Self::language__change_to_template, "Change language to {0}?"),
-            (Self::language__changed, "Language changed successfully"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::language__progress, "Changing language"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::language__progress, "Changing language"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::language__progress, "Changing language"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::language__progress, "Changing language..."),
-            (Self::language__title, "Language settings"),
-            (Self::lockscreen__tap_to_connect, "Tap to connect"),
-            (Self::lockscreen__tap_to_unlock, "Tap to unlock"),
-            (Self::lockscreen__title_locked, "Locked"),
-            (Self::lockscreen__title_not_connected, "Not connected"),
-            (Self::misc__decrypt_value, "Decrypt value"),
-            (Self::misc__encrypt_value, "Encrypt value"),
-            (Self::misc__title_suite_labeling, "Suite labeling"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::modify_amount__decrease_amount, "Decrease amount by:"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::modify_amount__decrease_amount, "Decrease amount by:"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::modify_amount__decrease_amount, "Decrease amount by:"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::modify_amount__decrease_amount, "Decrease amount by"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::modify_amount__increase_amount, "Increase amount by:"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::modify_amount__increase_amount, "Increase amount by:"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::modify_amount__increase_amount, "Increase amount by:"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::modify_amount__increase_amount, "Increase amount by"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::modify_amount__new_amount, "New amount:"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::modify_amount__new_amount, "New amount:"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::modify_amount__new_amount, "New amount:"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::modify_amount__new_amount, "New amount"),
-            (Self::modify_amount__title, "Modify amount"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::modify_fee__decrease_fee, "Decrease fee by:"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::modify_fee__decrease_fee, "Decrease fee by:"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::modify_fee__decrease_fee, "Decrease fee by:"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::modify_fee__decrease_fee, "Decrease fee by"),
-            (Self::modify_fee__fee_rate, "Fee rate:"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::modify_fee__increase_fee, "Increase fee by:"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::modify_fee__increase_fee, "Increase fee by:"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::modify_fee__increase_fee, "Increase fee by:"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::modify_fee__increase_fee, "Increase fee by"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::modify_fee__new_transaction_fee, "New transaction fee:"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::modify_fee__new_transaction_fee, "New transaction fee:"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::modify_fee__new_transaction_fee, "New transaction fee:"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::modify_fee__new_transaction_fee, "New transaction fee"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::modify_fee__no_change, "Fee did not change.\n"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::modify_fee__no_change, "Fee did not change.\n"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::modify_fee__no_change, "Fee did not change.\n"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::modify_fee__no_change, "Fee did not change"),
-            (Self::modify_fee__title, "Modify fee"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::modify_fee__transaction_fee, "Transaction fee:"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::modify_fee__transaction_fee, "Transaction fee:"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::modify_fee__transaction_fee, "Transaction fee:"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::modify_fee__transaction_fee, "Transaction fee"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__confirm_export, "Confirm export"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__confirm_ki_sync, "Confirm ki sync"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__confirm_refresh, "Confirm refresh"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__confirm_unlock_time, "Confirm unlock time"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__hashing_inputs, "Hashing inputs"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__payment_id, "Payment ID"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__postprocessing, "Postprocessing..."),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__processing, "Processing..."),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__processing_inputs, "Processing inputs"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__processing_outputs, "Processing outputs"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__signing, "Signing..."),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__signing_inputs, "Signing inputs"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__unlock_time_set_template, "Unlock time for this transaction is set to {0}"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__wanna_export_tx_der, "Do you really want to export tx_der\nfor tx_proof?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__wanna_export_tx_key, "Do you really want to export tx_key?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__wanna_export_watchkey, "Do you really want to export watch-only credentials?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__wanna_start_refresh, "Do you really want to\nstart refresh?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::monero__wanna_sync_key_images, "Do you really want to\nsync key images?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__absolute, "absolute"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__absolute, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__absolute, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__absolute, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__activate, "Activate"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__activate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__activate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__activate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__add, "Add"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__add, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__add, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__add, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_action, "Confirm action"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_action, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_action, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_action, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_address, "Confirm address"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_address, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_address, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_address, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_creation_fee, "Confirm creation fee"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_creation_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_creation_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_creation_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_mosaic, "Confirm mosaic"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_multisig_fee, "Confirm multisig fee"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_multisig_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_multisig_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_multisig_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_namespace, "Confirm namespace"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_payload, "Confirm payload"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_payload, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_payload, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_payload, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_properties, "Confirm properties"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_properties, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_properties, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_properties, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_rental_fee, "Confirm rental fee"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_rental_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_rental_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_rental_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__confirm_transfer_of, "Confirm transfer of"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__confirm_transfer_of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__confirm_transfer_of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__confirm_transfer_of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__convert_account_to_multisig, "Convert account to multisig account?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__convert_account_to_multisig, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__convert_account_to_multisig, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__convert_account_to_multisig, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__cosign_transaction_for, "Cosign transaction for"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__cosign_transaction_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__cosign_transaction_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__cosign_transaction_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__cosignatory, " cosignatory"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__cosignatory, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__cosignatory, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__cosignatory, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__create_mosaic, "Create mosaic"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__create_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__create_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__create_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__create_namespace, "Create namespace"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__create_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__create_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__create_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__deactivate, "Deactivate"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__deactivate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__deactivate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__deactivate, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__decrease, "Decrease"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__decrease, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__decrease, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__decrease, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__description, "Description:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__description, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__description, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__description, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__divisibility_and_levy_cannot_be_shown, "Divisibility and levy cannot be shown for unknown mosaics"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__divisibility_and_levy_cannot_be_shown, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__divisibility_and_levy_cannot_be_shown, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__divisibility_and_levy_cannot_be_shown, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__encrypted, "Encrypted"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__encrypted, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__encrypted, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__encrypted, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__final_confirm, "Final confirm"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__final_confirm, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__final_confirm, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__final_confirm, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__immutable, "immutable"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__immutable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__immutable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__immutable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__increase, "Increase"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__increase, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__increase, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__increase, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__initial_supply, "Initial supply:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__initial_supply, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__initial_supply, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__initial_supply, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__initiate_transaction_for, "Initiate transaction for"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__initiate_transaction_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__initiate_transaction_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__initiate_transaction_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__levy_divisibility, "Levy divisibility:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__levy_divisibility, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__levy_divisibility, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__levy_divisibility, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__levy_fee, "Levy fee:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__levy_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__levy_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__levy_fee, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__levy_fee_of, "Confirm mosaic levy fee of"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__levy_fee_of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__levy_fee_of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__levy_fee_of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__levy_mosaic, "Levy mosaic:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__levy_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__levy_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__levy_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__levy_namespace, "Levy namespace:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__levy_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__levy_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__levy_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__levy_recipient, "Levy recipient:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__levy_recipient, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__levy_recipient, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__levy_recipient, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__levy_type, "Levy type:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__levy_type, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__levy_type, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__levy_type, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__modify_supply_for, "Modify supply for"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__modify_supply_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__modify_supply_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__modify_supply_for, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__modify_the_number_of_cosignatories_by, "Modify the number of cosignatories by "),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__modify_the_number_of_cosignatories_by, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__modify_the_number_of_cosignatories_by, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__modify_the_number_of_cosignatories_by, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__mutable, "mutable"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__mutable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__mutable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__mutable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__of, "of"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__of, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__percentile, "percentile"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__percentile, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__percentile, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__percentile, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__raw_units_template, "{0} raw units"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__raw_units_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__raw_units_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__raw_units_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__remote_harvesting, " remote harvesting?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__remote_harvesting, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__remote_harvesting, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__remote_harvesting, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__remove, "Remove"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__remove, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__remove, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__remove, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__set_minimum_cosignatories_to, "Set minimum cosignatories to "),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__set_minimum_cosignatories_to, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__set_minimum_cosignatories_to, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__set_minimum_cosignatories_to, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__sign_tx_fee_template, "Sign this transaction\nand pay {0}\nfor network fee?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__sign_tx_fee_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__sign_tx_fee_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__sign_tx_fee_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__supply_change, "Supply change"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__supply_change, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__supply_change, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__supply_change, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__supply_units_template, "{0} supply by {1} whole units?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__supply_units_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__supply_units_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__supply_units_template, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__transferable, "Transferable?"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__transferable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__transferable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__transferable, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__under_namespace, "under namespace"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__under_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__under_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__under_namespace, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__unencrypted, "Unencrypted"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__unencrypted, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__unencrypted, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__unencrypted, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::nem__unknown_mosaic, "Unknown mosaic!"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::nem__unknown_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::nem__unknown_mosaic, ""),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::nem__unknown_mosaic, ""),
-            (Self::passphrase__access_wallet, "Access passphrase wallet?"),
-            (Self::passphrase__always_on_device, "Always enter your passphrase on Trezor?"),
-            (Self::passphrase__from_host_not_shown, "Passphrase provided by connected app will be used but will not be displayed due to the device settings."),
-            (Self::passphrase__wallet, "Passphrase wallet"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::passphrase__hide, "Hide passphrase coming from app?"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::passphrase__hide, "Hide passphrase coming from app?"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::passphrase__hide, "Hide passphrase coming from app?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::passphrase__hide, "Hide your passphrase on Trezor entered on connected app?"),
-            (Self::passphrase__next_screen_will_show_passphrase, "The next screen shows your passphrase."),
-            (Self::passphrase__please_enter, "Please enter your passphrase."),
-            (Self::passphrase__revoke_on_device, "Do you want to revoke the passphrase on device setting?"),
-            (Self::passphrase__title_confirm, "Confirm passphrase"),
-            (Self::passphrase__title_enter, "Enter passphrase"),
-            (Self::passphrase__title_hide, "Hide passphrase"),
-            (Self::passphrase__title_settings, "Passphrase settings"),
-            (Self::passphrase__title_source, "Passphrase source"),
-            (Self::passphrase__turn_off, "Turn off passphrase protection?"),
-            (Self::passphrase__turn_on, "Turn on passphrase protection?"),
-            (Self::pin__change, "Change PIN"),
-            (Self::pin__changed, "PIN changed."),
-            (Self::pin__cursor_will_change, "Position of the cursor will change between entries for enhanced security."),
-            (Self::pin__diff_from_wipe_code, "The new PIN must be different from your wipe code."),
-            (Self::pin__disabled, "PIN protection\nturned off."),
-            (Self::pin__enabled, "PIN protection\nturned on."),
-            (Self::pin__enter, "Enter PIN"),
-            (Self::pin__enter_new, "Enter new PIN"),
-            (Self::pin__entered_not_valid, "The PIN you have entered is not valid."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::pin__info, "PIN will be required to access this device."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::pin__info, "PIN will be required to access this device."),
-            #[cfg(feature = "layout_delizia")]
-            (Self::pin__info, "PIN will be required to access this device."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::pin__info, "The PIN will be required to access this device."),
-            (Self::pin__invalid_pin, "Invalid PIN"),
-            (Self::pin__last_attempt, "Last attempt"),
-            (Self::pin__mismatch, "Entered PINs do not match!"),
-            (Self::pin__pin_mismatch, "PIN mismatch"),
-            (Self::pin__please_check_again, "Please check again."),
-            (Self::pin__reenter_new, "Re-enter new PIN"),
-            (Self::pin__reenter_to_confirm, "Please re-enter PIN to confirm."),
-            (Self::pin__should_be_long, "PIN should be 4-50 digits long."),
-            (Self::pin__title_check_pin, "Check PIN"),
-            (Self::pin__title_settings, "PIN settings"),
-            (Self::pin__title_wrong_pin, "Wrong PIN"),
-            (Self::pin__tries_left, "tries left"),
-            (Self::pin__turn_off, "Are you sure you want to turn off PIN protection?"),
-            (Self::pin__turn_on, "Turn on PIN protection?"),
-            (Self::pin__wrong_pin, "Wrong PIN"),
-            (Self::plurals__contains_x_keys, "key|keys"),
-            (Self::plurals__lock_after_x_hours, "hour|hours"),
-            (Self::plurals__lock_after_x_milliseconds, "millisecond|milliseconds"),
-            (Self::plurals__lock_after_x_minutes, "minute|minutes"),
-            (Self::plurals__lock_after_x_seconds, "second|seconds"),
-            (Self::plurals__sign_x_actions, "action|actions"),
-            (Self::plurals__transaction_of_x_operations, "operation|operations"),
-            (Self::plurals__x_groups_needed, "group|groups"),
-            (Self::plurals__x_shares_needed, "share|shares"),
-            (Self::progress__authenticity_check, "Checking authenticity..."),
-            (Self::progress__done, "Done"),
-            (Self::progress__loading_transaction, "Loading transaction..."),
-            (Self::progress__locking_device, "Locking the device..."),
-            (Self::progress__one_second_left, "1 second left"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::progress__please_wait, "Please wait"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::progress__please_wait, "Please wait"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::progress__please_wait, "Please wait"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::progress__please_wait, "Please wait..."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::storage_msg__processing, "Processing"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::storage_msg__processing, "Processing"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::storage_msg__processing, "Processing"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::storage_msg__processing, "Processing..."),
-            (Self::progress__refreshing, "Refreshing..."),
-            (Self::progress__signing_transaction, "Signing transaction..."),
-            (Self::progress__syncing, "Syncing..."),
-            (Self::progress__x_seconds_left_template, "{0} seconds left"),
-            (Self::reboot_to_bootloader__restart, "Trezor will restart in bootloader mode."),
-            (Self::reboot_to_bootloader__title, "Go to bootloader"),
-            (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
-            (Self::recovery__cancel_dry_run, "Cancel backup check"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__check_dry_run, "Check your backup?"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__check_dry_run, "Check your backup?"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__check_dry_run, "Check your backup?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__check_dry_run, "Let's do a wallet backup check."),
-            (Self::recovery__cursor_will_change, "Position of the cursor will change between entries for enhanced security."),
-            (Self::recovery__dry_run_bip39_valid_match, "The entered wallet backup is valid and matches the one in this device."),
-            (Self::recovery__dry_run_bip39_valid_mismatch, "The entered wallet backup is valid but does not match the one in the device."),
-            (Self::recovery__dry_run_slip39_valid_match, "The entered recovery shares are valid and match what is currently in the device."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__dry_run_slip39_valid_mismatch, "The entered recovery shares are valid but do not match what is currently in the device."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__dry_run_slip39_valid_mismatch, "The entered recovery shares are valid but do not match what is currently in the device."),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__dry_run_slip39_valid_mismatch, "The entered wallet backup is valid but doesn't match the one on this device."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__dry_run_slip39_valid_mismatch, "The entered wallet backup is valid but doesn't match the one on this device."),
-            (Self::recovery__enter_any_share, "Enter any share"),
-            (Self::recovery__enter_backup, "Enter your backup."),
-            (Self::recovery__enter_different_share, "Enter a different share."),
-            (Self::recovery__enter_share_from_diff_group, "Enter share from a different group."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__group_num_template, "Group {0}"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__group_num_template, "Group {0}"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__group_num_template, "Group {0}"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__group_num_template, "Group #{0}"),
-            (Self::recovery__group_threshold_reached, "Group threshold reached."),
-            (Self::recovery__invalid_wallet_backup_entered, "Invalid wallet backup entered."),
-            (Self::recovery__invalid_share_entered, "Invalid recovery share entered."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__more_shares_needed, "More shares needed"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__more_shares_needed, "More shares needed"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__more_shares_needed, "More shares needed"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__more_shares_needed, "More shares needed."),
-            (Self::recovery__num_of_words, "Select the number of words in your backup."),
-            (Self::recovery__only_first_n_letters, "You'll only have to select the first 2-4 letters of each word."),
-            (Self::recovery__progress_will_be_lost, "All progress will be lost."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__share_already_entered, "Share already entered"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__share_already_entered, "Share already entered"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__share_already_entered, "Share already entered"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__share_already_entered, "Share already entered."),
-            (Self::recovery__share_from_another_multi_share_backup, "You have entered a share from a different backup."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__share_num_template, "Share {0}"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__share_num_template, "Share {0}"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__share_num_template, "Share {0}"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__share_num_template, "Share #{0}"),
-            (Self::recovery__title, "Recover wallet"),
-            (Self::recovery__title_cancel_dry_run, "Cancel backup check"),
-            (Self::recovery__title_cancel_recovery, "Cancel recovery"),
-            (Self::recovery__title_dry_run, "Backup check"),
-            (Self::recovery__title_recover, "Recover wallet"),
-            (Self::recovery__title_remaining_shares, "Remaining shares"),
-            (Self::recovery__type_word_x_of_y_template, "Type word {0} of {1}"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__wallet_recovered, "Wallet recovery completed"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__wallet_recovered, "Wallet recovery completed"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__wallet_recovered, "Wallet recovery completed"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__wallet_recovered, "Wallet recovery completed."),
-            (Self::recovery__wanna_cancel_dry_run, "Are you sure you want to cancel the backup check?"),
-            (Self::recovery__wanna_cancel_recovery, "Are you sure you want to cancel the recovery process?"),
-            (Self::recovery__word_count_template, "({0} words)"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__word_x_of_y_template, "Word {0}\nof {1}"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__x_more_items_starting_template_plural, "You need {count} more {plural} starting"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered."),
-            (Self::recovery__you_have_entered, "You have entered"),
-            (Self::reset__advanced_group_threshold_info, "The group threshold specifies the number of groups required to recover your wallet."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__all_x_of_y_template, "all {0} of {1} shares"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__all_x_of_y_template, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__all_x_of_y_template, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__all_x_of_y_template, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__any_x_of_y_template, "any {0} of {1} shares"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__any_x_of_y_template, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__any_x_of_y_template, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__any_x_of_y_template, ""),
-            (Self::reset__button_create, "Create wallet"),
-            (Self::reset__button_recover, "Recover wallet"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__by_continuing, "By continuing you agree to Trezor Company's terms and conditions."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__by_continuing, "By continuing you agree to Trezor Company's terms and conditions."),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__by_continuing, "By continuing you agree to Trezor Company's terms and conditions."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__by_continuing, "By continuing, you agree to Trezor Company's Terms of Use."),
-            (Self::reset__check_backup_title, "Check backup"),
-            (Self::reset__check_group_share_title_template, "Check g{0} - share {1}"),
-            (Self::reset__check_wallet_backup_title, "Check wallet backup"),
-            (Self::reset__check_share_title_template, "Check share #{0}"),
-            (Self::reset__continue_with_next_share, "Continue with the next share."),
-            (Self::reset__continue_with_share_template, "Continue with share #{0}."),
-            (Self::reset__finished_verifying_group_template, "You have finished verifying your recovery shares for group {0}."),
-            (Self::reset__finished_verifying_wallet_backup, "You have finished verifying your wallet backup."),
-            (Self::reset__finished_verifying_shares, "You have finished verifying your recovery shares."),
-            (Self::reset__group_description, "A group is made up of recovery shares."),
-            (Self::reset__group_info, "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds."),
-            (Self::reset__group_share_checked_successfully_template, "Group {0} - Share {1} checked successfully."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__group_share_title_template, "Group {0} - share {1}"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__group_share_title_template, "Group {0} - share {1}"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__group_share_title_template, "Group {0} - share {1}"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__group_share_title_template, "Group #{0} - Share #{1}"),
-            (Self::reset__more_info_at, "More info at"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__need_all_share_template, "For recovery you need all {0} of the shares."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__need_all_share_template, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__need_all_share_template, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__need_all_share_template, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__need_any_share_template, "For recovery you need any {0} of the shares."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__need_any_share_template, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__need_any_share_template, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__need_any_share_template, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__needed_to_form_a_group, "needed to form a group. "),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__needed_to_form_a_group, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__needed_to_form_a_group, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__needed_to_form_a_group, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__needed_to_recover_your_wallet, "needed to recover your wallet. "),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__needed_to_recover_your_wallet, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__needed_to_recover_your_wallet, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__needed_to_recover_your_wallet, ""),
-            (Self::reset__never_make_digital_copy, "Never put your backup anywhere digital."),
-            (Self::reset__num_of_share_holders_template, "{0} people or locations will each hold one share."),
-            (Self::reset__num_of_shares_advanced_info_template, "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__num_of_shares_basic_info_template, "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__num_of_shares_basic_info_template, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__num_of_shares_basic_info_template, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__num_of_shares_basic_info_template, ""),
-            (Self::reset__num_shares_for_group_template, "The required number of shares to form Group {0}."),
-            (Self::reset__number_of_shares_info, "= total number of unique word lists used for wallet backup."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__one_share, "1 share"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__one_share, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__one_share, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__one_share, ""),
-            (Self::reset__only_one_share_will_be_created, "Only one share will be created."),
-            (Self::reset__recovery_wallet_backup_title, "Wallet backup"),
-            (Self::reset__recovery_share_title_template, "Recovery share #{0}"),
-            (Self::reset__required_number_of_groups, "The required number of groups for recovery."),
-            (Self::reset__select_correct_word, "Select the correct word for each position."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__select_word_template, "Select {0} word"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__select_word_template, "Select {0} word"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__select_word_template, "Select {0} word"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__select_word_template, "Select word #{0} from your wallet backup"),
-            (Self::reset__select_word_x_of_y_template, "Select word {0} of {1}:"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__set_it_to_count_template, "Set it to {0} and you will need "),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__set_it_to_count_template, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__set_it_to_count_template, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__set_it_to_count_template, ""),
-            (Self::reset__share_checked_successfully_template, "Share #{0} checked successfully."),
-            (Self::reset__share_words_title, "Standard backup"),
-            (Self::reset__slip39_checklist_num_groups, "Number of groups"),
-            (Self::reset__slip39_checklist_num_shares, "Number of shares"),
-            (Self::reset__slip39_checklist_set_num_groups, "Set number of groups"),
-            (Self::reset__slip39_checklist_set_num_shares, "Set number of shares"),
-            (Self::reset__slip39_checklist_set_sizes, "Set sizes and thresholds"),
-            (Self::reset__slip39_checklist_set_sizes_longer, "Set size and threshold for each group"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__slip39_checklist_set_threshold, "Set threshold"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__slip39_checklist_set_threshold, "Set threshold"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__slip39_checklist_set_threshold, "Set threshold"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__slip39_checklist_set_threshold, "Set recovery threshold"),
-            (Self::reset__slip39_checklist_title, "Backup checklist"),
-            (Self::reset__slip39_checklist_write_down, "Write down and check all shares"),
-            (Self::reset__slip39_checklist_write_down_recovery, "Write down & check all wallet backup shares"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__the_threshold_sets_the_number_of_shares, "The threshold sets the number of shares "),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__the_threshold_sets_the_number_of_shares, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__the_threshold_sets_the_number_of_shares, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__the_threshold_sets_the_number_of_shares, ""),
-            (Self::reset__threshold_info, "= minimum number of unique word lists used for recovery."),
-            (Self::reset__title_backup_is_done, "Backup is done"),
-            (Self::reset__title_create_wallet, "Create wallet"),
-            (Self::reset__title_group_threshold, "Group threshold"),
-            (Self::reset__title_number_of_groups, "Number of groups"),
-            (Self::reset__title_number_of_shares, "Number of shares"),
-            (Self::reset__title_set_group_threshold, "Set group threshold"),
-            (Self::reset__title_set_number_of_groups, "Set number of groups"),
-            (Self::reset__title_set_number_of_shares, "Set number of shares"),
-            (Self::reset__title_set_threshold, "Set threshold"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__to_form_group_template, "to form Group {0}."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__to_form_group_template, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__to_form_group_template, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__to_form_group_template, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__tos_link, "trezor.io/tos"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__tos_link, "trezor.io/tos"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__tos_link, "trezor.io/tos"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__tos_link, "More at trezor.io/tos"),
-            (Self::reset__total_number_of_shares_in_group_template, "Set the total number of shares in Group {0}."),
-            (Self::reset__use_your_backup, "Use your backup when you need to recover your wallet."),
-            (Self::reset__write_down_words_template, "Write the following {0} words in order on your wallet backup card."),
-            (Self::reset__wrong_word_selected, "Wrong word selected!"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__you_need_one_share, "For recovery you need 1 share."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__you_need_one_share, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__you_need_one_share, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__you_need_one_share, ""),
-            (Self::reset__your_backup_is_done, "Your backup is done."),
-            #[cfg(feature = "universal_fw")]
-            (Self::ripple__confirm_tag, "Confirm tag"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ripple__destination_tag_template, "Destination tag:\n{0}"),
-            (Self::rotation__change_template, "Change display orientation to {0}?"),
-            (Self::rotation__east, "east"),
-            (Self::rotation__north, "north"),
-            (Self::rotation__south, "south"),
-            (Self::rotation__title_change, "Display orientation"),
-            (Self::rotation__west, "west"),
-            (Self::safety_checks__approve_unsafe_always, "Trezor will allow you to approve some actions which might be unsafe."),
-            (Self::safety_checks__approve_unsafe_temporary, "Trezor will temporarily allow you to approve some actions which might be unsafe."),
-            (Self::safety_checks__enforce_strict, "Do you really want to enforce strict safety checks (recommended)?"),
-            (Self::safety_checks__title, "Safety checks"),
-            (Self::safety_checks__title_safety_override, "Safety override"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__all_data_will_be_lost, "All data on the SD card will be lost."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__all_data_will_be_lost, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__all_data_will_be_lost, "All data on the SD card will be lost."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__all_data_will_be_lost, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__card_required, "SD card required."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__card_required, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__card_required, "SD card required."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__card_required, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__disable, "Do you really want to remove SD card protection from your device?"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__disable, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__disable, "Do you really want to remove SD card protection from your device?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__disable, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__disabled, "You have successfully disabled SD protection."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__disabled, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__disabled, "You have successfully disabled SD protection."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__disabled, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__enable, "Do you really want to secure your device with SD card protection?"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__enable, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__enable, "Do you really want to secure your device with SD card protection?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__enable, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__enabled, "You have successfully enabled SD protection."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__enabled, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__enabled, "You have successfully enabled SD protection."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__enabled, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__error, "SD card error"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__error, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__error, "SD card error"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__error, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__format_card, "Format SD card"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__format_card, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__format_card, "Format SD card"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__format_card, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__insert_correct_card, "Please insert the correct SD card for this device."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__insert_correct_card, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__insert_correct_card, "Please insert the correct SD card for this device."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__insert_correct_card, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__please_insert, "Please insert your SD card."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__please_insert, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__please_insert, "Please insert your SD card."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__please_insert, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__please_unplug_and_insert, "Please unplug the device and insert your SD card."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__please_unplug_and_insert, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__please_unplug_and_insert, "Please unplug the device and insert your SD card."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__please_unplug_and_insert, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__problem_accessing, "There was a problem accessing the SD card."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__problem_accessing, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__problem_accessing, "There was a problem accessing the SD card."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__problem_accessing, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__refresh, "Do you really want to replace the current SD card secret with a newly generated one?"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__refresh, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__refresh, "Do you really want to replace the current SD card secret with a newly generated one?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__refresh, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__refreshed, "You have successfully refreshed SD protection."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__refreshed, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__refreshed, "You have successfully refreshed SD protection."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__refreshed, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__restart, "Do you want to restart Trezor in bootloader mode?"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__restart, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__restart, "Do you want to restart Trezor in bootloader mode?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__restart, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__title, "SD card protection"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__title, "SD card protection"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__title, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__title_problem, "SD card problem"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__title_problem, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__title_problem, "SD card problem"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__title_problem, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__unknown_filesystem, "Unknown filesystem."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__unknown_filesystem, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__unknown_filesystem, "Unknown filesystem."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__unknown_filesystem, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__unplug_and_insert_correct, "Please unplug the device and insert the correct SD card."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__unplug_and_insert_correct, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__unplug_and_insert_correct, "Please unplug the device and insert the correct SD card."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__unplug_and_insert_correct, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__use_different_card, "Use a different card or format the SD card to the FAT32 filesystem."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__use_different_card, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__use_different_card, "Use a different card or format the SD card to the FAT32 filesystem."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__use_different_card, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__wanna_format, "Do you really want to format the SD card?"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__wanna_format, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__wanna_format, "Do you really want to format the SD card?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__wanna_format, ""),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sd_card__wrong_sd_card, "Wrong SD card."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sd_card__wrong_sd_card, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sd_card__wrong_sd_card, "Wrong SD card."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sd_card__wrong_sd_card, ""),
-            (Self::send__confirm_sending, "Sending amount"),
-            (Self::send__from_multiple_accounts, "Sending from multiple accounts."),
-            (Self::send__including_fee, "Including fee:"),
-            (Self::send__maximum_fee, "Maximum fee"),
-            (Self::send__receiving_to_multisig, "Receiving to a multisig address."),
-            (Self::send__title_confirm_sending, "Confirm sending"),
-            (Self::send__title_joint_transaction, "Joint transaction"),
-            (Self::send__title_receiving_to, "Receiving to"),
-            (Self::send__title_sending, "Sending"),
-            (Self::send__title_sending_amount, "Sending amount"),
-            (Self::send__title_sending_to, "Sending to"),
-            (Self::send__to_the_total_amount, "To the total amount:"),
-            (Self::send__transaction_id, "Transaction ID"),
-            (Self::send__you_are_contributing, "You are contributing:"),
-            (Self::share_words__words_in_order, " words in order."),
-            (Self::share_words__wrote_down_all, "I wrote down all "),
-            (Self::sign_message__bytes_template, "{0} Bytes"),
-            (Self::sign_message__confirm_address, "Signing address"),
-            (Self::sign_message__confirm_message, "Confirm message"),
-            (Self::sign_message__message_size, "Message size"),
-            (Self::sign_message__verify_address, "Verify address"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__account_index, "Account index"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__associated_token_account, "Associated token account"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__confirm_multisig, "Confirm multisig"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__expected_fee, "Expected fee"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__instruction_accounts_template, "Instruction contains {0} accounts and its data is {1} bytes long."),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__instruction_data, "Instruction data"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__instruction_is_multisig, "The following instruction is a multisig instruction."),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__is_provided_via_lookup_table_template, "{0} is provided via a lookup table."),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__lookup_table_address, "Lookup table address"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__multiple_signers, "Multiple signers"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__transaction_contains_unknown_instructions, "Transaction contains unknown instructions."),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__transaction_requires_x_signers_template, "Transaction requires {0} signers which increases the fee."),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__account_merge, "Account Merge"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__account_thresholds, "Account Thresholds"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__add_signer, "Add Signer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__add_trust, "Add trust"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__all_will_be_sent_to, "All XLM will be sent to"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__allow_trust, "Allow trust"),
-            (Self::words__asset, "Asset"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__balance_id, "Balance ID"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__bump_sequence, "Bump Sequence"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__buying, "Buying:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__claim_claimable_balance, "Claim Claimable Balance"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__clear_data, "Clear data"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__clear_flags, "Clear flags"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__confirm_issuer, "Confirm Issuer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__confirm_memo, "Confirm memo"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__confirm_operation, "Confirm operation"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__confirm_timebounds, "Confirm timebounds"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__create_account, "Create Account"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__debited_amount, "Debited amount"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__delete, "Delete"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__delete_passive_offer, "Delete Passive Offer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__delete_trust, "Delete trust"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__destination, "Destination"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__exchanges_require_memo, "Memo is not set.\nTypically needed when sending to exchanges."),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__final_confirm, "Final confirm"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__hash, "Hash"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__high, "High:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__home_domain, "Home Domain"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__inflation, "Inflation"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__issuer_template, "{0} issuer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__key, "Key:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__limit, "Limit"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__low, "Low:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__master_weight, "Master Weight:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__medium, "Medium:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__new_offer, "New Offer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__new_passive_offer, "New Passive Offer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__no_memo_set, "No memo set!"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__no_restriction, "[no restriction]"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__path_pay, "Path Pay"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__path_pay_at_least, "Path Pay at least"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__pay, "Pay"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__pay_at_most, "Pay at most"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__preauth_transaction, "Pre-auth transaction"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__price_per_template, "Price per {0}:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__remove_signer, "Remove Signer"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__revoke_trust, "Revoke trust"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__selling, "Selling:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__set_data, "Set data"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__set_flags, "Set flags"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__set_sequence_to_template, "Set sequence to {0}?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__sign_tx_count_template, "Sign this transaction made up of {0}"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__sign_tx_fee_template, "and pay {0}\nfor fee?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__source_account, "Source account"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__trusted_account, "Trusted Account"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__update, "Update"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__valid_from, "Valid from (UTC)"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__valid_to, "Valid to (UTC)"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__value_sha256, "Value (SHA-256):"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__wanna_clean_value_key_template, "Do you want to clear value key {0}?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__baker_address, "Baker address"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__balance, "Balance:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__ballot, "Ballot:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__confirm_delegation, "Confirm delegation"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__confirm_origination, "Confirm origination"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__delegator, "Delegator"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__proposal, "Proposal"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__register_delegate, "Register delegate"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__remove_delegation, "Remove delegation"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__submit_ballot, "Submit ballot"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__submit_proposal, "Submit proposal"),
-            #[cfg(feature = "universal_fw")]
-            (Self::tezos__submit_proposals, "Submit proposals"),
-            (Self::tutorial__middle_click, "Press both left and right at the same\ntime to confirm."),
-            (Self::tutorial__press_and_hold, "Press and hold the right button to\napprove important operations."),
-            (Self::tutorial__ready_to_use, "You're ready to\nuse Trezor."),
-            (Self::tutorial__scroll_down, "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up."),
-            (Self::tutorial__sure_you_want_skip, "Are you sure you\nwant to skip the tutorial?"),
-            (Self::tutorial__title_hello, "Hello"),
-            (Self::tutorial__title_screen_scroll, "Screen scroll"),
-            (Self::tutorial__title_skip, "Skip tutorial"),
-            (Self::tutorial__title_tutorial_complete, "Tutorial complete"),
-            (Self::tutorial__use_trezor, "Use Trezor by\nclicking the left and right buttons.\n\rContinue right."),
-            (Self::tutorial__welcome_press_right, "Welcome to Trezor. Press right to continue."),
-            #[cfg(feature = "universal_fw")]
-            (Self::u2f__get, "Increase and retrieve the U2F counter?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::u2f__set_template, "Set the U2F counter to {0}?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::u2f__title_get, "Get U2F counter"),
-            #[cfg(feature = "universal_fw")]
-            (Self::u2f__title_set, "Set U2F counter"),
-            (Self::wipe__info, "All data will be erased."),
-            (Self::wipe__title, "Wipe device"),
-            (Self::wipe__want_to_wipe, "Do you really want to wipe the device?\n"),
-            (Self::wipe_code__change, "Change wipe code"),
-            (Self::wipe_code__changed, "Wipe code changed."),
-            (Self::wipe_code__diff_from_pin, "The wipe code must be different from your PIN."),
-            (Self::wipe_code__disabled, "Wipe code disabled."),
-            (Self::wipe_code__enabled, "Wipe code enabled."),
-            (Self::wipe_code__enter_new, "New wipe code"),
-            (Self::wipe_code__info, "Wipe code can be used to erase all data from this device."),
-            (Self::wipe_code__invalid, "Invalid wipe code"),
-            (Self::wipe_code__mismatch, "The wipe codes you entered do not match."),
-            (Self::wipe_code__reenter, "Re-enter wipe code"),
-            (Self::wipe_code__reenter_to_confirm, "Please re-enter wipe code to confirm."),
-            (Self::wipe_code__title_check, "Check wipe code"),
-            (Self::wipe_code__title_invalid, "Invalid wipe code"),
-            (Self::wipe_code__title_settings, "Wipe code settings"),
-            (Self::wipe_code__turn_off, "Turn off wipe code protection?"),
-            (Self::wipe_code__turn_on, "Turn on wipe code protection?"),
-            (Self::wipe_code__wipe_code_mismatch, "Wipe code mismatch"),
-            (Self::word_count__title, "Number of words"),
-            (Self::words__account, "Account"),
-            (Self::words__account_colon, "Account:"),
-            (Self::words__address, "Address"),
-            (Self::words__amount, "Amount"),
-            (Self::words__are_you_sure, "Are you sure?"),
-            (Self::words__array_of, "Array of"),
-            (Self::words__blockhash, "Blockhash"),
-            (Self::words__buying, "Buying"),
-            (Self::words__confirm, "Confirm"),
-            (Self::words__confirm_fee, "Confirm fee"),
-            (Self::words__contains, "Contains"),
-            (Self::words__continue_anyway_question, "Continue anyway?"),
-            (Self::words__continue_with, "Continue with"),
-            (Self::words__error, "Error"),
-            (Self::words__fee, "Fee"),
-            (Self::words__from, "from"),
-            (Self::words__keep_it_safe, "Keep it safe!"),
-            (Self::words__know_what_your_doing, "Continue only if you know what you are doing!"),
-            (Self::words__my_trezor, "My Trezor"),
-            (Self::words__no, "No"),
-            (Self::words__outputs, "outputs"),
-            (Self::words__please_check_again, "Please check again"),
-            (Self::words__please_try_again, "Please try again"),
-            (Self::words__really_wanna, "Do you really want to"),
-            (Self::words__recipient, "Recipient"),
-            (Self::words__sign, "Sign"),
-            (Self::words__signer, "Signer"),
-            (Self::words__title_check, "Check"),
-            (Self::words__title_group, "Group"),
-            (Self::words__title_information, "Information"),
-            (Self::words__title_remember, "Remember"),
-            (Self::words__title_share, "Share"),
-            (Self::words__title_shares, "Shares"),
-            (Self::words__title_success, "Success"),
-            (Self::words__title_summary, "Summary"),
-            (Self::words__title_threshold, "Threshold"),
-            (Self::words__unknown, "Unknown"),
-            (Self::words__warning, "Warning"),
-            (Self::words__writable, "Writable"),
-            (Self::words__yes, "Yes"),
-            (Self::reboot_to_bootloader__just_a_moment, "Just a moment..."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::inputs__previous, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::inputs__previous, "PREVIOUS"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::inputs__previous, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::inputs__previous, ""),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__staking_claim, "Claim"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__staking_claim_address, "Claim address"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__staking_claim_intro, "Claim ETH from Everstake?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__staking_stake, "Stake"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__staking_stake_address, "Stake address"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__staking_stake_intro, "Stake ETH on Everstake?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__staking_unstake, "Unstake"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__staking_unstake_intro, "Unstake ETH from Everstake?"),
-            (Self::storage_msg__starting, "Starting up"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::storage_msg__verifying_pin, "Verifying PIN"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::storage_msg__verifying_pin, "Verifying PIN"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::storage_msg__verifying_pin, "Verifying PIN"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::storage_msg__verifying_pin, "Verifying PIN..."),
-            (Self::storage_msg__wrong_pin, "Wrong PIN"),
-            (Self::reset__create_x_of_y_multi_share_backup_template, "Do you want to create a {0} of {1} multi-share backup?"),
-            (Self::reset__title_shamir_backup, "Multi-share backup"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__always_abstain, "Always Abstain"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__always_no_confidence, "Always No Confidence"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__delegating_to_key_hash, "Delegating to key hash:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__delegating_to_script, "Delegating to script:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__deposit, "Deposit:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__vote_delegation, "Vote delegation"),
-            (Self::instructions__tap_to_confirm, "Tap to confirm"),
-            (Self::instructions__hold_to_confirm, "Hold to confirm"),
-            (Self::words__important, "Important"),
-            (Self::reset__words_written_down_template, "I wrote down all {0} words in order."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::backup__create_backup_to_prevent_loss, "Create a backup to avoid losing access to your funds"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::backup__create_backup_to_prevent_loss, "Create a backup to avoid losing access to your funds"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::backup__create_backup_to_prevent_loss, "Create a backup to avoid losing access to your funds"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::backup__create_backup_to_prevent_loss, "Create a wallet backup to avoid losing access to your funds."),
-            (Self::reset__check_backup_instructions, "Let's do a quick check of your backup."),
-            (Self::words__instructions, "Instructions"),
-            (Self::words__not_recommended, "Not recommended!"),
-            (Self::address_details__account_info, "Account info"),
-            (Self::address__cancel_contact_support, "If receive address doesn't match, contact Trezor Support at trezor.io/support."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::address__cancel_receive, "Cancel receive"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::address__cancel_receive, "Cancel receive"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::address__cancel_receive, "Cancel receive"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::address__cancel_receive, "Cancel receive?"),
-            (Self::address__qr_code, "QR code"),
-            (Self::address_details__derivation_path, "Derivation path"),
-            (Self::instructions__continue_in_app, "Continue in the app"),
-            (Self::words__cancel_and_exit, "Cancel and exit"),
-            (Self::address__confirmed, "Receive address confirmed"),
-            (Self::pin__cancel_description, "Continue without PIN"),
-            (Self::pin__cancel_info, "Without a PIN, anyone can access this device."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::pin__cancel_setup, "Cancel PIN setup"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::pin__cancel_setup, "Cancel PIN setup"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::pin__cancel_setup, "Cancel PIN setup"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::pin__cancel_setup, "Cancel PIN setup?"),
-            (Self::send__cancel_sign, "Cancel sign"),
-            (Self::send__send_from, "Send from"),
-            (Self::instructions__hold_to_sign, "Hold to sign"),
-            (Self::confirm_total__fee_rate, "Fee rate"),
-            (Self::send__incl_transaction_fee, "incl. Transaction fee"),
-            (Self::send__total_amount, "Total amount"),
-            (Self::auto_lock__turned_on, "Auto-lock turned on"),
-            (Self::backup__info_multi_share_backup, "Your wallet backup contains multiple lists of words in a specific order (shares)."),
-            (Self::backup__info_single_share_backup, "Your wallet backup contains {0} words in a specific order."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::backup__title_backup_completed, "Wallet backup completed"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::backup__title_backup_completed, "Wallet backup completed"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::backup__title_backup_completed, "Wallet backup completed"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::backup__title_backup_completed, "Wallet backup completed."),
-            (Self::backup__title_create_wallet_backup, "Create wallet backup"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::haptic_feedback__disable, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::haptic_feedback__disable, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::haptic_feedback__disable, "Disable haptic feedback?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::haptic_feedback__disable, "Disable haptic feedback?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::haptic_feedback__enable, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::haptic_feedback__enable, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::haptic_feedback__enable, "Enable haptic feedback?"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::haptic_feedback__enable, "Enable haptic feedback?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::haptic_feedback__subtitle, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::haptic_feedback__subtitle, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::haptic_feedback__subtitle, "Setting"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::haptic_feedback__subtitle, "Setting"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::haptic_feedback__title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::haptic_feedback__title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::haptic_feedback__title, "Haptic feedback"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::haptic_feedback__title, "Haptic feedback"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::instructions__continue_holding, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::instructions__continue_holding, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::instructions__continue_holding, "Continue\nholding"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::instructions__continue_holding, "Keep holding"),
-            (Self::instructions__enter_next_share, "Enter next share"),
-            (Self::instructions__hold_to_continue, "Hold to continue"),
-            (Self::instructions__hold_to_exit_tutorial, "Hold to exit tutorial"),
-            (Self::instructions__learn_more, "Learn more"),
-            (Self::instructions__shares_continue_with_x_template, "Continue with Share #{0}"),
-            (Self::instructions__shares_start_with_1, "Start with share #1"),
-            (Self::passphrase__title_passphrase, "Passphrase"),
-            (Self::recovery__dry_run_backup_not_on_this_device, "Wallet backup not on this device"),
-            (Self::recovery__dry_run_invalid_backup_entered, "Invalid wallet backup entered"),
-            (Self::recovery__dry_run_slip39_valid_all_shares, "All shares are valid and belong to the backup in this device"),
-            (Self::recovery__dry_run_slip39_valid_share, "Entered share is valid and belongs to the backup in the device"),
-            (Self::recovery__dry_run_verify_remaining_shares, "Verify remaining recovery shares?"),
-            (Self::recovery__enter_each_word, "Enter each word of your wallet backup in order."),
-            (Self::recovery__info_about_disconnect, "It's safe to disconnect your Trezor while recovering your wallet and continue later."),
-            (Self::recovery__share_does_not_match, "Share doesn't match"),
-            (Self::reset__cancel_create_wallet, "Cancel create wallet"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__incorrect_word_selected, "Incorrect word selected"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__incorrect_word_selected, "Incorrect word selected"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__incorrect_word_selected, "Incorrect word selected"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__incorrect_word_selected, "Incorrect word selected."),
-            (Self::reset__more_at, "More at"),
-            (Self::reset__num_of_shares_how_many, "How many wallet backup shares do you want to create?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__num_of_shares_long_info_template, "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__num_of_shares_long_info_template, "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__num_of_shares_long_info_template, "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__num_of_shares_long_info_template, "Each backup share is a sequence of {0} words.\nStore each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."),
-            (Self::reset__select_threshold, "Select the minimum shares required to recover your wallet."),
-            (Self::reset__share_completed_template, "Share #{0} completed"),
-            (Self::reset__slip39_checklist_num_shares_x_template, "Number of shares: {0}"),
-            (Self::reset__slip39_checklist_threshold_x_template, "Recovery threshold: {0}"),
-            (Self::send__transaction_signed, "Transaction signed"),
-            (Self::tutorial__continue, "Continue tutorial"),
-            (Self::tutorial__exit, "Exit tutorial"),
-            (Self::tutorial__menu, "Find context-specific actions and options in the menu."),
-            (Self::tutorial__one_more_step, "One more step"),
-            (Self::tutorial__ready_to_use_safe5, "You're all set to start using your device!"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::tutorial__swipe_up_and_down, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::tutorial__swipe_up_and_down, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::tutorial__swipe_up_and_down, "Tap the lower half of the screen to continue, or swipe down to go back."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__swipe_up_and_down, ""),
-            (Self::tutorial__title_easy_navigation, "Easy navigation"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::tutorial__welcome_safe5, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::tutorial__welcome_safe5, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::tutorial__welcome_safe5, "Welcome to\nTrezor Safe 5"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__welcome_safe5, ""),
-            (Self::words__good_to_know, "Good to know"),
-            (Self::words__operation_cancelled, "Operation cancelled"),
-            (Self::words__settings, "Settings"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::words__try_again, "Try again."),
-            #[cfg(feature = "layout_caesar")]
-            (Self::words__try_again, "Try again."),
-            #[cfg(feature = "layout_delizia")]
-            (Self::words__try_again, "Try again."),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::words__try_again, "Try again"),
-            (Self::reset__slip39_checklist_num_groups_x_template, "Number of groups: {0}"),
-            (Self::brightness__title, "Display brightness"),
-            (Self::recovery__title_unlock_repeated_backup, "Multi-share backup"),
-            (Self::recovery__unlock_repeated_backup, "Create additional backup?"),
-            (Self::recovery__unlock_repeated_backup_verb, "Create backup"),
-            (Self::homescreen__set_default, "Change wallpaper to default image?"),
-            (Self::reset__words_may_repeat, "Words may repeat."),
-            (Self::reset__repeat_for_all_shares, "Repeat for all shares."),
-            (Self::homescreen__settings_subtitle, "Settings"),
-            (Self::homescreen__settings_title, "Homescreen"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::reset__the_word_is_repeated, "The word is repeated"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reset__the_word_is_repeated, "The word is repeated"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reset__the_word_is_repeated, "The word is repeated"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reset__the_word_is_repeated, "The word appears multiple times in the backup."),
-            (Self::tutorial__title_lets_begin, "Let's begin"),
-            (Self::tutorial__did_you_know, "Did you know?"),
-            (Self::tutorial__first_wallet, "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."),
-            (Self::tutorial__restart_tutorial, "Restart tutorial"),
-            (Self::tutorial__title_handy_menu, "Handy menu"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::tutorial__title_hold, "Hold to confirm important actions"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::tutorial__title_hold, "Hold to confirm important actions"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::tutorial__title_hold, "Hold to confirm important actions"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__title_hold, "Hold the on-screen button at the bottom to confirm important actions."),
-            (Self::tutorial__title_well_done, "Well done!"),
-            (Self::tutorial__lets_begin, "Learn how to use and navigate this device with ease."),
-            (Self::tutorial__get_started, "Get started!"),
-            (Self::instructions__swipe_horizontally, "Swipe horizontally"),
-            (Self::setting__adjust, "Adjust"),
-            (Self::setting__apply, "Apply"),
-            (Self::brightness__changed_title, "Display brightness changed"),
-            (Self::brightness__change_title, "Change display brightness"),
-            (Self::words__title_done, "Done"),
-            (Self::reset__slip39_checklist_more_info_threshold, "The threshold sets the minimum number of shares needed to recover your wallet."),
-            (Self::reset__slip39_checklist_more_info_threshold_example_template, "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."),
-            (Self::passphrase__continue_with_empty_passphrase, "Continue with empty passphrase?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__more_credentials, "More credentials"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__select_intro, "Select the credential that you would like to use for authentication."),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_for_authentication, "for authentication"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_select_credential, "Select credential"),
-            (Self::instructions__swipe_down, "Swipe down"),
-            #[cfg(feature = "universal_fw")]
-            (Self::fido__title_credential_details, "Credential details"),
-            (Self::address__public_key_confirmed, "Public key confirmed"),
-            (Self::words__continue_anyway, "Continue anyway"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::ethereum__unknown_contract_address, "Unknown contract address"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::ethereum__unknown_contract_address, "Unknown contract address"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::ethereum__unknown_contract_address, "Unknown contract address"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ethereum__unknown_contract_address, "Unknown token contract address."),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::ethereum__token_contract, "Token contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::ethereum__token_contract, "Token contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::ethereum__token_contract, "Token contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ethereum__token_contract, "Token contract address"),
-            (Self::buttons__view_all_data, "View all data"),
-            (Self::instructions__view_all_data, "View all data in the menu."),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::ethereum__interaction_contract, "Interaction contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::ethereum__interaction_contract, "Interaction contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::ethereum__interaction_contract, "Interaction contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ethereum__interaction_contract, "Interaction contract address"),
-            (Self::misc__enable_labeling, "Enable labeling?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__base_fee, "Base fee"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__claim, "Claim"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__claim_question, "Claim SOL from stake account?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__claim_recipient_warning, "Claiming SOL to address outside your current wallet."),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__priority_fee, "Priority fee"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__stake, "Stake"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__stake_account, "Stake account"),
-            (Self::words__provider, "Provider"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__stake_question, "Stake SOL?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__stake_withdrawal_warning, "The current wallet isn't the SOL staking withdraw authority."),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__stake_withdrawal_warning_title, "Withdraw authority address"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__unstake, "Unstake"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__unstake_question, "Unstake SOL from stake account?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__vote_account, "Vote account"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__stake_on_question, "Stake SOL on {0}?"),
-            (Self::sign_message__confirm_without_review, "Confirm without review"),
-            (Self::instructions__tap_to_continue, "Tap to continue"),
-            #[cfg(feature = "universal_fw")]
-            (Self::nostr__event_kind_template, "Event kind: {0}"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__unpair_all, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__unpair_all, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__unpair_all, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__unpair_all, "Unpair all bluetooth devices"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__unpair_current, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__unpair_current, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__unpair_current, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__unpair_current, "Unpair connected device"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__unpair_title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__unpair_title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__unpair_title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__unpair_title, "Unpair"),
-            (Self::words__unlocked, "Unlocked"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__max_fees_rent, "Max fees and rent"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__max_rent_fee, "Max rent fee"),
-            (Self::words__transaction_fee, "Transaction fee"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve, "Approve"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_amount_allowance, "Amount allowance"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_chain_id, "Chain ID"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_intro, "Review details to approve token spending."),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_intro_title, "Token approval"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_to, "Approve to"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_unlimited_template, "Approving unlimited amount of {0}"),
-            (Self::words__unlimited, "Unlimited"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_intro_revoke, "Review details to revoke token approval."),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_intro_title_revoke, "Token revocation"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_revoke, "Revoke"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__approve_revoke_from, "Revoke from"),
-            (Self::words__chain, "Chain"),
-            (Self::words__token, "Token"),
-            (Self::instructions__tap, "Tap"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__unknown_token, "Unknown token"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__unknown_token_address, "Unknown token address"),
-            (Self::reset__share_words_first, "Write down the first word from the backup."),
-            (Self::backup__not_recommend, "We don't recommend to skip wallet backup creation."),
-            (Self::words__pay_attention, "Pay attention"),
-            (Self::address__check_with_source, "Check the address with source."),
-            (Self::words__receive, "Receive"),
-            (Self::reset__recovery_share_description, "A recovery share is a list of words you wrote down when setting up your Trezor."),
-            (Self::reset__recovery_share_number, "Your wallet backup consists of 1 to 16 shares."),
-            (Self::words__recovery_share, "Recovery share"),
-            (Self::send__send_in_the_app, "After signing, send the transaction in the app."),
-            (Self::send__sign_cancelled, "Sign cancelled."),
-            (Self::words__send, "Send"),
-            (Self::words__wallet, "Wallet"),
-            (Self::words__authenticate, "Authenticate"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
-            (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
-            (Self::plurals__lock_after_x_days, "day|days"),
-            (Self::firmware_update__restart, "Trezor will restart after update."),
-            (Self::passphrase__access_hidden_wallet, "Access hidden wallet"),
-            (Self::passphrase__hidden_wallet, "Hidden wallet"),
-            (Self::passphrase__show, "Show passphrase"),
-            (Self::pin__reenter, "Re-enter PIN"),
-            (Self::pin__setup_completed, "PIN setup completed."),
-            (Self::instructions__shares_start_with_x_template, "Start with Share #{0}"),
-            (Self::reset__check_share_backup_template, "Let's do a quick check of Share #{0}."),
-            (Self::reset__select_word_from_share_template, "Select word #{0} from\nShare #{1}"),
-            (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
-            (Self::send__cancel_transaction, "Cancel transaction"),
-            (Self::send__multisig_different_paths, "Using different paths for different XPUBs."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::address__xpub, "XPUB"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::address__xpub, "XPUB"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::address__xpub, "XPUB"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::address__xpub, "Public key (XPUB)"),
-            (Self::words__cancel_question, "Cancel?"),
-            (Self::address__coin_address_template, "{0} address"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__contract_address, "Provider contract address"),
-            (Self::buttons__view, "View"),
-            (Self::words__swap, "Swap"),
-            (Self::address__title_provider_address, "Provider address"),
-            (Self::address__title_refund_address, "Refund address"),
-            (Self::words__assets, "Assets"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_confirm_message_hash, "Confirm message hash"),
-            (Self::buttons__finish, "Finish"),
-            (Self::instructions__menu_to_continue, "Use menu to continue"),
-            (Self::tutorial__last_one, "Last one"),
-            (Self::tutorial__menu_appendix, "View more info, quit flow, ..."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::tutorial__navigation_ts7, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::tutorial__navigation_ts7, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::tutorial__navigation_ts7, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__navigation_ts7, "Use the on-screen buttons to navigate and confirm your actions."),
-            (Self::tutorial__suite_restart, "Replay this tutorial anytime from the Trezor Suite app."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::tutorial__welcome_safe7, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::tutorial__welcome_safe7, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::tutorial__welcome_safe7, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__welcome_safe7, "Welcome\nto Trezor\nSafe 7"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::tutorial__what_is_tropic, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::tutorial__what_is_tropic, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::tutorial__what_is_tropic, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
-            (Self::tutorial__tap_to_start, "Tap to start tutorial"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::tutorial__tropic_info, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::tutorial__tropic_info, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::tutorial__tropic_info, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__tropic_info, "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__sign_with, "Sign with"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__timebounds, "Timebounds"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__token_info, "Token info"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__transaction_source, "Transaction source"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__transaction_source_diff_warning, "Transaction source does not belong to this Trezor."),
-            (Self::device_name__continue_with_empty_label, "Continue with empty device name?"),
-            (Self::device_name__enter, "Enter device name"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::regulatory__title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::regulatory__title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::regulatory__title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::regulatory__title, "Regulatory"),
-            (Self::words__name, "Name"),
-            (Self::device_name__changed, "Device name changed."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirm_message, "Confirm message"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__empty_message, "Empty message"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__message_hash, "Message hash:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__message_hex, "Message hex"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__message_text, "Message text"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__sign_message_hash_path_template, "Sign message hash with {0}"),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__sign_message_path_template, "Sign message with {0}"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__manage_paired, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__manage_paired, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__manage_paired, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__manage_paired, "Manage paired devices"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__pair_new, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__pair_new, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__pair_new, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__pair_new, "Pair new device"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__pair_title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__pair_title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__pair_title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__pair_title, "Pair & Connect"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__version, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__version, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__version, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__version, "Bluetooth version"),
-            (Self::homescreen__firmware_type, "Firmware type"),
-            (Self::homescreen__firmware_version, "Firmware version"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::led__disable, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::led__disable, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::led__disable, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::led__disable, "Disable LED?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::led__enable, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::led__enable, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::led__enable, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::led__enable, "Enable LED?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::led__title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::led__title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::led__title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::led__title, "LED"),
-            (Self::words__about, "About"),
-            (Self::words__connected, "Connected"),
-            (Self::words__device, "Device"),
-            (Self::words__disconnect, "Disconnect"),
-            (Self::words__led, "LED"),
-            (Self::words__manage, "Manage"),
-            (Self::words__off, "OFF"),
-            (Self::words__on, "ON"),
-            (Self::words__review, "Review"),
-            (Self::words__security, "Security"),
-            (Self::pin__change_question, "Change PIN?"),
-            (Self::pin__remove, "Remove PIN"),
-            (Self::pin__title, "PIN code"),
-            (Self::wipe_code__change_question, "Change wipe code?"),
-            (Self::wipe_code__remove, "Remove wipe code"),
-            (Self::wipe_code__title, "Wipe code"),
-            (Self::words__disabled, "Disabled"),
-            (Self::words__enabled, "Enabled"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__disable, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__disable, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__disable, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__disable, "Turn Bluetooth off?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__enable, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__enable, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__enable, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__enable, "Turn Bluetooth on?"),
-            (Self::words__bluetooth, "Bluetooth"),
-            (Self::wipe__start_again, "Wipe your Trezor and start the setup process again."),
-            (Self::words__set, "Set"),
-            (Self::words__wipe, "Wipe"),
-            (Self::lockscreen__unlock, "Unlock"),
-            (Self::recovery__start_entering, "Start entering"),
-            (Self::words__disconnected, "Disconnected"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__forget_all, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__forget_all, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__forget_all, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__forget_all, "Forget all"),
-            (Self::words__connect, "Connect"),
-            (Self::words__forget, "Forget"),
-            (Self::words__power, "Power"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__limit_reached, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__limit_reached, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__limit_reached, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__limit_reached, "Limit of paired devices reached"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__forget_all_description, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__forget_all_description, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__forget_all_description, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__forget_all_description, "They'll be removed, and you'll need to pair them again before use."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__forget_all_devices, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__forget_all_devices, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__forget_all_devices, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__forget_all_devices, "Forget all devices?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__forget_all_success, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__forget_all_success, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__forget_all_success, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__forget_all_success, "All connections removed."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__forget_this_description, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__forget_this_description, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__forget_this_description, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__forget_this_description, "It will be removed, and you'll need to pair it again before use."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__forget_this_device, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__forget_this_device, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__forget_this_device, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__forget_this_device, "Forget this device?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__forget_this_success, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__forget_this_success, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__forget_this_success, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__forget_this_success, "Connection removed."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__autoconnect, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__autoconnect, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__autoconnect, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__autoconnect, "Allow {0} to connect automatically to this Trezor?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__autoconnect_app, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__autoconnect_app, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__autoconnect_app, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__autoconnect_app, "Allow {0} on {1} to connect automatically to this Trezor?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__connect, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__connect, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__connect, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__connect, "Allow {0} to connect with this Trezor?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__connect_app, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__connect_app, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__connect_app, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__connect_app, "Allow {0} on {1} to connect with this Trezor?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__pair, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__pair, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__pair, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__pair, "Allow {0} to pair with this Trezor?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__pair_app, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__pair_app, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__pair_app, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__pair_app, "Allow {0} on {1} to pair with this Trezor?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__autoconnect_title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__autoconnect_title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__autoconnect_title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__autoconnect_title, "Autoconnect credential"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__code_entry, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__code_entry, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__code_entry, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__code_entry, "Enter this one-time security code on {0}"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__code_title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__code_title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__code_title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__code_title, "One more step"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__connect_title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__connect_title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__connect_title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__connect_title, "Connection dialog"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__nfc_text, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__nfc_text, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__nfc_text, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__nfc_text, "Keep your Trezor near your phone to complete the setup."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__pair_title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__pair_title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__pair_title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__pair_title, "Before you continue"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__qr_title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__qr_title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__qr_title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__qr_title, "Scan QR code to pair"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__pairing_match, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__pairing_match, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__pairing_match, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__pairing_match, "Pairing code match?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__pairing_title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__pairing_title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__pairing_title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__pairing_title, "Bluetooth pairing"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__pair_name, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__pair_name, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__pair_name, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__pair_name, "{0} is your Trezor's name."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::thp__pair_new_device, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__pair_new_device, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__pair_new_device, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__pair_new_device, "Pair with new device"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::tutorial__power, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::tutorial__power, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::tutorial__power, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__power, "Use the power button on the side to turn your device on or off."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::auto_lock__on_battery, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::auto_lock__on_battery, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::auto_lock__on_battery, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::auto_lock__on_battery, "on battery / wireless charger"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::auto_lock__on_usb, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::auto_lock__on_usb, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::auto_lock__on_usb, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::auto_lock__on_usb, "connected to USB"),
-            (Self::pin__wipe_code_exists_description, "Wipe code must be turned off before turning off PIN protection."),
-            (Self::pin__wipe_code_exists_title, "Wipe code set"),
-            (Self::wipe_code__pin_not_set_description, "PIN must be set before enabling wipe code."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::wipe_code__cancel_setup, "Cancel wipe code setup?"),
-            (Self::homescreen__backup_needed_info, "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__host_info, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__host_info, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__host_info, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__host_info, "Connection info"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__mac_address, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__mac_address, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__mac_address, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__mac_address, "MAC address"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__waiting_for_host, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__waiting_for_host, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__waiting_for_host, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__waiting_for_host, "Waiting for connection..."),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__apps_connected, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__apps_connected, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__apps_connected, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__apps_connected, "Apps connected"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sn__action, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sn__action, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sn__action, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sn__action, "Allow connected device to get serial number of your Trezor Safe 7?"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::sn__title, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::sn__title, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::sn__title, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::sn__title, "Serial number"),
-            #[cfg(feature = "layout_bolt")]
-            (Self::ble__must_be_enabled, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::ble__must_be_enabled, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::ble__must_be_enabled, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ble__must_be_enabled, "The Bluetooth must be turned on to pair with a new device."),
-            #[cfg(feature = "universal_fw")]
-            (Self::ripple__destination_tag_missing, "Destination tag is not set. Typically needed when sending to exchanges."),
-            (Self::words__comm_trouble, "Your Trezor is having trouble communicating with your connected device."),
-            (Self::secure_sync__delegated_identity_key_no_thp, "Allow Trezor Suite to use Suite Sync with this Trezor?"),
-            (Self::secure_sync__delegated_identity_key_thp, "Allow {0} on {1} to use Suite Sync with this Trezor?"),
-            (Self::secure_sync__header, "Suite Sync"),
-            (Self::words__note, "Note"),
-    ];
+cfg_if::cfg_if! {
+    if #[cfg(feature = "layout_bolt")] {
+        impl TranslatedString {
+            const BTC_ONLY_BLOB: StringsBlob = StringsBlob {
+                text: "Please contact Trezor support atKey mismatch?Address mismatch?trezor.io/supportWrong derivation path for selected account.XPUB mismatch?Public keyCosignerReceive addressYoursDerivation path:Receive addressReceiving toAllow connected app to check the authenticity of your {0}?Authenticate deviceAuto-lock Trezor after {0} of inactivity?Auto-lock delayYou can back up your Trezor once, at any time.You should back up your new wallet right now.It should be backed up now!Wallet created.\nWallet created successfully.You can use your backup to recover your wallet at any time.Back up walletSkip backupAre you sure you want to skip the backup?Commitment dataConfirm locktimeDo you want to create a proof of ownership?The mining fee of\n{0}\nis unexpectedly high.Locktime is set but will have no effect.Locktime set toLocktime set to blockheightA lot of change-outputs.Multiple accountsNew fee rate:Simple send ofTicket amountConfirm detailsFinalize transactionHigh mining feeMeld transactionModify amountPayjoinProof of ownershipPurchase ticketUpdate transactionUnknown pathUnknown transactionUnusually high fee.The transaction contains unverified external inputs.The signature is valid.Voting rights toAbortAccessAgainAllowBackBack upCancelChangeCheckCheck againCloseConfirmContinueDetailsEnableEnterEnter shareExportFormatGo backHold to confirmInfoInstallMore infoOk, I understandPurchaseQuitRestartRetrySelectSetShow allShow detailsShow wordsSkipTry againTurn offTurn onAccess your coinjoin account?Do not disconnect your Trezor!Max mining feeMax roundsAuthorize coinjoinCoinjoin in progressWaiting for othersFee rate:Sending from account:Fee infoSending fromChange device name to {0}?Device nameDo you really want to send entropy?Confirm entropySign transactionEnable experimental features?Only for development and beta testing!Experimental modeUpdate firmwareFW fingerprintClick to ConnectClick to UnlockBackup failedBackup neededCoinjoin authorizedExperimental modeNo USB connectionPIN not setSeedlessChange wallpaperJoint transactionTo the total amount:You are contributing:Change language to {0}?Language changed successfullyChanging languageLanguage settingsTap to connectTap to unlockLockedNot connectedDecrypt valueEncrypt valueSuite labelingDecrease amount by:Increase amount by:New amount:Modify amountDecrease fee by:Fee rate:Increase fee by:New transaction fee:Fee did not change.\nModify feeTransaction fee:Access passphrase wallet?Always enter your passphrase on Trezor?Passphrase provided by connected app will be used but will not be displayed due to the device settings.Passphrase walletHide passphrase coming from app?The next screen shows your passphrase.Please enter your passphrase.Do you want to revoke the passphrase on device setting?Confirm passphraseEnter passphraseHide passphrasePassphrase settingsPassphrase sourceTurn off passphrase protection?Turn on passphrase protection?Change PINPIN changed.Position of the cursor will change between entries for enhanced security.The new PIN must be different from your wipe code.PIN protection\nturned off.PIN protection\nturned on.Enter PINEnter new PINThe PIN you have entered is not valid.PIN will be required to access this device.Invalid PINLast attemptEntered PINs do not match!PIN mismatchPlease check again.Re-enter new PINPlease re-enter PIN to confirm.PIN should be 4-50 digits long.Check PINPIN settingsWrong PINtries leftAre you sure you want to turn off PIN protection?Turn on PIN protection?Wrong PINkey|keyshour|hoursmillisecond|millisecondsminute|minutessecond|secondsaction|actionsoperation|operationsgroup|groupsshare|sharesChecking authenticity...DoneLoading transaction...Locking the device...1 second leftPlease waitProcessingRefreshing...Signing transaction...Syncing...{0} seconds leftTrezor will restart in bootloader mode.Go to bootloaderFirmware version {0}\nby {1}Cancel backup checkCheck your backup?Position of the cursor will change between entries for enhanced security.The entered wallet backup is valid and matches the one in this device.The entered wallet backup is valid but does not match the one in the device.The entered recovery shares are valid and match what is currently in the device.The entered recovery shares are valid but do not match what is currently in the device.Enter any shareEnter your backup.Enter a different share.Enter share from a different group.Group {0}Group threshold reached.Invalid wallet backup entered.Invalid recovery share entered.More shares neededSelect the number of words in your backup.You'll only have to select the first 2-4 letters of each word.All progress will be lost.Share already enteredYou have entered a share from a different backup.Share {0}Recover walletCancel backup checkCancel recoveryBackup checkRecover walletRemaining sharesType word {0} of {1}Wallet recovery completedAre you sure you want to cancel the backup check?Are you sure you want to cancel the recovery process?({0} words)Word {0} of {1}{count} more {plural} starting{count} more {plural} needed{0} of {1} shares enteredYou have enteredThe group threshold specifies the number of groups required to recover your wallet.all {0} of {1} sharesany {0} of {1} sharesCreate walletRecover walletBy continuing you agree to Trezor Company's terms and conditions.Check backupCheck g{0} - share {1}Check wallet backupCheck share #{0}Continue with the next share.Continue with share #{0}.You have finished verifying your recovery shares for group {0}.You have finished verifying your wallet backup.You have finished verifying your recovery shares.A group is made up of recovery shares.Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.Group {0} - Share {1} checked successfully.Group {0} - share {1}More info atFor recovery you need all {0} of the shares.For recovery you need any {0} of the shares.needed to form a group. needed to recover your wallet. Never put your backup anywhere digital.{0} people or locations will each hold one share.Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet.The required number of shares to form Group {0}.= total number of unique word lists used for wallet backup.1 shareOnly one share will be created.Wallet backupRecovery share #{0}The required number of groups for recovery.Select the correct word for each position.Select {0} wordSelect word {0} of {1}:Set it to {0} and you will need Share #{0} checked successfully.Standard backupNumber of groupsNumber of sharesSet number of groupsSet number of sharesSet sizes and thresholdsSet size and threshold for each groupSet thresholdBackup checklistWrite down and check all sharesWrite down & check all wallet backup sharesThe threshold sets the number of shares = minimum number of unique word lists used for recovery.Backup is doneCreate walletGroup thresholdNumber of groupsNumber of sharesSet group thresholdSet number of groupsSet number of sharesSet thresholdto form Group {0}.trezor.io/tosSet the total number of shares in Group {0}.Use your backup when you need to recover your wallet.Write the following {0} words in order on your wallet backup card.Wrong word selected!For recovery you need 1 share.Your backup is done.Change display orientation to {0}?eastnorthsouthDisplay orientationwestTrezor will allow you to approve some actions which might be unsafe.Trezor will temporarily allow you to approve some actions which might be unsafe.Do you really want to enforce strict safety checks (recommended)?Safety checksSafety overrideAll data on the SD card will be lost.SD card required.Do you really want to remove SD card protection from your device?You have successfully disabled SD protection.Do you really want to secure your device with SD card protection?You have successfully enabled SD protection.SD card errorFormat SD cardPlease insert the correct SD card for this device.Please insert your SD card.Please unplug the device and insert your SD card.There was a problem accessing the SD card.Do you really want to replace the current SD card secret with a newly generated one?You have successfully refreshed SD protection.Do you want to restart Trezor in bootloader mode?SD card protectionSD card problemUnknown filesystem.Please unplug the device and insert the correct SD card.Use a different card or format the SD card to the FAT32 filesystem.Do you really want to format the SD card?Wrong SD card.Sending amountSending from multiple accounts.Including fee:Maximum feeReceiving to a multisig address.Confirm sendingJoint transactionReceiving toSendingSending amountSending toTo the total amount:Transaction IDYou are contributing: words in order.I wrote down all {0} BytesSigning addressConfirm messageMessage sizeVerify addressAssetPress both left and right at the same\ntime to confirm.Press and hold the right button to\napprove important operations.You're ready to\nuse Trezor.Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.Are you sure you\nwant to skip the tutorial?HelloScreen scrollSkip tutorialTutorial completeUse Trezor by\nclicking the left and right buttons.\n\rContinue right.Welcome to Trezor. Press right to continue.All data will be erased.Wipe deviceDo you really want to wipe the device?\nChange wipe codeWipe code changed.The wipe code must be different from your PIN.Wipe code disabled.Wipe code enabled.New wipe codeWipe code can be used to erase all data from this device.Invalid wipe codeThe wipe codes you entered do not match.Re-enter wipe codePlease re-enter wipe code to confirm.Check wipe codeInvalid wipe codeWipe code settingsTurn off wipe code protection?Turn on wipe code protection?Wipe code mismatchNumber of wordsAccountAccount:AddressAmountAre you sure?Array ofBlockhashBuyingConfirmConfirm feeContainsContinue anyway?Continue withErrorFeefromKeep it safe!Continue only if you know what you are doing!My TrezorNooutputsPlease check againPlease try againDo you really want toRecipientSignSignerCheckGroupInformationRememberShareSharesSuccessSummaryThresholdUnknownWarningWritableYesJust a moment...Starting upVerifying PINWrong PINDo you want to create a {0} of {1} multi-share backup?Multi-share backupTap to confirmHold to confirmImportantI wrote down all {0} words in order.Create a backup to avoid losing access to your fundsLet's do a quick check of your backup.InstructionsNot recommended!Account infoIf receive address doesn't match, contact Trezor Support at trezor.io/support.Cancel receiveQR codeDerivation pathContinue in the appCancel and exitReceive address confirmedContinue without PINWithout a PIN, anyone can access this device.Cancel PIN setupCancel signSend fromHold to signFee rateincl. Transaction feeTotal amountAuto-lock turned onYour wallet backup contains multiple lists of words in a specific order (shares).Your wallet backup contains {0} words in a specific order.Wallet backup completedCreate wallet backupEnter next shareHold to continueHold to exit tutorialLearn moreContinue with Share #{0}Start with share #1PassphraseWallet backup not on this deviceInvalid wallet backup enteredAll shares are valid and belong to the backup in this deviceEntered share is valid and belongs to the backup in the deviceVerify remaining recovery shares?Enter each word of your wallet backup in order.It's safe to disconnect your Trezor while recovering your wallet and continue later.Share doesn't matchCancel create walletIncorrect word selectedMore atHow many wallet backup shares do you want to create?Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.Select the minimum shares required to recover your wallet.Share #{0} completedNumber of shares: {0}Recovery threshold: {0}Transaction signedContinue tutorialExit tutorialFind context-specific actions and options in the menu.One more stepYou're all set to start using your device!Easy navigationGood to knowOperation cancelledSettingsTry again.Number of groups: {0}Display brightnessMulti-share backupCreate additional backup?Create backupChange wallpaper to default image?Words may repeat.Repeat for all shares.SettingsHomescreenThe word is repeatedLet's beginDid you know?The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.Restart tutorialHandy menuHold to confirm important actionsWell done!Learn how to use and navigate this device with ease.Get started!Swipe horizontallyAdjustApplyDisplay brightness changedChange display brightnessDoneThe threshold sets the minimum number of shares needed to recover your wallet.If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.Continue with empty passphrase?Swipe downPublic key confirmedContinue anywayView all dataView all data in the menu.Enable labeling?ProviderConfirm without reviewTap to continueUnlockedTransaction feeUnlimitedChainTokenTapWrite down the first word from the backup.We don't recommend to skip wallet backup creation.Pay attentionCheck the address with source.ReceiveA recovery share is a list of words you wrote down when setting up your Trezor.Your wallet backup consists of 1 to 16 shares.Recovery shareAfter signing, send the transaction in the app.Sign cancelled.SendWalletAuthenticateSet the time before your Trezor locks automatically.day|daysTrezor will restart after update.Access hidden walletHidden walletShow passphraseRe-enter PINPIN setup completed.Start with Share #{0}Let's do a quick check of Share #{0}.Select word #{0} from\nShare #{1}Share #{0} from Group #{1} entered.Cancel transactionUsing different paths for different XPUBs.XPUBCancel?{0} addressViewSwapProvider addressRefund addressAssetsFinishUse menu to continueLast oneView more info, quit flow, ...Replay this tutorial anytime from the Trezor Suite app.Tap to start tutorialContinue with empty device name?Enter device nameNameDevice name changed.Firmware typeFirmware versionAboutConnectedDeviceDisconnectLEDManageOFFONReviewSecurityChange PIN?Remove PINPIN codeChange wipe code?Remove wipe codeWipe codeDisabledEnabledBluetoothWipe your Trezor and start the setup process again.SetWipeUnlockStart enteringDisconnectedConnectForgetPowerWipe code must be turned off before turning off PIN protection.Wipe code setPIN must be set before enabling wipe code.Cancel wipe code setupOpen Trezor Suite and create a wallet backup. This is the only way to recover access to your assets.Your Trezor is having trouble communicating with your connected device.Allow Trezor Suite to use Suite Sync with this Trezor?Allow {0} on {1} to use Suite Sync with this Trezor?Suite SyncNote",
+                offsets: &[
+                    (Self::addr_mismatch__contact_support_at, 32),
+                    (Self::addr_mismatch__key_mismatch, 45),
+                    (Self::addr_mismatch__mismatch, 62),
+                    (Self::addr_mismatch__support_url, 79),
+                    (Self::addr_mismatch__wrong_derivation_path, 122),
+                    (Self::addr_mismatch__xpub_mismatch, 136),
+                    (Self::address__public_key, 146),
+                    (Self::address__title_cosigner, 154),
+                    (Self::address__title_receive_address, 169),
+                    (Self::address__title_yours, 174),
+                    (Self::address_details__derivation_path_colon, 190),
+                    (Self::address_details__title_receive_address, 205),
+                    (Self::address_details__title_receiving_to, 217),
+                    (Self::authenticate__confirm_template, 275),
+                    (Self::authenticate__header, 294),
+                    (Self::auto_lock__change_template, 335),
+                    (Self::auto_lock__title, 350),
+                    (Self::backup__can_back_up_anytime, 396),
+                    (Self::backup__it_should_be_backed_up, 441),
+                    (Self::backup__it_should_be_backed_up_now, 468),
+                    (Self::backup__new_wallet_created, 484),
+                    (Self::backup__new_wallet_successfully_created, 512),
+                    (Self::backup__recover_anytime, 571),
+                    (Self::backup__title_backup_wallet, 585),
+                    (Self::backup__title_skip, 596),
+                    (Self::backup__want_to_skip, 637),
+                    (Self::bitcoin__commitment_data, 652),
+                    (Self::bitcoin__confirm_locktime, 668),
+                    (Self::bitcoin__create_proof_of_ownership, 711),
+                    (Self::bitcoin__high_mining_fee_template, 754),
+                    (Self::bitcoin__locktime_no_effect, 794),
+                    (Self::bitcoin__locktime_set_to, 809),
+                    (Self::bitcoin__locktime_set_to_blockheight, 836),
+                    (Self::bitcoin__lot_of_change_outputs, 860),
+                    (Self::bitcoin__multiple_accounts, 877),
+                    (Self::bitcoin__new_fee_rate, 890),
+                    (Self::bitcoin__simple_send_of, 904),
+                    (Self::bitcoin__ticket_amount, 917),
+                    (Self::bitcoin__title_confirm_details, 932),
+                    (Self::bitcoin__title_finalize_transaction, 952),
+                    (Self::bitcoin__title_high_mining_fee, 967),
+                    (Self::bitcoin__title_meld_transaction, 983),
+                    (Self::bitcoin__title_modify_amount, 996),
+                    (Self::bitcoin__title_payjoin, 1003),
+                    (Self::bitcoin__title_proof_of_ownership, 1021),
+                    (Self::bitcoin__title_purchase_ticket, 1036),
+                    (Self::bitcoin__title_update_transaction, 1054),
+                    (Self::bitcoin__unknown_path, 1066),
+                    (Self::bitcoin__unknown_transaction, 1085),
+                    (Self::bitcoin__unusually_high_fee, 1104),
+                    (Self::bitcoin__unverified_external_inputs, 1156),
+                    (Self::bitcoin__valid_signature, 1179),
+                    (Self::bitcoin__voting_rights, 1195),
+                    (Self::buttons__abort, 1200),
+                    (Self::buttons__access, 1206),
+                    (Self::buttons__again, 1211),
+                    (Self::buttons__allow, 1216),
+                    (Self::buttons__back, 1220),
+                    (Self::buttons__back_up, 1227),
+                    (Self::buttons__cancel, 1233),
+                    (Self::buttons__change, 1239),
+                    (Self::buttons__check, 1244),
+                    (Self::buttons__check_again, 1255),
+                    (Self::buttons__close, 1260),
+                    (Self::buttons__confirm, 1267),
+                    (Self::buttons__continue, 1275),
+                    (Self::buttons__details, 1282),
+                    (Self::buttons__enable, 1288),
+                    (Self::buttons__enter, 1293),
+                    (Self::buttons__enter_share, 1304),
+                    (Self::buttons__export, 1310),
+                    (Self::buttons__format, 1316),
+                    (Self::buttons__go_back, 1323),
+                    (Self::buttons__hold_to_confirm, 1338),
+                    (Self::buttons__info, 1342),
+                    (Self::buttons__install, 1349),
+                    (Self::buttons__more_info, 1358),
+                    (Self::buttons__ok_i_understand, 1374),
+                    (Self::buttons__purchase, 1382),
+                    (Self::buttons__quit, 1386),
+                    (Self::buttons__restart, 1393),
+                    (Self::buttons__retry, 1398),
+                    (Self::buttons__select, 1404),
+                    (Self::buttons__set, 1407),
+                    (Self::buttons__show_all, 1415),
+                    (Self::buttons__show_details, 1427),
+                    (Self::buttons__show_words, 1437),
+                    (Self::buttons__skip, 1441),
+                    (Self::buttons__try_again, 1450),
+                    (Self::buttons__turn_off, 1458),
+                    (Self::buttons__turn_on, 1465),
+                    (Self::coinjoin__access_account, 1494),
+                    (Self::coinjoin__do_not_disconnect, 1524),
+                    (Self::coinjoin__max_mining_fee, 1538),
+                    (Self::coinjoin__max_rounds, 1548),
+                    (Self::coinjoin__title, 1566),
+                    (Self::coinjoin__title_progress, 1586),
+                    (Self::coinjoin__waiting_for_others, 1604),
+                    (Self::confirm_total__fee_rate_colon, 1613),
+                    (Self::confirm_total__sending_from_account, 1634),
+                    (Self::confirm_total__title_fee, 1642),
+                    (Self::confirm_total__title_sending_from, 1654),
+                    (Self::device_name__change_template, 1680),
+                    (Self::device_name__title, 1691),
+                    (Self::entropy__send, 1726),
+                    (Self::entropy__title_confirm, 1741),
+                    (Self::send__sign_transaction, 1757),
+                    (Self::experimental_mode__enable, 1786),
+                    (Self::experimental_mode__only_for_dev, 1824),
+                    (Self::experimental_mode__title, 1841),
+                    (Self::firmware_update__title, 1856),
+                    (Self::firmware_update__title_fingerprint, 1870),
+                    (Self::homescreen__click_to_connect, 1886),
+                    (Self::homescreen__click_to_unlock, 1901),
+                    (Self::homescreen__title_backup_failed, 1914),
+                    (Self::homescreen__title_backup_needed, 1927),
+                    (Self::homescreen__title_coinjoin_authorized, 1946),
+                    (Self::homescreen__title_experimental_mode, 1963),
+                    (Self::homescreen__title_no_usb_connection, 1980),
+                    (Self::homescreen__title_pin_not_set, 1991),
+                    (Self::homescreen__title_seedless, 1999),
+                    (Self::homescreen__title_set, 2015),
+                    (Self::inputs__back, 2015),
+                    (Self::inputs__cancel, 2015),
+                    (Self::inputs__delete, 2015),
+                    (Self::inputs__enter, 2015),
+                    (Self::inputs__return, 2015),
+                    (Self::inputs__show, 2015),
+                    (Self::inputs__space, 2015),
+                    (Self::joint__title, 2032),
+                    (Self::joint__to_the_total_amount, 2052),
+                    (Self::joint__you_are_contributing, 2073),
+                    (Self::language__change_to_template, 2096),
+                    (Self::language__changed, 2125),
+                    (Self::language__progress, 2142),
+                    (Self::language__title, 2159),
+                    (Self::lockscreen__tap_to_connect, 2173),
+                    (Self::lockscreen__tap_to_unlock, 2186),
+                    (Self::lockscreen__title_locked, 2192),
+                    (Self::lockscreen__title_not_connected, 2205),
+                    (Self::misc__decrypt_value, 2218),
+                    (Self::misc__encrypt_value, 2231),
+                    (Self::misc__title_suite_labeling, 2245),
+                    (Self::modify_amount__decrease_amount, 2264),
+                    (Self::modify_amount__increase_amount, 2283),
+                    (Self::modify_amount__new_amount, 2294),
+                    (Self::modify_amount__title, 2307),
+                    (Self::modify_fee__decrease_fee, 2323),
+                    (Self::modify_fee__fee_rate, 2332),
+                    (Self::modify_fee__increase_fee, 2348),
+                    (Self::modify_fee__new_transaction_fee, 2368),
+                    (Self::modify_fee__no_change, 2388),
+                    (Self::modify_fee__title, 2398),
+                    (Self::modify_fee__transaction_fee, 2414),
+                    (Self::passphrase__access_wallet, 2439),
+                    (Self::passphrase__always_on_device, 2478),
+                    (Self::passphrase__from_host_not_shown, 2581),
+                    (Self::passphrase__wallet, 2598),
+                    (Self::passphrase__hide, 2630),
+                    (Self::passphrase__next_screen_will_show_passphrase, 2668),
+                    (Self::passphrase__please_enter, 2697),
+                    (Self::passphrase__revoke_on_device, 2752),
+                    (Self::passphrase__title_confirm, 2770),
+                    (Self::passphrase__title_enter, 2786),
+                    (Self::passphrase__title_hide, 2801),
+                    (Self::passphrase__title_settings, 2820),
+                    (Self::passphrase__title_source, 2837),
+                    (Self::passphrase__turn_off, 2868),
+                    (Self::passphrase__turn_on, 2898),
+                    (Self::pin__change, 2908),
+                    (Self::pin__changed, 2920),
+                    (Self::pin__cursor_will_change, 2993),
+                    (Self::pin__diff_from_wipe_code, 3043),
+                    (Self::pin__disabled, 3069),
+                    (Self::pin__enabled, 3094),
+                    (Self::pin__enter, 3103),
+                    (Self::pin__enter_new, 3116),
+                    (Self::pin__entered_not_valid, 3154),
+                    (Self::pin__info, 3197),
+                    (Self::pin__invalid_pin, 3208),
+                    (Self::pin__last_attempt, 3220),
+                    (Self::pin__mismatch, 3246),
+                    (Self::pin__pin_mismatch, 3258),
+                    (Self::pin__please_check_again, 3277),
+                    (Self::pin__reenter_new, 3293),
+                    (Self::pin__reenter_to_confirm, 3324),
+                    (Self::pin__should_be_long, 3355),
+                    (Self::pin__title_check_pin, 3364),
+                    (Self::pin__title_settings, 3376),
+                    (Self::pin__title_wrong_pin, 3385),
+                    (Self::pin__tries_left, 3395),
+                    (Self::pin__turn_off, 3444),
+                    (Self::pin__turn_on, 3467),
+                    (Self::pin__wrong_pin, 3476),
+                    (Self::plurals__contains_x_keys, 3484),
+                    (Self::plurals__lock_after_x_hours, 3494),
+                    (Self::plurals__lock_after_x_milliseconds, 3518),
+                    (Self::plurals__lock_after_x_minutes, 3532),
+                    (Self::plurals__lock_after_x_seconds, 3546),
+                    (Self::plurals__sign_x_actions, 3560),
+                    (Self::plurals__transaction_of_x_operations, 3580),
+                    (Self::plurals__x_groups_needed, 3592),
+                    (Self::plurals__x_shares_needed, 3604),
+                    (Self::progress__authenticity_check, 3628),
+                    (Self::progress__done, 3632),
+                    (Self::progress__loading_transaction, 3654),
+                    (Self::progress__locking_device, 3675),
+                    (Self::progress__one_second_left, 3688),
+                    (Self::progress__please_wait, 3699),
+                    (Self::storage_msg__processing, 3709),
+                    (Self::progress__refreshing, 3722),
+                    (Self::progress__signing_transaction, 3744),
+                    (Self::progress__syncing, 3754),
+                    (Self::progress__x_seconds_left_template, 3770),
+                    (Self::reboot_to_bootloader__restart, 3809),
+                    (Self::reboot_to_bootloader__title, 3825),
+                    (Self::reboot_to_bootloader__version_by_template, 3852),
+                    (Self::recovery__cancel_dry_run, 3871),
+                    (Self::recovery__check_dry_run, 3889),
+                    (Self::recovery__cursor_will_change, 3962),
+                    (Self::recovery__dry_run_bip39_valid_match, 4032),
+                    (Self::recovery__dry_run_bip39_valid_mismatch, 4108),
+                    (Self::recovery__dry_run_slip39_valid_match, 4188),
+                    (Self::recovery__dry_run_slip39_valid_mismatch, 4275),
+                    (Self::recovery__enter_any_share, 4290),
+                    (Self::recovery__enter_backup, 4308),
+                    (Self::recovery__enter_different_share, 4332),
+                    (Self::recovery__enter_share_from_diff_group, 4367),
+                    (Self::recovery__group_num_template, 4376),
+                    (Self::recovery__group_threshold_reached, 4400),
+                    (Self::recovery__invalid_wallet_backup_entered, 4430),
+                    (Self::recovery__invalid_share_entered, 4461),
+                    (Self::recovery__more_shares_needed, 4479),
+                    (Self::recovery__num_of_words, 4521),
+                    (Self::recovery__only_first_n_letters, 4583),
+                    (Self::recovery__progress_will_be_lost, 4609),
+                    (Self::recovery__share_already_entered, 4630),
+                    (Self::recovery__share_from_another_multi_share_backup, 4679),
+                    (Self::recovery__share_num_template, 4688),
+                    (Self::recovery__title, 4702),
+                    (Self::recovery__title_cancel_dry_run, 4721),
+                    (Self::recovery__title_cancel_recovery, 4736),
+                    (Self::recovery__title_dry_run, 4748),
+                    (Self::recovery__title_recover, 4762),
+                    (Self::recovery__title_remaining_shares, 4778),
+                    (Self::recovery__type_word_x_of_y_template, 4798),
+                    (Self::recovery__wallet_recovered, 4823),
+                    (Self::recovery__wanna_cancel_dry_run, 4872),
+                    (Self::recovery__wanna_cancel_recovery, 4925),
+                    (Self::recovery__word_count_template, 4936),
+                    (Self::recovery__word_x_of_y_template, 4951),
+                    (Self::recovery__x_more_items_starting_template_plural, 4981),
+                    (Self::recovery__x_more_shares_needed_template_plural, 5009),
+                    (Self::recovery__x_of_y_entered_template, 5034),
+                    (Self::recovery__you_have_entered, 5050),
+                    (Self::reset__advanced_group_threshold_info, 5133),
+                    (Self::reset__all_x_of_y_template, 5154),
+                    (Self::reset__any_x_of_y_template, 5175),
+                    (Self::reset__button_create, 5188),
+                    (Self::reset__button_recover, 5202),
+                    (Self::reset__by_continuing, 5267),
+                    (Self::reset__check_backup_title, 5279),
+                    (Self::reset__check_group_share_title_template, 5301),
+                    (Self::reset__check_wallet_backup_title, 5320),
+                    (Self::reset__check_share_title_template, 5336),
+                    (Self::reset__continue_with_next_share, 5365),
+                    (Self::reset__continue_with_share_template, 5390),
+                    (Self::reset__finished_verifying_group_template, 5453),
+                    (Self::reset__finished_verifying_wallet_backup, 5500),
+                    (Self::reset__finished_verifying_shares, 5549),
+                    (Self::reset__group_description, 5587),
+                    (Self::reset__group_info, 5720),
+                    (Self::reset__group_share_checked_successfully_template, 5763),
+                    (Self::reset__group_share_title_template, 5784),
+                    (Self::reset__more_info_at, 5796),
+                    (Self::reset__need_all_share_template, 5840),
+                    (Self::reset__need_any_share_template, 5884),
+                    (Self::reset__needed_to_form_a_group, 5908),
+                    (Self::reset__needed_to_recover_your_wallet, 5939),
+                    (Self::reset__never_make_digital_copy, 5978),
+                    (Self::reset__num_of_share_holders_template, 6027),
+                    (Self::reset__num_of_shares_advanced_info_template, 6152),
+                    (Self::reset__num_of_shares_basic_info_template, 6269),
+                    (Self::reset__num_shares_for_group_template, 6317),
+                    (Self::reset__number_of_shares_info, 6376),
+                    (Self::reset__one_share, 6383),
+                    (Self::reset__only_one_share_will_be_created, 6414),
+                    (Self::reset__recovery_wallet_backup_title, 6427),
+                    (Self::reset__recovery_share_title_template, 6446),
+                    (Self::reset__required_number_of_groups, 6489),
+                    (Self::reset__select_correct_word, 6531),
+                    (Self::reset__select_word_template, 6546),
+                    (Self::reset__select_word_x_of_y_template, 6569),
+                    (Self::reset__set_it_to_count_template, 6601),
+                    (Self::reset__share_checked_successfully_template, 6633),
+                    (Self::reset__share_words_title, 6648),
+                    (Self::reset__slip39_checklist_num_groups, 6664),
+                    (Self::reset__slip39_checklist_num_shares, 6680),
+                    (Self::reset__slip39_checklist_set_num_groups, 6700),
+                    (Self::reset__slip39_checklist_set_num_shares, 6720),
+                    (Self::reset__slip39_checklist_set_sizes, 6744),
+                    (Self::reset__slip39_checklist_set_sizes_longer, 6781),
+                    (Self::reset__slip39_checklist_set_threshold, 6794),
+                    (Self::reset__slip39_checklist_title, 6810),
+                    (Self::reset__slip39_checklist_write_down, 6841),
+                    (Self::reset__slip39_checklist_write_down_recovery, 6884),
+                    (Self::reset__the_threshold_sets_the_number_of_shares, 6924),
+                    (Self::reset__threshold_info, 6980),
+                    (Self::reset__title_backup_is_done, 6994),
+                    (Self::reset__title_create_wallet, 7007),
+                    (Self::reset__title_group_threshold, 7022),
+                    (Self::reset__title_number_of_groups, 7038),
+                    (Self::reset__title_number_of_shares, 7054),
+                    (Self::reset__title_set_group_threshold, 7073),
+                    (Self::reset__title_set_number_of_groups, 7093),
+                    (Self::reset__title_set_number_of_shares, 7113),
+                    (Self::reset__title_set_threshold, 7126),
+                    (Self::reset__to_form_group_template, 7144),
+                    (Self::reset__tos_link, 7157),
+                    (Self::reset__total_number_of_shares_in_group_template, 7201),
+                    (Self::reset__use_your_backup, 7254),
+                    (Self::reset__write_down_words_template, 7320),
+                    (Self::reset__wrong_word_selected, 7340),
+                    (Self::reset__you_need_one_share, 7370),
+                    (Self::reset__your_backup_is_done, 7390),
+                    (Self::rotation__change_template, 7424),
+                    (Self::rotation__east, 7428),
+                    (Self::rotation__north, 7433),
+                    (Self::rotation__south, 7438),
+                    (Self::rotation__title_change, 7457),
+                    (Self::rotation__west, 7461),
+                    (Self::safety_checks__approve_unsafe_always, 7529),
+                    (Self::safety_checks__approve_unsafe_temporary, 7609),
+                    (Self::safety_checks__enforce_strict, 7674),
+                    (Self::safety_checks__title, 7687),
+                    (Self::safety_checks__title_safety_override, 7702),
+                    (Self::sd_card__all_data_will_be_lost, 7739),
+                    (Self::sd_card__card_required, 7756),
+                    (Self::sd_card__disable, 7821),
+                    (Self::sd_card__disabled, 7866),
+                    (Self::sd_card__enable, 7931),
+                    (Self::sd_card__enabled, 7975),
+                    (Self::sd_card__error, 7988),
+                    (Self::sd_card__format_card, 8002),
+                    (Self::sd_card__insert_correct_card, 8052),
+                    (Self::sd_card__please_insert, 8079),
+                    (Self::sd_card__please_unplug_and_insert, 8128),
+                    (Self::sd_card__problem_accessing, 8170),
+                    (Self::sd_card__refresh, 8254),
+                    (Self::sd_card__refreshed, 8300),
+                    (Self::sd_card__restart, 8349),
+                    (Self::sd_card__title, 8367),
+                    (Self::sd_card__title_problem, 8382),
+                    (Self::sd_card__unknown_filesystem, 8401),
+                    (Self::sd_card__unplug_and_insert_correct, 8457),
+                    (Self::sd_card__use_different_card, 8524),
+                    (Self::sd_card__wanna_format, 8565),
+                    (Self::sd_card__wrong_sd_card, 8579),
+                    (Self::send__confirm_sending, 8593),
+                    (Self::send__from_multiple_accounts, 8624),
+                    (Self::send__including_fee, 8638),
+                    (Self::send__maximum_fee, 8649),
+                    (Self::send__receiving_to_multisig, 8681),
+                    (Self::send__title_confirm_sending, 8696),
+                    (Self::send__title_joint_transaction, 8713),
+                    (Self::send__title_receiving_to, 8725),
+                    (Self::send__title_sending, 8732),
+                    (Self::send__title_sending_amount, 8746),
+                    (Self::send__title_sending_to, 8756),
+                    (Self::send__to_the_total_amount, 8776),
+                    (Self::send__transaction_id, 8790),
+                    (Self::send__you_are_contributing, 8811),
+                    (Self::share_words__words_in_order, 8827),
+                    (Self::share_words__wrote_down_all, 8844),
+                    (Self::sign_message__bytes_template, 8853),
+                    (Self::sign_message__confirm_address, 8868),
+                    (Self::sign_message__confirm_message, 8883),
+                    (Self::sign_message__message_size, 8895),
+                    (Self::sign_message__verify_address, 8909),
+                    (Self::words__asset, 8914),
+                    (Self::tutorial__middle_click, 8968),
+                    (Self::tutorial__press_and_hold, 9032),
+                    (Self::tutorial__ready_to_use, 9059),
+                    (Self::tutorial__scroll_down, 9168),
+                    (Self::tutorial__sure_you_want_skip, 9211),
+                    (Self::tutorial__title_hello, 9216),
+                    (Self::tutorial__title_screen_scroll, 9229),
+                    (Self::tutorial__title_skip, 9242),
+                    (Self::tutorial__title_tutorial_complete, 9259),
+                    (Self::tutorial__use_trezor, 9326),
+                    (Self::tutorial__welcome_press_right, 9369),
+                    (Self::wipe__info, 9393),
+                    (Self::wipe__title, 9404),
+                    (Self::wipe__want_to_wipe, 9443),
+                    (Self::wipe_code__change, 9459),
+                    (Self::wipe_code__changed, 9477),
+                    (Self::wipe_code__diff_from_pin, 9523),
+                    (Self::wipe_code__disabled, 9542),
+                    (Self::wipe_code__enabled, 9560),
+                    (Self::wipe_code__enter_new, 9573),
+                    (Self::wipe_code__info, 9630),
+                    (Self::wipe_code__invalid, 9647),
+                    (Self::wipe_code__mismatch, 9687),
+                    (Self::wipe_code__reenter, 9705),
+                    (Self::wipe_code__reenter_to_confirm, 9742),
+                    (Self::wipe_code__title_check, 9757),
+                    (Self::wipe_code__title_invalid, 9774),
+                    (Self::wipe_code__title_settings, 9792),
+                    (Self::wipe_code__turn_off, 9822),
+                    (Self::wipe_code__turn_on, 9851),
+                    (Self::wipe_code__wipe_code_mismatch, 9869),
+                    (Self::word_count__title, 9884),
+                    (Self::words__account, 9891),
+                    (Self::words__account_colon, 9899),
+                    (Self::words__address, 9906),
+                    (Self::words__amount, 9912),
+                    (Self::words__are_you_sure, 9925),
+                    (Self::words__array_of, 9933),
+                    (Self::words__blockhash, 9942),
+                    (Self::words__buying, 9948),
+                    (Self::words__confirm, 9955),
+                    (Self::words__confirm_fee, 9966),
+                    (Self::words__contains, 9974),
+                    (Self::words__continue_anyway_question, 9990),
+                    (Self::words__continue_with, 10003),
+                    (Self::words__error, 10008),
+                    (Self::words__fee, 10011),
+                    (Self::words__from, 10015),
+                    (Self::words__keep_it_safe, 10028),
+                    (Self::words__know_what_your_doing, 10073),
+                    (Self::words__my_trezor, 10082),
+                    (Self::words__no, 10084),
+                    (Self::words__outputs, 10091),
+                    (Self::words__please_check_again, 10109),
+                    (Self::words__please_try_again, 10125),
+                    (Self::words__really_wanna, 10146),
+                    (Self::words__recipient, 10155),
+                    (Self::words__sign, 10159),
+                    (Self::words__signer, 10165),
+                    (Self::words__title_check, 10170),
+                    (Self::words__title_group, 10175),
+                    (Self::words__title_information, 10186),
+                    (Self::words__title_remember, 10194),
+                    (Self::words__title_share, 10199),
+                    (Self::words__title_shares, 10205),
+                    (Self::words__title_success, 10212),
+                    (Self::words__title_summary, 10219),
+                    (Self::words__title_threshold, 10228),
+                    (Self::words__unknown, 10235),
+                    (Self::words__warning, 10242),
+                    (Self::words__writable, 10250),
+                    (Self::words__yes, 10253),
+                    (Self::reboot_to_bootloader__just_a_moment, 10269),
+                    (Self::inputs__previous, 10269),
+                    (Self::storage_msg__starting, 10280),
+                    (Self::storage_msg__verifying_pin, 10293),
+                    (Self::storage_msg__wrong_pin, 10302),
+                    (Self::reset__create_x_of_y_multi_share_backup_template, 10356),
+                    (Self::reset__title_shamir_backup, 10374),
+                    (Self::instructions__tap_to_confirm, 10388),
+                    (Self::instructions__hold_to_confirm, 10403),
+                    (Self::words__important, 10412),
+                    (Self::reset__words_written_down_template, 10448),
+                    (Self::backup__create_backup_to_prevent_loss, 10500),
+                    (Self::reset__check_backup_instructions, 10538),
+                    (Self::words__instructions, 10550),
+                    (Self::words__not_recommended, 10566),
+                    (Self::address_details__account_info, 10578),
+                    (Self::address__cancel_contact_support, 10656),
+                    (Self::address__cancel_receive, 10670),
+                    (Self::address__qr_code, 10677),
+                    (Self::address_details__derivation_path, 10692),
+                    (Self::instructions__continue_in_app, 10711),
+                    (Self::words__cancel_and_exit, 10726),
+                    (Self::address__confirmed, 10751),
+                    (Self::pin__cancel_description, 10771),
+                    (Self::pin__cancel_info, 10816),
+                    (Self::pin__cancel_setup, 10832),
+                    (Self::send__cancel_sign, 10843),
+                    (Self::send__send_from, 10852),
+                    (Self::instructions__hold_to_sign, 10864),
+                    (Self::confirm_total__fee_rate, 10872),
+                    (Self::send__incl_transaction_fee, 10893),
+                    (Self::send__total_amount, 10905),
+                    (Self::auto_lock__turned_on, 10924),
+                    (Self::backup__info_multi_share_backup, 11005),
+                    (Self::backup__info_single_share_backup, 11063),
+                    (Self::backup__title_backup_completed, 11086),
+                    (Self::backup__title_create_wallet_backup, 11106),
+                    (Self::haptic_feedback__disable, 11106),
+                    (Self::haptic_feedback__enable, 11106),
+                    (Self::haptic_feedback__subtitle, 11106),
+                    (Self::haptic_feedback__title, 11106),
+                    (Self::instructions__continue_holding, 11106),
+                    (Self::instructions__enter_next_share, 11122),
+                    (Self::instructions__hold_to_continue, 11138),
+                    (Self::instructions__hold_to_exit_tutorial, 11159),
+                    (Self::instructions__learn_more, 11169),
+                    (Self::instructions__shares_continue_with_x_template, 11193),
+                    (Self::instructions__shares_start_with_1, 11212),
+                    (Self::passphrase__title_passphrase, 11222),
+                    (Self::recovery__dry_run_backup_not_on_this_device, 11254),
+                    (Self::recovery__dry_run_invalid_backup_entered, 11283),
+                    (Self::recovery__dry_run_slip39_valid_all_shares, 11343),
+                    (Self::recovery__dry_run_slip39_valid_share, 11405),
+                    (Self::recovery__dry_run_verify_remaining_shares, 11438),
+                    (Self::recovery__enter_each_word, 11485),
+                    (Self::recovery__info_about_disconnect, 11569),
+                    (Self::recovery__share_does_not_match, 11588),
+                    (Self::reset__cancel_create_wallet, 11608),
+                    (Self::reset__incorrect_word_selected, 11631),
+                    (Self::reset__more_at, 11638),
+                    (Self::reset__num_of_shares_how_many, 11690),
+                    (Self::reset__num_of_shares_long_info_template, 11861),
+                    (Self::reset__select_threshold, 11919),
+                    (Self::reset__share_completed_template, 11939),
+                    (Self::reset__slip39_checklist_num_shares_x_template, 11960),
+                    (Self::reset__slip39_checklist_threshold_x_template, 11983),
+                    (Self::send__transaction_signed, 12001),
+                    (Self::tutorial__continue, 12018),
+                    (Self::tutorial__exit, 12031),
+                    (Self::tutorial__menu, 12085),
+                    (Self::tutorial__one_more_step, 12098),
+                    (Self::tutorial__ready_to_use_safe5, 12140),
+                    (Self::tutorial__swipe_up_and_down, 12140),
+                    (Self::tutorial__title_easy_navigation, 12155),
+                    (Self::tutorial__welcome_safe5, 12155),
+                    (Self::words__good_to_know, 12167),
+                    (Self::words__operation_cancelled, 12186),
+                    (Self::words__settings, 12194),
+                    (Self::words__try_again, 12204),
+                    (Self::reset__slip39_checklist_num_groups_x_template, 12225),
+                    (Self::brightness__title, 12243),
+                    (Self::recovery__title_unlock_repeated_backup, 12261),
+                    (Self::recovery__unlock_repeated_backup, 12286),
+                    (Self::recovery__unlock_repeated_backup_verb, 12299),
+                    (Self::homescreen__set_default, 12333),
+                    (Self::reset__words_may_repeat, 12350),
+                    (Self::reset__repeat_for_all_shares, 12372),
+                    (Self::homescreen__settings_subtitle, 12380),
+                    (Self::homescreen__settings_title, 12390),
+                    (Self::reset__the_word_is_repeated, 12410),
+                    (Self::tutorial__title_lets_begin, 12421),
+                    (Self::tutorial__did_you_know, 12434),
+                    (Self::tutorial__first_wallet, 12511),
+                    (Self::tutorial__restart_tutorial, 12527),
+                    (Self::tutorial__title_handy_menu, 12537),
+                    (Self::tutorial__title_hold, 12570),
+                    (Self::tutorial__title_well_done, 12580),
+                    (Self::tutorial__lets_begin, 12632),
+                    (Self::tutorial__get_started, 12644),
+                    (Self::instructions__swipe_horizontally, 12662),
+                    (Self::setting__adjust, 12668),
+                    (Self::setting__apply, 12673),
+                    (Self::brightness__changed_title, 12699),
+                    (Self::brightness__change_title, 12724),
+                    (Self::words__title_done, 12728),
+                    (Self::reset__slip39_checklist_more_info_threshold, 12806),
+                    (Self::reset__slip39_checklist_more_info_threshold_example_template, 12893),
+                    (Self::passphrase__continue_with_empty_passphrase, 12924),
+                    (Self::instructions__swipe_down, 12934),
+                    (Self::address__public_key_confirmed, 12954),
+                    (Self::words__continue_anyway, 12969),
+                    (Self::buttons__view_all_data, 12982),
+                    (Self::instructions__view_all_data, 13008),
+                    (Self::misc__enable_labeling, 13024),
+                    (Self::words__provider, 13032),
+                    (Self::sign_message__confirm_without_review, 13054),
+                    (Self::instructions__tap_to_continue, 13069),
+                    (Self::ble__unpair_all, 13069),
+                    (Self::ble__unpair_current, 13069),
+                    (Self::ble__unpair_title, 13069),
+                    (Self::words__unlocked, 13077),
+                    (Self::words__transaction_fee, 13092),
+                    (Self::words__unlimited, 13101),
+                    (Self::words__chain, 13106),
+                    (Self::words__token, 13111),
+                    (Self::instructions__tap, 13114),
+                    (Self::reset__share_words_first, 13156),
+                    (Self::backup__not_recommend, 13206),
+                    (Self::words__pay_attention, 13219),
+                    (Self::address__check_with_source, 13249),
+                    (Self::words__receive, 13256),
+                    (Self::reset__recovery_share_description, 13335),
+                    (Self::reset__recovery_share_number, 13381),
+                    (Self::words__recovery_share, 13395),
+                    (Self::send__send_in_the_app, 13442),
+                    (Self::send__sign_cancelled, 13457),
+                    (Self::words__send, 13461),
+                    (Self::words__wallet, 13467),
+                    (Self::words__authenticate, 13479),
+                    (Self::auto_lock__description, 13531),
+                    (Self::plurals__lock_after_x_days, 13539),
+                    (Self::firmware_update__restart, 13572),
+                    (Self::passphrase__access_hidden_wallet, 13592),
+                    (Self::passphrase__hidden_wallet, 13605),
+                    (Self::passphrase__show, 13620),
+                    (Self::pin__reenter, 13632),
+                    (Self::pin__setup_completed, 13652),
+                    (Self::instructions__shares_start_with_x_template, 13673),
+                    (Self::reset__check_share_backup_template, 13710),
+                    (Self::reset__select_word_from_share_template, 13742),
+                    (Self::recovery__share_from_group_entered_template, 13777),
+                    (Self::send__cancel_transaction, 13795),
+                    (Self::send__multisig_different_paths, 13837),
+                    (Self::address__xpub, 13841),
+                    (Self::words__cancel_question, 13848),
+                    (Self::address__coin_address_template, 13859),
+                    (Self::buttons__view, 13863),
+                    (Self::words__swap, 13867),
+                    (Self::address__title_provider_address, 13883),
+                    (Self::address__title_refund_address, 13897),
+                    (Self::words__assets, 13903),
+                    (Self::buttons__finish, 13909),
+                    (Self::instructions__menu_to_continue, 13929),
+                    (Self::tutorial__last_one, 13937),
+                    (Self::tutorial__menu_appendix, 13967),
+                    (Self::tutorial__navigation_ts7, 13967),
+                    (Self::tutorial__suite_restart, 14022),
+                    (Self::tutorial__welcome_safe7, 14022),
+                    (Self::tutorial__what_is_tropic, 14022),
+                    (Self::tutorial__tap_to_start, 14043),
+                    (Self::tutorial__tropic_info, 14043),
+                    (Self::device_name__continue_with_empty_label, 14075),
+                    (Self::device_name__enter, 14092),
+                    (Self::regulatory__title, 14092),
+                    (Self::words__name, 14096),
+                    (Self::device_name__changed, 14116),
+                    (Self::ble__manage_paired, 14116),
+                    (Self::ble__pair_new, 14116),
+                    (Self::ble__pair_title, 14116),
+                    (Self::ble__version, 14116),
+                    (Self::homescreen__firmware_type, 14129),
+                    (Self::homescreen__firmware_version, 14145),
+                    (Self::led__disable, 14145),
+                    (Self::led__enable, 14145),
+                    (Self::led__title, 14145),
+                    (Self::words__about, 14150),
+                    (Self::words__connected, 14159),
+                    (Self::words__device, 14165),
+                    (Self::words__disconnect, 14175),
+                    (Self::words__led, 14178),
+                    (Self::words__manage, 14184),
+                    (Self::words__off, 14187),
+                    (Self::words__on, 14189),
+                    (Self::words__review, 14195),
+                    (Self::words__security, 14203),
+                    (Self::pin__change_question, 14214),
+                    (Self::pin__remove, 14224),
+                    (Self::pin__title, 14232),
+                    (Self::wipe_code__change_question, 14249),
+                    (Self::wipe_code__remove, 14265),
+                    (Self::wipe_code__title, 14274),
+                    (Self::words__disabled, 14282),
+                    (Self::words__enabled, 14289),
+                    (Self::ble__disable, 14289),
+                    (Self::ble__enable, 14289),
+                    (Self::words__bluetooth, 14298),
+                    (Self::wipe__start_again, 14349),
+                    (Self::words__set, 14352),
+                    (Self::words__wipe, 14356),
+                    (Self::lockscreen__unlock, 14362),
+                    (Self::recovery__start_entering, 14376),
+                    (Self::words__disconnected, 14388),
+                    (Self::ble__forget_all, 14388),
+                    (Self::words__connect, 14395),
+                    (Self::words__forget, 14401),
+                    (Self::words__power, 14406),
+                    (Self::ble__limit_reached, 14406),
+                    (Self::ble__forget_all_description, 14406),
+                    (Self::ble__forget_all_devices, 14406),
+                    (Self::ble__forget_all_success, 14406),
+                    (Self::ble__forget_this_description, 14406),
+                    (Self::ble__forget_this_device, 14406),
+                    (Self::ble__forget_this_success, 14406),
+                    (Self::thp__autoconnect, 14406),
+                    (Self::thp__autoconnect_app, 14406),
+                    (Self::thp__connect, 14406),
+                    (Self::thp__connect_app, 14406),
+                    (Self::thp__pair, 14406),
+                    (Self::thp__pair_app, 14406),
+                    (Self::thp__autoconnect_title, 14406),
+                    (Self::thp__code_entry, 14406),
+                    (Self::thp__code_title, 14406),
+                    (Self::thp__connect_title, 14406),
+                    (Self::thp__nfc_text, 14406),
+                    (Self::thp__pair_title, 14406),
+                    (Self::thp__qr_title, 14406),
+                    (Self::ble__pairing_match, 14406),
+                    (Self::ble__pairing_title, 14406),
+                    (Self::thp__pair_name, 14406),
+                    (Self::thp__pair_new_device, 14406),
+                    (Self::tutorial__power, 14406),
+                    (Self::auto_lock__on_battery, 14406),
+                    (Self::auto_lock__on_usb, 14406),
+                    (Self::pin__wipe_code_exists_description, 14469),
+                    (Self::pin__wipe_code_exists_title, 14482),
+                    (Self::wipe_code__pin_not_set_description, 14524),
+                    (Self::wipe_code__cancel_setup, 14546),
+                    (Self::homescreen__backup_needed_info, 14646),
+                    (Self::ble__host_info, 14646),
+                    (Self::ble__mac_address, 14646),
+                    (Self::ble__waiting_for_host, 14646),
+                    (Self::ble__apps_connected, 14646),
+                    (Self::sn__action, 14646),
+                    (Self::sn__title, 14646),
+                    (Self::ble__must_be_enabled, 14646),
+                    (Self::words__comm_trouble, 14717),
+                    (Self::secure_sync__delegated_identity_key_no_thp, 14771),
+                    (Self::secure_sync__delegated_identity_key_thp, 14823),
+                    (Self::secure_sync__header, 14833),
+                    (Self::words__note, 14837),
+                ],
+            };
 
-    #[cfg(feature = "micropython")]
+            #[cfg(feature = "universal_fw")]
+            const ALTCOIN_BLOB: StringsBlob = StringsBlob {
+                text: "BaseEnterpriseLegacyPointerRewardaddress - no staking rewards.Amount burned (decimals unknown):Amount minted (decimals unknown):Amount sent (decimals unknown):Pool has no metadata (anonymous pool)Asset fingerprint:Auxiliary data hash:BlockCatalystCertificateChange outputCheck all items carefully.Choose level of details:Collateral input ID:Collateral input index:The collateral return output contains tokens.Collateral returnConfirm signing the stake pool registration as an owner.Confirm transactionConfirming a multisig transaction.Confirming a Plutus transaction.Confirming pool registration as owner.Confirming a transaction.CostCredential doesn't match payment credential.Datum hash:Delegating to:for account {0} and index {1}:for account {0}:for key hash:for script:Inline datumInput ID:Input index:The following address is a change address. ItsThe following address is owned by this device. ItsThe vote key registration payment address is owned by this device. Itskey hashMarginmulti-sig pathContains {0} nested scripts.Network:Transaction has no outputs, network cannot be verified.Nonce:otherpathPledgepointerPolicy IDPool metadata hash:Pool metadata url:Pool owner:Pool reward account:Reference input ID:Reference input index:Reference scriptRequired signerrewardAddress is a reward address.Warning: The address is not a payment address, it is not eligible for rewards.Rewards go to:scriptAllAnyScript data hash:Script hash:Invalid beforeInvalid hereafterKeyN of Kscript rewardSendingShow SimpleSign transaction with {0}Stake delegationStake key deregistrationStakepool registrationStake pool registration\nPool ID:Stake key registrationStaking key for accountto pool:token minting pathTotal collateral:TransactionThe transaction contains minting or burning of tokens.The following transaction output contains a script address, but does not contain a datum.Transaction ID:The transaction contains no collateral inputs. Plutus script will not be able to run.The transaction contains no script data hash. Plutus script will not be able to run.The following transaction output contains tokens.TTL:Unknown collateral amount.Path is unusual.Valid since:Verify scriptVote key registration (CIP-36)Vote public key:Voting purpose:WarningWeight:Confirm withdrawal for {0} address:Requires {0} out of {1} signatures.You are about to sign {0}.Action Name:Arbitrary dataBuy RAMBytes:Cancel voteChecksum:Code:Contract:CPU:Creator:DelegateDelete AuthFrom:Link AuthMemoName:NET:New accountOwner:Parent:Payer:Permission:Proxy:Receiver:RefundRequirement:Sell RAMSender:Threshold:To:Transfer:Type:UndelegateUnlink AuthUpdate AuthVote for producersVote for proxyVoter:Amount sent:Size: {0} bytesGas limitGas priceMax fee per gasName and versionNew contract will be deployedNo message fieldMax priority feeShow full arrayShow full domainShow full messageShow full structReally sign EIP-712 typed data?Input dataConfirm domainConfirm messageConfirm structConfirm typed dataSigning address{0} unitsUnknown tokenThe signature is valid.Already registeredThis device is already registered with this application.This device is already registered with {0}.This device is not registered with this application.The credential you are trying to import does\nnot belong to this authenticator.erase all credentials?Export information about the credentials stored on this device?Not registeredThis device is not registered with\n{0}.Please enable PIN protection.FIDO2 authenticateImport credentialList credentialsFIDO2 registerRemove credentialFIDO2 resetU2F authenticateU2F registerFIDO2 verify userUnable to verify user.Do you really want to erase all credentials?Confirm exportConfirm ki syncConfirm refreshConfirm unlock timeHashing inputsPayment IDPostprocessing...Processing...Processing inputsProcessing outputsSigning...Signing inputsUnlock time for this transaction is set to {0}Do you really want to export tx_der\nfor tx_proof?Do you really want to export tx_key?Do you really want to export watch-only credentials?Do you really want to\nstart refresh?Do you really want to\nsync key images?absoluteActivateAddConfirm actionConfirm addressConfirm creation feeConfirm mosaicConfirm multisig feeConfirm namespaceConfirm payloadConfirm propertiesConfirm rental feeConfirm transfer ofConvert account to multisig account?Cosign transaction for cosignatoryCreate mosaicCreate namespaceDeactivateDecreaseDescription:Divisibility and levy cannot be shown for unknown mosaicsEncryptedFinal confirmimmutableIncreaseInitial supply:Initiate transaction forLevy divisibility:Levy fee:Confirm mosaic levy fee ofLevy mosaic:Levy namespace:Levy recipient:Levy type:Modify supply forModify the number of cosignatories by mutableofpercentile{0} raw units remote harvesting?RemoveSet minimum cosignatories to Sign this transaction\nand pay {0}\nfor network fee?Supply change{0} supply by {1} whole units?Transferable?under namespaceUnencryptedUnknown mosaic!Confirm tagDestination tag:\n{0}Account indexAssociated token accountConfirm multisigExpected feeInstruction contains {0} accounts and its data is {1} bytes long.Instruction dataThe following instruction is a multisig instruction.{0} is provided via a lookup table.Lookup table addressMultiple signersTransaction contains unknown instructions.Transaction requires {0} signers which increases the fee.Account MergeAccount ThresholdsAdd SignerAdd trustAll XLM will be sent toAllow trustBalance IDBump SequenceBuying:Claim Claimable BalanceClear dataClear flagsConfirm IssuerConfirm memoConfirm operationConfirm timeboundsCreate AccountDebited amountDeleteDelete Passive OfferDelete trustDestinationMemo is not set.\nTypically needed when sending to exchanges.Final confirmHashHigh:Home DomainInflation{0} issuerKey:LimitLow:Master Weight:Medium:New OfferNew Passive OfferNo memo set![no restriction]Path PayPath Pay at leastPayPay at mostPre-auth transactionPrice per {0}:Remove SignerRevoke trustSelling:Set dataSet flagsSet sequence to {0}?Sign this transaction made up of {0}and pay {0}\nfor fee?Source accountTrusted AccountUpdateValid from (UTC)Valid to (UTC)Value (SHA-256):Do you want to clear value key {0}?Baker addressBalance:Ballot:Confirm delegationConfirm originationDelegatorProposalRegister delegateRemove delegationSubmit ballotSubmit proposalSubmit proposalsIncrease and retrieve the U2F counter?Set the U2F counter to {0}?Get U2F counterSet U2F counterClaimClaim addressClaim ETH from Everstake?StakeStake addressStake ETH on Everstake?UnstakeUnstake ETH from Everstake?Always AbstainAlways No ConfidenceDelegating to key hash:Delegating to script:Deposit:Vote delegationMore credentialsSelect the credential that you would like to use for authentication.for authenticationSelect credentialCredential detailsUnknown contract addressToken contractInteraction contractBase feeClaimClaim SOL from stake account?Claiming SOL to address outside your current wallet.Priority feeStakeStake accountStake SOL?The current wallet isn't the SOL staking withdraw authority.Withdraw authority addressUnstakeUnstake SOL from stake account?Vote accountStake SOL on {0}?Event kind: {0}Max fees and rentMax rent feeApproveAmount allowanceChain IDReview details to approve token spending.Token approvalApprove toApproving unlimited amount of {0}Review details to revoke token approval.Token revocationRevokeRevoke fromUnknown tokenUnknown token addressAll input data ({0} bytes)Provider contract addressConfirm message hashSign withTimeboundsToken infoTransaction sourceTransaction source does not belong to this Trezor.Confirm messageEmpty messageMessage hash:Message hexMessage textSign message hash with {0}Sign message with {0}Destination tag is not set. Typically needed when sending to exchanges.",
+                offsets: &[
+                    (Self::cardano__addr_base, 4),
+                    (Self::cardano__addr_enterprise, 14),
+                    (Self::cardano__addr_legacy, 20),
+                    (Self::cardano__addr_pointer, 27),
+                    (Self::cardano__addr_reward, 33),
+                    (Self::cardano__address_no_staking, 62),
+                    (Self::cardano__amount_burned_decimals_unknown, 95),
+                    (Self::cardano__amount_minted_decimals_unknown, 128),
+                    (Self::cardano__amount_sent_decimals_unknown, 159),
+                    (Self::cardano__anonymous_pool, 196),
+                    (Self::cardano__asset_fingerprint, 214),
+                    (Self::cardano__auxiliary_data_hash, 234),
+                    (Self::cardano__block, 239),
+                    (Self::cardano__catalyst, 247),
+                    (Self::cardano__certificate, 258),
+                    (Self::cardano__change_output, 271),
+                    (Self::cardano__check_all_items, 297),
+                    (Self::cardano__choose_level_of_details, 321),
+                    (Self::cardano__collateral_input_id, 341),
+                    (Self::cardano__collateral_input_index, 364),
+                    (Self::cardano__collateral_output_contains_tokens, 409),
+                    (Self::cardano__collateral_return, 426),
+                    (Self::cardano__confirm_signing_stake_pool, 482),
+                    (Self::cardano__confirm_transaction, 501),
+                    (Self::cardano__confirming_a_multisig_transaction, 535),
+                    (Self::cardano__confirming_a_plutus_transaction, 567),
+                    (Self::cardano__confirming_pool_registration, 605),
+                    (Self::cardano__confirming_transaction, 630),
+                    (Self::cardano__cost, 634),
+                    (Self::cardano__credential_mismatch, 678),
+                    (Self::cardano__datum_hash, 689),
+                    (Self::cardano__delegating_to, 703),
+                    (Self::cardano__for_account_and_index_template, 733),
+                    (Self::cardano__for_account_template, 749),
+                    (Self::cardano__for_key_hash, 762),
+                    (Self::cardano__for_script, 773),
+                    (Self::cardano__inline_datum, 785),
+                    (Self::cardano__input_id, 794),
+                    (Self::cardano__input_index, 806),
+                    (Self::cardano__intro_text_change, 852),
+                    (Self::cardano__intro_text_owned_by_device, 902),
+                    (Self::cardano__intro_text_registration_payment, 972),
+                    (Self::cardano__key_hash, 980),
+                    (Self::cardano__margin, 986),
+                    (Self::cardano__multisig_path, 1000),
+                    (Self::cardano__nested_scripts_template, 1028),
+                    (Self::cardano__network, 1036),
+                    (Self::cardano__no_output_tx, 1091),
+                    (Self::cardano__nonce, 1097),
+                    (Self::cardano__other, 1102),
+                    (Self::cardano__path, 1106),
+                    (Self::cardano__pledge, 1112),
+                    (Self::cardano__pointer, 1119),
+                    (Self::cardano__policy_id, 1128),
+                    (Self::cardano__pool_metadata_hash, 1147),
+                    (Self::cardano__pool_metadata_url, 1165),
+                    (Self::cardano__pool_owner, 1176),
+                    (Self::cardano__pool_reward_account, 1196),
+                    (Self::cardano__reference_input_id, 1215),
+                    (Self::cardano__reference_input_index, 1237),
+                    (Self::cardano__reference_script, 1253),
+                    (Self::cardano__required_signer, 1268),
+                    (Self::cardano__reward, 1274),
+                    (Self::cardano__reward_address, 1302),
+                    (Self::cardano__reward_eligibility_warning, 1380),
+                    (Self::cardano__rewards_go_to, 1394),
+                    (Self::cardano__script, 1400),
+                    (Self::cardano__script_all, 1403),
+                    (Self::cardano__script_any, 1406),
+                    (Self::cardano__script_data_hash, 1423),
+                    (Self::cardano__script_hash, 1435),
+                    (Self::cardano__script_invalid_before, 1449),
+                    (Self::cardano__script_invalid_hereafter, 1466),
+                    (Self::cardano__script_key, 1469),
+                    (Self::cardano__script_n_of_k, 1475),
+                    (Self::cardano__script_reward, 1488),
+                    (Self::cardano__sending, 1495),
+                    (Self::cardano__show_simple, 1506),
+                    (Self::cardano__sign_tx_path_template, 1531),
+                    (Self::cardano__stake_delegation, 1547),
+                    (Self::cardano__stake_deregistration, 1571),
+                    (Self::cardano__stake_pool_registration, 1593),
+                    (Self::cardano__stake_pool_registration_pool_id, 1625),
+                    (Self::cardano__stake_registration, 1647),
+                    (Self::cardano__staking_key_for_account, 1670),
+                    (Self::cardano__to_pool, 1678),
+                    (Self::cardano__token_minting_path, 1696),
+                    (Self::cardano__total_collateral, 1713),
+                    (Self::cardano__transaction, 1724),
+                    (Self::cardano__transaction_contains_minting_or_burning, 1778),
+                    (Self::cardano__transaction_contains_script_address_no_datum, 1867),
+                    (Self::cardano__transaction_id, 1882),
+                    (Self::cardano__transaction_no_collateral_input, 1967),
+                    (Self::cardano__transaction_no_script_data_hash, 2051),
+                    (Self::cardano__transaction_output_contains_tokens, 2100),
+                    (Self::cardano__ttl, 2104),
+                    (Self::cardano__unknown_collateral_amount, 2130),
+                    (Self::cardano__unusual_path, 2146),
+                    (Self::cardano__valid_since, 2158),
+                    (Self::cardano__verify_script, 2171),
+                    (Self::cardano__vote_key_registration, 2201),
+                    (Self::cardano__vote_public_key, 2217),
+                    (Self::cardano__voting_purpose, 2232),
+                    (Self::cardano__warning, 2239),
+                    (Self::cardano__weight, 2246),
+                    (Self::cardano__withdrawal_for_address_template, 2281),
+                    (Self::cardano__x_of_y_signatures_template, 2316),
+                    (Self::eos__about_to_sign_template, 2342),
+                    (Self::eos__action_name, 2354),
+                    (Self::eos__arbitrary_data, 2368),
+                    (Self::eos__buy_ram, 2375),
+                    (Self::eos__bytes, 2381),
+                    (Self::eos__cancel_vote, 2392),
+                    (Self::eos__checksum, 2401),
+                    (Self::eos__code, 2406),
+                    (Self::eos__contract, 2415),
+                    (Self::eos__cpu, 2419),
+                    (Self::eos__creator, 2427),
+                    (Self::eos__delegate, 2435),
+                    (Self::eos__delete_auth, 2446),
+                    (Self::eos__from, 2451),
+                    (Self::eos__link_auth, 2460),
+                    (Self::eos__memo, 2464),
+                    (Self::eos__name, 2469),
+                    (Self::eos__net, 2473),
+                    (Self::eos__new_account, 2484),
+                    (Self::eos__owner, 2490),
+                    (Self::eos__parent, 2497),
+                    (Self::eos__payer, 2503),
+                    (Self::eos__permission, 2514),
+                    (Self::eos__proxy, 2520),
+                    (Self::eos__receiver, 2529),
+                    (Self::eos__refund, 2535),
+                    (Self::eos__requirement, 2547),
+                    (Self::eos__sell_ram, 2555),
+                    (Self::eos__sender, 2562),
+                    (Self::eos__threshold, 2572),
+                    (Self::eos__to, 2575),
+                    (Self::eos__transfer, 2584),
+                    (Self::eos__type, 2589),
+                    (Self::eos__undelegate, 2599),
+                    (Self::eos__unlink_auth, 2610),
+                    (Self::eos__update_auth, 2621),
+                    (Self::eos__vote_for_producers, 2639),
+                    (Self::eos__vote_for_proxy, 2653),
+                    (Self::eos__voter, 2659),
+                    (Self::ethereum__amount_sent, 2671),
+                    (Self::ethereum__data_size_template, 2686),
+                    (Self::ethereum__gas_limit, 2695),
+                    (Self::ethereum__gas_price, 2704),
+                    (Self::ethereum__max_gas_price, 2719),
+                    (Self::ethereum__name_and_version, 2735),
+                    (Self::ethereum__new_contract, 2764),
+                    (Self::ethereum__no_message_field, 2780),
+                    (Self::ethereum__priority_fee, 2796),
+                    (Self::ethereum__show_full_array, 2811),
+                    (Self::ethereum__show_full_domain, 2827),
+                    (Self::ethereum__show_full_message, 2844),
+                    (Self::ethereum__show_full_struct, 2860),
+                    (Self::ethereum__sign_eip712, 2891),
+                    (Self::ethereum__title_input_data, 2901),
+                    (Self::ethereum__title_confirm_domain, 2915),
+                    (Self::ethereum__title_confirm_message, 2930),
+                    (Self::ethereum__title_confirm_struct, 2944),
+                    (Self::ethereum__title_confirm_typed_data, 2962),
+                    (Self::ethereum__title_signing_address, 2977),
+                    (Self::ethereum__units_template, 2986),
+                    (Self::ethereum__unknown_token, 2999),
+                    (Self::ethereum__valid_signature, 3022),
+                    (Self::fido__already_registered, 3040),
+                    (Self::fido__device_already_registered, 3096),
+                    (Self::fido__device_already_registered_with_template, 3139),
+                    (Self::fido__device_not_registered, 3191),
+                    (Self::fido__does_not_belong, 3269),
+                    (Self::fido__erase_credentials, 3291),
+                    (Self::fido__export_credentials, 3354),
+                    (Self::fido__not_registered, 3368),
+                    (Self::fido__not_registered_with_template, 3407),
+                    (Self::fido__please_enable_pin_protection, 3436),
+                    (Self::fido__title_authenticate, 3454),
+                    (Self::fido__title_import_credential, 3471),
+                    (Self::fido__title_list_credentials, 3487),
+                    (Self::fido__title_register, 3501),
+                    (Self::fido__title_remove_credential, 3518),
+                    (Self::fido__title_reset, 3529),
+                    (Self::fido__title_u2f_auth, 3545),
+                    (Self::fido__title_u2f_register, 3557),
+                    (Self::fido__title_verify_user, 3574),
+                    (Self::fido__unable_to_verify_user, 3596),
+                    (Self::fido__wanna_erase_credentials, 3640),
+                    (Self::monero__confirm_export, 3654),
+                    (Self::monero__confirm_ki_sync, 3669),
+                    (Self::monero__confirm_refresh, 3684),
+                    (Self::monero__confirm_unlock_time, 3703),
+                    (Self::monero__hashing_inputs, 3717),
+                    (Self::monero__payment_id, 3727),
+                    (Self::monero__postprocessing, 3744),
+                    (Self::monero__processing, 3757),
+                    (Self::monero__processing_inputs, 3774),
+                    (Self::monero__processing_outputs, 3792),
+                    (Self::monero__signing, 3802),
+                    (Self::monero__signing_inputs, 3816),
+                    (Self::monero__unlock_time_set_template, 3862),
+                    (Self::monero__wanna_export_tx_der, 3911),
+                    (Self::monero__wanna_export_tx_key, 3947),
+                    (Self::monero__wanna_export_watchkey, 3999),
+                    (Self::monero__wanna_start_refresh, 4035),
+                    (Self::monero__wanna_sync_key_images, 4073),
+                    (Self::nem__absolute, 4081),
+                    (Self::nem__activate, 4089),
+                    (Self::nem__add, 4092),
+                    (Self::nem__confirm_action, 4106),
+                    (Self::nem__confirm_address, 4121),
+                    (Self::nem__confirm_creation_fee, 4141),
+                    (Self::nem__confirm_mosaic, 4155),
+                    (Self::nem__confirm_multisig_fee, 4175),
+                    (Self::nem__confirm_namespace, 4192),
+                    (Self::nem__confirm_payload, 4207),
+                    (Self::nem__confirm_properties, 4225),
+                    (Self::nem__confirm_rental_fee, 4243),
+                    (Self::nem__confirm_transfer_of, 4262),
+                    (Self::nem__convert_account_to_multisig, 4298),
+                    (Self::nem__cosign_transaction_for, 4320),
+                    (Self::nem__cosignatory, 4332),
+                    (Self::nem__create_mosaic, 4345),
+                    (Self::nem__create_namespace, 4361),
+                    (Self::nem__deactivate, 4371),
+                    (Self::nem__decrease, 4379),
+                    (Self::nem__description, 4391),
+                    (Self::nem__divisibility_and_levy_cannot_be_shown, 4448),
+                    (Self::nem__encrypted, 4457),
+                    (Self::nem__final_confirm, 4470),
+                    (Self::nem__immutable, 4479),
+                    (Self::nem__increase, 4487),
+                    (Self::nem__initial_supply, 4502),
+                    (Self::nem__initiate_transaction_for, 4526),
+                    (Self::nem__levy_divisibility, 4544),
+                    (Self::nem__levy_fee, 4553),
+                    (Self::nem__levy_fee_of, 4579),
+                    (Self::nem__levy_mosaic, 4591),
+                    (Self::nem__levy_namespace, 4606),
+                    (Self::nem__levy_recipient, 4621),
+                    (Self::nem__levy_type, 4631),
+                    (Self::nem__modify_supply_for, 4648),
+                    (Self::nem__modify_the_number_of_cosignatories_by, 4686),
+                    (Self::nem__mutable, 4693),
+                    (Self::nem__of, 4695),
+                    (Self::nem__percentile, 4705),
+                    (Self::nem__raw_units_template, 4718),
+                    (Self::nem__remote_harvesting, 4737),
+                    (Self::nem__remove, 4743),
+                    (Self::nem__set_minimum_cosignatories_to, 4772),
+                    (Self::nem__sign_tx_fee_template, 4822),
+                    (Self::nem__supply_change, 4835),
+                    (Self::nem__supply_units_template, 4865),
+                    (Self::nem__transferable, 4878),
+                    (Self::nem__under_namespace, 4893),
+                    (Self::nem__unencrypted, 4904),
+                    (Self::nem__unknown_mosaic, 4919),
+                    (Self::ripple__confirm_tag, 4930),
+                    (Self::ripple__destination_tag_template, 4950),
+                    (Self::solana__account_index, 4963),
+                    (Self::solana__associated_token_account, 4987),
+                    (Self::solana__confirm_multisig, 5003),
+                    (Self::solana__expected_fee, 5015),
+                    (Self::solana__instruction_accounts_template, 5080),
+                    (Self::solana__instruction_data, 5096),
+                    (Self::solana__instruction_is_multisig, 5148),
+                    (Self::solana__is_provided_via_lookup_table_template, 5183),
+                    (Self::solana__lookup_table_address, 5203),
+                    (Self::solana__multiple_signers, 5219),
+                    (Self::solana__transaction_contains_unknown_instructions, 5261),
+                    (Self::solana__transaction_requires_x_signers_template, 5318),
+                    (Self::stellar__account_merge, 5331),
+                    (Self::stellar__account_thresholds, 5349),
+                    (Self::stellar__add_signer, 5359),
+                    (Self::stellar__add_trust, 5368),
+                    (Self::stellar__all_will_be_sent_to, 5391),
+                    (Self::stellar__allow_trust, 5402),
+                    (Self::stellar__balance_id, 5412),
+                    (Self::stellar__bump_sequence, 5425),
+                    (Self::stellar__buying, 5432),
+                    (Self::stellar__claim_claimable_balance, 5455),
+                    (Self::stellar__clear_data, 5465),
+                    (Self::stellar__clear_flags, 5476),
+                    (Self::stellar__confirm_issuer, 5490),
+                    (Self::stellar__confirm_memo, 5502),
+                    (Self::stellar__confirm_operation, 5519),
+                    (Self::stellar__confirm_timebounds, 5537),
+                    (Self::stellar__create_account, 5551),
+                    (Self::stellar__debited_amount, 5565),
+                    (Self::stellar__delete, 5571),
+                    (Self::stellar__delete_passive_offer, 5591),
+                    (Self::stellar__delete_trust, 5603),
+                    (Self::stellar__destination, 5614),
+                    (Self::stellar__exchanges_require_memo, 5674),
+                    (Self::stellar__final_confirm, 5687),
+                    (Self::stellar__hash, 5691),
+                    (Self::stellar__high, 5696),
+                    (Self::stellar__home_domain, 5707),
+                    (Self::stellar__inflation, 5716),
+                    (Self::stellar__issuer_template, 5726),
+                    (Self::stellar__key, 5730),
+                    (Self::stellar__limit, 5735),
+                    (Self::stellar__low, 5739),
+                    (Self::stellar__master_weight, 5753),
+                    (Self::stellar__medium, 5760),
+                    (Self::stellar__new_offer, 5769),
+                    (Self::stellar__new_passive_offer, 5786),
+                    (Self::stellar__no_memo_set, 5798),
+                    (Self::stellar__no_restriction, 5814),
+                    (Self::stellar__path_pay, 5822),
+                    (Self::stellar__path_pay_at_least, 5839),
+                    (Self::stellar__pay, 5842),
+                    (Self::stellar__pay_at_most, 5853),
+                    (Self::stellar__preauth_transaction, 5873),
+                    (Self::stellar__price_per_template, 5887),
+                    (Self::stellar__remove_signer, 5900),
+                    (Self::stellar__revoke_trust, 5912),
+                    (Self::stellar__selling, 5920),
+                    (Self::stellar__set_data, 5928),
+                    (Self::stellar__set_flags, 5937),
+                    (Self::stellar__set_sequence_to_template, 5957),
+                    (Self::stellar__sign_tx_count_template, 5993),
+                    (Self::stellar__sign_tx_fee_template, 6013),
+                    (Self::stellar__source_account, 6027),
+                    (Self::stellar__trusted_account, 6042),
+                    (Self::stellar__update, 6048),
+                    (Self::stellar__valid_from, 6064),
+                    (Self::stellar__valid_to, 6078),
+                    (Self::stellar__value_sha256, 6094),
+                    (Self::stellar__wanna_clean_value_key_template, 6129),
+                    (Self::tezos__baker_address, 6142),
+                    (Self::tezos__balance, 6150),
+                    (Self::tezos__ballot, 6157),
+                    (Self::tezos__confirm_delegation, 6175),
+                    (Self::tezos__confirm_origination, 6194),
+                    (Self::tezos__delegator, 6203),
+                    (Self::tezos__proposal, 6211),
+                    (Self::tezos__register_delegate, 6228),
+                    (Self::tezos__remove_delegation, 6245),
+                    (Self::tezos__submit_ballot, 6258),
+                    (Self::tezos__submit_proposal, 6273),
+                    (Self::tezos__submit_proposals, 6289),
+                    (Self::u2f__get, 6327),
+                    (Self::u2f__set_template, 6354),
+                    (Self::u2f__title_get, 6369),
+                    (Self::u2f__title_set, 6384),
+                    (Self::ethereum__staking_claim, 6389),
+                    (Self::ethereum__staking_claim_address, 6402),
+                    (Self::ethereum__staking_claim_intro, 6427),
+                    (Self::ethereum__staking_stake, 6432),
+                    (Self::ethereum__staking_stake_address, 6445),
+                    (Self::ethereum__staking_stake_intro, 6468),
+                    (Self::ethereum__staking_unstake, 6475),
+                    (Self::ethereum__staking_unstake_intro, 6502),
+                    (Self::cardano__always_abstain, 6516),
+                    (Self::cardano__always_no_confidence, 6536),
+                    (Self::cardano__delegating_to_key_hash, 6559),
+                    (Self::cardano__delegating_to_script, 6580),
+                    (Self::cardano__deposit, 6588),
+                    (Self::cardano__vote_delegation, 6603),
+                    (Self::fido__more_credentials, 6619),
+                    (Self::fido__select_intro, 6687),
+                    (Self::fido__title_for_authentication, 6705),
+                    (Self::fido__title_select_credential, 6722),
+                    (Self::fido__title_credential_details, 6740),
+                    (Self::ethereum__unknown_contract_address, 6764),
+                    (Self::ethereum__token_contract, 6778),
+                    (Self::ethereum__interaction_contract, 6798),
+                    (Self::solana__base_fee, 6806),
+                    (Self::solana__claim, 6811),
+                    (Self::solana__claim_question, 6840),
+                    (Self::solana__claim_recipient_warning, 6892),
+                    (Self::solana__priority_fee, 6904),
+                    (Self::solana__stake, 6909),
+                    (Self::solana__stake_account, 6922),
+                    (Self::solana__stake_question, 6932),
+                    (Self::solana__stake_withdrawal_warning, 6992),
+                    (Self::solana__stake_withdrawal_warning_title, 7018),
+                    (Self::solana__unstake, 7025),
+                    (Self::solana__unstake_question, 7056),
+                    (Self::solana__vote_account, 7068),
+                    (Self::solana__stake_on_question, 7085),
+                    (Self::nostr__event_kind_template, 7100),
+                    (Self::solana__max_fees_rent, 7117),
+                    (Self::solana__max_rent_fee, 7129),
+                    (Self::ethereum__approve, 7136),
+                    (Self::ethereum__approve_amount_allowance, 7152),
+                    (Self::ethereum__approve_chain_id, 7160),
+                    (Self::ethereum__approve_intro, 7201),
+                    (Self::ethereum__approve_intro_title, 7215),
+                    (Self::ethereum__approve_to, 7225),
+                    (Self::ethereum__approve_unlimited_template, 7258),
+                    (Self::ethereum__approve_intro_revoke, 7298),
+                    (Self::ethereum__approve_intro_title_revoke, 7314),
+                    (Self::ethereum__approve_revoke, 7320),
+                    (Self::ethereum__approve_revoke_from, 7331),
+                    (Self::solana__unknown_token, 7344),
+                    (Self::solana__unknown_token_address, 7365),
+                    (Self::ethereum__title_all_input_data_template, 7391),
+                    (Self::ethereum__contract_address, 7416),
+                    (Self::ethereum__title_confirm_message_hash, 7436),
+                    (Self::stellar__sign_with, 7445),
+                    (Self::stellar__timebounds, 7455),
+                    (Self::stellar__token_info, 7465),
+                    (Self::stellar__transaction_source, 7483),
+                    (Self::stellar__transaction_source_diff_warning, 7533),
+                    (Self::cardano__confirm_message, 7548),
+                    (Self::cardano__empty_message, 7561),
+                    (Self::cardano__message_hash, 7574),
+                    (Self::cardano__message_hex, 7585),
+                    (Self::cardano__message_text, 7597),
+                    (Self::cardano__sign_message_hash_path_template, 7623),
+                    (Self::cardano__sign_message_path_template, 7644),
+                    (Self::ripple__destination_tag_missing, 7715),
+                ],
+            };
+
+            #[cfg(feature = "debug")]
+            const DEBUG_BLOB: StringsBlob = StringsBlob {
+                text: "Loading seedLoading private seed is not recommended.",
+                offsets: &[
+                    (Self::debug__loading_seed, 12),
+                    (Self::debug__loading_seed_not_recommended, 52),
+                ],
+            };
+
+            pub const BLOBS: &'static [StringsBlob] = &[
+                Self::BTC_ONLY_BLOB,
+                #[cfg(feature = "universal_fw")]
+                Self::ALTCOIN_BLOB,
+                #[cfg(feature = "debug")]
+                Self::DEBUG_BLOB,
+            ];
+        }
+    } else if #[cfg(feature = "layout_caesar")] {
+        impl TranslatedString {
+            const BTC_ONLY_BLOB: StringsBlob = StringsBlob {
+                text: "Please contact Trezor support atKey mismatch?Address mismatch?trezor.io/supportWrong derivation path for selected account.XPUB mismatch?Public keyCosignerReceive addressYoursDerivation path:Receive addressReceiving toAllow connected app to check the authenticity of your {0}?Authenticate deviceAuto-lock Trezor after {0} of inactivity?Auto-lock delayYou can back up your Trezor once, at any time.You should back up your new wallet right now.It should be backed up now!Wallet created.\nWallet created successfully.You can use your backup to recover your wallet at any time.Back up walletSkip backupAre you sure you want to skip the backup?Commitment dataConfirm locktimeDo you want to create a proof of ownership?The mining fee of\n{0}\nis unexpectedly high.Locktime is set but will have no effect.Locktime set toLocktime set to blockheightA lot of change-outputs.Multiple accountsNew fee rate:Simple send ofTicket amountConfirm detailsFinalize transactionHigh mining feeMeld transactionModify amountPayjoinProof of ownershipPurchase ticketUpdate transactionUnknown pathUnknown transactionUnusually high fee.The transaction contains unverified external inputs.The signature is valid.Voting rights toAbortAccessAgainAllowBackBack upCancelChangeCheckCheck againCloseConfirmContinueDetailsEnableEnterEnter shareExportFormatGo backHold to confirmInfoInstallMore infoOk, I understandPurchaseQuitRestartRetrySelectSetShow allShow detailsShow wordsSkipTry againTurn offTurn onAccess your coinjoin account?Do not disconnect your Trezor!Max mining feeMax roundsAuthorize coinjoinCoinjoin in progressWaiting for othersFee rate:Sending from account:Fee infoSending fromChange device name to {0}?Device nameDo you really want to send entropy?Confirm entropySign transactionEnable experimental features?Only for development and beta testing!Experimental modeUpdate firmwareFW fingerprintClick to ConnectClick to UnlockBackup failedBackup neededCoinjoin authorizedExperimental modeNo USB connectionPIN not setSeedlessChange wallpaperBACKCANCELDELETEENTERRETURNSHOWSPACEJoint transactionTo the total amount:You are contributing:Change language to {0}?Language changed successfullyChanging languageLanguage settingsTap to connectTap to unlockLockedNot connectedDecrypt valueEncrypt valueSuite labelingDecrease amount by:Increase amount by:New amount:Modify amountDecrease fee by:Fee rate:Increase fee by:New transaction fee:Fee did not change.\nModify feeTransaction fee:Access passphrase wallet?Always enter your passphrase on Trezor?Passphrase provided by connected app will be used but will not be displayed due to the device settings.Passphrase walletHide passphrase coming from app?The next screen shows your passphrase.Please enter your passphrase.Do you want to revoke the passphrase on device setting?Confirm passphraseEnter passphraseHide passphrasePassphrase settingsPassphrase sourceTurn off passphrase protection?Turn on passphrase protection?Change PINPIN changed.Position of the cursor will change between entries for enhanced security.The new PIN must be different from your wipe code.PIN protection\nturned off.PIN protection\nturned on.Enter PINEnter new PINThe PIN you have entered is not valid.PIN will be required to access this device.Invalid PINLast attemptEntered PINs do not match!PIN mismatchPlease check again.Re-enter new PINPlease re-enter PIN to confirm.PIN should be 4-50 digits long.Check PINPIN settingsWrong PINtries leftAre you sure you want to turn off PIN protection?Turn on PIN protection?Wrong PINkey|keyshour|hoursmillisecond|millisecondsminute|minutessecond|secondsaction|actionsoperation|operationsgroup|groupsshare|sharesChecking authenticity...DoneLoading transaction...Locking the device...1 second leftPlease waitProcessingRefreshing...Signing transaction...Syncing...{0} seconds leftTrezor will restart in bootloader mode.Go to bootloaderFirmware version {0}\nby {1}Cancel backup checkCheck your backup?Position of the cursor will change between entries for enhanced security.The entered wallet backup is valid and matches the one in this device.The entered wallet backup is valid but does not match the one in the device.The entered recovery shares are valid and match what is currently in the device.The entered recovery shares are valid but do not match what is currently in the device.Enter any shareEnter your backup.Enter a different share.Enter share from a different group.Group {0}Group threshold reached.Invalid wallet backup entered.Invalid recovery share entered.More shares neededSelect the number of words in your backup.You'll only have to select the first 2-4 letters of each word.All progress will be lost.Share already enteredYou have entered a share from a different backup.Share {0}Recover walletCancel backup checkCancel recoveryBackup checkRecover walletRemaining sharesType word {0} of {1}Wallet recovery completedAre you sure you want to cancel the backup check?Are you sure you want to cancel the recovery process?({0} words)Word {0} of {1}{count} more {plural} starting{count} more {plural} needed{0} of {1} shares enteredYou have enteredThe group threshold specifies the number of groups required to recover your wallet.Create walletRecover walletBy continuing you agree to Trezor Company's terms and conditions.Check backupCheck g{0} - share {1}Check wallet backupCheck share #{0}Continue with the next share.Continue with share #{0}.You have finished verifying your recovery shares for group {0}.You have finished verifying your wallet backup.You have finished verifying your recovery shares.A group is made up of recovery shares.Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.Group {0} - Share {1} checked successfully.Group {0} - share {1}More info atNever put your backup anywhere digital.{0} people or locations will each hold one share.Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.The required number of shares to form Group {0}.= total number of unique word lists used for wallet backup.Only one share will be created.Wallet backupRecovery share #{0}The required number of groups for recovery.Select the correct word for each position.Select {0} wordSelect word {0} of {1}:Share #{0} checked successfully.Standard backupNumber of groupsNumber of sharesSet number of groupsSet number of sharesSet sizes and thresholdsSet size and threshold for each groupSet thresholdBackup checklistWrite down and check all sharesWrite down & check all wallet backup shares= minimum number of unique word lists used for recovery.Backup is doneCreate walletGroup thresholdNumber of groupsNumber of sharesSet group thresholdSet number of groupsSet number of sharesSet thresholdtrezor.io/tosSet the total number of shares in Group {0}.Use your backup when you need to recover your wallet.Write the following {0} words in order on your wallet backup card.Wrong word selected!Your backup is done.Change display orientation to {0}?eastnorthsouthDisplay orientationwestTrezor will allow you to approve some actions which might be unsafe.Trezor will temporarily allow you to approve some actions which might be unsafe.Do you really want to enforce strict safety checks (recommended)?Safety checksSafety overrideSending amountSending from multiple accounts.Including fee:Maximum feeReceiving to a multisig address.Confirm sendingJoint transactionReceiving toSendingSending amountSending toTo the total amount:Transaction IDYou are contributing: words in order.I wrote down all {0} BytesSigning addressConfirm messageMessage sizeVerify addressAssetPress both left and right at the same\ntime to confirm.Press and hold the right button to\napprove important operations.You're ready to\nuse Trezor.Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.Are you sure you\nwant to skip the tutorial?HelloScreen scrollSkip tutorialTutorial completeUse Trezor by\nclicking the left and right buttons.\n\rContinue right.Welcome to Trezor. Press right to continue.All data will be erased.Wipe deviceDo you really want to wipe the device?\nChange wipe codeWipe code changed.The wipe code must be different from your PIN.Wipe code disabled.Wipe code enabled.New wipe codeWipe code can be used to erase all data from this device.Invalid wipe codeThe wipe codes you entered do not match.Re-enter wipe codePlease re-enter wipe code to confirm.Check wipe codeInvalid wipe codeWipe code settingsTurn off wipe code protection?Turn on wipe code protection?Wipe code mismatchNumber of wordsAccountAccount:AddressAmountAre you sure?Array ofBlockhashBuyingConfirmConfirm feeContainsContinue anyway?Continue withErrorFeefromKeep it safe!Continue only if you know what you are doing!My TrezorNooutputsPlease check againPlease try againDo you really want toRecipientSignSignerCheckGroupInformationRememberShareSharesSuccessSummaryThresholdUnknownWarningWritableYesJust a moment...PREVIOUSStarting upVerifying PINWrong PINDo you want to create a {0} of {1} multi-share backup?Multi-share backupTap to confirmHold to confirmImportantI wrote down all {0} words in order.Create a backup to avoid losing access to your fundsLet's do a quick check of your backup.InstructionsNot recommended!Account infoIf receive address doesn't match, contact Trezor Support at trezor.io/support.Cancel receiveQR codeDerivation pathContinue in the appCancel and exitReceive address confirmedContinue without PINWithout a PIN, anyone can access this device.Cancel PIN setupCancel signSend fromHold to signFee rateincl. Transaction feeTotal amountAuto-lock turned onYour wallet backup contains multiple lists of words in a specific order (shares).Your wallet backup contains {0} words in a specific order.Wallet backup completedCreate wallet backupEnter next shareHold to continueHold to exit tutorialLearn moreContinue with Share #{0}Start with share #1PassphraseWallet backup not on this deviceInvalid wallet backup enteredAll shares are valid and belong to the backup in this deviceEntered share is valid and belongs to the backup in the deviceVerify remaining recovery shares?Enter each word of your wallet backup in order.It's safe to disconnect your Trezor while recovering your wallet and continue later.Share doesn't matchCancel create walletIncorrect word selectedMore atHow many wallet backup shares do you want to create?Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.Select the minimum shares required to recover your wallet.Share #{0} completedNumber of shares: {0}Recovery threshold: {0}Transaction signedContinue tutorialExit tutorialFind context-specific actions and options in the menu.One more stepYou're all set to start using your device!Easy navigationGood to knowOperation cancelledSettingsTry again.Number of groups: {0}Display brightnessMulti-share backupCreate additional backup?Create backupChange wallpaper to default image?Words may repeat.Repeat for all shares.SettingsHomescreenThe word is repeatedLet's beginDid you know?The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.Restart tutorialHandy menuHold to confirm important actionsWell done!Learn how to use and navigate this device with ease.Get started!Swipe horizontallyAdjustApplyDisplay brightness changedChange display brightnessDoneThe threshold sets the minimum number of shares needed to recover your wallet.If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.Continue with empty passphrase?Swipe downPublic key confirmedContinue anywayView all dataView all data in the menu.Enable labeling?ProviderConfirm without reviewTap to continueUnlockedTransaction feeUnlimitedChainTokenTapWrite down the first word from the backup.We don't recommend to skip wallet backup creation.Pay attentionCheck the address with source.ReceiveA recovery share is a list of words you wrote down when setting up your Trezor.Your wallet backup consists of 1 to 16 shares.Recovery shareAfter signing, send the transaction in the app.Sign cancelled.SendWalletAuthenticateSet the time before your Trezor locks automatically.day|daysTrezor will restart after update.Access hidden walletHidden walletShow passphraseRe-enter PINPIN setup completed.Start with Share #{0}Let's do a quick check of Share #{0}.Select word #{0} from\nShare #{1}Share #{0} from Group #{1} entered.Cancel transactionUsing different paths for different XPUBs.XPUBCancel?{0} addressViewSwapProvider addressRefund addressAssetsFinishUse menu to continueLast oneView more info, quit flow, ...Replay this tutorial anytime from the Trezor Suite app.Tap to start tutorialContinue with empty device name?Enter device nameNameDevice name changed.Firmware typeFirmware versionAboutConnectedDeviceDisconnectLEDManageOFFONReviewSecurityChange PIN?Remove PINPIN codeChange wipe code?Remove wipe codeWipe codeDisabledEnabledBluetoothWipe your Trezor and start the setup process again.SetWipeUnlockStart enteringDisconnectedConnectForgetPowerWipe code must be turned off before turning off PIN protection.Wipe code setPIN must be set before enabling wipe code.Cancel wipe code setupOpen Trezor Suite and create a wallet backup. This is the only way to recover access to your assets.Your Trezor is having trouble communicating with your connected device.Allow Trezor Suite to use Suite Sync with this Trezor?Allow {0} on {1} to use Suite Sync with this Trezor?Suite SyncNote",
+                offsets: &[
+                    (Self::addr_mismatch__contact_support_at, 32),
+                    (Self::addr_mismatch__key_mismatch, 45),
+                    (Self::addr_mismatch__mismatch, 62),
+                    (Self::addr_mismatch__support_url, 79),
+                    (Self::addr_mismatch__wrong_derivation_path, 122),
+                    (Self::addr_mismatch__xpub_mismatch, 136),
+                    (Self::address__public_key, 146),
+                    (Self::address__title_cosigner, 154),
+                    (Self::address__title_receive_address, 169),
+                    (Self::address__title_yours, 174),
+                    (Self::address_details__derivation_path_colon, 190),
+                    (Self::address_details__title_receive_address, 205),
+                    (Self::address_details__title_receiving_to, 217),
+                    (Self::authenticate__confirm_template, 275),
+                    (Self::authenticate__header, 294),
+                    (Self::auto_lock__change_template, 335),
+                    (Self::auto_lock__title, 350),
+                    (Self::backup__can_back_up_anytime, 396),
+                    (Self::backup__it_should_be_backed_up, 441),
+                    (Self::backup__it_should_be_backed_up_now, 468),
+                    (Self::backup__new_wallet_created, 484),
+                    (Self::backup__new_wallet_successfully_created, 512),
+                    (Self::backup__recover_anytime, 571),
+                    (Self::backup__title_backup_wallet, 585),
+                    (Self::backup__title_skip, 596),
+                    (Self::backup__want_to_skip, 637),
+                    (Self::bitcoin__commitment_data, 652),
+                    (Self::bitcoin__confirm_locktime, 668),
+                    (Self::bitcoin__create_proof_of_ownership, 711),
+                    (Self::bitcoin__high_mining_fee_template, 754),
+                    (Self::bitcoin__locktime_no_effect, 794),
+                    (Self::bitcoin__locktime_set_to, 809),
+                    (Self::bitcoin__locktime_set_to_blockheight, 836),
+                    (Self::bitcoin__lot_of_change_outputs, 860),
+                    (Self::bitcoin__multiple_accounts, 877),
+                    (Self::bitcoin__new_fee_rate, 890),
+                    (Self::bitcoin__simple_send_of, 904),
+                    (Self::bitcoin__ticket_amount, 917),
+                    (Self::bitcoin__title_confirm_details, 932),
+                    (Self::bitcoin__title_finalize_transaction, 952),
+                    (Self::bitcoin__title_high_mining_fee, 967),
+                    (Self::bitcoin__title_meld_transaction, 983),
+                    (Self::bitcoin__title_modify_amount, 996),
+                    (Self::bitcoin__title_payjoin, 1003),
+                    (Self::bitcoin__title_proof_of_ownership, 1021),
+                    (Self::bitcoin__title_purchase_ticket, 1036),
+                    (Self::bitcoin__title_update_transaction, 1054),
+                    (Self::bitcoin__unknown_path, 1066),
+                    (Self::bitcoin__unknown_transaction, 1085),
+                    (Self::bitcoin__unusually_high_fee, 1104),
+                    (Self::bitcoin__unverified_external_inputs, 1156),
+                    (Self::bitcoin__valid_signature, 1179),
+                    (Self::bitcoin__voting_rights, 1195),
+                    (Self::buttons__abort, 1200),
+                    (Self::buttons__access, 1206),
+                    (Self::buttons__again, 1211),
+                    (Self::buttons__allow, 1216),
+                    (Self::buttons__back, 1220),
+                    (Self::buttons__back_up, 1227),
+                    (Self::buttons__cancel, 1233),
+                    (Self::buttons__change, 1239),
+                    (Self::buttons__check, 1244),
+                    (Self::buttons__check_again, 1255),
+                    (Self::buttons__close, 1260),
+                    (Self::buttons__confirm, 1267),
+                    (Self::buttons__continue, 1275),
+                    (Self::buttons__details, 1282),
+                    (Self::buttons__enable, 1288),
+                    (Self::buttons__enter, 1293),
+                    (Self::buttons__enter_share, 1304),
+                    (Self::buttons__export, 1310),
+                    (Self::buttons__format, 1316),
+                    (Self::buttons__go_back, 1323),
+                    (Self::buttons__hold_to_confirm, 1338),
+                    (Self::buttons__info, 1342),
+                    (Self::buttons__install, 1349),
+                    (Self::buttons__more_info, 1358),
+                    (Self::buttons__ok_i_understand, 1374),
+                    (Self::buttons__purchase, 1382),
+                    (Self::buttons__quit, 1386),
+                    (Self::buttons__restart, 1393),
+                    (Self::buttons__retry, 1398),
+                    (Self::buttons__select, 1404),
+                    (Self::buttons__set, 1407),
+                    (Self::buttons__show_all, 1415),
+                    (Self::buttons__show_details, 1427),
+                    (Self::buttons__show_words, 1437),
+                    (Self::buttons__skip, 1441),
+                    (Self::buttons__try_again, 1450),
+                    (Self::buttons__turn_off, 1458),
+                    (Self::buttons__turn_on, 1465),
+                    (Self::coinjoin__access_account, 1494),
+                    (Self::coinjoin__do_not_disconnect, 1524),
+                    (Self::coinjoin__max_mining_fee, 1538),
+                    (Self::coinjoin__max_rounds, 1548),
+                    (Self::coinjoin__title, 1566),
+                    (Self::coinjoin__title_progress, 1586),
+                    (Self::coinjoin__waiting_for_others, 1604),
+                    (Self::confirm_total__fee_rate_colon, 1613),
+                    (Self::confirm_total__sending_from_account, 1634),
+                    (Self::confirm_total__title_fee, 1642),
+                    (Self::confirm_total__title_sending_from, 1654),
+                    (Self::device_name__change_template, 1680),
+                    (Self::device_name__title, 1691),
+                    (Self::entropy__send, 1726),
+                    (Self::entropy__title_confirm, 1741),
+                    (Self::send__sign_transaction, 1757),
+                    (Self::experimental_mode__enable, 1786),
+                    (Self::experimental_mode__only_for_dev, 1824),
+                    (Self::experimental_mode__title, 1841),
+                    (Self::firmware_update__title, 1856),
+                    (Self::firmware_update__title_fingerprint, 1870),
+                    (Self::homescreen__click_to_connect, 1886),
+                    (Self::homescreen__click_to_unlock, 1901),
+                    (Self::homescreen__title_backup_failed, 1914),
+                    (Self::homescreen__title_backup_needed, 1927),
+                    (Self::homescreen__title_coinjoin_authorized, 1946),
+                    (Self::homescreen__title_experimental_mode, 1963),
+                    (Self::homescreen__title_no_usb_connection, 1980),
+                    (Self::homescreen__title_pin_not_set, 1991),
+                    (Self::homescreen__title_seedless, 1999),
+                    (Self::homescreen__title_set, 2015),
+                    (Self::inputs__back, 2019),
+                    (Self::inputs__cancel, 2025),
+                    (Self::inputs__delete, 2031),
+                    (Self::inputs__enter, 2036),
+                    (Self::inputs__return, 2042),
+                    (Self::inputs__show, 2046),
+                    (Self::inputs__space, 2051),
+                    (Self::joint__title, 2068),
+                    (Self::joint__to_the_total_amount, 2088),
+                    (Self::joint__you_are_contributing, 2109),
+                    (Self::language__change_to_template, 2132),
+                    (Self::language__changed, 2161),
+                    (Self::language__progress, 2178),
+                    (Self::language__title, 2195),
+                    (Self::lockscreen__tap_to_connect, 2209),
+                    (Self::lockscreen__tap_to_unlock, 2222),
+                    (Self::lockscreen__title_locked, 2228),
+                    (Self::lockscreen__title_not_connected, 2241),
+                    (Self::misc__decrypt_value, 2254),
+                    (Self::misc__encrypt_value, 2267),
+                    (Self::misc__title_suite_labeling, 2281),
+                    (Self::modify_amount__decrease_amount, 2300),
+                    (Self::modify_amount__increase_amount, 2319),
+                    (Self::modify_amount__new_amount, 2330),
+                    (Self::modify_amount__title, 2343),
+                    (Self::modify_fee__decrease_fee, 2359),
+                    (Self::modify_fee__fee_rate, 2368),
+                    (Self::modify_fee__increase_fee, 2384),
+                    (Self::modify_fee__new_transaction_fee, 2404),
+                    (Self::modify_fee__no_change, 2424),
+                    (Self::modify_fee__title, 2434),
+                    (Self::modify_fee__transaction_fee, 2450),
+                    (Self::passphrase__access_wallet, 2475),
+                    (Self::passphrase__always_on_device, 2514),
+                    (Self::passphrase__from_host_not_shown, 2617),
+                    (Self::passphrase__wallet, 2634),
+                    (Self::passphrase__hide, 2666),
+                    (Self::passphrase__next_screen_will_show_passphrase, 2704),
+                    (Self::passphrase__please_enter, 2733),
+                    (Self::passphrase__revoke_on_device, 2788),
+                    (Self::passphrase__title_confirm, 2806),
+                    (Self::passphrase__title_enter, 2822),
+                    (Self::passphrase__title_hide, 2837),
+                    (Self::passphrase__title_settings, 2856),
+                    (Self::passphrase__title_source, 2873),
+                    (Self::passphrase__turn_off, 2904),
+                    (Self::passphrase__turn_on, 2934),
+                    (Self::pin__change, 2944),
+                    (Self::pin__changed, 2956),
+                    (Self::pin__cursor_will_change, 3029),
+                    (Self::pin__diff_from_wipe_code, 3079),
+                    (Self::pin__disabled, 3105),
+                    (Self::pin__enabled, 3130),
+                    (Self::pin__enter, 3139),
+                    (Self::pin__enter_new, 3152),
+                    (Self::pin__entered_not_valid, 3190),
+                    (Self::pin__info, 3233),
+                    (Self::pin__invalid_pin, 3244),
+                    (Self::pin__last_attempt, 3256),
+                    (Self::pin__mismatch, 3282),
+                    (Self::pin__pin_mismatch, 3294),
+                    (Self::pin__please_check_again, 3313),
+                    (Self::pin__reenter_new, 3329),
+                    (Self::pin__reenter_to_confirm, 3360),
+                    (Self::pin__should_be_long, 3391),
+                    (Self::pin__title_check_pin, 3400),
+                    (Self::pin__title_settings, 3412),
+                    (Self::pin__title_wrong_pin, 3421),
+                    (Self::pin__tries_left, 3431),
+                    (Self::pin__turn_off, 3480),
+                    (Self::pin__turn_on, 3503),
+                    (Self::pin__wrong_pin, 3512),
+                    (Self::plurals__contains_x_keys, 3520),
+                    (Self::plurals__lock_after_x_hours, 3530),
+                    (Self::plurals__lock_after_x_milliseconds, 3554),
+                    (Self::plurals__lock_after_x_minutes, 3568),
+                    (Self::plurals__lock_after_x_seconds, 3582),
+                    (Self::plurals__sign_x_actions, 3596),
+                    (Self::plurals__transaction_of_x_operations, 3616),
+                    (Self::plurals__x_groups_needed, 3628),
+                    (Self::plurals__x_shares_needed, 3640),
+                    (Self::progress__authenticity_check, 3664),
+                    (Self::progress__done, 3668),
+                    (Self::progress__loading_transaction, 3690),
+                    (Self::progress__locking_device, 3711),
+                    (Self::progress__one_second_left, 3724),
+                    (Self::progress__please_wait, 3735),
+                    (Self::storage_msg__processing, 3745),
+                    (Self::progress__refreshing, 3758),
+                    (Self::progress__signing_transaction, 3780),
+                    (Self::progress__syncing, 3790),
+                    (Self::progress__x_seconds_left_template, 3806),
+                    (Self::reboot_to_bootloader__restart, 3845),
+                    (Self::reboot_to_bootloader__title, 3861),
+                    (Self::reboot_to_bootloader__version_by_template, 3888),
+                    (Self::recovery__cancel_dry_run, 3907),
+                    (Self::recovery__check_dry_run, 3925),
+                    (Self::recovery__cursor_will_change, 3998),
+                    (Self::recovery__dry_run_bip39_valid_match, 4068),
+                    (Self::recovery__dry_run_bip39_valid_mismatch, 4144),
+                    (Self::recovery__dry_run_slip39_valid_match, 4224),
+                    (Self::recovery__dry_run_slip39_valid_mismatch, 4311),
+                    (Self::recovery__enter_any_share, 4326),
+                    (Self::recovery__enter_backup, 4344),
+                    (Self::recovery__enter_different_share, 4368),
+                    (Self::recovery__enter_share_from_diff_group, 4403),
+                    (Self::recovery__group_num_template, 4412),
+                    (Self::recovery__group_threshold_reached, 4436),
+                    (Self::recovery__invalid_wallet_backup_entered, 4466),
+                    (Self::recovery__invalid_share_entered, 4497),
+                    (Self::recovery__more_shares_needed, 4515),
+                    (Self::recovery__num_of_words, 4557),
+                    (Self::recovery__only_first_n_letters, 4619),
+                    (Self::recovery__progress_will_be_lost, 4645),
+                    (Self::recovery__share_already_entered, 4666),
+                    (Self::recovery__share_from_another_multi_share_backup, 4715),
+                    (Self::recovery__share_num_template, 4724),
+                    (Self::recovery__title, 4738),
+                    (Self::recovery__title_cancel_dry_run, 4757),
+                    (Self::recovery__title_cancel_recovery, 4772),
+                    (Self::recovery__title_dry_run, 4784),
+                    (Self::recovery__title_recover, 4798),
+                    (Self::recovery__title_remaining_shares, 4814),
+                    (Self::recovery__type_word_x_of_y_template, 4834),
+                    (Self::recovery__wallet_recovered, 4859),
+                    (Self::recovery__wanna_cancel_dry_run, 4908),
+                    (Self::recovery__wanna_cancel_recovery, 4961),
+                    (Self::recovery__word_count_template, 4972),
+                    (Self::recovery__word_x_of_y_template, 4987),
+                    (Self::recovery__x_more_items_starting_template_plural, 5017),
+                    (Self::recovery__x_more_shares_needed_template_plural, 5045),
+                    (Self::recovery__x_of_y_entered_template, 5070),
+                    (Self::recovery__you_have_entered, 5086),
+                    (Self::reset__advanced_group_threshold_info, 5169),
+                    (Self::reset__all_x_of_y_template, 5169),
+                    (Self::reset__any_x_of_y_template, 5169),
+                    (Self::reset__button_create, 5182),
+                    (Self::reset__button_recover, 5196),
+                    (Self::reset__by_continuing, 5261),
+                    (Self::reset__check_backup_title, 5273),
+                    (Self::reset__check_group_share_title_template, 5295),
+                    (Self::reset__check_wallet_backup_title, 5314),
+                    (Self::reset__check_share_title_template, 5330),
+                    (Self::reset__continue_with_next_share, 5359),
+                    (Self::reset__continue_with_share_template, 5384),
+                    (Self::reset__finished_verifying_group_template, 5447),
+                    (Self::reset__finished_verifying_wallet_backup, 5494),
+                    (Self::reset__finished_verifying_shares, 5543),
+                    (Self::reset__group_description, 5581),
+                    (Self::reset__group_info, 5714),
+                    (Self::reset__group_share_checked_successfully_template, 5757),
+                    (Self::reset__group_share_title_template, 5778),
+                    (Self::reset__more_info_at, 5790),
+                    (Self::reset__need_all_share_template, 5790),
+                    (Self::reset__need_any_share_template, 5790),
+                    (Self::reset__needed_to_form_a_group, 5790),
+                    (Self::reset__needed_to_recover_your_wallet, 5790),
+                    (Self::reset__never_make_digital_copy, 5829),
+                    (Self::reset__num_of_share_holders_template, 5878),
+                    (Self::reset__num_of_shares_advanced_info_template, 6003),
+                    (Self::reset__num_of_shares_basic_info_template, 6003),
+                    (Self::reset__num_shares_for_group_template, 6051),
+                    (Self::reset__number_of_shares_info, 6110),
+                    (Self::reset__one_share, 6110),
+                    (Self::reset__only_one_share_will_be_created, 6141),
+                    (Self::reset__recovery_wallet_backup_title, 6154),
+                    (Self::reset__recovery_share_title_template, 6173),
+                    (Self::reset__required_number_of_groups, 6216),
+                    (Self::reset__select_correct_word, 6258),
+                    (Self::reset__select_word_template, 6273),
+                    (Self::reset__select_word_x_of_y_template, 6296),
+                    (Self::reset__set_it_to_count_template, 6296),
+                    (Self::reset__share_checked_successfully_template, 6328),
+                    (Self::reset__share_words_title, 6343),
+                    (Self::reset__slip39_checklist_num_groups, 6359),
+                    (Self::reset__slip39_checklist_num_shares, 6375),
+                    (Self::reset__slip39_checklist_set_num_groups, 6395),
+                    (Self::reset__slip39_checklist_set_num_shares, 6415),
+                    (Self::reset__slip39_checklist_set_sizes, 6439),
+                    (Self::reset__slip39_checklist_set_sizes_longer, 6476),
+                    (Self::reset__slip39_checklist_set_threshold, 6489),
+                    (Self::reset__slip39_checklist_title, 6505),
+                    (Self::reset__slip39_checklist_write_down, 6536),
+                    (Self::reset__slip39_checklist_write_down_recovery, 6579),
+                    (Self::reset__the_threshold_sets_the_number_of_shares, 6579),
+                    (Self::reset__threshold_info, 6635),
+                    (Self::reset__title_backup_is_done, 6649),
+                    (Self::reset__title_create_wallet, 6662),
+                    (Self::reset__title_group_threshold, 6677),
+                    (Self::reset__title_number_of_groups, 6693),
+                    (Self::reset__title_number_of_shares, 6709),
+                    (Self::reset__title_set_group_threshold, 6728),
+                    (Self::reset__title_set_number_of_groups, 6748),
+                    (Self::reset__title_set_number_of_shares, 6768),
+                    (Self::reset__title_set_threshold, 6781),
+                    (Self::reset__to_form_group_template, 6781),
+                    (Self::reset__tos_link, 6794),
+                    (Self::reset__total_number_of_shares_in_group_template, 6838),
+                    (Self::reset__use_your_backup, 6891),
+                    (Self::reset__write_down_words_template, 6957),
+                    (Self::reset__wrong_word_selected, 6977),
+                    (Self::reset__you_need_one_share, 6977),
+                    (Self::reset__your_backup_is_done, 6997),
+                    (Self::rotation__change_template, 7031),
+                    (Self::rotation__east, 7035),
+                    (Self::rotation__north, 7040),
+                    (Self::rotation__south, 7045),
+                    (Self::rotation__title_change, 7064),
+                    (Self::rotation__west, 7068),
+                    (Self::safety_checks__approve_unsafe_always, 7136),
+                    (Self::safety_checks__approve_unsafe_temporary, 7216),
+                    (Self::safety_checks__enforce_strict, 7281),
+                    (Self::safety_checks__title, 7294),
+                    (Self::safety_checks__title_safety_override, 7309),
+                    (Self::sd_card__all_data_will_be_lost, 7309),
+                    (Self::sd_card__card_required, 7309),
+                    (Self::sd_card__disable, 7309),
+                    (Self::sd_card__disabled, 7309),
+                    (Self::sd_card__enable, 7309),
+                    (Self::sd_card__enabled, 7309),
+                    (Self::sd_card__error, 7309),
+                    (Self::sd_card__format_card, 7309),
+                    (Self::sd_card__insert_correct_card, 7309),
+                    (Self::sd_card__please_insert, 7309),
+                    (Self::sd_card__please_unplug_and_insert, 7309),
+                    (Self::sd_card__problem_accessing, 7309),
+                    (Self::sd_card__refresh, 7309),
+                    (Self::sd_card__refreshed, 7309),
+                    (Self::sd_card__restart, 7309),
+                    (Self::sd_card__title, 7309),
+                    (Self::sd_card__title_problem, 7309),
+                    (Self::sd_card__unknown_filesystem, 7309),
+                    (Self::sd_card__unplug_and_insert_correct, 7309),
+                    (Self::sd_card__use_different_card, 7309),
+                    (Self::sd_card__wanna_format, 7309),
+                    (Self::sd_card__wrong_sd_card, 7309),
+                    (Self::send__confirm_sending, 7323),
+                    (Self::send__from_multiple_accounts, 7354),
+                    (Self::send__including_fee, 7368),
+                    (Self::send__maximum_fee, 7379),
+                    (Self::send__receiving_to_multisig, 7411),
+                    (Self::send__title_confirm_sending, 7426),
+                    (Self::send__title_joint_transaction, 7443),
+                    (Self::send__title_receiving_to, 7455),
+                    (Self::send__title_sending, 7462),
+                    (Self::send__title_sending_amount, 7476),
+                    (Self::send__title_sending_to, 7486),
+                    (Self::send__to_the_total_amount, 7506),
+                    (Self::send__transaction_id, 7520),
+                    (Self::send__you_are_contributing, 7541),
+                    (Self::share_words__words_in_order, 7557),
+                    (Self::share_words__wrote_down_all, 7574),
+                    (Self::sign_message__bytes_template, 7583),
+                    (Self::sign_message__confirm_address, 7598),
+                    (Self::sign_message__confirm_message, 7613),
+                    (Self::sign_message__message_size, 7625),
+                    (Self::sign_message__verify_address, 7639),
+                    (Self::words__asset, 7644),
+                    (Self::tutorial__middle_click, 7698),
+                    (Self::tutorial__press_and_hold, 7762),
+                    (Self::tutorial__ready_to_use, 7789),
+                    (Self::tutorial__scroll_down, 7898),
+                    (Self::tutorial__sure_you_want_skip, 7941),
+                    (Self::tutorial__title_hello, 7946),
+                    (Self::tutorial__title_screen_scroll, 7959),
+                    (Self::tutorial__title_skip, 7972),
+                    (Self::tutorial__title_tutorial_complete, 7989),
+                    (Self::tutorial__use_trezor, 8056),
+                    (Self::tutorial__welcome_press_right, 8099),
+                    (Self::wipe__info, 8123),
+                    (Self::wipe__title, 8134),
+                    (Self::wipe__want_to_wipe, 8173),
+                    (Self::wipe_code__change, 8189),
+                    (Self::wipe_code__changed, 8207),
+                    (Self::wipe_code__diff_from_pin, 8253),
+                    (Self::wipe_code__disabled, 8272),
+                    (Self::wipe_code__enabled, 8290),
+                    (Self::wipe_code__enter_new, 8303),
+                    (Self::wipe_code__info, 8360),
+                    (Self::wipe_code__invalid, 8377),
+                    (Self::wipe_code__mismatch, 8417),
+                    (Self::wipe_code__reenter, 8435),
+                    (Self::wipe_code__reenter_to_confirm, 8472),
+                    (Self::wipe_code__title_check, 8487),
+                    (Self::wipe_code__title_invalid, 8504),
+                    (Self::wipe_code__title_settings, 8522),
+                    (Self::wipe_code__turn_off, 8552),
+                    (Self::wipe_code__turn_on, 8581),
+                    (Self::wipe_code__wipe_code_mismatch, 8599),
+                    (Self::word_count__title, 8614),
+                    (Self::words__account, 8621),
+                    (Self::words__account_colon, 8629),
+                    (Self::words__address, 8636),
+                    (Self::words__amount, 8642),
+                    (Self::words__are_you_sure, 8655),
+                    (Self::words__array_of, 8663),
+                    (Self::words__blockhash, 8672),
+                    (Self::words__buying, 8678),
+                    (Self::words__confirm, 8685),
+                    (Self::words__confirm_fee, 8696),
+                    (Self::words__contains, 8704),
+                    (Self::words__continue_anyway_question, 8720),
+                    (Self::words__continue_with, 8733),
+                    (Self::words__error, 8738),
+                    (Self::words__fee, 8741),
+                    (Self::words__from, 8745),
+                    (Self::words__keep_it_safe, 8758),
+                    (Self::words__know_what_your_doing, 8803),
+                    (Self::words__my_trezor, 8812),
+                    (Self::words__no, 8814),
+                    (Self::words__outputs, 8821),
+                    (Self::words__please_check_again, 8839),
+                    (Self::words__please_try_again, 8855),
+                    (Self::words__really_wanna, 8876),
+                    (Self::words__recipient, 8885),
+                    (Self::words__sign, 8889),
+                    (Self::words__signer, 8895),
+                    (Self::words__title_check, 8900),
+                    (Self::words__title_group, 8905),
+                    (Self::words__title_information, 8916),
+                    (Self::words__title_remember, 8924),
+                    (Self::words__title_share, 8929),
+                    (Self::words__title_shares, 8935),
+                    (Self::words__title_success, 8942),
+                    (Self::words__title_summary, 8949),
+                    (Self::words__title_threshold, 8958),
+                    (Self::words__unknown, 8965),
+                    (Self::words__warning, 8972),
+                    (Self::words__writable, 8980),
+                    (Self::words__yes, 8983),
+                    (Self::reboot_to_bootloader__just_a_moment, 8999),
+                    (Self::inputs__previous, 9007),
+                    (Self::storage_msg__starting, 9018),
+                    (Self::storage_msg__verifying_pin, 9031),
+                    (Self::storage_msg__wrong_pin, 9040),
+                    (Self::reset__create_x_of_y_multi_share_backup_template, 9094),
+                    (Self::reset__title_shamir_backup, 9112),
+                    (Self::instructions__tap_to_confirm, 9126),
+                    (Self::instructions__hold_to_confirm, 9141),
+                    (Self::words__important, 9150),
+                    (Self::reset__words_written_down_template, 9186),
+                    (Self::backup__create_backup_to_prevent_loss, 9238),
+                    (Self::reset__check_backup_instructions, 9276),
+                    (Self::words__instructions, 9288),
+                    (Self::words__not_recommended, 9304),
+                    (Self::address_details__account_info, 9316),
+                    (Self::address__cancel_contact_support, 9394),
+                    (Self::address__cancel_receive, 9408),
+                    (Self::address__qr_code, 9415),
+                    (Self::address_details__derivation_path, 9430),
+                    (Self::instructions__continue_in_app, 9449),
+                    (Self::words__cancel_and_exit, 9464),
+                    (Self::address__confirmed, 9489),
+                    (Self::pin__cancel_description, 9509),
+                    (Self::pin__cancel_info, 9554),
+                    (Self::pin__cancel_setup, 9570),
+                    (Self::send__cancel_sign, 9581),
+                    (Self::send__send_from, 9590),
+                    (Self::instructions__hold_to_sign, 9602),
+                    (Self::confirm_total__fee_rate, 9610),
+                    (Self::send__incl_transaction_fee, 9631),
+                    (Self::send__total_amount, 9643),
+                    (Self::auto_lock__turned_on, 9662),
+                    (Self::backup__info_multi_share_backup, 9743),
+                    (Self::backup__info_single_share_backup, 9801),
+                    (Self::backup__title_backup_completed, 9824),
+                    (Self::backup__title_create_wallet_backup, 9844),
+                    (Self::haptic_feedback__disable, 9844),
+                    (Self::haptic_feedback__enable, 9844),
+                    (Self::haptic_feedback__subtitle, 9844),
+                    (Self::haptic_feedback__title, 9844),
+                    (Self::instructions__continue_holding, 9844),
+                    (Self::instructions__enter_next_share, 9860),
+                    (Self::instructions__hold_to_continue, 9876),
+                    (Self::instructions__hold_to_exit_tutorial, 9897),
+                    (Self::instructions__learn_more, 9907),
+                    (Self::instructions__shares_continue_with_x_template, 9931),
+                    (Self::instructions__shares_start_with_1, 9950),
+                    (Self::passphrase__title_passphrase, 9960),
+                    (Self::recovery__dry_run_backup_not_on_this_device, 9992),
+                    (Self::recovery__dry_run_invalid_backup_entered, 10021),
+                    (Self::recovery__dry_run_slip39_valid_all_shares, 10081),
+                    (Self::recovery__dry_run_slip39_valid_share, 10143),
+                    (Self::recovery__dry_run_verify_remaining_shares, 10176),
+                    (Self::recovery__enter_each_word, 10223),
+                    (Self::recovery__info_about_disconnect, 10307),
+                    (Self::recovery__share_does_not_match, 10326),
+                    (Self::reset__cancel_create_wallet, 10346),
+                    (Self::reset__incorrect_word_selected, 10369),
+                    (Self::reset__more_at, 10376),
+                    (Self::reset__num_of_shares_how_many, 10428),
+                    (Self::reset__num_of_shares_long_info_template, 10599),
+                    (Self::reset__select_threshold, 10657),
+                    (Self::reset__share_completed_template, 10677),
+                    (Self::reset__slip39_checklist_num_shares_x_template, 10698),
+                    (Self::reset__slip39_checklist_threshold_x_template, 10721),
+                    (Self::send__transaction_signed, 10739),
+                    (Self::tutorial__continue, 10756),
+                    (Self::tutorial__exit, 10769),
+                    (Self::tutorial__menu, 10823),
+                    (Self::tutorial__one_more_step, 10836),
+                    (Self::tutorial__ready_to_use_safe5, 10878),
+                    (Self::tutorial__swipe_up_and_down, 10878),
+                    (Self::tutorial__title_easy_navigation, 10893),
+                    (Self::tutorial__welcome_safe5, 10893),
+                    (Self::words__good_to_know, 10905),
+                    (Self::words__operation_cancelled, 10924),
+                    (Self::words__settings, 10932),
+                    (Self::words__try_again, 10942),
+                    (Self::reset__slip39_checklist_num_groups_x_template, 10963),
+                    (Self::brightness__title, 10981),
+                    (Self::recovery__title_unlock_repeated_backup, 10999),
+                    (Self::recovery__unlock_repeated_backup, 11024),
+                    (Self::recovery__unlock_repeated_backup_verb, 11037),
+                    (Self::homescreen__set_default, 11071),
+                    (Self::reset__words_may_repeat, 11088),
+                    (Self::reset__repeat_for_all_shares, 11110),
+                    (Self::homescreen__settings_subtitle, 11118),
+                    (Self::homescreen__settings_title, 11128),
+                    (Self::reset__the_word_is_repeated, 11148),
+                    (Self::tutorial__title_lets_begin, 11159),
+                    (Self::tutorial__did_you_know, 11172),
+                    (Self::tutorial__first_wallet, 11249),
+                    (Self::tutorial__restart_tutorial, 11265),
+                    (Self::tutorial__title_handy_menu, 11275),
+                    (Self::tutorial__title_hold, 11308),
+                    (Self::tutorial__title_well_done, 11318),
+                    (Self::tutorial__lets_begin, 11370),
+                    (Self::tutorial__get_started, 11382),
+                    (Self::instructions__swipe_horizontally, 11400),
+                    (Self::setting__adjust, 11406),
+                    (Self::setting__apply, 11411),
+                    (Self::brightness__changed_title, 11437),
+                    (Self::brightness__change_title, 11462),
+                    (Self::words__title_done, 11466),
+                    (Self::reset__slip39_checklist_more_info_threshold, 11544),
+                    (Self::reset__slip39_checklist_more_info_threshold_example_template, 11631),
+                    (Self::passphrase__continue_with_empty_passphrase, 11662),
+                    (Self::instructions__swipe_down, 11672),
+                    (Self::address__public_key_confirmed, 11692),
+                    (Self::words__continue_anyway, 11707),
+                    (Self::buttons__view_all_data, 11720),
+                    (Self::instructions__view_all_data, 11746),
+                    (Self::misc__enable_labeling, 11762),
+                    (Self::words__provider, 11770),
+                    (Self::sign_message__confirm_without_review, 11792),
+                    (Self::instructions__tap_to_continue, 11807),
+                    (Self::ble__unpair_all, 11807),
+                    (Self::ble__unpair_current, 11807),
+                    (Self::ble__unpair_title, 11807),
+                    (Self::words__unlocked, 11815),
+                    (Self::words__transaction_fee, 11830),
+                    (Self::words__unlimited, 11839),
+                    (Self::words__chain, 11844),
+                    (Self::words__token, 11849),
+                    (Self::instructions__tap, 11852),
+                    (Self::reset__share_words_first, 11894),
+                    (Self::backup__not_recommend, 11944),
+                    (Self::words__pay_attention, 11957),
+                    (Self::address__check_with_source, 11987),
+                    (Self::words__receive, 11994),
+                    (Self::reset__recovery_share_description, 12073),
+                    (Self::reset__recovery_share_number, 12119),
+                    (Self::words__recovery_share, 12133),
+                    (Self::send__send_in_the_app, 12180),
+                    (Self::send__sign_cancelled, 12195),
+                    (Self::words__send, 12199),
+                    (Self::words__wallet, 12205),
+                    (Self::words__authenticate, 12217),
+                    (Self::auto_lock__description, 12269),
+                    (Self::plurals__lock_after_x_days, 12277),
+                    (Self::firmware_update__restart, 12310),
+                    (Self::passphrase__access_hidden_wallet, 12330),
+                    (Self::passphrase__hidden_wallet, 12343),
+                    (Self::passphrase__show, 12358),
+                    (Self::pin__reenter, 12370),
+                    (Self::pin__setup_completed, 12390),
+                    (Self::instructions__shares_start_with_x_template, 12411),
+                    (Self::reset__check_share_backup_template, 12448),
+                    (Self::reset__select_word_from_share_template, 12480),
+                    (Self::recovery__share_from_group_entered_template, 12515),
+                    (Self::send__cancel_transaction, 12533),
+                    (Self::send__multisig_different_paths, 12575),
+                    (Self::address__xpub, 12579),
+                    (Self::words__cancel_question, 12586),
+                    (Self::address__coin_address_template, 12597),
+                    (Self::buttons__view, 12601),
+                    (Self::words__swap, 12605),
+                    (Self::address__title_provider_address, 12621),
+                    (Self::address__title_refund_address, 12635),
+                    (Self::words__assets, 12641),
+                    (Self::buttons__finish, 12647),
+                    (Self::instructions__menu_to_continue, 12667),
+                    (Self::tutorial__last_one, 12675),
+                    (Self::tutorial__menu_appendix, 12705),
+                    (Self::tutorial__navigation_ts7, 12705),
+                    (Self::tutorial__suite_restart, 12760),
+                    (Self::tutorial__welcome_safe7, 12760),
+                    (Self::tutorial__what_is_tropic, 12760),
+                    (Self::tutorial__tap_to_start, 12781),
+                    (Self::tutorial__tropic_info, 12781),
+                    (Self::device_name__continue_with_empty_label, 12813),
+                    (Self::device_name__enter, 12830),
+                    (Self::regulatory__title, 12830),
+                    (Self::words__name, 12834),
+                    (Self::device_name__changed, 12854),
+                    (Self::ble__manage_paired, 12854),
+                    (Self::ble__pair_new, 12854),
+                    (Self::ble__pair_title, 12854),
+                    (Self::ble__version, 12854),
+                    (Self::homescreen__firmware_type, 12867),
+                    (Self::homescreen__firmware_version, 12883),
+                    (Self::led__disable, 12883),
+                    (Self::led__enable, 12883),
+                    (Self::led__title, 12883),
+                    (Self::words__about, 12888),
+                    (Self::words__connected, 12897),
+                    (Self::words__device, 12903),
+                    (Self::words__disconnect, 12913),
+                    (Self::words__led, 12916),
+                    (Self::words__manage, 12922),
+                    (Self::words__off, 12925),
+                    (Self::words__on, 12927),
+                    (Self::words__review, 12933),
+                    (Self::words__security, 12941),
+                    (Self::pin__change_question, 12952),
+                    (Self::pin__remove, 12962),
+                    (Self::pin__title, 12970),
+                    (Self::wipe_code__change_question, 12987),
+                    (Self::wipe_code__remove, 13003),
+                    (Self::wipe_code__title, 13012),
+                    (Self::words__disabled, 13020),
+                    (Self::words__enabled, 13027),
+                    (Self::ble__disable, 13027),
+                    (Self::ble__enable, 13027),
+                    (Self::words__bluetooth, 13036),
+                    (Self::wipe__start_again, 13087),
+                    (Self::words__set, 13090),
+                    (Self::words__wipe, 13094),
+                    (Self::lockscreen__unlock, 13100),
+                    (Self::recovery__start_entering, 13114),
+                    (Self::words__disconnected, 13126),
+                    (Self::ble__forget_all, 13126),
+                    (Self::words__connect, 13133),
+                    (Self::words__forget, 13139),
+                    (Self::words__power, 13144),
+                    (Self::ble__limit_reached, 13144),
+                    (Self::ble__forget_all_description, 13144),
+                    (Self::ble__forget_all_devices, 13144),
+                    (Self::ble__forget_all_success, 13144),
+                    (Self::ble__forget_this_description, 13144),
+                    (Self::ble__forget_this_device, 13144),
+                    (Self::ble__forget_this_success, 13144),
+                    (Self::thp__autoconnect, 13144),
+                    (Self::thp__autoconnect_app, 13144),
+                    (Self::thp__connect, 13144),
+                    (Self::thp__connect_app, 13144),
+                    (Self::thp__pair, 13144),
+                    (Self::thp__pair_app, 13144),
+                    (Self::thp__autoconnect_title, 13144),
+                    (Self::thp__code_entry, 13144),
+                    (Self::thp__code_title, 13144),
+                    (Self::thp__connect_title, 13144),
+                    (Self::thp__nfc_text, 13144),
+                    (Self::thp__pair_title, 13144),
+                    (Self::thp__qr_title, 13144),
+                    (Self::ble__pairing_match, 13144),
+                    (Self::ble__pairing_title, 13144),
+                    (Self::thp__pair_name, 13144),
+                    (Self::thp__pair_new_device, 13144),
+                    (Self::tutorial__power, 13144),
+                    (Self::auto_lock__on_battery, 13144),
+                    (Self::auto_lock__on_usb, 13144),
+                    (Self::pin__wipe_code_exists_description, 13207),
+                    (Self::pin__wipe_code_exists_title, 13220),
+                    (Self::wipe_code__pin_not_set_description, 13262),
+                    (Self::wipe_code__cancel_setup, 13284),
+                    (Self::homescreen__backup_needed_info, 13384),
+                    (Self::ble__host_info, 13384),
+                    (Self::ble__mac_address, 13384),
+                    (Self::ble__waiting_for_host, 13384),
+                    (Self::ble__apps_connected, 13384),
+                    (Self::sn__action, 13384),
+                    (Self::sn__title, 13384),
+                    (Self::ble__must_be_enabled, 13384),
+                    (Self::words__comm_trouble, 13455),
+                    (Self::secure_sync__delegated_identity_key_no_thp, 13509),
+                    (Self::secure_sync__delegated_identity_key_thp, 13561),
+                    (Self::secure_sync__header, 13571),
+                    (Self::words__note, 13575),
+                ],
+            };
+
+            #[cfg(feature = "universal_fw")]
+            const ALTCOIN_BLOB: StringsBlob = StringsBlob {
+                text: "BaseEnterpriseLegacyPointerRewardaddress - no staking rewards.Amount burned (decimals unknown):Amount minted (decimals unknown):Amount sent (decimals unknown):Pool has no metadata (anonymous pool)Asset fingerprint:Auxiliary data hash:BlockCatalystCertificateChange outputCheck all items carefully.Choose level of details:Collateral input ID:Collateral input index:The collateral return output contains tokens.Collateral returnConfirm signing the stake pool registration as an owner.Confirm transactionConfirming a multisig transaction.Confirming a Plutus transaction.Confirming pool registration as owner.Confirming a transaction.CostCredential doesn't match payment credential.Datum hash:Delegating to:for account {0} and index {1}:for account {0}:for key hash:for script:Inline datumInput ID:Input index:The following address is a change address. ItsThe following address is owned by this device. ItsThe vote key registration payment address is owned by this device. Itskey hashMarginmulti-sig pathContains {0} nested scripts.Network:Transaction has no outputs, network cannot be verified.Nonce:otherpathPledgepointerPolicy IDPool metadata hash:Pool metadata url:Pool owner:Pool reward account:Reference input ID:Reference input index:Reference scriptRequired signerrewardAddress is a reward address.Warning: The address is not a payment address, it is not eligible for rewards.Rewards go to:scriptAllAnyScript data hash:Script hash:Invalid beforeInvalid hereafterKeyN of Kscript rewardSendingShow SimpleSign transaction with {0}Stake delegationStake key deregistrationStakepool registrationStake pool registration\nPool ID:Stake key registrationStaking key for accountto pool:token minting pathTotal collateral:TransactionThe transaction contains minting or burning of tokens.The following transaction output contains a script address, but does not contain a datum.Transaction ID:The transaction contains no collateral inputs. Plutus script will not be able to run.The transaction contains no script data hash. Plutus script will not be able to run.The following transaction output contains tokens.TTL:Unknown collateral amount.Path is unusual.Valid since:Verify scriptVote key registration (CIP-36)Vote public key:Voting purpose:WarningWeight:Confirm withdrawal for {0} address:Requires {0} out of {1} signatures.Amount sent:Size: {0} bytesGas limitGas priceMax fee per gasName and versionNew contract will be deployedNo message fieldMax priority feeShow full arrayShow full domainShow full messageShow full structReally sign EIP-712 typed data?Input dataConfirm domainConfirm messageConfirm structConfirm typed dataSigning address{0} unitsUnknown tokenThe signature is valid.Already registeredThis device is already registered with this application.This device is already registered with {0}.This device is not registered with this application.The credential you are trying to import does\nnot belong to this authenticator.erase all credentials?Export information about the credentials stored on this device?Not registeredThis device is not registered with\n{0}.Please enable PIN protection.FIDO2 authenticateImport credentialList credentialsFIDO2 registerRemove credentialFIDO2 resetU2F authenticateU2F registerFIDO2 verify userUnable to verify user.Do you really want to erase all credentials?Confirm exportConfirm ki syncConfirm refreshConfirm unlock timeHashing inputsPayment IDPostprocessing...Processing...Processing inputsProcessing outputsSigning...Signing inputsUnlock time for this transaction is set to {0}Do you really want to export tx_der\nfor tx_proof?Do you really want to export tx_key?Do you really want to export watch-only credentials?Do you really want to\nstart refresh?Do you really want to\nsync key images?Confirm tagDestination tag:\n{0}Account indexAssociated token accountConfirm multisigExpected feeInstruction contains {0} accounts and its data is {1} bytes long.Instruction dataThe following instruction is a multisig instruction.{0} is provided via a lookup table.Lookup table addressMultiple signersTransaction contains unknown instructions.Transaction requires {0} signers which increases the fee.Account MergeAccount ThresholdsAdd SignerAdd trustAll XLM will be sent toAllow trustBalance IDBump SequenceBuying:Claim Claimable BalanceClear dataClear flagsConfirm IssuerConfirm memoConfirm operationConfirm timeboundsCreate AccountDebited amountDeleteDelete Passive OfferDelete trustDestinationMemo is not set.\nTypically needed when sending to exchanges.Final confirmHashHigh:Home DomainInflation{0} issuerKey:LimitLow:Master Weight:Medium:New OfferNew Passive OfferNo memo set![no restriction]Path PayPath Pay at leastPayPay at mostPre-auth transactionPrice per {0}:Remove SignerRevoke trustSelling:Set dataSet flagsSet sequence to {0}?Sign this transaction made up of {0}and pay {0}\nfor fee?Source accountTrusted AccountUpdateValid from (UTC)Valid to (UTC)Value (SHA-256):Do you want to clear value key {0}?Baker addressBalance:Ballot:Confirm delegationConfirm originationDelegatorProposalRegister delegateRemove delegationSubmit ballotSubmit proposalSubmit proposalsIncrease and retrieve the U2F counter?Set the U2F counter to {0}?Get U2F counterSet U2F counterClaimClaim addressClaim ETH from Everstake?StakeStake addressStake ETH on Everstake?UnstakeUnstake ETH from Everstake?Always AbstainAlways No ConfidenceDelegating to key hash:Delegating to script:Deposit:Vote delegationMore credentialsSelect the credential that you would like to use for authentication.for authenticationSelect credentialCredential detailsUnknown contract addressToken contractInteraction contractBase feeClaimClaim SOL from stake account?Claiming SOL to address outside your current wallet.Priority feeStakeStake accountStake SOL?The current wallet isn't the SOL staking withdraw authority.Withdraw authority addressUnstakeUnstake SOL from stake account?Vote accountStake SOL on {0}?Event kind: {0}Max fees and rentMax rent feeApproveAmount allowanceChain IDReview details to approve token spending.Token approvalApprove toApproving unlimited amount of {0}Review details to revoke token approval.Token revocationRevokeRevoke fromUnknown tokenUnknown token addressAll input data ({0} bytes)Provider contract addressConfirm message hashSign withTimeboundsToken infoTransaction sourceTransaction source does not belong to this Trezor.Confirm messageEmpty messageMessage hash:Message hexMessage textSign message hash with {0}Sign message with {0}Destination tag is not set. Typically needed when sending to exchanges.",
+                offsets: &[
+                    (Self::cardano__addr_base, 4),
+                    (Self::cardano__addr_enterprise, 14),
+                    (Self::cardano__addr_legacy, 20),
+                    (Self::cardano__addr_pointer, 27),
+                    (Self::cardano__addr_reward, 33),
+                    (Self::cardano__address_no_staking, 62),
+                    (Self::cardano__amount_burned_decimals_unknown, 95),
+                    (Self::cardano__amount_minted_decimals_unknown, 128),
+                    (Self::cardano__amount_sent_decimals_unknown, 159),
+                    (Self::cardano__anonymous_pool, 196),
+                    (Self::cardano__asset_fingerprint, 214),
+                    (Self::cardano__auxiliary_data_hash, 234),
+                    (Self::cardano__block, 239),
+                    (Self::cardano__catalyst, 247),
+                    (Self::cardano__certificate, 258),
+                    (Self::cardano__change_output, 271),
+                    (Self::cardano__check_all_items, 297),
+                    (Self::cardano__choose_level_of_details, 321),
+                    (Self::cardano__collateral_input_id, 341),
+                    (Self::cardano__collateral_input_index, 364),
+                    (Self::cardano__collateral_output_contains_tokens, 409),
+                    (Self::cardano__collateral_return, 426),
+                    (Self::cardano__confirm_signing_stake_pool, 482),
+                    (Self::cardano__confirm_transaction, 501),
+                    (Self::cardano__confirming_a_multisig_transaction, 535),
+                    (Self::cardano__confirming_a_plutus_transaction, 567),
+                    (Self::cardano__confirming_pool_registration, 605),
+                    (Self::cardano__confirming_transaction, 630),
+                    (Self::cardano__cost, 634),
+                    (Self::cardano__credential_mismatch, 678),
+                    (Self::cardano__datum_hash, 689),
+                    (Self::cardano__delegating_to, 703),
+                    (Self::cardano__for_account_and_index_template, 733),
+                    (Self::cardano__for_account_template, 749),
+                    (Self::cardano__for_key_hash, 762),
+                    (Self::cardano__for_script, 773),
+                    (Self::cardano__inline_datum, 785),
+                    (Self::cardano__input_id, 794),
+                    (Self::cardano__input_index, 806),
+                    (Self::cardano__intro_text_change, 852),
+                    (Self::cardano__intro_text_owned_by_device, 902),
+                    (Self::cardano__intro_text_registration_payment, 972),
+                    (Self::cardano__key_hash, 980),
+                    (Self::cardano__margin, 986),
+                    (Self::cardano__multisig_path, 1000),
+                    (Self::cardano__nested_scripts_template, 1028),
+                    (Self::cardano__network, 1036),
+                    (Self::cardano__no_output_tx, 1091),
+                    (Self::cardano__nonce, 1097),
+                    (Self::cardano__other, 1102),
+                    (Self::cardano__path, 1106),
+                    (Self::cardano__pledge, 1112),
+                    (Self::cardano__pointer, 1119),
+                    (Self::cardano__policy_id, 1128),
+                    (Self::cardano__pool_metadata_hash, 1147),
+                    (Self::cardano__pool_metadata_url, 1165),
+                    (Self::cardano__pool_owner, 1176),
+                    (Self::cardano__pool_reward_account, 1196),
+                    (Self::cardano__reference_input_id, 1215),
+                    (Self::cardano__reference_input_index, 1237),
+                    (Self::cardano__reference_script, 1253),
+                    (Self::cardano__required_signer, 1268),
+                    (Self::cardano__reward, 1274),
+                    (Self::cardano__reward_address, 1302),
+                    (Self::cardano__reward_eligibility_warning, 1380),
+                    (Self::cardano__rewards_go_to, 1394),
+                    (Self::cardano__script, 1400),
+                    (Self::cardano__script_all, 1403),
+                    (Self::cardano__script_any, 1406),
+                    (Self::cardano__script_data_hash, 1423),
+                    (Self::cardano__script_hash, 1435),
+                    (Self::cardano__script_invalid_before, 1449),
+                    (Self::cardano__script_invalid_hereafter, 1466),
+                    (Self::cardano__script_key, 1469),
+                    (Self::cardano__script_n_of_k, 1475),
+                    (Self::cardano__script_reward, 1488),
+                    (Self::cardano__sending, 1495),
+                    (Self::cardano__show_simple, 1506),
+                    (Self::cardano__sign_tx_path_template, 1531),
+                    (Self::cardano__stake_delegation, 1547),
+                    (Self::cardano__stake_deregistration, 1571),
+                    (Self::cardano__stake_pool_registration, 1593),
+                    (Self::cardano__stake_pool_registration_pool_id, 1625),
+                    (Self::cardano__stake_registration, 1647),
+                    (Self::cardano__staking_key_for_account, 1670),
+                    (Self::cardano__to_pool, 1678),
+                    (Self::cardano__token_minting_path, 1696),
+                    (Self::cardano__total_collateral, 1713),
+                    (Self::cardano__transaction, 1724),
+                    (Self::cardano__transaction_contains_minting_or_burning, 1778),
+                    (Self::cardano__transaction_contains_script_address_no_datum, 1867),
+                    (Self::cardano__transaction_id, 1882),
+                    (Self::cardano__transaction_no_collateral_input, 1967),
+                    (Self::cardano__transaction_no_script_data_hash, 2051),
+                    (Self::cardano__transaction_output_contains_tokens, 2100),
+                    (Self::cardano__ttl, 2104),
+                    (Self::cardano__unknown_collateral_amount, 2130),
+                    (Self::cardano__unusual_path, 2146),
+                    (Self::cardano__valid_since, 2158),
+                    (Self::cardano__verify_script, 2171),
+                    (Self::cardano__vote_key_registration, 2201),
+                    (Self::cardano__vote_public_key, 2217),
+                    (Self::cardano__voting_purpose, 2232),
+                    (Self::cardano__warning, 2239),
+                    (Self::cardano__weight, 2246),
+                    (Self::cardano__withdrawal_for_address_template, 2281),
+                    (Self::cardano__x_of_y_signatures_template, 2316),
+                    (Self::eos__about_to_sign_template, 2316),
+                    (Self::eos__action_name, 2316),
+                    (Self::eos__arbitrary_data, 2316),
+                    (Self::eos__buy_ram, 2316),
+                    (Self::eos__bytes, 2316),
+                    (Self::eos__cancel_vote, 2316),
+                    (Self::eos__checksum, 2316),
+                    (Self::eos__code, 2316),
+                    (Self::eos__contract, 2316),
+                    (Self::eos__cpu, 2316),
+                    (Self::eos__creator, 2316),
+                    (Self::eos__delegate, 2316),
+                    (Self::eos__delete_auth, 2316),
+                    (Self::eos__from, 2316),
+                    (Self::eos__link_auth, 2316),
+                    (Self::eos__memo, 2316),
+                    (Self::eos__name, 2316),
+                    (Self::eos__net, 2316),
+                    (Self::eos__new_account, 2316),
+                    (Self::eos__owner, 2316),
+                    (Self::eos__parent, 2316),
+                    (Self::eos__payer, 2316),
+                    (Self::eos__permission, 2316),
+                    (Self::eos__proxy, 2316),
+                    (Self::eos__receiver, 2316),
+                    (Self::eos__refund, 2316),
+                    (Self::eos__requirement, 2316),
+                    (Self::eos__sell_ram, 2316),
+                    (Self::eos__sender, 2316),
+                    (Self::eos__threshold, 2316),
+                    (Self::eos__to, 2316),
+                    (Self::eos__transfer, 2316),
+                    (Self::eos__type, 2316),
+                    (Self::eos__undelegate, 2316),
+                    (Self::eos__unlink_auth, 2316),
+                    (Self::eos__update_auth, 2316),
+                    (Self::eos__vote_for_producers, 2316),
+                    (Self::eos__vote_for_proxy, 2316),
+                    (Self::eos__voter, 2316),
+                    (Self::ethereum__amount_sent, 2328),
+                    (Self::ethereum__data_size_template, 2343),
+                    (Self::ethereum__gas_limit, 2352),
+                    (Self::ethereum__gas_price, 2361),
+                    (Self::ethereum__max_gas_price, 2376),
+                    (Self::ethereum__name_and_version, 2392),
+                    (Self::ethereum__new_contract, 2421),
+                    (Self::ethereum__no_message_field, 2437),
+                    (Self::ethereum__priority_fee, 2453),
+                    (Self::ethereum__show_full_array, 2468),
+                    (Self::ethereum__show_full_domain, 2484),
+                    (Self::ethereum__show_full_message, 2501),
+                    (Self::ethereum__show_full_struct, 2517),
+                    (Self::ethereum__sign_eip712, 2548),
+                    (Self::ethereum__title_input_data, 2558),
+                    (Self::ethereum__title_confirm_domain, 2572),
+                    (Self::ethereum__title_confirm_message, 2587),
+                    (Self::ethereum__title_confirm_struct, 2601),
+                    (Self::ethereum__title_confirm_typed_data, 2619),
+                    (Self::ethereum__title_signing_address, 2634),
+                    (Self::ethereum__units_template, 2643),
+                    (Self::ethereum__unknown_token, 2656),
+                    (Self::ethereum__valid_signature, 2679),
+                    (Self::fido__already_registered, 2697),
+                    (Self::fido__device_already_registered, 2753),
+                    (Self::fido__device_already_registered_with_template, 2796),
+                    (Self::fido__device_not_registered, 2848),
+                    (Self::fido__does_not_belong, 2926),
+                    (Self::fido__erase_credentials, 2948),
+                    (Self::fido__export_credentials, 3011),
+                    (Self::fido__not_registered, 3025),
+                    (Self::fido__not_registered_with_template, 3064),
+                    (Self::fido__please_enable_pin_protection, 3093),
+                    (Self::fido__title_authenticate, 3111),
+                    (Self::fido__title_import_credential, 3128),
+                    (Self::fido__title_list_credentials, 3144),
+                    (Self::fido__title_register, 3158),
+                    (Self::fido__title_remove_credential, 3175),
+                    (Self::fido__title_reset, 3186),
+                    (Self::fido__title_u2f_auth, 3202),
+                    (Self::fido__title_u2f_register, 3214),
+                    (Self::fido__title_verify_user, 3231),
+                    (Self::fido__unable_to_verify_user, 3253),
+                    (Self::fido__wanna_erase_credentials, 3297),
+                    (Self::monero__confirm_export, 3311),
+                    (Self::monero__confirm_ki_sync, 3326),
+                    (Self::monero__confirm_refresh, 3341),
+                    (Self::monero__confirm_unlock_time, 3360),
+                    (Self::monero__hashing_inputs, 3374),
+                    (Self::monero__payment_id, 3384),
+                    (Self::monero__postprocessing, 3401),
+                    (Self::monero__processing, 3414),
+                    (Self::monero__processing_inputs, 3431),
+                    (Self::monero__processing_outputs, 3449),
+                    (Self::monero__signing, 3459),
+                    (Self::monero__signing_inputs, 3473),
+                    (Self::monero__unlock_time_set_template, 3519),
+                    (Self::monero__wanna_export_tx_der, 3568),
+                    (Self::monero__wanna_export_tx_key, 3604),
+                    (Self::monero__wanna_export_watchkey, 3656),
+                    (Self::monero__wanna_start_refresh, 3692),
+                    (Self::monero__wanna_sync_key_images, 3730),
+                    (Self::nem__absolute, 3730),
+                    (Self::nem__activate, 3730),
+                    (Self::nem__add, 3730),
+                    (Self::nem__confirm_action, 3730),
+                    (Self::nem__confirm_address, 3730),
+                    (Self::nem__confirm_creation_fee, 3730),
+                    (Self::nem__confirm_mosaic, 3730),
+                    (Self::nem__confirm_multisig_fee, 3730),
+                    (Self::nem__confirm_namespace, 3730),
+                    (Self::nem__confirm_payload, 3730),
+                    (Self::nem__confirm_properties, 3730),
+                    (Self::nem__confirm_rental_fee, 3730),
+                    (Self::nem__confirm_transfer_of, 3730),
+                    (Self::nem__convert_account_to_multisig, 3730),
+                    (Self::nem__cosign_transaction_for, 3730),
+                    (Self::nem__cosignatory, 3730),
+                    (Self::nem__create_mosaic, 3730),
+                    (Self::nem__create_namespace, 3730),
+                    (Self::nem__deactivate, 3730),
+                    (Self::nem__decrease, 3730),
+                    (Self::nem__description, 3730),
+                    (Self::nem__divisibility_and_levy_cannot_be_shown, 3730),
+                    (Self::nem__encrypted, 3730),
+                    (Self::nem__final_confirm, 3730),
+                    (Self::nem__immutable, 3730),
+                    (Self::nem__increase, 3730),
+                    (Self::nem__initial_supply, 3730),
+                    (Self::nem__initiate_transaction_for, 3730),
+                    (Self::nem__levy_divisibility, 3730),
+                    (Self::nem__levy_fee, 3730),
+                    (Self::nem__levy_fee_of, 3730),
+                    (Self::nem__levy_mosaic, 3730),
+                    (Self::nem__levy_namespace, 3730),
+                    (Self::nem__levy_recipient, 3730),
+                    (Self::nem__levy_type, 3730),
+                    (Self::nem__modify_supply_for, 3730),
+                    (Self::nem__modify_the_number_of_cosignatories_by, 3730),
+                    (Self::nem__mutable, 3730),
+                    (Self::nem__of, 3730),
+                    (Self::nem__percentile, 3730),
+                    (Self::nem__raw_units_template, 3730),
+                    (Self::nem__remote_harvesting, 3730),
+                    (Self::nem__remove, 3730),
+                    (Self::nem__set_minimum_cosignatories_to, 3730),
+                    (Self::nem__sign_tx_fee_template, 3730),
+                    (Self::nem__supply_change, 3730),
+                    (Self::nem__supply_units_template, 3730),
+                    (Self::nem__transferable, 3730),
+                    (Self::nem__under_namespace, 3730),
+                    (Self::nem__unencrypted, 3730),
+                    (Self::nem__unknown_mosaic, 3730),
+                    (Self::ripple__confirm_tag, 3741),
+                    (Self::ripple__destination_tag_template, 3761),
+                    (Self::solana__account_index, 3774),
+                    (Self::solana__associated_token_account, 3798),
+                    (Self::solana__confirm_multisig, 3814),
+                    (Self::solana__expected_fee, 3826),
+                    (Self::solana__instruction_accounts_template, 3891),
+                    (Self::solana__instruction_data, 3907),
+                    (Self::solana__instruction_is_multisig, 3959),
+                    (Self::solana__is_provided_via_lookup_table_template, 3994),
+                    (Self::solana__lookup_table_address, 4014),
+                    (Self::solana__multiple_signers, 4030),
+                    (Self::solana__transaction_contains_unknown_instructions, 4072),
+                    (Self::solana__transaction_requires_x_signers_template, 4129),
+                    (Self::stellar__account_merge, 4142),
+                    (Self::stellar__account_thresholds, 4160),
+                    (Self::stellar__add_signer, 4170),
+                    (Self::stellar__add_trust, 4179),
+                    (Self::stellar__all_will_be_sent_to, 4202),
+                    (Self::stellar__allow_trust, 4213),
+                    (Self::stellar__balance_id, 4223),
+                    (Self::stellar__bump_sequence, 4236),
+                    (Self::stellar__buying, 4243),
+                    (Self::stellar__claim_claimable_balance, 4266),
+                    (Self::stellar__clear_data, 4276),
+                    (Self::stellar__clear_flags, 4287),
+                    (Self::stellar__confirm_issuer, 4301),
+                    (Self::stellar__confirm_memo, 4313),
+                    (Self::stellar__confirm_operation, 4330),
+                    (Self::stellar__confirm_timebounds, 4348),
+                    (Self::stellar__create_account, 4362),
+                    (Self::stellar__debited_amount, 4376),
+                    (Self::stellar__delete, 4382),
+                    (Self::stellar__delete_passive_offer, 4402),
+                    (Self::stellar__delete_trust, 4414),
+                    (Self::stellar__destination, 4425),
+                    (Self::stellar__exchanges_require_memo, 4485),
+                    (Self::stellar__final_confirm, 4498),
+                    (Self::stellar__hash, 4502),
+                    (Self::stellar__high, 4507),
+                    (Self::stellar__home_domain, 4518),
+                    (Self::stellar__inflation, 4527),
+                    (Self::stellar__issuer_template, 4537),
+                    (Self::stellar__key, 4541),
+                    (Self::stellar__limit, 4546),
+                    (Self::stellar__low, 4550),
+                    (Self::stellar__master_weight, 4564),
+                    (Self::stellar__medium, 4571),
+                    (Self::stellar__new_offer, 4580),
+                    (Self::stellar__new_passive_offer, 4597),
+                    (Self::stellar__no_memo_set, 4609),
+                    (Self::stellar__no_restriction, 4625),
+                    (Self::stellar__path_pay, 4633),
+                    (Self::stellar__path_pay_at_least, 4650),
+                    (Self::stellar__pay, 4653),
+                    (Self::stellar__pay_at_most, 4664),
+                    (Self::stellar__preauth_transaction, 4684),
+                    (Self::stellar__price_per_template, 4698),
+                    (Self::stellar__remove_signer, 4711),
+                    (Self::stellar__revoke_trust, 4723),
+                    (Self::stellar__selling, 4731),
+                    (Self::stellar__set_data, 4739),
+                    (Self::stellar__set_flags, 4748),
+                    (Self::stellar__set_sequence_to_template, 4768),
+                    (Self::stellar__sign_tx_count_template, 4804),
+                    (Self::stellar__sign_tx_fee_template, 4824),
+                    (Self::stellar__source_account, 4838),
+                    (Self::stellar__trusted_account, 4853),
+                    (Self::stellar__update, 4859),
+                    (Self::stellar__valid_from, 4875),
+                    (Self::stellar__valid_to, 4889),
+                    (Self::stellar__value_sha256, 4905),
+                    (Self::stellar__wanna_clean_value_key_template, 4940),
+                    (Self::tezos__baker_address, 4953),
+                    (Self::tezos__balance, 4961),
+                    (Self::tezos__ballot, 4968),
+                    (Self::tezos__confirm_delegation, 4986),
+                    (Self::tezos__confirm_origination, 5005),
+                    (Self::tezos__delegator, 5014),
+                    (Self::tezos__proposal, 5022),
+                    (Self::tezos__register_delegate, 5039),
+                    (Self::tezos__remove_delegation, 5056),
+                    (Self::tezos__submit_ballot, 5069),
+                    (Self::tezos__submit_proposal, 5084),
+                    (Self::tezos__submit_proposals, 5100),
+                    (Self::u2f__get, 5138),
+                    (Self::u2f__set_template, 5165),
+                    (Self::u2f__title_get, 5180),
+                    (Self::u2f__title_set, 5195),
+                    (Self::ethereum__staking_claim, 5200),
+                    (Self::ethereum__staking_claim_address, 5213),
+                    (Self::ethereum__staking_claim_intro, 5238),
+                    (Self::ethereum__staking_stake, 5243),
+                    (Self::ethereum__staking_stake_address, 5256),
+                    (Self::ethereum__staking_stake_intro, 5279),
+                    (Self::ethereum__staking_unstake, 5286),
+                    (Self::ethereum__staking_unstake_intro, 5313),
+                    (Self::cardano__always_abstain, 5327),
+                    (Self::cardano__always_no_confidence, 5347),
+                    (Self::cardano__delegating_to_key_hash, 5370),
+                    (Self::cardano__delegating_to_script, 5391),
+                    (Self::cardano__deposit, 5399),
+                    (Self::cardano__vote_delegation, 5414),
+                    (Self::fido__more_credentials, 5430),
+                    (Self::fido__select_intro, 5498),
+                    (Self::fido__title_for_authentication, 5516),
+                    (Self::fido__title_select_credential, 5533),
+                    (Self::fido__title_credential_details, 5551),
+                    (Self::ethereum__unknown_contract_address, 5575),
+                    (Self::ethereum__token_contract, 5589),
+                    (Self::ethereum__interaction_contract, 5609),
+                    (Self::solana__base_fee, 5617),
+                    (Self::solana__claim, 5622),
+                    (Self::solana__claim_question, 5651),
+                    (Self::solana__claim_recipient_warning, 5703),
+                    (Self::solana__priority_fee, 5715),
+                    (Self::solana__stake, 5720),
+                    (Self::solana__stake_account, 5733),
+                    (Self::solana__stake_question, 5743),
+                    (Self::solana__stake_withdrawal_warning, 5803),
+                    (Self::solana__stake_withdrawal_warning_title, 5829),
+                    (Self::solana__unstake, 5836),
+                    (Self::solana__unstake_question, 5867),
+                    (Self::solana__vote_account, 5879),
+                    (Self::solana__stake_on_question, 5896),
+                    (Self::nostr__event_kind_template, 5911),
+                    (Self::solana__max_fees_rent, 5928),
+                    (Self::solana__max_rent_fee, 5940),
+                    (Self::ethereum__approve, 5947),
+                    (Self::ethereum__approve_amount_allowance, 5963),
+                    (Self::ethereum__approve_chain_id, 5971),
+                    (Self::ethereum__approve_intro, 6012),
+                    (Self::ethereum__approve_intro_title, 6026),
+                    (Self::ethereum__approve_to, 6036),
+                    (Self::ethereum__approve_unlimited_template, 6069),
+                    (Self::ethereum__approve_intro_revoke, 6109),
+                    (Self::ethereum__approve_intro_title_revoke, 6125),
+                    (Self::ethereum__approve_revoke, 6131),
+                    (Self::ethereum__approve_revoke_from, 6142),
+                    (Self::solana__unknown_token, 6155),
+                    (Self::solana__unknown_token_address, 6176),
+                    (Self::ethereum__title_all_input_data_template, 6202),
+                    (Self::ethereum__contract_address, 6227),
+                    (Self::ethereum__title_confirm_message_hash, 6247),
+                    (Self::stellar__sign_with, 6256),
+                    (Self::stellar__timebounds, 6266),
+                    (Self::stellar__token_info, 6276),
+                    (Self::stellar__transaction_source, 6294),
+                    (Self::stellar__transaction_source_diff_warning, 6344),
+                    (Self::cardano__confirm_message, 6359),
+                    (Self::cardano__empty_message, 6372),
+                    (Self::cardano__message_hash, 6385),
+                    (Self::cardano__message_hex, 6396),
+                    (Self::cardano__message_text, 6408),
+                    (Self::cardano__sign_message_hash_path_template, 6434),
+                    (Self::cardano__sign_message_path_template, 6455),
+                    (Self::ripple__destination_tag_missing, 6526),
+                ],
+            };
+
+            #[cfg(feature = "debug")]
+            const DEBUG_BLOB: StringsBlob = StringsBlob {
+                text: "Loading seedLoading private seed is not recommended.",
+                offsets: &[
+                    (Self::debug__loading_seed, 12),
+                    (Self::debug__loading_seed_not_recommended, 52),
+                ],
+            };
+
+            pub const BLOBS: &'static [StringsBlob] = &[
+                Self::BTC_ONLY_BLOB,
+                #[cfg(feature = "universal_fw")]
+                Self::ALTCOIN_BLOB,
+                #[cfg(feature = "debug")]
+                Self::DEBUG_BLOB,
+            ];
+        }
+    } else if #[cfg(feature = "layout_delizia")] {
+        impl TranslatedString {
+            const BTC_ONLY_BLOB: StringsBlob = StringsBlob {
+                text: "Please contact Trezor support atKey mismatch?Address mismatch?trezor.io/supportWrong derivation path for selected account.XPUB mismatch?Public keyCosignerReceive addressYoursDerivation path:Receive addressReceiving toAllow connected app to check the authenticity of your {0}?Authenticate deviceAuto-lock Trezor after {0} of inactivity?Auto-lock delayYou can back up your Trezor once, at any time.You should back up your new wallet right now.It should be backed up now!Wallet created.\nWallet created successfully.You can use your backup to recover your wallet at any time.Back up walletSkip backupAre you sure you want to skip the backup?Commitment dataConfirm locktimeDo you want to create a proof of ownership?The mining fee of\n{0}\nis unexpectedly high.Locktime is set but will have no effect.Locktime set toLocktime set to blockheightA lot of change-outputs.Multiple accountsNew fee rate:Simple send ofTicket amountConfirm detailsFinalize transactionHigh mining feeMeld transactionModify amountPayjoinProof of ownershipPurchase ticketUpdate transactionUnknown pathUnknown transactionUnusually high fee.The transaction contains unverified external inputs.The signature is valid.Voting rights toAbortAccessAgainAllowBackBack upCancelChangeCheckCheck againCloseConfirmContinueDetailsEnableEnterEnter shareExportFormatGo backHold to confirmInfoInstallMore infoOk, I understandPurchaseQuitRestartRetrySelectSetShow allShow detailsShow wordsSkipTry againTurn offTurn onAccess your coinjoin account?Do not disconnect your Trezor!Max mining feeMax roundsAuthorize coinjoinCoinjoin in progressWaiting for othersFee rate:Sending from account:Fee infoSending fromChange device name to {0}?Device nameDo you really want to send entropy?Confirm entropySign transactionEnable experimental features?Only for development and beta testing!Experimental modeUpdate firmwareFW fingerprintClick to ConnectClick to UnlockBackup failedBackup neededCoinjoin authorizedExperimental modeNo USB connectionPIN not setSeedlessChange wallpaperJoint transactionTo the total amount:You are contributing:Change language to {0}?Language changed successfullyChanging languageLanguage settingsTap to connectTap to unlockLockedNot connectedDecrypt valueEncrypt valueSuite labelingDecrease amount by:Increase amount by:New amount:Modify amountDecrease fee by:Fee rate:Increase fee by:New transaction fee:Fee did not change.\nModify feeTransaction fee:Access passphrase wallet?Always enter your passphrase on Trezor?Passphrase provided by connected app will be used but will not be displayed due to the device settings.Passphrase walletHide passphrase coming from app?The next screen shows your passphrase.Please enter your passphrase.Do you want to revoke the passphrase on device setting?Confirm passphraseEnter passphraseHide passphrasePassphrase settingsPassphrase sourceTurn off passphrase protection?Turn on passphrase protection?Change PINPIN changed.Position of the cursor will change between entries for enhanced security.The new PIN must be different from your wipe code.PIN protection\nturned off.PIN protection\nturned on.Enter PINEnter new PINThe PIN you have entered is not valid.PIN will be required to access this device.Invalid PINLast attemptEntered PINs do not match!PIN mismatchPlease check again.Re-enter new PINPlease re-enter PIN to confirm.PIN should be 4-50 digits long.Check PINPIN settingsWrong PINtries leftAre you sure you want to turn off PIN protection?Turn on PIN protection?Wrong PINkey|keyshour|hoursmillisecond|millisecondsminute|minutessecond|secondsaction|actionsoperation|operationsgroup|groupsshare|sharesChecking authenticity...DoneLoading transaction...Locking the device...1 second leftPlease waitProcessingRefreshing...Signing transaction...Syncing...{0} seconds leftTrezor will restart in bootloader mode.Go to bootloaderFirmware version {0}\nby {1}Cancel backup checkCheck your backup?Position of the cursor will change between entries for enhanced security.The entered wallet backup is valid and matches the one in this device.The entered wallet backup is valid but does not match the one in the device.The entered recovery shares are valid and match what is currently in the device.The entered wallet backup is valid but doesn't match the one on this device.Enter any shareEnter your backup.Enter a different share.Enter share from a different group.Group {0}Group threshold reached.Invalid wallet backup entered.Invalid recovery share entered.More shares neededSelect the number of words in your backup.You'll only have to select the first 2-4 letters of each word.All progress will be lost.Share already enteredYou have entered a share from a different backup.Share {0}Recover walletCancel backup checkCancel recoveryBackup checkRecover walletRemaining sharesType word {0} of {1}Wallet recovery completedAre you sure you want to cancel the backup check?Are you sure you want to cancel the recovery process?({0} words)Word {0} of {1}{count} more {plural} starting{count} more {plural} needed{0} of {1} shares enteredYou have enteredThe group threshold specifies the number of groups required to recover your wallet.Create walletRecover walletBy continuing you agree to Trezor Company's terms and conditions.Check backupCheck g{0} - share {1}Check wallet backupCheck share #{0}Continue with the next share.Continue with share #{0}.You have finished verifying your recovery shares for group {0}.You have finished verifying your wallet backup.You have finished verifying your recovery shares.A group is made up of recovery shares.Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.Group {0} - Share {1} checked successfully.Group {0} - share {1}More info atNever put your backup anywhere digital.{0} people or locations will each hold one share.Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.The required number of shares to form Group {0}.= total number of unique word lists used for wallet backup.Only one share will be created.Wallet backupRecovery share #{0}The required number of groups for recovery.Select the correct word for each position.Select {0} wordSelect word {0} of {1}:Share #{0} checked successfully.Standard backupNumber of groupsNumber of sharesSet number of groupsSet number of sharesSet sizes and thresholdsSet size and threshold for each groupSet thresholdBackup checklistWrite down and check all sharesWrite down & check all wallet backup shares= minimum number of unique word lists used for recovery.Backup is doneCreate walletGroup thresholdNumber of groupsNumber of sharesSet group thresholdSet number of groupsSet number of sharesSet thresholdtrezor.io/tosSet the total number of shares in Group {0}.Use your backup when you need to recover your wallet.Write the following {0} words in order on your wallet backup card.Wrong word selected!Your backup is done.Change display orientation to {0}?eastnorthsouthDisplay orientationwestTrezor will allow you to approve some actions which might be unsafe.Trezor will temporarily allow you to approve some actions which might be unsafe.Do you really want to enforce strict safety checks (recommended)?Safety checksSafety overrideAll data on the SD card will be lost.SD card required.Do you really want to remove SD card protection from your device?You have successfully disabled SD protection.Do you really want to secure your device with SD card protection?You have successfully enabled SD protection.SD card errorFormat SD cardPlease insert the correct SD card for this device.Please insert your SD card.Please unplug the device and insert your SD card.There was a problem accessing the SD card.Do you really want to replace the current SD card secret with a newly generated one?You have successfully refreshed SD protection.Do you want to restart Trezor in bootloader mode?SD card protectionSD card problemUnknown filesystem.Please unplug the device and insert the correct SD card.Use a different card or format the SD card to the FAT32 filesystem.Do you really want to format the SD card?Wrong SD card.Sending amountSending from multiple accounts.Including fee:Maximum feeReceiving to a multisig address.Confirm sendingJoint transactionReceiving toSendingSending amountSending toTo the total amount:Transaction IDYou are contributing: words in order.I wrote down all {0} BytesSigning addressConfirm messageMessage sizeVerify addressAssetPress both left and right at the same\ntime to confirm.Press and hold the right button to\napprove important operations.You're ready to\nuse Trezor.Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.Are you sure you\nwant to skip the tutorial?HelloScreen scrollSkip tutorialTutorial completeUse Trezor by\nclicking the left and right buttons.\n\rContinue right.Welcome to Trezor. Press right to continue.All data will be erased.Wipe deviceDo you really want to wipe the device?\nChange wipe codeWipe code changed.The wipe code must be different from your PIN.Wipe code disabled.Wipe code enabled.New wipe codeWipe code can be used to erase all data from this device.Invalid wipe codeThe wipe codes you entered do not match.Re-enter wipe codePlease re-enter wipe code to confirm.Check wipe codeInvalid wipe codeWipe code settingsTurn off wipe code protection?Turn on wipe code protection?Wipe code mismatchNumber of wordsAccountAccount:AddressAmountAre you sure?Array ofBlockhashBuyingConfirmConfirm feeContainsContinue anyway?Continue withErrorFeefromKeep it safe!Continue only if you know what you are doing!My TrezorNooutputsPlease check againPlease try againDo you really want toRecipientSignSignerCheckGroupInformationRememberShareSharesSuccessSummaryThresholdUnknownWarningWritableYesJust a moment...Starting upVerifying PINWrong PINDo you want to create a {0} of {1} multi-share backup?Multi-share backupTap to confirmHold to confirmImportantI wrote down all {0} words in order.Create a backup to avoid losing access to your fundsLet's do a quick check of your backup.InstructionsNot recommended!Account infoIf receive address doesn't match, contact Trezor Support at trezor.io/support.Cancel receiveQR codeDerivation pathContinue in the appCancel and exitReceive address confirmedContinue without PINWithout a PIN, anyone can access this device.Cancel PIN setupCancel signSend fromHold to signFee rateincl. Transaction feeTotal amountAuto-lock turned onYour wallet backup contains multiple lists of words in a specific order (shares).Your wallet backup contains {0} words in a specific order.Wallet backup completedCreate wallet backupDisable haptic feedback?Enable haptic feedback?SettingHaptic feedbackContinue\nholdingEnter next shareHold to continueHold to exit tutorialLearn moreContinue with Share #{0}Start with share #1PassphraseWallet backup not on this deviceInvalid wallet backup enteredAll shares are valid and belong to the backup in this deviceEntered share is valid and belongs to the backup in the deviceVerify remaining recovery shares?Enter each word of your wallet backup in order.It's safe to disconnect your Trezor while recovering your wallet and continue later.Share doesn't matchCancel create walletIncorrect word selectedMore atHow many wallet backup shares do you want to create?Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.Select the minimum shares required to recover your wallet.Share #{0} completedNumber of shares: {0}Recovery threshold: {0}Transaction signedContinue tutorialExit tutorialFind context-specific actions and options in the menu.One more stepYou're all set to start using your device!Tap the lower half of the screen to continue, or swipe down to go back.Easy navigationWelcome to\nTrezor Safe 5Good to knowOperation cancelledSettingsTry again.Number of groups: {0}Display brightnessMulti-share backupCreate additional backup?Create backupChange wallpaper to default image?Words may repeat.Repeat for all shares.SettingsHomescreenThe word is repeatedLet's beginDid you know?The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.Restart tutorialHandy menuHold to confirm important actionsWell done!Learn how to use and navigate this device with ease.Get started!Swipe horizontallyAdjustApplyDisplay brightness changedChange display brightnessDoneThe threshold sets the minimum number of shares needed to recover your wallet.If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.Continue with empty passphrase?Swipe downPublic key confirmedContinue anywayView all dataView all data in the menu.Enable labeling?ProviderConfirm without reviewTap to continueUnlockedTransaction feeUnlimitedChainTokenTapWrite down the first word from the backup.We don't recommend to skip wallet backup creation.Pay attentionCheck the address with source.ReceiveA recovery share is a list of words you wrote down when setting up your Trezor.Your wallet backup consists of 1 to 16 shares.Recovery shareAfter signing, send the transaction in the app.Sign cancelled.SendWalletAuthenticateSet the time before your Trezor locks automatically.day|daysTrezor will restart after update.Access hidden walletHidden walletShow passphraseRe-enter PINPIN setup completed.Start with Share #{0}Let's do a quick check of Share #{0}.Select word #{0} from\nShare #{1}Share #{0} from Group #{1} entered.Cancel transactionUsing different paths for different XPUBs.XPUBCancel?{0} addressViewSwapProvider addressRefund addressAssetsFinishUse menu to continueLast oneView more info, quit flow, ...Replay this tutorial anytime from the Trezor Suite app.Tap to start tutorialContinue with empty device name?Enter device nameNameDevice name changed.Firmware typeFirmware versionAboutConnectedDeviceDisconnectLEDManageOFFONReviewSecurityChange PIN?Remove PINPIN codeChange wipe code?Remove wipe codeWipe codeDisabledEnabledBluetoothWipe your Trezor and start the setup process again.SetWipeUnlockStart enteringDisconnectedConnectForgetPowerWipe code must be turned off before turning off PIN protection.Wipe code setPIN must be set before enabling wipe code.Cancel wipe code setupOpen Trezor Suite and create a wallet backup. This is the only way to recover access to your assets.Your Trezor is having trouble communicating with your connected device.Allow Trezor Suite to use Suite Sync with this Trezor?Allow {0} on {1} to use Suite Sync with this Trezor?Suite SyncNote",
+                offsets: &[
+                    (Self::addr_mismatch__contact_support_at, 32),
+                    (Self::addr_mismatch__key_mismatch, 45),
+                    (Self::addr_mismatch__mismatch, 62),
+                    (Self::addr_mismatch__support_url, 79),
+                    (Self::addr_mismatch__wrong_derivation_path, 122),
+                    (Self::addr_mismatch__xpub_mismatch, 136),
+                    (Self::address__public_key, 146),
+                    (Self::address__title_cosigner, 154),
+                    (Self::address__title_receive_address, 169),
+                    (Self::address__title_yours, 174),
+                    (Self::address_details__derivation_path_colon, 190),
+                    (Self::address_details__title_receive_address, 205),
+                    (Self::address_details__title_receiving_to, 217),
+                    (Self::authenticate__confirm_template, 275),
+                    (Self::authenticate__header, 294),
+                    (Self::auto_lock__change_template, 335),
+                    (Self::auto_lock__title, 350),
+                    (Self::backup__can_back_up_anytime, 396),
+                    (Self::backup__it_should_be_backed_up, 441),
+                    (Self::backup__it_should_be_backed_up_now, 468),
+                    (Self::backup__new_wallet_created, 484),
+                    (Self::backup__new_wallet_successfully_created, 512),
+                    (Self::backup__recover_anytime, 571),
+                    (Self::backup__title_backup_wallet, 585),
+                    (Self::backup__title_skip, 596),
+                    (Self::backup__want_to_skip, 637),
+                    (Self::bitcoin__commitment_data, 652),
+                    (Self::bitcoin__confirm_locktime, 668),
+                    (Self::bitcoin__create_proof_of_ownership, 711),
+                    (Self::bitcoin__high_mining_fee_template, 754),
+                    (Self::bitcoin__locktime_no_effect, 794),
+                    (Self::bitcoin__locktime_set_to, 809),
+                    (Self::bitcoin__locktime_set_to_blockheight, 836),
+                    (Self::bitcoin__lot_of_change_outputs, 860),
+                    (Self::bitcoin__multiple_accounts, 877),
+                    (Self::bitcoin__new_fee_rate, 890),
+                    (Self::bitcoin__simple_send_of, 904),
+                    (Self::bitcoin__ticket_amount, 917),
+                    (Self::bitcoin__title_confirm_details, 932),
+                    (Self::bitcoin__title_finalize_transaction, 952),
+                    (Self::bitcoin__title_high_mining_fee, 967),
+                    (Self::bitcoin__title_meld_transaction, 983),
+                    (Self::bitcoin__title_modify_amount, 996),
+                    (Self::bitcoin__title_payjoin, 1003),
+                    (Self::bitcoin__title_proof_of_ownership, 1021),
+                    (Self::bitcoin__title_purchase_ticket, 1036),
+                    (Self::bitcoin__title_update_transaction, 1054),
+                    (Self::bitcoin__unknown_path, 1066),
+                    (Self::bitcoin__unknown_transaction, 1085),
+                    (Self::bitcoin__unusually_high_fee, 1104),
+                    (Self::bitcoin__unverified_external_inputs, 1156),
+                    (Self::bitcoin__valid_signature, 1179),
+                    (Self::bitcoin__voting_rights, 1195),
+                    (Self::buttons__abort, 1200),
+                    (Self::buttons__access, 1206),
+                    (Self::buttons__again, 1211),
+                    (Self::buttons__allow, 1216),
+                    (Self::buttons__back, 1220),
+                    (Self::buttons__back_up, 1227),
+                    (Self::buttons__cancel, 1233),
+                    (Self::buttons__change, 1239),
+                    (Self::buttons__check, 1244),
+                    (Self::buttons__check_again, 1255),
+                    (Self::buttons__close, 1260),
+                    (Self::buttons__confirm, 1267),
+                    (Self::buttons__continue, 1275),
+                    (Self::buttons__details, 1282),
+                    (Self::buttons__enable, 1288),
+                    (Self::buttons__enter, 1293),
+                    (Self::buttons__enter_share, 1304),
+                    (Self::buttons__export, 1310),
+                    (Self::buttons__format, 1316),
+                    (Self::buttons__go_back, 1323),
+                    (Self::buttons__hold_to_confirm, 1338),
+                    (Self::buttons__info, 1342),
+                    (Self::buttons__install, 1349),
+                    (Self::buttons__more_info, 1358),
+                    (Self::buttons__ok_i_understand, 1374),
+                    (Self::buttons__purchase, 1382),
+                    (Self::buttons__quit, 1386),
+                    (Self::buttons__restart, 1393),
+                    (Self::buttons__retry, 1398),
+                    (Self::buttons__select, 1404),
+                    (Self::buttons__set, 1407),
+                    (Self::buttons__show_all, 1415),
+                    (Self::buttons__show_details, 1427),
+                    (Self::buttons__show_words, 1437),
+                    (Self::buttons__skip, 1441),
+                    (Self::buttons__try_again, 1450),
+                    (Self::buttons__turn_off, 1458),
+                    (Self::buttons__turn_on, 1465),
+                    (Self::coinjoin__access_account, 1494),
+                    (Self::coinjoin__do_not_disconnect, 1524),
+                    (Self::coinjoin__max_mining_fee, 1538),
+                    (Self::coinjoin__max_rounds, 1548),
+                    (Self::coinjoin__title, 1566),
+                    (Self::coinjoin__title_progress, 1586),
+                    (Self::coinjoin__waiting_for_others, 1604),
+                    (Self::confirm_total__fee_rate_colon, 1613),
+                    (Self::confirm_total__sending_from_account, 1634),
+                    (Self::confirm_total__title_fee, 1642),
+                    (Self::confirm_total__title_sending_from, 1654),
+                    (Self::device_name__change_template, 1680),
+                    (Self::device_name__title, 1691),
+                    (Self::entropy__send, 1726),
+                    (Self::entropy__title_confirm, 1741),
+                    (Self::send__sign_transaction, 1757),
+                    (Self::experimental_mode__enable, 1786),
+                    (Self::experimental_mode__only_for_dev, 1824),
+                    (Self::experimental_mode__title, 1841),
+                    (Self::firmware_update__title, 1856),
+                    (Self::firmware_update__title_fingerprint, 1870),
+                    (Self::homescreen__click_to_connect, 1886),
+                    (Self::homescreen__click_to_unlock, 1901),
+                    (Self::homescreen__title_backup_failed, 1914),
+                    (Self::homescreen__title_backup_needed, 1927),
+                    (Self::homescreen__title_coinjoin_authorized, 1946),
+                    (Self::homescreen__title_experimental_mode, 1963),
+                    (Self::homescreen__title_no_usb_connection, 1980),
+                    (Self::homescreen__title_pin_not_set, 1991),
+                    (Self::homescreen__title_seedless, 1999),
+                    (Self::homescreen__title_set, 2015),
+                    (Self::inputs__back, 2015),
+                    (Self::inputs__cancel, 2015),
+                    (Self::inputs__delete, 2015),
+                    (Self::inputs__enter, 2015),
+                    (Self::inputs__return, 2015),
+                    (Self::inputs__show, 2015),
+                    (Self::inputs__space, 2015),
+                    (Self::joint__title, 2032),
+                    (Self::joint__to_the_total_amount, 2052),
+                    (Self::joint__you_are_contributing, 2073),
+                    (Self::language__change_to_template, 2096),
+                    (Self::language__changed, 2125),
+                    (Self::language__progress, 2142),
+                    (Self::language__title, 2159),
+                    (Self::lockscreen__tap_to_connect, 2173),
+                    (Self::lockscreen__tap_to_unlock, 2186),
+                    (Self::lockscreen__title_locked, 2192),
+                    (Self::lockscreen__title_not_connected, 2205),
+                    (Self::misc__decrypt_value, 2218),
+                    (Self::misc__encrypt_value, 2231),
+                    (Self::misc__title_suite_labeling, 2245),
+                    (Self::modify_amount__decrease_amount, 2264),
+                    (Self::modify_amount__increase_amount, 2283),
+                    (Self::modify_amount__new_amount, 2294),
+                    (Self::modify_amount__title, 2307),
+                    (Self::modify_fee__decrease_fee, 2323),
+                    (Self::modify_fee__fee_rate, 2332),
+                    (Self::modify_fee__increase_fee, 2348),
+                    (Self::modify_fee__new_transaction_fee, 2368),
+                    (Self::modify_fee__no_change, 2388),
+                    (Self::modify_fee__title, 2398),
+                    (Self::modify_fee__transaction_fee, 2414),
+                    (Self::passphrase__access_wallet, 2439),
+                    (Self::passphrase__always_on_device, 2478),
+                    (Self::passphrase__from_host_not_shown, 2581),
+                    (Self::passphrase__wallet, 2598),
+                    (Self::passphrase__hide, 2630),
+                    (Self::passphrase__next_screen_will_show_passphrase, 2668),
+                    (Self::passphrase__please_enter, 2697),
+                    (Self::passphrase__revoke_on_device, 2752),
+                    (Self::passphrase__title_confirm, 2770),
+                    (Self::passphrase__title_enter, 2786),
+                    (Self::passphrase__title_hide, 2801),
+                    (Self::passphrase__title_settings, 2820),
+                    (Self::passphrase__title_source, 2837),
+                    (Self::passphrase__turn_off, 2868),
+                    (Self::passphrase__turn_on, 2898),
+                    (Self::pin__change, 2908),
+                    (Self::pin__changed, 2920),
+                    (Self::pin__cursor_will_change, 2993),
+                    (Self::pin__diff_from_wipe_code, 3043),
+                    (Self::pin__disabled, 3069),
+                    (Self::pin__enabled, 3094),
+                    (Self::pin__enter, 3103),
+                    (Self::pin__enter_new, 3116),
+                    (Self::pin__entered_not_valid, 3154),
+                    (Self::pin__info, 3197),
+                    (Self::pin__invalid_pin, 3208),
+                    (Self::pin__last_attempt, 3220),
+                    (Self::pin__mismatch, 3246),
+                    (Self::pin__pin_mismatch, 3258),
+                    (Self::pin__please_check_again, 3277),
+                    (Self::pin__reenter_new, 3293),
+                    (Self::pin__reenter_to_confirm, 3324),
+                    (Self::pin__should_be_long, 3355),
+                    (Self::pin__title_check_pin, 3364),
+                    (Self::pin__title_settings, 3376),
+                    (Self::pin__title_wrong_pin, 3385),
+                    (Self::pin__tries_left, 3395),
+                    (Self::pin__turn_off, 3444),
+                    (Self::pin__turn_on, 3467),
+                    (Self::pin__wrong_pin, 3476),
+                    (Self::plurals__contains_x_keys, 3484),
+                    (Self::plurals__lock_after_x_hours, 3494),
+                    (Self::plurals__lock_after_x_milliseconds, 3518),
+                    (Self::plurals__lock_after_x_minutes, 3532),
+                    (Self::plurals__lock_after_x_seconds, 3546),
+                    (Self::plurals__sign_x_actions, 3560),
+                    (Self::plurals__transaction_of_x_operations, 3580),
+                    (Self::plurals__x_groups_needed, 3592),
+                    (Self::plurals__x_shares_needed, 3604),
+                    (Self::progress__authenticity_check, 3628),
+                    (Self::progress__done, 3632),
+                    (Self::progress__loading_transaction, 3654),
+                    (Self::progress__locking_device, 3675),
+                    (Self::progress__one_second_left, 3688),
+                    (Self::progress__please_wait, 3699),
+                    (Self::storage_msg__processing, 3709),
+                    (Self::progress__refreshing, 3722),
+                    (Self::progress__signing_transaction, 3744),
+                    (Self::progress__syncing, 3754),
+                    (Self::progress__x_seconds_left_template, 3770),
+                    (Self::reboot_to_bootloader__restart, 3809),
+                    (Self::reboot_to_bootloader__title, 3825),
+                    (Self::reboot_to_bootloader__version_by_template, 3852),
+                    (Self::recovery__cancel_dry_run, 3871),
+                    (Self::recovery__check_dry_run, 3889),
+                    (Self::recovery__cursor_will_change, 3962),
+                    (Self::recovery__dry_run_bip39_valid_match, 4032),
+                    (Self::recovery__dry_run_bip39_valid_mismatch, 4108),
+                    (Self::recovery__dry_run_slip39_valid_match, 4188),
+                    (Self::recovery__dry_run_slip39_valid_mismatch, 4264),
+                    (Self::recovery__enter_any_share, 4279),
+                    (Self::recovery__enter_backup, 4297),
+                    (Self::recovery__enter_different_share, 4321),
+                    (Self::recovery__enter_share_from_diff_group, 4356),
+                    (Self::recovery__group_num_template, 4365),
+                    (Self::recovery__group_threshold_reached, 4389),
+                    (Self::recovery__invalid_wallet_backup_entered, 4419),
+                    (Self::recovery__invalid_share_entered, 4450),
+                    (Self::recovery__more_shares_needed, 4468),
+                    (Self::recovery__num_of_words, 4510),
+                    (Self::recovery__only_first_n_letters, 4572),
+                    (Self::recovery__progress_will_be_lost, 4598),
+                    (Self::recovery__share_already_entered, 4619),
+                    (Self::recovery__share_from_another_multi_share_backup, 4668),
+                    (Self::recovery__share_num_template, 4677),
+                    (Self::recovery__title, 4691),
+                    (Self::recovery__title_cancel_dry_run, 4710),
+                    (Self::recovery__title_cancel_recovery, 4725),
+                    (Self::recovery__title_dry_run, 4737),
+                    (Self::recovery__title_recover, 4751),
+                    (Self::recovery__title_remaining_shares, 4767),
+                    (Self::recovery__type_word_x_of_y_template, 4787),
+                    (Self::recovery__wallet_recovered, 4812),
+                    (Self::recovery__wanna_cancel_dry_run, 4861),
+                    (Self::recovery__wanna_cancel_recovery, 4914),
+                    (Self::recovery__word_count_template, 4925),
+                    (Self::recovery__word_x_of_y_template, 4940),
+                    (Self::recovery__x_more_items_starting_template_plural, 4970),
+                    (Self::recovery__x_more_shares_needed_template_plural, 4998),
+                    (Self::recovery__x_of_y_entered_template, 5023),
+                    (Self::recovery__you_have_entered, 5039),
+                    (Self::reset__advanced_group_threshold_info, 5122),
+                    (Self::reset__all_x_of_y_template, 5122),
+                    (Self::reset__any_x_of_y_template, 5122),
+                    (Self::reset__button_create, 5135),
+                    (Self::reset__button_recover, 5149),
+                    (Self::reset__by_continuing, 5214),
+                    (Self::reset__check_backup_title, 5226),
+                    (Self::reset__check_group_share_title_template, 5248),
+                    (Self::reset__check_wallet_backup_title, 5267),
+                    (Self::reset__check_share_title_template, 5283),
+                    (Self::reset__continue_with_next_share, 5312),
+                    (Self::reset__continue_with_share_template, 5337),
+                    (Self::reset__finished_verifying_group_template, 5400),
+                    (Self::reset__finished_verifying_wallet_backup, 5447),
+                    (Self::reset__finished_verifying_shares, 5496),
+                    (Self::reset__group_description, 5534),
+                    (Self::reset__group_info, 5667),
+                    (Self::reset__group_share_checked_successfully_template, 5710),
+                    (Self::reset__group_share_title_template, 5731),
+                    (Self::reset__more_info_at, 5743),
+                    (Self::reset__need_all_share_template, 5743),
+                    (Self::reset__need_any_share_template, 5743),
+                    (Self::reset__needed_to_form_a_group, 5743),
+                    (Self::reset__needed_to_recover_your_wallet, 5743),
+                    (Self::reset__never_make_digital_copy, 5782),
+                    (Self::reset__num_of_share_holders_template, 5831),
+                    (Self::reset__num_of_shares_advanced_info_template, 5956),
+                    (Self::reset__num_of_shares_basic_info_template, 5956),
+                    (Self::reset__num_shares_for_group_template, 6004),
+                    (Self::reset__number_of_shares_info, 6063),
+                    (Self::reset__one_share, 6063),
+                    (Self::reset__only_one_share_will_be_created, 6094),
+                    (Self::reset__recovery_wallet_backup_title, 6107),
+                    (Self::reset__recovery_share_title_template, 6126),
+                    (Self::reset__required_number_of_groups, 6169),
+                    (Self::reset__select_correct_word, 6211),
+                    (Self::reset__select_word_template, 6226),
+                    (Self::reset__select_word_x_of_y_template, 6249),
+                    (Self::reset__set_it_to_count_template, 6249),
+                    (Self::reset__share_checked_successfully_template, 6281),
+                    (Self::reset__share_words_title, 6296),
+                    (Self::reset__slip39_checklist_num_groups, 6312),
+                    (Self::reset__slip39_checklist_num_shares, 6328),
+                    (Self::reset__slip39_checklist_set_num_groups, 6348),
+                    (Self::reset__slip39_checklist_set_num_shares, 6368),
+                    (Self::reset__slip39_checklist_set_sizes, 6392),
+                    (Self::reset__slip39_checklist_set_sizes_longer, 6429),
+                    (Self::reset__slip39_checklist_set_threshold, 6442),
+                    (Self::reset__slip39_checklist_title, 6458),
+                    (Self::reset__slip39_checklist_write_down, 6489),
+                    (Self::reset__slip39_checklist_write_down_recovery, 6532),
+                    (Self::reset__the_threshold_sets_the_number_of_shares, 6532),
+                    (Self::reset__threshold_info, 6588),
+                    (Self::reset__title_backup_is_done, 6602),
+                    (Self::reset__title_create_wallet, 6615),
+                    (Self::reset__title_group_threshold, 6630),
+                    (Self::reset__title_number_of_groups, 6646),
+                    (Self::reset__title_number_of_shares, 6662),
+                    (Self::reset__title_set_group_threshold, 6681),
+                    (Self::reset__title_set_number_of_groups, 6701),
+                    (Self::reset__title_set_number_of_shares, 6721),
+                    (Self::reset__title_set_threshold, 6734),
+                    (Self::reset__to_form_group_template, 6734),
+                    (Self::reset__tos_link, 6747),
+                    (Self::reset__total_number_of_shares_in_group_template, 6791),
+                    (Self::reset__use_your_backup, 6844),
+                    (Self::reset__write_down_words_template, 6910),
+                    (Self::reset__wrong_word_selected, 6930),
+                    (Self::reset__you_need_one_share, 6930),
+                    (Self::reset__your_backup_is_done, 6950),
+                    (Self::rotation__change_template, 6984),
+                    (Self::rotation__east, 6988),
+                    (Self::rotation__north, 6993),
+                    (Self::rotation__south, 6998),
+                    (Self::rotation__title_change, 7017),
+                    (Self::rotation__west, 7021),
+                    (Self::safety_checks__approve_unsafe_always, 7089),
+                    (Self::safety_checks__approve_unsafe_temporary, 7169),
+                    (Self::safety_checks__enforce_strict, 7234),
+                    (Self::safety_checks__title, 7247),
+                    (Self::safety_checks__title_safety_override, 7262),
+                    (Self::sd_card__all_data_will_be_lost, 7299),
+                    (Self::sd_card__card_required, 7316),
+                    (Self::sd_card__disable, 7381),
+                    (Self::sd_card__disabled, 7426),
+                    (Self::sd_card__enable, 7491),
+                    (Self::sd_card__enabled, 7535),
+                    (Self::sd_card__error, 7548),
+                    (Self::sd_card__format_card, 7562),
+                    (Self::sd_card__insert_correct_card, 7612),
+                    (Self::sd_card__please_insert, 7639),
+                    (Self::sd_card__please_unplug_and_insert, 7688),
+                    (Self::sd_card__problem_accessing, 7730),
+                    (Self::sd_card__refresh, 7814),
+                    (Self::sd_card__refreshed, 7860),
+                    (Self::sd_card__restart, 7909),
+                    (Self::sd_card__title, 7927),
+                    (Self::sd_card__title_problem, 7942),
+                    (Self::sd_card__unknown_filesystem, 7961),
+                    (Self::sd_card__unplug_and_insert_correct, 8017),
+                    (Self::sd_card__use_different_card, 8084),
+                    (Self::sd_card__wanna_format, 8125),
+                    (Self::sd_card__wrong_sd_card, 8139),
+                    (Self::send__confirm_sending, 8153),
+                    (Self::send__from_multiple_accounts, 8184),
+                    (Self::send__including_fee, 8198),
+                    (Self::send__maximum_fee, 8209),
+                    (Self::send__receiving_to_multisig, 8241),
+                    (Self::send__title_confirm_sending, 8256),
+                    (Self::send__title_joint_transaction, 8273),
+                    (Self::send__title_receiving_to, 8285),
+                    (Self::send__title_sending, 8292),
+                    (Self::send__title_sending_amount, 8306),
+                    (Self::send__title_sending_to, 8316),
+                    (Self::send__to_the_total_amount, 8336),
+                    (Self::send__transaction_id, 8350),
+                    (Self::send__you_are_contributing, 8371),
+                    (Self::share_words__words_in_order, 8387),
+                    (Self::share_words__wrote_down_all, 8404),
+                    (Self::sign_message__bytes_template, 8413),
+                    (Self::sign_message__confirm_address, 8428),
+                    (Self::sign_message__confirm_message, 8443),
+                    (Self::sign_message__message_size, 8455),
+                    (Self::sign_message__verify_address, 8469),
+                    (Self::words__asset, 8474),
+                    (Self::tutorial__middle_click, 8528),
+                    (Self::tutorial__press_and_hold, 8592),
+                    (Self::tutorial__ready_to_use, 8619),
+                    (Self::tutorial__scroll_down, 8728),
+                    (Self::tutorial__sure_you_want_skip, 8771),
+                    (Self::tutorial__title_hello, 8776),
+                    (Self::tutorial__title_screen_scroll, 8789),
+                    (Self::tutorial__title_skip, 8802),
+                    (Self::tutorial__title_tutorial_complete, 8819),
+                    (Self::tutorial__use_trezor, 8886),
+                    (Self::tutorial__welcome_press_right, 8929),
+                    (Self::wipe__info, 8953),
+                    (Self::wipe__title, 8964),
+                    (Self::wipe__want_to_wipe, 9003),
+                    (Self::wipe_code__change, 9019),
+                    (Self::wipe_code__changed, 9037),
+                    (Self::wipe_code__diff_from_pin, 9083),
+                    (Self::wipe_code__disabled, 9102),
+                    (Self::wipe_code__enabled, 9120),
+                    (Self::wipe_code__enter_new, 9133),
+                    (Self::wipe_code__info, 9190),
+                    (Self::wipe_code__invalid, 9207),
+                    (Self::wipe_code__mismatch, 9247),
+                    (Self::wipe_code__reenter, 9265),
+                    (Self::wipe_code__reenter_to_confirm, 9302),
+                    (Self::wipe_code__title_check, 9317),
+                    (Self::wipe_code__title_invalid, 9334),
+                    (Self::wipe_code__title_settings, 9352),
+                    (Self::wipe_code__turn_off, 9382),
+                    (Self::wipe_code__turn_on, 9411),
+                    (Self::wipe_code__wipe_code_mismatch, 9429),
+                    (Self::word_count__title, 9444),
+                    (Self::words__account, 9451),
+                    (Self::words__account_colon, 9459),
+                    (Self::words__address, 9466),
+                    (Self::words__amount, 9472),
+                    (Self::words__are_you_sure, 9485),
+                    (Self::words__array_of, 9493),
+                    (Self::words__blockhash, 9502),
+                    (Self::words__buying, 9508),
+                    (Self::words__confirm, 9515),
+                    (Self::words__confirm_fee, 9526),
+                    (Self::words__contains, 9534),
+                    (Self::words__continue_anyway_question, 9550),
+                    (Self::words__continue_with, 9563),
+                    (Self::words__error, 9568),
+                    (Self::words__fee, 9571),
+                    (Self::words__from, 9575),
+                    (Self::words__keep_it_safe, 9588),
+                    (Self::words__know_what_your_doing, 9633),
+                    (Self::words__my_trezor, 9642),
+                    (Self::words__no, 9644),
+                    (Self::words__outputs, 9651),
+                    (Self::words__please_check_again, 9669),
+                    (Self::words__please_try_again, 9685),
+                    (Self::words__really_wanna, 9706),
+                    (Self::words__recipient, 9715),
+                    (Self::words__sign, 9719),
+                    (Self::words__signer, 9725),
+                    (Self::words__title_check, 9730),
+                    (Self::words__title_group, 9735),
+                    (Self::words__title_information, 9746),
+                    (Self::words__title_remember, 9754),
+                    (Self::words__title_share, 9759),
+                    (Self::words__title_shares, 9765),
+                    (Self::words__title_success, 9772),
+                    (Self::words__title_summary, 9779),
+                    (Self::words__title_threshold, 9788),
+                    (Self::words__unknown, 9795),
+                    (Self::words__warning, 9802),
+                    (Self::words__writable, 9810),
+                    (Self::words__yes, 9813),
+                    (Self::reboot_to_bootloader__just_a_moment, 9829),
+                    (Self::inputs__previous, 9829),
+                    (Self::storage_msg__starting, 9840),
+                    (Self::storage_msg__verifying_pin, 9853),
+                    (Self::storage_msg__wrong_pin, 9862),
+                    (Self::reset__create_x_of_y_multi_share_backup_template, 9916),
+                    (Self::reset__title_shamir_backup, 9934),
+                    (Self::instructions__tap_to_confirm, 9948),
+                    (Self::instructions__hold_to_confirm, 9963),
+                    (Self::words__important, 9972),
+                    (Self::reset__words_written_down_template, 10008),
+                    (Self::backup__create_backup_to_prevent_loss, 10060),
+                    (Self::reset__check_backup_instructions, 10098),
+                    (Self::words__instructions, 10110),
+                    (Self::words__not_recommended, 10126),
+                    (Self::address_details__account_info, 10138),
+                    (Self::address__cancel_contact_support, 10216),
+                    (Self::address__cancel_receive, 10230),
+                    (Self::address__qr_code, 10237),
+                    (Self::address_details__derivation_path, 10252),
+                    (Self::instructions__continue_in_app, 10271),
+                    (Self::words__cancel_and_exit, 10286),
+                    (Self::address__confirmed, 10311),
+                    (Self::pin__cancel_description, 10331),
+                    (Self::pin__cancel_info, 10376),
+                    (Self::pin__cancel_setup, 10392),
+                    (Self::send__cancel_sign, 10403),
+                    (Self::send__send_from, 10412),
+                    (Self::instructions__hold_to_sign, 10424),
+                    (Self::confirm_total__fee_rate, 10432),
+                    (Self::send__incl_transaction_fee, 10453),
+                    (Self::send__total_amount, 10465),
+                    (Self::auto_lock__turned_on, 10484),
+                    (Self::backup__info_multi_share_backup, 10565),
+                    (Self::backup__info_single_share_backup, 10623),
+                    (Self::backup__title_backup_completed, 10646),
+                    (Self::backup__title_create_wallet_backup, 10666),
+                    (Self::haptic_feedback__disable, 10690),
+                    (Self::haptic_feedback__enable, 10713),
+                    (Self::haptic_feedback__subtitle, 10720),
+                    (Self::haptic_feedback__title, 10735),
+                    (Self::instructions__continue_holding, 10751),
+                    (Self::instructions__enter_next_share, 10767),
+                    (Self::instructions__hold_to_continue, 10783),
+                    (Self::instructions__hold_to_exit_tutorial, 10804),
+                    (Self::instructions__learn_more, 10814),
+                    (Self::instructions__shares_continue_with_x_template, 10838),
+                    (Self::instructions__shares_start_with_1, 10857),
+                    (Self::passphrase__title_passphrase, 10867),
+                    (Self::recovery__dry_run_backup_not_on_this_device, 10899),
+                    (Self::recovery__dry_run_invalid_backup_entered, 10928),
+                    (Self::recovery__dry_run_slip39_valid_all_shares, 10988),
+                    (Self::recovery__dry_run_slip39_valid_share, 11050),
+                    (Self::recovery__dry_run_verify_remaining_shares, 11083),
+                    (Self::recovery__enter_each_word, 11130),
+                    (Self::recovery__info_about_disconnect, 11214),
+                    (Self::recovery__share_does_not_match, 11233),
+                    (Self::reset__cancel_create_wallet, 11253),
+                    (Self::reset__incorrect_word_selected, 11276),
+                    (Self::reset__more_at, 11283),
+                    (Self::reset__num_of_shares_how_many, 11335),
+                    (Self::reset__num_of_shares_long_info_template, 11506),
+                    (Self::reset__select_threshold, 11564),
+                    (Self::reset__share_completed_template, 11584),
+                    (Self::reset__slip39_checklist_num_shares_x_template, 11605),
+                    (Self::reset__slip39_checklist_threshold_x_template, 11628),
+                    (Self::send__transaction_signed, 11646),
+                    (Self::tutorial__continue, 11663),
+                    (Self::tutorial__exit, 11676),
+                    (Self::tutorial__menu, 11730),
+                    (Self::tutorial__one_more_step, 11743),
+                    (Self::tutorial__ready_to_use_safe5, 11785),
+                    (Self::tutorial__swipe_up_and_down, 11856),
+                    (Self::tutorial__title_easy_navigation, 11871),
+                    (Self::tutorial__welcome_safe5, 11895),
+                    (Self::words__good_to_know, 11907),
+                    (Self::words__operation_cancelled, 11926),
+                    (Self::words__settings, 11934),
+                    (Self::words__try_again, 11944),
+                    (Self::reset__slip39_checklist_num_groups_x_template, 11965),
+                    (Self::brightness__title, 11983),
+                    (Self::recovery__title_unlock_repeated_backup, 12001),
+                    (Self::recovery__unlock_repeated_backup, 12026),
+                    (Self::recovery__unlock_repeated_backup_verb, 12039),
+                    (Self::homescreen__set_default, 12073),
+                    (Self::reset__words_may_repeat, 12090),
+                    (Self::reset__repeat_for_all_shares, 12112),
+                    (Self::homescreen__settings_subtitle, 12120),
+                    (Self::homescreen__settings_title, 12130),
+                    (Self::reset__the_word_is_repeated, 12150),
+                    (Self::tutorial__title_lets_begin, 12161),
+                    (Self::tutorial__did_you_know, 12174),
+                    (Self::tutorial__first_wallet, 12251),
+                    (Self::tutorial__restart_tutorial, 12267),
+                    (Self::tutorial__title_handy_menu, 12277),
+                    (Self::tutorial__title_hold, 12310),
+                    (Self::tutorial__title_well_done, 12320),
+                    (Self::tutorial__lets_begin, 12372),
+                    (Self::tutorial__get_started, 12384),
+                    (Self::instructions__swipe_horizontally, 12402),
+                    (Self::setting__adjust, 12408),
+                    (Self::setting__apply, 12413),
+                    (Self::brightness__changed_title, 12439),
+                    (Self::brightness__change_title, 12464),
+                    (Self::words__title_done, 12468),
+                    (Self::reset__slip39_checklist_more_info_threshold, 12546),
+                    (Self::reset__slip39_checklist_more_info_threshold_example_template, 12633),
+                    (Self::passphrase__continue_with_empty_passphrase, 12664),
+                    (Self::instructions__swipe_down, 12674),
+                    (Self::address__public_key_confirmed, 12694),
+                    (Self::words__continue_anyway, 12709),
+                    (Self::buttons__view_all_data, 12722),
+                    (Self::instructions__view_all_data, 12748),
+                    (Self::misc__enable_labeling, 12764),
+                    (Self::words__provider, 12772),
+                    (Self::sign_message__confirm_without_review, 12794),
+                    (Self::instructions__tap_to_continue, 12809),
+                    (Self::ble__unpair_all, 12809),
+                    (Self::ble__unpair_current, 12809),
+                    (Self::ble__unpair_title, 12809),
+                    (Self::words__unlocked, 12817),
+                    (Self::words__transaction_fee, 12832),
+                    (Self::words__unlimited, 12841),
+                    (Self::words__chain, 12846),
+                    (Self::words__token, 12851),
+                    (Self::instructions__tap, 12854),
+                    (Self::reset__share_words_first, 12896),
+                    (Self::backup__not_recommend, 12946),
+                    (Self::words__pay_attention, 12959),
+                    (Self::address__check_with_source, 12989),
+                    (Self::words__receive, 12996),
+                    (Self::reset__recovery_share_description, 13075),
+                    (Self::reset__recovery_share_number, 13121),
+                    (Self::words__recovery_share, 13135),
+                    (Self::send__send_in_the_app, 13182),
+                    (Self::send__sign_cancelled, 13197),
+                    (Self::words__send, 13201),
+                    (Self::words__wallet, 13207),
+                    (Self::words__authenticate, 13219),
+                    (Self::auto_lock__description, 13271),
+                    (Self::plurals__lock_after_x_days, 13279),
+                    (Self::firmware_update__restart, 13312),
+                    (Self::passphrase__access_hidden_wallet, 13332),
+                    (Self::passphrase__hidden_wallet, 13345),
+                    (Self::passphrase__show, 13360),
+                    (Self::pin__reenter, 13372),
+                    (Self::pin__setup_completed, 13392),
+                    (Self::instructions__shares_start_with_x_template, 13413),
+                    (Self::reset__check_share_backup_template, 13450),
+                    (Self::reset__select_word_from_share_template, 13482),
+                    (Self::recovery__share_from_group_entered_template, 13517),
+                    (Self::send__cancel_transaction, 13535),
+                    (Self::send__multisig_different_paths, 13577),
+                    (Self::address__xpub, 13581),
+                    (Self::words__cancel_question, 13588),
+                    (Self::address__coin_address_template, 13599),
+                    (Self::buttons__view, 13603),
+                    (Self::words__swap, 13607),
+                    (Self::address__title_provider_address, 13623),
+                    (Self::address__title_refund_address, 13637),
+                    (Self::words__assets, 13643),
+                    (Self::buttons__finish, 13649),
+                    (Self::instructions__menu_to_continue, 13669),
+                    (Self::tutorial__last_one, 13677),
+                    (Self::tutorial__menu_appendix, 13707),
+                    (Self::tutorial__navigation_ts7, 13707),
+                    (Self::tutorial__suite_restart, 13762),
+                    (Self::tutorial__welcome_safe7, 13762),
+                    (Self::tutorial__what_is_tropic, 13762),
+                    (Self::tutorial__tap_to_start, 13783),
+                    (Self::tutorial__tropic_info, 13783),
+                    (Self::device_name__continue_with_empty_label, 13815),
+                    (Self::device_name__enter, 13832),
+                    (Self::regulatory__title, 13832),
+                    (Self::words__name, 13836),
+                    (Self::device_name__changed, 13856),
+                    (Self::ble__manage_paired, 13856),
+                    (Self::ble__pair_new, 13856),
+                    (Self::ble__pair_title, 13856),
+                    (Self::ble__version, 13856),
+                    (Self::homescreen__firmware_type, 13869),
+                    (Self::homescreen__firmware_version, 13885),
+                    (Self::led__disable, 13885),
+                    (Self::led__enable, 13885),
+                    (Self::led__title, 13885),
+                    (Self::words__about, 13890),
+                    (Self::words__connected, 13899),
+                    (Self::words__device, 13905),
+                    (Self::words__disconnect, 13915),
+                    (Self::words__led, 13918),
+                    (Self::words__manage, 13924),
+                    (Self::words__off, 13927),
+                    (Self::words__on, 13929),
+                    (Self::words__review, 13935),
+                    (Self::words__security, 13943),
+                    (Self::pin__change_question, 13954),
+                    (Self::pin__remove, 13964),
+                    (Self::pin__title, 13972),
+                    (Self::wipe_code__change_question, 13989),
+                    (Self::wipe_code__remove, 14005),
+                    (Self::wipe_code__title, 14014),
+                    (Self::words__disabled, 14022),
+                    (Self::words__enabled, 14029),
+                    (Self::ble__disable, 14029),
+                    (Self::ble__enable, 14029),
+                    (Self::words__bluetooth, 14038),
+                    (Self::wipe__start_again, 14089),
+                    (Self::words__set, 14092),
+                    (Self::words__wipe, 14096),
+                    (Self::lockscreen__unlock, 14102),
+                    (Self::recovery__start_entering, 14116),
+                    (Self::words__disconnected, 14128),
+                    (Self::ble__forget_all, 14128),
+                    (Self::words__connect, 14135),
+                    (Self::words__forget, 14141),
+                    (Self::words__power, 14146),
+                    (Self::ble__limit_reached, 14146),
+                    (Self::ble__forget_all_description, 14146),
+                    (Self::ble__forget_all_devices, 14146),
+                    (Self::ble__forget_all_success, 14146),
+                    (Self::ble__forget_this_description, 14146),
+                    (Self::ble__forget_this_device, 14146),
+                    (Self::ble__forget_this_success, 14146),
+                    (Self::thp__autoconnect, 14146),
+                    (Self::thp__autoconnect_app, 14146),
+                    (Self::thp__connect, 14146),
+                    (Self::thp__connect_app, 14146),
+                    (Self::thp__pair, 14146),
+                    (Self::thp__pair_app, 14146),
+                    (Self::thp__autoconnect_title, 14146),
+                    (Self::thp__code_entry, 14146),
+                    (Self::thp__code_title, 14146),
+                    (Self::thp__connect_title, 14146),
+                    (Self::thp__nfc_text, 14146),
+                    (Self::thp__pair_title, 14146),
+                    (Self::thp__qr_title, 14146),
+                    (Self::ble__pairing_match, 14146),
+                    (Self::ble__pairing_title, 14146),
+                    (Self::thp__pair_name, 14146),
+                    (Self::thp__pair_new_device, 14146),
+                    (Self::tutorial__power, 14146),
+                    (Self::auto_lock__on_battery, 14146),
+                    (Self::auto_lock__on_usb, 14146),
+                    (Self::pin__wipe_code_exists_description, 14209),
+                    (Self::pin__wipe_code_exists_title, 14222),
+                    (Self::wipe_code__pin_not_set_description, 14264),
+                    (Self::wipe_code__cancel_setup, 14286),
+                    (Self::homescreen__backup_needed_info, 14386),
+                    (Self::ble__host_info, 14386),
+                    (Self::ble__mac_address, 14386),
+                    (Self::ble__waiting_for_host, 14386),
+                    (Self::ble__apps_connected, 14386),
+                    (Self::sn__action, 14386),
+                    (Self::sn__title, 14386),
+                    (Self::ble__must_be_enabled, 14386),
+                    (Self::words__comm_trouble, 14457),
+                    (Self::secure_sync__delegated_identity_key_no_thp, 14511),
+                    (Self::secure_sync__delegated_identity_key_thp, 14563),
+                    (Self::secure_sync__header, 14573),
+                    (Self::words__note, 14577),
+                ],
+            };
+
+            #[cfg(feature = "universal_fw")]
+            const ALTCOIN_BLOB: StringsBlob = StringsBlob {
+                text: "BaseEnterpriseLegacyPointerRewardaddress - no staking rewards.Amount burned (decimals unknown):Amount minted (decimals unknown):Amount sent (decimals unknown):Pool has no metadata (anonymous pool)Asset fingerprint:Auxiliary data hash:BlockCatalystCertificateChange outputCheck all items carefully.Choose level of details:Collateral input ID:Collateral input index:The collateral return output contains tokens.Collateral returnConfirm signing the stake pool registration as an owner.Confirm transactionConfirming a multisig transaction.Confirming a Plutus transaction.Confirming pool registration as owner.Confirming a transaction.CostCredential doesn't match payment credential.Datum hash:Delegating to:for account {0} and index {1}:for account {0}:for key hash:for script:Inline datumInput ID:Input index:The following address is a change address. ItsThe following address is owned by this device. ItsThe vote key registration payment address is owned by this device. Itskey hashMarginmulti-sig pathContains {0} nested scripts.Network:Transaction has no outputs, network cannot be verified.Nonce:otherpathPledgepointerPolicy IDPool metadata hash:Pool metadata url:Pool owner:Pool reward account:Reference input ID:Reference input index:Reference scriptRequired signerrewardAddress is a reward address.Warning: The address is not a payment address, it is not eligible for rewards.Rewards go to:scriptAllAnyScript data hash:Script hash:Invalid beforeInvalid hereafterKeyN of Kscript rewardSendingShow SimpleSign transaction with {0}Stake delegationStake key deregistrationStakepool registrationStake pool registration\nPool ID:Stake key registrationStaking key for accountto pool:token minting pathTotal collateral:TransactionThe transaction contains minting or burning of tokens.The following transaction output contains a script address, but does not contain a datum.Transaction ID:The transaction contains no collateral inputs. Plutus script will not be able to run.The transaction contains no script data hash. Plutus script will not be able to run.The following transaction output contains tokens.TTL:Unknown collateral amount.Path is unusual.Valid since:Verify scriptVote key registration (CIP-36)Vote public key:Voting purpose:WarningWeight:Confirm withdrawal for {0} address:Requires {0} out of {1} signatures.Amount sent:Size: {0} bytesGas limitGas priceMax fee per gasName and versionNew contract will be deployedNo message fieldMax priority feeShow full arrayShow full domainShow full messageShow full structReally sign EIP-712 typed data?Input dataConfirm domainConfirm messageConfirm structConfirm typed dataSigning address{0} unitsUnknown tokenThe signature is valid.Already registeredThis device is already registered with this application.This device is already registered with {0}.This device is not registered with this application.The credential you are trying to import does\nnot belong to this authenticator.erase all credentials?Export information about the credentials stored on this device?Not registeredThis device is not registered with\n{0}.Please enable PIN protection.FIDO2 authenticateImport credentialList credentialsFIDO2 registerRemove credentialFIDO2 resetU2F authenticateU2F registerFIDO2 verify userUnable to verify user.Do you really want to erase all credentials?Confirm exportConfirm ki syncConfirm refreshConfirm unlock timeHashing inputsPayment IDPostprocessing...Processing...Processing inputsProcessing outputsSigning...Signing inputsUnlock time for this transaction is set to {0}Do you really want to export tx_der\nfor tx_proof?Do you really want to export tx_key?Do you really want to export watch-only credentials?Do you really want to\nstart refresh?Do you really want to\nsync key images?Confirm tagDestination tag:\n{0}Account indexAssociated token accountConfirm multisigExpected feeInstruction contains {0} accounts and its data is {1} bytes long.Instruction dataThe following instruction is a multisig instruction.{0} is provided via a lookup table.Lookup table addressMultiple signersTransaction contains unknown instructions.Transaction requires {0} signers which increases the fee.Account MergeAccount ThresholdsAdd SignerAdd trustAll XLM will be sent toAllow trustBalance IDBump SequenceBuying:Claim Claimable BalanceClear dataClear flagsConfirm IssuerConfirm memoConfirm operationConfirm timeboundsCreate AccountDebited amountDeleteDelete Passive OfferDelete trustDestinationMemo is not set.\nTypically needed when sending to exchanges.Final confirmHashHigh:Home DomainInflation{0} issuerKey:LimitLow:Master Weight:Medium:New OfferNew Passive OfferNo memo set![no restriction]Path PayPath Pay at leastPayPay at mostPre-auth transactionPrice per {0}:Remove SignerRevoke trustSelling:Set dataSet flagsSet sequence to {0}?Sign this transaction made up of {0}and pay {0}\nfor fee?Source accountTrusted AccountUpdateValid from (UTC)Valid to (UTC)Value (SHA-256):Do you want to clear value key {0}?Baker addressBalance:Ballot:Confirm delegationConfirm originationDelegatorProposalRegister delegateRemove delegationSubmit ballotSubmit proposalSubmit proposalsIncrease and retrieve the U2F counter?Set the U2F counter to {0}?Get U2F counterSet U2F counterClaimClaim addressClaim ETH from Everstake?StakeStake addressStake ETH on Everstake?UnstakeUnstake ETH from Everstake?Always AbstainAlways No ConfidenceDelegating to key hash:Delegating to script:Deposit:Vote delegationMore credentialsSelect the credential that you would like to use for authentication.for authenticationSelect credentialCredential detailsUnknown contract addressToken contractInteraction contractBase feeClaimClaim SOL from stake account?Claiming SOL to address outside your current wallet.Priority feeStakeStake accountStake SOL?The current wallet isn't the SOL staking withdraw authority.Withdraw authority addressUnstakeUnstake SOL from stake account?Vote accountStake SOL on {0}?Event kind: {0}Max fees and rentMax rent feeApproveAmount allowanceChain IDReview details to approve token spending.Token approvalApprove toApproving unlimited amount of {0}Review details to revoke token approval.Token revocationRevokeRevoke fromUnknown tokenUnknown token addressAll input data ({0} bytes)Provider contract addressConfirm message hashSign withTimeboundsToken infoTransaction sourceTransaction source does not belong to this Trezor.Confirm messageEmpty messageMessage hash:Message hexMessage textSign message hash with {0}Sign message with {0}Destination tag is not set. Typically needed when sending to exchanges.",
+                offsets: &[
+                    (Self::cardano__addr_base, 4),
+                    (Self::cardano__addr_enterprise, 14),
+                    (Self::cardano__addr_legacy, 20),
+                    (Self::cardano__addr_pointer, 27),
+                    (Self::cardano__addr_reward, 33),
+                    (Self::cardano__address_no_staking, 62),
+                    (Self::cardano__amount_burned_decimals_unknown, 95),
+                    (Self::cardano__amount_minted_decimals_unknown, 128),
+                    (Self::cardano__amount_sent_decimals_unknown, 159),
+                    (Self::cardano__anonymous_pool, 196),
+                    (Self::cardano__asset_fingerprint, 214),
+                    (Self::cardano__auxiliary_data_hash, 234),
+                    (Self::cardano__block, 239),
+                    (Self::cardano__catalyst, 247),
+                    (Self::cardano__certificate, 258),
+                    (Self::cardano__change_output, 271),
+                    (Self::cardano__check_all_items, 297),
+                    (Self::cardano__choose_level_of_details, 321),
+                    (Self::cardano__collateral_input_id, 341),
+                    (Self::cardano__collateral_input_index, 364),
+                    (Self::cardano__collateral_output_contains_tokens, 409),
+                    (Self::cardano__collateral_return, 426),
+                    (Self::cardano__confirm_signing_stake_pool, 482),
+                    (Self::cardano__confirm_transaction, 501),
+                    (Self::cardano__confirming_a_multisig_transaction, 535),
+                    (Self::cardano__confirming_a_plutus_transaction, 567),
+                    (Self::cardano__confirming_pool_registration, 605),
+                    (Self::cardano__confirming_transaction, 630),
+                    (Self::cardano__cost, 634),
+                    (Self::cardano__credential_mismatch, 678),
+                    (Self::cardano__datum_hash, 689),
+                    (Self::cardano__delegating_to, 703),
+                    (Self::cardano__for_account_and_index_template, 733),
+                    (Self::cardano__for_account_template, 749),
+                    (Self::cardano__for_key_hash, 762),
+                    (Self::cardano__for_script, 773),
+                    (Self::cardano__inline_datum, 785),
+                    (Self::cardano__input_id, 794),
+                    (Self::cardano__input_index, 806),
+                    (Self::cardano__intro_text_change, 852),
+                    (Self::cardano__intro_text_owned_by_device, 902),
+                    (Self::cardano__intro_text_registration_payment, 972),
+                    (Self::cardano__key_hash, 980),
+                    (Self::cardano__margin, 986),
+                    (Self::cardano__multisig_path, 1000),
+                    (Self::cardano__nested_scripts_template, 1028),
+                    (Self::cardano__network, 1036),
+                    (Self::cardano__no_output_tx, 1091),
+                    (Self::cardano__nonce, 1097),
+                    (Self::cardano__other, 1102),
+                    (Self::cardano__path, 1106),
+                    (Self::cardano__pledge, 1112),
+                    (Self::cardano__pointer, 1119),
+                    (Self::cardano__policy_id, 1128),
+                    (Self::cardano__pool_metadata_hash, 1147),
+                    (Self::cardano__pool_metadata_url, 1165),
+                    (Self::cardano__pool_owner, 1176),
+                    (Self::cardano__pool_reward_account, 1196),
+                    (Self::cardano__reference_input_id, 1215),
+                    (Self::cardano__reference_input_index, 1237),
+                    (Self::cardano__reference_script, 1253),
+                    (Self::cardano__required_signer, 1268),
+                    (Self::cardano__reward, 1274),
+                    (Self::cardano__reward_address, 1302),
+                    (Self::cardano__reward_eligibility_warning, 1380),
+                    (Self::cardano__rewards_go_to, 1394),
+                    (Self::cardano__script, 1400),
+                    (Self::cardano__script_all, 1403),
+                    (Self::cardano__script_any, 1406),
+                    (Self::cardano__script_data_hash, 1423),
+                    (Self::cardano__script_hash, 1435),
+                    (Self::cardano__script_invalid_before, 1449),
+                    (Self::cardano__script_invalid_hereafter, 1466),
+                    (Self::cardano__script_key, 1469),
+                    (Self::cardano__script_n_of_k, 1475),
+                    (Self::cardano__script_reward, 1488),
+                    (Self::cardano__sending, 1495),
+                    (Self::cardano__show_simple, 1506),
+                    (Self::cardano__sign_tx_path_template, 1531),
+                    (Self::cardano__stake_delegation, 1547),
+                    (Self::cardano__stake_deregistration, 1571),
+                    (Self::cardano__stake_pool_registration, 1593),
+                    (Self::cardano__stake_pool_registration_pool_id, 1625),
+                    (Self::cardano__stake_registration, 1647),
+                    (Self::cardano__staking_key_for_account, 1670),
+                    (Self::cardano__to_pool, 1678),
+                    (Self::cardano__token_minting_path, 1696),
+                    (Self::cardano__total_collateral, 1713),
+                    (Self::cardano__transaction, 1724),
+                    (Self::cardano__transaction_contains_minting_or_burning, 1778),
+                    (Self::cardano__transaction_contains_script_address_no_datum, 1867),
+                    (Self::cardano__transaction_id, 1882),
+                    (Self::cardano__transaction_no_collateral_input, 1967),
+                    (Self::cardano__transaction_no_script_data_hash, 2051),
+                    (Self::cardano__transaction_output_contains_tokens, 2100),
+                    (Self::cardano__ttl, 2104),
+                    (Self::cardano__unknown_collateral_amount, 2130),
+                    (Self::cardano__unusual_path, 2146),
+                    (Self::cardano__valid_since, 2158),
+                    (Self::cardano__verify_script, 2171),
+                    (Self::cardano__vote_key_registration, 2201),
+                    (Self::cardano__vote_public_key, 2217),
+                    (Self::cardano__voting_purpose, 2232),
+                    (Self::cardano__warning, 2239),
+                    (Self::cardano__weight, 2246),
+                    (Self::cardano__withdrawal_for_address_template, 2281),
+                    (Self::cardano__x_of_y_signatures_template, 2316),
+                    (Self::eos__about_to_sign_template, 2316),
+                    (Self::eos__action_name, 2316),
+                    (Self::eos__arbitrary_data, 2316),
+                    (Self::eos__buy_ram, 2316),
+                    (Self::eos__bytes, 2316),
+                    (Self::eos__cancel_vote, 2316),
+                    (Self::eos__checksum, 2316),
+                    (Self::eos__code, 2316),
+                    (Self::eos__contract, 2316),
+                    (Self::eos__cpu, 2316),
+                    (Self::eos__creator, 2316),
+                    (Self::eos__delegate, 2316),
+                    (Self::eos__delete_auth, 2316),
+                    (Self::eos__from, 2316),
+                    (Self::eos__link_auth, 2316),
+                    (Self::eos__memo, 2316),
+                    (Self::eos__name, 2316),
+                    (Self::eos__net, 2316),
+                    (Self::eos__new_account, 2316),
+                    (Self::eos__owner, 2316),
+                    (Self::eos__parent, 2316),
+                    (Self::eos__payer, 2316),
+                    (Self::eos__permission, 2316),
+                    (Self::eos__proxy, 2316),
+                    (Self::eos__receiver, 2316),
+                    (Self::eos__refund, 2316),
+                    (Self::eos__requirement, 2316),
+                    (Self::eos__sell_ram, 2316),
+                    (Self::eos__sender, 2316),
+                    (Self::eos__threshold, 2316),
+                    (Self::eos__to, 2316),
+                    (Self::eos__transfer, 2316),
+                    (Self::eos__type, 2316),
+                    (Self::eos__undelegate, 2316),
+                    (Self::eos__unlink_auth, 2316),
+                    (Self::eos__update_auth, 2316),
+                    (Self::eos__vote_for_producers, 2316),
+                    (Self::eos__vote_for_proxy, 2316),
+                    (Self::eos__voter, 2316),
+                    (Self::ethereum__amount_sent, 2328),
+                    (Self::ethereum__data_size_template, 2343),
+                    (Self::ethereum__gas_limit, 2352),
+                    (Self::ethereum__gas_price, 2361),
+                    (Self::ethereum__max_gas_price, 2376),
+                    (Self::ethereum__name_and_version, 2392),
+                    (Self::ethereum__new_contract, 2421),
+                    (Self::ethereum__no_message_field, 2437),
+                    (Self::ethereum__priority_fee, 2453),
+                    (Self::ethereum__show_full_array, 2468),
+                    (Self::ethereum__show_full_domain, 2484),
+                    (Self::ethereum__show_full_message, 2501),
+                    (Self::ethereum__show_full_struct, 2517),
+                    (Self::ethereum__sign_eip712, 2548),
+                    (Self::ethereum__title_input_data, 2558),
+                    (Self::ethereum__title_confirm_domain, 2572),
+                    (Self::ethereum__title_confirm_message, 2587),
+                    (Self::ethereum__title_confirm_struct, 2601),
+                    (Self::ethereum__title_confirm_typed_data, 2619),
+                    (Self::ethereum__title_signing_address, 2634),
+                    (Self::ethereum__units_template, 2643),
+                    (Self::ethereum__unknown_token, 2656),
+                    (Self::ethereum__valid_signature, 2679),
+                    (Self::fido__already_registered, 2697),
+                    (Self::fido__device_already_registered, 2753),
+                    (Self::fido__device_already_registered_with_template, 2796),
+                    (Self::fido__device_not_registered, 2848),
+                    (Self::fido__does_not_belong, 2926),
+                    (Self::fido__erase_credentials, 2948),
+                    (Self::fido__export_credentials, 3011),
+                    (Self::fido__not_registered, 3025),
+                    (Self::fido__not_registered_with_template, 3064),
+                    (Self::fido__please_enable_pin_protection, 3093),
+                    (Self::fido__title_authenticate, 3111),
+                    (Self::fido__title_import_credential, 3128),
+                    (Self::fido__title_list_credentials, 3144),
+                    (Self::fido__title_register, 3158),
+                    (Self::fido__title_remove_credential, 3175),
+                    (Self::fido__title_reset, 3186),
+                    (Self::fido__title_u2f_auth, 3202),
+                    (Self::fido__title_u2f_register, 3214),
+                    (Self::fido__title_verify_user, 3231),
+                    (Self::fido__unable_to_verify_user, 3253),
+                    (Self::fido__wanna_erase_credentials, 3297),
+                    (Self::monero__confirm_export, 3311),
+                    (Self::monero__confirm_ki_sync, 3326),
+                    (Self::monero__confirm_refresh, 3341),
+                    (Self::monero__confirm_unlock_time, 3360),
+                    (Self::monero__hashing_inputs, 3374),
+                    (Self::monero__payment_id, 3384),
+                    (Self::monero__postprocessing, 3401),
+                    (Self::monero__processing, 3414),
+                    (Self::monero__processing_inputs, 3431),
+                    (Self::monero__processing_outputs, 3449),
+                    (Self::monero__signing, 3459),
+                    (Self::monero__signing_inputs, 3473),
+                    (Self::monero__unlock_time_set_template, 3519),
+                    (Self::monero__wanna_export_tx_der, 3568),
+                    (Self::monero__wanna_export_tx_key, 3604),
+                    (Self::monero__wanna_export_watchkey, 3656),
+                    (Self::monero__wanna_start_refresh, 3692),
+                    (Self::monero__wanna_sync_key_images, 3730),
+                    (Self::nem__absolute, 3730),
+                    (Self::nem__activate, 3730),
+                    (Self::nem__add, 3730),
+                    (Self::nem__confirm_action, 3730),
+                    (Self::nem__confirm_address, 3730),
+                    (Self::nem__confirm_creation_fee, 3730),
+                    (Self::nem__confirm_mosaic, 3730),
+                    (Self::nem__confirm_multisig_fee, 3730),
+                    (Self::nem__confirm_namespace, 3730),
+                    (Self::nem__confirm_payload, 3730),
+                    (Self::nem__confirm_properties, 3730),
+                    (Self::nem__confirm_rental_fee, 3730),
+                    (Self::nem__confirm_transfer_of, 3730),
+                    (Self::nem__convert_account_to_multisig, 3730),
+                    (Self::nem__cosign_transaction_for, 3730),
+                    (Self::nem__cosignatory, 3730),
+                    (Self::nem__create_mosaic, 3730),
+                    (Self::nem__create_namespace, 3730),
+                    (Self::nem__deactivate, 3730),
+                    (Self::nem__decrease, 3730),
+                    (Self::nem__description, 3730),
+                    (Self::nem__divisibility_and_levy_cannot_be_shown, 3730),
+                    (Self::nem__encrypted, 3730),
+                    (Self::nem__final_confirm, 3730),
+                    (Self::nem__immutable, 3730),
+                    (Self::nem__increase, 3730),
+                    (Self::nem__initial_supply, 3730),
+                    (Self::nem__initiate_transaction_for, 3730),
+                    (Self::nem__levy_divisibility, 3730),
+                    (Self::nem__levy_fee, 3730),
+                    (Self::nem__levy_fee_of, 3730),
+                    (Self::nem__levy_mosaic, 3730),
+                    (Self::nem__levy_namespace, 3730),
+                    (Self::nem__levy_recipient, 3730),
+                    (Self::nem__levy_type, 3730),
+                    (Self::nem__modify_supply_for, 3730),
+                    (Self::nem__modify_the_number_of_cosignatories_by, 3730),
+                    (Self::nem__mutable, 3730),
+                    (Self::nem__of, 3730),
+                    (Self::nem__percentile, 3730),
+                    (Self::nem__raw_units_template, 3730),
+                    (Self::nem__remote_harvesting, 3730),
+                    (Self::nem__remove, 3730),
+                    (Self::nem__set_minimum_cosignatories_to, 3730),
+                    (Self::nem__sign_tx_fee_template, 3730),
+                    (Self::nem__supply_change, 3730),
+                    (Self::nem__supply_units_template, 3730),
+                    (Self::nem__transferable, 3730),
+                    (Self::nem__under_namespace, 3730),
+                    (Self::nem__unencrypted, 3730),
+                    (Self::nem__unknown_mosaic, 3730),
+                    (Self::ripple__confirm_tag, 3741),
+                    (Self::ripple__destination_tag_template, 3761),
+                    (Self::solana__account_index, 3774),
+                    (Self::solana__associated_token_account, 3798),
+                    (Self::solana__confirm_multisig, 3814),
+                    (Self::solana__expected_fee, 3826),
+                    (Self::solana__instruction_accounts_template, 3891),
+                    (Self::solana__instruction_data, 3907),
+                    (Self::solana__instruction_is_multisig, 3959),
+                    (Self::solana__is_provided_via_lookup_table_template, 3994),
+                    (Self::solana__lookup_table_address, 4014),
+                    (Self::solana__multiple_signers, 4030),
+                    (Self::solana__transaction_contains_unknown_instructions, 4072),
+                    (Self::solana__transaction_requires_x_signers_template, 4129),
+                    (Self::stellar__account_merge, 4142),
+                    (Self::stellar__account_thresholds, 4160),
+                    (Self::stellar__add_signer, 4170),
+                    (Self::stellar__add_trust, 4179),
+                    (Self::stellar__all_will_be_sent_to, 4202),
+                    (Self::stellar__allow_trust, 4213),
+                    (Self::stellar__balance_id, 4223),
+                    (Self::stellar__bump_sequence, 4236),
+                    (Self::stellar__buying, 4243),
+                    (Self::stellar__claim_claimable_balance, 4266),
+                    (Self::stellar__clear_data, 4276),
+                    (Self::stellar__clear_flags, 4287),
+                    (Self::stellar__confirm_issuer, 4301),
+                    (Self::stellar__confirm_memo, 4313),
+                    (Self::stellar__confirm_operation, 4330),
+                    (Self::stellar__confirm_timebounds, 4348),
+                    (Self::stellar__create_account, 4362),
+                    (Self::stellar__debited_amount, 4376),
+                    (Self::stellar__delete, 4382),
+                    (Self::stellar__delete_passive_offer, 4402),
+                    (Self::stellar__delete_trust, 4414),
+                    (Self::stellar__destination, 4425),
+                    (Self::stellar__exchanges_require_memo, 4485),
+                    (Self::stellar__final_confirm, 4498),
+                    (Self::stellar__hash, 4502),
+                    (Self::stellar__high, 4507),
+                    (Self::stellar__home_domain, 4518),
+                    (Self::stellar__inflation, 4527),
+                    (Self::stellar__issuer_template, 4537),
+                    (Self::stellar__key, 4541),
+                    (Self::stellar__limit, 4546),
+                    (Self::stellar__low, 4550),
+                    (Self::stellar__master_weight, 4564),
+                    (Self::stellar__medium, 4571),
+                    (Self::stellar__new_offer, 4580),
+                    (Self::stellar__new_passive_offer, 4597),
+                    (Self::stellar__no_memo_set, 4609),
+                    (Self::stellar__no_restriction, 4625),
+                    (Self::stellar__path_pay, 4633),
+                    (Self::stellar__path_pay_at_least, 4650),
+                    (Self::stellar__pay, 4653),
+                    (Self::stellar__pay_at_most, 4664),
+                    (Self::stellar__preauth_transaction, 4684),
+                    (Self::stellar__price_per_template, 4698),
+                    (Self::stellar__remove_signer, 4711),
+                    (Self::stellar__revoke_trust, 4723),
+                    (Self::stellar__selling, 4731),
+                    (Self::stellar__set_data, 4739),
+                    (Self::stellar__set_flags, 4748),
+                    (Self::stellar__set_sequence_to_template, 4768),
+                    (Self::stellar__sign_tx_count_template, 4804),
+                    (Self::stellar__sign_tx_fee_template, 4824),
+                    (Self::stellar__source_account, 4838),
+                    (Self::stellar__trusted_account, 4853),
+                    (Self::stellar__update, 4859),
+                    (Self::stellar__valid_from, 4875),
+                    (Self::stellar__valid_to, 4889),
+                    (Self::stellar__value_sha256, 4905),
+                    (Self::stellar__wanna_clean_value_key_template, 4940),
+                    (Self::tezos__baker_address, 4953),
+                    (Self::tezos__balance, 4961),
+                    (Self::tezos__ballot, 4968),
+                    (Self::tezos__confirm_delegation, 4986),
+                    (Self::tezos__confirm_origination, 5005),
+                    (Self::tezos__delegator, 5014),
+                    (Self::tezos__proposal, 5022),
+                    (Self::tezos__register_delegate, 5039),
+                    (Self::tezos__remove_delegation, 5056),
+                    (Self::tezos__submit_ballot, 5069),
+                    (Self::tezos__submit_proposal, 5084),
+                    (Self::tezos__submit_proposals, 5100),
+                    (Self::u2f__get, 5138),
+                    (Self::u2f__set_template, 5165),
+                    (Self::u2f__title_get, 5180),
+                    (Self::u2f__title_set, 5195),
+                    (Self::ethereum__staking_claim, 5200),
+                    (Self::ethereum__staking_claim_address, 5213),
+                    (Self::ethereum__staking_claim_intro, 5238),
+                    (Self::ethereum__staking_stake, 5243),
+                    (Self::ethereum__staking_stake_address, 5256),
+                    (Self::ethereum__staking_stake_intro, 5279),
+                    (Self::ethereum__staking_unstake, 5286),
+                    (Self::ethereum__staking_unstake_intro, 5313),
+                    (Self::cardano__always_abstain, 5327),
+                    (Self::cardano__always_no_confidence, 5347),
+                    (Self::cardano__delegating_to_key_hash, 5370),
+                    (Self::cardano__delegating_to_script, 5391),
+                    (Self::cardano__deposit, 5399),
+                    (Self::cardano__vote_delegation, 5414),
+                    (Self::fido__more_credentials, 5430),
+                    (Self::fido__select_intro, 5498),
+                    (Self::fido__title_for_authentication, 5516),
+                    (Self::fido__title_select_credential, 5533),
+                    (Self::fido__title_credential_details, 5551),
+                    (Self::ethereum__unknown_contract_address, 5575),
+                    (Self::ethereum__token_contract, 5589),
+                    (Self::ethereum__interaction_contract, 5609),
+                    (Self::solana__base_fee, 5617),
+                    (Self::solana__claim, 5622),
+                    (Self::solana__claim_question, 5651),
+                    (Self::solana__claim_recipient_warning, 5703),
+                    (Self::solana__priority_fee, 5715),
+                    (Self::solana__stake, 5720),
+                    (Self::solana__stake_account, 5733),
+                    (Self::solana__stake_question, 5743),
+                    (Self::solana__stake_withdrawal_warning, 5803),
+                    (Self::solana__stake_withdrawal_warning_title, 5829),
+                    (Self::solana__unstake, 5836),
+                    (Self::solana__unstake_question, 5867),
+                    (Self::solana__vote_account, 5879),
+                    (Self::solana__stake_on_question, 5896),
+                    (Self::nostr__event_kind_template, 5911),
+                    (Self::solana__max_fees_rent, 5928),
+                    (Self::solana__max_rent_fee, 5940),
+                    (Self::ethereum__approve, 5947),
+                    (Self::ethereum__approve_amount_allowance, 5963),
+                    (Self::ethereum__approve_chain_id, 5971),
+                    (Self::ethereum__approve_intro, 6012),
+                    (Self::ethereum__approve_intro_title, 6026),
+                    (Self::ethereum__approve_to, 6036),
+                    (Self::ethereum__approve_unlimited_template, 6069),
+                    (Self::ethereum__approve_intro_revoke, 6109),
+                    (Self::ethereum__approve_intro_title_revoke, 6125),
+                    (Self::ethereum__approve_revoke, 6131),
+                    (Self::ethereum__approve_revoke_from, 6142),
+                    (Self::solana__unknown_token, 6155),
+                    (Self::solana__unknown_token_address, 6176),
+                    (Self::ethereum__title_all_input_data_template, 6202),
+                    (Self::ethereum__contract_address, 6227),
+                    (Self::ethereum__title_confirm_message_hash, 6247),
+                    (Self::stellar__sign_with, 6256),
+                    (Self::stellar__timebounds, 6266),
+                    (Self::stellar__token_info, 6276),
+                    (Self::stellar__transaction_source, 6294),
+                    (Self::stellar__transaction_source_diff_warning, 6344),
+                    (Self::cardano__confirm_message, 6359),
+                    (Self::cardano__empty_message, 6372),
+                    (Self::cardano__message_hash, 6385),
+                    (Self::cardano__message_hex, 6396),
+                    (Self::cardano__message_text, 6408),
+                    (Self::cardano__sign_message_hash_path_template, 6434),
+                    (Self::cardano__sign_message_path_template, 6455),
+                    (Self::ripple__destination_tag_missing, 6526),
+                ],
+            };
+
+            #[cfg(feature = "debug")]
+            const DEBUG_BLOB: StringsBlob = StringsBlob {
+                text: "Loading seedLoading private seed is not recommended.",
+                offsets: &[
+                    (Self::debug__loading_seed, 12),
+                    (Self::debug__loading_seed_not_recommended, 52),
+                ],
+            };
+
+            pub const BLOBS: &'static [StringsBlob] = &[
+                Self::BTC_ONLY_BLOB,
+                #[cfg(feature = "universal_fw")]
+                Self::ALTCOIN_BLOB,
+                #[cfg(feature = "debug")]
+                Self::DEBUG_BLOB,
+            ];
+        }
+    } else if #[cfg(feature = "layout_eckhart")] {
+        impl TranslatedString {
+            const BTC_ONLY_BLOB: StringsBlob = StringsBlob {
+                text: "Please contact Trezor support atKey mismatch?Address mismatch?trezor.io/supportWrong derivation path for selected account.XPUB mismatch?Public keyCosignerReceive addressYoursDerivation path:Receive addressReceiving toAllow connected app to check the authenticity of your {0}?Authenticate deviceAuto-lock Trezor after {0} of inactivity?Auto-lockYou can back up your Trezor once, at any time.Back up your new wallet now.It should be backed up now!Wallet created.\nWallet created successfully.You can use your backup to recover your wallet at any time.Back up walletSkip backupAre you sure you want to skip the backup?Commitment dataConfirm locktimeDo you want to create a proof of ownership?The mining fee of\n{0}\nis unexpectedly high.Locktime is set but will have no effect.Locktime set toLocktime set to blockheightA lot of change-outputs.Multiple accountsNew fee rate:Simple send ofTicket amountConfirm detailsFinalize transactionHigh mining feeMeld transactionModify amountPayjoinProof of ownershipPurchase ticketUpdate transactionUnknown pathUnknown transactionUnusually high fee.The transaction contains unverified external inputs.The signature is valid.Voting rights toAbortAccessAgainAllowBackBack upCancelChangeCheckCheck againCloseConfirmContinueDetailsEnableEnterEnter shareExportFormatGo backHold to confirmInfoInstallMore infoOk, I understandPurchaseQuitRestartRetrySelectSetShow allShow detailsShow wordsSkipTry againTurn offTurn onAccess your coinjoin account?Do not disconnect your Trezor!Max mining feeMax roundsAuthorize coinjoinCoinjoin in progress...Waiting for othersFee rate:Sending from account:Fee infoSending fromChange device name to {0}?Device nameDo you really want to send entropy?Confirm entropySign transactionEnable experimental features?Only for development and beta testing!Experimental modeUpdate firmwareFW fingerprintClick to ConnectClick to UnlockBackup failedBackup neededCoinjoin authorizedExperimental modeNo USB connectionPIN not setSeedlessChange wallpaperJoint transactionTo the total amount:You are contributing:Change language to {0}?Language changed successfullyChanging language...Language settingsTap to connectTap to unlockLockedNot connectedDecrypt valueEncrypt valueSuite labelingDecrease amount byIncrease amount byNew amountModify amountDecrease fee byFee rate:Increase fee byNew transaction feeFee did not changeModify feeTransaction feeAccess passphrase wallet?Always enter your passphrase on Trezor?Passphrase provided by connected app will be used but will not be displayed due to the device settings.Passphrase walletHide your passphrase on Trezor entered on connected app?The next screen shows your passphrase.Please enter your passphrase.Do you want to revoke the passphrase on device setting?Confirm passphraseEnter passphraseHide passphrasePassphrase settingsPassphrase sourceTurn off passphrase protection?Turn on passphrase protection?Change PINPIN changed.Position of the cursor will change between entries for enhanced security.The new PIN must be different from your wipe code.PIN protection\nturned off.PIN protection\nturned on.Enter PINEnter new PINThe PIN you have entered is not valid.The PIN will be required to access this device.Invalid PINLast attemptEntered PINs do not match!PIN mismatchPlease check again.Re-enter new PINPlease re-enter PIN to confirm.PIN should be 4-50 digits long.Check PINPIN settingsWrong PINtries leftAre you sure you want to turn off PIN protection?Turn on PIN protection?Wrong PINkey|keyshour|hoursmillisecond|millisecondsminute|minutessecond|secondsaction|actionsoperation|operationsgroup|groupsshare|sharesChecking authenticity...DoneLoading transaction...Locking the device...1 second leftPlease wait...Processing...Refreshing...Signing transaction...Syncing...{0} seconds leftTrezor will restart in bootloader mode.Go to bootloaderFirmware version {0}\nby {1}Cancel backup checkLet's do a wallet backup check.Position of the cursor will change between entries for enhanced security.The entered wallet backup is valid and matches the one in this device.The entered wallet backup is valid but does not match the one in the device.The entered recovery shares are valid and match what is currently in the device.The entered wallet backup is valid but doesn't match the one on this device.Enter any shareEnter your backup.Enter a different share.Enter share from a different group.Group #{0}Group threshold reached.Invalid wallet backup entered.Invalid recovery share entered.More shares needed.Select the number of words in your backup.You'll only have to select the first 2-4 letters of each word.All progress will be lost.Share already entered.You have entered a share from a different backup.Share #{0}Recover walletCancel backup checkCancel recoveryBackup checkRecover walletRemaining sharesType word {0} of {1}Wallet recovery completed.Are you sure you want to cancel the backup check?Are you sure you want to cancel the recovery process?({0} words)Word {0}\nof {1}You need {count} more {plural} starting{count} more {plural} needed.{0} of {1} shares entered.You have enteredThe group threshold specifies the number of groups required to recover your wallet.Create walletRecover walletBy continuing, you agree to Trezor Company's Terms of Use.Check backupCheck g{0} - share {1}Check wallet backupCheck share #{0}Continue with the next share.Continue with share #{0}.You have finished verifying your recovery shares for group {0}.You have finished verifying your wallet backup.You have finished verifying your recovery shares.A group is made up of recovery shares.Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.Group {0} - Share {1} checked successfully.Group #{0} - Share #{1}More info atNever put your backup anywhere digital.{0} people or locations will each hold one share.Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.The required number of shares to form Group {0}.= total number of unique word lists used for wallet backup.Only one share will be created.Wallet backupRecovery share #{0}The required number of groups for recovery.Select the correct word for each position.Select word #{0} from your wallet backupSelect word {0} of {1}:Share #{0} checked successfully.Standard backupNumber of groupsNumber of sharesSet number of groupsSet number of sharesSet sizes and thresholdsSet size and threshold for each groupSet recovery thresholdBackup checklistWrite down and check all sharesWrite down & check all wallet backup shares= minimum number of unique word lists used for recovery.Backup is doneCreate walletGroup thresholdNumber of groupsNumber of sharesSet group thresholdSet number of groupsSet number of sharesSet thresholdMore at trezor.io/tosSet the total number of shares in Group {0}.Use your backup when you need to recover your wallet.Write the following {0} words in order on your wallet backup card.Wrong word selected!Your backup is done.Change display orientation to {0}?eastnorthsouthDisplay orientationwestTrezor will allow you to approve some actions which might be unsafe.Trezor will temporarily allow you to approve some actions which might be unsafe.Do you really want to enforce strict safety checks (recommended)?Safety checksSafety overrideSending amountSending from multiple accounts.Including fee:Maximum feeReceiving to a multisig address.Confirm sendingJoint transactionReceiving toSendingSending amountSending toTo the total amount:Transaction IDYou are contributing: words in order.I wrote down all {0} BytesSigning addressConfirm messageMessage sizeVerify addressAssetPress both left and right at the same\ntime to confirm.Press and hold the right button to\napprove important operations.You're ready to\nuse Trezor.Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.Are you sure you\nwant to skip the tutorial?HelloScreen scrollSkip tutorialTutorial completeUse Trezor by\nclicking the left and right buttons.\n\rContinue right.Welcome to Trezor. Press right to continue.All data will be erased.Wipe deviceDo you really want to wipe the device?\nChange wipe codeWipe code changed.The wipe code must be different from your PIN.Wipe code disabled.Wipe code enabled.New wipe codeWipe code can be used to erase all data from this device.Invalid wipe codeThe wipe codes you entered do not match.Re-enter wipe codePlease re-enter wipe code to confirm.Check wipe codeInvalid wipe codeWipe code settingsTurn off wipe code protection?Turn on wipe code protection?Wipe code mismatchNumber of wordsAccountAccount:AddressAmountAre you sure?Array ofBlockhashBuyingConfirmConfirm feeContainsContinue anyway?Continue withErrorFeefromKeep it safe!Continue only if you know what you are doing!My TrezorNooutputsPlease check againPlease try againDo you really want toRecipientSignSignerCheckGroupInformationRememberShareSharesSuccessSummaryThresholdUnknownWarningWritableYesJust a moment...Starting upVerifying PIN...Wrong PINDo you want to create a {0} of {1} multi-share backup?Multi-share backupTap to confirmHold to confirmImportantI wrote down all {0} words in order.Create a wallet backup to avoid losing access to your funds.Let's do a quick check of your backup.InstructionsNot recommended!Account infoIf receive address doesn't match, contact Trezor Support at trezor.io/support.Cancel receive?QR codeDerivation pathContinue in the appCancel and exitReceive address confirmedContinue without PINWithout a PIN, anyone can access this device.Cancel PIN setup?Cancel signSend fromHold to signFee rateincl. Transaction feeTotal amountAuto-lock turned onYour wallet backup contains multiple lists of words in a specific order (shares).Your wallet backup contains {0} words in a specific order.Wallet backup completed.Create wallet backupDisable haptic feedback?Enable haptic feedback?SettingHaptic feedbackKeep holdingEnter next shareHold to continueHold to exit tutorialLearn moreContinue with Share #{0}Start with share #1PassphraseWallet backup not on this deviceInvalid wallet backup enteredAll shares are valid and belong to the backup in this deviceEntered share is valid and belongs to the backup in the deviceVerify remaining recovery shares?Enter each word of your wallet backup in order.It's safe to disconnect your Trezor while recovering your wallet and continue later.Share doesn't matchCancel create walletIncorrect word selected.More atHow many wallet backup shares do you want to create?Each backup share is a sequence of {0} words.\nStore each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.Select the minimum shares required to recover your wallet.Share #{0} completedNumber of shares: {0}Recovery threshold: {0}Transaction signedContinue tutorialExit tutorialFind context-specific actions and options in the menu.One more stepYou're all set to start using your device!Easy navigationGood to knowOperation cancelledSettingsTry againNumber of groups: {0}Display brightnessMulti-share backupCreate additional backup?Create backupChange wallpaper to default image?Words may repeat.Repeat for all shares.SettingsHomescreenThe word appears multiple times in the backup.Let's beginDid you know?The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.Restart tutorialHandy menuHold the on-screen button at the bottom to confirm important actions.Well done!Learn how to use and navigate this device with ease.Get started!Swipe horizontallyAdjustApplyDisplay brightness changedChange display brightnessDoneThe threshold sets the minimum number of shares needed to recover your wallet.If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.Continue with empty passphrase?Swipe downPublic key confirmedContinue anywayView all dataView all data in the menu.Enable labeling?ProviderConfirm without reviewTap to continueUnpair all bluetooth devicesUnpair connected deviceUnpairUnlockedTransaction feeUnlimitedChainTokenTapWrite down the first word from the backup.We don't recommend to skip wallet backup creation.Pay attentionCheck the address with source.ReceiveA recovery share is a list of words you wrote down when setting up your Trezor.Your wallet backup consists of 1 to 16 shares.Recovery shareAfter signing, send the transaction in the app.Sign cancelled.SendWalletAuthenticateSet the time before your Trezor locks automatically.day|daysTrezor will restart after update.Access hidden walletHidden walletShow passphraseRe-enter PINPIN setup completed.Start with Share #{0}Let's do a quick check of Share #{0}.Select word #{0} from\nShare #{1}Share #{0} from Group #{1} entered.Cancel transactionUsing different paths for different XPUBs.Public key (XPUB)Cancel?{0} addressViewSwapProvider addressRefund addressAssetsFinishUse menu to continueLast oneView more info, quit flow, ...Use the on-screen buttons to navigate and confirm your actions.Replay this tutorial anytime from the Trezor Suite app.Welcome\nto Trezor\nSafe 7What is TROPIC01?Tap to start tutorialTROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security.Continue with empty device name?Enter device nameRegulatoryNameDevice name changed.Manage paired devicesPair new devicePair & ConnectBluetooth versionFirmware typeFirmware versionDisable LED?Enable LED?LEDAboutConnectedDeviceDisconnectLEDManageOFFONReviewSecurityChange PIN?Remove PINPIN codeChange wipe code?Remove wipe codeWipe codeDisabledEnabledTurn Bluetooth off?Turn Bluetooth on?BluetoothWipe your Trezor and start the setup process again.SetWipeUnlockStart enteringDisconnectedForget allConnectForgetPowerLimit of paired devices reachedThey'll be removed, and you'll need to pair them again before use.Forget all devices?All connections removed.It will be removed, and you'll need to pair it again before use.Forget this device?Connection removed.Allow {0} to connect automatically to this Trezor?Allow {0} on {1} to connect automatically to this Trezor?Allow {0} to connect with this Trezor?Allow {0} on {1} to connect with this Trezor?Allow {0} to pair with this Trezor?Allow {0} on {1} to pair with this Trezor?Autoconnect credentialEnter this one-time security code on {0}One more stepConnection dialogKeep your Trezor near your phone to complete the setup.Before you continueScan QR code to pairPairing code match?Bluetooth pairing{0} is your Trezor's name.Pair with new deviceUse the power button on the side to turn your device on or off.on battery / wireless chargerconnected to USBWipe code must be turned off before turning off PIN protection.Wipe code setPIN must be set before enabling wipe code.Cancel wipe code setup?Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets.Connection infoMAC addressWaiting for connection...Apps connectedAllow connected device to get serial number of your Trezor Safe 7?Serial numberThe Bluetooth must be turned on to pair with a new device.Your Trezor is having trouble communicating with your connected device.Allow Trezor Suite to use Suite Sync with this Trezor?Allow {0} on {1} to use Suite Sync with this Trezor?Suite SyncNote",
+                offsets: &[
+                    (Self::addr_mismatch__contact_support_at, 32),
+                    (Self::addr_mismatch__key_mismatch, 45),
+                    (Self::addr_mismatch__mismatch, 62),
+                    (Self::addr_mismatch__support_url, 79),
+                    (Self::addr_mismatch__wrong_derivation_path, 122),
+                    (Self::addr_mismatch__xpub_mismatch, 136),
+                    (Self::address__public_key, 146),
+                    (Self::address__title_cosigner, 154),
+                    (Self::address__title_receive_address, 169),
+                    (Self::address__title_yours, 174),
+                    (Self::address_details__derivation_path_colon, 190),
+                    (Self::address_details__title_receive_address, 205),
+                    (Self::address_details__title_receiving_to, 217),
+                    (Self::authenticate__confirm_template, 275),
+                    (Self::authenticate__header, 294),
+                    (Self::auto_lock__change_template, 335),
+                    (Self::auto_lock__title, 344),
+                    (Self::backup__can_back_up_anytime, 390),
+                    (Self::backup__it_should_be_backed_up, 418),
+                    (Self::backup__it_should_be_backed_up_now, 445),
+                    (Self::backup__new_wallet_created, 461),
+                    (Self::backup__new_wallet_successfully_created, 489),
+                    (Self::backup__recover_anytime, 548),
+                    (Self::backup__title_backup_wallet, 562),
+                    (Self::backup__title_skip, 573),
+                    (Self::backup__want_to_skip, 614),
+                    (Self::bitcoin__commitment_data, 629),
+                    (Self::bitcoin__confirm_locktime, 645),
+                    (Self::bitcoin__create_proof_of_ownership, 688),
+                    (Self::bitcoin__high_mining_fee_template, 731),
+                    (Self::bitcoin__locktime_no_effect, 771),
+                    (Self::bitcoin__locktime_set_to, 786),
+                    (Self::bitcoin__locktime_set_to_blockheight, 813),
+                    (Self::bitcoin__lot_of_change_outputs, 837),
+                    (Self::bitcoin__multiple_accounts, 854),
+                    (Self::bitcoin__new_fee_rate, 867),
+                    (Self::bitcoin__simple_send_of, 881),
+                    (Self::bitcoin__ticket_amount, 894),
+                    (Self::bitcoin__title_confirm_details, 909),
+                    (Self::bitcoin__title_finalize_transaction, 929),
+                    (Self::bitcoin__title_high_mining_fee, 944),
+                    (Self::bitcoin__title_meld_transaction, 960),
+                    (Self::bitcoin__title_modify_amount, 973),
+                    (Self::bitcoin__title_payjoin, 980),
+                    (Self::bitcoin__title_proof_of_ownership, 998),
+                    (Self::bitcoin__title_purchase_ticket, 1013),
+                    (Self::bitcoin__title_update_transaction, 1031),
+                    (Self::bitcoin__unknown_path, 1043),
+                    (Self::bitcoin__unknown_transaction, 1062),
+                    (Self::bitcoin__unusually_high_fee, 1081),
+                    (Self::bitcoin__unverified_external_inputs, 1133),
+                    (Self::bitcoin__valid_signature, 1156),
+                    (Self::bitcoin__voting_rights, 1172),
+                    (Self::buttons__abort, 1177),
+                    (Self::buttons__access, 1183),
+                    (Self::buttons__again, 1188),
+                    (Self::buttons__allow, 1193),
+                    (Self::buttons__back, 1197),
+                    (Self::buttons__back_up, 1204),
+                    (Self::buttons__cancel, 1210),
+                    (Self::buttons__change, 1216),
+                    (Self::buttons__check, 1221),
+                    (Self::buttons__check_again, 1232),
+                    (Self::buttons__close, 1237),
+                    (Self::buttons__confirm, 1244),
+                    (Self::buttons__continue, 1252),
+                    (Self::buttons__details, 1259),
+                    (Self::buttons__enable, 1265),
+                    (Self::buttons__enter, 1270),
+                    (Self::buttons__enter_share, 1281),
+                    (Self::buttons__export, 1287),
+                    (Self::buttons__format, 1293),
+                    (Self::buttons__go_back, 1300),
+                    (Self::buttons__hold_to_confirm, 1315),
+                    (Self::buttons__info, 1319),
+                    (Self::buttons__install, 1326),
+                    (Self::buttons__more_info, 1335),
+                    (Self::buttons__ok_i_understand, 1351),
+                    (Self::buttons__purchase, 1359),
+                    (Self::buttons__quit, 1363),
+                    (Self::buttons__restart, 1370),
+                    (Self::buttons__retry, 1375),
+                    (Self::buttons__select, 1381),
+                    (Self::buttons__set, 1384),
+                    (Self::buttons__show_all, 1392),
+                    (Self::buttons__show_details, 1404),
+                    (Self::buttons__show_words, 1414),
+                    (Self::buttons__skip, 1418),
+                    (Self::buttons__try_again, 1427),
+                    (Self::buttons__turn_off, 1435),
+                    (Self::buttons__turn_on, 1442),
+                    (Self::coinjoin__access_account, 1471),
+                    (Self::coinjoin__do_not_disconnect, 1501),
+                    (Self::coinjoin__max_mining_fee, 1515),
+                    (Self::coinjoin__max_rounds, 1525),
+                    (Self::coinjoin__title, 1543),
+                    (Self::coinjoin__title_progress, 1566),
+                    (Self::coinjoin__waiting_for_others, 1584),
+                    (Self::confirm_total__fee_rate_colon, 1593),
+                    (Self::confirm_total__sending_from_account, 1614),
+                    (Self::confirm_total__title_fee, 1622),
+                    (Self::confirm_total__title_sending_from, 1634),
+                    (Self::device_name__change_template, 1660),
+                    (Self::device_name__title, 1671),
+                    (Self::entropy__send, 1706),
+                    (Self::entropy__title_confirm, 1721),
+                    (Self::send__sign_transaction, 1737),
+                    (Self::experimental_mode__enable, 1766),
+                    (Self::experimental_mode__only_for_dev, 1804),
+                    (Self::experimental_mode__title, 1821),
+                    (Self::firmware_update__title, 1836),
+                    (Self::firmware_update__title_fingerprint, 1850),
+                    (Self::homescreen__click_to_connect, 1866),
+                    (Self::homescreen__click_to_unlock, 1881),
+                    (Self::homescreen__title_backup_failed, 1894),
+                    (Self::homescreen__title_backup_needed, 1907),
+                    (Self::homescreen__title_coinjoin_authorized, 1926),
+                    (Self::homescreen__title_experimental_mode, 1943),
+                    (Self::homescreen__title_no_usb_connection, 1960),
+                    (Self::homescreen__title_pin_not_set, 1971),
+                    (Self::homescreen__title_seedless, 1979),
+                    (Self::homescreen__title_set, 1995),
+                    (Self::inputs__back, 1995),
+                    (Self::inputs__cancel, 1995),
+                    (Self::inputs__delete, 1995),
+                    (Self::inputs__enter, 1995),
+                    (Self::inputs__return, 1995),
+                    (Self::inputs__show, 1995),
+                    (Self::inputs__space, 1995),
+                    (Self::joint__title, 2012),
+                    (Self::joint__to_the_total_amount, 2032),
+                    (Self::joint__you_are_contributing, 2053),
+                    (Self::language__change_to_template, 2076),
+                    (Self::language__changed, 2105),
+                    (Self::language__progress, 2125),
+                    (Self::language__title, 2142),
+                    (Self::lockscreen__tap_to_connect, 2156),
+                    (Self::lockscreen__tap_to_unlock, 2169),
+                    (Self::lockscreen__title_locked, 2175),
+                    (Self::lockscreen__title_not_connected, 2188),
+                    (Self::misc__decrypt_value, 2201),
+                    (Self::misc__encrypt_value, 2214),
+                    (Self::misc__title_suite_labeling, 2228),
+                    (Self::modify_amount__decrease_amount, 2246),
+                    (Self::modify_amount__increase_amount, 2264),
+                    (Self::modify_amount__new_amount, 2274),
+                    (Self::modify_amount__title, 2287),
+                    (Self::modify_fee__decrease_fee, 2302),
+                    (Self::modify_fee__fee_rate, 2311),
+                    (Self::modify_fee__increase_fee, 2326),
+                    (Self::modify_fee__new_transaction_fee, 2345),
+                    (Self::modify_fee__no_change, 2363),
+                    (Self::modify_fee__title, 2373),
+                    (Self::modify_fee__transaction_fee, 2388),
+                    (Self::passphrase__access_wallet, 2413),
+                    (Self::passphrase__always_on_device, 2452),
+                    (Self::passphrase__from_host_not_shown, 2555),
+                    (Self::passphrase__wallet, 2572),
+                    (Self::passphrase__hide, 2628),
+                    (Self::passphrase__next_screen_will_show_passphrase, 2666),
+                    (Self::passphrase__please_enter, 2695),
+                    (Self::passphrase__revoke_on_device, 2750),
+                    (Self::passphrase__title_confirm, 2768),
+                    (Self::passphrase__title_enter, 2784),
+                    (Self::passphrase__title_hide, 2799),
+                    (Self::passphrase__title_settings, 2818),
+                    (Self::passphrase__title_source, 2835),
+                    (Self::passphrase__turn_off, 2866),
+                    (Self::passphrase__turn_on, 2896),
+                    (Self::pin__change, 2906),
+                    (Self::pin__changed, 2918),
+                    (Self::pin__cursor_will_change, 2991),
+                    (Self::pin__diff_from_wipe_code, 3041),
+                    (Self::pin__disabled, 3067),
+                    (Self::pin__enabled, 3092),
+                    (Self::pin__enter, 3101),
+                    (Self::pin__enter_new, 3114),
+                    (Self::pin__entered_not_valid, 3152),
+                    (Self::pin__info, 3199),
+                    (Self::pin__invalid_pin, 3210),
+                    (Self::pin__last_attempt, 3222),
+                    (Self::pin__mismatch, 3248),
+                    (Self::pin__pin_mismatch, 3260),
+                    (Self::pin__please_check_again, 3279),
+                    (Self::pin__reenter_new, 3295),
+                    (Self::pin__reenter_to_confirm, 3326),
+                    (Self::pin__should_be_long, 3357),
+                    (Self::pin__title_check_pin, 3366),
+                    (Self::pin__title_settings, 3378),
+                    (Self::pin__title_wrong_pin, 3387),
+                    (Self::pin__tries_left, 3397),
+                    (Self::pin__turn_off, 3446),
+                    (Self::pin__turn_on, 3469),
+                    (Self::pin__wrong_pin, 3478),
+                    (Self::plurals__contains_x_keys, 3486),
+                    (Self::plurals__lock_after_x_hours, 3496),
+                    (Self::plurals__lock_after_x_milliseconds, 3520),
+                    (Self::plurals__lock_after_x_minutes, 3534),
+                    (Self::plurals__lock_after_x_seconds, 3548),
+                    (Self::plurals__sign_x_actions, 3562),
+                    (Self::plurals__transaction_of_x_operations, 3582),
+                    (Self::plurals__x_groups_needed, 3594),
+                    (Self::plurals__x_shares_needed, 3606),
+                    (Self::progress__authenticity_check, 3630),
+                    (Self::progress__done, 3634),
+                    (Self::progress__loading_transaction, 3656),
+                    (Self::progress__locking_device, 3677),
+                    (Self::progress__one_second_left, 3690),
+                    (Self::progress__please_wait, 3704),
+                    (Self::storage_msg__processing, 3717),
+                    (Self::progress__refreshing, 3730),
+                    (Self::progress__signing_transaction, 3752),
+                    (Self::progress__syncing, 3762),
+                    (Self::progress__x_seconds_left_template, 3778),
+                    (Self::reboot_to_bootloader__restart, 3817),
+                    (Self::reboot_to_bootloader__title, 3833),
+                    (Self::reboot_to_bootloader__version_by_template, 3860),
+                    (Self::recovery__cancel_dry_run, 3879),
+                    (Self::recovery__check_dry_run, 3910),
+                    (Self::recovery__cursor_will_change, 3983),
+                    (Self::recovery__dry_run_bip39_valid_match, 4053),
+                    (Self::recovery__dry_run_bip39_valid_mismatch, 4129),
+                    (Self::recovery__dry_run_slip39_valid_match, 4209),
+                    (Self::recovery__dry_run_slip39_valid_mismatch, 4285),
+                    (Self::recovery__enter_any_share, 4300),
+                    (Self::recovery__enter_backup, 4318),
+                    (Self::recovery__enter_different_share, 4342),
+                    (Self::recovery__enter_share_from_diff_group, 4377),
+                    (Self::recovery__group_num_template, 4387),
+                    (Self::recovery__group_threshold_reached, 4411),
+                    (Self::recovery__invalid_wallet_backup_entered, 4441),
+                    (Self::recovery__invalid_share_entered, 4472),
+                    (Self::recovery__more_shares_needed, 4491),
+                    (Self::recovery__num_of_words, 4533),
+                    (Self::recovery__only_first_n_letters, 4595),
+                    (Self::recovery__progress_will_be_lost, 4621),
+                    (Self::recovery__share_already_entered, 4643),
+                    (Self::recovery__share_from_another_multi_share_backup, 4692),
+                    (Self::recovery__share_num_template, 4702),
+                    (Self::recovery__title, 4716),
+                    (Self::recovery__title_cancel_dry_run, 4735),
+                    (Self::recovery__title_cancel_recovery, 4750),
+                    (Self::recovery__title_dry_run, 4762),
+                    (Self::recovery__title_recover, 4776),
+                    (Self::recovery__title_remaining_shares, 4792),
+                    (Self::recovery__type_word_x_of_y_template, 4812),
+                    (Self::recovery__wallet_recovered, 4838),
+                    (Self::recovery__wanna_cancel_dry_run, 4887),
+                    (Self::recovery__wanna_cancel_recovery, 4940),
+                    (Self::recovery__word_count_template, 4951),
+                    (Self::recovery__word_x_of_y_template, 4966),
+                    (Self::recovery__x_more_items_starting_template_plural, 5005),
+                    (Self::recovery__x_more_shares_needed_template_plural, 5034),
+                    (Self::recovery__x_of_y_entered_template, 5060),
+                    (Self::recovery__you_have_entered, 5076),
+                    (Self::reset__advanced_group_threshold_info, 5159),
+                    (Self::reset__all_x_of_y_template, 5159),
+                    (Self::reset__any_x_of_y_template, 5159),
+                    (Self::reset__button_create, 5172),
+                    (Self::reset__button_recover, 5186),
+                    (Self::reset__by_continuing, 5244),
+                    (Self::reset__check_backup_title, 5256),
+                    (Self::reset__check_group_share_title_template, 5278),
+                    (Self::reset__check_wallet_backup_title, 5297),
+                    (Self::reset__check_share_title_template, 5313),
+                    (Self::reset__continue_with_next_share, 5342),
+                    (Self::reset__continue_with_share_template, 5367),
+                    (Self::reset__finished_verifying_group_template, 5430),
+                    (Self::reset__finished_verifying_wallet_backup, 5477),
+                    (Self::reset__finished_verifying_shares, 5526),
+                    (Self::reset__group_description, 5564),
+                    (Self::reset__group_info, 5697),
+                    (Self::reset__group_share_checked_successfully_template, 5740),
+                    (Self::reset__group_share_title_template, 5763),
+                    (Self::reset__more_info_at, 5775),
+                    (Self::reset__need_all_share_template, 5775),
+                    (Self::reset__need_any_share_template, 5775),
+                    (Self::reset__needed_to_form_a_group, 5775),
+                    (Self::reset__needed_to_recover_your_wallet, 5775),
+                    (Self::reset__never_make_digital_copy, 5814),
+                    (Self::reset__num_of_share_holders_template, 5863),
+                    (Self::reset__num_of_shares_advanced_info_template, 5988),
+                    (Self::reset__num_of_shares_basic_info_template, 5988),
+                    (Self::reset__num_shares_for_group_template, 6036),
+                    (Self::reset__number_of_shares_info, 6095),
+                    (Self::reset__one_share, 6095),
+                    (Self::reset__only_one_share_will_be_created, 6126),
+                    (Self::reset__recovery_wallet_backup_title, 6139),
+                    (Self::reset__recovery_share_title_template, 6158),
+                    (Self::reset__required_number_of_groups, 6201),
+                    (Self::reset__select_correct_word, 6243),
+                    (Self::reset__select_word_template, 6283),
+                    (Self::reset__select_word_x_of_y_template, 6306),
+                    (Self::reset__set_it_to_count_template, 6306),
+                    (Self::reset__share_checked_successfully_template, 6338),
+                    (Self::reset__share_words_title, 6353),
+                    (Self::reset__slip39_checklist_num_groups, 6369),
+                    (Self::reset__slip39_checklist_num_shares, 6385),
+                    (Self::reset__slip39_checklist_set_num_groups, 6405),
+                    (Self::reset__slip39_checklist_set_num_shares, 6425),
+                    (Self::reset__slip39_checklist_set_sizes, 6449),
+                    (Self::reset__slip39_checklist_set_sizes_longer, 6486),
+                    (Self::reset__slip39_checklist_set_threshold, 6508),
+                    (Self::reset__slip39_checklist_title, 6524),
+                    (Self::reset__slip39_checklist_write_down, 6555),
+                    (Self::reset__slip39_checklist_write_down_recovery, 6598),
+                    (Self::reset__the_threshold_sets_the_number_of_shares, 6598),
+                    (Self::reset__threshold_info, 6654),
+                    (Self::reset__title_backup_is_done, 6668),
+                    (Self::reset__title_create_wallet, 6681),
+                    (Self::reset__title_group_threshold, 6696),
+                    (Self::reset__title_number_of_groups, 6712),
+                    (Self::reset__title_number_of_shares, 6728),
+                    (Self::reset__title_set_group_threshold, 6747),
+                    (Self::reset__title_set_number_of_groups, 6767),
+                    (Self::reset__title_set_number_of_shares, 6787),
+                    (Self::reset__title_set_threshold, 6800),
+                    (Self::reset__to_form_group_template, 6800),
+                    (Self::reset__tos_link, 6821),
+                    (Self::reset__total_number_of_shares_in_group_template, 6865),
+                    (Self::reset__use_your_backup, 6918),
+                    (Self::reset__write_down_words_template, 6984),
+                    (Self::reset__wrong_word_selected, 7004),
+                    (Self::reset__you_need_one_share, 7004),
+                    (Self::reset__your_backup_is_done, 7024),
+                    (Self::rotation__change_template, 7058),
+                    (Self::rotation__east, 7062),
+                    (Self::rotation__north, 7067),
+                    (Self::rotation__south, 7072),
+                    (Self::rotation__title_change, 7091),
+                    (Self::rotation__west, 7095),
+                    (Self::safety_checks__approve_unsafe_always, 7163),
+                    (Self::safety_checks__approve_unsafe_temporary, 7243),
+                    (Self::safety_checks__enforce_strict, 7308),
+                    (Self::safety_checks__title, 7321),
+                    (Self::safety_checks__title_safety_override, 7336),
+                    (Self::sd_card__all_data_will_be_lost, 7336),
+                    (Self::sd_card__card_required, 7336),
+                    (Self::sd_card__disable, 7336),
+                    (Self::sd_card__disabled, 7336),
+                    (Self::sd_card__enable, 7336),
+                    (Self::sd_card__enabled, 7336),
+                    (Self::sd_card__error, 7336),
+                    (Self::sd_card__format_card, 7336),
+                    (Self::sd_card__insert_correct_card, 7336),
+                    (Self::sd_card__please_insert, 7336),
+                    (Self::sd_card__please_unplug_and_insert, 7336),
+                    (Self::sd_card__problem_accessing, 7336),
+                    (Self::sd_card__refresh, 7336),
+                    (Self::sd_card__refreshed, 7336),
+                    (Self::sd_card__restart, 7336),
+                    (Self::sd_card__title, 7336),
+                    (Self::sd_card__title_problem, 7336),
+                    (Self::sd_card__unknown_filesystem, 7336),
+                    (Self::sd_card__unplug_and_insert_correct, 7336),
+                    (Self::sd_card__use_different_card, 7336),
+                    (Self::sd_card__wanna_format, 7336),
+                    (Self::sd_card__wrong_sd_card, 7336),
+                    (Self::send__confirm_sending, 7350),
+                    (Self::send__from_multiple_accounts, 7381),
+                    (Self::send__including_fee, 7395),
+                    (Self::send__maximum_fee, 7406),
+                    (Self::send__receiving_to_multisig, 7438),
+                    (Self::send__title_confirm_sending, 7453),
+                    (Self::send__title_joint_transaction, 7470),
+                    (Self::send__title_receiving_to, 7482),
+                    (Self::send__title_sending, 7489),
+                    (Self::send__title_sending_amount, 7503),
+                    (Self::send__title_sending_to, 7513),
+                    (Self::send__to_the_total_amount, 7533),
+                    (Self::send__transaction_id, 7547),
+                    (Self::send__you_are_contributing, 7568),
+                    (Self::share_words__words_in_order, 7584),
+                    (Self::share_words__wrote_down_all, 7601),
+                    (Self::sign_message__bytes_template, 7610),
+                    (Self::sign_message__confirm_address, 7625),
+                    (Self::sign_message__confirm_message, 7640),
+                    (Self::sign_message__message_size, 7652),
+                    (Self::sign_message__verify_address, 7666),
+                    (Self::words__asset, 7671),
+                    (Self::tutorial__middle_click, 7725),
+                    (Self::tutorial__press_and_hold, 7789),
+                    (Self::tutorial__ready_to_use, 7816),
+                    (Self::tutorial__scroll_down, 7925),
+                    (Self::tutorial__sure_you_want_skip, 7968),
+                    (Self::tutorial__title_hello, 7973),
+                    (Self::tutorial__title_screen_scroll, 7986),
+                    (Self::tutorial__title_skip, 7999),
+                    (Self::tutorial__title_tutorial_complete, 8016),
+                    (Self::tutorial__use_trezor, 8083),
+                    (Self::tutorial__welcome_press_right, 8126),
+                    (Self::wipe__info, 8150),
+                    (Self::wipe__title, 8161),
+                    (Self::wipe__want_to_wipe, 8200),
+                    (Self::wipe_code__change, 8216),
+                    (Self::wipe_code__changed, 8234),
+                    (Self::wipe_code__diff_from_pin, 8280),
+                    (Self::wipe_code__disabled, 8299),
+                    (Self::wipe_code__enabled, 8317),
+                    (Self::wipe_code__enter_new, 8330),
+                    (Self::wipe_code__info, 8387),
+                    (Self::wipe_code__invalid, 8404),
+                    (Self::wipe_code__mismatch, 8444),
+                    (Self::wipe_code__reenter, 8462),
+                    (Self::wipe_code__reenter_to_confirm, 8499),
+                    (Self::wipe_code__title_check, 8514),
+                    (Self::wipe_code__title_invalid, 8531),
+                    (Self::wipe_code__title_settings, 8549),
+                    (Self::wipe_code__turn_off, 8579),
+                    (Self::wipe_code__turn_on, 8608),
+                    (Self::wipe_code__wipe_code_mismatch, 8626),
+                    (Self::word_count__title, 8641),
+                    (Self::words__account, 8648),
+                    (Self::words__account_colon, 8656),
+                    (Self::words__address, 8663),
+                    (Self::words__amount, 8669),
+                    (Self::words__are_you_sure, 8682),
+                    (Self::words__array_of, 8690),
+                    (Self::words__blockhash, 8699),
+                    (Self::words__buying, 8705),
+                    (Self::words__confirm, 8712),
+                    (Self::words__confirm_fee, 8723),
+                    (Self::words__contains, 8731),
+                    (Self::words__continue_anyway_question, 8747),
+                    (Self::words__continue_with, 8760),
+                    (Self::words__error, 8765),
+                    (Self::words__fee, 8768),
+                    (Self::words__from, 8772),
+                    (Self::words__keep_it_safe, 8785),
+                    (Self::words__know_what_your_doing, 8830),
+                    (Self::words__my_trezor, 8839),
+                    (Self::words__no, 8841),
+                    (Self::words__outputs, 8848),
+                    (Self::words__please_check_again, 8866),
+                    (Self::words__please_try_again, 8882),
+                    (Self::words__really_wanna, 8903),
+                    (Self::words__recipient, 8912),
+                    (Self::words__sign, 8916),
+                    (Self::words__signer, 8922),
+                    (Self::words__title_check, 8927),
+                    (Self::words__title_group, 8932),
+                    (Self::words__title_information, 8943),
+                    (Self::words__title_remember, 8951),
+                    (Self::words__title_share, 8956),
+                    (Self::words__title_shares, 8962),
+                    (Self::words__title_success, 8969),
+                    (Self::words__title_summary, 8976),
+                    (Self::words__title_threshold, 8985),
+                    (Self::words__unknown, 8992),
+                    (Self::words__warning, 8999),
+                    (Self::words__writable, 9007),
+                    (Self::words__yes, 9010),
+                    (Self::reboot_to_bootloader__just_a_moment, 9026),
+                    (Self::inputs__previous, 9026),
+                    (Self::storage_msg__starting, 9037),
+                    (Self::storage_msg__verifying_pin, 9053),
+                    (Self::storage_msg__wrong_pin, 9062),
+                    (Self::reset__create_x_of_y_multi_share_backup_template, 9116),
+                    (Self::reset__title_shamir_backup, 9134),
+                    (Self::instructions__tap_to_confirm, 9148),
+                    (Self::instructions__hold_to_confirm, 9163),
+                    (Self::words__important, 9172),
+                    (Self::reset__words_written_down_template, 9208),
+                    (Self::backup__create_backup_to_prevent_loss, 9268),
+                    (Self::reset__check_backup_instructions, 9306),
+                    (Self::words__instructions, 9318),
+                    (Self::words__not_recommended, 9334),
+                    (Self::address_details__account_info, 9346),
+                    (Self::address__cancel_contact_support, 9424),
+                    (Self::address__cancel_receive, 9439),
+                    (Self::address__qr_code, 9446),
+                    (Self::address_details__derivation_path, 9461),
+                    (Self::instructions__continue_in_app, 9480),
+                    (Self::words__cancel_and_exit, 9495),
+                    (Self::address__confirmed, 9520),
+                    (Self::pin__cancel_description, 9540),
+                    (Self::pin__cancel_info, 9585),
+                    (Self::pin__cancel_setup, 9602),
+                    (Self::send__cancel_sign, 9613),
+                    (Self::send__send_from, 9622),
+                    (Self::instructions__hold_to_sign, 9634),
+                    (Self::confirm_total__fee_rate, 9642),
+                    (Self::send__incl_transaction_fee, 9663),
+                    (Self::send__total_amount, 9675),
+                    (Self::auto_lock__turned_on, 9694),
+                    (Self::backup__info_multi_share_backup, 9775),
+                    (Self::backup__info_single_share_backup, 9833),
+                    (Self::backup__title_backup_completed, 9857),
+                    (Self::backup__title_create_wallet_backup, 9877),
+                    (Self::haptic_feedback__disable, 9901),
+                    (Self::haptic_feedback__enable, 9924),
+                    (Self::haptic_feedback__subtitle, 9931),
+                    (Self::haptic_feedback__title, 9946),
+                    (Self::instructions__continue_holding, 9958),
+                    (Self::instructions__enter_next_share, 9974),
+                    (Self::instructions__hold_to_continue, 9990),
+                    (Self::instructions__hold_to_exit_tutorial, 10011),
+                    (Self::instructions__learn_more, 10021),
+                    (Self::instructions__shares_continue_with_x_template, 10045),
+                    (Self::instructions__shares_start_with_1, 10064),
+                    (Self::passphrase__title_passphrase, 10074),
+                    (Self::recovery__dry_run_backup_not_on_this_device, 10106),
+                    (Self::recovery__dry_run_invalid_backup_entered, 10135),
+                    (Self::recovery__dry_run_slip39_valid_all_shares, 10195),
+                    (Self::recovery__dry_run_slip39_valid_share, 10257),
+                    (Self::recovery__dry_run_verify_remaining_shares, 10290),
+                    (Self::recovery__enter_each_word, 10337),
+                    (Self::recovery__info_about_disconnect, 10421),
+                    (Self::recovery__share_does_not_match, 10440),
+                    (Self::reset__cancel_create_wallet, 10460),
+                    (Self::reset__incorrect_word_selected, 10484),
+                    (Self::reset__more_at, 10491),
+                    (Self::reset__num_of_shares_how_many, 10543),
+                    (Self::reset__num_of_shares_long_info_template, 10714),
+                    (Self::reset__select_threshold, 10772),
+                    (Self::reset__share_completed_template, 10792),
+                    (Self::reset__slip39_checklist_num_shares_x_template, 10813),
+                    (Self::reset__slip39_checklist_threshold_x_template, 10836),
+                    (Self::send__transaction_signed, 10854),
+                    (Self::tutorial__continue, 10871),
+                    (Self::tutorial__exit, 10884),
+                    (Self::tutorial__menu, 10938),
+                    (Self::tutorial__one_more_step, 10951),
+                    (Self::tutorial__ready_to_use_safe5, 10993),
+                    (Self::tutorial__swipe_up_and_down, 10993),
+                    (Self::tutorial__title_easy_navigation, 11008),
+                    (Self::tutorial__welcome_safe5, 11008),
+                    (Self::words__good_to_know, 11020),
+                    (Self::words__operation_cancelled, 11039),
+                    (Self::words__settings, 11047),
+                    (Self::words__try_again, 11056),
+                    (Self::reset__slip39_checklist_num_groups_x_template, 11077),
+                    (Self::brightness__title, 11095),
+                    (Self::recovery__title_unlock_repeated_backup, 11113),
+                    (Self::recovery__unlock_repeated_backup, 11138),
+                    (Self::recovery__unlock_repeated_backup_verb, 11151),
+                    (Self::homescreen__set_default, 11185),
+                    (Self::reset__words_may_repeat, 11202),
+                    (Self::reset__repeat_for_all_shares, 11224),
+                    (Self::homescreen__settings_subtitle, 11232),
+                    (Self::homescreen__settings_title, 11242),
+                    (Self::reset__the_word_is_repeated, 11288),
+                    (Self::tutorial__title_lets_begin, 11299),
+                    (Self::tutorial__did_you_know, 11312),
+                    (Self::tutorial__first_wallet, 11389),
+                    (Self::tutorial__restart_tutorial, 11405),
+                    (Self::tutorial__title_handy_menu, 11415),
+                    (Self::tutorial__title_hold, 11484),
+                    (Self::tutorial__title_well_done, 11494),
+                    (Self::tutorial__lets_begin, 11546),
+                    (Self::tutorial__get_started, 11558),
+                    (Self::instructions__swipe_horizontally, 11576),
+                    (Self::setting__adjust, 11582),
+                    (Self::setting__apply, 11587),
+                    (Self::brightness__changed_title, 11613),
+                    (Self::brightness__change_title, 11638),
+                    (Self::words__title_done, 11642),
+                    (Self::reset__slip39_checklist_more_info_threshold, 11720),
+                    (Self::reset__slip39_checklist_more_info_threshold_example_template, 11807),
+                    (Self::passphrase__continue_with_empty_passphrase, 11838),
+                    (Self::instructions__swipe_down, 11848),
+                    (Self::address__public_key_confirmed, 11868),
+                    (Self::words__continue_anyway, 11883),
+                    (Self::buttons__view_all_data, 11896),
+                    (Self::instructions__view_all_data, 11922),
+                    (Self::misc__enable_labeling, 11938),
+                    (Self::words__provider, 11946),
+                    (Self::sign_message__confirm_without_review, 11968),
+                    (Self::instructions__tap_to_continue, 11983),
+                    (Self::ble__unpair_all, 12011),
+                    (Self::ble__unpair_current, 12034),
+                    (Self::ble__unpair_title, 12040),
+                    (Self::words__unlocked, 12048),
+                    (Self::words__transaction_fee, 12063),
+                    (Self::words__unlimited, 12072),
+                    (Self::words__chain, 12077),
+                    (Self::words__token, 12082),
+                    (Self::instructions__tap, 12085),
+                    (Self::reset__share_words_first, 12127),
+                    (Self::backup__not_recommend, 12177),
+                    (Self::words__pay_attention, 12190),
+                    (Self::address__check_with_source, 12220),
+                    (Self::words__receive, 12227),
+                    (Self::reset__recovery_share_description, 12306),
+                    (Self::reset__recovery_share_number, 12352),
+                    (Self::words__recovery_share, 12366),
+                    (Self::send__send_in_the_app, 12413),
+                    (Self::send__sign_cancelled, 12428),
+                    (Self::words__send, 12432),
+                    (Self::words__wallet, 12438),
+                    (Self::words__authenticate, 12450),
+                    (Self::auto_lock__description, 12502),
+                    (Self::plurals__lock_after_x_days, 12510),
+                    (Self::firmware_update__restart, 12543),
+                    (Self::passphrase__access_hidden_wallet, 12563),
+                    (Self::passphrase__hidden_wallet, 12576),
+                    (Self::passphrase__show, 12591),
+                    (Self::pin__reenter, 12603),
+                    (Self::pin__setup_completed, 12623),
+                    (Self::instructions__shares_start_with_x_template, 12644),
+                    (Self::reset__check_share_backup_template, 12681),
+                    (Self::reset__select_word_from_share_template, 12713),
+                    (Self::recovery__share_from_group_entered_template, 12748),
+                    (Self::send__cancel_transaction, 12766),
+                    (Self::send__multisig_different_paths, 12808),
+                    (Self::address__xpub, 12825),
+                    (Self::words__cancel_question, 12832),
+                    (Self::address__coin_address_template, 12843),
+                    (Self::buttons__view, 12847),
+                    (Self::words__swap, 12851),
+                    (Self::address__title_provider_address, 12867),
+                    (Self::address__title_refund_address, 12881),
+                    (Self::words__assets, 12887),
+                    (Self::buttons__finish, 12893),
+                    (Self::instructions__menu_to_continue, 12913),
+                    (Self::tutorial__last_one, 12921),
+                    (Self::tutorial__menu_appendix, 12951),
+                    (Self::tutorial__navigation_ts7, 13014),
+                    (Self::tutorial__suite_restart, 13069),
+                    (Self::tutorial__welcome_safe7, 13093),
+                    (Self::tutorial__what_is_tropic, 13110),
+                    (Self::tutorial__tap_to_start, 13131),
+                    (Self::tutorial__tropic_info, 13243),
+                    (Self::device_name__continue_with_empty_label, 13275),
+                    (Self::device_name__enter, 13292),
+                    (Self::regulatory__title, 13302),
+                    (Self::words__name, 13306),
+                    (Self::device_name__changed, 13326),
+                    (Self::ble__manage_paired, 13347),
+                    (Self::ble__pair_new, 13362),
+                    (Self::ble__pair_title, 13376),
+                    (Self::ble__version, 13393),
+                    (Self::homescreen__firmware_type, 13406),
+                    (Self::homescreen__firmware_version, 13422),
+                    (Self::led__disable, 13434),
+                    (Self::led__enable, 13445),
+                    (Self::led__title, 13448),
+                    (Self::words__about, 13453),
+                    (Self::words__connected, 13462),
+                    (Self::words__device, 13468),
+                    (Self::words__disconnect, 13478),
+                    (Self::words__led, 13481),
+                    (Self::words__manage, 13487),
+                    (Self::words__off, 13490),
+                    (Self::words__on, 13492),
+                    (Self::words__review, 13498),
+                    (Self::words__security, 13506),
+                    (Self::pin__change_question, 13517),
+                    (Self::pin__remove, 13527),
+                    (Self::pin__title, 13535),
+                    (Self::wipe_code__change_question, 13552),
+                    (Self::wipe_code__remove, 13568),
+                    (Self::wipe_code__title, 13577),
+                    (Self::words__disabled, 13585),
+                    (Self::words__enabled, 13592),
+                    (Self::ble__disable, 13611),
+                    (Self::ble__enable, 13629),
+                    (Self::words__bluetooth, 13638),
+                    (Self::wipe__start_again, 13689),
+                    (Self::words__set, 13692),
+                    (Self::words__wipe, 13696),
+                    (Self::lockscreen__unlock, 13702),
+                    (Self::recovery__start_entering, 13716),
+                    (Self::words__disconnected, 13728),
+                    (Self::ble__forget_all, 13738),
+                    (Self::words__connect, 13745),
+                    (Self::words__forget, 13751),
+                    (Self::words__power, 13756),
+                    (Self::ble__limit_reached, 13787),
+                    (Self::ble__forget_all_description, 13853),
+                    (Self::ble__forget_all_devices, 13872),
+                    (Self::ble__forget_all_success, 13896),
+                    (Self::ble__forget_this_description, 13960),
+                    (Self::ble__forget_this_device, 13979),
+                    (Self::ble__forget_this_success, 13998),
+                    (Self::thp__autoconnect, 14048),
+                    (Self::thp__autoconnect_app, 14105),
+                    (Self::thp__connect, 14143),
+                    (Self::thp__connect_app, 14188),
+                    (Self::thp__pair, 14223),
+                    (Self::thp__pair_app, 14265),
+                    (Self::thp__autoconnect_title, 14287),
+                    (Self::thp__code_entry, 14327),
+                    (Self::thp__code_title, 14340),
+                    (Self::thp__connect_title, 14357),
+                    (Self::thp__nfc_text, 14412),
+                    (Self::thp__pair_title, 14431),
+                    (Self::thp__qr_title, 14451),
+                    (Self::ble__pairing_match, 14470),
+                    (Self::ble__pairing_title, 14487),
+                    (Self::thp__pair_name, 14513),
+                    (Self::thp__pair_new_device, 14533),
+                    (Self::tutorial__power, 14596),
+                    (Self::auto_lock__on_battery, 14625),
+                    (Self::auto_lock__on_usb, 14641),
+                    (Self::pin__wipe_code_exists_description, 14704),
+                    (Self::pin__wipe_code_exists_title, 14717),
+                    (Self::wipe_code__pin_not_set_description, 14759),
+                    (Self::wipe_code__cancel_setup, 14782),
+                    (Self::homescreen__backup_needed_info, 14882),
+                    (Self::ble__host_info, 14897),
+                    (Self::ble__mac_address, 14908),
+                    (Self::ble__waiting_for_host, 14933),
+                    (Self::ble__apps_connected, 14947),
+                    (Self::sn__action, 15013),
+                    (Self::sn__title, 15026),
+                    (Self::ble__must_be_enabled, 15084),
+                    (Self::words__comm_trouble, 15155),
+                    (Self::secure_sync__delegated_identity_key_no_thp, 15209),
+                    (Self::secure_sync__delegated_identity_key_thp, 15261),
+                    (Self::secure_sync__header, 15271),
+                    (Self::words__note, 15275),
+                ],
+            };
+
+            #[cfg(feature = "universal_fw")]
+            const ALTCOIN_BLOB: StringsBlob = StringsBlob {
+                text: "BaseEnterpriseLegacyPointerRewardaddress - no staking rewards.Amount burned (decimals unknown):Amount minted (decimals unknown):Amount sent (decimals unknown):Pool has no metadata (anonymous pool)Asset fingerprint:Auxiliary data hash:BlockCatalystCertificateChange outputCheck all items carefully.Choose level of details:Collateral input ID:Collateral input index:The collateral return output contains tokens.Collateral returnConfirm signing the stake pool registration as an owner.Confirm transactionConfirming a multisig transaction.Confirming a Plutus transaction.Confirming pool registration as owner.Confirming a transaction.CostCredential doesn't match payment credential.Datum hash:Delegating to:for account {0} and index {1}:for account {0}:for key hash:for script:Inline datumInput ID:Input index:The following address is a change address. ItsThe following address is owned by this device. ItsThe vote key registration payment address is owned by this device. Itskey hashMarginmulti-sig pathContains {0} nested scripts.Network:Transaction has no outputs, network cannot be verified.Nonce:otherpathPledgepointerPolicy IDPool metadata hash:Pool metadata url:Pool owner:Pool reward account:Reference input ID:Reference input index:Reference scriptRequired signerrewardAddress is a reward address.Warning: The address is not a payment address, it is not eligible for rewards.Rewards go to:scriptAllAnyScript data hash:Script hash:Invalid beforeInvalid hereafterKeyN of Kscript rewardSendingShow SimpleSign transaction with {0}Stake delegationStake key deregistrationStakepool registrationStake pool registration\nPool ID:Stake key registrationStaking key for accountto pool:token minting pathTotal collateral:TransactionThe transaction contains minting or burning of tokens.The following transaction output contains a script address, but does not contain a datum.Transaction ID:The transaction contains no collateral inputs. Plutus script will not be able to run.The transaction contains no script data hash. Plutus script will not be able to run.The following transaction output contains tokens.TTL:Unknown collateral amount.Path is unusual.Valid since:Verify scriptVote key registration (CIP-36)Vote public key:Voting purpose:WarningWeight:Confirm withdrawal for {0} address:Requires {0} out of {1} signatures.Amount sent:Size: {0} bytesGas limitGas priceMax fee per gasName and versionNew contract will be deployedNo message fieldMax priority feeShow full arrayShow full domainShow full messageShow full structReally sign EIP-712 typed data?Input dataConfirm domainConfirm messageConfirm structConfirm typed dataSigning address{0} unitsUnknown tokenThe signature is valid.Already registeredThis device is already registered with this application.This device is already registered with {0}.This device is not registered with this application.The credential you are trying to import does not belong to this authenticator.Delete all of the saved credentials?Export information about the credentials stored on this device?Not registeredThis device is not registered with\n{0}.Please enable PIN protection.FIDO2 authenticateImport credentialList credentialsFIDO2 registerRemove credentialFIDO2 resetU2F authenticateU2F registerFIDO2 verify userUnable to verify user.Do you really want to erase all credentials?Confirm exportConfirm ki syncConfirm refreshConfirm unlock timeHashing inputsPayment IDPostprocessing...Processing...Processing inputsProcessing outputsSigning...Signing inputsUnlock time for this transaction is set to {0}Do you really want to export tx_der\nfor tx_proof?Do you really want to export tx_key?Do you really want to export watch-only credentials?Do you really want to\nstart refresh?Do you really want to\nsync key images?Confirm tagDestination tag:\n{0}Account indexAssociated token accountConfirm multisigExpected feeInstruction contains {0} accounts and its data is {1} bytes long.Instruction dataThe following instruction is a multisig instruction.{0} is provided via a lookup table.Lookup table addressMultiple signersTransaction contains unknown instructions.Transaction requires {0} signers which increases the fee.Account MergeAccount ThresholdsAdd SignerAdd trustAll XLM will be sent toAllow trustBalance IDBump SequenceBuying:Claim Claimable BalanceClear dataClear flagsConfirm IssuerConfirm memoConfirm operationConfirm timeboundsCreate AccountDebited amountDeleteDelete Passive OfferDelete trustDestinationMemo is not set.\nTypically needed when sending to exchanges.Final confirmHashHigh:Home DomainInflation{0} issuerKey:LimitLow:Master Weight:Medium:New OfferNew Passive OfferNo memo set![no restriction]Path PayPath Pay at leastPayPay at mostPre-auth transactionPrice per {0}:Remove SignerRevoke trustSelling:Set dataSet flagsSet sequence to {0}?Sign this transaction made up of {0}and pay {0}\nfor fee?Source accountTrusted AccountUpdateValid from (UTC)Valid to (UTC)Value (SHA-256):Do you want to clear value key {0}?Baker addressBalance:Ballot:Confirm delegationConfirm originationDelegatorProposalRegister delegateRemove delegationSubmit ballotSubmit proposalSubmit proposalsIncrease and retrieve the U2F counter?Set the U2F counter to {0}?Get U2F counterSet U2F counterClaimClaim addressClaim ETH from Everstake?StakeStake addressStake ETH on Everstake?UnstakeUnstake ETH from Everstake?Always AbstainAlways No ConfidenceDelegating to key hash:Delegating to script:Deposit:Vote delegationMore credentialsSelect the credential that you would like to use for authentication.for authenticationSelect credentialCredential detailsUnknown token contract address.Token contract addressInteraction contract addressBase feeClaimClaim SOL from stake account?Claiming SOL to address outside your current wallet.Priority feeStakeStake accountStake SOL?The current wallet isn't the SOL staking withdraw authority.Withdraw authority addressUnstakeUnstake SOL from stake account?Vote accountStake SOL on {0}?Event kind: {0}Max fees and rentMax rent feeApproveAmount allowanceChain IDReview details to approve token spending.Token approvalApprove toApproving unlimited amount of {0}Review details to revoke token approval.Token revocationRevokeRevoke fromUnknown tokenUnknown token addressAll input data ({0} bytes)Provider contract addressConfirm message hashSign withTimeboundsToken infoTransaction sourceTransaction source does not belong to this Trezor.Confirm messageEmpty messageMessage hash:Message hexMessage textSign message hash with {0}Sign message with {0}Destination tag is not set. Typically needed when sending to exchanges.",
+                offsets: &[
+                    (Self::cardano__addr_base, 4),
+                    (Self::cardano__addr_enterprise, 14),
+                    (Self::cardano__addr_legacy, 20),
+                    (Self::cardano__addr_pointer, 27),
+                    (Self::cardano__addr_reward, 33),
+                    (Self::cardano__address_no_staking, 62),
+                    (Self::cardano__amount_burned_decimals_unknown, 95),
+                    (Self::cardano__amount_minted_decimals_unknown, 128),
+                    (Self::cardano__amount_sent_decimals_unknown, 159),
+                    (Self::cardano__anonymous_pool, 196),
+                    (Self::cardano__asset_fingerprint, 214),
+                    (Self::cardano__auxiliary_data_hash, 234),
+                    (Self::cardano__block, 239),
+                    (Self::cardano__catalyst, 247),
+                    (Self::cardano__certificate, 258),
+                    (Self::cardano__change_output, 271),
+                    (Self::cardano__check_all_items, 297),
+                    (Self::cardano__choose_level_of_details, 321),
+                    (Self::cardano__collateral_input_id, 341),
+                    (Self::cardano__collateral_input_index, 364),
+                    (Self::cardano__collateral_output_contains_tokens, 409),
+                    (Self::cardano__collateral_return, 426),
+                    (Self::cardano__confirm_signing_stake_pool, 482),
+                    (Self::cardano__confirm_transaction, 501),
+                    (Self::cardano__confirming_a_multisig_transaction, 535),
+                    (Self::cardano__confirming_a_plutus_transaction, 567),
+                    (Self::cardano__confirming_pool_registration, 605),
+                    (Self::cardano__confirming_transaction, 630),
+                    (Self::cardano__cost, 634),
+                    (Self::cardano__credential_mismatch, 678),
+                    (Self::cardano__datum_hash, 689),
+                    (Self::cardano__delegating_to, 703),
+                    (Self::cardano__for_account_and_index_template, 733),
+                    (Self::cardano__for_account_template, 749),
+                    (Self::cardano__for_key_hash, 762),
+                    (Self::cardano__for_script, 773),
+                    (Self::cardano__inline_datum, 785),
+                    (Self::cardano__input_id, 794),
+                    (Self::cardano__input_index, 806),
+                    (Self::cardano__intro_text_change, 852),
+                    (Self::cardano__intro_text_owned_by_device, 902),
+                    (Self::cardano__intro_text_registration_payment, 972),
+                    (Self::cardano__key_hash, 980),
+                    (Self::cardano__margin, 986),
+                    (Self::cardano__multisig_path, 1000),
+                    (Self::cardano__nested_scripts_template, 1028),
+                    (Self::cardano__network, 1036),
+                    (Self::cardano__no_output_tx, 1091),
+                    (Self::cardano__nonce, 1097),
+                    (Self::cardano__other, 1102),
+                    (Self::cardano__path, 1106),
+                    (Self::cardano__pledge, 1112),
+                    (Self::cardano__pointer, 1119),
+                    (Self::cardano__policy_id, 1128),
+                    (Self::cardano__pool_metadata_hash, 1147),
+                    (Self::cardano__pool_metadata_url, 1165),
+                    (Self::cardano__pool_owner, 1176),
+                    (Self::cardano__pool_reward_account, 1196),
+                    (Self::cardano__reference_input_id, 1215),
+                    (Self::cardano__reference_input_index, 1237),
+                    (Self::cardano__reference_script, 1253),
+                    (Self::cardano__required_signer, 1268),
+                    (Self::cardano__reward, 1274),
+                    (Self::cardano__reward_address, 1302),
+                    (Self::cardano__reward_eligibility_warning, 1380),
+                    (Self::cardano__rewards_go_to, 1394),
+                    (Self::cardano__script, 1400),
+                    (Self::cardano__script_all, 1403),
+                    (Self::cardano__script_any, 1406),
+                    (Self::cardano__script_data_hash, 1423),
+                    (Self::cardano__script_hash, 1435),
+                    (Self::cardano__script_invalid_before, 1449),
+                    (Self::cardano__script_invalid_hereafter, 1466),
+                    (Self::cardano__script_key, 1469),
+                    (Self::cardano__script_n_of_k, 1475),
+                    (Self::cardano__script_reward, 1488),
+                    (Self::cardano__sending, 1495),
+                    (Self::cardano__show_simple, 1506),
+                    (Self::cardano__sign_tx_path_template, 1531),
+                    (Self::cardano__stake_delegation, 1547),
+                    (Self::cardano__stake_deregistration, 1571),
+                    (Self::cardano__stake_pool_registration, 1593),
+                    (Self::cardano__stake_pool_registration_pool_id, 1625),
+                    (Self::cardano__stake_registration, 1647),
+                    (Self::cardano__staking_key_for_account, 1670),
+                    (Self::cardano__to_pool, 1678),
+                    (Self::cardano__token_minting_path, 1696),
+                    (Self::cardano__total_collateral, 1713),
+                    (Self::cardano__transaction, 1724),
+                    (Self::cardano__transaction_contains_minting_or_burning, 1778),
+                    (Self::cardano__transaction_contains_script_address_no_datum, 1867),
+                    (Self::cardano__transaction_id, 1882),
+                    (Self::cardano__transaction_no_collateral_input, 1967),
+                    (Self::cardano__transaction_no_script_data_hash, 2051),
+                    (Self::cardano__transaction_output_contains_tokens, 2100),
+                    (Self::cardano__ttl, 2104),
+                    (Self::cardano__unknown_collateral_amount, 2130),
+                    (Self::cardano__unusual_path, 2146),
+                    (Self::cardano__valid_since, 2158),
+                    (Self::cardano__verify_script, 2171),
+                    (Self::cardano__vote_key_registration, 2201),
+                    (Self::cardano__vote_public_key, 2217),
+                    (Self::cardano__voting_purpose, 2232),
+                    (Self::cardano__warning, 2239),
+                    (Self::cardano__weight, 2246),
+                    (Self::cardano__withdrawal_for_address_template, 2281),
+                    (Self::cardano__x_of_y_signatures_template, 2316),
+                    (Self::eos__about_to_sign_template, 2316),
+                    (Self::eos__action_name, 2316),
+                    (Self::eos__arbitrary_data, 2316),
+                    (Self::eos__buy_ram, 2316),
+                    (Self::eos__bytes, 2316),
+                    (Self::eos__cancel_vote, 2316),
+                    (Self::eos__checksum, 2316),
+                    (Self::eos__code, 2316),
+                    (Self::eos__contract, 2316),
+                    (Self::eos__cpu, 2316),
+                    (Self::eos__creator, 2316),
+                    (Self::eos__delegate, 2316),
+                    (Self::eos__delete_auth, 2316),
+                    (Self::eos__from, 2316),
+                    (Self::eos__link_auth, 2316),
+                    (Self::eos__memo, 2316),
+                    (Self::eos__name, 2316),
+                    (Self::eos__net, 2316),
+                    (Self::eos__new_account, 2316),
+                    (Self::eos__owner, 2316),
+                    (Self::eos__parent, 2316),
+                    (Self::eos__payer, 2316),
+                    (Self::eos__permission, 2316),
+                    (Self::eos__proxy, 2316),
+                    (Self::eos__receiver, 2316),
+                    (Self::eos__refund, 2316),
+                    (Self::eos__requirement, 2316),
+                    (Self::eos__sell_ram, 2316),
+                    (Self::eos__sender, 2316),
+                    (Self::eos__threshold, 2316),
+                    (Self::eos__to, 2316),
+                    (Self::eos__transfer, 2316),
+                    (Self::eos__type, 2316),
+                    (Self::eos__undelegate, 2316),
+                    (Self::eos__unlink_auth, 2316),
+                    (Self::eos__update_auth, 2316),
+                    (Self::eos__vote_for_producers, 2316),
+                    (Self::eos__vote_for_proxy, 2316),
+                    (Self::eos__voter, 2316),
+                    (Self::ethereum__amount_sent, 2328),
+                    (Self::ethereum__data_size_template, 2343),
+                    (Self::ethereum__gas_limit, 2352),
+                    (Self::ethereum__gas_price, 2361),
+                    (Self::ethereum__max_gas_price, 2376),
+                    (Self::ethereum__name_and_version, 2392),
+                    (Self::ethereum__new_contract, 2421),
+                    (Self::ethereum__no_message_field, 2437),
+                    (Self::ethereum__priority_fee, 2453),
+                    (Self::ethereum__show_full_array, 2468),
+                    (Self::ethereum__show_full_domain, 2484),
+                    (Self::ethereum__show_full_message, 2501),
+                    (Self::ethereum__show_full_struct, 2517),
+                    (Self::ethereum__sign_eip712, 2548),
+                    (Self::ethereum__title_input_data, 2558),
+                    (Self::ethereum__title_confirm_domain, 2572),
+                    (Self::ethereum__title_confirm_message, 2587),
+                    (Self::ethereum__title_confirm_struct, 2601),
+                    (Self::ethereum__title_confirm_typed_data, 2619),
+                    (Self::ethereum__title_signing_address, 2634),
+                    (Self::ethereum__units_template, 2643),
+                    (Self::ethereum__unknown_token, 2656),
+                    (Self::ethereum__valid_signature, 2679),
+                    (Self::fido__already_registered, 2697),
+                    (Self::fido__device_already_registered, 2753),
+                    (Self::fido__device_already_registered_with_template, 2796),
+                    (Self::fido__device_not_registered, 2848),
+                    (Self::fido__does_not_belong, 2926),
+                    (Self::fido__erase_credentials, 2962),
+                    (Self::fido__export_credentials, 3025),
+                    (Self::fido__not_registered, 3039),
+                    (Self::fido__not_registered_with_template, 3078),
+                    (Self::fido__please_enable_pin_protection, 3107),
+                    (Self::fido__title_authenticate, 3125),
+                    (Self::fido__title_import_credential, 3142),
+                    (Self::fido__title_list_credentials, 3158),
+                    (Self::fido__title_register, 3172),
+                    (Self::fido__title_remove_credential, 3189),
+                    (Self::fido__title_reset, 3200),
+                    (Self::fido__title_u2f_auth, 3216),
+                    (Self::fido__title_u2f_register, 3228),
+                    (Self::fido__title_verify_user, 3245),
+                    (Self::fido__unable_to_verify_user, 3267),
+                    (Self::fido__wanna_erase_credentials, 3311),
+                    (Self::monero__confirm_export, 3325),
+                    (Self::monero__confirm_ki_sync, 3340),
+                    (Self::monero__confirm_refresh, 3355),
+                    (Self::monero__confirm_unlock_time, 3374),
+                    (Self::monero__hashing_inputs, 3388),
+                    (Self::monero__payment_id, 3398),
+                    (Self::monero__postprocessing, 3415),
+                    (Self::monero__processing, 3428),
+                    (Self::monero__processing_inputs, 3445),
+                    (Self::monero__processing_outputs, 3463),
+                    (Self::monero__signing, 3473),
+                    (Self::monero__signing_inputs, 3487),
+                    (Self::monero__unlock_time_set_template, 3533),
+                    (Self::monero__wanna_export_tx_der, 3582),
+                    (Self::monero__wanna_export_tx_key, 3618),
+                    (Self::monero__wanna_export_watchkey, 3670),
+                    (Self::monero__wanna_start_refresh, 3706),
+                    (Self::monero__wanna_sync_key_images, 3744),
+                    (Self::nem__absolute, 3744),
+                    (Self::nem__activate, 3744),
+                    (Self::nem__add, 3744),
+                    (Self::nem__confirm_action, 3744),
+                    (Self::nem__confirm_address, 3744),
+                    (Self::nem__confirm_creation_fee, 3744),
+                    (Self::nem__confirm_mosaic, 3744),
+                    (Self::nem__confirm_multisig_fee, 3744),
+                    (Self::nem__confirm_namespace, 3744),
+                    (Self::nem__confirm_payload, 3744),
+                    (Self::nem__confirm_properties, 3744),
+                    (Self::nem__confirm_rental_fee, 3744),
+                    (Self::nem__confirm_transfer_of, 3744),
+                    (Self::nem__convert_account_to_multisig, 3744),
+                    (Self::nem__cosign_transaction_for, 3744),
+                    (Self::nem__cosignatory, 3744),
+                    (Self::nem__create_mosaic, 3744),
+                    (Self::nem__create_namespace, 3744),
+                    (Self::nem__deactivate, 3744),
+                    (Self::nem__decrease, 3744),
+                    (Self::nem__description, 3744),
+                    (Self::nem__divisibility_and_levy_cannot_be_shown, 3744),
+                    (Self::nem__encrypted, 3744),
+                    (Self::nem__final_confirm, 3744),
+                    (Self::nem__immutable, 3744),
+                    (Self::nem__increase, 3744),
+                    (Self::nem__initial_supply, 3744),
+                    (Self::nem__initiate_transaction_for, 3744),
+                    (Self::nem__levy_divisibility, 3744),
+                    (Self::nem__levy_fee, 3744),
+                    (Self::nem__levy_fee_of, 3744),
+                    (Self::nem__levy_mosaic, 3744),
+                    (Self::nem__levy_namespace, 3744),
+                    (Self::nem__levy_recipient, 3744),
+                    (Self::nem__levy_type, 3744),
+                    (Self::nem__modify_supply_for, 3744),
+                    (Self::nem__modify_the_number_of_cosignatories_by, 3744),
+                    (Self::nem__mutable, 3744),
+                    (Self::nem__of, 3744),
+                    (Self::nem__percentile, 3744),
+                    (Self::nem__raw_units_template, 3744),
+                    (Self::nem__remote_harvesting, 3744),
+                    (Self::nem__remove, 3744),
+                    (Self::nem__set_minimum_cosignatories_to, 3744),
+                    (Self::nem__sign_tx_fee_template, 3744),
+                    (Self::nem__supply_change, 3744),
+                    (Self::nem__supply_units_template, 3744),
+                    (Self::nem__transferable, 3744),
+                    (Self::nem__under_namespace, 3744),
+                    (Self::nem__unencrypted, 3744),
+                    (Self::nem__unknown_mosaic, 3744),
+                    (Self::ripple__confirm_tag, 3755),
+                    (Self::ripple__destination_tag_template, 3775),
+                    (Self::solana__account_index, 3788),
+                    (Self::solana__associated_token_account, 3812),
+                    (Self::solana__confirm_multisig, 3828),
+                    (Self::solana__expected_fee, 3840),
+                    (Self::solana__instruction_accounts_template, 3905),
+                    (Self::solana__instruction_data, 3921),
+                    (Self::solana__instruction_is_multisig, 3973),
+                    (Self::solana__is_provided_via_lookup_table_template, 4008),
+                    (Self::solana__lookup_table_address, 4028),
+                    (Self::solana__multiple_signers, 4044),
+                    (Self::solana__transaction_contains_unknown_instructions, 4086),
+                    (Self::solana__transaction_requires_x_signers_template, 4143),
+                    (Self::stellar__account_merge, 4156),
+                    (Self::stellar__account_thresholds, 4174),
+                    (Self::stellar__add_signer, 4184),
+                    (Self::stellar__add_trust, 4193),
+                    (Self::stellar__all_will_be_sent_to, 4216),
+                    (Self::stellar__allow_trust, 4227),
+                    (Self::stellar__balance_id, 4237),
+                    (Self::stellar__bump_sequence, 4250),
+                    (Self::stellar__buying, 4257),
+                    (Self::stellar__claim_claimable_balance, 4280),
+                    (Self::stellar__clear_data, 4290),
+                    (Self::stellar__clear_flags, 4301),
+                    (Self::stellar__confirm_issuer, 4315),
+                    (Self::stellar__confirm_memo, 4327),
+                    (Self::stellar__confirm_operation, 4344),
+                    (Self::stellar__confirm_timebounds, 4362),
+                    (Self::stellar__create_account, 4376),
+                    (Self::stellar__debited_amount, 4390),
+                    (Self::stellar__delete, 4396),
+                    (Self::stellar__delete_passive_offer, 4416),
+                    (Self::stellar__delete_trust, 4428),
+                    (Self::stellar__destination, 4439),
+                    (Self::stellar__exchanges_require_memo, 4499),
+                    (Self::stellar__final_confirm, 4512),
+                    (Self::stellar__hash, 4516),
+                    (Self::stellar__high, 4521),
+                    (Self::stellar__home_domain, 4532),
+                    (Self::stellar__inflation, 4541),
+                    (Self::stellar__issuer_template, 4551),
+                    (Self::stellar__key, 4555),
+                    (Self::stellar__limit, 4560),
+                    (Self::stellar__low, 4564),
+                    (Self::stellar__master_weight, 4578),
+                    (Self::stellar__medium, 4585),
+                    (Self::stellar__new_offer, 4594),
+                    (Self::stellar__new_passive_offer, 4611),
+                    (Self::stellar__no_memo_set, 4623),
+                    (Self::stellar__no_restriction, 4639),
+                    (Self::stellar__path_pay, 4647),
+                    (Self::stellar__path_pay_at_least, 4664),
+                    (Self::stellar__pay, 4667),
+                    (Self::stellar__pay_at_most, 4678),
+                    (Self::stellar__preauth_transaction, 4698),
+                    (Self::stellar__price_per_template, 4712),
+                    (Self::stellar__remove_signer, 4725),
+                    (Self::stellar__revoke_trust, 4737),
+                    (Self::stellar__selling, 4745),
+                    (Self::stellar__set_data, 4753),
+                    (Self::stellar__set_flags, 4762),
+                    (Self::stellar__set_sequence_to_template, 4782),
+                    (Self::stellar__sign_tx_count_template, 4818),
+                    (Self::stellar__sign_tx_fee_template, 4838),
+                    (Self::stellar__source_account, 4852),
+                    (Self::stellar__trusted_account, 4867),
+                    (Self::stellar__update, 4873),
+                    (Self::stellar__valid_from, 4889),
+                    (Self::stellar__valid_to, 4903),
+                    (Self::stellar__value_sha256, 4919),
+                    (Self::stellar__wanna_clean_value_key_template, 4954),
+                    (Self::tezos__baker_address, 4967),
+                    (Self::tezos__balance, 4975),
+                    (Self::tezos__ballot, 4982),
+                    (Self::tezos__confirm_delegation, 5000),
+                    (Self::tezos__confirm_origination, 5019),
+                    (Self::tezos__delegator, 5028),
+                    (Self::tezos__proposal, 5036),
+                    (Self::tezos__register_delegate, 5053),
+                    (Self::tezos__remove_delegation, 5070),
+                    (Self::tezos__submit_ballot, 5083),
+                    (Self::tezos__submit_proposal, 5098),
+                    (Self::tezos__submit_proposals, 5114),
+                    (Self::u2f__get, 5152),
+                    (Self::u2f__set_template, 5179),
+                    (Self::u2f__title_get, 5194),
+                    (Self::u2f__title_set, 5209),
+                    (Self::ethereum__staking_claim, 5214),
+                    (Self::ethereum__staking_claim_address, 5227),
+                    (Self::ethereum__staking_claim_intro, 5252),
+                    (Self::ethereum__staking_stake, 5257),
+                    (Self::ethereum__staking_stake_address, 5270),
+                    (Self::ethereum__staking_stake_intro, 5293),
+                    (Self::ethereum__staking_unstake, 5300),
+                    (Self::ethereum__staking_unstake_intro, 5327),
+                    (Self::cardano__always_abstain, 5341),
+                    (Self::cardano__always_no_confidence, 5361),
+                    (Self::cardano__delegating_to_key_hash, 5384),
+                    (Self::cardano__delegating_to_script, 5405),
+                    (Self::cardano__deposit, 5413),
+                    (Self::cardano__vote_delegation, 5428),
+                    (Self::fido__more_credentials, 5444),
+                    (Self::fido__select_intro, 5512),
+                    (Self::fido__title_for_authentication, 5530),
+                    (Self::fido__title_select_credential, 5547),
+                    (Self::fido__title_credential_details, 5565),
+                    (Self::ethereum__unknown_contract_address, 5596),
+                    (Self::ethereum__token_contract, 5618),
+                    (Self::ethereum__interaction_contract, 5646),
+                    (Self::solana__base_fee, 5654),
+                    (Self::solana__claim, 5659),
+                    (Self::solana__claim_question, 5688),
+                    (Self::solana__claim_recipient_warning, 5740),
+                    (Self::solana__priority_fee, 5752),
+                    (Self::solana__stake, 5757),
+                    (Self::solana__stake_account, 5770),
+                    (Self::solana__stake_question, 5780),
+                    (Self::solana__stake_withdrawal_warning, 5840),
+                    (Self::solana__stake_withdrawal_warning_title, 5866),
+                    (Self::solana__unstake, 5873),
+                    (Self::solana__unstake_question, 5904),
+                    (Self::solana__vote_account, 5916),
+                    (Self::solana__stake_on_question, 5933),
+                    (Self::nostr__event_kind_template, 5948),
+                    (Self::solana__max_fees_rent, 5965),
+                    (Self::solana__max_rent_fee, 5977),
+                    (Self::ethereum__approve, 5984),
+                    (Self::ethereum__approve_amount_allowance, 6000),
+                    (Self::ethereum__approve_chain_id, 6008),
+                    (Self::ethereum__approve_intro, 6049),
+                    (Self::ethereum__approve_intro_title, 6063),
+                    (Self::ethereum__approve_to, 6073),
+                    (Self::ethereum__approve_unlimited_template, 6106),
+                    (Self::ethereum__approve_intro_revoke, 6146),
+                    (Self::ethereum__approve_intro_title_revoke, 6162),
+                    (Self::ethereum__approve_revoke, 6168),
+                    (Self::ethereum__approve_revoke_from, 6179),
+                    (Self::solana__unknown_token, 6192),
+                    (Self::solana__unknown_token_address, 6213),
+                    (Self::ethereum__title_all_input_data_template, 6239),
+                    (Self::ethereum__contract_address, 6264),
+                    (Self::ethereum__title_confirm_message_hash, 6284),
+                    (Self::stellar__sign_with, 6293),
+                    (Self::stellar__timebounds, 6303),
+                    (Self::stellar__token_info, 6313),
+                    (Self::stellar__transaction_source, 6331),
+                    (Self::stellar__transaction_source_diff_warning, 6381),
+                    (Self::cardano__confirm_message, 6396),
+                    (Self::cardano__empty_message, 6409),
+                    (Self::cardano__message_hash, 6422),
+                    (Self::cardano__message_hex, 6433),
+                    (Self::cardano__message_text, 6445),
+                    (Self::cardano__sign_message_hash_path_template, 6471),
+                    (Self::cardano__sign_message_path_template, 6492),
+                    (Self::ripple__destination_tag_missing, 6563),
+                ],
+            };
+
+            #[cfg(feature = "debug")]
+            const DEBUG_BLOB: StringsBlob = StringsBlob {
+                text: "Loading seedLoading private seed is not recommended.",
+                offsets: &[
+                    (Self::debug__loading_seed, 12),
+                    (Self::debug__loading_seed_not_recommended, 52),
+                ],
+            };
+
+            pub const BLOBS: &'static [StringsBlob] = &[
+                Self::BTC_ONLY_BLOB,
+                #[cfg(feature = "universal_fw")]
+                Self::ALTCOIN_BLOB,
+                #[cfg(feature = "debug")]
+                Self::DEBUG_BLOB,
+            ];
+        }
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl TranslatedString {
     pub const QSTR_MAP: &'static [(Qstr, Self)] = &[
         (Qstr::MP_QSTR_addr_mismatch__contact_support_at, Self::addr_mismatch__contact_support_at),
         (Qstr::MP_QSTR_addr_mismatch__key_mismatch, Self::addr_mismatch__key_mismatch),
