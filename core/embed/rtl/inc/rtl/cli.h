@@ -145,6 +145,8 @@ struct cli {
   uint32_t response_crc;
   /** CRC was requested for the current command */
   bool crc_req;
+  /** CRC is enabled for all subsequent commands */
+  bool crc_auto;
 };
 
 /** Initializes the command line structure */

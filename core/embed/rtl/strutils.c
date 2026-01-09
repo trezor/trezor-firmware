@@ -58,6 +58,23 @@ bool cstr_starts_with(const char* str, const char* prefix) {
   return strlen(str) >= prefix_len && 0 == strncmp(str, prefix, prefix_len);
 }
 
+bool cstr_ends_with(const char* str, const char* suffix) {
+  size_t str_len = strlen(str);
+  size_t suffix_len = strlen(suffix);
+  if (str_len < suffix_len) {
+    return false;
+  }
+  return 0 == strcmp(str + str_len - suffix_len, suffix);
+}
+
+bool cstr_remove_suffix(char* str, const char* suffix) {
+  if (cstr_ends_with(str, suffix)) {
+    str[strlen(str) - strlen(suffix)] = '\0';
+    return true;
+  }
+  return false;
+}
+
 static inline bool parse_nibble(char c, uint32_t* value) {
   uint8_t nibble = 0;
 
