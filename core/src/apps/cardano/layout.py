@@ -107,7 +107,7 @@ async def show_native_script(
         script_type_name_suffix = ""
         if script_type == CNST.PUB_KEY:
             if key_path:
-                script_type_name_suffix = "path"
+                script_type_name_suffix = TR.cardano__path
             elif key_hash:
                 script_type_name_suffix = "hash"
 
@@ -475,11 +475,12 @@ async def _show_credential(
     # and reward address payment credential. In that case we don't want to
     # show some of the "props".
     if credential.is_set():
-        credential_title = credential.get_title()
-        # TODO: handle translation
+        credential_description = TR.cardano__credential_intro_template.format(
+            credential.type_name, credential.get_title()
+        )
         append(
             (
-                f"{intro_text} {credential.type_name} credential is a {credential_title}:",
+                f"{intro_text} {credential_description}:",
                 None,
                 None,
             )
