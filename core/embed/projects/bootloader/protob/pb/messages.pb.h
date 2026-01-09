@@ -23,7 +23,11 @@ typedef enum _MessageType {
     MessageType_MessageType_ButtonRequest = 26,
     MessageType_MessageType_ButtonAck = 27,
     MessageType_MessageType_GetFeatures = 55,
-    MessageType_MessageType_UnlockBootloader = 96
+    MessageType_MessageType_UnlockBootloader = 96,
+    MessageType_MessageType_DebugLinkDecision = 100,
+    MessageType_MessageType_DebugLinkGetState = 101,
+    MessageType_MessageType_DebugLinkState = 102,
+    MessageType_MessageType_DebugLinkRecordScreen = 9003
 } MessageType;
 
 typedef enum _FailureType {
@@ -160,8 +164,8 @@ extern "C" {
 
 /* Helper constants for enums */
 #define _MessageType_MIN MessageType_MessageType_Initialize
-#define _MessageType_MAX MessageType_MessageType_UnlockBootloader
-#define _MessageType_ARRAYSIZE ((MessageType)(MessageType_MessageType_UnlockBootloader+1))
+#define _MessageType_MAX MessageType_MessageType_DebugLinkRecordScreen
+#define _MessageType_ARRAYSIZE ((MessageType)(MessageType_MessageType_DebugLinkRecordScreen+1))
 
 #define _FailureType_MIN FailureType_Failure_UnexpectedMessage
 #define _FailureType_MAX FailureType_Failure_Busy

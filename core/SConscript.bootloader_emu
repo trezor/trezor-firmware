@@ -7,6 +7,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
+DEBUGLINK = ARGUMENTS.get('DEBUGLINK', '0') == '1'
 HW_REVISION = 'emulator'
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 
@@ -46,6 +47,10 @@ CPPDEFINES_MOD = []
 SOURCE_MOD = []
 SOURCE_MOD_CRYPTO = []
 RUST_UI_FEATURES = []
+
+if DEBUGLINK:
+    FEATURES_WANTED.append("usb_iface_debug")
+    CPPDEFINES_MOD.append("DEBUGLINK")
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
@@ -136,6 +141,14 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/version_check.c',
     'embed/projects/bootloader/emulator.c',
 ]
+
+if DEBUGLINK:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/workflow/debuglink.c',
+        'embed/projects/bootloader/wire/debug_iface_usb.c',
+        'embed/projects/bootloader/protob/protob_debug.c',
+        'embed/projects/bootloader/protob/pb/messages-debug.pb.c',
+    ]
 
 SOURCE_UNIX = [
     'embed/projects/unix/profile.c',
@@ -236,6 +249,12 @@ cmake_gen = env.Command(
 #
 env.get("ENV")["RUST_TARGET"] = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
 features = ['bootloader',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
+
+if DEBUGLINK:
+    features.append('debuglink')
+    features.append('ui_debug')
+    features.append('ui_debug_overlay')
+
 if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
     profile = 'dev'
 else:

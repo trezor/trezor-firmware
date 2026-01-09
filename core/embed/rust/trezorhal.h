@@ -56,6 +56,7 @@
 #endif
 
 #ifdef BOOTLOADER
+#include "workflow/debuglink.h"
 #include "workflow/workflow_common.h"
 #endif
 

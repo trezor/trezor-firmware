@@ -14,10 +14,15 @@ THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 DISABLE_TROPIC = ARGUMENTS.get('DISABLE_TROPIC', '1') == '1'
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
 PYOPT = ARGUMENTS.get('PYOPT', '1')
+DEBUGLINK = ARGUMENTS.get('DEBUGLINK', '0') == '1'
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '1')
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
+
+if DEBUGLINK or PYOPT == '0':
+  DEBUGLINK = True
+  PYOPT = '0'
 
 if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
@@ -911,6 +916,7 @@ else:
 features = ['micropython', 'protobuf', 'ui', 'translations'] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 if PYOPT == '0':
     features.append('debug')
+    features.append('debuglink')
     features.append('ui_debug')
     features.append('ui_debug_overlay')
 if EVERYTHING:

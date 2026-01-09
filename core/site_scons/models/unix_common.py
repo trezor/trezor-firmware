@@ -28,6 +28,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/cpuid/inc",
         "embed/util/flash/inc",
         "embed/util/fwutils/inc",
+        "embed/util/tsqueue/inc",
         "embed/util/unit_properties/inc",
     ]
 
@@ -57,6 +58,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/flash/unix/flash.c",
         "embed/util/flash/unix/flash_otp.c",
         "embed/util/fwutils/fwutils.c",
+        "embed/util/tsqueue/tsqueue.c",
         "embed/util/unit_properties/unix/unit_properties.c",
     ]
 

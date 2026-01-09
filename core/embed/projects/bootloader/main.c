@@ -96,6 +96,10 @@
 #include "wire/wire_iface_usb.h"
 #include "workflow/workflow.h"
 
+#ifdef DEBUGLINK
+#include "workflow/debuglink.h"
+#endif
+
 #ifdef TREZOR_EMULATOR
 #include "SDL.h"
 #include "emulator.h"
@@ -326,6 +330,10 @@ static void drivers_init(secbool manufacturing_mode,
   // increase BLE speed for sake of upload speed
   ble_set_high_speed(true);
 #endif
+
+#ifdef DEBUGLINK
+  debuglink_init();
+#endif
 }
 
 static void drivers_deinit(void) {
@@ -340,6 +348,10 @@ static void drivers_deinit(void) {
   ble_deinit();
 #endif
 #endif
+#ifdef DEBUGLINK
+  debuglink_deinit();
+#endif
+
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
 #ifdef USE_POWER_MANAGER
   pm_deinit();
