@@ -1,6 +1,6 @@
 # Trezor Protocol
 
-## version 1
+## Version 1 (Codec v1)
 
 Messages are sent in packets of 64 bytes.
 
