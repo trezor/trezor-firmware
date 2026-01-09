@@ -753,6 +753,14 @@ pm_status_t pm_hibernate(void) {
   return (pm_status_t)syscall_invoke0(SYSCALL_POWER_MANAGER_HIBERNATE);
 }
 
+pm_status_t pm_charging_enable(void) {
+  return (pm_status_t)syscall_invoke0(SYSCALL_POWER_MANAGER_CHARGING_ENABLE);
+}
+
+pm_status_t pm_charging_disable(void) {
+  return (pm_status_t)syscall_invoke0(SYSCALL_POWER_MANAGER_CHARGING_DISABLE);
+}
+
 pm_status_t pm_get_state(pm_state_t *state) {
   return (pm_status_t)syscall_invoke1((uint32_t)state,
                                       SYSCALL_POWER_MANAGER_GET_STATE);
