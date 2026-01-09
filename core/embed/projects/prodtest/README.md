@@ -86,9 +86,9 @@ The CLI supports an optional CRC checksum for commands and responses to ensure d
 When CRC is enabled, every command MUST include a CRC-32 checksum at the end of the line, preceded by a space.
 
 Command Format:
-`<command> [<args>] <CRC32>`
+`<command> [<args>] <CRC32>` or `<command>&crc [<args> <CRC32>]`
 
-The checksum is calculated using the standard CRC-32 algorithm (polynomial `0xEDB88320`, initial value `0xFFFFFFFF`, and final XOR `0xFFFFFFFF`) over the command string excluding the ` <CRC32>` suffix.
+The checksum is calculated using the standard CRC-32 algorithm (polynomial `0xEDB88320`, initial value `0xFFFFFFFF`, and final XOR `0xFFFFFFFF`) over the command string excluding the suffix. In the `<command>&crc <args> <CRC32>` format, the `<CRC32>` is the checksum of the entire string before it (including the `&crc` and arguments).
 
 The device also appends the checksum to every response line (including `OK`, `ERROR`, `PROGRESS`, and `#` traces).
 
@@ -97,8 +97,19 @@ Response Format:
 
 Example with CRC enabled:
 ```
-ping ABC 70417631
-OK ABC E7193F16
+ping ABC 3240F7DC
+OK ABC 24DA4527
+```
+
+Example with `&` alternative (enforces CRC for a single command even if CRC is otherwise disabled):
+```
+ping&crc ABC 62E5DE12
+OK ABC 24DA4527
+```
+If the command has no arguments, the format is `<command>&crc <CRC32>`:
+```
+ping&crc D720F16C
+OK  D38BF920
 ```
 
 ## List of commands

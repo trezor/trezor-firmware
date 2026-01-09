@@ -541,6 +541,10 @@ static void cli_clear_line(cli_t* cli) {
   cli->hist_idx = 0;
   cli->hist_prefix = 0;
   cli->response_crc = CRC32_INITIAL;
+  if (cli->crc_single) {
+    cli->crc_req = false;
+    cli->crc_single = false;
+  }
   memset(cli->line_buffer, 0, sizeof(cli->line_buffer));
 }
 
@@ -624,11 +628,25 @@ const cli_command_t* cli_process_io(cli_t* cli) {
   }
 
   // Handle optional CRC check
+  size_t len = strlen(cli->line_buffer);
+
+  // Check for &crc alternative for single command if not already in CRC mode
+  if (!cli->crc_req) {
+    char* ampersand = strchr(cli->line_buffer, '&');
+    if (ampersand != NULL && strncmp(ampersand, "&crc", 4) == 0) {
+      // Find if &crc is in the first word
+      char* space = strchr(cli->line_buffer, ' ');
+      if (space == NULL || ampersand < space) {
+        cli->crc_req = true;
+        cli->crc_single = true;
+      }
+    }
+  }
+
   if (cli->crc_req) {
-    size_t len = strlen(cli->line_buffer);
     if (len >= 9) {
       char* space = &cli->line_buffer[len - 9];
-      if (*space == ' ') {
+      if (*space == ' ' || *space == '&') {
         uint32_t received_crc;
         if (cstr_parse_uint32(space + 1, 16, &received_crc)) {
           uint32_t calculated_crc =
@@ -652,6 +670,13 @@ const cli_command_t* cli_process_io(cli_t* cli) {
       cli_error(cli, CLI_ERROR_INVALID_CRC, "Line too short for CRC");
       goto cleanup;
     }
+  }
+
+  // Validate and strip the command-specific &crc if present
+  char* ampersand = strchr(cli->line_buffer, '&');
+  if (ampersand != NULL && strncmp(ampersand, "&crc", 4) == 0) {
+    // Strip &crc
+    memmove(ampersand, ampersand + 4, strlen(ampersand + 4) + 1);
   }
 
   cli_history_add(cli, cli->line_buffer);
