@@ -35,10 +35,14 @@ def test_concurrent_handshakes(client: Client) -> None:
     with pytest.raises(exceptions.TransportBusy):
         protocol_2._read_ack()
 
-    # The first host can complete handshake
+    # The first host can complete handshake and pairing
     protocol_1._send_handshake_completion_request()
     protocol_1._read_ack()
     protocol_1._read_handshake_completion_response()
+    client.protocol = protocol_1
+    client.do_pairing()
 
-    # Now the second handshake can be done
+    # Now the second handshake and pairing can be done
     protocol_2._do_handshake()
+    client.protocol = protocol_2
+    client.do_pairing()
