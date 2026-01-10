@@ -1209,6 +1209,392 @@ impl ::protobuf::reflect::ProtobufValue for TronTransferContract {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.tron.TronTriggerSmartContract)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct TronTriggerSmartContract {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTriggerSmartContract.owner_address)
+    pub owner_address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTriggerSmartContract.contract_address)
+    pub contract_address: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTriggerSmartContract.data)
+    pub data: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTriggerSmartContract.call_value)
+    pub call_value: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTriggerSmartContract.call_token_value)
+    pub call_token_value: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.tron.TronTriggerSmartContract.token_id)
+    pub token_id: ::std::option::Option<i64>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.tron.TronTriggerSmartContract.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a TronTriggerSmartContract {
+    fn default() -> &'a TronTriggerSmartContract {
+        <TronTriggerSmartContract as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl TronTriggerSmartContract {
+    pub fn new() -> TronTriggerSmartContract {
+        ::std::default::Default::default()
+    }
+
+    // required bytes owner_address = 1;
+
+    pub fn owner_address(&self) -> &[u8] {
+        match self.owner_address.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_owner_address(&mut self) {
+        self.owner_address = ::std::option::Option::None;
+    }
+
+    pub fn has_owner_address(&self) -> bool {
+        self.owner_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_owner_address(&mut self, v: ::std::vec::Vec<u8>) {
+        self.owner_address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_owner_address(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.owner_address.is_none() {
+            self.owner_address = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.owner_address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_owner_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.owner_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required bytes contract_address = 2;
+
+    pub fn contract_address(&self) -> &[u8] {
+        match self.contract_address.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_contract_address(&mut self) {
+        self.contract_address = ::std::option::Option::None;
+    }
+
+    pub fn has_contract_address(&self) -> bool {
+        self.contract_address.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_contract_address(&mut self, v: ::std::vec::Vec<u8>) {
+        self.contract_address = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_contract_address(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.contract_address.is_none() {
+            self.contract_address = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.contract_address.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_contract_address(&mut self) -> ::std::vec::Vec<u8> {
+        self.contract_address.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required bytes data = 4;
+
+    pub fn data(&self) -> &[u8] {
+        match self.data.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_data(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_data(&self) -> bool {
+        self.data.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_data(&mut self, v: ::std::vec::Vec<u8>) {
+        self.data = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_data(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.data.is_none() {
+            self.data = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.data.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_data(&mut self) -> ::std::vec::Vec<u8> {
+        self.data.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional sint64 call_value = 3;
+
+    pub fn call_value(&self) -> i64 {
+        self.call_value.unwrap_or(0)
+    }
+
+    pub fn clear_call_value(&mut self) {
+        self.call_value = ::std::option::Option::None;
+    }
+
+    pub fn has_call_value(&self) -> bool {
+        self.call_value.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_call_value(&mut self, v: i64) {
+        self.call_value = ::std::option::Option::Some(v);
+    }
+
+    // optional sint64 call_token_value = 5;
+
+    pub fn call_token_value(&self) -> i64 {
+        self.call_token_value.unwrap_or(0)
+    }
+
+    pub fn clear_call_token_value(&mut self) {
+        self.call_token_value = ::std::option::Option::None;
+    }
+
+    pub fn has_call_token_value(&self) -> bool {
+        self.call_token_value.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_call_token_value(&mut self, v: i64) {
+        self.call_token_value = ::std::option::Option::Some(v);
+    }
+
+    // optional sint64 token_id = 6;
+
+    pub fn token_id(&self) -> i64 {
+        self.token_id.unwrap_or(0)
+    }
+
+    pub fn clear_token_id(&mut self) {
+        self.token_id = ::std::option::Option::None;
+    }
+
+    pub fn has_token_id(&self) -> bool {
+        self.token_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_token_id(&mut self, v: i64) {
+        self.token_id = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(6);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "owner_address",
+            |m: &TronTriggerSmartContract| { &m.owner_address },
+            |m: &mut TronTriggerSmartContract| { &mut m.owner_address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "contract_address",
+            |m: &TronTriggerSmartContract| { &m.contract_address },
+            |m: &mut TronTriggerSmartContract| { &mut m.contract_address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "data",
+            |m: &TronTriggerSmartContract| { &m.data },
+            |m: &mut TronTriggerSmartContract| { &mut m.data },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "call_value",
+            |m: &TronTriggerSmartContract| { &m.call_value },
+            |m: &mut TronTriggerSmartContract| { &mut m.call_value },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "call_token_value",
+            |m: &TronTriggerSmartContract| { &m.call_token_value },
+            |m: &mut TronTriggerSmartContract| { &mut m.call_token_value },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "token_id",
+            |m: &TronTriggerSmartContract| { &m.token_id },
+            |m: &mut TronTriggerSmartContract| { &mut m.token_id },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TronTriggerSmartContract>(
+            "TronTriggerSmartContract",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for TronTriggerSmartContract {
+    const NAME: &'static str = "TronTriggerSmartContract";
+
+    fn is_initialized(&self) -> bool {
+        if self.owner_address.is_none() {
+            return false;
+        }
+        if self.contract_address.is_none() {
+            return false;
+        }
+        if self.data.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.owner_address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.contract_address = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                34 => {
+                    self.data = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                24 => {
+                    self.call_value = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                40 => {
+                    self.call_token_value = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                48 => {
+                    self.token_id = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.owner_address.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.contract_address.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.data.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
+        if let Some(v) = self.call_value {
+            my_size += ::protobuf::rt::sint64_size(3, v);
+        }
+        if let Some(v) = self.call_token_value {
+            my_size += ::protobuf::rt::sint64_size(5, v);
+        }
+        if let Some(v) = self.token_id {
+            my_size += ::protobuf::rt::sint64_size(6, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.owner_address.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.contract_address.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.data.as_ref() {
+            os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.call_value {
+            os.write_sint64(3, v)?;
+        }
+        if let Some(v) = self.call_token_value {
+            os.write_sint64(5, v)?;
+        }
+        if let Some(v) = self.token_id {
+            os.write_sint64(6, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> TronTriggerSmartContract {
+        TronTriggerSmartContract::new()
+    }
+
+    fn clear(&mut self) {
+        self.owner_address = ::std::option::Option::None;
+        self.contract_address = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
+        self.call_value = ::std::option::Option::None;
+        self.call_token_value = ::std::option::Option::None;
+        self.token_id = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static TronTriggerSmartContract {
+        static instance: TronTriggerSmartContract = TronTriggerSmartContract {
+            owner_address: ::std::option::Option::None,
+            contract_address: ::std::option::Option::None,
+            data: ::std::option::Option::None,
+            call_value: ::std::option::Option::None,
+            call_token_value: ::std::option::Option::None,
+            token_id: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for TronTriggerSmartContract {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("TronTriggerSmartContract").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for TronTriggerSmartContract {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for TronTriggerSmartContract {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.tron.TronSignature)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct TronSignature {
@@ -2184,6 +2570,8 @@ pub mod tron_raw_transaction {
         pub enum TronRawContractType {
             // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.TransferContract)
             TransferContract = 1,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.TriggerSmartContract)
+            TriggerSmartContract = 31,
         }
 
         impl ::protobuf::Enum for TronRawContractType {
@@ -2196,6 +2584,7 @@ pub mod tron_raw_transaction {
             fn from_i32(value: i32) -> ::std::option::Option<TronRawContractType> {
                 match value {
                     1 => ::std::option::Option::Some(TronRawContractType::TransferContract),
+                    31 => ::std::option::Option::Some(TronRawContractType::TriggerSmartContract),
                     _ => ::std::option::Option::None
                 }
             }
@@ -2203,12 +2592,14 @@ pub mod tron_raw_transaction {
             fn from_str(str: &str) -> ::std::option::Option<TronRawContractType> {
                 match str {
                     "TransferContract" => ::std::option::Option::Some(TronRawContractType::TransferContract),
+                    "TriggerSmartContract" => ::std::option::Option::Some(TronRawContractType::TriggerSmartContract),
                     _ => ::std::option::Option::None
                 }
             }
 
             const VALUES: &'static [TronRawContractType] = &[
                 TronRawContractType::TransferContract,
+                TronRawContractType::TriggerSmartContract,
             ];
         }
 
@@ -2221,6 +2612,7 @@ pub mod tron_raw_transaction {
             fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
                 let index = match self {
                     TronRawContractType::TransferContract => 0,
+                    TronRawContractType::TriggerSmartContract => 1,
                 };
                 Self::enum_descriptor().value_by_index(index)
             }
@@ -2256,22 +2648,28 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x15\n\x13TronContractRequest\"r\n\x14TronTransferContract\x12#\n\rowner\
     _address\x18\x01\x20\x02(\x0cR\x0cownerAddress\x12\x1d\n\nto_address\x18\
     \x02\x20\x02(\x0cR\ttoAddress\x12\x16\n\x06amount\x18\x03\x20\x02(\x04R\
-    \x06amount\"-\n\rTronSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0c\
-    R\tsignature\"\x81\x05\n\x12TronRawTransaction\x12&\n\x0fref_block_bytes\
-    \x18\x01\x20\x02(\x0cR\rrefBlockBytes\x12$\n\x0eref_block_hash\x18\x04\
-    \x20\x02(\x0cR\x0crefBlockHash\x12\x1e\n\nexpiration\x18\x08\x20\x02(\
-    \x04R\nexpiration\x12\x12\n\x04data\x18\n\x20\x01(\x0cR\x04data\x12W\n\
-    \x08contract\x18\x0b\x20\x03(\x0b2;.hw.trezor.messages.tron.TronRawTrans\
-    action.TronRawContractR\x08contract\x12\x1c\n\ttimestamp\x18\x0e\x20\x02\
-    (\x04R\ttimestamp\x12\x1b\n\tfee_limit\x18\x12\x20\x01(\x04R\x08feeLimit\
-    \x1a\xd4\x02\n\x0fTronRawContract\x12c\n\x04type\x18\x01\x20\x02(\x0e2O.\
-    hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContra\
-    ctTypeR\x04type\x12j\n\tparameter\x18\x02\x20\x02(\x0b2L.hw.trezor.messa\
-    ges.tron.TronRawTransaction.TronRawContract.TronRawParameterR\tparameter\
-    \x1aC\n\x10TronRawParameter\x12\x19\n\x08type_url\x18\x01\x20\x02(\tR\
-    \x07typeUrl\x12\x14\n\x05value\x18\x02\x20\x02(\x0cR\x05value\"+\n\x13Tr\
-    onRawContractType\x12\x14\n\x10TransferContract\x10\x01B8\n#com.satoshil\
-    abs.trezor.lib.protobufB\x11TrezorMessageTron\
+    \x06amount\"\xe2\x01\n\x18TronTriggerSmartContract\x12#\n\rowner_address\
+    \x18\x01\x20\x02(\x0cR\x0cownerAddress\x12)\n\x10contract_address\x18\
+    \x02\x20\x02(\x0cR\x0fcontractAddress\x12\x12\n\x04data\x18\x04\x20\x02(\
+    \x0cR\x04data\x12\x1d\n\ncall_value\x18\x03\x20\x01(\x12R\tcallValue\x12\
+    (\n\x10call_token_value\x18\x05\x20\x01(\x12R\x0ecallTokenValue\x12\x19\
+    \n\x08token_id\x18\x06\x20\x01(\x12R\x07tokenId\"-\n\rTronSignature\x12\
+    \x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\"\x9b\x05\n\x12TronRa\
+    wTransaction\x12&\n\x0fref_block_bytes\x18\x01\x20\x02(\x0cR\rrefBlockBy\
+    tes\x12$\n\x0eref_block_hash\x18\x04\x20\x02(\x0cR\x0crefBlockHash\x12\
+    \x1e\n\nexpiration\x18\x08\x20\x02(\x04R\nexpiration\x12\x12\n\x04data\
+    \x18\n\x20\x01(\x0cR\x04data\x12W\n\x08contract\x18\x0b\x20\x03(\x0b2;.h\
+    w.trezor.messages.tron.TronRawTransaction.TronRawContractR\x08contract\
+    \x12\x1c\n\ttimestamp\x18\x0e\x20\x02(\x04R\ttimestamp\x12\x1b\n\tfee_li\
+    mit\x18\x12\x20\x01(\x04R\x08feeLimit\x1a\xee\x02\n\x0fTronRawContract\
+    \x12c\n\x04type\x18\x01\x20\x02(\x0e2O.hw.trezor.messages.tron.TronRawTr\
+    ansaction.TronRawContract.TronRawContractTypeR\x04type\x12j\n\tparameter\
+    \x18\x02\x20\x02(\x0b2L.hw.trezor.messages.tron.TronRawTransaction.TronR\
+    awContract.TronRawParameterR\tparameter\x1aC\n\x10TronRawParameter\x12\
+    \x19\n\x08type_url\x18\x01\x20\x02(\tR\x07typeUrl\x12\x14\n\x05value\x18\
+    \x02\x20\x02(\x0cR\x05value\"E\n\x13TronRawContractType\x12\x14\n\x10Tra\
+    nsferContract\x10\x01\x12\x18\n\x14TriggerSmartContract\x10\x1fB8\n#com.\
+    satoshilabs.trezor.lib.protobufB\x11TrezorMessageTron\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -2289,12 +2687,13 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(9);
+            let mut messages = ::std::vec::Vec::with_capacity(10);
             messages.push(TronGetAddress::generated_message_descriptor_data());
             messages.push(TronAddress::generated_message_descriptor_data());
             messages.push(TronSignTx::generated_message_descriptor_data());
             messages.push(TronContractRequest::generated_message_descriptor_data());
             messages.push(TronTransferContract::generated_message_descriptor_data());
+            messages.push(TronTriggerSmartContract::generated_message_descriptor_data());
             messages.push(TronSignature::generated_message_descriptor_data());
             messages.push(TronRawTransaction::generated_message_descriptor_data());
             messages.push(tron_raw_transaction::TronRawContract::generated_message_descriptor_data());

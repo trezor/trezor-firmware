@@ -1,5 +1,5 @@
 import io
-from typing import TYPE_CHECKING, Any, Tuple
+from typing import TYPE_CHECKING, Any, Tuple, Union
 
 from . import messages
 from .protobuf import load_message
@@ -8,7 +8,9 @@ if TYPE_CHECKING:
     from .tools import Address
     from .transport.session import Session
 
-    TronMessageType = messages.TronTransferContract
+    TronMessageType = Union[
+        messages.TronTransferContract, messages.TronTriggerSmartContract
+    ]
 
 DEFAULT_BIP32_PATH = "m/44h/195h/0h/0/0"
 
@@ -39,6 +41,16 @@ def from_raw_data(
             to_address=raw_contract.to_address,
             owner_address=raw_contract.owner_address,
             amount=raw_contract.amount,
+        )
+    elif contract_type == messages.TronRawContractType.TriggerSmartContract:
+        raw_contract = load_message(
+            io.BytesIO(raw_tx.contract[0].parameter.value),
+            messages.TronTriggerSmartContract,
+        )
+        contract = messages.TronTriggerSmartContract(
+            owner_address=raw_contract.owner_address,
+            contract_address=raw_contract.contract_address,
+            data=raw_contract.data,
         )
     else:
         raise ValueError(f"Unsupported contract type: {contract_type}")

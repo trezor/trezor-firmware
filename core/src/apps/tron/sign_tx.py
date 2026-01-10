@@ -27,6 +27,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     from apps.common import paths
 
     _MAX_DATA_LENGTH = const(256)
+    _MAX_FEE_LIMIT = const(15_000_000_000)  # TRON: Maximum Fee limit in SUN.
 
     await paths.validate_path(keychain, msg.address_n)
     node = keychain.derive(msg.address_n)
@@ -42,10 +43,20 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
             chunkify=False,
         )
 
+    # https://developers.tron.network/docs/set-feelimit
+    fee_limit = msg.fee_limit or 0
+    if fee_limit > _MAX_FEE_LIMIT:
+        raise DataError("Tron: fees too high")
+
     contract = await call_any(messages.TronContractRequest(), *consts.CONTRACT_TYPES)
     raw_contract, total_send = await process_contract(contract)
 
-    await confirm_tron_send(total_send)
+    fee_string = (
+        layout.format_energy_amount(fee_limit)
+        if messages.TronTriggerSmartContract.is_type_of(contract)
+        else None
+    )
+    await confirm_tron_send(total_send, fee_string)
 
     raw_tx = messages.TronRawTransaction(
         ref_block_bytes=msg.ref_block_bytes,
@@ -70,13 +81,18 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
 async def process_contract(
     contract: MessageType,
-) -> tuple[TronRawContract, str]:
+) -> tuple[TronRawContract, str | None]:
     from trezor.enums import TronRawContractType
 
+    total_send = None
     if messages.TronTransferContract.is_type_of(contract):
         contract_type = TronRawContractType.TransferContract
         await layout.confirm_transfer_contract(contract)
         total_send = layout.format_trx_amount(contract.amount)
+    elif messages.TronTriggerSmartContract.is_type_of(contract):
+        contract_type = TronRawContractType.TriggerSmartContract
+        await layout.confirm_unkown_smart_contract(contract)
+        # TODO: Extract from contract.data to total_send
     else:
         raise DataError("Tron: contract type unknown")
 
