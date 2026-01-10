@@ -14,6 +14,7 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
+        notification::{Notification, NotificationLevel},
         shape::{self, Renderer},
     },
 };
@@ -98,11 +99,20 @@ const fn default_hs_radii() -> [i16; 5] {
     arr
 }
 
-fn render_notif<'s>(notif: HomescreenNotification, top: i16, target: &mut impl Renderer<'s>) {
+/// Returns background color and text color
+fn level_to_style(level: NotificationLevel) -> (Color, Color) {
+    match level {
+        NotificationLevel::Success => (theme::GREEN_DARK, theme::GREEN_LIME),
+        _ => (theme::ORANGE_DARK, theme::ORANGE_LIGHT),
+    }
+}
+
+fn render_notif<'s>(notif: Notification, top: i16, target: &mut impl Renderer<'s>) {
     notif.text.map(|t| {
         let style = theme::TEXT_BOLD;
 
         let text_width = style.text_font.text_width(t);
+        let (color_bg, color_text) = level_to_style(notif.level);
 
         let banner = Rect::new(
             Point::new(AREA.center().x - NOTIFICATION_BORDER - text_width / 2, top),
@@ -119,12 +129,12 @@ fn render_notif<'s>(notif: HomescreenNotification, top: i16, target: &mut impl R
 
         shape::Bar::new(banner)
             .with_radius(NOTIFICATION_BG_RADIUS)
-            .with_bg(notif.color_bg)
+            .with_bg(color_bg)
             .with_alpha(NOTIFICATION_BG_ALPHA)
             .render(target);
 
         shape::Text::new(text_pos, t, style.text_font)
-            .with_fg(notif.color_text)
+            .with_fg(color_text)
             .render(target);
     });
 }
@@ -488,13 +498,6 @@ impl HideLabelAnimation {
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct HomescreenNotification {
-    pub text: TString<'static>,
-    pub color_bg: Color,
-    pub color_text: Color,
-}
-
 pub struct Homescreen {
     /// Label for the device name, a.k.a "label"
     label_device: Label<'static>,
@@ -504,7 +507,7 @@ pub struct Homescreen {
     labels_width: i16,
     /// Combined height of both labels
     labels_height: i16,
-    notification: Option<(TString<'static>, u8)>,
+    notification: Option<Notification>,
     image: Option<BinaryData<'static>>,
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
     hold_to_lock: bool,
@@ -521,7 +524,7 @@ pub enum HomescreenMsg {
 impl Homescreen {
     pub fn new(
         label: TString<'static>,
-        notification: Option<(TString<'static>, u8)>,
+        notification: Option<Notification>,
         hold_to_lock: bool,
     ) -> Result<Self, Error> {
         let label_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
@@ -567,30 +570,14 @@ impl Homescreen {
         })
     }
 
-    fn level_to_style(level: u8) -> (Color, Color) {
-        match level {
-            3 => (theme::GREEN_DARK, theme::GREEN_LIME),
-            _ => (theme::ORANGE_DARK, theme::ORANGE_LIGHT),
-        }
-    }
-
-    fn get_notification(&self) -> Option<HomescreenNotification> {
+    fn get_notification(&self) -> Option<Notification> {
         if !usb_configured() {
-            let (color_bg, color_text) = Self::level_to_style(0);
-            Some(HomescreenNotification {
+            Some(Notification {
                 text: TR::homescreen__title_no_usb_connection.into(),
-                color_bg,
-                color_text,
-            })
-        } else if let Some((notification, level)) = self.notification {
-            let (color_bg, color_text) = Self::level_to_style(level);
-            Some(HomescreenNotification {
-                text: notification,
-                color_bg,
-                color_text,
+                level: NotificationLevel::Alert,
             })
         } else {
-            None
+            self.notification.clone()
         }
     }
 
@@ -1001,10 +988,9 @@ impl Component for Lockscreen {
         render_instruction(tap.into(), target);
 
         if self.coinjoin_authorized {
-            let notif = HomescreenNotification {
+            let notif = Notification {
                 text: TR::homescreen__title_coinjoin_authorized.into(),
-                color_bg: theme::GREEN_DARK,
-                color_text: theme::GREEN_LIME,
+                level: NotificationLevel::Success,
             };
 
             render_notif(notif, NOTIFICATION_LOCKSCREEN_TOP, target);

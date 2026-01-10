@@ -3,6 +3,7 @@ use crate::{
     io::BinaryData,
     micropython::{buffer::StrBuffer, gc::Gc, list::List, obj::Obj},
     strutil::TString,
+    ui::notification::Notification,
 };
 use heapless::Vec;
 
@@ -351,8 +352,7 @@ pub trait FirmwareUI {
 
     fn show_homescreen(
         label: TString<'static>,
-        notification: Option<TString<'static>>,
-        notification_level: u8,
+        notification: Option<Notification>,
         lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 

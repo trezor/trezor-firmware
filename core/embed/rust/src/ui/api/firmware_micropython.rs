@@ -25,6 +25,7 @@ use crate::{
             result::{BACK, CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, RecoveryType},
         },
+        notification::{Notification, NotificationLevel, NOTIFICATION_LEVEL_OBJ},
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_PAIRED_DEVICES,
             MAX_WORD_QUIZ_ITEMS,
@@ -927,13 +928,23 @@ extern "C" fn new_show_group_share_success(
 extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let label: TString<'static> = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
-        let notification: Option<TString<'static>> =
-            kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
-        let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
+        let notification: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_notification)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let lockable: bool = kwargs.get(Qstr::MP_QSTR_lockable)?.try_into()?;
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
-        let layout = ModelUI::show_homescreen(label, notification, notification_level, lockable)?;
+        let notification = if let Some(notif_tuple) = notification {
+            let [text, level]: [Obj; 2] = util::iter_into_array(notif_tuple)?;
+            let text: TString<'static> = text.try_into()?;
+            let level: NotificationLevel = level.try_into()?;
+            Some(Notification { text, level })
+        } else {
+            None
+        };
+
+        let layout = ModelUI::show_homescreen(label, notification, lockable)?;
         let layout_obj = LayoutObj::new_root(layout)?;
         if skip_first_paint {
             layout_obj.skip_first_paint();
@@ -1970,8 +1981,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_homescreen(
     ///     *,
     ///     label: str,
-    ///     notification: str | None,
-    ///     notification_level: int = 0,
+    ///     notification: tuple[str, int] | None = None,
     ///     lockable: bool,
     ///     skip_first_paint: bool,
     /// ) -> LayoutObj[UiResult]:
@@ -2201,6 +2211,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     SWIPE_LEFT: ClassVar[int]
     ///     SWIPE_RIGHT: ClassVar[int]
     Qstr::MP_QSTR_AttachType => ATTACH_TYPE_OBJ.as_obj(),
+
+    /// class NotificationLevel:
+    ///     """Notification level determining the style of notification."""
+    ///     ALERT: ClassVar[int]
+    ///     WARNING: ClassVar[int]
+    ///     INFO: ClassVar[int]
+    ///     SUCCESS: ClassVar[int]
+    Qstr::MP_QSTR_NotificationLevel => NOTIFICATION_LEVEL_OBJ.as_obj(),
 
     /// class LayoutState:
     ///     """Layout state."""
