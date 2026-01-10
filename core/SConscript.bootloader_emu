@@ -236,6 +236,9 @@ cmake_gen = env.Command(
 #
 env.get("ENV")["RUST_TARGET"] = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
 features = ['bootloader',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
+if not PRODUCTION:
+    features.append('ui_dev_overlay')
+
 if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
     profile = 'dev'
 else:

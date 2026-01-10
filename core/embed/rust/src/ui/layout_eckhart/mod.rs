@@ -1,7 +1,11 @@
 use super::{geometry::Rect, CommonUI};
 use theme::backlight;
 
-#[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
+#[cfg(any(
+    feature = "ui_debug_overlay",
+    feature = "ui_performance_overlay",
+    feature = "ui_dev_overlay"
+))]
 use super::{display::Color, geometry::Offset, shape};
 
 #[cfg(feature = "ui_performance_overlay")]
@@ -44,6 +48,11 @@ pub const WAIT_MESSAGE: &str = "Wait";
 pub const CANCEL_MESSAGE: &str = "Cancel";
 
 pub struct UIEckhart;
+
+#[cfg(any(feature = "ui_debug_overlay", feature = "ui_dev_overlay"))]
+const OVERLAY_MARKER_SIZE: Offset = Offset::uniform(15);
+#[cfg(any(feature = "ui_debug_overlay", feature = "ui_dev_overlay"))]
+const OVERLAY_MARKER_PADDING: Offset = Offset::uniform(10);
 
 impl CommonUI for UIEckhart {
     #[cfg(feature = "backlight")]
@@ -105,13 +114,12 @@ impl CommonUI for UIEckhart {
 
     #[cfg(feature = "ui_debug_overlay")]
     fn render_debug_overlay<'s>(target: &mut impl shape::Renderer<'s>) {
-        const RECT_SIZE: i16 = 15;
-        let r = Rect::from_top_left_and_size(
-            Self::SCREEN.top_right() - Offset::new(10 + RECT_SIZE, -10),
-            Offset::new(RECT_SIZE, RECT_SIZE),
+        let r = Rect::from_top_right_and_size(
+            Self::SCREEN.top_right(),
+            OVERLAY_MARKER_PADDING + OVERLAY_MARKER_SIZE,
         );
-        shape::Bar::new(r)
-            .with_bg(Color::rgb(0xff, 0, 0))
+        shape::Bar::new(r.with_size(OVERLAY_MARKER_SIZE))
+            .with_bg(Color::rgb(255, 0, 0))
             .render(target);
     }
 
@@ -151,5 +159,16 @@ impl CommonUI for UIEckhart {
         .with_align(Alignment::End)
         .with_fg(Color::rgb(255, 255, 0))
         .render(target);
+    }
+
+    #[cfg(feature = "ui_dev_overlay")]
+    fn render_dev_overlay<'s>(target: &mut impl shape::Renderer<'s>) {
+        let r = Rect::from_top_left_and_size(
+            Self::SCREEN.top_left() + OVERLAY_MARKER_PADDING,
+            OVERLAY_MARKER_SIZE,
+        );
+        shape::Bar::new(r)
+            .with_bg(Color::rgb(0, 255, 0))
+            .render(target);
     }
 }
