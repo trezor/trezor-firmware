@@ -60,7 +60,11 @@ impl Component for ConnectScreen {
     type Msg = ConnectMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (header_area, content_area) = SCREEN.split_top(theme::HEADER_HEIGHT);
+        let (header_area, content_area) = if self.header.is_some() {
+            SCREEN.split_top(theme::HEADER_HEIGHT)
+        } else {
+            SCREEN.split_top(theme::PROGRESS_TEXT_ORIGIN.y)
+        };
         let (content_area, action_bar_area) = content_area.split_bottom(theme::ACTION_BAR_HEIGHT);
         let content_area = content_area.inset(theme::SIDE_INSETS);
         self.header.place(header_area);

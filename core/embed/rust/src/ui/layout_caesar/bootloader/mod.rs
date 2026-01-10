@@ -104,7 +104,7 @@ impl BootloaderUI for UICaesar {
         run(&mut frame, true, communication)
     }
 
-    fn screen_connect(_initial_setup: bool, _auto_update: bool) -> (u32, u32) {
+    fn screen_connect(_initial_setup: bool, _show_menu: bool) -> (u32, u32) {
         let mut frame = Connect::new("Waiting for host...", fonts::FONT_NORMAL, BLD_FG, BLD_BG);
 
         run(&mut frame, true, true)

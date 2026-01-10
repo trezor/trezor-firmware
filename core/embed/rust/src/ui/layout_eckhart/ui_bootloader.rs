@@ -106,9 +106,9 @@ impl BootloaderUI for UIEckhart {
         run(&mut screen, true, communication)
     }
 
-    fn screen_connect(initial_setup: bool, auto_update: bool) -> (u32, u32) {
+    fn screen_connect(initial_setup: bool, show_menu: bool) -> (u32, u32) {
         let mut screen = ConnectScreen::new(initial_setup);
-        if auto_update {
+        if show_menu {
             screen = screen.with_header(BldHeader::new("Bootloader".into()).with_menu_button());
         }
         if !initial_setup {

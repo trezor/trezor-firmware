@@ -149,13 +149,13 @@ impl BootloaderUI for UIBolt {
         run(&mut frame, true, communication)
     }
 
-    fn screen_connect(initial_setup: bool, auto_update: bool) -> (u32, u32) {
+    fn screen_connect(initial_setup: bool, show_menu: bool) -> (u32, u32) {
         let mut frame = Connect::new(
             "Waiting for host...",
             fonts::FONT_NORMAL,
             BLD_TITLE_COLOR,
             initial_setup,
-            auto_update,
+            show_menu,
         );
         run(&mut frame, true, true)
     }
