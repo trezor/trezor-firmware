@@ -176,7 +176,7 @@ def _input_code(debug: "DebugLink", pin: str, check: bool = False) -> None:
     """Input the PIN or Wipe code"""
     before = debug.read_layout().pin()
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
-        digits_order = debug.read_layout().tt_pin_digits_order()
+        digits_order = debug.read_layout().bolt_pin_digits_order()
         for idx, digit in enumerate(pin):
             digit_index = digits_order.index(digit)
             coords = debug.screen_buttons.pin_passphrase_index(digit_index)
@@ -459,7 +459,7 @@ def test_long_press_digit(device_handler: "BackgroundDeviceHandler"):
         _input_code(debug, PIN4[:-1])
 
         # Prepare last digit for long press
-        digits_order = debug.read_layout().tt_pin_digits_order()
+        digits_order = debug.read_layout().bolt_pin_digits_order()
         digit_index = digits_order.index(PIN4[-1])
         pos = debug.screen_buttons.pin_passphrase_index(digit_index)
 
