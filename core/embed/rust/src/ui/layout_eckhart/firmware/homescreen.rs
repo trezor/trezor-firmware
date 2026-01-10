@@ -8,6 +8,7 @@ use crate::{
         display::{image::ImageInfo, Color},
         geometry::{Alignment, Direction, Offset, Rect},
         layout::util::get_user_custom_image,
+        notification::{Notification, NotificationLevel},
         shape::{self, Renderer},
         util::animation_disabled,
     },
@@ -61,17 +62,15 @@ impl Homescreen {
         locked: bool,
         bootscreen: bool,
         coinjoin_authorized: bool,
-        notification: Option<(TString<'static>, u8)>,
+        notification: Option<Notification>,
     ) -> Result<Self, Error> {
         let image = get_homescreen_image();
         let shadow = image.is_some();
 
         // Notification
-        let mut notification_level = 4;
         let (led_color, hint) = match notification {
-            Some((text, level)) => {
-                notification_level = level;
-                let (led_color, hint) = Self::get_notification_display(level, text);
+            Some(ref notification) => {
+                let (led_color, hint) = Self::get_notification_display(notification);
                 (Some(led_color), Some(hint))
             }
             None if locked && coinjoin_authorized => (
@@ -85,7 +84,7 @@ impl Homescreen {
         };
 
         // Homebar
-        let (style_sheet, gradient) = button_homebar_style(notification_level);
+        let (style_sheet, gradient) = button_homebar_style(notification.map(|n| n.level));
         let btn = Button::new(Self::homebar_content(bootscreen, locked))
             .styled(style_sheet)
             .with_gradient(gradient);
@@ -110,18 +109,14 @@ impl Homescreen {
         ButtonContent::HomeBar(text)
     }
 
-    fn get_notification_display(level: u8, text: TString<'static>) -> (Color, Hint<'static>) {
-        match level {
-            0 => (theme::LED_RED, Hint::new_warning_danger(text)),
-            1 => (theme::LED_YELLOW, Hint::new_warning_neutral(text)),
-            2 => (theme::LED_BLUE, Hint::new_instruction(text, None)),
-            3 => (
+    fn get_notification_display(n: &Notification) -> (Color, Hint<'static>) {
+        match n.level {
+            NotificationLevel::Alert => (theme::LED_RED, Hint::new_warning_danger(n.text)),
+            NotificationLevel::Warning => (theme::LED_YELLOW, Hint::new_warning_neutral(n.text)),
+            NotificationLevel::Info => (theme::LED_BLUE, Hint::new_instruction(n.text, None)),
+            NotificationLevel::Success => (
                 theme::LED_GREEN_LIGHT,
-                Hint::new_instruction_green(text, Some(theme::ICON_INFO)),
-            ),
-            _ => (
-                theme::LED_WHITE,
-                Hint::new_instruction(text, Some(theme::ICON_INFO)),
+                Hint::new_instruction_green(n.text, Some(theme::ICON_INFO)),
             ),
         }
     }

@@ -6,7 +6,7 @@ from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import TR, ui, utils
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Iterator, ParamSpec, TypeVar
+    from typing import Any, Callable, Iterator, ParamSpec, Tuple, TypeVar
 
     from trezor import loop
 
@@ -65,8 +65,7 @@ class Homescreen(HomescreenBase):
     def __init__(
         self,
         label: str | None,
-        notification: str | None,
-        notification_level: int,
+        notification: Tuple[str, int] | None,
         lockable: bool,
     ) -> None:
         super().__init__(
@@ -74,7 +73,6 @@ class Homescreen(HomescreenBase):
                 trezorui_api.show_homescreen,
                 label=label or utils.MODEL_FULL_NAME,
                 notification=notification,
-                notification_level=notification_level,
                 lockable=lockable,
                 skip_first_paint=self._should_resume(),
             )

@@ -26,6 +26,7 @@ use crate::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ContentType, PropsList, RecoveryType, StrOrBytes},
         },
+        notification::Notification,
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
             MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
@@ -982,11 +983,9 @@ impl FirmwareUI for UIDelizia {
 
     fn show_homescreen(
         label: TString<'static>,
-        notification: Option<TString<'static>>,
-        notification_level: u8,
+        notification: Option<Notification>,
         lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let notification = notification.map(|w| (w, notification_level));
         let layout = RootComponent::new(Homescreen::new(label, notification, lockable)?);
         Ok(layout)
     }

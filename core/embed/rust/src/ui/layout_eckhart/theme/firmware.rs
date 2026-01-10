@@ -1,8 +1,11 @@
 use crate::{
     time::ShortDuration,
-    ui::component::text::{
-        layout::{Chunks, LineBreaking, PageBreaking},
-        TextStyle,
+    ui::{
+        component::text::{
+            layout::{Chunks, LineBreaking, PageBreaking},
+            TextStyle,
+        },
+        notification::NotificationLevel,
     },
 };
 
@@ -414,14 +417,16 @@ macro_rules! button_homebar_style {
         }
     };
 }
-pub const fn button_homebar_style(notification_level: u8) -> (ButtonStyleSheet, Gradient) {
-    // NOTE: 0 is the highest severity.
-    match notification_level {
-        0 => (button_homebar_style!(RED), Gradient::Alert),
-        1 => (button_homebar_style!(GREY_LIGHT), Gradient::Warning),
-        2 => (button_homebar_style!(GREY_LIGHT), Gradient::DefaultGrey),
-        3 => (button_homebar_style!(GREY_LIGHT), Gradient::SignGreen),
-        _ => (button_homebar_style!(GREY_LIGHT), Gradient::DefaultGrey),
+
+pub const fn button_homebar_style(nl: Option<NotificationLevel>) -> (ButtonStyleSheet, Gradient) {
+    match nl {
+        Some(NotificationLevel::Alert) => (button_homebar_style!(RED), Gradient::Alert),
+        Some(NotificationLevel::Warning) => (button_homebar_style!(GREY_LIGHT), Gradient::Warning),
+        Some(NotificationLevel::Info) => (button_homebar_style!(GREY_LIGHT), Gradient::DefaultGrey),
+        Some(NotificationLevel::Success) => {
+            (button_homebar_style!(GREY_LIGHT), Gradient::SignGreen)
+        }
+        None => (button_homebar_style!(GREY_LIGHT), Gradient::DefaultGrey),
     }
 }
 

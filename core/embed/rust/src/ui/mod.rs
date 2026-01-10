@@ -10,6 +10,7 @@ pub mod event;
 pub mod flow;
 pub mod geometry;
 pub mod lerp;
+pub mod notification;
 pub mod shape;
 pub mod util;
 

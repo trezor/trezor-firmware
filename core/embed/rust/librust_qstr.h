@@ -16,6 +16,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_8;
   MP_QSTR_9;
   MP_QSTR_;
+  MP_QSTR_ALERT;
   MP_QSTR_ATTACHED;
   MP_QSTR_AttachType;
   MP_QSTR_BACK;
@@ -42,6 +43,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_MsgDef;
   MP_QSTR_NONE;
   MP_QSTR_NORMAL;
+  MP_QSTR_NotificationLevel;
   MP_QSTR_PairDevice;
   MP_QSTR_RESUME;
   MP_QSTR_RX_PACKET_LEN;
@@ -51,6 +53,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_RemovePin;
   MP_QSTR_RemoveWipeCode;
   MP_QSTR_ReviewFailedBackup;
+  MP_QSTR_SUCCESS;
   MP_QSTR_SWIPE_DOWN;
   MP_QSTR_SWIPE_LEFT;
   MP_QSTR_SWIPE_RIGHT;
@@ -71,6 +74,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_TurnOff;
   MP_QSTR_UnpairAllDevices;
   MP_QSTR_UnpairDevice;
+  MP_QSTR_WARNING;
   MP_QSTR_WipeDevice;
   MP_QSTR___del__;
   MP_QSTR___dict__;
@@ -478,7 +482,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_more_info_callback;
   MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;
-  MP_QSTR_notification_level;
   MP_QSTR_page_count;
   MP_QSTR_page_counter;
   MP_QSTR_pages;
