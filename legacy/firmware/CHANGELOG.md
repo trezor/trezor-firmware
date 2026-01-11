@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Send BIP-380 descriptor in GetPublicKey response.  [#3576]
 
 ### Changed
+- Allow using Ethereum mainnet addresses on all non-Ethereum networks. This enables access to networks like Hyperliquid that use conflicting chain IDs and cannot obtain official SLIP-44 registration.  [#5134]
 - Deprecate ETH Holesky testnet and use Hoodi testnet instead.  [#5942]
 
 ### Fixed
@@ -667,6 +668,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4851]: https://github.com/trezor/trezor-firmware/pull/4851
 [#4932]: https://github.com/trezor/trezor-firmware/pull/4932
 [#5133]: https://github.com/trezor/trezor-firmware/pull/5133
+[#5134]: https://github.com/trezor/trezor-firmware/pull/5134
 [#5194]: https://github.com/trezor/trezor-firmware/pull/5194
 [#5204]: https://github.com/trezor/trezor-firmware/pull/5204
 [#5257]: https://github.com/trezor/trezor-firmware/pull/5257
