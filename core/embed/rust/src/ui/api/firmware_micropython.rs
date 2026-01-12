@@ -1310,6 +1310,14 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_cancel(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], _kwargs: &Map| {
+        let layout = ModelUI::confirm_cancel()?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
         let layout = ModelUI::tutorial()?;
@@ -2166,6 +2174,11 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
+
+    /// def confirm_cancel() -> LayoutObj[UiResult]:
+    ///     """Ask the user to confirm the cancellation (or cancel the cancellation and go back to
+    ///     the previous flow)"""
+    Qstr::MP_QSTR_confirm_cancel => obj_fn_kw!(0, new_confirm_cancel).as_obj(),
 
     /// def tutorial() -> LayoutObj[UiResult]:
     ///     """Show user how to interact with the device."""

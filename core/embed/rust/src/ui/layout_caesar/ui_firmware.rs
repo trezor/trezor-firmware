@@ -1420,6 +1420,10 @@ impl FirmwareUI for UICaesar {
         Ok(obj)
     }
 
+    fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+    }
+
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
         const PAGE_COUNT: usize = 7;
 

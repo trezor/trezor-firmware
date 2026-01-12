@@ -493,5 +493,7 @@ pub trait FirmwareUI {
         danger: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
+    fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error>;
+
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error>;
 }

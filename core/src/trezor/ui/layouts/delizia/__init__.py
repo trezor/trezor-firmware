@@ -854,7 +854,7 @@ def confirm_value(
 ) -> Awaitable[ui.UiResult]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
-    from trezor.ui.layouts.menu import Menu, interact_with_menu
+    from trezor.ui.layouts.menu import Cancel, Menu, interact_with_menu
 
     main = trezorui_api.confirm_value(
         title=title,
@@ -876,7 +876,10 @@ def confirm_value(
         menu_items.append(create_details(name, p, page_title))
     menu = Menu.root(
         menu_items,
-        cancel=(cancel_text or TR.buttons__cancel),
+        cancel=Cancel.from_layout(
+            name=(cancel_text or TR.buttons__cancel),
+            layout_factory=trezorui_api.confirm_cancel,
+        ),
     )
     return interact_with_menu(main, menu, br_name, br_code)
 
