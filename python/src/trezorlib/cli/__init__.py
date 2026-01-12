@@ -167,7 +167,8 @@ class TrezorConnection:
         derive_cardano: bool = False,
     ) -> Session:
         client = self.get_client()
-        client.ensure_unlocked()
+        if not seedless:
+            client.ensure_unlocked()
         if (
             not client.features.passphrase_protection
             and not self.passphrase_source.ok_if_disabled()
