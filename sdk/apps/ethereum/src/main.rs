@@ -8,13 +8,13 @@ use alloc::vec;
 use prost::Message as _;
 use trezor_app_sdk::service::{self, CoreIpcService};
 use trezor_app_sdk::util::Timeout;
-use trezor_app_sdk::{error, info, ui, Error, IpcMessage, Result, CORE_SERVICE};
+use trezor_app_sdk::{CORE_SERVICE, Error, IpcMessage, Result, error, info, ui};
 
 // Include generated protobuf code
+mod get_public_key;
 mod paths;
-mod proto;
+pub(crate) mod proto;
 
-use proto::common::HdNodeType;
 use proto::ethereum::{EthereumGetPublicKey, EthereumPublicKey};
 use ufmt::derive::uDebug;
 use ufmt_utils::WriteAdapter;
@@ -37,20 +37,7 @@ fn handle_get_public_key(request_data: &[u8]) -> Result<()> {
     let request =
         <EthereumGetPublicKey>::decode(request_data).map_err(|_| Error::InvalidMessage)?;
 
-    // TODO: we use the Bitcoin format for Ethereum xpubs
-    // - Derive the key from the BIP-32 path using keychain
-    // - Generate the xpub from the derived node
-    // - Show on display if requested (show_display = true)
-
-    // For now, create a dummy response with required fields
-    let mut response = EthereumPublicKey::default();
-
-    // Set required node field
-    response.node = HdNodeType::default();
-
-    // Set required xpub field - format: xpub with path info for now
-
-    response.xpub = String::from("xpub661MyMwAqRbcF");
+    let mut response = get_public_key::get_public_key(request)?;
 
     let response_bytes = response.encode_to_vec();
     let message = IpcMessage::new(EthereumMessages::PublicKey.into(), &response_bytes);

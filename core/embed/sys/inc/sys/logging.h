@@ -64,7 +64,7 @@ typedef struct {
 
 #define LOG_DECLARE(source_name)
 
-#define LOG_MODULE_MAX_LEVEL (LOG_LEVEL_OFF)
+#define LOG_MODULE_MAX_LEVEL (LOG_LEVEL_DBG)
 
 #define LOG_ERR(fmt, ...)
 #define LOG_WARN(fmt, ...)

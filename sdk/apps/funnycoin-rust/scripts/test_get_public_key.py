@@ -45,7 +45,7 @@ def main():
     print(f"App loaded with instance ID: {instance_id}\n")
 
     request = messages.ExtAppMessage(
-        instance_id=2617994019,
+        instance_id=instance_id,
         message_id=0,
         data=request_data,
     )

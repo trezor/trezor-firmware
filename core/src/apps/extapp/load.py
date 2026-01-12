@@ -42,14 +42,12 @@ async def load(msg: ExtAppLoad) -> ExtAppLoaded:
     try:
         task = app.spawn_task(msg.hash)
     except RuntimeError as e:
-        pass
-
-    try:
-        await _load_image(msg.hash, msg.size)
-    except Exception as e:
-        raise DataError(f"ExtApp load failed: {e}") from e
-    else:
-        task = app.spawn_task(msg.hash)
+        try:
+            await _load_image(msg.hash, msg.size)
+        except Exception as e:
+            raise DataError(f"ExtApp load failed: {e}") from e
+        else:
+            task = app.spawn_task(msg.hash)
 
     instance_id = random.uniform(2**32 - 1)
     cache_entry = ustruct.pack("<BI", task.id(), instance_id)

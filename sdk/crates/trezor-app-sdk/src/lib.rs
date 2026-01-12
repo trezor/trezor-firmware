@@ -75,6 +75,7 @@ pub enum Error {
     ServiceError,
     InvalidFunction,
     InvalidMessage,
+    InvalidArgument,
     Cancelled,
 }
 

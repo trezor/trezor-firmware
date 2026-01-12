@@ -253,7 +253,7 @@ def cli(
         output = None
 
     logger = logging.getLogger("trezorlib._internal.emulator")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     logger.addHandler(logging.StreamHandler())
 
     emulator = CoreEmulator(

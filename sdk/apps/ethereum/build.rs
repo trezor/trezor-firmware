@@ -1,14 +1,17 @@
 fn main() {
     let mut config = prost_build::Config::new();
-    config.compile_protos(
-        &[
-            "../../../common/protob/messages-common.proto",
-            "../../../common/protob/messages-ethereum.proto",
-            "../../../common/protob/messages-ethereum-eip712.proto",
-        ],
-        &["../../../common/protob/"],
-    )
-    .unwrap();
+    config
+        .compile_protos(
+            &[
+                "../../../common/protob/messages.proto",
+                "../../../common/protob/messages-common.proto",
+                "../../../common/protob/messages-ethereum.proto",
+                "../../../common/protob/messages-bitcoin.proto",
+                "../../../common/protob/messages-ethereum-eip712.proto",
+            ],
+            &["../../../common/protob/"],
+        )
+        .unwrap();
 
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     if target_os == "macos" {
