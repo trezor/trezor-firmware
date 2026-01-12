@@ -1305,6 +1305,10 @@ impl FirmwareUI for UIBolt {
         )
     }
 
+    fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+    }
+
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }

@@ -840,6 +840,12 @@ def show_warning(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def confirm_cancel() -> LayoutObj[UiResult]:
+    """Ask the user to confirm the cancellation (or cancel the cancellation and go back to
+    the previous flow)"""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def tutorial() -> LayoutObj[UiResult]:
     """Show user how to interact with the device."""
 

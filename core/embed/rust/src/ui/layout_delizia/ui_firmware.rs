@@ -37,9 +37,10 @@ use crate::{
 use super::{
     component::{
         check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Homescreen,
-        Lockscreen, MnemonicKeyboard, PinKeyboard, Progress, ScrolledVerticalMenu, SelectWordCount,
-        SelectWordCountLayout, Slip39Input, StatusScreen, SwipeContent, SwipeUpScreen, TradeScreen,
-        VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem, VerticalMenuItems,
+        Lockscreen, MnemonicKeyboard, PinKeyboard, Progress, PromptScreen, ScrolledVerticalMenu,
+        SelectWordCount, SelectWordCountLayout, Slip39Input, StatusScreen, SwipeContent,
+        SwipeUpScreen, TradeScreen, VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem,
+        VerticalMenuItems,
     },
     flow::{
         self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
@@ -1314,6 +1315,17 @@ impl FirmwareUI for UIDelizia {
 
         let layout = LayoutObj::new(SwipeUpScreen::new(frame))?;
         Ok(layout)
+    }
+
+    fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error> {
+        Ok(RootComponent::new(
+            Frame::left_aligned(
+                TR::send__cancel_sign.into(),
+                SwipeContent::new(PromptScreen::new_tap_to_cancel()),
+            )
+            .with_cancel_button()
+            .with_footer(TR::instructions__tap_to_confirm.into(), None),
+        ))
     }
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {

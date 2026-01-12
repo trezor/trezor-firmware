@@ -1280,7 +1280,7 @@ class InputFlowSignTxCancelFromAmount(InputFlowBase):
         assert TR.words__recipient + " #1" in layout.title()
 
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.button_actions.navigate_to_menu_item(1)  # click Cancel
+        self.debug.button_actions.navigate_to_menu_item(0)  # click Cancel
         self.debug.synchronize_at("PromptScreen")
         self.debug.click(self.debug.screen_buttons.tap_to_confirm())
 

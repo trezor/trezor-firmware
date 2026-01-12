@@ -1710,6 +1710,28 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
+    fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error> {
+        flow::util::single_page(
+            TextScreen::new(
+                Paragraph::new(&theme::TEXT_REGULAR, TR::send__cancel_sign)
+                    .into_paragraphs()
+                    .with_placement(LinearPlacement::vertical()),
+            )
+            .with_header(Header::new(TR::words__send.into()))
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                Button::with_text(TR::buttons__cancel.into())
+                    .styled(theme::button_actionbar_danger())
+                    .with_gradient(Gradient::Alert),
+            ))
+            .map(|msg| match msg {
+                TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+                TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+                _ => None,
+            }),
+        )
+    }
+
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::show_tutorial::new_show_tutorial()?;
         Ok(flow)

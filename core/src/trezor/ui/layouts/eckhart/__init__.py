@@ -582,7 +582,7 @@ async def confirm_output(
     cancel_text: str | None = None,
     description: str | None = None,
 ) -> None:
-    from trezor.ui.layouts.menu import Menu, interact_with_menu
+    from trezor.ui.layouts.menu import Cancel, Menu, interact_with_menu
 
     if address_label is not None:
         title = address_label
@@ -619,7 +619,10 @@ async def confirm_output(
 
         menu = Menu.root(
             menu_items,
-            cancel=TR.buttons__cancel,
+            cancel=Cancel.from_layout(
+                name=TR.buttons__cancel,
+                layout_factory=trezorui_api.confirm_cancel,
+            ),
         )
 
         address_layout = trezorui_api.confirm_value(
@@ -643,10 +646,18 @@ async def confirm_output(
             back_button=True,
         )
 
-        await confirm_linear_flow(
-            lambda: interact_with_menu(address_layout, menu, "confirm_output", br_code),
-            lambda: interact_with_menu(amount_layout, menu, "confirm_output", br_code),
-        )
+        try:
+            await confirm_linear_flow(
+                lambda: interact_with_menu(
+                    address_layout, menu, "confirm_output", br_code
+                ),
+                lambda: interact_with_menu(
+                    amount_layout, menu, "confirm_output", br_code
+                ),
+            )
+        except ActionCancelled:
+            show_continue_in_app(TR.send__sign_cancelled)
+            raise
     else:
         await raise_if_not_confirmed(
             trezorui_api.flow_confirm_output(

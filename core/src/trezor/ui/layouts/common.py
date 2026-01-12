@@ -135,7 +135,7 @@ async def with_info(
 
 
 async def confirm_linear_flow(
-    *confirm_factories: Callable[[], Awaitable[ui.UiResult]]
+    *confirm_factories: Callable[[], Awaitable[ui.UiResult]],
 ) -> None:
     i = 0
     while i < len(confirm_factories):
