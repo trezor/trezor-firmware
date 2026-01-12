@@ -88,7 +88,7 @@ fn ipc_ui_call_void(value: TrezorUiEnum) -> Result<()> {
 pub fn confirm_value(title: &str, content: &str) -> UiResult {
     let value = TrezorUiEnum::ConfirmAction {
         title: ShortString::from_str(title).unwrap(),
-        content: ShortString::from_str(&content[..50]).unwrap(),
+        content: ShortString::from_str(content).unwrap(),
     };
     ipc_ui_call_confirm(value)
 }
@@ -147,6 +147,17 @@ pub fn request_number(title: &str, content: &str, initial: u32, min: u32, max: u
     let result = ipc_ui_call(&value)?;
     match result {
         TrezorUiResult::Integer(_) => Ok(result),
+        _ => Ok(TrezorUiResult::Cancelled),
+    }
+}
+
+pub fn show_public_key(key: &str) -> UiResult {
+    let value = TrezorUiEnum::ShowPublicKey {
+        key: ShortString::from_str(key).unwrap(),
+    };
+    let result = ipc_ui_call(&value)?;
+    match result {
+        TrezorUiResult::Confirmed => Ok(result),
         _ => Ok(TrezorUiResult::Cancelled),
     }
 }

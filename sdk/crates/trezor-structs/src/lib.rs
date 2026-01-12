@@ -113,6 +113,9 @@ pub enum TrezorUiEnum {
         title: ShortString,
         props: PropsList,
     },
+    ShowPublicKey {
+        key: ShortString,
+    },
 }
 
 /// Outgoing UI result message for IPC

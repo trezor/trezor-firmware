@@ -1,6 +1,8 @@
 const HARDENED: u32 = 0x80000000;
 const MAX_PATH_STR_LEN: usize = 256; // "m/44'/0'/0'/0/0" with margin
 
+pub const SLIP25_PURPOSE: u32 = 10025 | HARDENED;
+
 /// Convert BIP-32 path to string representation (e.g., "m/44'/0'/0'/0/0")
 pub fn address_n_to_str(address_n: &[u32]) -> alloc::string::String {
     use alloc::string::String;
