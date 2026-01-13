@@ -26,6 +26,7 @@
 #include <gfx/dma2d_bitblt.h>
 #include <io/display.h>
 #include <io/notify.h>
+#include <io/translations.h>
 #include <io/usb.h>
 #include <sec/fwutils.h>
 #include <sec/rng_strong.h>
@@ -38,7 +39,6 @@
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/translations.h>
 
 #ifdef USE_BLE
 #include <io/ble.h>
