@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include <sys/suspend.h>
+#include <io/suspend.h>
 
 /* power manager status codes */
 typedef enum {

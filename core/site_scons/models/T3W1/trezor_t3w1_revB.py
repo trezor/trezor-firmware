@@ -279,10 +279,14 @@ def configure(
 
     if "suspend" in features_wanted:
         sources += [
-            "embed/sys/suspend/stm32u5/suspend.c",
-            "embed/sys/suspend/stm32u5/suspend_io.c",
+            "embed/io/suspend/stm32u5/suspend.c",
+            "embed/io/suspend/stm32u5/suspend_io.c",
+            "embed/sec/suspend/stm32u5/suspend_io.c",
         ]
-        paths += ["embed/sys/suspend/inc"]
+        paths += [
+            "embed/io/suspend/inc",
+            "embed/sec/suspend/inc",
+        ]
         defines += [("USE_SUSPEND", "1")]
 
     if "power_manager" in features_wanted:

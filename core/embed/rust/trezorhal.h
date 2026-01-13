@@ -48,7 +48,7 @@
 #endif
 
 #ifdef USE_SUSPEND
-#include <sys/suspend.h>
+#include <io/suspend.h>
 #endif
 
 #ifdef USE_STORAGE
