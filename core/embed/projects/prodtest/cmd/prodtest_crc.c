@@ -20,11 +20,21 @@
 #include <rtl/cli.h>
 
 static void prodtest_crc_enable(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
   cli_enable_crc(cli);
   cli_ok(cli, "");
 }
 
 static void prodtest_crc_disable(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
   cli_disable_crc(cli);
   cli_ok(cli, "");
 }
