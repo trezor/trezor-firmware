@@ -14,6 +14,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/io/notify/inc",
         "embed/io/tsqueue/inc",
         "embed/sec/monoctr/inc",
+        "embed/sec/option_bytes/inc",
         "embed/sec/random_delays/inc",
         "embed/sec/rng/inc",
         "embed/sec/secure_aes/inc",
@@ -36,7 +37,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/cpuid/inc",
         "embed/util/flash/inc",
         "embed/util/fwutils/inc",
-        "embed/util/option_bytes/inc",
         "vendor/micropython/lib/cmsis/inc",
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
         "vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
@@ -70,6 +70,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/io/tsqueue/tsqueue.c",
         "embed/sec/board_capabilities/stm32/board_capabilities.c",
         "embed/sec/monoctr/stm32f4/monoctr.c",
+        "embed/sec/option_bytes/stm32f4/option_bytes.c",
         "embed/sec/random_delays/stm32/random_delays.c",
         "embed/sec/rng/rng_strong.c",
         "embed/sec/secret/stm32f4/secret.c",
@@ -107,7 +108,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/flash/stm32f4/flash_layout.c",
         "embed/util/flash/stm32f4/flash_otp.c",
         "embed/util/fwutils/fwutils.c",
-        "embed/util/option_bytes/stm32f4/option_bytes.c",
     ]
 
     if "dbg_console" in features_wanted:

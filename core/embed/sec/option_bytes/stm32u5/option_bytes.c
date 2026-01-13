@@ -23,8 +23,8 @@
 
 #ifdef SECURE_MODE
 
+#include <sec/option_bytes.h>
 #include <util/flash.h>
-#include <util/option_bytes.h>
 
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file

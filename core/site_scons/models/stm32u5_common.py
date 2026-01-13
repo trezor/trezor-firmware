@@ -16,6 +16,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/board_capabilities/inc",
         "embed/sec/hash_processor/inc",
         "embed/sec/monoctr/inc",
+        "embed/sec/option_bytes/inc",
         "embed/sec/random_delays/inc",
         "embed/sec/rng/inc",
         "embed/sec/secret/inc",
@@ -39,7 +40,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/cpuid/inc",
         "embed/util/flash/inc",
         "embed/util/fwutils/inc",
-        "embed/util/option_bytes/inc",
         "vendor/stm32u5xx_hal_driver/Inc",
         "vendor/cmsis_device_u5/Include",
         "vendor/cmsis_5/CMSIS/Core/Include",
@@ -93,6 +93,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/board_capabilities/stm32/board_capabilities.c",
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
         "embed/sec/monoctr/stm32u5/monoctr.c",
+        "embed/sec/option_bytes/stm32u5/option_bytes.c",
         "embed/sec/random_delays/stm32/random_delays.c",
         "embed/sec/rng/rng_strong.c",
         "embed/sec/secret/stm32u5/secret.c",
@@ -136,7 +137,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/flash/stm32u5/flash_layout.c",
         "embed/util/flash/stm32u5/flash_otp.c",
         "embed/util/fwutils/fwutils.c",
-        "embed/util/option_bytes/stm32u5/option_bytes.c",
     ]
 
     if "dbg_console" in features_wanted:
