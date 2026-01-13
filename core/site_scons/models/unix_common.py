@@ -12,6 +12,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
     paths += [
         "embed/io/notify/inc",
         "embed/io/display/inc",
+        "embed/sec/fwutils/inc",
         "embed/sec/random_delays/inc",
         "embed/sec/time_estimate/inc",
         "embed/sys/bsp/inc",
@@ -29,7 +30,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/startup/inc",
         "embed/sys/task/inc",
         "embed/sys/time/inc",
-        "embed/util/fwutils/inc",
     ]
 
     sources += [
@@ -37,6 +37,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/io/notify/notify.c",
         "embed/io/usb/unix/sock.c",
         "embed/sec/board_capabilities/unix/board_capabilities.c",
+        "embed/sec/fwutils/fwutils.c",
         "embed/sec/random_delays/unix/random_delays.c",
         "embed/sec/secret/unix/secret.c",
         "embed/sec/secret/unix/secret_keys.c",
@@ -58,7 +59,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/task/unix/systask.c",
         "embed/sys/time/unix/systick.c",
         "embed/sys/time/unix/systimer.c",
-        "embed/util/fwutils/fwutils.c",
     ]
 
     if "usb" in features_wanted:
