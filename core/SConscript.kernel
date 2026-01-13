@@ -444,6 +444,7 @@ rust = tools.add_rust_lib(
     all_paths=ALLPATHS,
     build_dir=str(Dir('.').abspath),
 )
+obj_program += [rust]
 
 
 if "secmon_layout" in FEATURES_AVAILABLE:
@@ -460,7 +461,6 @@ program_elf = env.Command(
 )
 
 env.Depends(program_elf, linkerscript_gen)
-env.Depends(program_elf, rust)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)

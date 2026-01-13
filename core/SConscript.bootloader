@@ -278,6 +278,7 @@ obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-
 obj_program += env.Object(source=SOURCE_BOOTLOADER)
 obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_HAL)
+obj_program += [rust]
 
 if 'boot_ucb' in FEATURES_AVAILABLE:
     obj_program += env.Object(
@@ -299,7 +300,6 @@ program_elf = env.Command(
 )
 
 env.Depends(program_elf, linkerscript_gen)
-env.Depends(program_elf, rust)
 
 SUFFIX = '_qa' if BOOTLOADER_QA else ''
 

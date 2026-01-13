@@ -338,6 +338,7 @@ rust = tools.add_rust_lib(
     all_paths=ALLPATHS,
     build_dir=str(Dir('.').abspath),
 )
+obj_program += [rust]
 
 
 if (vh := ARGUMENTS.get("VENDOR_HEADER", None)):
@@ -378,7 +379,6 @@ program_elf = env.Command(
 )
 
 env.Depends(program_elf, linkerscript_gen)
-env.Depends(program_elf, rust)
 
 BINARY_NAME = f"build/prodtest/prodtest-{TREZOR_MODEL}"
 BINARY_NAME += "-" + tools.get_version('embed/projects/prodtest/version.h')

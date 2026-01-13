@@ -302,14 +302,13 @@ obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-
 obj_program += env.Object(source=SOURCE_PRODTEST)
 obj_program += env.Object(source=SOURCE_HAL)
 obj_program += env.Object(source=SOURCE_MLDSA)
+obj_program += [rust]
 
 program_elf = env.Command(
     target='prodtest.elf',
     source=obj_program,
     action=
     '$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS')
-
-env.Depends(program_elf, rust)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
