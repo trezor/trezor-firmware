@@ -20,7 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/notify.h>
+#include <io/notify.h>
 #include <util/flash_utils.h>
 
 #ifdef USE_BLE

@@ -10,6 +10,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
     ]
 
     paths += [
+        "embed/io/notify/inc",
         "embed/io/display/inc",
         "embed/sec/random_delays/inc",
         "embed/sec/time_estimate/inc",
@@ -20,7 +21,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secret/inc",
         "embed/sys/irq/inc",
         "embed/sys/mpu/inc",
-        "embed/sys/notify/inc",
         "embed/sys/rng/inc",
         "embed/sys/startup/inc",
         "embed/sys/task/inc",
@@ -34,6 +34,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
 
     sources += [
         "embed/io/display/unix/display_driver.c",
+        "embed/io/notify/notify.c",
         "embed/io/usb/unix/sock.c",
         "embed/sec/random_delays/unix/random_delays.c",
         "embed/sec/secret/unix/secret.c",
@@ -44,7 +45,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/rng/rng_strong.c",
         "embed/sec/time_estimate/unix/time_estimate.c",
         "embed/sys/mpu/unix/mpu.c",
-        "embed/sys/notify/notify.c",
         "embed/sys/rng/unix/rng.c",
         "embed/sys/startup/unix/bootutils.c",
         "embed/sys/task/sysevent.c",

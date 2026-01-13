@@ -11,6 +11,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
     ]
 
     paths += [
+        "embed/io/notify/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/random_delays/inc",
         "embed/sec/rng/inc",
@@ -21,7 +22,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/irq/inc",
         "embed/sys/linker/inc",
         "embed/sys/mpu/inc",
-        "embed/sys/notify/inc",
         "embed/sys/pvd/inc",
         "embed/sys/rng/inc",
         "embed/sec/secret/inc",
@@ -66,6 +66,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
     ]
 
     sources += [
+        "embed/io/notify/notify.c",
         "embed/sec/monoctr/stm32f4/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",
         "embed/sec/rng/rng_strong.c",
@@ -77,7 +78,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/irq/stm32/irq.c",
         "embed/sys/linker/linker_utils.c",
         "embed/sys/mpu/stm32f4/mpu.c",
-        "embed/sys/notify/notify.c",
         "embed/sys/pvd/stm32/pvd.c",
         "embed/sys/rng/stm32/rng.c",
         "embed/sys/stack/stm32/stack_utils.c",

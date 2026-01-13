@@ -37,9 +37,9 @@
 #include <io/usb.h>
 #include <sys/logging.h>
 
+#include <io/notify.h>
 #include <sec/secret_keys.h>
 #include <sys/bootutils.h>
-#include <sys/notify.h>
 #include <util/fwutils.h>
 #include <util/scm_revision.h>
 #include <util/unit_properties.h>

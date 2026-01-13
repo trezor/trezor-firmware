@@ -11,6 +11,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     ]
 
     paths += [
+        "embed/io/notify/inc",
         "embed/sec/hash_processor/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/random_delays/inc",
@@ -24,7 +25,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/irq/inc",
         "embed/sys/linker/inc",
         "embed/sys/mpu/inc",
-        "embed/sys/notify/inc",
         "embed/sys/pvd/inc",
         "embed/sys/rng/inc",
         "embed/sys/stack/inc",
@@ -88,6 +88,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         ]
 
     sources += [
+        "embed/io/notify/notify.c",
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
         "embed/sec/monoctr/stm32u5/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",
@@ -103,7 +104,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/irq/stm32/irq.c",
         "embed/sys/linker/linker_utils.c",
         "embed/sys/mpu/stm32u5/mpu.c",
-        "embed/sys/notify/notify.c",
         "embed/sys/pvd/stm32/pvd.c",
         "embed/sys/rng/stm32/rng.c",
         "embed/sys/smcall/stm32/smcall_dispatch.c",
