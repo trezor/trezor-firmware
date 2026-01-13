@@ -20,7 +20,7 @@
 #pragma once
 
 #include "codec_v1.h"
-#include "util/image.h"
+#include "sec/image.h"
 
 wire_iface_t *usb_iface_init(secbool usb21_landing);
 

@@ -24,11 +24,11 @@
 #include <trezor_rtl.h>
 
 #include <rtl/sizedefs.h>
+#include <sec/boot_header.h>
+#include <sec/boot_ucb.h>
+#include <sec/image_hash_conf.h>
 #include <sys/flash.h>
 #include <sys/mpu.h>
-#include <util/boot_header.h>
-#include <util/boot_ucb.h>
-#include <util/image_hash_conf.h>
 
 #define BOOT_UCB_MAGIC 0x5A8C7BF3
 

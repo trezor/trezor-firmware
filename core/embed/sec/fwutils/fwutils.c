@@ -24,9 +24,9 @@
 #include <trezor_rtl.h>
 
 #include <sec/fwutils.h>
+#include <sec/image.h>
 #include <sys/flash.h>
 #include <sys/systask.h>
-#include <util/image.h>
 
 #include "blake2s.h"
 

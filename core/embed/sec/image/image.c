@@ -22,9 +22,9 @@
 
 #include "ed25519-donna/ed25519.h"
 
+#include <sec/image.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
-#include <util/image.h>
 
 #ifdef STM32F4
 _Static_assert(BOOTLOADER_VECTBL_OFFSET == IMAGE_HEADER_SIZE,

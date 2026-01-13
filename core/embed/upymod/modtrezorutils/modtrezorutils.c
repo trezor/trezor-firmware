@@ -26,7 +26,7 @@
 #include "py/objstr.h"
 #include "py/runtime.h"
 
-#include <util/image.h>
+#include <sec/image.h>
 #include "version.h"
 
 #if MICROPY_PY_TREZORUTILS

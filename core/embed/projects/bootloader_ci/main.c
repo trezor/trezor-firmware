@@ -26,6 +26,7 @@
 #include <io/display.h>
 #include <io/usb.h>
 #include <io/usb_config.h>
+#include <sec/image.h>
 #include <sec/random_delays.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
@@ -35,7 +36,6 @@
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/image.h>
 #include <util/rsod.h>
 
 #include "version.h"

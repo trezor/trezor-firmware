@@ -35,11 +35,11 @@
 
 #include <io/display.h>
 #include <io/notify.h>
+#include <sec/boot_image.h>
 #include <sys/linker_utils.h>
 #include <sys/logging.h>
 #include <sys/systask.h>
 #include <sys/system.h>
-#include <util/boot_image.h>
 #include <util/rsod.h>
 #include "rust_ui_common.h"
 

@@ -22,14 +22,14 @@
 
 #include <rtl/cli.h>
 #include <sec/board_capabilities.h>
+#include <sec/boot_image.h>
+#include <sec/image.h>
 #include <sys/mpu.h>
-#include <util/boot_image.h>
-#include <util/image.h>
 
 #include "common.h"
 
 #ifdef USE_BOOT_UCB
-#include <util/boot_header.h>
+#include <sec/boot_header.h>
 #endif
 
 static void prodtest_bootloader_version(cli_t *cli) {

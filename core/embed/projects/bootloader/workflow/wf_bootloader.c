@@ -21,8 +21,8 @@
 #include <trezor_rtl.h>
 
 #include <io/notify.h>
+#include <sec/image.h>
 #include <sys/types.h>
-#include <util/image.h>
 
 #ifdef USE_POWER_MANAGER
 #include <io/power_manager.h>

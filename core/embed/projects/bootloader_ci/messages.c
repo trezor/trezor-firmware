@@ -26,10 +26,10 @@
 #include "pb/messages.pb.h"
 
 #include <io/usb.h>
+#include <sec/image.h>
 #include <sys/flash.h>
 #include <sys/flash_utils.h>
 #include <sys/sysevent.h>
-#include <util/image.h>
 #include "version.h"
 
 #include "bootui.h"

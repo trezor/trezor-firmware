@@ -78,7 +78,7 @@ void reboot_and_upgrade__verified(const uint8_t hash[32]);
 
 // ---------------------------------------------------------------------
 
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 
 bool boot_image_check__verified(const boot_image_t *image);
 

@@ -22,7 +22,7 @@
 
 #include <trezor_types.h>
 
-#include <util/image.h>
+#include <sec/image.h>
 
 #define USB_TIMEOUT 500
 #define USB_PACKET_SIZE 64

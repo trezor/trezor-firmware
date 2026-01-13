@@ -21,6 +21,7 @@
 #include <trezor_model.h>
 
 #include <sec/board_capabilities.h>
+#include <sec/boot_image.h>
 #include <sec/option_bytes.h>
 #include <sec/random_delays.h>
 #include <sec/secure_aes.h>
@@ -30,7 +31,6 @@
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
-#include <util/boot_image.h>
 
 #ifdef USE_BACKUP_RAM
 #include <sec/backup_ram.h>

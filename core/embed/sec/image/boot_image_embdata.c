@@ -19,7 +19,7 @@
 
 #include <trezor_model.h>
 
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 
 #define CONCAT_NAME_HELPER(prefix, name, suffix) prefix##name##suffix
 #define CONCAT_NAME(name, var) CONCAT_NAME_HELPER(BOOTLOADER_, name, var)

@@ -5,11 +5,11 @@
 #include <gfx/terminal.h>
 
 #include <io/display.h>
+#include <sec/image.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
 #include <sys/flash_utils.h>
 #include <sys/systick.h>
-#include <util/image.h>
 
 #include "memzero.h"
 

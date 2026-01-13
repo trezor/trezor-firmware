@@ -93,12 +93,12 @@ SOURCE_MOD += [
     'embed/gfx/gfx_draw.c',
     'embed/gfx/terminal.c',
     'embed/io/display/display_utils.c',
-    'embed/util/image/image.c',
     'embed/util/rsod/rsod.c',
     'embed/util/rsod/rsod_special.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/scm_revision.c',
     'embed/rtl/strutils.c',
+    'embed/sec/image/image.c',
     'embed/sys/flash/flash_utils.c',
 ]
 
@@ -153,8 +153,8 @@ env.Replace(
         'embed/io/haptic/inc',
         'embed/io/touch/inc',
         'embed/io/usb/inc',
+        'embed/sec/image/inc',
         'embed/sys/bsp/inc',
-        'embed/util/image/inc',
         'embed/util/rsod/inc',
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,

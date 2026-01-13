@@ -39,7 +39,7 @@ void bootargs_get_args(boot_args_t *args) {
 // boot_image.h
 // =============================================================================
 
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 
 bool boot_image_check(const boot_image_t *image) {
   return (bool)smcall_invoke1((uint32_t)image, SMCALL_BOOT_IMAGE_CHECK);

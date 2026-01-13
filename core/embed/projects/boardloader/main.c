@@ -33,10 +33,10 @@
 #include <util/rsod.h>
 
 #ifdef USE_BOOT_UCB
-#include <util/boot_header.h>
-#include <util/boot_ucb.h>
+#include <sec/boot_header.h>
+#include <sec/boot_ucb.h>
 #else
-#include <util/image.h>
+#include <sec/image.h>
 #endif
 
 #ifdef USE_PMIC
