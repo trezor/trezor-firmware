@@ -26,8 +26,6 @@
 #include <rtl/sizedefs.h>
 #include <sys/irq.h>
 #include <sys/trustzone.h>
-#include <util/flash.h>
-#include <util/image.h>
 
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
 

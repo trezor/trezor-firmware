@@ -22,8 +22,14 @@
 
 #include "ed25519-donna/ed25519.h"
 
+#include <sys/bootutils.h>
 #include <util/flash.h>
 #include <util/image.h>
+
+#ifdef STM32F4
+_Static_assert(BOOTLOADER_VECTBL_OFFSET == IMAGE_HEADER_SIZE,
+               "BOOTLOADER_VECTBL_OFFSET must match IMAGE_HEADER_SIZE");
+#endif
 
 _Static_assert(VENDOR_HEADER_MAX_SIZE + IMAGE_HEADER_SIZE <= IMAGE_CHUNK_SIZE,
                "The size of the firmware headers must be less than or equal to "

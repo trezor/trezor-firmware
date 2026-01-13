@@ -19,21 +19,22 @@
 
 #ifdef KERNEL
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <rtl/sizedefs.h>
 #include <sec/rng.h>
 #include <sys/applet.h>
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
 #include <sys/systask.h>
-#include <util/image.h>
 
 static mpu_area_t coreapp_code_area;
 static mpu_area_t coreapp_tls_area;
 
 // defined in linker script
 extern uint32_t _kernel_flash_end;
-#define KERNEL_END COREAPP_CODE_ALIGN((uint32_t) & _kernel_flash_end)
+#define KERNEL_END ALIGN_UP((uint32_t) & _kernel_flash_end, COREAPP_ALIGNMENT)
 
 // Initializes coreapp applet
 void coreapp_init(applet_t* applet) {
