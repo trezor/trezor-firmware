@@ -26,10 +26,10 @@
 #include <io/usb.h>
 #include <io/usb_config.h>
 #include <rtl/cli.h>
+#include <sec/board_capabilities.h>
 #include <sec/unit_properties.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/board_capabilities.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
 

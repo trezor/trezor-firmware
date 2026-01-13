@@ -22,8 +22,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/board_capabilities.h>
 #include <sys/mpu.h>
-#include <util/board_capabilities.h>
 
 static uint32_t board_name = 0;
 

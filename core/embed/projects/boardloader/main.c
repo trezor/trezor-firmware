@@ -21,13 +21,13 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
+#include <sec/board_capabilities.h>
 #include <sec/secret.h>
 #include <sys/bootutils.h>
 #include <sys/reset_flags.h>
 #include <sys/rng.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/board_capabilities.h>
 #include <util/flash.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>

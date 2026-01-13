@@ -20,6 +20,7 @@
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 
+#include <sec/board_capabilities.h>
 #include <sec/random_delays.h>
 #include <sec/secure_aes.h>
 #include <sec/unit_properties.h>
@@ -27,7 +28,6 @@
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
-#include <util/board_capabilities.h>
 #include <util/boot_image.h>
 #include <util/flash.h>
 #include <util/option_bytes.h>

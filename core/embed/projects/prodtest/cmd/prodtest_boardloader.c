@@ -20,8 +20,8 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
+#include <sec/board_capabilities.h>
 #include <sys/mpu.h>
-#include <util/board_capabilities.h>
 #include <util/flash.h>
 
 #include "common.h"

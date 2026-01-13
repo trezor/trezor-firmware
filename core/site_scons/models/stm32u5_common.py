@@ -13,6 +13,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     paths += [
         "embed/io/notify/inc",
         "embed/io/tsqueue/inc",
+        "embed/sec/board_capabilities/inc",
         "embed/sec/hash_processor/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/random_delays/inc",
@@ -35,7 +36,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/task/inc",
         "embed/sys/time/inc",
         "embed/sys/trustzone/inc",
-        "embed/util/board_capabilities/inc",
         "embed/util/cpuid/inc",
         "embed/util/flash/inc",
         "embed/util/fwutils/inc",
@@ -90,6 +90,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     sources += [
         "embed/io/notify/notify.c",
         "embed/io/tsqueue/tsqueue.c",
+        "embed/sec/board_capabilities/stm32/board_capabilities.c",
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
         "embed/sec/monoctr/stm32u5/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",
@@ -130,7 +131,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/time/stm32/systimer.c",
         "embed/sys/task/sysevent.c",
         "embed/sys/trustzone/stm32u5/trustzone.c",
-        "embed/util/board_capabilities/stm32/board_capabilities.c",
         "embed/util/cpuid/stm32/cpuid.c",
         "embed/util/flash/stm32u5/flash.c",
         "embed/util/flash/stm32u5/flash_layout.c",
