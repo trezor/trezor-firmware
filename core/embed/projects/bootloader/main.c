@@ -66,7 +66,7 @@
 #include <sys/rtc.h>
 #endif
 #ifdef USE_TAMPER
-#include <sys/tamper.h>
+#include <sec/tamper.h>
 #endif
 #ifdef USE_BLE
 #include <io/ble.h>

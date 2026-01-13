@@ -106,7 +106,7 @@
 #endif
 
 #ifdef USE_TAMPER
-#include <sys/tamper.h>
+#include <sec/tamper.h>
 #endif
 
 #ifdef TREZOR_MODEL_T2T1
