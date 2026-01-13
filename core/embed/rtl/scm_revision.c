@@ -17,6 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <util/scm_revision.h>
+#include <rtl/scm_revision.h>
 
 const uint8_t SCM_REVISION[] = SCM_REVISION_INIT;

@@ -28,7 +28,7 @@
 #include <rtl/strutils.h>
 
 #ifdef SCM_REVISION_INIT
-#include <util/scm_revision.h>
+#include <rtl/scm_revision.h>
 #endif
 
 #define RSOD_DEFAULT_TITLE "Internal error";
