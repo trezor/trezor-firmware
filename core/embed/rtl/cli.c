@@ -574,6 +574,12 @@ static bool cli_split_args(cli_t* cli) {
   cli->cmd_name = cstr_token(&buf);
   cli->args_count = 0;
 
+  // Single crc check?
+  if (cstr_ends_with(cli->line_buffer, "&crc")) {
+    cstr_remove_suffix(cli->line_buffer, "&crc");
+    cli->crc_single = true;
+  }
+
   while (*buf != '\0' && cli->args_count < CLI_MAX_ARGS) {
     const char* arg = cstr_token(&buf);
     if (*arg != '\0') {
@@ -627,56 +633,37 @@ const cli_command_t* cli_process_io(cli_t* cli) {
     goto cleanup;
   }
 
-  // Handle optional CRC check
-  size_t len = strlen(cli->line_buffer);
+  // Calculate CRC of the command line (excluding the expected CRC suffix)
+  // (we may not use the value if crc is not requested)
+  uint32_t calculated_crc =
+      ~cli_crc32(CRC32_INITIAL, cli->line_buffer, MAX(cli->line_len - 8, 0));
 
-  // Check for &crc alternative for single command if not already in CRC mode
-  if (!cli->crc_req) {
-    char* ampersand = strchr(cli->line_buffer, '&');
-    if (ampersand != NULL && strncmp(ampersand, "&crc", 4) == 0) {
-      // Find if &crc is in the first word
-      char* space = strchr(cli->line_buffer, ' ');
-      if (space == NULL || ampersand < space) {
-        cli->crc_req = true;
-        cli->crc_single = true;
-      }
-    }
+  // Split command line into arguments
+  if (!cli_split_args(cli)) {
+    cli_error(cli, CLI_ERROR_FATAL, "Too many arguments.");
+    goto cleanup;
   }
 
-  if (cli->crc_req) {
-    if (len >= 9) {
-      char* space = &cli->line_buffer[len - 9];
-      if (*space == ' ' || *space == '&') {
-        uint32_t received_crc;
-        if (cstr_parse_uint32(space + 1, 16, &received_crc)) {
-          uint32_t calculated_crc =
-              ~cli_crc32(CRC32_INITIAL, cli->line_buffer, len - 9);
-          if (calculated_crc == received_crc) {
-            *space = '\0';
-          } else {
-            cli_error(cli, CLI_ERROR_INVALID_CRC, "Expected %08X, got %08X",
-                      calculated_crc, received_crc);
-            goto cleanup;
-          }
-        } else {
-          cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
-          goto cleanup;
-        }
-      } else {
-        cli_error(cli, CLI_ERROR_INVALID_CRC, "CRC suffix missing");
-        goto cleanup;
-      }
-    } else {
-      cli_error(cli, CLI_ERROR_INVALID_CRC, "Line too short for CRC");
+  if (cli->crc_single || cli->crc_req) {
+    if (cli->args_count < 1) {
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "CRC suffix missing");
       goto cleanup;
     }
-  }
 
-  // Validate and strip the command-specific &crc if present
-  char* ampersand = strchr(cli->line_buffer, '&');
-  if (ampersand != NULL && strncmp(ampersand, "&crc", 4) == 0) {
-    // Strip &crc
-    memmove(ampersand, ampersand + 4, strlen(ampersand + 4) + 1);
+    uint32_t crc = 0;
+
+    if (!cstr_parse_uint32(cli->args[cli->args_count - 1], 16, &crc)) {
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
+      goto cleanup;
+    }
+
+    if (calculated_crc != crc) {
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Expected %08X, got %08X",
+                calculated_crc, crc);
+      goto cleanup;
+    }
+
+    --cli->args_count;
   }
 
   cli_history_add(cli, cli->line_buffer);
