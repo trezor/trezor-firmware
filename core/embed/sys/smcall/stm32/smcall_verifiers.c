@@ -575,7 +575,7 @@ access_violation:
 #endif
 
 #ifdef USE_TELEMETRY
-#include <util/telemetry.h>
+#include <sec/telemetry.h>
 
 // Telemetry verifiers
 void telemetry_update_battery_temp__verified(float temp_c) {
