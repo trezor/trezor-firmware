@@ -17,13 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <util/cpuid.h>
+#include <sys/cpuid.h>
+#include <sys/mpu.h>
+
+#ifdef STM32U5
+#include "stm32u5xx_ll_utils.h"
+#else
+#include "stm32f4xx_ll_utils.h"
+#endif
 
 void cpuid_get(cpuid_t* cpuid) {
-  cpuid->id[0] = 0;
-  cpuid->id[1] = 0;
-  cpuid->id[2] = 0;
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+  cpuid->id[0] = LL_GetUID_Word0();
+  cpuid->id[1] = LL_GetUID_Word1();
+  cpuid->id[2] = LL_GetUID_Word2();
+  mpu_restore(mpu_mode);
 }
+
+#endif
