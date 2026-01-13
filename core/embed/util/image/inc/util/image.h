@@ -22,7 +22,7 @@
 #include <trezor_model.h>
 #include <trezor_types.h>
 
-#include <util/flash.h>
+#include <sys/flash.h>
 #include "blake2s.h"
 
 #include "image_hash_conf.h"

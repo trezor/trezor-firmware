@@ -21,7 +21,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <util/flash.h>
+#include <sys/flash.h>
 
 #ifdef KERNEL_MODE
 

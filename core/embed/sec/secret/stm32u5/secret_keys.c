@@ -158,8 +158,8 @@ secbool secret_key_storage_salt(uint16_t fw_type,
 
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 #include <sec/rng_strong.h>
+#include <sys/flash_otp.h>
 #include <sys/mpu.h>
-#include <util/flash_otp.h>
 
 #ifdef USE_OPTIGA
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {

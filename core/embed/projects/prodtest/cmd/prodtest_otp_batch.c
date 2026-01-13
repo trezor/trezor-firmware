@@ -21,7 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <util/flash_otp.h>
+#include <sys/flash_otp.h>
 
 static void prodtest_otp_read(cli_t* cli, uint8_t block_num) {
   if (cli_arg_count(cli) > 0) {

@@ -22,7 +22,7 @@
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 
-#include <util/flash.h>
+#include <sys/flash.h>
 
 #include "../layout_helpers.h"
 

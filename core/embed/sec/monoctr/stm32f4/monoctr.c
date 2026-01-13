@@ -21,8 +21,8 @@
 #include <trezor_rtl.h>
 
 #include <sec/monoctr.h>
+#include <sys/flash_otp.h>
 #include <sys/mpu.h>
-#include <util/flash_otp.h>
 
 #ifdef KERNEL_MODE
 

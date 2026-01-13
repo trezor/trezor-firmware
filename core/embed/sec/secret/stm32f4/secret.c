@@ -21,9 +21,9 @@
 #include <trezor_rtl.h>
 
 #include <sec/secret.h>
+#include <sys/flash.h>
+#include <sys/flash_utils.h>
 #include <sys/mpu.h>
-#include <util/flash.h>
-#include <util/flash_utils.h>
 #include <util/rsod_special.h>
 
 #ifdef KERNEL_MODE

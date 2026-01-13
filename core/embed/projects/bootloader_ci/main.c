@@ -29,12 +29,12 @@
 #include <sec/random_delays.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
+#include <sys/flash_otp.h>
 #include <sys/mpu.h>
 #include <sys/rng.h>
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/flash_otp.h>
 #include <util/image.h>
 #include <util/rsod.h>
 

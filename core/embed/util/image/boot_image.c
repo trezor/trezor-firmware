@@ -24,9 +24,9 @@
 
 #include <sec/board_capabilities.h>
 #include <sec/monoctr.h>
+#include <sys/flash.h>
 #include <sys/mpu.h>
 #include <util/boot_image.h>
-#include <util/flash.h>
 #include <util/image.h>
 
 #include "blake2s.h"

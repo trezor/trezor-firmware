@@ -23,9 +23,9 @@
 #include <trezor_rtl.h>
 
 #include <sec/secret_keys.h>
+#include <sys/flash_otp.h>
 #include <sys/mpu.h>
 #include <sys/rng.h>
-#include <util/flash_otp.h>
 #include <util/image.h>
 
 #include "stm32u5xx_ll_utils.h"

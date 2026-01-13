@@ -23,8 +23,8 @@
 
 #include <sec/monoctr.h>
 #include <sec/secret.h>
+#include <sys/flash.h>
 #include <sys/mpu.h>
-#include <util/flash.h>
 
 static int32_t get_offset(monoctr_type_t type) {
   switch (type) {
