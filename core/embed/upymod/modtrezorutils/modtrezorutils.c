@@ -39,10 +39,10 @@
 
 #include <io/notify.h>
 #include <rtl/scm_revision.h>
+#include <sec/fwutils.h>
 #include <sec/secret_keys.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
-#include <util/fwutils.h>
 #include "blake2s.h"
 #include "memzero.h"
 

@@ -194,7 +194,7 @@ bool translations_write__verified(const uint8_t *data, uint32_t offset,
 const uint8_t *translations_read__verified(uint32_t *len, uint32_t offset);
 
 // ---------------------------------------------------------------------
-#include <util/fwutils.h>
+#include <sec/fwutils.h>
 
 int firmware_hash_start__verified(const uint8_t *challenge,
                                   size_t challenge_len);

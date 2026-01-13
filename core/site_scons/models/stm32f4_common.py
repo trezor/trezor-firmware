@@ -13,6 +13,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
     paths += [
         "embed/io/notify/inc",
         "embed/io/tsqueue/inc",
+        "embed/sec/fwutils/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/option_bytes/inc",
         "embed/sec/random_delays/inc",
@@ -36,7 +37,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/syscall/inc",
         "embed/sys/task/inc",
         "embed/sys/time/inc",
-        "embed/util/fwutils/inc",
         "vendor/micropython/lib/cmsis/inc",
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
         "vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
@@ -69,6 +69,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/io/notify/notify.c",
         "embed/io/tsqueue/tsqueue.c",
         "embed/sec/board_capabilities/stm32/board_capabilities.c",
+        "embed/sec/fwutils/fwutils.c",
         "embed/sec/monoctr/stm32f4/monoctr.c",
         "embed/sec/option_bytes/stm32f4/option_bytes.c",
         "embed/sec/random_delays/stm32/random_delays.c",
@@ -107,7 +108,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/time/stm32/systick.c",
         "embed/sys/time/stm32/systimer.c",
         "embed/sys/task/sysevent.c",
-        "embed/util/fwutils/fwutils.c",
     ]
 
     if "dbg_console" in features_wanted:

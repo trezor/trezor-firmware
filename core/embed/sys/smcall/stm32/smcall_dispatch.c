@@ -22,6 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <sec/board_capabilities.h>
+#include <sec/fwutils.h>
 #include <sec/random_delays.h>
 #include <sec/rng_strong.h>
 #include <sec/secret.h>
@@ -31,7 +32,6 @@
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/system.h>
-#include <util/fwutils.h>
 
 #ifdef USE_BACKUP_RAM
 #include <sec/backup_ram.h>

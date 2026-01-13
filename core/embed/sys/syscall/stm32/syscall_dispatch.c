@@ -27,6 +27,7 @@
 #include <io/display.h>
 #include <io/notify.h>
 #include <io/usb.h>
+#include <sec/fwutils.h>
 #include <sec/rng_strong.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
@@ -37,7 +38,6 @@
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/fwutils.h>
 #include <util/translations.h>
 
 #ifdef USE_BLE

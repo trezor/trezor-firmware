@@ -14,6 +14,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/io/notify/inc",
         "embed/io/tsqueue/inc",
         "embed/sec/board_capabilities/inc",
+        "embed/sec/fwutils/inc",
         "embed/sec/hash_processor/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/option_bytes/inc",
@@ -39,7 +40,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/task/inc",
         "embed/sys/time/inc",
         "embed/sys/trustzone/inc",
-        "embed/util/fwutils/inc",
         "vendor/stm32u5xx_hal_driver/Inc",
         "vendor/cmsis_device_u5/Include",
         "vendor/cmsis_5/CMSIS/Core/Include",
@@ -92,6 +92,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/io/tsqueue/tsqueue.c",
         "embed/sec/board_capabilities/stm32/board_capabilities.c",
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
+        "embed/sec/fwutils/fwutils.c",
         "embed/sec/monoctr/stm32u5/monoctr.c",
         "embed/sec/option_bytes/stm32u5/option_bytes.c",
         "embed/sec/random_delays/stm32/random_delays.c",
@@ -136,7 +137,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/time/stm32/systimer.c",
         "embed/sys/task/sysevent.c",
         "embed/sys/trustzone/stm32u5/trustzone.c",
-        "embed/util/fwutils/fwutils.c",
     ]
 
     if "dbg_console" in features_wanted:

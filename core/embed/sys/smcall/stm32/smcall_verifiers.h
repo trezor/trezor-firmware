@@ -115,7 +115,7 @@ void rng_fill_buffer__verified(void *buffer, size_t buffer_size);
 bool rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size);
 
 // ---------------------------------------------------------------------
-#include <util/fwutils.h>
+#include <sec/fwutils.h>
 
 int firmware_hash_start__verified(const uint8_t *challenge,
                                   size_t challenge_len);
