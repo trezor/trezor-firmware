@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #include <sys/power_manager.h>
 #include <sys/systick.h>
 

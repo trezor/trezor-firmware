@@ -104,11 +104,11 @@ def configure(
     defines += [("USE_I2C", "1")]
 
     sources += [
-        "embed/sys/backup_ram/backup_ram_crc.c",
-        "embed/sys/backup_ram/stm32u5/backup_ram.c",
+        "embed/sec/backup_ram/backup_ram_crc.c",
+        "embed/sec/backup_ram/stm32u5/backup_ram.c",
     ]
 
-    paths += ["embed/sys/backup_ram/inc"]
+    paths += ["embed/sec/backup_ram/inc"]
     defines += [("USE_BACKUP_RAM", "1")]
 
     if "rtc" in features_wanted:

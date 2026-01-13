@@ -375,7 +375,7 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
 
 #ifdef USE_BACKUP_RAM
 
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 
 uint16_t backup_ram_search(uint16_t min_key) {
   return (bool)smcall_invoke1(min_key, SMCALL_BACKUP_RAM_SEARCH);
