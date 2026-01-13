@@ -214,11 +214,11 @@ if 'boot_ucb' in FEATURES_AVAILABLE:
 
 SOURCE_MOD += [
     'embed/io/translations/translations.c',
-    'embed/util/rsod/rsod_special.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/strutils.c',
     'embed/sec/image/boot_image.c',
     'embed/sec/image/image.c',
+    'embed/sec/rsod/rsod_special.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -310,8 +310,8 @@ ALLPATHS = [
         'embed/io/gfx/inc',
         'embed/io/translations/inc',
         'embed/sec/image/inc',
+        'embed/sec/rsod/inc',
         'embed/sys/bsp/inc',
-        'embed/util/rsod/inc',
     ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(

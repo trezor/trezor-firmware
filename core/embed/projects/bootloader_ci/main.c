@@ -24,6 +24,7 @@
 
 #include <io/display.h>
 #include <io/gfx_draw.h>
+#include <io/rsod.h>
 #include <io/usb.h>
 #include <io/usb_config.h>
 #include <sec/image.h>
@@ -36,7 +37,6 @@
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/rsod.h>
 
 #include "version.h"
 

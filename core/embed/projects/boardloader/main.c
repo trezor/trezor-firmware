@@ -21,6 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
+#include <io/rsod.h>
 #include <sec/board_capabilities.h>
 #include <sec/option_bytes.h>
 #include <sec/secret.h>
@@ -30,7 +31,6 @@
 #include <sys/rng.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/rsod.h>
 
 #ifdef USE_BOOT_UCB
 #include <sec/boot_header.h>

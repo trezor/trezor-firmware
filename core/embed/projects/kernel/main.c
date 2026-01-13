@@ -22,6 +22,7 @@
 
 #include <io/display.h>
 #include <io/gfx_bitblt.h>
+#include <io/rsod.h>
 #include <sec/board_capabilities.h>
 #include <sec/boot_image.h>
 #include <sec/option_bytes.h>
@@ -36,7 +37,6 @@
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/rsod.h>
 
 #ifdef USE_BUTTON
 #include <io/button.h>

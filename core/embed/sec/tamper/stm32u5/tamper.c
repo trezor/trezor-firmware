@@ -22,12 +22,12 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <io/rsod.h>
 #include <sec/tamper.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
 #include <sys/systick.h>
-#include <util/rsod.h>
 
 // Fixes a typo in CMSIS Device library for STM32U5
 #undef TAMP_CR3_ITAMP7NOER_Msk

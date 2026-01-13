@@ -20,27 +20,38 @@
 #pragma once
 
 #include <sys/bootutils.h>
+#include <sys/systask.h>
 
 /**
- * Shows RSOD screen with "Wipe code entered" message
- * and shuts down the device.
+ * Shows RSOD (Red Screen of Death) using terminal.
+ *
+ * @param pminfo Pointer to the post mortem to display
  */
-void __attribute__((noreturn)) show_wipe_code_screen(void);
+void rsod_terminal(const systask_postmortem_t* pminfo);
 
 /**
- * Shows RSOD screen with "Pin attempts exceeded" message
- * and shuts down the device.
+ * Shows RSOD (Red Screen of Death) using Rust GUI.
+ *
+ * @param pminfo Pointer to the post mortem to display
  */
-void __attribute__((noreturn)) show_pin_too_many_screen(void);
+void rsod_gui(const systask_postmortem_t* pminfo);
+
+#ifdef KERNEL_MODE
 
 /**
- * Shows RSOD screen with "Install restricted" message
- * and shuts down the device.
+ * Universal panic handler that can be passed to `system_init()` function
+ * to show RSOD screen describing the system error and halt the device
+ *
+ * (may be called from interrupt context)
+ *
+ * @param pminfo Pointer to the post mortem to display
  */
-void __attribute__((noreturn)) show_install_restricted_screen(void);
+void rsod_panic_handler(const systask_postmortem_t* pminfo);
 
 /**
  * Shows RSOD screen with "Device wiped" message
  * and shuts down the device.
  */
-void show_wipe_info(const bootutils_wipe_info_t *info);
+void show_wipe_info(const bootutils_wipe_info_t* info);
+
+#endif  // KERNEL_MODE

@@ -20,12 +20,12 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/rsod_special.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
 #include <sys/flash_utils.h>
 #include <sys/systick.h>
-#include <util/rsod_special.h>
 
 #if defined(LOCKABLE_BOOTLOADER) || USE_STORAGE_HWKEY
 #include <sec/secret.h>

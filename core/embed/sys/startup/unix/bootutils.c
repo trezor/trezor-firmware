@@ -25,7 +25,6 @@
 #include <sys/bootutils.h>
 #include <sys/logging.h>
 #include <sys/systick.h>
-#include <util/rsod_special.h>
 
 LOG_DECLARE(bootutils)
 
@@ -82,6 +81,11 @@ __attribute__((noreturn)) void reboot_to_off(void) {
 
   exit(3);
 }
+
+// To avoid including higher-layer code, we declare this function here.
+// We expect to remove the show_wipe_info() call in the future as soon as
+// we are able to test the bootargs content using automated tests.
+extern void show_wipe_info(const bootutils_wipe_info_t* info);
 
 __attribute__((noreturn)) void reboot_and_wipe(
     const bootutils_wipe_info_t* info) {

@@ -21,6 +21,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/rsod_special.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
 #include <sys/bootutils.h>
@@ -28,7 +29,6 @@
 #include <sys/flash_utils.h>
 #include <sys/mpu.h>
 #include <sys/rng.h>
-#include <util/rsod_special.h>
 #include "memzero.h"
 
 #ifdef SECURE_MODE

@@ -91,14 +91,14 @@ SOURCE_MOD += [
     'embed/io/gfx/bitblt/gfx_bitblt_mono8.c',
     'embed/io/gfx/gfx_color.c',
     'embed/io/gfx/gfx_draw.c',
+    'embed/io/gfx/rsod.c',
     'embed/io/gfx/terminal/font_bitmap.c',
     'embed/io/gfx/terminal/terminal.c',
-    'embed/util/rsod/rsod.c',
-    'embed/util/rsod/rsod_special.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/scm_revision.c',
     'embed/rtl/strutils.c',
     'embed/sec/image/image.c',
+    'embed/sec/rsod/rsod_special.c',
     'embed/sys/flash/flash_utils.c',
 ]
 
@@ -154,8 +154,8 @@ env.Replace(
         'embed/io/touch/inc',
         'embed/io/usb/inc',
         'embed/sec/image/inc',
+        'embed/sec/rsod/inc',
         'embed/sys/bsp/inc',
-        'embed/util/rsod/inc',
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[

@@ -24,5 +24,5 @@
 // storage.
 
 #include <rtl/error_handling.h>
+#include <sec/rsod_special.h>
 #include <sys/systick.h>
-#include <util/rsod_special.h>

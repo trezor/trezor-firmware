@@ -23,6 +23,7 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
+#include <io/rsod.h>
 #include <io/usb.h>
 #include <io/usb_config.h>
 #include <rtl/cli.h>
@@ -31,7 +32,6 @@
 #include <sys/flash_otp.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/rsod.h>
 
 #include "commands.h"
 #include "rust_types.h"
