@@ -21,6 +21,8 @@
 
 #include <errno.h>
 
+#include "sysexit.h"
+
 // Suppresses the intellisense error in VSCode
 #ifndef __FILE_NAME__
 #define __FILE_NAME__ __FILE__

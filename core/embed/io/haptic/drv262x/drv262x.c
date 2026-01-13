@@ -23,7 +23,7 @@
 
 #include <io/haptic.h>
 #include <io/i2c_bus.h>
-#include <rtl/logging.h>
+#include <sys/logging.h>
 #include <sys/systick.h>
 
 #include "drv262x.h"

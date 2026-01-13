@@ -47,6 +47,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../io/usb/inc",
     "-I../sec/storage/inc",
     "-I../sys/dbg/inc",
+    "-I../sys/inc",
     "-I../sys/time/inc",
     "-I../sys/task/inc",
     "-I../sys/power_manager/inc",

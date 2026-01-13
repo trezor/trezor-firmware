@@ -34,8 +34,8 @@
 #include "ports/stm32/pendsv.h"
 
 #include <io/display.h>
-#include <rtl/logging.h>
 #include <sys/linker_utils.h>
+#include <sys/logging.h>
 #include <sys/notify.h>
 #include <sys/systask.h>
 #include <sys/system.h>

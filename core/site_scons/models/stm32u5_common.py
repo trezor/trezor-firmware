@@ -19,6 +19,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secure_aes/inc",
         "embed/sec/time_estimate/inc",
         "embed/sys/bsp/stm32u5",
+        "embed/sys/inc",
         "embed/sys/irq/inc",
         "embed/sys/linker/inc",
         "embed/sys/mpu/inc",

@@ -120,7 +120,7 @@ ssize_t dbg_console_write(const void *data, size_t data_size) {
 
 #ifdef USE_DBG_CONSOLE
 
-#include <rtl/logging.h>
+#include <sys/logging.h>
 
 bool syslog_start_record(const log_source_t *source, log_level_t level) {
   return (bool)syscall_invoke2((uint32_t)source, level,

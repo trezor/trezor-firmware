@@ -21,9 +21,9 @@
 
 #include <stdlib.h>
 
-#include <rtl/logging.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
+#include <sys/logging.h>
 #include <sys/systick.h>
 #include <util/rsod_special.h>
 

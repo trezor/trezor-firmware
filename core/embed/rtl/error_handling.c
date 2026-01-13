@@ -19,9 +19,6 @@
 
 #include <trezor_rtl.h>
 
-#include <sys/bootutils.h>
-#include <sys/system.h>
-
 #ifndef TREZOR_EMULATOR
 // Stack check guard value set in startup code.
 // This is used if stack protection is enabled.

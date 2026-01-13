@@ -6,9 +6,9 @@
 #include <SDL.h>
 
 #include <io/display.h>
-#include <rtl/logging.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
+#include <sys/logging.h>
 #include <util/flash.h>
 #include <util/flash_otp.h>
 #include "bootui.h"
