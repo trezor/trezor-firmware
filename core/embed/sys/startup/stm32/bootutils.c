@@ -31,7 +31,6 @@
 #include <sys/stack_utils.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
-#include <util/image.h>
 
 #ifdef STM32F4
 #include <io/display.h>
@@ -175,7 +174,7 @@ static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
     SysTick_Config(HAL_RCC_GetSysClockFreq() / 1000U);
     NVIC_SetPriority(SysTick_IRQn, 0);
 #endif
-    jump_to_vectbl(BOOTLOADER_START + IMAGE_HEADER_SIZE, command);
+    jump_to_vectbl(BOOTLOADER_START + BOOTLOADER_VECTBL_OFFSET, command);
   }
 #else
 #error Unsupported platform

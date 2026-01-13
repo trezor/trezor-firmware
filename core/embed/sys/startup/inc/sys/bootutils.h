@@ -21,6 +21,13 @@
 
 #include <sys/systask.h>
 
+#ifdef STM32F4
+// Offset of the vector table in the bootloader image.
+// This should match IMAGE_HEADER_SIZE in util/image.h.
+// Duplicated here to avoid circular dependency.
+#define BOOTLOADER_VECTBL_OFFSET 0x400
+#endif
+
 // Wipe information structure
 typedef struct {
   char title[64];

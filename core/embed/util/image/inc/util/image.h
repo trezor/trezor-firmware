@@ -39,10 +39,6 @@
 
 #define SECMON_IMAGE_MAGIC 0x43455354  // TSEC
 
-#define COREAPP_CODE_ALIGN(addr)                             \
-  ((((uint32_t)(uintptr_t)addr) + (COREAPP_ALIGNMENT - 1)) & \
-   ~(COREAPP_ALIGNMENT - 1))
-
 typedef struct {
   uint32_t magic;
   uint32_t hdrlen;

@@ -30,8 +30,6 @@
 #include <rtl/sizedefs.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
-#include <util/flash.h>
-#include <util/image.h>
 
 #include "stm32u5xx_ll_cortex.h"
 
@@ -128,7 +126,10 @@ static void mpu_set_attributes(void) {
   MPU->MAIR0 |= 0x44 << 24;
 }
 
-#define STORAGE_SIZE (NORCOW_SECTOR_SIZE * NORCOW_SECTOR_COUNT)
+#define STORAGE_SIZE (STORAGE_1_MAXSIZE + STORAGE_2_MAXSIZE)
+_Static_assert(STORAGE_1_START + STORAGE_1_MAXSIZE == STORAGE_2_START,
+               "storage regions not contiguous");
+
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_1_MAXSIZE, "norcow misconfigured");
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
@@ -178,7 +179,7 @@ extern uint32_t _kernel_flash_end;
 #define KERNEL_START FIRMWARE_START
 #endif
 
-#define KERNEL_END COREAPP_CODE_ALIGN((uint32_t) & _kernel_flash_end)
+#define KERNEL_END ALIGN_UP((uint32_t) & _kernel_flash_end, COREAPP_ALIGNMENT)
 #define KERNEL_SIZE (KERNEL_END - KERNEL_START)
 #endif  // KERNEL
 
