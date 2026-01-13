@@ -259,7 +259,7 @@ pm_status_t pm_get_state(pm_state_t* state) {
   }
 
   state->charging_limited = drv->charging_limited_latched;
-
+  state->battery_connected = !drv->battery_disconnected;
   state->power_status = drv->state;
   state->soc = drv->soc_ceiled;
   state->battery_temp = drv->pmic_data.ntc_temp;

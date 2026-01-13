@@ -8,8 +8,8 @@ use super::super::{
 use crate::{
     strutil::format_i64,
     trezorhal::power_manager::{
-        charging_disable, charging_enable, charging_state, is_charging_limited, is_ntc_connected,
-        soc, ChargingState,
+        charging_disable, charging_enable, charging_state, is_battery_connected,
+        is_charging_limited, is_ntc_connected, soc, ChargingState,
     },
     ui::{
         component::{Component, Event, EventCtx, Never, Qr},
@@ -64,6 +64,8 @@ impl Welcome {
             (true, "NTC Error")
         } else if is_charging_limited() {
             (true, "Charging Limited")
+        } else if !is_battery_connected() {
+            (true, "Battery Disconnected")
         } else {
             (false, "Error")
         };
@@ -137,8 +139,15 @@ impl Component for Welcome {
                     // Error case: Battery OCV jump detected event
                     if e.battery_ocv_jump_detected {
                         self.error_active = true;
-                        charging_disable();
                         self.error_headline = "Battery OCV Jump";
+                        charging_disable();
+                        ctx.request_paint();
+                    }
+                    // Error case: Battery disconnection detected
+                    if e.battery_connected_changed && !is_battery_connected() {
+                        self.error_active = true;
+                        self.error_headline = "Battery Disconnected";
+                        charging_disable();
                         ctx.request_paint();
                     }
                 }
