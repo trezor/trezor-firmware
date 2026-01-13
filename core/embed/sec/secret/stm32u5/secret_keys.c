@@ -157,7 +157,7 @@ secbool secret_key_storage_salt(uint16_t fw_type,
 }
 
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include <sys/mpu.h>
 #include <util/flash_otp.h>
 

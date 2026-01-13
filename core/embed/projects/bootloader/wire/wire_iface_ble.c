@@ -25,7 +25,7 @@
 
 #include <io/ble.h>
 #include <rtl/strutils.h>
-#include <sec/rng.h>
+#include <sys/rng.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 

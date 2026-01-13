@@ -21,9 +21,9 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
-#include <sec/rng.h>
 #include <sys/applet.h>
 #include <sys/mpu.h>
+#include <sys/rng.h>
 #include <sys/systask.h>
 
 #ifdef USE_TRUSTZONE

@@ -21,11 +21,11 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/rng.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
 #include <sys/bootutils.h>
 #include <sys/mpu.h>
+#include <sys/rng.h>
 #include <util/flash.h>
 #include <util/flash_utils.h>
 #include <util/rsod_special.h>

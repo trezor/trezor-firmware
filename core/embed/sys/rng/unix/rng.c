@@ -19,7 +19,7 @@
 
 #include <trezor_rtl.h>
 
-#include <sec/rng.h>
+#include <sys/rng.h>
 
 #include "rand.h"
 

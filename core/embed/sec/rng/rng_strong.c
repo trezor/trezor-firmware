@@ -19,7 +19,7 @@
 
 #include <trezor_rtl.h>
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 
 #ifdef SECURE_MODE
 

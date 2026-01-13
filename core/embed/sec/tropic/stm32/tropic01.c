@@ -24,7 +24,7 @@
 #include <libtropic.h>
 
 #include <memzero.h>
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include <sec/tropic.h>
 #include <sys/systick.h>
 

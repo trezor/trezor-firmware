@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include <sys/mpu.h>
 
 #include "chacha20poly1305/rfc7539.h"

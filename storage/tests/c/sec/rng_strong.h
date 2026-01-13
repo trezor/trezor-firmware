@@ -23,7 +23,7 @@
 
 #include "rand.h"
 
-// Minimal implementation of sec/rng.h from core/embed
+// Minimal implementation of sec/rng_strong.h for the storage tests
 
 static inline bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   random_buffer((uint8_t*)buffer, buffer_size);

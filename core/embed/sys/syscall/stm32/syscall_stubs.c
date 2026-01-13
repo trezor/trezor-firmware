@@ -586,7 +586,7 @@ uint32_t translations_area_bytesize(void) {
 // rng.h
 // =============================================================================
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 
 void rng_fill_buffer(void *buffer, size_t buffer_size) {
   syscall_invoke2((uint32_t)buffer, buffer_size, SYSCALL_RNG_FILL_BUFFER);

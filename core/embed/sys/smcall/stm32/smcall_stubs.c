@@ -313,7 +313,7 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
 // rng.h
 // =============================================================================
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 
 void rng_fill_buffer(void *buffer, size_t buffer_size) {
   smcall_invoke2((uint32_t)buffer, buffer_size, SMCALL_RNG_FILL_BUFFER);

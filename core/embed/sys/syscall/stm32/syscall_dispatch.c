@@ -26,7 +26,7 @@
 #include <gfx/dma2d_bitblt.h>
 #include <io/display.h>
 #include <io/usb.h>
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 #include <sys/bootutils.h>

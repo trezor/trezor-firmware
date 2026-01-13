@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <sec/random_delays.h>
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 #include <sys/bootargs.h>

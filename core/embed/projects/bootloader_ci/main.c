@@ -27,10 +27,10 @@
 #include <io/usb.h>
 #include <io/usb_config.h>
 #include <sec/random_delays.h>
-#include <sec/rng.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/mpu.h>
+#include <sys/rng.h>
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
