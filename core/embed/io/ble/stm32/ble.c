@@ -27,13 +27,13 @@
 
 #include <io/ble.h>
 #include <io/nrf.h>
+#include <io/tsqueue.h>
 #include <sec/backup_ram.h>
 #include <sec/unit_properties.h>
 #include <sys/irq.h>
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
-#include <util/tsqueue.h>
 
 #ifdef USE_POWER_MANAGER
 #include <io/power_manager.h>

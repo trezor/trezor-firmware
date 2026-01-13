@@ -12,6 +12,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
 
     paths += [
         "embed/io/notify/inc",
+        "embed/io/tsqueue/inc",
         "embed/sec/hash_processor/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/random_delays/inc",
@@ -39,7 +40,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/flash/inc",
         "embed/util/fwutils/inc",
         "embed/util/option_bytes/inc",
-        "embed/util/tsqueue/inc",
         "vendor/stm32u5xx_hal_driver/Inc",
         "vendor/cmsis_device_u5/Include",
         "vendor/cmsis_5/CMSIS/Core/Include",
@@ -89,6 +89,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
 
     sources += [
         "embed/io/notify/notify.c",
+        "embed/io/tsqueue/tsqueue.c",
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
         "embed/sec/monoctr/stm32u5/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",
@@ -136,7 +137,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/flash/stm32u5/flash_otp.c",
         "embed/util/fwutils/fwutils.c",
         "embed/util/option_bytes/stm32u5/option_bytes.c",
-        "embed/util/tsqueue/tsqueue.c",
     ]
 
     if "dbg_console" in features_wanted:
