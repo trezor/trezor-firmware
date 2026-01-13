@@ -22,9 +22,9 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/rng.h>
 #include <sec/secret_keys.h>
 #include <sys/mpu.h>
+#include <sys/rng.h>
 #include <util/flash_otp.h>
 #include <util/image.h>
 

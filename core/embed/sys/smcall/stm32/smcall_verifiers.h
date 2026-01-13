@@ -108,7 +108,7 @@ secbool storage_set__verified(const uint16_t key, const void *val,
 secbool storage_next_counter__verified(const uint16_t key, uint32_t *count);
 
 // ---------------------------------------------------------------------
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 
 void rng_fill_buffer__verified(void *buffer, size_t buffer_size);
 

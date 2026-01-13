@@ -21,38 +21,7 @@
 
 #include <trezor_types.h>
 
-#ifdef SECURE_MODE
-
-/**
- * @brief Initializes the hardware random number generator.
- *
- */
-void rng_init(void);
-
-#endif
-
-/**
- * @brief Fills a buffer with random bytes using the hardware RNG
- *
- * This function uses only single source of entropy - the hardware RNG
- * available on the microcontroller. It is fast but less suitable for
- * generating critical secrets.
- *
- * @param buffer Buffer to fill with random bytes.
- * @param buffer_size Size of the buffer in bytes.
- */
-void rng_fill_buffer(void* buffer, size_t buffer_size);
-
-/**
- * @brief Gets 32 bits of random data using from the hardware RNG.
- *
- * @return uint32_t Random data.
- */
-static inline uint32_t rng_get(void) {
-  uint32_t r = 0;
-  rng_fill_buffer((uint8_t*)&r, sizeof(r));
-  return r;
-}
+#include <sys/rng.h>
 
 /**
  * @brief Fills a buffer with random bytes using the hardware RNG and

@@ -27,7 +27,7 @@
 #include <sec/secret_keys.h>
 #include "../secret_keys_common.h"
 
-#include <sec/rng.h>
+#include <sec/rng_strong.h>
 #include <sys/mpu.h>
 #include <util/flash_otp.h>
 #include "memzero.h"

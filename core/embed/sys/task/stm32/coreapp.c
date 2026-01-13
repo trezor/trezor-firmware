@@ -23,10 +23,10 @@
 #include <trezor_rtl.h>
 
 #include <rtl/sizedefs.h>
-#include <sec/rng.h>
 #include <sys/applet.h>
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
+#include <sys/rng.h>
 #include <sys/systask.h>
 
 static mpu_area_t coreapp_code_area;

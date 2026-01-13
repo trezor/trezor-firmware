@@ -23,10 +23,10 @@
 #include <trezor_rtl.h>
 
 #include <io/nrf.h>
-#include <sec/rng.h>
 #include <sec/secret_keys.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/rng.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 #include <util/tsqueue.h>

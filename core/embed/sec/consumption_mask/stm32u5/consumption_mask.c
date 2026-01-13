@@ -19,7 +19,7 @@
 
 #include <trezor_bsp.h>
 
-#include <sec/rng.h>
+#include <sys/rng.h>
 
 #ifdef KERNEL_MODE
 

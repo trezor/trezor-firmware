@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sec/rng.h>
+#include <sys/rng.h>
 
 #include "py/objstr.h"
 

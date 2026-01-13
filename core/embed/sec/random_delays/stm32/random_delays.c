@@ -22,7 +22,7 @@
 #include <stdatomic.h>
 
 #include <sec/random_delays.h>
-#include <sec/rng.h>
+#include <sys/rng.h>
 #include <sys/systimer.h>
 
 #include "chacha_drbg.h"

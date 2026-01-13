@@ -20,9 +20,9 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <sec/rng.h>
 #include <sys/bootargs.h>
 #include <sys/linker_utils.h>
+#include <sys/rng.h>
 #include <sys/stack_utils.h>
 #include <sys/system.h>
 
