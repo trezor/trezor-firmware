@@ -22,8 +22,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/flash.h>
 #include <sys/mpu.h>
-#include <util/flash.h>
 #include <util/translations.h>
 
 bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {

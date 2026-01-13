@@ -61,6 +61,6 @@ def configure(
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
 
-    sources += ["embed/util/flash/stm32f4/flash_layout.c"]
+    sources += ["embed/sys/flash/stm32f4/flash_layout.c"]
 
     return features_available

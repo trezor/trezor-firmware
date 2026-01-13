@@ -28,8 +28,8 @@
 #include "../secret_keys_common.h"
 
 #include <sec/rng_strong.h>
+#include <sys/flash_otp.h>
 #include <sys/mpu.h>
-#include <util/flash_otp.h>
 #include "memzero.h"
 
 #ifdef USE_OPTIGA

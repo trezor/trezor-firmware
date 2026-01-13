@@ -130,7 +130,7 @@ def configure(
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 
-    sources += ["embed/util/flash/stm32u5/flash_layout.c"]
+    sources += ["embed/sys/flash/stm32u5/flash_layout.c"]
 
     defines += ["USE_HW_JPEG_DECODER"]
     features_available.append("hw_jpeg_decoder")

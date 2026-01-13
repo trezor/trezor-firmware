@@ -25,11 +25,11 @@
 #include <sec/option_bytes.h>
 #include <sec/secret.h>
 #include <sys/bootutils.h>
+#include <sys/flash.h>
 #include <sys/reset_flags.h>
 #include <sys/rng.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/flash.h>
 #include <util/rsod.h>
 
 #ifdef USE_BOOT_UCB

@@ -21,7 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <io/notify.h>
-#include <util/flash_utils.h>
+#include <sys/flash_utils.h>
 
 #ifdef USE_BLE
 #include <io/ble.h>

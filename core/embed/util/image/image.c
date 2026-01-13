@@ -23,7 +23,7 @@
 #include "ed25519-donna/ed25519.h"
 
 #include <sys/bootutils.h>
-#include <util/flash.h>
+#include <sys/flash.h>
 #include <util/image.h>
 
 #ifdef STM32F4

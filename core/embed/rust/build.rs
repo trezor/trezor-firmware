@@ -53,7 +53,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../sys/task/inc",
     "-I../sys/suspend/inc",
     "-I../sys/irq/inc",
-    "-I../util/flash/inc",
+    "-I../sys/flash/inc",
     "-I../util/translations/inc",
     "-I../models",
     "-DTREZOR_EMULATOR",

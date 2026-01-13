@@ -21,8 +21,8 @@
 #include <trezor_rtl.h>
 
 #include <sys/bootutils.h>
-#include <util/flash.h>
-#include <util/flash_otp.h>
+#include <sys/flash.h>
+#include <sys/flash_otp.h>
 #include <util/image.h>
 
 #include "fw_check.h"

@@ -23,8 +23,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/flash.h>
 #include <sys/systask.h>
-#include <util/flash.h>
 #include <util/fwutils.h>
 #include <util/image.h>
 

@@ -26,9 +26,9 @@
 #include "pb/messages.pb.h"
 
 #include <io/usb.h>
+#include <sys/flash.h>
+#include <sys/flash_utils.h>
 #include <sys/sysevent.h>
-#include <util/flash.h>
-#include <util/flash_utils.h>
 #include <util/image.h>
 #include "version.h"
 

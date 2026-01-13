@@ -21,9 +21,9 @@
 #include <trezor_rtl.h>
 
 #include <io/notify.h>
+#include <sys/flash_utils.h>
 #include <sys/systick.h>
 #include <sys/types.h>
-#include <util/flash_utils.h>
 #include <util/image.h>
 
 #ifdef USE_STORAGE_HWKEY

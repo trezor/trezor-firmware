@@ -29,10 +29,10 @@
 #include <sec/unit_properties.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
+#include <sys/flash_utils.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/types.h>
-#include <util/flash_utils.h>
 #include <util/image.h>
 #include <util/rsod.h>
 #include <util/rsod_special.h>

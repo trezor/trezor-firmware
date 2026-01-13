@@ -22,13 +22,13 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secret/inc",
         "embed/sec/unit_properties/inc",
         "embed/sys/cpuid/inc",
+        "embed/sys/flash/inc",
         "embed/sys/irq/inc",
         "embed/sys/mpu/inc",
         "embed/sys/rng/inc",
         "embed/sys/startup/inc",
         "embed/sys/task/inc",
         "embed/sys/time/inc",
-        "embed/util/flash/inc",
         "embed/util/fwutils/inc",
     ]
 
@@ -47,6 +47,8 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/time_estimate/unix/time_estimate.c",
         "embed/sec/unit_properties/unix/unit_properties.c",
         "embed/sys/cpuid/unix/cpuid.c",
+        "embed/sys/flash/unix/flash.c",
+        "embed/sys/flash/unix/flash_otp.c",
         "embed/sys/mpu/unix/mpu.c",
         "embed/sys/rng/unix/rng.c",
         "embed/sys/startup/unix/bootutils.c",
@@ -56,8 +58,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/task/unix/systask.c",
         "embed/sys/time/unix/systick.c",
         "embed/sys/time/unix/systimer.c",
-        "embed/util/flash/unix/flash.c",
-        "embed/util/flash/unix/flash_otp.c",
         "embed/util/fwutils/fwutils.c",
     ]
 

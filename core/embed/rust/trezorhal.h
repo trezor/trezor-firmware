@@ -7,11 +7,11 @@
 #include <io/display_utils.h>
 #include <io/usb.h>
 #include <rtl/secbool.h>
+#include <sys/flash.h>
 #include <sys/irq.h>
 #include <sys/logging.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
-#include <util/flash.h>
 #include <util/translations.h>
 #include "rust_types.h"
 

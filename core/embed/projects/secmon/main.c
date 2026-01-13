@@ -26,11 +26,11 @@
 #include <sec/secure_aes.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
+#include <sys/flash.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
 #include <util/boot_image.h>
-#include <util/flash.h>
 
 #ifdef USE_BACKUP_RAM
 #include <sec/backup_ram.h>

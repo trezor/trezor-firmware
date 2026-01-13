@@ -19,7 +19,7 @@
 
 #include <trezor_rtl.h>
 
-#include <util/flash_otp.h>
+#include <sys/flash_otp.h>
 
 #define OTP_BLOCK_SIZE 32
 #define FLASH_SECTOR_OTP (FLASH_SECTOR_COUNT)

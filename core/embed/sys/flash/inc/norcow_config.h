@@ -23,7 +23,7 @@
 #include <trezor_model.h>
 #include <trezor_types.h>
 
-#include <util/flash.h>
+#include <sys/flash.h>
 
 #define NORCOW_HEADER_LEN 0
 #define NORCOW_SECTOR_COUNT 2

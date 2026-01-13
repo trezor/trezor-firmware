@@ -21,7 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <sec/unit_properties.h>
-#include <util/flash_otp.h>
+#include <sys/flash_otp.h>
 
 // Unit properties driver structure
 typedef struct {

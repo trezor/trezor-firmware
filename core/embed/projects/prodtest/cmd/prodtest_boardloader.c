@@ -21,8 +21,8 @@
 
 #include <rtl/cli.h>
 #include <sec/board_capabilities.h>
+#include <sys/flash.h>
 #include <sys/mpu.h>
-#include <util/flash.h>
 
 #include "common.h"
 
