@@ -25,13 +25,13 @@
 
 #include <gfx/dma2d_bitblt.h>
 #include <io/display.h>
+#include <io/notify.h>
 #include <io/usb.h>
 #include <sec/rng_strong.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
-#include <sys/notify.h>
 #include <sys/sysevent.h>
 #include <sys/systask.h>
 #include <sys/system.h>

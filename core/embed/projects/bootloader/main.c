@@ -22,12 +22,12 @@
 
 #include <io/display.h>
 #include <io/display_utils.h>
+#include <io/notify.h>
 #include <io/usb_config.h>
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
-#include <sys/notify.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/types.h>

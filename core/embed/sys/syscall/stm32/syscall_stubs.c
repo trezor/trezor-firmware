@@ -181,7 +181,7 @@ void reboot_device(void) {
 // notify.h
 // =============================================================================
 
-#include <sys/notify.h>
+#include <io/notify.h>
 
 void notify_send(notification_event_t event) {
   syscall_invoke1((uint32_t)event, SYSCALL_NOTIFY_SEND);

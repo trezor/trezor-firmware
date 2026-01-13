@@ -20,7 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/notify.h>
+#include <io/notify.h>
 #include <sys/types.h>
 #include <util/image.h>
 

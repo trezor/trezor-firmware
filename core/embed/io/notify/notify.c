@@ -22,7 +22,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/notify.h>
+#include <io/notify.h>
 
 #define NOTIFICATION_VERSION 1
 

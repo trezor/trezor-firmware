@@ -21,7 +21,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sys/notify.h>
+#include <io/notify.h>
 #include <util/image.h>
 
 #include "bootui.h"
