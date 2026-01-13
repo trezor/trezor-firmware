@@ -24,7 +24,6 @@
 
 #include <sys/systick.h>
 #include <sys/types.h>
-#include <util/image.h>
 
 #include "protob/protob.h"
 #include "wire/wire_iface_usb.h"

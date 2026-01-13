@@ -81,7 +81,7 @@
 #endif
 
 #if PRODUCTION || BOOTLOADER_QA
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 #endif
 
 #include "syscall_context.h"

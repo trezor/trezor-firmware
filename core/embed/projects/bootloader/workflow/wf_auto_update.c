@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <io/notify.h>
-#include <util/image.h>
+#include <sec/image.h>
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"

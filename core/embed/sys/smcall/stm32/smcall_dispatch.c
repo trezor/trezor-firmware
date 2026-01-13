@@ -46,7 +46,7 @@
 #include <sys/suspend_io.h>
 #endif
 
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 
 #include "smcall_numbers.h"
 #include "smcall_probe.h"

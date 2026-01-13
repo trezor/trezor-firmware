@@ -23,8 +23,8 @@
 #include <trezor_rtl.h>
 
 #include <rtl/sizedefs.h>
-#include <util/boot_header.h>
-#include <util/image_hash_conf.h>
+#include <sec/boot_header.h>
+#include <sec/image_hash_conf.h>
 
 #include <../vendor/sphincsplus/ref/api.h>
 #include <ed25519-donna/ed25519.h>

@@ -143,7 +143,7 @@ bool syslog_set_filter(const char *filter, size_t filter_len) {
 // boot_image.h
 // =============================================================================
 
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 
 bool boot_image_check(const boot_image_t *image) {
   return (bool)syscall_invoke1((uint32_t)image, SYSCALL_BOOT_IMAGE_CHECK);

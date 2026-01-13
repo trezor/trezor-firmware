@@ -21,8 +21,8 @@
 
 #include <trezor_types.h>
 
-#include <util/boot_header.h>
-#include <util/image_hash_conf.h>
+#include <sec/boot_header.h>
+#include <sec/image_hash_conf.h>
 
 /**
  * Update control block structure sitting on fixed address in flash memory

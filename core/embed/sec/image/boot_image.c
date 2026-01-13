@@ -23,18 +23,18 @@
 #include <trezor_rtl.h>
 
 #include <sec/board_capabilities.h>
+#include <sec/boot_image.h>
+#include <sec/image.h>
 #include <sec/monoctr.h>
 #include <sys/flash.h>
 #include <sys/mpu.h>
-#include <util/boot_image.h>
-#include <util/image.h>
 
 #include "blake2s.h"
 #include "memzero.h"
 
 #ifdef USE_BOOT_UCB
-#include <util/boot_header.h>
-#include <util/boot_ucb.h>
+#include <sec/boot_header.h>
+#include <sec/boot_ucb.h>
 #else
 #include "uzlib.h"
 #endif

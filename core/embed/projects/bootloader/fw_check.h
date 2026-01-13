@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include <util/image.h>
+#include <sec/image.h>
 
 /**
  * @brief Firmware information collected by the bootloader when validating

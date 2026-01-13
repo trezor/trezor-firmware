@@ -31,7 +31,7 @@ void bootargs_get_args__verified(boot_args_t *args);
 
 // ---------------------------------------------------------------------
 
-#include <util/boot_image.h>
+#include <sec/boot_image.h>
 
 bool boot_image_check__verified(const boot_image_t *image);
 
