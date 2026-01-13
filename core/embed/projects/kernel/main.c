@@ -23,6 +23,7 @@
 #include <gfx/gfx_bitblt.h>
 #include <io/display.h>
 #include <sec/board_capabilities.h>
+#include <sec/option_bytes.h>
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
@@ -35,7 +36,6 @@
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <util/boot_image.h>
-#include <util/option_bytes.h>
 #include <util/rsod.h>
 
 #ifdef USE_BUTTON

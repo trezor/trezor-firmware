@@ -19,9 +19,9 @@
 
 #include <trezor_bsp.h>
 
+#include <sec/option_bytes.h>
 #include <sys/mpu.h>
 #include <util/flash_otp.h>
-#include <util/option_bytes.h>
 
 #ifdef KERNEL_MODE
 
