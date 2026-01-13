@@ -618,6 +618,15 @@ void tz_init(void) {
   GPIOJ->SECCFGR &= ~0xFFFF;
 #endif
 
+#ifdef USE_HW_REVISION
+  HW_REVISION_0_PORT->SECCFGR |= HW_REVISION_0_PIN;
+  HW_REVISION_1_PORT->SECCFGR |= HW_REVISION_1_PIN;
+  HW_REVISION_2_PORT->SECCFGR |= HW_REVISION_2_PIN;
+#ifdef HW_REVISION_3_PIN
+  HW_REVISION_3_PORT->SECCFGR |= HW_REVISION_3_PIN;
+#endif
+#endif
+
 #ifdef USE_TAMPER
   // Set TAMPER interrupt as secure
   NVIC_ClearTargetState(TAMP_IRQn);

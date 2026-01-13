@@ -20,7 +20,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <util/hw_revision.h>
+#include <sec/hw_revision.h>
 
 static void prodtest_hw_revision(cli_t* cli) {
   uint8_t rev = hw_revision_get();
