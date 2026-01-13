@@ -22,7 +22,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <io/i2c_bus.h>
+#include <sys/i2c_bus.h>
 #include <sys/irq.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>

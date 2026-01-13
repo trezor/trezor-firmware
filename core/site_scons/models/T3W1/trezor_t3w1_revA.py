@@ -99,8 +99,8 @@ def configure(
             ("USE_BUTTON", "1"),
         ]
 
-    sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
-    paths += ["embed/io/i2c_bus/inc"]
+    sources += ["embed/sys/i2c_bus/stm32u5/i2c_bus.c"]
+    paths += ["embed/sys/i2c_bus/inc"]
     defines += [("USE_I2C", "1")]
 
     sources += [

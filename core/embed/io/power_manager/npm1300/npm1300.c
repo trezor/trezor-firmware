@@ -22,8 +22,8 @@
 
 #include <math.h>
 
-#include <io/i2c_bus.h>
 #include <io/pmic.h>
+#include <sys/i2c_bus.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
 #include <sys/systimer.h>

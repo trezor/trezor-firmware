@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <io/haptic.h>
-#include <io/i2c_bus.h>
+#include <sys/i2c_bus.h>
 #include <sys/logging.h>
 #include <sys/systick.h>
 
