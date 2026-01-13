@@ -23,8 +23,8 @@
 #include <pb.h>
 #include <pb_decode.h>
 
+#include <sec/unit_properties.h>
 #include <util/image.h>
-#include <util/unit_properties.h>
 
 #if LOCKABLE_BOOTLOADER
 #include <sec/secret.h>

@@ -19,6 +19,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/rng/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/secret/inc",
+        "embed/sec/unit_properties/inc",
         "embed/sys/irq/inc",
         "embed/sys/mpu/inc",
         "embed/sys/rng/inc",
@@ -29,7 +30,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/cpuid/inc",
         "embed/util/flash/inc",
         "embed/util/fwutils/inc",
-        "embed/util/unit_properties/inc",
     ]
 
     sources += [
@@ -44,6 +44,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/monoctr/unix/monoctr.c",
         "embed/sec/rng/rng_strong.c",
         "embed/sec/time_estimate/unix/time_estimate.c",
+        "embed/sec/unit_properties/unix/unit_properties.c",
         "embed/sys/mpu/unix/mpu.c",
         "embed/sys/rng/unix/rng.c",
         "embed/sys/startup/unix/bootutils.c",
@@ -58,7 +59,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/flash/unix/flash.c",
         "embed/util/flash/unix/flash_otp.c",
         "embed/util/fwutils/fwutils.c",
-        "embed/util/unit_properties/unix/unit_properties.c",
     ]
 
     if "usb" in features_wanted:

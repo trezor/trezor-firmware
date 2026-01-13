@@ -45,7 +45,7 @@ void reboot_and_upgrade__verified(const uint8_t hash[32]);
 void reboot_with_rsod__verified(const systask_postmortem_t *pminfo);
 
 // ---------------------------------------------------------------------
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 void unit_properties_get__verified(unit_properties_t *props);
 

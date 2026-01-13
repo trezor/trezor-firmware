@@ -25,6 +25,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/pvd/inc",
         "embed/sys/rng/inc",
         "embed/sec/secret/inc",
+        "embed/sec/unit_properties/inc",
         "embed/sys/stack/inc",
         "embed/sys/startup/inc",
         "embed/sys/syscall/inc",
@@ -36,7 +37,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/fwutils/inc",
         "embed/util/option_bytes/inc",
         "embed/util/tsqueue/inc",
-        "embed/util/unit_properties/inc",
         "vendor/micropython/lib/cmsis/inc",
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
         "vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
@@ -75,6 +75,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secret/secret_keys_common.c",
         "embed/sec/storage/stm32f4/storage_salt.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
+        "embed/sec/unit_properties/stm32/unit_properties.c",
         "embed/sys/irq/stm32/irq.c",
         "embed/sys/linker/linker_utils.c",
         "embed/sys/mpu/stm32f4/mpu.c",
@@ -107,7 +108,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/fwutils/fwutils.c",
         "embed/util/option_bytes/stm32f4/option_bytes.c",
         "embed/util/tsqueue/tsqueue.c",
-        "embed/util/unit_properties/stm32/unit_properties.c",
     ]
 
     if "dbg_console" in features_wanted:

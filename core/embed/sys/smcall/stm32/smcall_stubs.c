@@ -127,7 +127,7 @@ void resume_secure_drivers(void) {
 // unit_properties.h
 // =============================================================================
 
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 void unit_properties_get(unit_properties_t *props) {
   smcall_invoke1((uint32_t)props, SMCALL_UNIT_PROPERTIES_GET);

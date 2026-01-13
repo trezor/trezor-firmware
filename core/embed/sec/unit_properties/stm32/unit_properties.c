@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 #ifdef SECURE_MODE
 

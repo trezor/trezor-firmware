@@ -22,6 +22,7 @@
 
 #include <sec/random_delays.h>
 #include <sec/secure_aes.h>
+#include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include <sys/system.h>
 #include <sys/systick.h>
@@ -30,7 +31,6 @@
 #include <util/boot_image.h>
 #include <util/flash.h>
 #include <util/option_bytes.h>
-#include <util/unit_properties.h>
 
 #ifdef USE_BACKUP_RAM
 #include <sec/backup_ram.h>
