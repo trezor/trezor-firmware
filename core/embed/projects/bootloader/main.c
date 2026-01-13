@@ -23,9 +23,11 @@
 #include <io/display.h>
 #include <io/display_utils.h>
 #include <io/notify.h>
+#include <io/rsod.h>
 #include <io/usb_config.h>
 #include <sec/image.h>
 #include <sec/random_delays.h>
+#include <sec/rsod_special.h>
 #include <sec/secret.h>
 #include <sec/unit_properties.h>
 #include <sys/bootargs.h>
@@ -34,8 +36,6 @@
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/types.h>
-#include <util/rsod.h>
-#include <util/rsod_special.h>
 
 #ifdef USE_BOOT_UCB
 #include <sec/boot_ucb.h>

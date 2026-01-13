@@ -20,14 +20,9 @@
 #include <trezor_rtl.h>
 
 #include <rtl/strutils.h>
+#include <sec/rsod_special.h>
 #include <sys/bootutils.h>
 #include <sys/system.h>
-
-#ifdef FANCY_FATAL_ERROR
-#include "rust_ui_common.h"
-#endif
-
-#define ALL_DATA_ERASED_MESSAGE "All data has been erased from the device"
 
 #ifdef TREZOR_MODEL_T3W1
 // empty message for T3W1 so that it falls to the more appropriate default
@@ -50,26 +45,6 @@ void __attribute__((noreturn)) show_wipe_code_screen(void) {
   while (1)
     ;
 }
-
-#ifdef FANCY_FATAL_ERROR
-void show_wipe_info(const bootutils_wipe_info_t *info) {
-  const char *title = "Device wiped";
-  const char *message = ALL_DATA_ERASED_MESSAGE;
-  const char *footer = "Please visit trezor.io/rsod";
-
-  if (info->title[0] != '\0') {
-    title = info->title;
-  }
-  if (info->message[0] != '\0') {
-    message = info->message;
-  }
-  if (info->footer[0] != '\0') {
-    footer = info->footer;
-  }
-
-  display_rsod_rust(title, message, footer);
-}
-#endif
 
 void __attribute__((noreturn)) show_pin_too_many_screen(void) {
   bootutils_wipe_info_t info = {0};

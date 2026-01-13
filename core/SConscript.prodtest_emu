@@ -134,10 +134,9 @@ SOURCE_MOD += [
     'embed/io/gfx/bitblt/gfx_bitblt_mono8.c',
     'embed/io/gfx/gfx_color.c',
     'embed/io/gfx/gfx_draw.c',
+    'embed/io/gfx/rsod.c',
     'embed/io/gfx/terminal/font_bitmap.c',
     'embed/io/gfx/terminal/terminal.c',
-    'embed/util/rsod/rsod.c',
-    'embed/util/rsod/rsod_special.c',
     'embed/rtl/cli.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/printf.c',
@@ -146,6 +145,7 @@ SOURCE_MOD += [
     'embed/rtl/unit_test.c',
     'embed/sec/image/boot_image.c',
     'embed/sec/image/image.c',
+    'embed/sec/rsod/rsod_special.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -223,7 +223,7 @@ ALLPATHS = ['embed/rust',
            'embed/io/gfx/inc',
            'embed/io/translations/inc',
            'embed/sec/image/inc',
-           'embed/util/rsod/inc',
+           'embed/sec/rsod/inc',
        ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(

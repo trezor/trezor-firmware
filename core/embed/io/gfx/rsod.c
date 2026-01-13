@@ -20,10 +20,11 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
+#include <io/rsod.h>
 #include <io/terminal.h>
+#include <sec/rsod_special.h>
 #include <sys/bootutils.h>
 #include <sys/system.h>
-#include <util/rsod.h>
 
 #include <rtl/strutils.h>
 
@@ -172,6 +173,24 @@ void rsod_gui(const systask_postmortem_t* pminfo) {
   }
 
   // Render the RSOD in Rust
+  display_rsod_rust(title, message, footer);
+}
+
+void show_wipe_info(const bootutils_wipe_info_t* info) {
+  const char* title = "Device wiped";
+  const char* message = ALL_DATA_ERASED_MESSAGE;
+  const char* footer = "Please visit trezor.io/rsod";
+
+  if (info->title[0] != '\0') {
+    title = info->title;
+  }
+  if (info->message[0] != '\0') {
+    message = info->message;
+  }
+  if (info->footer[0] != '\0') {
+    footer = info->footer;
+  }
+
   display_rsod_rust(title, message, footer);
 }
 

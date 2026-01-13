@@ -17,24 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIB_RSOD_H
-#define LIB_RSOD_H
+#pragma once
 
-#include <sys/systask.h>
+#define ALL_DATA_ERASED_MESSAGE "All data has been erased from the device"
 
-// Shows RSOD (Red Screen of Death) using terminal.
-void rsod_terminal(const systask_postmortem_t* pminfo);
+/**
+ * Shows RSOD screen with "Wipe code entered" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_wipe_code_screen(void);
 
-// Shows RSOD (Red Screen of Death) using Rust GUI.
-void rsod_gui(const systask_postmortem_t* pminfo);
+/**
+ * Shows RSOD screen with "Pin attempts exceeded" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_pin_too_many_screen(void);
 
-#ifdef KERNEL_MODE
-
-// Universal panic handler that can be passed to `system_init()` function
-// to show RSOD screen describing the system error.
-// (may be called from interrupt context)
-void rsod_panic_handler(const systask_postmortem_t* pminfo);
-
-#endif  // KERNEL_MODE
-
-#endif  // LIB_RSOD_H
+/**
+ * Shows RSOD screen with "Install restricted" message
+ * and shuts down the device.
+ */
+void __attribute__((noreturn)) show_install_restricted_screen(void);

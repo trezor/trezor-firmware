@@ -22,8 +22,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/rsod_special.h>
 #include <sec/secret.h>
-#include <util/rsod_special.h>
 
 #ifdef KERNEL_MODE
 
