@@ -20,13 +20,13 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/gfx_draw.h>
-#include <gfx/terminal.h>
 #include <io/display.h>
+#include <io/gfx_draw.h>
+#include <io/terminal.h>
 #include <rtl/printf.h>
 #include <rtl/strutils.h>
 
-#include "fonts/font_bitmap.h"
+#include "font_bitmap.h"
 
 #ifndef TERMINAL_FONT_SCALE
 #define TERMINAL_FONT_SCALE 1

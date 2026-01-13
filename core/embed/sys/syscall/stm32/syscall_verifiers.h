@@ -255,7 +255,7 @@ pm_status_t pm_suspend__verified(wakeup_flags_t *wakeup_reason);
 // ---------------------------------------------------------------------
 #ifdef USE_HW_JPEG_DECODER
 
-#include <gfx/jpegdec.h>
+#include <io/jpegdec.h>
 
 jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input);
 
@@ -271,7 +271,7 @@ bool jpegdec_get_slice_mono8__verified(void *mono8, jpegdec_slice_t *slice);
 // ---------------------------------------------------------------------
 #ifdef USE_DMA2D
 
-#include <gfx/dma2d_bitblt.h>
+#include <io/dma2d_bitblt.h>
 
 bool dma2d_rgb565_fill__verified(const gfx_bitblt_t *bb);
 

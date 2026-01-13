@@ -4,8 +4,8 @@
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 
-#include <gfx/gfx_bitblt.h>
 #include <io/display.h>
+#include <io/gfx_bitblt.h>
 
 void display_fill(const gfx_bitblt_t *bb) {
   display_fb_info_t fb;

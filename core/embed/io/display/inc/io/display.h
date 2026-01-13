@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include <gfx/gfx_bitblt.h>
+#include <io/gfx_bitblt.h>
 
 // This is a universal API for controlling different types of display
 // controllers.

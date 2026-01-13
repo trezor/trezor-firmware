@@ -19,8 +19,8 @@
 
 #include <trezor_rtl.h>
 
-#include <gfx/terminal.h>
 #include <io/display.h>
+#include <io/terminal.h>
 #include <sys/bootutils.h>
 #include <sys/system.h>
 #include <util/rsod.h>

@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gfx/dma2d_bitblt.h>
+#include <io/dma2d_bitblt.h>
 
 #ifdef KERNEL_MODE
 

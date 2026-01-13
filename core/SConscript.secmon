@@ -307,7 +307,7 @@ ALLPATHS = [
         'embed/projects/firmware',
         'embed/rtl/inc',
         'embed/models',
-        'embed/gfx/inc',
+        'embed/io/gfx/inc',
         'embed/io/translations/inc',
         'embed/sec/image/inc',
         'embed/sys/bsp/inc',

@@ -36,7 +36,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../../vendor/micropython/lib/uzlib",
     "-I../../vendor/",
     "-I../rtl/inc",
-    "-I../gfx/inc",
+    "-I../io/gfx/inc",
     "-I../io/ble/inc",
     "-I../io/button/inc",
     "-I../io/display/inc",

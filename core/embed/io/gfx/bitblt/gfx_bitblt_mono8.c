@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gfx/gfx_bitblt.h>
+#include <io/gfx_bitblt.h>
 
 void gfx_mono8_fill(const gfx_bitblt_t* bb) {
   uint8_t* dst_ptr = (uint8_t*)bb->dst_row + bb->dst_x;

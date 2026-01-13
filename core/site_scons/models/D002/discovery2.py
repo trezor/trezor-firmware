@@ -103,7 +103,7 @@ def configure(
 
     defines += ["USE_DMA2D"]
     features_available.append("dma2d")
-    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+    sources += ["embed/io/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
     defines += [
         "USE_HASH_PROCESSOR=1",

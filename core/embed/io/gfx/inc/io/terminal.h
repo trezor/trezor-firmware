@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <gfx/gfx_color.h>
+#include <io/gfx_color.h>
 
 /**
  * Sets foreground and background colors for terminal text.

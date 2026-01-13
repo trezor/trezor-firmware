@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gfx/gfx_color.h>
+#include <io/gfx_color.h>
 
 const gfx_color16_t* gfx_color16_gradient_a4(gfx_color_t fg_color,
                                              gfx_color_t bg_color) {

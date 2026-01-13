@@ -135,7 +135,7 @@ def configure(
     defines += ["USE_HW_JPEG_DECODER"]
     features_available.append("hw_jpeg_decoder")
     sources += [
-        "embed/gfx/jpegdec/unix/jpegdec.c",
+        "embed/io/gfx/jpegdec/unix/jpegdec.c",
     ]
 
     if "serial_number" in features_wanted:
