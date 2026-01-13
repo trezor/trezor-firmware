@@ -139,7 +139,7 @@ void display_refresh(void);
 
 // Following functions define display's bitblt interface.
 //
-// These functions draw directly to to display or to the
+// These functions draw directly to the display or to the
 // currently inactive framebuffer.
 //
 // bb->dst_row and bb->dst_stride must be 0
