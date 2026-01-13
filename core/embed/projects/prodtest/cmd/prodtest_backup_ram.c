@@ -21,9 +21,9 @@
 
 #include <trezor_rtl.h>
 
+#include <io/power_manager.h>
 #include <rtl/cli.h>
 #include <sec/backup_ram.h>
-#include <sys/power_manager.h>
 #include <sys/systick.h>
 
 static void prodtest_backup_ram_list(cli_t* cli) {

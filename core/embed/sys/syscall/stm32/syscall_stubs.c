@@ -739,7 +739,7 @@ void nrf_reboot(void) { syscall_invoke0(SYSCALL_NRF_REBOOT); }
 
 #ifdef USE_POWER_MANAGER
 
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 
 pm_status_t pm_suspend(wakeup_flags_t *wakeup_reason) {
   return (pm_status_t)syscall_invoke1((uint32_t)wakeup_reason,

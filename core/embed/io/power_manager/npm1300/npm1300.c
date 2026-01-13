@@ -23,9 +23,9 @@
 #include <math.h>
 
 #include <io/i2c_bus.h>
+#include <io/pmic.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
-#include <sys/pmic.h>
 #include <sys/systimer.h>
 
 #ifdef USE_SUSPEND

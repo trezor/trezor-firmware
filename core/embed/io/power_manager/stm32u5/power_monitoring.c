@@ -18,10 +18,10 @@
  */
 #ifdef KERNEL_MODE
 
+#include <io/pmic.h>
 #include <sec/backup_ram.h>
 #include <sys/irq.h>
 #include <sys/notify.h>
-#include <sys/pmic.h>
 #include <sys/systick.h>
 #include <trezor_rtl.h>
 

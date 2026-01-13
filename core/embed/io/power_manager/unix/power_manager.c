@@ -20,8 +20,8 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
+#include <io/power_manager.h>
 #include <io/unix/sdl_display.h>
-#include <sys/power_manager.h>
 
 #include <SDL.h>
 #include "SDL_events.h"

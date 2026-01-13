@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 
 /// package: trezorio.pm
 

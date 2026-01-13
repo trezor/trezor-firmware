@@ -19,8 +19,8 @@
 #ifdef KERNEL_MODE
 
 #include <io/backlight.h>
+#include <io/pmic.h>
 #include <sys/bootutils.h>
-#include <sys/pmic.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 

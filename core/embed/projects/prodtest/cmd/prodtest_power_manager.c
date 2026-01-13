@@ -23,13 +23,13 @@
 
 #include <stdlib.h>
 
+#include <io/power_manager.h>
 #include <rtl/cli.h>
 #include <rtl/printf.h>
 #include <rtl/unit_test.h>
 #include <rust_ui_prodtest.h>
 #include <sec/backup_ram.h>
 #include <sys/bootutils.h>
-#include <sys/power_manager.h>
 #include <sys/rtc.h>
 #include <sys/systick.h>
 
