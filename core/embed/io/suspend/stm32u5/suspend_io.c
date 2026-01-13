@@ -21,9 +21,9 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <io/suspend_io.h>
+#include <sec/suspend_io.h>
 #include <sys/irq.h>
-#include <sys/suspend_io.h>
-#include <sys/systick.h>
 
 #ifdef USE_BLE
 #include <io/ble.h>
@@ -45,67 +45,13 @@
 #include <io/rgb_led.h>
 #endif
 
-#ifdef USE_STORAGE_HWKEY
-#include <sec/secure_aes.h>
-#endif
-
 #ifdef USE_TOUCH
 #include <io/touch.h>
-#endif
-
-#ifdef USE_TROPIC
-#include <sec/tropic.h>
 #endif
 
 #ifdef USE_USB
 #include <io/usb.h>
 #endif
-
-#ifdef SECURE_MODE
-void suspend_cpu(void) {
-  // Disable interrupts by setting PRIMASK to 1.
-  //
-  // The system can wake up, but interrupts will not be processed until
-  // PRIMASK is cleared again. This is necessary to restore the system clock
-  // immediately after exiting STOP2 mode.
-
-  irq_key_t irq_key = irq_lock();
-
-  // The PWR clock is disabled after system initialization.
-  // Re-enable it before writing to PWR registers.
-  __HAL_RCC_PWR_CLK_ENABLE();
-
-  // Enter STOP2 low-power mode
-  HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-
-  // Disable PWR clock after use
-  __HAL_RCC_PWR_CLK_DISABLE();
-
-  // Recover system clock
-  SystemInit();
-
-  irq_unlock(irq_key);
-}
-
-void suspend_secure_drivers() {
-#ifdef USE_STORAGE_HWKEY
-  secure_aes_deinit();
-#endif
-#ifdef USE_TROPIC
-  tropic_deinit();
-#endif
-}
-
-void resume_secure_drivers() {
-#ifdef USE_STORAGE_HWKEY
-  secure_aes_init();
-#endif
-#ifdef USE_TROPIC
-  tropic_init();
-#endif
-}
-
-#endif  // SECURE_MODE
 
 void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
   suspend_secure_drivers();

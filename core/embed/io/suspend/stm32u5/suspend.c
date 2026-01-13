@@ -21,9 +21,10 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <io/suspend.h>
+#include <io/suspend_io.h>
+#include <sec/suspend_io.h>
 #include <sys/irq.h>
-#include <sys/suspend.h>
-#include <sys/suspend_io.h>
 
 #include <../../power_manager/stwlc38/stwlc38.h>
 #include <io/pmic.h>

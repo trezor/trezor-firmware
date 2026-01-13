@@ -26,7 +26,7 @@
 #include <sys/sysevent_source.h>
 
 #ifdef USE_SUSPEND
-#include <sys/suspend.h>
+#include <io/suspend.h>
 #endif
 
 #include "usb_internal.h"

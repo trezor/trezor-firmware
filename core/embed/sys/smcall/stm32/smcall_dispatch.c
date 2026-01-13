@@ -43,7 +43,7 @@
 #endif
 
 #ifdef USE_SUSPEND
-#include <sys/suspend_io.h>
+#include <sec/suspend_io.h>
 #endif
 
 #include <sec/boot_image.h>

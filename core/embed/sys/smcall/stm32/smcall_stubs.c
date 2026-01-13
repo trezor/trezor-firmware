@@ -109,7 +109,7 @@ void reboot_with_rsod(const systask_postmortem_t *pminfo) {
 
 #ifdef USE_SUSPEND
 
-#include <sys/suspend_io.h>
+#include <sec/suspend_io.h>
 
 void suspend_cpu(void) { smcall_invoke0(SMCALL_SUSPEND_CPU); }
 

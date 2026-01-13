@@ -29,7 +29,7 @@
 #include <sys/systimer.h>
 
 #ifdef USE_SUSPEND
-#include <sys/suspend.h>
+#include <io/suspend.h>
 #endif
 
 #include "npm1300_defs.h"
