@@ -234,8 +234,8 @@ def configure(
 
     if "hw_revision" in features_wanted:
         defines += [("USE_HW_REVISION", "1")]
-        paths += ["embed/util/hw_revision/inc"]
-        sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
+        paths += ["embed/sec/hw_revision/inc"]
+        sources += ["embed/sec/hw_revision/stm32/hw_revision.c"]
 
     if "telemetry" in features_wanted:
         sources += ["embed/util/telemetry/telemetry.c"]

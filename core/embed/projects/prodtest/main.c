@@ -102,7 +102,7 @@
 #endif
 
 #ifdef USE_HW_REVISION
-#include <util/hw_revision.h>
+#include <sec/hw_revision.h>
 #endif
 
 #ifdef USE_TAMPER

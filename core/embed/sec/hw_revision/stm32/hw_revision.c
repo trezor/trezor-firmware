@@ -16,13 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifdef KERNEL_MODE
+
+#ifdef SECURE_MODE
 
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <util/hw_revision.h>
+#include <sec/hw_revision.h>
 
 typedef struct {
   uint8_t revision;
@@ -111,4 +112,4 @@ uint8_t hw_revision_get(void) {
   return hw_revision->revision;
 }
 
-#endif
+#endif  // SECURE_MODE
