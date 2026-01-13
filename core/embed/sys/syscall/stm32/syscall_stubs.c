@@ -293,7 +293,7 @@ secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 // unit_properties.h
 // =============================================================================
 
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 void unit_properties_get(unit_properties_t *props) {
   syscall_invoke1((uint32_t)props, SYSCALL_UNIT_PROPERTIES_GET);

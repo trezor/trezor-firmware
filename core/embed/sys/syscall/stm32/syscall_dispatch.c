@@ -30,6 +30,7 @@
 #include <sec/rng_strong.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
+#include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/sysevent.h>
@@ -38,7 +39,6 @@
 #include <sys/systick.h>
 #include <util/fwutils.h>
 #include <util/translations.h>
-#include <util/unit_properties.h>
 
 #ifdef USE_BLE
 #include <io/ble.h>

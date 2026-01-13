@@ -25,13 +25,13 @@
 #include <sec/rng_strong.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
+#include <sec/unit_properties.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/system.h>
 #include <util/board_capabilities.h>
 #include <util/fwutils.h>
-#include <util/unit_properties.h>
 
 #ifdef USE_BACKUP_RAM
 #include <sec/backup_ram.h>

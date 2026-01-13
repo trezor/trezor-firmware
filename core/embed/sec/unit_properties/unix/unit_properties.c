@@ -20,8 +20,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/unit_properties.h>
 #include <util/flash_otp.h>
-#include <util/unit_properties.h>
 
 // Unit properties driver structure
 typedef struct {

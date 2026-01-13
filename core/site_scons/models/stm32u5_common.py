@@ -20,6 +20,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secure_aes/inc",
         "embed/sec/tamper/inc",
         "embed/sec/time_estimate/inc",
+        "embed/sec/unit_properties/inc",
         "embed/sys/bsp/stm32u5",
         "embed/sys/inc",
         "embed/sys/irq/inc",
@@ -39,7 +40,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/fwutils/inc",
         "embed/util/option_bytes/inc",
         "embed/util/tsqueue/inc",
-        "embed/util/unit_properties/inc",
         "vendor/stm32u5xx_hal_driver/Inc",
         "vendor/cmsis_device_u5/Include",
         "vendor/cmsis_5/CMSIS/Core/Include",
@@ -101,6 +101,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/storage/stm32u5/storage_salt.c",
         "embed/sec/tamper/stm32u5/tamper.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
+        "embed/sec/unit_properties/stm32/unit_properties.c",
         "embed/sys/irq/stm32/irq.c",
         "embed/sys/linker/linker_utils.c",
         "embed/sys/mpu/stm32u5/mpu.c",
@@ -136,7 +137,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/fwutils/fwutils.c",
         "embed/util/option_bytes/stm32u5/option_bytes.c",
         "embed/util/tsqueue/tsqueue.c",
-        "embed/util/unit_properties/stm32/unit_properties.c",
     ]
 
     if "dbg_console" in features_wanted:

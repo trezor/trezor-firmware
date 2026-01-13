@@ -118,7 +118,7 @@ secbool __wur sdcard_write_blocks__verified(const uint32_t *src,
 #endif  // USE_SD_CARD
 
 // ---------------------------------------------------------------------
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 void unit_properties_get__verified(unit_properties_t *props);
 

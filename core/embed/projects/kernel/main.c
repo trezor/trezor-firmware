@@ -25,6 +25,7 @@
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
+#include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
@@ -36,7 +37,6 @@
 #include <util/boot_image.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>
-#include <util/unit_properties.h>
 
 #ifdef USE_BUTTON
 #include <io/button.h>

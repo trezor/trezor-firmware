@@ -20,7 +20,7 @@
 
 #include <math.h>
 
-#include <util/unit_properties.h>
+#include <sec/unit_properties.h>
 
 #include "battery_model.h"
 
