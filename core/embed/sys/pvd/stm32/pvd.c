@@ -20,13 +20,8 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
-
-#ifdef USE_BACKLIGHT
-#include <io/backlight.h>
-#endif
 
 #if defined(KERNEL_MODE) && defined(USE_PVD)
 
@@ -56,10 +51,6 @@ void PVD_PVM_IRQHandler(void) {
 void PVD_IRQHandler(void) {
 #endif
   mpu_reconfig(MPU_MODE_DEFAULT);
-
-#ifdef USE_BACKLIGHT
-  backlight_set(0);
-#endif
 
   error_shutdown("PVD IRQ");
 }
