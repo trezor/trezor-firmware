@@ -60,6 +60,7 @@ typedef union {
     bool ntc_connected_changed : 1;
     bool charging_limited_changed : 1;
     bool temp_control_active_changed : 1;
+    bool battery_connected_changed : 1;
 
     // Jump detection events (fast changes within a short time window)
     bool battery_temp_jump_detected : 1;
@@ -75,6 +76,7 @@ typedef struct {
   bool ntc_connected;
   bool charging_limited;
   bool temp_control_active;
+  bool battery_connected;
   pm_charging_status_t charging_status;
   pm_power_status_t power_status;
   uint8_t soc;

@@ -22,6 +22,8 @@ pub fn pm_parse_event(event: ffi::pm_event_t) -> PMEvent {
         pm_event.charging_limited_changed = event.flags.charging_limited_changed();
         pm_event.soc_updated = event.flags.soc_updated();
         pm_event.battery_temp_jump_detected = event.flags.battery_temp_jump_detected();
+        pm_event.temp_control_active_changed = event.flags.temp_control_active_changed();
+        pm_event.battery_connected_changed = event.flags.battery_connected_changed();
         pm_event.battery_ocv_jump_detected = event.flags.battery_ocv_jump_detected();
         pm_event.charging_status_changed = event.flags.charging_status_changed();
         pm_event.power_status_changed = event.flags.power_status_changed();
@@ -62,6 +64,12 @@ pub fn is_charging_limited() -> bool {
     let mut state: ffi::pm_state_t = unsafe { core::mem::zeroed() };
     unsafe { ffi::pm_get_state(&mut state as _) };
     state.charging_limited
+}
+
+pub fn is_battery_connected() -> bool {
+    let mut state: ffi::pm_state_t = unsafe { core::mem::zeroed() };
+    unsafe { ffi::pm_get_state(&mut state as _) };
+    state.battery_connected
 }
 
 pub fn suspend() {

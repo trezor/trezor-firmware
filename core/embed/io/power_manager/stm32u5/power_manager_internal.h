@@ -37,6 +37,10 @@
 #define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
 
+#define PM_BATTERY_DISCONNECTED_THR_V 0.5f  // battery disconnection detection
+#define PM_BATTERY_DISCONNECTED_REC_V \
+  0.8f  // recovery from disconnect detection
+
 #define PM_SELF_DISG_RATE_HIBERNATION_MA 0.004f
 #define PM_SELF_DISG_RATE_SUSPEND_MA 0.032f
 
@@ -87,6 +91,9 @@ typedef struct {
   //   started being true (0 when not timing)
   bool charging_limited_latched;
   uint32_t charging_limited_start_ms;
+
+  // battery disconnection detection, voltage based
+  bool battery_disconnected;
 
 #ifdef PM_ENABLE_TEMP_CONTROL
   // Temp controller

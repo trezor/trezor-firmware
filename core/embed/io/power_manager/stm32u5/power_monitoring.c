@@ -84,6 +84,12 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   telemetry_update_battery_temp(drv->pmic_data.ntc_temp);
 #endif
 
+  // detect battery disconnection
+  drv->battery_disconnected =
+      (drv->pmic_data.vbat < PM_BATTERY_DISCONNECTED_THR_V) ||
+      (drv->battery_disconnected &&
+       drv->pmic_data.vbat < PM_BATTERY_DISCONNECTED_REC_V);
+
   pm_parse_power_source_state(drv);
 
   // Run battery charging controller

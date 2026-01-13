@@ -155,6 +155,10 @@ static bool pm_fsm_update(pm_fsm_t* fsm, pm_state_t* new_state) {
     fsm->events.flags.charging_limited_changed = true;
   }
 
+  if (new_state->battery_connected != fsm->last_state.battery_connected) {
+    fsm->events.flags.battery_connected_changed = true;
+  }
+
   fsm->last_state = *new_state;
 
   return fsm->events.all != 0;
