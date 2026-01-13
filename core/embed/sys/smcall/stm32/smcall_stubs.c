@@ -53,7 +53,7 @@ void boot_image_replace(const boot_image_t *image) {
 // board_capabilities.h
 // =============================================================================
 
-#include <util/board_capabilities.h>
+#include <sec/board_capabilities.h>
 
 uint32_t get_board_name(void) { return smcall_invoke0(SMCALL_GET_BOARD_NAME); }
 

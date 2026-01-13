@@ -22,6 +22,7 @@
 
 #include <gfx/gfx_bitblt.h>
 #include <io/display.h>
+#include <sec/board_capabilities.h>
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
@@ -33,7 +34,6 @@
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/board_capabilities.h>
 #include <util/boot_image.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>

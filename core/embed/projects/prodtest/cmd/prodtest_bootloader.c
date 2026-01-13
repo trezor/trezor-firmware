@@ -21,8 +21,8 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
+#include <sec/board_capabilities.h>
 #include <sys/mpu.h>
-#include <util/board_capabilities.h>
 #include <util/boot_image.h>
 #include <util/image.h>
 

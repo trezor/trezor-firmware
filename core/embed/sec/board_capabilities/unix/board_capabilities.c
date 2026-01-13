@@ -20,7 +20,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <util/board_capabilities.h>
+#include <sec/board_capabilities.h>
 
 void parse_boardloader_capabilities() {}
 
