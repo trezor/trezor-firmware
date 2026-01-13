@@ -144,7 +144,7 @@ bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
 
 #ifdef USE_BACKUP_RAM
 
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 
 bool backup_ram_read__verified(uint16_t key, void *buffer, size_t buffer_size,
                                size_t *data_size);

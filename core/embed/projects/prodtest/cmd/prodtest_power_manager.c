@@ -27,7 +27,7 @@
 #include <rtl/printf.h>
 #include <rtl/unit_test.h>
 #include <rust_ui_prodtest.h>
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #include <sys/bootutils.h>
 #include <sys/power_manager.h>
 #include <sys/rtc.h>

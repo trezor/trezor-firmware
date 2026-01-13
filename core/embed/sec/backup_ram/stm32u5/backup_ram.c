@@ -24,7 +24,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/sizedefs.h>
-#include <sys/backup_ram.h>
+#include <sec/backup_ram.h>
 #include <sys/irq.h>
 
 #include "../backup_ram_crc.h"
