@@ -28,10 +28,10 @@
 #include <trezor_rtl.h>
 
 #include <io/i2c_bus.h>
-#include <rtl/logging.h>
 #include <rtl/strutils.h>
 #include <sec/optiga_hal.h>
 #include <sec/optiga_transport.h>
+#include <sys/logging.h>
 #include <sys/systick.h>
 #include "aes/aesccm.h"
 #include "memzero.h"

@@ -35,7 +35,7 @@
 #include "embed/upymod/trezorobj.h"
 
 #include <io/usb.h>
-#include <rtl/logging.h>
+#include <sys/logging.h>
 
 #include <sec/secret_keys.h>
 #include <sys/bootutils.h>

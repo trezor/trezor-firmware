@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <io/touch.h>
-#include <rtl/logging.h>
+#include <sys/logging.h>
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
 #include <sys/systick.h>

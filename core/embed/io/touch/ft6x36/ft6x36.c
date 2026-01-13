@@ -24,7 +24,7 @@
 
 #include <io/i2c_bus.h>
 #include <io/touch.h>
-#include <rtl/logging.h>
+#include <sys/logging.h>
 #include <sys/systick.h>
 #include "ft6x36.h"
 

@@ -14,7 +14,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/random_delays/inc",
         "embed/sec/time_estimate/inc",
         "embed/sys/bsp/inc",
-        "embed/sys/dbg/inc",
+        "embed/sys/inc",
         "embed/sec/rng/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/secret/inc",

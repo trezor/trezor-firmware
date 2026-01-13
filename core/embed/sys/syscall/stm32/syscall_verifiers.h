@@ -59,7 +59,7 @@ ssize_t dbg_console_write__verified(const void *data, size_t data_size);
 // ---------------------------------------------------------------------
 #ifdef USE_DBG_CONSOLE
 
-#include <rtl/logging.h>
+#include <sys/logging.h>
 
 bool syslog_start_record__verified(const log_source_t *source,
                                    log_level_t level);
