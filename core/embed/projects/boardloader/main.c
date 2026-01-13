@@ -52,7 +52,7 @@
 #endif
 
 #ifdef USE_TAMPER
-#include <sys/tamper.h>
+#include <sec/tamper.h>
 #endif
 
 #include "bld_version.h"

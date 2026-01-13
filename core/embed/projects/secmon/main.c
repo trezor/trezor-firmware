@@ -41,7 +41,7 @@
 #endif
 
 #ifdef USE_TAMPER
-#include <sys/tamper.h>
+#include <sec/tamper.h>
 #endif
 
 #ifdef USE_TROPIC

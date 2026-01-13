@@ -17,17 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <sec/tamper.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
 #include <sys/systick.h>
-#include <sys/tamper.h>
 #include <util/rsod.h>
-
-#ifdef SECURE_MODE
 
 // Fixes a typo in CMSIS Device library for STM32U5
 #undef TAMP_CR3_ITAMP7NOER_Msk
