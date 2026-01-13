@@ -904,6 +904,7 @@ rust = tools.add_rust_lib(
     all_paths=ALLPATHS,
     build_dir=str(Dir('.').abspath),
 )
+obj_program += [rust]
 
 
 env.Depends(rust, protobuf_blobs)
@@ -997,7 +998,6 @@ env.Depends(program_elf, linkerscript_gen)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
-env.Depends(program_elf, rust)
 
 BINARY_NAME = f"build/firmware/firmware-{TREZOR_MODEL}"
 if not EVERYTHING:

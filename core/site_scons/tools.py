@@ -151,21 +151,18 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
     RUST_TARGET = env.get("ENV")["RUST_TARGET"]
 
     # Determine the profile build flags.
-    if profile == "release":
-        profile = "--release"
-        is_debug = False
-        RUST_LIBDIR = f"build/{build}/rust/{RUST_TARGET}/release"
-    else:
-        profile = ""
-        is_debug = True
-        RUST_LIBDIR = f"build/{build}/rust/{RUST_TARGET}/debug"
+    is_debug = {"dev": True, "release": False}[profile]
+
+    # Don't prefix with `build_dir` - the paths below should be relative to it.
+    RUST_LIBDIR = f"rust/{RUST_TARGET}/{'debug' if is_debug else 'release'}"
     RUST_LIBPATH = f"{RUST_LIBDIR}/lib{RUST_LIB}.a"
 
     def cargo_build():
         lib_features = []
         lib_features.extend(features)
 
-        cargo_opts = [
+        cargo_opts = [] if is_debug else ["--release"]
+        cargo_opts += [
             f"--target={RUST_TARGET}",
             f"--target-dir=../../build/{build}/rust",
             "--no-default-features",
@@ -178,7 +175,7 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
                 "-Z build-std-features=panic_immediate_abort",
             ]
 
-        build_cmd = f"cargo build {profile} " + " ".join(cargo_opts)
+        build_cmd = "cargo build " + " ".join(cargo_opts)
 
         unstable_rustc_flags = [
             # see https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
@@ -200,13 +197,13 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
             f"cd embed/rust; {build_cmd} > {build_dir}/rust-type-sizes.log"
         )
 
+    # Target path should be relative to `build_dir`.
     rust = env.Command(
         target=RUST_LIBPATH,
         source="",
         action=cargo_build(),
     )
-
-    env.Append(LINKFLAGS=[f"-L{RUST_LIBDIR}"])
-    env.Append(LINKFLAGS=[f"-l{RUST_LIB}"])
+    # TODO: run `cargo` only if needed
+    env.AlwaysBuild(rust)
 
     return rust

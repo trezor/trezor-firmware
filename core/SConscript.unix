@@ -925,7 +925,7 @@ rust = tools.add_rust_lib(
     all_paths=ALLPATHS,
     build_dir=str(Dir('.').abspath),
 )
-
+obj_program += [rust]
 
 env.Depends(rust, protobuf_blobs)
 env.Depends(rust, TRANSLATION_DATA)
@@ -938,4 +938,3 @@ program = env.Command(
 
 if CMAKELISTS != 0:
     env.Depends(program, cmake_gen)
-env.Depends(program, rust)
