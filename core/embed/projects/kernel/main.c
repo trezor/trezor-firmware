@@ -20,8 +20,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/gfx_bitblt.h>
 #include <io/display.h>
+#include <io/gfx_bitblt.h>
 #include <sec/board_capabilities.h>
 #include <sec/boot_image.h>
 #include <sec/option_bytes.h>

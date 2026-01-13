@@ -2,7 +2,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/terminal.h>
+#include <io/terminal.h>
 
 #include <io/display.h>
 #include <sec/image.h>

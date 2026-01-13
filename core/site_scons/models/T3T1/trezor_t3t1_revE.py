@@ -107,7 +107,7 @@ def configure(
 
     if "dma2d" in features_wanted:
         defines += [("USE_DMA2D", "1")]
-        sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+        sources += ["embed/io/gfx/bitblt/stm32/dma2d_bitblt.c"]
         features_available.append("dma2d")
 
     if "optiga" in features_wanted:

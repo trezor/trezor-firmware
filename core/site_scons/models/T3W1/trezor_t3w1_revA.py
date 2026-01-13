@@ -246,12 +246,12 @@ def configure(
         "USE_DMA2D",
     ]
     features_available.append("dma2d")
-    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+    sources += ["embed/io/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
     defines += ["USE_HW_JPEG_DECODER"]
     features_available.append("hw_jpeg_decoder")
     sources += [
-        "embed/gfx/jpegdec/stm32u5/jpegdec.c",
+        "embed/io/gfx/jpegdec/stm32u5/jpegdec.c",
     ]
 
     defines += [

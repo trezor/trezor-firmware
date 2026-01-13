@@ -22,8 +22,8 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <gfx/dma2d_bitblt.h>
-#include <gfx/jpegdec.h>
+#include <io/dma2d_bitblt.h>
+#include <io/jpegdec.h>
 #include <rtl/sizedefs.h>
 #include <sys/systick.h>
 

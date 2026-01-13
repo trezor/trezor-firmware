@@ -26,8 +26,8 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <gfx/dma2d_bitblt.h>
-#include <gfx/gfx_color.h>
+#include <io/dma2d_bitblt.h>
+#include <io/gfx_color.h>
 
 // Number of DMA2D layers - background (0) and foreground (1)
 #define DMA2D_LAYER_COUNT 2

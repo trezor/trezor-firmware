@@ -2,9 +2,9 @@
 
 #include <trezor_model.h>
 
-#include <gfx/gfx_bitblt.h>
 #include <io/display.h>
 #include <io/display_utils.h>
+#include <io/gfx_bitblt.h>
 #include <io/translations.h>
 #include <io/usb.h>
 #include <rtl/secbool.h>
@@ -16,7 +16,7 @@
 #include "rust_types.h"
 
 #ifdef USE_HW_JPEG_DECODER
-#include <gfx/jpegdec.h>
+#include <io/jpegdec.h>
 #endif
 
 #ifdef USE_BLE

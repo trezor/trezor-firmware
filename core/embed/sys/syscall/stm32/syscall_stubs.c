@@ -776,7 +776,7 @@ bool pm_get_events(pm_event_t *events) {
 
 #ifdef USE_HW_JPEG_DECODER
 
-#include <gfx/jpegdec.h>
+#include <io/jpegdec.h>
 
 bool jpegdec_open(void) { return (bool)syscall_invoke0(SYSCALL_JPEGDEC_OPEN); }
 
@@ -809,7 +809,7 @@ bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
 
 #ifdef USE_DMA2D
 
-#include <gfx/dma2d_bitblt.h>
+#include <io/dma2d_bitblt.h>
 
 void dma2d_wait(void) { syscall_invoke0(SYSCALL_DMA2D_WAIT); }
 

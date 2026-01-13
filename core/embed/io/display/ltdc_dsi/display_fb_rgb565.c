@@ -1,8 +1,8 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <gfx/gfx_bitblt.h>
 #include <io/display.h>
+#include <io/gfx_bitblt.h>
 
 #ifdef KERNEL_MODE
 void display_copy_rgb565(const gfx_bitblt_t *bb) {

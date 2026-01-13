@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include <gfx/gfx_color.h>
+#include <io/gfx_color.h>
 
 // These module provides low-level bit block transfer (bitblt)
 // operations on different bitmap/framebuffer types.

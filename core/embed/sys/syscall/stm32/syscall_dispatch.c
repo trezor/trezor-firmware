@@ -23,8 +23,8 @@
 
 #include <trezor_rtl.h>
 
-#include <gfx/dma2d_bitblt.h>
 #include <io/display.h>
+#include <io/dma2d_bitblt.h>
 #include <io/notify.h>
 #include <io/translations.h>
 #include <io/usb.h>
@@ -57,7 +57,7 @@
 #endif
 
 #ifdef USE_HW_JPEG_DECODER
-#include <gfx/jpegdec.h>
+#include <io/jpegdec.h>
 #endif
 
 #ifdef USE_OPTIGA

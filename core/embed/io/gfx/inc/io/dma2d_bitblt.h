@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <gfx/gfx_bitblt.h>
+#include <io/gfx_bitblt.h>
 
 #ifdef KERNEL_MODE
 

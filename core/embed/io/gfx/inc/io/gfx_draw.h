@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <gfx/gfx_color.h>
+#include <io/gfx_color.h>
 
 // 2D rectangle coordinates
 //

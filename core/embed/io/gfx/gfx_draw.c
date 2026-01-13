@@ -20,8 +20,8 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/gfx_draw.h>
 #include <io/display.h>
+#include <io/gfx_draw.h>
 
 typedef struct {
   int16_t dst_x;

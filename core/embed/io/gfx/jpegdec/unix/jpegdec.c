@@ -19,8 +19,8 @@
 
 #include <trezor_rtl.h>
 
-#include <gfx/gfx_color.h>
-#include <gfx/jpegdec.h>
+#include <io/gfx_color.h>
+#include <io/jpegdec.h>
 
 #include <jpeglib.h>
 
