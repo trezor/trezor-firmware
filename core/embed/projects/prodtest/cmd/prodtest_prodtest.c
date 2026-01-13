@@ -32,7 +32,7 @@
 
 #include <version.h>
 
-#define MEM_BUFFER_SIZE (8 * 1024)
+#define MEM_BUFFER_SIZE (4 * 1024)
 static uint8_t mem_buffer[MEM_BUFFER_SIZE];
 static size_t mem_buffer_len = 0;
 
@@ -97,7 +97,7 @@ static void prodtest_mem_write(cli_t* cli) {
 
   if (!cli_arg_hex(cli, "hexdata", mem_buffer, MEM_BUFFER_SIZE,
                    &mem_buffer_len)) {
-    cli_error(cli, CLI_ERROR_INVALID_ARG, "Failed to parse hex data.");
+    cli_error_arg(cli, "Failed to parse hex data.");
     return;
   }
 
