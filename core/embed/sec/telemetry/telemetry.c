@@ -21,9 +21,8 @@
 
 #include <trezor_types.h>
 
-#include <sys/backup_ram.h>
-
-#include <util/telemetry.h>
+#include <sec/backup_ram.h>
+#include <sec/telemetry.h>
 
 // Versioning for persisted telemetry structure
 #define TELEMETRY_DATA_VERSION 0x0001

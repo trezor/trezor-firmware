@@ -169,7 +169,7 @@ secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
 // Telemetry
 // ---------------------------------------------------------------------
 
-#include <util/telemetry.h>
+#include <sec/telemetry.h>
 
 void telemetry_update_battery_temp__verified(float temp_c);
 

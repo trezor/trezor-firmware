@@ -26,7 +26,7 @@
 #include <trezor_rtl.h>
 
 #ifdef USE_TELEMETRY
-#include <util/telemetry.h>
+#include <sec/telemetry.h>
 #endif
 
 #include "../fuel_gauge/battery_model.h"
