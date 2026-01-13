@@ -3,17 +3,17 @@
 
 extern crate alloc;
 
-use alloc::string::String;
-use alloc::vec;
 use prost::Message as _;
 use trezor_app_sdk::service::{self, CoreIpcService};
 use trezor_app_sdk::util::Timeout;
-use trezor_app_sdk::{CORE_SERVICE, Error, IpcMessage, Result, error, info, ui};
+use trezor_app_sdk::{CORE_SERVICE, Error, IpcMessage, Result, error};
 
 // Include generated protobuf code
-mod get_public_key;
-mod paths;
 pub(crate) mod proto;
+
+mod bitcoin;
+mod common;
+mod ethereum;
 
 use proto::ethereum::{EthereumGetPublicKey, EthereumPublicKey};
 use ufmt::derive::uDebug;
@@ -37,7 +37,7 @@ fn handle_get_public_key(request_data: &[u8]) -> Result<()> {
     let request =
         <EthereumGetPublicKey>::decode(request_data).map_err(|_| Error::InvalidMessage)?;
 
-    let mut response = get_public_key::get_public_key(request)?;
+    let response = ethereum::get_public_key::get_public_key(request)?;
 
     let response_bytes = response.encode_to_vec();
     let message = IpcMessage::new(EthereumMessages::PublicKey.into(), &response_bytes);

@@ -7,13 +7,14 @@ use trezor_app_sdk::{
     ui, {Error, Result},
 };
 
-use crate::proto::{
-    bitcoin::{GetPublicKey, PublicKey},
-    common::HdNodeType,
-    ethereum::{EthereumGetPublicKey, EthereumPublicKey},
+use crate::{
+    bitcoin,
+    proto::{
+        bitcoin::{GetPublicKey, PublicKey},
+        common::HdNodeType,
+        ethereum::{EthereumGetPublicKey, EthereumPublicKey},
+    },
 };
-
-mod bitcoin;
 
 /// Ethereum uses Bitcoin xpub format
 pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
@@ -24,7 +25,7 @@ pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
         ..Default::default()
     };
 
-    let resp = bitcoin::get_public_key(btc_msg, None, None)?;
+    let resp = bitcoin::get_public_key::get_public_key(btc_msg, None, None)?;
 
     // Show hex-encoded public key if requested
     if msg.show_display.unwrap_or(false) {

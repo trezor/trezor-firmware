@@ -30,6 +30,14 @@ pub fn address_n_to_str(address_n: &[u32]) -> alloc::string::String {
     String::from(writer.as_ref())
 }
 
+pub fn is_hardened(i: u32) -> bool {
+    i & HARDENED != 0
+}
+
+pub fn path_is_hardened(address_n: &[u32]) -> bool {
+    address_n.iter().all(|&n| is_hardened(n))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
