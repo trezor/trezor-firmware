@@ -6,6 +6,7 @@ pub mod bitcoin {
 pub mod common {
     include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.rs"));
     include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.common.rs"));
+    include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.management.rs"));
 }
 pub mod ethereum {
     include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.ethereum.rs"));
