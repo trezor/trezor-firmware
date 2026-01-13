@@ -21,7 +21,7 @@
 
 #ifdef KERNEL_MODE
 
-#include <io/i2c_bus.h>
+#include <sys/i2c_bus.h>
 #include <sys/systick.h>
 
 #include "stmpe811.h"

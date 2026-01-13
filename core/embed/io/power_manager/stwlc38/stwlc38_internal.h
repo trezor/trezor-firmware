@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <io/i2c_bus.h>
+#include <sys/i2c_bus.h>
 #include <trezor_types.h>
 
 #ifdef KERNEL_MODE

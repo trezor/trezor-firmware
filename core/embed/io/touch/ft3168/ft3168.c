@@ -22,8 +22,8 @@
 
 #ifdef KERNEL_MODE
 
-#include <io/i2c_bus.h>
 #include <io/touch.h>
+#include <sys/i2c_bus.h>
 #include <sys/logging.h>
 #include <sys/systick.h>
 #include "ft3168.h"
