@@ -186,7 +186,7 @@ void rng_fill_buffer__verified(void *buffer, size_t buffer_size);
 bool rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size);
 
 // ---------------------------------------------------------------------
-#include <util/translations.h>
+#include <io/translations.h>
 
 bool translations_write__verified(const uint8_t *data, uint32_t offset,
                                   uint32_t len);

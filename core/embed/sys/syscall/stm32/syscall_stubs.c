@@ -564,7 +564,7 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
 // translations.h
 // =============================================================================
 
-#include <util/translations.h>
+#include <io/translations.h>
 
 bool translations_write(const uint8_t *data, uint32_t offset, uint32_t len) {
   return (bool)syscall_invoke3((uint32_t)data, offset, len,

@@ -181,9 +181,9 @@ ALLPATHS = ['embed/rust',
            'embed/projects/unix',
            'embed/upymod/modtrezorui',
            'embed/gfx/inc',
+           'embed/io/translations/inc',
            'embed/sec/image/inc',
            'embed/util/rsod/inc',
-           'embed/util/translations/inc',
            'vendor/nanopb',
        ] + CPPPATH_MOD + PATH_HAL
 

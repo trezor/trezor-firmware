@@ -221,9 +221,9 @@ ALLPATHS = ['embed/rust',
            'embed/models',
            'embed/projects/unix',
            'embed/gfx/inc',
+           'embed/io/translations/inc',
            'embed/sec/image/inc',
            'embed/util/rsod/inc',
-           'embed/util/translations/inc',
        ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(

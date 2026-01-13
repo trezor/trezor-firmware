@@ -22,9 +22,9 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <io/translations.h>
 #include <sys/flash.h>
 #include <sys/mpu.h>
-#include <util/translations.h>
 
 bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   uint32_t size = translations_area_bytesize();
