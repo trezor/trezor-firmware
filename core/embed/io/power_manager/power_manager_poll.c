@@ -21,7 +21,7 @@
 
 #include <trezor_rtl.h>
 
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
 

@@ -40,7 +40,7 @@
 #endif
 
 #ifdef USE_PMIC
-#include <sys/pmic.h>
+#include <io/pmic.h>
 #endif
 
 #ifdef USE_PVD

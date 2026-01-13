@@ -26,8 +26,8 @@
 #include <sys/suspend_io.h>
 
 #include <../../power_manager/stwlc38/stwlc38.h>
-#include <sys/pmic.h>
-#include <sys/power_manager.h>
+#include <io/pmic.h>
+#include <io/power_manager.h>
 
 #ifdef USE_RGB_LED
 #include <io/rgb_led.h>

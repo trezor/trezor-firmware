@@ -20,9 +20,9 @@
 
 #include <trezor_rtl.h>
 
+#include <io/pmic.h>
 #include <sec/backup_ram.h>
 #include <sys/irq.h>
-#include <sys/pmic.h>
 #include <sys/suspend.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>

@@ -21,8 +21,8 @@
 
 #include <trezor_types.h>
 
-#include <sys/pmic.h>
-#include <sys/power_manager.h>
+#include <io/pmic.h>
+#include <io/power_manager.h>
 #include <sys/rtc_scheduler.h>
 #include <sys/systimer.h>
 

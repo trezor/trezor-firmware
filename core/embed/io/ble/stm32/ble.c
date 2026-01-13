@@ -36,7 +36,7 @@
 #include <util/unit_properties.h>
 
 #ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 #endif
 
 #include "ble_comm_defs.h"

@@ -242,7 +242,7 @@ bool nrf_update__verified(const uint8_t *data, size_t len);
 
 #ifdef USE_POWER_MANAGER
 
-#include <sys/power_manager.h>
+#include <io/power_manager.h>
 
 pm_status_t pm_get_state__verified(pm_state_t *status);
 
