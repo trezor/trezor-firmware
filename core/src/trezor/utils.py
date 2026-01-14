@@ -21,6 +21,7 @@ from trezorutils import (  # noqa: F401
     NOTIFY_WIPE,
     SCM_REVISION,
     UI_LAYOUT,
+    USE_APP_LOADING,
     USE_BACKLIGHT,
     USE_BLE,
     USE_BUTTON,
