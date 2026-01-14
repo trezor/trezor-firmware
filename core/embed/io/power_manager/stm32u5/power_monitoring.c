@@ -92,8 +92,8 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   drv->battery_ocv = bat_meas_to_ocv(drv->pmic_data.vbat, drv->pmic_data.ibat,
                                      drv->pmic_data.ntc_temp);
 
-  if (!drv->fuel_gauge_initialized) {
-    // Fuel gauge not initialized yet, battery SoC not available, sample the
+  if (!bat_fg_is_locked()) {
+    // Fuel gauge not locked yet, battery SoC not available, just sample the
     // battery data into the circular buffer.
     bat_fg_feed_sample(drv->pmic_data.vbat, drv->pmic_data.ibat,
                        drv->pmic_data.ntc_temp);

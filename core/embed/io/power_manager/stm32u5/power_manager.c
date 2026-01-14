@@ -164,9 +164,6 @@ pm_status_t pm_init(bool inherit_state) {
   drv->i_chg_temp_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
 #endif
 
-  // Fuel gauge SoC available, set fuel_gauge initialized.
-  drv->fuel_gauge_initialized = true;
-
   irq_unlock(irq_key);
 
   // Wait to stabilize the state machine
@@ -196,7 +193,7 @@ void pm_deinit(void) {
     drv->shutdown_timer = NULL;
   }
 
-  if (drv->fuel_gauge_initialized) {
+  if (bat_fg_is_locked()) {
     pm_store_data_to_backup_ram();
   }
 
