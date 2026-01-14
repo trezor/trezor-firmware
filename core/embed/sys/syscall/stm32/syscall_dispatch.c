@@ -80,6 +80,10 @@
 #include <io/touch.h>
 #endif
 
+#ifdef USE_TELEMETRY
+#include <sec/telemetry.h>
+#endif
+
 #if PRODUCTION || BOOTLOADER_QA
 #include <sec/boot_image.h>
 #endif
@@ -496,6 +500,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t *dest = (uint8_t *)args[0];
       args[0] = secret_key_delegated_identity__verified(dest);
     } break;
+
+#ifdef USE_TELEMETRY
+    case SYSCALL_TELEMETRY_GET: {
+      telemetry_data_t *out = (telemetry_data_t *)args[0];
+      args[0] = telemetry_get__verified(out);
+    } break;
+#endif
 
     case SYSCALL_STORAGE_SETUP: {
       PIN_UI_WAIT_CALLBACK callback = (PIN_UI_WAIT_CALLBACK)args[0];

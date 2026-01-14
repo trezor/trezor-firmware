@@ -168,6 +168,14 @@ secbool secret_key_delegated_identity__verified(
     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 // ---------------------------------------------------------------------
+#ifdef USE_TELEMETRY
+
+#include <sec/telemetry.h>
+bool telemetry_get__verified(telemetry_data_t *out);
+
+#endif
+
+// ---------------------------------------------------------------------
 #include <sec/storage.h>
 
 void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback);
