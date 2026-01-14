@@ -23,7 +23,7 @@ use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 pub use trezor_structs::TrezorUiResult;
-use trezor_structs::{PropsList, ShortString, TrezorUiEnum};
+use trezor_structs::{PropsList, ShortString, TrezorCryptoEnum, TrezorCryptoResult, TrezorUiEnum};
 
 use crate::error;
 use crate::ipc::IpcMessage;
@@ -77,6 +77,17 @@ fn ipc_ui_call_void(value: TrezorUiEnum) -> Result<()> {
     ipc_ui_call(&value)?;
     Ok(())
 }
+
+// fn ipc_crypto_call(value: TrezorCryptoEnum) -> CryptoResult {
+//     let bytes = to_bytes::<Failure>(value).unwrap();
+//     let message = IpcMessage::new(0, &bytes);
+//     let result = services_or_die().call(CoreIpcService::Crypto, &message, Timeout::max())?;
+
+//     // Safe validation using bytecheck before accessing archived data
+//     let archived = rkyv::access::<ArchivedTrezorCryptoResult, Failure>(result.data()).unwrap();
+//     let deserialized = deserialize::<TrezorCryptoResult, Failure>(archived).unwrap();
+//     Ok(deserialized)
+// }
 
 // ============================================================================
 // Public API Functions

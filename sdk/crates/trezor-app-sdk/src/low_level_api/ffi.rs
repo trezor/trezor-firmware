@@ -12,6 +12,8 @@ pub type ipc_fn_t = u32;
 
 /// Current API version numbers
 pub const TREZOR_API_VERSION_1: u32 = 1;
+/// Current crypto version numbers
+pub const TREZOR_CRYPTO_VERSION_1: u32 = 1;
 
 /// Maximum IPC message payload size in bytes
 // pub const IPC_MSG_PAYLOAD_SIZE: usize = 256;
@@ -114,5 +116,21 @@ pub struct trezor_api_v1_t {
         fn_: u32,
         data: *const core::ffi::c_void,
         data_size: usize,
+    ) -> bool,
+}
+
+/// Trezor crypto v1 function pointers
+#[repr(C)]
+pub struct trezor_crypto_v1_t {
+    pub get_xpub: unsafe extern "C" fn(
+        handle: syshandle_t,
+        buffer: *mut core::ffi::c_void,
+        buffer_size: usize,
+    ) -> isize,
+
+    pub sign_hash: unsafe extern "C" fn(
+        remote: systask_id_t,
+        buffer: *mut core::ffi::c_void,
+        size: usize,
     ) -> bool,
 }
