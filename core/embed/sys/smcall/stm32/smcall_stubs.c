@@ -424,6 +424,10 @@ void telemetry_update_battery_temp(float temp_c) {
   smcall_invoke1(float_to_u32.u, SMCALL_TELEMETRY_UPDATE_BATT_TEMP);
 }
 
+void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
+  smcall_invoke1((uint32_t)errors.all, SMCALL_TELEMETRY_UPDATE_BATT_ERRORS);
+}
+
 bool telemetry_get(telemetry_data_t *out) {
   return (bool)smcall_invoke1((uint32_t)out, SMCALL_TELEMETRY_GET);
 }

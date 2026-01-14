@@ -577,12 +577,6 @@ access_violation:
 #ifdef USE_TELEMETRY
 #include <sec/telemetry.h>
 
-// Telemetry verifiers
-void telemetry_update_battery_temp__verified(float temp_c) {
-  // No pointers to verify; simple value pass-through
-  telemetry_update_battery_temp(temp_c);
-}
-
 bool telemetry_get__verified(telemetry_data_t *out) {
   if (out != NULL && !probe_write_access(out, sizeof(*out))) {
     goto access_violation;

@@ -413,7 +413,12 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       } u32_to_float = {.u = args[0]};
 
       float temp = u32_to_float.f;
-      telemetry_update_battery_temp__verified(temp);
+      telemetry_update_battery_temp(temp);
+    } break;
+
+    case SMCALL_TELEMETRY_UPDATE_BATT_ERRORS: {
+      telemetry_batt_errors_t errors = {.all = args[0]};
+      telemetry_update_battery_errors(errors);
     } break;
 
     case SMCALL_TELEMETRY_GET: {

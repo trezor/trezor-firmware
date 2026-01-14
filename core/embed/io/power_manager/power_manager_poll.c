@@ -25,6 +25,10 @@
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
 
+#ifdef USE_TELEMETRY
+#include <sec/telemetry.h>
+#endif
+
 #include "power_manager_poll.h"
 
 typedef struct {
@@ -158,6 +162,19 @@ static bool pm_fsm_update(pm_fsm_t* fsm, pm_state_t* new_state) {
   if (new_state->battery_connected != fsm->last_state.battery_connected) {
     fsm->events.flags.battery_connected_changed = true;
   }
+
+#ifdef USE_TELEMETRY
+  telemetry_batt_errors_t errors = {0};
+  errors.bits.ntc_disconnected = !new_state->ntc_connected;
+  errors.bits.charging_limited = new_state->charging_limited;
+  errors.bits.battery_disconnected = !new_state->battery_connected;
+  errors.bits.temp_control_active = new_state->temp_control_active;
+  errors.bits.battery_ocv_jump_detected =
+      fsm->events.flags.battery_ocv_jump_detected;
+  errors.bits.battery_temp_jump_detected =
+      fsm->events.flags.battery_temp_jump_detected;
+  telemetry_update_battery_errors(errors);
+#endif
 
   fsm->last_state = *new_state;
 
