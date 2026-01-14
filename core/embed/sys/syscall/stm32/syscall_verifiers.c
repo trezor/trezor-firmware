@@ -598,6 +598,22 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_TELEMETRY
+bool telemetry_get__verified(telemetry_data_t *out) {
+  if (!probe_write_access(out, sizeof(*out))) {
+    goto access_violation;
+  }
+
+  return telemetry_get(out);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+#endif
+
+// ---------------------------------------------------------------------
+
 static PIN_UI_WAIT_CALLBACK storage_callback = NULL;
 
 static secbool storage_callback_wrapper(uint32_t wait, uint32_t progress,

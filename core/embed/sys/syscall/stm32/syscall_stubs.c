@@ -498,6 +498,18 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 }
 
 // =============================================================================
+// telemetry.h
+// =============================================================================
+
+#ifdef USE_TELEMETRY
+#include <sec/telemetry.h>
+
+bool telemetry_get(telemetry_data_t *out) {
+  return (bool)syscall_invoke1((uint32_t)out, SYSCALL_TELEMETRY_GET);
+}
+#endif
+
+// =============================================================================
 // storage.h
 // =============================================================================
 

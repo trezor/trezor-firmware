@@ -200,6 +200,7 @@ typedef enum {
 
   SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY,
 
+  SYSCALL_TELEMETRY_GET,
   // ------------------------------------------------------
   // Following syscalls are executed in kernel thread mode
 
