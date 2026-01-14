@@ -89,4 +89,12 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         defines += [("USE_DBG_CONSOLE", "1")]
         features_available.append("dbg_console")
 
+    if "ipc" in features_wanted:
+        sources += [
+            "embed/sys/ipc/ipc.c",
+            "embed/sys/ipc/unix/ipc_memcpy.c",
+        ]
+        defines += [("USE_IPC", "1")]
+        paths += ["embed/sys/ipc/inc"]
+
     return features_available

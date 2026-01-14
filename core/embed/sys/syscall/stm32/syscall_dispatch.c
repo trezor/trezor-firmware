@@ -205,6 +205,38 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #endif
 
+#ifdef USE_IPC
+    case SYSCALL_IPC_REGISTER: {
+      systask_id_t origin = (systask_id_t)args[0];
+      void *buffer = (void *)args[1];
+      size_t size = (size_t)args[2];
+      args[0] = ipc_register__verified(origin, buffer, size);
+    } break;
+
+    case SYSCALL_IPC_UNREGISTER: {
+      systask_id_t origin = (systask_id_t)args[0];
+      ipc_unregister(origin);
+    } break;
+
+    case SYSCALL_IPC_TRY_RECEIVE: {
+      ipc_message_t *msg = (ipc_message_t *)args[0];
+      args[0] = ipc_try_receive__verified(msg);
+    } break;
+
+    case SYSCALL_IPC_FREE_MESSAGE: {
+      ipc_message_t *msg = (ipc_message_t *)args[0];
+      ipc_message_free__verified(msg);
+    } break;
+
+    case SYSCALL_IPC_SEND: {
+      systask_id_t remote = (systask_id_t)args[0];
+      uint32_t fn = (uint32_t)args[1];
+      const void *data = (const void *)args[2];
+      size_t data_size = (size_t)args[3];
+      args[0] = ipc_send__verified(remote, fn, data, data_size);
+    } break;
+#endif  // USE_IPC
+
     case SYSCALL_BOOT_IMAGE_CHECK: {
       const boot_image_t *image = (const boot_image_t *)args[0];
       args[0] = boot_image_check__verified(image);
