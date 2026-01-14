@@ -32,7 +32,7 @@
 #include <sys/rtc_scheduler.h>
 #endif
 
-#include "../fuel_gauge/battery_model.h"
+#include "../battery/battery.h"
 #include "../power_manager_poll.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
@@ -69,10 +69,8 @@ pm_status_t pm_init(bool inherit_state) {
     return PM_ERROR;
   }
 
-  // Initialize fuel gauge
-  fuel_gauge_init(&drv->fuel_gauge, PM_FUEL_GAUGE_R, PM_FUEL_GAUGE_Q,
-                  PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
-                  PM_FUEL_GAUGE_P_INIT);
+  // Initialize battery model with fuel gauge estimator
+  bat_init();
 
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
@@ -120,9 +118,9 @@ pm_status_t pm_init(bool inherit_state) {
         // If the RTC timestamp is older than the last captured timestamp,
         // we will not use it.
         if (rtc_timestamp >= recovery.last_capture_timestamp) {
-          pm_compensate_fuel_gauge(
-              &recovery.soc, rtc_timestamp - recovery.last_capture_timestamp,
-              PM_SELF_DISG_RATE_HIBERNATION_MA, 25.0f);
+          bat_fg_compensate_soc(&recovery.soc,
+                                rtc_timestamp - recovery.last_capture_timestamp,
+                                PM_SELF_DISG_RATE_HIBERNATION_MA, 25.0f);
         }
       }
     }
@@ -130,9 +128,9 @@ pm_status_t pm_init(bool inherit_state) {
 #endif
 
     drv->battery_critical = recovery.bat_critical;
-    fuel_gauge_set_soc(&drv->fuel_gauge, recovery.soc, recovery.P);
+    bat_fg_set_soc(recovery.soc, recovery.P);
   } else {
-    pm_battery_initial_soc_guess();
+    bat_fg_initial_guess();
   }
 
   if (inherit_state) {
@@ -423,8 +421,12 @@ pm_status_t pm_get_report(pm_report_t* report) {
   report->battery_voltage_v = drv->pmic_data.vbat;
   report->battery_current_ma = drv->pmic_data.ibat;
   report->battery_temp_c = drv->pmic_data.ntc_temp;
-  report->battery_soc = drv->fuel_gauge.soc;
-  report->battery_soc_latched = drv->fuel_gauge.soc_latched;
+
+  bat_fg_state_t fg_state;
+  bat_fg_get_state(&fg_state);
+  report->battery_soc = fg_state.soc;
+  report->battery_soc_latched = fg_state.soc_latched;
+
   report->pmic_temp_c = drv->pmic_data.die_temp;
   report->wireless_rectifier_voltage_v = drv->wireless_data.vrect;
   report->wireless_output_voltage_v = drv->wireless_data.vout;
@@ -500,8 +502,11 @@ pm_status_t pm_store_data_to_backup_ram() {
 
   pm_recovery_data_t recovery = {.version = PM_RECOVERY_DATA_VERSION};
 
-  recovery.soc = drv->fuel_gauge.soc;
-  recovery.P = drv->fuel_gauge.P;
+  bat_fg_state_t fg_state;
+  bat_fg_get_state(&fg_state);
+
+  recovery.soc = fg_state.soc;
+  recovery.P = fg_state.P;
 
   // Power manager state
   recovery.bat_critical = drv->battery_critical;
@@ -737,21 +742,6 @@ bool pm_driver_is_suspended(void) {
   irq_unlock(irq_key);
 
   return suspended;
-}
-
-void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
-                              float battery_current_ma, float bat_temp_c) {
-  pm_driver_t* drv = &g_pm;
-
-  if (!drv->initialized) {
-    return;
-  }
-
-  float compensation_mah = ((battery_current_ma)*elapsed_s) / 3600.0f;
-  bool discharging_mode = battery_current_ma >= 0.0f;
-  *soc -=
-      (compensation_mah / battery_total_capacity(&drv->fuel_gauge.model,
-                                                 bat_temp_c, discharging_mode));
 }
 
 static pm_status_t pm_wait_to_stabilize(pm_driver_t* drv, uint32_t timeout_ms) {

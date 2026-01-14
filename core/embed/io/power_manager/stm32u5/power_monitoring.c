@@ -29,8 +29,7 @@
 #include <sec/telemetry.h>
 #endif
 
-#include "../fuel_gauge/battery_model.h"
-#include "../fuel_gauge/fuel_gauge.h"
+#include "../battery/battery.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
@@ -38,7 +37,6 @@
 static void pm_temperature_controller(pm_driver_t* drv);
 #endif
 
-static void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 static void pm_parse_power_source_state(pm_driver_t* drv);
 
 #ifdef PM_ENABLE_TEMP_CONTROL
@@ -91,17 +89,18 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   // Run battery charging controller
   pm_charging_controller(drv);
 
-  drv->battery_ocv =
-      battery_meas_to_ocv(&drv->fuel_gauge.model, drv->pmic_data.vbat,
-                          drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+  drv->battery_ocv = bat_meas_to_ocv(drv->pmic_data.vbat, drv->pmic_data.ibat,
+                                     drv->pmic_data.ntc_temp);
 
   if (!drv->fuel_gauge_initialized) {
     // Fuel gauge not initialized yet, battery SoC not available, sample the
     // battery data into the circular buffer.
-    pm_battery_sampling(drv->pmic_data.vbat, drv->pmic_data.ibat,
-                        drv->pmic_data.ntc_temp);
+    bat_fg_feed_sample(drv->pmic_data.vbat, drv->pmic_data.ibat,
+                       drv->pmic_data.ntc_temp);
 
   } else {
+    bat_fg_state_t fg_state;
+
     if (drv->woke_up_from_suspend) {
 #ifdef USE_RTC
 
@@ -109,8 +108,10 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
       // estimation during the suspend period. Since this period may be very
       // long and the battery temperature may vary, use the average ambient
       // temperature.
-      pm_compensate_fuel_gauge(&drv->fuel_gauge.soc, drv->time_in_suspend_s,
-                               PM_SELF_DISG_RATE_SUSPEND_MA, 25.0f);
+
+      bat_fg_get_state(&fg_state);
+      bat_fg_compensate_soc(&fg_state.soc, drv->time_in_suspend_s,
+                            PM_SELF_DISG_RATE_SUSPEND_MA, 25.0f);
 
       // TODO: Currently in suspend mode we use single self-discharge rate
       // but in practice the discharge rate may change in case some components
@@ -118,9 +119,7 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
       // mode for limited time, for now we decided to neglect this. but in
       // the future we may want to distinguish between different suspend modes
       // and use different self-discharge rates.
-
-      fuel_gauge_set_soc(&drv->fuel_gauge, drv->fuel_gauge.soc,
-                         drv->fuel_gauge.P);
+      bat_fg_set_soc(fg_state.soc, fg_state.P);
 
 #endif  // USE_RTC
 
@@ -128,16 +127,16 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
       drv->woke_up_from_suspend = false;
 
     } else {
-      fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
-                        drv->pmic_data.vbat, drv->pmic_data.ibat,
-                        drv->pmic_data.ntc_temp);
+      bat_fg_update(drv->pmic_sampling_period_ms, drv->pmic_data.vbat,
+                    drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
     }
 
     // Charging completed flag from PMIC controller
     if (drv->pmic_data.charge_status & 0x2) {
       // Force fuel gauge to 100%, keep the covariance
       drv->fully_charged = true;
-      fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
+      bat_fg_get_state(&fg_state);
+      bat_fg_set_soc(1.0f, fg_state.P);
     } else {
       if (drv->pmic_data.ibat > 0) {
         drv->fully_charged = false;
@@ -145,7 +144,8 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
     }
 
     // Ceil the float soc to user-friendly integer
-    drv->soc_ceiled = (uint8_t)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
+    bat_fg_get_state(&fg_state);
+    drv->soc_ceiled = (uint8_t)(fg_state.soc_latched * 100 + 0.999f);
 
     // Check battery voltage for low threshold
     if (drv->soc_ceiled <= PM_BATTERY_LOW_THRESHOLD_SOC && !drv->battery_low) {
@@ -211,13 +211,11 @@ void pm_charging_controller(pm_driver_t* drv) {
   } else if (fabsf((-drv->pmic_data.ibat) - (float)drv->i_chg_target_ma) <=
              20.0f) {
     // Translate SoC target to charging voltage via battery model
-    float target_ocv_voltage_v =
-        battery_ocv(&drv->fuel_gauge.model, drv->soc_target / 100.0f,
-                    drv->pmic_data.ntc_temp, false);
+    float target_ocv_voltage_v = bat_soc_to_ocv(drv->soc_target / 100.0f,
+                                                drv->pmic_data.ntc_temp, false);
 
-    float battery_ocv_v =
-        battery_meas_to_ocv(&drv->fuel_gauge.model, drv->pmic_data.vbat,
-                            drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+    float battery_ocv_v = bat_meas_to_ocv(
+        drv->pmic_data.vbat, drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
 
     drv->target_battery_ocv_v_tau =
         (drv->target_battery_ocv_v_tau * 0.95f) +
@@ -227,9 +225,9 @@ void pm_charging_controller(pm_driver_t* drv) {
       // current voltage is within tight bounds of target voltage,
       // we may also force SoC estimate to target value.
       if (drv->target_battery_ocv_v_tau < target_ocv_voltage_v + 0.15) {
-        fuel_gauge_set_soc(&drv->fuel_gauge,
-                           (drv->soc_target / 100.0f) - 0.0001f,
-                           drv->fuel_gauge.P);
+        bat_fg_state_t fg_state;
+        bat_fg_get_state(&fg_state);
+        bat_fg_set_soc((drv->soc_target / 100.0f) - 0.0001f, fg_state.P);
       }
 
       drv->soc_target_reached = true;
@@ -294,30 +292,6 @@ static void pm_temperature_controller(pm_driver_t* drv) {
 
 #endif
 
-static void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
-  pm_driver_t* drv = &g_pm;
-
-  // Store battery data in the buffer
-  drv->bat_sampling_buf[drv->bat_sampling_buf_head_idx].vbat = vbat;
-  drv->bat_sampling_buf[drv->bat_sampling_buf_head_idx].ibat = ibat;
-  drv->bat_sampling_buf[drv->bat_sampling_buf_head_idx].ntc_temp = ntc_temp;
-
-  // Update head index
-  drv->bat_sampling_buf_head_idx++;
-  if (drv->bat_sampling_buf_head_idx >= PM_BATTERY_SAMPLING_BUF_SIZE) {
-    drv->bat_sampling_buf_head_idx = 0;
-  }
-
-  // Check if the buffer is full
-  if (drv->bat_sampling_buf_head_idx == drv->bat_sampling_buf_tail_idx) {
-    // Buffer is full, move tail index forward
-    drv->bat_sampling_buf_tail_idx++;
-    if (drv->bat_sampling_buf_tail_idx >= PM_BATTERY_SAMPLING_BUF_SIZE) {
-      drv->bat_sampling_buf_tail_idx = 0;
-    }
-  }
-}
-
 static void pm_parse_power_source_state(pm_driver_t* drv) {
   // Check USB power source status
   if (drv->pmic_data.usb_status != 0x0) {
@@ -345,60 +319,21 @@ static void pm_parse_power_source_state(pm_driver_t* drv) {
     }
   }
 
+  bat_fg_state_t fg_state;
+  bat_fg_get_state(&fg_state);
+
   // Check battery voltage for critical (undervoltage) threshold
   if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
       !drv->battery_critical && !drv->usb_connected) {
     // Force Fuel gauge to 0, keep the covariance
-    fuel_gauge_set_soc(&drv->fuel_gauge, 0.0f, drv->fuel_gauge.P);
+    bat_fg_set_soc(0.0f, fg_state.P);
     drv->battery_critical = true;
 
-  } else if (drv->fuel_gauge.soc_latched >=
-                 (PM_BATTERY_CRITICAL_RECOVERY_SOC) ||
+  } else if (fg_state.soc_latched >= (PM_BATTERY_CRITICAL_RECOVERY_SOC) ||
              drv->usb_connected) {
     // Restore the battery critical state
     drv->battery_critical = false;
   }
-}
-
-void pm_battery_initial_soc_guess(void) {
-  pm_driver_t* drv = &g_pm;
-
-  irq_key_t irq_key = irq_lock();
-
-  // Check if the buffer is full
-  if (drv->bat_sampling_buf_head_idx == drv->bat_sampling_buf_tail_idx) {
-    // Buffer is empty, no data to process
-    return;
-  }
-
-  // Calculate average voltage, current and temperature from the sampling
-  // buffer and run the fuel gauge initial guess
-  uint8_t buf_idx = drv->bat_sampling_buf_tail_idx;
-  uint8_t samples_count = 0;
-  float vbat_g = 0.0f;
-  float ibat_g = 0.0f;
-  float ntc_temp_g = 0.0f;
-  while (drv->bat_sampling_buf_head_idx != buf_idx) {
-    vbat_g += drv->bat_sampling_buf[buf_idx].vbat;
-    ibat_g += drv->bat_sampling_buf[buf_idx].ibat;
-    ntc_temp_g += drv->bat_sampling_buf[buf_idx].ntc_temp;
-
-    buf_idx++;
-    if (buf_idx >= PM_BATTERY_SAMPLING_BUF_SIZE) {
-      buf_idx = 0;
-    }
-
-    samples_count++;
-  }
-
-  // Calculate average values
-  vbat_g /= samples_count;
-  ibat_g /= samples_count;
-  ntc_temp_g /= samples_count;
-
-  fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
-
-  irq_unlock(irq_key);
 }
 
 #endif

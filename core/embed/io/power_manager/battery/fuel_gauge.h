@@ -27,22 +27,9 @@
  * @brief Fuel gauge state structure
  */
 typedef struct {
-  battery_model_t model;  ///< Battery model parameters
-
-  /** @name State estimates */
-  /**@{*/
   float soc;          ///< State of charge estimate (0.0 to 1.0)
   float soc_latched;  ///< Latched SOC (the one that gets reported)
   float P;            ///< Error covariance
-  /**@}*/
-
-  /** @name Filter parameters */
-  /**@{*/
-  float R;             ///< Measurement noise variance
-  float Q;             ///< Process noise variance
-  float R_aggressive;  ///< Aggressive measurement noise variance
-  float Q_aggressive;  ///< Aggressive process noise variance
-  /**@}*/
 } fuel_gauge_state_t;
 
 /**
@@ -55,8 +42,7 @@ typedef struct {
  * @param Q_aggressive Aggressive mode process noise variance
  * @param P_init Initial error covariance
  */
-void fuel_gauge_init(fuel_gauge_state_t* state, float R, float Q,
-                     float R_aggressive, float Q_aggressive, float P_init);
+void fuel_gauge_init(fuel_gauge_state_t* state);
 
 /**
  * @brief Reset the EKF state
@@ -81,7 +67,8 @@ void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P);
  * @param current_mA Current battery current (mA), positive for discharge
  * @param temperature Battery temperature (°C)
  */
-void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
+void fuel_gauge_initial_guess(fuel_gauge_state_t* state,
+                              battery_model_t* battery_model, float voltage_V,
                               float current_mA, float temperature);
 
 /**
@@ -94,5 +81,6 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
  * @param temperature Battery temperature (°C)
  * @return Updated SOC estimate (0.0 to 1.0)
  */
-float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms,
+float fuel_gauge_update(fuel_gauge_state_t* state,
+                        battery_model_t* battery_model, uint32_t dt_ms,
                         float voltage_V, float current_mA, float temperature);
