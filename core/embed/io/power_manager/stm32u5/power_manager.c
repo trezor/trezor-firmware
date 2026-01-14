@@ -526,6 +526,15 @@ pm_status_t pm_store_data_to_backup_ram() {
     return PM_ERROR;
   }
 
+  /* Update battery cycle counter telemetry */
+  // float cycle_increment = bat_fetch_cycle_increment();
+  //
+  // Add cycle increment to telemetry
+  // #ifdef USE_TELEMETRY
+  //   telemetry_add_battery_cycle_increment(cycle_increment);
+  // #endif
+  //
+
   return PM_OK;
 }
 

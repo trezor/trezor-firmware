@@ -24,6 +24,7 @@
 #include "battery.h"
 #include "battery_model.h"
 #include "fuel_gauge.h"
+#include "math.h"
 
 typedef struct {
   float voltage_V;
@@ -48,6 +49,8 @@ typedef struct {
   battery_model_t battery_model;
   bat_sample_buffer_t sample_buf;
 
+  float cycle_counter;
+
 } bat_driver_t;
 
 bat_driver_t g_bat_driver = {
@@ -60,7 +63,6 @@ void bat_init(void) {
   if (drv->initialized) {
     return;  // Already initialized
   }
-
   memset(drv, 0, sizeof(bat_driver_t));
 
   battery_model_init(&drv->battery_model);
@@ -197,6 +199,10 @@ ts_t bat_fg_update(uint32_t dt_ms, float voltage_V, float current_mA,
     return TS_EINVAL;
   }
 
+  drv->cycle_counter += (fabsf(current_mA) * ((float)dt_ms / 3600000.0f)) /
+                        (2 * battery_total_capacity(&drv->battery_model, 25.0f,
+                                                    current_mA >= 0.0f));
+
   fuel_gauge_update(&drv->fg_state, &drv->battery_model, dt_ms, voltage_V,
                     current_mA, temp_C);
 
@@ -222,6 +228,18 @@ ts_t bat_fg_compensate_soc(float* soc, uint32_t elapsed_s,
                                                  avg_temp_C, discharging_mode));
 
   return TS_OK;
+}
+
+float bat_fetch_cycle_increment(void) {
+  bat_driver_t* drv = &g_bat_driver;
+
+  if (!drv->initialized) {
+    return 0.0f;
+  }
+
+  float cycle_increment = (float)((uint16_t)drv->cycle_counter);
+  drv->cycle_counter = 0.0f;
+  return cycle_increment;
 }
 
 float bat_soc_to_ocv(float soc, float temp_C, bool discharging_mode) {
