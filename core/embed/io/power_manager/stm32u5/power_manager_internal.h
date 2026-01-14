@@ -70,10 +70,7 @@ typedef struct {
   // Set if the driver's background operations are suspended.
   bool suspended;
 
-  // Fuel gauge
-  bool fuel_gauge_initialized;
   uint8_t soc_ceiled;
-
   uint8_t soc_target;
   bool soc_target_reached;
   float target_battery_ocv_v_tau;
