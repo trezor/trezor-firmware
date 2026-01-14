@@ -129,3 +129,24 @@ pub enum TrezorUiResult {
     Integer(u32),
     String(ShortString),
 }
+
+#[derive(Archive, Serialize)]
+pub enum TrezorCryptoEnum {
+    GetXpub {
+        title: ShortString,
+        content: ShortString,
+    },
+    SignHash {
+        title: ShortString,
+        content: ShortString,
+    },
+}
+
+/// Outgoing Crypto result message for IPC
+#[derive(Archive, Serialize, Deserialize)]
+pub enum TrezorCryptoResult {
+    None,
+    Confirmed,
+    Cancelled,
+    Xpub(ShortString),
+}

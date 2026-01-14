@@ -1,6 +1,11 @@
+extern crate alloc;
+
+use alloc::vec::Vec;
+
 use ufmt::derive::uDebug;
 
-use crate::{low_level_api, sysevent::SysEvents};
+use crate::low_level_api;
+use crate::sysevent::SysEvents;
 
 #[derive(uDebug, Copy, Clone, PartialEq, Eq)]
 pub struct Timeout(u32);
@@ -66,3 +71,5 @@ impl<'a> AsRef<str> for SliceWriter<'a> {
         unsafe { core::str::from_utf8_unchecked(&self.slice[..self.pos]) }
     }
 }
+
+struct DerivationPath([u32; 8]);

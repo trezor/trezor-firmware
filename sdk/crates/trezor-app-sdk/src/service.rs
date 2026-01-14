@@ -16,6 +16,7 @@ pub enum CoreIpcService {
     WireStart = 2,
     WireContinue = 3,
     WireEnd = 4,
+    Crypto = 5,
     #[num_enum(catch_all)]
     Unknown(u16),
     Ping = 0xffff,
