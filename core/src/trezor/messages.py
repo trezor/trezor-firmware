@@ -6128,6 +6128,30 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["StellarSignedTx"]:
             return isinstance(msg, cls)
 
+    class TelemetryGet(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TelemetryGet"]:
+            return isinstance(msg, cls)
+
+    class Telemetry(protobuf.MessageType):
+        min_temp_c: "int | None"
+        max_temp_c: "int | None"
+        battery_errors: "int | None"
+
+        def __init__(
+            self,
+            *,
+            min_temp_c: "int | None" = None,
+            max_temp_c: "int | None" = None,
+            battery_errors: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Telemetry"]:
+            return isinstance(msg, cls)
+
     class TezosGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"

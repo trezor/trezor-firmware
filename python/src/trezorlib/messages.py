@@ -700,6 +700,8 @@ class MessageType(IntEnum):
     BenchmarkNames = 9101
     BenchmarkRun = 9102
     BenchmarkResult = 9103
+    TelemetryGet = 1100
+    Telemetry = 1101
 
 
 class BenchmarkListNames(protobuf.MessageType):
@@ -7858,6 +7860,30 @@ class StellarSignedTx(protobuf.MessageType):
     ) -> None:
         self.public_key = public_key
         self.signature = signature
+
+
+class TelemetryGet(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1100
+
+
+class Telemetry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1101
+    FIELDS = {
+        1: protobuf.Field("min_temp_c", "sint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("max_temp_c", "sint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("battery_errors", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        min_temp_c: Optional["int"] = None,
+        max_temp_c: Optional["int"] = None,
+        battery_errors: Optional["int"] = None,
+    ) -> None:
+        self.min_temp_c = min_temp_c
+        self.max_temp_c = max_temp_c
+        self.battery_errors = battery_errors
 
 
 class TezosGetAddress(protobuf.MessageType):

@@ -25,6 +25,7 @@ mod generated {
         messages_management
         messages_benchmark
         messages_thp
+        messages_telemetry
         options
 
         "bitcoin" => messages_bitcoin
