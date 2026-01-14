@@ -268,26 +268,27 @@ class CodeEntry(PairingMethod):
             cpace_trezor_public_key=cpace_trezor_msg.cpace_trezor_public_key,
         )
 
-    def send_code(self, code: str) -> None:
-        assert self.code_entry_state is not None
-
-        if len(code) != 6 or not code.isdigit():
-            raise ValueError("Code must be a 6-digit number")
-
+    def _perform_cpace(self, code: str) -> messages.ThpCodeEntryCpaceHostTag:
         # perform the CPace protocol
+        assert self.code_entry_state is not None
         cpace_result = cpace(
             prs=code.encode("ascii"),
             ci=self.handshake_hash,
             b_pubkey=self.code_entry_state.cpace_trezor_public_key,
         )
         tag = sha256(cpace_result.shared_secret).digest()
-        secret_msg = self.controller._call(
-            messages.ThpCodeEntryCpaceHostTag(
-                cpace_host_public_key=cpace_result.a_pubkey,
-                tag=tag,
-            ),
-            expect=messages.ThpCodeEntrySecret,
+        return messages.ThpCodeEntryCpaceHostTag(
+            cpace_host_public_key=cpace_result.a_pubkey,
+            tag=tag,
         )
+
+    def send_code(self, code: str) -> None:
+        assert self.code_entry_state is not None
+        if len(code) != 6 or not code.isdigit():
+            raise ValueError("Code must be a 6-digit number")
+
+        msg = self._perform_cpace(code)
+        secret_msg = self.controller._call(msg, expect=messages.ThpCodeEntrySecret)
 
         # check the commitment
         computed_commitment = sha256(secret_msg.secret).digest()
