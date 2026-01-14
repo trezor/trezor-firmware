@@ -1292,7 +1292,7 @@ class TrezorTestContext:
         auto_interact: bool = True,
         debug_transport: Transport | None = None,
         force_wipe: bool = False,
-        host_name: str | None = "debughost",
+        host_name: str | None = None,
     ) -> None:
         try:
             debug_transport = debug_transport or transport.find_debug()
@@ -1308,6 +1308,8 @@ class TrezorTestContext:
                 raise
 
         self.transport = transport
+        if host_name is None:
+            host_name = "debughost"
         self.app = client.AppManifest(app_name="debuglink", host_name=host_name)
 
         if protocol_v1.probe(self.transport):
