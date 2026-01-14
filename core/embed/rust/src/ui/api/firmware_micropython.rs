@@ -2019,9 +2019,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
     Qstr::MP_QSTR_show_ble_pairing_code => obj_fn_kw!(0, new_show_ble_pairing_code).as_obj(),
 
-    /// def wait_ble_host_confirmation(
-    ///     *,
-    /// ) -> LayoutObj[UiResult]:
+    /// def wait_ble_host_confirmation() -> LayoutObj[UiResult]:
     ///     """Pairing device: third screen (waiting for host confirmation).
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
     Qstr::MP_QSTR_wait_ble_host_confirmation => obj_fn_kw!(0, new_wait_ble_host_confirmation).as_obj(),
