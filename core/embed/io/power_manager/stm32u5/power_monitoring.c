@@ -80,8 +80,10 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   stwlc38_get_report(&drv->wireless_data);
 
 #ifdef USE_TELEMETRY
-  // Update telemetry with current battery temperature
-  telemetry_update_battery_temp(drv->pmic_data.ntc_temp);
+  // Update telemetry with the current battery temperature
+  if (!drv->pmic_data.ntc_disconnected) {
+    telemetry_update_battery_temp(drv->pmic_data.ntc_temp);
+  }
 #endif
 
   // detect battery disconnection
