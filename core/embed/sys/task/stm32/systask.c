@@ -180,6 +180,8 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
   task->applet = applet;
   task->sb_addr = sb_addr;
 
+  task->initialized = true;
+
   // Notify all event sources about the task creation
   sysevents_notify_task_created(task);
 
@@ -359,7 +361,9 @@ static void systask_kill(systask_t* task) {
   }
 }
 
-bool systask_is_alive(const systask_t* task) { return !task->killed; }
+bool systask_is_alive(const systask_t* task) {
+  return task->initialized && !task->killed;
+}
 
 void systask_exit(systask_t* task, int exit_code) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
