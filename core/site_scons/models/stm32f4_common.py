@@ -108,6 +108,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/time/stm32/systick.c",
         "embed/sys/time/stm32/systimer.c",
         "embed/sys/task/sysevent.c",
+        "embed/sys/task/system.c",
     ]
 
     if "dbg_console" in features_wanted:
