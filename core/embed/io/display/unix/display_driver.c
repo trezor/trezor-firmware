@@ -101,10 +101,6 @@ static display_driver_t g_display_driver = {
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
-static void display_exit_handler(void) {
-  display_deinit(DISPLAY_RESET_CONTENT);
-}
-
 bool display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
@@ -116,7 +112,6 @@ bool display_init(display_content_mode_t mode) {
     LOG_ERR("%s", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
-  atexit(display_exit_handler);
 
   char *window_title = NULL;
   char *window_title_alloc = NULL;
