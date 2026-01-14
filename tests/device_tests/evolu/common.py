@@ -11,8 +11,6 @@ from trezorlib.messages import ThpCredentialResponse
 from trezorlib.thp import curve25519
 
 from ...common import compact_size
-from ..thp.connect import prepare_protocol_for_pairing
-from ..thp.test_pairing import nfc_pairing
 
 TEST_randomness = os.urandom(32)
 TEST_host_static_private_key = curve25519.get_private_key(TEST_randomness)
@@ -50,11 +48,12 @@ class ThpPairingResult:
 
 
 def pair_and_get_credential(client: Client) -> ThpPairingResult:
-    from ..thp.connect import prepare_channel_for_pairing
-    from ..thp.test_pairing import _nfc_pairing
+    from ..thp.connect import nfc_pairing, prepare_channel_for_pairing
 
-    prepare_channel_for_pairing(client, host_static_privkey=TEST_host_static_private_key)
-    _nfc_pairing(client)
+    prepare_channel_for_pairing(
+        client, host_static_privkey=TEST_host_static_private_key
+    )
+    nfc_pairing(client)
     credential = client.pairing.request_credential(autoconnect=False)
     client.pairing.finish()
 
