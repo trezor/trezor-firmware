@@ -349,7 +349,6 @@ def _prepared_test_ctx(
             "  pytest -m 'not sd_card' <test path>"
         )
 
-    test_ui = request.config.getoption("ui")
     fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
 
     _raw_test_ctx.reset_debug_features()
