@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "embed/upymod/trezorobj.h"
 #include "py/mperrno.h"
 
 #include <io/sdcard.h>
