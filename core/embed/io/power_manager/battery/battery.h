@@ -154,6 +154,21 @@ ts_t bat_fg_compensate_soc(float* soc, uint32_t elapsed_s,
                            float avg_bat_current_mA, float avg_temp_C);
 
 /**
+ * @brief Fetch battery cycle count increment from the fuel gauge.
+ *
+ * Battery driver maintains an internal cycle counter based on the accumulated
+ * current throughput. This function retrieves the number reflecting the number
+ * of full charge-discharge cycles completed since the last fetch.
+ *
+ * calculation example:
+ * cycle_count = sum(current_mA * dt_hours) / (2 *
+ * battery_total_capacity_mah(@25C))
+ *
+ * @return Number of full charge-discharge cycles completed since last fetch
+ */
+float bat_fetch_cycle_increment(void);
+
+/**
  * @brief Convert battery SOC to OCV according to the battery model at given
  * temperature point.
  *
