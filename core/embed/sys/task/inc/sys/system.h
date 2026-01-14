@@ -24,16 +24,17 @@
 #ifdef KERNEL_MODE
 
 /**
- * @brief Initializes fundamental system services (MPU, SysTick, systimer
- * and task scheduler)
+ * @brief Initializes the fundamental system services (MPU, SysTick, systimer
+ * and task scheduler).
  *
- * @param error_handler Callback that is called when a kernel task
- * terminates with an error
+ * @param error_handler Callback that is called when a kernel task terminates
+ * with an error
  */
 void system_init(systask_error_handler_t error_handler);
 
 /**
- * Deinitializes the system services before handover to next booting stage.
+ * @brief Deinitializes the system services before handover to next booting
+ * stage.
  */
 void system_deinit(void);
 
@@ -56,8 +57,8 @@ void system_deinit(void);
  * leave the postmortem information in the bootargs allowing the bootloader
  * to display the RSOD.
  *
- * @param error_handler Callback that is called in the emergency mode
- * @param pminfo Postmortem information about the error
+ * @param error_handler Callback invoked in emergency mode (may be NULL).
+ * @param pminfo Postmortem information passed to the error handler.
  */
 __attribute__((noreturn)) void system_emergency_rescue(
     systask_error_handler_t error_handler, const systask_postmortem_t* pminfo);
@@ -71,27 +72,63 @@ __attribute__((noreturn)) void system_emergency_rescue(
  * postmortem information. If the task is not the kernel task, the task is
  * terminated immediately and the kernel task is scheduled.
  *
- * @param exitcode Exit code passed to the error handler
+ * @param exitcode Exit code returned by the terminating task.
  */
 void system_exit(int exitcode);
 
 /**
+ * @brief Terminates the current task with an error message.
+ *
+ * See the notes for `system_exit` regarding the behavior of the error handler
+ *
+ * @param title Title of the error.
+ * @param message Main error message.
+ * @param footer Footer text for the error display.
+ */
+void system_exit_error(const char* title, const char* message,
+                       const char* footer);
+
+/**
  * @brief Like `system_exit_error`, but with explicit lengths for the strings.
+ *
+ * @param title Title of the error.
+ * @param title_len Length of the title.
+ * @param message Main error message.
+ * @param message_len Length of the message.
+ * @param footer Footer text for the error display.
+ * @param footer_len Length of the footer.
  */
 void system_exit_error_ex(const char* title, size_t title_len,
                           const char* message, size_t message_len,
                           const char* footer, size_t footer_len);
 
 /**
+ * @brief Terminates the current task with a fatal error message.
+ *
+ * See the notes for `system_exit` regarding the behavior of the error handler
+ *
+ * @param message Fatal error message.
+ * @param file Source file where the fatal error occurred.
+ * @param line Line number in the source file.
+ */
+void system_exit_fatal(const char* message, const char* file, int line);
+
+/**
  * @brief Like `system_exit_fatal`, but with explicit lengths for the strings.
+ *
+ * @param message Fatal error message.
+ * @param message_len Length of the message.
+ * @param file Source file where the fatal error occurred.
+ * @param file_len Length of the file string.
+ * @param line Line number in the source file.
  */
 void system_exit_fatal_ex(const char* message, size_t message_len,
                           const char* file, size_t file_len, int line);
 
 /**
- * Returns string representation of the system fault.
+ * @brief Returns string representation of the system fault.
  *
- * @param fault Pointer to the system fault information
- * @return String representation of the fault
+ * @param fault Pointer to the system fault structure.
+ * @return const char* String describing the fault.
  */
 const char* system_fault_message(const system_fault_t* fault);
