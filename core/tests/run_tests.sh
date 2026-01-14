@@ -26,6 +26,8 @@ cd $(dirname $0)
 
 declare -i num_of_tests=${#tests[@]}
 
+export MICROPYPATH=.:../src  # for tests' imports to work as expected
+
 for test_case in ${tests[@]}; do
     echo
     if $MICROPYTHON $test_case; then

@@ -1,7 +1,3 @@
-import sys
-
-sys.path.append("../src")
-
 import unittest  # noqa: F401
 from typing import Any, Awaitable
 from ubinascii import hexlify, unhexlify  # noqa: F401
