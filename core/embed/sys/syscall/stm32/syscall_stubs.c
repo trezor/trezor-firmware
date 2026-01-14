@@ -103,6 +103,8 @@ ssize_t syshandle_write(syshandle_t handle, const void *data,
 
 #ifdef USE_DBG_CONSOLE
 
+#include <sys/dbg_console.h>
+
 ssize_t dbg_console_read(void *buffer, size_t buffer_size) {
   return syscall_invoke2((uint32_t)buffer, buffer_size,
                          SYSCALL_DBG_CONSOLE_READ);
@@ -138,6 +140,39 @@ bool syslog_set_filter(const char *filter, size_t filter_len) {
 }
 
 #endif
+
+// =============================================================================
+// ipc.h
+// =============================================================================
+
+#ifdef USE_IPC
+
+#include <sys/ipc.h>
+
+bool ipc_register(systask_id_t origin, void *buffer, size_t size) {
+  return (bool)syscall_invoke3((uint32_t)origin, (uint32_t)buffer, size,
+                               SYSCALL_IPC_REGISTER);
+}
+
+void ipc_unregister(systask_id_t origin) {
+  syscall_invoke1((uint32_t)origin, SYSCALL_IPC_UNREGISTER);
+}
+
+bool ipc_try_receive(ipc_message_t *msg) {
+  return (bool)syscall_invoke1((uint32_t)msg, SYSCALL_IPC_TRY_RECEIVE);
+}
+
+void ipc_message_free(ipc_message_t *msg) {
+  syscall_invoke1((uint32_t)msg, SYSCALL_IPC_FREE_MESSAGE);
+}
+
+bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
+              size_t data_size) {
+  return (bool)syscall_invoke4((uint32_t)remote, fn, (uint32_t)data, data_size,
+                               SYSCALL_IPC_SEND);
+}
+
+#endif  // USE_IPC
 
 // =============================================================================
 // boot_image.h

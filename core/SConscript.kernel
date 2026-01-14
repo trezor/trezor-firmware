@@ -50,6 +50,7 @@ FEATURES_WANTED = [
     "dma2d",
     "haptic",
     "input",
+    "ipc",
     "kernel_mode",
     "optiga",
     "power_manager",
