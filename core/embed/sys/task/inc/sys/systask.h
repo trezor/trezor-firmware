@@ -149,6 +149,8 @@ typedef struct {
   /** Set to nonzero, if the task is killed */
   volatile uint32_t killed;
 
+  /** The structure is properly initialized */
+  bool initialized;
   /** Task id */
   systask_id_t id;
   /** Task post-mortem information */
