@@ -230,8 +230,8 @@ def test_one_one_fee_cancel_from_amount(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client, pytest.raises(Cancelled):
-        IF = InputFlowSignTxCancelFromAmount(session.client)
+    with session.test_ctx as client, pytest.raises(Cancelled):
+        IF = InputFlowSignTxCancelFromAmount(client)
         client.set_input_flow(IF.get())
 
         btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
