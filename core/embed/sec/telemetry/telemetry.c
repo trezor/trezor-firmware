@@ -53,18 +53,23 @@ static bool telemetry_write(const telemetry_t* data) {
                           data, sizeof(*data));
 }
 
+static void telemetry_init_record(void) {
+  telemetry_t telemetry;
+  telemetry.version = TELEMETRY_DATA_VERSION;
+  telemetry.initialized = 1;
+  telemetry.reserved = 0;
+  telemetry.data.min_temp_c = 500.0f;
+  telemetry.data.max_temp_c = -500.0f;
+  telemetry.data.battery_errors.all = 0;
+  telemetry_write(&telemetry);
+}
+
 void telemetry_update_battery_temp(float temp_c) {
   telemetry_t telemetry;
   bool have = telemetry_read(&telemetry) && telemetry.initialized == 1;
 
   if (!have) {
-    telemetry.version = TELEMETRY_DATA_VERSION;
-    telemetry.initialized = 1;
-    telemetry.reserved = 0;
-    telemetry.data.min_temp_c = temp_c;
-    telemetry.data.max_temp_c = temp_c;
-    telemetry_write(&telemetry);
-    return;
+    telemetry_init_record();
   }
 
   bool changed = false;
@@ -78,6 +83,22 @@ void telemetry_update_battery_temp(float temp_c) {
   }
 
   if (changed) {
+    telemetry_write(&telemetry);
+  }
+}
+
+void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
+  telemetry_t telemetry;
+  bool have = telemetry_read(&telemetry) && telemetry.initialized == 1;
+
+  if (!have) {
+    telemetry_init_record();
+  }
+
+  // Only update and write if some of OUR flags are set
+  if (errors.all != 0 &&
+      ((telemetry.data.battery_errors.all & errors.all) != errors.all)) {
+    telemetry.data.battery_errors.all |= errors.all;
     telemetry_write(&telemetry);
   }
 }

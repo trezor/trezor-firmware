@@ -21,12 +21,25 @@
 
 #include <trezor_types.h>
 
+typedef union {
+  uint8_t all;
+  struct {
+    bool ntc_disconnected : 1;
+    bool charging_limited : 1;
+    bool temp_control_active : 1;
+    bool battery_disconnected : 1;
+    bool battery_temp_jump_detected : 1;
+    bool battery_ocv_jump_detected : 1;
+  } bits;
+} telemetry_batt_errors_t;
+
 /**
  * @brief Telemetry data structure.
  */
 typedef struct {
   float min_temp_c; /**< Minimum recorded battery temperature in Celsius. */
   float max_temp_c; /**< Maximum recorded battery temperature in Celsius. */
+  telemetry_batt_errors_t battery_errors; /**< Bitfield of battery errors. */
 } telemetry_data_t;
 
 /**
@@ -42,7 +55,16 @@ typedef struct {
 void telemetry_update_battery_temp(float temp_c);
 
 /**
- * @brief Retrieve stored min/max battery temperature (in Celsius).
+ * @brief Record battery errors into telemetry storage.
+ *
+ * The flags are ORed with the existing errors.
+ *
+ * @param errors Power management errors as a bitfield.
+ */
+void telemetry_update_battery_errors(telemetry_batt_errors_t errors);
+
+/**
+ * @brief Retrieve stored telemetry data.
  *
  * @param[out] out Pointer to where the telemetry data will be stored (may be
  * NULL).
