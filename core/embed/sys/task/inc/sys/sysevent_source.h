@@ -118,4 +118,13 @@ void sysevents_notify_task_created(systask_t *task);
 // event source.
 void sysevents_notify_task_killed(systask_t *task);
 
+// Yields the CPU from the active task and schedules it to be resumed as
+// soon as possible.
+//
+// Adds the current active task to the polling list without waiting for any
+// specific events and with an immediate timeout of 0. This effectively
+// schedules the task to resume as soon as possible when another task
+// gives up the CPU.
+void sysevents_yield_and_reschedule(systask_t *task);
+
 #endif  // KERNEL_MODE
