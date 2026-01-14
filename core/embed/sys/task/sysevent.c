@@ -258,6 +258,8 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
 
     uint32_t now = systick_ms();
 
+    bool events_processed = false;
+
     // Choose the next task to run
     for (size_t prio = 0; prio < dispatcher->pollers_count; prio++) {
       sysevent_poller_t *poller = &dispatcher->pollers[prio];
@@ -265,6 +267,7 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
       bool ready = (poller->signalled.read_ready != 0) ||
                    (poller->signalled.write_ready != 0);
       if (ready || timed_out) {
+        events_processed = true;
         systask_t *task = poller->task;
 #if defined(KERNEL) && !defined(TREZOR_EMULATOR)
         if (task->applet != NULL) {
@@ -283,13 +286,15 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
       }
     }
 
+    if (!events_processed) {
 #ifdef TREZOR_EMULATOR
-    // Wait a bit to not consume 100% CPU
-    systick_delay_ms(1);
+      // Wait a bit to not consume 100% CPU
+      systick_delay_ms(1);
 #else
-    // Wait for the next event
-    __WFI();
+      // Wait for the next event
+      __WFI();
 #endif
+    }
   }
 }
 
