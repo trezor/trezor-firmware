@@ -33,6 +33,11 @@
 #include <sys/systick.h>
 #include <sys/systimer.h>
 
+#ifdef USE_APP_LOADING
+#include <io/app_cache.h>
+#include <io/app_loader.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -97,6 +102,11 @@ static void drivers_init(void) {
 
 #ifdef USE_BLE
   ble_init();
+#endif
+
+#ifdef USE_APP_LOADING
+  app_cache_init();
+  app_loader_init();
 #endif
 }
 
