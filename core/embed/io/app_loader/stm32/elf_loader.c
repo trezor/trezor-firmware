@@ -27,11 +27,11 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <io/elf_loader.h>
+#include <sec/image.h>
 #include <sys/applet.h>
 #include <sys/coreapp.h>
 #include <sys/mpu.h>
-#include <util/elf_loader.h>
-#include <util/image.h>
 
 #include "../app_arena.h"
 #include "elf.h"

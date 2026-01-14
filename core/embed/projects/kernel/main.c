@@ -38,6 +38,11 @@
 #include <sys/system.h>
 #include <sys/systick.h>
 
+#ifdef USE_APP_LOADING
+#include <io/app_cache.h>
+#include <io/app_loader.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -189,6 +194,11 @@ void drivers_init() {
 
 #ifdef USE_USB
   usb_configure(NULL);
+#endif
+
+#ifdef USE_APP_LOADING
+  app_cache_init();
+  app_loader_init();
 #endif
 }
 
