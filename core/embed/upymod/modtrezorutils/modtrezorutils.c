@@ -46,6 +46,10 @@
 #include "blake2s.h"
 #include "memzero.h"
 
+#ifdef USE_TELEMETRY
+#include <sec/telemetry.h>
+#endif
+
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
@@ -62,6 +66,30 @@
 #endif
 
 /// from trezor import utils
+
+#ifdef USE_TELEMETRY
+/// def telemetry_get() -> tuple[int, int, int] | None:
+///     """
+///     Retrieves the stored telemetry data. Returns a tuple
+///     (min_temp_milli_c, max_temp_milli_c, battery_errors)
+///     or None if telemetry is not available.
+///     """
+STATIC mp_obj_t mod_trezorutils_telemetry_get(void) {
+  telemetry_data_t data;
+  if (!telemetry_get(&data)) {
+    return mp_const_none;
+  }
+
+  mp_obj_t tuple[3];
+  tuple[0] = mp_obj_new_int((int32_t)(data.min_temp_c * 1000.0f));
+  tuple[1] = mp_obj_new_int((int32_t)(data.max_temp_c * 1000.0f));
+  tuple[2] = mp_obj_new_int(data.battery_errors.all);
+
+  return mp_obj_new_tuple(3, tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_telemetry_get_obj,
+                                 mod_trezorutils_telemetry_get);
+#endif
 
 /// def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
 ///     """
@@ -763,6 +791,8 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether a debug console is enabled."""
 /// USE_APP_LOADING: bool
 /// """Whether the firmware supports loading 3rd-party applications."""
+/// USE_TELEMETRY: bool
+/// """Whether a telemetry is supported."""
 /// MODEL: str
 /// """Model name."""
 /// MODEL_FULL_NAME: str
@@ -831,6 +861,13 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_bootloader_locked_obj)},
     {MP_ROM_QSTR(MP_QSTR_notify_send),
      MP_ROM_PTR(&mod_trezorutils_notify_send_obj)},
+#ifdef USE_TELEMETRY
+    {MP_ROM_QSTR(MP_QSTR_telemetry_get),
+     MP_ROM_PTR(&mod_trezorutils_telemetry_get_obj)},
+    {MP_ROM_QSTR(MP_QSTR_USE_TELEMETRY), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_TELEMETRY), mp_const_false},
+#endif
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_BOOT), MP_ROM_INT(NOTIFY_BOOT)},
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_UNLOCK), MP_ROM_INT(NOTIFY_UNLOCK)},
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_LOCK), MP_ROM_INT(NOTIFY_LOCK)},
