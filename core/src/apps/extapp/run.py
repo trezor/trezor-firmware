@@ -23,6 +23,7 @@ _SERVICE_UI = const(1)
 _SERVICE_WIRE_START = const(2)
 _SERVICE_WIRE_CONTINUE = const(3)
 _SERVICE_WIRE_END = const(4)
+_SERVICE_CRYPTO = const(5)
 
 
 def fn_id(service: int, message_id: int) -> int:
@@ -62,7 +63,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         if not task.is_running():
             raise DataError(f"Task stopped: {request.instance_id}")
         try:
-            msg: IpcMessage = await loop.wait(io.IPC2_EVENT | io.POLL_READ, timeout_ms=1000)
+            msg: IpcMessage = await loop.wait(
+                io.IPC2_EVENT | io.POLL_READ, timeout_ms=1000
+            )
         except loop.Timeout:
             die(DataError("Timeout waiting for message"))
 
@@ -77,6 +80,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             # Serialize the result into a compact binary response
             resp = trezorui_api.serialize_ui_result(result=result)
             io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UI, 0), resp)
+
+        elif service == _SERVICE_CRYPTO:
+            pass
 
         elif service == _SERVICE_WIRE_CONTINUE:
             # usb request/ack
