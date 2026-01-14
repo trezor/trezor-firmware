@@ -67,6 +67,7 @@ FEATURES_WANTED = [
     "serial_number",
     "storage",
     "suspend",
+    'telemetry',
     "tropic",
     "usb",
     "usb_iface_wire",
@@ -748,6 +749,8 @@ if FROZEN:
         ))
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
+    if 'telemetry' in FEATURES_AVAILABLE:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/telemetry/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*/*.py',
         exclude=[

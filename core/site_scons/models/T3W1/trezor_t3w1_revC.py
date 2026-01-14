@@ -241,6 +241,7 @@ def configure(
         sources += ["embed/sec/telemetry/telemetry.c"]
         paths += ["embed/sec/telemetry/inc"]
         defines += [("USE_TELEMETRY", "1")]
+        features_available.append("telemetry")
 
     defines += [
         "FRAMEBUFFER",

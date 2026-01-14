@@ -11,6 +11,15 @@ from trezor import utils
 
 
 # upymod/modtrezorutils/modtrezorutils.c
+def telemetry_get() -> tuple[int, int, int] | None:
+    """
+    Retrieves the stored telemetry data. Returns a tuple
+    (min_temp_milli_c, max_temp_milli_c, battery_errors)
+    or None if telemetry is not available.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
 def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
     """
     Compares the private information in `sec` with public, user-provided
@@ -268,6 +277,8 @@ USE_DBG_CONSOLE: bool
 """Whether a debug console is enabled."""
 USE_APP_LOADING: bool
 """Whether the firmware supports loading 3rd-party applications."""
+USE_TELEMETRY: bool
+"""Whether a telemetry is supported."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str
