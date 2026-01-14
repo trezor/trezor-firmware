@@ -1,9 +1,9 @@
 import secrets
 import time
 import typing as t
+from contextlib import contextmanager
 from hashlib import sha256
 from unittest.mock import patch
-from contextlib import contextmanager
 
 import pytest
 import typing_extensions as tx
@@ -99,6 +99,57 @@ def test_pairing_code_entry(client: Client) -> None:
     method.send_code(f"{code:06}")
 
     client.pairing.finish()
+
+
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+@deterministic_secrets()
+def test_pairing_code_entry_invalid_cpace_key(client: Client) -> None:
+    prepare_channel_for_pairing(client, fixed_entropy=True)
+    method = pairing.CodeEntry(client.pairing)
+
+    # Code Entry code shown
+    pairing_info = client.debug.pairing_info(
+        thp_channel_id=client.channel.channel_id.to_bytes(2, "big")
+    )
+    code = pairing_info.code_entry_code
+    assert code is not None
+    code_str = f"{code:06}"
+
+    invalid_msg = method._perform_cpace(code_str)
+    invalid_msg.cpace_host_public_key = b"\x00" * 32
+    method._perform_cpace = lambda code: invalid_msg
+    with pytest.raises(
+        exceptions.TrezorFailure, match="DataError: Unexpected Code Entry Tag"
+    ):
+        method.send_code(code_str)
+
+
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+@deterministic_secrets()
+def test_pairing_code_entry_invalid_cpace_key_length(client: Client) -> None:
+    prepare_channel_for_pairing(client, fixed_entropy=True)
+    method = pairing.CodeEntry(client.pairing)
+
+    # Code Entry code shown
+    pairing_info = client.debug.pairing_info(
+        thp_channel_id=client.channel.channel_id.to_bytes(2, "big")
+    )
+    code = pairing_info.code_entry_code
+    assert code is not None
+    code_str = f"{code:06}"
+
+    invalid_msg = method._perform_cpace(code_str)
+    invalid_msg.cpace_host_public_key = invalid_msg.cpace_host_public_key[:16]
+    method._perform_cpace = lambda code: invalid_msg
+    with pytest.raises(
+        exceptions.TrezorFailure,
+        match="DataError: CPACE host public key must be 32 bytes long",
+    ):
+        method.send_code(code_str)
 
 
 @pytest.mark.filterwarnings(
