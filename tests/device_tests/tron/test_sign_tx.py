@@ -4,7 +4,7 @@ import json
 import pytest
 
 from trezorlib import messages, protobuf, tron
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -59,7 +59,7 @@ def _do_cancel_sign_tx(session: Session, fixture: str):
         yield
         session.cancel()
 
-    with pytest.raises(Cancelled), session.client as client:
+    with pytest.raises(Cancelled), session.test_ctx as client:
         client.set_input_flow(input_flow)
         tron.sign_tx(session, tx, contract, address_n)
 
