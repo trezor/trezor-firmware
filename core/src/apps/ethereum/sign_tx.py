@@ -361,6 +361,11 @@ async def _handle_known_contract_calls(
 
         token = definitions.get_token(address_bytes)
         token_address = address_bytes
+    else:
+        # If the function was known but something else (data length) was unexpected,
+        # pretend we did not recognize the function so we fall back to blind signing.
+        # See the approve_avantis test case and ERC-8021.
+        func_sig = None
 
     return token, token_address, func_sig, recipient, value
 
