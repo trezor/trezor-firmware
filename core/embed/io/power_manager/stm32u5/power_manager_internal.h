@@ -26,7 +26,6 @@
 #include <sys/rtc_scheduler.h>
 #include <sys/systimer.h>
 
-#include "../fuel_gauge/fuel_gauge.h"
 #include "../stwlc38/stwlc38.h"
 
 // Power manager thresholds & timings
@@ -37,17 +36,9 @@
 #define PM_BATTERY_LOW_THRESHOLD_SOC 15
 #define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
-#define PM_BATTERY_SAMPLING_BUF_SIZE 10
 
 #define PM_SELF_DISG_RATE_HIBERNATION_MA 0.004f
 #define PM_SELF_DISG_RATE_SUSPEND_MA 0.032f
-
-// Fuel gauge extended kalman filter parameters
-#define PM_FUEL_GAUGE_R 3500.0f
-#define PM_FUEL_GAUGE_Q 0.0001f
-#define PM_FUEL_GAUGE_R_AGGRESSIVE 3000.0f
-#define PM_FUEL_GAUGE_Q_AGGRESSIVE 0.0002f
-#define PM_FUEL_GAUGE_P_INIT 0.1f
 
 // Timeout after which the device automatically transit from suspend to
 // hibernation
@@ -65,13 +56,6 @@
 #define PM_TEMP_CONTROL_BAND_3_MAX_TEMP 45.0f
 #define PM_TEMP_CONTROL_BAND_4_MAX_TEMP 47.0f
 
-// Power manager battery sampling data structure
-typedef struct {
-  float vbat;      // Battery voltage [V]
-  float ibat;      // Battery current [mA]
-  float ntc_temp;  // NTC temperature [°C]
-} pm_sampling_data_t;
-
 // Power manager core driver structure
 typedef struct {
   bool initialized;
@@ -87,11 +71,7 @@ typedef struct {
   bool suspended;
 
   // Fuel gauge
-  fuel_gauge_state_t fuel_gauge;
   bool fuel_gauge_initialized;
-  pm_sampling_data_t bat_sampling_buf[PM_BATTERY_SAMPLING_BUF_SIZE];
-  uint8_t bat_sampling_buf_tail_idx;
-  uint8_t bat_sampling_buf_head_idx;
   uint8_t soc_ceiled;
 
   uint8_t soc_target;
@@ -176,20 +156,8 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report);
 // pm_monitor_power_sources() to control the charging current and state.
 void pm_charging_controller(pm_driver_t* drv);
 
-// Battery initial state of charge guess function. This function uses the
-// sampled battery data to guess the initial state of charge in case its
-// unknown.
-void pm_battery_initial_soc_guess(void);
-
 // Store power manager data to backup RAM
 pm_status_t pm_store_data_to_backup_ram(void);
-
-// Direct coulomb counter compensation of the SoC based on the battery current,
-// temp and elapsed time, this function is used to compensate the fuel gauge
-// estimation during the periods where the EKF could not be used, such as
-// suspend or hibernation.
-void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
-                              float battery_current_mah, float bat_temp_c);
 
 // Schedule the RTC wakeup when going into suspend mode.
 // Return false if the driver was not initialized or the RTC timestamp is

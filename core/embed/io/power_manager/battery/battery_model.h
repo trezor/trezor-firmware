@@ -21,10 +21,12 @@
 
 #include <trezor_types.h>
 
-// Include the battery data header - this will be selected at compile time
-// based on which battery is being used
-#include "battery_data_hcf343837ncz.h"
-#include "battery_data_jyhpfl333838.h"
+/**
+ * Battery data headers - correct battery data will be selected
+ * based on the unit variant.
+ */
+#include "battery_data/hcf343837ncz.h"
+#include "battery_data/jyhpfl333838.h"
 
 typedef struct {
   uint8_t num_temp_points;
