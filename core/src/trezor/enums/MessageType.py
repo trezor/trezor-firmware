@@ -96,6 +96,8 @@ BenchmarkListNames = 9100
 BenchmarkNames = 9101
 BenchmarkRun = 9102
 BenchmarkResult = 9103
+TelemetryGet = 1100
+Telemetry = 1101
 if __debug__:
     DebugLinkDecision = 100
     DebugLinkGetState = 101

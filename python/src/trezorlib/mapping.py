@@ -110,12 +110,12 @@ class ProtobufMapping:
             msg_class = getattr(module, entry.name, None)
             if msg_class is None:
                 raise ValueError(
-                    f"Implementation of protobuf message '{entry.name}' is missing"
+                    f"Implementation of protobuf message '{entry.name}' is missing, {module}"
                 )
 
             if msg_class.MESSAGE_WIRE_TYPE != entry.value:
                 raise ValueError(
-                    f"Inconsistent wire type and MessageType record for '{entry.name}'"
+                    f"Inconsistent wire type and MessageType record for '{entry.name}': {entry.value} != {msg_class.MESSAGE_WIRE_TYPE}, {msg_class}"
                 )
 
             mapping.register(msg_class)
