@@ -54,6 +54,9 @@
 #ifdef KERNEL_MODE
 
 void sdcard_init(void);
+
+void sdcard_deinit(void);
+
 secbool __wur sdcard_power_on_unchecked(bool low_speed);
 
 #endif
