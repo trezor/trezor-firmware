@@ -19,6 +19,10 @@
 
 #include <trezor_rtl.h>
 
+#include <sys/sysevent.h>
+#include <sys/systask.h>
+#include <sys/systick.h>
+
 #include <sys/unix/sdl_event.h>
 
 typedef struct {
@@ -61,16 +65,25 @@ void sdl_events_unregister(sdl_event_filter_cb_t callback, void* context) {
 }
 
 void sdl_events_poll(void) {
-  sdl_event_dispatcher_t* dispatcher = &g_sdl_event_dispatcher;
-  SDL_Event sdl_event;
+  // SDL functions are not thread-safe, so we process events
+  // only in the kernel task context. In other tasks, we just yield
+  // use the sysevents_poll() that will poll events in the kernel task.
+  if (systask_active() == systask_kernel()) {
+    sdl_event_dispatcher_t* dispatcher = &g_sdl_event_dispatcher;
+    SDL_Event sdl_event;
 
-  // Process all pending events
-  while (SDL_PollEvent(&sdl_event) > 0) {
-    for (int index = 0; index < ARRAY_LENGTH(dispatcher->filter); index++) {
-      sdl_event_filter_t* filter = &dispatcher->filter[index];
-      if (filter->callback != NULL) {
-        filter->callback(filter->context, &sdl_event);
+    // Process all pending events
+    while (SDL_PollEvent(&sdl_event) > 0) {
+      for (int index = 0; index < ARRAY_LENGTH(dispatcher->filter); index++) {
+        sdl_event_filter_t* filter = &dispatcher->filter[index];
+        if (filter->callback != NULL) {
+          filter->callback(filter->context, &sdl_event);
+        }
       }
     }
+  } else {
+    sysevents_t awaited = {0};
+    sysevents_t signalled = {0};
+    sysevents_poll(&awaited, &signalled, ticks_timeout(0));
   }
 }
