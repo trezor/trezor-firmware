@@ -652,3 +652,7 @@ def set_brightness(session: "Session", value: Optional[int] = None) -> str | Non
 def get_serial_number(session: "Session") -> str:
     ret = session.call(messages.GetSerialNumber(), expect=messages.SerialNumber)
     return ret.serial_number
+
+
+def get_telemetry(session: "Session") -> messages.Telemetry:
+    return session.call(messages.TelemetryGet(), expect=messages.Telemetry)

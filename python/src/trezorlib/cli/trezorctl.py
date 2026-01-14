@@ -51,6 +51,7 @@ from . import (
     settings,
     solana,
     stellar,
+    telemetry,
     tezos,
     tron,
     with_session,
@@ -436,6 +437,7 @@ cli.add_command(ripple.cli)
 cli.add_command(settings.cli)
 cli.add_command(solana.cli)
 cli.add_command(stellar.cli)
+cli.add_command(telemetry.cli)
 cli.add_command(tezos.cli)
 cli.add_command(tron.cli)
 
