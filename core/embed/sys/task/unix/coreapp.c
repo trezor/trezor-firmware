@@ -27,6 +27,9 @@
 
 extern int coreapp_emu(int argc, char** argv);
 
+// API getter function implemented in the coreapp
+extern const void* coreapp_api_get(uint32_t version);
+
 bool coreapp_init(applet_t* applet, int argc, char** argv) {
   const applet_layout_t coreapp_layout = {0};
   const applet_privileges_t coreapp_privileges = {0};
@@ -44,5 +47,9 @@ bool coreapp_init(applet_t* applet, int argc, char** argv) {
 
   return true;
 }
+
+#ifdef USE_APP_LOADING
+void* coreapp_get_api_getter(void) { return (void*)coreapp_api_get; }
+#endif
 
 #endif  // KERNEL
