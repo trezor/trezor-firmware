@@ -29,4 +29,4 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) { return MPU_MODE_DISABLED; }
 
 void mpu_restore(mpu_mode_t mode) {}
 
-void mpu_set_active_applet(applet_layout_t* layout) {}
+void mpu_set_active_applet(const applet_layout_t* layout) {}
