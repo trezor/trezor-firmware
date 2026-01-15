@@ -183,6 +183,10 @@ def test_backup_failed(
     # Wait for the homescreen to appear
     debug.synchronize_at("Homescreen")
 
+    # THP channel must be re-created after wipe
+    test_ctx = device_handler.client
+    test_ctx.client._invalidate()
+
     # Refresh features and check wiped state
     features = device_handler.features()
     assert features.initialized is False
