@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Tuple
 import pytest
 
 from trezorlib import btc, device, exceptions, messages
-from trezorlib.client import PASSPHRASE_ON_DEVICE
+from trezorlib.client import PassphraseSetting
 from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path
@@ -230,7 +230,7 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)  # type: ignore
+    device_handler.get_session(passphrase=PassphraseSetting.ON_DEVICE)  # type: ignore
     debug.synchronize_at(["PassphraseKeyboard", "StringKeyboard"])
 
     if debug.layout_type is LayoutType.Caesar:
@@ -276,7 +276,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     debug = device_handler.debuglink()
 
     # get address (derive_seed)
-    device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)
+    device_handler.get_session(passphrase=PassphraseSetting.ON_DEVICE)
     debug.synchronize_at(["PassphraseKeyboard", "StringKeyboard"])
 
     if debug.layout_type is LayoutType.Caesar:
