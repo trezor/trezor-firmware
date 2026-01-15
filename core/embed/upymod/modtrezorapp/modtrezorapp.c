@@ -35,9 +35,9 @@
 #include "modtrezorapp-image.h"
 #include "modtrezorapp-task.h"
 
-/// package: trezorapp.__init__
+/// package: trezorapp
 
-/// def spawn_task(app_hash: bytes) -> AppTask:
+/// def spawn_task(app_hash: AnyBytes) -> AppTask:
 ///     """
 ///     Spawns an application task from the app cache.
 ///     """
@@ -52,10 +52,16 @@ STATIC mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
   const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
 
   systask_id_t task_id;
-  ts_t status = app_task_spawn(hash_ptr, &task_id);
+  ts_t status;
+
+  status = app_task_get_id(hash_ptr, &task_id);
+
   if (ts_error(status)) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to spawn app from app cache"));
+    status = app_task_spawn(hash_ptr, &task_id);
+    if (ts_error(status)) {
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Failed to spawn app from app cache"));
+    }
   }
 
   mp_obj_AppTask_t *o =
@@ -66,7 +72,7 @@ STATIC mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_spawn_task_obj,
                                  mod_trezorapp_spawn_task);
 
-/// def create_image(app_hash: bytes, size: int) -> AppImage:
+/// def create_image(app_hash: AnyBytes, size: int) -> AppImage:
 ///     """
 ///     Creates a new application image in the app cache.
 ///     """
@@ -97,36 +103,6 @@ STATIC mp_obj_t mod_trezorapp_create_image(mp_obj_t app_hash_obj,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_create_image_obj,
                                  mod_trezorapp_create_image);
 
-#ifdef TREZOR_EMULATOR
-/// def load_file(app_hash: bytes, filename: Str) -> None:
-///     """
-///     Loads an application image from a file into the app cache.
-///     """
-STATIC mp_obj_t mod_trezorapp_load_file(mp_obj_t app_hash_obj,
-                                        mp_obj_t filename_obj) {
-  mp_buffer_info_t hash = {0};
-  mp_get_buffer_raise(app_hash_obj, &hash, MP_BUFFER_READ);
-
-  if (hash.len != sizeof(app_hash_t)) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid app hash size"));
-  }
-
-  const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
-
-  const char *filename = mp_obj_str_get_str(filename_obj);
-
-  ts_t status = app_cache_load_file(hash_ptr, filename);
-  if (ts_error(status)) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to load app image from file"));
-  }
-
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorapp_load_file_obj,
-                                 mod_trezorapp_load_file);
-#endif  // TREZOR_EMULATOR
-
 STATIC const mp_rom_map_elem_t mp_module_trezorapp_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorapp)},
 
@@ -134,9 +110,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorapp_globals_table[] = {
      MP_ROM_PTR(&mod_trezorapp_spawn_task_obj)},
     {MP_ROM_QSTR(MP_QSTR_create_image),
      MP_ROM_PTR(&mod_trezorapp_create_image_obj)},
-#ifdef TREZOR_EMULATOR
-    {MP_ROM_QSTR(MP_QSTR_load_file), MP_ROM_PTR(&mod_trezorapp_load_file_obj)},
-#endif
+    {MP_ROM_QSTR(MP_QSTR_AppTask), MP_ROM_PTR(&mod_trezorapp_AppTask_type)},
+    {MP_ROM_QSTR(MP_QSTR_AppImage), MP_ROM_PTR(&mod_trezorapp_AppImage_type)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,

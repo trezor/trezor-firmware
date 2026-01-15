@@ -9,6 +9,7 @@ mp_obj_t protobuf_debug_msg_def_type();
 
 extern mp_obj_module_t mp_module_trezorproto;
 extern mp_obj_module_t mp_module_trezorui_api;
+extern mp_obj_module_t mp_module_trezorcrypto_api;
 extern mp_obj_module_t mp_module_trezortranslate;
 extern mp_obj_module_t mp_module_trezorble;
 
