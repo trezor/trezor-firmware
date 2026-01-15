@@ -27,20 +27,13 @@ class ThpErrorCode(IntEnum):
     DECRYPTION_FAILED = 3
     DEVICE_LOCKED = 5
 
-    @classmethod
-    def to_exception(cls, code: int) -> ThpError:
-        try:
-            valid_code = cls(code)
-            return ThpError(valid_code)
-        except ValueError:
-            return ThpError(code)
-
 
 class ThpError(exceptions.TrezorException):
-    def __init__(self, code: ThpErrorCode | int) -> None:
+    def __init__(self, code: int) -> None:
         self.code = code
-        if isinstance(code, ThpErrorCode):
-            self.name = code.name
-        else:
+        try:
+            self.code = ThpErrorCode(code)
+            self.name = self.code.name
+        except ValueError:
             self.name = "unknown"
-        super().__init__(code, self.name)
+        super().__init__(self.code, self.name)
