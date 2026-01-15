@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Trezor Company s.r.o.
+ * Copyright (c) 2023, 2026 Trezor Company s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -37,6 +37,7 @@
 #define DER_INTEGER 0x02
 #define DER_BIT_STRING 0x03
 #define DER_OCTET_STRING 0x04
+#define DER_OID 0x06
 
 // Struct representing a DER-encoded ASN.1 data value.
 typedef struct {
@@ -51,6 +52,9 @@ typedef struct {
 bool __wur der_read_length(BUFFER_READER *buf, size_t *len);
 bool __wur der_write_length(BUFFER_WRITER *buf, size_t len);
 bool __wur der_read_item(BUFFER_READER *buf, DER_ITEM *item);
+bool __wur der_read_item_expected(BUFFER_READER *buf, const uint8_t expected_id,
+                                  DER_ITEM *item);
+bool __wur der_equal(const DER_ITEM *a, const DER_ITEM *b);
 bool __wur der_reencode_int(BUFFER_READER *reader, BUFFER_WRITER *writer);
 
 #endif  // __DER_H
