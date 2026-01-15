@@ -19,6 +19,9 @@ pub const MAX_MENU_ITEMS: usize = 5;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
 
+/// Maximum IPC message size in bytes for serialized data
+pub const MAX_IPC_SIZE: usize = 1024;
+
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(
@@ -35,6 +38,12 @@ pub trait FirmwareUI {
         prompt_screen: bool,
         prompt_title: Option<TString<'static>>,
         external_menu: bool, // TODO: will eventually replace the internal menu
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn confirm_long(
+        title: TString<'static>,
+        pages: usize,
+        request_cb: impl Fn(&[u8], u16) + 'static,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_address(
@@ -475,4 +484,23 @@ pub trait FirmwareUI {
     fn confirm_cancel() -> Result<impl LayoutMaybeTrace, Error>;
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error>;
+
+    /// Deserializes and processes an IPC message from a serialized byte array.
+    ///
+    /// This function takes a BinaryData containing the serialized rkyv message,
+    /// deserializes it, and dispatches to the appropriate UI function based on
+    /// the message type.
+    ///
+    /// # Arguments
+    /// * `data` - Byte slice containing the rkyv-encoded TrezorEnum message
+    /// * `request_cb` - Callback function to request firther information during
+    ///   processing
+    ///
+    /// # Returns
+    /// A Result containing the layout object or an error if deserialization
+    /// fails
+    fn process_ipc_message(
+        data: &[u8],
+        request_cb: impl Fn(&[u8], u16) + 'static,
+    ) -> Result<(Gc<LayoutObj>, i32, Obj), Error>;
 }

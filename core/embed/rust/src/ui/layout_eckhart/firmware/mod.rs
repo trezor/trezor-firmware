@@ -10,6 +10,7 @@ mod hint;
 mod hold_to_confirm;
 mod homescreen;
 mod keyboard;
+mod long_screen;
 mod progress_screen;
 mod qr_screen;
 mod regulatory_screen;
@@ -41,6 +42,7 @@ pub use keyboard::{
     string::{StringInput, StringInputMsg, StringKeyboard, StringKeyboardMsg},
     word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
+pub use long_screen::{LongContentScreen, LongContentScreenMsg};
 pub use progress_screen::ProgressScreen;
 pub use qr_screen::{QrMsg, QrScreen};
 pub use regulatory_screen::{RegulatoryMsg, RegulatoryScreen};

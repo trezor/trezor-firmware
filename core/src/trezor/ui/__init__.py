@@ -20,6 +20,7 @@ if utils.USE_POWER_MANAGER:
     from trezor.power_management.autodim import autodim_clear
 
 if TYPE_CHECKING:
+    from trezorio import IpcMessage
     from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
 
     from trezor.enums import ButtonRequestType
@@ -394,6 +395,7 @@ class Layout(Generic[T]):
             yield self._handle_touch_events()
         if utils.USE_BLE:
             yield self._handle_ble_events()
+        yield self._handle_ipc_events()
         if utils.USE_POWER_MANAGER:
             yield self._handle_power_manager()
 
@@ -459,6 +461,17 @@ class Layout(Generic[T]):
                             ",".join(ble.connection_flags()),
                         )
                     self._event(self.layout.ble_event, *event)
+            except Shutdown:
+                return
+
+    if utils.USE_IPC:
+
+        async def _handle_ipc_events(self) -> None:
+            ipc_check = loop.wait(io.IPC2_EVENT | io.POLL_READ)
+            try:
+                while True:
+                    msg: IpcMessage = await ipc_check
+                    self._event(self.layout.ipc_event, msg.fn, bytes(msg.data))
             except Shutdown:
                 return
 

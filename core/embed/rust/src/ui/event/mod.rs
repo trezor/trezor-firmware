@@ -8,6 +8,8 @@ pub mod usb;
 #[cfg(feature = "ble")]
 mod ble;
 
+mod ipc;
+
 #[cfg(feature = "power_manager")]
 mod power_manager;
 
@@ -15,6 +17,7 @@ mod power_manager;
 pub use ble::BLEEvent;
 #[cfg(feature = "button")]
 pub use button::{ButtonEvent, PhysicalButton};
+pub use ipc::IpcEvent;
 #[cfg(feature = "power_manager")]
 pub use power_manager::PMEvent;
 #[cfg(feature = "touch")]

@@ -1,0 +1,48 @@
+[package]
+name = "ethereum_rust"
+version = "0.1.0"
+edition = "2024"
+
+[profile.dev]
+panic = "abort"
+debug = 2       # full DWARF info
+strip = "none"
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+debug = 0
+debug-assertions = false
+overflow-checks = false
+incremental = false
+
+[dependencies]
+trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }
+emballoc = "0.3.0"
+prost = { version = "0.14.1", default-features = false, features = ["derive"] }
+num_enum = { version = "0.7.5", default-features = false }
+ufmt = { version = "0.2.0", default-features = false }
+ufmt-utils = "0.2.0"
+uluru = "3.1.0"
+primitive-types = { version = "0.14.0", default-features = false }
+
+[build-dependencies]
+prost-build = "0.14.1"
+serde = { version = "=1.0.145", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+ethereum_rust = { path = ".", features = ["test"] }
+trezor-app-sdk = { path = "../../crates/trezor-app-sdk", features = ["test"] }
+
+[package.metadata.rust-analyzer]
+# Tell rust-analyzer where to find generated code
+rustc-env = { OUT_DIR = "target/debug/build/ethereum/out" }
+
+[features]
+default = []
+test = ["debug"]
+debug = ["dev_keys"]
+dev_keys = []

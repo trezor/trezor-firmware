@@ -1,0 +1,3 @@
+junit.xml
+trezor*.log
+connect_tests/trezor-suite
