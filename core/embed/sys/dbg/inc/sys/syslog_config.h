@@ -60,6 +60,10 @@
 #define SYSLOG_ble_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
+#ifndef SYSLOG_elf_loader_MAX_LOG_LEVEL
+#define SYSLOG_elf_loader_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
 // Optiga command log is relatively quiet
 #ifndef SYSLOG_optiga_MAX_LOG_LEVEL
 #define SYSLOG_optiga_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL

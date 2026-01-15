@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <trezor_types.h>
+
 typedef enum {
   APP_ALLOC_IMAGE, /** Image memory allocation */
   APP_ALLOC_DATA,  /** Data memory allocation */
@@ -26,9 +28,9 @@ typedef enum {
 
 /** Initializes the application arena.
  *
- * @return true on success, false on failure.
+ * @return TS_OK on success, or an error code on failure.
  */
-bool app_arena_init(void);
+ts_t __wur app_arena_init(void);
 
 /**
  * Allocates memory for an application.
@@ -42,6 +44,6 @@ void* app_arena_alloc(size_t size, app_alloc_type_t type);
 /**
  * Frees memory previously allocated with app_arena_alloc().
  *
- * @param ptr Pointer to the memory to free.
+ * @param ptr Pointer to the memory to free. If NULL, no action is taken.
  */
 void app_arena_free(void* ptr);

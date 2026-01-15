@@ -58,11 +58,11 @@ typedef struct {
 // Global app arena instance
 static app_arena_t g_app_arena = {0};
 
-bool app_arena_init() {
+ts_t app_arena_init() {
   app_arena_t* arena = &g_app_arena;
 
   if (arena->initialized) {
-    return true;
+    return TS_OK;
   }
 
   memset(arena, 0, sizeof(app_arena_t));
@@ -71,7 +71,7 @@ bool app_arena_init() {
   arena->mem_size = 64 * 1024 * 1024;
   arena->mem_ptr = malloc(arena->mem_size);
   if (arena->mem_ptr == NULL) {
-    return false;
+    return TS_ENOMEM;
   }
 #else
   arena->mem_size = APPDATA_RAM_SIZE;
@@ -87,7 +87,7 @@ bool app_arena_init() {
 #endif
 
   arena->initialized = true;
-  return true;
+  return TS_OK;
 }
 
 void* app_arena_alloc(size_t block_size, app_alloc_type_t type) {

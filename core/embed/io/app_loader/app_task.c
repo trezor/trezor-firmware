@@ -52,21 +52,25 @@ typedef struct {
 // Global app loader instance
 static app_loader_t g_app_loader;
 
-bool app_loader_init(void) {
+ts_t app_loader_init(void) {
   app_loader_t* loader = &g_app_loader;
 
   if (loader->initialized) {
-    return true;
+    return TS_OK;
   }
 
-  if (!app_arena_init()) {
-    return false;
-  }
+  TSH_DECLARE;
+  ts_t status;
 
   memset(loader, 0, sizeof(*loader));
 
+  status = app_arena_init();
+  TSH_CHECK_OK(status);
+
   loader->initialized = true;
-  return true;
+
+cleanup:
+  TSH_RETURN;
 }
 
 static app_entry_t* find_app_by_task(systask_id_t task_id) {
@@ -121,45 +125,50 @@ static void remove_entry(app_entry_t* entry) {
   memset(entry, 0, sizeof(*entry));
 }
 
-bool app_task_spawn(const app_hash_t* hash, systask_id_t* task_id) {
+ts_t app_task_spawn(const app_hash_t* hash, systask_id_t* task_id) {
   app_loader_t* loader = &g_app_loader;
 
-  if (!loader->initialized) {
-    return false;
-  }
+  TSH_DECLARE;
+  ts_t status;
 
-  app_entry_t* entry = find_app_by_hash(hash);
-  if (entry != NULL) {
-    // Application is already spawned
-    return false;
-  }
+  app_entry_t* entry = NULL;
+
+  TSH_CHECK(loader->initialized, TS_ENOINIT);
+
+  entry = find_app_by_hash(hash);
+  TSH_CHECK(entry == NULL, TS_EBUSY);  // Application is already spawned
 
   entry = alloc_entry(hash);
-  if (entry == NULL) {
-    // No space for new app entry
-    return false;
-  }
+  TSH_CHECK(entry != NULL, TS_ENOMEM);  // No space for new app entry
 
   void* image_ptr = NULL;
   size_t image_size = 0;
 
   entry->locked_image = app_cache_lock_image(hash, &image_ptr, &image_size);
-  if (entry->locked_image == APP_CACHE_INVALID_HANDLE) {
-    // Unable to lock application image in cache
-    remove_entry(entry);
-    return false;
-  }
+  TSH_CHECK(entry->locked_image != APP_CACHE_INVALID_HANDLE, TS_ENOENT);
 
-  if (!elf_load(&entry->applet, image_ptr, image_size)) {
-    remove_entry(entry);
-    return false;
+  status = elf_load(&entry->applet, image_ptr, image_size);
+
+  if (ts_error(status)) {
+    if (!ts_eq(status, TS_ENOMEM)) {
+      // Remap to generic error
+      status = TS_EINVAL;
+    }
   }
+  TSH_CHECK_OK(status);
 
   applet_run(&entry->applet);
 
   *task_id = entry->applet.task.id;
 
-  return true;
+  TSH_RETURN;
+
+cleanup:
+  if (entry != NULL) {
+    remove_entry(entry);
+  }
+
+  TSH_RETURN;
 }
 
 bool app_task_is_running(systask_id_t task_id) {
@@ -177,22 +186,22 @@ bool app_task_is_running(systask_id_t task_id) {
   return systask_is_alive(&entry->applet.task);
 }
 
-bool app_task_get_pminfo(systask_id_t task_id, systask_postmortem_t* pminfo) {
+ts_t app_task_get_pminfo(systask_id_t task_id, systask_postmortem_t* pminfo) {
   app_loader_t* loader = &g_app_loader;
+
+  TSH_DECLARE;
 
   memset(pminfo, 0, sizeof(*pminfo));
 
-  if (!loader->initialized) {
-    return false;
-  }
+  TSH_CHECK(loader->initialized, TS_ENOINIT);
 
   app_entry_t* entry = find_app_by_task(task_id);
-  if (entry == NULL) {
-    return false;
-  }
+  TSH_CHECK(entry != NULL, TS_ENOENT);
 
   *pminfo = entry->applet.task.pminfo;
-  return true;
+
+cleanup:
+  TSH_RETURN;
 }
 
 void app_task_unload(systask_id_t task_id) {

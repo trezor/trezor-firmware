@@ -933,7 +933,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_APP_TASK_SPAWN: {
       const app_hash_t *hash = (const app_hash_t *)args[0];
       systask_id_t *task_id = (systask_id_t *)args[1];
-      args[0] = app_task_spawn__verified(hash, task_id);
+      ts_t status = app_task_spawn__verified(hash, task_id);
+      args[0] = ts_code(status);
     } break;
 
     case SYSCALL_APP_TASK_IS_RUNNING: {
@@ -944,7 +945,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_APP_TASK_GET_PMINFO: {
       systask_id_t task_id = (systask_id_t)args[0];
       systask_postmortem_t *pminfo = (systask_postmortem_t *)args[1];
-      args[0] = app_task_get_pminfo__verified(task_id, pminfo);
+      ts_t status = app_task_get_pminfo__verified(task_id, pminfo);
+      args[0] = ts_code(status);
     } break;
 
     case SYSCALL_APP_TASK_UNLOAD: {
@@ -963,13 +965,15 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uintptr_t offset = (uintptr_t)args[1];
       const void *data = (const void *)args[2];
       size_t size = (size_t)args[3];
-      args[0] = app_cache_write_image__verified(handle, offset, data, size);
+      ts_t status = app_cache_write_image__verified(handle, offset, data, size);
+      args[0] = ts_code(status);
     } break;
 
     case SYSCALL_APP_CACHE_FINALIZE_IMAGE: {
       app_cache_handle_t handle = (app_cache_handle_t)args[0];
       bool accept = (bool)args[1];
-      args[0] = app_cache_finalize_image(handle, accept);
+      ts_t status = app_cache_finalize_image(handle, accept);
+      args[0] = ts_code(status);
     } break;
 
 #endif
