@@ -1,6 +1,6 @@
 # Trezor Core
 
-Trezor Core is the second-gen firmware running on Trezor devices. It currently runs on Trezor T, Trezor Safe 3 and Trezor Safe 5.
+Trezor Core is the second-gen firmware running on Trezor devices. It currently runs on Trezor T, Trezor Safe 3, Trezor Safe 5 and Trezor Safe 7.
 
 Trezor Core is part of the trezor-firmware monorepo to be found on [GitHub](https://github.com/trezor/trezor-firmware), in the `core` subdirectory.
 

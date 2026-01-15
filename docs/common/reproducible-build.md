@@ -40,6 +40,7 @@ The following models are supported:
 * **`T2B1`** - Trezor Safe 3 rev.A
 * **`T3B1`** - Trezor Safe 3 rev.B
 * **`T3T1`** - Trezor Safe 5
+* **`T3W1`** - Trezor Safe 7
 
 Examples:
 
@@ -63,14 +64,14 @@ trezorctl firmware download --model t3t1 --version 2.8.3
 
 Or locate the firmware image in the [Trezor Data repository](https://github.com/trezor/data/tree/master/firmware).
 
-The firmware binary starts with a [vendor header](../hardware/model-t/boot.md#vendor-header)
-whose size is:
+The firmware binary starts with a [vendor header](../core/misc/boot.md#vendor-header) whose size is:
 
 * Model T: 4608 bytes
 * Safe 3: 512 bytes
 * Safe 5: 1024 bytes
+* Safe 7: 1024 bytes
 
-The vendor header is followed by a [firmware header](../hardware/model-t/boot.md#firmware-header)
+The vendor header is followed by a [firmware header](../core/misc/boot.md#firmware-header)
 that contains a 65-byte signature at offset `0x3bf` (959 in decimal).
 
 You will need to calculate the right offset for the signature based on the model:
@@ -78,6 +79,7 @@ You will need to calculate the right offset for the signature based on the model
 * Model T: 4608 + 959 = 5567
 * Safe 3: 512 + 959 = 1471
 * Safe 5: 1024 + 959 = 1983
+* Safe 7: 1024 + 959 = 1983
 
 Zero out the signature data to obtain an image identical to the one built locally:
 
@@ -102,7 +104,7 @@ trezorctl firmware download --model 1 --version 1.10.3
 Or locate the firmware image in the [Trezor Data repository](https://github.com/trezor/data/tree/master/firmware).
 
 Official Trezor One firmware older than 1.12 starts with [256-byte legacy
-header](../hardware/model-one/firmware-format.md) used for compatibility with old
+header](../legacy/firmware-format.md#legacy-header) used for compatibility with old
 bootloaders. Locally built firmware doesn't have this header.
 
 ```
@@ -110,7 +112,7 @@ bootloaders. Locally built firmware doesn't have this header.
 tail -c +257 trezor-1.10.3.bin > trezor-1.10.3-nolegacyhdr.bin
 ```
 
-The [v2 header](../hardware/model-one/firmware-format.md#v2-header) has 3x65
+The [v2 header](../legacy/firmware-format.md#v2-header) has 3x65
 bytes of signature data at offset 0x220. Overwrite by zeros to obtain image
 identical to the one built locally.
 
