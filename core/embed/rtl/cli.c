@@ -232,9 +232,9 @@ void cli_abort(cli_t* cli) { cli->aborted = true; }
 
 bool cli_aborted(cli_t* cli) { return cli->aborted; }
 
-void cli_enable_crc(cli_t* cli) { cli->crc_req = true; }
+void cli_enable_crc(cli_t* cli) { cli->crc_auto = true; }
 
-void cli_disable_crc(cli_t* cli) { cli->crc_req = false; }
+void cli_disable_crc(cli_t* cli) { cli->crc_auto = false; }
 
 // Finds a command record by name
 //
@@ -544,10 +544,7 @@ static void cli_clear_line(cli_t* cli) {
   cli->hist_idx = 0;
   cli->hist_prefix = 0;
   cli->response_crc = CRC32_INITIAL;
-  if (cli->crc_single) {
-    cli->crc_req = false;
-    cli->crc_single = false;
-  }
+  cli->crc_req = cli->crc_auto;
   memset(cli->line_buffer, 0, sizeof(cli->line_buffer));
 }
 
@@ -580,7 +577,7 @@ static bool cli_split_args(cli_t* cli) {
   // Single crc check?
   if (cstr_starts_with(cli->line_buffer, CLI_CRC_PREFIX)) {
     cli->cmd_name += strlen(CLI_CRC_PREFIX);
-    cli->crc_single = true;
+    cli->crc_req = true;
   }
 
   while (*buf != '\0' && cli->args_count < CLI_MAX_ARGS) {
@@ -636,9 +633,13 @@ const cli_command_t* cli_process_io(cli_t* cli) {
     goto cleanup;
   }
 
+  cli_history_add(cli, cli->line_buffer);
+
   // Calculate CRC of the command line (excluding the expected CRC suffix)
   // (we may not use the value if crc is not requested)
-  size_t crc_offset = cli->crc_single ? strlen(CLI_CRC_PREFIX) : 0;
+  size_t crc_offset = cstr_starts_with(cli->line_buffer, CLI_CRC_PREFIX)
+                          ? strlen(CLI_CRC_PREFIX)
+                          : 0;
   uint32_t calculated_crc =
       ~cli_crc32(CRC32_INITIAL, cli->line_buffer + crc_offset,
                  MAX((int)cli->line_len - (int)crc_offset - CLI_CRC_LENGTH, 0));
@@ -648,33 +649,6 @@ const cli_command_t* cli_process_io(cli_t* cli) {
     cli_error(cli, CLI_ERROR_FATAL, "Too many arguments.");
     goto cleanup;
   }
-
-  if (cli->crc_single || cli->crc_req) {
-    if (cli->args_count < 1) {
-      cli_error(cli, CLI_ERROR_INVALID_CRC, "CRC suffix missing");
-      goto cleanup;
-    }
-
-    uint32_t crc = 0;
-
-    const char* crc_str = cli_nth_arg(cli, cli->args_count - 1);
-
-    if (strlen(crc_str) != CLI_CRC_LENGTH ||
-        !cstr_parse_uint32(crc_str, 16, &crc)) {
-      cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
-      goto cleanup;
-    }
-
-    if (calculated_crc != crc) {
-      cli_error(cli, CLI_ERROR_INVALID_CRC, "Expected %08X, got %08X",
-                calculated_crc, crc);
-      goto cleanup;
-    }
-
-    --cli->args_count;
-  }
-
-  cli_history_add(cli, cli->line_buffer);
 
   // Empty line?
   if (*cli->cmd_name == '\0') {
@@ -698,6 +672,34 @@ const cli_command_t* cli_process_io(cli_t* cli) {
       cli_trace(cli, "Exiting interactive mode...");
     }
     goto cleanup;
+  }
+
+  if (cli->crc_req) {
+    if (cli->args_count < 1) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "CRC suffix missing");
+      goto cleanup;
+    }
+
+    uint32_t crc = 0;
+
+    const char* crc_str = cli_nth_arg(cli, cli->args_count - 1);
+
+    if (strlen(crc_str) != CLI_CRC_LENGTH ||
+        !cstr_parse_uint32(crc_str, 16, &crc)) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
+      goto cleanup;
+    }
+
+    if (calculated_crc != crc) {
+      cli->crc_req = false;
+      cli_error(cli, CLI_ERROR_INVALID_CRC, "Expected %08X, got %08X",
+                calculated_crc, crc);
+      goto cleanup;
+    }
+
+    --cli->args_count;
   }
 
   // Find the command handler
