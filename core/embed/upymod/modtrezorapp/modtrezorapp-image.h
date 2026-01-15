@@ -46,7 +46,8 @@ STATIC mp_obj_t mod_trezorapp_AppImage_write(mp_obj_t self, mp_obj_t offset_obj,
 
   uintptr_t offset = mp_obj_get_int(offset_obj);
 
-  if (!app_cache_write_image(image, offset, bufinfo.buf, bufinfo.len)) {
+  ts_t status = app_cache_write_image(image, offset, bufinfo.buf, bufinfo.len);
+  if (ts_error(status)) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to write to app image."));
   }
@@ -68,7 +69,9 @@ STATIC mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
 
   bool accept = mp_obj_is_true(accept_obj);
 
-  app_cache_finalize_image(o->image, accept);
+  ts_t status = app_cache_finalize_image(o->image, accept);
+  UNUSED(status);
+
   o->image = APP_CACHE_INVALID_HANDLE;
 
   return mp_const_none;

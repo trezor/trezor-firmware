@@ -109,6 +109,10 @@
 #endif
 
 void drivers_init() {
+  ts_t status;
+
+  UNUSED(status);
+
 #ifdef SECURE_MODE
   parse_boardloader_capabilities();
   unit_properties_init();
@@ -175,7 +179,7 @@ void drivers_init() {
 #endif
 
 #ifdef USE_HAPTIC
-  ts_t status = haptic_init();
+  status = haptic_init();
   UNUSED(status);
 #endif
 
@@ -197,8 +201,11 @@ void drivers_init() {
 #endif
 
 #ifdef USE_APP_LOADING
-  app_cache_init();
-  app_loader_init();
+  status = app_cache_init();
+  ensure_ok(status, "app_cache_init failed");
+
+  status = app_loader_init();
+  ensure_ok(status, "app_loader_init failed");
 #endif
 }
 
