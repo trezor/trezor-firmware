@@ -1,6 +1,6 @@
 # Build instructions for Emulator (Unix port)
 
-> :bulb: **Hint**:
+> **Hint**:
 Using emulator as described here is useful during firmware development. If you intend to use the emulator without modifying the firmware, you might be looking for [Trezor User Env](https://github.com/trezor/trezor-user-env/tree/master).
 
 First clone, initialize submodules, install `uv` and enter the `uv` shell as

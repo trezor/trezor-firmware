@@ -1,14 +1,14 @@
-# Hello world feature in TT
+# Hello World in Trezor Core
 
 (How to develop on Trezor)
 
 ## Overview
-This document shows the creation of a custom functionality (feature, application) on TT. It explains how to build both the Trezor (device, core) logic, as well as the client (computer, host, trezorlib) logic needed to speak with Trezor. For most new features, also the communication layer between Trezor and computer (protobuf) needs to be modified, to set up the messages they will exchange.
+This document shows the creation of a custom functionality (feature, application) in Trezor Core firmware. It explains how to build both the Trezor (device, core) logic, as well as the client (computer, host, trezorlib) logic needed to speak with Trezor. For most new features, also the communication layer between Trezor and computer (protobuf) needs to be modified, to set up the messages they will exchange.
 
-Intermediate knowledge of `python` and `linux` environment is assumed here to easily follow along. For steps how to set up the Trezor dev environment, refer to other docs - [build](../core/build/index.md) or [emulator](../core/emulator/index.md). The most important part is being in the `uv` environment of this project, so all dependencies are installed.
+Intermediate knowledge of `python` and `linux` environment is assumed here to easily follow along. For steps how to set up the Trezor dev environment, refer to other docs - [build](../core/build/index.md) or [emulator](../core/emulator/index.md). The most important part are `nix` and `uv` environments of this project, so all dependencies are installed.
 
 ## Feature description
-We will implement a simple hello-world feature where Trezor gets some information from the host, will do something with it (optionally shows something on the screen), and returns some information back to the host, where we want to display them. (Note that there are no cryptographic operations involved in this example, it focuses only on basic communication between Trezor and host.)
+We will implement a simple "hello world" feature where Trezor gets some information from the host, will do something with it (optionally shows something on the screen), and returns some information back to the host, where we want to display them. (Note that there are no cryptographic operations involved in this example, it focuses only on basic communication between Trezor and host.)
 
 ## Implementation
 
@@ -22,7 +22,7 @@ Communication between Trezor and the computer is handled by a protocol called `p
 Trezor on its own cannot send data to the computer, it can only react to a "request" message it recognizes and send a "response" message.
 Both of these messages will need to be specified, and both parts of communication will need to understand them.
 
-Protobuf messages are defined in `common/protob` directory in `.proto` files. When we are creating a brand-new feature (application), it is worth creating a new `.proto` file dedicated only for this feature. Let's call it `messages-hello.proto` and fill it with the content below.
+Protobuf messages are defined in `common/protob` directory in `.proto` files. When we are creating a brand new feature (application), it is worth creating a new `.proto` file dedicated only for this feature. Let's call it `messages-hello.proto` and fill it with the content below.
 
 #### **`common/protob/messages-helloworld.proto`**
 ```protobuf
@@ -32,8 +32,6 @@ package hw.trezor.messages.helloworld;
 // Sugar for easier handling in Java
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageHelloWorld";
-
-import "messages.proto";
 
 /**
  * Request: Hello world request for text
@@ -54,20 +52,21 @@ message HelloWorldRequest {
     required string text = 1;
 }
 ```
-There are some officialities at the top, the most important things are the `message` declarations. We are defining a `HelloWorldRequest`, that will be sent from the computer to Trezor, and `HelloWorldResponse`, that will be sent back from Trezor. There are many features and data-types `protobuf` supports - see [Google docs](https://developers.google.com/protocol-buffers) or other `common/protob/messages-*.proto` files.
+There are some formalities at the top, the most important things are the `message` declarations. We are defining a `HelloWorldRequest`, that will be sent from the computer to Trezor, and `HelloWorldResponse`, that will be sent back from Trezor. There are many features and data-types `protobuf` supports - see [Google docs](https://developers.google.com/protocol-buffers) or other `common/protob/messages-*.proto` files.
 
 After defining the details of communication messages, we will also need to give these messages their unique IDs and specify the direction in which they are sent (into Trezor or from Trezor). That is done in `common/protob/messages.proto` file. We will append a new block at the end of the file:
+
 #### **`common/protob/messages.proto`**
 ```protobuf
 // Hello world
-MessageType_HelloWorldRequest = 900 [(wire_in) = true];
-MessageType_HelloWorldResponse = 901 [(wire_out) = true];
+MessageType_HelloWorldRequest = 2900 [(wire_in) = true];
+MessageType_HelloWorldResponse = 2901 [(wire_out) = true];
 ```
 
-After this, we are almost done with `protobuf`! The only thing left is to run `make gen` in the root directory to create all the auto-generated files. By running this, the `protobuf` definitions will be translated into `python` classes in both `core` and `python` sub-repositories, so that they can understand these messages. Files under `core/src/trezor` and `python/src/trezorlib` should be modified by this.
+After this, we are almost done with `protobuf`! The only thing left is to run `make gen` in the root directory to create all the auto-generated files. By running this, the `protobuf` definitions will be translated into `python` classes in `core`, `python` and `rust` sub-repositories, so that they can understand these messages. Files under `core/src/trezor`, `python/src/trezorlib` and `rust/trezor-client/src` should be modified by this.
 
 #### Optional step
-This feature will be implemented only on `TT` and not the older `T1` model. If we want to be compatible with `CI`, we need to define these messages as unused for `T1`. That is done in `legacy/firmware/protob/Makefile`, where we will extend the `SKIPPED_MESSAGES` variable:
+This feature will be implemented only in Trezor Core and not for the legacy `T1` model. If we want to be compatible with `CI`, we need to define these messages as unused for `T1`. That is done in `legacy/firmware/protob/Makefile`, where we will extend the `SKIPPED_MESSAGES` variable:
 
 #### **`legacy/firmware/protob/Makefile`**
 ```sh
@@ -76,7 +75,7 @@ SKIPPED_MESSAGES := ... \
 ```
 
 ### 2. Trezor part (core)
-The second part deals with creating the "application code" on Trezor. Surprisingly, this part is probably the easiest one from all three parts here (as this is just hello-world example).
+The second part deals with creating the application code on Trezor. Surprisingly, this part is probably the easiest one from all three parts here (as this is just a "hello world" example).
 
 All the applications running on Trezor are situated under `core/src/apps` directory. We could create a new application, or reuse the existing one if the feature logically corresponds to it. We will choose to implement this feature under `misc` application, as it is really a miscellaneous one.
 
@@ -111,11 +110,11 @@ def _get_text_from_msg(msg: HelloWorldRequest) -> str:
 
 Note that we need to import the newly created protobuf messages (`HelloWorldRequest` and `HelloWorldResponse`) to provide type hints and to be able to return the response. We are also importing a `UI` layout so that we can show a confirmation dialog.
 
-All the protobuf fields are accessible on the `msg` object and are accessed via dot notation like class attributes (`msg.show_display`). When instantiating the response object, keyword-arguments need to be used - `HelloWorldResponse(text=text)`.
+All the protobuf fields are accessible on the `msg` object and are accessed via dot notation like class attributes (`msg.show_display`). When instantiating the response object, keyword arguments need to be used - `HelloWorldResponse(text=text)`.
 
 Even though the code in `core` is run by a `micropython` interpreter, almost all basic features from "classic" python are supported - like `f-strings` here.
 
-As we want to also write unittests for this module, we define a helper function `_get_text_from_msg`, even though it could easily be inlined in this case.
+As we want to also write unit tests for this module, we define a helper function `_get_text_from_msg`, even though it could easily be inlined in this case.
 
 To see the details about code style and conventions, refer to [codestyle.md](../core/misc/codestyle.md).
 
@@ -136,9 +135,9 @@ These are all the necessary code changes in `core`. For this code to work, we wi
 ### 3. Host part (trezorlib)
 So far we have defined the messages going to the Trezor and back and the Trezor logic itself. What remains is the code sitting on the computer and sending these messages into Trezor and receiving them.
 
-There are more ways how to achieve this, for example [Connect](https://github.com/trezor/connect) is a way of communicating with Trezor from a web browser. However, we will decide to implement this connection via `trezorlib`, our own python [library](https://pypi.org/project/trezor/), which lives under `python/src/trezorlib` and acts as a `CLI` (Command-line interface) to communicate with Trezor (via `trezorctl` command).
+There are more ways how to achieve this, for example [Connect](https://github.com/trezor/trezor-suite/tree/develop/packages/connect) is a way of communicating with Trezor from a web browser. However, we will decide to implement this connection via `trezorlib`, our own python [library](https://pypi.org/project/trezor/), which lives under `python/src/trezorlib` and acts as a `CLI` (command-line interface) to communicate with Trezor (via `trezorctl` command).
 
-This implementation will be split into two parts, as we will create the Trezor-communication logic in one file and the `CLI` logic taking arguments and calling this code in the second file. (It would be possible to define everything at once in the `CLI` file, but we want the possibility to call the Trezor-speaking function separately, for example when testing.)
+This implementation will be split into two parts, as we will create the Trezor communication logic in one file and the `CLI` logic taking arguments and calling this code in the second file. (It would be possible to define everything at once in the `CLI` file, but we want the possibility to call the Trezor speaking function separately, for example when testing.)
 
 We will create the `python/src/trezorlib/hello_world.py` file and fill it with code to speak with Trezor:
 
@@ -147,20 +146,18 @@ We will create the `python/src/trezorlib/hello_world.py` file and fill it with c
 from typing import TYPE_CHECKING, Optional
 
 from . import messages
-from .tools import expect
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
-    from .protobuf import MessageType
+    from .transport.session import Session
 
 
 def say_hello(
-    client: "TrezorClient",
+    session: "Session",
     name: str,
     amount: Optional[int],
     show_display: bool,
-) -> "MessageType":
-    return client.call(
+) -> str:
+    return session.call(
         messages.HelloWorldRequest(
             name=name,
             amount=amount,
@@ -181,10 +178,10 @@ from typing import TYPE_CHECKING, Optional
 import click
 
 from .. import hello_world
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 
 @click.group(name="helloworld")
@@ -198,12 +195,12 @@ def cli() -> None:
 @click.option(
     "-d", "--show-display", is_flag=True, help="Whether to show confirmation screen."
 )
-@with_client
+@with_session
 def say_hello(
-    client: "TrezorClient", name: str, amount: Optional[int], show_display: bool
+    session: "Session", name: str, amount: Optional[int], show_display: bool
 ) -> str:
     """Simply say hello to the supplied name."""
-    return hello_world.say_hello(client, name, amount, show_display=show_display)
+    return hello_world.say_hello(session, name, amount, show_display=show_display)
 ```
 
 Code above is importing the `hello_world` module defined before and is calling its `say_hello()` function with arguments received from the user. We are using [click](https://click.palletsprojects.com/en/8.0.x/) library to create the `CLI` - first the `helloworld` group and then the `say_hello` command (which is invoked by `say-hello`).
@@ -214,17 +211,17 @@ However, the command above will not work yet, as the `helloworld` group is not r
 
 #### **`python/src/trezorlib/cli/trezorctl.py`**
 ```python
-from . import helloworld
+from . import hello_world
 ...
 cli.add_command(hello_world.cli)
 ```
 
 If we are currently in `uv` environment, the `trezorctl` command is being evaluated directly from the source code in `python/src/trezorlib`. That means it should be able to understand our example command `trezorctl helloworld say-hello George -a 3 -d`.
 
-The example command on its own will however not work without listening Trezor which understands the new messages. In the next and final part, we will build and spawn a Trezor on our computer with all the changes made in Part 1 and 2.
+The example command on its own will however not work without a listening Trezor which understands the new messages. In the next and final part, we will build and spawn a Trezor on our computer with all the changes made in Part 1 and 2.
 
 ### 4. Putting it together
-Looks like all the code changes have been done, the final part is to build a Trezor image - `emulator` - so that we can actually run and test all the logic we created.
+Now that all the code changes have been done, the final part is to build a Trezor image - `emulator` - so that we can actually run and test all the logic we created.
 
 Detailed information about the emulator can be found in its [docs](../core/emulator/index.md), but we only need two most important commands, that will build and spawn the emulator:
 
@@ -247,7 +244,7 @@ Hello George!
 For building the new feature into a physical Trezor, refer to [embedded](../core/build/embedded.md).
 
 ## Testing
-It is always good to include some tests exercising the created functionality, so when we break it later, it will be noticed. Trezor model T supports both `unit tests` and `integration tests` (which are called `device tests`).
+It is always good to include some tests validating the created functionality, so when we break it later, it will be noticed. Trezor Core supports both `unit tests` and `integration tests` (which are called `device tests`).
 
 ### Unit tests
 [docs](../core/tests/index.md)
@@ -260,9 +257,10 @@ To call a specific test (the one we are about to create), run `make test TESTOPT
 
 #### **`core/tests/test_apps.misc.hello_world.py`**
 ```python
-from common import *
+from common import unittest
 
 from trezor.messages import HelloWorldRequest
+
 from apps.misc.hello_world import _get_text_from_msg
 
 
@@ -294,12 +292,10 @@ Device tests are stored in `tests/device_tests` and they can be run by `make tes
 #### **`tests/device_tests/misc/test_hello_world.py`**
 
 ```python
-from typing import Optional
-
 import pytest
 
 from trezorlib import hello_world
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 VECTORS = (  # name, amount, show_display
     ("George", 2, True),
@@ -311,16 +307,15 @@ VECTORS = (  # name, amount, show_display
 @pytest.mark.models("core")
 @pytest.mark.parametrize("name, amount, show_display", VECTORS)
 def test_hello_world(
-    client: Client, name: str, amount: Optional[int], show_display: bool
+    session: Session, name: str, amount: int | None, show_display: bool
 ):
-    with client:
-        greeting_text = hello_world.say_hello(
-            client, name=name, amount=amount, show_display=show_display
-        )
-        greeting_lines = greeting_text.strip().splitlines()
+    greeting_text = hello_world.say_hello(
+        session, name=name, amount=amount, show_display=show_display
+    )
+    greeting_lines = greeting_text.strip().splitlines()
 
-        assert len(greeting_lines) == amount or 1
-        assert all(name in line for line in greeting_lines)
+    assert len(greeting_lines) == amount or 1
+    assert all(name in line for line in greeting_lines)
 ```
 
 Unlike in unit tests, [pytest](https://docs.pytest.org) is used as the test framework, which is more suitable for bigger and more complex test suites.
@@ -329,7 +324,7 @@ As the functionality is developed only for `core`, we want to limit the test via
 
 We are also using the `@pytest.mark.parametrize` decorator, which is an efficient way of testing multiple inputs into the same test case.
 
-We are not asserting the exact result of the greeting (that is done by unit tests), we just check it has the expected structure - but we can check really anything here.
+We are not asserting the exact result of the greeting (that is done by unit tests), we just check it has the expected structure, but we can check really anything here.
 
 Note the usage of `trezorlib.hello_world.say_hello`, which we defined earlier, so we see how it can be useful for testing purposes.
 

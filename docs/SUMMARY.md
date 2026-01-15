@@ -58,4 +58,4 @@
   - [TOIF Image Format](misc/toif.md)
 - [Developers guide](developers/index.md)
   - [Libraries](developers/libraries.md)
-  - [Hello World in Core](developers/hello_world_feature_TT.md)
+  - [Hello World in Core](developers/hello_world_in_core.md)
