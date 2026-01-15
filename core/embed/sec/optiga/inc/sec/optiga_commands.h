@@ -95,12 +95,18 @@ typedef enum {
 
 // Access conditions.
 typedef enum {
-  OPTIGA_ACCESS_COND_ALW = 0x00,   // Always.
-  OPTIGA_ACCESS_COND_CONF = 0x20,  // Confidentiality protection required.
-  OPTIGA_ACCESS_COND_INT = 0x21,   // Integrity protection required.
-  OPTIGA_ACCESS_COND_AUTO = 0x23,  // Authorization required.
-  OPTIGA_ACCESS_COND_LUC = 0x40,   // Usage limited by counter.
-  OPTIGA_ACCESS_COND_NEV = 0xFF,   // Never.
+  OPTIGA_ACCESS_COND_ALW = 0x00,      // Always.
+  OPTIGA_ACCESS_COND_CONF = 0x20,     // Confidentiality protection required.
+  OPTIGA_ACCESS_COND_INT = 0x21,      // Integrity protection required.
+  OPTIGA_ACCESS_COND_AUTO = 0x23,     // Authorization required.
+  OPTIGA_ACCESS_COND_LUC = 0x40,      // Usage limited by counter.
+  OPTIGA_ACCESS_COND_LCSG = 0x70,     // Global lifecycle state.
+  OPTIGA_ACCESS_COND_LCSA = 0xE0,     // Application lifecycle state.
+  OPTIGA_ACCESS_COND_LCSO = 0xE1,     // Data object lifecycle state.
+  OPTIGA_ACCESS_COND_EQUAL = 0xFA,    // Equal.
+  OPTIGA_ACCESS_COND_GREATER = 0xFB,  // Greater than.
+  OPTIGA_ACCESS_COND_LESS = 0xFC,     // Less than.
+  OPTIGA_ACCESS_COND_NEV = 0xFF,      // Never.
 } optiga_access_cond;
 
 // Life cycle status.

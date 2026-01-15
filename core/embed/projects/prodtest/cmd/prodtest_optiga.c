@@ -49,6 +49,7 @@
 #define OID_KEY_FIDO (OPTIGA_OID_ECC_KEY + 2)
 #define OID_KEY_PAIRING OPTIGA_OID_PTFBIND_SECRET
 #define OID_TRUST_ANCHOR (OPTIGA_OID_CA_CERT + 0)
+#define UNRECOGNIZED_STR "UNRECOGNIZED"
 
 // Data object access conditions.
 static const optiga_metadata_item ACCESS_PAIRED =
@@ -671,6 +672,308 @@ static void prodtest_optiga_keyfido_read(cli_t* cli) {
 #endif  // SECRET_KEY_MASKING
 }
 
+static const char* optiga_lifecycle_state_str(uint8_t lcs) {
+  switch (lcs) {
+    case OPTIGA_LCS_CR:
+      return "Creation";
+    case OPTIGA_LCS_IN:
+      return "Initialization";
+    case OPTIGA_LCS_OP:
+      return "Operational";
+    case OPTIGA_LCS_TE:
+      return "Termination";
+    default:
+      return NULL;
+  }
+}
+
+static const char* optiga_algorithm_str(uint8_t alg) {
+  switch (alg) {
+    case OPTIGA_CURVE_P256:
+      return "NIST P256 ECC";
+    case OPTIGA_CURVE_P384:
+      return "NIST P384 ECC";
+    case OPTIGA_CURVE_P521:
+      return "NIST P521 ECC";
+    case OPTIGA_AES_128:
+      return "AES-128";
+    case OPTIGA_AES_192:
+      return "AES-192";
+    case OPTIGA_AES_256:
+      return "AES-256";
+    default:
+      return NULL;
+  }
+}
+
+#define FLAGS_STR_MAX_SIZE 24
+static void optiga_key_usage_str(uint8_t usage,
+                                 char usage_str[FLAGS_STR_MAX_SIZE]) {
+  memzero(usage_str, FLAGS_STR_MAX_SIZE);
+  if ((usage & OPTIGA_KEY_USAGE_AUTH) != 0) {
+    usage &= ~OPTIGA_KEY_USAGE_AUTH;
+    strcat(usage_str, "Auth ");
+  }
+
+  if ((usage & OPTIGA_KEY_USAGE_ENC) != 0) {
+    usage &= ~OPTIGA_KEY_USAGE_ENC;
+    strcat(usage_str, "Enc ");
+  }
+
+  if ((usage & OPTIGA_KEY_USAGE_SIGN) != 0) {
+    usage &= ~OPTIGA_KEY_USAGE_SIGN;
+    strcat(usage_str, "Sign ");
+  }
+
+  if ((usage & OPTIGA_KEY_USAGE_KEYAGREE) != 0) {
+    usage &= ~OPTIGA_KEY_USAGE_KEYAGREE;
+    strcat(usage_str, "KeyAgree ");
+  }
+
+  // Ensure that there are no unrecognized flags.
+  if (usage != 0) {
+    strcpy(usage_str, UNRECOGNIZED_STR);
+  }
+}
+
+static const char* optiga_data_type_str(uint8_t type) {
+  switch (type) {
+    case OPTIGA_DATA_TYPE_BSTR:
+      return "BSTR";
+    case OPTIGA_DATA_TYPE_UPCTR:
+      return "UPCTR";
+    case OPTIGA_DATA_TYPE_TA:
+      return "TA";
+    case OPTIGA_DATA_TYPE_DEVCERT:
+      return "DEVCERT";
+    case OPTIGA_DATA_TYPE_PRESSEC:
+      return "PRESSEC";
+    case OPTIGA_DATA_TYPE_PTFBIND:
+      return "PTFBIND";
+    case OPTIGA_DATA_TYPE_UPDATSEC:
+      return "UPDATSEC";
+    case OPTIGA_DATA_TYPE_AUTOREF:
+      return "AUTOREF";
+    default:
+      return NULL;
+  }
+}
+
+// Single-byte access conditions.
+static const char* optiga_access_cond_simple_str(uint8_t cond) {
+  switch (cond) {
+    case OPTIGA_ACCESS_COND_ALW:
+      return "Always";
+    case OPTIGA_ACCESS_COND_NEV:
+      return "Never";
+    default:
+      return NULL;
+  }
+}
+
+// Access condition references.
+static const char* optiga_access_cond_ref_str(uint8_t ref) {
+  switch (ref) {
+    case OPTIGA_ACCESS_COND_CONF:
+      return "Conf";
+    case OPTIGA_ACCESS_COND_INT:
+      return "Int";
+    case OPTIGA_ACCESS_COND_AUTO:
+      return "Auto";
+    case OPTIGA_ACCESS_COND_LUC:
+      return "Luc";
+    default:
+      return NULL;
+  }
+}
+
+// Access condition lifecycle states.
+static const char* optiga_access_cond_lcs_str(uint8_t lcs) {
+  switch (lcs) {
+    case OPTIGA_ACCESS_COND_LCSG:
+      return "LcsG";
+    case OPTIGA_ACCESS_COND_LCSA:
+      return "LcsA";
+    case OPTIGA_ACCESS_COND_LCSO:
+      return "LcsO";
+    default:
+      return NULL;
+  }
+}
+
+// Access condition qualifiers.
+static const char* optiga_access_cond_qual_str(uint8_t qual) {
+  switch (qual) {
+    case OPTIGA_ACCESS_COND_EQUAL:
+      return "==";
+    case OPTIGA_ACCESS_COND_GREATER:
+      return ">";
+    case OPTIGA_ACCESS_COND_LESS:
+      return "<";
+    default:
+      return NULL;
+  }
+}
+
+static void trace_flags_metadata(cli_t* cli, const char* description,
+                                 void (*str_func)(uint8_t, char*),
+                                 const optiga_metadata_item* item) {
+  if (item->ptr == NULL) {
+    return;
+  }
+
+  char value[FLAGS_STR_MAX_SIZE] = UNRECOGNIZED_STR;
+  if (item->len == 1) {
+    str_func(item->ptr[0], value);
+  }
+
+  cli_trace(cli, "%s: %s", description, value);
+}
+
+static void trace_simple_metadata(cli_t* cli, const char* description,
+                                  const char* (*str_func)(uint8_t),
+                                  const optiga_metadata_item* item) {
+  if (item->ptr == NULL) {
+    return;
+  }
+
+  const char* value = NULL;
+  if (item->len == 1) {
+    value = str_func(item->ptr[0]);
+  }
+
+  if (value == NULL) {
+    value = UNRECOGNIZED_STR;
+  }
+  cli_trace(cli, "%s: %s", description, value);
+}
+
+static void trace_size_metadata(cli_t* cli, const char* description,
+                                const optiga_metadata_item* item) {
+  if (item->ptr == NULL) {
+    return;
+  }
+
+  if (item->len == 1) {
+    cli_trace(cli, "%s: %d", description, item->ptr[0]);
+  } else if (item->len == 2) {
+    cli_trace(cli, "%s: %d", description, (item->ptr[0] << 8) + item->ptr[1]);
+  } else {
+    cli_trace(cli, "%s: %s", description, UNRECOGNIZED_STR);
+  }
+}
+
+static void trace_hexadecimal_metadata(cli_t* cli, const char* description,
+                                       const optiga_metadata_item* item) {
+  if (item->ptr == NULL) {
+    return;
+  }
+
+  if (item->len == 1) {
+    cli_trace(cli, "%s: 0x%02x", description, item->ptr[0]);
+  } else if (item->len == 2) {
+    cli_trace(cli, "%s: 0x%02x%02x", description, item->ptr[0], item->ptr[1]);
+  } else {
+    cli_trace(cli, "%s: %s", description, UNRECOGNIZED_STR);
+  }
+}
+
+static void trace_access_cond_metadata(cli_t* cli, const char* description,
+                                       const optiga_metadata_item* item) {
+  if (item->ptr == NULL) {
+    return;
+  }
+
+  if (item->len == 1) {
+    const char* cond = optiga_access_cond_simple_str(item->ptr[0]);
+    if (cond != NULL) {
+      cli_trace(cli, "%s: %s", description, cond);
+      return;
+    }
+  } else if (item->len == 3) {
+    const char* ref = optiga_access_cond_ref_str(item->ptr[0]);
+    if (ref != NULL) {
+      uint16_t linked_oid = (item->ptr[1] << 8) + item->ptr[2];
+      cli_trace(cli, "%s: %s(%04X)", description, ref, linked_oid);
+      return;
+    }
+
+    const char* lcs = optiga_access_cond_lcs_str(item->ptr[0]);
+    const char* qual = optiga_access_cond_qual_str(item->ptr[1]);
+    const char* state = optiga_lifecycle_state_str(item->ptr[2]);
+    if (lcs != NULL && qual != NULL && state != NULL) {
+      cli_trace(cli, "%s: %s %s %s", description, lcs, qual, state);
+      return;
+    }
+  }
+
+  cli_trace(cli, "%s: %s", description, UNRECOGNIZED_STR);
+}
+
+static void prodtest_optiga_metadata_read(cli_t* cli) {
+  uint8_t oid_bytes[2] = {0};
+  size_t oid_len = 0;
+
+  if (!cli_arg_hex(cli, "oid", oid_bytes, sizeof(oid_bytes), &oid_len)) {
+    if (oid_len == sizeof(oid_bytes)) {
+      cli_error(cli, CLI_ERROR,
+                "OID too long. Four hexadecimal digits expected.");
+    } else {
+      cli_error(cli, CLI_ERROR, "Hexadecimal decoding error.");
+    }
+    return;
+  }
+
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (oid_len != sizeof(oid_bytes)) {
+    cli_error(cli, CLI_ERROR,
+              "OID too short. Four hexadecimal digits expected.");
+    return;
+  }
+
+  uint16_t oid = (oid_bytes[0] << 8) + oid_bytes[1];
+  uint8_t serialized[OPTIGA_MAX_METADATA_SIZE] = {0};
+
+  size_t size = 0;
+  optiga_result ret =
+      optiga_get_data_object(oid, true, serialized, sizeof(serialized), &size);
+  if (OPTIGA_SUCCESS != ret) {
+    cli_error(cli, CLI_ERROR, "optiga_get_metadata error %d for OID 0x%04x.",
+              ret, oid);
+    return;
+  }
+
+  optiga_metadata metadata = {0};
+  ret = optiga_parse_metadata(serialized, size, &metadata);
+  if (OPTIGA_SUCCESS != ret) {
+    cli_error(cli, CLI_ERROR, "optiga_parse_metadata error %d.", ret);
+    return;
+  }
+
+  trace_simple_metadata(cli, "Life cycle state", optiga_lifecycle_state_str,
+                        &metadata.lcso);
+  trace_hexadecimal_metadata(cli, "Version", &metadata.version);
+  trace_size_metadata(cli, "Maximum size", &metadata.max_size);
+  trace_size_metadata(cli, "Used size", &metadata.used_size);
+  trace_access_cond_metadata(cli, "Read", &metadata.read);
+  trace_access_cond_metadata(cli, "Write", &metadata.change);
+  trace_access_cond_metadata(cli, "Execute", &metadata.execute);
+  trace_access_cond_metadata(cli, "Metadata update", &metadata.meta_update);
+  trace_simple_metadata(cli, "Algorithm", optiga_algorithm_str,
+                        &metadata.algorithm);
+  trace_flags_metadata(cli, "Key usage", optiga_key_usage_str,
+                       &metadata.key_usage);
+  trace_simple_metadata(cli, "Data type", optiga_data_type_str,
+                        &metadata.data_type);
+  trace_hexadecimal_metadata(cli, "Reset type", &metadata.reset_type);
+
+  cli_ok_hexdata(cli, serialized, size);
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -755,6 +1058,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_optiga_counter_read,
   .info = "Read the Optiga security event counter",
   .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "optiga-metadata-read",
+  .func = prodtest_optiga_metadata_read,
+  .info = "Read the metadata of the specified data object in Optiga",
+  .args = "<oid>"
 );
 
 #endif  // USE_OPTIGA
