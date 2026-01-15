@@ -924,6 +924,22 @@ optiga-counter-read
 OK 0E
 ```
 
+### optiga-metadata-read
+Retrieves the metadata of the specified data object in Optiga.
+
+Example:
+```
+optiga-metadata-read f1d0
+# Life cycle state: Operational
+# Maximum size: 140
+# Used size: 32
+# Read: Auto(F1D4)
+# Write: Always
+# Execute: Always
+# Data type: AUTOREF
+OK 2017C00107C4018CC50120D00100D10323F1D4D30100E80131
+```
+
 ### pm-new-soc-estimate
 Erase power manager recovery data from the backup RAM and immediately reboot the device to run new battery SoC estimate.
 
