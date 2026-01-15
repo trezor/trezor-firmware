@@ -26,7 +26,7 @@ from trezorlib.messages import SdProtectOperationType as Op
 
 B = messages.ButtonRequestType
 
-from .. import translations as TR
+from trezorlib.testing import translations as TR
 
 PIN = "1234"
 

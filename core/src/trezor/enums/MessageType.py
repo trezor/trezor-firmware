@@ -297,3 +297,7 @@ if not utils.BITCOIN_ONLY:
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    TrezorAppLoad = 9200
+    TrezorAppLoaded = 9201
+    TrezorAppMessage = 9202
+    TrezorAppResponse = 9203

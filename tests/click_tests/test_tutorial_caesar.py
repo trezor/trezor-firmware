@@ -21,13 +21,11 @@ import pytest
 
 from trezorlib import device
 from trezorlib.exceptions import Cancelled
-
-from .. import translations as TR
+from trezorlib.testing import translations as TR
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
-
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 # Safe family only
