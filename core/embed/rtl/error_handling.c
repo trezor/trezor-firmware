@@ -55,6 +55,8 @@ const char *ts_string(ts_t status) {
     return "ENOINIT";
   } else if (ts_eq(status, TS_ENOEN)) {
     return "ENOEN";
+  } else if (ts_eq(status, TS_EACCES)) {
+    return "EACCES";
   } else {
     return "?ERROR";
   }
