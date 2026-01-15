@@ -34,7 +34,7 @@
  * @param elf_size Size of the ELF image in memory
  *
  * @return TS_OK on success, or an error code on failure:
- *         TS_ENOMEM if there is not enough memory
- *         TS_EINVAL if the ELF image is invalid
+ *         TS_ENOMEM if there is not enough memory,
+ *         TS_EINVAL if the ELF image is invalid,
  */
 ts_t __wur elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size);

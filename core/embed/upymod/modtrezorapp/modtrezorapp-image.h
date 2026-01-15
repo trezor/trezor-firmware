@@ -70,12 +70,6 @@ STATIC mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
   bool accept = mp_obj_is_true(accept_obj);
 
   ts_t status = app_cache_finalize_image(o->image, accept);
-
-  if (accept && ts_error(status)) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 MP_ERROR_TEXT("Failed to finalize app image."));
-  }
-
   UNUSED(status);
 
   o->image = APP_CACHE_INVALID_HANDLE;

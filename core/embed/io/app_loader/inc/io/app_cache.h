@@ -96,7 +96,7 @@ ts_t __wur app_cache_finalize_image(app_cache_handle_t handle, bool accept);
  * @param ptr Pointer to store the address of the application image.
  * @param size Pointer to store the size of the application image.
  *
- * @return A handle to the locked application image.
+ * @return A handle to the locked application image,
  */
 
 app_cache_handle_t app_cache_lock_image(const app_hash_t* hash, void** ptr,

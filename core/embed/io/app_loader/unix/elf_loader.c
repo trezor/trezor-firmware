@@ -41,7 +41,7 @@ ts_t write_to_file(const char* filename, const void* elf_ptr, size_t elf_size) {
   FILE* f = fopen(filename, "wb");
   TSH_CHECK(f != NULL, TS_EIO);
 
-  size_t rc = fwrite(elf_ptr, 1, elf_size, f);
+  int rc = fwrite(elf_ptr, 1, elf_size, f);
   TSH_CHECK(rc == elf_size, TS_EIO);
 
 cleanup:
