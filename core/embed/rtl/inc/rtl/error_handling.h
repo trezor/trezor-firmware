@@ -45,6 +45,7 @@ typedef struct {
 #define TS_ETIMEDOUT ts_make(ETIMEDOUT)
 #define TS_EIO ts_make(EIO)
 #define TS_EBADMSG ts_make(EBADMSG)
+#define TS_EACCES ts_make(EACCES)
 
 /** List of Trezor-specific error codes with offset from 2000 to avoid mixing
  * with standard errno codes */
