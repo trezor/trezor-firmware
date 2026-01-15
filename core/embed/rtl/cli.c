@@ -578,8 +578,8 @@ static bool cli_split_args(cli_t* cli) {
   cli->args_count = 0;
 
   // Single crc check?
-  if (cstr_ends_with(cli->line_buffer, "&crc")) {
-    cstr_remove_suffix(cli->line_buffer, "&crc");
+  if (cstr_starts_with(cli->line_buffer, CLI_CRC_PREFIX)) {
+    cli->cmd_name += strlen(CLI_CRC_PREFIX);
     cli->crc_single = true;
   }
 
@@ -638,8 +638,10 @@ const cli_command_t* cli_process_io(cli_t* cli) {
 
   // Calculate CRC of the command line (excluding the expected CRC suffix)
   // (we may not use the value if crc is not requested)
-  uint32_t calculated_crc = ~cli_crc32(CRC32_INITIAL, cli->line_buffer,
-                                       MAX(cli->line_len - CLI_CRC_LENGTH, 0));
+  size_t crc_offset = cli->crc_single ? strlen(CLI_CRC_PREFIX) : 0;
+  uint32_t calculated_crc =
+      ~cli_crc32(CRC32_INITIAL, cli->line_buffer + crc_offset,
+                 MAX((int)cli->line_len - (int)crc_offset - CLI_CRC_LENGTH, 0));
 
   // Split command line into arguments
   if (!cli_split_args(cli)) {
@@ -673,12 +675,6 @@ const cli_command_t* cli_process_io(cli_t* cli) {
   }
 
   cli_history_add(cli, cli->line_buffer);
-
-  // Split command line into arguments
-  if (!cli_split_args(cli)) {
-    cli_error(cli, CLI_ERROR_FATAL, "Too many arguments.");
-    goto cleanup;
-  }
 
   // Empty line?
   if (*cli->cmd_name == '\0') {
@@ -746,7 +742,7 @@ static int find_arg(const cli_command_t* cmd, const char* name) {
 
     // Extract argument name
     const char* s = p;
-    while (*p != '\0' && (*p != '>' && *p != ']')) {
+    while (*p != '\0' && *p != '>' && *p != ']') {
       p++;
     }
 
