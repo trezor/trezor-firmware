@@ -23,16 +23,45 @@
 
 #include <io/button.h>
 
+/**
+ * @brief Initialize the button debug module.
+ */
 void button_debug_init(void);
 
+/**
+ * @brief Deinitialize the button debug module.
+ */
 void button_debug_deinit(void);
 
+/**
+ * @brief Signal a click event for the given button.
+ *
+ * @param button The button that was clicked.
+ */
 void button_debug_click(button_t button);
 
+/**
+ * @brief Signal a press event for the given button.
+ *
+ * @param button The button that was pressed.
+ */
 void button_debug_press(button_t button);
 
+/**
+ * @brief Signal a release event for the given button.
+ *
+ * @param button The button that was released.
+ */
 void button_debug_release(button_t button);
 
+/**
+ * @brief Advance to the next button debug state.
+ */
 void button_debug_next(void);
 
+/**
+ * @brief Get the current button debug state.
+ *
+ * @return The current state as a 32-bit unsigned integer.
+ */
 uint32_t button_debug_get_state(void);

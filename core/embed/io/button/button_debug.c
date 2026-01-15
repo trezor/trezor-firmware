@@ -19,65 +19,85 @@
 
 #include <trezor_rtl.h>
 
+#include <rtl/logging.h>
 #include <util/tsqueue.h>
 
 #include "button_debug.h"
 
+LOG_DECLARE(button_debug)
+
 #define BUTTON_DEBUG_QUEUE_SIZE 8
 
-static uint32_t button_debug_queue_items[BUTTON_DEBUG_QUEUE_SIZE];
-static tsqueue_entry_t button_debug_queue_entries[BUTTON_DEBUG_QUEUE_SIZE];
-static tsqueue_t button_debug_queue;
-static uint32_t button_debug_state = 0;
+typedef struct {
+  button_event_t queue_items[BUTTON_DEBUG_QUEUE_SIZE];
+  tsqueue_entry_t queue_entries[BUTTON_DEBUG_QUEUE_SIZE];
+  tsqueue_t queue;
+  uint32_t state;
+} button_debug_t;
+
+static button_debug_t button_debug;
 
 void button_debug_init(void) {
-  tsqueue_init(&button_debug_queue, button_debug_queue_entries,
-               (uint8_t*)button_debug_queue_items, sizeof(button_event_t),
+  memset(&button_debug, 0, sizeof(button_debug_t));
+  tsqueue_init(&button_debug.queue, button_debug.queue_entries,
+               (uint8_t*)button_debug.queue_items, sizeof(button_event_t),
                BUTTON_DEBUG_QUEUE_SIZE);
 }
 
-void button_debug_deinit(void) { tsqueue_reset(&button_debug_queue); }
+void button_debug_deinit(void) {
+  memset(&button_debug, 0, sizeof(button_debug_t));
+}
 
 void button_debug_click(button_t button) {
   button_event_t event = {0};
   event.button = button;
   event.event_type = BTN_EVENT_DOWN;
-  tsqueue_enqueue(&button_debug_queue, (uint8_t*)&event, sizeof(event), NULL);
+  if (!tsqueue_enqueue(&button_debug.queue, (uint8_t*)&event, sizeof(event),
+                       NULL)) {
+    LOG_WARN("button debug queue full");
+  }
 
   event.event_type = BTN_EVENT_UP;
-  tsqueue_enqueue(&button_debug_queue, (uint8_t*)&event, sizeof(event), NULL);
+  if (!tsqueue_enqueue(&button_debug.queue, (uint8_t*)&event, sizeof(event),
+                       NULL)) {
+    LOG_WARN("button debug queue full");
+  }
 }
 
 void button_debug_press(button_t button) {
   button_event_t event = {0};
   event.button = button;
   event.event_type = BTN_EVENT_DOWN;
-  tsqueue_enqueue(&button_debug_queue, (uint8_t*)&event, sizeof(event), NULL);
+  if (!tsqueue_enqueue(&button_debug.queue, (uint8_t*)&event, sizeof(event),
+                       NULL)) {
+    LOG_WARN("button debug queue full");
+  }
 }
 
 void button_debug_release(button_t button) {
   button_event_t event = {0};
   event.button = button;
   event.event_type = BTN_EVENT_UP;
-  tsqueue_enqueue(&button_debug_queue, (uint8_t*)&event, sizeof(event), NULL);
+  if (!tsqueue_enqueue(&button_debug.queue, (uint8_t*)&event, sizeof(event),
+                       NULL)) {
+    LOG_WARN("button debug queue full");
+  }
 }
 
 void button_debug_next(void) {
-  if (tsqueue_empty(&button_debug_queue)) {
+  button_event_t event = {0};
+
+  if (!tsqueue_dequeue(&button_debug.queue, (uint8_t*)&event, sizeof(event),
+                       NULL, NULL)) {
     return;
   }
 
-  button_event_t event = {0};
-
-  if (tsqueue_dequeue(&button_debug_queue, (uint8_t*)&event, sizeof(event),
-                      NULL, NULL)) {
-    if (event.event_type == BTN_EVENT_DOWN) {
-      button_debug_state |= (1 << event.button);
-    }
-    if (event.event_type == BTN_EVENT_UP) {
-      button_debug_state &= ~(1 << event.button);
-    }
+  if (event.event_type == BTN_EVENT_DOWN) {
+    button_debug.state |= (1 << event.button);
+  }
+  if (event.event_type == BTN_EVENT_UP) {
+    button_debug.state &= ~(1 << event.button);
   }
 }
 
-uint32_t button_debug_get_state(void) { return button_debug_state; }
+uint32_t button_debug_get_state(void) { return button_debug.state; }

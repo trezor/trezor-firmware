@@ -149,6 +149,12 @@ static void on_event_poll(void* context, bool read_awaited,
 
   if (read_awaited) {
     uint32_t state = button_get_state();
+
+#ifdef DEBUGLINK
+    button_debug_next();
+    state |= button_debug_get_state();
+#endif
+
     syshandle_signal_read_ready(SYSHANDLE_BUTTON, &state);
   }
 }
@@ -158,11 +164,6 @@ static bool on_check_read_ready(void* context, systask_id_t task_id,
   button_fsm_t* fsm = &g_button_tls[task_id];
 
   uint32_t new_state = *(uint32_t*)param;
-
-#ifdef DEBUGLINK
-  button_debug_next();
-  new_state |= button_debug_get_state();
-#endif
 
   return button_fsm_event_ready(fsm, new_state);
 }
