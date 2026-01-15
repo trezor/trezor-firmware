@@ -5,7 +5,7 @@ edition = "2024"
 
 [profile.dev]
 panic = "abort"
-debug = 2      # full DWARF info
+debug = 2       # full DWARF info
 strip = "none"
 
 [profile.release]
@@ -24,3 +24,7 @@ uluru = "3.1.0"
 
 [build-dependencies]
 prost-build = "0.14.1"
+
+[package.metadata.rust-analyzer]
+# Tell rust-analyzer where to find generated code
+rustc-env = { OUT_DIR = "target/debug/build/ethereum/out" }

@@ -42,51 +42,29 @@ enum EthereumMessages {
 #[global_allocator]
 static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
 
-/// Handle GetPublicKey request
-fn handle_get_public_key(request_data: &[u8]) -> Result<()> {
-    // Deserialize the request
-    let request =
-        <EthereumGetPublicKey>::decode(request_data).map_err(|_| Error::InvalidMessage)?;
+/// Macro to generate handler functions
+macro_rules! wire_handler {
+    ($handler_name:ident, $request_type:ty, $response_msg:expr, $handler_fn:path) => {
+        fn $handler_name(request_data: &[u8]) -> Result<()> {
+            let request = <$request_type>::decode(request_data)
+                .map_err(|_| Error::InvalidMessage)?;
 
-    let response = get_public_key::get_public_key(request)?;
+            let response = $handler_fn(request)?;
 
-    let response_bytes = response.encode_to_vec();
-    let message = IpcMessage::new(EthereumMessages::PublicKey.into(), &response_bytes);
-    Ok(message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?)
+            let response_bytes = response.encode_to_vec();
+            let message = IpcMessage::new($response_msg.into(), &response_bytes);
+            message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?;
+            Ok(())
+        }
+    };
 }
 
-fn handle_get_address(request_data: &[u8]) -> Result<()> {
-    // Deserialize the request
-    let request = <EthereumGetAddress>::decode(request_data).map_err(|_| Error::InvalidMessage)?;
+// Generate all handler functions
+wire_handler!(handle_get_public_key, EthereumGetPublicKey, EthereumMessages::PublicKey, get_public_key::get_public_key);
+wire_handler!(handle_get_address, EthereumGetAddress, EthereumMessages::Address, get_address::get_address);
+wire_handler!(handle_sign_message, EthereumSignMessage, EthereumMessages::MessageSignature, sign_message::sign_message);
+wire_handler!(handle_sign_tx, EthereumSignTx, EthereumMessages::TxRequest, sign_tx::sign_tx);
 
-    let response = get_address::get_address(request)?;
-
-    let response_bytes = response.encode_to_vec();
-    let message = IpcMessage::new(EthereumMessages::Address.into(), &response_bytes);
-    Ok(message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?)
-}
-
-fn handle_sign_message(request_data: &[u8]) -> Result<()> {
-    // Deserialize the request
-    let request = <EthereumSignMessage>::decode(request_data).map_err(|_| Error::InvalidMessage)?;
-
-    let response = sign_message::sign_message(request)?;
-
-    let response_bytes = response.encode_to_vec();
-    let message = IpcMessage::new(EthereumMessages::MessageSignature.into(), &response_bytes);
-    Ok(message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?)
-}
-
-fn handle_sign_tx(request_data: &[u8]) -> Result<()> {
-    // Deserialize the request
-    let request = <EthereumSignTx>::decode(request_data).map_err(|_| Error::InvalidMessage)?;
-
-    let response = sign_tx::sign_tx(request)?;
-
-    let response_bytes = response.encode_to_vec();
-    let message = IpcMessage::new(EthereumMessages::TxRequest.into(), &response_bytes);
-    Ok(message.send(service::CORE_SERVICE_REMOTE, CoreIpcService::WireEnd.into())?)
-}
 
 // Application entry point - receives raw bytes, returns raw bytes
 #[unsafe(no_mangle)]
