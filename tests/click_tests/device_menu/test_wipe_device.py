@@ -57,6 +57,10 @@ def test_wipe(device_handler: "BackgroundDeviceHandler"):
     # Wait for the homescreen to appear
     debug.synchronize_at("Homescreen")
 
+    # THP channel must be re-created after wipe
+    test_ctx = device_handler.client
+    test_ctx.client._invalidate()
+
     features = device_handler.features()
     assert features.initialized is False
     assert features.pin_protection is False
