@@ -28,7 +28,6 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.models("eckhart")]
 
 
-@pytest.mark.invalidate_client
 @pytest.mark.setup_client(pin=PIN4)
 def test_wipe(device_handler: "BackgroundDeviceHandler"):
     enter_pin(device_handler)
