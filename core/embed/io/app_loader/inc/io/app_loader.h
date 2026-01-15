@@ -43,7 +43,7 @@ ts_t __wur app_loader_init(void);
  * @param task_id Pointer to store the spawned application's task ID.
  *
  * @return TS_OK on success, or an error code on failure:
- *         TS_ENOENT if image not found, or an pother error
+ *         TS_NOENT if image not found, or an pother error
  *         TS_ENOMEM if there is not enough memory
  *         TS_EINVAL if the application image is invalid
  */

@@ -135,8 +135,8 @@ ts_t app_task_spawn(const app_hash_t* hash, systask_id_t* task_id) {
 
   TSH_CHECK(loader->initialized, TS_ENOINIT);
 
-  // Check if the application is already spawned
-  TSH_CHECK(find_app_by_hash(hash) == NULL, TS_EBUSY);
+  entry = find_app_by_hash(hash);
+  TSH_CHECK(entry == NULL, TS_EBUSY);  // Application is already spawned
 
   entry = alloc_entry(hash);
   TSH_CHECK(entry != NULL, TS_ENOMEM);  // No space for new app entry
