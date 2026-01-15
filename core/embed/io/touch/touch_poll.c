@@ -29,6 +29,10 @@
 
 #include "touch_poll.h"
 
+#ifdef DEBUGLINK
+#include "touch_debug.h"
+#endif
+
 LOG_DECLARE(touch_driver);
 
 typedef struct {
@@ -178,8 +182,8 @@ static uint32_t touch_poll_get_state(touch_fsm_t* fsm, bool* reinstate) {
     return touch_debug_get_state();
   }
 #else
-  (void)fsm;
-  (void)reinstate;
+  UNUSED(fsm);
+  UNUSED(reinstate);
 #endif
 
   return touch_get_state();
@@ -223,6 +227,12 @@ static void on_event_poll(void* context, bool read_awaited,
     touch_debug_next();
 #endif
 
+#ifdef DEBUGLINK
+    if (touch_debug_active()) {
+      touch_state = touch_debug_get_state();
+    }
+#endif
+
     syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
   }
 }
@@ -232,15 +242,6 @@ static bool on_check_read_ready(void* context, systask_id_t task_id,
   touch_fsm_t* fsm = &g_touch_tls[task_id];
 
   uint32_t touch_state = *(uint32_t*)param;
-
-#ifdef DEBUGLINK
-  if (touch_debug_active() != fsm->debug_active) {
-    return true;
-  }
-  if (touch_debug_active()) {
-    touch_state = touch_debug_get_state();
-  }
-#endif
 
   return touch_fsm_event_ready(fsm, touch_state);
 }
