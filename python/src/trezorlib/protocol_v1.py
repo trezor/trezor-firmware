@@ -25,7 +25,7 @@ import warnings
 
 import typing_extensions as tx
 
-from . import client, exceptions, mapping, messages
+from . import client, exceptions, mapping, messages, models
 from .log import DUMP_BYTES
 from .thp import pairing
 from .tools import enter_context
@@ -202,8 +202,15 @@ class SessionV1(client.Session["TrezorClientV1", t.Optional[bytes]]):
 
         # after processing any PassphraseRequest, we should have an Address response
         resp = messages.PublicKey.ensure_isinstance(resp)
-        assert resp.root_fingerprint is not None
-        self._root_fingerprint = resp.root_fingerprint.to_bytes(4, "big")
+
+        # `root_fingerprint` is not available on older models.
+        min_version = (1, 9, 4) if self.model is models.T1B1 else (2, 3, 5)
+        if self.version >= min_version:
+            assert resp.root_fingerprint is not None
+            self._root_fingerprint = resp.root_fingerprint.to_bytes(4, "big")
+        else:
+            warnings.warn("Your Trezor firmware does not support root fingerprint.")
+
         self.client.refresh_features()
 
     def close(self) -> None:
