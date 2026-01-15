@@ -125,7 +125,6 @@ def test_seedless(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(needs_backup=True)
-@pytest.mark.invalidate_client
 def test_backup_failed(
     device_handler: "BackgroundDeviceHandler",
 ):
