@@ -1370,6 +1370,7 @@ class TrezorTestContext:
 
         Clears all debugging state that might have been modified by a testcase.
         """
+        self.debug.input_wait_type = DebugWaitType.IMMEDIATE
         self.ui.clear()
         self.in_with_statement = False
         self.expected_responses: list[MessageFilter] | None = None
