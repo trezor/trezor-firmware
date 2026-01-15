@@ -11,6 +11,9 @@
 #define ESC_COLOR_GRAY "\e[37m"
 #define ESC_COLOR_RESET "\e[39m"
 
+#define CLI_CRC_PREFIX "checked-"
+#define CLI_CRC_LENGTH 8
+
 #define CRC32_INITIAL 0xFFFFFFFF
 #define CRC32_POLYNOMIAL 0xEDB88320
 
@@ -635,8 +638,8 @@ const cli_command_t* cli_process_io(cli_t* cli) {
 
   // Calculate CRC of the command line (excluding the expected CRC suffix)
   // (we may not use the value if crc is not requested)
-  uint32_t calculated_crc =
-      ~cli_crc32(CRC32_INITIAL, cli->line_buffer, MAX(cli->line_len - 8, 0));
+  uint32_t calculated_crc = ~cli_crc32(CRC32_INITIAL, cli->line_buffer,
+                                       MAX(cli->line_len - CLI_CRC_LENGTH, 0));
 
   // Split command line into arguments
   if (!cli_split_args(cli)) {
@@ -652,7 +655,10 @@ const cli_command_t* cli_process_io(cli_t* cli) {
 
     uint32_t crc = 0;
 
-    if (!cstr_parse_uint32(cli->args[cli->args_count - 1], 16, &crc)) {
+    const char* crc_str = cli_nth_arg(cli, cli->args_count - 1);
+
+    if (strlen(crc_str) != CLI_CRC_LENGTH ||
+        !cstr_parse_uint32(crc_str, 16, &crc)) {
       cli_error(cli, CLI_ERROR_INVALID_CRC, "Invalid CRC format");
       goto cleanup;
     }
