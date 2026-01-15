@@ -375,6 +375,76 @@ void prodtest_pm_new_soc_estimate(cli_t* cli) {
   cli_error(cli, CLI_ERROR, "failed to reboot");
 }
 
+void prodtest_pm_battery_test(cli_t* cli) {
+  uint32_t tested_samples = 10;
+
+  if (cli_has_arg(cli, "tested_samples")) {
+    if (!cli_arg_uint32(cli, "tested_samples", &tested_samples)) {
+      cli_error_arg(cli,
+                    "tested_samples argument is expected in integer format.");
+      return;
+    }
+
+    if (cli_arg_count(cli) > 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+  } else {
+    if (cli_arg_count(cli) > 0) {
+      cli_error_arg_count(cli);
+      return;
+    }
+  }
+
+  bool passed = true;
+
+  /** Acquire <tested_samples> battery measurements and check
+   *  the following criteria to pass the test
+   * - Every sample battery voltage is within range <2.95, 3,65> V
+   * - Every sample NTC temperature is within range <-10,65> °C
+   */
+  for (uint8_t i = 0; i < tested_samples; i++) {
+    if (cli_aborted(cli)) {
+      cli_error(cli, CLI_ERROR, "Aborted.");
+      goto cleanup;
+    }
+
+    pm_report_t report;
+    pm_status_t status = pm_get_report(&report);
+    if (status != PM_OK) {
+      cli_error(cli, CLI_ERROR, "Failed to get power manager report.");
+      goto cleanup;
+    }
+
+    char* err_mark = "";
+
+    if (report.battery_voltage_v < 2.95f || report.battery_voltage_v > 3.65f ||
+        report.battery_temp_c < -10.0f || report.battery_temp_c > 65.0f) {
+      passed = false;
+      err_mark = "!";
+    }
+
+    cli_progress(cli, "Sample %d: Voltage %d.%03d V, Temp %d.%03d C %s", i + 1,
+                 (int)report.battery_voltage_v,
+                 (int)(report.battery_voltage_v * 1000) % 1000,
+                 (int)report.battery_temp_c,
+                 (int)(report.battery_temp_c * 1000) % 1000, err_mark);
+
+    systick_delay_ms(100);
+  }
+
+  if (passed) {
+    cli_ok(cli, "Battery test passed.");
+  } else {
+    cli_error(cli, CLI_ERROR, "Battery test failed.");
+  }
+
+cleanup:
+  prodtest_show_homescreen();
+  return;
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -439,5 +509,12 @@ PRODTEST_CLI_CMD(
   .info = "Reset battery SoC estimate",
   .args = ""
 );
+
+PRODTEST_CLI_CMD(
+  .name = "pm-battery-test",
+  .func = prodtest_pm_battery_test,
+  .info = "Run battery voltage and temperature test",
+  .args = "[<tested_samples>]"
+)
 
 #endif /* USE_POWER_MANAGER */

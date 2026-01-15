@@ -1072,6 +1072,31 @@ pm-hibernate
 OK
 ```
 
+### pm-battery-test
+Acquire <tested_samples> (default=10) battery measurements and check
+the following criteria to pass the test
+ - Every sample battery voltage is within range <2.95, 3.65> V
+ - Every sample NTC temperature is within range <-10, 65> °C
+
+In case any sample fails the test, the line is marked with `!` and test
+ends up with `ERROR error "Battery test failed."`.
+
+Example:
+```
+> pm-battery-test [<tested_samples>]
+PROGRESS Sample 1: Voltage 3.445 V, Temp 23.874 C
+PROGRESS Sample 2: Voltage 3.450 V, Temp 23.874 C
+PROGRESS Sample 3: Voltage 3.445 V, Temp 23.772 C
+PROGRESS Sample 4: Voltage 3.445 V, Temp 23.670 C
+PROGRESS Sample 5: Voltage 3.450 V, Temp 23.772 C
+PROGRESS Sample 6: Voltage 3.445 V, Temp 23.874 C
+PROGRESS Sample 7: Voltage 3.445 V, Temp 23.772 C
+PROGRESS Sample 8: Voltage 3.445 V, Temp 23.670 C
+PROGRESS Sample 9: Voltage 3.445 V, Temp 23.772 C
+PROGRESS Sample 10: Voltage 3.445 V, Temp 23.874 C
+OK Battery test passed.
+```
+
 ### tamper-read
 Reads the state of the tamper detection inputs.
 Up to 8 inputs can be read, each represented by a single bit in the response.
