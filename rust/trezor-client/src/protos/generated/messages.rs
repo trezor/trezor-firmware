@@ -609,6 +609,14 @@ pub enum MessageType {
     MessageType_TelemetryGet = 1100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_Telemetry)
     MessageType_Telemetry = 1101,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppLoad)
+    MessageType_TrezorAppLoad = 9200,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppLoaded)
+    MessageType_TrezorAppLoaded = 9201,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppMessage)
+    MessageType_TrezorAppMessage = 9202,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TrezorAppResponse)
+    MessageType_TrezorAppResponse = 9203,
 }
 
 impl ::protobuf::Enum for MessageType {
@@ -911,6 +919,10 @@ impl ::protobuf::Enum for MessageType {
             9103 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkResult),
             1100 => ::std::option::Option::Some(MessageType::MessageType_TelemetryGet),
             1101 => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
+            9200 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppLoad),
+            9201 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppLoaded),
+            9202 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppMessage),
+            9203 => ::std::option::Option::Some(MessageType::MessageType_TrezorAppResponse),
             _ => ::std::option::Option::None
         }
     }
@@ -1208,6 +1220,10 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_BenchmarkResult" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkResult),
             "MessageType_TelemetryGet" => ::std::option::Option::Some(MessageType::MessageType_TelemetryGet),
             "MessageType_Telemetry" => ::std::option::Option::Some(MessageType::MessageType_Telemetry),
+            "MessageType_TrezorAppLoad" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppLoad),
+            "MessageType_TrezorAppLoaded" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppLoaded),
+            "MessageType_TrezorAppMessage" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppMessage),
+            "MessageType_TrezorAppResponse" => ::std::option::Option::Some(MessageType::MessageType_TrezorAppResponse),
             _ => ::std::option::Option::None
         }
     }
@@ -1504,6 +1520,10 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_BenchmarkResult,
         MessageType::MessageType_TelemetryGet,
         MessageType::MessageType_Telemetry,
+        MessageType::MessageType_TrezorAppLoad,
+        MessageType::MessageType_TrezorAppLoaded,
+        MessageType::MessageType_TrezorAppMessage,
+        MessageType::MessageType_TrezorAppResponse,
     ];
 }
 
@@ -1806,6 +1826,10 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_BenchmarkResult => 288,
             MessageType::MessageType_TelemetryGet => 289,
             MessageType::MessageType_Telemetry => 290,
+            MessageType::MessageType_TrezorAppLoad => 291,
+            MessageType::MessageType_TrezorAppLoaded => 292,
+            MessageType::MessageType_TrezorAppMessage => 293,
+            MessageType::MessageType_TrezorAppResponse => 294,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1824,7 +1848,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xa6f\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xc7g\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\xb0\xb5\
     \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2158,7 +2182,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\
     \x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageType_TelemetryGet\x10\
     \xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_T\
-    elemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\
+    elemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12$\n\x19M\
+    essageType_TrezorAppLoad\x10\xf0G\x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMess\
+    ageType_TrezorAppLoaded\x10\xf1G\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessa\
+    geType_TrezorAppMessage\x10\xf2G\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessa\
+    geType_TrezorAppResponse\x10\xf3G\x1a\x04\x98\xb5\x18\x01\x1a\x08\xc8\
     \xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08M\x10N\"\x04\x08G\
     \x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\
     \x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\

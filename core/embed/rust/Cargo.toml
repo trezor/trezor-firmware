@@ -62,7 +62,7 @@ n4w1 = []
 translations = ["crypto"]
 secmon_layout = []
 dbg_console = []
-app_loading = []
+app_loading = ["dep:trezor-structs", "dep:rkyv"]
 test = [
     "backlight",
     "button",
@@ -117,6 +117,8 @@ zeroize = { workspace = true, optional = true }
 
 io = { workspace = true, optional = true }
 upymod = { workspace = true, optional = true }
+rkyv = { workspace = true, optional = true }
+trezor-structs = { workspace = true, optional = true }
 
 [build-dependencies]
 bindgen.workspace = true

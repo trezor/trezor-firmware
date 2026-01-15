@@ -25,14 +25,10 @@ from trezorlib.btc import get_public_node
 from trezorlib.debuglink import DebugLink
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext
+from trezorlib.testing.common import BRGeneratorType
 from trezorlib.tools import parse_path
 
-from ...common import (
-    EXTERNAL_ENTROPY,
-    MOCK_GET_ENTROPY,
-    BRGeneratorType,
-    generate_entropy,
-)
+from ...common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 
 pytestmark = pytest.mark.models("legacy")
 

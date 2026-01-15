@@ -107,6 +107,10 @@ trezor_message_impl! {
     BenchmarkResult => MessageType_BenchmarkResult,
     TelemetryGet => MessageType_TelemetryGet,
     Telemetry => MessageType_Telemetry,
+    TrezorAppLoad => MessageType_TrezorAppLoad,
+    TrezorAppLoaded => MessageType_TrezorAppLoaded,
+    TrezorAppMessage => MessageType_TrezorAppMessage,
+    TrezorAppResponse => MessageType_TrezorAppResponse,
 }
 
 #[cfg(feature = "bitcoin")]

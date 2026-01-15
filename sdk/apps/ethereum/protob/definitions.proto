@@ -1,0 +1,165 @@
+syntax = "proto2";
+package hw.trezor.definitions;
+
+/**
+ * Definitions type enum.
+ * Used to check the encoded EthereumNetworkInfo/EthereumTokenInfo/EthereumDisplayFormat message.
+ */
+enum DefinitionType {
+  NETWORK        = 0;
+  TOKEN          = 1;
+  DISPLAY_FORMAT = 2;
+
+}
+
+// ****** CROSS-PARSEABILITY NOTE ******
+//
+// Neither definition type should be cross-parseable with any other definition type.
+// That is, any parser shoud *fail to parse* a data blob of, e.g., EthereumNetworkInfo,
+// as a different definition type, e.g., EthereumDisplayFormat.
+//
+// To achieve that, we vary the wire types of the fields in order:
+//
+// * NetworkInfo: varint, length-delimited, ...
+// * TokenInfo: length-delimited, varint, ...
+
+/**
+ * Ethereum network definition.
+ * @embed
+ */
+message NetworkInfo {
+  required uint64 chain_id = 1;
+  required string symbol   = 2;
+  required uint32 slip44   = 3;
+  required string name     = 4;
+}
+
+/**
+ * Ethereum token definition.
+ * @embed
+ */
+message TokenInfo {
+  required bytes  address  = 1;
+  required uint64 chain_id = 2;
+  required string symbol   = 3;
+  required uint32 decimals = 4;
+  required string name     = 5;
+}
+
+// ****** DISPLAY_FORMAT ******
+
+/**
+ * Solidity types.
+ * @embed
+ */
+enum ABIType {
+  ABI_ADDRESS = 0;
+  ABI_UINT256 = 1;
+  ABI_UINT248 = 2;
+  ABI_UINT160 = 3;
+  ABI_UINT128 = 4;
+  ABI_UINT120 = 5;
+  ABI_UINT112 = 6;
+  ABI_UINT96  = 7;
+  ABI_UINT72  = 8;
+  ABI_UINT64  = 9;
+  ABI_UINT48  = 10;
+  ABI_UINT40  = 11;
+  ABI_UINT32  = 12;
+  ABI_UINT24  = 13;
+  ABI_UINT16  = 14;
+  ABI_UINT8   = 15;
+  ABI_BOOL    = 16;
+  ABI_BYTES   = 20;
+  ABI_STRING  = 21;
+}
+
+/**
+ * Solidity struct / tuple.
+ * @embed
+ */
+message ABITupleInfo {
+  repeated ABIValueInfo fields     = 1;
+  required bool         is_dynamic = 2;
+}
+
+/**
+ * Ethereum ERC-20 function parameter.
+ * @embed
+ */
+message ABIValueInfo {
+    // Exactly one of the following should be set:
+  optional ABIType      atomic  = 1;      // Atomic(parser)
+  optional ABIType      dynamic = 2;     // Dynamic(parser)
+  optional ABITupleInfo tuple   = 3;  // Tuple(fields, is_dynamic)
+  optional ABIValueInfo array   = 4;  // Array(element_type)
+}
+
+/**
+ * All available ERC-7730 field formatters.
+ * @embed
+ */
+enum ERC7730FieldFormatterType {
+  ADDRESS_NAME = 0;
+  AMOUNT       = 1;
+  TOKEN_AMOUNT = 2;
+  UNIT         = 3;
+}
+
+/**
+ * ERC-7730 container path (paths starting with @).
+ * Note: keep this in sync with `ContainerPath` from `clear_signing.py`
+ * @embed
+ */
+enum ERC7730ContainerPath {
+  FROM  = 1;
+  VALUE = 2;
+  TO    = 3;
+}
+
+/**
+ * Path used in ERC-7730 field definitions to access values.
+ * We currently support two kinds of paths:
+ *  * paths that access function parameters
+ *  * container paths (starting with `@`)
+ *
+ * `$` and `#` paths are not supported.
+ * @embed
+ */
+message ERC7730Path {
+    // Exactly one of the following should be set:
+  repeated uint32               path           = 1;  // eg. (0,) is encoded as [0], (1, 2) is encoded as [1, 2], etc.
+  optional ERC7730ContainerPath container_path = 2;
+}
+
+/**
+ * Definition of a single field according to ERC-7730.
+ * @embed
+ */
+message ERC7730FieldInfo {
+  required ERC7730Path               path      = 1;
+  required string                    label     = 2;
+  required ERC7730FieldFormatterType formatter = 3;
+
+    // TokenAmountFormatter params
+  optional ERC7730Path token_path = 4;
+  optional bytes       threshold  = 5;
+
+    // UnitFormatter params
+  optional uint32 decimals = 6;
+  optional string base     = 7;
+  optional bool   prefix   = 8;
+}
+
+/**
+ * isplay format - corresponding to `DisplayFormat` in `clear_signing.py`.
+ * @embed
+ */
+message DisplayFormatInfo {
+  required uint64           chain_id              = 1;
+  required bytes            address               = 2;
+  required bytes            func_sig              = 3;
+  required string           intent                = 4;
+  repeated ABIValueInfo     parameter_definitions = 5;
+  repeated ERC7730FieldInfo field_definitions     = 6;
+}

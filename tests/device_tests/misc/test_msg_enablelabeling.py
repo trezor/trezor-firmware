@@ -18,8 +18,8 @@ import pytest
 
 from trezorlib import misc
 from trezorlib.debuglink import TrezorTestContext as Client
+from trezorlib.testing import translations as TR
 
-from ... import translations as TR
 from ...common import MNEMONIC12
 
 

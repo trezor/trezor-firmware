@@ -23,7 +23,7 @@ from trezorlib import messages, models
 from trezorlib.debuglink import LayoutType
 
 if TYPE_CHECKING:
-    from ..device_handler import BackgroundDeviceHandler
+    from trezorlib.testing.device_handler import BackgroundDeviceHandler
 
 
 PIN4 = "1234"

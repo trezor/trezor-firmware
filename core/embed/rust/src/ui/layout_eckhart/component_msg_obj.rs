@@ -1,5 +1,7 @@
 use num_traits::ToPrimitive;
 
+#[cfg(feature = "app_loading")]
+use super::firmware::{LongContentScreen, LongContentScreenMsg};
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
@@ -105,6 +107,19 @@ where
             TextScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
             TextScreenMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             TextScreenMsg::Menu => Ok(INFO.as_obj()),
+        }
+    }
+}
+
+#[cfg(feature = "app_loading")]
+impl<'a, F> ComponentMsgObj for LongContentScreen<'a, F>
+where
+    F: Fn(&[u8], u16),
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            LongContentScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            LongContentScreenMsg::Confirmed => Ok(CONFIRMED.as_obj()),
         }
     }
 }

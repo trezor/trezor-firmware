@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import threading
 import typing as t
@@ -8,16 +9,38 @@ import warnings
 from hashlib import sha256
 from pathlib import Path
 
-from trezorlib import cosi, device, models
-from trezorlib._internal import translations
-from trezorlib.debuglink import DebugSession, LayoutType
-
+from .. import cosi, device, models
+from .._internal import translations
+from ..debuglink import DebugSession, LayoutType
 from . import common
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
+ROOT = HERE.parent.parent.parent.parent
 
-TRANSLATIONS_DIR = ROOT / "core" / "translations"
+
+def get_translations_dir() -> Path:
+    """Return the translations directory.
+
+    Searches in the following order:
+    1. Environment variable TREZOR_TRANSLATIONS_DIR (explicit override)
+    2. Legacy location relative to firmware repo root
+    """
+
+    env_dir = os.environ.get("TREZOR_TRANSLATIONS_DIR")
+    if env_dir:
+        return Path(env_dir)
+
+    # Legacy: translations living in the firmware repo
+    legacy = ROOT / "core" / "translations"
+    if legacy.is_dir():
+        return legacy
+
+    raise FileNotFoundError(
+        "Translations directory not found. Set TREZOR_TRANSLATIONS_DIR environment variable."
+    )
+
+
+TRANSLATIONS_DIR = get_translations_dir()
 FONTS_DIR = TRANSLATIONS_DIR / "fonts"
 ORDER_FILE = TRANSLATIONS_DIR / "order.json"
 
@@ -66,14 +89,27 @@ def build_and_sign_blob(
     return sign_blob(blob)
 
 
-def set_language(session: DebugSession, lang: str, *, force: bool = False):
+def set_language(session: DebugSession, lang: str, *, force: bool = False) -> None:
     if lang.startswith("en"):
         language_data = b""
     else:
         language_data = build_and_sign_blob(lang, session)
     with session.test_ctx:
-        if not session.features.language.startswith(lang) or force:
-            device.change_language(session, language_data)  # type: ignore
+        language = session.features.language
+        if language is None or not language.startswith(lang) or force:
+            device.change_language(session, language_data)
+    _CURRENT_TRANSLATION.LAYOUT = session.layout_type
+    _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
+
+
+def check_language(session: DebugSession, lang: str) -> None:
+    with session.test_ctx:
+        language = session.features.language
+        assert isinstance(language, str)
+        if not language.startswith(lang):
+            raise RuntimeError(
+                f"Incompatible language on device: expected '{lang}', got '{language}'"
+            )
     _CURRENT_TRANSLATION.LAYOUT = session.layout_type
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
@@ -140,7 +176,7 @@ class Translation:
         re_safe = re.escape(tr)
         return re.compile(self.FORMAT_STR_RE.sub(r".*?", re_safe))
 
-    def format(self, key: str, *args, **kwargs) -> str:
+    def format(self, key: str, *args: t.Any, **kwargs: t.Any) -> str:
         tr = self.translate(key)
         try:
             return tr.format(*args, **kwargs)
@@ -163,7 +199,7 @@ def regexp(key: str) -> re.Pattern:
     return _CURRENT_TRANSLATION.TR.as_regexp(key, _stacklevel=1)
 
 
-def format(key: str, *args, **kwargs) -> str:
+def format(key: str, *args: t.Any, **kwargs: t.Any) -> str:
     return _CURRENT_TRANSLATION.TR.format(key, *args, **kwargs)
 
 
