@@ -186,8 +186,7 @@ static bool get_cert_extensions(DER_ITEM* tbs_cert, DER_ITEM* extensions) {
   while (der_read_item(&tbs_cert->buf, &cert_item)) {
     if (cert_item.id == DER_X509_EXTENSIONS) {
       // Open the extensions sequence.
-      return der_read_item(&cert_item.buf, extensions) &&
-             extensions->id == DER_SEQUENCE;
+      return der_read_item_expected(&cert_item.buf, DER_SEQUENCE, extensions);
     }
   }
   return false;
@@ -200,7 +199,7 @@ static bool get_extension_value(const uint8_t* extension_oid,
   DER_ITEM extension = {0};
   while (der_read_item(&extensions->buf, &extension)) {
     DER_ITEM extension_id = {0};
-    if (der_read_item(&extension.buf, &extension_id) &&
+    if (der_read_item_expected(&extension.buf, DER_OID, &extension_id) &&
         extension_id.buf.size == extension_oid_size &&
         memcmp(extension_id.buf.data, extension_oid, extension_oid_size) == 0) {
       // Find the extension's extnValue, skipping the optional critical flag.
@@ -238,8 +237,8 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
 
   // Open the AuthorityKeyIdentifier sequence.
   DER_ITEM auth_key_id = {0};
-  if (!der_read_item(&extension_value.buf, &auth_key_id) ||
-      auth_key_id.id != DER_SEQUENCE) {
+  if (!der_read_item_expected(&extension_value.buf, DER_SEQUENCE,
+                              &auth_key_id)) {
     cli_error(cli, CLI_ERROR,
               "get_authority_key_digest, failed to open authority key "
               "identifier extnValue.");
@@ -248,8 +247,8 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
 
   // Find the keyIdentifier field.
   DER_ITEM key_id = {0};
-  if (!der_read_item(&auth_key_id.buf, &key_id) ||
-      key_id.id != DER_X509_KEY_IDENTIFIER) {
+  if (!der_read_item_expected(&auth_key_id.buf, DER_X509_KEY_IDENTIFIER,
+                              &key_id)) {
     cli_error(cli, CLI_ERROR,
               "get_authority_key_digest, failed to find keyIdentifier field.");
     return false;
@@ -274,19 +273,16 @@ static bool get_name_attribute(DER_ITEM* name, const uint8_t* type,
   }
 
   DER_ITEM relative_distinguished_name = {0};
-  while (der_read_item(&name->buf, &relative_distinguished_name)) {
-    if (relative_distinguished_name.id != DER_SET) {
-      return false;
-    }
-
+  while (der_read_item_expected(&name->buf, DER_SET,
+                                &relative_distinguished_name)) {
     DER_ITEM attribute = {0};
-    if (!der_read_item(&relative_distinguished_name.buf, &attribute) ||
-        attribute.id != DER_SEQUENCE) {
+    if (!der_read_item_expected(&relative_distinguished_name.buf, DER_SEQUENCE,
+                                &attribute)) {
       return false;
     }
 
     DER_ITEM attribute_type = {0};
-    if (!der_read_item(&attribute.buf, &attribute_type)) {
+    if (!der_read_item_expected(&attribute.buf, DER_OID, &attribute_type)) {
       return false;
     }
 
@@ -309,7 +305,7 @@ static bool get_name_attribute(DER_ITEM* name, const uint8_t* type,
     return true;
   }
 
-  // Attribute not found.
+  // Attribute not found or the tag of `relative_distinguished_name` is invalid.
   return false;
 }
 
@@ -436,7 +432,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // Read the next certificate in the chain.
     cert_count += 1;
     DER_ITEM cert = {0};
-    if (!der_read_item(&chain_reader, &cert) || cert.id != DER_SEQUENCE) {
+    if (!der_read_item_expected(&chain_reader, DER_SEQUENCE, &cert)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 1, cert %d.",
                 cert_count);
@@ -445,7 +441,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the tbsCertificate.
     DER_ITEM tbs_cert = {0};
-    if (!der_read_item(&cert.buf, &tbs_cert)) {
+    if (!der_read_item_expected(&cert.buf, DER_SEQUENCE, &tbs_cert)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 2, cert %d.",
                 cert_count);
@@ -465,7 +461,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the subject.
     DER_ITEM subject = {0};
-    if (!der_read_item(&tbs_cert.buf, &subject)) {
+    if (!der_read_item_expected(&tbs_cert.buf, DER_SEQUENCE, &subject)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 4, cert %d.",
                 cert_count);
@@ -518,7 +514,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the Subject Public Key Info.
     DER_ITEM pub_key_info = {0};
-    if (!der_read_item(&tbs_cert.buf, &pub_key_info)) {
+    if (!der_read_item_expected(&tbs_cert.buf, DER_SEQUENCE, &pub_key_info)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 5, cert %d.",
                 cert_count);
@@ -527,7 +523,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the algorithm
     DER_ITEM alg = {0};
-    if (!der_read_item(&pub_key_info.buf, &alg) ||
+    if (!der_read_item_expected(&pub_key_info.buf, DER_SEQUENCE, &alg) ||
         !get_algorithm(&alg, &alg_id)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, reading algorithm, cert %d.",
@@ -538,7 +534,8 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     // Read the public key.
     DER_ITEM pub_key_val = {0};
     uint8_t unused_bits = 0;
-    if (!der_read_item(&pub_key_info.buf, &pub_key_val)) {
+    if (!der_read_item_expected(&pub_key_info.buf, DER_BIT_STRING,
+                                &pub_key_val)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 6, cert %d.",
                 cert_count);
@@ -576,7 +573,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // skip the signatureAlgorithm
     DER_ITEM sig_alg = {0};
-    if (!der_read_item(&cert.buf, &sig_alg)) {
+    if (!der_read_item_expected(&cert.buf, DER_SEQUENCE, &sig_alg)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, der_read_item 7, cert %d.", "%d.",
                 cert_count);
@@ -585,7 +582,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
     // Read the signature and save it for the next signature verification.
     DER_ITEM sig_val = {0};
-    if (!der_read_item(&cert.buf, &sig_val) || sig_val.id != DER_BIT_STRING ||
+    if (!der_read_item_expected(&cert.buf, DER_BIT_STRING, &sig_val) ||
         !buffer_get(&sig_val.buf, &unused_bits) || unused_bits != 0 ||
         !buffer_ptr(&sig_val.buf, &sig)) {
       cli_error(cli, CLI_ERROR,
