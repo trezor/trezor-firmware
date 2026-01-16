@@ -76,7 +76,10 @@ impl<R: Role> Header<R> {
     /// Parse header from a byte slice. Return remaining subslice on success.
     /// Note: sync bits are discarded and need to be obtained from input buffer separately.
     pub fn parse(buffer: &[u8]) -> Result<(Self, &[u8])> {
-        let (first_byte, rest) = buffer.split_first().ok_or(Error::MalformedData)?;
+        let Some((first_byte, rest)) = buffer.split_first() else {
+            log::error!("Packet too short.");
+            return Err(Error::MalformedData);
+        };
         let cb = ControlByte::from(*first_byte);
         if cb.is_codec_v1() {
             if R::is_host() {
@@ -88,6 +91,7 @@ impl<R: Role> Header<R> {
         }
         let (channel_id, rest) = parse_u16(rest)?;
         if !channel_id_valid(channel_id) {
+            log::error!("Invalid channel id {}.", channel_id);
             return Err(Error::OutOfBounds);
         }
         if cb.is_continuation() {
@@ -95,6 +99,7 @@ impl<R: Role> Header<R> {
         }
         let (payload_len, rest) = parse_u16(rest)?;
         if payload_len > MAX_PAYLOAD_LEN {
+            log::error!("Payload length exceeds {}.", MAX_PAYLOAD_LEN);
             return Err(Error::OutOfBounds);
         }
         // strip padding if there is any
@@ -126,6 +131,7 @@ impl<R: Role> Header<R> {
         {
             return Ok((Self::ChannelAllocationResponse { payload_len }, rest));
         }
+        log::error!("Unknown control byte {}.", u8::from(cb));
         Err(Error::MalformedData)
     }
 
@@ -153,6 +159,7 @@ impl<R: Role> Header<R> {
         if res.payload_len() == payload_len {
             Ok(Some(res))
         } else {
+            log::error!("Unexpected payload length.");
             Err(Error::MalformedData)
         }
     }
