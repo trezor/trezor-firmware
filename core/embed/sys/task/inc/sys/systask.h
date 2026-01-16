@@ -259,6 +259,16 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
 bool systask_is_alive(const systask_t* task);
 
 /**
+ * @brief Sets the MPU configuration for the given task
+ *
+ * The function configures the MPU regions according to the task's
+ * associated applet layout. Does nothing if the task has no associated applet.
+ *
+ * @param task Pointer to the task.
+ */
+void systask_set_mpu(systask_t* task);
+
+/**
  * @brief Pushes data onto the stack of the task
  *
  * The task must be not be running when the function is called
