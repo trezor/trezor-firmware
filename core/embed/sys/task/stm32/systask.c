@@ -190,6 +190,15 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
 
 systask_id_t systask_id(const systask_t* task) { return task->id; }
 
+#ifdef KERNEL
+void systask_set_mpu(systask_t* task) {
+  if (task->applet != NULL) {
+    applet_t* applet = (applet_t*)task->applet;
+    mpu_set_active_applet(&applet->layout);
+  }
+}
+#endif  // KERNEL
+
 uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {
   if (task->sp < task->sp_lim) {
     // Stack overflow
@@ -219,10 +228,7 @@ void systask_pop_data(systask_t* task, size_t size) { task->sp += size; }
 bool systask_push_call(systask_t* task, void* entrypoint, uintptr_t arg1,
                        uintptr_t arg2, uintptr_t arg3) {
 #ifdef KERNEL
-  if (task->applet != NULL) {
-    applet_t* applet = (applet_t*)task->applet;
-    mpu_set_active_applet(&applet->layout);
-  }
+  systask_set_mpu(task);
 #endif
 
   uint32_t original_sp = task->sp;
@@ -316,10 +322,7 @@ void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1) {
   }
 
 #ifdef KERNEL
-  if (task->applet != NULL) {
-    applet_t* applet = (applet_t*)task->applet;
-    mpu_set_active_applet(&applet->layout);
-  }
+  systask_set_mpu(task);
 #endif
 
   stack[STK_FRAME_R0] = r0;
@@ -581,10 +584,7 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
 
   if (prev_task->tls_size != 0) {
 #ifdef KERNEL
-    if (prev_task->applet != NULL) {
-      applet_t* applet = (applet_t*)prev_task->applet;
-      mpu_set_active_applet(&applet->layout);
-    }
+    systask_set_mpu(prev_task);
 #endif
 
     // Save the TLS of the previous task
@@ -610,10 +610,7 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   mpu_reconfig(next_task->mpu_mode);
 
 #ifdef KERNEL
-  if (next_task->applet != NULL) {
-    applet_t* applet = (applet_t*)next_task->applet;
-    mpu_set_active_applet(&applet->layout);
-  }
+  systask_set_mpu(next_task);
 
   if (next_task->tls_size != 0) {
     // Restore the TLS of the next task
