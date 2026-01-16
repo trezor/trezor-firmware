@@ -237,6 +237,7 @@ __fatal_error(const char *msg, const char *file, int line);
   do {                       \
     ts_t _status = status;   \
     if (ts_error(_status)) { \
+      TSH_LOG_((status));    \
       __status = _status;    \
       goto cleanup;          \
     }                        \
@@ -252,6 +253,7 @@ __fatal_error(const char *msg, const char *file, int line);
 #define TSH_CHECK(cond, status) \
   do {                          \
     if (!(cond)) {              \
+      TSH_LOG_((status));       \
       __status = status;        \
       goto cleanup;             \
     }                           \
@@ -266,6 +268,7 @@ __fatal_error(const char *msg, const char *file, int line);
 #define TSH_CHECK_ARG(cond) \
   do {                      \
     if (!(cond)) {          \
+      TSH_LOG_(TS_EINVAL);  \
       __status = TS_EINVAL; \
       goto cleanup;         \
     }                       \
@@ -281,7 +284,28 @@ __fatal_error(const char *msg, const char *file, int line);
 #define TSH_CHECK_SEC(seccond, status) \
   do {                                 \
     if ((seccond) != sectrue) {        \
+      TSH_LOG_((status));              \
       __status = status;               \
       goto cleanup;                    \
     }                                  \
   } while (0)
+
+#ifdef USE_DBG_CONSOLE
+
+// defined in /sys/dbg/syslog.c
+extern void syslog_tsh_error(ts_t status, const char *file, int line);
+
+// Helper macro for logging within TSH_CHECK_xxx macros.
+// Do not use directly.
+#define TSH_LOG_(status)                               \
+  do {                                                 \
+    syslog_tsh_error(status, __FILE_NAME__, __LINE__); \
+  } while (0)
+
+#else
+
+#define TSH_LOG_(status) \
+  do {                   \
+  } while (0)
+
+#endif
