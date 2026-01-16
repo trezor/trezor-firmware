@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.exceptions import Cancelled
 
 from ... import translations as TR
 from .. import reset
@@ -155,10 +156,15 @@ def test_backup_failed(
 
     # read words
     reset.read_words(debug, do_htc=False, confirm_instruction=True)
+    # stop at words' confirmation
+    debug.synchronize_at("SelectWordScreen")
 
     device_handler.kill_task()
+    # the transport is closed by `kill_task` above
+    session.client.transport.open()
     # Raise the loop restart exception to reset the flow
-    session.cancel()
+    with pytest.raises(Cancelled):
+        session.call(messages.Cancel())
 
     # Wait for the homescreen to appear
     debug.synchronize_at("Homescreen")
