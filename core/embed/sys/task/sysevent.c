@@ -270,10 +270,7 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
         events_processed = true;
         systask_t *task = poller->task;
 #if defined(KERNEL) && !defined(TREZOR_EMULATOR)
-        if (task->applet != NULL) {
-          applet_t *applet = (applet_t *)task->applet;
-          mpu_set_active_applet(&applet->layout);
-        }
+        systask_set_mpu(task);
 #endif
         if (poller->signalled_arg != NULL) {
           *poller->signalled_arg = poller->signalled;
