@@ -17,4 +17,16 @@ git = "https://github.com/trezor/noise-rust"
 rev = "916ce4dc25b0dc830832a51f6f37021e2214e4c7"
 
 [dev-dependencies]
+env_logger = "*"
+getrandom = "0.3.4"
 hex = "0.4.3"
+# regenerate examples/host-cli/pb after upgrading protobuf
+protobuf = "=3.7.2"
+protobuf-codegen = "=3.7.2"
+
+[dev-dependencies.trezor-noise-rust-crypto]
+version = "0.6.2"
+default-features = false
+features = ["use-x25519", "use-aes-256-gcm", "use-sha2"]
+git = "https://github.com/trezor/noise-rust"
+rev = "916ce4dc25b0dc830832a51f6f37021e2214e4c7"

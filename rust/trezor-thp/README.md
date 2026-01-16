@@ -26,7 +26,7 @@ Crates that provide higher level interface:
 The examples assume Trezor emulator available through UDP.
 
 ```console
-cargo run --example ping-emulator
+cargo run --example transport-level-ping
 cargo run --example host-cli
 ```
 
