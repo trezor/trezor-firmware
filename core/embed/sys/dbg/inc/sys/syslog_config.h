@@ -26,7 +26,7 @@
 // Maximum default log level for all modules if not overriden in
 // by defining SYSLOG_<module_name>_MAX_LOG_LEVEL during compilation
 #ifndef SYSLOG_DEFAULT_LOG_LEVEL
-#define SYSLOG_DEFAULT_LOG_LEVEL LOG_LEVEL_OFF
+#define SYSLOG_DEFAULT_LOG_LEVEL LOG_LEVEL_WARN
 #endif
 
 // Maximum default log level for specific modules
