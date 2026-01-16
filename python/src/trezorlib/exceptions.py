@@ -159,3 +159,10 @@ class StateMismatchError(TrezorException):
     Raised when the caller invokes a function that does not match the current
     state of a flow.
     """
+
+
+class MissingCapability(TrezorException):
+    """Current firmware doesn't have the required capability.
+
+    Raised when the caller invokes a function that is not supported.
+    """
