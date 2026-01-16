@@ -123,7 +123,12 @@ class TropicModel:
         while True:
             try:
                 with socket.create_connection(("127.0.0.1", self.port), timeout=1):
-                    break  # if we can connect to the model, it means it is ready
+                    # seems that even if the model is listening for connections
+                    # it sometimes needs up to 2 seconds more
+                    # before it actually correctly processes requests
+                    # TODO: https://github.com/trezor/trezor-firmware/pull/6128
+                    time.sleep(2)
+                    break
             except OSError:
                 pass
 
