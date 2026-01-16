@@ -29,7 +29,7 @@ impl<R: Role> Fragmenter<R> {
     }
 
     pub fn next(&mut self, payload: &[u8], dest: &mut [u8]) -> Result<bool> {
-        const MIN_PACKET_SIZE: usize = Header::<crate::Device>::new_ack(0).header_len() + 1;
+        const MIN_PACKET_SIZE: usize = Header::<crate::Device>::new_ping().header_len() + 1;
         if dest.len() < MIN_PACKET_SIZE {
             return Err(Error::InsufficientBuffer);
         }
@@ -49,7 +49,7 @@ impl<R: Role> Fragmenter<R> {
             self.checksum.update(&dest[..header_len]);
             header_len
         } else {
-            let cont_header = Header::<R>::new_continuation(self.header.channel_id());
+            let cont_header = Header::<R>::new_continuation(self.header.channel_id())?;
             cont_header
                 .to_bytes(SyncBits::new(), dest)
                 .ok_or(Error::UnexpectedInput)?
@@ -82,6 +82,12 @@ impl<R: Role> Fragmenter<R> {
         let payload_done = self.offset + CHECKSUM_LEN >= self.header.payload_len().into();
         let crc_done = self.crc_offset >= CHECKSUM_LEN;
         payload_done && crc_done
+    }
+
+    pub fn reset(&mut self) {
+        self.offset = 0;
+        self.checksum = Crc32::new();
+        self.crc_offset = 0;
     }
 
     /// Shortcut to serialize packet into buffer known to be large enough.
@@ -132,12 +138,19 @@ impl<R: Role> Reassembler<R> {
     pub fn update(&mut self, input: &[u8], buffer: &mut [u8]) -> Result<()> {
         let (header, after_header) = Header::<R>::parse(input)?;
         if !header.is_continuation() {
-            log::error!("Unexpected continuation.");
+            log::error!(
+                "[{}] Unexpected initiation packet.",
+                self.header.channel_id()
+            );
             return Err(Error::UnexpectedInput);
         }
 
         if header.channel_id() != self.header.channel_id() {
-            log::error!("Unexpected channel id.");
+            log::error!(
+                "[{}] Unexpected channel id {}.",
+                self.header.channel_id(),
+                header.channel_id()
+            );
             return Err(Error::OutOfBounds);
         }
 
@@ -163,18 +176,18 @@ impl<R: Role> Reassembler<R> {
 
     pub fn verify(&self, buffer: &[u8]) -> Result<usize> {
         if !self.is_done() {
-            return Err(Error::InvalidDigest);
+            return Err(Error::UnexpectedInput);
         }
         let computed_checksum = self.checksum.finalize();
         let length_no_checksum =
             usize::from(self.header.payload_len()).saturating_sub(CHECKSUM_LEN);
         let received_checksum = *buffer
             .get(length_no_checksum..)
-            .ok_or(Error::InvalidDigest)?
+            .ok_or(Error::InvalidChecksum)?
             .first_chunk::<CHECKSUM_LEN>()
-            .ok_or(Error::InvalidDigest)?;
+            .ok_or(Error::InvalidChecksum)?;
         if computed_checksum != received_checksum {
-            return Err(Error::InvalidDigest);
+            return Err(Error::InvalidChecksum);
         }
         Ok(length_no_checksum)
     }
@@ -247,8 +260,8 @@ mod test {
 
         for i in 0..DATA.len() {
             let source = &DATA[..i];
-            let channel_id = i as u16;
-            let header = Header::<Host>::new_encrypted(channel_id, source);
+            let channel_id = 1 + i as u16;
+            let header = Header::<Host>::new_encrypted(channel_id, source).unwrap();
 
             let packets = fragment(header, SyncBits::new(), source, PACKET_SIZE);
             // println!("message len: {}, packets: {}", i, packets.len());
@@ -314,7 +327,7 @@ mod test {
 
     #[test]
     fn test_write_empty_payload() {
-        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &[]);
+        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &[]).unwrap();
         let packets = fragment(header, SyncBits::new(), &[], PACKET_LEN);
         assert_eq!(packets.len(), 1);
         assert_eq!(hex::encode(&packets[0]), EMPTY_PAYLOAD_EXPECTED);
@@ -323,7 +336,7 @@ mod test {
     #[test]
     fn test_write_short_payload() {
         let data = &[0x07];
-        let header = Header::<Device>::new_encrypted(CHANNEL_ID, data);
+        let header = Header::<Device>::new_encrypted(CHANNEL_ID, data).unwrap();
         let packets = fragment(header, SyncBits::new(), data, PACKET_LEN);
         assert_eq!(packets.len(), 1);
         assert_eq!(hex::encode(&packets[0]), SHORT_PAYLOAD_EXPECTED);
@@ -332,7 +345,7 @@ mod test {
     #[test]
     fn test_write_longer_payload() {
         let data: Vec<u8, 256> = (0..=255).collect();
-        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &data);
+        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &data).unwrap();
         let packets = fragment(header, SyncBits::new(), &data, PACKET_LEN);
         assert_eq!(packets.len(), LONGER_PAYLOAD_EXPECTED.len());
         packets
@@ -346,7 +359,7 @@ mod test {
         let data: Vec<u8, 2048> = (0..2048u16)
             .map(|n| u8::try_from(n & 0xff).unwrap())
             .collect();
-        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &data);
+        let header = Header::<Device>::new_encrypted(CHANNEL_ID, &data).unwrap();
         let packets = fragment(header, SyncBits::new(), &data, PACKET_LEN);
         assert_eq!(packets.len(), EVEN_LONGER_PAYLOADS_EXPECTED.len());
         packets
