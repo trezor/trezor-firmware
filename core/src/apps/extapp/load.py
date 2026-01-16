@@ -17,9 +17,13 @@ if TYPE_CHECKING:
 
 
 async def _load_image(hash: AnyBytes, size: int) -> None:
+    from trezor.ui.layouts.progress import progress
+
     image = app.create_image(hash, size)
     offset = 0
+    prog = progress("Loading app...")
     while offset < size:
+        prog.report(int(offset / size * 1000))
         chunk = (
             await context.call(
                 DataChunkRequest(
@@ -33,6 +37,7 @@ async def _load_image(hash: AnyBytes, size: int) -> None:
         image.write(offset, chunk)
         offset += len(chunk)
     image.finalize(True)
+    prog.stop()
 
 
 async def load(msg: ExtAppLoad) -> ExtAppLoaded:
