@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import stat
+from concurrent.futures import ThreadPoolExecutor
 from http import HTTPStatus
 from pathlib import Path
 from typing import TypeAlias
@@ -135,9 +136,13 @@ def download_emulators_for_model(model: str) -> None:
     all_releases = get_all_releases()
     emus = get_emulators_for_model(model, all_releases)
 
-    for emu in emus:
+    def _run(emu: Emulator):
         emu.download()
         emu.set_as_executable()
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        for _ in executor.map(_run, emus):
+            pass
 
 
 @click.command()
