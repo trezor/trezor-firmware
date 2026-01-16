@@ -143,7 +143,11 @@ class SignatureVerifier:
             i = 0
             for der_signature, _ in self.signatures:
                 signature = der.decode_signature(der_signature)
-                while not secp256k1.verify(self.public_keys[i], signature, digest):
+                valid = False
+                while not valid:
+                    # If the signature does not match any public key, then public_keys[i] will
+                    # raise an IndexError, resulting in an invalid signature exception.
+                    valid = secp256k1.verify(self.public_keys[i], signature, digest)
                     i += 1
         except Exception:
             raise DataError("Invalid signature")
