@@ -362,7 +362,7 @@ def set_busy(session: "Session", enable: bool | None, expiry: int | None) -> Non
 
 
 PUBKEY_WHITELIST_URL_TEMPLATE = (
-    "https://data.trezor.io/firmware/{model}/authenticity.json"
+    "https://data.trezor.io/firmware/{model}/authenticity-dev.json"
 )
 
 
