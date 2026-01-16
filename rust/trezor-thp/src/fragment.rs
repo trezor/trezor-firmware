@@ -132,10 +132,12 @@ impl<R: Role> Reassembler<R> {
     pub fn update(&mut self, input: &[u8], buffer: &mut [u8]) -> Result<()> {
         let (header, after_header) = Header::<R>::parse(input)?;
         if !header.is_continuation() {
+            log::error!("Unexpected continuation.");
             return Err(Error::UnexpectedInput);
         }
 
         if header.channel_id() != self.header.channel_id() {
+            log::error!("Unexpected channel id.");
             return Err(Error::OutOfBounds);
         }
 
@@ -185,6 +187,7 @@ impl<R: Role> Reassembler<R> {
     pub fn single<'a>(buffer: &[u8], dest: &'a mut [u8]) -> Result<(Header<R>, &'a [u8])> {
         let reassembler = Self::new(buffer, dest)?;
         if !reassembler.is_done() {
+            log::error!("Single packet message expected.");
             return Err(Error::MalformedData);
         }
         let reply_len = reassembler.verify(dest)?;
