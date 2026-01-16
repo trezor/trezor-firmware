@@ -102,9 +102,10 @@ class BackgroundDeviceHandler:
 
     def kill_task(self) -> None:
         if self.task is not None:
-            # Force close the client, which should raise an exception in a client
+            # Force close the transport, which should raise an exception in a client
             # waiting on IO. Does not work over Bridge, because bridge doesn't have
             # a close() method.
+            self.client.transport.close()
             try:
                 self.task.result(timeout=1)
             except Exception:

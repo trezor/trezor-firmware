@@ -185,7 +185,6 @@ def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
     recovery.confirm_recovery(debug, title=title)
     # select number of words
     recovery.select_number_of_words(debug, num_of_words=12)
-    device_handler.client.transport.close()
     # abort the process running the recovery from host
     device_handler.kill_task()
 
