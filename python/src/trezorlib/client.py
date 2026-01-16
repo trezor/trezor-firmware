@@ -313,6 +313,14 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
     def is_connected(self) -> bool:
         return True
 
+    def check_capability(self, capability: messages.Capability) -> None:
+        if not self.features.capabilities:
+            # Older firmware didn't support `Features.capabilities`
+            return
+
+        if capability not in self.features.capabilities:
+            raise exceptions.MissingCapability(self.version, capability)
+
     def get_session(
         self,
         passphrase: str | PassphraseSetting | None = PassphraseSetting.STANDARD_WALLET,
@@ -342,18 +350,11 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         self.connect()
         self.check_firmware_version()
 
-        if (
-            derive_cardano
-            and messages.Capability.Cardano not in self.features.capabilities
-        ):
-            raise exceptions.TrezorException("Cardano is not available on this device.")
-        if (
-            passphrase is PassphraseSetting.ON_DEVICE
-            and messages.Capability.PassphraseEntry not in self.features.capabilities
-        ):
-            raise exceptions.PassphraseError(
-                "Passphrase entry is not available on this device."
-            )
+        if derive_cardano:
+            self.check_capability(messages.Capability.Cardano)
+
+        if passphrase is PassphraseSetting.ON_DEVICE:
+            self.check_capability(messages.Capability.PassphraseEntry)
 
         if isinstance(passphrase, str):
             passphrase = unicodedata.normalize("NFKD", passphrase)
