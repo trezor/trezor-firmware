@@ -62,6 +62,7 @@ class TrezorClient:
 
     _model: models.TrezorModel
     _features: messages.Features | None = None
+    _booloader_session: bool
     _protocol_version: int
     _setup_pin: str | None = None  # Should be used only by conftest
     _last_active_session: SessionV1 | None = None
@@ -75,6 +76,7 @@ class TrezorClient:
         model: models.TrezorModel | None = None,
         app_name: str | None = None,
         host_name: str | None = None,
+        bootloader: bool = False,
     ) -> None:
         """
         Transport needs to be opened before calling a method (or accessing
@@ -96,6 +98,7 @@ class TrezorClient:
         else:
             self.mapping = mapping.DEFAULT_MAPPING
 
+        self._booloader_session = bootloader
         self._is_invalidated: bool = False
         self.transport = transport
         self.app_name = app_name
@@ -113,6 +116,9 @@ class TrezorClient:
             self._protocol_version = ProtocolVersion.V2
         else:
             raise Exception("Unknown protocol version")
+
+    def is_bootloader(self) -> bool:
+        return self._booloader_session
 
     def do_pairing(
         self, pairing_method: messages.ThpPairingMethod | None = None
@@ -226,7 +232,7 @@ class TrezorClient:
         """
         Returns a new session.
         """
-        if isinstance(self.protocol, ProtocolV1Channel):
+        if isinstance(self.protocol, ProtocolV1Channel) or self._booloader_session:
             from .transport.session import SessionV1, derive_seed
 
             if passphrase is SEEDLESS:
@@ -235,7 +241,8 @@ class TrezorClient:
                 self,
                 derive_cardano=derive_cardano,
             )
-            derive_seed(session, passphrase)
+            if not self._booloader_session:
+                derive_seed(session, passphrase)
             return session
         if isinstance(self.protocol, ProtocolV2Channel):
             from .transport.session import SessionV2
@@ -325,6 +332,10 @@ class TrezorClient:
 
     def _get_protocol(self) -> Channel:
         protocol = ProtocolV1Channel(self.transport, mapping.DEFAULT_MAPPING)
+
+        if self._booloader_session:
+            return protocol
+
         protocol.write(messages.Initialize())
         while True:
             try:

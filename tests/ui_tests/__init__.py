@@ -58,7 +58,8 @@ def screen_recording(
 
     # Make sure the device is ready - otherwise, the next `DebugLinkRecordScreen` request
     # may be lost due to an event loop restart.
-    client.sync_responses()
+    if not client.is_bootloader():
+        client.sync_responses()
     try:
         client.debug.start_recording(str(testcase.actual_dir))
         yield
@@ -68,7 +69,8 @@ def screen_recording(
 
         # Wait for response, which gives the emulator time to catch up and redraw the homescreen.
         # Otherwise there's a race condition between that and stopping recording.
-        client.sync_responses()
+        if not client.is_bootloader():
+            client.sync_responses()
         client.debug.stop_recording()
 
     result = testcase.build_result(request)

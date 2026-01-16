@@ -112,6 +112,10 @@ EMU_LOG_FILE ?= $(TESTPATH)/trezor.log
 EMU_TEST_ARGS = --disable-animation --headless --output=$(EMU_LOG_FILE) --temporary-profile
 EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
 
+EMU_BOOTLOADER =  $(CURDIR)/build/bootloader_emu/bootloader.elf
+EMU_TEST_BOOTLOADER_ARGS = -a -s -i $(CURDIR)/build/firmware/firmware.bin
+EMU_TEST_BOOTLOADER = $(EMU_BOOTLOADER) $(EMU_TEST_BOOTLOADER_ARGS)
+
 JUNIT_XML ?= $(TESTPATH)/junit.xml
 PYTEST = pytest --junitxml=$(JUNIT_XML)
 TREZOR_FIDO2_UDP_PORT = 21326
@@ -250,6 +254,11 @@ test_emu_ui_record: ## record and hash screens for ui integration tests
 test_emu_ui_record_multicore: ## quickly record all screens
 	make test_emu_ui_multicore || echo "All errors are recorded in fixtures.json"
 	../tests/update_fixtures.py local --remove-missing
+
+
+test_bootloader_ui: ## run bootloader UI tests
+	$(PYTEST) $(TESTPATH)/click_tests/bootloader $(TESTOPTS) \
+		--ui=test --ui-check-missing --do-master-diff --bootloader
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)

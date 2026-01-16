@@ -230,6 +230,10 @@ class SessionV1(Session):
         return resp
 
     def init_session(self, derive_cardano: bool | None = None) -> None:
+
+        if self.client.is_bootloader():
+            return
+
         if self.id == b"":
             new_session = True
             session_id = None

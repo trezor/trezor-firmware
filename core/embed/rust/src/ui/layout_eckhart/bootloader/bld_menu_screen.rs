@@ -103,3 +103,10 @@ impl Component for BldMenuScreen {
         }
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for BldMenuScreen {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("BldMenuScreen");
+    }
+}
