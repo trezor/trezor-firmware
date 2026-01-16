@@ -580,14 +580,14 @@ wheels = [
 
 [[package]]
 name = "ecdsa"
-version = "0.16.1"
+version = "0.19.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "six" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1d/d4/0684a83b3c16a9d1446ace27a506cef1db9b23984ac7ed6aaf764fdd56e8/ecdsa-0.16.1.tar.gz", hash = "sha256:cfc046a2ddd425adbd1a78b3c46f0d1325c657811c0f45ecc3a0a6236c1e50ff", size = 126935, upload-time = "2020-11-12T19:15:51.714Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c0/1f/924e3caae75f471eae4b26bd13b698f6af2c44279f67af317439c2f4c46a/ecdsa-0.19.1.tar.gz", hash = "sha256:478cba7b62555866fcb3bb3fe985e06decbdb68ef55713c4e5ab98c57d508e61", size = 201793, upload-time = "2025-03-13T11:52:43.25Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/16/70be2716e24eaf5d81074bb3c05429d60292c2a96613a78ac3d69526ad2a/ecdsa-0.16.1-py2.py3-none-any.whl", hash = "sha256:881fa5e12bb992972d3d1b3d4dfbe149ab76a89f13da02daa5ea1ec7dea6e747", size = 104195, upload-time = "2020-11-12T19:15:49.563Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/a3/460c57f094a4a165c84a1341c373b0a4f5ec6ac244b998d5021aade89b77/ecdsa-0.19.1-py2.py3-none-any.whl", hash = "sha256:30638e27cf77b7e15c4c4cc1973720149e1033827cfd00661ca5c8cc0cdb24c3", size = 150607, upload-time = "2025-03-13T11:52:41.757Z" },
 ]
 
 [[package]]
@@ -2205,7 +2205,7 @@ requires-dist = [
     { name = "cryptography" },
     { name = "demjson3" },
     { name = "dominate" },
-    { name = "ecdsa", specifier = ">=0.16,<0.17" },
+    { name = "ecdsa", specifier = ">=0.19,<0.20" },
     { name = "fido2", specifier = ">=0.8.0,<0.9" },
     { name = "flake8", specifier = ">=7" },
     { name = "flake8-annotations", specifier = ">=3.1.1,<4" },
