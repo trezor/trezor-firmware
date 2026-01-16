@@ -39,6 +39,12 @@ impl From<u8> for SyncBits {
     }
 }
 
+impl From<&[u8]> for SyncBits {
+    fn from(bytes: &[u8]) -> Self {
+        Self::from(*bytes.first().unwrap_or(&0u8))
+    }
+}
+
 impl From<SyncBits> for u8 {
     fn from(sb: SyncBits) -> Self {
         sb.0
@@ -91,6 +97,7 @@ impl ChannelSync {
         Some(sb) // start sending, use these bits
     }
 
+    /// FIXME maybe set can_send in send_start and remove this?
     /// Call after sending last message fragment, wait for ACK before allowing next message.
     /// NOTE: Consider saving some kind of timestamp or identifier instead of bool.
     pub fn send_finish(&mut self) {
@@ -128,6 +135,7 @@ impl ChannelSync {
 
     /// Serialize for storage.
     /// can_send_bit | sync_receive_bit | sync_send_bit | ack_piggybacking | rfu(4)
+    #[cfg(test)]
     pub fn to_u8(&self) -> u8 {
         let mut res = 0u8;
         if self.can_send {
@@ -146,6 +154,7 @@ impl ChannelSync {
     }
 
     /// Deserialize from storage.
+    #[cfg(test)]
     pub fn from_u8(val: u8) -> Self {
         Self {
             can_send: (val & 0x80 != 0),

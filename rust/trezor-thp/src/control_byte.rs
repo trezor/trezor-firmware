@@ -81,6 +81,12 @@ impl From<u8> for ControlByte {
     }
 }
 
+impl From<&[u8]> for ControlByte {
+    fn from(bytes: &[u8]) -> Self {
+        Self::from(*bytes.first().unwrap_or(&0))
+    }
+}
+
 impl From<ControlByte> for u8 {
     fn from(cb: ControlByte) -> Self {
         cb.0

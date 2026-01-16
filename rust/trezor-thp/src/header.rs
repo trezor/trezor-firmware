@@ -1,5 +1,5 @@
 use crate::Role;
-use crate::alternating_bit::SyncBits;
+pub use crate::alternating_bit::SyncBits;
 use crate::control_byte::{self, ControlByte};
 use crate::crc32;
 use crate::error::{Error, Result};
@@ -7,11 +7,11 @@ use crate::error::{Error, Result};
 use core::marker::PhantomData;
 
 const CHECKSUM_LEN: u16 = crc32::CHECKSUM_LEN as u16;
-const NONCE_LEN: u16 = 8;
+pub const NONCE_LEN: usize = 8;
 const MAX_PAYLOAD_LEN: u16 = 60000;
 
 const MAX_CHANNEL_ID: u16 = 0xFFEF;
-const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
+pub const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
 
 /// Represents packet header, i.e. control byte, channel id and possibly payload length.
 /// Please note that `seq_bit` and `ack_bit` which are also part of the header are handled separately.
@@ -50,7 +50,8 @@ pub enum Header<R: Role> {
 }
 
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
+#[repr(u8)]
 pub enum HandshakeMessage {
     InitiationRequest,
     InitiationResponse,
@@ -62,11 +63,21 @@ pub const fn channel_id_valid(channel_id: u16) -> bool {
     channel_id <= MAX_CHANNEL_ID || channel_id == BROADCAST_CHANNEL_ID
 }
 
-fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
-    let (bytes, rest) = buffer
-        .split_first_chunk::<2>()
-        .ok_or(Error::MalformedData)?;
+pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
+    let Some((bytes, rest)) = buffer.split_first_chunk::<2>() else {
+        log::error!("Packet too short.");
+        return Err(Error::MalformedData);
+    };
     Ok((u16::from_be_bytes(*bytes), rest))
+}
+
+pub(crate) fn parse_cb_channel(buffer: &[u8]) -> Result<(ControlByte, u16, &[u8])> {
+    let Some((cb, rest)) = buffer.split_first() else {
+        log::error!("Packet too short.");
+        return Err(Error::MalformedData);
+    };
+    let (channel_id, rest) = parse_u16(rest)?;
+    Ok((ControlByte::from(*cb), channel_id, rest))
 }
 
 impl<R: Role> Header<R> {
@@ -76,11 +87,7 @@ impl<R: Role> Header<R> {
     /// Parse header from a byte slice. Return remaining subslice on success.
     /// Note: sync bits are discarded and need to be obtained from input buffer separately.
     pub fn parse(buffer: &[u8]) -> Result<(Self, &[u8])> {
-        let Some((first_byte, rest)) = buffer.split_first() else {
-            log::error!("Packet too short.");
-            return Err(Error::MalformedData);
-        };
-        let cb = ControlByte::from(*first_byte);
+        let (cb, channel_id, rest) = parse_cb_channel(buffer)?;
         if cb.is_codec_v1() {
             if R::is_host() {
                 return Ok((Header::CodecV1Response, &[]));
@@ -89,7 +96,6 @@ impl<R: Role> Header<R> {
                 return Ok((Header::CodecV1Request { is_continuation }, &[]));
             }
         }
-        let (channel_id, rest) = parse_u16(rest)?;
         if !channel_id_valid(channel_id) {
             log::error!("Invalid channel id {}.", channel_id);
             return Err(Error::OutOfBounds);
@@ -227,15 +233,16 @@ impl<R: Role> Header<R> {
 
     /// Payload length including checksum. Messages without checksum return 0.
     pub const fn payload_len(&self) -> u16 {
+        let nonce_len: u16 = NONCE_LEN as u16;
         match self {
             Self::Continuation { .. } => 0,
             Self::Ack { .. } => CHECKSUM_LEN,
             Self::CodecV1Request { .. } | Self::CodecV1Response => 0,
-            Self::ChannelAllocationRequest => NONCE_LEN + CHECKSUM_LEN,
+            Self::ChannelAllocationRequest => nonce_len + CHECKSUM_LEN,
             Self::ChannelAllocationResponse { payload_len } => *payload_len,
             Self::TransportError { .. } => 1 + CHECKSUM_LEN,
-            Self::Ping => NONCE_LEN + CHECKSUM_LEN,
-            Self::Pong => NONCE_LEN + CHECKSUM_LEN,
+            Self::Ping => nonce_len + CHECKSUM_LEN,
+            Self::Pong => nonce_len + CHECKSUM_LEN,
             Self::Handshake {
                 phase: _,
                 channel_id: _,
@@ -257,6 +264,24 @@ impl<R: Role> Header<R> {
 
     pub const fn new_continuation(channel_id: u16) -> Self {
         Self::Continuation { channel_id }
+    }
+
+    pub const fn new_channel_request() -> Self {
+        Self::ChannelAllocationRequest
+    }
+
+    pub const fn new_channel_response(payload: &[u8]) -> Self {
+        Self::ChannelAllocationResponse {
+            payload_len: (payload.len() + NONCE_LEN) as u16 + CHECKSUM_LEN,
+        }
+    }
+
+    pub const fn new_handshake(channel_id: u16, phase: HandshakeMessage, payload: &[u8]) -> Self {
+        Self::Handshake {
+            phase,
+            channel_id,
+            payload_len: payload.len() as u16 + CHECKSUM_LEN,
+        }
     }
 
     pub const fn new_encrypted(channel_id: u16, payload: &[u8]) -> Self {
@@ -308,6 +333,25 @@ impl<R: Role> Header<R> {
 
     pub const fn is_ack(&self) -> bool {
         matches!(self, Self::Ack { .. })
+    }
+
+    pub const fn is_error(&self) -> bool {
+        matches!(self, Self::TransportError { .. })
+    }
+
+    pub const fn is_channel_allocation_request(&self) -> bool {
+        matches!(self, Self::ChannelAllocationRequest)
+    }
+
+    pub const fn is_channel_allocation_response(&self) -> bool {
+        matches!(self, Self::ChannelAllocationResponse { .. })
+    }
+
+    pub const fn handshake_phase(&self) -> Option<HandshakeMessage> {
+        match self {
+            Self::Handshake { phase, .. } => Some(*phase),
+            _ => None,
+        }
     }
 }
 

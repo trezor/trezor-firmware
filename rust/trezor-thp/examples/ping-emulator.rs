@@ -4,9 +4,8 @@ use std::str::FromStr;
 
 use trezor_thp::{
     Host,
-    alternating_bit::SyncBits,
     fragment::{Fragmenter, Reassembler},
-    header::Header,
+    header::{Header, SyncBits},
 };
 
 const REPEAT: u8 = 1;

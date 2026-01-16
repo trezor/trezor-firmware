@@ -84,6 +84,12 @@ impl<R: Role> Fragmenter<R> {
         payload_done && crc_done
     }
 
+    pub fn reset(&mut self) {
+        self.offset = 0;
+        self.checksum = Crc32::new();
+        self.crc_offset = 0;
+    }
+
     /// Shortcut to serialize packet into buffer known to be large enough.
     pub fn single(header: Header<R>, sb: SyncBits, payload: &[u8], dest: &mut [u8]) -> Result<()> {
         let mut fragmenter = Self::new(header, sb, payload)?;
@@ -163,7 +169,7 @@ impl<R: Role> Reassembler<R> {
 
     pub fn verify(&self, buffer: &[u8]) -> Result<usize> {
         if !self.is_done() {
-            return Err(Error::InvalidDigest);
+            return Err(Error::UnexpectedInput);
         }
         let computed_checksum = self.checksum.finalize();
         let length_no_checksum =
