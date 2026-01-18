@@ -4,9 +4,9 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
+        component::{text::TextStyle, Component, Event, EventCtx, Label, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Direction, Offset, Point, Rect},
+        geometry::{Direction, Point, Rect},
         layout::util::get_user_custom_image,
         notification::{Notification, NotificationLevel},
         shape::{self, Renderer},
@@ -14,10 +14,7 @@ use crate::{
 };
 
 use super::{
-    super::{
-        component::{Button, ButtonContent, FuelGauge},
-        fonts,
-    },
+    super::component::{Button, ButtonContent, FuelGauge},
     constant::{HEIGHT, SCREEN, WIDTH},
     theme::{self, firmware::button_homebar_style, ScreenBackground},
     ActionBar, ActionBarMsg, Hint,
@@ -28,8 +25,8 @@ use crate::ui::led::LedState;
 
 /// Full-screen component for the homescreen and lockscreen.
 pub struct Homescreen {
-    /// Device name with shadow
-    label: HomeLabel,
+    /// Device name
+    label: Label<'static>,
     /// Notification
     hint: Option<Hint<'static>>,
     /// Home action bar
@@ -55,6 +52,7 @@ pub enum HomescreenMsg {
 }
 
 impl Homescreen {
+    const LABEL_TEXT_STYLE: TextStyle = theme::firmware::TEXT_BIG;
     pub fn new(
         label: TString<'static>,
         _lockable: bool,
@@ -63,8 +61,8 @@ impl Homescreen {
         coinjoin_authorized: bool,
         notification: Option<Notification>,
     ) -> Result<Self, Error> {
+        let label = Label::left_aligned(label, Self::LABEL_TEXT_STYLE).top_aligned();
         let image = get_homescreen_image();
-        let shadow = image.is_some();
 
         // Notification
         let (led_color, hint) = match notification {
@@ -89,7 +87,7 @@ impl Homescreen {
             .with_gradient(gradient);
 
         Ok(Self {
-            label: HomeLabel::new(label, shadow),
+            label,
             hint,
             action_bar: ActionBar::new_single(btn),
             image,
@@ -189,56 +187,6 @@ impl Component for Homescreen {
     }
 }
 
-/// Helper component to render a label with a shadow.
-struct HomeLabel {
-    label: Label<'static>,
-    /// Label shadow, only rendered when custom homescreen image is set
-    label_shadow: Option<Label<'static>>,
-}
-
-impl HomeLabel {
-    const LABEL_SHADOW_OFFSET: Offset = Offset::uniform(2);
-    const LABEL_TEXT_STYLE: TextStyle = theme::firmware::TEXT_BIG;
-    const LABEL_SHADOW_TEXT_STYLE: TextStyle = TextStyle::new(
-        fonts::FONT_SATOSHI_EXTRALIGHT_46,
-        theme::BLACK,
-        theme::BLACK,
-        theme::BLACK,
-        theme::BLACK,
-    );
-
-    fn new(label: TString<'static>, shadow: bool) -> Self {
-        let label_primary = Label::left_aligned(label, Self::LABEL_TEXT_STYLE).top_aligned();
-        let label_shadow = shadow
-            .then_some(Label::left_aligned(label, Self::LABEL_SHADOW_TEXT_STYLE).top_aligned());
-        Self {
-            label: label_primary,
-            label_shadow,
-        }
-    }
-
-    fn inner(&self) -> &Label<'static> {
-        &self.label
-    }
-}
-
-impl Component for HomeLabel {
-    type Msg = Never;
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.label.place(bounds);
-        self.label_shadow
-            .place(bounds.translate(Self::LABEL_SHADOW_OFFSET));
-        bounds
-    }
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
-        None
-    }
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.label_shadow.render(target);
-        self.label.render(target);
-    }
-}
-
 pub fn check_homescreen_format(image: BinaryData) -> bool {
     match ImageInfo::parse(image) {
         ImageInfo::Jpeg(info) => {
@@ -261,6 +209,8 @@ fn get_homescreen_image() -> Option<BinaryData<'static>> {
 impl crate::trace::Trace for Homescreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Homescreen");
-        t.child("label", self.label.inner());
+        t.child("label", &self.label);
+        t.child("homebar", &self.action_bar);
+        t.child("fuel_gauge", &self.fuel_gauge);
     }
 }
