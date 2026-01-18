@@ -1,4 +1,5 @@
 use crate::{
+    strutil::ShortString,
     trezorhal::power_manager::{self, ChargingState},
     ui::{
         component::{Component, Event, EventCtx, Never},
@@ -22,13 +23,15 @@ use super::super::{
 #[cfg(feature = "micropython")]
 use super::super::theme::firmware::FUEL_GAUGE_DURATION;
 
+const ICON_PERCENT_GAP: i16 = 16;
+
 /// Component for showing a small fuel gauge (battery status) consisting of:
 /// - icon indicating charging or discharging state
 /// - percentage
 #[derive(Clone)]
 pub struct FuelGauge {
     /// Area where the fuel gauge is rendered
-    area: Rect,
+    pub area: Rect,
     /// Mode of the fuel gauge (Always or OnChrgStatusChange)
     mode: FuelGaugeMode,
     /// State of battery charging
@@ -89,6 +92,46 @@ impl FuelGauge {
             #[cfg(feature = "micropython")]
             FuelGaugeMode::OnChargingChange(timer) => timer.is_running(),
         }
+    }
+
+    /// Returns the total rendered width of the fuel gauge content.
+    pub fn content_width(&self) -> i16 {
+        let icon_w = self.icon_width();
+        match self.mode {
+            FuelGaugeMode::AlwaysIconOnly | FuelGaugeMode::ChargingIconOnly => icon_w,
+            _ => {
+                let soc_fmt = self.soc_text();
+                icon_w + ICON_PERCENT_GAP + self.font.text_width(&soc_fmt)
+            }
+        }
+    }
+
+    const fn icon_width(&self) -> i16 {
+        match self.charging_state {
+            ChargingState::Charging => ICON_BATTERY_ZAP.toif.width(),
+            ChargingState::Discharging | ChargingState::Idle => ICON_BATTERY_FULL.toif.width(),
+        }
+    }
+
+    fn soc_text(&self) -> ShortString {
+        if self.soc.is_none() {
+            uformat!("?")
+        } else {
+            uformat!("{} %", self.soc.unwrap_or(0))
+        }
+    }
+
+    fn render_icon<'s>(
+        &self,
+        area: Rect,
+        icon: Icon,
+        color: Color,
+        target: &mut impl Renderer<'s>,
+    ) {
+        shape::ToifImage::new(area.left_center(), icon.toif)
+            .with_fg(color)
+            .with_align(Alignment2D::CENTER_LEFT)
+            .render(target);
     }
 
     const fn new(mode: FuelGaugeMode) -> Self {
@@ -185,15 +228,9 @@ impl Component for FuelGauge {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        const ICON_PERCENT_GAP: i16 = 16;
-
         let soc = self.soc.unwrap_or(0);
         let (icon, color_icon, color_text) = self.battery_indication(self.charging_state, soc);
-        let soc_percent_fmt = if self.soc.is_none() {
-            uformat!("?")
-        } else {
-            uformat!("{} %", soc)
-        };
+        let soc_percent_fmt = self.soc_text();
         let text_width = self.font.text_width(&soc_percent_fmt);
         let text_height = self.font.text_height();
         let icon_width = icon.toif.width();
@@ -208,30 +245,20 @@ impl Component for FuelGauge {
             ),
             alignment,
         );
-        let text_y_coord = self.font.vert_center(area.y0, area.y1, &soc_percent_fmt);
 
         match self.mode {
             FuelGaugeMode::AlwaysIconOnly => {
-                shape::ToifImage::new(area.left_center(), icon.toif)
-                    .with_fg(color_icon)
-                    .with_align(Alignment2D::CENTER_LEFT)
-                    .render(target);
+                self.render_icon(area, icon, color_icon, target);
             }
             FuelGaugeMode::ChargingIconOnly => {
                 if matches!(self.charging_state, ChargingState::Charging) {
-                    shape::ToifImage::new(area.left_center(), icon.toif)
-                        .with_fg(color_icon)
-                        .with_align(Alignment2D::CENTER_LEFT)
-                        .render(target);
+                    self.render_icon(area, icon, color_icon, target);
                 }
             }
             _ => {
                 // both icon and percentage
-                shape::ToifImage::new(area.left_center(), icon.toif)
-                    .with_fg(color_icon)
-                    .with_align(Alignment2D::CENTER_LEFT)
-                    .render(target);
-
+                self.render_icon(area, icon, color_icon, target);
+                let text_y_coord = self.font.vert_center(area.y0, area.y1, &soc_percent_fmt);
                 shape::Text::new(
                     Point::new(area.x1, text_y_coord),
                     &soc_percent_fmt,
