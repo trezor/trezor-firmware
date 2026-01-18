@@ -96,6 +96,7 @@ impl Homescreen {
             Some(Notification {
                 text: TR::homescreen__title_no_usb_connection.into(),
                 level: NotificationLevel::Alert,
+                actionable: false,
             })
         } else {
             self.notification.clone()

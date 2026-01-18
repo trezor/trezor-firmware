@@ -575,6 +575,7 @@ impl Homescreen {
             Some(Notification {
                 text: TR::homescreen__title_no_usb_connection.into(),
                 level: NotificationLevel::Alert,
+                actionable: false,
             })
         } else {
             self.notification.clone()
@@ -991,6 +992,7 @@ impl Component for Lockscreen {
             let notif = Notification {
                 text: TR::homescreen__title_coinjoin_authorized.into(),
                 level: NotificationLevel::Success,
+                actionable: false,
             };
 
             render_notif(notif, NOTIFICATION_LOCKSCREEN_TOP, target);

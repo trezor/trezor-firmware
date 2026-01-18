@@ -65,7 +65,7 @@ class Homescreen(HomescreenBase):
     def __init__(
         self,
         label: str | None,
-        notification: Tuple[str, int] | None,
+        notification: Tuple[str, int, bool] | None,
         lockable: bool,
     ) -> None:
         super().__init__(
