@@ -36,17 +36,38 @@ async def homescreen() -> None:
         notification = (
             TR.homescreen__title_coinjoin_authorized,
             NotificationLevel.SUCCESS,
+            False,
         )
     elif storage.device.is_initialized() and storage.device.no_backup():
-        notification = (TR.homescreen__title_seedless, NotificationLevel.ALERT)
+        notification = (
+            TR.homescreen__title_seedless,
+            NotificationLevel.ALERT,
+            False,
+        )
     elif storage.device.is_initialized() and storage.device.unfinished_backup():
-        notification = (TR.homescreen__title_backup_failed, NotificationLevel.ALERT)
+        notification = (
+            TR.homescreen__title_backup_failed,
+            NotificationLevel.ALERT,
+            True,
+        )
     elif storage.device.is_initialized() and storage.device.needs_backup():
-        notification = (TR.homescreen__title_backup_needed, NotificationLevel.WARNING)
+        notification = (
+            TR.homescreen__title_backup_needed,
+            NotificationLevel.WARNING,
+            True,
+        )
     elif storage.device.is_initialized() and not config.has_pin():
-        notification = (TR.homescreen__title_pin_not_set, NotificationLevel.WARNING)
+        notification = (
+            TR.homescreen__title_pin_not_set,
+            NotificationLevel.WARNING,
+            True,
+        )
     elif storage.device.get_experimental_features():
-        notification = (TR.homescreen__title_experimental_mode, NotificationLevel.INFO)
+        notification = (
+            TR.homescreen__title_experimental_mode,
+            NotificationLevel.INFO,
+            False,
+        )
 
     obj = Homescreen(
         label=label,

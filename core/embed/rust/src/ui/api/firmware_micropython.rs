@@ -877,10 +877,15 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let notification = if let Some(notif_tuple) = notification {
-            let [text, level]: [Obj; 2] = util::iter_into_array(notif_tuple)?;
+            let [text, level, actionable]: [Obj; 3] = util::iter_into_array(notif_tuple)?;
             let text: TString<'static> = text.try_into()?;
             let level: NotificationLevel = level.try_into()?;
-            Some(Notification { text, level })
+            let actionable: bool = actionable.try_into()?;
+            Some(Notification {
+                text,
+                level,
+                actionable,
+            })
         } else {
             None
         };
@@ -1918,7 +1923,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_homescreen(
     ///     *,
     ///     label: str,
-    ///     notification: tuple[str, int] | None = None,
+    ///     notification: tuple[str, int, bool] | None = None,
     ///     lockable: bool,
     ///     skip_first_paint: bool,
     /// ) -> LayoutObj[UiResult]:

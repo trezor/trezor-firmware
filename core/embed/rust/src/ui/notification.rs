@@ -15,11 +15,16 @@ use crate::micropython::{
 pub struct Notification {
     pub text: TString<'static>,
     pub level: NotificationLevel,
+    pub actionable: bool,
 }
 
 impl Notification {
-    pub fn new(text: TString<'static>, level: NotificationLevel) -> Self {
-        Self { text, level }
+    pub fn new(text: TString<'static>, level: NotificationLevel, actionable: bool) -> Self {
+        Self {
+            text,
+            level,
+            actionable,
+        }
     }
 }
 

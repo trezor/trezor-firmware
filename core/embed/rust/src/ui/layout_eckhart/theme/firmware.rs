@@ -393,11 +393,11 @@ pub const fn menu_item_title_red() -> ButtonStyleSheet {
 }
 
 macro_rules! button_homebar_style {
-    ($icon_color:expr) => {
+    ($icon_color:expr, $text_color:expr) => {
         ButtonStyleSheet {
             normal: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_MEDIUM_26,
-                text_color: GREY_LIGHT,
+                text_color: $text_color,
                 button_color: GREY_SUPER_DARK,
                 icon_color: $icon_color,
             },
@@ -418,15 +418,36 @@ macro_rules! button_homebar_style {
     };
 }
 
-pub const fn button_homebar_style(nl: Option<NotificationLevel>) -> (ButtonStyleSheet, Gradient) {
-    match nl {
-        Some(NotificationLevel::Alert) => (button_homebar_style!(RED), Gradient::Alert),
-        Some(NotificationLevel::Warning) => (button_homebar_style!(GREY_LIGHT), Gradient::Warning),
-        Some(NotificationLevel::Info) => (button_homebar_style!(GREY_LIGHT), Gradient::DefaultGrey),
-        Some(NotificationLevel::Success) => {
-            (button_homebar_style!(GREY_LIGHT), Gradient::SignGreen)
+pub const fn button_homebar_style(
+    nl: Option<&NotificationLevel>,
+    actionable: bool,
+) -> (ButtonStyleSheet, Gradient) {
+    match (nl, actionable) {
+        (Some(NotificationLevel::Alert), true) => {
+            (button_homebar_style!(RED, RED), Gradient::Alert)
         }
-        None => (button_homebar_style!(GREY_LIGHT), Gradient::DefaultGrey),
+        (Some(NotificationLevel::Alert), false) => {
+            (button_homebar_style!(RED, GREY_LIGHT), Gradient::Alert)
+        }
+        (Some(NotificationLevel::Warning), true) => {
+            (button_homebar_style!(GREY_LIGHT, YELLOW), Gradient::Warning)
+        }
+        (Some(NotificationLevel::Warning), false) => (
+            button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
+            Gradient::Warning,
+        ),
+        (Some(NotificationLevel::Info), _) => (
+            button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
+            Gradient::DefaultGrey,
+        ),
+        (Some(NotificationLevel::Success), _) => (
+            button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
+            Gradient::SignGreen,
+        ),
+        (None, _) => (
+            button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
+            Gradient::DefaultGrey,
+        ),
     }
 }
 

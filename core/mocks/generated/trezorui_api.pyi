@@ -605,7 +605,7 @@ def show_group_share_success(
 def show_homescreen(
     *,
     label: str,
-    notification: tuple[str, int] | None = None,
+    notification: tuple[str, int, bool] | None = None,
     lockable: bool,
     skip_first_paint: bool,
 ) -> LayoutObj[UiResult]:
