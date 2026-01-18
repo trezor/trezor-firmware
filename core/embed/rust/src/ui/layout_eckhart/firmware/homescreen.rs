@@ -6,11 +6,10 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment, Direction, Offset, Rect},
+        geometry::{Direction, Offset, Rect},
         layout::util::get_user_custom_image,
         notification::{Notification, NotificationLevel},
         shape::{self, Renderer},
-        util::animation_disabled,
     },
 };
 
@@ -97,9 +96,7 @@ impl Homescreen {
             led_color,
             locked,
             bootscreen,
-            fuel_gauge: FuelGauge::homescreen_bar()
-                .with_alignment(Alignment::Center)
-                .with_font(fonts::FONT_SATOSHI_MEDIUM_26),
+            fuel_gauge: FuelGauge::always_icon_only(),
             swipe: Swipe::new().up(),
         })
     }
@@ -122,10 +119,6 @@ impl Homescreen {
     }
 
     fn event_fuel_gauge(&mut self, ctx: &mut EventCtx, event: Event) {
-        if animation_disabled() {
-            return;
-        }
-
         self.fuel_gauge.event(ctx, event);
         let bar_content = if self.fuel_gauge.should_be_shown() {
             ButtonContent::Empty
