@@ -6,7 +6,7 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Direction, Offset, Rect},
+        geometry::{Direction, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         notification::{Notification, NotificationLevel},
         shape::{self, Renderer},
@@ -117,19 +117,6 @@ impl Homescreen {
             ),
         }
     }
-
-    fn event_fuel_gauge(&mut self, ctx: &mut EventCtx, event: Event) {
-        self.fuel_gauge.event(ctx, event);
-        let bar_content = if self.fuel_gauge.should_be_shown() {
-            ButtonContent::Empty
-        } else {
-            Self::homebar_content(self.bootscreen, self.locked)
-        };
-
-        if let Some(b) = self.action_bar.right_button_mut() {
-            b.set_content(bar_content)
-        }
-    }
 }
 
 impl Component for Homescreen {
@@ -141,6 +128,8 @@ impl Component for Homescreen {
         debug_assert_eq!(bounds.width(), SCREEN.width());
 
         let (rest, bar_area) = bounds.split_bottom(theme::ACTION_BAR_HEIGHT);
+        let (status_area, rest) = rest.split_top(theme::HEADER_HEIGHT);
+        let status_area = status_area.inset(theme::SIDE_INSETS);
         let rest = if let Some(hint) = &mut self.hint {
             let (rest, hint_area) = rest.split_bottom(hint.height());
             hint.place(hint_area);
@@ -148,18 +137,18 @@ impl Component for Homescreen {
         } else {
             rest
         };
-        let label_area = rest.inset(theme::CONTENT_INSETS_NO_HEADER);
+        let label_area = rest.inset(theme::SIDE_INSETS);
 
+        self.fuel_gauge.place(status_area);
         self.label.place(label_area);
         self.action_bar.place(bar_area);
-        self.fuel_gauge.place(bar_area);
         // Swipe component is placed in the action bar touch area
         self.swipe.place(self.action_bar.touch_area());
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.event_fuel_gauge(ctx, event);
+        self.fuel_gauge.event(ctx, event);
 
         let swipe_up = matches!(self.swipe.event(ctx, event), Some(Direction::Up));
         let homebar_tap = matches!(
