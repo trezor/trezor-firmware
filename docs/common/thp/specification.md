@@ -58,6 +58,7 @@ This document defines the format and internal workings of the communication prot
     - [Host's state machine](#hosts-state-machine-2)
 - [Other features](#other-features)
   - [Channel replacement](#channel-replacement)
+- [References](#references)
 
 # Introduction
 
