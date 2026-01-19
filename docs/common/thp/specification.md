@@ -640,8 +640,6 @@ Let *device_properties* be the Trezor’s properties advertised by the Trezor in
 
 Let *pairing_methods* be the pairing methods supported by the Trezor (retrieved from the *device_properties*).
 
-![Host's handshake state](images/handshake_host.png)
-
 ```mermaid
 flowchart TD
     HH0 -- out:&nbsp;HandshakeInitiationRequest --> HH1
