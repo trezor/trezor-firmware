@@ -149,7 +149,7 @@ Channels are identified by a 16-bit *channel identifier* (CID). The CID `0xFFFF`
 
 ## Transport packet structure
 
-Transport packets start with a *control byte* to determine how to handle the received packet. The recognized control byte values (with appropriate masks) are denoted in the following table.
+Each transport packet starts with a *control byte* that determines how the packet is processed by the receiver. Certain packet properties are identified using only a subset of the bits in the control byte; the remaining bits may take arbitrary values and MUST be ignored for the purpose of property identification. The recognized control byte patterns are listed in the table below. Bits denoted by X may have arbitrary values and are not considered when matching a packet to a property. For ease of implementation, each entry specifies a mask and the corresponding masked value. A control byte matches a given property if: `control_byte & mask == masked_value`.
 
 | **Name** | **Control byte (binary)** | **Mask (&)** | **Masked value** | **Description** | Handled by layer |
 |:------------------------------|:----------:|:----:|:----:|:-----------------------------------------------------------|:----------------------------------|
