@@ -577,7 +577,7 @@ Let HKDF(*ck*, *input*) be the function defined as follows:
 
 ## Trezor’s state machine
 
-Let *device_properties* be the properties advertised by the Trezor in ChannelAllocationResponse.
+Let *device_properties* be the properties advertised by the Trezor in `ChannelAllocationResponse`.
 
 Let (*trezor_static_privkey*, *trezor_static_pubkey*) be a X25519 key pair that persists Trezor restarts.
 
@@ -636,7 +636,7 @@ Let (*host_static_privkey*, *host_static_pubkey*) be a X25519 key pair that pers
 
 Let *credentials* be a list of pairs consisting of Trezor’s static public key and the corresponding credential.
 
-Let *device_properties* be the Trezor’s properties advertised by the Trezor in ChannelAllocationResponse.
+Let *device_properties* be the Trezor’s properties advertised by the Trezor in `ChannelAllocationResponse`.
 
 Let *pairing_methods* be the pairing methods supported by the Trezor (retrieved from the *device_properties*).
 
