@@ -264,7 +264,7 @@ The host application requests the establishment of a new channel with Trezor by 
 | 8          | 2        | *cid*               | A new channel identifier.                                                                                                                                                        |
 | 10         | var      | *device_properties* | Properties of the Trezor device containing a basic description of the device (model, device color) and capabilities (supported protocol version and pairing methods), see below. |
 
-The `ThpDeviceProperties` are encoded using the [Protocol Buffers](https://protobuf.dev/) version 2 wire format as a message with the following definition:
+The `device_properties` field contains a serialized `ThpDeviceProperties` message. The message is encoded using the [Protocol Buffers](https://protobuf.dev/) version 2 wire format and has the following definition:
 
 ```protobuf
 message ThpDeviceProperties {
