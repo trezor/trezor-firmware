@@ -298,14 +298,14 @@ Protocol-level errors are represented by messages identifed by the `transport_er
 
 Recognized transport error codes are:
 
-| **Code** | **Name**            | **Description**                                                                                                                                            |
-|:--------:|:--------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 0        |                     | Reserved for future use.                                                                                                                                   |
-| 1        | TRANSPORT_BUSY      | Issued by the recipient when the transport layer is busy reassembling a message on another channel.                                                        |
-| 2        | UNALLOCATED_CHANNEL | Issued by Trezor in response to a message that has a channel identifier which is not allocated.                                                            |
-| 3        | DECRYPTION_FAILED   | Issued by Trezor in response to a message that has an invalid authentication tag. For more information, see [Secure channel layer](#secure-channel-layer). |
-| 4        |                     | Reserved for future use.                                                                                                                                   |
-| 5        | DEVICE_LOCKED       | Issued by Trezor in response to handshake messages (`HandshakeInitiationRequest`, `HandshakeContinuationRequest`) received while the device is **locked**. |
+| **Code** | **Name**            | **Description**                                                                                                                                                                                     |
+|:--------:|:--------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0        |                     | Reserved for future use.                                                                                                                                                                            |
+| 1        | TRANSPORT_BUSY      | Issued by the recipient when the transport layer is busy reassembling a message on another channel.                                                                                                 |
+| 2        | UNALLOCATED_CHANNEL | Issued by Trezor in response to a message that has a channel identifier which is not allocated.                                                                                                     |
+| 3        | DECRYPTION_FAILED   | Issued by Trezor in response to a message that has an invalid authentication tag. For more information, see [Secure channel layer](#secure-channel-layer).                                          |
+| 4        |                     | Reserved for future use.                                                                                                                                                                            |
+| 5        | DEVICE_LOCKED       | Issued by Trezor in response to handshake messages (`HandshakeInitiationRequest`, `HandshakeContinuationRequest`) received while the device is **locked**. See [Handshake phase](#handshake-phase). |
 
 When the sender receives a TRANSPORT_BUSY error, it should notify the segmenting layer to cease transmitting packets and notify the synchronization layer to increase the timeout for the next retransmission of the transport payload by a random value in the range [0, MAX_BUSY_BACKOFF_MS].
 
