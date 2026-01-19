@@ -19,6 +19,11 @@ We prefer Python 3.10 style annotations:
 
 This also applies inside `if TYPE_CHECKING` branches.
 
+> [!NOTE]
+> For some Python code, for example in `trezorlib`, style checkers will complain that
+> newer Python is required for the preferred annotation style. To avoid this issue,
+> use `from __future__ import annotations`.
+
 #### Type-checking imports
 
 At run-time, the `typing` module is not available. There is compile-time magic that

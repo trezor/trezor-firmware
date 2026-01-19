@@ -58,4 +58,4 @@
   - [TOIF Image Format](misc/toif.md)
 - [Developers guide](developers/index.md)
   - [Libraries](developers/libraries.md)
-  - [Hello World in Core](developers/hello_world_in_core.md)
+  - [Hello World in Trezor Core](developers/hello_world_in_core.md)
