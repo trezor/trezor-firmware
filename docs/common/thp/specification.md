@@ -290,22 +290,22 @@ enum ThpPairingMethod {
 
 The supported pairing methods are not implied by the model because some may be disabled by user settings or device mode. Trezor may also indicate a different set of pairing methods depending on the underlying means of data transfer, e.g., USB and Bluetooth.
 
-`TransportError` uses the `transport_error` control byte and has the following transport payload:
+Protocol-level errors are represented by messages identifed by the `transport_error` control byte. Sucn messages have the following transport payload:
 
-| **Offset** | **Size** | **Field name** | **Description**                                           |
-|:----------:|:--------:|:---------------|:----------------------------------------------------------|
-| 0          | 1        | *error_code*   | The code of the transport error encoded as a single byte. |
+| **Offset** | **Size** | **Field name** | **Description**                                |
+|:----------:|:--------:|:---------------|:-----------------------------------------------|
+| 0          | 1        | *error_code*   | Transport error code encoded as a single byte. |
 
 Recognized transport error codes are:
 
-| **Code** | **Name**            | **Description**                                                                                                                                         |
-|:--------:|:--------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 0        |                     | Reserved for future use.                                                                                                                                |
-| 1        | TRANSPORT_BUSY      | Issued by a recipient when the transport layer is busy reassembling a message on another channel.                                                       |
-| 2        | UNALLOCATED_CHANNEL | Issued by Trezor in response to messages that have a channel identifier that is not allocated.                                                          |
-| 3        | DECRYPTION_FAILED   | Issued by Trezor in response to messages that have an invalid authentication tag. Decryption error results in termination of the channel.               |
-| 4        |                     | Reserved for future use.                                                                                                                                |
-| 5        | DEVICE_LOCKED       | Issued by Trezor in response to handshake messages (`HandshakeInitiationRequest`, `HandshakeContinuationRequest`) that are sent to a **locked** device. |
+| **Code** | **Name**            | **Description**                                                                                                                                            |
+|:--------:|:--------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0        |                     | Reserved for future use.                                                                                                                                   |
+| 1        | TRANSPORT_BUSY      | Issued by the recipient when the transport layer is busy reassembling a message on another channel.                                                        |
+| 2        | UNALLOCATED_CHANNEL | Issued by Trezor in response to a message that has a channel identifier which is not allocated.                                                            |
+| 3        | DECRYPTION_FAILED   | Issued by Trezor in response to a message that has an invalid authentication tag. For more information, see [Secure channel layer](#secure-channel-layer). |
+| 4        |                     | Reserved for future use.                                                                                                                                   |
+| 5        | DEVICE_LOCKED       | Issued by Trezor in response to handshake messages (`HandshakeInitiationRequest`, `HandshakeContinuationRequest`) received while the device is **locked**. |
 
 When the sender receives a TRANSPORT_BUSY error, it should notify the segmenting layer to cease transmitting packets and notify the synchronization layer to increase the timeout for the next retransmission of the transport payload by a random value in the range [0, MAX_BUSY_BACKOFF_MS].
 
