@@ -12,8 +12,6 @@ pub type ipc_fn_t = u32;
 
 /// Current API version numbers
 pub const TREZOR_API_VERSION_1: u32 = 1;
-/// Current crypto version numbers
-pub const TREZOR_CRYPTO_VERSION_1: u32 = 1;
 
 /// Maximum IPC message payload size in bytes
 // pub const IPC_MSG_PAYLOAD_SIZE: usize = 256;
@@ -117,20 +115,81 @@ pub struct trezor_api_v1_t {
         data: *const core::ffi::c_void,
         data_size: usize,
     ) -> bool,
+    pub trezor_crypto_v1_t: *const trezor_crypto_v1_t,
 }
 
 /// Trezor crypto v1 function pointers
 #[repr(C)]
 pub struct trezor_crypto_v1_t {
-    pub get_xpub: unsafe extern "C" fn(
-        handle: syshandle_t,
-        buffer: *mut core::ffi::c_void,
-        buffer_size: usize,
-    ) -> isize,
-
-    pub sign_hash: unsafe extern "C" fn(
-        remote: systask_id_t,
-        buffer: *mut core::ffi::c_void,
-        size: usize,
-    ) -> bool,
+    pub hdnode_from_xpub: unsafe extern "C" fn(
+        depth: u32,
+        child_num: u32,
+        chain_code: *const u8,
+        public_key: *const u8,
+        curve: *const core::ffi::c_char,
+        out: *mut HDNode,
+    ) -> core::ffi::c_int,
+    pub hdnode_sign: unsafe extern "C" fn(
+        node: *mut HDNode,
+        msg: *const u8,
+        msg_len: u32,
+        hasher_sign: HasherType,
+        sig: *mut u8,
+        pby: *mut u8,
+        is_canonical: ::core::option::Option<
+            unsafe extern "C" fn(by: u8, sig: *mut u8) -> core::ffi::c_int,
+        >,
+    ) -> core::ffi::c_int,
 }
+
+pub type HasherType = core::ffi::c_uint;
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bignum256 {
+    pub val: [u32; 9usize],
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct curve_point {
+    pub x: bignum256,
+    pub y: bignum256,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ecdsa_curve {
+    pub prime: bignum256,
+    pub G: curve_point,
+    pub order: bignum256,
+    pub order_half: bignum256,
+    pub a: core::ffi::c_int,
+    pub b: bignum256,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct curve_info {
+    pub bip32_name: *const core::ffi::c_char,
+    pub params: *const ecdsa_curve,
+    pub hasher_base58: HasherType,
+    pub hasher_sign: HasherType,
+    pub hasher_pubkey: HasherType,
+    pub hasher_script: HasherType,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct HDNode {
+    pub depth: u32,
+    pub child_num: u32,
+    pub chain_code: [u8; 32usize],
+    pub private_key: [u8; 32usize],
+    pub private_key_extension: [u8; 32usize],
+    pub public_key: [u8; 33usize],
+    pub is_public_key_set: bool,
+    pub curve: *const curve_info,
+}
+
+unsafe impl Sync for trezor_api_v1_t {}
+unsafe impl Sync for trezor_crypto_v1_t {}

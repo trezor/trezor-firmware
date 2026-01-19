@@ -26,6 +26,10 @@ ssize_t dbg_console_write(const void* data, size_t data_size) {
 }
 #endif
 
+const trezor_crypto_v1_t trezor_crypto_v1 = {
+    .hdnode_from_xpub = hdnode_from_xpub,
+};
+
 const trezor_api_v1_t trezor_api_v1 = {
     .system_exit = system_exit,
     .system_exit_error = system_exit_error,
@@ -41,6 +45,7 @@ const trezor_api_v1_t trezor_api_v1 = {
     .ipc_try_receive = ipc_try_receive,
     .ipc_message_free = ipc_message_free,
     .ipc_send = ipc_send,
+    .trezor_crypto_v1 = &trezor_crypto_v1,
 };
 
 const void* coreapp_api_get(uint32_t version) {

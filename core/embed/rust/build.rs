@@ -526,8 +526,13 @@ fn generate_crypto_bindings() {
     let bindings = prepare_bindings()
         .header("crypto.h")
         // aesgcm
+        .allowlist_type("HDNode")
+        .allowlist_type("curve_info")
+        .allowlist_type("HasherType")
         .allowlist_type("gcm_ctx")
         .no_copy("gcm_ctx")
+        .allowlist_function("hdnode_sign")
+        .allowlist_function("hdnode_from_xpub")
         .allowlist_function("gcm_init_and_key")
         .allowlist_function("gcm_init_message")
         .allowlist_function("gcm_encrypt")

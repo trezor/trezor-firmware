@@ -3,3 +3,4 @@
 #include "elligator2.h"
 #include "hmac.h"
 #include "sha2.h"
+#include "../../../crypto/bip32.h"

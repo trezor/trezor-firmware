@@ -28,7 +28,7 @@ enum FunnycoinMessages {
 }
 
 #[global_allocator]
-static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
+static ALLOCATOR: emballoc::Allocator<8192> = emballoc::Allocator::new();
 
 // // Provide a critical section implementation for single-threaded environment
 // struct SingleThreadedCriticalSection;

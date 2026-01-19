@@ -149,4 +149,5 @@ pub enum TrezorCryptoResult {
     Confirmed,
     Cancelled,
     Xpub(ShortString),
+    Signature([u8; 64]),
 }
