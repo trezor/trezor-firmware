@@ -646,7 +646,7 @@ flowchart TD
     HH1 -- [Trezor&nbsp;is&nbsp;known]<br>in:&nbsp;HandshakeInitiationResponse<br>out:&nbsp;HandshakeCompletionRequest&nbsp;[real&nbsp;key] --> HH2
     HH1 -- [Trezor&nbsp;is&nbsp;unknown]<br>in:&nbsp;HandshakeInitiationResponse<br>out:&nbsp;HandshakeCompletionRequest&nbsp;[dummy&nbsp;key] --> HH3
     HH3 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;not&nbsp;paired] ---> HP0
-    HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;paired] ---> HC1
+    HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;paired] ---> HC0
     HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;not&nbsp;paired] ---> HP0
 ```
 
