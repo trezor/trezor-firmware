@@ -892,7 +892,7 @@ The behavior of Trezor in the state TP1is defined as follows:
 
 ### State TP2
 
-The behavior of Trezor in the state TP2is defined as follows:
+The behavior of Trezor in the state TP2 is defined as follows:
 
 - When the message CodeEntryChallenge(*challenge*) is received, take the following actions:
     1. Set *code_code_entry* = SHA-256(PairingMethod_CodeEntry || *handshake_hash* || *code_entry_secret* || *challenge* || *PairingMethod_CodeEntry*) % 1000000.
