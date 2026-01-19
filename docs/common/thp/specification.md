@@ -640,17 +640,17 @@ Let *device_properties* be the Trezor’s properties advertised by the Trezor in
 
 Let *pairing_methods* be the pairing methods supported by the Trezor (retrieved from the *device_properties*).
 
-![handshake_host.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/281043f9-2e6b-41e3-8ba6-efc99b7fde17/c9aa47fb-f9b1-4901-8b75-78756a518503/handshake_host.png)
+![Host's handshake state](images/handshake_host.png)
 
-    ```mermaid
-    flowchart TD
-      HH0 -- out:&nbsp;HandshakeInitiationRequest --> HH1
-      HH1 -- [Trezor&nbsp;is&nbsp;known]<br>in:&nbsp;HandshakeInitiationResponse<br>out:&nbsp;HandshakeCompletionRequest&nbsp;[real&nbsp;key] --> HH2
-      HH1 -- [Trezor&nbsp;is&nbsp;unknown]<br>in:&nbsp;HandshakeInitiationResponse<br>out:&nbsp;HandshakeCompletionRequest&nbsp;[dummy&nbsp;key] --> HH3
-      HH3 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;not&nbsp;paired] ---> HP0
-      HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;paired] ---> HC1
-      HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;not&nbsp;paired] ---> HP0
-    ```
+```mermaid
+flowchart TD
+    HH0 -- out:&nbsp;HandshakeInitiationRequest --> HH1
+    HH1 -- [Trezor&nbsp;is&nbsp;known]<br>in:&nbsp;HandshakeInitiationResponse<br>out:&nbsp;HandshakeCompletionRequest&nbsp;[real&nbsp;key] --> HH2
+    HH1 -- [Trezor&nbsp;is&nbsp;unknown]<br>in:&nbsp;HandshakeInitiationResponse<br>out:&nbsp;HandshakeCompletionRequest&nbsp;[dummy&nbsp;key] --> HH3
+    HH3 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;not&nbsp;paired] ---> HP0
+    HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;paired] ---> HC1
+    HH2 -- in:&nbsp;HandshakeCompletionResponse [trezor&nbsp;is&nbsp;not&nbsp;paired] ---> HP0
+```
 
 
 ### State HH0
