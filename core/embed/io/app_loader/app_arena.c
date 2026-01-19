@@ -65,17 +65,18 @@ ts_t app_arena_init() {
     return TS_OK;
   }
 
+  TSH_DECLARE;
+
   memset(arena, 0, sizeof(app_arena_t));
 
 #ifdef TREZOR_EMULATOR
   arena->mem_size = 64 * 1024 * 1024;
   arena->mem_ptr = malloc(arena->mem_size);
-  if (arena->mem_ptr == NULL) {
-    return TS_ENOMEM;
-  }
+  TSH_CHECK(arena->mem_ptr != NULL, TS_ENOMEM);
 #else
   arena->mem_size = APPDATA_RAM_SIZE;
   arena->mem_ptr = (uint8_t*)APPDATA_RAM_START;
+  TSH_CHECK(arena->mem_ptr != NULL, TS_ENOMEM);
 
 #ifdef USE_TRUSTZONE
   // Allow unprivileged access to app arena memory
@@ -87,7 +88,9 @@ ts_t app_arena_init() {
 #endif
 
   arena->initialized = true;
-  return TS_OK;
+
+cleanup:
+  TSH_RETURN;
 }
 
 void* app_arena_alloc(size_t block_size, app_alloc_type_t type) {
