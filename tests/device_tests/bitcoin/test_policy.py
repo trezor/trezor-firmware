@@ -41,8 +41,19 @@ def test_registerpolicy(session: Session):
 
 
 def test_getpolicyaddress(session: Session):
+    """
+    Can be tested on https://adys.dev/miniscript, with the following policy:
+    or_d(
+        pk(tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg/<0;1>/*),
+        and_v(
+            v:pkh(tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb/<0;1>/*),
+            older(1)
+        )
+    )
+    `index=1` external address will be `tb1qzvr7ptes6kq2ee0745a7h2n639etfz43nsz9d2jn8u6wz8egx0hqnr5pza`
+    """
     policy_name = "Basic inheritance policy"
-    policy_template = "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@0/<2;3>/*),older(1))))"
+    policy_template = "wsh(or_d(pk(@0/<0;1>/*),and_v(v:pkh(@1/<0;1>/*),older(1))))"
     policy_xpubs = [
         "tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg",
         "tpubDCNhwLKYSSu2FKssoMziAdwhAAKS3bASH7wZYkNmJ7sU5hW9LgDaAQPqe7ivAkskSF29B1CkRRg4g2mbovXgAL9Mby6i9xBdhZh2txDeSLb",
@@ -67,7 +78,7 @@ def test_getpolicyaddress(session: Session):
         show_display=True,
     ).address
 
-    print(address)
+    assert address == "tb1qzvr7ptes6kq2ee0745a7h2n639etfz43nsz9d2jn8u6wz8egx0hqnr5pza"
 
     # altered_mac = bytes([mac[0] ^ 1]) + mac[1:]
     # with pytest.raises(TrezorFailure, match="Invalid MAC"):
