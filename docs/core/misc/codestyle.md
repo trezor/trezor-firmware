@@ -13,14 +13,14 @@ See rules for exceptions in the [Exceptions documentation](./exceptions.md).
 
 We prefer Python 3.10 style annotations:
 
-* instead of `List[int]`, use `list[int]`, dtto for `Tuple`, `Dict` and `Set`
+* instead of `List[int]`, use `list[int]`, ditto for `Tuple`, `Dict` and `Set`
 * instead of `Optional[int]`, use `int | None`
 * instead of `Union[int, str]`, use `int | str`
 
 This also applies inside `if TYPE_CHECKING` branches.
 
 > [!NOTE]
-> For some Python code, for example in `trezorlib`, style checkers will complain that
+> For existing Python code, for example in `trezorlib`, style checkers will complain that
 > newer Python is required for the preferred annotation style. To avoid this issue,
 > use `from __future__ import annotations`.
 
