@@ -897,7 +897,7 @@ The behavior of Trezor in the state TP2 is defined as follows:
 - When the message CodeEntryChallenge(*challenge*) is received, take the following actions:
     1. Set *code_code_entry* = SHA-256(PairingMethod_CodeEntry || *handshake_hash* || *code_entry_secret* || *challenge* || *PairingMethod_CodeEntry*) % 1000000.
     2. Display *code_code_entry* on the screen.
-    3. Compute *pregenerator* as the first 32 bytes of SHA-512(*prefix* || *code_code_entry* || *padding* || *handshake_hash* || **0x00***), where *prefix* is the byte-string  0x08 || 0x43 || 0x50 || 0x61 || 0x63 || 0x65 || 0x32 || 0x35 || 0x35 || 0x06, *code_code_entry* is encoded as an ASCII representation of the 6-digit code (with prepended zeroes if needed) (`f"{code_code_entry:06}".encode("ascii")`), and *padding* is the byte-string **0x6f** || 0x00 ^ **111** || 0x20.
+    3. Compute *pregenerator* as the first 32 bytes of SHA-512(*prefix* || *code_code_entry* || *padding* || *handshake_hash* || 0x00), where *prefix* is the byte-string  0x08 || 0x43 || 0x50 || 0x61 || 0x63 || 0x65 || 0x32 || 0x35 || 0x35 || 0x06, *code_code_entry* is encoded as an ASCII representation of the 6-digit code (with prepended zeroes if needed) (`f"{code_code_entry:06}".encode("ascii")`), and *padding* is the byte-string 0x6f || 0x00 ^ 111 || 0x20.
     4. Set *generator* = ELLIGATOR2(*pregenerator*).
     5. Generate a random 32-byte *cpace_trezor_private_key*.
     6. Set *cpace_trezor_public_key* = X25519(*cpace_trezor_private_key*, *generator*).
