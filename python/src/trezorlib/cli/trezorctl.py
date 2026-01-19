@@ -44,6 +44,7 @@ from . import (
     evolu,
     fido,
     firmware,
+    hello_world,
     monero,
     nem,
     nostr,
@@ -429,6 +430,7 @@ cli.add_command(eos.cli)
 cli.add_command(ethereum.cli)
 cli.add_command(evolu.cli)
 cli.add_command(fido.cli)
+cli.add_command(hello_world.cli)
 cli.add_command(monero.cli)
 cli.add_command(nem.cli)
 cli.add_command(nostr.cli)

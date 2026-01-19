@@ -1,0 +1,25 @@
+syntax = "proto2";
+package hw.trezor.messages.helloworld;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageHelloWorld";
+
+/**
+ * Request: Hello world request for text
+ * @next HelloWorldResponse
+ * @next Failure
+ */
+message HelloWorldRequest {
+    required string name = 1;
+    optional uint32 amount = 2 [default=1];
+    optional bool show_display = 3;
+}
+
+/**
+ * Response: Hello world text
+ * @end
+ */
+ message HelloWorldResponse {
+    required string text = 1;
+}

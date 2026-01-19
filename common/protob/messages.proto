@@ -363,4 +363,8 @@ enum MessageType {
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];
     MessageType_BenchmarkRun = 9102 [(bitcoin_only) = true];
     MessageType_BenchmarkResult = 9103 [(bitcoin_only) = true];
+
+    // Hello world
+    MessageType_HelloWorldRequest = 2900 [(wire_in) = true];
+    MessageType_HelloWorldResponse = 2901 [(wire_out) = true];
 }

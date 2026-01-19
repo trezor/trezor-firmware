@@ -106,6 +106,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.cipher_key_value"
     if msg_type == MessageType.GetFirmwareHash:
         return "apps.misc.get_firmware_hash"
+    if msg_type == MessageType.HelloWorldRequest:
+        return "apps.misc.hello_world"
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:

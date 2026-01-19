@@ -275,3 +275,5 @@ if not utils.BITCOIN_ONLY:
     TronContractRequest = 2204
     TronTransferContract = 2205
     TronTriggerSmartContract = 2206
+    HelloWorldRequest = 2900
+    HelloWorldResponse = 2901

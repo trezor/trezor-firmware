@@ -646,3 +646,5 @@ if TYPE_CHECKING:
         BenchmarkNames = 9101
         BenchmarkRun = 9102
         BenchmarkResult = 9103
+        HelloWorldRequest = 2900
+        HelloWorldResponse = 2901

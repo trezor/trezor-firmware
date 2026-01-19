@@ -700,6 +700,8 @@ class MessageType(IntEnum):
     BenchmarkNames = 9101
     BenchmarkRun = 9102
     BenchmarkResult = 9103
+    HelloWorldRequest = 2900
+    HelloWorldResponse = 2901
 
 
 class BenchmarkListNames(protobuf.MessageType):
@@ -5680,6 +5682,40 @@ class EvoluDelegatedIdentityKey(protobuf.MessageType):
         private_key: "bytes",
     ) -> None:
         self.private_key = private_key
+
+
+class HelloWorldRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2900
+    FIELDS = {
+        1: protobuf.Field("name", "string", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint32", repeated=False, required=False, default=1),
+        3: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        name: "str",
+        amount: Optional["int"] = 1,
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.name = name
+        self.amount = amount
+        self.show_display = show_display
+
+
+class HelloWorldResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2901
+    FIELDS = {
+        1: protobuf.Field("text", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        text: "str",
+    ) -> None:
+        self.text = text
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

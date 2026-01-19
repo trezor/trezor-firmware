@@ -4212,6 +4212,38 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EvoluDelegatedIdentityKey"]:
             return isinstance(msg, cls)
 
+    class HelloWorldRequest(protobuf.MessageType):
+        name: "str"
+        amount: "int"
+        show_display: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+            amount: "int | None" = None,
+            show_display: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["HelloWorldRequest"]:
+            return isinstance(msg, cls)
+
+    class HelloWorldResponse(protobuf.MessageType):
+        text: "str"
+
+        def __init__(
+            self,
+            *,
+            text: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["HelloWorldResponse"]:
+            return isinstance(msg, cls)
+
     class MoneroTransactionSourceEntry(protobuf.MessageType):
         outputs: "list[MoneroOutputEntry]"
         real_output: "int | None"
