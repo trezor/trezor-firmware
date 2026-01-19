@@ -322,7 +322,7 @@ The synchronization layer handles acknowledgement messages, which allow the rece
 
 Sender should not assume a message to be received without a receipt of an acknowledgement message.
 
-The primary function of the synchronization layer is to work as the Alternating Bit Protocol (ABP) to ensure reliable communication. As such, it handles sequence numbers, ACK messages, retransmissions, and timeouts. Secondly, it provides the higher layers (e.g., the Secure channel layer) with data payloads (and notifications).
+The primary function of the synchronization layer is to work as the *Alternating Bit Protocol* (ABP)[[ABP69](#abp69)] ensuring reliable communication over an unreliable transport. As such, it handles sequence numbers, ACK messages, retransmissions, and timeouts. Secondly, it provides the higher layers (e.g., the Secure channel layer) with data payloads (and notifications).
 
 It is possible that some packets are lost by the Data transfer layer (L1). In order to guarantee reliable communication, THP uses the *Alternating Bit Protocol* in combination with a *CRC32* checksum.
 
@@ -1311,3 +1311,7 @@ Also, as the sessions from the old channel are migrated to the new one - it allo
 Example usecase - the host application crashes/restarts.
 
 Note: STATE_PAIRED_AUTOCONNECT can be viewed as a special case of STATE_PAIRED.
+
+# References
+
+<a id="abp69"></a> **[ABP69]** K. A. Bartlett, R. A. Scantlebury, and P. T. Wilkinson, “A note on reliable full-duplex transmission over half-duplex links,” *Communications of the ACM*, vol. 12, no. 5, pp. 260–261, May 1969.
