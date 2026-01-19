@@ -586,7 +586,7 @@ Let *cred_auth_key* be a symmetric 16-byte key that persists Trezor's restarts.
 ```mermaid
 flowchart TD
   TH1 -- in:&nbsp;HandshakeInitiationRequest<br>out:&nbsp;HandshakeInitiationResponse --> TH2
-  TH2 -- in:&nbsp;HandshakeCompletionRequest&nbsp;[paired]<br>out:&nbsp;HandshakeCompletionResponse --> TS["transport state"]
+  TH2 -- in:&nbsp;HandshakeCompletionRequest&nbsp;[paired]<br>out:&nbsp;HandshakeCompletionResponse --> TC1
   TH2 -- in:&nbsp;HandshakeCompletionRequest&nbsp;[unpaired]<br>out:&nbsp;HandshakeCompletionResponse --> TP1
 ```
 
