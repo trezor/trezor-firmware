@@ -14,7 +14,7 @@ We will implement a simple "hello world" feature where Trezor gets some informat
 
 As already mentioned, to get something useful from Trezor, writing device logic is not enough. We need to have a specific communication channel between the computer and Trezor, and also the computer needs to know how to speak to the device to trigger wanted action.
 
-### TLDR: [implementation in a single commit](https://github.com/trezor/trezor-firmware/commit/e1cbb8a97018ec3ea39e759bbdc9a5311f992dc5)
+### TLDR: [implementation in a single commit](https://github.com/trezor/trezor-firmware/commit/f43e7828281219b9770eea376e5dd6d5afd6ee3b)
 
 ### 1. Communication part (protobuf)
 Communication between Trezor and the computer is handled by a protocol called `protobuf`. It allows for the creation of specific messages (containing clearly defined data) that will be exchanged. More details about this can be seen in [docs](../common/communication/index.md).
@@ -143,6 +143,8 @@ We will create the `python/src/trezorlib/hello_world.py` file and fill it with c
 
 #### **`python/src/trezorlib/hello_world.py`**
 ```python
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 from . import messages
@@ -173,6 +175,8 @@ This function is then called from the `CLI` function, which we will define in `p
 
 #### **`python/src/trezorlib/cli/hello_world.py`**
 ```python
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 import click
@@ -332,6 +336,6 @@ Note the usage of `trezorlib.hello_world.say_hello`, which we defined earlier, s
 If we want to be fully compatible with `CI`, we need to create expected `UI-test` results. The most straightforward way to do it is to run `make test_emu_ui_record` in `core` directory.
 
 ## Conclusion
-All changes in one commit can be seen [here](https://github.com/trezor/trezor-firmware/commit/e1cbb8a97018ec3ea39e759bbdc9a5311f992dc5).
+All changes in one commit can be seen [here](https://github.com/trezor/trezor-firmware/commit/f43e7828281219b9770eea376e5dd6d5afd6ee3b).
 
 Ideas for potentially useful Trezor features are welcome. Feel free to submit issues and open PRs, even if incomplete.
