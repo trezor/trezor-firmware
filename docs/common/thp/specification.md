@@ -879,7 +879,7 @@ The behavior of Trezor in the state TP1is defined as follows:
     3. Transition to the state TP3a
 - selected_pairing_method is PairingMethod_QrCode
     1. Generate a random 16-byte *qr_code_secret*.
-    2.  Set *code_qr_code* = SHA-256(PairingMethod_QrCode || *handshake_hash* || *qr_code_secret*)[:16].
+    2. Set *code_qr_code* = SHA-256(PairingMethod_QrCode || *handshake_hash* || *qr_code_secret*)[:16].
     3. Display QR Code on the Trezor’s screen
     4. Send the message PairingPreparationsFinished() to the host.
     5. Transition to the state TP3b
@@ -895,14 +895,15 @@ The behavior of Trezor in the state TP1is defined as follows:
 The behavior of Trezor in the state TP2 is defined as follows:
 
 - When the message CodeEntryChallenge(*challenge*) is received, take the following actions:
-    1. Set *code_code_entry* = SHA-256(PairingMethod_CodeEntry || *handshake_hash* || *code_entry_secret* || *challenge* || *PairingMethod_CodeEntry*) % 1000000.
-    2. Display *code_code_entry* on the screen.
-    3. Compute *pregenerator* as the first 32 bytes of SHA-512(*prefix* || *code_code_entry* || *padding* || *handshake_hash* || 0x00), where *prefix* is the byte-string  0x08 || 0x43 || 0x50 || 0x61 || 0x63 || 0x65 || 0x32 || 0x35 || 0x35 || 0x06, *code_code_entry* is encoded as an ASCII representation of the 6-digit code (with prepended zeroes if needed) (`f"{code_code_entry:06}".encode("ascii")`), and *padding* is the byte-string 0x6f || 0x00 ^ 111 || 0x20.
-    4. Set *generator* = ELLIGATOR2(*pregenerator*).
-    5. Generate a random 32-byte *cpace_trezor_private_key*.
-    6. Set *cpace_trezor_public_key* = X25519(*cpace_trezor_private_key*, *generator*).
-    7. Send the message CodeEntryCpaceTrezor(*cpace_trezor_public_key*) to the host.
-    8. Transition to the state TP3a.
+    1. Set *code_code_entry_hash* = SHA-256(PairingMethod_CodeEntry || *handshake_hash* || *code_entry_secret* || *challenge* || *PairingMethod_CodeEntry*).
+    2. Interpret *code_code_entry_hash* as an unsigned big-endian integer and set *code_code_entry* = *code_code_entry_hash* % 1000000.
+    3. Display *code_code_entry* on the screen.
+    4. Compute *pregenerator* as the first 32 bytes of SHA-512(*prefix* || *code_code_entry* || *padding* || *handshake_hash* || 0x00), where *prefix* is the byte-string  0x08 || 0x43 || 0x50 || 0x61 || 0x63 || 0x65 || 0x32 || 0x35 || 0x35 || 0x06, *code_code_entry* is encoded as an ASCII representation of the 6-digit code (with prepended zeroes if needed) (`f"{code_code_entry:06}".encode("ascii")`), and *padding* is the byte-string 0x6f || 0x00 ^ 111 || 0x20.
+    5. Set *generator* = ELLIGATOR2(*pregenerator*).
+    6. Generate a random 32-byte *cpace_trezor_private_key*.
+    7. Set *cpace_trezor_public_key* = X25519(*cpace_trezor_private_key*, *generator*).
+    8. Send the message CodeEntryCpaceTrezor(*cpace_trezor_public_key*) to the host.
+    9. Transition to the state TP3a.
 
 ### State TP3a
 
@@ -1225,7 +1226,7 @@ message AuthenticatedCredentialData {
 
 ### Credential authentication key
 
-For credential issuance and validation, a credential authentication key (*cred_auth_key*) is used. This key is derived from two components - *device secret* and a counter (*cred_auth_key_counter*). The *device secret* is independent of seed and is generated randomly first time it is needed. The *cred_auth_key_counter* is 4 bytes big endian initiated to zero.
+For credential issuance and validation, a credential authentication key (*cred_auth_key*) is used. This key is derived from two components - *device secret* and a counter (*cred_auth_key_counter*). The *device secret* is independent of seed and is generated randomly first time it is needed. The *cred_auth_key_counter* is 4 bytes big-endian initiated to zero.
 
 ### Credential validation
 
