@@ -467,18 +467,6 @@ The handshake is based on the `XX` handshake pattern as specified by the [Noise 
 
 *trezor_masked_static_pubkey* = X25519(SHA-256(*trezor_static_pubkey* || *trezor_ephemeral_pubkey*), *trezor_static_pubkey*).
 
-## Common definitions
-
-The X25519 function, Curve25519, and key pair generation are specified in [RFC 7748](https://datatracker.ietf.org/doc/html/rfc7748). In this section, *B* denotes the base point of Curve25519, which is encoded as a byte(0x09) followed by 31 zero bytes.
-
-Let *protocol_name* = `Noise_XX_25519_AESGCM_SHA256\\x00\\x00\\x00\\x00`.
-
-Let HKDF(*ck*, *input*) be the function defined as follows:
-
-1. Let *temp_key* = HMAC-SHA-256(*ck*, *input*).
-2. Let *output_1* = HMAC-SHA-256(*temp_key*, byte(0x01)).
-3. Let *output_2* = HMAC-SHA-256(*temp_key*, *output_1* || byte(0x02)).
-4. Return (*output_1*, *output_2*).
 
 ## Messages
 
@@ -546,6 +534,19 @@ The message is sent from the Trezor to the host. It is sent as an encrypted payl
 | Offset | Size | Field name               | Description                                |
 |--------|------|--------------------------|--------------------------------------------|
 | 0      | 17   | *encrypted_trezor_state* | encrypted and authenticated Trezor’s state |
+
+## Common definitions
+
+The X25519 function, Curve25519, and key pair generation are specified in [RFC 7748](https://datatracker.ietf.org/doc/html/rfc7748).
+
+Let *protocol_name* = `Noise_XX_25519_AESGCM_SHA256\\x00\\x00\\x00\\x00`.
+
+Let HKDF(*ck*, *input*) be the function defined as follows:
+
+1. Let *temp_key* = HMAC-SHA-256(*ck*, *input*).
+2. Let *output_1* = HMAC-SHA-256(*temp_key*, byte(0x01)).
+3. Let *output_2* = HMAC-SHA-256(*temp_key*, *output_1* || byte(0x02)).
+4. Return (*output_1*, *output_2*).
 
 ## Trezor’s state machine
 
