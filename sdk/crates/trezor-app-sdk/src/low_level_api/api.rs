@@ -71,6 +71,15 @@ fn get_or_die() -> &'static ffi::trezor_api_v1_t {
     API.get().expect("API not initialized")
 }
 
+#[inline]
+fn get_crypto_or_die() -> &'static ffi::trezor_crypto_v1_t {
+    unsafe {
+        (get_or_die().trezor_crypto_v1_t)
+            .as_ref()
+            .expect("Crypto API getter returned null pointer")
+    }
+}
+
 /// Free resources associated with a received IPC message
 ///
 /// # Safety
@@ -200,3 +209,30 @@ pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
     // not being supposed to, we abort.
     core::intrinsics::abort();
 }
+
+pub fn hdnode_from_xpub(
+    depth: u32,
+    child_num: u32,
+    chain_code: &[u8; 32],
+    public_key: &[u8; 33],
+    curve: &core::ffi::CStr,
+    out: &mut ffi::HDNode,
+) -> Result<(), ApiError> {
+    let res = unsafe {
+        (get_crypto_or_die().hdnode_from_xpub)(
+            depth,
+            child_num,
+            chain_code.as_ptr(),
+            public_key.as_ptr(),
+            curve.as_ptr(),
+            out,
+        )
+    };
+    if res == 0 {
+        Ok(())
+    } else {
+        Err(ApiError::Failed)
+    }
+}
+
+
