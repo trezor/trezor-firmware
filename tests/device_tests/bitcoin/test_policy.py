@@ -106,3 +106,56 @@ def test_getpolicyaddress(session: Session):
     #         0,
     #         False,
     #     )
+
+
+@pytest.mark.xfail(reason="missing FW support for complex policies", raises=TrezorFailure)
+def test_getpolicyaddress_complex(session: Session):
+    """
+    Can be tested on https://adys.dev/miniscript, with the following policy:
+
+    or_i(
+        and_v(
+            v:thresh(
+            2,
+            pkh([00000000/84'/0'/0']xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/<2;3>/*),
+            a:pkh([00000001/84'/0'/1']xpub6DDUPHpUo4pd1hyVtRaknvZvCgdPdEDMKx3bB5UFcx73pEHRDVK4rwEZUgeUbVuYWGMNLvuBHp5WeyPevN2Gv7m9FnLHQE6XaKNRPZcYcHH/<2;3>/*),
+            a:pkh([00000002/84'/0'/2']xpub6DDUPHpUo4pd5Z4Dmuk7igUc5DcYBoJXcVA1NJbKaRX1M2WKsTqHF5igMbwLpA23iHBwPXY11cidR2kiJVsQWfuJgaQJuxFrjm7iEhsMm4y/<0;1>/*)
+            ),
+            older(52596)
+        ),
+        and_v(
+            v:pk([00000000/84'/0'/0']xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/<0;1>/*),
+            pk([00000001/84'/0'/1']xpub6DDUPHpUo4pd1hyVtRaknvZvCgdPdEDMKx3bB5UFcx73pEHRDVK4rwEZUgeUbVuYWGMNLvuBHp5WeyPevN2Gv7m9FnLHQE6XaKNRPZcYcHH/<0;1>/*)
+        )
+    )
+
+    `index=1` external address will be `bc1qkye36enq7qzxadptuhh4v9t09zhelpw3cz9n0knvg2ayhdns5c7sc6vyde`
+    """
+    policy_name = "2-of-2 => 2-of-3 after 1y"
+    policy_template = "or_i(and_v(v:thresh(2,pkh(@0/<2;3>/*),a:pkh(@1<2;3>/*),a:pkh([00000002/84'/0'/2']@2/<0;1>/*)),older(52596)),and_v(v:pk(@0/<0;1>/*),pk(@1/<0;1>/*)))"
+    policy_xpubs = [
+        "xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF",
+        "xpub6DDUPHpUo4pd1hyVtRaknvZvCgdPdEDMKx3bB5UFcx73pEHRDVK4rwEZUgeUbVuYWGMNLvuBHp5WeyPevN2Gv7m9FnLHQE6XaKNRPZcYcHH",
+        "xpub6DDUPHpUo4pd5Z4Dmuk7igUc5DcYBoJXcVA1NJbKaRX1M2WKsTqHF5igMbwLpA23iHBwPXY11cidR2kiJVsQWfuJgaQJuxFrjm7iEhsMm4y",
+    ]
+    policy_blocks = 52596
+    policy_registration = btc.register_policy(
+        session, "Bitcoin", policy_name, policy_template, policy_xpubs, policy_blocks
+    )
+
+    mac = policy_registration.mac
+
+    address = btc.get_policy_address(
+        session,
+        "Bitcoin",
+        policy_name,
+        policy_template,
+        policy_xpubs,
+        policy_blocks,
+        mac,
+        0,
+        False,
+        show_display=True,
+    ).address
+
+    assert address == "bc1qkye36enq7qzxadptuhh4v9t09zhelpw3cz9n0knvg2ayhdns5c7sc6vyde"
