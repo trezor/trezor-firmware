@@ -66,7 +66,7 @@ MessageType_HelloWorldResponse = 2901 [(wire_out) = true];
 After this, we are almost done with `protobuf`! The only thing left is to run `make gen` in the root directory to create all the auto-generated files. By running this, the `protobuf` definitions will be translated into `python` classes in `core`, `python` and `rust` sub-repositories, so that they can understand these messages. Files under `core/src/trezor`, `python/src/trezorlib` and `rust/trezor-client/src` should be modified by this.
 
 #### Optional step
-This feature will be implemented only in Trezor Core and not for the legacy `T1` model. If we want to be compatible with `CI`, we need to define these messages as unused for `T1`. That is done in `legacy/firmware/protob/Makefile`, where we will extend the `SKIPPED_MESSAGES` variable:
+This feature will be implemented only in Trezor Core and not for the legacy `T1` model. If we want to be compatible with CI, we need to define these messages as unused for `T1`. That is done in `legacy/firmware/protob/Makefile`, where we will extend the `SKIPPED_MESSAGES` variable:
 
 #### **`legacy/firmware/protob/Makefile`**
 ```sh
@@ -333,7 +333,7 @@ We are not asserting the exact result of the greeting (that is done by unit test
 Note the usage of `trezorlib.hello_world.say_hello`, which we defined earlier, so we see how it can be useful for testing purposes.
 
 #### Optional step
-If we want to be fully compatible with `CI`, we need to create expected `UI-test` results. The most straightforward way to do it is to run `make test_emu_ui_record` in `core` directory.
+If we want to be fully compatible with CI, we need to update [`fixtures.json`](https://raw.githubusercontent.com/trezor/trezor-firmware/refs/heads/main/tests/ui_tests/fixtures.json) with results from the new workflow run. The most convenient way to do it is to let the tests run in CI first and then update [`fixtures.json`](https://raw.githubusercontent.com/trezor/trezor-firmware/refs/heads/main/tests/ui_tests/fixtures.json) using data from the run. The tool for this is [update_fixtures.py](https://github.com/trezor/trezor-firmware/blob/main/tests/update_fixtures.py); see `./update_fixtures.py ci --help`.
 
 ## Conclusion
 All changes in one commit can be seen [here](https://github.com/trezor/trezor-firmware/commit/f43e7828281219b9770eea376e5dd6d5afd6ee3b).
