@@ -114,6 +114,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.evolu.sign_registration_request"
     if msg_type == MessageType.EvoluGetDelegatedIdentityKey:
         return "apps.evolu.get_delegated_identity_key"
+    if msg_type == MessageType.EvoluIndexManagement:
+        return "apps.evolu.index_management"
     if msg_type == MessageType.PaymentNotification:
         return "apps.misc.payment_notification"
 

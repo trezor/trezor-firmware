@@ -348,6 +348,8 @@ enum MessageType {
     MessageType_EvoluRegistrationRequest = 2103 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_EvoluGetDelegatedIdentityKey = 2104 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_EvoluDelegatedIdentityKey = 2105 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_EvoluIndexManagement = 2106 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_EvoluIndexManagementResponse = 2107 [(bitcoin_only) = true, (wire_out) = true];
 
     // Tron
     MessageType_TronGetAddress = 2200 [(wire_in) = true];

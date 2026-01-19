@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from trezor.messages import EvoluGetNode, EvoluNode
 
 _EVOLU_KEY_PATH_PREFIX = [b"TREZOR", b"Evolu"]
+_EVOLU_KEY_PATH_PREFIX_INDEX = [b"TREZOR", b"Evolu Index"]
 
 
 async def get_node(msg: EvoluGetNode) -> EvoluNode:
@@ -22,7 +23,7 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
         NotInitialized: If the device is not initialized.
         ValueError: If the proof of delegated identity is missing or invalid.
     """
-    from storage.device import is_initialized
+    from storage.device import get_delegated_identity_key_rotation_index, is_initialized
     from trezor.messages import EvoluNode
     from trezor.wire import NotInitialized
 
@@ -31,21 +32,30 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
 
+    delegated_identity_key_rotation_index = get_delegated_identity_key_rotation_index()
+    if delegated_identity_key_rotation_index is None:
+        delegated_identity_key_rotation_index = 0
+
     if not check_delegated_identity_proof(
-        bytes(msg.proof_of_delegated_identity), header=b"EvoluGetNode"
+        bytes(msg.proof_of_delegated_identity),
+        delegated_identity_key_rotation_index,
+        header=b"EvoluGetNode",
     ):
         raise ValueError("Invalid proof")
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite
 
-    return EvoluNode(data=await derive_evolu_node())
+    return EvoluNode(data=await derive_evolu_node(msg.node_rotation_index))
 
 
-async def derive_evolu_node() -> bytes:
+async def derive_evolu_node(index: int) -> bytes:
     from apps.common.seed import Slip21Node, get_seed
 
     seed = await get_seed()
     node = Slip21Node(seed)
-    node.derive_path(_EVOLU_KEY_PATH_PREFIX)
+    if index == 0:
+        node.derive_path(_EVOLU_KEY_PATH_PREFIX)
+    else:
+        node.derive_path(_EVOLU_KEY_PATH_PREFIX_INDEX + [str(index).encode()])
 
     return node.data

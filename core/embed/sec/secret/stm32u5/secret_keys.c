@@ -34,26 +34,28 @@
 secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
   _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH);
   return secret_key_derive_sym(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
-                               KEY_INDEX_MCU_DEVICE_AUTH, 0, dest);
+                               KEY_INDEX_MCU_DEVICE_AUTH, 0, 0, dest);
 }
 
 #ifdef USE_OPTIGA
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
   _Static_assert(OPTIGA_PAIRING_SECRET_SIZE == SHA256_DIGEST_LENGTH);
   return secret_key_derive_sym(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
-                               KEY_INDEX_OPTIGA_PAIRING, 0, dest);
+                               KEY_INDEX_OPTIGA_PAIRING, 0, 0, dest);
 }
 
 secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
-                                     KEY_INDEX_OPTIGA_MASKING, dest);
+                                     KEY_INDEX_OPTIGA_MASKING, 0, dest);
 }
 
 #endif  // USE_OPTIGA
 
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+secbool secret_key_delegated_identity(uint16_t rotation_index,
+                                      uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
-                                     KEY_INDEX_DELEGATED_IDENTITY, dest);
+                                     KEY_INDEX_DELEGATED_IDENTITY,
+                                     rotation_index, dest);
 }
 
 #ifdef USE_TROPIC
@@ -61,7 +63,7 @@ static secbool secret_key_derive_curve25519(uint8_t slot, uint16_t index,
                                             curve25519_key dest) {
   _Static_assert(sizeof(curve25519_key) == SHA256_DIGEST_LENGTH);
 
-  secbool ret = secret_key_derive_sym(slot, index, 0, dest);
+  secbool ret = secret_key_derive_sym(slot, index, 0, 0, dest);
   dest[0] &= 248;
   dest[31] &= 127;
   dest[31] |= 64;
@@ -87,7 +89,7 @@ secbool secret_key_tropic_pairing_privileged(curve25519_key dest) {
 
 secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
-                                     KEY_INDEX_TROPIC_MASKING, dest);
+                                     KEY_INDEX_TROPIC_MASKING, 0, dest);
 }
 
 #endif  // USE_TROPIC
@@ -115,7 +117,7 @@ secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]) {
   }
 
   return secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
-                               KEY_INDEX_NRF_PAIRING, 0, dest);
+                               KEY_INDEX_NRF_PAIRING, 0, 0, dest);
 }
 
 secbool secret_validate_nrf_pairing(const uint8_t* message, size_t msg_len,
@@ -125,7 +127,7 @@ secbool secret_validate_nrf_pairing(const uint8_t* message, size_t msg_len,
   uint8_t key[NRF_PAIRING_SECRET_SIZE] = {0};
 
   if (sectrue != secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
-                                       KEY_INDEX_NRF_PAIRING, 0, key)) {
+                                       KEY_INDEX_NRF_PAIRING, 0, 0, key)) {
     return secfalse;
   }
 
@@ -153,7 +155,7 @@ secbool secret_key_storage_salt(uint16_t fw_type,
                                 uint8_t dest[SECRET_KEY_STORAGE_SALT_SIZE]) {
   _Static_assert(SECRET_KEY_STORAGE_SALT_SIZE == SHA256_DIGEST_LENGTH);
   return secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
-                               KEY_INDEX_STORAGE_SALT, fw_type, dest);
+                               KEY_INDEX_STORAGE_SALT, fw_type, 0, dest);
 }
 
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
@@ -186,9 +188,10 @@ secbool secret_key_master_key_get(secret_key_master_key_t* master_key) {
   return sectrue;
 }
 
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  return secret_key_derive_nist256p1(UNUSED_KEY_SLOT,
-                                     KEY_INDEX_DELEGATED_IDENTITY, dest);
+secbool secret_key_delegated_identity(uint16_t rotation_index,
+                                      uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  return secret_key_derive_nist256p1(
+      UNUSED_KEY_SLOT, KEY_INDEX_DELEGATED_IDENTITY, rotation_index, dest);
 }
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT

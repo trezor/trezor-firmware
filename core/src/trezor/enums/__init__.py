@@ -635,6 +635,8 @@ if TYPE_CHECKING:
         EvoluRegistrationRequest = 2103
         EvoluGetDelegatedIdentityKey = 2104
         EvoluDelegatedIdentityKey = 2105
+        EvoluIndexManagement = 2106
+        EvoluIndexManagementResponse = 2107
         TronGetAddress = 2200
         TronAddress = 2201
         TronSignTx = 2202
