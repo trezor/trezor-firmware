@@ -31,10 +31,19 @@
 #include <sys/ipc.h>
 #endif
 
+#include "bip32.h"
+
+
 #ifndef USE_DBG_CONSOLE
 // temporary hack to allow compilation when DBG console is disabled
 ssize_t dbg_console_write(const void* data, size_t data_size);
 #endif
+
+typedef struct {
+ int (*hdnode_from_xpub) (uint32_t depth, uint32_t child_num,
+                     const uint8_t *chain_code, const uint8_t *public_key,
+                     const char *curve, HDNode *out);
+} trezor_crypto_v1_t;
 
 typedef struct {
   void (*system_exit)(int exitcode);
@@ -71,5 +80,7 @@ typedef struct {
 
   bool (*ipc_send)(systask_id_t remote, uint32_t fn, const void* data,
                    size_t data_size);
+
+  const trezor_crypto_v1_t* trezor_crypto_v1;
 
 } trezor_api_v1_t;

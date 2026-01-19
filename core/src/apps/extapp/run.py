@@ -12,6 +12,13 @@ from trezor.wire.errors import DataError
 import trezorui_api
 from trezor.messages import ExtAppMessage, ExtAppResponse
 
+from trezor.messages import HDNodeType
+from trezor.enums import InputScriptType
+from apps.common.keychain import Keychain
+from apps.common import paths, coininfo
+from apps.common.keychain import get_keychain
+
+
 if TYPE_CHECKING:
     from typing import NoReturn
     from trezorio import IpcMessage
@@ -55,6 +62,10 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         _SYSTASK_ID_EXTAPP, fn_id(_SERVICE_WIRE_START, request.message_id), request.data
     )
 
+    coin = coininfo.by_name("Bitcoin")
+    script_type = InputScriptType.SPENDADDRESS
+    keychain = await get_keychain(coin.curve_name, [paths.AlwaysMatchingSchema])
+
     def die(exception: Exception) -> NoReturn:
         task.unload()
         raise exception
@@ -82,6 +93,21 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UI, 0), resp)
 
         elif service == _SERVICE_CRYPTO:
+            address_n: list[int] = [1, 2, 3, 4]  # TODO need to get from msg.data
+            node = keychain.derive(address_n)
+            assert script_type is InputScriptType.SPENDADDRESS
+            assert coin.xpub_magic is not None
+            node_xpub = node.serialize_public(coin.xpub_magic)
+            pubkey = node.public_key()
+            node_type = HDNodeType(
+                depth=node.depth(),
+                child_num=node.child_num(),
+                fingerprint=node.fingerprint(),
+                chain_code=node.chain_code(),
+                public_key=pubkey,
+            )
+
+            # TODO: need to implement ffi call here
             pass
 
         elif service == _SERVICE_WIRE_CONTINUE:

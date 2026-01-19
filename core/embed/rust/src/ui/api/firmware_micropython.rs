@@ -42,7 +42,7 @@ use rkyv::{
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
-use trezor_structs::{ShortString, TrezorUiResult};
+use trezor_structs::{ShortString, TrezorCryptoResult, TrezorUiResult};
 
 #[cfg(feature = "backlight")]
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
