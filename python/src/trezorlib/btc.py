@@ -177,7 +177,7 @@ def register_policy(
     template: str,
     xpubs: list[str],
     blocks: int,
-) -> messages.Policy:
+) -> messages.PolicyRegistration:
     return session.call(
         messages.Policy(
             name=name,
@@ -205,7 +205,13 @@ def get_policy_address(
 ) -> messages.Address:
     return session.call(
         messages.GetPolicyAddress(
-            policy=messages.Policy(name=policy_name, template=template, xpubs=xpubs, blocks=blocks, coin_name=coin_name),
+            policy=messages.Policy(
+                name=policy_name,
+                template=template,
+                xpubs=xpubs,
+                blocks=blocks,
+                coin_name=coin_name,
+            ),
             mac=mac,
             index=index,
             change=change,
