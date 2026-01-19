@@ -873,6 +873,7 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
   curve25519_key tropic_public = {0};
   if (!tropic_get_pubkey(tropic_public)) {
     cli_error(cli, CLI_ERROR, "`tropic_get_tropic_pubkey()` failed");
+    goto cleanup;
   }
 
   uint8_t output[sizeof(unprivileged_private) + NOISE_TAG_SIZE] = {0};
