@@ -1314,4 +1314,4 @@ Note: STATE_PAIRED_AUTOCONNECT can be viewed as a special case of STATE_PAIRED.
 
 # References
 
-<a id="abp69"></a> **[ABP69]** K. A. Bartlett, R. A. Scantlebury, and P. T. Wilkinson, “A note on reliable full-duplex transmission over half-duplex links,” *Communications of the ACM*, vol. 12, no. 5, pp. 260–261, May 1969.
+<a id="abp69"></a> **[ABP69]** K. A. Bartlett, R. A. Scantlebury, and P. T. Wilkinson, “A note on reliable full-duplex transmission over half-duplex links,” *Communications of the ACM*, vol. 12, no. 5, pp. 260–261, May 1969. https://dl.acm.org/doi/pdf/10.1145/362946.362970
