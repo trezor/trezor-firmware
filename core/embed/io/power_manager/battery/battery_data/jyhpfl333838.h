@@ -43,210 +43,210 @@
 // Temperature points arrays (in Celsius)
 // Discharge temperatures
 static const float BATTERY_JYHPFL333838_TEMP_POINTS_DISCHG
-    [BATTERY_JYHPFL333838_NUM_TEMP_POINTS] = {0.80f,  5.78f,  10.64f, 15.55f,
-                                              20.65f, 25.43f, 31.41f, 35.41f,
-                                              40.38f, 45.28f};
+    [BATTERY_JYHPFL333838_NUM_TEMP_POINTS] = {1.20f,  6.02f,  10.82f, 15.66f,
+                                              20.54f, 25.39f, 30.25f, 35.18f,
+                                              40.11f, 45.10f};
 
 // Charge temperatures
 static const float
     BATTERY_JYHPFL333838_TEMP_POINTS_CHG[BATTERY_JYHPFL333838_NUM_TEMP_POINTS] =
-        {2.32f,  7.28f,  12.60f, 17.51f, 22.50f,
-         27.38f, 32.31f, 37.36f, 42.34f, 47.37f};
+        {2.84f,  7.65f,  12.96f, 17.80f, 22.67f,
+         27.54f, 32.36f, 37.25f, 42.19f, 47.14f};
 
 // Internal resistance curve parameters (rational function parameters
 // a+b*t)/(c+d*t)
 static const float BATTERY_JYHPFL333838_R_INT_PARAMS[4] = {
     // a, b, c, d for rational function (a + b*t)/(c + d*t)
-    3.700987f, 0.063115f, 4.059870f, 0.273364f};
+    610.420875f, 17.843781f, 696.659674f, 63.429549f};
 
 // Discharge OCV curve parameters for each temperature
 static const float BATTERY_JYHPFL333838_OCV_DISCHARGE_PARAMS
     [BATTERY_JYHPFL333838_NUM_TEMP_POINTS][10] = {
-        // Temperature: 0.80°C (key: 0)
+        // Temperature: 1.20°C (key: 0)
         {
-            0.126550f, 3.211777f,  // m, b (linear segment)
-            19.098931f, 149.532130f, 6.226951f,
-            44.749610f,  // a1, b1, c1, d1 (first rational segment)
-            1209.541847f, -1204.643391f, 365.238423f,
-            -363.797538f  // a3, b3, c3, d3 (third rational segment)
+            0.126702f, 3.203315f,  // m, b (linear segment)
+            11.023599f, 106.085148f, 3.598773f,
+            32.028392f,  // a1, b1, c1, d1 (first rational segment)
+            1277.990728f, -1271.445603f, 386.919821f,
+            -384.988749f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 5.78°C (key: 5)
+        // Temperature: 6.02°C (key: 5)
         {
-            0.118854f, 3.221712f,  // m, b (linear segment)
-            510.794524f, 4147.718053f, 167.121531f,
-            1235.569720f,  // a1, b1, c1, d1 (first rational segment)
-            2461.131197f, -2454.069820f, 742.268667f,
-            -740.201672f  // a3, b3, c3, d3 (third rational segment)
+            0.131380f, 3.207245f,  // m, b (linear segment)
+            72.815639f, 666.592195f, 23.819540f,
+            200.347822f,  // a1, b1, c1, d1 (first rational segment)
+            1188.462373f, -1183.410865f, 358.920808f,
+            -357.426584f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 10.64°C (key: 10)
+        // Temperature: 10.82°C (key: 10)
         {
-            0.116679f, 3.228096f,  // m, b (linear segment)
-            4.902604f, 39.346060f, 1.602605f,
-            11.689570f,  // a1, b1, c1, d1 (first rational segment)
-            1195.141551f, -1192.318620f, 359.914069f,
-            -359.086078f  // a3, b3, c3, d3 (third rational segment)
+            0.134383f, 3.211193f,  // m, b (linear segment)
+            694.784001f, 5880.951793f, 226.842317f,
+            1761.552942f,  // a1, b1, c1, d1 (first rational segment)
+            -2439.402815f, 2426.704902f, -735.278568f,
+            731.510052f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 15.55°C (key: 15)
+        // Temperature: 15.66°C (key: 15)
         {
-            0.114185f, 3.232650f,  // m, b (linear segment)
-            60.048245f, 556.913282f, 19.591820f,
-            166.054156f,  // a1, b1, c1, d1 (first rational segment)
-            3200.736593f, -3191.682291f, 963.249686f,
-            -960.608735f  // a3, b3, c3, d3 (third rational segment)
+            0.138715f, 3.214329f,  // m, b (linear segment)
+            159.052685f, 1690.401977f, 51.878081f,
+            508.587170f,  // a1, b1, c1, d1 (first rational segment)
+            1084.691155f, -1082.324350f, 326.236079f,
+            -325.534997f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 20.65°C (key: 20)
+        // Temperature: 20.54°C (key: 20)
         {
-            0.114688f, 3.233887f,  // m, b (linear segment)
-            62.865854f, 711.447068f, 20.495367f,
-            213.158188f,  // a1, b1, c1, d1 (first rational segment)
-            1180.804882f, -1178.074609f, 355.167808f,
-            -354.373464f  // a3, b3, c3, d3 (third rational segment)
+            0.141409f, 3.216984f,  // m, b (linear segment)
+            43.200571f, 606.882819f, 14.109561f,
+            183.292567f,  // a1, b1, c1, d1 (first rational segment)
+            2453.465092f, -2450.207975f, 736.801949f,
+            -735.836397f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 25.43°C (key: 25)
+        // Temperature: 25.39°C (key: 25)
         {
-            0.117543f, 3.236008f,  // m, b (linear segment)
-            78.102339f, 1077.942159f, 25.484299f,
-            323.846567f,  // a1, b1, c1, d1 (first rational segment)
-            1130.318095f, -1127.865886f, 339.544458f,
-            -338.836536f  // a3, b3, c3, d3 (third rational segment)
+            0.142277f, 3.219692f,  // m, b (linear segment)
+            825.309207f, 14179.043553f, 270.130480f,
+            4289.332517f,  // a1, b1, c1, d1 (first rational segment)
+            3633.932971f, -3631.845578f, 1090.147677f,
+            -1089.528218f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 31.41°C (key: 30)
+        // Temperature: 30.25°C (key: 30)
         {
-            0.117363f, 3.238875f,  // m, b (linear segment)
-            88.813605f, 1434.949559f, 29.026877f,
-            431.654409f,  // a1, b1, c1, d1 (first rational segment)
-            2953.178047f, -2947.773461f, 886.333650f,
-            -884.769279f  // a3, b3, c3, d3 (third rational segment)
+            0.142527f, 3.221902f,  // m, b (linear segment)
+            267.194722f, 4775.525707f, 87.476021f,
+            1444.184771f,  // a1, b1, c1, d1 (first rational segment)
+            -8213.747803f, 8212.751696f, -2462.224052f,
+            2461.928626f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 35.41°C (key: 35)
+        // Temperature: 35.18°C (key: 35)
         {
-            0.123731f, 3.236223f,  // m, b (linear segment)
-            129.239103f, 2182.616715f, 42.262528f,
-            657.226142f,  // a1, b1, c1, d1 (first rational segment)
-            4774.132278f, -4767.725320f, 1431.719239f,
-            -1429.869351f  // a3, b3, c3, d3 (third rational segment)
+            0.142494f, 3.223499f,  // m, b (linear segment)
+            894.361314f, 16712.949502f, 293.056689f,
+            5053.496993f,  // a1, b1, c1, d1 (first rational segment)
+            7370.015442f, -7370.625470f, 2208.241069f,
+            -2208.422024f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 40.38°C (key: 40)
+        // Temperature: 40.11°C (key: 40)
         {
-            0.123696f, 3.237016f,  // m, b (linear segment)
-            221.044970f, 3715.383819f, 72.272903f,
-            1118.389323f,  // a1, b1, c1, d1 (first rational segment)
-            -4039.944265f, 4034.063152f, -1211.294227f,
-            1209.598810f  // a3, b3, c3, d3 (third rational segment)
+            0.141720f, 3.224820f,  // m, b (linear segment)
+            417.203118f, 7836.144780f, 136.768407f,
+            2368.333770f,  // a1, b1, c1, d1 (first rational segment)
+            6428.631685f, -6430.699149f, 1925.756247f,
+            -1926.369615f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 45.28°C (key: 45)
+        // Temperature: 45.10°C (key: 45)
         {
-            0.125006f, 3.235912f,  // m, b (linear segment)
-            151.467401f, 2582.526900f, 49.550052f,
-            777.691108f,  // a1, b1, c1, d1 (first rational segment)
-            1112.445343f, -1110.999778f, 333.537185f,
-            -333.119361f  // a3, b3, c3, d3 (third rational segment)
+            0.140212f, 3.226317f,  // m, b (linear segment)
+            550.627184f, 10296.917878f, 180.517837f,
+            3110.498427f,  // a1, b1, c1, d1 (first rational segment)
+            -3345.517720f, 3346.787783f, -1002.091702f,
+            1002.468503f  // a3, b3, c3, d3 (third rational segment)
         }};
 
 // Charge OCV curve parameters for each temperature
 static const float BATTERY_JYHPFL333838_OCV_CHARGE_PARAMS
     [BATTERY_JYHPFL333838_NUM_TEMP_POINTS][10] = {
-        // Temperature: 2.32°C (key: 0)
+        // Temperature: 2.84°C (key: 0)
         {
-            0.133654f, 3.292145f,  // m, b (linear segment)
-            2424.212366f, 87282.185143f, 753.227933f,
-            26148.817273f,  // a1, b1, c1, d1 (first rational segment)
-            -20885.884413f, 19421.324650f, -6263.752097f,
-            5862.671202f  // a3, b3, c3, d3 (third rational segment)
+            0.106475f, 3.318151f,  // m, b (linear segment)
+            -14.045089f, -1226.311963f, -4.347672f,
+            -366.041525f,  // a1, b1, c1, d1 (first rational segment)
+            1070.558858f, -1037.613037f, 317.191883f,
+            -308.168858f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 7.28°C (key: 5)
+        // Temperature: 7.65°C (key: 5)
         {
-            0.119964f, 3.293413f,  // m, b (linear segment)
-            2732.271006f, 75783.249716f, 850.221080f,
-            22690.534179f,  // a1, b1, c1, d1 (first rational segment)
-            -4317.842520f, 4121.656010f, -1290.625974f,
-            1236.917022f  // a3, b3, c3, d3 (third rational segment)
+            0.102477f, 3.308675f,  // m, b (linear segment)
+            -0.878797f, -34.044968f, -0.273191f,
+            -10.172039f,  // a1, b1, c1, d1 (first rational segment)
+            1170.137272f, -1142.421322f, 347.439588f,
+            -339.848657f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 12.60°C (key: 10)
+        // Temperature: 12.96°C (key: 10)
         {
-            0.129891f, 3.273207f,  // m, b (linear segment)
-            846.503340f, 15988.928725f, 265.726589f,
-            4798.200588f,  // a1, b1, c1, d1 (first rational segment)
-            -60068.019107f, 55820.453762f, -18158.693048f,
-            16993.928616f  // a3, b3, c3, d3 (third rational segment)
+            0.110985f, 3.288082f,  // m, b (linear segment)
+            -95.542322f, -1913.725451f, -29.960661f,
+            -572.562062f,  // a1, b1, c1, d1 (first rational segment)
+            1241.862566f, -1196.979674f, 371.790254f,
+            -359.507652f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 17.51°C (key: 15)
+        // Temperature: 17.80°C (key: 15)
         {
-            0.115653f, 3.274031f,  // m, b (linear segment)
-            237.696958f, 1964.826751f, 74.429637f,
-            585.013431f,  // a1, b1, c1, d1 (first rational segment)
-            968.862408f, -935.338129f, 290.869232f,
-            -281.680851f  // a3, b3, c3, d3 (third rational segment)
+            0.108478f, 3.281443f,  // m, b (linear segment)
+            0.157392f, 1.712027f, 0.049492f,
+            0.509770f,  // a1, b1, c1, d1 (first rational segment)
+            1192.978731f, -1161.538226f, 357.109128f,
+            -348.505427f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 22.50°C (key: 20)
+        // Temperature: 22.67°C (key: 20)
         {
-            0.118277f, 3.272331f,  // m, b (linear segment)
-            -26.011330f, -198.086479f, -8.180144f,
-            -58.781818f,  // a1, b1, c1, d1 (first rational segment)
-            983.725464f, -950.493228f, 295.209174f,
-            -286.098635f  // a3, b3, c3, d3 (third rational segment)
+            0.108073f, 3.276199f,  // m, b (linear segment)
+            72.636119f, 644.341350f, 22.910105f,
+            191.382416f,  // a1, b1, c1, d1 (first rational segment)
+            972.064158f, -956.738429f, 290.499768f,
+            -286.298033f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 27.38°C (key: 25)
+        // Temperature: 27.54°C (key: 25)
         {
-            0.111950f, 3.273751f,  // m, b (linear segment)
-            -25.521502f, -274.597696f, -8.095046f,
-            -81.706277f,  // a1, b1, c1, d1 (first rational segment)
-            1073.930068f, -1053.131703f, 321.219989f,
-            -315.514254f  // a3, b3, c3, d3 (third rational segment)
+            0.115319f, 3.269345f,  // m, b (linear segment)
+            16.396740f, 311.905967f, 5.271973f,
+            93.367211f,  // a1, b1, c1, d1 (first rational segment)
+            1111.550297f, -1097.707047f, 331.943219f,
+            -328.145698f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 32.31°C (key: 30)
+        // Temperature: 32.36°C (key: 30)
         {
-            0.105879f, 3.276268f,  // m, b (linear segment)
-            154.842986f, 1451.215812f, 48.865130f,
-            431.470258f,  // a1, b1, c1, d1 (first rational segment)
-            -3747.632139f, 3694.953159f, -1119.887101f,
-            1105.424025f  // a3, b3, c3, d3 (third rational segment)
+            0.116052f, 3.267403f,  // m, b (linear segment)
+            41.221264f, 817.918853f, 13.276687f,
+            245.036453f,  // a1, b1, c1, d1 (first rational segment)
+            1085.264164f, -1077.073143f, 323.725175f,
+            -321.475891f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 37.36°C (key: 35)
+        // Temperature: 37.25°C (key: 35)
         {
-            0.103781f, 3.277949f,  // m, b (linear segment)
-            42.648170f, 582.113263f, 13.465663f,
-            173.961241f,  // a1, b1, c1, d1 (first rational segment)
-            1109.000316f, -1096.490080f, 331.110598f,
-            -327.675032f  // a3, b3, c3, d3 (third rational segment)
+            0.115131f, 3.267480f,  // m, b (linear segment)
+            17.359462f, 345.261707f, 5.603591f,
+            103.394636f,  // a1, b1, c1, d1 (first rational segment)
+            1130.349129f, -1123.746416f, 337.060838f,
+            -335.246964f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 42.34°C (key: 40)
+        // Temperature: 42.19°C (key: 40)
         {
-            0.105248f, 3.278675f,  // m, b (linear segment)
-            86.330934f, 1157.715172f, 27.596520f,
-            344.393006f,  // a1, b1, c1, d1 (first rational segment)
-            1018.218867f, -1006.960134f, 303.810937f,
-            -300.720120f  // a3, b3, c3, d3 (third rational segment)
+            0.114044f, 3.267777f,  // m, b (linear segment)
+            57.975538f, 1174.969083f, 18.756850f,
+            351.777353f,  // a1, b1, c1, d1 (first rational segment)
+            1022.343802f, -1017.883339f, 304.768153f,
+            -303.542651f  // a3, b3, c3, d3 (third rational segment)
         },
-        // Temperature: 47.37°C (key: 45)
+        // Temperature: 47.14°C (key: 45)
         {
-            0.102922f, 3.281457f,  // m, b (linear segment)
-            133.236246f, 1680.463569f, 42.563832f,
-            499.016826f,  // a1, b1, c1, d1 (first rational segment)
-            731.525161f, -722.630154f, 218.130924f,
-            -215.651760f  // a3, b3, c3, d3 (third rational segment)
+            0.112035f, 3.269741f,  // m, b (linear segment)
+            28.634200f, 559.963514f, 9.277864f,
+            167.422055f,  // a1, b1, c1, d1 (first rational segment)
+            1114.364131f, -1108.686878f, 332.145661f,
+            -330.562526f  // a3, b3, c3, d3 (third rational segment)
         }};
 
 // Battery capacity data for each temperature
 static const float
     BATTERY_JYHPFL333838_CAPACITY[BATTERY_JYHPFL333838_NUM_TEMP_POINTS][2] = {
-        // Temperature: 0.80°C (key: 0)
-        {297.56f, 315.21f},
-        // Temperature: 5.78°C (key: 5)
-        {325.07f, 336.55f},
-        // Temperature: 10.64°C (key: 10)
-        {343.23f, 366.44f},
-        // Temperature: 15.55°C (key: 15)
-        {355.86f, 378.79f},
-        // Temperature: 20.65°C (key: 20)
-        {362.69f, 394.38f},
-        // Temperature: 25.43°C (key: 25)
-        {357.80f, 383.75f},
-        // Temperature: 31.41°C (key: 30)
-        {361.17f, 379.75f},
-        // Temperature: 35.41°C (key: 35)
-        {357.76f, 366.75f},
-        // Temperature: 40.38°C (key: 40)
-        {357.29f, 383.63f},
-        // Temperature: 45.28°C (key: 45)
-        {353.41f, 377.66f}};
+        // Temperature: 1.20°C (key: 0)
+        {282.28f, 272.69f},
+        // Temperature: 6.02°C (key: 5)
+        {313.09f, 303.77f},
+        // Temperature: 10.82°C (key: 10)
+        {331.90f, 338.43f},
+        // Temperature: 15.66°C (key: 15)
+        {345.53f, 357.56f},
+        // Temperature: 20.54°C (key: 20)
+        {353.35f, 367.91f},
+        // Temperature: 25.39°C (key: 25)
+        {359.08f, 377.93f},
+        // Temperature: 30.25°C (key: 30)
+        {364.63f, 383.03f},
+        // Temperature: 35.18°C (key: 35)
+        {368.55f, 387.07f},
+        // Temperature: 40.11°C (key: 40)
+        {370.95f, 389.48f},
+        // Temperature: 45.10°C (key: 45)
+        {374.49f, 393.99f}};
