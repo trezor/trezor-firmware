@@ -49,11 +49,11 @@ impl<B: Backend> NoiseCiphers<B> {
 
     pub fn decrypt(&mut self, in_out: &mut [u8]) -> Result<usize, Error> {
         if in_out.len() < TAG_LEN {
-            return Err(Error::InvalidDigest);
+            return Err(Error::MalformedData);
         }
         self.decrypt
             .decrypt_ad_in_place(&[], in_out, in_out.len())
-            .map_err(|()| Error::InvalidDigest)
+            .map_err(|()| Error::CryptoError)
     }
 
     pub fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
@@ -100,8 +100,8 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         self.hss.read_message(incoming, &mut [])?;
 
         // Look up static key based on remote keys, or generate a new one.
-        let remote_static_key = self.hss.get_rs().ok_or(Error::HandshakeFailed)?;
-        let remote_ephemeral_key = self.hss.get_re().ok_or(Error::HandshakeFailed)?;
+        let remote_static_key = self.hss.get_rs().ok_or(Error::CryptoError)?;
+        let remote_ephemeral_key = self.hss.get_re().ok_or(Error::CryptoError)?;
         let (local_static, pairing_credential) =
             Self::credential_from_store(cred_store, &remote_ephemeral_key, &remote_static_key);
         self.hss.set_s(local_static);
@@ -112,7 +112,7 @@ impl<B: Backend> NoiseHandshake<Host, B> {
             .write_message(pairing_credential.as_slice(), dest)?;
         if !self.hss.completed() {
             log::error!("Handshake not completed.");
-            return Err(Error::HandshakeFailed);
+            return Err(Error::CryptoError);
         }
         let (encrypt, decrypt) = self.hss.get_ciphers();
         let mut handshake_hash = [0u8; HANDSHAKE_HASH_LEN];

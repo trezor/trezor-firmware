@@ -4,7 +4,6 @@ use crate::{
     Backend, Channel, ChannelIO, Error, Host,
     channel::{Nonce, PacketInResult, PacketState, PairingState, noise::NoiseHandshake},
     credential::CredentialStore,
-    error::TransportError,
     header::{BROADCAST_CHANNEL_ID, HandshakeMessage, Header, parse_u16},
 };
 
@@ -74,21 +73,15 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         let (header, len) = self.channel.raw_out(&self.internal_buffer)?;
         self.internal_buffer.truncate(len);
 
-        if header.is_error() {
-            let b = self.internal_buffer.first().ok_or(Error::MalformedData)?;
-            let e: TransportError = b.try_into()?;
-            log::error!("[{}] Transport error: {}", self.channel.channel_id, e as u8);
-            // TODO handle TransportError::Locked
-        }
-
         match (self.state, header.handshake_phase()) {
             (HostHandshakeState::SentChannelRequest(nonce), _)
                 if header.is_channel_allocation_response() =>
             {
-                self.get_channel(&nonce)?;
-                log::debug!("Got channel id {}.", self.channel.channel_id);
-                self.start_handshake()?;
-                self.state = HostHandshakeState::SentInitiationRequest;
+                if self.get_channel(&nonce)? {
+                    log::debug!("Got channel id {}.", self.channel.channel_id);
+                    self.start_handshake()?;
+                    self.state = HostHandshakeState::SentInitiationRequest;
+                }
             }
             (
                 HostHandshakeState::SentInitiationRequest,
@@ -112,21 +105,21 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         Ok(())
     }
 
-    fn get_channel(&mut self, expected_nonce: &Nonce) -> Result<(), Error> {
+    fn get_channel(&mut self, expected_nonce: &Nonce) -> Result<bool, Error> {
         let Some((_nonce, payload)) = self
             .internal_buffer
             .as_slice()
             .split_at_checked(core::mem::size_of::<Nonce>())
             .filter(|(nonce, _payload)| nonce == expected_nonce)
         else {
-            log::error!("Received invalid channel request nonce.");
-            return Err(Error::MalformedData);
+            log::warn!("Received non matching channel request nonce.");
+            return Ok(false);
         };
         let (cid, device_properties) = parse_u16(payload)?;
         self.channel.channel_id = cid;
         self.device_properties =
             heapless::Vec::from_slice(device_properties).map_err(|_| Error::InsufficientBuffer)?;
-        Ok(())
+        Ok(true)
     }
 
     fn start_handshake(&mut self) -> Result<(), Error> {

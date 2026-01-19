@@ -170,7 +170,7 @@ impl<R: Role> Header<R> {
         }
     }
 
-    fn control_byte(&self, sync_bits: SyncBits) -> Option<ControlByte> {
+    pub(crate) fn control_byte(&self, sync_bits: SyncBits) -> Option<ControlByte> {
         let cb = match self {
             Self::Continuation { .. } => control_byte::CONTINUATION_PACKET,
             Self::Ack { .. } => control_byte::ACK_MESSAGE,
