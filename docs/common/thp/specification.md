@@ -38,7 +38,7 @@ This document defines the format and internal workings of the communication prot
       - [Trezor's state machine](#trezors-state-machine)
       - [Host's state machine](#hosts-state-machine)
     - [Common definitions](#common-definitions)
-      - [Common definitions](#notation)
+      - [Notation](#notation)
     - [Notes](#notes)
   - [Pairing phase](#pairing-phase)
     - [Messages](#messages-1)
