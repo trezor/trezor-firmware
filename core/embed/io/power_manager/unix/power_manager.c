@@ -69,6 +69,8 @@ pm_status_t pm_get_state(pm_state_t* state) {
   state->charging_status = PM_BATTERY_IDLE;
   state->power_status = PM_STATE_ACTIVE;
   state->soc = 100;
+  state->ntc_connected = true;
+  state->battery_connected = true;
   return PM_OK;
 }
 
