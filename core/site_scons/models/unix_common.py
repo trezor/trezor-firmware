@@ -12,6 +12,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
     paths += [
         "embed/io/notify/inc",
         "embed/io/display/inc",
+        "embed/io/tsqueue/inc",
         "embed/sec/fwutils/inc",
         "embed/sec/random_delays/inc",
         "embed/sec/time_estimate/inc",
@@ -35,6 +36,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
     sources += [
         "embed/io/display/unix/display_driver.c",
         "embed/io/notify/notify.c",
+        "embed/io/tsqueue/tsqueue.c",
         "embed/io/usb/unix/sock.c",
         "embed/sec/board_capabilities/unix/board_capabilities.c",
         "embed/sec/fwutils/fwutils.c",
