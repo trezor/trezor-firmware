@@ -632,7 +632,7 @@ When the message HandshakeCompletionRequest(*encrypted_host_static_pubkey*, *enc
 
 ## Host’s state machine
 
-Let (*host_static_privkey*, *host_static_pubkey*) be a X2551thpPairing9 key pair that persists host restarts.
+Let (*host_static_privkey*, *host_static_pubkey*) be a X25519 key pair that persists host restarts.
 
 Let *credentials* be a list of pairs consisting of Trezor’s static public key and the corresponding credential.
 
