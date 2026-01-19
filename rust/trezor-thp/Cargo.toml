@@ -3,6 +3,9 @@ name = "trezor-thp"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+use_std = []
+
 [dependencies]
 log = "0.4.29"
 
@@ -23,6 +26,10 @@ hex = "0.4.3"
 # regenerate examples/host-cli/pb after upgrading protobuf
 protobuf = "=3.7.2"
 protobuf-codegen = "=3.7.2"
+
+[dev-dependencies.trezor-thp]
+features = ["use_std"]
+path = "."
 
 [dev-dependencies.trezor-noise-rust-crypto]
 version = "0.6.2"

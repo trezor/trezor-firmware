@@ -1,5 +1,7 @@
 pub mod host;
 mod noise;
+#[cfg(feature = "use_std")]
+pub mod vec;
 
 use crate::{
     Error, Role,
