@@ -38,6 +38,7 @@ This document defines the format and internal workings of the communication prot
       - [Trezor's state machine](#trezors-state-machine)
       - [Host's state machine](#hosts-state-machine)
     - [Common definitions](#common-definitions)
+      - [Common definitions](#notation)
     - [Notes](#notes)
   - [Pairing phase](#pairing-phase)
     - [Messages](#messages-1)
@@ -548,6 +549,32 @@ Let HKDF(*ck*, *input*) be the function defined as follows:
 3. Let *output_2* = HMAC-SHA-256(*temp_key*, *output_1* || byte(0x02)).
 4. Return (*output_1*, *output_2*).
 
+### Notation
+
+- `0^n` — a string of `n` zero bits.
+  Example: `0^96` represents a 96-bit string of all zeros.
+
+- `0^n || 1` — concatenation of `n` zero bits with a single bit `1`.
+  Example: `0^95 || 1` represents 95 zero bits followed by a 1 bit (total 96 bits).
+
+- `||` — concatenation of byte strings.
+
+- `empty_string` — a zero-length byte string.
+
+- `SHA-256(input)` — the SHA-256 hash of the input byte string.
+
+- `X25519(privkey, pubkey)` — X25519 scalar multiplication using `privkey` and `pubkey`.
+
+- `AES-GCM-ENCRYPT(key, IV, ad, plaintext)` — AES encryption in Galois/Counter Mode.
+
+- `AES-GCM(key, IV, ad, plaintext)` — AES-GCM operation returning the authentication tag.
+
+- `HKDF(ck, input)` — HMAC-based key derivation function producing a new chaining key and session key, see [Common definitions](#common-definitions).
+
+- `PROTOBUF-DECODE(type, data)` — deserializes the byte string `data` into a Protocol Buffers message of the specified `type`.
+
+- `ValidateCredential(cred_auth_key, credential, host_static_public_key)` — returns `True` if `credential` is valid for the given `cred_auth_key` and `host_static_public_key`; otherwise returns `False`.
+
 ## Trezor’s state machine
 
 Let *device_properties* be the properties advertised by the Trezor in ChannelAllocationResponse.
@@ -576,7 +603,7 @@ When the message HandshakeInitiationRequest(*host_ephemeral_pubkey*) is received
 6. Set *ck*, *k* = HKDF(*protocol_name*, X25519(*trezor_ephemeral_privkey*, *host_ephemeral_pubkey*)).
 7. Set *mask* = SHA-256(*trezor_static_pubkey* || *trezor_ephemeral_pubkey*).
 8. Set *trezor_masked_static_pubkey* = X25519(*mask*, *trezor_static_pubkey*).
-9. Set *encrypted_trezor_static_pubkey* = AES-GCM-ENCRYPT(*key*=*k*, *IV*=0^96 (96 bits), *ad*=*h*, *plaintext*=*trezor_masked_static_pubkey*).
+9. Set *encrypted_trezor_static_pubkey* = AES-GCM-ENCRYPT(*key*=*k*, *IV*=0^96, *ad*=*h*, *plaintext*=*trezor_masked_static_pubkey*).
 10. Set *h* = SHA-256(*h* || *encrypted_trezor_static_pubkey*).
 11. Set *ck*, *k* = HKDF(*ck*, X25519(*mask*, X25519(*trezor_static_privkey*, *host_ephemeral_pubkey*))).
 12. Set *tag* = AES-GCM(*key*=*k*, *IV*=0^96, *ad*=*h*, *plaintext*=*empty_string*).
@@ -589,7 +616,7 @@ When the message HandshakeInitiationRequest(*host_ephemeral_pubkey*) is received
 The behavior of the Trezor in the state TH2(*host_static_public_key*, *h*, *k*, *ck*, *trezor_ephemeral_privkey*) is defined as follows:
 
 When the message HandshakeCompletionRequest(*encrypted_host_static_pubkey*, *encrypted_payload*) is received, take the following actions:
-1. Set *host_static_pubkey* = AES-GCM-DECRYPT(*key*=*k*, *IV*=0^95 (95 bits) || 1, *ad*=*h*, *ciphertext*=*encrypted_host_static_pubkey*).
+1. Set *host_static_pubkey* = AES-GCM-DECRYPT(*key*=*k*, *IV*=0^95 || 1, *ad*=*h*, *ciphertext*=*encrypted_host_static_pubkey*).
 2. Set *h* = SHA-256(*h* || *encrypted_host_static_pubkey*).
 3. Set *ck*, *k* = HKDF(*ck*, X25519(*trezor_ephemeral_privkey*, *host_static_pubkey*)).
 4. Set *payload_binary* = AES-GCM-DECRYPT(*key*=*k*, *IV*=0^96, *ad*=*h*, *ciphertext*=*encrypted_payload*).
