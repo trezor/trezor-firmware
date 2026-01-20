@@ -87,12 +87,12 @@ class KeyringCredential:
     def delete(self) -> None:
         try:
             keyring.delete_password(self._system_privkey, self._username)
-        except Exception:
-            pass
+        except Exception as e:
+            LOG.warning("Failed to delete private key from system keyring: %s", e)
         try:
             keyring.delete_password(self._system_credential, self._username)
-        except Exception:
-            pass
+        except Exception as e:
+            LOG.warning("Failed to delete credential from system keyring: %s", e)
 
     def as_credential(self) -> Credential:
         # limitation of pyright:
