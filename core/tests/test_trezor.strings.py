@@ -123,6 +123,27 @@ class TestStrings(unittest.TestCase):
         for v in VECTORS:
             self.assertEqual(strings.format_duration_ms(v[0]), v[1])
 
+    def test_format_duration(self):
+        VECTORS = [
+            (0, "0 seconds"),
+            (1, "1 second"),
+            (59, "59 seconds"),
+            (60, "1 minute"),
+            (61, "1 minute 1 second"),
+            (60 * 60, "1 hour"),
+            # zero components are omitted, even in the middle
+            (60 * 60 + 1, "1 hour 1 second"),
+            (60 * 60 + 61, "1 hour 1 minute 1 second"),
+            (24 * 60 * 60, "1 day"),
+            (
+                2 * 24 * 60 * 60 + 3 * 60 * 60 + 4 * 60 + 5,
+                "2 days 3 hours 4 minutes 5 seconds",
+            ),
+            (365 * 24 * 60 * 60, "365 days"),
+        ]
+        for value, expected in VECTORS:
+            self.assertEqual(strings.format_duration(value), expected)
+
     def test_format_timestamp(self):
         VECTORS = [
             (0, "1970-01-01 00:00:00"),

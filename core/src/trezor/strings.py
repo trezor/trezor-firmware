@@ -1,6 +1,8 @@
 import utime
 from micropython import const
 
+from . import TR
+
 _SECONDS_1970_TO_2000 = const(946684800)
 
 
@@ -86,26 +88,54 @@ def format_plural(string: str, count: int, plurals: str) -> str:
     return string.format(count=count, plural=plural)
 
 
+_TIME_UNITS = (
+    (TR.plurals__days, 24 * 60 * 60 * 1000),
+    (TR.plurals__hours, 60 * 60 * 1000),
+    (TR.plurals__minutes, 60 * 1000),
+    (TR.plurals__seconds, 1000),
+    (TR.plurals__milliseconds, 1),
+)
+
+
+def _format_duration(
+    milliseconds: int,
+    units: tuple[tuple[str, int], ...] = _TIME_UNITS,
+    truncate: bool = False,
+) -> str:
+    """
+    Returns human-friendly representation of a duration given in milliseconds.
+
+    With `truncate=True` only the largest matching unit is shown, dropping all
+    decimals (e.g. 119 seconds -> "1 minute").
+
+    With `truncate=False` the duration is formatted exactly, joining all
+    non-zero components (e.g. 61 seconds -> "1 minute 1 second").
+    """
+    components: list[str] = []
+    remainder = milliseconds
+    for unit, divisor in units:
+        count, remainder = divmod(remainder, divisor)
+        if count:
+            components.append(format_plural("{count} {plural}", count, unit))
+            if truncate:
+                break
+
+    # empty components means zero duration; use the smallest unit
+    return " ".join(components) or format_plural("{count} {plural}", 0, units[-1][0])
+
+
 def format_duration_ms(milliseconds: int) -> str:
     """
     Returns human-friendly representation of a duration. Truncates all decimals.
     """
-    from . import TR
+    return _format_duration(milliseconds, truncate=True)
 
-    units: tuple[tuple[str, int], ...] = (
-        (TR.plurals__days, 24 * 60 * 60 * 1000),
-        (TR.plurals__hours, 60 * 60 * 1000),
-        (TR.plurals__minutes, 60 * 1000),
-        (TR.plurals__seconds, 1000),
-    )
-    for unit, divisor in units:
-        if milliseconds >= divisor:
-            break
-    else:
-        unit = TR.plurals__milliseconds
-        divisor = 1
 
-    return format_plural("{count} {plural}", milliseconds // divisor, unit)
+def format_duration(seconds: int) -> str:
+    """
+    Returns human-friendly representation of a duration given in seconds.
+    """
+    return _format_duration(seconds * 1000, units=_TIME_UNITS[:-1])
 
 
 def format_timestamp(timestamp: int) -> str:

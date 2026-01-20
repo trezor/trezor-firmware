@@ -1,9 +1,11 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 import apps.common.writers as writers
 
 # Reexporting to other modules
 write_bytes_fixed = writers.write_bytes_fixed
+write_bytes_unchecked = writers.write_bytes_unchecked
 write_uint32 = writers.write_uint32_be
 write_uint64 = writers.write_uint64_be
 
@@ -39,3 +41,26 @@ def write_pubkey(w: Writer, address: str) -> None:
     # first 4 bytes of an address are the type, there's only one type (0)
     write_uint32(w, 0)
     writers.write_bytes_fixed(w, public_key_from_address(address), 32)
+
+
+_INT32_MIN = const(-0x8000_0000)
+_INT32_MAX = const(0x7FFF_FFFF)
+_UINT32_MASK = const(0xFFFF_FFFF)
+
+_INT64_MIN = const(-0x8000_0000_0000_0000)
+_INT64_MAX = const(0x7FFF_FFFF_FFFF_FFFF)
+_UINT64_MASK = const(0xFFFF_FFFF_FFFF_FFFF)
+
+
+def write_int32(w: Writer, value: int) -> None:
+    """Write signed 32-bit integer in big-endian."""
+    if value < _INT32_MIN or value > _INT32_MAX:
+        raise ValueError("int32 out of range")
+    write_uint32(w, value & _UINT32_MASK)
+
+
+def write_int64(w: Writer, value: int) -> None:
+    """Write signed 64-bit integer in big-endian."""
+    if value < _INT64_MIN or value > _INT64_MAX:
+        raise ValueError("int64 out of range")
+    write_uint64(w, value & _UINT64_MASK)

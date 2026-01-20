@@ -23,10 +23,13 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarCreateAccountOp,
+        StellarInvokeHostFunctionOp,
         StellarPathPaymentStrictReceiveOp,
         StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
         StellarSignedTx,
+        StellarTxExt,
+        StellarTxExtRequest,
         StellarTxOpRequest,
     )
     from trezor.ui.layouts import show_continue_in_app
@@ -105,7 +108,6 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
         memo_confirm_text = hexlify(msg.memo_hash).decode()
     else:
         raise ProcessError("Stellar invalid memo type")
-    await layout.require_confirm_memo(memo_type, memo_confirm_text)
 
     if msg.payment_req:
         from apps.common.payment_request import PaymentRequestVerifier
@@ -121,6 +123,7 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
     # these two are used in case of payment requests, where we allow only one output, hence we have a single output address and asset
     output_address = None
     output_asset = None
+    has_soroban_op = False
 
     progress_obj = progress(indeterminate=True)
     writers.write_uint32(w, num_operations)
@@ -128,7 +131,22 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
         progress_obj.report(int(i / num_operations * 900))
         op = await call_any(StellarTxOpRequest(), *consts.op_codes.keys())
 
-        await process_operation(w, op, current_output_index, verifier)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+        if StellarInvokeHostFunctionOp.is_type_of(op):
+            # A Soroban operation must be the only operation in the transaction.
+            if num_operations != 1:
+                raise ProcessError(
+                    "Stellar: a Soroban operation must be the only operation"
+                )
+            if memo_type != StellarMemoType.NONE:
+                raise ProcessError(
+                    "Stellar: a Soroban operation cannot be used with a memo"
+                )
+            has_soroban_op = True
+        elif i == 0:
+            # Soroban transactions do not support memos
+            await layout.require_confirm_memo(memo_type, memo_confirm_text)
+
+        await process_operation(w, op, current_output_index, verifier)  # type: ignore [Argument of type "StellarInvokeHostFunctionOp | MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
 
         if msg.payment_req:
             assert verifier is not None
@@ -160,8 +178,24 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
     # ---------------------------------
     # FINAL
     # ---------------------------------
-    # 4 null bytes representing a (currently unused) empty union
-    writers.write_uint32(w, 0)
+    # Transaction extension (ext union)
+    if has_soroban_op:
+        # For Soroban transactions, request StellarTxExt with soroban_data
+        from trezor.wire.context import call
+
+        tx_ext = await call(StellarTxExtRequest(), StellarTxExt)
+        if tx_ext.v != 1:
+            raise DataError("Stellar: Soroban transaction requires ext.v = 1")
+        if tx_ext.soroban_data is None:
+            raise DataError("Stellar: missing soroban_data")
+        writers.write_uint32(w, 1)  # ext.v = 1
+        # Write soroban_data as raw XDR bytes (SorobanTransactionData struct)
+        writers.write_bytes_unchecked(w, tx_ext.soroban_data)
+    else:
+        # For non-Soroban transactions, ext.v = 0 (empty union).
+        # We intentionally do NOT request StellarTxExtRequest here to maintain
+        # backward compatibility with existing SDK implementations.
+        writers.write_uint32(w, 0)
 
     if msg.payment_req:
         assert verifier is not None
