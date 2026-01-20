@@ -14,7 +14,7 @@ from trezor import utils
 def telemetry_get() -> tuple[int, int, int, int] | None:
     """
     Retrieves the stored telemetry data. Returns a tuple
-    (min_temp_milli_c, max_temp_milli_c, battery_errors)
+    (min_temp_milli_c, max_temp_milli_c, battery_errors, battery_cycles)
     or None if telemetry is not available.
     """
 
