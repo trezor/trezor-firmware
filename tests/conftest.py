@@ -384,7 +384,9 @@ def _prepared_test_ctx(
     session.close()
 
     try:
-        yield _raw_test_ctx
+        with _raw_test_ctx.transport:
+            # the test will start with an open transport
+            yield _raw_test_ctx
     finally:
         # Make sure there are no GC leaks from this test
         _raw_test_ctx.debug.check_gc_info(fail_on_gc_leak)
