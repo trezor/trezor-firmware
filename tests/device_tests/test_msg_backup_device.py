@@ -15,6 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 
+import time
+
 import pytest
 import shamir_mnemonic as shamir
 
@@ -22,7 +24,8 @@ from trezorlib import device, messages
 from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.debuglink import TrezorClientDebugLink
+from trezorlib.exceptions import TransportBusy, TrezorFailure
 
 from ..common import (
     MNEMONIC12,
@@ -89,6 +92,44 @@ def test_backup_slip39_basic(session: Session, click_info: bool):
     expected_ms = shamir.combine_mnemonics(MNEMONIC_SLIP39_BASIC_20_3of6)
     actual_ms = shamir.combine_mnemonics(IF.mnemonics[:3])
     assert expected_ms == actual_ms
+
+
+@pytest.mark.models("t3w1")
+@pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
+def test_backup_not_preemptible(session: Session):
+    assert session.features.backup_availability == messages.BackupAvailability.Required
+
+    mnemonics = []
+
+    def input_flow(client: TrezorClientDebugLink):
+        from tests.input_flows import get_mnemonic
+
+        for expected_name in ("backup_intro", "backup_warning"):
+            assert (yield).name == expected_name
+            # Stale channel preemption is triggered by delayed THP reconnection
+            time.sleep(1)
+            with pytest.raises(TransportBusy):
+                client.get_new_client()
+            client.debug.press_yes()
+
+        mnemonic = yield from get_mnemonic(client.debug, confirm_success=False)
+        mnemonics.append(mnemonic)
+
+    with session.client as client:
+        client.set_input_flow(input_flow(client))
+        device.backup(session)
+
+    assert session.features.initialized is True
+    assert (
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Single_Extendable
+    assert shamir.combine_mnemonics(mnemonics) == shamir.combine_mnemonics(
+        MNEMONIC_SLIP39_SINGLE_EXT_20
+    )
 
 
 @pytest.mark.models("core")
