@@ -1282,7 +1282,7 @@ class TrezorTestContext:
         auto_interact: bool = True,
         debug_transport: Transport | None = None,
         force_wipe: bool = False,
-        host_name: str | None = "debughost",
+        host_name: str = "debughost",
     ) -> None:
         try:
             debug_transport = debug_transport or transport.find_debug()
