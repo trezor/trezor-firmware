@@ -7872,6 +7872,7 @@ class Telemetry(protobuf.MessageType):
         1: protobuf.Field("min_temp_c", "sint32", repeated=False, required=False, default=None),
         2: protobuf.Field("max_temp_c", "sint32", repeated=False, required=False, default=None),
         3: protobuf.Field("battery_errors", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("battery_cycles", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -7880,10 +7881,12 @@ class Telemetry(protobuf.MessageType):
         min_temp_c: Optional["int"] = None,
         max_temp_c: Optional["int"] = None,
         battery_errors: Optional["int"] = None,
+        battery_cycles: Optional["int"] = None,
     ) -> None:
         self.min_temp_c = min_temp_c
         self.max_temp_c = max_temp_c
         self.battery_errors = battery_errors
+        self.battery_cycles = battery_cycles
 
 
 class TezosGetAddress(protobuf.MessageType):

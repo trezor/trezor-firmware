@@ -60,3 +60,6 @@ def get(session: Session) -> None:
             for bit, name in BATTERY_ERRORS.items():
                 if res.battery_errors & bit:
                     click.echo(f" - {name}")
+
+    if res.battery_cycles is not None:
+        click.echo(f"Battery cycles: {res.battery_cycles / 1000:.2f}")

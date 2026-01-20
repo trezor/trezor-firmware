@@ -138,7 +138,7 @@ pub struct Telemetry {
     // @@protoc_insertion_point(field:hw.trezor.messages.telemetry.Telemetry.battery_errors)
     pub battery_errors: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.telemetry.Telemetry.battery_cycles)
-    pub battery_cycles: ::std::option::Option<i32>,
+    pub battery_cycles: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.telemetry.Telemetry.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -212,9 +212,9 @@ impl Telemetry {
         self.battery_errors = ::std::option::Option::Some(v);
     }
 
-    // optional sint32 battery_cycles = 4;
+    // optional uint32 battery_cycles = 4;
 
-    pub fn battery_cycles(&self) -> i32 {
+    pub fn battery_cycles(&self) -> u32 {
         self.battery_cycles.unwrap_or(0)
     }
 
@@ -227,7 +227,7 @@ impl Telemetry {
     }
 
     // Param is passed by value, moved
-    pub fn set_battery_cycles(&mut self, v: i32) {
+    pub fn set_battery_cycles(&mut self, v: u32) {
         self.battery_cycles = ::std::option::Option::Some(v);
     }
 
@@ -282,7 +282,7 @@ impl ::protobuf::Message for Telemetry {
                     self.battery_errors = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 32 => {
-                    self.battery_cycles = ::std::option::Option::Some(is.read_sint32()?);
+                    self.battery_cycles = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -306,7 +306,7 @@ impl ::protobuf::Message for Telemetry {
             my_size += ::protobuf::rt::uint32_size(3, v);
         }
         if let Some(v) = self.battery_cycles {
-            my_size += ::protobuf::rt::sint32_size(4, v);
+            my_size += ::protobuf::rt::uint32_size(4, v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -324,7 +324,7 @@ impl ::protobuf::Message for Telemetry {
             os.write_uint32(3, v)?;
         }
         if let Some(v) = self.battery_cycles {
-            os.write_sint32(4, v)?;
+            os.write_uint32(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -384,9 +384,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     options.proto\"\x0e\n\x0cTelemetryGet\"\x95\x01\n\tTelemetry\x12\x1c\n\n\
     min_temp_c\x18\x01\x20\x01(\x11R\x08minTempC\x12\x1c\n\nmax_temp_c\x18\
     \x02\x20\x01(\x11R\x08maxTempC\x12%\n\x0ebattery_errors\x18\x03\x20\x01(\
-    \rR\rbatteryErrors\x12%\n\x0ebattery_cycles\x18\x04\x20\x01(\x11R\rbatte\
-    ryCyclesBA\n#com.satoshilabs.trezor.lib.protobufB\x16TrezorMessageTeleme\
-    try\x80\xa6\x1d\x01\
+    \rR\rbatteryErrors\x12%\n\x0ebattery_cycles\x18\x04\x20\x01(\rR\rbattery\
+    CyclesBA\n#com.satoshilabs.trezor.lib.protobufB\x16TrezorMessageTelemetr\
+    y\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
