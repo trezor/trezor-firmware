@@ -329,10 +329,10 @@ class Channel:
                 host_pairing_credential=credential
             )
         )
-        message2 = self.noise.write_message(payload=msg_data)
+        message = self.noise.write_message(payload=msg_data)
 
         ha_completion_req_message = Message(
-            control_byte.HANDSHAKE_COMP_REQ, self.channel_id, bytes(message2)
+            control_byte.HANDSHAKE_COMP_REQ, self.channel_id, bytes(message)
         )
         self._send_message(ha_completion_req_message)
 
