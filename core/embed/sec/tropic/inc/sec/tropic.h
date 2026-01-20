@@ -80,7 +80,7 @@ lt_ret_t tropic_custom_session_start(cli_t* cli,
 
 lt_ret_t tropic_session_invalidate(void);
 
-bool tropic_wait_for_ready(void);
+bool tropic_wait_for_ready(cli_t* cli);
 
 bool tropic_get_pubkey(cli_t* cli, curve25519_key pubkey);
 
