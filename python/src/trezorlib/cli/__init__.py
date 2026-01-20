@@ -75,10 +75,17 @@ class ChoiceType(click.Choice):
 
 
 class PassphraseSource(Enum):
+    """Passphrase source configured by the user."""
     AUTO = "auto"
+    """If passphrase is enabled and the device supports it, request passphrase
+    entry on the device. Otherwise, open the default wallet with no
+    passphrase."""
     PROMPT = "prompt"
+    """Request passphrase entry on the host."""
     EMPTY = "empty"
+    """Open the default wallet with no passphrase."""
     DEVICE = "device"
+    """Request passphrase entry on the device."""
 
     def ok_if_disabled(self) -> bool:
         return self in (self.AUTO, self.EMPTY)
