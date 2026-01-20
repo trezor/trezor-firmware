@@ -570,9 +570,11 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
   tropic_locked_status status = get_tropic_locked_status(cli);
   switch (status) {
     case TROPIC_LOCKED_TRUE:
+      cli_trace(cli, "Tropic is locked.");
       cli_ok(cli, "YES");
       break;
     case TROPIC_LOCKED_FALSE:
+      cli_trace(cli, "Tropic is not locked.");
       cli_ok(cli, "NO");
       break;
     default:
@@ -589,14 +591,16 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
 
   curve25519_key tropic_public = {0};
   if (secret_key_tropic_public(tropic_public) != sectrue) {
-    // The Tropic pairing process was not initiated.
+    cli_trace(cli, "The Tropic pairing process was not initiated.");
     return TROPIC_LOCKED_FALSE;
   }
 
   ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     if (ret == LT_L2_HSK_ERR) {
-      // The Tropic pairing process was initiated but probably failed midway.
+      cli_trace(cli,
+                "The Tropic pairing process was initiated but probably failed "
+                "midway.");
       return TROPIC_LOCKED_FALSE;
     } else {
       cli_error(cli, CLI_ERROR,
@@ -618,6 +622,9 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
 
   if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
              sizeof(g_reversible_configuration)) != 0) {
+    cli_trace(cli,
+              "The reversible configuration read does not match the expected "
+              "reversible configuration.");
     return TROPIC_LOCKED_FALSE;
   }
 
@@ -631,6 +638,9 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
 
   if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
              sizeof(g_irreversible_configuration)) != 0) {
+    cli_trace(cli,
+              "The irreversible configuration read does not match the expected "
+              "irreversible configuration.");
     return TROPIC_LOCKED_FALSE;
   }
 
