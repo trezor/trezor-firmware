@@ -593,7 +593,7 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     return TROPIC_LOCKED_FALSE;
   }
 
-  ret = tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     if (ret == LT_L2_HSK_ERR) {
       // The Tropic pairing process was initiated but probably failed midway.
@@ -669,7 +669,7 @@ static bool tropic_is_paired(cli_t* cli) {
   lt_ret_t ret = LT_FAIL;
 
   // Try to establish a session using the unprivileged key pair.
-  ret = tropic_custom_session_start(TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT);
+  ret = tropic_custom_session_start(cli, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     if (cli != NULL) {
       cli_error(
@@ -682,7 +682,7 @@ static bool tropic_is_paired(cli_t* cli) {
   }
 
   // Try to establish a session using the privileged key pair.
-  ret = tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     if (cli != NULL) {
       cli_error(cli, CLI_ERROR,
@@ -806,7 +806,8 @@ static void prodtest_tropic_pair(cli_t* cli) {
     goto cleanup;
   }
 
-  if (tropic_custom_session_start(TROPIC_FACTORY_PAIRING_KEY_SLOT) == LT_OK) {
+  if (tropic_custom_session_start(cli, TROPIC_FACTORY_PAIRING_KEY_SLOT) ==
+      LT_OK) {
     // Write the privileged pairing key to the tropic's pairing key slot if it
     // has not been written yet.
     lt_ret_t ret = pairing_key_write(
@@ -1160,7 +1161,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
   lt_ret_t ret = LT_FAIL;
 
-  ret = tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`tropic_custom_session_start()` for privileged key failed with "
@@ -1362,7 +1363,7 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
   lt_ret_t ret =
-      tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+      tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`tropic_custom_session_start()` for privileged key failed with "
@@ -1408,7 +1409,7 @@ static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
   lt_ret_t ret = LT_FAIL;
 
-  ret = tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`tropic_custom_session_start()` for privileged key failed with "
@@ -1455,7 +1456,7 @@ static void pubkey_read(cli_t* cli, lt_ecc_slot_t slot,
 
   lt_ret_t ret = LT_FAIL;
 
-  ret = tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  ret = tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`tropic_custom_session_start()` for privileged key failed with "
@@ -1655,7 +1656,7 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   // Find an available pairing key
   for (lt_pkey_index_t i = TROPIC_FACTORY_PAIRING_KEY_SLOT;
        i <= TROPIC_PRIVILEGED_PAIRING_KEY_SLOT; i++) {
-    res = tropic_custom_session_start(i);
+    res = tropic_custom_session_start(cli, i);
     if (res == LT_OK) {
       pairing_key_index = i;
       break;
@@ -1686,7 +1687,7 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
           i + 1, lt_ret_verbose(res));
       return;
     }
-    res = tropic_custom_session_start(pairing_key_index);
+    res = tropic_custom_session_start(cli, pairing_key_index);
     if (res != LT_OK) {
       cli_error(cli, CLI_ERROR,
                 "Call #%d of `tropic_custom_session_start()"

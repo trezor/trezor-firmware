@@ -22,6 +22,7 @@
 #ifdef USE_STORAGE
 #include <sec/storage.h>
 #endif
+#include <rtl/cli.h>
 #include <trezor_types.h>
 
 #include "ed25519-donna/ed25519.h"
@@ -74,7 +75,8 @@ void tropic_deinit(void);
 #include "libtropic.h"
 lt_handle_t* tropic_get_handle(void);
 
-lt_ret_t tropic_custom_session_start(lt_pkey_index_t pairing_key_index);
+lt_ret_t tropic_custom_session_start(cli_t* cli,
+                                     lt_pkey_index_t pairing_key_index);
 
 lt_ret_t tropic_session_invalidate(void);
 
