@@ -4,7 +4,16 @@ from common import *  # isort:skip
 from trezor.wire import ProcessError
 
 if not utils.BITCOIN_ONLY:
-    from apps.stellar.helpers import address_from_public_key, public_key_from_address
+    from apps.stellar.helpers import (
+        STRKEY_CLAIMABLE_BALANCE,
+        STRKEY_CONTRACT,
+        STRKEY_ED25519_PUBLIC_KEY,
+        STRKEY_LIQUIDITY_POOL,
+        STRKEY_MUXED_ACCOUNT,
+        address_from_public_key,
+        encode_strkey,
+        public_key_from_address,
+    )
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -74,6 +83,84 @@ class TestStellarAddress(unittest.TestCase):
             public_key_from_address(
                 "GCN2K2HG53AWX2SP5UHRPMJUUHLJF2XBTGSXROTPWRGAYJCDDP63J2AA"
             )  # invalid checksum
+
+    def test_encode_strkey_account(self):
+        # Test encoding ED25519 public key (G... address)
+        pubkey = unhexlify(
+            "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"
+        )
+        self.assertEqual(
+            encode_strkey(STRKEY_ED25519_PUBLIC_KEY, pubkey),
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+        )
+
+    def test_encode_strkey_contract(self):
+        # Test encoding contract address (C... address)
+        contract_hash = unhexlify(
+            "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"
+        )
+        self.assertEqual(
+            encode_strkey(STRKEY_CONTRACT, contract_hash),
+            "CA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUWDA",
+        )
+
+    # https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
+    def test_encode_strkey_muxed_account(self):
+        # Test encoding muxed account (M... address)
+        # Muxed account is 32 bytes public key + 8 bytes ID
+        # ed25519: GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ
+        # id: 9223372036854775808 (0x8000000000000000)
+        muxed_data = unhexlify(
+            "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"  # public key
+            "8000000000000000"  # muxed ID
+        )
+        self.assertEqual(
+            encode_strkey(STRKEY_MUXED_ACCOUNT, muxed_data),
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAJLK",
+        )
+
+        # id: 0
+        muxed_data = unhexlify(
+            "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"  # public key
+            "0000000000000000"  # muxed ID = 0
+        )
+        self.assertEqual(
+            encode_strkey(STRKEY_MUXED_ACCOUNT, muxed_data),
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUQ",
+        )
+
+        # id: 1024
+        muxed_data = unhexlify(
+            "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"  # public key
+            "0000000000000400"  # muxed ID = 1024
+        )
+        self.assertEqual(
+            encode_strkey(STRKEY_MUXED_ACCOUNT, muxed_data),
+            "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAEABLYI",
+        )
+
+    def test_encode_strkey_claimable_balance(self):
+        # Test encoding claimable balance (B... address)
+        # Claimable balance ID format: 1 bytes type (v0 = 0x00) + 32 bytes hash
+        balance_id = unhexlify(
+            "00"  # type v0
+            "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"  # hash
+        )
+        self.assertEqual(
+            encode_strkey(STRKEY_CLAIMABLE_BALANCE, balance_id),
+            "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU",
+        )
+
+    def test_encode_strkey_liquidity_pool(self):
+        # Test encoding liquidity pool (L... address)
+        # Liquidity pool ID is 32 bytes hash
+        pool_id = unhexlify(
+            "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"
+        )
+        self.assertEqual(
+            encode_strkey(STRKEY_LIQUIDITY_POOL, pool_id),
+            "LA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUPJN",
+        )
 
 
 if __name__ == "__main__":

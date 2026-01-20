@@ -6267,6 +6267,4234 @@ impl ::protobuf::reflect::ProtobufValue for StellarSignedTx {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSCVal)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarSCVal {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_scval::StellarSCValType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.b)
+    pub b: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.u32)
+    pub u32: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.i32)
+    pub i32: ::std::option::Option<i32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.u64)
+    pub u64: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.i64)
+    pub i64: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.timepoint)
+    pub timepoint: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.duration)
+    pub duration: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.u128)
+    pub u128: ::protobuf::MessageField<stellar_scval::StellarUInt128Parts>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.i128)
+    pub i128: ::protobuf::MessageField<stellar_scval::StellarInt128Parts>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.u256)
+    pub u256: ::protobuf::MessageField<stellar_scval::StellarUInt256Parts>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.i256)
+    pub i256: ::protobuf::MessageField<stellar_scval::StellarInt256Parts>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.bytes)
+    pub bytes: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.string)
+    pub string: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.symbol)
+    pub symbol: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.vec)
+    pub vec: ::std::vec::Vec<StellarSCVal>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.map)
+    pub map: ::std::vec::Vec<stellar_scval::StellarSCValMapEntry>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.address)
+    pub address: ::protobuf::MessageField<stellar_scval::StellarSCAddress>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSCVal.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarSCVal {
+    fn default() -> &'a StellarSCVal {
+        <StellarSCVal as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarSCVal {
+    pub fn new() -> StellarSCVal {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.stellar.StellarSCVal.StellarSCValType type = 1;
+
+    pub fn type_(&self) -> stellar_scval::StellarSCValType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(stellar_scval::StellarSCValType::SCV_BOOL),
+            None => stellar_scval::StellarSCValType::SCV_BOOL,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: stellar_scval::StellarSCValType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    // optional bool b = 2;
+
+    pub fn b(&self) -> bool {
+        self.b.unwrap_or(false)
+    }
+
+    pub fn clear_b(&mut self) {
+        self.b = ::std::option::Option::None;
+    }
+
+    pub fn has_b(&self) -> bool {
+        self.b.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_b(&mut self, v: bool) {
+        self.b = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 u32 = 4;
+
+    pub fn u32(&self) -> u32 {
+        self.u32.unwrap_or(0)
+    }
+
+    pub fn clear_u32(&mut self) {
+        self.u32 = ::std::option::Option::None;
+    }
+
+    pub fn has_u32(&self) -> bool {
+        self.u32.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_u32(&mut self, v: u32) {
+        self.u32 = ::std::option::Option::Some(v);
+    }
+
+    // optional sint32 i32 = 5;
+
+    pub fn i32(&self) -> i32 {
+        self.i32.unwrap_or(0)
+    }
+
+    pub fn clear_i32(&mut self) {
+        self.i32 = ::std::option::Option::None;
+    }
+
+    pub fn has_i32(&self) -> bool {
+        self.i32.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_i32(&mut self, v: i32) {
+        self.i32 = ::std::option::Option::Some(v);
+    }
+
+    // optional uint64 u64 = 6;
+
+    pub fn u64(&self) -> u64 {
+        self.u64.unwrap_or(0)
+    }
+
+    pub fn clear_u64(&mut self) {
+        self.u64 = ::std::option::Option::None;
+    }
+
+    pub fn has_u64(&self) -> bool {
+        self.u64.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_u64(&mut self, v: u64) {
+        self.u64 = ::std::option::Option::Some(v);
+    }
+
+    // optional sint64 i64 = 7;
+
+    pub fn i64(&self) -> i64 {
+        self.i64.unwrap_or(0)
+    }
+
+    pub fn clear_i64(&mut self) {
+        self.i64 = ::std::option::Option::None;
+    }
+
+    pub fn has_i64(&self) -> bool {
+        self.i64.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_i64(&mut self, v: i64) {
+        self.i64 = ::std::option::Option::Some(v);
+    }
+
+    // optional uint64 timepoint = 8;
+
+    pub fn timepoint(&self) -> u64 {
+        self.timepoint.unwrap_or(0)
+    }
+
+    pub fn clear_timepoint(&mut self) {
+        self.timepoint = ::std::option::Option::None;
+    }
+
+    pub fn has_timepoint(&self) -> bool {
+        self.timepoint.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_timepoint(&mut self, v: u64) {
+        self.timepoint = ::std::option::Option::Some(v);
+    }
+
+    // optional uint64 duration = 9;
+
+    pub fn duration(&self) -> u64 {
+        self.duration.unwrap_or(0)
+    }
+
+    pub fn clear_duration(&mut self) {
+        self.duration = ::std::option::Option::None;
+    }
+
+    pub fn has_duration(&self) -> bool {
+        self.duration.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_duration(&mut self, v: u64) {
+        self.duration = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes bytes = 14;
+
+    pub fn bytes(&self) -> &[u8] {
+        match self.bytes.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_bytes(&mut self) {
+        self.bytes = ::std::option::Option::None;
+    }
+
+    pub fn has_bytes(&self) -> bool {
+        self.bytes.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_bytes(&mut self, v: ::std::vec::Vec<u8>) {
+        self.bytes = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_bytes(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.bytes.is_none() {
+            self.bytes = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.bytes.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_bytes(&mut self) -> ::std::vec::Vec<u8> {
+        self.bytes.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes string = 15;
+
+    pub fn string(&self) -> &[u8] {
+        match self.string.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_string(&mut self) {
+        self.string = ::std::option::Option::None;
+    }
+
+    pub fn has_string(&self) -> bool {
+        self.string.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_string(&mut self, v: ::std::vec::Vec<u8>) {
+        self.string = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_string(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.string.is_none() {
+            self.string = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.string.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_string(&mut self) -> ::std::vec::Vec<u8> {
+        self.string.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional string symbol = 16;
+
+    pub fn symbol(&self) -> &str {
+        match self.symbol.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_symbol(&mut self) {
+        self.symbol = ::std::option::Option::None;
+    }
+
+    pub fn has_symbol(&self) -> bool {
+        self.symbol.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_symbol(&mut self, v: ::std::string::String) {
+        self.symbol = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_symbol(&mut self) -> &mut ::std::string::String {
+        if self.symbol.is_none() {
+            self.symbol = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.symbol.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_symbol(&mut self) -> ::std::string::String {
+        self.symbol.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(18);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &StellarSCVal| { &m.type_ },
+            |m: &mut StellarSCVal| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "b",
+            |m: &StellarSCVal| { &m.b },
+            |m: &mut StellarSCVal| { &mut m.b },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "u32",
+            |m: &StellarSCVal| { &m.u32 },
+            |m: &mut StellarSCVal| { &mut m.u32 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "i32",
+            |m: &StellarSCVal| { &m.i32 },
+            |m: &mut StellarSCVal| { &mut m.i32 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "u64",
+            |m: &StellarSCVal| { &m.u64 },
+            |m: &mut StellarSCVal| { &mut m.u64 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "i64",
+            |m: &StellarSCVal| { &m.i64 },
+            |m: &mut StellarSCVal| { &mut m.i64 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "timepoint",
+            |m: &StellarSCVal| { &m.timepoint },
+            |m: &mut StellarSCVal| { &mut m.timepoint },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "duration",
+            |m: &StellarSCVal| { &m.duration },
+            |m: &mut StellarSCVal| { &mut m.duration },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, stellar_scval::StellarUInt128Parts>(
+            "u128",
+            |m: &StellarSCVal| { &m.u128 },
+            |m: &mut StellarSCVal| { &mut m.u128 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, stellar_scval::StellarInt128Parts>(
+            "i128",
+            |m: &StellarSCVal| { &m.i128 },
+            |m: &mut StellarSCVal| { &mut m.i128 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, stellar_scval::StellarUInt256Parts>(
+            "u256",
+            |m: &StellarSCVal| { &m.u256 },
+            |m: &mut StellarSCVal| { &mut m.u256 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, stellar_scval::StellarInt256Parts>(
+            "i256",
+            |m: &StellarSCVal| { &m.i256 },
+            |m: &mut StellarSCVal| { &mut m.i256 },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "bytes",
+            |m: &StellarSCVal| { &m.bytes },
+            |m: &mut StellarSCVal| { &mut m.bytes },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "string",
+            |m: &StellarSCVal| { &m.string },
+            |m: &mut StellarSCVal| { &mut m.string },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "symbol",
+            |m: &StellarSCVal| { &m.symbol },
+            |m: &mut StellarSCVal| { &mut m.symbol },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "vec",
+            |m: &StellarSCVal| { &m.vec },
+            |m: &mut StellarSCVal| { &mut m.vec },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "map",
+            |m: &StellarSCVal| { &m.map },
+            |m: &mut StellarSCVal| { &mut m.map },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, stellar_scval::StellarSCAddress>(
+            "address",
+            |m: &StellarSCVal| { &m.address },
+            |m: &mut StellarSCVal| { &mut m.address },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSCVal>(
+            "StellarSCVal",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarSCVal {
+    const NAME: &'static str = "StellarSCVal";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        for v in &self.u128 {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.i128 {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.u256 {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.i256 {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.vec {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.map {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.address {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                16 => {
+                    self.b = ::std::option::Option::Some(is.read_bool()?);
+                },
+                32 => {
+                    self.u32 = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                40 => {
+                    self.i32 = ::std::option::Option::Some(is.read_sint32()?);
+                },
+                48 => {
+                    self.u64 = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                56 => {
+                    self.i64 = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                64 => {
+                    self.timepoint = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                72 => {
+                    self.duration = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                82 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.u128)?;
+                },
+                90 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.i128)?;
+                },
+                98 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.u256)?;
+                },
+                106 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.i256)?;
+                },
+                114 => {
+                    self.bytes = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                122 => {
+                    self.string = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                130 => {
+                    self.symbol = ::std::option::Option::Some(is.read_string()?);
+                },
+                138 => {
+                    self.vec.push(is.read_message()?);
+                },
+                146 => {
+                    self.map.push(is.read_message()?);
+                },
+                154 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.address)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.b {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.u32 {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        if let Some(v) = self.i32 {
+            my_size += ::protobuf::rt::sint32_size(5, v);
+        }
+        if let Some(v) = self.u64 {
+            my_size += ::protobuf::rt::uint64_size(6, v);
+        }
+        if let Some(v) = self.i64 {
+            my_size += ::protobuf::rt::sint64_size(7, v);
+        }
+        if let Some(v) = self.timepoint {
+            my_size += ::protobuf::rt::uint64_size(8, v);
+        }
+        if let Some(v) = self.duration {
+            my_size += ::protobuf::rt::uint64_size(9, v);
+        }
+        if let Some(v) = self.u128.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.i128.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.u256.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.i256.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.bytes.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(14, &v);
+        }
+        if let Some(v) = self.string.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(15, &v);
+        }
+        if let Some(v) = self.symbol.as_ref() {
+            my_size += ::protobuf::rt::string_size(16, &v);
+        }
+        for value in &self.vec {
+            let len = value.compute_size();
+            my_size += 2 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        for value in &self.map {
+            let len = value.compute_size();
+            my_size += 2 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        if let Some(v) = self.address.as_ref() {
+            let len = v.compute_size();
+            my_size += 2 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.b {
+            os.write_bool(2, v)?;
+        }
+        if let Some(v) = self.u32 {
+            os.write_uint32(4, v)?;
+        }
+        if let Some(v) = self.i32 {
+            os.write_sint32(5, v)?;
+        }
+        if let Some(v) = self.u64 {
+            os.write_uint64(6, v)?;
+        }
+        if let Some(v) = self.i64 {
+            os.write_sint64(7, v)?;
+        }
+        if let Some(v) = self.timepoint {
+            os.write_uint64(8, v)?;
+        }
+        if let Some(v) = self.duration {
+            os.write_uint64(9, v)?;
+        }
+        if let Some(v) = self.u128.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(10, v, os)?;
+        }
+        if let Some(v) = self.i128.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(11, v, os)?;
+        }
+        if let Some(v) = self.u256.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(12, v, os)?;
+        }
+        if let Some(v) = self.i256.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(13, v, os)?;
+        }
+        if let Some(v) = self.bytes.as_ref() {
+            os.write_bytes(14, v)?;
+        }
+        if let Some(v) = self.string.as_ref() {
+            os.write_bytes(15, v)?;
+        }
+        if let Some(v) = self.symbol.as_ref() {
+            os.write_string(16, v)?;
+        }
+        for v in &self.vec {
+            ::protobuf::rt::write_message_field_with_cached_size(17, v, os)?;
+        };
+        for v in &self.map {
+            ::protobuf::rt::write_message_field_with_cached_size(18, v, os)?;
+        };
+        if let Some(v) = self.address.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(19, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarSCVal {
+        StellarSCVal::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.b = ::std::option::Option::None;
+        self.u32 = ::std::option::Option::None;
+        self.i32 = ::std::option::Option::None;
+        self.u64 = ::std::option::Option::None;
+        self.i64 = ::std::option::Option::None;
+        self.timepoint = ::std::option::Option::None;
+        self.duration = ::std::option::Option::None;
+        self.u128.clear();
+        self.i128.clear();
+        self.u256.clear();
+        self.i256.clear();
+        self.bytes = ::std::option::Option::None;
+        self.string = ::std::option::Option::None;
+        self.symbol = ::std::option::Option::None;
+        self.vec.clear();
+        self.map.clear();
+        self.address.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarSCVal {
+        static instance: StellarSCVal = StellarSCVal {
+            type_: ::std::option::Option::None,
+            b: ::std::option::Option::None,
+            u32: ::std::option::Option::None,
+            i32: ::std::option::Option::None,
+            u64: ::std::option::Option::None,
+            i64: ::std::option::Option::None,
+            timepoint: ::std::option::Option::None,
+            duration: ::std::option::Option::None,
+            u128: ::protobuf::MessageField::none(),
+            i128: ::protobuf::MessageField::none(),
+            u256: ::protobuf::MessageField::none(),
+            i256: ::protobuf::MessageField::none(),
+            bytes: ::std::option::Option::None,
+            string: ::std::option::Option::None,
+            symbol: ::std::option::Option::None,
+            vec: ::std::vec::Vec::new(),
+            map: ::std::vec::Vec::new(),
+            address: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarSCVal {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarSCVal").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarSCVal {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarSCVal {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `StellarSCVal`
+pub mod stellar_scval {
+    // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSCVal.StellarUInt128Parts)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct StellarUInt128Parts {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarUInt128Parts.hi)
+        pub hi: ::std::option::Option<u64>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarUInt128Parts.lo)
+        pub lo: ::std::option::Option<u64>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSCVal.StellarUInt128Parts.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a StellarUInt128Parts {
+        fn default() -> &'a StellarUInt128Parts {
+            <StellarUInt128Parts as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl StellarUInt128Parts {
+        pub fn new() -> StellarUInt128Parts {
+            ::std::default::Default::default()
+        }
+
+        // required uint64 hi = 1;
+
+        pub fn hi(&self) -> u64 {
+            self.hi.unwrap_or(0)
+        }
+
+        pub fn clear_hi(&mut self) {
+            self.hi = ::std::option::Option::None;
+        }
+
+        pub fn has_hi(&self) -> bool {
+            self.hi.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_hi(&mut self, v: u64) {
+            self.hi = ::std::option::Option::Some(v);
+        }
+
+        // required uint64 lo = 2;
+
+        pub fn lo(&self) -> u64 {
+            self.lo.unwrap_or(0)
+        }
+
+        pub fn clear_lo(&mut self) {
+            self.lo = ::std::option::Option::None;
+        }
+
+        pub fn has_lo(&self) -> bool {
+            self.lo.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_lo(&mut self, v: u64) {
+            self.lo = ::std::option::Option::Some(v);
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "hi",
+                |m: &StellarUInt128Parts| { &m.hi },
+                |m: &mut StellarUInt128Parts| { &mut m.hi },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "lo",
+                |m: &StellarUInt128Parts| { &m.lo },
+                |m: &mut StellarUInt128Parts| { &mut m.lo },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarUInt128Parts>(
+                "StellarSCVal.StellarUInt128Parts",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for StellarUInt128Parts {
+        const NAME: &'static str = "StellarUInt128Parts";
+
+        fn is_initialized(&self) -> bool {
+            if self.hi.is_none() {
+                return false;
+            }
+            if self.lo.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    8 => {
+                        self.hi = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    16 => {
+                        self.lo = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.hi {
+                my_size += ::protobuf::rt::uint64_size(1, v);
+            }
+            if let Some(v) = self.lo {
+                my_size += ::protobuf::rt::uint64_size(2, v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.hi {
+                os.write_uint64(1, v)?;
+            }
+            if let Some(v) = self.lo {
+                os.write_uint64(2, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> StellarUInt128Parts {
+            StellarUInt128Parts::new()
+        }
+
+        fn clear(&mut self) {
+            self.hi = ::std::option::Option::None;
+            self.lo = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static StellarUInt128Parts {
+            static instance: StellarUInt128Parts = StellarUInt128Parts {
+                hi: ::std::option::Option::None,
+                lo: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for StellarUInt128Parts {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("StellarSCVal.StellarUInt128Parts").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for StellarUInt128Parts {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for StellarUInt128Parts {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSCVal.StellarInt128Parts)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct StellarInt128Parts {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarInt128Parts.hi)
+        pub hi: ::std::option::Option<i64>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarInt128Parts.lo)
+        pub lo: ::std::option::Option<u64>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSCVal.StellarInt128Parts.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a StellarInt128Parts {
+        fn default() -> &'a StellarInt128Parts {
+            <StellarInt128Parts as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl StellarInt128Parts {
+        pub fn new() -> StellarInt128Parts {
+            ::std::default::Default::default()
+        }
+
+        // required sint64 hi = 1;
+
+        pub fn hi(&self) -> i64 {
+            self.hi.unwrap_or(0)
+        }
+
+        pub fn clear_hi(&mut self) {
+            self.hi = ::std::option::Option::None;
+        }
+
+        pub fn has_hi(&self) -> bool {
+            self.hi.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_hi(&mut self, v: i64) {
+            self.hi = ::std::option::Option::Some(v);
+        }
+
+        // required uint64 lo = 2;
+
+        pub fn lo(&self) -> u64 {
+            self.lo.unwrap_or(0)
+        }
+
+        pub fn clear_lo(&mut self) {
+            self.lo = ::std::option::Option::None;
+        }
+
+        pub fn has_lo(&self) -> bool {
+            self.lo.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_lo(&mut self, v: u64) {
+            self.lo = ::std::option::Option::Some(v);
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "hi",
+                |m: &StellarInt128Parts| { &m.hi },
+                |m: &mut StellarInt128Parts| { &mut m.hi },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "lo",
+                |m: &StellarInt128Parts| { &m.lo },
+                |m: &mut StellarInt128Parts| { &mut m.lo },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarInt128Parts>(
+                "StellarSCVal.StellarInt128Parts",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for StellarInt128Parts {
+        const NAME: &'static str = "StellarInt128Parts";
+
+        fn is_initialized(&self) -> bool {
+            if self.hi.is_none() {
+                return false;
+            }
+            if self.lo.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    8 => {
+                        self.hi = ::std::option::Option::Some(is.read_sint64()?);
+                    },
+                    16 => {
+                        self.lo = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.hi {
+                my_size += ::protobuf::rt::sint64_size(1, v);
+            }
+            if let Some(v) = self.lo {
+                my_size += ::protobuf::rt::uint64_size(2, v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.hi {
+                os.write_sint64(1, v)?;
+            }
+            if let Some(v) = self.lo {
+                os.write_uint64(2, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> StellarInt128Parts {
+            StellarInt128Parts::new()
+        }
+
+        fn clear(&mut self) {
+            self.hi = ::std::option::Option::None;
+            self.lo = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static StellarInt128Parts {
+            static instance: StellarInt128Parts = StellarInt128Parts {
+                hi: ::std::option::Option::None,
+                lo: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for StellarInt128Parts {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("StellarSCVal.StellarInt128Parts").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for StellarInt128Parts {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for StellarInt128Parts {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSCVal.StellarUInt256Parts)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct StellarUInt256Parts {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarUInt256Parts.hi_hi)
+        pub hi_hi: ::std::option::Option<u64>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarUInt256Parts.hi_lo)
+        pub hi_lo: ::std::option::Option<u64>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarUInt256Parts.lo_hi)
+        pub lo_hi: ::std::option::Option<u64>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarUInt256Parts.lo_lo)
+        pub lo_lo: ::std::option::Option<u64>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSCVal.StellarUInt256Parts.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a StellarUInt256Parts {
+        fn default() -> &'a StellarUInt256Parts {
+            <StellarUInt256Parts as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl StellarUInt256Parts {
+        pub fn new() -> StellarUInt256Parts {
+            ::std::default::Default::default()
+        }
+
+        // required uint64 hi_hi = 1;
+
+        pub fn hi_hi(&self) -> u64 {
+            self.hi_hi.unwrap_or(0)
+        }
+
+        pub fn clear_hi_hi(&mut self) {
+            self.hi_hi = ::std::option::Option::None;
+        }
+
+        pub fn has_hi_hi(&self) -> bool {
+            self.hi_hi.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_hi_hi(&mut self, v: u64) {
+            self.hi_hi = ::std::option::Option::Some(v);
+        }
+
+        // required uint64 hi_lo = 2;
+
+        pub fn hi_lo(&self) -> u64 {
+            self.hi_lo.unwrap_or(0)
+        }
+
+        pub fn clear_hi_lo(&mut self) {
+            self.hi_lo = ::std::option::Option::None;
+        }
+
+        pub fn has_hi_lo(&self) -> bool {
+            self.hi_lo.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_hi_lo(&mut self, v: u64) {
+            self.hi_lo = ::std::option::Option::Some(v);
+        }
+
+        // required uint64 lo_hi = 3;
+
+        pub fn lo_hi(&self) -> u64 {
+            self.lo_hi.unwrap_or(0)
+        }
+
+        pub fn clear_lo_hi(&mut self) {
+            self.lo_hi = ::std::option::Option::None;
+        }
+
+        pub fn has_lo_hi(&self) -> bool {
+            self.lo_hi.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_lo_hi(&mut self, v: u64) {
+            self.lo_hi = ::std::option::Option::Some(v);
+        }
+
+        // required uint64 lo_lo = 4;
+
+        pub fn lo_lo(&self) -> u64 {
+            self.lo_lo.unwrap_or(0)
+        }
+
+        pub fn clear_lo_lo(&mut self) {
+            self.lo_lo = ::std::option::Option::None;
+        }
+
+        pub fn has_lo_lo(&self) -> bool {
+            self.lo_lo.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_lo_lo(&mut self, v: u64) {
+            self.lo_lo = ::std::option::Option::Some(v);
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(4);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "hi_hi",
+                |m: &StellarUInt256Parts| { &m.hi_hi },
+                |m: &mut StellarUInt256Parts| { &mut m.hi_hi },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "hi_lo",
+                |m: &StellarUInt256Parts| { &m.hi_lo },
+                |m: &mut StellarUInt256Parts| { &mut m.hi_lo },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "lo_hi",
+                |m: &StellarUInt256Parts| { &m.lo_hi },
+                |m: &mut StellarUInt256Parts| { &mut m.lo_hi },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "lo_lo",
+                |m: &StellarUInt256Parts| { &m.lo_lo },
+                |m: &mut StellarUInt256Parts| { &mut m.lo_lo },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarUInt256Parts>(
+                "StellarSCVal.StellarUInt256Parts",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for StellarUInt256Parts {
+        const NAME: &'static str = "StellarUInt256Parts";
+
+        fn is_initialized(&self) -> bool {
+            if self.hi_hi.is_none() {
+                return false;
+            }
+            if self.hi_lo.is_none() {
+                return false;
+            }
+            if self.lo_hi.is_none() {
+                return false;
+            }
+            if self.lo_lo.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    8 => {
+                        self.hi_hi = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    16 => {
+                        self.hi_lo = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    24 => {
+                        self.lo_hi = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    32 => {
+                        self.lo_lo = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.hi_hi {
+                my_size += ::protobuf::rt::uint64_size(1, v);
+            }
+            if let Some(v) = self.hi_lo {
+                my_size += ::protobuf::rt::uint64_size(2, v);
+            }
+            if let Some(v) = self.lo_hi {
+                my_size += ::protobuf::rt::uint64_size(3, v);
+            }
+            if let Some(v) = self.lo_lo {
+                my_size += ::protobuf::rt::uint64_size(4, v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.hi_hi {
+                os.write_uint64(1, v)?;
+            }
+            if let Some(v) = self.hi_lo {
+                os.write_uint64(2, v)?;
+            }
+            if let Some(v) = self.lo_hi {
+                os.write_uint64(3, v)?;
+            }
+            if let Some(v) = self.lo_lo {
+                os.write_uint64(4, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> StellarUInt256Parts {
+            StellarUInt256Parts::new()
+        }
+
+        fn clear(&mut self) {
+            self.hi_hi = ::std::option::Option::None;
+            self.hi_lo = ::std::option::Option::None;
+            self.lo_hi = ::std::option::Option::None;
+            self.lo_lo = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static StellarUInt256Parts {
+            static instance: StellarUInt256Parts = StellarUInt256Parts {
+                hi_hi: ::std::option::Option::None,
+                hi_lo: ::std::option::Option::None,
+                lo_hi: ::std::option::Option::None,
+                lo_lo: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for StellarUInt256Parts {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("StellarSCVal.StellarUInt256Parts").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for StellarUInt256Parts {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for StellarUInt256Parts {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSCVal.StellarInt256Parts)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct StellarInt256Parts {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarInt256Parts.hi_hi)
+        pub hi_hi: ::std::option::Option<i64>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarInt256Parts.hi_lo)
+        pub hi_lo: ::std::option::Option<u64>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarInt256Parts.lo_hi)
+        pub lo_hi: ::std::option::Option<u64>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarInt256Parts.lo_lo)
+        pub lo_lo: ::std::option::Option<u64>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSCVal.StellarInt256Parts.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a StellarInt256Parts {
+        fn default() -> &'a StellarInt256Parts {
+            <StellarInt256Parts as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl StellarInt256Parts {
+        pub fn new() -> StellarInt256Parts {
+            ::std::default::Default::default()
+        }
+
+        // required sint64 hi_hi = 1;
+
+        pub fn hi_hi(&self) -> i64 {
+            self.hi_hi.unwrap_or(0)
+        }
+
+        pub fn clear_hi_hi(&mut self) {
+            self.hi_hi = ::std::option::Option::None;
+        }
+
+        pub fn has_hi_hi(&self) -> bool {
+            self.hi_hi.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_hi_hi(&mut self, v: i64) {
+            self.hi_hi = ::std::option::Option::Some(v);
+        }
+
+        // required uint64 hi_lo = 2;
+
+        pub fn hi_lo(&self) -> u64 {
+            self.hi_lo.unwrap_or(0)
+        }
+
+        pub fn clear_hi_lo(&mut self) {
+            self.hi_lo = ::std::option::Option::None;
+        }
+
+        pub fn has_hi_lo(&self) -> bool {
+            self.hi_lo.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_hi_lo(&mut self, v: u64) {
+            self.hi_lo = ::std::option::Option::Some(v);
+        }
+
+        // required uint64 lo_hi = 3;
+
+        pub fn lo_hi(&self) -> u64 {
+            self.lo_hi.unwrap_or(0)
+        }
+
+        pub fn clear_lo_hi(&mut self) {
+            self.lo_hi = ::std::option::Option::None;
+        }
+
+        pub fn has_lo_hi(&self) -> bool {
+            self.lo_hi.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_lo_hi(&mut self, v: u64) {
+            self.lo_hi = ::std::option::Option::Some(v);
+        }
+
+        // required uint64 lo_lo = 4;
+
+        pub fn lo_lo(&self) -> u64 {
+            self.lo_lo.unwrap_or(0)
+        }
+
+        pub fn clear_lo_lo(&mut self) {
+            self.lo_lo = ::std::option::Option::None;
+        }
+
+        pub fn has_lo_lo(&self) -> bool {
+            self.lo_lo.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_lo_lo(&mut self, v: u64) {
+            self.lo_lo = ::std::option::Option::Some(v);
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(4);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "hi_hi",
+                |m: &StellarInt256Parts| { &m.hi_hi },
+                |m: &mut StellarInt256Parts| { &mut m.hi_hi },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "hi_lo",
+                |m: &StellarInt256Parts| { &m.hi_lo },
+                |m: &mut StellarInt256Parts| { &mut m.hi_lo },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "lo_hi",
+                |m: &StellarInt256Parts| { &m.lo_hi },
+                |m: &mut StellarInt256Parts| { &mut m.lo_hi },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "lo_lo",
+                |m: &StellarInt256Parts| { &m.lo_lo },
+                |m: &mut StellarInt256Parts| { &mut m.lo_lo },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarInt256Parts>(
+                "StellarSCVal.StellarInt256Parts",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for StellarInt256Parts {
+        const NAME: &'static str = "StellarInt256Parts";
+
+        fn is_initialized(&self) -> bool {
+            if self.hi_hi.is_none() {
+                return false;
+            }
+            if self.hi_lo.is_none() {
+                return false;
+            }
+            if self.lo_hi.is_none() {
+                return false;
+            }
+            if self.lo_lo.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    8 => {
+                        self.hi_hi = ::std::option::Option::Some(is.read_sint64()?);
+                    },
+                    16 => {
+                        self.hi_lo = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    24 => {
+                        self.lo_hi = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    32 => {
+                        self.lo_lo = ::std::option::Option::Some(is.read_uint64()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.hi_hi {
+                my_size += ::protobuf::rt::sint64_size(1, v);
+            }
+            if let Some(v) = self.hi_lo {
+                my_size += ::protobuf::rt::uint64_size(2, v);
+            }
+            if let Some(v) = self.lo_hi {
+                my_size += ::protobuf::rt::uint64_size(3, v);
+            }
+            if let Some(v) = self.lo_lo {
+                my_size += ::protobuf::rt::uint64_size(4, v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.hi_hi {
+                os.write_sint64(1, v)?;
+            }
+            if let Some(v) = self.hi_lo {
+                os.write_uint64(2, v)?;
+            }
+            if let Some(v) = self.lo_hi {
+                os.write_uint64(3, v)?;
+            }
+            if let Some(v) = self.lo_lo {
+                os.write_uint64(4, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> StellarInt256Parts {
+            StellarInt256Parts::new()
+        }
+
+        fn clear(&mut self) {
+            self.hi_hi = ::std::option::Option::None;
+            self.hi_lo = ::std::option::Option::None;
+            self.lo_hi = ::std::option::Option::None;
+            self.lo_lo = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static StellarInt256Parts {
+            static instance: StellarInt256Parts = StellarInt256Parts {
+                hi_hi: ::std::option::Option::None,
+                hi_lo: ::std::option::Option::None,
+                lo_hi: ::std::option::Option::None,
+                lo_lo: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for StellarInt256Parts {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("StellarSCVal.StellarInt256Parts").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for StellarInt256Parts {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for StellarInt256Parts {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct StellarSCAddress {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.type)
+        pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_scaddress::StellarSCAddressType>>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.address)
+        pub address: ::std::option::Option<::std::vec::Vec<u8>>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a StellarSCAddress {
+        fn default() -> &'a StellarSCAddress {
+            <StellarSCAddress as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl StellarSCAddress {
+        pub fn new() -> StellarSCAddress {
+            ::std::default::Default::default()
+        }
+
+        // required .hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.StellarSCAddressType type = 1;
+
+        pub fn type_(&self) -> stellar_scaddress::StellarSCAddressType {
+            match self.type_ {
+                Some(e) => e.enum_value_or(stellar_scaddress::StellarSCAddressType::SC_ADDRESS_TYPE_ACCOUNT),
+                None => stellar_scaddress::StellarSCAddressType::SC_ADDRESS_TYPE_ACCOUNT,
+            }
+        }
+
+        pub fn clear_type_(&mut self) {
+            self.type_ = ::std::option::Option::None;
+        }
+
+        pub fn has_type(&self) -> bool {
+            self.type_.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_type(&mut self, v: stellar_scaddress::StellarSCAddressType) {
+            self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+        }
+
+        // required bytes address = 2;
+
+        pub fn address(&self) -> &[u8] {
+            match self.address.as_ref() {
+                Some(v) => v,
+                None => &[],
+            }
+        }
+
+        pub fn clear_address(&mut self) {
+            self.address = ::std::option::Option::None;
+        }
+
+        pub fn has_address(&self) -> bool {
+            self.address.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_address(&mut self, v: ::std::vec::Vec<u8>) {
+            self.address = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_address(&mut self) -> &mut ::std::vec::Vec<u8> {
+            if self.address.is_none() {
+                self.address = ::std::option::Option::Some(::std::vec::Vec::new());
+            }
+            self.address.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_address(&mut self) -> ::std::vec::Vec<u8> {
+            self.address.take().unwrap_or_else(|| ::std::vec::Vec::new())
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "type",
+                |m: &StellarSCAddress| { &m.type_ },
+                |m: &mut StellarSCAddress| { &mut m.type_ },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "address",
+                |m: &StellarSCAddress| { &m.address },
+                |m: &mut StellarSCAddress| { &mut m.address },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSCAddress>(
+                "StellarSCVal.StellarSCAddress",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for StellarSCAddress {
+        const NAME: &'static str = "StellarSCAddress";
+
+        fn is_initialized(&self) -> bool {
+            if self.type_.is_none() {
+                return false;
+            }
+            if self.address.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    8 => {
+                        self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                    },
+                    18 => {
+                        self.address = ::std::option::Option::Some(is.read_bytes()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.type_ {
+                my_size += ::protobuf::rt::int32_size(1, v.value());
+            }
+            if let Some(v) = self.address.as_ref() {
+                my_size += ::protobuf::rt::bytes_size(2, &v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.type_ {
+                os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+            }
+            if let Some(v) = self.address.as_ref() {
+                os.write_bytes(2, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> StellarSCAddress {
+            StellarSCAddress::new()
+        }
+
+        fn clear(&mut self) {
+            self.type_ = ::std::option::Option::None;
+            self.address = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static StellarSCAddress {
+            static instance: StellarSCAddress = StellarSCAddress {
+                type_: ::std::option::Option::None,
+                address: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for StellarSCAddress {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("StellarSCVal.StellarSCAddress").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for StellarSCAddress {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for StellarSCAddress {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    /// Nested message and enums of message `StellarSCAddress`
+    pub mod stellar_scaddress {
+        #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+        // @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.StellarSCAddressType)
+        pub enum StellarSCAddressType {
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.StellarSCAddressType.SC_ADDRESS_TYPE_ACCOUNT)
+            SC_ADDRESS_TYPE_ACCOUNT = 0,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.StellarSCAddressType.SC_ADDRESS_TYPE_CONTRACT)
+            SC_ADDRESS_TYPE_CONTRACT = 1,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.StellarSCAddressType.SC_ADDRESS_TYPE_MUXED_ACCOUNT)
+            SC_ADDRESS_TYPE_MUXED_ACCOUNT = 2,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.StellarSCAddressType.SC_ADDRESS_TYPE_CLAIMABLE_BALANCE)
+            SC_ADDRESS_TYPE_CLAIMABLE_BALANCE = 3,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCAddress.StellarSCAddressType.SC_ADDRESS_TYPE_LIQUIDITY_POOL)
+            SC_ADDRESS_TYPE_LIQUIDITY_POOL = 4,
+        }
+
+        impl ::protobuf::Enum for StellarSCAddressType {
+            const NAME: &'static str = "StellarSCAddressType";
+
+            fn value(&self) -> i32 {
+                *self as i32
+            }
+
+            fn from_i32(value: i32) -> ::std::option::Option<StellarSCAddressType> {
+                match value {
+                    0 => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_ACCOUNT),
+                    1 => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_CONTRACT),
+                    2 => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_MUXED_ACCOUNT),
+                    3 => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_CLAIMABLE_BALANCE),
+                    4 => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_LIQUIDITY_POOL),
+                    _ => ::std::option::Option::None
+                }
+            }
+
+            fn from_str(str: &str) -> ::std::option::Option<StellarSCAddressType> {
+                match str {
+                    "SC_ADDRESS_TYPE_ACCOUNT" => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_ACCOUNT),
+                    "SC_ADDRESS_TYPE_CONTRACT" => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_CONTRACT),
+                    "SC_ADDRESS_TYPE_MUXED_ACCOUNT" => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_MUXED_ACCOUNT),
+                    "SC_ADDRESS_TYPE_CLAIMABLE_BALANCE" => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_CLAIMABLE_BALANCE),
+                    "SC_ADDRESS_TYPE_LIQUIDITY_POOL" => ::std::option::Option::Some(StellarSCAddressType::SC_ADDRESS_TYPE_LIQUIDITY_POOL),
+                    _ => ::std::option::Option::None
+                }
+            }
+
+            const VALUES: &'static [StellarSCAddressType] = &[
+                StellarSCAddressType::SC_ADDRESS_TYPE_ACCOUNT,
+                StellarSCAddressType::SC_ADDRESS_TYPE_CONTRACT,
+                StellarSCAddressType::SC_ADDRESS_TYPE_MUXED_ACCOUNT,
+                StellarSCAddressType::SC_ADDRESS_TYPE_CLAIMABLE_BALANCE,
+                StellarSCAddressType::SC_ADDRESS_TYPE_LIQUIDITY_POOL,
+            ];
+        }
+
+        impl ::protobuf::EnumFull for StellarSCAddressType {
+            fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+                static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+                descriptor.get(|| super::super::file_descriptor().enum_by_package_relative_name("StellarSCVal.StellarSCAddress.StellarSCAddressType").unwrap()).clone()
+            }
+
+            fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+                let index = *self as usize;
+                Self::enum_descriptor().value_by_index(index)
+            }
+        }
+
+        impl ::std::default::Default for StellarSCAddressType {
+            fn default() -> Self {
+                StellarSCAddressType::SC_ADDRESS_TYPE_ACCOUNT
+            }
+        }
+
+        impl StellarSCAddressType {
+            pub(in super::super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+                ::protobuf::reflect::GeneratedEnumDescriptorData::new::<StellarSCAddressType>("StellarSCVal.StellarSCAddress.StellarSCAddressType")
+            }
+        }
+    }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSCVal.StellarSCValMapEntry)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct StellarSCValMapEntry {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarSCValMapEntry.key)
+        pub key: ::protobuf::MessageField<super::StellarSCVal>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSCVal.StellarSCValMapEntry.value)
+        pub value: ::protobuf::MessageField<super::StellarSCVal>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSCVal.StellarSCValMapEntry.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a StellarSCValMapEntry {
+        fn default() -> &'a StellarSCValMapEntry {
+            <StellarSCValMapEntry as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl StellarSCValMapEntry {
+        pub fn new() -> StellarSCValMapEntry {
+            ::std::default::Default::default()
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::StellarSCVal>(
+                "key",
+                |m: &StellarSCValMapEntry| { &m.key },
+                |m: &mut StellarSCValMapEntry| { &mut m.key },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::StellarSCVal>(
+                "value",
+                |m: &StellarSCValMapEntry| { &m.value },
+                |m: &mut StellarSCValMapEntry| { &mut m.value },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSCValMapEntry>(
+                "StellarSCVal.StellarSCValMapEntry",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for StellarSCValMapEntry {
+        const NAME: &'static str = "StellarSCValMapEntry";
+
+        fn is_initialized(&self) -> bool {
+            for v in &self.key {
+                if !v.is_initialized() {
+                    return false;
+                }
+            };
+            for v in &self.value {
+                if !v.is_initialized() {
+                    return false;
+                }
+            };
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    10 => {
+                        ::protobuf::rt::read_singular_message_into_field(is, &mut self.key)?;
+                    },
+                    18 => {
+                        ::protobuf::rt::read_singular_message_into_field(is, &mut self.value)?;
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.key.as_ref() {
+                let len = v.compute_size();
+                my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+            }
+            if let Some(v) = self.value.as_ref() {
+                let len = v.compute_size();
+                my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.key.as_ref() {
+                ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+            }
+            if let Some(v) = self.value.as_ref() {
+                ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> StellarSCValMapEntry {
+            StellarSCValMapEntry::new()
+        }
+
+        fn clear(&mut self) {
+            self.key.clear();
+            self.value.clear();
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static StellarSCValMapEntry {
+            static instance: StellarSCValMapEntry = StellarSCValMapEntry {
+                key: ::protobuf::MessageField::none(),
+                value: ::protobuf::MessageField::none(),
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for StellarSCValMapEntry {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("StellarSCVal.StellarSCValMapEntry").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for StellarSCValMapEntry {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for StellarSCValMapEntry {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType)
+    pub enum StellarSCValType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_BOOL)
+        SCV_BOOL = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_VOID)
+        SCV_VOID = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_U32)
+        SCV_U32 = 3,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_I32)
+        SCV_I32 = 4,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_U64)
+        SCV_U64 = 5,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_I64)
+        SCV_I64 = 6,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_TIMEPOINT)
+        SCV_TIMEPOINT = 7,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_DURATION)
+        SCV_DURATION = 8,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_U128)
+        SCV_U128 = 9,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_I128)
+        SCV_I128 = 10,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_U256)
+        SCV_U256 = 11,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_I256)
+        SCV_I256 = 12,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_BYTES)
+        SCV_BYTES = 13,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_STRING)
+        SCV_STRING = 14,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_SYMBOL)
+        SCV_SYMBOL = 15,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_VEC)
+        SCV_VEC = 16,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_MAP)
+        SCV_MAP = 17,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSCVal.StellarSCValType.SCV_ADDRESS)
+        SCV_ADDRESS = 18,
+    }
+
+    impl ::protobuf::Enum for StellarSCValType {
+        const NAME: &'static str = "StellarSCValType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<StellarSCValType> {
+            match value {
+                0 => ::std::option::Option::Some(StellarSCValType::SCV_BOOL),
+                1 => ::std::option::Option::Some(StellarSCValType::SCV_VOID),
+                3 => ::std::option::Option::Some(StellarSCValType::SCV_U32),
+                4 => ::std::option::Option::Some(StellarSCValType::SCV_I32),
+                5 => ::std::option::Option::Some(StellarSCValType::SCV_U64),
+                6 => ::std::option::Option::Some(StellarSCValType::SCV_I64),
+                7 => ::std::option::Option::Some(StellarSCValType::SCV_TIMEPOINT),
+                8 => ::std::option::Option::Some(StellarSCValType::SCV_DURATION),
+                9 => ::std::option::Option::Some(StellarSCValType::SCV_U128),
+                10 => ::std::option::Option::Some(StellarSCValType::SCV_I128),
+                11 => ::std::option::Option::Some(StellarSCValType::SCV_U256),
+                12 => ::std::option::Option::Some(StellarSCValType::SCV_I256),
+                13 => ::std::option::Option::Some(StellarSCValType::SCV_BYTES),
+                14 => ::std::option::Option::Some(StellarSCValType::SCV_STRING),
+                15 => ::std::option::Option::Some(StellarSCValType::SCV_SYMBOL),
+                16 => ::std::option::Option::Some(StellarSCValType::SCV_VEC),
+                17 => ::std::option::Option::Some(StellarSCValType::SCV_MAP),
+                18 => ::std::option::Option::Some(StellarSCValType::SCV_ADDRESS),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<StellarSCValType> {
+            match str {
+                "SCV_BOOL" => ::std::option::Option::Some(StellarSCValType::SCV_BOOL),
+                "SCV_VOID" => ::std::option::Option::Some(StellarSCValType::SCV_VOID),
+                "SCV_U32" => ::std::option::Option::Some(StellarSCValType::SCV_U32),
+                "SCV_I32" => ::std::option::Option::Some(StellarSCValType::SCV_I32),
+                "SCV_U64" => ::std::option::Option::Some(StellarSCValType::SCV_U64),
+                "SCV_I64" => ::std::option::Option::Some(StellarSCValType::SCV_I64),
+                "SCV_TIMEPOINT" => ::std::option::Option::Some(StellarSCValType::SCV_TIMEPOINT),
+                "SCV_DURATION" => ::std::option::Option::Some(StellarSCValType::SCV_DURATION),
+                "SCV_U128" => ::std::option::Option::Some(StellarSCValType::SCV_U128),
+                "SCV_I128" => ::std::option::Option::Some(StellarSCValType::SCV_I128),
+                "SCV_U256" => ::std::option::Option::Some(StellarSCValType::SCV_U256),
+                "SCV_I256" => ::std::option::Option::Some(StellarSCValType::SCV_I256),
+                "SCV_BYTES" => ::std::option::Option::Some(StellarSCValType::SCV_BYTES),
+                "SCV_STRING" => ::std::option::Option::Some(StellarSCValType::SCV_STRING),
+                "SCV_SYMBOL" => ::std::option::Option::Some(StellarSCValType::SCV_SYMBOL),
+                "SCV_VEC" => ::std::option::Option::Some(StellarSCValType::SCV_VEC),
+                "SCV_MAP" => ::std::option::Option::Some(StellarSCValType::SCV_MAP),
+                "SCV_ADDRESS" => ::std::option::Option::Some(StellarSCValType::SCV_ADDRESS),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [StellarSCValType] = &[
+            StellarSCValType::SCV_BOOL,
+            StellarSCValType::SCV_VOID,
+            StellarSCValType::SCV_U32,
+            StellarSCValType::SCV_I32,
+            StellarSCValType::SCV_U64,
+            StellarSCValType::SCV_I64,
+            StellarSCValType::SCV_TIMEPOINT,
+            StellarSCValType::SCV_DURATION,
+            StellarSCValType::SCV_U128,
+            StellarSCValType::SCV_I128,
+            StellarSCValType::SCV_U256,
+            StellarSCValType::SCV_I256,
+            StellarSCValType::SCV_BYTES,
+            StellarSCValType::SCV_STRING,
+            StellarSCValType::SCV_SYMBOL,
+            StellarSCValType::SCV_VEC,
+            StellarSCValType::SCV_MAP,
+            StellarSCValType::SCV_ADDRESS,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for StellarSCValType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("StellarSCVal.StellarSCValType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = match self {
+                StellarSCValType::SCV_BOOL => 0,
+                StellarSCValType::SCV_VOID => 1,
+                StellarSCValType::SCV_U32 => 2,
+                StellarSCValType::SCV_I32 => 3,
+                StellarSCValType::SCV_U64 => 4,
+                StellarSCValType::SCV_I64 => 5,
+                StellarSCValType::SCV_TIMEPOINT => 6,
+                StellarSCValType::SCV_DURATION => 7,
+                StellarSCValType::SCV_U128 => 8,
+                StellarSCValType::SCV_I128 => 9,
+                StellarSCValType::SCV_U256 => 10,
+                StellarSCValType::SCV_I256 => 11,
+                StellarSCValType::SCV_BYTES => 12,
+                StellarSCValType::SCV_STRING => 13,
+                StellarSCValType::SCV_SYMBOL => 14,
+                StellarSCValType::SCV_VEC => 15,
+                StellarSCValType::SCV_MAP => 16,
+                StellarSCValType::SCV_ADDRESS => 17,
+            };
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for StellarSCValType {
+        fn default() -> Self {
+            StellarSCValType::SCV_BOOL
+        }
+    }
+
+    impl StellarSCValType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<StellarSCValType>("StellarSCVal.StellarSCValType")
+        }
+    }
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarInvokeContractArgs)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarInvokeContractArgs {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarInvokeContractArgs.contract_address)
+    pub contract_address: ::protobuf::MessageField<stellar_scval::StellarSCAddress>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarInvokeContractArgs.function_name)
+    pub function_name: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarInvokeContractArgs.args)
+    pub args: ::std::vec::Vec<StellarSCVal>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarInvokeContractArgs.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarInvokeContractArgs {
+    fn default() -> &'a StellarInvokeContractArgs {
+        <StellarInvokeContractArgs as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarInvokeContractArgs {
+    pub fn new() -> StellarInvokeContractArgs {
+        ::std::default::Default::default()
+    }
+
+    // required string function_name = 2;
+
+    pub fn function_name(&self) -> &str {
+        match self.function_name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_function_name(&mut self) {
+        self.function_name = ::std::option::Option::None;
+    }
+
+    pub fn has_function_name(&self) -> bool {
+        self.function_name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_function_name(&mut self, v: ::std::string::String) {
+        self.function_name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_function_name(&mut self) -> &mut ::std::string::String {
+        if self.function_name.is_none() {
+            self.function_name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.function_name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_function_name(&mut self) -> ::std::string::String {
+        self.function_name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, stellar_scval::StellarSCAddress>(
+            "contract_address",
+            |m: &StellarInvokeContractArgs| { &m.contract_address },
+            |m: &mut StellarInvokeContractArgs| { &mut m.contract_address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "function_name",
+            |m: &StellarInvokeContractArgs| { &m.function_name },
+            |m: &mut StellarInvokeContractArgs| { &mut m.function_name },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "args",
+            |m: &StellarInvokeContractArgs| { &m.args },
+            |m: &mut StellarInvokeContractArgs| { &mut m.args },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarInvokeContractArgs>(
+            "StellarInvokeContractArgs",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarInvokeContractArgs {
+    const NAME: &'static str = "StellarInvokeContractArgs";
+
+    fn is_initialized(&self) -> bool {
+        if self.contract_address.is_none() {
+            return false;
+        }
+        if self.function_name.is_none() {
+            return false;
+        }
+        for v in &self.contract_address {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.args {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.contract_address)?;
+                },
+                18 => {
+                    self.function_name = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.args.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.contract_address.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.function_name.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        for value in &self.args {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.contract_address.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.function_name.as_ref() {
+            os.write_string(2, v)?;
+        }
+        for v in &self.args {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarInvokeContractArgs {
+        StellarInvokeContractArgs::new()
+    }
+
+    fn clear(&mut self) {
+        self.contract_address.clear();
+        self.function_name = ::std::option::Option::None;
+        self.args.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarInvokeContractArgs {
+        static instance: StellarInvokeContractArgs = StellarInvokeContractArgs {
+            contract_address: ::protobuf::MessageField::none(),
+            function_name: ::std::option::Option::None,
+            args: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarInvokeContractArgs {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarInvokeContractArgs").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarInvokeContractArgs {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarInvokeContractArgs {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarSorobanAuthorizedFunction {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_soroban_authorized_function::StellarSorobanAuthorizedFunctionType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.contract_fn)
+    pub contract_fn: ::protobuf::MessageField<StellarInvokeContractArgs>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarSorobanAuthorizedFunction {
+    fn default() -> &'a StellarSorobanAuthorizedFunction {
+        <StellarSorobanAuthorizedFunction as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarSorobanAuthorizedFunction {
+    pub fn new() -> StellarSorobanAuthorizedFunction {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType type = 1;
+
+    pub fn type_(&self) -> stellar_soroban_authorized_function::StellarSorobanAuthorizedFunctionType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(stellar_soroban_authorized_function::StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN),
+            None => stellar_soroban_authorized_function::StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: stellar_soroban_authorized_function::StellarSorobanAuthorizedFunctionType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &StellarSorobanAuthorizedFunction| { &m.type_ },
+            |m: &mut StellarSorobanAuthorizedFunction| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarInvokeContractArgs>(
+            "contract_fn",
+            |m: &StellarSorobanAuthorizedFunction| { &m.contract_fn },
+            |m: &mut StellarSorobanAuthorizedFunction| { &mut m.contract_fn },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanAuthorizedFunction>(
+            "StellarSorobanAuthorizedFunction",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarSorobanAuthorizedFunction {
+    const NAME: &'static str = "StellarSorobanAuthorizedFunction";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        for v in &self.contract_fn {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.contract_fn)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.contract_fn.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.contract_fn.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarSorobanAuthorizedFunction {
+        StellarSorobanAuthorizedFunction::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.contract_fn.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarSorobanAuthorizedFunction {
+        static instance: StellarSorobanAuthorizedFunction = StellarSorobanAuthorizedFunction {
+            type_: ::std::option::Option::None,
+            contract_fn: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarSorobanAuthorizedFunction {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarSorobanAuthorizedFunction").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarSorobanAuthorizedFunction {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarSorobanAuthorizedFunction {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `StellarSorobanAuthorizedFunction`
+pub mod stellar_soroban_authorized_function {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType)
+    pub enum StellarSorobanAuthorizedFunctionType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN)
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN)
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType.SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN)
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2,
+    }
+
+    impl ::protobuf::Enum for StellarSorobanAuthorizedFunctionType {
+        const NAME: &'static str = "StellarSorobanAuthorizedFunctionType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<StellarSorobanAuthorizedFunctionType> {
+            match value {
+                0 => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN),
+                1 => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN),
+                2 => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<StellarSorobanAuthorizedFunctionType> {
+            match str {
+                "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN" => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN),
+                "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN" => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN),
+                "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN" => ::std::option::Option::Some(StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [StellarSorobanAuthorizedFunctionType] = &[
+            StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN,
+            StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN,
+            StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for StellarSorobanAuthorizedFunctionType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for StellarSorobanAuthorizedFunctionType {
+        fn default() -> Self {
+            StellarSorobanAuthorizedFunctionType::SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN
+        }
+    }
+
+    impl StellarSorobanAuthorizedFunctionType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<StellarSorobanAuthorizedFunctionType>("StellarSorobanAuthorizedFunction.StellarSorobanAuthorizedFunctionType")
+        }
+    }
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocation)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarSorobanAuthorizedInvocation {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocation.function)
+    pub function: ::protobuf::MessageField<StellarSorobanAuthorizedFunction>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocation.sub_invocations)
+    pub sub_invocations: ::std::vec::Vec<StellarSorobanAuthorizedInvocation>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanAuthorizedInvocation.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarSorobanAuthorizedInvocation {
+    fn default() -> &'a StellarSorobanAuthorizedInvocation {
+        <StellarSorobanAuthorizedInvocation as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarSorobanAuthorizedInvocation {
+    pub fn new() -> StellarSorobanAuthorizedInvocation {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSorobanAuthorizedFunction>(
+            "function",
+            |m: &StellarSorobanAuthorizedInvocation| { &m.function },
+            |m: &mut StellarSorobanAuthorizedInvocation| { &mut m.function },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "sub_invocations",
+            |m: &StellarSorobanAuthorizedInvocation| { &m.sub_invocations },
+            |m: &mut StellarSorobanAuthorizedInvocation| { &mut m.sub_invocations },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanAuthorizedInvocation>(
+            "StellarSorobanAuthorizedInvocation",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarSorobanAuthorizedInvocation {
+    const NAME: &'static str = "StellarSorobanAuthorizedInvocation";
+
+    fn is_initialized(&self) -> bool {
+        if self.function.is_none() {
+            return false;
+        }
+        for v in &self.function {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.sub_invocations {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.function)?;
+                },
+                18 => {
+                    self.sub_invocations.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.function.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        for value in &self.sub_invocations {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.function.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        for v in &self.sub_invocations {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarSorobanAuthorizedInvocation {
+        StellarSorobanAuthorizedInvocation::new()
+    }
+
+    fn clear(&mut self) {
+        self.function.clear();
+        self.sub_invocations.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarSorobanAuthorizedInvocation {
+        static instance: StellarSorobanAuthorizedInvocation = StellarSorobanAuthorizedInvocation {
+            function: ::protobuf::MessageField::none(),
+            sub_invocations: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarSorobanAuthorizedInvocation {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarSorobanAuthorizedInvocation").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarSorobanAuthorizedInvocation {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarSorobanAuthorizedInvocation {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarHostFunction)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarHostFunction {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarHostFunction.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_host_function::StellarHostFunctionType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarHostFunction.invoke_contract)
+    pub invoke_contract: ::protobuf::MessageField<StellarInvokeContractArgs>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarHostFunction.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarHostFunction {
+    fn default() -> &'a StellarHostFunction {
+        <StellarHostFunction as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarHostFunction {
+    pub fn new() -> StellarHostFunction {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.stellar.StellarHostFunction.StellarHostFunctionType type = 1;
+
+    pub fn type_(&self) -> stellar_host_function::StellarHostFunctionType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(stellar_host_function::StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT),
+            None => stellar_host_function::StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: stellar_host_function::StellarHostFunctionType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &StellarHostFunction| { &m.type_ },
+            |m: &mut StellarHostFunction| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarInvokeContractArgs>(
+            "invoke_contract",
+            |m: &StellarHostFunction| { &m.invoke_contract },
+            |m: &mut StellarHostFunction| { &mut m.invoke_contract },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarHostFunction>(
+            "StellarHostFunction",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarHostFunction {
+    const NAME: &'static str = "StellarHostFunction";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        for v in &self.invoke_contract {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.invoke_contract)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.invoke_contract.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.invoke_contract.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarHostFunction {
+        StellarHostFunction::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.invoke_contract.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarHostFunction {
+        static instance: StellarHostFunction = StellarHostFunction {
+            type_: ::std::option::Option::None,
+            invoke_contract: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarHostFunction {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarHostFunction").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarHostFunction {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarHostFunction {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `StellarHostFunction`
+pub mod stellar_host_function {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarHostFunction.StellarHostFunctionType)
+    pub enum StellarHostFunctionType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarHostFunction.StellarHostFunctionType.HOST_FUNCTION_TYPE_INVOKE_CONTRACT)
+        HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarHostFunction.StellarHostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT)
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarHostFunction.StellarHostFunctionType.HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM)
+        HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM = 2,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarHostFunction.StellarHostFunctionType.HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2)
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3,
+    }
+
+    impl ::protobuf::Enum for StellarHostFunctionType {
+        const NAME: &'static str = "StellarHostFunctionType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<StellarHostFunctionType> {
+            match value {
+                0 => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT),
+                1 => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT),
+                2 => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM),
+                3 => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<StellarHostFunctionType> {
+            match str {
+                "HOST_FUNCTION_TYPE_INVOKE_CONTRACT" => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT),
+                "HOST_FUNCTION_TYPE_CREATE_CONTRACT" => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT),
+                "HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM" => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM),
+                "HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2" => ::std::option::Option::Some(StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [StellarHostFunctionType] = &[
+            StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT,
+            StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT,
+            StellarHostFunctionType::HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM,
+            StellarHostFunctionType::HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for StellarHostFunctionType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("StellarHostFunction.StellarHostFunctionType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for StellarHostFunctionType {
+        fn default() -> Self {
+            StellarHostFunctionType::HOST_FUNCTION_TYPE_INVOKE_CONTRACT
+        }
+    }
+
+    impl StellarHostFunctionType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<StellarHostFunctionType>("StellarHostFunction.StellarHostFunctionType")
+        }
+    }
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanAddressCredentials)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarSorobanAddressCredentials {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAddressCredentials.address)
+    pub address: ::protobuf::MessageField<stellar_scval::StellarSCAddress>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAddressCredentials.nonce)
+    pub nonce: ::std::option::Option<i64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAddressCredentials.signature_expiration_ledger)
+    pub signature_expiration_ledger: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAddressCredentials.signature)
+    pub signature: ::protobuf::MessageField<StellarSCVal>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanAddressCredentials.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarSorobanAddressCredentials {
+    fn default() -> &'a StellarSorobanAddressCredentials {
+        <StellarSorobanAddressCredentials as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarSorobanAddressCredentials {
+    pub fn new() -> StellarSorobanAddressCredentials {
+        ::std::default::Default::default()
+    }
+
+    // required sint64 nonce = 2;
+
+    pub fn nonce(&self) -> i64 {
+        self.nonce.unwrap_or(0)
+    }
+
+    pub fn clear_nonce(&mut self) {
+        self.nonce = ::std::option::Option::None;
+    }
+
+    pub fn has_nonce(&self) -> bool {
+        self.nonce.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nonce(&mut self, v: i64) {
+        self.nonce = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 signature_expiration_ledger = 3;
+
+    pub fn signature_expiration_ledger(&self) -> u32 {
+        self.signature_expiration_ledger.unwrap_or(0)
+    }
+
+    pub fn clear_signature_expiration_ledger(&mut self) {
+        self.signature_expiration_ledger = ::std::option::Option::None;
+    }
+
+    pub fn has_signature_expiration_ledger(&self) -> bool {
+        self.signature_expiration_ledger.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature_expiration_ledger(&mut self, v: u32) {
+        self.signature_expiration_ledger = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, stellar_scval::StellarSCAddress>(
+            "address",
+            |m: &StellarSorobanAddressCredentials| { &m.address },
+            |m: &mut StellarSorobanAddressCredentials| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nonce",
+            |m: &StellarSorobanAddressCredentials| { &m.nonce },
+            |m: &mut StellarSorobanAddressCredentials| { &mut m.nonce },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature_expiration_ledger",
+            |m: &StellarSorobanAddressCredentials| { &m.signature_expiration_ledger },
+            |m: &mut StellarSorobanAddressCredentials| { &mut m.signature_expiration_ledger },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSCVal>(
+            "signature",
+            |m: &StellarSorobanAddressCredentials| { &m.signature },
+            |m: &mut StellarSorobanAddressCredentials| { &mut m.signature },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanAddressCredentials>(
+            "StellarSorobanAddressCredentials",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarSorobanAddressCredentials {
+    const NAME: &'static str = "StellarSorobanAddressCredentials";
+
+    fn is_initialized(&self) -> bool {
+        if self.address.is_none() {
+            return false;
+        }
+        if self.nonce.is_none() {
+            return false;
+        }
+        if self.signature_expiration_ledger.is_none() {
+            return false;
+        }
+        if self.signature.is_none() {
+            return false;
+        }
+        for v in &self.address {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.signature {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.address)?;
+                },
+                16 => {
+                    self.nonce = ::std::option::Option::Some(is.read_sint64()?);
+                },
+                24 => {
+                    self.signature_expiration_ledger = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                34 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.signature)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.address.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.nonce {
+            my_size += ::protobuf::rt::sint64_size(2, v);
+        }
+        if let Some(v) = self.signature_expiration_ledger {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.signature.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.address.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.nonce {
+            os.write_sint64(2, v)?;
+        }
+        if let Some(v) = self.signature_expiration_ledger {
+            os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.signature.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarSorobanAddressCredentials {
+        StellarSorobanAddressCredentials::new()
+    }
+
+    fn clear(&mut self) {
+        self.address.clear();
+        self.nonce = ::std::option::Option::None;
+        self.signature_expiration_ledger = ::std::option::Option::None;
+        self.signature.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarSorobanAddressCredentials {
+        static instance: StellarSorobanAddressCredentials = StellarSorobanAddressCredentials {
+            address: ::protobuf::MessageField::none(),
+            nonce: ::std::option::Option::None,
+            signature_expiration_ledger: ::std::option::Option::None,
+            signature: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarSorobanAddressCredentials {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarSorobanAddressCredentials").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarSorobanAddressCredentials {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarSorobanAddressCredentials {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanCredentials)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarSorobanCredentials {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanCredentials.type)
+    pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<stellar_soroban_credentials::StellarSorobanCredentialsType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanCredentials.address)
+    pub address: ::protobuf::MessageField<StellarSorobanAddressCredentials>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanCredentials.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarSorobanCredentials {
+    fn default() -> &'a StellarSorobanCredentials {
+        <StellarSorobanCredentials as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarSorobanCredentials {
+    pub fn new() -> StellarSorobanCredentials {
+        ::std::default::Default::default()
+    }
+
+    // required .hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType type = 1;
+
+    pub fn type_(&self) -> stellar_soroban_credentials::StellarSorobanCredentialsType {
+        match self.type_ {
+            Some(e) => e.enum_value_or(stellar_soroban_credentials::StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT),
+            None => stellar_soroban_credentials::StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT,
+        }
+    }
+
+    pub fn clear_type_(&mut self) {
+        self.type_ = ::std::option::Option::None;
+    }
+
+    pub fn has_type(&self) -> bool {
+        self.type_.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type(&mut self, v: stellar_soroban_credentials::StellarSorobanCredentialsType) {
+        self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type",
+            |m: &StellarSorobanCredentials| { &m.type_ },
+            |m: &mut StellarSorobanCredentials| { &mut m.type_ },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSorobanAddressCredentials>(
+            "address",
+            |m: &StellarSorobanCredentials| { &m.address },
+            |m: &mut StellarSorobanCredentials| { &mut m.address },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanCredentials>(
+            "StellarSorobanCredentials",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarSorobanCredentials {
+    const NAME: &'static str = "StellarSorobanCredentials";
+
+    fn is_initialized(&self) -> bool {
+        if self.type_.is_none() {
+            return false;
+        }
+        for v in &self.address {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.address)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.type_ {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.address.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.type_ {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.address.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarSorobanCredentials {
+        StellarSorobanCredentials::new()
+    }
+
+    fn clear(&mut self) {
+        self.type_ = ::std::option::Option::None;
+        self.address.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarSorobanCredentials {
+        static instance: StellarSorobanCredentials = StellarSorobanCredentials {
+            type_: ::std::option::Option::None,
+            address: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarSorobanCredentials {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarSorobanCredentials").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarSorobanCredentials {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarSorobanCredentials {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `StellarSorobanCredentials`
+pub mod stellar_soroban_credentials {
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType)
+    pub enum StellarSorobanCredentialsType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_SOURCE_ACCOUNT)
+        SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentialsType.SOROBAN_CREDENTIALS_ADDRESS)
+        SOROBAN_CREDENTIALS_ADDRESS = 1,
+    }
+
+    impl ::protobuf::Enum for StellarSorobanCredentialsType {
+        const NAME: &'static str = "StellarSorobanCredentialsType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<StellarSorobanCredentialsType> {
+            match value {
+                0 => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT),
+                1 => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<StellarSorobanCredentialsType> {
+            match str {
+                "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT" => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT),
+                "SOROBAN_CREDENTIALS_ADDRESS" => ::std::option::Option::Some(StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [StellarSorobanCredentialsType] = &[
+            StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT,
+            StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_ADDRESS,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for StellarSorobanCredentialsType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("StellarSorobanCredentials.StellarSorobanCredentialsType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for StellarSorobanCredentialsType {
+        fn default() -> Self {
+            StellarSorobanCredentialsType::SOROBAN_CREDENTIALS_SOURCE_ACCOUNT
+        }
+    }
+
+    impl StellarSorobanCredentialsType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<StellarSorobanCredentialsType>("StellarSorobanCredentials.StellarSorobanCredentialsType")
+        }
+    }
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarSorobanAuthorizationEntry)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarSorobanAuthorizationEntry {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAuthorizationEntry.credentials)
+    pub credentials: ::protobuf::MessageField<StellarSorobanCredentials>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSorobanAuthorizationEntry.root_invocation)
+    pub root_invocation: ::protobuf::MessageField<StellarSorobanAuthorizedInvocation>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSorobanAuthorizationEntry.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarSorobanAuthorizationEntry {
+    fn default() -> &'a StellarSorobanAuthorizationEntry {
+        <StellarSorobanAuthorizationEntry as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarSorobanAuthorizationEntry {
+    pub fn new() -> StellarSorobanAuthorizationEntry {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSorobanCredentials>(
+            "credentials",
+            |m: &StellarSorobanAuthorizationEntry| { &m.credentials },
+            |m: &mut StellarSorobanAuthorizationEntry| { &mut m.credentials },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarSorobanAuthorizedInvocation>(
+            "root_invocation",
+            |m: &StellarSorobanAuthorizationEntry| { &m.root_invocation },
+            |m: &mut StellarSorobanAuthorizationEntry| { &mut m.root_invocation },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSorobanAuthorizationEntry>(
+            "StellarSorobanAuthorizationEntry",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarSorobanAuthorizationEntry {
+    const NAME: &'static str = "StellarSorobanAuthorizationEntry";
+
+    fn is_initialized(&self) -> bool {
+        if self.credentials.is_none() {
+            return false;
+        }
+        if self.root_invocation.is_none() {
+            return false;
+        }
+        for v in &self.credentials {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.root_invocation {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.credentials)?;
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.root_invocation)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.credentials.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.root_invocation.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.credentials.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.root_invocation.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarSorobanAuthorizationEntry {
+        StellarSorobanAuthorizationEntry::new()
+    }
+
+    fn clear(&mut self) {
+        self.credentials.clear();
+        self.root_invocation.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarSorobanAuthorizationEntry {
+        static instance: StellarSorobanAuthorizationEntry = StellarSorobanAuthorizationEntry {
+            credentials: ::protobuf::MessageField::none(),
+            root_invocation: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarSorobanAuthorizationEntry {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarSorobanAuthorizationEntry").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarSorobanAuthorizationEntry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarSorobanAuthorizationEntry {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarInvokeHostFunctionOp)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarInvokeHostFunctionOp {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarInvokeHostFunctionOp.source_account)
+    pub source_account: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarInvokeHostFunctionOp.function)
+    pub function: ::protobuf::MessageField<StellarHostFunction>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarInvokeHostFunctionOp.auth)
+    pub auth: ::std::vec::Vec<StellarSorobanAuthorizationEntry>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarInvokeHostFunctionOp.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarInvokeHostFunctionOp {
+    fn default() -> &'a StellarInvokeHostFunctionOp {
+        <StellarInvokeHostFunctionOp as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarInvokeHostFunctionOp {
+    pub fn new() -> StellarInvokeHostFunctionOp {
+        ::std::default::Default::default()
+    }
+
+    // optional string source_account = 1;
+
+    pub fn source_account(&self) -> &str {
+        match self.source_account.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_source_account(&mut self) {
+        self.source_account = ::std::option::Option::None;
+    }
+
+    pub fn has_source_account(&self) -> bool {
+        self.source_account.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_source_account(&mut self, v: ::std::string::String) {
+        self.source_account = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_source_account(&mut self) -> &mut ::std::string::String {
+        if self.source_account.is_none() {
+            self.source_account = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.source_account.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_source_account(&mut self) -> ::std::string::String {
+        self.source_account.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "source_account",
+            |m: &StellarInvokeHostFunctionOp| { &m.source_account },
+            |m: &mut StellarInvokeHostFunctionOp| { &mut m.source_account },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, StellarHostFunction>(
+            "function",
+            |m: &StellarInvokeHostFunctionOp| { &m.function },
+            |m: &mut StellarInvokeHostFunctionOp| { &mut m.function },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "auth",
+            |m: &StellarInvokeHostFunctionOp| { &m.auth },
+            |m: &mut StellarInvokeHostFunctionOp| { &mut m.auth },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarInvokeHostFunctionOp>(
+            "StellarInvokeHostFunctionOp",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarInvokeHostFunctionOp {
+    const NAME: &'static str = "StellarInvokeHostFunctionOp";
+
+    fn is_initialized(&self) -> bool {
+        if self.function.is_none() {
+            return false;
+        }
+        for v in &self.function {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.auth {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.source_account = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.function)?;
+                },
+                26 => {
+                    self.auth.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.source_account.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.function.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        for value in &self.auth {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.source_account.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.function.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        for v in &self.auth {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarInvokeHostFunctionOp {
+        StellarInvokeHostFunctionOp::new()
+    }
+
+    fn clear(&mut self) {
+        self.source_account = ::std::option::Option::None;
+        self.function.clear();
+        self.auth.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarInvokeHostFunctionOp {
+        static instance: StellarInvokeHostFunctionOp = StellarInvokeHostFunctionOp {
+            source_account: ::std::option::Option::None,
+            function: ::protobuf::MessageField::none(),
+            auth: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarInvokeHostFunctionOp {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarInvokeHostFunctionOp").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarInvokeHostFunctionOp {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarInvokeHostFunctionOp {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarTxExtRequest)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarTxExtRequest {
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarTxExtRequest.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarTxExtRequest {
+    fn default() -> &'a StellarTxExtRequest {
+        <StellarTxExtRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarTxExtRequest {
+    pub fn new() -> StellarTxExtRequest {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarTxExtRequest>(
+            "StellarTxExtRequest",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarTxExtRequest {
+    const NAME: &'static str = "StellarTxExtRequest";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarTxExtRequest {
+        StellarTxExtRequest::new()
+    }
+
+    fn clear(&mut self) {
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarTxExtRequest {
+        static instance: StellarTxExtRequest = StellarTxExtRequest {
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarTxExtRequest {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarTxExtRequest").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarTxExtRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarTxExtRequest {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.stellar.StellarTxExt)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct StellarTxExt {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarTxExt.v)
+    pub v: ::std::option::Option<i32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarTxExt.soroban_data)
+    pub soroban_data: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarTxExt.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a StellarTxExt {
+    fn default() -> &'a StellarTxExt {
+        <StellarTxExt as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StellarTxExt {
+    pub fn new() -> StellarTxExt {
+        ::std::default::Default::default()
+    }
+
+    // required sint32 v = 1;
+
+    pub fn v(&self) -> i32 {
+        self.v.unwrap_or(0)
+    }
+
+    pub fn clear_v(&mut self) {
+        self.v = ::std::option::Option::None;
+    }
+
+    pub fn has_v(&self) -> bool {
+        self.v.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_v(&mut self, v: i32) {
+        self.v = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes soroban_data = 2;
+
+    pub fn soroban_data(&self) -> &[u8] {
+        match self.soroban_data.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_soroban_data(&mut self) {
+        self.soroban_data = ::std::option::Option::None;
+    }
+
+    pub fn has_soroban_data(&self) -> bool {
+        self.soroban_data.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_soroban_data(&mut self, v: ::std::vec::Vec<u8>) {
+        self.soroban_data = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_soroban_data(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.soroban_data.is_none() {
+            self.soroban_data = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.soroban_data.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_soroban_data(&mut self) -> ::std::vec::Vec<u8> {
+        self.soroban_data.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "v",
+            |m: &StellarTxExt| { &m.v },
+            |m: &mut StellarTxExt| { &mut m.v },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "soroban_data",
+            |m: &StellarTxExt| { &m.soroban_data },
+            |m: &mut StellarTxExt| { &mut m.soroban_data },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarTxExt>(
+            "StellarTxExt",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for StellarTxExt {
+    const NAME: &'static str = "StellarTxExt";
+
+    fn is_initialized(&self) -> bool {
+        if self.v.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.v = ::std::option::Option::Some(is.read_sint32()?);
+                },
+                18 => {
+                    self.soroban_data = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.v {
+            my_size += ::protobuf::rt::sint32_size(1, v);
+        }
+        if let Some(v) = self.soroban_data.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.v {
+            os.write_sint32(1, v)?;
+        }
+        if let Some(v) = self.soroban_data.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> StellarTxExt {
+        StellarTxExt::new()
+    }
+
+    fn clear(&mut self) {
+        self.v = ::std::option::Option::None;
+        self.soroban_data = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static StellarTxExt {
+        static instance: StellarTxExt = StellarTxExt {
+            v: ::std::option::Option::None,
+            soroban_data: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for StellarTxExt {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("StellarTxExt").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for StellarTxExt {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StellarTxExt {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.stellar.StellarAssetType)
 pub enum StellarAssetType {
@@ -6435,9 +10663,103 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     p\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x1d\n\
     \nbalance_id\x18\x02\x20\x02(\x0cR\tbalanceId\"N\n\x0fStellarSignedTx\
     \x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsigna\
-    ture\x18\x02\x20\x02(\x0cR\tsignature*=\n\x10StellarAssetType\x12\n\n\
-    \x06NATIVE\x10\0\x12\r\n\tALPHANUM4\x10\x01\x12\x0e\n\nALPHANUM12\x10\
-    \x02B;\n#com.satoshilabs.trezor.lib.protobufB\x14TrezorMessageStellar\
+    ture\x18\x02\x20\x02(\x0cR\tsignature\"\xcd\x0f\n\x0cStellarSCVal\x12M\n\
+    \x04type\x18\x01\x20\x02(\x0e29.hw.trezor.messages.stellar.StellarSCVal.\
+    StellarSCValTypeR\x04type\x12\x0c\n\x01b\x18\x02\x20\x01(\x08R\x01b\x12\
+    \x10\n\x03u32\x18\x04\x20\x01(\rR\x03u32\x12\x10\n\x03i32\x18\x05\x20\
+    \x01(\x11R\x03i32\x12\x10\n\x03u64\x18\x06\x20\x01(\x04R\x03u64\x12\x10\
+    \n\x03i64\x18\x07\x20\x01(\x12R\x03i64\x12\x1c\n\ttimepoint\x18\x08\x20\
+    \x01(\x04R\ttimepoint\x12\x1a\n\x08duration\x18\t\x20\x01(\x04R\x08durat\
+    ion\x12P\n\x04u128\x18\n\x20\x01(\x0b2<.hw.trezor.messages.stellar.Stell\
+    arSCVal.StellarUInt128PartsR\x04u128\x12O\n\x04i128\x18\x0b\x20\x01(\x0b\
+    2;.hw.trezor.messages.stellar.StellarSCVal.StellarInt128PartsR\x04i128\
+    \x12P\n\x04u256\x18\x0c\x20\x01(\x0b2<.hw.trezor.messages.stellar.Stella\
+    rSCVal.StellarUInt256PartsR\x04u256\x12O\n\x04i256\x18\r\x20\x01(\x0b2;.\
+    hw.trezor.messages.stellar.StellarSCVal.StellarInt256PartsR\x04i256\x12\
+    \x14\n\x05bytes\x18\x0e\x20\x01(\x0cR\x05bytes\x12\x16\n\x06string\x18\
+    \x0f\x20\x01(\x0cR\x06string\x12\x16\n\x06symbol\x18\x10\x20\x01(\tR\x06\
+    symbol\x12:\n\x03vec\x18\x11\x20\x03(\x0b2(.hw.trezor.messages.stellar.S\
+    tellarSCValR\x03vec\x12O\n\x03map\x18\x12\x20\x03(\x0b2=.hw.trezor.messa\
+    ges.stellar.StellarSCVal.StellarSCValMapEntryR\x03map\x12S\n\x07address\
+    \x18\x13\x20\x01(\x0b29.hw.trezor.messages.stellar.StellarSCVal.StellarS\
+    CAddressR\x07address\x1a5\n\x13StellarUInt128Parts\x12\x0e\n\x02hi\x18\
+    \x01\x20\x02(\x04R\x02hi\x12\x0e\n\x02lo\x18\x02\x20\x02(\x04R\x02lo\x1a\
+    4\n\x12StellarInt128Parts\x12\x0e\n\x02hi\x18\x01\x20\x02(\x12R\x02hi\
+    \x12\x0e\n\x02lo\x18\x02\x20\x02(\x04R\x02lo\x1ai\n\x13StellarUInt256Par\
+    ts\x12\x13\n\x05hi_hi\x18\x01\x20\x02(\x04R\x04hiHi\x12\x13\n\x05hi_lo\
+    \x18\x02\x20\x02(\x04R\x04hiLo\x12\x13\n\x05lo_hi\x18\x03\x20\x02(\x04R\
+    \x04loHi\x12\x13\n\x05lo_lo\x18\x04\x20\x02(\x04R\x04loLo\x1ah\n\x12Stel\
+    larInt256Parts\x12\x13\n\x05hi_hi\x18\x01\x20\x02(\x12R\x04hiHi\x12\x13\
+    \n\x05hi_lo\x18\x02\x20\x02(\x04R\x04hiLo\x12\x13\n\x05lo_hi\x18\x03\x20\
+    \x02(\x04R\x04loHi\x12\x13\n\x05lo_lo\x18\x04\x20\x02(\x04R\x04loLo\x1a\
+    \xd2\x02\n\x10StellarSCAddress\x12b\n\x04type\x18\x01\x20\x02(\x0e2N.hw.\
+    trezor.messages.stellar.StellarSCVal.StellarSCAddress.StellarSCAddressTy\
+    peR\x04type\x12\x18\n\x07address\x18\x02\x20\x02(\x0cR\x07address\"\xbf\
+    \x01\n\x14StellarSCAddressType\x12\x1b\n\x17SC_ADDRESS_TYPE_ACCOUNT\x10\
+    \0\x12\x1c\n\x18SC_ADDRESS_TYPE_CONTRACT\x10\x01\x12!\n\x1dSC_ADDRESS_TY\
+    PE_MUXED_ACCOUNT\x10\x02\x12%\n!SC_ADDRESS_TYPE_CLAIMABLE_BALANCE\x10\
+    \x03\x12\"\n\x1eSC_ADDRESS_TYPE_LIQUIDITY_POOL\x10\x04\x1a\x92\x01\n\x14\
+    StellarSCValMapEntry\x12:\n\x03key\x18\x01\x20\x01(\x0b2(.hw.trezor.mess\
+    ages.stellar.StellarSCValR\x03key\x12>\n\x05value\x18\x02\x20\x01(\x0b2(\
+    .hw.trezor.messages.stellar.StellarSCValR\x05value\"\xb1\x02\n\x10Stella\
+    rSCValType\x12\x0c\n\x08SCV_BOOL\x10\0\x12\x0c\n\x08SCV_VOID\x10\x01\x12\
+    \x0b\n\x07SCV_U32\x10\x03\x12\x0b\n\x07SCV_I32\x10\x04\x12\x0b\n\x07SCV_\
+    U64\x10\x05\x12\x0b\n\x07SCV_I64\x10\x06\x12\x11\n\rSCV_TIMEPOINT\x10\
+    \x07\x12\x10\n\x0cSCV_DURATION\x10\x08\x12\x0c\n\x08SCV_U128\x10\t\x12\
+    \x0c\n\x08SCV_I128\x10\n\x12\x0c\n\x08SCV_U256\x10\x0b\x12\x0c\n\x08SCV_\
+    I256\x10\x0c\x12\r\n\tSCV_BYTES\x10\r\x12\x0e\n\nSCV_STRING\x10\x0e\x12\
+    \x0e\n\nSCV_SYMBOL\x10\x0f\x12\x0b\n\x07SCV_VEC\x10\x10\x12\x0b\n\x07SCV\
+    _MAP\x10\x11\x12\x0f\n\x0bSCV_ADDRESS\x10\x12\"\x04\x08\x02\x10\x02\"\
+    \x04\x08\x13\x10\x13\"\x04\x08\x14\x10\x14\"\x04\x08\x15\x10\x15J\x04\
+    \x08\x03\x10\x04J\x04\x08\x14\x10\x15J\x04\x08\x15\x10\x16\"\xe4\x01\n\
+    \x19StellarInvokeContractArgs\x12d\n\x10contract_address\x18\x01\x20\x02\
+    (\x0b29.hw.trezor.messages.stellar.StellarSCVal.StellarSCAddressR\x0fcon\
+    tractAddress\x12#\n\rfunction_name\x18\x02\x20\x02(\tR\x0cfunctionName\
+    \x12<\n\x04args\x18\x03\x20\x03(\x0b2(.hw.trezor.messages.stellar.Stella\
+    rSCValR\x04args\"\xcb\x03\n\x20StellarSorobanAuthorizedFunction\x12u\n\
+    \x04type\x18\x01\x20\x02(\x0e2a.hw.trezor.messages.stellar.StellarSoroba\
+    nAuthorizedFunction.StellarSorobanAuthorizedFunctionTypeR\x04type\x12V\n\
+    \x0bcontract_fn\x18\x02\x20\x01(\x0b25.hw.trezor.messages.stellar.Stella\
+    rInvokeContractArgsR\ncontractFn\"\xd7\x01\n$StellarSorobanAuthorizedFun\
+    ctionType\x120\n,SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN\x10\0\x12<\
+    \n8SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN\x10\x01\x12?\
+    \n;SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN\x10\x02\"\
+    \xe7\x01\n\"StellarSorobanAuthorizedInvocation\x12X\n\x08function\x18\
+    \x01\x20\x02(\x0b2<.hw.trezor.messages.stellar.StellarSorobanAuthorizedF\
+    unctionR\x08function\x12g\n\x0fsub_invocations\x18\x02\x20\x03(\x0b2>.hw\
+    .trezor.messages.stellar.StellarSorobanAuthorizedInvocationR\x0esubInvoc\
+    ations\"\x96\x03\n\x13StellarHostFunction\x12[\n\x04type\x18\x01\x20\x02\
+    (\x0e2G.hw.trezor.messages.stellar.StellarHostFunction.StellarHostFuncti\
+    onTypeR\x04type\x12^\n\x0finvoke_contract\x18\x02\x20\x01(\x0b25.hw.trez\
+    or.messages.stellar.StellarInvokeContractArgsR\x0einvokeContract\"\xc1\
+    \x01\n\x17StellarHostFunctionType\x12&\n\"HOST_FUNCTION_TYPE_INVOKE_CONT\
+    RACT\x10\0\x12&\n\"HOST_FUNCTION_TYPE_CREATE_CONTRACT\x10\x01\x12+\n'HOS\
+    T_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM\x10\x02\x12)\n%HOST_FUNCTION_TYPE_C\
+    REATE_CONTRACT_V2\x10\x03\"\x95\x02\n\x20StellarSorobanAddressCredential\
+    s\x12S\n\x07address\x18\x01\x20\x02(\x0b29.hw.trezor.messages.stellar.St\
+    ellarSCVal.StellarSCAddressR\x07address\x12\x14\n\x05nonce\x18\x02\x20\
+    \x02(\x12R\x05nonce\x12>\n\x1bsignature_expiration_ledger\x18\x03\x20\
+    \x02(\rR\x19signatureExpirationLedger\x12F\n\tsignature\x18\x04\x20\x02(\
+    \x0b2(.hw.trezor.messages.stellar.StellarSCValR\tsignature\"\xc6\x02\n\
+    \x19StellarSorobanCredentials\x12g\n\x04type\x18\x01\x20\x02(\x0e2S.hw.t\
+    rezor.messages.stellar.StellarSorobanCredentials.StellarSorobanCredentia\
+    lsTypeR\x04type\x12V\n\x07address\x18\x02\x20\x01(\x0b2<.hw.trezor.messa\
+    ges.stellar.StellarSorobanAddressCredentialsR\x07address\"h\n\x1dStellar\
+    SorobanCredentialsType\x12&\n\"SOROBAN_CREDENTIALS_SOURCE_ACCOUNT\x10\0\
+    \x12\x1f\n\x1bSOROBAN_CREDENTIALS_ADDRESS\x10\x01\"\xe4\x01\n\x20Stellar\
+    SorobanAuthorizationEntry\x12W\n\x0bcredentials\x18\x01\x20\x02(\x0b25.h\
+    w.trezor.messages.stellar.StellarSorobanCredentialsR\x0bcredentials\x12g\
+    \n\x0froot_invocation\x18\x02\x20\x02(\x0b2>.hw.trezor.messages.stellar.\
+    StellarSorobanAuthorizedInvocationR\x0erootInvocation\"\xe3\x01\n\x1bSte\
+    llarInvokeHostFunctionOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rs\
+    ourceAccount\x12K\n\x08function\x18\x02\x20\x02(\x0b2/.hw.trezor.message\
+    s.stellar.StellarHostFunctionR\x08function\x12P\n\x04auth\x18\x03\x20\
+    \x03(\x0b2<.hw.trezor.messages.stellar.StellarSorobanAuthorizationEntryR\
+    \x04auth\"\x15\n\x13StellarTxExtRequest\"?\n\x0cStellarTxExt\x12\x0c\n\
+    \x01v\x18\x01\x20\x02(\x11R\x01v\x12!\n\x0csoroban_data\x18\x02\x20\x01(\
+    \x0cR\x0bsorobanData*=\n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\
+    \r\n\tALPHANUM4\x10\x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilab\
+    s.trezor.lib.protobufB\x14TrezorMessageStellar\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -6456,7 +10778,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(20);
+            let mut messages = ::std::vec::Vec::with_capacity(37);
             messages.push(StellarAsset::generated_message_descriptor_data());
             messages.push(StellarGetAddress::generated_message_descriptor_data());
             messages.push(StellarAddress::generated_message_descriptor_data());
@@ -6477,10 +10799,32 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(StellarBumpSequenceOp::generated_message_descriptor_data());
             messages.push(StellarClaimClaimableBalanceOp::generated_message_descriptor_data());
             messages.push(StellarSignedTx::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(3);
+            messages.push(StellarSCVal::generated_message_descriptor_data());
+            messages.push(StellarInvokeContractArgs::generated_message_descriptor_data());
+            messages.push(StellarSorobanAuthorizedFunction::generated_message_descriptor_data());
+            messages.push(StellarSorobanAuthorizedInvocation::generated_message_descriptor_data());
+            messages.push(StellarHostFunction::generated_message_descriptor_data());
+            messages.push(StellarSorobanAddressCredentials::generated_message_descriptor_data());
+            messages.push(StellarSorobanCredentials::generated_message_descriptor_data());
+            messages.push(StellarSorobanAuthorizationEntry::generated_message_descriptor_data());
+            messages.push(StellarInvokeHostFunctionOp::generated_message_descriptor_data());
+            messages.push(StellarTxExtRequest::generated_message_descriptor_data());
+            messages.push(StellarTxExt::generated_message_descriptor_data());
+            messages.push(stellar_scval::StellarUInt128Parts::generated_message_descriptor_data());
+            messages.push(stellar_scval::StellarInt128Parts::generated_message_descriptor_data());
+            messages.push(stellar_scval::StellarUInt256Parts::generated_message_descriptor_data());
+            messages.push(stellar_scval::StellarInt256Parts::generated_message_descriptor_data());
+            messages.push(stellar_scval::StellarSCAddress::generated_message_descriptor_data());
+            messages.push(stellar_scval::StellarSCValMapEntry::generated_message_descriptor_data());
+            let mut enums = ::std::vec::Vec::with_capacity(8);
             enums.push(StellarAssetType::generated_enum_descriptor_data());
             enums.push(stellar_sign_tx::StellarMemoType::generated_enum_descriptor_data());
             enums.push(stellar_set_options_op::StellarSignerType::generated_enum_descriptor_data());
+            enums.push(stellar_scval::StellarSCValType::generated_enum_descriptor_data());
+            enums.push(stellar_scval::stellar_scaddress::StellarSCAddressType::generated_enum_descriptor_data());
+            enums.push(stellar_soroban_authorized_function::StellarSorobanAuthorizedFunctionType::generated_enum_descriptor_data());
+            enums.push(stellar_host_function::StellarHostFunctionType::generated_enum_descriptor_data());
+            enums.push(stellar_soroban_credentials::StellarSorobanCredentialsType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
                 deps,

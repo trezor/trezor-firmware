@@ -1190,6 +1190,240 @@
         "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
         "signature": "ooAYonekHwUqyAahFkVoHL811S0z22sJ8Wqe277RqBnTillDRtIk3uqi0KsLZYJyeC8Ln7J0ZaXAtGPwIYoKCg=="
       }
+    },
+    {
+      "name": "StellarInvokeHostFunction-invoke-contract",
+      "parameters": {
+        "xdr": "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",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 199580,
+          "sequence_number": 256035073667629065,
+          "timebounds_start": 0,
+          "timebounds_end": 1768962000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": {
+                  "type": "SC_ADDRESS_TYPE_CONTRACT",
+                  "address": "129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a580"
+                },
+                "function_name": "submit",
+                "args": [
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": {
+                      "type": "SC_ADDRESS_TYPE_ACCOUNT",
+                      "address": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292"
+                    }
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": {
+                      "type": "SC_ADDRESS_TYPE_ACCOUNT",
+                      "address": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292"
+                    }
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": {
+                      "type": "SC_ADDRESS_TYPE_ACCOUNT",
+                      "address": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292"
+                    }
+                  },
+                  {
+                    "type": "SCV_VEC",
+                    "vec": [
+                      {
+                        "type": "SCV_MAP",
+                        "map": [
+                          {
+                            "key": {
+                              "type": "SCV_SYMBOL",
+                              "symbol": "address"
+                            },
+                            "value": {
+                              "type": "SCV_ADDRESS",
+                              "address": {
+                                "type": "SC_ADDRESS_TYPE_CONTRACT",
+                                "address": "adefce59aee52968f76061d494c2525b75659fa4296a65f499ef29e56477e496"
+                              }
+                            }
+                          },
+                          {
+                            "key": {
+                              "type": "SCV_SYMBOL",
+                              "symbol": "amount"
+                            },
+                            "value": {
+                              "type": "SCV_I128",
+                              "i128": {
+                                "hi": 0,
+                                "lo": 1234567890000
+                              }
+                            }
+                          },
+                          {
+                            "key": {
+                              "type": "SCV_SYMBOL",
+                              "symbol": "request_type"
+                            },
+                            "value": {
+                              "type": "SCV_U32",
+                              "u32": 2
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "auth": [
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT"
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                    "contract_fn": {
+                      "contract_address": {
+                        "type": "SC_ADDRESS_TYPE_CONTRACT",
+                        "address": "129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a580"
+                      },
+                      "function_name": "submit",
+                      "args": [
+                        {
+                          "type": "SCV_ADDRESS",
+                          "address": {
+                            "type": "SC_ADDRESS_TYPE_ACCOUNT",
+                            "address": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292"
+                          }
+                        },
+                        {
+                          "type": "SCV_ADDRESS",
+                          "address": {
+                            "type": "SC_ADDRESS_TYPE_ACCOUNT",
+                            "address": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292"
+                          }
+                        },
+                        {
+                          "type": "SCV_ADDRESS",
+                          "address": {
+                            "type": "SC_ADDRESS_TYPE_ACCOUNT",
+                            "address": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292"
+                          }
+                        },
+                        {
+                          "type": "SCV_VEC",
+                          "vec": [
+                            {
+                              "type": "SCV_MAP",
+                              "map": [
+                                {
+                                  "key": {
+                                    "type": "SCV_SYMBOL",
+                                    "symbol": "address"
+                                  },
+                                  "value": {
+                                    "type": "SCV_ADDRESS",
+                                    "address": {
+                                      "type": "SC_ADDRESS_TYPE_CONTRACT",
+                                      "address": "adefce59aee52968f76061d494c2525b75659fa4296a65f499ef29e56477e496"
+                                    }
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "type": "SCV_SYMBOL",
+                                    "symbol": "amount"
+                                  },
+                                  "value": {
+                                    "type": "SCV_I128",
+                                    "i128": {
+                                      "hi": 0,
+                                      "lo": 1234567890000
+                                    }
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "type": "SCV_SYMBOL",
+                                    "symbol": "request_type"
+                                  },
+                                  "value": {
+                                    "type": "SCV_U32",
+                                    "u32": 2
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "sub_invocations": [
+                    {
+                      "function": {
+                        "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                        "contract_fn": {
+                          "contract_address": {
+                            "type": "SC_ADDRESS_TYPE_CONTRACT",
+                            "address": "adefce59aee52968f76061d494c2525b75659fa4296a65f499ef29e56477e496"
+                          },
+                          "function_name": "transfer",
+                          "args": [
+                            {
+                              "type": "SCV_ADDRESS",
+                              "address": {
+                                "type": "SC_ADDRESS_TYPE_ACCOUNT",
+                                "address": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292"
+                              }
+                            },
+                            {
+                              "type": "SCV_ADDRESS",
+                              "address": {
+                                "type": "SC_ADDRESS_TYPE_CONTRACT",
+                                "address": "129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a580"
+                              }
+                            },
+                            {
+                              "type": "SCV_I128",
+                              "i128": {
+                                "hi": 0,
+                                "lo": 1234567890000
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "sub_invocations": []
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "00000000000000060000000600000001129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a5800000001000000001000000020000000f0000000741756374696f6e000000001100000001000000020000000f00000009617563745f7479706500000000000003000000000000000f00000004757365720000001200000000000000002f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292000000000000000600000001129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a5800000001000000001000000020000000f00000008456d6973446174610000000300000003000000010000000600000001129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a5800000001000000001000000020000000f00000009526573436f6e6669670000000000001200000001adefce59aee52968f76061d494c2525b75659fa4296a65f499ef29e56477e496000000010000000600000001129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a58000000014000000010000000600000001adefce59aee52968f76061d494c2525b75659fa4296a65f499ef29e56477e496000000140000000100000007a41fc53d6753b6c04eb15b021c55052366a4c8e0e21bc72700f461264ec1350e0000000400000001000000002f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c322920000000155534443000000003b9911380efe988ba0a8900eb1cfe44f366f7dbe946bed077240f7f624df15c50000000600000001129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a5800000001000000001000000020000000f00000009506f736974696f6e730000000000001200000000000000002f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292000000010000000600000001129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a5800000001000000001000000020000000f0000000752657344617461000000001200000001adefce59aee52968f76061d494c2525b75659fa4296a65f499ef29e56477e496000000010000000600000001adefce59aee52968f76061d494c2525b75659fa4296a65f499ef29e56477e4960000001000000001000000020000000f0000000742616c616e6365000000001200000001129cc8cc6336f1fdbbdcc0f3983434c3cdb85fd9ea85697a3782d318d874a58000000001003b8ed500000074000003e400000000000303cc"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "gp46zOL1Igt1hGVm9zhTgO87NlIH6DRsgHueTxb9YsNumZg8+AbWVJscB5i19rs1RliYcdUe8GsIHfwDjpKWAQ=="
+      }
     }
   ]
 }

@@ -81,5 +81,9 @@ async def process_operation(
         if confirm:
             await layout.confirm_claim_claimable_balance_op(op)
         serialize.write_claim_claimable_balance_op(w, op)
+    elif messages.StellarInvokeHostFunctionOp.is_type_of(op):
+        if confirm:
+            await layout.confirm_invoke_host_function_op(op)
+        serialize.write_invoke_host_function_op(w, op)
     else:
         raise ValueError("Unknown operation")

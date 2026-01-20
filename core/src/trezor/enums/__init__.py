@@ -334,6 +334,48 @@ if TYPE_CHECKING:
         PRE_AUTH = 1
         HASH = 2
 
+    class StellarSCValType(IntEnum):
+        SCV_BOOL = 0
+        SCV_VOID = 1
+        SCV_U32 = 3
+        SCV_I32 = 4
+        SCV_U64 = 5
+        SCV_I64 = 6
+        SCV_TIMEPOINT = 7
+        SCV_DURATION = 8
+        SCV_U128 = 9
+        SCV_I128 = 10
+        SCV_U256 = 11
+        SCV_I256 = 12
+        SCV_BYTES = 13
+        SCV_STRING = 14
+        SCV_SYMBOL = 15
+        SCV_VEC = 16
+        SCV_MAP = 17
+        SCV_ADDRESS = 18
+
+    class StellarSCAddressType(IntEnum):
+        SC_ADDRESS_TYPE_ACCOUNT = 0
+        SC_ADDRESS_TYPE_CONTRACT = 1
+        SC_ADDRESS_TYPE_MUXED_ACCOUNT = 2
+        SC_ADDRESS_TYPE_CLAIMABLE_BALANCE = 3
+        SC_ADDRESS_TYPE_LIQUIDITY_POOL = 4
+
+    class StellarSorobanAuthorizedFunctionType(IntEnum):
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN = 1
+        SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2
+
+    class StellarHostFunctionType(IntEnum):
+        HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT = 1
+        HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM = 2
+        HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3
+
+    class StellarSorobanCredentialsType(IntEnum):
+        SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0
+        SOROBAN_CREDENTIALS_ADDRESS = 1
+
     class TezosContractType(IntEnum):
         Implicit = 0
         Originated = 1
@@ -533,6 +575,9 @@ if TYPE_CHECKING:
         StellarPathPaymentStrictSendOp = 223
         StellarClaimClaimableBalanceOp = 225
         StellarSignedTx = 230
+        StellarInvokeHostFunctionOp = 235
+        StellarTxExtRequest = 238
+        StellarTxExt = 239
         CardanoGetPublicKey = 305
         CardanoPublicKey = 306
         CardanoGetAddress = 307

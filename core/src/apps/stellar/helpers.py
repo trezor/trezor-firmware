@@ -1,9 +1,18 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.crypto import base32
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+
+# Stellar strkey version bytes
+# See: https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md
+STRKEY_ED25519_PUBLIC_KEY = const(6)  # G...
+STRKEY_CONTRACT = const(2)  # C...
+STRKEY_MUXED_ACCOUNT = const(12)  # M...
+STRKEY_CLAIMABLE_BALANCE = const(1)  # B...
+STRKEY_LIQUIDITY_POOL = const(11)  # L...
 
 
 def public_key_from_address(address: str) -> bytes:
@@ -22,12 +31,16 @@ def public_key_from_address(address: str) -> bytes:
 
 def address_from_public_key(pubkey: AnyBytes) -> str:
     """Returns the base32-encoded version of public key bytes (G...)"""
-    address = bytearray()
-    address.append(6 << 3)  # version -> 'G'
-    address.extend(pubkey)
-    address.extend(_crc16_checksum(bytes(address)))  # checksum
+    return encode_strkey(STRKEY_ED25519_PUBLIC_KEY, pubkey)
 
-    return base32.encode(address)
+
+def encode_strkey(version: int, data: AnyBytes) -> str:
+    """Encode data to Stellar strkey format."""
+    payload = bytearray()
+    payload.append(version << 3)
+    payload.extend(data)
+    payload.extend(_crc16_checksum(bytes(payload)))
+    return base32.encode(payload).rstrip("=")
 
 
 def _crc16_checksum(data: AnyBytes) -> bytes:
