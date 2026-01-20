@@ -196,7 +196,7 @@ class SessionV1(client.Session["TrezorClientV1", t.Optional[bytes]]):
         elif passphrase:
             # We didn't get a PassphraseRequest, but passphrase_protection is enabled.
             # Looks like the session is already initialized. Bail out.
-            raise exceptions.PassphraseError(f"Failed to activate passphrase session")
+            raise exceptions.PassphraseError("Failed to activate passphrase session")
 
         # after processing any PassphraseRequest, we should have an Address response
         resp = messages.PublicKey.ensure_isinstance(resp)

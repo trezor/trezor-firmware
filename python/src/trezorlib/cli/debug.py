@@ -51,8 +51,7 @@ def record_screen_from_connection(
     obj: "TrezorConnection", directory: Union[str, None]
 ) -> None:
     """Record screen helper to transform TrezorConnection into TrezorClientDebugLink."""
-    transport = obj.get_transport()
-    debug_client = TrezorTestContext(transport=transport, auto_interact=False)
+    debug_client = TrezorTestContext(transport=obj.transport, auto_interact=False)
     record_screen(debug_client, directory, report_func=click.echo)
 
 
