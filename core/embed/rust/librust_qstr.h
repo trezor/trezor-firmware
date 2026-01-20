@@ -1010,10 +1010,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__address;
   MP_QSTR_words__amount;
   MP_QSTR_words__are_you_sure;
+  MP_QSTR_words__arguments;
   MP_QSTR_words__array_of;
   MP_QSTR_words__asset;
   MP_QSTR_words__assets;
   MP_QSTR_words__authenticate;
+  MP_QSTR_words__authorization;
   MP_QSTR_words__blockhash;
   MP_QSTR_words__bluetooth;
   MP_QSTR_words__buying;
@@ -1042,6 +1044,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__fee_limit;
   MP_QSTR_words__forget;
   MP_QSTR_words__from;
+  MP_QSTR_words__function;
   MP_QSTR_words__important;
   MP_QSTR_words__instructions;
   MP_QSTR_words__intent;
@@ -1503,11 +1506,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__delete_trust;
   MP_QSTR_stellar__destination;
   MP_QSTR_stellar__exchanges_require_memo;
+  MP_QSTR_stellar__ext_auth;
+  MP_QSTR_stellar__ext_auth_message;
   MP_QSTR_stellar__final_confirm;
   MP_QSTR_stellar__hash;
   MP_QSTR_stellar__high;
   MP_QSTR_stellar__home_domain;
   MP_QSTR_stellar__inflation;
+  MP_QSTR_stellar__invoke_contract;
   MP_QSTR_stellar__issuer_template;
   MP_QSTR_stellar__key;
   MP_QSTR_stellar__limit;

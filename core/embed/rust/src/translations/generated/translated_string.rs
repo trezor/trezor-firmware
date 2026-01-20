@@ -1653,6 +1653,15 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__calldata_digest = 1253,  // "ERC-8213 digest"
     pin__reenter_new_description = 1254,  // {"Bolt": "", "Caesar": "", "Delizia": "Re-enter new PIN.", "Eckhart": ""}
+    #[cfg(feature = "universal_fw")]
+    stellar__ext_auth = 1255,  // "External Authorizations"
+    #[cfg(feature = "universal_fw")]
+    stellar__ext_auth_message = 1256,  // "Transaction contains additional invocations authorized by external means."
+    #[cfg(feature = "universal_fw")]
+    stellar__invoke_contract = 1257,  // "Invoke Contract"
+    words__arguments = 1258,  // "Arguments"
+    words__authorization = 1259,  // "Authorization"
+    words__function = 1260,  // "Function"
 }
 
 impl TranslatedString {
@@ -2915,6 +2924,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -4175,6 +4190,12 @@ impl TranslatedString {
                 18888,
                 18903,
                 18903,
+                18926,
+                18999,
+                19014,
+                19023,
+                19036,
+                19044,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5434,6 +5455,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6694,6 +6721,12 @@ impl TranslatedString {
                 18888,
                 18903,
                 18903,
+                18926,
+                18999,
+                19014,
+                19023,
+                19036,
+                19044,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7953,6 +7986,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -9213,6 +9252,12 @@ impl TranslatedString {
                 18888,
                 18903,
                 18903,
+                18926,
+                18999,
+                19014,
+                19023,
+                19036,
+                19044,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -10472,6 +10517,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11732,6 +11783,12 @@ impl TranslatedString {
                 18888,
                 18903,
                 18903,
+                18926,
+                18999,
+                19014,
+                19023,
+                19036,
+                19044,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12992,6 +13049,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -14252,6 +14315,12 @@ impl TranslatedString {
                 16679,
                 16694,
                 16694,
+                16717,
+                16790,
+                16805,
+                16814,
+                16827,
+                16835,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15511,6 +15580,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -16771,6 +16846,12 @@ impl TranslatedString {
                 16679,
                 16694,
                 16694,
+                16717,
+                16790,
+                16805,
+                16814,
+                16827,
+                16835,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18030,6 +18111,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -19290,6 +19377,12 @@ impl TranslatedString {
                 16679,
                 16694,
                 16694,
+                16717,
+                16790,
+                16805,
+                16814,
+                16827,
+                16835,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20549,6 +20642,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -21809,6 +21908,12 @@ impl TranslatedString {
                 16679,
                 16694,
                 16694,
+                16717,
+                16790,
+                16805,
+                16814,
+                16827,
+                16835,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -23069,6 +23174,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "Re-enter new PIN.",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -24329,6 +24440,12 @@ impl TranslatedString {
                 18760,
                 18775,
                 18792,
+                18815,
+                18888,
+                18903,
+                18912,
+                18925,
+                18933,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25588,6 +25705,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "Re-enter new PIN.",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -26848,6 +26971,12 @@ impl TranslatedString {
                 18760,
                 18775,
                 18792,
+                18815,
+                18888,
+                18903,
+                18912,
+                18925,
+                18933,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -28107,6 +28236,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "Re-enter new PIN.",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -29367,6 +29502,12 @@ impl TranslatedString {
                 18760,
                 18775,
                 18792,
+                18815,
+                18888,
+                18903,
+                18912,
+                18925,
+                18933,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30626,6 +30767,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "Re-enter new PIN.",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -31886,6 +32033,12 @@ impl TranslatedString {
                 18760,
                 18775,
                 18792,
+                18815,
+                18888,
+                18903,
+                18912,
+                18925,
+                18933,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -33146,6 +33299,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -34406,6 +34565,12 @@ impl TranslatedString {
                 20138,
                 20153,
                 20153,
+                20176,
+                20249,
+                20264,
+                20273,
+                20286,
+                20294,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35665,6 +35830,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -36925,6 +37096,12 @@ impl TranslatedString {
                 20138,
                 20153,
                 20153,
+                20176,
+                20249,
+                20264,
+                20273,
+                20286,
+                20294,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -38184,6 +38361,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -39444,6 +39627,12 @@ impl TranslatedString {
                 20138,
                 20153,
                 20153,
+                20176,
+                20249,
+                20264,
+                20273,
+                20286,
+                20294,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -40703,6 +40892,12 @@ impl TranslatedString {
                 "To",
                 "ERC-8213 digest",
                 "",
+                "External Authorizations",
+                "Transaction contains additional invocations authorized by external means.",
+                "Invoke Contract",
+                "Arguments",
+                "Authorization",
+                "Function",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -41963,6 +42158,12 @@ impl TranslatedString {
                 20138,
                 20153,
                 20153,
+                20176,
+                20249,
+                20264,
+                20273,
+                20286,
+                20294,
             ];
 
         }
@@ -43309,6 +43510,10 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__exchanges_require_memo, Self::stellar__exchanges_require_memo),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__ext_auth, Self::stellar__ext_auth),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__ext_auth_message, Self::stellar__ext_auth_message),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__final_confirm, Self::stellar__final_confirm),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__hash, Self::stellar__hash),
@@ -43318,6 +43523,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__home_domain, Self::stellar__home_domain),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__inflation, Self::stellar__inflation),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__invoke_contract, Self::stellar__invoke_contract),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__issuer_template, Self::stellar__issuer_template),
         #[cfg(feature = "universal_fw")]
@@ -43521,10 +43728,12 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__address, Self::words__address),
         (Qstr::MP_QSTR_words__amount, Self::words__amount),
         (Qstr::MP_QSTR_words__are_you_sure, Self::words__are_you_sure),
+        (Qstr::MP_QSTR_words__arguments, Self::words__arguments),
         (Qstr::MP_QSTR_words__array_of, Self::words__array_of),
         (Qstr::MP_QSTR_words__asset, Self::words__asset),
         (Qstr::MP_QSTR_words__assets, Self::words__assets),
         (Qstr::MP_QSTR_words__authenticate, Self::words__authenticate),
+        (Qstr::MP_QSTR_words__authorization, Self::words__authorization),
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
         (Qstr::MP_QSTR_words__bluetooth, Self::words__bluetooth),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
@@ -43553,6 +43762,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__fee_limit, Self::words__fee_limit),
         (Qstr::MP_QSTR_words__forget, Self::words__forget),
         (Qstr::MP_QSTR_words__from, Self::words__from),
+        (Qstr::MP_QSTR_words__function, Self::words__function),
         (Qstr::MP_QSTR_words__important, Self::words__important),
         (Qstr::MP_QSTR_words__instructions, Self::words__instructions),
         (Qstr::MP_QSTR_words__intent, Self::words__intent),

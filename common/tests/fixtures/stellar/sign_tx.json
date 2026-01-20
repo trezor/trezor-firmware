@@ -1228,6 +1228,673 @@
         "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
         "signature": "ooAYonekHwUqyAahFkVoHL811S0z22sJ8Wqe277RqBnTillDRtIk3uqi0KsLZYJyeC8Ln7J0ZaXAtGPwIYoKCg=="
       }
+    },
+    {
+      "name": "StellarInvokeHostFunction-all-types",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAAD6QAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAJYWxsX3R5cGVzAAAAAAAAGgAAAAAAAAABAAAAAAAAAAAAAAABAAAAA/////8AAAAEgAAAAAAAAAX//////////wAAAAaAAAAAAAAAAAAAAAcAAAAAZ3SFgAAAAAgAAAAAAAFRgAAAAAn/////////////////////AAAACoAAAAAAAAAAAAAAAAAAAAAAAAAL//////////////////////////////////////////8AAAAMgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANAAAABN6tvu8AAAAOAAAAE2hlbGxvICJ3b3JsZCIKXCBlbmQAAAAADgAAAAT//gABAAAADwAAAAh0cmFuc2ZlcgAAABAAAAABAAAAAwAAAAMAAAABAAAADwAAAAN0d28AAAAAAAAAAAEAAAAQAAAAAQAAAAAAAAARAAAAAQAAAAIAAAAPAAAABmFtb3VudAAAAAAACgAAAAAAAAAAAAAAAAAPQkAAAAAPAAAAAnRvAAAAAAASAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAABEAAAABAAAAAAAAABIAAAAAAAAAAC8iucYvCLd08+vm3W59uTw+wsveAnlWGj2cUiW4wyKSAAAAEgAAAAEDChEYHyYtNDtCSVBXXmVsc3qBiI+WnaSrsrnAx87V3AAAABIAAAACoaarsLW6v8QBBgsQFRofJCkuMzg9QkdMUVZbYGVqb3R5foOIjZKXnAAAABIAAAADAAAAAAkMDxIVGBseISQnKi0wMzY5PD9CRUhLTlFUV1pdYGNmAAAAEgAAAAQCDRgjLjlET1plcHuGkZynsr3I097p9P8KFSArNkFMVwAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAw1AAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 1001,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                "function_name": "all_types",
+                "args": [
+                  {
+                    "type": "SCV_BOOL",
+                    "b": true
+                  },
+                  {
+                    "type": "SCV_BOOL",
+                    "b": false
+                  },
+                  {
+                    "type": "SCV_VOID"
+                  },
+                  {
+                    "type": "SCV_U32",
+                    "u32": 4294967295
+                  },
+                  {
+                    "type": "SCV_I32",
+                    "i32": -2147483648
+                  },
+                  {
+                    "type": "SCV_U64",
+                    "u64": 18446744073709551615
+                  },
+                  {
+                    "type": "SCV_I64",
+                    "i64": -9223372036854775808
+                  },
+                  {
+                    "type": "SCV_TIMEPOINT",
+                    "timepoint": 1735689600
+                  },
+                  {
+                    "type": "SCV_DURATION",
+                    "duration": 86400
+                  },
+                  {
+                    "type": "SCV_U128",
+                    "u128": {
+                      "hi": 18446744073709551615,
+                      "lo": 18446744073709551615
+                    }
+                  },
+                  {
+                    "type": "SCV_I128",
+                    "i128": {
+                      "hi": -9223372036854775808,
+                      "lo": 0
+                    }
+                  },
+                  {
+                    "type": "SCV_U256",
+                    "u256": {
+                      "hi_hi": 18446744073709551615,
+                      "hi_lo": 18446744073709551615,
+                      "lo_hi": 18446744073709551615,
+                      "lo_lo": 18446744073709551615
+                    }
+                  },
+                  {
+                    "type": "SCV_I256",
+                    "i256": {
+                      "hi_hi": -9223372036854775808,
+                      "hi_lo": 0,
+                      "lo_hi": 0,
+                      "lo_lo": 0
+                    }
+                  },
+                  {
+                    "type": "SCV_BYTES",
+                    "bytes": "deadbeef"
+                  },
+                  {
+                    "type": "SCV_STRING",
+                    "string": "68656c6c6f2022776f726c64220a5c20656e64"
+                  },
+                  {
+                    "type": "SCV_STRING",
+                    "string": "fffe0001"
+                  },
+                  {
+                    "type": "SCV_SYMBOL",
+                    "symbol": "transfer"
+                  },
+                  {
+                    "type": "SCV_VEC",
+                    "vec": [
+                      {
+                        "type": "SCV_U32",
+                        "u32": 1
+                      },
+                      {
+                        "type": "SCV_SYMBOL",
+                        "symbol": "two"
+                      },
+                      {
+                        "type": "SCV_BOOL",
+                        "b": true
+                      }
+                    ]
+                  },
+                  {
+                    "type": "SCV_VEC"
+                  },
+                  {
+                    "type": "SCV_MAP",
+                    "map": [
+                      {
+                        "key": {
+                          "type": "SCV_SYMBOL",
+                          "symbol": "amount"
+                        },
+                        "value": {
+                          "type": "SCV_I128",
+                          "i128": {
+                            "hi": 0,
+                            "lo": 1000000
+                          }
+                        }
+                      },
+                      {
+                        "key": {
+                          "type": "SCV_SYMBOL",
+                          "symbol": "to"
+                        },
+                        "value": {
+                          "type": "SCV_ADDRESS",
+                          "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "SCV_MAP"
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI"
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "MAAQMCYQCUNB6JBJFYZTQPKCI5GFCVS3MBSWU33UPF7IHCENSKLZZINGVOYLLOV7YTWO4"
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "BAAASDAPCIKRQGY6EESCOKRNGAZTMOJ4H5BEKSCLJZIVIV22LVQGGZRNN4"
+                  },
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "LABA2GBDFY4UIT22MVYHXBURTST3FPOI2PPOT5H7BIKSAKZWIFGFOEBC"
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "D3dQu/hju9RPgHNb8Dwjl+Idx1HToY8MsVIUIk80hlEj2P473PSDf7PIYjBYZrb4FKDK6pE2yKapSwpGsRiUAA=="
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-auth-tree",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAAH0QAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAGc3VibWl0AAAAAAACAAAAEgAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpIAAAAKAAAAAAAAAAAAAAAAAExLQAAAAAMAAAAAAAAAAAAAAAEDChEYHyYtNDtCSVBXXmVsc3qBiI+WnaSrsrnAx87V3AAAAAZzdWJtaXQAAAAAAAIAAAASAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAAoAAAAAAAAAAAAAAAAATEtAAAAAAgAAAAAAAAAEAg0YIy45RE9aZXB7hpGcp7K9yNPe6fT/ChUgKzZBTFcAAAAIdHJhbnNmZXIAAAADAAAAEgAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpIAAAASAAAAAQMKERgfJi00O0JJUFdeZWxzeoGIj5adpKuyucDHztXcAAAACgAAAAAAAAAAAAAAAABMS0AAAAABAAAAAAAAAAMAAAAACQwPEhUYGx4hJCcqLTAzNjk8P0JFSEtOUVRXWl1gY2YAAAAEYnVybgAAAAIAAAASAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAAoAAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAACoaarsLW6v8QBBgsQFRofJCkuMzg9QkdMUVZbYGVqb3R5foOIjZKXnAAAAAdhcHByb3ZlAAAAAAIAAAASAAAAAAAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAAMAAAAHAAAAAAAAAAAAAAAAAAAAAQMKERgfJi00O0JJUFdeZWxzeoGIj5adpKuyucDHztXcAAAABHN3YXAAAAACAAAADwAAAAhleGFjdF9pbgAAAAoAAAAAAAAAAAAAAAAAAADIAAAAAQAAAAAAAAAEAg0YIy45RE9aZXB7hpGcp7K9yNPe6fT/ChUgKzZBTFcAAAAFcm91dGUAAAAAAAABAAAAEgAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpIAAAAAAAAAAQAAAAAAAAAALyK5xi8It3Tz6+bdbn25PD7Cy94CeVYaPZxSJbjDIpJ//////////wAB4kAAAAANAAAAQAABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8AAAAAAAAAAQMKERgfJi00O0JJUFdeZWxzeoGIj5adpKuyucDHztXcAAAAB2RlcG9zaXQAAAAAAgAAABIAAAAAAAAAAC8iucYvCLd08+vm3W59uTw+wsveAnlWGj2cUiW4wyKSAAAACgAAAAAAAAAAAAAAAAAAA+cAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNQAAAAAA==",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 2001,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                "function_name": "submit",
+                "args": [
+                  {
+                    "type": "SCV_ADDRESS",
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                  },
+                  {
+                    "type": "SCV_I128",
+                    "i128": {
+                      "hi": 0,
+                      "lo": 5000000
+                    }
+                  }
+                ]
+              }
+            },
+            "auth": [
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT"
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                    "contract_fn": {
+                      "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                      "function_name": "submit",
+                      "args": [
+                        {
+                          "type": "SCV_ADDRESS",
+                          "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                        },
+                        {
+                          "type": "SCV_I128",
+                          "i128": {
+                            "hi": 0,
+                            "lo": 5000000
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "sub_invocations": [
+                    {
+                      "function": {
+                        "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                        "contract_fn": {
+                          "contract_address": "LABA2GBDFY4UIT22MVYHXBURTST3FPOI2PPOT5H7BIKSAKZWIFGFOEBC",
+                          "function_name": "transfer",
+                          "args": [
+                            {
+                              "type": "SCV_ADDRESS",
+                              "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                            },
+                            {
+                              "type": "SCV_ADDRESS",
+                              "address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI"
+                            },
+                            {
+                              "type": "SCV_I128",
+                              "i128": {
+                                "hi": 0,
+                                "lo": 5000000
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "sub_invocations": [
+                        {
+                          "function": {
+                            "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                            "contract_fn": {
+                              "contract_address": "BAAASDAPCIKRQGY6EESCOKRNGAZTMOJ4H5BEKSCLJZIVIV22LVQGGZRNN4",
+                              "function_name": "burn",
+                              "args": [
+                                {
+                                  "type": "SCV_ADDRESS",
+                                  "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                                },
+                                {
+                                  "type": "SCV_I128",
+                                  "i128": {
+                                    "hi": 0,
+                                    "lo": 100
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "function": {
+                        "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                        "contract_fn": {
+                          "contract_address": "MAAQMCYQCUNB6JBJFYZTQPKCI5GFCVS3MBSWU33UPF7IHCENSKLZZINGVOYLLOV7YTWO4",
+                          "function_name": "approve",
+                          "args": [
+                            {
+                              "type": "SCV_ADDRESS",
+                              "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                            },
+                            {
+                              "type": "SCV_U32",
+                              "u32": 7
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT"
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                    "contract_fn": {
+                      "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                      "function_name": "swap",
+                      "args": [
+                        {
+                          "type": "SCV_SYMBOL",
+                          "symbol": "exact_in"
+                        },
+                        {
+                          "type": "SCV_I128",
+                          "i128": {
+                            "hi": 0,
+                            "lo": 200
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "sub_invocations": [
+                    {
+                      "function": {
+                        "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                        "contract_fn": {
+                          "contract_address": "LABA2GBDFY4UIT22MVYHXBURTST3FPOI2PPOT5H7BIKSAKZWIFGFOEBC",
+                          "function_name": "route",
+                          "args": [
+                            {
+                              "type": "SCV_ADDRESS",
+                              "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_ADDRESS",
+                  "address": {
+                    "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+                    "nonce": 9223372036854775807,
+                    "signature_expiration_ledger": 123456,
+                    "signature": {
+                      "type": "SCV_BYTES",
+                      "bytes": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+                    }
+                  }
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                    "contract_fn": {
+                      "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                      "function_name": "deposit",
+                      "args": [
+                        {
+                          "type": "SCV_ADDRESS",
+                          "address": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV"
+                        },
+                        {
+                          "type": "SCV_I128",
+                          "i128": {
+                            "hi": 0,
+                            "lo": 999
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "/di5nlkauUooBg83iKXOkEWG1X1cQ4/IraU/dIx9a0vviKXMCRORXZm0vV2F9FG+1hKWcY3qCFDzdGKahzVWAA=="
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-memo-not-allowed",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAALuQAAAAEAAAAAAAAAAAAAAABw29iAAAAAAQAAAAVoZWxsbwAAAAAAAAEAAAAAAAAAGAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAGc3VibWl0AAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDUAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 3001,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "TEXT",
+          "memo_text": "hello"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                "function_name": "submit"
+              }
+            }
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "error_message": "cannot be used with a memo"
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-not-only-operation",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAMgAAAAAAAAPoQAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAIAAAAAAAAAGAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAGc3VibWl0AAAAAAAAAAAAAAAAAAAAAAABAAAAAC8iucYvCLd08+vm3W59uTw+wsveAnlWGj2cUiW4wyKSAAAAAAAAAAAA5OHAAAAAAAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 200,
+          "sequence_number": 4001,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                "function_name": "submit"
+              }
+            }
+          },
+          {
+            "_message_type": "StellarPaymentOp",
+            "destination_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+            "asset": {
+              "type": "NATIVE"
+            },
+            "amount": 15000000
+          }
+        ],
+        "ext": {
+          "v": 0
+        }
+      },
+      "result": {
+        "error_message": "must be the only operation"
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-requires-ext-v1",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAATiQAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAGc3VibWl0AAAAAAAAAAAAAAAAAAAAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 100,
+          "sequence_number": 5001,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                "function_name": "submit"
+              }
+            }
+          }
+        ],
+        "ext": {
+          "v": 0
+        }
+      },
+      "result": {
+        "error_message": "requires ext.v = 1"
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-no-args",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAAXcQAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAJZ2V0X2NvdW50AAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAw1AAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 6001,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                "function_name": "get_count"
+              }
+            }
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "38320pFImULhxVKboTvem0wKuI6D8d5SjCstMSmJihRFnjJhhAXkHMIDxLXot6ImDdbdjnNHFIa9jxM84zG4BQ=="
+      },
+      "skip_models": ["t1b1"]
+    },
+    {
+      "name": "StellarInvokeHostFunction-op-source-account",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAw7QAAAAAAAAXcQAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAABAAAAAF1VZCRmsYW4QxUuniGRUdvFiSAn7EAQGlF77VygMMLgAAAAGAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAGc3VibWl0AAAAAAABAAAACgAAAAAAAAAAAAAAAABMS0AAAAABAAAAAAAAAAAAAAABAwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dwAAAAGc3VibWl0AAAAAAABAAAACgAAAAAAAAAAAAAAAABMS0AAAAABAAAAAAAAAAEHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJgAAAARidXJuAAAAAQAAAAoAAAAAAAAAAAAAAAAAAABkAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDUAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 50100,
+          "sequence_number": 6001,
+          "timebounds_start": 0,
+          "timebounds_end": 1893456000,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarInvokeHostFunctionOp",
+            "source_account": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+            "function": {
+              "type": "HOST_FUNCTION_TYPE_INVOKE_CONTRACT",
+              "invoke_contract": {
+                "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                "function_name": "submit",
+                "args": [
+                  {
+                    "type": "SCV_I128",
+                    "i128": {
+                      "hi": 0,
+                      "lo": 5000000
+                    }
+                  }
+                ]
+              }
+            },
+            "auth": [
+              {
+                "credentials": {
+                  "type": "SOROBAN_CREDENTIALS_SOURCE_ACCOUNT"
+                },
+                "root_invocation": {
+                  "function": {
+                    "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                    "contract_fn": {
+                      "contract_address": "CABQUEIYD4TC2NB3IJEVAV26MVWHG6UBRCHZNHNEVOZLTQGHZ3K5ZIRI",
+                      "function_name": "submit",
+                      "args": [
+                        {
+                          "type": "SCV_I128",
+                          "i128": {
+                            "hi": 0,
+                            "lo": 5000000
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "sub_invocations": [
+                    {
+                      "function": {
+                        "type": "SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN",
+                        "contract_fn": {
+                          "contract_address": "CADQQCIKBMGA2DQPCAIREEYUCULBOGAZDINRYHI6D4QCCIRDEQSSN4QL",
+                          "function_name": "burn",
+                          "args": [
+                            {
+                              "type": "SCV_I128",
+                              "i128": {
+                                "hi": 0,
+                                "lo": 100
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "ext": {
+          "v": 1,
+          "soroban_data": "000000000000000000000000000000000000000000000000000000000000c350"
+        }
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "5uv43tMSDRDgs788M4uIkEkA6QvwN4eu0EP7yq2niwVSsVRHTqrnc6S3JrH2vu11ZwbUfaHL0BhGhPDm90vaAw=="
+      },
+      "skip_models": ["t1b1"]
     }
   ]
 }
