@@ -61,6 +61,7 @@ static void telemetry_init_record(void) {
   telemetry.data.min_temp_c = 500.0f;
   telemetry.data.max_temp_c = -500.0f;
   telemetry.data.battery_errors.all = 0;
+  telemetry.data.battery_cycles = 0.0f;
   telemetry_write(&telemetry);
 }
 
@@ -99,6 +100,20 @@ void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
   if (errors.all != 0 &&
       ((telemetry.data.battery_errors.all & errors.all) != errors.all)) {
     telemetry.data.battery_errors.all |= errors.all;
+    telemetry_write(&telemetry);
+  }
+}
+
+void telemetry_update_battery_cycles(float battery_cycles_inc) {
+  telemetry_t telemetry;
+  bool have = telemetry_read(&telemetry) && telemetry.initialized == 1;
+
+  if (!have) {
+    telemetry_init_record();
+  }
+
+  if (battery_cycles_inc > 0.0f) {
+    telemetry.data.battery_cycles += battery_cycles_inc;
     telemetry_write(&telemetry);
   }
 }
