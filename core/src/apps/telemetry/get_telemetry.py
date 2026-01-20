@@ -10,11 +10,12 @@ async def get_telemetry(msg: TelemetryGet) -> Telemetry:
 
     data = telemetry_get()
     if data:
-        min_temp_c, max_temp_c, battery_errors = data
+        min_temp_c, max_temp_c, battery_errors, battery_cycles = data
         return Telemetry(
             min_temp_c=min_temp_c,
             max_temp_c=max_temp_c,
             battery_errors=battery_errors,
+            battery_cycles=battery_cycles,
         )
     else:
         return Telemetry()

@@ -6138,6 +6138,7 @@ if TYPE_CHECKING:
         min_temp_c: "int | None"
         max_temp_c: "int | None"
         battery_errors: "int | None"
+        battery_cycles: "int | None"
 
         def __init__(
             self,
@@ -6145,6 +6146,7 @@ if TYPE_CHECKING:
             min_temp_c: "int | None" = None,
             max_temp_c: "int | None" = None,
             battery_errors: "int | None" = None,
+            battery_cycles: "int | None" = None,
         ) -> None:
             pass
 
