@@ -52,7 +52,7 @@ typedef enum {
                              // be called
 } tropic_handshake_state_t;
 
-static tropic_handshake_state_t tropic_handshake_state =
+static tropic_handshake_state_t g_tropic_handshake_state =
     TROPIC_HANDSHAKE_STATE_0;
 
 // TODO: Update this link to correspond with the latest chip revision when it
@@ -61,7 +61,7 @@ static tropic_handshake_state_t tropic_handshake_state =
 // TODO: Adjust the configuration to match the revision of the provisioned
 // tropics.
 // clang-format off
-static struct lt_config_t irreversible_configuration = {
+static struct lt_config_t g_irreversible_configuration = {
     .obj = {
         // # CFG_START_UP (0x00)
         // | Setting                 | Value                   |
@@ -270,7 +270,7 @@ static struct lt_config_t irreversible_configuration = {
 
 // TODO: Adjust the configuration to match the revision of the provisioned
 // tropics.
-static struct lt_config_t reversible_configuration = {
+static struct lt_config_t g_reversible_configuration = {
     .obj = {
         // # CFG_START_UP (0x00)
         // | Setting                 | Value                   |
@@ -580,7 +580,7 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
 }
 
 tropic_locked_status get_tropic_locked_status(cli_t* cli) {
-  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
   lt_handle_t* tropic_handle = tropic_get_handle();
   lt_ret_t ret = LT_FAIL;
@@ -612,8 +612,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(&reversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(reversible_configuration)) != 0) {
+  if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
+             sizeof(g_reversible_configuration)) != 0) {
     return TROPIC_LOCKED_FALSE;
   }
 
@@ -624,8 +624,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(&irreversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(irreversible_configuration)) != 0) {
+  if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
+             sizeof(g_irreversible_configuration)) != 0) {
     return TROPIC_LOCKED_FALSE;
   }
 
@@ -743,7 +743,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
     goto cleanup;
   }
 
-  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
@@ -861,7 +861,7 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
     return;
   }
 
-  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
   curve25519_key unprivileged_private = {0};
   if (secret_key_tropic_pairing_unprivileged(unprivileged_private) != sectrue) {
@@ -1036,7 +1036,7 @@ static void prodtest_tropic_handshake(cli_t* cli) {
     return;
   }
 
-  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_1;
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_1;
 
   cli_ok_hexdata(cli, &l2_state.buff, response_length);
 }
@@ -1079,7 +1079,7 @@ static void prodtest_tropic_send_command(cli_t* cli) {
     return;
   }
 
-  if (tropic_handshake_state != TROPIC_HANDSHAKE_STATE_1) {
+  if (g_tropic_handshake_state != TROPIC_HANDSHAKE_STATE_1) {
     cli_error(cli, CLI_ERROR, "You have to call `tropic-handshake` first.");
     return;
   }
@@ -1142,7 +1142,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
   lt_ret_t ret = LT_FAIL;
 
   ret = tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
@@ -1164,7 +1164,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = lt_write_whole_R_config(tropic_handle, &reversible_configuration);
+  ret = lt_write_whole_R_config(tropic_handle, &g_reversible_configuration);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`lt_write_whole_R_config()` failed with error %d", ret);
@@ -1178,13 +1178,13 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (memcmp(&reversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(reversible_configuration)) != 0) {
+  if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
+             sizeof(g_reversible_configuration)) != 0) {
     cli_error(cli, CLI_ERROR, "Reversible configuration mismatch after write.");
     return;
   }
 
-  ret = lt_write_whole_I_config(tropic_handle, &irreversible_configuration);
+  ret = lt_write_whole_I_config(tropic_handle, &g_irreversible_configuration);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`lt_write_whole_I_config()` failed with error %d", ret);
@@ -1198,8 +1198,8 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (memcmp(&irreversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(irreversible_configuration)) != 0) {
+  if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
+             sizeof(g_irreversible_configuration)) != 0) {
     cli_error(cli, CLI_ERROR,
               "Irreversible configuration mismatch after write.");
     return;
@@ -1340,7 +1340,7 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
     return;
   }
 
-  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
   lt_ret_t ret =
       tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
@@ -1386,7 +1386,7 @@ static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
     return;
   }
 
-  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
   lt_ret_t ret = LT_FAIL;
 
   ret = tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
@@ -1626,7 +1626,7 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
             mac_and_destroy_per_slot_iterations);
   cli_trace(cli, "Signing iterations: %d", signing_iterations);
 
-  tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
   lt_ret_t res = LT_FAIL;
   lt_pkey_index_t pairing_key_index = -1;
