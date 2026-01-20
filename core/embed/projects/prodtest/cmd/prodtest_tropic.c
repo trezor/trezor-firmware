@@ -1397,7 +1397,8 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   ret = data_write(tropic_handle, first_slot, slots_count, certificate,
                    certificate_length);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR, "Unable to write certificate");
+    cli_error(cli, CLI_ERROR, "`data_write()` failed with error '%s'",
+              lt_ret_verbose(ret));
     return;
   }
 
@@ -1405,9 +1406,14 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   uint8_t certificate_read[TROPIC_SLOT_MAX_SIZE_V1 * slots_count];
   ret = data_read(tropic_handle, first_slot, slots_count, certificate_read,
                   sizeof(certificate_read), &certificate_read_length);
-  if (ret != LT_OK || certificate_read_length != certificate_length ||
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`data_read()` failed with error '%s'",
+              lt_ret_verbose(ret));
+    return;
+  }
+  if (certificate_read_length != certificate_length ||
       memcmp(certificate, certificate_read, certificate_length) != 0) {
-    cli_error(cli, CLI_ERROR, "Unable to read certificate");
+    cli_error(cli, CLI_ERROR, "Certificate does not match the expected value");
     return;
   }
 
