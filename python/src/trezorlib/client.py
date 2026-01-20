@@ -371,11 +371,11 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         must_request_passphrase = (
             passphrase_is_nonempty or passphrase is PassphraseSetting.ON_DEVICE
         )
-        if must_request_passphrase and not self.features.passphrase_protection:
+        if must_request_passphrase and self.features.passphrase_protection is False:
             raise exceptions.PassphraseError(
                 "Passphrase protection is disabled on this device."
             )
-        if passphrase_is_nonempty and self.features.passphrase_always_on_device is True:
+        if passphrase_is_nonempty and self.features.passphrase_always_on_device:
             raise exceptions.PassphraseError(
                 "Only on-device entry allowed for passphrase."
             )

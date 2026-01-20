@@ -187,7 +187,7 @@ class SessionV1(client.Session["TrezorClientV1", t.Optional[bytes]]):
             resp = self.call(ack)
 
         elif (
-            self.features.passphrase_always_on_device is True
+            self.features.passphrase_always_on_device
             and passphrase is client.PassphraseSetting.ON_DEVICE
         ):
             # Passphrase was processed on device without asking the host. This is OK.
@@ -196,9 +196,7 @@ class SessionV1(client.Session["TrezorClientV1", t.Optional[bytes]]):
         elif passphrase:
             # We didn't get a PassphraseRequest, but passphrase_protection is enabled.
             # Looks like the session is already initialized. Bail out.
-            raise exceptions.TrezorException(
-                f"Failed to activate passphrase session {resp}"
-            )
+            raise exceptions.PassphraseError(f"Failed to activate passphrase session")
 
         # after processing any PassphraseRequest, we should have an Address response
         resp = messages.PublicKey.ensure_isinstance(resp)

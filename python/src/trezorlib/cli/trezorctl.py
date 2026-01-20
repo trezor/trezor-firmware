@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import atexit
 import importlib.metadata
 import json
 import logging
@@ -231,6 +232,8 @@ def cli_main(
         passphrase_source = PassphraseSource.AUTO
 
     ctx.obj = TrezorConnection(path, session_id, passphrase_source, script)
+    ctx.obj.open()
+    atexit.register(ctx.obj.close)
 
     # Optionally record the screen into a specified directory.
     if record:
