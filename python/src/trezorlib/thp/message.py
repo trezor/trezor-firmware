@@ -44,7 +44,11 @@ def packet_header(ctrl_byte: int, cid: int) -> bytes:
 
 
 def packet_length(data: bytes) -> bytes:
-    return struct.pack(">H", len(data) + CHECKSUM_LENGTH)
+    try:
+        return struct.pack(">H", len(data) + CHECKSUM_LENGTH)
+    except struct.error:
+        # indicates u16 overflow
+        raise exceptions.TrezorException("Encoded message is too long")
 
 
 def _crc32(data: bytes) -> bytes:
