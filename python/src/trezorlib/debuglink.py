@@ -38,7 +38,6 @@ from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
 from .thp.channel import Channel
 from .thp.client import TrezorClientThp
-from .tools import parse_path
 from .transport import Timeout
 
 if t.TYPE_CHECKING:
