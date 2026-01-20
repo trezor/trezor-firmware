@@ -70,7 +70,6 @@ S = t.TypeVar("S", bound=client.Session)
 MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
-PASSPHRASE_TEST_PATH = parse_path("44h/1h/0h/0/0")
 
 LOG = logging.getLogger(__name__)
 
