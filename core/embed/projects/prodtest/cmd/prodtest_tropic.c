@@ -1343,8 +1343,11 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
 
   ed25519_signature signature = {0};
 
-  if (lt_ecc_eddsa_sign(tropic_get_handle(), TROPIC_DEVICE_KEY_SLOT, challenge,
-                        sizeof(challenge), signature) != LT_OK) {
+  lt_ret_t ret = lt_ecc_eddsa_sign(tropic_get_handle(), TROPIC_DEVICE_KEY_SLOT,
+                                   challenge, sizeof(challenge), signature);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_ecc_eddsa_sign()` failed with error '%s'",
+              lt_ret_verbose(ret));
     return false;
   }
 
