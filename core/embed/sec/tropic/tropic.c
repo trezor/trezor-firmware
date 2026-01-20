@@ -128,7 +128,8 @@ static uint8_t tropic_cert_chain[LT_NUM_CERTIFICATES *
 static size_t tropic_cert_chain_length = 0;
 static curve25519_key tropic_public_cached = {0};
 
-static bool cache_tropic_cert_chain(void) {
+// If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
+static bool cache_tropic_cert_chain(cli_t *cli) {
   if (tropic_cert_chain_length > 0) {
     return true;
   }
@@ -144,11 +145,19 @@ static bool cache_tropic_cert_chain(void) {
 
   ret = lt_get_info_cert_store(&g_tropic_driver.handle, &cert_store);
   if (ret != LT_OK) {
+#if TREZOR_PRODTEST
+    cli_trace(cli, "lt_get_info_cert_store() failed with error '%s'",
+              lt_ret_verbose(ret));
+#endif
     return false;
   }
 
   ret = lt_get_st_pub(&cert_store, tropic_public_cached);
   if (ret != LT_OK) {
+#if TREZOR_PRODTEST
+    cli_trace(cli, "lt_get_st_pub() failed with error '%s'",
+              lt_ret_verbose(ret));
+#endif
     return false;
   }
 
@@ -166,17 +175,17 @@ static bool cache_tropic_cert_chain(void) {
   return true;
 }
 
-bool tropic_get_pubkey(curve25519_key pubkey) {
-  if (!cache_tropic_cert_chain()) {
+bool tropic_get_pubkey(cli_t *cli, curve25519_key pubkey) {
+  if (!cache_tropic_cert_chain(cli)) {
     return false;
   }
   memcpy(pubkey, tropic_public_cached, sizeof(curve25519_key));
   return true;
 }
 
-bool tropic_get_cert_chain_ptr(uint8_t const **cert_chain,
+bool tropic_get_cert_chain_ptr(cli_t *cli, uint8_t const **cert_chain,
                                size_t *cert_chain_length) {
-  if (!cache_tropic_cert_chain()) {
+  if (!cache_tropic_cert_chain(cli)) {
     return false;
   }
   *cert_chain = tropic_cert_chain;
@@ -265,7 +274,7 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
   if (secret_key_tropic_public(tropic_public) != sectrue) {
 #if !PRODUCTION || defined(TREZOR_PRODTEST)
     if (pairing_key_index != TROPIC_FACTORY_PAIRING_KEY_SLOT ||
-        !tropic_get_pubkey(tropic_public))
+        !tropic_get_pubkey(cli, tropic_public))
 #endif
     {
 #ifdef TREZOR_PRODTEST

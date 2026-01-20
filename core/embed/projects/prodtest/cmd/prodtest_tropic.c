@@ -552,7 +552,7 @@ static void prodtest_tropic_certtropic_read(cli_t* cli) {
 
   const uint8_t* tropic_cert_chain = NULL;
   size_t tropic_cert_chain_length = 0;
-  if (!tropic_get_cert_chain_ptr(&tropic_cert_chain,
+  if (!tropic_get_cert_chain_ptr(cli, &tropic_cert_chain,
                                  &tropic_cert_chain_length)) {
     cli_error(cli, CLI_ERROR, "`tropic_get_cert_chain_ptr()` failed");
     return;
@@ -777,7 +777,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
 
   // Get the Tropic01 public pairing key from the chip's certificate.
   curve25519_key tropic_public = {0};
-  if (!tropic_get_pubkey(tropic_public)) {
+  if (!tropic_get_pubkey(cli, tropic_public)) {
     cli_error(cli, CLI_ERROR, "`tropic_get_tropic_pubkey()` failed");
     goto cleanup;
   }
@@ -877,7 +877,7 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
   }
 
   curve25519_key tropic_public = {0};
-  if (!tropic_get_pubkey(tropic_public)) {
+  if (!tropic_get_pubkey(cli, tropic_public)) {
     cli_error(cli, CLI_ERROR, "`tropic_get_tropic_pubkey()` failed");
     goto cleanup;
   }
