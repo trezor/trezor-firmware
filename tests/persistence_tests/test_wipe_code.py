@@ -48,21 +48,23 @@ def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
 def test_wipe_code_activate_core(core_emulator: Emulator):
     # set up device
     setup_device_core(core_emulator.client, PIN, WIPE_CODE)
-    session = core_emulator.client.get_session()
-    device_id = core_emulator.client.features.device_id
+    with core_emulator.client.get_session() as session:
+        device_id = core_emulator.client.features.device_id
 
-    # Initiate Change pin process
-    ret = session.call_raw(messages.ChangePin(remove=False))
-    assert isinstance(ret, messages.ButtonRequest)
-    assert ret.name == "change_pin"
-    core_emulator.client.debug.press_yes()
-    ret = session.call_raw(messages.ButtonAck())
+        # Initiate Change pin process
+        ret = session.call_raw(messages.ChangePin(remove=False))
+        assert isinstance(ret, messages.ButtonRequest)
+        assert ret.name == "change_pin"
+        core_emulator.client.debug.press_yes()
+        ret = session.call_raw(messages.ButtonAck())
 
-    # Enter the wipe code instead of the current PIN
-    expected = message_filters.ButtonRequest(code=messages.ButtonRequestType.PinEntry)
-    assert expected.match(ret)
-    session.client._write(session, messages.ButtonAck())
-    core_emulator.client.debug.input(WIPE_CODE)
+        # Enter the wipe code instead of the current PIN
+        expected = message_filters.ButtonRequest(
+            code=messages.ButtonRequestType.PinEntry
+        )
+        assert expected.match(ret)
+        session.write(messages.ButtonAck())
+        core_emulator.client.debug.input(WIPE_CODE)
 
     # preserving screenshots even after it dies and starts again
     prev_screenshot_dir = core_emulator.client.debug.screenshot_recording_dir
@@ -86,19 +88,19 @@ def test_wipe_code_activate_legacy():
         # set up device
         setup_device_legacy(emu.client, PIN, WIPE_CODE)
 
-        session = emu.client.get_session()
-        device_id = emu.client.features.device_id
+        with emu.client.get_session() as session:
+            device_id = emu.client.features.device_id
 
-        # Initiate Change pin process
-        ret = session.call_raw(messages.ChangePin(remove=False))
-        assert isinstance(ret, messages.ButtonRequest)
-        emu.client.debug.press_yes()
-        ret = session.call_raw(messages.ButtonAck())
+            # Initiate Change pin process
+            ret = session.call_raw(messages.ChangePin(remove=False))
+            assert isinstance(ret, messages.ButtonRequest)
+            emu.client.debug.press_yes()
+            ret = session.call_raw(messages.ButtonAck())
 
-        # Enter the wipe code instead of the current PIN
-        assert isinstance(ret, messages.PinMatrixRequest)
-        wipe_code_encoded = emu.client.debug.encode_pin(WIPE_CODE)
-        session._write(messages.PinMatrixAck(pin=wipe_code_encoded))
+            # Enter the wipe code instead of the current PIN
+            assert isinstance(ret, messages.PinMatrixRequest)
+            wipe_code_encoded = emu.client.debug.encode_pin(WIPE_CODE)
+            session.write(messages.PinMatrixAck(pin=wipe_code_encoded))
 
         # wait 30 seconds for emulator to shut down
         # this will raise a TimeoutError if the emulator doesn't die.

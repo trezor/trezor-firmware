@@ -100,9 +100,9 @@ class Transport(metaclass=ABCMeta):
         self._opened = 0
 
     def __enter__(self) -> Transport:
-        if self._opened == 0:
-            self.open()
         self._opened += 1
+        if self._opened == 1:  # means it previously was 0
+            self.open()
         return self
 
     def __exit__(
