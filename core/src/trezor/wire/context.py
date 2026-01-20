@@ -147,6 +147,23 @@ def with_context(ctx: Context, workflow: loop.Task) -> Generator:
             send_exc = None
 
 
+def disable_preemptions() -> None:
+    """
+    For some workflows, we prefer disallowing THP stale channel preeemption
+    since aborting the workflow will have a non-trivial cost.
+
+    For example, when running BackupDevice, we prefer to continue the backup,
+    because aborting it will require the user to reset the device (since the
+    backup can be shown only once).
+    """
+    if utils.USE_THP:
+        try:
+            ctx = get_context()
+            ctx.is_preemptible = False
+        except NoWireContext:
+            return
+
+
 def try_get_ctx_ids() -> tuple[AnyBytes, AnyBytes] | None:
     ids = None
     if utils.USE_THP:

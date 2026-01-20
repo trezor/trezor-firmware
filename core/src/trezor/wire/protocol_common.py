@@ -47,6 +47,7 @@ class Context:
     ) -> None:
         self.iface: WireInterface = iface
         self.message_type_enum_name = message_type_enum_name
+        self.is_preemptible = True
         if channel_id is not None:
             self.channel_id = channel_id
 

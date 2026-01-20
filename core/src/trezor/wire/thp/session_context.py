@@ -10,6 +10,7 @@ from trezor.wire.message_handler import failure, handle_single_message
 
 from ..protocol_common import Context, Message
 from . import SessionState
+from .channel import ChannelPreemptedException
 
 if TYPE_CHECKING:
     from typing import Awaitable, Container
@@ -92,7 +93,17 @@ class GenericSessionContext(Context):
                 iface=self.iface,
             )
 
-        message = await self._read_next_message()
+        while True:
+            try:
+                message = await self._read_next_message()
+                break
+            except ChannelPreemptedException as e:
+                if self.is_preemptible:
+                    raise  # allow stale channel preemption
+                elif __debug__:
+                    self.channel._log("Ignore channel preemption", logger=log.warning)
+                    log.exception(__name__, e)
+
         if message.type not in expected_types:
             if __debug__:
                 log.debug(

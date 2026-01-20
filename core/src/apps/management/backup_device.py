@@ -18,6 +18,7 @@ async def perform_backup(
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_action
     from trezor.utils import ensure
+    from trezor.wire.context import disable_preemptions
 
     from apps.common import backup, backup_types, mnemonic
 
@@ -32,6 +33,9 @@ async def perform_backup(
             br_code=ButtonRequestType.ProtectCall,
             verb=TR.recovery__unlock_repeated_backup_verb,
         )
+
+    # Explicitly avoid THP preemption, to avoid failing the backup if the host reconnects.
+    disable_preemptions()
 
     mnemonic_secret = mnemonic.get_secret()
     ensure(mnemonic_secret is not None)  # checked at run-time

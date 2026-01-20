@@ -305,6 +305,7 @@ class Channel:
                         logger=(log.error if is_stale else log.warning),
                     )
                 if is_stale:
+                    # it may be ignored if the workflow is not preemptible
                     raise
                 continue
 
