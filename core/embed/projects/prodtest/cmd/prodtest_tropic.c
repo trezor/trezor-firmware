@@ -647,22 +647,29 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
   return TROPIC_LOCKED_TRUE;
 }
 
-static lt_ret_t pairing_key_write(lt_handle_t* handle, lt_pkey_index_t slot,
+static lt_ret_t pairing_key_write(cli_t* cli, lt_handle_t* handle,
+                                  lt_pkey_index_t slot,
                                   const ed25519_secret_key public_key) {
   // If this function returns `LT_OK`, it is ensured that the pairing key
   // `public_key` is written in the slot `slot`.
   lt_ret_t ret = lt_pairing_key_write(handle, public_key, slot);
-  if (ret != LT_OK && ret != LT_L3_FAIL) {
+  if (ret == LT_L3_FAIL) {
+    cli_trace(cli, "Pairing key has already been written.");
+  } else if (ret != LT_OK) {
+    cli_trace(cli, "`lt_pairing_key_write()` failed with error '%s'",
+              lt_ret_verbose(ret));
     return ret;
   }
-  // If the pairing has already been written, `lt_pairing_key_write()` returns
-  // `LT_L3_FAIL`.
+
   curve25519_key public_key_read = {0};
   ret = lt_pairing_key_read(handle, public_key_read, slot);
   if (ret != LT_OK) {
+    cli_trace(cli, "`lt_pairing_key_read()` failed with error '%s'",
+              lt_ret_verbose(ret));
     return ret;
   }
   if (memcmp(public_key, public_key_read, sizeof(ed25519_public_key)) != 0) {
+    cli_trace(cli, "Public key does not match the expected value.");
     return LT_FAIL;
   }
 
@@ -820,8 +827,9 @@ static void prodtest_tropic_pair(cli_t* cli) {
       LT_OK) {
     // Write the privileged pairing key to the tropic's pairing key slot if it
     // has not been written yet.
-    lt_ret_t ret = pairing_key_write(
-        tropic_handle, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT, privileged_public);
+    lt_ret_t ret = pairing_key_write(cli, tropic_handle,
+                                     TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
+                                     privileged_public);
     // If the pairing key has already been written, `pairing_key_write()`
     // returns `LT_OK`.
     if (ret != LT_OK) {
@@ -834,7 +842,8 @@ static void prodtest_tropic_pair(cli_t* cli) {
 
     // Write the unprivileged pairing key to the tropic's pairing key slot if it
     // has not been written yet.
-    ret = pairing_key_write(tropic_handle, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT,
+    ret = pairing_key_write(cli, tropic_handle,
+                            TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT,
                             unprivileged_public);
     // If the pairing key has already been written, `pairing_key_write()`
     // returns `LT_OK`.
