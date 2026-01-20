@@ -93,7 +93,7 @@ static bool is_retryable(lt_ret_t ret) {
         tropic01_reset();                                                   \
         tropic_deinit();                                                    \
         tropic_init();                                                      \
-        tropic_wait_for_ready();                                            \
+        tropic_wait_for_ready(NULL);                                        \
         if (TROPIC_RETRY_COMMAND_session_started) {                         \
           if (tropic_custom_session_start(                                  \
                   NULL, TROPIC_RETRY_COMMAND_pairing_key_index) != LT_OK) { \
@@ -194,10 +194,14 @@ bool tropic_get_cert_chain_ptr(cli_t *cli, uint8_t const **cert_chain,
 }
 #endif  // !PRODUCTION || defined(TREZOR_PRODTEST)
 
-bool tropic_wait_for_ready(void) {
+// If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
+bool tropic_wait_for_ready(cli_t *cli) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
+#if TREZOR_PRODTEST
+    cli_trace(cli, "Tropic driver is not initialized");
+#endif
     return false;
   }
 
@@ -215,6 +219,9 @@ bool tropic_wait_for_ready(void) {
     }
   }
 
+#if TREZOR_PRODTEST
+  cli_trace(cli, "Tropic is busy");
+#endif
   return false;
 }
 
@@ -285,7 +292,7 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
     }
   }
 
-  tropic_wait_for_ready();
+  tropic_wait_for_ready(cli);
 
   ret = TROPIC_RETRY_COMMAND(lt_session_start(&drv->handle, tropic_public,
                                               pairing_key_index, trezor_private,
