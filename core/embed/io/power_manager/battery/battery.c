@@ -21,6 +21,8 @@
 
 #include <trezor_rtl.h>
 
+#include <sys/irq.h>
+
 #include "battery.h"
 #include "battery_model.h"
 #include "fuel_gauge.h"
@@ -93,6 +95,8 @@ ts_t bat_fg_feed_sample(float voltage_V, float current_mA, float temp_C) {
     return TS_ENOINIT;
   }
 
+  irq_key_t key = irq_lock();
+
   // Store battery data in the buffer
   drv->sample_buf.samples[drv->sample_buf.head_idx].voltage_V = voltage_V;
   drv->sample_buf.samples[drv->sample_buf.head_idx].current_mA = current_mA;
@@ -113,6 +117,8 @@ ts_t bat_fg_feed_sample(float voltage_V, float current_mA, float temp_C) {
     }
   }
 
+  irq_unlock(key);
+
   return TS_OK;
 }
 
@@ -127,6 +133,8 @@ ts_t bat_fg_initial_guess() {
     // Buffer is empty, no data to process
     return TS_EINVAL;
   }
+
+  irq_key_t key = irq_lock();
 
   // Calculate average voltage, current and temperature from the sampling
   // buffer and run the fuel gauge initial guess
@@ -154,6 +162,8 @@ ts_t bat_fg_initial_guess() {
 
   fuel_gauge_initial_guess(&drv->fg_state, &drv->battery_model, vbat_avg,
                            ibat_avg, ntc_temp_avg);
+
+  irq_unlock(key);
 
   drv->fg_locked = true;
 
@@ -199,12 +209,16 @@ ts_t bat_fg_update(uint32_t dt_ms, float voltage_V, float current_mA,
     return TS_EINVAL;
   }
 
+  irq_key_t key = irq_lock();
+
   drv->cycle_counter += (fabsf(current_mA) * ((float)dt_ms / 3600000.0f)) /
                         (2 * battery_total_capacity(&drv->battery_model, 25.0f,
                                                     current_mA >= 0.0f));
 
   fuel_gauge_update(&drv->fg_state, &drv->battery_model, dt_ms, voltage_V,
                     current_mA, temp_C);
+
+  irq_unlock(key);
 
   return TS_OK;
 }
@@ -237,8 +251,13 @@ float bat_fetch_cycle_increment(void) {
     return 0.0f;
   }
 
-  float cycle_increment = (float)((uint16_t)drv->cycle_counter);
+  irq_key_t key = irq_lock();
+
+  float cycle_increment = drv->cycle_counter;
   drv->cycle_counter = 0.0f;
+
+  irq_unlock(key);
+
   return cycle_increment;
 }
 
