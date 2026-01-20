@@ -134,7 +134,7 @@ class SessionV1(client.Session["TrezorClientV1", t.Optional[bytes]]):
         )
         features = messages.Features.ensure_isinstance(resp)
         session_id = features.session_id
-        if session_id is None:
+        if session_id is None and not features.bootloader_mode:
             LOG.error(
                 "Trezor did not return a session ID. Session management is now broken."
             )
