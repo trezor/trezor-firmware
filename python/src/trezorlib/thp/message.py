@@ -28,9 +28,6 @@ from typing_extensions import Self
 from .. import exceptions
 from . import control_byte
 
-TREZOR_STATE_UNPAIRED = b"\x00"
-TREZOR_STATE_PAIRED = b"\x01"
-
 BROADCAST_CHANNEL_ID = 0xFFFF
 
 FORMAT_STR_INIT = ">BHH"
