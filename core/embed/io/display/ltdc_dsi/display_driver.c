@@ -35,6 +35,14 @@
 
 #include "display_internal.h"
 
+#if REFRESH_RATE_SCALING_SUPPORTED
+// VFP lookup table for different refresh rates
+static const uint32_t vfp_lut[REFRESH_RATE_COUNT] = {
+    [REFRESH_RATE_HI] = VFP_REFRESH_RATE_HI,
+    [REFRESH_RATE_LO] = VFP_REFRESH_RATE_LO,
+};
+#endif
+
 display_driver_t g_display_driver = {
     .initialized = false,
 };
@@ -43,24 +51,13 @@ static void display_pll_deinit(void) { __HAL_RCC_PLL3_DISABLE(); }
 
 static bool display_pll_init(void) {
   /* Start and configure PLL3 */
-  /* HSE = 16/32MHZ */
-  /* 16/32/(M=8) = 4MHz input (min) */
-  /* 4*(N=125) = 500MHz VCO (almost max) */
-  /* 500/(P=8) = 62.5 for DSI is exactly the lane byte clock*/
-
   __HAL_RCC_PLL3_DISABLE();
 
   while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) != 0U)
     ;
 
-#if HSE_VALUE == 32000000
-
-  __HAL_RCC_PLL3_CONFIG(RCC_PLLSOURCE_HSE, 8,
-                        ((DSI_LANE_BYTE_FREQ_HZ * 8) / 4000000), 8, 8, 24);
-#elif HSE_VALUE == 16000000
-  __HAL_RCC_PLL3_CONFIG(RCC_PLLSOURCE_HSE, 4,
-                        ((DSI_LANE_BYTE_FREQ_HZ * 8) / 4000000), 8, 8, 24);
-#endif
+  __HAL_RCC_PLL3_CONFIG(RCC_PLLSOURCE_HSE, PLL3_M, PLL3_N, PLL3_P, PLL3_Q,
+                        PLL3_R);
 
   __HAL_RCC_PLL3_VCIRANGE(RCC_PLLVCIRANGE_0);
 
@@ -104,7 +101,7 @@ static bool display_dsi_init(display_driver_t *drv) {
 
   __HAL_DSI_ENABLE(&drv->hlcd_dsi);
 
-  // /* Enable the DSI PLL */
+  /* Enable the DSI PLL */
   __HAL_DSI_PLL_ENABLE(&drv->hlcd_dsi);
 
   HAL_Delay(1);
@@ -131,18 +128,17 @@ static bool display_dsi_init(display_driver_t *drv) {
 
   /* DSI initialization */
   drv->hlcd_dsi.Instance = DSI;
+  // Erratum "DSI automatic clock lane control not functional" =>
+  // it can't be enabled.
   drv->hlcd_dsi.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-  /* We have 1 data lane at 500Mbps => lane byte clock at 500/8 = 62,5 MHZ */
-  /* We want TX escape clock at around 20MHz and under 20MHz so clock division
-   * is set to 4 */
-  drv->hlcd_dsi.Init.TXEscapeCkdiv = 4;
+  drv->hlcd_dsi.Init.TXEscapeCkdiv = DSI_TX_ESCAPE_CLK_DIV;
   drv->hlcd_dsi.Init.NumberOfLanes = PANEL_DSI_LANES;
-  drv->hlcd_dsi.Init.PHYFrequencyRange = DSI_DPHY_FRANGE_450MHZ_510MHZ;
-  drv->hlcd_dsi.Init.PHYLowPowerOffset = 0;
+  drv->hlcd_dsi.Init.PHYFrequencyRange = DSI_DPHY_FRANGE;
+  drv->hlcd_dsi.Init.PHYLowPowerOffset = PHY_LP_OFFSET;
 
-  PLLInit.PLLNDIV = ((DSI_LANE_BYTE_FREQ_HZ * 8 * 2 * 4) / (2 * HSE_VALUE));
-  PLLInit.PLLIDF = 4;
-  PLLInit.PLLODF = 2;
+  PLLInit.PLLIDF = PLL_DSI_IDF;
+  PLLInit.PLLNDIV = PLL_DSI_NDIV;
+  PLLInit.PLLODF = PLL_DSI_ODF;
   PLLInit.PLLVCORange = DSI_DPHY_VCO_FRANGE_800MHZ_1GHZ;
   PLLInit.PLLChargePump = DSI_PLL_CHARGE_PUMP_2000HZ_4400HZ;
   PLLInit.PLLTuning = DSI_PLL_LOOP_FILTER_2000HZ_4400HZ;
@@ -159,22 +155,24 @@ static bool display_dsi_init(display_driver_t *drv) {
   drv->DSIVidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
   drv->DSIVidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
   drv->DSIVidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-  drv->DSIVidCfg.ColorCoding = DSI_RGB888;
+  drv->DSIVidCfg.ColorCoding = PANEL_DSI_COLOR_CODING;
   drv->DSIVidCfg.Mode = PANEL_DSI_MODE;
-  drv->DSIVidCfg.PacketSize = LCD_WIDTH;
-  drv->DSIVidCfg.NullPacketSize = 0xFFFU;
-  drv->DSIVidCfg.HorizontalSyncActive = HSYNC * 3;
-  drv->DSIVidCfg.HorizontalBackPorch = HBP * 3;
-  drv->DSIVidCfg.HorizontalLine = (HACT + HSYNC + HBP + HFP) * 3;
+  // In burst mode, the packet size must be greater or equal to the visible
+  // width.
+  drv->DSIVidCfg.PacketSize = HACT;
+  drv->DSIVidCfg.NumberOfChunks = 0;  // No chunks in burst mode
+  drv->DSIVidCfg.NullPacketSize = 0;  // No null packet in burst mode
+  drv->DSIVidCfg.HorizontalSyncActive = HSYNC * LANE_BYTE_2_PIXEL_CLK_RATIO;
+  drv->DSIVidCfg.HorizontalBackPorch = HBP * LANE_BYTE_2_PIXEL_CLK_RATIO;
+  drv->DSIVidCfg.HorizontalLine =
+      (HSYNC + HBP + HACT + HFP) * LANE_BYTE_2_PIXEL_CLK_RATIO;
   drv->DSIVidCfg.VerticalSyncActive = VSYNC;
   drv->DSIVidCfg.VerticalBackPorch = VBP;
   drv->DSIVidCfg.VerticalFrontPorch = VFP;
   drv->DSIVidCfg.VerticalActive = VACT;
   drv->DSIVidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
   drv->DSIVidCfg.LPLargestPacketSize = 64;
-  /* Specify for each region of the video frame, if the transmission of command
-   * in LP mode is allowed in this region */
-  /* while streaming is active in video mode */
+  // Enable entering LP in all regions if timing constraints allow it.
   drv->DSIVidCfg.LPHorizontalFrontPorchEnable = DSI_LP_HFP_ENABLE;
   drv->DSIVidCfg.LPHorizontalBackPorchEnable = DSI_LP_HBP_ENABLE;
   drv->DSIVidCfg.LPVerticalActiveEnable = DSI_LP_VACT_ENABLE;
@@ -189,13 +187,11 @@ static bool display_dsi_init(display_driver_t *drv) {
     goto cleanup;
   }
 
-  /*********************/
-  /* LCD configuration */
-  /*********************/
-  PhyTimers.ClockLaneHS2LPTime = 11;
-  PhyTimers.ClockLaneLP2HSTime = 40;
-  PhyTimers.DataLaneHS2LPTime = 12;
-  PhyTimers.DataLaneLP2HSTime = 23;
+  // RM0456 Table 445. HS2LP and LP2HS values vs. band frequency (MHz)
+  PhyTimers.ClockLaneHS2LPTime = PHY_TIMER_CLK_HS2LP;
+  PhyTimers.ClockLaneLP2HSTime = PHY_TIMER_CLK_LP2HS;
+  PhyTimers.DataLaneHS2LPTime = PHY_TIMER_DATA_HS2LP;
+  PhyTimers.DataLaneLP2HSTime = PHY_TIMER_DATA_LP2HS;
   PhyTimers.DataLaneMaxReadTime = 0;
   PhyTimers.StopWaitTime = 7;
 
@@ -285,8 +281,8 @@ static bool display_ltdc_init(display_driver_t *drv, uint32_t fb_addr) {
   drv->hlcd_ltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
   drv->hlcd_ltdc.Init.HorizontalSync = HSYNC - 1;
   drv->hlcd_ltdc.Init.AccumulatedHBP = HSYNC + HBP - 1;
-  drv->hlcd_ltdc.Init.AccumulatedActiveW = HACT + HBP + HSYNC - 1;
-  drv->hlcd_ltdc.Init.TotalWidth = HACT + HBP + HFP + HSYNC - 1;
+  drv->hlcd_ltdc.Init.AccumulatedActiveW = HSYNC + HBP + HACT - 1;
+  drv->hlcd_ltdc.Init.TotalWidth = HSYNC + HBP + HACT + HFP - 1;
   drv->hlcd_ltdc.Init.Backcolor.Red = 0;   /* Not used default value */
   drv->hlcd_ltdc.Init.Backcolor.Green = 0; /* Not used default value */
   drv->hlcd_ltdc.Init.Backcolor.Blue = 0;  /* Not used default value */
@@ -381,7 +377,8 @@ bool display_init(display_content_mode_t mode) {
     goto cleanup;
   }
 
-  if (HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LCD_HEIGHT) != HAL_OK) {
+  if (HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LINE_EVENT_GENERAL_LINE) !=
+      HAL_OK) {
     goto cleanup;
   }
 
@@ -395,6 +392,31 @@ bool display_init(display_content_mode_t mode) {
   __HAL_LTDC_ENABLE_IT(&drv->hlcd_ltdc, LTDC_IT_LI | LTDC_IT_FU | LTDC_IT_TE);
 
   gfx_bitblt_init();
+
+  // Workaround to avoid a wrong image display for 1st refresh rate change.
+  // It has been observed that the first change of the refresh rate after
+  // initialization causes improper display update. Disabling and re-enabling
+  // the LTDC and DSI seems to solve the issue.
+  //
+  // TODO: review the configuration sequence of the LTDC and DSI to avoid this.
+  // See RM0456 44.14.1 Programing procedure overview
+  __HAL_LTDC_DISABLE(&drv->hlcd_ltdc);
+  __HAL_DSI_DISABLE(&drv->hlcd_dsi);
+
+  __HAL_DSI_ENABLE(&drv->hlcd_dsi);
+  __HAL_LTDC_ENABLE(&drv->hlcd_ltdc);
+  // Workaround end.
+
+#if REFRESH_RATE_SCALING_SUPPORTED
+  // No need to lock IRQs here because the "drv->initialized" flag is not set
+  // yet.
+  drv->refresh_rate_state = REFRESH_RATE_IDLE;
+  drv->refresh_rate = REFRESH_RATE_HI;
+  // Set the timeout variable to return to the low refresh rate after the
+  // "REFRESH_RATE_HI2LO_TIMEOUT_MS" time of inactivity.
+  drv->refresh_rate_timeout_ms = ticks_timeout(REFRESH_RATE_HI2LO_TIMEOUT_MS);
+  drv->refresh_rate_timeout_set = true;
+#endif
 
   drv->initialized = true;
   return true;
@@ -441,6 +463,148 @@ void display_deinit(display_content_mode_t mode) {
 
   memset(drv, 0, sizeof(display_driver_t));
 }
+
+#if REFRESH_RATE_SCALING_SUPPORTED
+void display_refresh_rate_timeout_set(void) {
+  display_driver_t *drv = &g_display_driver;
+  irq_key_t key;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  key = irq_lock();
+
+  // Set/refresh the timeout variable to return to the low refresh rate after
+  // the "REFRESH_RATE_HI2LO_TIMEOUT_MS" time of inactivity.
+  drv->refresh_rate_timeout_ms = ticks_timeout(REFRESH_RATE_HI2LO_TIMEOUT_MS);
+  drv->refresh_rate_timeout_set = true;
+
+  irq_unlock(key);
+}
+
+void display_refresh_rate_timeout_check(void) {
+  display_driver_t *drv = &g_display_driver;
+  irq_key_t key;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  // The function is called from an IRQ context. It might be possible to NOT
+  // disable IRQs and make preemption (of higher prio IRQs) possible.
+  // To be safe, we disable IRQs here.
+  key = irq_lock();
+
+  // Is timeout set and expired? Return to the low refresh rate.
+  if (drv->refresh_rate_timeout_set &&
+      ticks_expired(drv->refresh_rate_timeout_ms)) {
+    // Change the display refresh rate to the low refresh rate.
+    display_refresh_rate_set(REFRESH_RATE_LO);
+    drv->refresh_rate_timeout_set = false;
+  }
+
+  irq_unlock(key);
+}
+
+static inline void display_refresh_rate_reg_config(display_driver_t *drv) {
+  // LTDC && DSI disable.
+  __HAL_LTDC_DISABLE(&drv->hlcd_ltdc);
+  __HAL_DSI_DISABLE(&drv->hlcd_dsi);
+
+  // Set the Vertical Front Porch (VFP).
+  ATOMIC_MODIFY_REG(drv->hlcd_dsi.Instance->VVFPCR, DSI_VVFPCR_VFP_Msk,
+                    drv->DSIVidCfg.VerticalFrontPorch);
+
+  // Set Total Height.
+  ATOMIC_MODIFY_REG(drv->hlcd_ltdc.Instance->TWCR, LTDC_TWCR_TOTALH_Msk,
+                    drv->hlcd_ltdc.Init.TotalHeigh);
+
+  // DSI && LTDC enable.
+  __HAL_DSI_ENABLE(&drv->hlcd_dsi);
+  __HAL_LTDC_ENABLE(&drv->hlcd_ltdc);
+}
+
+void display_refresh_rate_set(display_refresh_rate_t refresh_rate) {
+  display_driver_t *drv = &g_display_driver;
+  irq_key_t key;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  key = irq_lock();
+
+  if (refresh_rate < REFRESH_RATE_COUNT && refresh_rate != drv->refresh_rate) {
+    // Update the requested refresh rate. Do it in any state of the state
+    // machine. The actual update will be performed in the IRQ context.
+    // The respective VFP and Total Height values will be set there.
+    drv->refresh_rate = refresh_rate;
+
+    if (drv->refresh_rate_state == REFRESH_RATE_IDLE) {
+      // Move the state machine forward to request the update in the "Line
+      // Event" IRQ handler.
+      drv->refresh_rate_state = REFRESH_RATE_REQUESTED;
+    }
+  }
+
+  irq_unlock(key);
+}
+
+void display_refresh_rate_config(void) {
+  display_driver_t *drv = &g_display_driver;
+  irq_key_t key;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  // The function is called from an IRQ context. It might be possible to NOT
+  // disable IRQs and make preemption (of higher prio IRQs) possible.
+  // To be safe, we disable IRQs here.
+  key = irq_lock();
+
+  if (drv->refresh_rate_state == REFRESH_RATE_UPDATING) {
+    // 30 us timeout, because the line takes max 29.75us at 18.518519MHz pixel
+    // clock and 544 pixel line width (including porches and sync).
+    uint64_t timeout_us = systick_us() + REFRESH_RATE_CFG_TIMEOUT_US;
+
+    // Check if we are in the vertical sync period. If yes, we have no idea
+    // where exactly we are in the VSYNC, so we can't safely update the
+    // registers now. We postpone the update - moving back to the REQUESTED
+    // state to try again later.
+    if (READ_BIT(drv->hlcd_ltdc.Instance->CDSR, LTDC_CDSR_VSYNCS) == 0) {
+      // Busy waiting for VSYNC with timeout. As soon as VSYNC starts (==1),
+      // we can proceed with the update.
+      while (READ_BIT(drv->hlcd_ltdc.Instance->CDSR, LTDC_CDSR_VSYNCS) == 0) {
+        if (systick_us() > timeout_us) {
+          // Failed to update, moving back to REQUESTED state to try again.
+          drv->refresh_rate_state = REFRESH_RATE_REQUESTED;
+
+          irq_unlock(key);
+          return;
+        }
+      }
+
+      // Prepare the structures for the update.
+      drv->DSIVidCfg.VerticalFrontPorch = vfp_lut[drv->refresh_rate];
+      drv->hlcd_ltdc.Init.TotalHeigh = drv->hlcd_ltdc.Init.AccumulatedActiveH +
+                                       drv->DSIVidCfg.VerticalFrontPorch;
+
+      // Perform the update of the registers.
+      display_refresh_rate_reg_config(drv);
+
+      // Updated: moving to the IDLE state.
+      drv->refresh_rate_state = REFRESH_RATE_IDLE;
+    } else {
+      // Failed to update, moving back to REQUESTED state to try again.
+      drv->refresh_rate_state = REFRESH_RATE_REQUESTED;
+    }
+  }
+
+  irq_unlock(key);
+}
+#endif  // REFRESH_RATE_SCALING_SUPPORTED
 
 bool display_set_backlight(uint8_t level) {
   display_driver_t *drv = &g_display_driver;
