@@ -40,6 +40,7 @@ typedef struct {
   float min_temp_c; /**< Minimum recorded battery temperature in Celsius. */
   float max_temp_c; /**< Maximum recorded battery temperature in Celsius. */
   telemetry_batt_errors_t battery_errors; /**< Bitfield of battery errors. */
+  float battery_cycles; /**< Number of recorded battery cycles. */
 } telemetry_data_t;
 
 /**
@@ -62,6 +63,20 @@ void telemetry_update_battery_temp(float temp_c);
  * @param errors Power management errors as a bitfield.
  */
 void telemetry_update_battery_errors(telemetry_batt_errors_t errors);
+
+/**
+ * @brief Increment battery cycles count in telemetry storage with an increment
+ *
+ * Battery cycles can only increase and should be updated with fractional
+ * increments accumulated over time from last call of this function.
+ *
+ * A battery cycle represents the cumulative current throughput equivalent to
+ * one complete charge-discharge cycle of a battery with capacity measured
+ * at 25°C.
+ *
+ * @param battery_cycles_inc battery cycles increment.
+ */
+void telemetry_update_battery_cycles(float battery_cycles_inc);
 
 /**
  * @brief Retrieve stored telemetry data.
