@@ -189,8 +189,8 @@ impl<R: Role> Reassembler<R> {
         Ok(length_no_checksum)
     }
 
-    pub fn header(&self) -> Header<R> {
-        self.header.clone()
+    pub fn header(&self) -> &Header<R> {
+        &self.header
     }
 
     // Shortcut to deserialize single packet message.

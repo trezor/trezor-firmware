@@ -1,7 +1,7 @@
 use crate::{
-    Channel, ChannelIO,
+    ChannelIO,
     channel::{APP_HEADER_LEN, PacketInResult},
-    error::{Error, Result},
+    error::Result,
 };
 
 use std::ops::Deref;
@@ -30,7 +30,11 @@ impl<C: ChannelIO> ChannelVec<C> {
         let res = self
             .channel
             .packet_in(packet_buffer, self.receive_buffer.as_mut_slice());
-        // TODO handle buffer resizing
+        if let Ok(pir) = &res {
+            if let Some(new_size) = pir.enlarge_receive_buffer {
+                self.receive_buffer.resize(new_size.into(), 0u8);
+            }
+        }
         res
     }
 

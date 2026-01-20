@@ -159,7 +159,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
         if has_cid {
             self.send_ack = Some(self.sync.receive_acknowledge());
         }
-        let header = r.header();
+        let header = r.header().clone();
         self.packet_state = PacketState::Idle;
         Ok((header, len))
     }
@@ -214,17 +214,19 @@ impl<R: Role, B: Backend> Channel<R, B> {
         receive_buffer.fill(0);
         let r = Reassembler::new(packet_buffer, receive_buffer)?;
         let is_done = r.is_done();
+        let payload_len = r.header().payload_len();
+        let enlarge = (usize::from(payload_len) > receive_buffer.len()).then_some(payload_len);
         self.packet_state = PacketState::Receiving(r);
-        PacketInResult::message(is_done)
+        PacketInResult::message_init(is_done, enlarge)
     }
 }
 
 /// Whether channel state changed after calling [`ChannelIO::packet_in`].
 pub struct PacketInResult {
-    ack_received: bool,
-    message_ready: bool,
-    error: Option<TransportError>,
-    // enlarge_buffer: Option<usize>,
+    pub ack_received: bool,
+    pub message_ready: bool,
+    pub error: Option<TransportError>,
+    pub enlarge_receive_buffer: Option<u16>,
 }
 
 impl PacketInResult {
@@ -233,6 +235,7 @@ impl PacketInResult {
             ack_received,
             message_ready,
             error: None,
+            enlarge_receive_buffer: None,
         }
     }
 
@@ -244,6 +247,15 @@ impl PacketInResult {
         Ok(Self::new(true, false))
     }
 
+    const fn message_init(is_done: bool, enlarge_receive_buffer: Option<u16>) -> Result<Self> {
+        Ok(Self {
+            ack_received: false,
+            message_ready: is_done,
+            error: None,
+            enlarge_receive_buffer,
+        })
+    }
+
     const fn message(is_done: bool) -> Result<Self> {
         Ok(Self::new(false, is_done))
     }
@@ -253,6 +265,7 @@ impl PacketInResult {
             ack_received: false,
             message_ready: false,
             error: Some(e),
+            enlarge_receive_buffer: None,
         })
     }
 
@@ -270,10 +283,6 @@ impl PacketInResult {
 
     pub const fn got_error(&self) -> bool {
         self.error.is_some()
-    }
-
-    pub const fn which_error(&self) -> TransportError {
-        self.error.unwrap()
     }
 }
 
