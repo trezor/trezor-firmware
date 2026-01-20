@@ -662,7 +662,7 @@ Take the following actions:
 
 ### State HH1
 
-The behavior of the host in the state HH1(*host_ephemeral_trezor_privkey*, *host_ephemeral_pubkey*) is defined as follows:
+The behavior of the host in the state HH1(*host_ephemeral_privkey*, *host_ephemeral_pubkey*) is defined as follows:
 
 When the message HandshakeInitiationResponse(*trezor_ephemeral_pubkey*, *encrypted_trezor_static_pubkey*, *tag*) is received, take the following actions:
 1. Set *h* = SHA-256(*protocol_name* || *device_properties*).
