@@ -125,6 +125,11 @@ def configure(
     paths += ["embed/io/power_manager/inc"]
     features_available.append("power_manager")
 
+    sources += ["embed/sec/telemetry/unix/telemetry.c"]
+    paths += ["embed/sec/telemetry/inc"]
+    defines += [("USE_TELEMETRY", "1")]
+    features_available.append("telemetry")
+
     paths += ["embed/io/suspend/inc"]
 
     features_available.append("backlight")
