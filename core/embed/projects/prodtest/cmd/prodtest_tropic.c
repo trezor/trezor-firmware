@@ -61,7 +61,7 @@ static tropic_handshake_state_t g_tropic_handshake_state =
 // TODO: Adjust the configuration to match the revision of the provisioned
 // tropics.
 // clang-format off
-static struct lt_config_t g_irreversible_configuration = {
+static const struct lt_config_t g_irreversible_configuration = {
     .obj = {
         // # CFG_START_UP (0x00)
         // | Setting                 | Value                   |
@@ -270,7 +270,7 @@ static struct lt_config_t g_irreversible_configuration = {
 
 // TODO: Adjust the configuration to match the revision of the provisioned
 // tropics.
-static struct lt_config_t g_reversible_configuration = {
+static const struct lt_config_t g_reversible_configuration = {
     .obj = {
         // # CFG_START_UP (0x00)
         // | Setting                 | Value                   |
