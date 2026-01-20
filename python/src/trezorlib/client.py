@@ -172,6 +172,14 @@ class Session(t.Generic[ClientType, SessionIdType]):
 
     @enter_context
     def ensure_unlocked(self) -> None:
+        """Ensure that the device is unlocked.
+
+        This method only works on sessions that have a passphrase derived, and
+        transitively, only on an initialized device.
+
+        Go through `client.ensure_unlocked()` if you want to abstract away the
+        choice of a correct session for this operation.
+        """
         resp = self.call(GET_ROOT_FINGERPRINT_MESSAGE, expect=messages.PublicKey)
         assert resp.root_fingerprint is not None
         root_fingerprint = resp.root_fingerprint.to_bytes(4, "big")
@@ -560,6 +568,9 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
 
     def ensure_unlocked(self) -> None:
         """Ensure the device is unlocked."""
+        if not self.features.initialized:
+            # uninitialized device cannot be locked
+            return
         session = self.get_session(passphrase=PassphraseSetting.STANDARD_WALLET)
         with session:
             session.ensure_unlocked()
