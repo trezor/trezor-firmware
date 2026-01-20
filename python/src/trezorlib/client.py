@@ -134,9 +134,10 @@ class Session(t.Generic[ClientType, SessionIdType]):
         LOG.info("Closing session %s", self)
         try:
             self.call(messages.EndSession())
-            self.is_invalid = True
         except Exception as e:
             LOG.warning("Failed to end session: %s", e)
+        finally:
+            self.is_invalid = True
 
     def cancel(self) -> None:
         """Send a Cancel signal to the device, interrupting the current workflow."""
