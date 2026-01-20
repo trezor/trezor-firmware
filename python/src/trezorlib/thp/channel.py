@@ -174,7 +174,7 @@ class Channel:
                     continue
                 if message.data != nonce:
                     LOG.warning(
-                        "Read ping response with unexpected nonce: %s",
+                        "Read pong with unexpected nonce: %s",
                         message.to_bytes().hex(),
                     )
                     continue
