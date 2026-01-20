@@ -11,7 +11,7 @@ from trezor import utils
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def telemetry_get() -> tuple[int, int, int] | None:
+def telemetry_get() -> tuple[int, int, int, int] | None:
     """
     Retrieves the stored telemetry data. Returns a tuple
     (min_temp_milli_c, max_temp_milli_c, battery_errors)
