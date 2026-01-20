@@ -138,6 +138,7 @@ class Channel:
         self.host_static_privkey: bytes = secrets.token_bytes(32)
         self._noise: NoiseConnection | None = None
         self.state = channel_state
+        self.trezor_public_keys: TrezorPublicKeys | None = None
 
     @property
     def noise(self) -> NoiseConnection:
@@ -302,10 +303,10 @@ class Channel:
     def _send_handshake_completion_request(
         self, credentials: t.Iterable[Credential]
     ) -> None:
-        trezor_public_keys = TrezorPublicKeys.from_noise(
+        self.trezor_public_keys = TrezorPublicKeys.from_noise(
             self.noise.noise_protocol.handshake_state
         )
-        cred = find_credential(credentials, trezor_public_keys)
+        cred = find_credential(credentials, self.trezor_public_keys)
         if cred is not None:
             LOG.info(
                 "Found credential for channel %04x: %s",
