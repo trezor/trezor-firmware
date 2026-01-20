@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize("O0")
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -46,6 +48,12 @@ static const uint32_t vfp_lut[REFRESH_RATE_COUNT] = {
 display_driver_t g_display_driver = {
     .initialized = false,
 };
+
+volatile uint32_t refresh_rate_change_tryouts = 0;
+volatile uint32_t timeout_max = 0;
+
+volatile uint32_t LTDC_CPSR_stamp = 0xFFFFFFFF;
+volatile uint32_t LTDC_CDSR_stamp = 0xFFFFFFFF;
 
 static void display_pll_deinit(void) { __HAL_RCC_PLL3_DISABLE(); }
 
@@ -508,9 +516,18 @@ void display_refresh_rate_timeout_check(void) {
 }
 
 static inline void display_refresh_rate_reg_config(display_driver_t *drv) {
+  LTDC_CPSR_stamp = (drv->hlcd_ltdc.Instance->CPSR & LTDC_CPSR_CYPOS_Msk) >>
+                    LTDC_CPSR_CYPOS_Pos;
+  LTDC_CDSR_stamp = (drv->hlcd_ltdc.Instance->CDSR & LTDC_CDSR_VSYNCS_Msk) >>
+                    LTDC_CDSR_VSYNCS_Pos;
+
   // LTDC && DSI disable.
   __HAL_LTDC_DISABLE(&drv->hlcd_ltdc);
   __HAL_DSI_DISABLE(&drv->hlcd_dsi);
+
+  if ((LTDC_CPSR_stamp > 1) || (LTDC_CDSR_stamp == 0)) {
+    __NOP();
+  }
 
   // Set the Vertical Front Porch (VFP).
   ATOMIC_MODIFY_REG(drv->hlcd_dsi.Instance->VVFPCR, DSI_VVFPCR_VFP_Msk,
@@ -568,6 +585,7 @@ void display_refresh_rate_config(void) {
     // 30 us timeout, because the line takes max 29.75us at 18.518519MHz pixel
     // clock and 544 pixel line width (including porches and sync).
     uint64_t timeout_us = systick_us() + REFRESH_RATE_CFG_TIMEOUT_US;
+    uint64_t time_stamp;
 
     // Check if we are in the vertical sync period. If yes, we have no idea
     // where exactly we are in the VSYNC, so we can't safely update the
@@ -577,9 +595,18 @@ void display_refresh_rate_config(void) {
       // Busy waiting for VSYNC with timeout. As soon as VSYNC starts (==1),
       // we can proceed with the update.
       while (READ_BIT(drv->hlcd_ltdc.Instance->CDSR, LTDC_CDSR_VSYNCS) == 0) {
-        if (systick_us() > timeout_us) {
+        time_stamp = systick_us();
+
+        timeout_max =
+            MAX(timeout_max,
+                (uint32_t)(time_stamp -
+                           (timeout_us - REFRESH_RATE_CFG_TIMEOUT_US)));
+
+        if (time_stamp > timeout_us) {
           // Failed to update, moving back to REQUESTED state to try again.
           drv->refresh_rate_state = REFRESH_RATE_REQUESTED;
+
+          refresh_rate_change_tryouts++;
 
           irq_unlock(key);
           return;
@@ -599,6 +626,8 @@ void display_refresh_rate_config(void) {
     } else {
       // Failed to update, moving back to REQUESTED state to try again.
       drv->refresh_rate_state = REFRESH_RATE_REQUESTED;
+
+      refresh_rate_change_tryouts++;
     }
   }
 

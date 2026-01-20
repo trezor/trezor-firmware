@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma GCC optimize("O0")
 
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -42,6 +43,9 @@
 #include <io/app_cache.h>
 #include <io/app_loader.h>
 #endif
+
+#include <sys/dbg_console.h>
+#include <sys/irq.h>
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -107,6 +111,15 @@
 #include <io/usb.h>
 #include <io/usb_config.h>
 #endif
+
+#include "../../io/display/ltdc_dsi/display_internal.h"
+
+extern volatile uint32_t refresh_counter;
+extern volatile uint32_t refresh_rate_change_tryouts;
+extern volatile uint32_t timeout_max;
+
+extern volatile uint32_t LTDC_CPSR_stamp;
+extern volatile uint32_t LTDC_CDSR_stamp;
 
 void drivers_init() {
 #ifdef SECURE_MODE
@@ -206,6 +219,9 @@ void drivers_init() {
 //
 // Returns when the coreapp task is terminated
 static void kernel_loop(applet_t *coreapp) {
+  uint32_t time0 = ticks();
+  uint32_t time1 = time0 + 5000;  // 5s delay for the 1st refresh rate change
+
 #if SECURE_MODE && USE_STORAGE_HWKEY
   secure_aes_set_applet(coreapp);
 #endif
@@ -222,6 +238,39 @@ static void kernel_loop(applet_t *coreapp) {
 
     if (signalled.read_ready & (1 << SYSHANDLE_SYSCALL)) {
       syscall_ipc_dequeue();
+    }
+
+    uint32_t time_tmp = ticks();
+
+    if (time_tmp > time1) {
+      static display_refresh_rate_t refresh_rate = REFRESH_RATE_HI;
+      float frequency;
+
+      irq_key_t key = irq_lock();
+      frequency = (refresh_counter * 1000.0f) / (float)(time_tmp - time0);
+      refresh_counter = 0;
+      irq_unlock(key);
+
+      // TODO: to revise the printed text
+      dbg_printf("frequency=%d.%d, refresh_rate_change_tryouts=%d, timeout_max=%d \n", (int)frequency, (int)((frequency - (int)frequency) * 100), (int)refresh_rate_change_tryouts, (int)timeout_max);
+      // dbg_printf("LTDC_CPSR.CYPOS=%X, LTDC_CDSR.VSYNCS=%X\n", (unsigned int)LTDC_CPSR_stamp, (unsigned int)LTDC_CDSR_stamp);
+      UNUSED(frequency);
+
+      key = irq_lock();
+      LTDC_CPSR_stamp = 0xFFFFFFFF;
+      LTDC_CDSR_stamp = 0xFFFFFFFF;
+      irq_unlock(key);
+
+      if (refresh_rate == REFRESH_RATE_HI) {
+        refresh_rate = REFRESH_RATE_LO;
+      } else {
+        refresh_rate = REFRESH_RATE_HI;
+      }
+
+      //display_refresh_rate_set(refresh_rate);
+
+      time0 = time_tmp;
+      time1 = time0 + 1000;  // 1000ms period
     }
 
   } while (applet_is_alive(coreapp));

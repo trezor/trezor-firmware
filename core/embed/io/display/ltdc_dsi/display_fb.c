@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma GCC optimize("O0")
+
 #ifdef KERNEL_MODE
 #include <trezor_bsp.h>
 #include <trezor_model.h>
@@ -42,6 +44,8 @@ uint8_t physical_frame_buffer_0[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
 __attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
 uint8_t physical_frame_buffer_1[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
+
+volatile uint32_t refresh_counter = 0;
 
 #ifdef USE_TRUSTZONE
 void display_set_unpriv_access(bool unpriv) {
@@ -215,6 +219,8 @@ void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc) {
     // Configure the next line event for standard operation.
     HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LINE_EVENT_GENERAL_LINE);
   } else {
+    refresh_counter++;
+
     display_refresh_rate_timeout_check();
 
     // Process pending frame buffer update.
@@ -244,6 +250,8 @@ void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc) {
     }
   }
 #else
+  refresh_counter++;
+
   if (drv->update_pending > 0) {
     drv->update_pending--;
   }
