@@ -1490,9 +1490,13 @@ static void pubkey_read(cli_t* cli, lt_ecc_slot_t slot,
   lt_ecc_key_origin_t origin = 0;
   ret = lt_ecc_key_read(tropic_get_handle(), slot, &public_key[1],
                         ECDSA_PUBLIC_KEY_SIZE - 1, &curve_type, &origin);
-  if (ret != LT_OK || curve_type != TR01_CURVE_P256) {
-    cli_error(cli, CLI_ERROR, "lt_ecc_key_read error '%s'.",
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_ecc_key_read()` failed with error '%s'",
               lt_ret_verbose(ret));
+    return;
+  }
+  if (curve_type != TR01_CURVE_P256) {
+    cli_error(cli, CLI_ERROR, "Curve type is not P-256");
     return;
   }
 
