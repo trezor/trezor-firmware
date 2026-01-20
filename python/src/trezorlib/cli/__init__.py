@@ -27,15 +27,8 @@ from enum import Enum
 
 import click
 
-from .. import exceptions, protocol_v1, transport, ui
-from ..client import (
-    AppManifest,
-    PassphraseSetting,
-    Session,
-    TrezorClient,
-    get_client,
-    get_default_session,
-)
+from .. import exceptions, messages, protocol_v1, transport, ui
+from ..client import AppManifest, PassphraseSetting, Session, TrezorClient, get_client
 from ..thp import client as thp_client
 from ..transport import Transport
 from . import credentials
@@ -145,6 +138,11 @@ def get_code_entry_code() -> str:
 
 
 class TrezorConnection:
+    _client: TrezorClient | None = None
+    _features: messages.Features | None = None
+    _transport: Transport | None = None
+    _standard_session: Session | None = None
+
     def __init__(
         self,
         path: str,
@@ -168,6 +166,55 @@ class TrezorConnection:
             self.app.button_callback = click_ui.button_request
             self.app.pin_callback = click_ui.get_pin
 
+    def ensure_unlocked(self) -> None:
+        """Ensure that the device is unlocked.
+
+        Separate from `client.ensure_unlocked()` because we want to reuse the
+        standard session.
+        """
+        if not self.get_client().features.initialized:
+            # uninitialized device cannot be locked
+            return
+        # query the standard session instead
+        self.standard_session.ensure_unlocked()
+
+    @property
+    def standard_session(self) -> Session:
+        if self._standard_session is None:
+            self._standard_session = self.get_client().get_session(
+                passphrase=PassphraseSetting.STANDARD_WALLET
+            )
+        # seems to be a weird typechecker limitation that it still thinks that
+        # session could be None here
+        return self._standard_session  # type: ignore ["None" is not assignable]
+
+    @property
+    def features(self) -> messages.Features:
+        if self._features is None:
+            self.ensure_unlocked()
+            self._features = self.get_client().features
+        return self._features
+
+    @property
+    def transport(self) -> Transport:
+        if self._transport is None:
+            self.open()
+        assert self._transport is not None
+        return self._transport
+
+    def open(self) -> None:
+        if self._transport is None:
+            self._transport = self._get_transport()
+            self._transport.open()
+
+    def close(self) -> None:
+        if self._transport is not None:
+            self._transport.close()
+        self._transport = None
+        self._client = None
+        self._features = None
+        self._standard_session = None
+
     def get_session(
         self,
         use_passphrase: bool = True,
@@ -175,19 +222,27 @@ class TrezorConnection:
         derive_cardano: bool = False,
     ) -> Session:
         client = self.get_client()
-        client.ensure_unlocked()
         if (
-            not client.features.passphrase_protection
+            not self.features.passphrase_protection
             and not self.passphrase_source.ok_if_disabled()
         ):
             raise click.ClickException("Passphrase protection is not enabled")
 
-        # if empty passphrase is requested, do not try to resume and instead
-        # create a new session
-        if not use_passphrase or self.passphrase_source == PassphraseSource.EMPTY:
-            return client.get_session(passphrase=PassphraseSetting.STANDARD_WALLET)
+        passphrase_source = self.passphrase_source
+        if passphrase_source == PassphraseSource.AUTO:
+            if not self.features.passphrase_protection:
+                passphrase_source = PassphraseSource.EMPTY
+            elif messages.Capability.PassphraseEntry in self.features.capabilities:
+                passphrase_source = PassphraseSource.DEVICE
+            else:
+                passphrase_source = PassphraseSource.PROMPT
+
         if seedless:
             return client.get_session(passphrase=None)
+        # if empty passphrase is requested, do not try to resume and instead
+        # create a new session
+        if not use_passphrase or passphrase_source == PassphraseSource.EMPTY:
+            return self.standard_session
 
         # Try resume session from id
         if self.session_id is not None:
@@ -217,18 +272,16 @@ class TrezorConnection:
             else:
                 return session
 
-        if self.passphrase_source == PassphraseSource.PROMPT:
+        if passphrase_source == PassphraseSource.PROMPT:
             passphrase = get_passphrase()
             return client.get_session(passphrase=passphrase)
-        if self.passphrase_source == PassphraseSource.DEVICE:
+        if passphrase_source == PassphraseSource.DEVICE:
             return client.get_session(passphrase=PassphraseSetting.ON_DEVICE)
-        if self.passphrase_source == PassphraseSource.AUTO:
-            return get_default_session(client, derive_cardano=derive_cardano)
         raise NotImplementedError(
             f"Passphrase source {self.passphrase_source} not implemented"
         )
 
-    def get_transport(self) -> Transport:
+    def _get_transport(self) -> Transport:
         try:
             # look for transport without prefix search
             return transport.get_transport(self.path, prefix_search=False)
@@ -240,8 +293,8 @@ class TrezorConnection:
         # if this fails, we want the exception to bubble up to the caller
         return transport.get_transport(self.path, prefix_search=True)
 
-    def get_client(self) -> TrezorClient:
-        client = get_client(self.app, self.get_transport())
+    def _get_client(self) -> TrezorClient:
+        client = get_client(self.app, self.transport)
         if not client.pairing.is_paired():
             from ..thp import pairing
 
@@ -252,6 +305,11 @@ class TrezorConnection:
                 self.credentials.add(credential)
 
         return client
+
+    def get_client(self) -> TrezorClient:
+        if self._client is None:
+            self._client = self._get_client()
+        return self._client
 
     def _connection_context(
         self,

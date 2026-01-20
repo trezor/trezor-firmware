@@ -686,11 +686,12 @@ def update(
             else:
                 device.reboot_to_bootloader(seedless_session)
 
+            obj.close()
             click.echo("Waiting for bootloader...")
             while True:
                 time.sleep(0.5)
                 try:
-                    obj.get_transport()
+                    obj.open()
                     break
                 except Exception:
                     pass
