@@ -76,34 +76,34 @@ static bool is_retryable(lt_ret_t ret) {
 
 // Statement expression, see
 // https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
-#define TROPIC_RETRY_COMMAND(command)                                 \
-  ({                                                                  \
-    bool TROPIC_RETRY_COMMAND_session_started =                       \
-        g_tropic_driver.session_started;                              \
-    lt_pkey_index_t TROPIC_RETRY_COMMAND_pairing_key_index =          \
-        g_tropic_driver.pairing_key_index;                            \
-    lt_ret_t TROPIC_RETRY_COMMAND_res = command;                      \
-    for (int TROPIC_RETRY_COMMAND_i = 0;                              \
-         TROPIC_RETRY_COMMAND_i < TROPIC_MAX_RETRIES - 1;             \
-         TROPIC_RETRY_COMMAND_i++) {                                  \
-      if (!is_retryable(TROPIC_RETRY_COMMAND_res)) {                  \
-        break;                                                        \
-      }                                                               \
-      if (TROPIC_RETRY_COMMAND_res == LT_L1_CHIP_ALARM_MODE) {        \
-        tropic01_reset();                                             \
-        tropic_deinit();                                              \
-        tropic_init();                                                \
-        tropic_wait_for_ready();                                      \
-        if (TROPIC_RETRY_COMMAND_session_started) {                   \
-          if (tropic_custom_session_start(                            \
-                  TROPIC_RETRY_COMMAND_pairing_key_index) != LT_OK) { \
-            continue;                                                 \
-          }                                                           \
-        }                                                             \
-      }                                                               \
-      TROPIC_RETRY_COMMAND_res = command;                             \
-    }                                                                 \
-    TROPIC_RETRY_COMMAND_res;                                         \
+#define TROPIC_RETRY_COMMAND(command)                                       \
+  ({                                                                        \
+    bool TROPIC_RETRY_COMMAND_session_started =                             \
+        g_tropic_driver.session_started;                                    \
+    lt_pkey_index_t TROPIC_RETRY_COMMAND_pairing_key_index =                \
+        g_tropic_driver.pairing_key_index;                                  \
+    lt_ret_t TROPIC_RETRY_COMMAND_res = command;                            \
+    for (int TROPIC_RETRY_COMMAND_i = 0;                                    \
+         TROPIC_RETRY_COMMAND_i < TROPIC_MAX_RETRIES - 1;                   \
+         TROPIC_RETRY_COMMAND_i++) {                                        \
+      if (!is_retryable(TROPIC_RETRY_COMMAND_res)) {                        \
+        break;                                                              \
+      }                                                                     \
+      if (TROPIC_RETRY_COMMAND_res == LT_L1_CHIP_ALARM_MODE) {              \
+        tropic01_reset();                                                   \
+        tropic_deinit();                                                    \
+        tropic_init();                                                      \
+        tropic_wait_for_ready();                                            \
+        if (TROPIC_RETRY_COMMAND_session_started) {                         \
+          if (tropic_custom_session_start(                                  \
+                  NULL, TROPIC_RETRY_COMMAND_pairing_key_index) != LT_OK) { \
+            continue;                                                       \
+          }                                                                 \
+        }                                                                   \
+      }                                                                     \
+      TROPIC_RETRY_COMMAND_res = command;                                   \
+    }                                                                       \
+    TROPIC_RETRY_COMMAND_res;                                               \
   })
 #endif  // TREZOR_EMULATOR
 
@@ -218,7 +218,9 @@ lt_ret_t tropic_session_invalidate(void) {
   return LT_OK;
 }
 
-lt_ret_t tropic_custom_session_start(lt_pkey_index_t pairing_key_index) {
+// If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
+lt_ret_t tropic_custom_session_start(cli_t *cli,
+                                     lt_pkey_index_t pairing_key_index) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
@@ -238,11 +240,17 @@ lt_ret_t tropic_custom_session_start(lt_pkey_index_t pairing_key_index) {
       break;
     case TROPIC_PRIVILEGED_PAIRING_KEY_SLOT:
       if (secret_key_tropic_pairing_privileged(trezor_private) != sectrue) {
+#ifdef TREZOR_PRODTEST
+        cli_trace(cli, "`secret_key_tropic_pairing_privileged()` failed");
+#endif
         goto cleanup;
       }
       break;
     case TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT:
       if (secret_key_tropic_pairing_unprivileged(trezor_private) != sectrue) {
+#ifdef TREZOR_PRODTEST
+        cli_trace(cli, "`secret_key_tropic_pairing_unprivileged()` failed");
+#endif
         goto cleanup;
       }
       break;
@@ -260,6 +268,10 @@ lt_ret_t tropic_custom_session_start(lt_pkey_index_t pairing_key_index) {
         !tropic_get_pubkey(tropic_public))
 #endif
     {
+#ifdef TREZOR_PRODTEST
+      cli_trace(cli,
+                "`secret_key_tropic_public()` or `tropic_get_pubkey()` failed");
+#endif
       goto cleanup;
     }
   }
@@ -269,6 +281,14 @@ lt_ret_t tropic_custom_session_start(lt_pkey_index_t pairing_key_index) {
   ret = TROPIC_RETRY_COMMAND(lt_session_start(&drv->handle, tropic_public,
                                               pairing_key_index, trezor_private,
                                               trezor_public));
+#if TREZOR_PRODTEST
+  if (ret != LT_OK) {
+    cli_trace(cli,
+              "`lt_session_start()` failed for pairing key %d "
+              "with error '%s'",
+              pairing_key_index, lt_ret_verbose(ret));
+  }
+#endif
 
   drv->session_started = (ret == LT_OK);
   drv->pairing_key_index = pairing_key_index;
@@ -291,17 +311,18 @@ bool tropic_session_start(void) {
   }
 
 #ifndef TREZOR_EMULATOR
-  if (tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
+  if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
   }
-  if (tropic_custom_session_start(TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT) ==
+  if (tropic_custom_session_start(NULL, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
   }
 #endif
 #if !PRODUCTION
-  if (tropic_custom_session_start(TROPIC_FACTORY_PAIRING_KEY_SLOT) == LT_OK) {
+  if (tropic_custom_session_start(NULL, TROPIC_FACTORY_PAIRING_KEY_SLOT) ==
+      LT_OK) {
     return true;
   }
 #endif
