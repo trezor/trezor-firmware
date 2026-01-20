@@ -28,14 +28,7 @@ from enum import Enum
 import click
 
 from .. import exceptions, messages, protocol_v1, transport, ui
-from ..client import (
-    AppManifest,
-    PassphraseSetting,
-    Session,
-    TrezorClient,
-    get_client,
-    get_default_session,
-)
+from ..client import AppManifest, PassphraseSetting, Session, TrezorClient, get_client
 from ..thp import client as thp_client
 from ..transport import Transport
 from . import credentials
@@ -217,6 +210,10 @@ class TrezorConnection:
     def close(self) -> None:
         if self._transport is not None:
             self._transport.close()
+        self._transport = None
+        self._client = None
+        self._features = None
+        self._standard_session = None
 
     def get_session(
         self,
@@ -274,7 +271,6 @@ class TrezorConnection:
                 raise
             else:
                 return session
-
 
         if passphrase_source == PassphraseSource.PROMPT:
             passphrase = get_passphrase()
