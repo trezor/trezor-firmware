@@ -348,7 +348,7 @@ def show_success_backup() -> Awaitable[None]:
 
 
 def show_reset_warning(
-    br_name: str,
+    br_name: str | None,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
@@ -399,19 +399,21 @@ async def show_share_confirmation_success(
                 group_index + 1, share_index + 1
             )
 
+    # Avoid sending ButtonRequest during backup flow, to avoid THP failures if the host is unavailable.
     await show_success(
-        "success_recovery",
-        content,
+        br_name=None,
+        content=content,
         subheader=TR.words__title_done,
         button=button,
     )
 
 
 def show_share_confirmation_failure() -> Awaitable[None]:
+    # Avoid sending ButtonRequest during backup flow, to avoid THP failures if the host is unavailable.
     return show_reset_warning(
-        "warning_backup_check",
-        TR.reset__incorrect_word_selected,
-        TR.words__important,
-        TR.words__try_again,
-        ButtonRequestType.ResetDevice,
+        br_name=None,
+        content=TR.reset__incorrect_word_selected,
+        subheader=TR.words__important,
+        button=TR.words__try_again,
+        br_code=ButtonRequestType.ResetDevice,
     )
