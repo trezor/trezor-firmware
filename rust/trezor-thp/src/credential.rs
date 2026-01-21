@@ -1,5 +1,10 @@
 pub const CREDENTIAL_PRIVKEY_LENGTH: usize = 32;
 
+pub struct FoundCredential<'a> {
+    pub local_static_privkey: &'a [u8; CREDENTIAL_PRIVKEY_LENGTH],
+    pub auth_credential: &'a [u8],
+}
+
 /// Host-side credential store.
 /// Basically a set of (`remote_static_pubkey`, `local_static_privkey`, `auth_credential`).
 pub trait CredentialStore {
@@ -12,7 +17,7 @@ pub trait CredentialStore {
         ephemeral_pubkey: &[u8],
         masked_static_pubkey: &[u8],
         dest: &'a mut [u8],
-    ) -> Option<&'a [u8]>;
+    ) -> Option<FoundCredential<'a>>;
 }
 
 /// Never finds a matching credential.
@@ -24,7 +29,7 @@ impl CredentialStore for NullCredentialStore {
         _ephemeral: &[u8],
         _masked_static: &[u8],
         _dest: &'a mut [u8],
-    ) -> Option<&'a [u8]> {
+    ) -> Option<FoundCredential<'a>> {
         None
     }
 }

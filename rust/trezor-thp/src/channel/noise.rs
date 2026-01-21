@@ -135,18 +135,11 @@ impl<B: Backend> NoiseHandshake<Host, B> {
     {
         let mut buf = heapless::Vec::new();
         buf.resize(buf.capacity(), 0u8).unwrap();
-
-        if let Some(res) = cs.lookup(re.as_slice(), rs.as_slice(), buf.as_mut_slice()) {
-            let key_len = <DHPrivKey<B> as U8Array>::len();
-            if let Some(key_bytes) = res.get(0..key_len) {
-                let found_key = <DHPrivKey<B> as U8Array>::from_slice(key_bytes);
-                // Shift credential to the begining of the slice.
-                buf.as_mut_slice().copy_within(key_len.., 0);
-                buf.truncate(buf.len() - key_len);
-                return (found_key, buf);
-            } else {
-                log::error!("CredentialStore returned invalid key, using generated.");
-            }
+        let result = cs.lookup(re.as_slice(), rs.as_slice(), buf.as_mut_slice());
+        if let Some(found) = result {
+            let found_key = <DHPrivKey<B> as U8Array>::from_slice(found.local_static_privkey);
+            let found_credential = heapless::Vec::from_slice(found.auth_credential).unwrap();
+            return (found_key, found_credential);
         }
         buf.clear();
         let new_key = <B::DH as DH>::genkey();
