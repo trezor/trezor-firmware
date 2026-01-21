@@ -126,15 +126,16 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
             self.try_to_unlock,
             &mut self.internal_buffer,
         )?;
-        let len = msg.len();
-        self.internal_buffer.truncate(len);
         let header = Header::new_handshake(
             self.channel.channel_id,
             HandshakeMessage::InitiationRequest,
-            &self.internal_buffer,
+            msg,
         );
         self.noise = Some(hss);
-        self.channel.raw_in(header, &self.internal_buffer)
+        self.channel.raw_in(header, msg)?;
+        let len = msg.len();
+        self.internal_buffer.truncate(len);
+        Ok(())
     }
 
     fn continue_handshake(&mut self) -> Result<(), Error> {
@@ -147,15 +148,15 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         )?;
         self.channel.noise = Some(nc);
         self.noise = None;
-        let len = msg.len();
-        self.internal_buffer.truncate(len);
         let header = Header::new_handshake(
             self.channel.channel_id,
             HandshakeMessage::CompletionRequest,
-            &self.internal_buffer,
+            msg,
         );
-
-        self.channel.raw_in(header, &self.internal_buffer)
+        self.channel.raw_in(header, msg)?;
+        let len = msg.len();
+        self.internal_buffer.truncate(len);
+        Ok(())
     }
 
     fn finish_handshake(&mut self) -> Result<PairingState, Error> {

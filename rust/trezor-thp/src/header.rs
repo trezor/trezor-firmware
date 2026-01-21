@@ -73,7 +73,7 @@ pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
 
 pub(crate) fn parse_cb_channel(buffer: &[u8]) -> Result<(ControlByte, u16, &[u8])> {
     let Some((cb, rest)) = buffer.split_first() else {
-        log::error!("Packet too short.");
+        log::error!("Packet is empty.");
         return Err(Error::MalformedData);
     };
     let (channel_id, rest) = parse_u16(rest)?;

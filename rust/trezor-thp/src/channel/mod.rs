@@ -184,7 +184,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
         if let Ok((header, payload)) = Reassembler::<R>::single(packet_buffer, &mut err_buf) {
             if let Ok(te) = TransportError::try_from(payload) {
                 if header.is_error() {
-                    log::error!("Other side sent error: {}.", te as u8);
+                    log::error!("[{}] Peer sent an error: {}.", self.channel_id, te as u8);
                     if !te.is_recoverable() {
                         self.packet_state = PacketState::Failed(Some(te));
                     }
@@ -192,7 +192,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                 }
             }
         }
-        log::error!("Other side sent unknown error.");
+        log::error!("[{}] Peer sent unknown error.", self.channel_id);
         self.packet_state = PacketState::Failed(None);
         Err(Error::MalformedData)
     }

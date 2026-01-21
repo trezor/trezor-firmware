@@ -138,12 +138,16 @@ impl<R: Role> Reassembler<R> {
     pub fn update(&mut self, input: &[u8], buffer: &mut [u8]) -> Result<()> {
         let (header, after_header) = Header::<R>::parse(input)?;
         if !header.is_continuation() {
-            log::error!("Unexpected continuation.");
+            log::error!("[{}] Unexpected continuation.", self.header.channel_id());
             return Err(Error::UnexpectedInput);
         }
 
         if header.channel_id() != self.header.channel_id() {
-            log::error!("Unexpected channel id.");
+            log::error!(
+                "[{}] Unexpected channel id {}.",
+                self.header.channel_id(),
+                header.channel_id()
+            );
             return Err(Error::OutOfBounds);
         }
 
