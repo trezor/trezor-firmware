@@ -24,6 +24,7 @@ import json
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Any, Callable, Optional, TypeVar, cast
 
 import click
@@ -204,6 +205,7 @@ def configure_logging(verbose: int) -> None:
 @click.option(
     "-r",
     "--record",
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
     help="Record screen changes into a specified directory.",
 )
 @click.version_option(package_name="trezor")
@@ -217,7 +219,7 @@ def cli_main(
     passphrase_on_host: bool,
     script: bool,
     session_id: Optional[str],
-    record: Optional[str],
+    record: Path | None,
 ) -> None:
     configure_logging(verbose)
 
@@ -232,13 +234,15 @@ def cli_main(
     else:
         passphrase_source = PassphraseSource.AUTO
 
-    ctx.obj = TrezorConnection(path, session_id, passphrase_source, script)
+    ctx.obj = TrezorConnection(
+        path=path,
+        session_id=session_id,
+        passphrase_source=passphrase_source,
+        script=script,
+        record_dir=record,
+    )
     ctx.obj.open()
     atexit.register(ctx.obj.close)
-
-    # Optionally record the screen into a specified directory.
-    if record:
-        debug.record_screen_from_connection(ctx.obj, record)
 
 
 # Creating a cli function that has the right types for future usage
@@ -271,19 +275,6 @@ def print_result(res: Any, is_json: bool, script: bool, **kwargs: Any) -> None:
             click.echo(protobuf.format_message(res))
         elif res is not None:
             click.echo(res)
-
-
-@cli.set_result_callback()
-@click.pass_obj
-def stop_recording_action(obj: TrezorConnection, *args: Any, **kwargs: Any) -> None:
-    """Stop recording screen changes when the recording was started by `cli_main`.
-
-    (When user used the `-r / --record` option of `trezorctl` command.)
-
-    It allows for isolating screen directories only for specific actions/commands.
-    """
-    if kwargs.get("record"):
-        debug.record_screen_from_connection(obj, None)
 
 
 def format_device_name(features: messages.Features) -> str:
