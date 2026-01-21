@@ -175,6 +175,10 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
             .unwrap();
     }
 
+    pub fn device_properties(&self) -> &[u8] {
+        self.device_properties.as_slice()
+    }
+
     /// True if handshake finished and [`ChannelOpen::complete()`] can be called.
     pub fn handshake_done(&self) -> bool {
         matches!(self.state, HostHandshakeState::Finished(_))

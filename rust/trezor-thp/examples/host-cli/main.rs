@@ -8,7 +8,7 @@ use protobuf::Message;
 use trezor_thp::{
     Backend, Channel, Host,
     channel::host::{ChannelOpen, ChannelPairing},
-    credential::NullCredentialStore,
+    credential::{CredentialStore, NullCredentialStore},
 };
 
 use client::Client;
@@ -27,6 +27,20 @@ impl Backend for RustCrypto {
     fn random_bytes(dest: &mut [u8]) {
         getrandom::fill(dest).unwrap();
     }
+}
+
+fn do_handshake<C>(client: &mut Client<ChannelOpen<C, RustCrypto>>)
+where
+    C: CredentialStore,
+{
+    // Handshake should finish within 3 request-response cycles.
+    // Device properties and channel id are available after the first one.
+    client.call(0, &[]);
+    let device_properties =
+        ThpDeviceProperties::parse_from_bytes(client.channel.device_properties()).unwrap();
+    log::debug!("Device properties: {:?}.", device_properties);
+    client.call(0, &[]);
+    client.call(0, &[]);
 }
 
 fn do_pairing(client: &mut Client<ChannelPairing<RustCrypto>>) {
@@ -89,9 +103,8 @@ pub fn main() -> std::io::Result<()> {
     let channel = ChannelOpen::<_, RustCrypto>::new(false, cred_lookup).unwrap();
     let mut client = Client::open(get_address(), channel);
 
-    while !client.channel.handshake_done() {
-        client.call(0, &[]);
-    }
+    do_handshake(&mut client);
+    assert!(client.channel.handshake_done());
     let mut client = client.map(|c| c.complete().unwrap());
 
     do_pairing(&mut client);
