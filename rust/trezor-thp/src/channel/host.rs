@@ -265,8 +265,8 @@ where
         self.channel.message_out_ready()
     }
 
-    fn message_retransmit(&mut self, send_buffer: &[u8]) -> Result<(), Error> {
-        self.channel.message_retransmit(send_buffer)
+    fn message_retransmit(&mut self) -> Result<(), Error> {
+        self.channel.message_retransmit()
     }
 }
 
@@ -354,7 +354,7 @@ impl<B: Backend> ChannelIO for ChannelPairing<B> {
         self.channel.message_out_ready()
     }
 
-    fn message_retransmit(&mut self, send_buffer: &[u8]) -> Result<(), Error> {
-        self.channel.message_retransmit(send_buffer)
+    fn message_retransmit(&mut self) -> Result<(), Error> {
+        self.channel.message_retransmit()
     }
 }

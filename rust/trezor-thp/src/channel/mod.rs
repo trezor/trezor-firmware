@@ -354,7 +354,7 @@ pub trait ChannelIO {
 
     /// Retransmit message previously submitted using [`Self::message_in`]. Does nothing if
     /// ACK was already received.
-    fn message_retransmit(&mut self, send_buffer: &[u8]) -> Result<()>;
+    fn message_retransmit(&mut self) -> Result<()>;
 
     /// Submit message for channel to encrypt and fragment into packets.
     ///
@@ -516,7 +516,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         }
     }
 
-    fn message_retransmit(&mut self, _send_buffer: &[u8]) -> Result<()> {
+    fn message_retransmit(&mut self) -> Result<()> {
         let PacketState::Sending(f) = &mut self.packet_state else {
             log::warn!("[{}] Nothing to retransmit.", self.channel_id);
             return Ok(());
