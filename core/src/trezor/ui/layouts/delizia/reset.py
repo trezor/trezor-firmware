@@ -321,7 +321,7 @@ def show_success_backup() -> Awaitable[None]:
 
 
 def show_reset_warning(
-    br_name: str,
+    br_name: str | None,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
@@ -374,14 +374,13 @@ async def show_share_confirmation_success(
                 )
             )
 
-    await show_success("success_share_confirm", title, subheader=footer_description)
+    await show_success(br_name=None, content=title, subheader=footer_description)
 
 
 def show_share_confirmation_failure() -> Awaitable[None]:
     return show_reset_warning(
-        "warning_backup_check",
-        TR.words__try_again,
-        TR.reset__incorrect_word_selected,
-        "",
-        ButtonRequestType.ResetDevice,
+        br_name=None,
+        content=TR.words__try_again,
+        subheader=TR.reset__incorrect_word_selected,
+        button="",
     )

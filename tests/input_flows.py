@@ -1900,7 +1900,7 @@ class InputFlowBip39ResetFailedCheck(InputFlowBase):
             self.debug, choose_wrong=True
         )
 
-        if self.debug.layout_type is not LayoutType.Eckhart:
+        if self.debug.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart):
             br = yield  # warning screen
             assert br.code == B.ResetDevice
         self.debug.press_yes()
@@ -2274,7 +2274,7 @@ def load_5_groups_5_shares(
             mnemonic = yield from read_and_confirm_mnemonic(debug)
             assert mnemonic is not None
             mnemonics.append(mnemonic)
-            if debug.layout_type is not LayoutType.Eckhart:
+            if debug.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart):
                 # Confirm continue to next
                 yield from swipe_if_necessary(debug, B.Success)
             debug.press_yes()
@@ -2392,8 +2392,6 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         # Mnemonic phrases - show & confirm shares for all groups
         self.mnemonics = yield from load_5_groups_5_shares(self.debug)
 
-        br = yield  # Confirm backup
-        assert br.code == B.Success
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
