@@ -105,9 +105,7 @@ impl<C: ChannelIO> Client<C> {
                 match self.recv_from(&mut sockbuf, ACK_TIMEOUT) {
                     None => {
                         // timeout
-                        self.channel
-                            .message_retransmit(send_buffer.as_slice())
-                            .unwrap();
+                        self.channel.message_retransmit().unwrap();
                         break;
                     }
                     Some(reply_len) => {
