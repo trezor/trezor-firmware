@@ -50,7 +50,7 @@
 
 // The value by which the index of the first mac-and-destroy slot is shifted
 // before every PIN change. The value is coprime to
-// TROPIC_MAC_AND_DESTROY_SLOTS_COUNT to ensure that
+// TROPIC_MAC_AND_DESTROY_SLOT_COUNT to ensure that
 // `get_mac_and_destroy_slot(i, change_pin_counter)` achieves the maximum
 // possible period in `change_pin_counter`.
 #define TROPIC_MAC_AND_DESTROY_SHIFT 11
@@ -481,7 +481,7 @@ static lt_mac_and_destroy_slot_t get_mac_and_destroy_slot(
 
   return first_slot_index +
          (change_pin_counter * TROPIC_MAC_AND_DESTROY_SHIFT + pin_index) %
-             TROPIC_MAC_AND_DESTROY_SLOTS_COUNT;
+             TROPIC_MAC_AND_DESTROY_SLOT_COUNT;
 }
 
 static uint16_t get_kek_masks_slot(tropic_driver_t *drv) {
