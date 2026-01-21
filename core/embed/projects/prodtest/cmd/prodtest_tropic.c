@@ -1590,7 +1590,7 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   }
 
   uint32_t start_session_iterations = 10;
-  uint32_t mac_and_destroy_slot_count = TROPIC_MAC_AND_DESTROY_SLOTS_COUNT;
+  uint32_t mac_and_destroy_slot_count = TROPIC_MAC_AND_DESTROY_SLOT_COUNT;
   uint32_t mac_and_destroy_per_slot_iterations = 3;
   uint32_t signing_iterations = 10;
 
@@ -1602,10 +1602,10 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
     }
     if (!cli_arg_uint32(cli, "mac-and-destroy-slot-count",
                         &mac_and_destroy_slot_count) ||
-        mac_and_destroy_slot_count > TROPIC_MAC_AND_DESTROY_SLOTS_COUNT) {
+        mac_and_destroy_slot_count > TROPIC_MAC_AND_DESTROY_SLOT_COUNT) {
       cli_error_arg(cli,
                     "Expecting number of MAC-and-destroy slots in range 0-%d.",
-                    TROPIC_MAC_AND_DESTROY_SLOTS_COUNT);
+                    TROPIC_MAC_AND_DESTROY_SLOT_COUNT);
       return;
     }
     if (!cli_arg_uint32(cli, "mac-and-destroy-per-slot-iterations",
