@@ -27,11 +27,11 @@ impl TransportError {
     }
 }
 
-impl TryFrom<&u8> for TransportError {
+impl TryFrom<u8> for TransportError {
     type Error = Error;
 
-    fn try_from(val: &u8) -> Result<Self> {
-        Ok(match *val {
+    fn try_from(val: u8) -> Result<Self> {
+        Ok(match val {
             1 => Self::TransportBusy,
             2 => Self::UnallocatedChannel,
             3 => Self::DecryptionFailed,
@@ -47,7 +47,7 @@ impl TryFrom<&[u8]> for TransportError {
     fn try_from(val: &[u8]) -> Result<Self> {
         val.first()
             .ok_or(Error::MalformedData)
-            .and_then(TransportError::try_from)
+            .and_then(|b| TransportError::try_from(*b))
     }
 }
 

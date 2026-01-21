@@ -6,7 +6,7 @@ use crate::{
     alternating_bit::{ChannelSync, SyncBits},
     error::{Result, TransportError},
     fragment::{Fragmenter, Reassembler},
-    header::{BROADCAST_CHANNEL_ID, Header, NONCE_LEN, parse_cb_channel},
+    header::{BROADCAST_CHANNEL_ID, Header, NONCE_LEN, parse_cb_channel, parse_u16},
 };
 
 pub use noise::Backend;
@@ -26,17 +26,21 @@ pub enum PairingState {
 type Nonce = [u8; NONCE_LEN];
 
 impl PairingState {
-    pub fn from(bytes: &[u8]) -> Option<Self> {
-        Some(match bytes {
+    pub fn is_paired(&self) -> bool {
+        !matches!(self, Self::Unpaired)
+    }
+}
+
+impl TryFrom<&[u8]> for PairingState {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Ok(match bytes {
             [0] => Self::Unpaired,
             [1] => Self::Paired,
             [2] => Self::PairedAutoconnect,
-            _ => return None,
+            _ => return Err(Error::MalformedData),
         })
-    }
-
-    pub fn is_paired(&self) -> bool {
-        !matches!(self, Self::Unpaired)
     }
 }
 
@@ -141,7 +145,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
             return PacketInResult::nothing();
         }
         if matches!(self.packet_state, PacketState::Sending(_)) {
-            let sb = SyncBits::from(packet_buffer);
+            let sb = SyncBits::try_from(packet_buffer)?;
             self.sync.send_mark_delivered(sb);
             if self.sync.can_send() {
                 self.packet_state = PacketState::Idle;
@@ -175,7 +179,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
         packet_buffer: &[u8],
         receive_buffer: &mut [u8],
     ) -> Result<PacketInResult> {
-        let sb = SyncBits::from(packet_buffer);
+        let sb = SyncBits::try_from(packet_buffer)?;
         if !self.is_broadcast() && !self.sync.receive_start(sb) {
             // Bad sync bit, drop this packet and continuations.
             log::debug!("[{}] Bad sync bit, ignoring packet.", self.channel_id);
@@ -478,9 +482,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             log::error!("[{}] Incoming message too short.", self.channel_id);
         }
         let (session_id, rest) = receive_buffer.split_first().ok_or(Error::MalformedData)?;
-        let (message_type, rest) = rest.split_first_chunk::<2>().ok_or(Error::MalformedData)?;
-        let message_type = u16::from_be_bytes(*message_type);
-
+        let (message_type, rest) = parse_u16(rest)?;
         Ok((*session_id, message_type, rest))
     }
 

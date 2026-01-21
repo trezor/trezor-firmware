@@ -165,7 +165,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         let mut payload = self.internal_buffer.clone();
         let len = self.channel.noise().decrypt(payload.as_mut_slice())?;
         payload.truncate(len); // assumes tag at the end
-        PairingState::from(&payload).ok_or(Error::MalformedData)
+        PairingState::try_from(payload.as_slice())
     }
 
     fn zero_internal_buffer(&mut self) {

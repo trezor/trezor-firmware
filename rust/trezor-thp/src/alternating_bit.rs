@@ -1,4 +1,7 @@
-use crate::control_byte::{ACK_BIT, SEQ_BIT};
+use crate::{
+    control_byte::{ACK_BIT, SEQ_BIT},
+    error::Error,
+};
 
 #[derive(Clone, Copy)]
 pub struct SyncBits(u8);
@@ -39,9 +42,12 @@ impl From<u8> for SyncBits {
     }
 }
 
-impl From<&[u8]> for SyncBits {
-    fn from(bytes: &[u8]) -> Self {
-        Self::from(*bytes.first().unwrap_or(&0u8))
+impl TryFrom<&[u8]> for SyncBits {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Error> {
+        let first_byte = bytes.first().ok_or(Error::MalformedData)?;
+        Ok(Self::from(*first_byte))
     }
 }
 
