@@ -50,9 +50,8 @@ pub struct ChannelOpen<C: CredentialStore, B: Backend> {
 
 impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     pub fn new(try_to_unlock: bool, cred_store: C) -> Result<Self, Error> {
-        let mut nonce = Nonce::default();
-        B::random_bytes(&mut nonce);
-        let internal_buffer = heapless::Vec::from_slice(&nonce).unwrap();
+        let nonce = Nonce::random::<B>();
+        let internal_buffer = heapless::Vec::from_slice(nonce.as_slice()).unwrap();
         let mut channel = Channel::new(BROADCAST_CHANNEL_ID);
         channel.raw_in(Header::new_channel_request(), &internal_buffer)?;
         let res = Self {
@@ -108,12 +107,8 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     }
 
     fn get_channel(&mut self, expected_nonce: &Nonce) -> Result<ControlFlow<(), ()>, Error> {
-        let Some((_nonce, payload)) = self
-            .internal_buffer
-            .as_slice()
-            .split_at_checked(core::mem::size_of::<Nonce>())
-            .filter(|(nonce, _payload)| nonce == expected_nonce)
-        else {
+        let (nonce, payload) = Nonce::parse(&self.internal_buffer)?;
+        if nonce != *expected_nonce {
             log::warn!("Received non matching channel request nonce.");
             return Ok(ControlFlow::Break(()));
         };

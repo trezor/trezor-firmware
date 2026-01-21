@@ -7,7 +7,7 @@ use crate::error::{Error, Result};
 use core::marker::PhantomData;
 
 const CHECKSUM_LEN: u16 = crc32::CHECKSUM_LEN as u16;
-pub const NONCE_LEN: usize = 8;
+pub const NONCE_LEN: u16 = 8;
 const MAX_PAYLOAD_LEN: u16 = 60000;
 
 const MAX_CHANNEL_ID: u16 = 0xFFEF;
@@ -233,16 +233,15 @@ impl<R: Role> Header<R> {
 
     /// Payload length including checksum. Messages without checksum return 0.
     pub const fn payload_len(&self) -> u16 {
-        let nonce_len: u16 = NONCE_LEN as u16;
         match self {
             Self::Continuation { .. } => 0,
             Self::Ack { .. } => CHECKSUM_LEN,
             Self::CodecV1Request { .. } | Self::CodecV1Response => 0,
-            Self::ChannelAllocationRequest => nonce_len + CHECKSUM_LEN,
+            Self::ChannelAllocationRequest => NONCE_LEN + CHECKSUM_LEN,
             Self::ChannelAllocationResponse { payload_len } => *payload_len,
             Self::TransportError { .. } => 1 + CHECKSUM_LEN,
-            Self::Ping => nonce_len + CHECKSUM_LEN,
-            Self::Pong => nonce_len + CHECKSUM_LEN,
+            Self::Ping => NONCE_LEN + CHECKSUM_LEN,
+            Self::Pong => NONCE_LEN + CHECKSUM_LEN,
             Self::Handshake {
                 phase: _,
                 channel_id: _,
@@ -272,7 +271,7 @@ impl<R: Role> Header<R> {
 
     pub const fn new_channel_response(payload: &[u8]) -> Self {
         Self::ChannelAllocationResponse {
-            payload_len: (payload.len() + NONCE_LEN) as u16 + CHECKSUM_LEN,
+            payload_len: (payload.len() as u16) + NONCE_LEN + CHECKSUM_LEN,
         }
     }
 

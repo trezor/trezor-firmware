@@ -14,6 +14,31 @@ use noise::{HANDSHAKE_HASH_LEN, NoiseCiphers, TAG_LEN};
 
 const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
+/// Used during channel allocation on broadcast channel.
+#[derive(Copy, Clone, PartialEq)]
+struct Nonce([u8; NONCE_LEN as _]);
+
+impl Nonce {
+    pub const LEN: usize = NONCE_LEN as _;
+
+    pub fn random<B: Backend>() -> Self {
+        let mut bytes = [0u8; Self::LEN];
+        B::random_bytes(&mut bytes);
+        Self(bytes)
+    }
+
+    pub fn parse(bytes: &[u8]) -> Result<(Self, &[u8])> {
+        bytes
+            .split_first_chunk::<{ Nonce::LEN }>()
+            .map(|(n, p)| (Nonce(*n), p))
+            .ok_or(Error::MalformedData)
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.0
+    }
+}
+
 /// Sent by device after successful handshake to indicate whether pairing is required.
 #[repr(u8)]
 #[derive(Copy, Clone)]
@@ -22,8 +47,6 @@ pub enum PairingState {
     Paired = 1,
     PairedAutoconnect = 2,
 }
-
-type Nonce = [u8; NONCE_LEN];
 
 impl PairingState {
     pub fn is_paired(&self) -> bool {
