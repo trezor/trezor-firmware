@@ -7,6 +7,8 @@ use crate::{
     header::{BROADCAST_CHANNEL_ID, HandshakeMessage, Header, parse_u16},
 };
 
+use core::ops::ControlFlow;
+
 // Must fit any of:
 // - device_properties + overhead
 // - 2 DH keys + 2 AEAD tags (2*32+2*16=96) + overhead
@@ -77,7 +79,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
             (HostHandshakeState::SentChannelRequest(nonce), _)
                 if header.is_channel_allocation_response() =>
             {
-                if self.get_channel(&nonce)? {
+                if self.get_channel(&nonce)?.is_continue() {
                     log::debug!("Got channel id {}.", self.channel.channel_id);
                     self.start_handshake()?;
                     self.state = HostHandshakeState::SentInitiationRequest;
@@ -105,7 +107,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         Ok(())
     }
 
-    fn get_channel(&mut self, expected_nonce: &Nonce) -> Result<bool, Error> {
+    fn get_channel(&mut self, expected_nonce: &Nonce) -> Result<ControlFlow<(), ()>, Error> {
         let Some((_nonce, payload)) = self
             .internal_buffer
             .as_slice()
@@ -113,13 +115,13 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
             .filter(|(nonce, _payload)| nonce == expected_nonce)
         else {
             log::warn!("Received non matching channel request nonce.");
-            return Ok(false);
+            return Ok(ControlFlow::Break(()));
         };
         let (cid, device_properties) = parse_u16(payload)?;
         self.channel.channel_id = cid;
         self.device_properties =
             heapless::Vec::from_slice(device_properties).map_err(|_| Error::InsufficientBuffer)?;
-        Ok(true)
+        Ok(ControlFlow::Continue(()))
     }
 
     fn start_handshake(&mut self) -> Result<(), Error> {
