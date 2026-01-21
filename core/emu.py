@@ -9,12 +9,12 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Optional, TextIO
+from typing import TextIO
 
 import click
 
 import trezorlib.debuglink
-import trezorlib.device
+from trezorlib.cli.debug import record_screen
 from trezorlib._internal.emulator import CoreEmulator
 
 try:
@@ -133,7 +133,7 @@ def _from_env(name: str) -> bool:
 @click.option("-p", "--profile", metavar="NAME", help="Profile name or path")
 @click.option("-P", "--port", metavar="PORT", type=int, default=int(os.environ.get("TREZOR_UDP_PORT", 0)) or None, help="UDP port number")
 @click.option("-q", "--quiet", is_flag=True, help="Silence emulator output")
-@click.option("-r", "--record-dir", help="Directory where to record screen changes")
+@click.option("-r", "--record-dir", help="Directory where to record screen changes", type=click.Path(file_okay=False, dir_okay=True, path_type=Path))
 @click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
 @click.option("-S", "--script-gdb-file", type=click.Path(exists=True, dir_okay=False), help="Run gdb with an init file")
 @click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
@@ -160,7 +160,7 @@ def cli(
     port: int,
     output: TextIO | None,
     quiet: bool,
-    record_dir: Optional[str],
+    record_dir: Path | None,
     slip0014: bool,
     script_gdb_file: str | Path | None,
     valgrind: bool,
@@ -312,10 +312,7 @@ def cli(
         )
 
     if record_dir:
-        assert emulator.client is not None
-        trezorlib.debuglink.record_screen(
-            emulator.client, record_dir, report_func=print
-        )
+        record_screen(emulator.transport, record_dir)
 
     if run_command:
         ret = run_command_with_emulator(emulator, command)
