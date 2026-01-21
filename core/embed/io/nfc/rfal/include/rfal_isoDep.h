@@ -17,7 +17,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -65,7 +65,8 @@
 
 /* If module is disabled remove the need for the user to set lengths */
 #if !RFAL_FEATURE_ISO_DEP
-    #undef RFAL_FEATURE_ISO_DEP_IBLOCK_MAX_LEN
+    /*  PRQA S 0847 2 # MISRA 20.5 - #undef used to ease user defined configuration and memory optimization */
+    #undef RFAL_FEATURE_ISO_DEP_IBLOCK_MAX_LEN           
     #undef RFAL_FEATURE_ISO_DEP_APDU_MAX_LEN
 
     #define RFAL_FEATURE_ISO_DEP_IBLOCK_MAX_LEN  (1U)    /*!< ISO-DEP I-Block max length, set to "none" */
@@ -154,6 +155,9 @@
 #define RFAL_ISODEP_ATS_T0_TC_PRESENCE_MASK     (0x40U)  /*!< Mask bit for TC presence                                          */
 #define RFAL_ISODEP_ATS_T0_FSCI_MASK            (0x0FU)  /*!< Mask bit for FSCI presence                                        */
 #define RFAL_ISODEP_ATS_T0_OFFSET               (0x01U)  /*!< Offset of T0 in ATS Response                                      */
+#define RFAL_ISODEP_ATS_TB_FWI_SHIFT            (4U)     /*!< ATS TB's FWI shift   Digital 2.0  14.6.2                          */
+#define RFAL_ISODEP_ATS_FWI_MASK                (0x0FU)  /*!< ATS TB's FWI mask    Digital 2.0  14.6.2                          */
+#define RFAL_ISODEP_ATS_SFGI_MASK               (0x0FU)  /*!< ATS TB's SFGI mask   Digital 2.0  14.6.2                          */
 
 
 #define RFAL_ISODEP_MAX_I_RETRYS                (2U)     /*!< Number of retries for a I-Block     Digital 2.0   16.2.5.4                  */
