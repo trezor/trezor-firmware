@@ -24,6 +24,7 @@ import sys
 import typing as t
 from contextlib import contextmanager
 from enum import Enum
+from pathlib import Path
 
 import click
 
@@ -151,11 +152,13 @@ class TrezorConnection:
         script: bool,
         *,
         app_name: str = "trezorctl",
+        record_dir: Path | None = None,
     ) -> None:
         self.path = path
         self.session_id = session_id
         self.passphrase_source = passphrase_source
         self.script = script
+        self.record_dir = record_dir
         self.credentials = credentials.CredentialStore(app_name)
         self.app = AppManifest(app_name=app_name, credentials=self.credentials.list)
         if self.script:
@@ -202,12 +205,24 @@ class TrezorConnection:
         assert self._transport is not None
         return self._transport
 
+    def _record_screen(self, start: bool) -> None:
+        """Helper wrapping `debug.record_screen()` to avoid circular import."""
+        from .debug import record_screen
+
+        if self.record_dir is None:
+            return
+
+        assert self._transport is not None
+        record_screen(self._transport, self.record_dir if start else None)
+
     def open(self) -> None:
         if self._transport is None:
             self._transport = self._get_transport()
             self._transport.open()
+            self._record_screen(True)
 
     def close(self) -> None:
+        self._record_screen(False)
         if self._transport is not None:
             self._transport.close()
         self._transport = None
