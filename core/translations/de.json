@@ -1229,7 +1229,6 @@
     "instructions__tap": "Tippen",
     "instructions__tap_to_confirm": "Zum Bestätigen tippen",
     "instructions__tap_to_continue": "Zum Fortfahren tippen",
-    "instructions__tap_to_start": "Zum Beginnen tippen",
     "instructions__view_all_data": "Alle Daten im Menü sehen.",
     "joint__title": {
       "Bolt": "Gemeins. Transakt.",
@@ -3211,6 +3210,7 @@
     "words__enabled": "Aktiviert",
     "words__error": "Fehler",
     "words__fee": "Gebühr",
+    "words__fee_limit": "Fee limit",
     "words__forget": "Vergessen",
     "words__from": "von",
     "words__good_to_know": "Gut zu wissen",
@@ -3229,6 +3229,7 @@
     "words__name": "Name",
     "words__no": "Nein",
     "words__not_recommended": "Nicht empfohlen!",
+    "words__note": "Note",
     "words__off": "AUS",
     "words__on": "EIN",
     "words__operation_cancelled": "Vorgang abgebrochen",
