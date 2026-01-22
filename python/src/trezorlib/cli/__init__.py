@@ -17,16 +17,21 @@
 from __future__ import annotations
 
 import functools
+import json
+import base64
 import logging
 import os
+import random
 import re
 import sys
 import typing as t
 from contextlib import contextmanager
+import dataclasses
 from enum import Enum
 from pathlib import Path
 
 import click
+from typing_extensions import Self
 
 from .. import exceptions, messages, protocol_v1, transport, ui
 from ..client import AppManifest, PassphraseSetting, Session, TrezorClient, get_client
@@ -138,6 +143,56 @@ def get_code_entry_code() -> str:
             raise exceptions.Cancelled from None
 
 
+@dataclasses.dataclass
+class SessionIdentifier:
+    path: str
+    sid: str
+    type: str
+
+    @classmethod
+    def from_session(cls, session: Session) -> Self:
+        path = session.client.transport.get_path()
+        if isinstance(session, protocol_v1.SessionV1):
+            if session.id is None:
+                raise click.ClickException("This Trezor session does not have an ID.")
+            return cls(path=path, sid=session.id.hex(), type="v1")
+        if isinstance(session, thp_client.ThpSession):
+            return cls(path=path, sid=str(session.id), type="thp")
+        raise ValueError(f"Unsupported session type: {type(session).__name__}")
+
+    @classmethod
+    def from_session_str(cls, session_str: str) -> Self:
+        session_str_decoded = base64.b64decode(session_str).decode()
+        LOG.info(f"Decoded session string: {session_str_decoded}")
+        dict = json.loads(session_str_decoded)
+        return cls(**dict)
+
+    def to_session_str(self) -> str:
+        session_str_plain = json.dumps(dataclasses.asdict(self))
+        LOG.info(f"Decoded ession string: {session_str_plain}")
+        return base64.b64encode(session_str_plain.encode()).decode()
+
+    def resume(self, client: TrezorClient) -> Session:
+        if self.type == "v1":
+            if not isinstance(client, protocol_v1.TrezorClientV1):
+                raise click.ClickException(
+                    f"Protocol mismatch: resuming a v1 session with a {type(client).__name__} client"
+                )
+            LOG.info(f"Resuming v1 session with id: {self.sid}")
+            return protocol_v1.SessionV1(client, id=bytes.fromhex(self.sid))
+        if self.type == "thp":
+            if not isinstance(client, thp_client.TrezorClientThp):
+                raise click.ClickException(
+                    f"Protocol mismatch: resuming a THP session with a {type(client).__name__} client"
+                )
+            LOG.info(f"Resuming THP session with id: {self.sid}")
+            return thp_client.ThpSession(client, id=int(self.sid))
+        raise ValueError(f"Unsupported session type: {self.type}")
+
+
+ENV_TREZOR_SESSION_ID = os.environ.get("TREZOR_SESSION_ID")
+
+
 class TrezorConnection:
     _client: TrezorClient | None = None
     _features: messages.Features | None = None
@@ -146,16 +201,35 @@ class TrezorConnection:
 
     def __init__(
         self,
-        path: str,
-        session_id: str | None,
-        passphrase_source: PassphraseSource,
-        script: bool,
         *,
+        session_str: str | None = None,
+        path: str | None = None,
+        passphrase_source: PassphraseSource = PassphraseSource.AUTO,
+        script: bool = False,
         app_name: str = "trezorctl",
         record_dir: Path | None = None,
     ) -> None:
-        self.path = path
-        self.session_id = session_id
+        self.session_str = session_str
+
+        if session_str is None:
+            self.session = None
+            self.path = path
+        else:
+            self.session = SessionIdentifier.from_session_str(session_str)
+            if path is not None and self.session.path != path:
+                click.echo("Attempting to resume a session on a different device.")
+                click.echo(
+                    "Hint: omit -p or unset TREZOR_PATH to use the appropriate device for this session."
+                )
+                if ENV_TREZOR_SESSION_ID == self.session_str:
+                    click.echo(
+                        "Hint: unset TREZOR_SESSION_ID to avoid resuming a session."
+                    )
+                raise click.ClickException(
+                    "Session path does not match the provided path"
+                )
+            self.path = self.session.path
+
         self.passphrase_source = passphrase_source
         self.script = script
         self.record_dir = record_dir
@@ -175,18 +249,20 @@ class TrezorConnection:
         Separate from `client.ensure_unlocked()` because we want to reuse the
         standard session.
         """
-        if not self.get_client().features.initialized:
-            # uninitialized device cannot be locked
-            return
-        # query the standard session instead
-        self.standard_session.ensure_unlocked()
+        with self.client_context() as client:
+            if not client.features.initialized:
+                # uninitialized device cannot be locked
+                return
+            # query the standard session instead
+            self.standard_session.ensure_unlocked()
 
     @property
     def standard_session(self) -> Session:
         if self._standard_session is None:
-            self._standard_session = self.get_client().get_session(
-                passphrase=PassphraseSetting.STANDARD_WALLET
-            )
+            with self.client_context() as client:
+                self._standard_session = client.get_session(
+                    passphrase=PassphraseSetting.STANDARD_WALLET
+                )
         # seems to be a weird typechecker limitation that it still thinks that
         # session could be None here
         return self._standard_session  # type: ignore ["None" is not assignable]
@@ -195,8 +271,16 @@ class TrezorConnection:
     def features(self) -> messages.Features:
         if self._features is None:
             self.ensure_unlocked()
-            self._features = self.get_client().features
+            assert self._client is not None  # after ensure_unlocked
+            self._features = self._client.features
         return self._features
+
+    @property
+    def version(self) -> tuple[int, int, int]:
+        if self._version is None:
+            with self.client_context() as client:
+                self._version = client.version
+        return self._version
 
     @property
     def transport(self) -> Transport:
@@ -230,68 +314,108 @@ class TrezorConnection:
         self._features = None
         self._standard_session = None
 
-    def get_session(
-        self,
-        use_passphrase: bool = True,
-        seedless: bool = False,
-        derive_cardano: bool = False,
-    ) -> Session:
-        client = self.get_client()
+    def _passphrase_source_resolved(self) -> PassphraseSource:
+        """Resolve PassphraseSource.AUTO to a concrete PassphraseSource.
+
+        Assumes that `self.features` is already populated.
+
+        Returns:
+        * `self.passphrase_source` if it is not `PassphraseSource.AUTO`
+        * `PassphraseSource.EMPTY` if passphrase protection is disabled
+        * `PassphraseSource.DEVICE` if passphrase entry is supported
+        * `PassphraseSource.PROMPT` otherwise
+        """
         if (
             not self.features.passphrase_protection
             and not self.passphrase_source.ok_if_disabled()
         ):
             raise click.ClickException("Passphrase protection is not enabled")
 
-        passphrase_source = self.passphrase_source
-        if passphrase_source == PassphraseSource.AUTO:
-            if not self.features.passphrase_protection:
-                passphrase_source = PassphraseSource.EMPTY
-            elif messages.Capability.PassphraseEntry in self.features.capabilities:
-                passphrase_source = PassphraseSource.DEVICE
-            else:
-                passphrase_source = PassphraseSource.PROMPT
+        if self.passphrase_source != PassphraseSource.AUTO:
+            return self.passphrase_source
+        if not self.features.passphrase_protection:
+            return PassphraseSource.EMPTY
+        if messages.Capability.PassphraseEntry in self.features.capabilities:
+            return PassphraseSource.DEVICE
+        return PassphraseSource.PROMPT
 
+    def get_session(
+        self,
+        use_passphrase: bool = True,
+        seedless: bool = False,
+        derive_cardano: bool = False,
+    ) -> Session:
+        """Get a session from this connection.
+
+        Arguments:
+        - use_passphrase: if True, user should get a passphrase prompt
+          (either on host or on device)
+        - seedless: if True, create a session without a derived seed
+        - derive_cardano: whether to derive a Cardano session
+        """
+        client = self.get_client()
+
+        # seedless sessions are never resumed
         if seedless:
             return client.get_session(passphrase=None)
-        # if empty passphrase is requested, do not try to resume and instead
-        # create a new session
+
+        passphrase_source = self._passphrase_source_resolved()
+
+        # if empty passphrase is requested, do not try to resume and just use
+        # the standard session that we already have
         if not use_passphrase or passphrase_source == PassphraseSource.EMPTY:
             return self.standard_session
 
         # Try resume session from id
-        if self.session_id is not None:
+        if self.session is not None:
             try:
-                if isinstance(client, protocol_v1.TrezorClientV1):
-                    session = protocol_v1.SessionV1(
-                        client, id=bytes.fromhex(self.session_id)
-                    )
-                    session.initialize()
-                elif isinstance(client, thp_client.TrezorClientThp):
-                    session = thp_client.ThpSession(client, id=int(self.session_id))
-                    # TODO what here?
-                else:
-                    raise click.ClickException(
-                        f"Unsupported client type: {type(client).__name__}"
-                    )
+                return self.session.resume(client)
             except exceptions.InvalidSessionError:
                 LOG.error("Failed to resume session", exc_info=True)
-                env_var = os.environ.get("TREZOR_SESSION_ID")
-                if env_var != self.session_id:
-                    click.echo(
-                        "Session-id stored in TREZOR_SESSION_ID is no longer valid. Call\n"
-                        "  unset TREZOR_SESSION_ID\n"
-                        "to clear it."
-                    )
                 raise
-            else:
-                return session
 
+        # if all else fails, allocate a new session
+        return self.get_new_session(derive_cardano=derive_cardano)
+
+    def get_new_session(
+        self, derive_cardano: bool = False, randomize_id: bool = False
+    ) -> Session:
+        """Allocate a new session.
+
+        By default, every THP session is counted from 1 based on
+        `client._session_id_counter`. If `randomize_id` is True, the returned
+        session will instead pick a random ID between 128 and 255, avoiding the
+        id that is currently set on `self.session`. This should match what the user
+        expects from `trezorctl get-session`.
+        """
+        client = self.get_client()
+        if randomize_id and isinstance(client, thp_client.TrezorClientThp):
+            if self.session is None:
+                session_id = 1
+            else:
+                session_id = int(self.session.sid)
+            random_value = session_id
+            while random_value == session_id:
+                random_value = random.randint(128, 255)
+            client._session_id_counter = random_value - 1
+
+        passphrase_source = self._passphrase_source_resolved()
+        if passphrase_source == PassphraseSource.EMPTY:
+            return client.get_session(
+                passphrase=PassphraseSetting.STANDARD_WALLET,
+                derive_cardano=derive_cardano,
+            )
         if passphrase_source == PassphraseSource.PROMPT:
             passphrase = get_passphrase()
-            return client.get_session(passphrase=passphrase)
+            return client.get_session(
+                passphrase=passphrase,
+                derive_cardano=derive_cardano,
+            )
         if passphrase_source == PassphraseSource.DEVICE:
-            return client.get_session(passphrase=PassphraseSetting.ON_DEVICE)
+            return client.get_session(
+                passphrase=PassphraseSetting.ON_DEVICE,
+                derive_cardano=derive_cardano,
+            )
         raise NotImplementedError(
             f"Passphrase source {self.passphrase_source} not implemented"
         )
@@ -305,8 +429,15 @@ class TrezorConnection:
             pass
 
         # look for transport with prefix search
-        # if this fails, we want the exception to bubble up to the caller
-        return transport.get_transport(self.path, prefix_search=True)
+        try:
+            return transport.get_transport(self.path, prefix_search=True)
+        except Exception:
+            if self.path:
+                raise click.ClickException(
+                    f"Could not find device by path: {self.path}"
+                )
+            else:
+                raise click.ClickException("No Trezor device found")
 
     def _get_client(self) -> TrezorClient:
         client = get_client(self.app, self.transport)
@@ -334,6 +465,8 @@ class TrezorConnection:
     ) -> t.Generator[R, None, None]:
         try:
             conn = connect_fn(*args, **kwargs)
+        except click.ClickException as e:
+            raise
         except Exception as e:
             self._print_exception(e, "Failed to connect")
             sys.exit(1)
@@ -344,6 +477,16 @@ class TrezorConnection:
             # handle cancel action
             click.echo("Action was cancelled.")
             sys.exit(1)
+        except exceptions.InvalidSessionError as e:
+            if ENV_TREZOR_SESSION_ID == self.session_str:
+                click.echo(
+                    "Session-id stored in TREZOR_SESSION_ID is no longer valid. Call\n"
+                    "  unset TREZOR_SESSION_ID\n"
+                    "to clear it."
+                )
+            raise click.ClickException(
+                f"Invalid session: {self.session_str or e.session_id}"
+            ) from e
         except exceptions.TrezorException as e:
             # handle any Trezor-sent exceptions as user-readable
             raise click.ClickException(str(e)) from e
@@ -434,7 +577,7 @@ def with_session(
                     return func(session, *args, **kwargs)
 
                 finally:
-                    if obj.session_id is None and not session.features.bootloader_mode:
+                    if obj.session is None and not session.features.bootloader_mode:
                         session.close()
 
         return function_with_session
