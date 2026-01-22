@@ -6,7 +6,7 @@ from trezor import TR
 from trezor.crypto import hmac, slip39
 from trezor.enums import BackupType, MessageType
 from trezor.ui.layouts import confirm_action
-from trezor.wire import ProcessError
+from trezor.wire import ProcessError, context
 
 from apps.common import backup_types
 
@@ -125,7 +125,9 @@ async def reset_device(msg: ResetDevice) -> Success:
 
     # generate and display backup information for the master secret
     if perform_backup:
-        await backup_seed(backup_type, secret)
+        with context.ignore_host():
+            # Avoid failing the backup due to host communication.
+            await backup_seed(backup_type, secret)
 
     # write settings and master secret into storage
     if msg.label is not None:

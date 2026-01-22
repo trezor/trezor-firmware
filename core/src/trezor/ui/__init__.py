@@ -211,6 +211,12 @@ class Layout(Generic[T]):
 
         # save context
         self.context = context.CURRENT_CONTEXT
+        if self.context is not None:
+            # ensure that communication issues and host-side cancellation will not stop the workflow (#6348):
+            # - ButtonRequests are skipped.
+            # - Unexpected messages are ignored.
+            # - THP stale channel preemption is disabled
+            self.ignore_host = self.context.ignore_host
 
         # attach a timer callback and paint self
         self._event(self.layout.attach_timer_fn, self._set_timer, transition_in)
@@ -480,22 +486,37 @@ class Layout(Generic[T]):
             while True:
                 # The following task will raise `UnexpectedMessageException` on any message.
                 unexpected_read = self.context.read(())
-                result = await loop.race(unexpected_read, self.button_request_box)
+                try:
+                    result = await loop.race(unexpected_read, self.button_request_box)
+                except context.UnexpectedMessageException as e:
+                    # handles THP ChannelPreemptedException as well
+                    if self.ignore_host:
+                        if __debug__:
+                            log.warning(
+                                __name__, "Ignoring host: %s", e.__class__.__name__
+                            )
+                        continue
+                    raise
+
                 if result is None:
                     return  # exit the loop when the layout is done.
                 assert isinstance(result, tuple)
                 br_code, br_name = result
 
-                if __debug__:
-                    log.info(__name__, "ButtonRequest sent: %s", br_name)
-                await self.context.call(
-                    ButtonRequest(
-                        code=br_code, pages=self.layout.page_count(), name=br_name
-                    ),
-                    ButtonAck,
-                )
-                if __debug__:
-                    log.info(__name__, "ButtonRequest acked: %s", br_name)
+                if self.ignore_host:
+                    if __debug__:
+                        log.debug(__name__, "ButtonRequest ignored: %s", br_name)
+                else:
+                    if __debug__:
+                        log.info(__name__, "ButtonRequest sent: %s", br_name)
+                    await self.context.call(
+                        ButtonRequest(
+                            code=br_code, pages=self.layout.page_count(), name=br_name
+                        ),
+                        ButtonAck,
+                    )
+                    if __debug__:
+                        log.info(__name__, "ButtonRequest acked: %s", br_name)
 
                 if (
                     self.button_request_ack_pending

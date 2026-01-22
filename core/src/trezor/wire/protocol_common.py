@@ -50,6 +50,9 @@ class Context:
         if channel_id is not None:
             self.channel_id = channel_id
 
+        # Some workflows must not fail due to communication issues - see `ui.Layout.start()` and #6348.
+        self.ignore_host: bool = False
+
     if TYPE_CHECKING:
 
         @overload

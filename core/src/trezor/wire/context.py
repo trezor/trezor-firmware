@@ -129,6 +129,18 @@ def with_context(ctx: Context, workflow: loop.Task) -> Generator:
             send_exc = None
 
 
+class ignore_host:
+    """Some workflows must not fail due to communication issues - see `ui.Layout.start()` and #6348."""
+
+    def __enter__(self) -> None:
+        if CURRENT_CONTEXT is not None:
+            CURRENT_CONTEXT.ignore_host = True
+
+    def __exit__(self, exc_type: Any, _exc_value: Any, _tb: Any) -> None:
+        if CURRENT_CONTEXT is not None:
+            CURRENT_CONTEXT.ignore_host = False
+
+
 def try_get_ctx_ids() -> tuple[AnyBytes, AnyBytes] | None:
     ids = None
     if utils.USE_THP:
