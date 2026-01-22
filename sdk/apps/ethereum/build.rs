@@ -3,12 +3,8 @@ fn main() {
     config
         .compile_protos(
             &[
-                // "../../../common/protob/messages.proto",
                 "../../../common/protob/messages-common.proto",
-                // "../../../common/protob/messages-management.proto",
                 "../../../common/protob/messages-ethereum.proto",
-                // "../../../common/protob/messages-bitcoin.proto",
-                // "../../../common/protob/messages-ethereum-eip712.proto",
             ],
             &["../../../common/protob/"],
         )

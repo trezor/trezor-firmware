@@ -1,7 +1,5 @@
 extern crate alloc;
 
-use alloc::vec::Vec;
-
 use ufmt::derive::uDebug;
 
 use crate::low_level_api;
@@ -71,5 +69,3 @@ impl<'a> AsRef<str> for SliceWriter<'a> {
         unsafe { core::str::from_utf8_unchecked(&self.slice[..self.pos]) }
     }
 }
-
-struct DerivationPath([u32; 8]);
