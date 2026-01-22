@@ -34,7 +34,7 @@ use crate::{
     util::interpolate,
 };
 
-use trezor_structs::{ArchivedShortString, ArchivedTrezorUiEnum};
+use trezor_structs::{ArchivedStringN, ArchivedTrezorUiEnum};
 
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
@@ -1741,7 +1741,7 @@ impl FirmwareUI for UIEckhart {
 
     fn process_ipc_message(data: &[u8]) -> Result<Gc<LayoutObj>, Error> {
         // Safe helper to convert archived string to TString using Deref
-        fn tstr_from_archived(s: &ArchivedShortString) -> TString<'static> {
+        fn tstr_from_archived<const N: usize>(s: &ArchivedStringN<N>) -> TString<'static> {
             unsafe { StrBuffer::from_ptr_and_len(s.data.as_ptr(), s.len as usize) }.into()
         }
 
@@ -1834,7 +1834,7 @@ impl FirmwareUI for UIEckhart {
                     "account".into(),
                     None,
                     None,
-                    0,
+                    1,
                     "br_name".into(),
                 )?;
 

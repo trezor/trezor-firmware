@@ -2,21 +2,58 @@
 
 use rkyv::{Archive, Deserialize, Serialize};
 
-/// Unified-length String type, long enough for most simple use-cases.
-/// Stores the string as a fixed-size byte array with length for rkyv serialization.
+/// Fixed-capacity UTF-8 string for `no_std`, serialized as `[u8; N] + len`.
 #[derive(Archive, Serialize, Deserialize, Copy, Clone)]
-pub struct ShortString {
-    pub data: [u8; 50],
+pub struct String<const N: usize> {
+    pub data: [u8; N],
     pub len: u8,
 }
 
-impl AsRef<str> for ShortString {
+pub type ShortString = String<50>;
+pub type LongString = String<150>;
+
+pub type ArchivedStringN<const N: usize> = rkyv::Archived<String<N>>;
+pub type ArchivedShortString = rkyv::Archived<String<50>>;
+pub type ArchivedLongString = rkyv::Archived<String<150>>;
+
+impl<const N: usize> String<N> {
+    pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
+        if N > (u8::MAX as usize) || slice.len() > N {
+            return Err(());
+        }
+        let mut data = [0u8; N];
+        data[..slice.len()].copy_from_slice(slice);
+        Ok(Self {
+            data,
+            len: slice.len() as u8,
+        })
+    }
+
+    pub fn from_str(s: &str) -> core::result::Result<Self, ()> {
+        Self::from_slice(s.as_bytes())
+    }
+
+    pub fn as_str(&self) -> &str {
+        core::str::from_utf8(&self.data[..self.len as usize]).unwrap_or("")
+    }
+}
+
+impl<const N: usize> AsRef<str> for String<N> {
     fn as_ref(&self) -> &str {
         core::str::from_utf8(&self.data[..self.len as usize]).unwrap_or("#INVALID#")
     }
 }
 
-pub type Prop = (ShortString, ShortString);
+impl<const N: usize> Default for String<N> {
+    fn default() -> Self {
+        Self {
+            data: [0u8; N],
+            len: 0,
+        }
+    }
+}
+
+type Prop = (ShortString, ShortString);
 
 #[derive(Archive, Serialize)]
 pub struct PropsList {
@@ -46,12 +83,18 @@ impl PropsList {
     }
 }
 
-impl ShortString {
-    pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
-        if slice.len() > 50 {
+#[derive(Archive, Serialize)]
+pub struct DerivationPath {
+    pub data: [u32; 8],
+    pub len: u8,
+}
+
+impl DerivationPath {
+    pub fn from_slice(slice: &[u32]) -> core::result::Result<Self, ()> {
+        if slice.len() > 8 {
             return Err(());
         }
-        let mut data = [0u8; 50];
+        let mut data = [0u32; 8];
         data[..slice.len()].copy_from_slice(slice);
         Ok(Self {
             data,
@@ -59,27 +102,15 @@ impl ShortString {
         })
     }
 
-    pub fn from_str(s: &str) -> core::result::Result<Self, ()> {
-        if s.len() > 50 {
-            return Err(());
-        }
-        let mut data = [0u8; 50];
-        data[..s.len()].copy_from_slice(s.as_bytes());
-        Ok(Self {
-            data,
-            len: s.len() as u8,
-        })
-    }
-
-    pub fn as_str(&self) -> &str {
-        core::str::from_utf8(&self.data[..self.len as usize]).unwrap_or("")
+    pub fn as_slice(&self) -> &[u32] {
+        &self.data[..self.len as usize]
     }
 }
 
-impl Default for ShortString {
+impl Default for DerivationPath {
     fn default() -> Self {
         Self {
-            data: [0u8; 50],
+            data: [0u32; 8],
             len: 0,
         }
     }
@@ -114,7 +145,7 @@ pub enum TrezorUiEnum {
         props: PropsList,
     },
     ShowPublicKey {
-        key: ShortString,
+        key: LongString,
     },
 }
 
@@ -133,8 +164,7 @@ pub enum TrezorUiResult {
 #[derive(Archive, Serialize)]
 pub enum TrezorCryptoEnum {
     GetXpub {
-        title: ShortString,
-        content: ShortString,
+        address_n: DerivationPath,
     },
     SignHash {
         title: ShortString,
@@ -148,6 +178,6 @@ pub enum TrezorCryptoResult {
     None,
     Confirmed,
     Cancelled,
-    Xpub(ShortString),
+    Xpub(LongString),
     Signature([u8; 64]),
 }

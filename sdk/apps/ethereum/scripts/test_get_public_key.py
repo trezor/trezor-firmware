@@ -14,14 +14,52 @@ from pathlib import Path
 from trezorlib.client import get_default_client
 from trezorlib import messages, protobuf, extapp
 
+HARDENED = 0x80000000
+
+
+def parse_derivation_path(path: str) -> list[int]:
+    path = path.strip()
+    if not path:
+        raise ValueError("empty derivation path")
+
+    parts = path.split("/")
+    if parts and parts[0].lower() == "m":
+        parts = parts[1:]
+
+    out: list[int] = []
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        hardened = part.endswith("'")
+        if hardened:
+            part = part[:-1]
+        if not part.isdigit():
+            raise ValueError(f"invalid path component: {part!r}")
+        idx = int(part, 10)
+        if idx < 0 or idx >= HARDENED:
+            raise ValueError(f"invalid index (must be < 2^31): {idx}")
+        out.append(idx | (HARDENED if hardened else 0))
+    return out
+
+
+def format_address_n_hex(address_n: list[int]) -> str:
+    return "[" + ", ".join(f"0x{x:08x}" for x in address_n) + "]"
+
 
 def main():
     client = get_default_client()
 
+    derivation_path = "m/44'/60'/0'"
+    print(f"Derivation path: {derivation_path}")
+
+    address_n = parse_derivation_path(derivation_path)
+    print(f"Address_n: {format_address_n_hex(address_n)}")
+
     # Create the GetPublicKey request
     request = messages.EthereumGetPublicKey(
-        address_n=[0x8000002C, 0x80000000, 0x80000000],  # m/44'/60'/0' (Ethereum)
-        show_display=False,
+        address_n=address_n,
+        show_display=True,
     )
 
     # Serialize to bytes
@@ -38,7 +76,7 @@ def main():
     #app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "release" / "ethereum_rust.min"
     print(f"\nLoading app from: {app_path}")
 
-    session = client.get_seedless_session()
+    session = client.get_session()
     instance_id = extapp.load(session, app_path.read_bytes())
 
     request = messages.ExtAppMessage(
