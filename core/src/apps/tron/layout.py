@@ -7,11 +7,8 @@ from trezor import TR, strings
 from .helpers import get_encoded_address
 
 if TYPE_CHECKING:
-    from trezor.messages import (
-        EthereumTokenInfo,
-        TronTransferContract,
-        TronTriggerSmartContract,
-    )
+
+    from trezor.messages import TronTransferContract, TronTriggerSmartContract
 
 
 def format_trx_amount(amount: int) -> str:
@@ -21,8 +18,8 @@ def format_trx_amount(amount: int) -> str:
     return f"{strings.format_amount(amount, _TRX_AMOUNT_DECIMALS)} TRX"
 
 
-def format_token_amount(amount: int, token: EthereumTokenInfo) -> str:
-    return f"{strings.format_amount(amount, token.decimals)} {token.symbol}"
+def format_token_amount(amount: int, token_decimals: int, token_symbol: str) -> str:
+    return f"{strings.format_amount(amount, token_decimals)} {token_symbol}"
 
 
 def format_energy_amount(amount: int) -> str:
@@ -76,13 +73,17 @@ async def confirm_unknown_smart_contract(
 
 
 async def confirm_known_trc20_smart_contract(
-    recipient_addr: bytes, amount: int, fee_limit: int, token: EthereumTokenInfo
+    recipient_addr: bytes,
+    amount: int,
+    fee_limit: int,
+    token_decimals: int,
+    token_symbol: str,
 ) -> None:
     from trezor.ui.layouts import confirm_tron_approve
 
     await confirm_tron_approve(
         recipient_addr=get_encoded_address(recipient_addr),
-        total_amount=format_token_amount(amount, token),
+        total_amount=format_token_amount(amount, token_decimals, token_symbol),
         maximum_fee=format_energy_amount(fee_limit),
         chunkify=True,
     )
