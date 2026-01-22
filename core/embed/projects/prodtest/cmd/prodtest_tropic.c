@@ -1775,6 +1775,238 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static bool privileged_session_start(cli_t* cli) {
+  g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+
+  if (tropic_custom_session_start(cli, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
+      LT_OK) {
+    return true;
+  }
+
+  if (tropic_custom_session_start(cli, TROPIC_FACTORY_PAIRING_KEY_SLOT) ==
+      LT_OK) {
+    return true;
+  }
+
+  return false;
+}
+
+static lt_ret_t tropic_erase_all_slots_internal(cli_t* cli,
+                                                lt_handle_t* tropic_handle) {
+  cli_trace(cli, "Erasing all ECC key slots, data slots and MAC&Destroy slots");
+
+  lt_ret_t ret = LT_OK;
+
+  // Erase all 32 ECC key slots
+  for (lt_ecc_slot_t slot = TR01_ECC_SLOT_0; slot <= TR01_ECC_SLOT_31; slot++) {
+    ret = lt_ecc_key_erase_retry(tropic_handle, slot);
+    if (ret != LT_OK) {
+      cli_trace(cli, "ECC slot %2d: Erase failed (error %s)", slot,
+                lt_ret_verbose(ret));
+      return ret;
+    }
+  }
+
+  // Erase all 512 R_MEM data slots
+  for (uint16_t slot = 0; slot <= TR01_R_MEM_DATA_SLOT_MAX; slot++) {
+    ret = lt_r_mem_data_erase_retry(tropic_handle, slot);
+    if (ret != LT_OK) {
+      cli_trace(cli, "Data slot %3d: Erase failed (error %s)", slot,
+                lt_ret_verbose(ret));
+      return ret;
+    }
+  }
+
+  // Destroy all 128 MAC and destroy slots by triggering self-destruct
+  // Dummy data to trigger MAC computation
+  uint8_t dummy_data[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+  // Output buffer for MAC result
+  uint8_t mac_output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+  for (lt_mac_and_destroy_slot_t slot = 0;
+       slot <= TR01_MAC_AND_DESTROY_SLOT_127; slot++) {
+    ret = lt_mac_and_destroy_retry(tropic_handle, slot, dummy_data, mac_output);
+    if (ret != LT_OK) {
+      cli_trace(cli, "M&D slot %3d: Destroy failed (error %s)", slot,
+                lt_ret_verbose(ret));
+      return ret;
+    }
+  }
+
+  cli_trace(cli, "All cryptographic data erased successfully");
+  return LT_OK;
+}
+
+static void prodtest_tropic_erase_all_slots(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (!privileged_session_start(cli)) {
+    cli_error(cli, CLI_ERROR, "`privileged_session_start()` failed.");
+    return;
+  }
+
+  lt_handle_t* tropic_handle = tropic_get_handle();
+
+  lt_ret_t ret = tropic_erase_all_slots_internal(cli, tropic_handle);
+  if (ret == LT_OK) {
+    cli_ok(cli, "");
+  } else {
+    cli_error(cli, CLI_ERROR, "Erase operation failed");
+  }
+}
+
+static void prodtest_tropic_set_sensors(cli_t* cli) {
+  if (cli_arg_count(cli) != 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint8_t input[4] = {0};
+  size_t input_length = 0;
+  if (!cli_arg_hex(cli, "hex-data", input, sizeof(input), &input_length)) {
+    if (input_length == sizeof(input)) {
+      cli_error(cli, CLI_ERROR, "Input too long.");
+    } else {
+      cli_error(cli, CLI_ERROR, "Hexadecimal decoding error.");
+    }
+    return;
+  }
+
+  if (input_length != sizeof(input)) {
+    cli_error(cli, CLI_ERROR, "Expected 4 bytes (8 hex digits) for uint32.");
+    return;
+  }
+
+  uint32_t new_sensors_config =
+      ((uint32_t)input[0] << 24) | ((uint32_t)input[1] << 16) |
+      ((uint32_t)input[2] << 8) | ((uint32_t)input[3]);
+
+  if (!privileged_session_start(cli)) {
+    cli_error(cli, CLI_ERROR, "`privileged_session_start()` failed.");
+    return;
+  }
+
+  lt_handle_t* tropic_handle = tropic_get_handle();
+
+  lt_ret_t ret = tropic_erase_all_slots_internal(cli, tropic_handle);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "Erase operation failed");
+    return;
+  }
+
+  struct lt_config_t configuration = {0};
+  ret = lt_read_whole_R_config_retry(tropic_handle, &configuration);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_read_whole_R_config()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  // Update sensors in the configuration
+  configuration.obj[TR01_CFG_SENSORS_IDX] = new_sensors_config;
+
+  ret = lt_erase_and_write_R_config_retry(tropic_handle, &configuration);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR,
+              "`lt_erase_and_write_R_config_retry()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  // Verify the write
+  struct lt_config_t verify_configuration = {0};
+  ret = lt_read_whole_R_config_retry(tropic_handle, &verify_configuration);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR,
+              "`lt_r_config_read()` verification failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  if (memcmp(&configuration, &verify_configuration,
+             sizeof(verify_configuration)) != 0) {
+    cli_error(cli, CLI_ERROR, "Configuration was not written correctly.");
+    return;
+  }
+
+  cli_ok(cli, "");
+}
+
+static void prodtest_tropic_read_sensors(cli_t* cli) {
+  if (cli_arg_count(cli) != 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  lt_handle_t* tropic_handle = tropic_get_handle();
+
+  if (!privileged_session_start(cli)) {
+    cli_error(cli, CLI_ERROR, "`privileged_session_start()` failed.");
+    return;
+  }
+
+  // Read current configuration
+  uint32_t sensors_config = 0;
+  lt_ret_t ret =
+      lt_r_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_r_config_read()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  cli_ok(cli, "0x%08X", sensors_config);
+}
+
+static void prodtest_tropic_read_configs(cli_t* cli) {
+  if (cli_arg_count(cli) != 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  lt_handle_t* tropic_handle = tropic_get_handle();
+
+  if (!privileged_session_start(cli)) {
+    cli_error(cli, CLI_ERROR, "`privileged_session_start()` failed.");
+    return;
+  }
+
+  // read reversible configuration
+  struct lt_config_t r_config = {0};
+  lt_ret_t ret = lt_read_whole_R_config_retry(tropic_handle, &r_config);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_read_whole_R_config()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  cli_trace(cli, "=== Reversible Configuration ===");
+  for (size_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
+    cli_trace(cli, "  R_config.obj[%zu]: 0x%08X  (addr: 0x%02zX)", i,
+              r_config.obj[i], i * 0x08);
+  }
+
+  // read irreversible configuration
+  struct lt_config_t i_config = {0};
+  ret = lt_read_whole_I_config(tropic_handle, &i_config);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "`lt_read_whole_I_config()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  cli_trace(cli, "");
+  cli_trace(cli, "=== Irreversible Configuration ===");
+  for (size_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
+    cli_trace(cli, "  I_config.obj[%zu]: 0x%08X  (addr: 0x%02zX)", i,
+              i_config.obj[i], i * 0x08);
+  }
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -1903,4 +2135,33 @@ PRODTEST_CLI_CMD(
   .args = "[<start-session-iterations> <mac-and-destroy-slot-count> <mac-and-destroy-per-slot-iterations> <signing-iterations>]"
 );
 
-#endif
+PRODTEST_CLI_CMD(
+  .name = "tropic-set-sensors",
+  .func = prodtest_tropic_set_sensors,
+  .info = "Set the reversible configuration of the sensors in Tropic",
+  .args = "<hex-data>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-read-sensors",
+  .func = prodtest_tropic_read_sensors,
+  .info = "Read the current sensor reversible configuration from Tropic",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-read-configs",
+  .func = prodtest_tropic_read_configs,
+  .info = "Read whole I_config and R_config.",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-erase-all-slots",
+  .func = prodtest_tropic_erase_all_slots,
+  .info = "Erase all ECC keys, data slots and Mac&Destroy slots. Keeps pairing keys intact.",
+  .args = ""
+);
+
+
+#endif // USE_TROPIC
