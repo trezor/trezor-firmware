@@ -617,7 +617,11 @@ def get_default_client(
     if not client.pairing.is_paired():
         from .thp.pairing import default_pairing_flow
 
-        default_pairing_flow(client.pairing, code_entry_callback=code_entry_callback)
+        default_pairing_flow(
+            client.pairing,
+            code_entry_callback=code_entry_callback,
+            request_credential=False,
+        )
     return client
 
 
