@@ -24,6 +24,7 @@ import json
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Any, Callable, Optional, TypeVar, cast
 
 import click
@@ -59,6 +60,8 @@ from . import (
     tezos,
     tron,
     with_client,
+    ENV_TREZOR_SESSION_ID,
+    SessionIdentifier,
 )
 
 F = TypeVar("F", bound=Callable)
@@ -196,27 +199,29 @@ def configure_logging(verbose: int) -> None:
 @click.option(
     "-s",
     "--session-id",
-    metavar="HEX",
-    help="Resume given session ID.",
-    default=os.environ.get("TREZOR_SESSION_ID"),
+    "session_str",
+    metavar="DATA",
+    help="Resume given session.",
+    default=ENV_TREZOR_SESSION_ID,
 )
 @click.option(
     "-r",
     "--record",
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
     help="Record screen changes into a specified directory.",
 )
 @click.version_option(package_name="trezor")
 @click.pass_context
 def cli_main(
     ctx: click.Context,
-    path: str,
+    path: str | None,
     ble: bool | None,
     verbose: int,
     is_json: bool,
     passphrase_on_host: bool,
     script: bool,
-    session_id: Optional[str],
-    record: Optional[str],
+    session_str: str | None,
+    record: Path | None,
 ) -> None:
     configure_logging(verbose)
 
@@ -231,13 +236,15 @@ def cli_main(
     else:
         passphrase_source = PassphraseSource.AUTO
 
-    ctx.obj = TrezorConnection(path, session_id, passphrase_source, script)
-    ctx.obj.open()
+    ctx.obj = TrezorConnection(
+        path=path,
+        session_str=session_str,
+        passphrase_source=passphrase_source,
+        script=script,
+        record_dir=record,
+    )
+    #ctx.obj.open()
     atexit.register(ctx.obj.close)
-
-    # Optionally record the screen into a specified directory.
-    if record:
-        debug.record_screen_from_connection(ctx.obj, record)
 
 
 # Creating a cli function that has the right types for future usage
@@ -270,19 +277,6 @@ def print_result(res: Any, is_json: bool, script: bool, **kwargs: Any) -> None:
             click.echo(protobuf.format_message(res))
         elif res is not None:
             click.echo(res)
-
-
-@cli.set_result_callback()
-@click.pass_obj
-def stop_recording_action(obj: TrezorConnection, *args: Any, **kwargs: Any) -> None:
-    """Stop recording screen changes when the recording was started by `cli_main`.
-
-    (When user used the `-r / --record` option of `trezorctl` command.)
-
-    It allows for isolating screen directories only for specific actions/commands.
-    """
-    if kwargs.get("record"):
-        debug.record_screen_from_connection(obj, None)
 
 
 def format_device_name(features: messages.Features) -> str:
@@ -357,21 +351,13 @@ def get_session(obj: TrezorConnection, derive_cardano: bool = False) -> str:
     `trezorctl -s SESSION_ID`, or set it to an environment variable `TREZOR_SESSION_ID`,
     to avoid having to enter passphrase for subsequent commands.
     """
-    # make sure session is not resumed
-    obj.session_id = None
+    if obj.features.bootloader_mode:
+        raise click.ClickException("Bootloader mode does not support sessions.")
+    if obj.features.model == "1" and obj.version < (1, 9, 0):
+        raise click.ClickException("Upgrade your firmware to enable session support.")
 
-    with obj.client_context() as client:
-        if client.features.model == "1" and client.version < (1, 9, 0):
-            raise click.ClickException(
-                "Upgrade your firmware to enable session support."
-            )
-
-        session = client.get_session(derive_cardano=derive_cardano)
-        if session.id is None:
-            raise click.ClickException("Passphrase not enabled or firmware too old.")
-        else:
-            # TODO
-            return session.id.hex()
+    session = obj.get_new_session(derive_cardano=derive_cardano, randomize_id=True)
+    return SessionIdentifier.from_session(session).to_session_str()
 
 
 @cli.command()
@@ -384,13 +370,14 @@ def clear_session(obj: TrezorConnection) -> None:
 
     Additionally, locks the device with PIN, if configured.
     """
-    if obj.session_id is not None:
+    if obj.session is not None:
         try:
             session = obj.get_session()
             session.close()
         except Exception:
             LOG.debug("Failed to clear session.", exc_info=True)
-    obj.get_client().lock()
+    with obj.client_context() as client:
+        client.lock()
 
 
 @cli.command()

@@ -129,7 +129,7 @@ class TrezorClientThp(client.TrezorClient[ThpSession]):
             return ThpSession(self, 0)
 
         self._session_id_counter += 1
-        if self._session_id_counter >= 0xFF:
+        if self._session_id_counter > 0xFF:
             self._session_id_counter = 1
         session = ThpSession(self, self._session_id_counter)
         session.derive(passphrase, derive_cardano)

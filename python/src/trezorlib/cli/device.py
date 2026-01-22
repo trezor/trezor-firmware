@@ -480,3 +480,32 @@ def authenticate(
 def serial_number(session: "Session") -> str:
     """Get serial number."""
     return device.get_serial_number(session)
+
+
+@cli.command()
+@click.option("--all", is_flag=True, help="Forget all devices.")
+@click.pass_obj
+def forget(obj: "TrezorConnection", all: bool) -> None:
+    """Forget a THP pairing key.
+
+    Forgets the THP pairing key for the currently connected device.
+    Specify --all to forget all keys for all remembered Trezors.
+    """
+    from ..thp.client import TrezorClientThp
+    from ..client import get_client
+
+    if all:
+        obj.credentials.clear()
+        return
+
+    client = get_client(obj.app, obj.transport)
+    if not isinstance(client, TrezorClientThp):
+        LOG.warning("Connected device is not a THP device, nothing to forget.")
+        return
+
+    if not client.pairing.is_paired():
+        LOG.warning("Device is not paired, nothing to forget.")
+        return
+
+    assert client.channel.trezor_public_keys is not None
+    obj.credentials.delete(client.channel.trezor_public_keys)

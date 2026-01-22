@@ -360,6 +360,24 @@ class Nfc(PairingMethod):
         self.controller.set_paired()
 
 
+@t.overload
+def default_pairing_flow(
+    pairing: PairingController,
+    *,
+    code_entry_callback: t.Callable[[], str] | None = None,
+    request_credential: t.Literal[True] = True,
+) -> Credential: ...
+
+
+@t.overload
+def default_pairing_flow(
+    pairing: PairingController,
+    *,
+    request_credential: t.Literal[False],
+    code_entry_callback: t.Callable[[], str] | None = None,
+) -> None: ...
+
+
 def default_pairing_flow(
     pairing: PairingController,
     *,
@@ -369,9 +387,10 @@ def default_pairing_flow(
     if pairing.is_paired():
         return
 
-    if SkipPairing in pairing.methods:
+    # we currently can't get a credential if pairing is skipped
+    if not request_credential and SkipPairing in pairing.methods:
         pairing.skip()
-        return
+        return None
 
     if CodeEntry not in pairing.methods:
         raise NotImplementedError(
