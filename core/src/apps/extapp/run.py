@@ -10,7 +10,10 @@ from trezor import io, loop, app
 from trezor.wire import context
 from trezor.wire.errors import DataError
 import trezorui_api
+import trezorcrypto_api
 from trezor.messages import ExtAppMessage, ExtAppResponse
+from trezor.ui.layouts import show_pubkey
+from ubinascii import hexlify
 
 from trezor.messages import HDNodeType
 from trezor.enums import InputScriptType
@@ -93,8 +96,16 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UI, 0), resp)
 
         elif service == _SERVICE_CRYPTO:
-            address_n: list[int] = [1, 2, 3, 4]  # TODO need to get from msg.data
+            # resp = trezorcrypto_api.process_crypto_message(data=bytes(msg.data))
+            # io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_CRYPTO, 0), resp)
+
+            # io.ipc_send(_SYSTASK_ID_EXTAPP, fn
+            address_n = trezorcrypto_api.deserialize_derivation_path(
+                data=bytes(msg.data)
+            )
+            print("Derivation path:", address_n)
             node = keychain.derive(address_n)
+
             assert script_type is InputScriptType.SPENDADDRESS
             assert coin.xpub_magic is not None
             node_xpub = node.serialize_public(coin.xpub_magic)
@@ -106,9 +117,11 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 chain_code=node.chain_code(),
                 public_key=pubkey,
             )
+            print("Derived pubkey:", hexlify(pubkey).decode())
 
-            # TODO: need to implement ffi call here
-            pass
+            # Serialize the result into a compact binary response
+            resp = trezorcrypto_api.serialize_crypto_result(result=node_xpub)
+            io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_CRYPTO, 0), resp)
 
         elif service == _SERVICE_WIRE_CONTINUE:
             # usb request/ack

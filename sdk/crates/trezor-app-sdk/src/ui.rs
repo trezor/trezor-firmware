@@ -23,11 +23,12 @@ use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 pub use trezor_structs::TrezorUiResult;
-use trezor_structs::{PropsList, ShortString, TrezorCryptoEnum, TrezorCryptoResult, TrezorUiEnum};
+use trezor_structs::{LongString, PropsList, ShortString, TrezorUiEnum};
 
+use crate::core_services::services_or_die;
 use crate::error;
 use crate::ipc::IpcMessage;
-use crate::service::{CoreIpcService, Error, IpcRemote};
+use crate::service::{CoreIpcService, Error};
 use crate::util::Timeout;
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
@@ -36,18 +37,8 @@ pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
 // Helper Functions
 // ============================================================================
 
-static SERVICES: spin::Once<&'static IpcRemote<'static, CoreIpcService>> = spin::Once::new();
-
 type Result<T> = core::result::Result<T, Error<'static>>;
 type UiResult = Result<TrezorUiResult>;
-
-pub fn init(services: &'static IpcRemote<CoreIpcService>) {
-    SERVICES.call_once(|| services);
-}
-
-fn services_or_die() -> &'static IpcRemote<'static, CoreIpcService> {
-    SERVICES.get().expect("Services not initialized")
-}
 
 /// Send a UI enum over IPC and get the response
 fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
@@ -78,17 +69,6 @@ fn ipc_ui_call_void(value: TrezorUiEnum) -> Result<()> {
     Ok(())
 }
 
-// fn ipc_crypto_call(value: TrezorCryptoEnum) -> CryptoResult {
-//     let bytes = to_bytes::<Failure>(value).unwrap();
-//     let message = IpcMessage::new(0, &bytes);
-//     let result = services_or_die().call(CoreIpcService::Crypto, &message, Timeout::max())?;
-
-//     // Safe validation using bytecheck before accessing archived data
-//     let archived = rkyv::access::<ArchivedTrezorCryptoResult, Failure>(result.data()).unwrap();
-//     let deserialized = deserialize::<TrezorCryptoResult, Failure>(archived).unwrap();
-//     Ok(deserialized)
-// }
-
 // ============================================================================
 // Public API Functions
 // ============================================================================
@@ -96,7 +76,7 @@ fn ipc_ui_call_void(value: TrezorUiEnum) -> Result<()> {
 /// Show a confirmation dialog with title and content
 ///
 /// Returns `Ok(true)` if user confirms, `Ok(false)` if user cancels
-pub fn confirm_value(title: &str, content: &str) -> UiResult  {
+pub fn confirm_value(title: &str, content: &str) -> UiResult {
     let value = TrezorUiEnum::ConfirmAction {
         title: ShortString::from_str(title).unwrap(),
         content: ShortString::from_str(&content[..50]).unwrap(),
@@ -164,7 +144,7 @@ pub fn request_number(title: &str, content: &str, initial: u32, min: u32, max: u
 
 pub fn show_public_key(key: &str) -> UiResult {
     let value = TrezorUiEnum::ShowPublicKey {
-        key: ShortString::from_str(key).unwrap(),
+        key: LongString::from_str(key).unwrap(),
     };
     let result = ipc_ui_call(&value)?;
     match result {

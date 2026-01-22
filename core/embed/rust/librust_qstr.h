@@ -320,6 +320,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_decode;
   MP_QSTR_deinit;
   MP_QSTR_description;
+  MP_QSTR_deserialize_derivation_path;
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
@@ -559,6 +560,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pm_event;
   MP_QSTR_prefill;
   MP_QSTR_prefill_word;
+  MP_QSTR_process_crypto_message;
   MP_QSTR_process_ipc_message;
   MP_QSTR_production_year;
   MP_QSTR_progress__authenticity_check;
@@ -810,6 +812,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
+  MP_QSTR_serialize_crypto_result;
   MP_QSTR_serialize_ui_result;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;

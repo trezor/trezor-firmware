@@ -48,10 +48,12 @@
 mod critical_section;
 mod ipc;
 // Internal low-level API module
+mod core_services;
 mod low_level_api;
 mod sysevent;
 
 // Public modules
+pub mod crypto;
 pub mod log;
 pub mod print;
 pub mod service;
@@ -113,7 +115,7 @@ pub unsafe extern "C" fn applet_main(
 
     info!("registering IPC");
     CORE_SERVICE.start();
-    ui::init(&CORE_SERVICE);
+    core_services::init(&CORE_SERVICE);
     trace!("IPC registered");
 
     // Call the user's app function
