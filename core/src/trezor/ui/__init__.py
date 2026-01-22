@@ -279,6 +279,12 @@ class Layout(Generic[T]):
                 is_done = loop.mailbox()  # (see below)
                 self.button_request_task = self._handle_button_requests(is_done)
                 self._start_task(self.button_request_task)
+            elif __debug__ and not self.button_request_box.is_empty():
+                log.debug(
+                    __name__,
+                    "ButtonRequest task not started, %s ignored",
+                    self.button_request_box.value,
+                )
 
             result = await self.result_box
             assert CURRENT_LAYOUT is None  # the screen is blank now
@@ -349,6 +355,8 @@ class Layout(Generic[T]):
             return False
 
         if self.context is None:
+            if __debug__:
+                log.debug(__name__, "ButtonRequest ignored: %s", res)
             return False
 
         if __debug__ and not self.button_request_box.is_empty():
