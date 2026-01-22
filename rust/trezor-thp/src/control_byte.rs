@@ -72,6 +72,13 @@ impl ControlByte {
     pub const fn is_channel_allocation_response(&self) -> bool {
         self.0 == CHANNEL_ALLOCATION_RES
     }
+
+    pub const fn is_handshake(&self) -> bool {
+        self.0 & DATA_MASK == HANDSHAKE_INIT_REQ
+            || self.0 & DATA_MASK == HANDSHAKE_INIT_RES
+            || self.0 & DATA_MASK == HANDSHAKE_COMP_REQ
+            || self.0 & DATA_MASK == HANDSHAKE_COMP_RES
+    }
 }
 
 // Note consider TryFrom + validation

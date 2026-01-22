@@ -408,10 +408,23 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         } else if cb.is_error() {
             return self.handle_error(packet_buffer);
         }
-        let is_init = !cb.is_continuation();
+        let is_cont = cb.is_continuation();
+        if !(is_cont
+            || cb.is_channel_allocation_request()
+            || cb.is_channel_allocation_response()
+            || cb.is_handshake()
+            || cb.is_encrypted_transport())
+        {
+            log::warn!(
+                "[{}] Invalid control byte {}.",
+                self.channel_id,
+                u8::from(cb)
+            );
+            return PacketInResult::nothing();
+        }
         match &mut self.packet_state {
             // First fragment.
-            PacketState::Receiving(_) | PacketState::Idle if is_init => {
+            PacketState::Receiving(_) | PacketState::Idle if !is_cont => {
                 self.handle_init(packet_buffer, receive_buffer)
             }
             // Continuation fragments.
