@@ -71,7 +71,11 @@ def prodtest_t1(session: "Session") -> None:
 @with_session(seedless=True)
 def optiga_set_sec_max(session: "Session") -> None:
     """Set Optiga's security event counter to maximum."""
-    debuglink_optiga_set_sec_max(session)
+    debug_transport = session.client.protocol.transport.find_debug()
+    debug_transport.open()
+    debug = DebugLink(transport=debug_transport)
+    debuglink_optiga_set_sec_max(debug)
+    debug_transport.close()
 
 
 @cli.command()

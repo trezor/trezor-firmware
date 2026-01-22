@@ -1837,8 +1837,8 @@ def _is_emulator(debug_client: "TrezorClientDebugLink") -> bool:
     return debug_client.features.fw_vendor == "EMULATOR"
 
 
-def optiga_set_sec_max(session: "Session") -> None:
-    session.call(messages.DebugLinkOptigaSetSecMax(), expect=messages.Success)
+def optiga_set_sec_max(debug: DebugLink) -> None:
+    debug._call(messages.DebugLinkOptigaSetSecMax())
 
 
 def set_log_filter(debug: DebugLink, filter: str) -> None:
