@@ -491,8 +491,8 @@ def forget(obj: "TrezorConnection", all: bool) -> None:
     Forgets the THP pairing key for the currently connected device.
     Specify --all to forget all keys for all remembered Trezors.
     """
-    from ..thp.client import TrezorClientThp
     from ..client import get_client
+    from ..thp.client import TrezorClientThp
 
     if all:
         obj.credentials.clear()

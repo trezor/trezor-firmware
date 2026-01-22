@@ -17,11 +17,11 @@
 from __future__ import annotations
 
 import base64
-from contextlib import contextmanager
 import json
 import logging
 import secrets
 import typing as t
+from contextlib import contextmanager
 from functools import cached_property
 from pathlib import Path
 
