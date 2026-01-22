@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define USE_TROPIC
 #ifdef USE_TROPIC
 #include "prodtest_tropic.h"
 
@@ -1528,6 +1529,40 @@ static void prodtest_tropic_keyfido_read(cli_t* cli) {
 #endif  // SECRET_KEY_MASKING
 }
 
+static void prodtest_tropic_provisioning_check(cli_t* cli) {
+  /*
+   * Checks:
+   * - Read the device's X.509 certificate from TROPIC - expected value
+   * - Read the X.509 certificate for the FIDO key from TROPIC - expected value
+   * - Read the x-coordinate of the FIDO public key. - expected value
+   */
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  // OID_CERT_DEV
+  // static uint8_t cert[OPTIGA_MAX_CERT_SIZE] = {0};
+  // size_t cert_size = 0;
+  // if (_cert_read(OID_CERT_DEV, OPTIGA_MAX_CERT_SIZE, cert, cert_size)) {
+  //   cli_ok(cli, "OID_CERT_DEV provisioned")
+  // } else {
+  //   cli_error(cli, "OID_CERT_DEV not provisioned");
+  // }
+
+  // OID_CERT_FIDO
+  // static uint8_t cert[OPTIGA_MAX_CERT_SIZE] = {0};
+  // size_t cert_size = 0;
+  //   cli_ok(cli, "OID_CERT_FIDO provisioned")
+  // } else {
+  //   cli_error(cli, "OID_CERT_FIDO not provisioned");
+  // }
+
+  // FIDO key read
+  // TODO
+  // cli_ok(cli, "FIDO key provisioned");
+}
+
 static void prodtest_tropic_update_fw(cli_t* cli) {
 #define FW_APP_UPDATE_BANK TR01_FW_BANK_FW1
 #define FW_SPECT_UPDATE_BANK TR01_FW_BANK_SPECT1
@@ -1549,7 +1584,7 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
             chip_id.silicon_rev[1], chip_id.silicon_rev[2],
             chip_id.silicon_rev[3]);
 
-#ifdef ABAB
+#ifdef ABAB  // ??? I THINK THIS IS OUTDATED, imo it should be ACAB
   if (strncmp((char*)chip_id.silicon_rev, "ABAB", 4) != 0) {
     cli_error(cli, CLI_ERROR, "Wrong tropic chip silicon revision");
     return;
@@ -1879,6 +1914,13 @@ PRODTEST_CLI_CMD(
   .name = "tropic-keyfido-read",
   .func = prodtest_tropic_keyfido_read,
   .info = "Read the FIDO public key from Tropic.",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-provisioning-check",
+  .func = prodtest_tropic_provisioning_check,
+  .info = "Check whether TROPIC's data objects are provisioned as expected.",
   .args = ""
 );
 

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#define USE_OPTIGA
 #ifdef USE_OPTIGA
 
 #include <trezor_model.h>
@@ -157,8 +157,10 @@ cleanup:
 }
 
 #if PRODUCTION
-#define METADATA_SET_LOCKED(metadata) \
-  { metadata.lcso = OPTIGA_META_LCS_OPERATIONAL; }
+#define METADATA_SET_LOCKED(metadata)            \
+  {                                              \
+    metadata.lcso = OPTIGA_META_LCS_OPERATIONAL; \
+  }
 #else
 #define METADATA_SET_LOCKED(metadata)
 #endif
@@ -316,6 +318,25 @@ static void prodtest_optiga_id_read(cli_t* cli) {
   cli_ok_hexdata(cli, optiga_id, optiga_id_size);
 }
 
+static bool _cert_read(uint16_t oid, size_t max_cert_size, uint8_t* cert,
+                       size_t* cert_size) {
+  optiga_result ret =
+      optiga_get_data_object(oid, false, cert, max_cert_size, &cert_size);
+  if (OPTIGA_SUCCESS != ret) {
+    cli_trace(cli, "optiga_get_data_object error %d for 0x%04x.", ret, oid);
+    return false;
+  }
+
+  size_t offset = 0;
+  if (cert[0] == 0xC0) {
+    // TLS identity certificate chain. We assume there is only one certificate.
+    offset = 9;
+  }
+  cert = cert + offset;
+  cert_size = cert_size - offset;
+  return true;
+}
+
 static void cert_read(cli_t* cli, uint16_t oid) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -324,21 +345,12 @@ static void cert_read(cli_t* cli, uint16_t oid) {
 
   static uint8_t cert[OPTIGA_MAX_CERT_SIZE] = {0};
   size_t cert_size = 0;
-  optiga_result ret =
-      optiga_get_data_object(oid, false, cert, sizeof(cert), &cert_size);
-  if (OPTIGA_SUCCESS != ret) {
-    cli_error(cli, CLI_ERROR, "optiga_get_data_object error %d for 0x%04x.",
-              ret, oid);
+  if (!_cert_read(oid, OPTIGA_MAX_CERT_SIZE, cert, cert_size)) {
+    cli_error(cli, CLI_ERROR, "FAILED TODO");
     return;
   }
 
-  size_t offset = 0;
-  if (cert[0] == 0xC0) {
-    // TLS identity certificate chain. We assume there is only one certificate.
-    offset = 9;
-  }
-
-  cli_ok_hexdata(cli, cert + offset, cert_size - offset);
+  cli_ok_hexdata(cli, cert, cert_size);
 }
 
 static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
@@ -671,6 +683,43 @@ static void prodtest_optiga_keyfido_read(cli_t* cli) {
 #endif  // SECRET_KEY_MASKING
 }
 
+static void prodtest_optiga_provisioning_check(cli_t* cli) {
+  /*
+   * Checks:
+   * - Read the device's X.509 certificate from Optiga - expected value
+   * - Read the X.509 certificate for the FIDO key from Optiga - expected value
+   * - Read the x-coordinate of the FIDO public key. - expected value
+   */
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  // OID_CERT_DEV
+  static uint8_t cert[OPTIGA_MAX_CERT_SIZE] = {0};
+  size_t cert_size = 0;
+  has_failed = 0;
+  if (_cert_read(OID_CERT_DEV, OPTIGA_MAX_CERT_SIZE, cert, &cert_size)) {
+    // assert cert == expected_Cert
+    cli_trace(cli, "OID_CERT_DEV provisioned")
+  } else {
+    cli_trace(cli, "OID_CERT_DEV not provisioned");
+    has_failed = 1;
+  }
+  // OID_CERT_FIDO
+  cert_size = 0;
+  if (_cert_read(OID_CERT_FIDO, OPTIGA_MAX_CERT_SIZE, cert, &cert_size)) {
+    cli_trace(cli, "OID_CERT_FIDO provisioned");
+  } else {
+    cli_trace(cli, "OID_CERT_FIDO not provisioned");
+    has_failed = 1;
+  }
+
+  // FIDO key read
+  // TODO
+  // cli_ok(cli, "FIDO key provisioned");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -734,6 +783,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_optiga_keyfido_write,
   .info = "Write the FIDO private key",
   .args = "<hex-data>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "optiga-provisioning-check",
+  .func = prodtest_optiga_provisioning_check,
+  .info = "Check whether Optiga's data objects are provisioned as expected.",
+  .args = ""
 );
 
 PRODTEST_CLI_CMD(
