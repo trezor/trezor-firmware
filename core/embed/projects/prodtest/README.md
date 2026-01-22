@@ -1307,6 +1307,107 @@ tropic-lock
 OK <hexadecimal string>
 ```
 
+### tropic-set-sensors
+
+Erases all ECC key slots, data slots and MAC & Destroy slots and then sets the reversible configuration of Tropic sensors to the input value.
+
+Example:
+```
+tropic-set-sensors fffffff5
+# Erasing all ECC key slots, data slots and MAC&Destroy slots
+# All cryptographic data erased successfully
+OK
+```
+
+### tropic-read-sensors
+
+Read the current sensor reversible configuration from Tropic.
+
+Example:
+```
+tropic-read-sensors
+OK 0xFFFFFFF5
+```
+
+### tropic-read-configs
+
+Read whole irreversible and reversible configurations.
+
+Example:
+```
+tropic-read-configs
+# === Reversible Configuration ===
+#   R_config.obj[0]: 0x00000009  (addr: 0x00)
+#   R_config.obj[1]: 0x00000000  (addr: 0x08)
+#   R_config.obj[2]: 0x00000000  (addr: 0x10)
+#   R_config.obj[3]: 0x00000000  (addr: 0x18)
+#   R_config.obj[4]: 0x00000001  (addr: 0x20)
+#   R_config.obj[5]: 0x04040404  (addr: 0x28)
+#   R_config.obj[6]: 0x06060606  (addr: 0x30)
+#   R_config.obj[7]: 0x06060606  (addr: 0x38)
+#   R_config.obj[8]: 0x00000004  (addr: 0x40)
+#   R_config.obj[9]: 0x00000606  (addr: 0x48)
+#   R_config.obj[10]: 0x00000606  (addr: 0x50)
+#   R_config.obj[11]: 0x00000606  (addr: 0x58)
+#   R_config.obj[12]: 0x00000006  (addr: 0x60)
+#   R_config.obj[13]: 0x06060404  (addr: 0x68)
+#   R_config.obj[14]: 0x06060406  (addr: 0x70)
+#   R_config.obj[15]: 0x06060406  (addr: 0x78)
+#   R_config.obj[16]: 0x00000006  (addr: 0x80)
+#   R_config.obj[17]: 0x06060604  (addr: 0x88)
+#   R_config.obj[18]: 0x06060604  (addr: 0x90)
+#   R_config.obj[19]: 0x06060606  (addr: 0x98)
+#   R_config.obj[20]: 0x06060606  (addr: 0xA0)
+#   R_config.obj[21]: 0x06060604  (addr: 0xA8)
+#   R_config.obj[22]: 0x06060604  (addr: 0xB0)
+#   R_config.obj[23]: 0x06060604  (addr: 0xB8)
+#   R_config.obj[24]: 0x06060606  (addr: 0xC0)
+#   R_config.obj[25]: 0x06060606  (addr: 0xC8)
+#   R_config.obj[26]: 0x06060404  (addr: 0xD0)
+#
+# === Irreversible Configuration ===
+#   I_config.obj[0]: 0xFFFFFFF9  (addr: 0x00)
+#   I_config.obj[1]: 0xFFFFFFFF  (addr: 0x08)
+#   I_config.obj[2]: 0xFFFFFFFE  (addr: 0x10)
+#   I_config.obj[3]: 0xFFFFFFFF  (addr: 0x18)
+#   I_config.obj[4]: 0xFFFFFFFF  (addr: 0x20)
+#   I_config.obj[5]: 0xFCFCFCFC  (addr: 0x28)
+#   I_config.obj[6]: 0xFEFEFEFE  (addr: 0x30)
+#   I_config.obj[7]: 0xFEFEFEFE  (addr: 0x38)
+#   I_config.obj[8]: 0xFFFFFFFC  (addr: 0x40)
+#   I_config.obj[9]: 0xFFFFFEFE  (addr: 0x48)
+#   I_config.obj[10]: 0xFFFFFEFE  (addr: 0x50)
+#   I_config.obj[11]: 0xFFFFFEFE  (addr: 0x58)
+#   I_config.obj[12]: 0xFFFFFFFE  (addr: 0x60)
+#   I_config.obj[13]: 0xFEFEFCFC  (addr: 0x68)
+#   I_config.obj[14]: 0xFEFEFCFE  (addr: 0x70)
+#   I_config.obj[15]: 0xFEFEFCFE  (addr: 0x78)
+#   I_config.obj[16]: 0xFFFFFFFE  (addr: 0x80)
+#   I_config.obj[17]: 0xFEFEFEFC  (addr: 0x88)
+#   I_config.obj[18]: 0xFEFEFEFC  (addr: 0x90)
+#   I_config.obj[19]: 0xFEFEFEFE  (addr: 0x98)
+#   I_config.obj[20]: 0xFEFEFEFE  (addr: 0xA0)
+#   I_config.obj[21]: 0xFEFEFEFC  (addr: 0xA8)
+#   I_config.obj[22]: 0xFEFEFEFC  (addr: 0xB0)
+#   I_config.obj[23]: 0xFEFEFEFC  (addr: 0xB8)
+#   I_config.obj[24]: 0xFEFEFEFE  (addr: 0xC0)
+#   I_config.obj[25]: 0xFEFEFEFE  (addr: 0xC8)
+#   I_config.obj[26]: 0xFEFEFCFC  (addr: 0xD0)
+OK
+```
+
+### tropic-erase-all-slots
+
+Erases all ECC key slots, data slots and MAC & Destroy slots.
+
+Example:
+```
+tropic-erase-all-slots
+# Erasing all ECC key slots, data slots and MAC&Destroy slots
+# All cryptographic data erased successfully
+OK
+```
+
 ### secure-channel-handshake-1
 
 Returns the first handshake message for establishing a secure channel between the device and HSM.

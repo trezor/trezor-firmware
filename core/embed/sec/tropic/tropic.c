@@ -65,7 +65,7 @@
 #ifdef TREZOR_EMULATOR
 #define TROPIC_RETRY_COMMAND(command) command
 #else
-#define TROPIC_MAX_RETRIES 5
+#define TROPIC_MAX_RETRIES 10
 
 bool tropic_session_start(void);
 
@@ -76,34 +76,32 @@ static bool is_retryable(lt_ret_t ret) {
 
 // Statement expression, see
 // https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
-#define TROPIC_RETRY_COMMAND(command)                                       \
-  ({                                                                        \
-    bool TROPIC_RETRY_COMMAND_session_started =                             \
-        g_tropic_driver.session_started;                                    \
-    lt_pkey_index_t TROPIC_RETRY_COMMAND_pairing_key_index =                \
-        g_tropic_driver.pairing_key_index;                                  \
-    lt_ret_t TROPIC_RETRY_COMMAND_res = command;                            \
-    for (int TROPIC_RETRY_COMMAND_i = 0;                                    \
-         TROPIC_RETRY_COMMAND_i < TROPIC_MAX_RETRIES - 1;                   \
-         TROPIC_RETRY_COMMAND_i++) {                                        \
-      if (!is_retryable(TROPIC_RETRY_COMMAND_res)) {                        \
-        break;                                                              \
-      }                                                                     \
-      if (TROPIC_RETRY_COMMAND_res == LT_L1_CHIP_ALARM_MODE) {              \
-        tropic01_reset();                                                   \
-        tropic_deinit();                                                    \
-        tropic_init();                                                      \
-        tropic_wait_for_ready(NULL);                                        \
-        if (TROPIC_RETRY_COMMAND_session_started) {                         \
-          if (tropic_custom_session_start(                                  \
-                  NULL, TROPIC_RETRY_COMMAND_pairing_key_index) != LT_OK) { \
-            continue;                                                       \
-          }                                                                 \
-        }                                                                   \
-      }                                                                     \
-      TROPIC_RETRY_COMMAND_res = command;                                   \
-    }                                                                       \
-    TROPIC_RETRY_COMMAND_res;                                               \
+#define TROPIC_RETRY_COMMAND(command)                                     \
+  ({                                                                      \
+    bool TROPIC_RETRY_COMMAND_session_started =                           \
+        g_tropic_driver.session_started;                                  \
+    lt_pkey_index_t TROPIC_RETRY_COMMAND_pairing_key_index =              \
+        g_tropic_driver.pairing_key_index;                                \
+    lt_ret_t TROPIC_RETRY_COMMAND_res = command;                          \
+    for (int TROPIC_RETRY_COMMAND_i = 0;                                  \
+         TROPIC_RETRY_COMMAND_i < TROPIC_MAX_RETRIES - 1;                 \
+         TROPIC_RETRY_COMMAND_i++) {                                      \
+      if (!is_retryable(TROPIC_RETRY_COMMAND_res)) {                      \
+        break;                                                            \
+      }                                                                   \
+      tropic01_reset();                                                   \
+      tropic_deinit();                                                    \
+      tropic_init();                                                      \
+      tropic_wait_for_ready(NULL);                                        \
+      if (TROPIC_RETRY_COMMAND_session_started) {                         \
+        if (tropic_custom_session_start(                                  \
+                NULL, TROPIC_RETRY_COMMAND_pairing_key_index) != LT_OK) { \
+          continue;                                                       \
+        }                                                                 \
+      }                                                                   \
+      TROPIC_RETRY_COMMAND_res = command;                                 \
+    }                                                                     \
+    TROPIC_RETRY_COMMAND_res;                                             \
   })
 #endif  // TREZOR_EMULATOR
 
@@ -196,6 +194,7 @@ bool tropic_get_cert_chain_ptr(cli_t *cli, uint8_t const **cert_chain,
   *cert_chain_length = tropic_cert_chain_length;
   return true;
 }
+
 #endif  // !PRODUCTION || defined(TREZOR_PRODTEST)
 
 // If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
@@ -365,6 +364,60 @@ void tropic_session_start_time(uint32_t *time_ms) {
   if (!g_tropic_driver.session_started) {
     *time_ms += 210;
   }
+}
+
+lt_ret_t lt_ecc_key_erase_retry(lt_handle_t *tropic_handle,
+                                const lt_ecc_slot_t ecc_slot) {
+  return TROPIC_RETRY_COMMAND(lt_ecc_key_erase(tropic_handle, ecc_slot));
+}
+
+lt_ret_t lt_r_mem_data_erase_retry(lt_handle_t *tropic_handle,
+                                   const uint16_t udata_slot) {
+  return TROPIC_RETRY_COMMAND(lt_r_mem_data_erase(tropic_handle, udata_slot));
+}
+
+lt_ret_t lt_mac_and_destroy_retry(lt_handle_t *tropic_handle,
+                                  const lt_mac_and_destroy_slot_t slot,
+                                  const uint8_t *data_out, uint8_t *data_in) {
+  return TROPIC_RETRY_COMMAND(
+      lt_mac_and_destroy(tropic_handle, slot, data_out, data_in));
+}
+
+lt_ret_t lt_read_whole_R_config_retry(lt_handle_t *tropic_handle,
+                                      struct lt_config_t *config) {
+  return TROPIC_RETRY_COMMAND(lt_read_whole_R_config(tropic_handle, config));
+}
+
+static lt_ret_t lt_erase_and_write_R_config(lt_handle_t *tropic_handle,
+                                            const struct lt_config_t *config) {
+  lt_ret_t ret = lt_r_config_erase(tropic_handle);
+  if (ret != LT_OK) {
+    return ret;
+  }
+
+  for (uint8_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
+    ret = TROPIC_RETRY_COMMAND(lt_r_config_write(
+        tropic_handle, cfg_desc_table[i].addr, config->obj[i]));
+    if (ret != LT_OK) {
+      uint32_t obj = 0;
+      lt_ret_t inside_ret = TROPIC_RETRY_COMMAND(
+          lt_r_config_read(tropic_handle, cfg_desc_table[i].addr, &obj));
+      if (inside_ret != LT_OK) {
+        return inside_ret;
+      }
+      if (memcmp(&obj, &config->obj[i], sizeof(uint32_t)) != 0) {
+        return ret;
+      }
+    }
+  }
+
+  return LT_OK;
+}
+
+lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t *tropic_handle,
+                                           const struct lt_config_t *config) {
+  return TROPIC_RETRY_COMMAND(
+      lt_erase_and_write_R_config(tropic_handle, config));
 }
 
 #ifdef TREZOR_EMULATOR

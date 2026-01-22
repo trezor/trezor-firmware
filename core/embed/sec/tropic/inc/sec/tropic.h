@@ -86,6 +86,23 @@ bool tropic_get_pubkey(cli_t* cli, curve25519_key pubkey);
 
 bool tropic_get_cert_chain_ptr(cli_t* cli, uint8_t const** cert_chain,
                                size_t* length);
+
+lt_ret_t lt_ecc_key_erase_retry(lt_handle_t* tropic_handle,
+                                const lt_ecc_slot_t ecc_slot);
+
+lt_ret_t lt_r_mem_data_erase_retry(lt_handle_t* tropic_handle,
+                                   const uint16_t udata_slot);
+
+lt_ret_t lt_mac_and_destroy_retry(lt_handle_t* tropic_handle,
+                                  const lt_mac_and_destroy_slot_t slot,
+                                  const uint8_t* data_out, uint8_t* data_in);
+
+lt_ret_t lt_read_whole_R_config_retry(lt_handle_t* tropic_handle,
+                                      struct lt_config_t* config);
+
+lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t* tropic_handle,
+                                           const struct lt_config_t* config);
+
 #endif
 
 #endif
