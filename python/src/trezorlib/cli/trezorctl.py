@@ -61,6 +61,8 @@ from . import (
     tezos,
     tron,
     with_client,
+    ENV_TREZOR_SESSION_ID,
+    SessionIdentifier,
 )
 
 F = TypeVar("F", bound=Callable)
@@ -198,9 +200,10 @@ def configure_logging(verbose: int) -> None:
 @click.option(
     "-s",
     "--session-id",
-    metavar="HEX",
-    help="Resume given session ID.",
-    default=os.environ.get("TREZOR_SESSION_ID"),
+    "session_str",
+    metavar="DATA",
+    help="Resume given session.",
+    default=ENV_TREZOR_SESSION_ID,
 )
 @click.option(
     "-r",
@@ -212,13 +215,13 @@ def configure_logging(verbose: int) -> None:
 @click.pass_context
 def cli_main(
     ctx: click.Context,
-    path: str,
+    path: str | None,
     ble: bool | None,
     verbose: int,
     is_json: bool,
     passphrase_on_host: bool,
     script: bool,
-    session_id: Optional[str],
+    session_str: str | None,
     record: Path | None,
 ) -> None:
     configure_logging(verbose)
@@ -236,12 +239,12 @@ def cli_main(
 
     ctx.obj = TrezorConnection(
         path=path,
-        session_id=session_id,
+        session_str=session_str,
         passphrase_source=passphrase_source,
         script=script,
         record_dir=record,
     )
-    ctx.obj.open()
+    #ctx.obj.open()
     atexit.register(ctx.obj.close)
 
 
@@ -349,21 +352,13 @@ def get_session(obj: TrezorConnection, derive_cardano: bool = False) -> str:
     `trezorctl -s SESSION_ID`, or set it to an environment variable `TREZOR_SESSION_ID`,
     to avoid having to enter passphrase for subsequent commands.
     """
-    # make sure session is not resumed
-    obj.session_id = None
+    if obj.features.bootloader_mode:
+        raise click.ClickException("Bootloader mode does not support sessions.")
+    if obj.features.model == "1" and obj.version < (1, 9, 0):
+        raise click.ClickException("Upgrade your firmware to enable session support.")
 
-    with obj.client_context() as client:
-        if client.features.model == "1" and client.version < (1, 9, 0):
-            raise click.ClickException(
-                "Upgrade your firmware to enable session support."
-            )
-
-        session = client.get_session(derive_cardano=derive_cardano)
-        if session.id is None:
-            raise click.ClickException("Passphrase not enabled or firmware too old.")
-        else:
-            # TODO
-            return session.id.hex()
+    session = obj.get_new_session(derive_cardano=derive_cardano, randomize_id=True)
+    return SessionIdentifier.from_session(session).to_session_str()
 
 
 @cli.command()
@@ -376,13 +371,14 @@ def clear_session(obj: TrezorConnection) -> None:
 
     Additionally, locks the device with PIN, if configured.
     """
-    if obj.session_id is not None:
+    if obj.session is not None:
         try:
             session = obj.get_session()
             session.close()
         except Exception:
             LOG.debug("Failed to clear session.", exc_info=True)
-    obj.get_client().lock()
+    with obj.client_context() as client:
+        client.lock()
 
 
 @cli.command()
