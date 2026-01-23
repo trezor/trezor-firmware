@@ -1523,7 +1523,7 @@ if not utils.BITCOIN_ONLY:
             recipient_addr: str,
             total_amount: str,
             maximum_fee: str,
-            chunkify: bool = False,
+            chunkify: bool = True,
         ) -> None:
 
             br_name = "confirm_tron_approve"
@@ -1569,6 +1569,58 @@ if not utils.BITCOIN_ONLY:
                     fee=maximum_fee,
                     fee_label=f"{TR.send__maximum_fee}:",
                     title=TR.words__title_summary,
+                    account_title=TR.address_details__account_info,
+                    extra_title=TR.confirm_total__title_fee,
+                ),
+                br_name=br_name,
+            )
+
+        # TODO: #6364 Consider simplifying with confirm_tron_send like ETH flows.
+        async def confirm_tron_transfer(
+            recipient_addr: str,
+            total_amount: str,
+            maximum_fee: str,
+            chunkify: bool = True,
+        ) -> None:
+
+            br_name = "confirm_tron_transfer"
+            title = TR.words__send
+
+            await confirm_value(
+                title,
+                recipient_addr,
+                "",
+                chunkify=chunkify,
+                br_name=br_name,
+                verb=TR.buttons__continue,
+                cancel=True,
+            )
+
+            properties: list[PropertyType] = [
+                (
+                    f"{TR.words__amount}:",
+                    total_amount,
+                    False,
+                ),
+                (f"{TR.words__chain}:", "Tron", True),
+            ]
+
+            await confirm_properties(
+                br_name,
+                title,
+                properties,
+                None,
+                False,
+                verb=TR.buttons__continue,
+            )
+
+            await raise_if_not_confirmed(
+                trezorui_api.confirm_summary(
+                    amount=None,
+                    amount_label=None,
+                    fee=maximum_fee,
+                    fee_label=f"{TR.send__maximum_fee}:",
+                    title=title,
                     account_title=TR.address_details__account_info,
                     extra_title=TR.confirm_total__title_fee,
                 ),
