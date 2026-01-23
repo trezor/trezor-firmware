@@ -19,6 +19,8 @@
 
 #if defined(KERNEL) && defined(USE_SECMON_LAYOUT)
 
+#include <trezor_rtl.h>
+
 #include "smcall_invoke.h"
 #include "smcall_numbers.h"
 
@@ -416,12 +418,7 @@ secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
 #include <sec/telemetry.h>
 
 void telemetry_update_battery_temp(float temp_c) {
-  union {
-    float f;
-    uint32_t u;
-  } float_to_u32 = {.f = temp_c};
-
-  smcall_invoke1(float_to_u32.u, SMCALL_TELEMETRY_UPDATE_BATT_TEMP);
+  smcall_invoke1(float_to_u32(temp_c), SMCALL_TELEMETRY_UPDATE_BATT_TEMP);
 }
 
 void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
@@ -429,12 +426,8 @@ void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
 }
 
 void telemetry_update_battery_cycles(float battery_cycles_inc) {
-  union {
-    float f;
-    uint32_t u;
-  } float_to_u32 = {.f = battery_cycles_inc};
-
-  smcall_invoke1(float_to_u32.u, SMCALL_TELEMETRY_UPDATE_BATT_CYCLES);
+  smcall_invoke1(float_to_u32(battery_cycles_inc),
+                 SMCALL_TELEMETRY_UPDATE_BATT_CYCLES);
 }
 
 bool telemetry_get(telemetry_data_t *out) {
