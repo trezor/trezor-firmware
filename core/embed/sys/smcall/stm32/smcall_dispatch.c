@@ -407,13 +407,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     // ------------------------------------------------------------------
     // Telemetry
     case SMCALL_TELEMETRY_UPDATE_BATT_TEMP: {
-      union {
-        float f;
-        uint32_t u;
-      } u32_to_float = {.u = args[0]};
-
-      float temp = u32_to_float.f;
-      telemetry_update_battery_temp(temp);
+      telemetry_update_battery_temp(u32_to_float(args[0]));
     } break;
 
     case SMCALL_TELEMETRY_UPDATE_BATT_ERRORS: {
@@ -422,13 +416,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 
     case SMCALL_TELEMETRY_UPDATE_BATT_CYCLES: {
-      union {
-        float f;
-        uint32_t u;
-      } u32_to_float = {.u = args[0]};
-
-      float battery_cycles_inc = u32_to_float.f;
-      telemetry_update_battery_cycles(battery_cycles_inc);
+      telemetry_update_battery_cycles(u32_to_float(args[0]));
     } break;
 
     case SMCALL_TELEMETRY_GET: {
