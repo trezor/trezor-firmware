@@ -45,3 +45,9 @@
 	path = vendor/mldsa-native
 	url = https://github.com/pq-code-package/mldsa-native.git
 	ignore = untracked
+[submodule "vendor/stm32u3xx_hal_driver"]
+	path = vendor/stm32u3xx_hal_driver
+	url = https://github.com/STMicroelectronics/stm32u3xx-hal-driver.git
+[submodule "vendor/cmsis_device_u3"]
+	path = vendor/cmsis_device_u3
+	url = https://github.com/STMicroelectronics/cmsis-device-u3.git
