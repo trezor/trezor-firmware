@@ -78,9 +78,9 @@ async def confirm_unknown_smart_contract(
 async def confirm_known_trc20_smart_contract(
     recipient_addr: bytes, amount: int, fee_limit: int, token: EthereumTokenInfo
 ) -> None:
-    from trezor.ui.layouts import confirm_tron_approve
+    from trezor.ui.layouts import confirm_tron_transfer
 
-    await confirm_tron_approve(
+    await confirm_tron_transfer(
         recipient_addr=get_encoded_address(recipient_addr),
         total_amount=format_token_amount(amount, token),
         maximum_fee=format_energy_amount(fee_limit),

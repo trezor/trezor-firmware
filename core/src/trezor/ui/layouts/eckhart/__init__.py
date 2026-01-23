@@ -1477,12 +1477,61 @@ if not utils.BITCOIN_ONLY:
                 br_code=ButtonRequestType.SignTx,
             )
 
-        # TODO: #6359 Reword the TR strings to be ETH agnostic.
+        # TODO: #6364 Consider simplifying with confirm_tron_send like ETH flows.
+        async def confirm_tron_transfer(
+            recipient_addr: str,
+            total_amount: str,
+            maximum_fee: str,
+            chunkify: bool = True,
+        ) -> None:
+
+            br_name = "confirm_tron_transfer"
+            title = TR.words__send
+
+            await confirm_value(
+                title,
+                recipient_addr,
+                "",
+                subtitle=TR.words__recipient,
+                chunkify=chunkify,
+                br_name=br_name,
+                verb=TR.buttons__continue,
+                cancel=True,
+            )
+
+            properties: list[PropertyType] = [
+                (
+                    f"{TR.words__amount}:",
+                    total_amount,
+                    False,
+                ),
+                (f"{TR.words__chain}:", "Tron", True),
+            ]
+
+            await confirm_properties(
+                br_name,
+                title,
+                properties,
+                None,
+                False,
+                verb=TR.buttons__continue,
+            )
+
+            await _confirm_summary(
+                None,
+                None,
+                maximum_fee,
+                f"{TR.send__maximum_fee}:",
+                title,
+                None,
+            )
+
+        # TODO: #6359 Redo as ETH confirm_tx
         async def confirm_tron_approve(
             recipient_addr: str,
             total_amount: str,
             maximum_fee: str,
-            chunkify: bool = False,
+            chunkify: bool = True,
         ) -> None:
 
             br_name = "confirm_tron_approve"
