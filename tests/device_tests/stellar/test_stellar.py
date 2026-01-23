@@ -74,10 +74,18 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.stellar]
 def parameters_to_proto(session, parameters):
     tx_data = parameters["tx"]
     ops_data = parameters["operations"]
+    ext_data = parameters.get("ext")
 
     tx_data["address_n"] = parse_path(parameters["address_n"])
     tx_data["network_passphrase"] = parameters["network_passphrase"]
     tx_data["num_operations"] = len(ops_data)
+
+    if ext_data:
+        soroban_data_hex = ext_data.get("soroban_data")
+        soroban_data = bytes.fromhex(soroban_data_hex) if soroban_data_hex else None
+        ext = messages.StellarTxExt(v=ext_data["v"], soroban_data=soroban_data)
+    else:
+        ext = messages.StellarTxExt(v=0)
 
     if parameters.get("payment_request"):
         purchase_memo = CoinPurchaseMemo(
@@ -126,18 +134,19 @@ def parameters_to_proto(session, parameters):
     if payment_request:
         tx.payment_req = payment_request
     operations = [make_op(op) for op in ops_data]
-    return tx, operations
+    return tx, operations, ext
 
 
 @parametrize_using_common_fixtures("stellar/sign_tx.json")
 def test_sign_tx(session: Session, parameters, result):
-    tx, operations = parameters_to_proto(session, parameters)
+    tx, operations, ext = parameters_to_proto(session, parameters)
 
     if "signature" in result:
         response = stellar.sign_tx(
             session,
             tx,
             operations,
+            ext,
             tx.address_n,
             tx.network_passphrase,
         )
@@ -146,7 +155,12 @@ def test_sign_tx(session: Session, parameters, result):
     elif "error_message" in result:
         with pytest.raises(TrezorFailure, match=result["error_message"]):
             stellar.sign_tx(
-                session, tx, operations, tx.address_n, tx.network_passphrase
+                session,
+                tx,
+                operations,
+                ext,
+                tx.address_n,
+                tx.network_passphrase,
             )
     else:
         assert False, "Invalid expected result"

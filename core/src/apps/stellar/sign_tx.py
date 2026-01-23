@@ -23,10 +23,13 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarCreateAccountOp,
+        StellarInvokeHostFunctionOp,
         StellarPathPaymentStrictReceiveOp,
         StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
         StellarSignedTx,
+        StellarTxExt,
+        StellarTxExtRequest,
         StellarTxOpRequest,
     )
     from trezor.ui.layouts import show_continue_in_app
@@ -121,6 +124,7 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
     # these two are used in case of payment requests, where we allow only one output, hence we have a single output address and asset
     output_address = None
     output_asset = None
+    has_soroban_op = False
 
     progress_obj = progress(indeterminate=True)
     writers.write_uint32(w, num_operations)
@@ -135,6 +139,9 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
         if op.source_account is not None and op.source_account != address:  # type: ignore [Cannot access attribute "source_account" for class "MessageType"]
             # if the operation source account does not match the Trezor account
             is_sending_from_trezor_account = False
+
+        if StellarInvokeHostFunctionOp.is_type_of(op):
+            has_soroban_op = True
 
         if any(
             op_type.is_type_of(op)
@@ -163,8 +170,24 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
     # ---------------------------------
     # FINAL
     # ---------------------------------
-    # 4 null bytes representing a (currently unused) empty union
-    writers.write_uint32(w, 0)
+    # Transaction extension (ext union)
+    if has_soroban_op:
+        # For Soroban transactions, request StellarTxExt with soroban_data
+        from trezor.wire.context import call
+
+        tx_ext = await call(StellarTxExtRequest(), StellarTxExt)
+        if tx_ext.v != 1:
+            raise DataError("Stellar: Soroban transaction requires ext.v = 1")
+        if tx_ext.soroban_data is None:
+            raise DataError("Stellar: missing soroban_data")
+        writers.write_uint32(w, 1)  # ext.v = 1
+        # Write soroban_data as raw XDR bytes (SorobanTransactionData struct)
+        writers.write_bytes_unchecked(w, tx_ext.soroban_data)
+    else:
+        # For non-Soroban transactions, ext.v = 0 (empty union).
+        # We intentionally do NOT request StellarTxExtRequest here to maintain
+        # backward compatibility with existing SDK implementations.
+        writers.write_uint32(w, 0)
 
     if msg.payment_req:
         assert verifier is not None

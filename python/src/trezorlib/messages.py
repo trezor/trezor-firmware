@@ -383,6 +383,53 @@ class StellarSignerType(IntEnum):
     HASH = 2
 
 
+class StellarSCValType(IntEnum):
+    SCV_BOOL = 0
+    SCV_VOID = 1
+    SCV_U32 = 3
+    SCV_I32 = 4
+    SCV_U64 = 5
+    SCV_I64 = 6
+    SCV_TIMEPOINT = 7
+    SCV_DURATION = 8
+    SCV_U128 = 9
+    SCV_I128 = 10
+    SCV_U256 = 11
+    SCV_I256 = 12
+    SCV_BYTES = 13
+    SCV_STRING = 14
+    SCV_SYMBOL = 15
+    SCV_VEC = 16
+    SCV_MAP = 17
+    SCV_ADDRESS = 18
+
+
+class StellarSCAddressType(IntEnum):
+    SC_ADDRESS_TYPE_ACCOUNT = 0
+    SC_ADDRESS_TYPE_CONTRACT = 1
+    SC_ADDRESS_TYPE_MUXED_ACCOUNT = 2
+    SC_ADDRESS_TYPE_CLAIMABLE_BALANCE = 3
+    SC_ADDRESS_TYPE_LIQUIDITY_POOL = 4
+
+
+class StellarSorobanAuthorizedFunctionType(IntEnum):
+    SOROBAN_AUTHORIZED_FUNCTION_TYPE_CONTRACT_FN = 0
+    SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_HOST_FN = 1
+    SOROBAN_AUTHORIZED_FUNCTION_TYPE_CREATE_CONTRACT_V2_HOST_FN = 2
+
+
+class StellarHostFunctionType(IntEnum):
+    HOST_FUNCTION_TYPE_INVOKE_CONTRACT = 0
+    HOST_FUNCTION_TYPE_CREATE_CONTRACT = 1
+    HOST_FUNCTION_TYPE_UPLOAD_CONTRACT_WASM = 2
+    HOST_FUNCTION_TYPE_CREATE_CONTRACT_V2 = 3
+
+
+class StellarSorobanCredentialsType(IntEnum):
+    SOROBAN_CREDENTIALS_SOURCE_ACCOUNT = 0
+    SOROBAN_CREDENTIALS_ADDRESS = 1
+
+
 class TezosContractType(IntEnum):
     Implicit = 0
     Originated = 1
@@ -587,6 +634,9 @@ class MessageType(IntEnum):
     StellarPathPaymentStrictSendOp = 223
     StellarClaimClaimableBalanceOp = 225
     StellarSignedTx = 230
+    StellarInvokeHostFunctionOp = 235
+    StellarTxExtRequest = 238
+    StellarTxExt = 239
     CardanoGetPublicKey = 305
     CardanoPublicKey = 306
     CardanoGetAddress = 307
@@ -7860,6 +7910,354 @@ class StellarSignedTx(protobuf.MessageType):
     ) -> None:
         self.public_key = public_key
         self.signature = signature
+
+
+class StellarSCVal(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarSCValType", repeated=False, required=True),
+        2: protobuf.Field("b", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("u32", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("i32", "sint32", repeated=False, required=False, default=None),
+        6: protobuf.Field("u64", "uint64", repeated=False, required=False, default=None),
+        7: protobuf.Field("i64", "sint64", repeated=False, required=False, default=None),
+        8: protobuf.Field("timepoint", "uint64", repeated=False, required=False, default=None),
+        9: protobuf.Field("duration", "uint64", repeated=False, required=False, default=None),
+        10: protobuf.Field("u128", "StellarUInt128Parts", repeated=False, required=False, default=None),
+        11: protobuf.Field("i128", "StellarInt128Parts", repeated=False, required=False, default=None),
+        12: protobuf.Field("u256", "StellarUInt256Parts", repeated=False, required=False, default=None),
+        13: protobuf.Field("i256", "StellarInt256Parts", repeated=False, required=False, default=None),
+        14: protobuf.Field("bytes", "bytes", repeated=False, required=False, default=None),
+        15: protobuf.Field("string", "bytes", repeated=False, required=False, default=None),
+        16: protobuf.Field("symbol", "string", repeated=False, required=False, default=None),
+        17: protobuf.Field("vec", "StellarSCVal", repeated=True, required=False, default=None),
+        18: protobuf.Field("map", "StellarSCValMapEntry", repeated=True, required=False, default=None),
+        19: protobuf.Field("address", "StellarSCAddress", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarSCValType",
+        vec: Optional[Sequence["StellarSCVal"]] = None,
+        map: Optional[Sequence["StellarSCValMapEntry"]] = None,
+        b: Optional["bool"] = None,
+        u32: Optional["int"] = None,
+        i32: Optional["int"] = None,
+        u64: Optional["int"] = None,
+        i64: Optional["int"] = None,
+        timepoint: Optional["int"] = None,
+        duration: Optional["int"] = None,
+        u128: Optional["StellarUInt128Parts"] = None,
+        i128: Optional["StellarInt128Parts"] = None,
+        u256: Optional["StellarUInt256Parts"] = None,
+        i256: Optional["StellarInt256Parts"] = None,
+        bytes: Optional["bytes"] = None,
+        string: Optional["bytes"] = None,
+        symbol: Optional["str"] = None,
+        address: Optional["StellarSCAddress"] = None,
+    ) -> None:
+        self.vec: Sequence["StellarSCVal"] = vec if vec is not None else []
+        self.map: Sequence["StellarSCValMapEntry"] = map if map is not None else []
+        self.type = type
+        self.b = b
+        self.u32 = u32
+        self.i32 = i32
+        self.u64 = u64
+        self.i64 = i64
+        self.timepoint = timepoint
+        self.duration = duration
+        self.u128 = u128
+        self.i128 = i128
+        self.u256 = u256
+        self.i256 = i256
+        self.bytes = bytes
+        self.string = string
+        self.symbol = symbol
+        self.address = address
+
+
+class StellarInvokeContractArgs(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("contract_address", "StellarSCAddress", repeated=False, required=True),
+        2: protobuf.Field("function_name", "string", repeated=False, required=True),
+        3: protobuf.Field("args", "StellarSCVal", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        contract_address: "StellarSCAddress",
+        function_name: "str",
+        args: Optional[Sequence["StellarSCVal"]] = None,
+    ) -> None:
+        self.args: Sequence["StellarSCVal"] = args if args is not None else []
+        self.contract_address = contract_address
+        self.function_name = function_name
+
+
+class StellarSorobanAuthorizedFunction(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarSorobanAuthorizedFunctionType", repeated=False, required=True),
+        2: protobuf.Field("contract_fn", "StellarInvokeContractArgs", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarSorobanAuthorizedFunctionType",
+        contract_fn: Optional["StellarInvokeContractArgs"] = None,
+    ) -> None:
+        self.type = type
+        self.contract_fn = contract_fn
+
+
+class StellarSorobanAuthorizedInvocation(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("function", "StellarSorobanAuthorizedFunction", repeated=False, required=True),
+        2: protobuf.Field("sub_invocations", "StellarSorobanAuthorizedInvocation", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        function: "StellarSorobanAuthorizedFunction",
+        sub_invocations: Optional[Sequence["StellarSorobanAuthorizedInvocation"]] = None,
+    ) -> None:
+        self.sub_invocations: Sequence["StellarSorobanAuthorizedInvocation"] = sub_invocations if sub_invocations is not None else []
+        self.function = function
+
+
+class StellarHostFunction(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarHostFunctionType", repeated=False, required=True),
+        2: protobuf.Field("invoke_contract", "StellarInvokeContractArgs", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarHostFunctionType",
+        invoke_contract: Optional["StellarInvokeContractArgs"] = None,
+    ) -> None:
+        self.type = type
+        self.invoke_contract = invoke_contract
+
+
+class StellarSorobanAddressCredentials(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("address", "StellarSCAddress", repeated=False, required=True),
+        2: protobuf.Field("nonce", "sint64", repeated=False, required=True),
+        3: protobuf.Field("signature_expiration_ledger", "uint32", repeated=False, required=True),
+        4: protobuf.Field("signature", "StellarSCVal", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "StellarSCAddress",
+        nonce: "int",
+        signature_expiration_ledger: "int",
+        signature: "StellarSCVal",
+    ) -> None:
+        self.address = address
+        self.nonce = nonce
+        self.signature_expiration_ledger = signature_expiration_ledger
+        self.signature = signature
+
+
+class StellarSorobanCredentials(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarSorobanCredentialsType", repeated=False, required=True),
+        2: protobuf.Field("address", "StellarSorobanAddressCredentials", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarSorobanCredentialsType",
+        address: Optional["StellarSorobanAddressCredentials"] = None,
+    ) -> None:
+        self.type = type
+        self.address = address
+
+
+class StellarSorobanAuthorizationEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("credentials", "StellarSorobanCredentials", repeated=False, required=True),
+        2: protobuf.Field("root_invocation", "StellarSorobanAuthorizedInvocation", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        credentials: "StellarSorobanCredentials",
+        root_invocation: "StellarSorobanAuthorizedInvocation",
+    ) -> None:
+        self.credentials = credentials
+        self.root_invocation = root_invocation
+
+
+class StellarInvokeHostFunctionOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 235
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("function", "StellarHostFunction", repeated=False, required=True),
+        3: protobuf.Field("auth", "StellarSorobanAuthorizationEntry", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        function: "StellarHostFunction",
+        auth: Optional[Sequence["StellarSorobanAuthorizationEntry"]] = None,
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.auth: Sequence["StellarSorobanAuthorizationEntry"] = auth if auth is not None else []
+        self.function = function
+        self.source_account = source_account
+
+
+class StellarTxExtRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 238
+
+
+class StellarTxExt(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 239
+    FIELDS = {
+        1: protobuf.Field("v", "sint32", repeated=False, required=True),
+        2: protobuf.Field("soroban_data", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        v: "int",
+        soroban_data: Optional["bytes"] = None,
+    ) -> None:
+        self.v = v
+        self.soroban_data = soroban_data
+
+
+class StellarUInt128Parts(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("hi", "uint64", repeated=False, required=True),
+        2: protobuf.Field("lo", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hi: "int",
+        lo: "int",
+    ) -> None:
+        self.hi = hi
+        self.lo = lo
+
+
+class StellarInt128Parts(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("hi", "sint64", repeated=False, required=True),
+        2: protobuf.Field("lo", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hi: "int",
+        lo: "int",
+    ) -> None:
+        self.hi = hi
+        self.lo = lo
+
+
+class StellarUInt256Parts(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("hi_hi", "uint64", repeated=False, required=True),
+        2: protobuf.Field("hi_lo", "uint64", repeated=False, required=True),
+        3: protobuf.Field("lo_hi", "uint64", repeated=False, required=True),
+        4: protobuf.Field("lo_lo", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hi_hi: "int",
+        hi_lo: "int",
+        lo_hi: "int",
+        lo_lo: "int",
+    ) -> None:
+        self.hi_hi = hi_hi
+        self.hi_lo = hi_lo
+        self.lo_hi = lo_hi
+        self.lo_lo = lo_lo
+
+
+class StellarInt256Parts(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("hi_hi", "sint64", repeated=False, required=True),
+        2: protobuf.Field("hi_lo", "uint64", repeated=False, required=True),
+        3: protobuf.Field("lo_hi", "uint64", repeated=False, required=True),
+        4: protobuf.Field("lo_lo", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hi_hi: "int",
+        hi_lo: "int",
+        lo_hi: "int",
+        lo_lo: "int",
+    ) -> None:
+        self.hi_hi = hi_hi
+        self.hi_lo = hi_lo
+        self.lo_hi = lo_hi
+        self.lo_lo = lo_lo
+
+
+class StellarSCAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "StellarSCAddressType", repeated=False, required=True),
+        2: protobuf.Field("address", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "StellarSCAddressType",
+        address: "bytes",
+    ) -> None:
+        self.type = type
+        self.address = address
+
+
+class StellarSCValMapEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("key", "StellarSCVal", repeated=False, required=False, default=None),
+        2: protobuf.Field("value", "StellarSCVal", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: Optional["StellarSCVal"] = None,
+        value: Optional["StellarSCVal"] = None,
+    ) -> None:
+        self.key = key
+        self.value = value
 
 
 class TelemetryGet(protobuf.MessageType):
