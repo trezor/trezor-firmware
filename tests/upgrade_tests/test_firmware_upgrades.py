@@ -67,7 +67,7 @@ def lower_models_minimum_version(func):
         models.T2T1 = dataclasses.replace(models.T2T1, minimum_version=(2, 0, 0))
         models.TREZOR_ONE = models.T1B1
         models.TREZOR_T = models.T2T1
-        models.ALL_MODELS = {models.T1B1, models.T2T1}
+        models.ALL_MODELS = {models.T1B1, models.T2T1, models.T3W1}
 
         try:
             result = func(*args, **kwargs)
