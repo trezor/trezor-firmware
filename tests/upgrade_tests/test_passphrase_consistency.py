@@ -44,7 +44,7 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 @pytest.fixture
 def emulator(gen: str, tag: str, model: str) -> Iterator[Emulator]:
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with EmulatorWrapper(gen, tag, model, headless=False) as emu:
         # set up a passphrase-protected device
         device.setup(
             emu.client.get_seedless_session(),
@@ -159,3 +159,16 @@ def test_init_device(emulator: Emulator):
             parse_path("44h/1h/0h/0/0"),
         )
         assert session_id == session.id
+
+@for_all()
+def test_emulator_startup_and_wait(emulator: Emulator):
+    """Simple test that just starts the emulator, sets it up, and waits briefly."""
+    import time
+    
+    # Emulator is already started and set up by the fixture
+    # Check that device is accessible via features
+    assert emulator.client.features is not None
+    assert emulator.client.features.initialized is True
+    
+    # Wait for 10 seconds to keep the emulator alive for testing
+    time.sleep(10)
