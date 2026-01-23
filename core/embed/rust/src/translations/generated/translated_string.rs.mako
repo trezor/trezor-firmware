@@ -100,7 +100,7 @@ def filter_by_features(values: list[str], keep_debug: bool, keep_altcoin: bool) 
         feature if is_enabled else f'not({feature})'
         for is_enabled, feature in zip(enabled_features, features)
     ]
-    cfg_line = f'#[cfg(all({', '.join(configs)}))]'
+    cfg_line = f'#[cfg(all({", ".join(configs)}))]'
 
     # Currently all English words fit into a single chunk
     [encoded] = TranslatedStringsChunk.from_items(filter_by_features(layout_data, *enabled_features))
