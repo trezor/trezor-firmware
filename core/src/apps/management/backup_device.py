@@ -24,6 +24,14 @@ async def perform_backup(
 
     from .reset_device import backup_seed, backup_slip39_custom, layout
 
+    await confirm_action(
+        "dummy",
+        title="Start",
+        description="Start backup? Be careful!",
+        br_code=ButtonRequestType.ProtectCall,
+        verb=TR.buttons__back_up,
+    )
+
     # Ask the user to confirm backup. The user can still escape here.
     if is_repeated_backup:
         await confirm_action(

@@ -1779,9 +1779,13 @@ class InputFlowBip39Backup(InputFlowBase):
         self.confirm_success = confirm_success
 
     def input_flow_common(self) -> BRGeneratorType:
+        # Dummy BR
+        yield from click_through(self.debug, screens=1, code=B.ProtectCall)
+
         # 1. Backup intro
         # 2. Backup warning
-        yield from click_through(self.debug, screens=2, code=B.ResetDevice)
+        for i in range(2):
+            self.debug.press_yes()
 
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic(self.debug, self.confirm_success)
