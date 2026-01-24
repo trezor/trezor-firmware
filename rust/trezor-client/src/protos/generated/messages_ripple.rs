@@ -454,6 +454,8 @@ pub struct RippleSignTx {
     pub last_ledger_sequence: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleSignTx.payment)
     pub payment: ::protobuf::MessageField<ripple_sign_tx::RipplePayment>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleSignTx.account_delete)
+    pub account_delete: ::protobuf::MessageField<ripple_sign_tx::RippleAccountDelete>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleSignTx.chunkify)
     pub chunkify: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleSignTx.payment_req)
@@ -570,7 +572,7 @@ impl RippleSignTx {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(8);
+        let mut fields = ::std::vec::Vec::with_capacity(9);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -602,6 +604,11 @@ impl RippleSignTx {
             |m: &RippleSignTx| { &m.payment },
             |m: &mut RippleSignTx| { &mut m.payment },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ripple_sign_tx::RippleAccountDelete>(
+            "account_delete",
+            |m: &RippleSignTx| { &m.account_delete },
+            |m: &mut RippleSignTx| { &mut m.account_delete },
+        ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "chunkify",
             |m: &RippleSignTx| { &m.chunkify },
@@ -630,10 +637,12 @@ impl ::protobuf::Message for RippleSignTx {
         if self.sequence.is_none() {
             return false;
         }
-        if self.payment.is_none() {
-            return false;
-        }
         for v in &self.payment {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.account_delete {
             if !v.is_initialized() {
                 return false;
             }
@@ -669,6 +678,9 @@ impl ::protobuf::Message for RippleSignTx {
                 },
                 50 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.payment)?;
+                },
+                74 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.account_delete)?;
                 },
                 56 => {
                     self.chunkify = ::std::option::Option::Some(is.read_bool()?);
@@ -707,6 +719,10 @@ impl ::protobuf::Message for RippleSignTx {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.account_delete.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         if let Some(v) = self.chunkify {
             my_size += 1 + 1;
         }
@@ -738,6 +754,9 @@ impl ::protobuf::Message for RippleSignTx {
         if let Some(v) = self.payment.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(6, v, os)?;
         }
+        if let Some(v) = self.account_delete.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(9, v, os)?;
+        }
         if let Some(v) = self.chunkify {
             os.write_bool(7, v)?;
         }
@@ -767,6 +786,7 @@ impl ::protobuf::Message for RippleSignTx {
         self.sequence = ::std::option::Option::None;
         self.last_ledger_sequence = ::std::option::Option::None;
         self.payment.clear();
+        self.account_delete.clear();
         self.chunkify = ::std::option::Option::None;
         self.payment_req.clear();
         self.special_fields.clear();
@@ -780,6 +800,7 @@ impl ::protobuf::Message for RippleSignTx {
             sequence: ::std::option::Option::None,
             last_ledger_sequence: ::std::option::Option::None,
             payment: ::protobuf::MessageField::none(),
+            account_delete: ::protobuf::MessageField::none(),
             chunkify: ::std::option::Option::None,
             payment_req: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
@@ -1044,6 +1065,167 @@ pub mod ripple_sign_tx {
     impl ::protobuf::reflect::ProtobufValue for RipplePayment {
         type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
     }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.ripple.RippleSignTx.RippleAccountDelete)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct RippleAccountDelete {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleSignTx.RippleAccountDelete.destination)
+        pub destination: ::std::option::Option<::std::string::String>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.ripple.RippleSignTx.RippleAccountDelete.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a RippleAccountDelete {
+        fn default() -> &'a RippleAccountDelete {
+            <RippleAccountDelete as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl RippleAccountDelete {
+        pub fn new() -> RippleAccountDelete {
+            ::std::default::Default::default()
+        }
+
+        // required string destination = 1;
+
+        pub fn destination(&self) -> &str {
+            match self.destination.as_ref() {
+                Some(v) => v,
+                None => "",
+            }
+        }
+
+        pub fn clear_destination(&mut self) {
+            self.destination = ::std::option::Option::None;
+        }
+
+        pub fn has_destination(&self) -> bool {
+            self.destination.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_destination(&mut self, v: ::std::string::String) {
+            self.destination = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_destination(&mut self) -> &mut ::std::string::String {
+            if self.destination.is_none() {
+                self.destination = ::std::option::Option::Some(::std::string::String::new());
+            }
+            self.destination.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_destination(&mut self) -> ::std::string::String {
+            self.destination.take().unwrap_or_else(|| ::std::string::String::new())
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(1);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "destination",
+                |m: &RippleAccountDelete| { &m.destination },
+                |m: &mut RippleAccountDelete| { &mut m.destination },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RippleAccountDelete>(
+                "RippleSignTx.RippleAccountDelete",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for RippleAccountDelete {
+        const NAME: &'static str = "RippleAccountDelete";
+
+        fn is_initialized(&self) -> bool {
+            if self.destination.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    10 => {
+                        self.destination = ::std::option::Option::Some(is.read_string()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.destination.as_ref() {
+                my_size += ::protobuf::rt::string_size(1, &v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.destination.as_ref() {
+                os.write_string(1, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> RippleAccountDelete {
+            RippleAccountDelete::new()
+        }
+
+        fn clear(&mut self) {
+            self.destination = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static RippleAccountDelete {
+            static instance: RippleAccountDelete = RippleAccountDelete {
+                destination: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for RippleAccountDelete {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("RippleSignTx.RippleAccountDelete").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for RippleAccountDelete {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for RippleAccountDelete {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
 }
 
 // @@protoc_insertion_point(message:hw.trezor.messages.ripple.RippleSignedTx)
@@ -1270,18 +1452,21 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\
     \x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\x08R\x08chunkify\
     \";\n\rRippleAddress\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\
-    \x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xd1\x03\n\x0cRippleSign\
+    \x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xee\x04\n\x0cRippleSign\
     Tx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03fee\
     \x18\x02\x20\x02(\x04R\x03fee\x12\x17\n\x05flags\x18\x03\x20\x01(\r:\x01\
     0R\x05flags\x12\x1a\n\x08sequence\x18\x04\x20\x02(\rR\x08sequence\x120\n\
     \x14last_ledger_sequence\x18\x05\x20\x01(\rR\x12lastLedgerSequence\x12O\
-    \n\x07payment\x18\x06\x20\x02(\x0b25.hw.trezor.messages.ripple.RippleSig\
-    nTx.RipplePaymentR\x07payment\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08\
-    R\x08chunkify\x12J\n\x0bpayment_req\x18\x08\x20\x01(\x0b2).hw.trezor.mes\
-    sages.common.PaymentRequestR\npaymentReq\x1ar\n\rRipplePayment\x12\x16\n\
-    \x06amount\x18\x01\x20\x02(\x04R\x06amount\x12\x20\n\x0bdestination\x18\
-    \x02\x20\x02(\tR\x0bdestination\x12'\n\x0fdestination_tag\x18\x03\x20\
-    \x01(\rR\x0edestinationTag\"S\n\x0eRippleSignedTx\x12\x1c\n\tsignature\
+    \n\x07payment\x18\x06\x20\x01(\x0b25.hw.trezor.messages.ripple.RippleSig\
+    nTx.RipplePaymentR\x07payment\x12b\n\x0eaccount_delete\x18\t\x20\x01(\
+    \x0b2;.hw.trezor.messages.ripple.RippleSignTx.RippleAccountDeleteR\racco\
+    untDelete\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\x12J\n\
+    \x0bpayment_req\x18\x08\x20\x01(\x0b2).hw.trezor.messages.common.Payment\
+    RequestR\npaymentReq\x1ar\n\rRipplePayment\x12\x16\n\x06amount\x18\x01\
+    \x20\x02(\x04R\x06amount\x12\x20\n\x0bdestination\x18\x02\x20\x02(\tR\
+    \x0bdestination\x12'\n\x0fdestination_tag\x18\x03\x20\x01(\rR\x0edestina\
+    tionTag\x1a7\n\x13RippleAccountDelete\x12\x20\n\x0bdestination\x18\x01\
+    \x20\x02(\tR\x0bdestination\"S\n\x0eRippleSignedTx\x12\x1c\n\tsignature\
     \x18\x01\x20\x02(\x0cR\tsignature\x12#\n\rserialized_tx\x18\x02\x20\x02(\
     \x0cR\x0cserializedTxB:\n#com.satoshilabs.trezor.lib.protobufB\x13Trezor\
     MessageRipple\
@@ -1303,12 +1488,13 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::messages_common::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(5);
+            let mut messages = ::std::vec::Vec::with_capacity(6);
             messages.push(RippleGetAddress::generated_message_descriptor_data());
             messages.push(RippleAddress::generated_message_descriptor_data());
             messages.push(RippleSignTx::generated_message_descriptor_data());
             messages.push(RippleSignedTx::generated_message_descriptor_data());
             messages.push(ripple_sign_tx::RipplePayment::generated_message_descriptor_data());
+            messages.push(ripple_sign_tx::RippleAccountDelete::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
