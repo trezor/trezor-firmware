@@ -1723,6 +1723,8 @@
       "Eckhart": ""
     },
     "reset__your_backup_is_done": "Your backup is done.",
+    "ripple__account_deletion_warning": "Delete Ripple account?",
+    "ripple__account_to_be_deleted": "To be deleted:",
     "ripple__confirm_tag": "Confirm tag",
     "ripple__destination_tag_missing": "Destination tag is not set. Typically needed when sending to exchanges.",
     "ripple__destination_tag_template": "Destination tag:\n{0}",
@@ -2244,6 +2246,7 @@
     "words__about": "About",
     "words__account": "Account",
     "words__account_colon": "Account:",
+    "words__account_deletion": "Account deletion",
     "words__address": "Address",
     "words__amount": "Amount",
     "words__are_you_sure": "Are you sure?",

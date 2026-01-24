@@ -975,7 +975,7 @@ def confirm_value(
         return lambda: trezorui_api.confirm_value(
             title=info_title,
             value=info_value,
-            description=description,
+            description=None,
             verb="",
             verb_cancel="",
             is_data=is_data,

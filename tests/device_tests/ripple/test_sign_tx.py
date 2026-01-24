@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import ripple
 from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ripple, pytest.mark.models("core")]
@@ -202,3 +202,54 @@ def test_signtx_payment_req(session: Session):
         resp.serialized_tx.hex()
         == "120000228000000024000000642e0001e240201b00051537614000000005f5e109684000000000000064732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed2744730450221008770743a472bb2d1c746a53ef131cc17cc118d538ec910ca928d221db4494cf702201e4ef242d6c3bff110c3cc3897a471fed0f5ac10987ea57da63f98dfa01e94df8114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988"
     )
+
+
+@pytest.mark.parametrize("chunkify", (True, False))
+def test_signtx_account_delete(session: Session, chunkify: bool):
+    msg = ripple.create_sign_tx_msg(
+        {
+            "TransactionType": "AccountDelete",
+            "AccountDelete": {
+                "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
+            },
+            "Flags": 0,
+            "Fee": 100,
+            "Sequence": 100,
+            "LastLedgerSequence": 333111,
+        }
+    )
+    resp = ripple.sign_tx(
+        session, parse_path("m/44h/144h/0h/0/2"), msg, chunkify=chunkify
+    )
+    assert (
+        resp.signature.hex()
+        == "304402204e5380e0d81f20c45b92710ec27a214e2f0650e315f0ef737754bba418f7cca902202e77c5fcb7443b648f09e8089ca24f1b8cd1ade51713fd1f1163d29ff6a489d5"
+    )
+    assert (
+        resp.serialized_tx.hex()
+        == "12001522800000002400000064201b00051537684000000000000064732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed27446304402204e5380e0d81f20c45b92710ec27a214e2f0650e315f0ef737754bba418f7cca902202e77c5fcb7443b648f09e8089ca24f1b8cd1ade51713fd1f1163d29ff6a489d58114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988"
+    )
+
+
+def test_signtx_cancel(session: Session):
+
+    msg = ripple.create_sign_tx_msg(
+        {
+            "TransactionType": "AccountDelete",
+            "AccountDelete": {
+                "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
+            },
+            "Flags": 0,
+            "Fee": 100,
+            "Sequence": 100,
+            "LastLedgerSequence": 333111,
+        }
+    )
+
+    def input_flow():
+        yield
+        session.cancel()
+
+    with pytest.raises(Cancelled), session.client as client:
+        client.set_input_flow(input_flow)
+        ripple.sign_tx(session, parse_path("m/44h/144h/0h/0/2"), msg)

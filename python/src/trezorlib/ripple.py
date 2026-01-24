@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from .tools import Address
     from .transport.session import Session
 
-REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
+REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType")
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")
 
 
@@ -62,10 +62,13 @@ def sign_tx(
 def create_sign_tx_msg(transaction: dict) -> messages.RippleSignTx:
     if not all(transaction.get(k) for k in REQUIRED_FIELDS):
         raise ValueError("Some of the required fields missing")
-    if not all(transaction["Payment"].get(k) for k in REQUIRED_PAYMENT_FIELDS):
-        raise ValueError("Some of the required payment fields missing")
-    if transaction["TransactionType"] != "Payment":
-        raise ValueError("Only Payment transaction type is supported")
+    if "Payment" in transaction:
+        if not all(transaction["Payment"].get(k) for k in REQUIRED_PAYMENT_FIELDS):
+            raise ValueError("Some of the required payment fields missing")
+    if transaction["TransactionType"] not in ("Payment", "AccountDelete"):
+        raise ValueError(
+            "Only Payment and AccountDelete transaction types are supported"
+        )
 
     converted = dict_from_camelcase(transaction)
     return dict_to_proto(messages.RippleSignTx, converted)
