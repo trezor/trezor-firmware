@@ -24,8 +24,9 @@ if TYPE_CHECKING:
     from .client import Session
     from .tools import Address
 
-REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
+REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType")
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")
+REQUIRED_ACCOUNT_DELETE_FIELDS = ("Destination",)
 
 
 def get_address(*args: Any, **kwargs: Any) -> str:
@@ -64,10 +65,25 @@ def sign_tx(
 def create_sign_tx_msg(transaction: dict) -> messages.RippleSignTx:
     if not all(transaction.get(k) for k in REQUIRED_FIELDS):
         raise ValueError("Some of the required fields missing")
-    if not all(transaction["Payment"].get(k) for k in REQUIRED_PAYMENT_FIELDS):
-        raise ValueError("Some of the required payment fields missing")
-    if transaction["TransactionType"] != "Payment":
-        raise ValueError("Only Payment transaction type is supported")
+    tx_type = transaction["TransactionType"]
+    if tx_type not in ("Payment", "AccountDelete"):
+        raise ValueError(
+            "Only Payment and AccountDelete transaction types are supported"
+        )
+    if "Payment" in transaction and "AccountDelete" in transaction:
+        raise ValueError("Transaction cannot contain both Payment and AccountDelete")
+    if tx_type == "Payment":
+        if "Payment" not in transaction:
+            raise ValueError("Payment transaction missing Payment object")
+        if not all(transaction["Payment"].get(k) for k in REQUIRED_PAYMENT_FIELDS):
+            raise ValueError("Some of the required payment fields missing")
+    elif tx_type == "AccountDelete":
+        if "AccountDelete" not in transaction:
+            raise ValueError("AccountDelete transaction missing AccountDelete object")
+        if not all(
+            transaction["AccountDelete"].get(k) for k in REQUIRED_ACCOUNT_DELETE_FIELDS
+        ):
+            raise ValueError("Some of the required account delete fields missing")
 
     converted = dict_from_camelcase(transaction)
     return dict_to_proto(messages.RippleSignTx, converted)

@@ -5789,21 +5789,23 @@ if TYPE_CHECKING:
         flags: "int"
         sequence: "int"
         last_ledger_sequence: "int | None"
-        payment: "RipplePayment"
+        payment: "RipplePayment | None"
         chunkify: "bool | None"
         payment_req: "PaymentRequest | None"
+        account_delete: "RippleAccountDelete | None"
 
         def __init__(
             self,
             *,
             fee: "int",
             sequence: "int",
-            payment: "RipplePayment",
             address_n: "list[int] | None" = None,
             flags: "int | None" = None,
             last_ledger_sequence: "int | None" = None,
+            payment: "RipplePayment | None" = None,
             chunkify: "bool | None" = None,
             payment_req: "PaymentRequest | None" = None,
+            account_delete: "RippleAccountDelete | None" = None,
         ) -> None:
             pass
 
@@ -5843,6 +5845,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["RipplePayment"]:
+            return isinstance(msg, cls)
+
+    class RippleAccountDelete(protobuf.MessageType):
+        destination: "str"
+
+        def __init__(
+            self,
+            *,
+            destination: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["RippleAccountDelete"]:
             return isinstance(msg, cls)
 
     class SolanaGetPublicKey(protobuf.MessageType):

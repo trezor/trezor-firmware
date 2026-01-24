@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 # NOTE: it is one big function because that way it is the most flash-space-efficient
 @auto_keychain(__name__, slip21_namespaces=[[b"SLIP-0024"]])
 async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
-    from trezor import TR
+    from trezor import TR, wire
     from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha512
@@ -24,14 +24,18 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     from . import SLIP44_ID, helpers, layout
     from .serialize import serialize
 
-    payment = msg.payment  # local_cache_attribute
+    payment = msg.payment
+    account_delete = msg.account_delete
+    if (payment is None) == (account_delete is None):
+        raise wire.DataError("Transaction cannot be both payment and account delete.")
 
-    if payment.amount > helpers.MAX_ALLOWED_AMOUNT:
-        raise ProcessError("Amount exceeds maximum allowed amount.")
     await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     source_address = helpers.address_from_public_key(node.public_key())
+
+    if payment is not None and payment.amount > helpers.MAX_ALLOWED_AMOUNT:
+        raise ProcessError("Amount exceeds maximum allowed amount.")
 
     # Setting canonical flag
     # Our ECDSA implementation already returns fully-canonical signatures,
@@ -48,6 +52,7 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
         raise ProcessError("Fee must be in the range of 10 to 10,000 drops")
 
     if msg.payment_req:
+        assert payment is not None  # payment_req implies payment
         from apps.common.payment_request import PaymentRequestVerifier
 
         verifier = PaymentRequestVerifier(msg.payment_req, SLIP44_ID, keychain)
@@ -59,7 +64,8 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
         await layout.require_confirm_payment_request(
             address, msg.payment_req, msg.address_n
         )
-    else:
+        await layout.require_confirm_total(payment.amount + msg.fee, msg.fee)
+    elif payment is not None:
         if payment.destination_tag is not None:
             await layout.require_confirm_destination_tag(payment.destination_tag)
         else:
@@ -72,7 +78,16 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
             payment.destination, payment.amount, chunkify=bool(msg.chunkify)
         )
 
-    await layout.require_confirm_total(payment.amount + msg.fee, msg.fee)
+        await layout.require_confirm_total(payment.amount + msg.fee, msg.fee)
+    else:
+        assert account_delete is not None
+        await layout.confirm_account_deletion(
+            source_address,
+            msg.address_n,
+            account_delete.destination,
+            msg.fee,
+            bool(msg.chunkify),
+        )
 
     # Signs and encodes signature into DER format
     first_half_of_sha512 = sha512(to_sign).digest()[:32]

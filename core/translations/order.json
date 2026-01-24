@@ -1225,5 +1225,8 @@
   "1223": "n4w1__err_empty",
   "1224": "n4w1__err_nonempty",
   "1225": "n4w1__err_damaged",
-  "1226": "words__tap_to_wake"
+  "1226": "ripple__account_deletion_warning",
+  "1227": "ripple__account_to_be_deleted",
+  "1228": "words__account_deletion",
+  "1229": "words__tap_to_wake"
 }
