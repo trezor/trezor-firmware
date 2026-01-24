@@ -31,20 +31,37 @@ def serialize(
     pubkey: AnyBytes,
     signature: AnyBytes | None = None,
 ) -> bytearray:
+    payment = msg.payment
+    account_delete = msg.account_delete
     # must be sorted numerically first by type and then by name
-    fields_to_write = (  # field_type, field_key, value
-        (_FIELD_TYPE_INT16, 2, 0),  # payment type is 0
-        (_FIELD_TYPE_INT32, 2, msg.flags),  # flags
-        (_FIELD_TYPE_INT32, 4, msg.sequence),  # sequence
-        (_FIELD_TYPE_INT32, 14, msg.payment.destination_tag),  # destinationTag
-        (_FIELD_TYPE_INT32, 27, msg.last_ledger_sequence),  # lastLedgerSequence
-        (_FIELD_TYPE_AMOUNT, 1, msg.payment.amount),  # amount
-        (_FIELD_TYPE_AMOUNT, 8, msg.fee),  # fee
-        (_FIELD_TYPE_VL, 3, pubkey),  # signingPubKey
-        (_FIELD_TYPE_VL, 4, signature),  # txnSignature
-        (_FIELD_TYPE_ACCOUNT, 1, source_address),  # account
-        (_FIELD_TYPE_ACCOUNT, 3, msg.payment.destination),  # destination
-    )
+    if payment is not None:
+        fields_to_write = (  # field_type, field_key, value
+            (_FIELD_TYPE_INT16, 2, 0),  # payment type is 0
+            (_FIELD_TYPE_INT32, 2, msg.flags),  # flags
+            (_FIELD_TYPE_INT32, 4, msg.sequence),  # sequence
+            (_FIELD_TYPE_INT32, 14, payment.destination_tag),  # destinationTag
+            (_FIELD_TYPE_INT32, 27, msg.last_ledger_sequence),  # lastLedgerSequence
+            (_FIELD_TYPE_AMOUNT, 1, payment.amount),  # amount
+            (_FIELD_TYPE_AMOUNT, 8, msg.fee),  # fee
+            (_FIELD_TYPE_VL, 3, pubkey),  # signingPubKey
+            (_FIELD_TYPE_VL, 4, signature),  # txnSignature
+            (_FIELD_TYPE_ACCOUNT, 1, source_address),  # account
+            (_FIELD_TYPE_ACCOUNT, 3, payment.destination),  # destination
+        )
+    else:
+        assert account_delete is not None
+        fields_to_write = (  # AccountDelete transaction
+            (_FIELD_TYPE_INT16, 2, 21),  # accountDelete type is 21
+            (_FIELD_TYPE_INT32, 2, msg.flags),  # flags
+            (_FIELD_TYPE_INT32, 4, msg.sequence),  # sequence
+            (_FIELD_TYPE_INT32, 27, msg.last_ledger_sequence),  # lastLedgerSequence
+            (_FIELD_TYPE_AMOUNT, 8, msg.fee),  # fee
+            (_FIELD_TYPE_VL, 3, pubkey),  # signingPubKey
+            (_FIELD_TYPE_VL, 4, signature),  # txnSignature
+            (_FIELD_TYPE_ACCOUNT, 1, source_address),  # Holder account
+            # Destination account for remaining XRP
+            (_FIELD_TYPE_ACCOUNT, 3, account_delete.destination),
+        )
 
     w = bytearray()
     for field_type, field_key, value in fields_to_write:

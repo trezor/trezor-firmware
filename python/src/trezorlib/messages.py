@@ -7531,9 +7531,10 @@ class RippleSignTx(protobuf.MessageType):
         3: protobuf.Field("flags", "uint32", repeated=False, required=False, default=0),
         4: protobuf.Field("sequence", "uint32", repeated=False, required=True),
         5: protobuf.Field("last_ledger_sequence", "uint32", repeated=False, required=False, default=None),
-        6: protobuf.Field("payment", "RipplePayment", repeated=False, required=True),
+        6: protobuf.Field("payment", "RipplePayment", repeated=False, required=False, default=None),
         7: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
         8: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
+        9: protobuf.Field("account_delete", "RippleAccountDelete", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -7541,21 +7542,23 @@ class RippleSignTx(protobuf.MessageType):
         *,
         fee: "int",
         sequence: "int",
-        payment: "RipplePayment",
         address_n: Optional[Sequence["int"]] = None,
         flags: Optional["int"] = 0,
         last_ledger_sequence: Optional["int"] = None,
+        payment: Optional["RipplePayment"] = None,
         chunkify: Optional["bool"] = None,
         payment_req: Optional["PaymentRequest"] = None,
+        account_delete: Optional["RippleAccountDelete"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.fee = fee
         self.sequence = sequence
-        self.payment = payment
         self.flags = flags
         self.last_ledger_sequence = last_ledger_sequence
+        self.payment = payment
         self.chunkify = chunkify
         self.payment_req = payment_req
+        self.account_delete = account_delete
 
 
 class RippleSignedTx(protobuf.MessageType):
@@ -7593,6 +7596,20 @@ class RipplePayment(protobuf.MessageType):
         self.amount = amount
         self.destination = destination
         self.destination_tag = destination_tag
+
+
+class RippleAccountDelete(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("destination", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        destination: "str",
+    ) -> None:
+        self.destination = destination
 
 
 class SolanaGetPublicKey(protobuf.MessageType):
