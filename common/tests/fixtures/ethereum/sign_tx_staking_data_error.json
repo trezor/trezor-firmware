@@ -5,27 +5,7 @@
     },
     "tests": [
         {
-            "name": "stake_bad_inputs_1",
-            "parameters": {
-                "comment": "Stake transaction - Hoodi testnet. Wrong source argument (should be 1).",
-                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000002",
-                "path": "m/44'/60'/0'/0/0",
-                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
-                "chain_id": 560048,
-                "nonce": "0x0",
-                "gas_price": "0x14",
-                "gas_limit": "0x14",
-                "tx_type": null,
-                "value": "0x16345785D8A0000"
-            },
-            "result": {
-                "sig_v": 0,
-                "sig_r": "0x0",
-                "sig_s": "0x0"
-            }
-        },
-        {
-            "name": "stake_bad_inputs_2",
+            "name": "stake_bad_inputs",
             "parameters": {
                 "comment": "Stake transaction - Mainnet. Missing arguments.",
                 "data": "3a29dbae",
@@ -45,27 +25,7 @@
             }
         },
         {
-            "name": "unstake_bad_inputs_1",
-            "parameters": {
-                "comment": "Unstake transaction - Hoodi testnet. Wrong source argument (should be 1).",
-                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002",
-                "path": "m/44'/60'/0'/0/0",
-                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
-                "chain_id": 560048,
-                "nonce": "0x0",
-                "gas_price": "0x14",
-                "gas_limit": "0x14",
-                "tx_type": null,
-                "value": "0x0"
-            },
-            "result": {
-                "sig_v": 0,
-                "sig_r": "0x0",
-                "sig_s": "0x0"
-            }
-        },
-        {
-            "name": "unstake_bad_inputs_2",
+            "name": "unstake_bad_inputs",
             "parameters": {
                 "comment": "Unstake transaction - Hoodi testnet. Misaligned arguments.",
                 "data": "76ec871c000000000000000000",
@@ -85,7 +45,7 @@
             }
         },
         {
-            "name": "claim_bad_inputs_1",
+            "name": "claim_bad_inputs",
             "parameters": {
                 "comment": "Claim transaction - Mainnet. Misaligned data.",
                 "data": "33986ffaaa000aaa",

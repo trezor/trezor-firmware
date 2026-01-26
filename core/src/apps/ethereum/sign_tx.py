@@ -462,13 +462,9 @@ async def _handle_staking_tx_stake(
     from .layout import require_confirm_stake
 
     # stake args:
-    # - arg0: uint64, source (should be 1)
+    # - arg0: uint64, source (1 for Trezor)
     try:
-        source = int.from_bytes(
-            data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES), "big"
-        )
-        if source != 1:
-            raise ValueError  # wrong value of 1st argument ('source' should be 1)
+        _ = data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES)  # skip arg0
         if data_reader.remaining_count() != 0:
             raise ValueError  # wrong number of arguments for stake (should be 1)
     except (ValueError, EOFError):
@@ -497,18 +493,14 @@ async def _handle_staking_tx_unstake(
 
     # unstake args:
     # - arg0: uint256, value
-    # - arg1:  uint16, isAllowedInterchange (bool)
-    # - arg2: uint64, source, should be 1
+    # - arg1: uint16, isAllowedInterchange (bool)
+    # - arg2: uint64, source (1 for Trezor)
     try:
         value = int.from_bytes(
             data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES), "big"
-        )
+        )  # parse arg0
         _ = data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES)  # skip arg1
-        source = int.from_bytes(
-            data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES), "big"
-        )
-        if source != 1:
-            raise ValueError  # wrong value of 3rd argument ('source' should be 1)
+        _ = data_reader.read_memoryview(constants.SC_ARGUMENT_BYTES)  # skip arg2
         if data_reader.remaining_count() != 0:
             raise ValueError  # wrong number of arguments for unstake (should be 3)
     except (ValueError, EOFError):

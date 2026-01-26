@@ -25,6 +25,26 @@
             }
         },
         {
+            "name": "stake_source_not_1",
+            "parameters": {
+                "comment": "Stake transaction - Hoodi testnet. Source is not 1.",
+                "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000002",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x16345785D8A0000"
+            },
+            "result": {
+                "sig_v": 1120132,
+                "sig_r": "bc62339b60d2d98db518891cf63bd82994088339fb885e7f342cef2bbffe5486",
+                "sig_s": "1889ee1876ea678161211fde29a21f1b067d662ad298a4037be795faffde0a35"
+            }
+        },
+        {
             "name": "stake_main",
             "parameters": {
                 "comment": "Stake transaction - Mainnet",
@@ -62,6 +82,26 @@
                 "sig_v": 1120132,
                 "sig_r": "52f130eabe5bf803bb1b8e0ee3da21495bd313310293176e7a431959fe28d7e2",
                 "sig_s": "58eefc8a896265d09f70123065a8a9d2324839aa118218d243ac740e158d4c35"
+            }
+        },
+        {
+            "name": "unstake_source_not_1",
+            "parameters": {
+                "comment": "Unstake transaction - Hoodi testnet. Source is not 1.",
+                "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
+                "chain_id": 560048,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 1120132,
+                "sig_r": "60ac0b26f8583849d3f640b1ce36ed257b65cb70e2fb1ca97eb1168cf6587399",
+                "sig_s": "4e0ee0dee1eccea6c08f8334fe863981e831c5860e2ba8c63a5e7574e63602aa"
             }
         },
         {
