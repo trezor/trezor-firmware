@@ -26,6 +26,7 @@ class FailureType(IntEnum):
     Busy = 15
     ThpUnallocatedSession = 16
     InvalidProtocol = 17
+    InProgress = 19
     FirmwareError = 99
 
 
