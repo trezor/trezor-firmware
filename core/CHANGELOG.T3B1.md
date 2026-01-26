@@ -20,8 +20,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fixed Stellar Amount and Bitcoin lock time font.  [#6109]
-- Make sure to increment THP `seq_bit`.  [#6138]
-- Fixed external tamper trigger clearing.  [#6186]
 
 ## [2.9.5] (internal release)
 
@@ -1239,10 +1237,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#6104]: https://github.com/trezor/trezor-firmware/pull/6104
 [#6109]: https://github.com/trezor/trezor-firmware/pull/6109
 [#6136]: https://github.com/trezor/trezor-firmware/pull/6136
-[#6138]: https://github.com/trezor/trezor-firmware/pull/6138
 [#6145]: https://github.com/trezor/trezor-firmware/pull/6145
 [#6165]: https://github.com/trezor/trezor-firmware/pull/6165
-[#6186]: https://github.com/trezor/trezor-firmware/pull/6186
 [#6225]: https://github.com/trezor/trezor-firmware/pull/6225
 [#6228]: https://github.com/trezor/trezor-firmware/pull/6228
 [#6236]: https://github.com/trezor/trezor-firmware/pull/6236
