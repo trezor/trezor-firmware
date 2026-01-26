@@ -36,6 +36,7 @@ static pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv);
 
 static void pm_enter_hibernate(pm_driver_t* drv);
 static void pm_enter_charging(pm_driver_t* drv);
+static void pm_enter_suspend(pm_driver_t* drv);
 static void pm_enter_shutting_down(pm_driver_t* drv);
 static void pm_enter_power_save(pm_driver_t* drv);
 static void pm_enter_active(pm_driver_t* drv);
@@ -63,7 +64,7 @@ static const pm_state_handler_t state_handlers[] = {
         },
     [PM_STATE_SUSPEND] =
         {
-            .enter = NULL,
+            .enter = pm_enter_suspend,
             .handle = pm_handle_state_suspend,
             .exit = NULL,
         },
@@ -250,27 +251,50 @@ static pm_power_status_t pm_handle_state_active(pm_driver_t* drv) {
 }
 
 // State enter/exit actions
-
 static void pm_enter_hibernate(pm_driver_t* drv) {
+  // Set PMIC to PFM mode to minimize the power cunsumption in low power mode.
+  pmic_set_buck_mode(PMIC_BUCK_MODE_PFM);
+
   // Store power manager data with request to hibernate, power manager
   // will try to hibernate immediately after reboot.
   pm_store_data_to_backup_ram();
   reboot_to_off();
 }
 
-static void pm_enter_charging(pm_driver_t* drv) {}
+static void pm_enter_charging(pm_driver_t* drv) {
+  // Force PMIC to PWM mode so it wont randomly switch to PFM mode and
+  // current measuremets are more stable.
+  pmic_set_buck_mode(PMIC_BUCK_MODE_PWM);
+}
+
+static void pm_enter_suspend(pm_driver_t* drv) {
+  // Set PMIC to PFM mode to minimize the power cunsumption in low power mode.
+  pmic_set_buck_mode(PMIC_BUCK_MODE_PFM);
+}
 
 static void pm_enter_shutting_down(pm_driver_t* drv) {
+  // Force PMIC to PWM mode so it wont randomly switch to PFM mode and
+  // current measuremets are more stable.
+  pmic_set_buck_mode(PMIC_BUCK_MODE_PWM);
+
   // Set shutdown timer
   systimer_set(drv->shutdown_timer, PM_SHUTDOWN_TIMEOUT_MS);
 }
 
 static void pm_enter_power_save(pm_driver_t* drv) {
+  // Force PMIC to PWM mode so it wont randomly switch to PFM mode and
+  // current measuremets are more stable.
+  pmic_set_buck_mode(PMIC_BUCK_MODE_PWM);
+
   // Limit backlight
   backlight_set_max_level(130);
 }
 
 static void pm_enter_active(pm_driver_t* drv) {
+  // Force PMIC to PWM mode so it wont randomly switch to PFM mode and
+  // current measuremets are more stable.
+  pmic_set_buck_mode(PMIC_BUCK_MODE_PWM);
+
   // Set unlimited backlight
   backlight_set_max_level(255);
 }
