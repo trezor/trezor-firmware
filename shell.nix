@@ -66,10 +66,10 @@ let
     src = nixpkgs.fetchFromGitHub {
       owner = "STMicroelectronics";
       repo = "OpenOCD";
-      rev = "openocd-cubeide-v1.13.0";
-      sha256 = "a811402e19f0bfe496f6eecdc05ecea57f79a323879a810efaaff101cb0f420f";
+      rev = "openocd-cubeide-v1.18.1";
+      sha256 = "00174xgk7rpvsmzx19n9rasd3qk85r087jwvsgaxfg2zbgm9lx1j";
     };
-    version = "stm-cubeide-v1.13.0";
+    version = "stm-cubeide-v1.18.1";
     nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ nixpkgs.autoreconfHook ];
   }));
 in
