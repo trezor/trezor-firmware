@@ -20,6 +20,7 @@ WipeCodeMismatch = 13
 InvalidSession = 14
 Busy = 15
 InvalidProtocol = 17
+InProgress = 19
 FirmwareError = 99
 if utils.USE_THP:
     ThpUnallocatedSession = 16

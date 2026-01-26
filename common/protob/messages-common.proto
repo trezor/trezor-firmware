@@ -43,6 +43,7 @@ message Failure {
         Failure_ThpUnallocatedSession = 16;
         Failure_InvalidProtocol = 17;
         reserved 18;
+        Failure_InProgress = 19;
         Failure_FirmwareError = 99;
     }
 }
