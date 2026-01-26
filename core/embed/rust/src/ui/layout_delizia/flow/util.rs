@@ -304,6 +304,7 @@ pub struct ShowInfoParams {
     swipe_up: bool,
     swipe_down: bool,
     items: Vec<(TString<'static>, TString<'static>), 4>,
+    flow_menu: bool,
 }
 
 impl ShowInfoParams {
@@ -318,6 +319,7 @@ impl ShowInfoParams {
             swipe_up: false,
             swipe_down: false,
             items: Vec::new(),
+            flow_menu: false,
         }
     }
 
@@ -380,6 +382,11 @@ impl ShowInfoParams {
         self
     }
 
+    pub const fn with_flow_menu(mut self, flow_menu: bool) -> Self {
+        self.flow_menu = flow_menu;
+        self
+    }
+
     #[inline(never)]
     pub fn into_layout(
         self,
@@ -415,6 +422,9 @@ impl ShowInfoParams {
         }
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
+        }
+        if self.flow_menu {
+            frame = frame.with_flow_menu();
         }
 
         if self.swipe_up {

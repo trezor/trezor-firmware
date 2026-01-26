@@ -211,6 +211,7 @@ pub fn new_confirm_output(
     let res = if let Some(summary_items_params) = summary_items_params {
         // Summary
         let content_summary = summary_items_params
+            .with_flow_menu(true)
             .into_layout()?
             .one_button_request(ButtonRequest::from_num(
                 summary_br_code.unwrap(),
@@ -224,6 +225,7 @@ pub fn new_confirm_output(
             SwipeContent::new(PromptScreen::new_hold_to_confirm()),
         )
         .with_menu_button()
+        .with_flow_menu()
         .with_footer(TR::instructions__hold_to_sign.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::Default)
         .map(super::util::map_to_confirm);
