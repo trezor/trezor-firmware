@@ -499,3 +499,32 @@ def verify_message(
     return btc.verify_message(
         session, coin, address, signature_bytes, message, chunkify=chunkify
     )
+
+
+@cli.command()
+@click.option("-n", "name", help="Human-readable policy name")
+@click.option(
+    "-t", "template", help="Miniscript template (using @N as xpub placeholder)"
+)
+@click.option("-x", "--xpub", multiple=True, help="A non-empty list of xpubs")
+@click.option("-c", "--coin", default=DEFAULT_COIN)
+@click.option("-b", "--blocks", type=int)
+@with_session
+def register_policy(
+    session: "Session",
+    coin: str,
+    name: str,
+    template: str,
+    blocks: int,
+    xpub: list[str],
+) -> str:
+    """Register a policy and return the resulting MAC."""
+    resp = btc.register_policy(
+        session=session,
+        coin_name=coin,
+        name=name,
+        template=template,
+        blocks=blocks,
+        xpubs=xpub,
+    )
+    return resp.mac.hex()
