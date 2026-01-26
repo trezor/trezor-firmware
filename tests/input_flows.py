@@ -3039,9 +3039,9 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
+                    self.client.ui.visit_menu_items()
                     self.debug.swipe_up()
 
-            # Visit info menus (if exist)
             layout = self.client.ui.visit_menu_items()
 
             text = layout.footer().lower()
@@ -3069,8 +3069,10 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
+                    self.client.ui.visit_menu_items()
                     self.debug.click(self.debug.screen_buttons.ok())
-            layout = self.debug.read_layout()
+
+            layout = self.client.ui.visit_menu_items()
             text = layout.action_bar().lower()
             # hi priority warning
             hi_prio = (
