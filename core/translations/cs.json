@@ -36,12 +36,7 @@
     "version": "2.10.1"
   },
   "translations": {
-    "addr_mismatch__contact_support_at": {
-      "Bolt": "Prosím, kontaktujte podporu Trezoru na",
-      "Caesar": "Kontaktujte naši podporu na",
-      "Delizia": "Kontaktujte naši podporu na",
-      "Eckhart": "Prosím, kontaktujte naši podporu na"
-    },
+    "addr_mismatch__contact_support_at": "Kontaktujte naši podporu na",
     "addr_mismatch__key_mismatch": "Neshoda klíče?",
     "addr_mismatch__mismatch": "Neshoduje se adresa?",
     "addr_mismatch__support_url": "trezor.io/support",
@@ -129,7 +124,12 @@
     "backup__new_wallet_successfully_created": "Peněženka byla vytvořena.",
     "backup__not_recommend": "Nedoporučujeme přeskočit vytvoření zálohy peněženky.",
     "backup__recover_anytime": "Pomocí zálohy můžete svou peněženku kdykoli obnovit.",
-    "backup__title_backup_completed": "Záloha peněženky byla vytvořena",
+    "backup__title_backup_completed": {
+      "Bolt": "Záloha peněženky byla vytvořena",
+      "Caesar": "Záloha peněženky byla vytvořena",
+      "Delizia": "Záloha peněženky byla vytvořena",
+      "Eckhart": "Záloha peněženky byla vytvořena."
+    },
     "backup__title_backup_wallet": "Záloha peněženky",
     "backup__title_create_wallet_backup": "Vytvořit zálohu peněženky",
     "backup__title_skip": "Přeskočit zálohu",
@@ -148,7 +148,7 @@
     "bitcoin__ticket_amount": "Částka za lístek",
     "bitcoin__title_confirm_details": "Potvrdit údaje",
     "bitcoin__title_finalize_transaction": "Dokončit transakci",
-    "bitcoin__title_high_mining_fee": "Vys. poplatek těžby",
+    "bitcoin__title_high_mining_fee": "Vysoký popl. těžby",
     "bitcoin__title_meld_transaction": "Transakce Meld",
     "bitcoin__title_modify_amount": "Upravit částku",
     "bitcoin__title_payjoin": "Payjoin",
@@ -790,7 +790,12 @@
     "fido__device_already_registered_with_template": "Toto zařízení je již registrováno v {0}.",
     "fido__device_not_registered": "Toto zařízení ještě není v aplikaci zaregistrováno.",
     "fido__does_not_belong": "Údaje, které se pokoušíte importovat,\nnepatří tomuto autentikátoru.",
-    "fido__erase_credentials": "smazat všechny údaje?",
+    "fido__erase_credentials": {
+      "Bolt": "smazat všechny údaje?",
+      "Caesar": "smazat všechny údaje?",
+      "Delizia": "smazat všechny údaje?",
+      "Eckhart": "Smazat všechny údaje?"
+    },
     "fido__export_credentials": "Exportovat informace o údajích uložených v tomto zařízení?",
     "fido__more_credentials": "Další přihlašovací údaje",
     "fido__not_registered": "Nezaregistrováno",
@@ -850,7 +855,7 @@
     "homescreen__title_backup_needed": "Je potřeba záloha",
     "homescreen__title_coinjoin_authorized": "Coinjoin schválen",
     "homescreen__title_experimental_mode": "Experiment. režim",
-    "homescreen__title_no_usb_connection": "Žádné připojení usb",
+    "homescreen__title_no_usb_connection": "Žádné připojení USB",
     "homescreen__title_pin_not_set": "Není nastaven PIN",
     "homescreen__title_seedless": "Bez seedu",
     "homescreen__title_set": "Změnit domov. obr.?",
@@ -924,7 +929,6 @@
     "instructions__tap": "Klepněte",
     "instructions__tap_to_confirm": "Klepnutím potvrďte",
     "instructions__tap_to_continue": "Klepnutím pokračujte",
-    "instructions__tap_to_start": "Začněte klepnutím",
     "instructions__view_all_data": "Zobrazit všechna data v menu.",
     "joint__title": "Společná transakce",
     "joint__to_the_total_amount": "Do celkové částky:",
@@ -964,7 +968,7 @@
     "misc__decrypt_value": "Dešifrovat hodnotu",
     "misc__enable_labeling": "Povolit popisky?",
     "misc__encrypt_value": "Zašifrovat hodnotu",
-    "misc__title_suite_labeling": "Popisky ze suite",
+    "misc__title_suite_labeling": "Popisky ze Suite",
     "modify_amount__decrease_amount": {
       "Bolt": "Snížit částku o:",
       "Caesar": "Snížit částku o:",
@@ -1517,7 +1521,12 @@
     "recovery__type_word_x_of_y_template": "Zadejte slovo {0} z {1}",
     "recovery__unlock_repeated_backup": "Vytvořit další zálohu?",
     "recovery__unlock_repeated_backup_verb": "Vytvořit zálohu",
-    "recovery__wallet_recovered": "Obnovení peněženky dokončeno",
+    "recovery__wallet_recovered": {
+      "Bolt": "Obnovení peněženky dokončeno",
+      "Caesar": "Obnovení peněženky dokončeno",
+      "Delizia": "Obnovení peněženky dokončeno",
+      "Eckhart": "Obnovení peněženky dokončeno."
+    },
     "recovery__wanna_cancel_dry_run": "Opravdu chcete zrušit kontrolu zálohy?",
     "recovery__wanna_cancel_recovery": "Opravdu chcete proces obnovy zrušit?",
     "recovery__word_count_template": "(slova: {0})",
@@ -1651,7 +1660,12 @@
       "Delizia": "Vyberte slovo #{0} z\npodílu #{1}",
       "Eckhart": "Vyberte slovo #{0} z podílu #{1}"
     },
-    "reset__select_word_template": "Vybrat slovo {0}",
+    "reset__select_word_template": {
+      "Bolt": "Vybrat slovo {0}",
+      "Caesar": "Vybrat slovo {0}",
+      "Delizia": "Vybrat slovo {0}",
+      "Eckhart": "Vybrat slovo #{0} ze zálohy vaší peněženky"
+    },
     "reset__select_word_x_of_y_template": "Vyb. slovo {0} z {1}:",
     "reset__set_it_to_count_template": {
       "Bolt": "Nastavte {0} a budete potřebovat ",
@@ -1932,7 +1946,7 @@
     "solana__stake_account": "Stake účet",
     "solana__stake_on_question": "Stakovat SOL na {0}?",
     "solana__stake_question": "Stakovat SOL?",
-    "solana__stake_withdrawal_warning": "Tato pěněženka nemůže být použita pro výběr z tohoto stakingu.",
+    "solana__stake_withdrawal_warning": "Tato peněženka nemůže být použita pro výběr z tohoto stakingu.",
     "solana__stake_withdrawal_warning_title": "Adresa autority oprávněné k výběru",
     "solana__transaction_contains_unknown_instructions": "Transakce obsahuje neznámý pokyn.",
     "solana__transaction_requires_x_signers_template": "Transakce vyžaduje {0} podepisujících osob, což zvyšuje poplatek.",
@@ -2124,7 +2138,7 @@
     "tutorial__continue": "Pokračovat v tutoriálu",
     "tutorial__did_you_know": "Věděli jste, že...",
     "tutorial__exit": "Ukončit tutoriál",
-    "tutorial__first_wallet": "Trezor Model One, vyrobený v roce 2013,\nbyl první hardwarovou peněženkou na světě?",
+    "tutorial__first_wallet": "Trezor Model One, vyrobený v roce 2013,\nbyl první hardwarovou peněženkou na světě.",
     "tutorial__get_started": "Jdeme na to!",
     "tutorial__last_one": "Poslední",
     "tutorial__lets_begin": "Snadno se naučte používat toto zařízení.",
@@ -2183,7 +2197,7 @@
     "tutorial__welcome_safe5": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Vítá vás Trezor Safe 5.",
+      "Delizia": "Vítá vás Trezor Safe 5",
       "Eckhart": ""
     },
     "tutorial__welcome_safe7": {
@@ -2266,6 +2280,7 @@
     "words__enabled": "Zapnuto",
     "words__error": "Chyba",
     "words__fee": "Poplatek",
+    "words__fee_limit": "",
     "words__forget": "Zapomenout",
     "words__from": "od",
     "words__good_to_know": "Dobré vědět",
@@ -2279,6 +2294,7 @@
     "words__name": "Název",
     "words__no": "Ne",
     "words__not_recommended": "Nedoporučuje se!",
+    "words__note": "",
     "words__off": "VYPNOUT",
     "words__on": "ZAPNOUT",
     "words__operation_cancelled": "Operace byla zrušena",
