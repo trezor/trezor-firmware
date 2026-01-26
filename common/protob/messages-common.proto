@@ -42,7 +42,7 @@ message Failure {
         Failure_Busy = 15;
         Failure_ThpUnallocatedSession = 16;
         Failure_InvalidProtocol = 17;
-        Failure_BufferError = 18;
+        reserved 18;
         Failure_FirmwareError = 99;
     }
 }
