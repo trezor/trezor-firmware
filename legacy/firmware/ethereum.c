@@ -663,7 +663,7 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
   const uint8_t *args_bytes =
       params->data_initial_chunk_bytes + SC_FUNC_SIG_BYTES;
 
-  bignum256 value = {0}, source = {0};
+  bignum256 value = {0};
   struct ethereum_amount amount = {.value = "", .unit = ""};
   const char *_line1 = NULL;
   const char *_line2 = NULL;
@@ -671,12 +671,8 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
   switch (op) {
     case ETH_STAKING_STAKE:
       // stake args:
-      // - arg0: uint64, source (should be 1)
+      // - arg0: uint64, source (1 for Trezor) - skipped
       if (args_size != SC_ARGUMENT_BYTES) {
-        return false;
-      }
-      bn_read_be(args_bytes, &source);
-      if (!bn_is_one(&source)) {
         return false;
       }
       parse_bignum256(params->value_bytes, params->value_size, &value);
@@ -690,12 +686,8 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
       // unstake args:
       // - arg0: uint256, value
       // - arg1: uint16, isAllowedInterchange (bool) - skipped
-      // - arg2: uint64, source, should be 1
+      // - arg2: uint64, source (1 for Trezor) - skipped
       if (args_size != 3 * SC_ARGUMENT_BYTES) {
-        return false;
-      }
-      bn_read_be(args_bytes + 2 * SC_ARGUMENT_BYTES, &source);
-      if (!bn_is_one(&source)) {
         return false;
       }
       bn_read_be(args_bytes, &value);
