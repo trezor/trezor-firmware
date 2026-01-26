@@ -522,3 +522,35 @@ bool panel_init(display_driver_t *drv) {
 
   return true;
 }
+
+#ifdef USE_SUSPEND
+bool panel_suspend(display_driver_t *drv) {
+  HAL_StatusTypeDef ret;
+
+  // 1) DCS Display OFF (panel blanks)
+  ret = HAL_DSI_ShortWrite(&drv->hlcd_dsi, 0, DSI_DCS_SHORT_PKT_WRITE_P0, 0x28,
+                           0x00);
+  if (ret != HAL_OK) return false;
+  systick_delay_ms(20);
+
+  // 2) DCS Sleep In (power down internal blocks)
+  ret = HAL_DSI_ShortWrite(&drv->hlcd_dsi, 0, DSI_DCS_SHORT_PKT_WRITE_P0, 0x10,
+                           0x00);
+  if (ret != HAL_OK) return false;
+  systick_delay_ms(120);
+
+  // 3) Vendor Deep Standby enter (ST7701S page select to 0x80)
+  // Enter DSTB Mode Flow:
+  // Step1: 0xFF:0x77/0x01/0x00/0x00/0x00/0x80
+  // Step2: 0xFF:0x77/0x01/0x00/0x00/0x80
+  ret = HAL_DSI_LongWrite(&drv->hlcd_dsi, 0, DSI_DCS_LONG_PKT_WRITE, 6, 0xFF,
+                          (uint8_t[]){0x77, 0x01, 0x00, 0x00, 0x00, 0x80});
+  if (ret != HAL_OK) return false;
+
+  ret = HAL_DSI_LongWrite(&drv->hlcd_dsi, 0, DSI_DCS_LONG_PKT_WRITE, 5, 0xFF,
+                          (uint8_t[]){0x77, 0x01, 0x00, 0x00, 0x80});
+  if (ret != HAL_OK) return false;
+
+  return true;
+}
+#endif  // USE_SUSPEND
