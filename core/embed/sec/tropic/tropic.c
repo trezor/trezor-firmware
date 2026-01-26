@@ -146,8 +146,10 @@ static bool cache_tropic_cert_chain(cli_t *cli) {
   ret = lt_get_info_cert_store(&g_tropic_driver.handle, &cert_store);
   if (ret != LT_OK) {
 #if TREZOR_PRODTEST
-    cli_trace(cli, "lt_get_info_cert_store() failed with error '%s'",
-              lt_ret_verbose(ret));
+    if (cli) {
+      cli_trace(cli, "lt_get_info_cert_store() failed with error '%s'",
+                lt_ret_verbose(ret));
+    }
 #endif
     return false;
   }
@@ -155,8 +157,10 @@ static bool cache_tropic_cert_chain(cli_t *cli) {
   ret = lt_get_st_pub(&cert_store, tropic_public_cached);
   if (ret != LT_OK) {
 #if TREZOR_PRODTEST
-    cli_trace(cli, "lt_get_st_pub() failed with error '%s'",
-              lt_ret_verbose(ret));
+    if (cli) {
+      cli_trace(cli, "lt_get_st_pub() failed with error '%s'",
+                lt_ret_verbose(ret));
+    }
 #endif
     return false;
   }
@@ -200,7 +204,9 @@ bool tropic_wait_for_ready(cli_t *cli) {
 
   if (!drv->initialized) {
 #if TREZOR_PRODTEST
-    cli_trace(cli, "Tropic driver is not initialized");
+    if (cli) {
+      cli_trace(cli, "Tropic driver is not initialized");
+    }
 #endif
     return false;
   }
@@ -220,7 +226,9 @@ bool tropic_wait_for_ready(cli_t *cli) {
   }
 
 #if TREZOR_PRODTEST
-  cli_trace(cli, "Tropic is busy");
+  if (cli) {
+    cli_trace(cli, "Tropic is busy");
+  }
 #endif
   return false;
 }
@@ -257,7 +265,9 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
     case TROPIC_PRIVILEGED_PAIRING_KEY_SLOT:
       if (secret_key_tropic_pairing_privileged(trezor_private) != sectrue) {
 #ifdef TREZOR_PRODTEST
-        cli_trace(cli, "`secret_key_tropic_pairing_privileged()` failed");
+        if (cli) {
+          cli_trace(cli, "`secret_key_tropic_pairing_privileged()` failed");
+        }
 #endif
         goto cleanup;
       }
@@ -265,7 +275,9 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
     case TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT:
       if (secret_key_tropic_pairing_unprivileged(trezor_private) != sectrue) {
 #ifdef TREZOR_PRODTEST
-        cli_trace(cli, "`secret_key_tropic_pairing_unprivileged()` failed");
+        if (cli) {
+          cli_trace(cli, "`secret_key_tropic_pairing_unprivileged()` failed");
+        }
 #endif
         goto cleanup;
       }
@@ -285,8 +297,11 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
 #endif
     {
 #ifdef TREZOR_PRODTEST
-      cli_trace(cli,
-                "`secret_key_tropic_public()` or `tropic_get_pubkey()` failed");
+      if (cli) {
+        cli_trace(
+            cli,
+            "`secret_key_tropic_public()` or `tropic_get_pubkey()` failed");
+      }
 #endif
       goto cleanup;
     }
@@ -298,7 +313,7 @@ lt_ret_t tropic_custom_session_start(cli_t *cli,
                                               pairing_key_index, trezor_private,
                                               trezor_public));
 #if TREZOR_PRODTEST
-  if (ret != LT_OK) {
+  if (ret != LT_OK && cli) {
     cli_trace(cli,
               "`lt_session_start()` failed for pairing key %d "
               "with error '%s'",
