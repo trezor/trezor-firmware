@@ -1119,12 +1119,12 @@ class DebugUI:
 
         # Paginating (going as further as possible)
         for _ in range(pages - 1):
+            self.visit_menu_items()
             if self.debuglink.model is models.T3W1:
                 self.debuglink.click(self.debuglink.screen_buttons.ok())
             else:
                 self.debuglink.swipe_up()
 
-        # Visit info menus (if exist)
         layout = self.visit_menu_items()
 
         # Confirm current layout
