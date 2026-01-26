@@ -97,7 +97,7 @@ def configure(
         defines += [("LT_HELPERS", "1")]
 
         paths += ["vendor/libtropic/TROPIC01_fw_update_files/boot_v_2_0_1/fw_v_2_0_0"]
-        defines += [("ABAB", "1")]
+        defines += [("ACAB", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/unix/touch.c"]
