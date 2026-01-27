@@ -44,7 +44,12 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 @pytest.fixture
 def emulator(gen: str, tag: str, model: str) -> Iterator[Emulator]:
-    with EmulatorWrapper(gen, tag, model, headless=False) as emu:
+    # NOTE: For T3W1 (Safe 7), Tropic model server must be running manually:
+    #   cd vendor/ts-tvl && poetry run model_server tcp -c ../../tests/tropic_model/config.yml -p 28992
+    # Auto-launch doesn't work in all environments (nix-shell PATH issues)
+    launch_tropic = False  # Disable auto-launch, require manual startup
+    # Use headless mode to avoid UI initialization issues
+    with EmulatorWrapper(gen, tag, model, launch_tropic_model=launch_tropic, headless=True) as emu:
         # set up a passphrase-protected device
         device.setup(
             emu.client.get_seedless_session(),

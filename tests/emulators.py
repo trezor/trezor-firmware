@@ -33,6 +33,7 @@ LOCAL_BUILD_PATHS = {
 }
 
 CORE_SRC_DIR = ROOT / "core" / "src"
+TROPIC_WORKDIR = ROOT / "vendor" / "ts-tvl"
 
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
@@ -150,6 +151,7 @@ class EmulatorWrapper:
                 storage=storage,
                 workdir=workdir,
                 launch_tropic_model=launch_tropic_model,
+                tropic_model_workdir=TROPIC_WORKDIR if launch_tropic_model else None,
                 tropic_model_port=_get_tropic_model_port(worker_id),
                 tropic_model_configfile=str(TROPIC_MODEL_CONFIGFILE),
                 tropic_model_logfile=tropic_model_logfile,

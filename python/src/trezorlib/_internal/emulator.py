@@ -103,19 +103,11 @@ class TropicModel:
             output = open(self.logfile, "w")
 
         return subprocess.Popen(
-            [
-                "model_server",
-                "tcp",
-                "-c",
-                self.configfile,
-                "-p",
-                str(self.port),
-                "-o",
-                str(self.profile_dir / "tropic_model_config_output.yml"),
-            ],
+            f"poetry run model_server tcp -c {self.configfile} -p {self.port} -o {self.profile_dir / 'tropic_model_config_output.yml'}",
             cwd=self.workdir,
             stdout=cast(TextIO, output),
             stderr=subprocess.STDOUT,
+            shell=True,
         )
 
     def _wait_until_ready(self, timeout: float = TROPIC_MODEL_WAIT_TIME) -> None:
@@ -357,6 +349,7 @@ class CoreEmulator(Emulator):
         self,
         *args: Any,
         launch_tropic_model: bool = False,
+        tropic_model_workdir: Optional[Path] = None,
         tropic_model_port: Optional[int] = None,
         tropic_model_configfile: Optional[str] = None,
         tropic_model_logfile: Union[TextIO, str, Path, None] = None,
@@ -380,7 +373,7 @@ class CoreEmulator(Emulator):
             assert tropic_model_port
             assert tropic_model_configfile
             self.tropic_model = TropicModel(
-                workdir=self.workdir,
+                workdir=tropic_model_workdir or self.workdir,
                 profile_dir=self.profile_dir,
                 port=tropic_model_port,
                 configfile=tropic_model_configfile,
