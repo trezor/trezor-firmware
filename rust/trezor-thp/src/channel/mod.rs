@@ -33,7 +33,7 @@ impl Nonce {
         bytes
             .split_first_chunk::<{ Nonce::LEN }>()
             .map(|(n, p)| (Nonce(*n), p))
-            .ok_or(Error::MalformedData)
+            .ok_or_else(Error::malformed_data)
     }
 
     pub fn as_slice(&self) -> &[u8] {
@@ -64,7 +64,7 @@ impl TryFrom<&[u8]> for PairingState {
             [0] => Self::Unpaired,
             [1] => Self::Paired,
             [2] => Self::PairedAutoconnect,
-            _ => return Err(Error::MalformedData),
+            _ => return Err(Error::malformed_data()),
         })
     }
 }
@@ -126,12 +126,12 @@ impl<R: Role, B: Backend> Channel<R, B> {
 
     fn raw_in(&mut self, header: Header<R>, send_buffer: &[u8]) -> Result<()> {
         let PacketState::Idle = self.packet_state else {
-            return Err(Error::NotReady);
+            return Err(Error::not_ready());
         };
         let sb = if self.is_broadcast() {
             SyncBits::new()
         } else {
-            self.sync.send_start().ok_or(Error::NotReady)?
+            self.sync.send_start().ok_or_else(Error::not_ready)?
         };
         let frag = Fragmenter::new(header, sb, send_buffer)?;
         self.packet_state = PacketState::Sending(frag);
@@ -141,10 +141,10 @@ impl<R: Role, B: Backend> Channel<R, B> {
     fn raw_out(&mut self, receive_buffer: &[u8]) -> Result<(Header<R>, usize)> {
         let has_cid = !self.is_broadcast();
         let PacketState::Receiving(r) = &mut self.packet_state else {
-            return Err(Error::NotReady);
+            return Err(Error::not_ready());
         };
         if !r.is_done() {
-            return Err(Error::NotReady);
+            return Err(Error::not_ready());
         }
         let len = match r.verify(receive_buffer) {
             Ok(len) => len,
@@ -196,7 +196,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
         }
         log::error!("[{}] Peer sent unknown error.", self.channel_id);
         self.packet_state = PacketState::Failed(None);
-        Err(Error::MalformedData)
+        Err(Error::malformed_data())
     }
 
     fn handle_init(
@@ -383,11 +383,11 @@ pub trait ChannelIO {
         send_buffer: &mut [u8],
     ) -> Result<()> {
         if !self.message_in_ready() {
-            return Err(Error::NotReady);
+            return Err(Error::not_ready());
         }
         let plaintext_len = message.len() + APP_HEADER_LEN;
         if send_buffer.len() < plaintext_len {
-            return Err(Error::InsufficientBuffer);
+            return Err(Error::insufficient_buffer());
         }
         send_buffer[0] = session_id;
         send_buffer[1..3].copy_from_slice(&message_type.to_be_bytes());
@@ -461,11 +461,11 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             return Ok(());
         }
         let PacketState::Sending(f) = &mut self.packet_state else {
-            return Err(Error::NotReady);
+            return Err(Error::not_ready());
         };
         let written = f.next(send_buffer, packet_buffer)?;
         if !written {
-            return Err(Error::NotReady);
+            return Err(Error::not_ready());
         }
         if f.is_done() {
             if self.is_broadcast() {
@@ -490,11 +490,11 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
 
     fn message_in(&mut self, plaintext_len: usize, send_buffer: &mut [u8]) -> Result<()> {
         if !self.message_in_ready() {
-            return Err(Error::NotReady);
+            return Err(Error::not_ready());
         }
         let encrypted_len = plaintext_len + TAG_LEN;
         if send_buffer.len() < encrypted_len {
-            return Err(Error::InsufficientBuffer);
+            return Err(Error::insufficient_buffer());
         }
         self.noise().encrypt(send_buffer, plaintext_len)?;
         let header = Header::new_encrypted(self.channel_id, &send_buffer[..encrypted_len]);
@@ -514,7 +514,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
                 "[{}] Invalid message type, expecting EncryptedTransport.",
                 self.channel_id
             );
-            return Err(Error::MalformedData);
+            return Err(Error::malformed_data());
         }
 
         let receive_buffer = match self.noise().decrypt(receive_buffer) {
@@ -528,7 +528,9 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         if receive_buffer.len() < APP_HEADER_LEN {
             log::error!("[{}] Incoming message too short.", self.channel_id);
         }
-        let (session_id, rest) = receive_buffer.split_first().ok_or(Error::MalformedData)?;
+        let (session_id, rest) = receive_buffer
+            .split_first()
+            .ok_or_else(Error::malformed_data)?;
         let (message_type, rest) = parse_u16(rest)?;
         Ok((*session_id, message_type, rest))
     }

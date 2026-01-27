@@ -36,7 +36,7 @@ impl TryFrom<u8> for TransportError {
             2 => Self::UnallocatedChannel,
             3 => Self::DecryptionFailed,
             5 => Self::DeviceLocked,
-            _ => return Err(Error::OutOfBounds),
+            _ => return Err(Error::out_of_bounds()),
         })
     }
 }
@@ -46,7 +46,7 @@ impl TryFrom<&[u8]> for TransportError {
 
     fn try_from(val: &[u8]) -> Result<Self> {
         val.first()
-            .ok_or(Error::MalformedData)
+            .ok_or_else(Error::malformed_data)
             .and_then(|b| TransportError::try_from(*b))
     }
 }
@@ -74,7 +74,7 @@ pub enum Error {
 impl From<NoiseError> for Error {
     fn from(val: NoiseError) -> Self {
         match val.kind() {
-            NoiseErrorKind::DH | NoiseErrorKind::Decryption => Self::CryptoError,
+            NoiseErrorKind::DH | NoiseErrorKind::Decryption => Self::crypto_error(),
             NoiseErrorKind::NeedPSK => panic!(),
             NoiseErrorKind::TooShort => Self::MalformedData,
         }
@@ -82,3 +82,33 @@ impl From<NoiseError> for Error {
 }
 
 pub type Result<T> = core::result::Result<T, Error>;
+
+impl Error {
+    pub const fn out_of_bounds() -> Self {
+        Self::OutOfBounds
+    }
+
+    pub const fn unexpected_input() -> Self {
+        Self::UnexpectedInput
+    }
+
+    pub const fn not_ready() -> Self {
+        Self::NotReady
+    }
+
+    pub const fn malformed_data() -> Self {
+        Self::MalformedData
+    }
+
+    pub const fn invalid_digest() -> Self {
+        Self::InvalidDigest
+    }
+
+    pub const fn insufficient_buffer() -> Self {
+        Self::InsufficientBuffer
+    }
+
+    pub const fn crypto_error() -> Self {
+        Self::CryptoError
+    }
+}

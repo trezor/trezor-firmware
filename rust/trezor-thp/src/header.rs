@@ -66,7 +66,7 @@ pub const fn channel_id_valid(channel_id: u16) -> bool {
 pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
     let Some((bytes, rest)) = buffer.split_first_chunk::<2>() else {
         log::error!("Packet too short.");
-        return Err(Error::MalformedData);
+        return Err(Error::malformed_data());
     };
     Ok((u16::from_be_bytes(*bytes), rest))
 }
@@ -74,7 +74,7 @@ pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
 pub(crate) fn parse_cb_channel(buffer: &[u8]) -> Result<(ControlByte, u16, &[u8])> {
     let Some((cb, rest)) = buffer.split_first() else {
         log::error!("Packet is empty.");
-        return Err(Error::MalformedData);
+        return Err(Error::malformed_data());
     };
     let (channel_id, rest) = parse_u16(rest)?;
     Ok((ControlByte::from(*cb), channel_id, rest))
@@ -98,7 +98,7 @@ impl<R: Role> Header<R> {
         }
         if !channel_id_valid(channel_id) {
             log::error!("Invalid channel id {}.", channel_id);
-            return Err(Error::OutOfBounds);
+            return Err(Error::out_of_bounds());
         }
         if cb.is_continuation() {
             return Ok((Header::Continuation { channel_id }, rest));
@@ -106,7 +106,7 @@ impl<R: Role> Header<R> {
         let (payload_len, rest) = parse_u16(rest)?;
         if payload_len > MAX_PAYLOAD_LEN {
             log::error!("Payload length exceeds {}.", MAX_PAYLOAD_LEN);
-            return Err(Error::OutOfBounds);
+            return Err(Error::out_of_bounds());
         }
         // strip padding if there is any
         let without_padding = rest.len().min(payload_len.into());
@@ -138,7 +138,7 @@ impl<R: Role> Header<R> {
             return Ok((Self::ChannelAllocationResponse { payload_len }, rest));
         }
         log::error!("Unknown control byte {}.", u8::from(cb));
-        Err(Error::MalformedData)
+        Err(Error::malformed_data())
     }
 
     fn parse_fixed(cb: ControlByte, channel_id: u16, payload_len: u16) -> Result<Option<Self>> {
@@ -166,7 +166,7 @@ impl<R: Role> Header<R> {
             Ok(Some(res))
         } else {
             log::error!("Unexpected payload length.");
-            Err(Error::MalformedData)
+            Err(Error::malformed_data())
         }
     }
 
