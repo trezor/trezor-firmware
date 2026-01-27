@@ -123,6 +123,7 @@ pub fn new_confirm_summary(
             .with_placement(LinearPlacement::vertical()),
     )
     .with_header(Header::new(title).with_menu_button())
+    .with_flow_menu()
     .with_action_bar(if back_button {
         ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), confirm_button)
     } else {
