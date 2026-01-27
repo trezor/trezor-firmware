@@ -51,6 +51,21 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
     let deserialized = deserialize::<TrezorUiResult, Failure>(archived).unwrap();
     Ok(deserialized)
 }
+
+
+fn ipc_ui_long_call(value: &TrezorUiEnum, long_content: &str) -> UiResult {
+    let bytes = to_bytes::<Failure>(value).unwrap();
+    let message = IpcMessage::new(0, &bytes);
+    let result = services_or_die().call_long(CoreIpcService::Ui, &message, Timeout::max(), long_content)?;
+
+    // Safe validation using bytecheck before accessing archived data
+    let archived = rkyv::access::<ArchivedTrezorUiResult, Failure>(result.data()).unwrap();
+    let deserialized = deserialize::<TrezorUiResult, Failure>(archived).unwrap();
+    Ok(deserialized)
+}
+
+
+
 /// Send a UI call and expect a boolean confirmation result
 fn ipc_ui_call_confirm(value: TrezorUiEnum) -> UiResult {
     match ipc_ui_call(&value) {
@@ -82,6 +97,22 @@ pub fn confirm_value(title: &str, content: &str) -> UiResult {
         content: ShortString::from_str(&content[..50]).unwrap(),
     };
     ipc_ui_call_confirm(value)
+}
+
+pub fn confirm_long_value(title: &str, content: &str) -> UiResult {
+    let value = TrezorUiEnum::ConfirmLong {
+        title: ShortString::from_str(title).unwrap(),
+        content_len: content.chars().count() as u32,
+    };
+
+    match ipc_ui_long_call(&value, content) {
+        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
+        Ok(_) => Ok(TrezorUiResult::Cancelled),
+        Err(e) => {
+            error!("UI error: {:?}", e);
+            Err(e)
+        }
+    }
 }
 
 /// Show a confirmation dialog with a list of key-value properties

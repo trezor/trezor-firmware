@@ -29,6 +29,7 @@ mod crypto;
 mod debug;
 mod error;
 mod io;
+mod ipc;
 mod maybe_trace;
 #[cfg(feature = "micropython")]
 mod micropython;
