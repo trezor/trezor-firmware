@@ -79,13 +79,13 @@ impl<C: ChannelIO> ChannelVec<C> {
         &self.channel
     }
 
-    pub fn map<D>(self, func: impl FnOnce(C) -> D) -> ChannelVec<D> {
-        ChannelVec {
-            channel: func(self.channel),
+    pub fn map<D>(self, func: impl FnOnce(C) -> Result<D>) -> Result<ChannelVec<D>> {
+        Ok(ChannelVec {
+            channel: func(self.channel)?,
             packet_len: self.packet_len,
             send_buffer: self.send_buffer,
             receive_buffer: self.receive_buffer,
-        }
+        })
     }
 }
 

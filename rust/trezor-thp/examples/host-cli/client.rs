@@ -39,7 +39,7 @@ where
 impl<C: ChannelIO> Client<C> {
     pub fn map<D>(self, func: impl FnOnce(C) -> D) -> Client<D> {
         Client {
-            channel: self.channel.map(func),
+            channel: self.channel.map(|c| Ok(func(c))).unwrap(),
             socket: self.socket,
             emu_addr: self.emu_addr,
         }
