@@ -60,8 +60,6 @@ CORE = HERE.parent / "core"
 
 LOG = logging.getLogger(__name__)
 
-LOCK_TIME = 0.2
-
 # So that we see details of failed asserts from this module
 pytest.register_assert_rewrite("tests.common")
 pytest.register_assert_rewrite("tests.input_flows")
