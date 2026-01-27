@@ -1,3 +1,5 @@
+use crate::channel::PairingState;
+
 pub const CREDENTIAL_PRIVKEY_LENGTH: usize = 32;
 
 pub struct FoundCredential<'a> {
@@ -31,5 +33,17 @@ impl CredentialStore for NullCredentialStore {
         _dest: &'a mut [u8],
     ) -> Option<FoundCredential<'a>> {
         None
+    }
+}
+
+pub trait CredentialVerifier {
+    fn verify(&self, remote_static_pubkey: &[u8], credential: &[u8]) -> PairingState;
+}
+
+pub struct NullCredentialVerifier;
+
+impl CredentialVerifier for NullCredentialVerifier {
+    fn verify(&self, _remote_static_pubkey: &[u8], _credential: &[u8]) -> PairingState {
+        PairingState::Unpaired
     }
 }

@@ -271,7 +271,7 @@ impl<R: Role> Header<R> {
 
     pub const fn new_channel_response(payload: &[u8]) -> Self {
         Self::ChannelAllocationResponse {
-            payload_len: (payload.len() as u16) + NONCE_LEN + CHECKSUM_LEN,
+            payload_len: (payload.len() as u16) + CHECKSUM_LEN,
         }
     }
 

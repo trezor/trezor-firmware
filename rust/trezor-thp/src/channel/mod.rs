@@ -1,5 +1,8 @@
+pub mod device;
 pub mod host;
 mod noise;
+#[cfg(test)]
+mod test;
 #[cfg(feature = "use_std")]
 pub mod vec;
 
@@ -468,7 +471,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             return Err(Error::not_ready());
         }
         if f.is_done() {
-            if self.is_broadcast() {
+            if f.header().channel_id() == BROADCAST_CHANNEL_ID { // TODO explain
                 // No ACKs without channel ID, assume delivered.
                 self.packet_state = PacketState::Idle;
             } else {

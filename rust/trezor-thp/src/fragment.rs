@@ -101,6 +101,10 @@ impl<R: Role> Fragmenter<R> {
         }
         Ok(())
     }
+
+    pub fn header(&self) -> &Header<R> {
+        &self.header
+    }
 }
 
 pub struct Reassembler<R: Role> {
