@@ -63,7 +63,7 @@ secbool secret_verify_header(void) {
   return bootloader_locked;
 }
 
-static void secret_erase(void) {
+void secret_erase(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
   mpu_restore(mpu_mode);
