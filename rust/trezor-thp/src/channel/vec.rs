@@ -72,7 +72,7 @@ impl<C: ChannelIO> ChannelVec<C> {
     }
 
     pub fn message_retransmit(&mut self) -> Result<()> {
-        self.channel.message_retransmit(self.send_buffer.as_slice())
+        self.channel.message_retransmit()
     }
 
     pub fn inner(&self) -> &C {
