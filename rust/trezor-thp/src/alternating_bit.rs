@@ -46,7 +46,7 @@ impl TryFrom<&[u8]> for SyncBits {
     type Error = Error;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Error> {
-        let first_byte = bytes.first().ok_or(Error::MalformedData)?;
+        let first_byte = bytes.first().ok_or_else(Error::malformed_data)?;
         Ok(Self::from(*first_byte))
     }
 }

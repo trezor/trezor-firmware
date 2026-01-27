@@ -68,7 +68,7 @@ pub const fn channel_id_valid(channel_id: u16) -> bool {
 pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
     let Some((bytes, rest)) = buffer.split_first_chunk::<2>() else {
         log::error!("Packet too short.");
-        return Err(Error::MalformedData);
+        return Err(Error::malformed_data());
     };
     Ok((u16::from_be_bytes(*bytes), rest))
 }
@@ -76,7 +76,7 @@ pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {
 pub(crate) fn parse_cb_channel(buffer: &[u8]) -> Result<(ControlByte, u16, &[u8])> {
     let Some((cb, rest)) = buffer.split_first() else {
         log::error!("Packet is empty.");
-        return Err(Error::MalformedData);
+        return Err(Error::malformed_data());
     };
     let (channel_id, rest) = parse_u16(rest)?;
     Ok((ControlByte::from(*cb), channel_id, rest))
@@ -101,7 +101,7 @@ impl<R: Role> Header<R> {
         }
         if !channel_id_valid(channel_id) {
             log::error!("Invalid channel id {}.", channel_id);
-            return Err(Error::OutOfBounds);
+            return Err(Error::out_of_bounds());
         }
         if cb.is_continuation() {
             return Ok((Header::Continuation { channel_id }, rest));
@@ -109,7 +109,7 @@ impl<R: Role> Header<R> {
         let (payload_len, rest) = parse_u16(rest)?;
         if payload_len > MAX_PAYLOAD_LEN {
             log::error!("Payload length exceeds {}.", MAX_PAYLOAD_LEN);
-            return Err(Error::OutOfBounds);
+            return Err(Error::out_of_bounds());
         }
         // strip padding if there is any
         let without_padding = rest.len().min(payload_len.into());
@@ -132,7 +132,7 @@ impl<R: Role> Header<R> {
             channel_id,
             payload_len
         );
-        Err(Error::MalformedData)
+        Err(Error::malformed_data())
     }
 
     fn parse_single(cb: ControlByte, channel_id: u16, payload_len: u16) -> Result<Option<Self>> {
@@ -160,7 +160,7 @@ impl<R: Role> Header<R> {
             Ok(Some(res))
         } else {
             log::error!("Unexpected payload length.");
-            Err(Error::MalformedData)
+            Err(Error::malformed_data())
         }
     }
 
@@ -287,13 +287,13 @@ impl<R: Role> Header<R> {
             }
         }
         log::error!("Cannot construct: message too long {}.", payload.len());
-        Err(Error::UnexpectedInput)
+        Err(Error::unexpected_input())
     }
 
     fn validate_channel(channel_id: u16) -> Result<u16> {
         if !channel_id_valid(channel_id) {
             log::error!("Cannot construct: invalid channel id {}.", channel_id);
-            return Err(Error::UnexpectedInput);
+            return Err(Error::unexpected_input());
         }
         Ok(channel_id)
     }
@@ -302,7 +302,7 @@ impl<R: Role> Header<R> {
         let channel_id = Self::validate_channel(channel_id)?;
         if channel_id == BROADCAST_CHANNEL_ID {
             log::error!("Cannot construct: illegal broadcast.");
-            return Err(Error::UnexpectedInput);
+            return Err(Error::unexpected_input());
         }
         Ok(channel_id)
     }
