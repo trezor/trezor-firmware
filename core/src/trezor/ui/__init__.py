@@ -478,8 +478,11 @@ class Layout(Generic[T]):
             if self.context is None:
                 return
             while True:
-                # The following task will raise `UnexpectedMessageException` on any message.
-                unexpected_read = self.context.read(())
+                # Continue listening to host, so we can respond to unexpected messages:
+                # - most of the flows should be cancelled via `UnexpectedMessageException`
+                # - some flows should avoid cancellation and notify the host
+                unexpected_read = self.context.create_unexpected_handler()
+
                 result = await loop.race(unexpected_read, self.button_request_box)
                 if result is None:
                     return  # exit the loop when the layout is done.

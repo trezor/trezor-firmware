@@ -15,11 +15,14 @@ from storage import cache
 from storage.cache_common import SESSIONLESS_FLAG
 from trezor import loop, protobuf, utils
 
-from .protocol_common import Context, Message
+from .protocol_common import Context, Message, UnexpectedHandler
+
+if __debug__:
+    from trezor import log
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Callable, Coroutine, Generator, TypeVar, overload
+    from typing import Any, Callable, Coroutine, Generator, NoReturn, TypeVar, overload
 
     from storage.cache_common import DataCache
 
@@ -155,6 +158,40 @@ def try_get_ctx_ids() -> tuple[AnyBytes, AnyBytes] | None:
         if isinstance(ctx, GenericSessionContext):
             ids = (ctx.channel_id, ctx.session_id.to_bytes(1, "big"))
     return ids
+
+
+class AvoidCancellation(UnexpectedHandler):
+    """Avoid cancellation due to unexpected messages."""
+
+    def __init__(self, err_msg: str) -> None:
+        super().__init__(get_context())
+        self.err_msg = err_msg
+
+    def create(self) -> loop.Task[NoReturn]:
+
+        async def _task() -> NoReturn:
+            from trezor.enums import FailureType
+            from trezor.messages import Failure
+            from trezor.wire import UnexpectedMessageException
+
+            while True:
+                try:
+                    await self.ctx.read(expected_types=())
+                except UnexpectedMessageException as e:
+                    log.exception(__name__, e)
+                    if e.msg is None:
+                        # ChannelPreemptedException should be ignored (in THP)
+                        continue
+                    try:
+                        # notify the host that the workflow was not cancelled
+                        await self.ctx.write(
+                            Failure(code=FailureType.InProgress, message=self.err_msg)
+                        )
+                    except Exception as e:
+                        if __debug__:
+                            log.exception(__name__, e)
+
+        return _task()
 
 
 # ACCESS TO CACHE
