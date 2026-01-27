@@ -634,7 +634,8 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
     // transfer
     if (drv->requested_step_duty_cycle !=
             drv->latched_step_duty_cycle[drv->prepare_buf_idx] ||
-        drv->pwm_data[drv->prepare_buf_idx][0] != UINT16_MAX) {
+        (drv->pwm_data[drv->prepare_buf_idx][0] != UINT16_MAX ||
+         drv->pwm_data[drv->prepare_buf_idx][1] != UINT16_MAX)) {
       // Clear the buffer
       memset(drv->pwm_data[drv->prepare_buf_idx], UINT8_MAX,
              sizeof(drv->pwm_data[drv->prepare_buf_idx]));
