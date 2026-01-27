@@ -299,7 +299,8 @@ message DebugLinkGcInfo {
 
 /**
  * Request: Set logging filter string.
- * @end
+ * @start
+ * @next Success
  */
 message DebugLinkSetLogFilter {
     optional string filter = 1;  // filter string
