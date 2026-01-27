@@ -105,6 +105,11 @@ void secret_prepare_fw(secbool allow_run_with_secret,
 void secret_init(void);
 
 /**
+ * @brief Erases the entire secret storage area.
+ */
+void secret_erase(void);
+
+/**
  * @brief Disables access to the data in the storage in case
  *        of a failure or an attack.
  *
