@@ -113,6 +113,7 @@ typedef struct {
 
   // Double buffer for DMA
   uint16_t pwm_data[DMA_BUF_COUNT][DMA_BUF_LENGTH];
+  volatile bool pwm_data_dirty[DMA_BUF_COUNT];
 
   volatile uint8_t locked_buf_idx;
   volatile uint8_t prepare_buf_idx;
@@ -123,12 +124,61 @@ static backlight_driver_t g_backlight_driver = {
     .initialized = false,
 };
 
-static void backlight_control_up(uint16_t *data, int steps);
-static void backlight_control_down(uint16_t *data, int steps);
 static void backlight_shutdown(void);
 static void backlight_deinit_ll(void);
 
 static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
+
+static inline void buffer_clear(uint8_t buf_idx) {
+  backlight_driver_t *drv = &g_backlight_driver;
+
+  // buf_idx is out of range. Safety check...
+  if (buf_idx >= DMA_BUF_COUNT) return;
+
+  memset(drv->pwm_data[buf_idx], UINT8_MAX, sizeof(drv->pwm_data[buf_idx]));
+  drv->pwm_data_dirty[buf_idx] = false;
+}
+
+static void buffer_steps_set(uint8_t buf_idx, int start_offset, int steps_cnt,
+                             uint16_t tim_pulse) {
+  backlight_driver_t *drv = &g_backlight_driver;
+  int elements_cnt = start_offset + steps_cnt;
+
+  // The requested buffer modification exceeds its boundaries OR buf_idx is out
+  // of range. Safety check...
+  if ((elements_cnt > DMA_BUF_LENGTH) || buf_idx >= DMA_BUF_COUNT) return;
+
+  if (drv->pwm_data_dirty[buf_idx]) {
+    buffer_clear(buf_idx);
+  }
+
+  for (int i = start_offset; i < elements_cnt; i++) {
+    drv->pwm_data[buf_idx][i] = tim_pulse;
+  }
+
+  drv->pwm_data_dirty[buf_idx] = true;
+}
+
+static inline void buffer_steps_duty_cycle_set(uint8_t buf_idx) {
+  backlight_driver_t *drv = &g_backlight_driver;
+
+  // buf_idx is out of range OR requested_step_duty_cycle is 0. Safety check...
+  if (buf_idx >= DMA_BUF_COUNT || drv->requested_step_duty_cycle == 0) return;
+
+  if (drv->pwm_data_dirty[buf_idx]) {
+    buffer_clear(buf_idx);
+  }
+
+  // First sample increases the steps by 1 (start of PWM period)
+  drv->pwm_data[buf_idx][0] = TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US);
+
+  // "drv->requested_step_duty_cycle" sample returns to the original steps'
+  // value (2nd half of PWM period)
+  drv->pwm_data[buf_idx][drv->requested_step_duty_cycle] =
+      TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US);
+
+  drv->pwm_data_dirty[buf_idx] = true;
+}
 
 // Applies gamma correction to a brightness input value.
 //
@@ -269,7 +319,7 @@ bool backlight_init(backlight_action_t action, float gamma_exp) {
 
     // Build dma_node Node
     HAL_ERR_CHECK(HAL_DMAEx_List_BuildNode(&pNodeConfig, &drv->dma_node[i]));
-    memset(drv->pwm_data[i], UINT8_MAX, sizeof(drv->pwm_data[i]));
+    buffer_clear(i);
 
     // Insert dma_node to Queue
     HAL_ERR_CHECK(
@@ -381,11 +431,10 @@ bool backlight_set(uint8_t val) {
 
     backlight_shutdown();
 
-    // Clearing buffer, preparation for the next time
-    memset(drv->pwm_data, UINT8_MAX, sizeof(drv->pwm_data));
-
-    // Clear the control data
+    // Clear the buffers and control data
     for (int i = 0; i < DMA_BUF_COUNT; i++) {
+      buffer_clear(i);
+
       drv->latched_level[i] = 0;
       drv->latched_step[i] = 0;
       drv->latched_step_duty_cycle[i] = 0;
@@ -418,28 +467,25 @@ bool backlight_set(uint8_t val) {
       // default state = DEFAULT_STEP) and the wanted one
       if (drv->requested_step > DEFAULT_STEP) {
         // Start from index 1, index 0 is already set (with buffer clear to make
-        // TIM not generate any pulse)
-        backlight_control_up(&drv->pwm_data[drv->prepare_buf_idx][1],
-                             drv->requested_step - DEFAULT_STEP);
+        // TIM not generate any pulse): the reason is that each programming
+        // sequence has to start with logic 1 pulse (100-150us i.e. we use
+        // 200 us) to make TPS recognize it
+        buffer_steps_set(drv->prepare_buf_idx, 1,
+                         drv->requested_step - DEFAULT_STEP,
+                         TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US));
       } else {
         // Start from index 1, index 0 is already set (with buffer clear to make
         // TIM not generate any pulse)
-        backlight_control_down(&drv->pwm_data[drv->prepare_buf_idx][1],
-                               DEFAULT_STEP - drv->requested_step);
+        buffer_steps_set(drv->prepare_buf_idx, 1,
+                         DEFAULT_STEP - drv->requested_step,
+                         TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US));
       }
 
       // If the requested level can't exactly be mapped to steps, we need to
       // prepare the PWM regulation of the step. No need to clear the buffer,
       // it's already cleared (the backlight was switched off).
       if (drv->requested_step_duty_cycle > 0) {
-        // First sample increases the steps by 1 (start of PWM period)
-        drv->pwm_data[drv->locked_buf_idx][0] =
-            TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US);
-
-        // "drv->requested_step_duty_cycle" sample returns to the original
-        // steps' value (2nd half of PWM period)
-        drv->pwm_data[drv->locked_buf_idx][drv->requested_step_duty_cycle] =
-            TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US);
+        buffer_steps_duty_cycle_set(drv->locked_buf_idx);
       }
 
       // Set the current values to reflect the state after TPS EN gets activated
@@ -505,18 +551,6 @@ bool backlight_set_max_level(uint8_t max_level) {
   // The maximum value has been changed, so we need to reapply
   // the requested value
   return backlight_set(drv->requested_level);
-}
-
-static void backlight_control_up(uint16_t *data, int steps) {
-  for (int i = 0; i < steps; i++) {
-    data[i] = TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US);
-  }
-}
-
-static void backlight_control_down(uint16_t *data, int steps) {
-  for (int i = 0; i < steps; i++) {
-    data[i] = TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US);
-  }
 }
 
 static void backlight_shutdown(void) {
@@ -606,19 +640,19 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
 
   // Check if we need to change the step value
   if (drv->requested_step != drv->latched_step[drv->locked_buf_idx]) {
-    // Clear the buffer
-    memset(drv->pwm_data[drv->prepare_buf_idx], UINT8_MAX,
-           sizeof(drv->pwm_data[drv->prepare_buf_idx]));
+    buffer_clear(drv->prepare_buf_idx);
 
     // Calculate the difference between the latched state and the requested one
     if (drv->requested_step > drv->latched_step[drv->locked_buf_idx]) {
-      backlight_control_up(
-          &drv->pwm_data[drv->prepare_buf_idx][0],
-          drv->requested_step - drv->latched_step[drv->locked_buf_idx]);
+      buffer_steps_set(
+          drv->prepare_buf_idx, 0,
+          drv->requested_step - drv->latched_step[drv->locked_buf_idx],
+          TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US));
     } else {
-      backlight_control_down(
-          &drv->pwm_data[drv->prepare_buf_idx][0],
-          drv->latched_step[drv->locked_buf_idx] - drv->requested_step);
+      buffer_steps_set(
+          drv->prepare_buf_idx, 0,
+          drv->latched_step[drv->locked_buf_idx] - drv->requested_step,
+          TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US));
     }
 
     // The buffer has been precalculated to reach the drv->requested_step value
@@ -634,23 +668,13 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
     // transfer
     if (drv->requested_step_duty_cycle !=
             drv->latched_step_duty_cycle[drv->prepare_buf_idx] ||
-        (drv->pwm_data[drv->prepare_buf_idx][0] != UINT16_MAX ||
-         drv->pwm_data[drv->prepare_buf_idx][1] != UINT16_MAX)) {
-      // Clear the buffer
-      memset(drv->pwm_data[drv->prepare_buf_idx], UINT8_MAX,
-             sizeof(drv->pwm_data[drv->prepare_buf_idx]));
+        drv->pwm_data_dirty[drv->prepare_buf_idx]) {
+      buffer_clear(drv->prepare_buf_idx);
 
       // If the requested level can't exactly be mapped to steps, we need to
       // prepare the PWM regulation of the step.
       if (drv->requested_step_duty_cycle > 0) {
-        // First sample increases the steps by 1 (start of PWM period)
-        drv->pwm_data[drv->prepare_buf_idx][0] =
-            TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US);
-
-        // "drv->requested_step_duty_cycle" sample returns to the original
-        // steps' value (2nd half of PWM period)
-        drv->pwm_data[drv->prepare_buf_idx][drv->requested_step_duty_cycle] =
-            TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US);
+        buffer_steps_duty_cycle_set(drv->prepare_buf_idx);
       }
     }
 
