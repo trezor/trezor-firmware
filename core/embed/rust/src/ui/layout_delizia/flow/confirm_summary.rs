@@ -74,6 +74,7 @@ pub fn new_confirm_summary(
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
     let content_summary = summary_params
+        .with_flow_menu(true)
         .into_layout()?
         // Summary(1) + Hold(1)
         .with_pages(|summary_pages| summary_pages + 1);
@@ -83,6 +84,7 @@ pub fn new_confirm_summary(
         TR::send__sign_transaction.into(),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
+    .with_flow_menu()
     .with_menu_button()
     .with_footer(TR::instructions__hold_to_sign.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::Default)
