@@ -76,6 +76,7 @@ async def perform_backup(
 async def backup_device(msg: BackupDevice) -> Success:
     from trezor import wire
     from trezor.messages import Success
+    from trezor.wire import context
 
     from apps.common import backup, mnemonic
 
@@ -103,6 +104,7 @@ async def backup_device(msg: BackupDevice) -> Success:
     elif len(groups) > 0:
         raise wire.DataError("group_threshold is missing")
 
-    await perform_backup(is_repeated_backup, group_threshold, groups)
+    with context.AvoidCancellation("Backup in progress"):
+        await perform_backup(is_repeated_backup, group_threshold, groups)
 
     return Success(message="Seed successfully backed up")
