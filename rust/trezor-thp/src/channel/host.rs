@@ -100,7 +100,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
             }
             _ => {
                 log::error!("Unexpected handshake state.");
-                return Err(Error::UnexpectedInput);
+                return Err(Error::unexpected_input());
             }
         }
         Ok(())
@@ -114,8 +114,8 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         };
         let (cid, device_properties) = parse_u16(payload)?;
         self.channel.channel_id = cid;
-        self.device_properties =
-            heapless::Vec::from_slice(device_properties).map_err(|_| Error::InsufficientBuffer)?;
+        self.device_properties = heapless::Vec::from_slice(device_properties)
+            .map_err(|_| Error::insufficient_buffer())?;
         Ok(ControlFlow::Continue(()))
     }
 
@@ -144,7 +144,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         self.internal_buffer
             .resize(self.internal_buffer.capacity(), 0u8)
             .unwrap();
-        let noise = self.noise.as_mut().ok_or(Error::UnexpectedInput)?;
+        let noise = self.noise.as_mut().ok_or_else(Error::unexpected_input)?;
         let (nc, msg) =
             noise.complete_pairing(&mut self.cred_store, &mut self.internal_buffer, payload_len)?;
         self.channel.noise = Some(nc);
@@ -191,7 +191,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     /// Transition into the pairing phase.
     pub fn complete(self) -> Result<ChannelPairing<B>, Error> {
         if self.is_broadcast() || self.channel.noise.is_none() {
-            return Err(Error::UnexpectedInput);
+            return Err(Error::unexpected_input());
         }
         log::debug!("Handshake complete.");
         Ok(match self.state {
@@ -201,7 +201,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
                 pairing_state: ps,
                 is_finished: false,
             },
-            _ => return Err(Error::UnexpectedInput),
+            _ => return Err(Error::unexpected_input()),
         })
     }
 }
@@ -305,7 +305,7 @@ impl<B: Backend> ChannelPairing<B> {
 
     pub fn complete(self) -> Result<Channel<Host, B>, Error> {
         if !self.is_finished {
-            return Err(Error::UnexpectedInput);
+            return Err(Error::unexpected_input());
         }
         log::debug!("Pairing and credentials complete, begin application level transport.");
         Ok(self.channel)
@@ -344,7 +344,7 @@ impl<B: Backend> ChannelIO for ChannelPairing<B> {
         let (sid, message_type, message) = self.channel.message_out(receive_buffer)?;
         if sid != 0 {
             log::error!("Invalid session id in pairing phase.");
-            return Err(Error::MalformedData);
+            return Err(Error::malformed_data());
         }
         if message_type == MESSAGE_TYPE_END_RESPONSE {
             self.is_finished = true;
