@@ -25,10 +25,10 @@
 
 #include "cash_addr.h"
 
-#define MAX_CASHADDR_SIZE 129
+#define MAX_CASHADDR_LEN 129
 #define MAX_BASE32_SIZE 104
-#define MAX_DATA_SIZE 65
-#define MAX_HRP_SIZE 20
+#define MAX_PROG_SIZE 65
+#define MAX_HRP_LEN 20
 #define CHECKSUM_SIZE 8
 
 uint64_t cashaddr_polymod_step(uint64_t pre) {
@@ -52,7 +52,7 @@ static const int8_t charset_rev[128] = {
     3,  16, 11, 28, 12, 14, 6,  4,  2,  -1, -1, -1, -1, -1};
 
 int cash_encode(char* output, const char* hrp, const uint8_t* data,
-                size_t data_len) {
+                size_t data_size) {
   uint64_t chk = 1;
   size_t i = 0;
   while (hrp[i] != 0) {
@@ -63,13 +63,16 @@ int cash_encode(char* output, const char* hrp, const uint8_t* data,
     *(output++) = ch;
     chk = cashaddr_polymod_step(chk) ^ (ch & 0x1f);
     ++i;
+    if (i > MAX_HRP_LEN) {
+      return 0;
+    }
   }
-  if (i + 1 + data_len + CHECKSUM_SIZE > MAX_CASHADDR_SIZE) {
+  if (i + 1 + data_size + CHECKSUM_SIZE > MAX_CASHADDR_LEN) {
     return 0;
   }
   chk = cashaddr_polymod_step(chk);
   *(output++) = ':';
-  for (i = 0; i < data_len; ++i) {
+  for (i = 0; i < data_size; ++i) {
     if (*data >> 5) return 0;
     chk = cashaddr_polymod_step(chk) ^ (*data);
     *(output++) = charset[*(data++)];
@@ -85,27 +88,28 @@ int cash_encode(char* output, const char* hrp, const uint8_t* data,
   return 1;
 }
 
-int cash_decode(char* hrp, uint8_t* data, size_t* data_len, const char* input) {
+int cash_decode(char* hrp, uint8_t* data, size_t* data_size,
+                const char* input) {
   uint64_t chk = 1;
   size_t i = 0;
   size_t input_len = strlen(input);
   size_t hrp_len = 0;
   int have_lower = 0, have_upper = 0;
-  if (input_len < CHECKSUM_SIZE || input_len > MAX_CASHADDR_SIZE) {
+  if (input_len < CHECKSUM_SIZE || input_len > MAX_CASHADDR_LEN) {
     return 0;
   }
-  *data_len = 0;
-  while (*data_len < input_len && input[(input_len - 1) - *data_len] != ':') {
-    ++(*data_len);
+  *data_size = 0;
+  while (*data_size < input_len && input[(input_len - 1) - *data_size] != ':') {
+    ++(*data_size);
   }
-  hrp_len = input_len - (1 + *data_len);
-  if (1 + *data_len >= input_len || hrp_len > MAX_HRP_SIZE ||
-      *data_len < CHECKSUM_SIZE ||
-      *data_len > CHECKSUM_SIZE + MAX_BASE32_SIZE) {
+  hrp_len = input_len - (1 + *data_size);
+  if (1 + *data_size >= input_len || hrp_len > MAX_HRP_LEN ||
+      *data_size < CHECKSUM_SIZE ||
+      *data_size > CHECKSUM_SIZE + MAX_BASE32_SIZE) {
     return 0;
   }
   // subtract checksum
-  *(data_len) -= CHECKSUM_SIZE;
+  *(data_size) -= CHECKSUM_SIZE;
   for (i = 0; i < hrp_len; ++i) {
     int ch = input[i];
     if (ch < 33 || ch > 126) {
@@ -165,25 +169,25 @@ static int convert_bits(uint8_t* out, size_t* outlen, int outbits,
   return 1;
 }
 
-int cash_addr_encode(char* output, const char* hrp, const uint8_t* data,
-                     size_t data_len) {
+int cash_addr_encode(char* output, const char* hrp, const uint8_t* prog,
+                     size_t prog_size) {
   uint8_t base32[MAX_BASE32_SIZE] = {0};
-  size_t base32len = 0;
-  if (data_len < 2 || data_len > MAX_DATA_SIZE) return 0;
-  convert_bits(base32, &base32len, 5, data, data_len, 8, 1);
-  return cash_encode(output, hrp, base32, base32len);
+  size_t base32size = 0;
+  if (prog_size < 2 || prog_size > MAX_PROG_SIZE) return 0;
+  convert_bits(base32, &base32size, 5, prog, prog_size, 8, 1);
+  return cash_encode(output, hrp, base32, base32size);
 }
 
-int cash_addr_decode(uint8_t* witdata, size_t* witdata_len, const char* hrp,
+int cash_addr_decode(uint8_t* prog, size_t* prog_size, const char* hrp,
                      const char* addr) {
   uint8_t data[MAX_BASE32_SIZE] = {0};
-  char hrp_actual[MAX_HRP_SIZE + 1] = {0};
-  size_t data_len = 0;
-  if (!cash_decode(hrp_actual, data, &data_len, addr)) return 0;
-  if (data_len == 0 || data_len > MAX_BASE32_SIZE) return 0;
-  if (strncmp(hrp, hrp_actual, MAX_HRP_SIZE + 1) != 0) return 0;
-  *witdata_len = 0;
-  if (!convert_bits(witdata, witdata_len, 8, data, data_len, 5, 0)) return 0;
-  if (*witdata_len < 2 || *witdata_len > MAX_DATA_SIZE) return 0;
+  char hrp_actual[MAX_HRP_LEN + 1] = {0};
+  size_t data_size = 0;
+  if (!cash_decode(hrp_actual, data, &data_size, addr)) return 0;
+  if (data_size == 0 || data_size > MAX_BASE32_SIZE) return 0;
+  if (strncmp(hrp, hrp_actual, MAX_HRP_LEN + 1) != 0) return 0;
+  *prog_size = 0;
+  if (!convert_bits(prog, prog_size, 8, data, data_size, 5, 0)) return 0;
+  if (*prog_size < 2 || *prog_size > MAX_PROG_SIZE) return 0;
   return 1;
 }
