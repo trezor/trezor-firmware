@@ -1,5 +1,5 @@
 use core::marker::PhantomData;
-
+extern crate alloc;
 use ufmt::derive::uDebug;
 
 use crate::ipc::{IpcInbox, IpcMessage, RemoteSysTask};
@@ -7,6 +7,8 @@ use crate::sysevent::SysEvents;
 use crate::util::Timeout;
 
 pub const CORE_SERVICE_REMOTE: RemoteSysTask = RemoteSysTask::CoreApp;
+
+use trezor_structs::ArchivedUtilEnum;
 
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, num_enum::IntoPrimitive, num_enum::FromPrimitive)]
 #[repr(u16)]
@@ -17,6 +19,7 @@ pub enum CoreIpcService {
     WireContinue = 3,
     WireEnd = 4,
     Crypto = 5,
+    LongConfirm = 6,
     #[num_enum(catch_all)]
     Unknown(u16),
     Ping = 0xffff,
@@ -74,8 +77,51 @@ impl<'a, T: Into<u16>> IpcRemote<'a, T> {
             Ok(reply)
         }
     }
-}
 
+    pub fn call_long(
+        &self,
+        service: T,
+        message: &IpcMessage,
+        timeout: Timeout,
+        long_content: &str,
+    ) -> Result<IpcMessage<'a>, Error<'a>> {
+        let service_id = service.into();
+        message
+            .send(self.inbox.remote(), service_id)
+            .map_err(|_| Error::FailedToSend)?;
+        loop {
+            let reply = self.receive(timeout)?;
+            if reply.service() == 6 {
+                let data = reply.data();
+
+                let archived = unsafe { rkyv::access_unchecked::<ArchivedUtilEnum>(data) };
+                match archived {
+                    ArchivedUtilEnum::RequestSlice { offset, size } => {
+                        let offset_val = offset.to_native() as usize;
+                        let size_val = size.to_native() as usize;
+                        // Find byte range for the requested char slice
+                        let mut chars = long_content.chars();
+                        let start_byte = chars
+                            .by_ref()
+                            .take(offset_val)
+                            .map(|c| c.len_utf8())
+                            .sum::<usize>();
+                        let slice_len = chars.take(size_val).map(|c| c.len_utf8()).sum::<usize>();
+                        let slice = &long_content.as_bytes()[start_byte..start_byte + slice_len];
+
+                        // TODO implement Debuf for Api error
+                        let _ = IpcMessage::new(10, slice).send(RemoteSysTask::CoreApp, 6);
+                    }
+                    _ => return Err(Error::UnexpectedResponse(reply)),
+                }
+            } else if reply.service() != service_id {
+                return Err(Error::UnexpectedService(reply));
+            } else {
+                return Ok(reply);
+            }
+        }
+    }
+}
 
 #[macro_export]
 macro_rules! static_service {
@@ -84,7 +130,9 @@ macro_rules! static_service {
             const BUFFER_SIZE: usize = $bufsize / core::mem::size_of::<usize>();
             static mut BUFFER: [usize; BUFFER_SIZE] = [0usize; BUFFER_SIZE];
             // SAFETY: The BUFFER cannot be accessed outside the macro invocation.
-            let inbox = $crate::ipc::IpcInbox::new($crate::ipc::RemoteSysTask::$remote, unsafe { &mut *core::ptr::addr_of_mut!(BUFFER) });
+            let inbox = $crate::ipc::IpcInbox::new($crate::ipc::RemoteSysTask::$remote, unsafe {
+                &mut *core::ptr::addr_of_mut!(BUFFER)
+            });
             $crate::service::IpcRemote::new(inbox)
         };
     };

@@ -11,6 +11,7 @@ fn main() {
     generate_trezorhal_bindings();
     #[cfg(feature = "crypto")]
     generate_crypto_bindings();
+    generate_ipc_bindings();
     #[cfg(feature = "test")]
     link_core_objects();
 }
@@ -576,6 +577,30 @@ fn generate_crypto_bindings() {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(PathBuf::from(out_path).join("crypto.rs"))
+        .unwrap();
+}
+
+fn generate_ipc_bindings() {
+    let out_path = env::var("OUT_DIR").unwrap();
+
+    // Tell cargo to invalidate the built crate whenever the header changes.
+    println!("cargo:rerun-if-changed=ipc.h");
+
+    let bindings = prepare_bindings()
+        .header("ipc.h")
+        .allowlist_function("ipc_send")
+        .allowlist_function("ipc_message_free")
+        .allowlist_function("ipc_try_receive")
+        .allowlist_function("ipc_register")
+        .allowlist_function("ipc_unregister")
+        .allowlist_type("ipc_message_t")
+        .allowlist_type("systask_id_t");
+
+    // Write the bindings to a file in the OUR_DIR.
+    bindings
+        .generate()
+        .expect("Unable to generate bindings")
+        .write_to_file(PathBuf::from(out_path).join("ipc.rs"))
         .unwrap();
 }
 

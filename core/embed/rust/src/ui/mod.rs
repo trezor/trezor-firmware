@@ -4,6 +4,7 @@ pub mod backlight;
 pub mod button_request;
 pub mod component;
 pub mod constant;
+pub mod cache;
 pub mod display;
 pub mod event;
 #[cfg(all(feature = "micropython", feature = "touch"))]

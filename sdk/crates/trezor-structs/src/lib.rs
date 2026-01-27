@@ -122,6 +122,10 @@ pub enum TrezorUiEnum {
         title: ShortString,
         content: ShortString,
     },
+    ConfirmLong {
+        title: ShortString,
+        content_len: u32,
+    },
     Warning {
         title: ShortString,
         content: ShortString,
@@ -180,4 +184,13 @@ pub enum TrezorCryptoResult {
     Cancelled,
     Xpub(LongString),
     Signature([u8; 64]),
+}
+
+/// Outgoing Crypto result message for IPC
+#[derive(Archive, Serialize, Deserialize)]
+pub enum UtilEnum {
+    RequestSlice {
+        offset: u32,
+        size: u32,
+    },
 }

@@ -115,6 +115,7 @@ spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 ufmt = "0.2.0"
 zeroize = { version = "1.8.2", default-features = false, optional = true }
+num_enum = { version = "0.7.5", default-features = false }
 
 # Runtime dependencies
 

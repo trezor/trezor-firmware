@@ -3,8 +3,6 @@ use core::ffi::c_void;
 use super::ffi::{self, ipc_message_t};
 use crate::log::info;
 
-extern crate alloc;
-
 pub const TREZOR_API_SUPPORTED_VERSION: u32 = ffi::TREZOR_API_VERSION_1;
 
 /// Global API singleton - initialized once and then immutable
@@ -124,7 +122,11 @@ pub fn ipc_unregister(remote: ffi::systask_id_t) {
     unsafe { (get_or_die().ipc_unregister)(remote) };
 }
 
-pub fn ipc_send(remote: ffi::systask_id_t, fn_: ffi::ipc_fn_t, bytes: &[u8]) -> Result<(), ApiError> {
+pub fn ipc_send(
+    remote: ffi::systask_id_t,
+    fn_: ffi::ipc_fn_t,
+    bytes: &[u8],
+) -> Result<(), ApiError> {
     let result = unsafe {
         (get_or_die().ipc_send)(remote, fn_, bytes.as_ptr() as *const c_void, bytes.len())
     };
@@ -234,5 +236,3 @@ pub fn hdnode_from_xpub(
         Err(ApiError::Failed)
     }
 }
-
-

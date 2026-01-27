@@ -16,10 +16,11 @@ use crate::{
 
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
-    Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
-    PinKeyboardMsg, ProgressScreen, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
-    SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
-    TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
+    Homescreen, HomescreenMsg, LongContentScreen, LongContentScreenMsg, MnemonicInput, MnemonicKeyboard,
+    MnemonicKeyboardMsg, PinKeyboard, PinKeyboardMsg, ProgressScreen, SelectWordCountMsg,
+    SelectWordCountScreen, SelectWordMsg, SelectWordScreen, SetBrightnessScreen, StringInput,
+    StringKeyboard, StringKeyboardMsg, TextScreen, TextScreenMsg, ValueInput, ValueInputScreen,
+    ValueInputScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -105,6 +106,15 @@ where
             TextScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
             TextScreenMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             TextScreenMsg::Menu => Ok(INFO.as_obj()),
+        }
+    }
+}
+
+impl ComponentMsgObj for LongContentScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            LongContentScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            LongContentScreenMsg::Confirmed => Ok(CONFIRMED.as_obj()),
         }
     }
 }

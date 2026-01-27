@@ -44,9 +44,9 @@ use super::{
     component::Button,
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
-        HeaderMsg, Hint, Homescreen, LabelInput, MnemonicKeyboard, PinKeyboard, ProgressScreen,
-        SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
-        StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu,
+        HeaderMsg, Hint, Homescreen, LabelInput, LongContentScreen, MnemonicKeyboard, PinKeyboard,
+        ProgressScreen, SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec,
+        Slip39Input, StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     flow, fonts,
@@ -120,6 +120,15 @@ impl FirmwareUI for UIEckhart {
         if let Some(subtitle) = subtitle {
             screen = screen.with_hint(Hint::new_instruction(subtitle, None));
         }
+        let layout = RootComponent::new(screen);
+        Ok(layout)
+    }
+
+    fn confirm_long(
+        title: TString<'static>,
+        content_length: u32,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let screen = LongContentScreen::new(title, content_length);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
@@ -1765,6 +1774,12 @@ impl FirmwareUI for UIEckhart {
                     None,  // prompt_title
                     false, // external_menu
                 )?;
+                LayoutObj::new_root(layout)
+            }
+            ArchivedTrezorUiEnum::ConfirmLong { title, content_len } => {
+                // Use safe Deref trait instead of raw pointers
+                let layout =
+                    Self::confirm_long(tstr_from_archived(title), u32::from(*content_len))?;
                 LayoutObj::new_root(layout)
             }
             ArchivedTrezorUiEnum::ConfirmProperties { title, props } => {

@@ -34,6 +34,7 @@ _SERVICE_WIRE_START = const(2)
 _SERVICE_WIRE_CONTINUE = const(3)
 _SERVICE_WIRE_END = const(4)
 _SERVICE_CRYPTO = const(5)
+_SERVICE_LONG_CONFIRM = const(6)
 
 
 def fn_id(service: int, message_id: int) -> int:

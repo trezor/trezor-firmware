@@ -39,6 +39,11 @@ pub trait FirmwareUI {
         external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    fn confirm_long(
+        title: TString<'static>,
+        content_length: u32,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
     fn confirm_address(
         title: TString<'static>,
         address: Obj, // TODO: replace Obj
