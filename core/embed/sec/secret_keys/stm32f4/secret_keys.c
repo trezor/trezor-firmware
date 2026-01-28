@@ -23,14 +23,16 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/secret.h>
 #include <sec/secret_keys.h>
 #include "../secret_keys_common.h"
 
 #include <sec/rng_strong.h>
 #include <sys/flash_otp.h>
-#include <sys/mpu.h>
 #include "memzero.h"
+
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
 
 #ifdef USE_OPTIGA
 

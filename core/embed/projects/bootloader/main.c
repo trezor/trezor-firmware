@@ -28,7 +28,6 @@
 #include <sec/image.h>
 #include <sec/random_delays.h>
 #include <sec/rsod_special.h>
-#include <sec/secret.h>
 #include <sec/unit_properties.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
@@ -82,6 +81,9 @@
 #endif
 #ifdef USE_NRF
 #include <io/nrf.h>
+#endif
+#ifdef USE_SECRET
+#include <sec/secret.h>
 #endif
 
 #ifdef USE_BLE
@@ -147,6 +149,10 @@ static void display_touch_init(secbool manufacturing_mode,
 
 static secbool boot_sequence(void) {
   secbool stay_in_bootloader = secfalse;
+
+#ifdef USE_SECRET
+  secret_init();
+#endif
 
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
@@ -419,6 +425,7 @@ void real_jump_to_firmware(void) {
   ensure_secmon_min_version(secmon_hdr->monotonic);
 #endif
 
+#ifdef USE_SECRET
   secbool provisioning_access =
       ((vhdr.vtrust & (VTRUST_ALLOW_PROVISIONING | VTRUST_SECRET_MASK)) ==
        (VTRUST_SECRET_ALLOW | VTRUST_ALLOW_PROVISIONING)) *
@@ -428,6 +435,7 @@ void real_jump_to_firmware(void) {
       ((vhdr.vtrust & VTRUST_SECRET_MASK) == VTRUST_SECRET_ALLOW) * sectrue;
 
   secret_prepare_fw(secret_run_access, provisioning_access);
+#endif
 
   // if all warnings are disabled in VTRUST flags then skip the procedure
   if ((vhdr.vtrust & VTRUST_NO_WARNING) != VTRUST_NO_WARNING) {
