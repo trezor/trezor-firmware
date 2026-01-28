@@ -132,6 +132,9 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
 static inline void buffer_clear(uint8_t buf_idx) {
   backlight_driver_t *drv = &g_backlight_driver;
 
+  // buf_idx is out of range. Safety check...
+  if (buf_idx >= DMA_BUF_COUNT) return;
+
   memset(drv->pwm_data[buf_idx], UINT8_MAX, sizeof(drv->pwm_data[buf_idx]));
   drv->pwm_data_dirty[buf_idx] = false;
 }
@@ -141,8 +144,13 @@ static void buffer_steps_set(uint8_t buf_idx, int start_offset, int steps_cnt,
   backlight_driver_t *drv = &g_backlight_driver;
   int elements_cnt = start_offset + steps_cnt;
 
-  // The requested buffer modification exceeds its boundaries. Safety check...
-  if (elements_cnt > DMA_BUF_LENGTH) return;
+  // The requested buffer modification exceeds its boundaries OR buf_idx is out
+  // of range. Safety check...
+  if ((elements_cnt > DMA_BUF_LENGTH) || buf_idx >= DMA_BUF_COUNT) return;
+
+  if (drv->pwm_data_dirty[buf_idx]) {
+    buffer_clear(buf_idx);
+  }
 
   for (int i = start_offset; i < elements_cnt; i++) {
     drv->pwm_data[buf_idx][i] = tim_pulse;
@@ -153,6 +161,13 @@ static void buffer_steps_set(uint8_t buf_idx, int start_offset, int steps_cnt,
 
 static inline void buffer_steps_duty_cycle_set(uint8_t buf_idx) {
   backlight_driver_t *drv = &g_backlight_driver;
+
+  // buf_idx is out of range. Safety check...
+  if (buf_idx >= DMA_BUF_COUNT) return;
+
+  if (drv->pwm_data_dirty[buf_idx]) {
+    buffer_clear(buf_idx);
+  }
 
   // First sample increases the steps by 1 (start of PWM period)
   drv->pwm_data[buf_idx][0] = TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US);
