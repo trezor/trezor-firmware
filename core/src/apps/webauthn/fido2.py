@@ -1311,7 +1311,7 @@ def basic_attestation_sign(data: Iterable[AnyBytes]) -> AnyBytes:
     for segment in data:
         dig.update(segment)
     sig = nist256p1.sign(_FIDO_ATT_PRIV_KEY, dig.digest(), False)
-    return der.encode_seq((sig[1:33], sig[33:]))
+    return der.encode_signature(sig)
 
 
 def _msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:

@@ -96,7 +96,7 @@ class Credential:
         for segment in data:
             dig.update(segment)
         sig = nist256p1.sign(self._private_key(), dig.digest(), False)
-        return der.encode_seq((sig[1:33], sig[33:]))
+        return der.encode_signature(sig)
 
     def bogus_signature(self) -> bytes:
         raise NotImplementedError
@@ -351,7 +351,7 @@ class Fido2Credential(Credential):
             COSE_ALG_ES256,
             COSE_CURVE_P256,
         ):
-            return der.encode_seq((b"\x0a" * 32, b"\x0a" * 32))
+            return der.encode_signature(b"\x0a" * 64)
         elif (self.algorithm, self.curve) == (
             COSE_ALG_EDDSA,
             COSE_CURVE_ED25519,
@@ -403,7 +403,7 @@ class U2fCredential(Credential):
         return self._u2f_sign(data)
 
     def bogus_signature(self) -> AnyBytes:
-        return der.encode_seq((b"\x0a" * 32, b"\x0a" * 32))
+        return der.encode_signature(b"\x0a" * 64)
 
     def generate_key_handle(self) -> None:
         # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
