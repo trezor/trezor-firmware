@@ -1,0 +1,51 @@
+{
+    "setup": {
+        "mnemonic": "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "EIP-7702 - Uniswap - fails because we have safety checks",
+            "skip_models": ["t1"],
+            "parameters": {
+                    "safety_checks": true,
+                    "data": "",
+                    "path": "m/44'/60'/0'/0/1",
+                    "to_address": "0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00",
+                    "chain_id": 1,
+                    "nonce": "0x0",
+                    "gas_price": "0x14",
+                    "gas_limit": "0x14",
+                    "tx_type": 4,
+                    "value": "0x0"
+            },
+            "result": {
+                    "sig_v": 0,
+                    "sig_r": "0x0",
+                    "sig_s": "0x0"
+            }
+        },
+        {
+            "name": "EIP-7702 - unknown address - safety checks disabled but still fails",
+            "skip_models": ["t1"],
+            "parameters": {
+                    "safety_checks": false,
+                    "data": "",
+                    "path": "m/44'/60'/0'/0/1",
+                    "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                    "chain_id": 1,
+                    "nonce": "0x0",
+                    "gas_price": "0x14",
+                    "gas_limit": "0x14",
+                    "tx_type": 4,
+                    "value": "0x0"
+            },
+            "result": {
+                    "sig_v": 0,
+                    "sig_r": "0x0",
+                    "sig_s": "0x0"
+            }
+        }
+
+    ]
+}

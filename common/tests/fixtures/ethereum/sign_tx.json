@@ -194,6 +194,27 @@
                 "sig_r": "7b6895910a73fcd71fbd4451304670fa1477b430552de35c746f140c9c8f5d77",
                 "sig_s": "7365f33b29cbfbec637982b4e3967c3d70c8aa29d36d67f52109dcd6fc162562"
             }
+        },
+        {
+            "name": "EIP-7702 - Uniswap",
+            "skip_models": ["t1"],
+            "parameters": {
+                    "safety_checks": false,
+                    "data": "",
+                    "path": "m/44'/60'/0'/0/1",
+                    "to_address": "0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00",
+                    "chain_id": 1,
+                    "nonce": "0x0",
+                    "gas_price": "0x14",
+                    "gas_limit": "0x14",
+                    "tx_type": 4,
+                    "value": "0x0"
+            },
+            "result": {
+                    "sig_v": 37,
+                    "sig_r": "869433a7e19c05d9beb0f223d18fb27c6fb6a1817d60b38144f249237b27a36d",
+                    "sig_s": "1379434319ea9953d6632cf54d8b2ec09c8d0d6fb932c530b67f0c03a318af57"
+            }
         }
     ]
 }

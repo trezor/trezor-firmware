@@ -90,7 +90,7 @@ async def require_confirm_tx(
     fee_info_items: Iterable[PropertyType],
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
-    is_contract_interaction: bool,
+    is_send: bool,
     chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_tx
@@ -105,7 +105,7 @@ async def require_confirm_tx(
         account_path,
         maximum_fee,
         fee_info_items,
-        is_contract_interaction,
+        is_send,
         chunkify=chunkify,
     )
 

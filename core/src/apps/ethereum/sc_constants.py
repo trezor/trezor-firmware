@@ -17,6 +17,21 @@ SC_FUNC_SIG_STAKE = unhexlify("3a29dbae")
 SC_FUNC_SIG_UNSTAKE = unhexlify("76ec871c")
 SC_FUNC_SIG_CLAIM = unhexlify("33986ffa")
 
+# EIP-7702
+
+EIP_7702_TX_TYPE = const(4)
+EIP_7702_KNOWN_ADDRESSES = {
+    unhexlify("000000009B1D0aF20D8C6d0A44e162d11F9b8f00"): "Uniswap",
+    unhexlify("69007702764179f14F51cdce752f4f775d74E139"): "alchemyplatform",
+    unhexlify("5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d"): "AmbireTech",
+    unhexlify("63c0c19a282a1b52b07dd5a65b58948a07dae32b"): "MetaMask",
+    unhexlify(
+        "4Cd241E8d1510e30b2076397afc7508Ae59C66c9"
+    ): "Ethereum Foundation AA team",
+    unhexlify("17c11FDdADac2b341F2455aFe988fec4c3ba26e3"): "Luganodes",
+}
+
+
 # Everstake staking
 
 # addresses for pool (stake/unstake) and accounting (claim) operations
