@@ -1,10 +1,11 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor import wire
 from trezor.crypto import bip39
+from trezor.wire import DataError
 
-from apps.common.keychain import Keychain
+from apps.common.keychain import ForbiddenKeyPath, Keychain
+from apps.common.paths import address_n_slip21_to_str
 from apps.common.seed import Slip21Node
 
 
@@ -52,10 +53,45 @@ class TestSeed(unittest.TestCase):
         )
 
         # Forbidden paths.
-        with self.assertRaises(wire.DataError):
+        with self.assertRaises(ForbiddenKeyPath):
             keychain.derive_slip21([])
-        with self.assertRaises(wire.DataError):
+        with self.assertRaises(ForbiddenKeyPath):
             keychain.derive_slip21([b"SLIP-9999", b"Authentication key"])
+
+        # Verify that ForbiddenKeyPath is a subclass of DataError
+        self.assertTrue(issubclass(ForbiddenKeyPath, DataError))
+
+    def test_slip21_to_str(self):
+        # Empty path is "m"
+        self.assertEqual(address_n_slip21_to_str([]), "m")
+
+        # Normal-use path
+        self.assertEqual(
+            address_n_slip21_to_str([b"SLIP-0021", b"Authentication key"]),
+            "m/SLIP-0021/Authentication key",
+        )
+
+        # Path with "/" and "\" - escaped as "\/" and "\\" respectively
+        label = b" \\ peace / among / worlds \\"
+        self.assertEqual(
+            address_n_slip21_to_str([label, label, label]),
+            "m/ \\\\ peace \\/ among \\/ worlds \\\\/ \\\\ peace \\/ among \\/ worlds \\\\/ \\\\ peace \\/ among \\/ worlds \\\\",
+        )
+
+        # Paths with non-ASCII-printable bytes - escaped as \xNN
+        self.assertEqual(
+            address_n_slip21_to_str([b"\x00"]),
+            "m/\\x00",
+        )
+        self.assertEqual(
+            address_n_slip21_to_str([b"\x00\x01\x80\xff pass"]),
+            "m/\\x00\\x01\\x80\\xff pass",
+        )
+        label = bytes("řeřicha", "utf-8")
+        self.assertEqual(
+            address_n_slip21_to_str([label, label, label]),
+            "m/\\xc5\\x99e\\xc5\\x99icha/\\xc5\\x99e\\xc5\\x99icha/\\xc5\\x99e\\xc5\\x99icha",
+        )
 
 
 if __name__ == "__main__":

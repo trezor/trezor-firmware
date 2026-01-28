@@ -107,6 +107,15 @@ class Keychain:
 
         raise ForbiddenKeyPath()
 
+    def verify_slip21_path(self, path: paths.Slip21Path) -> None:
+        if not safety_checks.is_strict():
+            return
+
+        if any(ns == path[: len(ns)] for ns in self.slip21_namespaces):
+            return
+
+        raise ForbiddenKeyPath()
+
     def is_in_keychain(self, path: paths.Bip32Path) -> bool:
         return any(schema.match(path) for schema in self.schemas)
 
@@ -149,10 +158,7 @@ class Keychain:
     def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node:
         from .seed import Slip21Node
 
-        if safety_checks.is_strict() and not any(
-            ns == path[: len(ns)] for ns in self.slip21_namespaces
-        ):
-            raise ForbiddenKeyPath()
+        self.verify_slip21_path(path)
 
         return self._derive_with_cache(
             1,
