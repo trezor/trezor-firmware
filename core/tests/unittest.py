@@ -292,23 +292,31 @@ def main(module="__main__"):
             ):
                 yield c
 
-    m = __import__(module)
-    suite = TestSuite()
-    for c in test_cases(m):
-        suite.addTest(c)
-    runner = TestRunner()
-    result = runner.run(suite)
-    msg = f"Ran {result.testsRun} tests"
-    result_strs = []
-    if result.skippedNum > 0:
-        result_strs.append(f"{result.skippedNum} skipped")
-    if result.failuresNum > 0:
-        result_strs.append(f"{result.failuresNum} failed")
-    if result.errorsNum > 0:
-        result_strs.append(f"{result.errorsNum} errored")
-    if result_strs:
-        msg += " (" + ", ".join(result_strs) + ")"
-    print(msg)
+    wasSuccessful = False
+    try:
+        m = __import__(module)
+        suite = TestSuite()
+        for c in test_cases(m):
+            suite.addTest(c)
+        runner = TestRunner()
+        result = runner.run(suite)
+        msg = f"Ran {result.testsRun} tests"
+        result_strs = []
+        if result.skippedNum > 0:
+            result_strs.append(f"{result.skippedNum} skipped")
+        if result.failuresNum > 0:
+            result_strs.append(f"{result.failuresNum} failed")
+        if result.errorsNum > 0:
+            result_strs.append(f"{result.errorsNum} errored")
+        if result_strs:
+            msg += " (" + ", ".join(result_strs) + ")"
+        print(msg)
+        wasSuccessful = result.wasSuccessful()
+    except Exception as e:
+        print(f"{ERROR_COLOR}Unittest runner error:{DEFAULT_COLOR}", e)
+        sys.print_exception(e)
 
-    if not result.wasSuccessful():
-        raise SystemExit(1)
+    if wasSuccessful:
+        print("RESULT:OK")
+    else:
+        print("RESULT:FAILED")
