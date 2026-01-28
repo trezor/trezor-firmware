@@ -449,8 +449,8 @@ bool backlight_set(uint8_t val) {
       if (drv->requested_step > DEFAULT_STEP) {
         // Start from index 1, index 0 is already set (with buffer clear to make
         // TIM not generate any pulse): the reason is that each programming
-        // sequence has to start with log 1 pulse (100-150us i.e. we use 200 us)
-        // to make TPS recognize it
+        // sequence has to start with logic 1 pulse (100-150us i.e. we use
+        // 200 us) to make TPS recognize it
         buffer_steps_set(drv->prepare_buf_idx, 1,
                          drv->requested_step - DEFAULT_STEP,
                          TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US));
