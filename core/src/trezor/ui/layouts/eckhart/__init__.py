@@ -1053,19 +1053,15 @@ if not utils.BITCOIN_ONLY:
         account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[PropertyType],
-        is_contract_interaction: bool,
+        is_send: bool,
         br_name: str = "confirm_total",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
         subtitle = (
             None
-            if is_contract_interaction and recipient is None
-            else (
-                TR.ethereum__interaction_contract
-                if is_contract_interaction
-                else TR.words__recipient
-            )
+            if not is_send and recipient is None
+            else (TR.words__recipient if is_send else TR.ethereum__interaction_contract)
         )
         title = TR.words__send
         fee_items: list[PropertyType] | None = (

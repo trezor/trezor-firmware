@@ -1029,12 +1029,12 @@ if not utils.BITCOIN_ONLY:
         account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[PropertyType],
-        is_contract_interaction: bool,
+        is_send: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        if not is_contract_interaction:
+        if is_send:
             description = f"{TR.words__recipient}:"
         else:
             description = f"{TR.ethereum__interaction_contract}:" if recipient else None
