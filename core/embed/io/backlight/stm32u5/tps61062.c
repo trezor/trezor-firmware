@@ -162,8 +162,8 @@ static void buffer_steps_set(uint8_t buf_idx, int start_offset, int steps_cnt,
 static inline void buffer_steps_duty_cycle_set(uint8_t buf_idx) {
   backlight_driver_t *drv = &g_backlight_driver;
 
-  // buf_idx is out of range. Safety check...
-  if (buf_idx >= DMA_BUF_COUNT) return;
+  // buf_idx is out of range OR requested_step_duty_cycle is 0. Safety check...
+  if (buf_idx >= DMA_BUF_COUNT || drv->requested_step_duty_cycle == 0) return;
 
   if (drv->pwm_data_dirty[buf_idx]) {
     buffer_clear(buf_idx);
