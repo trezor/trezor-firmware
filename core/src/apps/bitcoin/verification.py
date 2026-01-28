@@ -136,27 +136,14 @@ class SignatureVerifier:
             raise DataError("Invalid signature")
 
     def verify_ecdsa(self, digest: bytes) -> None:
+        from trezor.crypto import der
         from trezor.crypto.curve import secp256k1
 
         try:
             i = 0
             for der_signature, _ in self.signatures:
-                signature = _decode_der_signature(der_signature)
+                signature = der.decode_signature(der_signature)
                 while not secp256k1.verify(self.public_keys[i], signature, digest):
                     i += 1
         except Exception:
             raise DataError("Invalid signature")
-
-
-def _decode_der_signature(der_signature: memoryview) -> bytearray:
-    from trezor.crypto import der
-
-    seq = der.decode_seq(der_signature)
-    if len(seq) != 2 or any(len(i) > 32 for i in seq):
-        raise ValueError
-
-    signature = bytearray(64)
-    signature[32 - len(seq[0]) : 32] = seq[0]
-    signature[64 - len(seq[1]) : 64] = seq[1]
-
-    return signature

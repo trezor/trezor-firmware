@@ -6,7 +6,7 @@ from trezor.crypto import der
 
 class TestCryptoDer(unittest.TestCase):
 
-    vectors_seq = [
+    vectors_sig = (
         (
             (
                 "9a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b70771",
@@ -70,30 +70,29 @@ class TestCryptoDer(unittest.TestCase):
             ),
             "3008020200ee020200ff",
         ),
-    ]
+    )
 
-    def test_der_encode_seq(self):
+    def test_der_encode_decode_signature(self):
 
-        for s, d in self.vectors_seq:
+        for s, d in self.vectors_sig:
             s = tuple(unhexlify(i) for i in s)
             d = unhexlify(d)
-            d2 = der.encode_seq(s)
+            sig = b"".join(s)
+            d2 = der.encode_signature(sig)
             self.assertEqual(d2, d)
-            s = [i.lstrip(b"\x00") for i in s]
-            s2 = der.decode_seq(d)
-            self.assertEqual(s2, s)
+            s2 = der.decode_signature(d)
+            self.assertEqual(s2, sig)
 
     def test_der_encode_decode_long_seq(self):
         for length in (1, 127, 128, 129, 255, 256, 257):
             raw_int = bytes((i & 0xFE) + 1 for i in range(length))
             for leading_zeros in range(3):
-                encoded = der.encode_seq((b"\x00" * leading_zeros + raw_int,))
-                decoded = der.decode_seq(encoded)
+                encoded = der._encode_int_seq(b"\x00" * leading_zeros + raw_int)
+                decoded = der._decode_int_seq(encoded)
                 self.assertEqual(decoded, [raw_int])
-
         for zeroes in range(3):
-            encoded = der.encode_seq((b"\x00" * zeroes,))
-            decoded = der.decode_seq(encoded)
+            encoded = der._encode_int_seq(b"\x00" * zeroes)
+            decoded = der._decode_int_seq(encoded)
             self.assertEqual(decoded, [b"\x00"])
 
 
