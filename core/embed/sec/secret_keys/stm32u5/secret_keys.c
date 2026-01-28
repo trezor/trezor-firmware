@@ -23,11 +23,16 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/secret.h>
 #include <sec/secret_keys.h>
+
 #include "../secret_keys_common.h"
 #include "hmac.h"
 #include "memzero.h"
+
+#if defined(USE_TROPIC) || defined(USE_NRF_AUTH) || \
+    (!SECRET_PRIVILEGED_MASTER_KEY_SLOT && defined(USE_OPTIGA))
+#include <sec/secret.h>
+#endif
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
 

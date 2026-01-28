@@ -40,11 +40,18 @@
 #include <io/notify.h>
 #include <rtl/scm_revision.h>
 #include <sec/fwutils.h>
-#include <sec/secret_keys.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include "blake2s.h"
 #include "memzero.h"
+
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
+
+#ifdef USE_SECRET_KEYS
+#include <sec/secret_keys.h>
+#endif
 
 #ifdef USE_TELEMETRY
 #include <sec/telemetry.h>
@@ -55,10 +62,6 @@
 #endif
 #ifdef USE_NRF
 #include <io/nrf.h>
-#endif
-
-#if !defined(TREZOR_EMULATOR)
-#include <sec/secret.h>
 #endif
 
 #if !PYOPT && LOG_STACK_USAGE
@@ -664,7 +667,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_firmware_header_obj,
 ///     the feature is not supported.
 ///     """
 STATIC mp_obj_t mod_trezorutils_bootloader_locked() {
-#if LOCKABLE_BOOTLOADER
+#if LOCKABLE_BOOTLOADER && defined USE_SECRET
 #ifdef TREZOR_EMULATOR
   return mp_const_true;
 #else
