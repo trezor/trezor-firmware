@@ -701,6 +701,13 @@
     "ethereum__approve_unlimited_template": "Approving unlimited amount of {0}",
     "ethereum__contract_address": "Provider contract address",
     "ethereum__data_size_template": "Size: {0} bytes",
+    "ethereum__eip_7702": {
+      "Bolt": "Authorize the following contract as an EIP-7702 on your account",
+      "Caesar": "Authorize the following contract as an EIP-7702 on your account",
+      "Delizia": "Authorize the following contract as an EIP-7702 on your account?",
+      "Eckhart": "Authorize the following contract as an EIP-7702 on your account?"
+    },
+    "ethereum__eip_7702_title": "Smart accounts",
     "ethereum__gas_limit": "Gas limit",
     "ethereum__gas_price": "Gas price",
     "ethereum__interaction_contract": {
