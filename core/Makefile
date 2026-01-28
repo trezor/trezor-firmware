@@ -474,10 +474,6 @@ gdb_firmware: $(FIRMWARE_BUILD_DIR)/firmware.elf ## start remote gdb session to 
 
 ## misc commands:
 
-binctl: ## print info about binary files
-	./tools/headertool.py $(BOOTLOADER_BUILD_DIR)/bootloader.bin
-	./tools/headertool.py $(FIRMWARE_BUILD_DIR)/firmware.bin
-
 bloaty: ## run bloaty size profiler
 	bloaty -d symbols -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
 	bloaty -d compileunits -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
