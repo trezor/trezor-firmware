@@ -51,6 +51,15 @@ def configure(
         ("HW_REVISION", str(hw_revision)),
     ]
 
+    paths += ["embed/sec/secret/inc"]
+    sources += ["embed/sec/secret/stm32u5/secret.c"]
+    defines += [("USE_SECRET", "1")]
+
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/stm32u5/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
+
     if "display" in features_wanted:
         sources += ["embed/io/display/st-7789/display_fb.c"]
         sources += ["embed/io/display/st-7789/display_driver.c"]

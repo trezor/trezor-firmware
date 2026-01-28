@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef USE_SECRET
+
 #include <trezor_model.h>
 
 #include <string.h>
@@ -387,4 +389,7 @@ PRODTEST_CLI_CMD(
   .info = "Locks the secret sector",
   .args = ""
 );
+#endif
+
+#endif
 #endif

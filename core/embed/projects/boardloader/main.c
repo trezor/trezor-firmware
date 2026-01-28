@@ -24,7 +24,6 @@
 #include <io/rsod.h>
 #include <sec/board_capabilities.h>
 #include <sec/option_bytes.h>
-#include <sec/secret.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
 #include <sys/reset_flags.h>
@@ -55,6 +54,10 @@
 #include <sec/tamper.h>
 #endif
 
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
+
 #include "bld_version.h"
 #include "version.h"
 
@@ -72,7 +75,9 @@ static void drivers_init(void) {
 #ifdef USE_TAMPER
   tamper_init();
 #endif
+#ifdef USE_SECRET
   secret_init();
+#endif
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
@@ -308,8 +313,10 @@ int main(void) {
     // This may indicate a first boot after manufacturing,
     // or a potential hardware fault or exploit attempt.
 
+#ifdef USE_SECRET
     // Make storage data inaccessible.
     secret_safety_erase();
+#endif
 
     // Display an error message on the screen and reset the device.
     return 0;

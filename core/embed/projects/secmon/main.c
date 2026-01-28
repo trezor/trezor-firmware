@@ -52,6 +52,10 @@
 #include <sec/hash_processor.h>
 #endif
 
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
+
 // Configure and enable power for USB peripheral
 // (need to be called in secure mode since PWR and RCC peripheras are
 //  not accessible from non-secure mode)
@@ -74,6 +78,10 @@ static void drivers_init(void) {
 
   parse_boardloader_capabilities();
   unit_properties_init();
+
+#ifdef USE_SECRET
+  secret_init();
+#endif
 
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();

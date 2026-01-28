@@ -162,10 +162,12 @@ bool __wur optiga_read_sec__verified(uint8_t *sec);
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
+#ifdef USE_SECRET_KEYS
 #include <sec/secret_keys.h>
 
 secbool secret_key_delegated_identity__verified(
     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+#endif
 
 // ---------------------------------------------------------------------
 #ifdef USE_TELEMETRY
