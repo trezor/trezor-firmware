@@ -367,6 +367,29 @@ def address_n_to_str(address_n: Iterable[int]) -> str:
     return "m/" + "/".join(_path_item(i) for i in address_n)
 
 
+def address_n_slip21_to_str(address_n: Slip21Path) -> str:
+    if not address_n:
+        return "m"
+
+    def label_to_str(label: bytes) -> str:
+        out = []
+        for b in label:
+            if b == ord("\\"):
+                # Escape \ as \\
+                out.append("\\\\")
+            elif b == ord("/"):
+                # Escape / as \/
+                out.append("\\/")
+            elif 32 <= b <= 126:
+                out.append(chr(b))
+            else:
+                # Display non-ASCII-printable bytes as \xNN
+                out.append(f"\\x{b:02x}")
+        return "".join(out)
+
+    return "m/" + "/".join(label_to_str(label) for label in address_n)
+
+
 def unharden(item: int) -> int:
     return item ^ (item & HARDENED)
 
