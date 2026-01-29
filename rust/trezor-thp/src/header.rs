@@ -10,6 +10,7 @@ const CHECKSUM_LEN: u16 = crc32::CHECKSUM_LEN as u16;
 pub const NONCE_LEN: u16 = 8;
 const MAX_PAYLOAD_LEN: u16 = 60000;
 
+const MIN_CHANNEL_ID: u16 = 0x0001;
 const MAX_CHANNEL_ID: u16 = 0xFFEF;
 pub const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
 
@@ -60,7 +61,8 @@ pub enum HandshakeMessage {
 }
 
 pub const fn channel_id_valid(channel_id: u16) -> bool {
-    channel_id <= MAX_CHANNEL_ID || channel_id == BROADCAST_CHANNEL_ID
+    (MIN_CHANNEL_ID <= channel_id && channel_id <= MAX_CHANNEL_ID)
+        || channel_id == BROADCAST_CHANNEL_ID
 }
 
 pub(crate) fn parse_u16(buffer: &[u8]) -> Result<(u16, &[u8])> {

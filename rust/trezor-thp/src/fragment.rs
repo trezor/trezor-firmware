@@ -257,7 +257,7 @@ mod test {
 
         for i in 0..DATA.len() {
             let source = &DATA[..i];
-            let channel_id = i as u16;
+            let channel_id = 1 + i as u16;
             let header = Header::<Host>::new_encrypted(channel_id, source);
 
             let packets = fragment(header, SyncBits::new(), source, PACKET_SIZE);
