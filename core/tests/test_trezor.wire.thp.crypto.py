@@ -78,7 +78,7 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
         ]
 
     def __init__(self):
-        if __debug__:
+        if __debug__ and utils.USE_THP:
             thp_common.suppress_debug_log()
         super().__init__()
 
