@@ -5,6 +5,7 @@ from trezor.utils import ensure
 DEFAULT_COLOR = "\033[0m"
 ERROR_COLOR = "\033[31m"
 OK_COLOR = "\033[32m"
+SKIPPED_COLOR = "\033[33m"
 
 
 class SkipTest(Exception):
@@ -189,8 +190,14 @@ class TestCase:
 
 
 def skip(msg):
-    def _decor(fun):
-        # We just replace original fun with _inner
+
+    def _decor(obj):
+        # Class skip
+        if isinstance(obj, type):
+            obj.__skip__ = msg
+            return obj
+
+        # Function skip
         def _inner(self):
             raise SkipTest(msg)
 
@@ -241,20 +248,23 @@ def run_class(c, test_result):
     tear_down_class = getattr(o, "tearDownClass", lambda: None)
     set_up = getattr(o, "setUp", lambda: None)
     tear_down = getattr(o, "tearDown", lambda: None)
+    class_skip = getattr(c, "__skip__", None)
     print("class", c.__qualname__)
     try:
         set_up_class()
         for name in dir(o):
             if name.startswith("test"):
-                run_test_method(o, name, set_up, tear_down, test_result)
+                run_test_method(o, name, set_up, tear_down, test_result, class_skip)
     finally:
         tear_down_class()
 
 
-def run_test_method(o, name, set_up, tear_down, test_result):
+def run_test_method(o, name, set_up, tear_down, test_result, class_skip):
     print(" ", name, end=" ...")
     m = getattr(o, name)
     try:
+        if class_skip is not None:
+            raise SkipTest(class_skip)
         try:
             set_up()
             test_result.testsRun += 1
@@ -269,7 +279,7 @@ def run_test_method(o, name, set_up, tear_down, test_result):
             tear_down()
         print(f"{OK_COLOR} ok{DEFAULT_COLOR}")
     except SkipTest as e:
-        print(" skipped:", e.args[0])
+        print(f"{SKIPPED_COLOR} skipped:{DEFAULT_COLOR}", e.args[0])
         test_result.skippedNum += 1
     except AssertionError as e:
         print(f"{ERROR_COLOR} failed{DEFAULT_COLOR}")
