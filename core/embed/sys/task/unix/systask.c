@@ -110,6 +110,13 @@ static void systask_yield(void) {
   scheduler->active_task = scheduler->waiting_task;
   pthread_cond_signal(&scheduler->waiting_task->cv);
 
+  // If the current task is being killed, do not park it
+  // and terminate it instead
+  if (current_task->killed) {
+    pthread_mutex_unlock(&scheduler->lock);
+    pthread_exit(0);
+  }
+
   // Park until someone makes us active again (or we’re exiting)
   while (scheduler->active_task != current_task && !current_task->killed) {
     pthread_cond_wait(&current_task->cv, &scheduler->lock);
@@ -118,11 +125,6 @@ static void systask_yield(void) {
   pthread_mutex_unlock(&scheduler->lock);
 
   // Now the task called systask_yield() is active again
-
-  // Do not return to a killed task
-  if (current_task->killed) {
-    pthread_exit(0);
-  }
 
   // Process the pushed call first, if any
   // (used to throw exceptions into the task)
