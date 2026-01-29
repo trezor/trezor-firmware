@@ -874,6 +874,12 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
       "rng_fill_buffer_strong failed");
   ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek),
          "derive_kek_set failed");
+
+#if USE_TROPIC
+  ensure(tropic_validate_sensors(ui_progress),
+         "Tropic sensors config mismatch");
+#endif  // USE_TROPIC
+
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
   chacha20poly1305_encrypt(&ctx, cached_keys, ekeys, KEYS_SIZE);
@@ -920,6 +926,10 @@ void set_pin_time(uint32_t *time_ms, uint8_t *optiga_sec,
     tropic_pin_set_kek_masks_time(time_ms);
 #endif
   }
+
+#if USE_TROPIC
+  tropic_validate_sensors_time(time_ms);
+#endif  // USE_TROPIC
 
   // The value was obtained as the difference between the estimated and measured
   // time on T3W1
