@@ -1,24 +1,24 @@
 # trezor-thp
 
 Rust library for *Trezor Host Protocol*. THP facilitates communication between an application
-on host computer and a [Trezor] cryptocurrency wallet.
+on a host computer and a [Trezor] cryptocurrency wallet.
 
-To learn more about THP please see the [full specification][THP-spec].
+To learn more about THP, please see the [full specification][THP-spec].
 
 ## Design
 
-The goal of the library is to be used both by bare metal firmware as well as desktop applications.
+The goal of the library is to be used by both bare-metal firmware and desktop applications.
 
-- Implements both Host and Device (Trezor) side.
+- Implements both the Host and the Device (Trezor) side.
 - Usable on `no_std` and without `core::alloc`.
 - I/O-free to make integration into any kind of event loop possible.
 - Usable with any protobuf and cryptography libraries.
 - Minimal dependencies.
 
-Due to these requirements the crate is very low-level - it provides a library of components that
+Due to these requirements, the crate is very low-level - it provides a library of components that
 you need to assemble to get a high-level abstraction of THP sessions.
 
-Crates that provide higher level interface:
+Crates that provide a higher-level interface:
 - [trezor-client](https://crates.io/crates/trezor-client) (work in progress)
 
 ## Examples
@@ -36,8 +36,8 @@ None yet.
 
 ## Other implementations
 
-- trezorlib
-- suite
+- [trezorlib](https://github.com/trezor/trezor-firmware/tree/main/python/src/trezorlib/)
+- [Suite/Connect](https://github.com/trezor/trezor-suite/tree/develop/packages/protocol/src/protocol-thp/)
 
 ## Credits
 
