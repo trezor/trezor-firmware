@@ -31,6 +31,7 @@
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 
+#include "bignum.h"
 #include "ecdsa.h"
 #include "memzero.h"
 #include "nist256p1.h"
@@ -42,6 +43,7 @@
 #include "libtropic_l2.h"
 
 #include <sec/tropic.h>
+#include <sec/tropic_configs.h>
 
 #include "secure_channel.h"
 
@@ -58,425 +60,6 @@ static tropic_handshake_state_t g_tropic_handshake_state =
 // TODO: Update this link to correspond with the latest chip revision when it
 // becomes available.
 // https://github.com/tropicsquare/tropic01/blob/da459d18db7aea107419035b9cdf316d89a73445/doc/api/tropic01_user_api_v1.1.2.pdf
-// TODO: Adjust the configuration to match the revision of the provisioned
-// tropics.
-// clang-format off
-static const struct lt_config_t g_irreversible_configuration = {
-    .obj = {
-        // # CFG_START_UP (0x00)
-        // | Setting                 | Value                   |
-        // |-------------------------|-------------------------|
-        // | RFU_1 (bit 0)           | 1                       |
-        // | MBIST_DIS (bit 1)       | 0 (TEST_ON)             |
-        // | RNGTEST_DIS (bit 2)     | 0 (TEST_ON)             |
-        // | MAINTENANCE_ENA (bit 3) | 1 (MAINTENANCE_ALLOWED) |
-        ~0U & ~BIT(1) & ~BIT(2),
-        // # CFG_SENSORS (0x08)
-        // | Setting                         | Value                |
-        // |---------------------------------|----------------------|
-        // | PTRNG0_TEST_DIS (bit 0)         | 1 (NO_ACTION)        |
-        // | PTRNG1_TEST_DIS (bit 1)         | 1 (NO_ACTION)        |
-        // | OSCILLATOR_MON_DIS (bit 2)      | 1 (NO_ACTION)        |
-        // | SHIELD_DIS (bit 3)              | 1 (NO_ACTION)        |
-        // | VOLTAGE_MON_DIS (bit 4)         | 1 (NO_ACTION)        |
-        // | GLITCH_DET_DIS (bit 5)          | 1 (NO_ACTION)        |
-        // | TEMP_SENS_DIS (bit 6)           | 1 (NO_ACTION)        |
-        // | LASER_DET_DIS (bit 7)           | 1 (NO_ACTION)        |
-        // | EM_PULSE_DET_DIS (bit 8)        | 1 (NO_ACTION)        |
-        // | CPU_ALERT_DIS (bit 9)           | 1 (NO_ACTION)        |
-        // | PIN_VERIF_BIT_FLIP_DIS (bit 10) | 1 (NO_ACTION)        |
-        // | SCB_BIT_FLIP_DIS (bit 11)       | 1 (NO_ACTION)        |
-        // | CPB_BIT_FLIP_DIS (bit 12)       | 1 (NO_ACTION)        |
-        // | ECC_BIT_FLIP_DIS (bit 13)       | 1 (NO_ACTION)        |
-        // | R_MEM_BIT_FLIP_DIS (bit 14)     | 1 (NO_ACTION)        |
-        // | EKDB_BIT_FLIP_DIS (bit 15)      | 1 (NO_ACTION)        |
-        // | I_MEM_BIT_FLIP_DIS (bit 16)     | 1 (NO_ACTION)        |
-        // | PLATFORM_BIT_FLIP_DIS (bit 17)  | 1 (NO_ACTION)        |
-        ~0U,
-        // # CFG_DEBUG (0x10)
-        // | Setting           | Value |
-        // |-------------------|-------|
-        // | FW_LOG_EN (bit 0) | 0     |
-        ~0U & ~BIT(0),
-        // # CFG_GPO (0x14)
-        ~0U,
-        // # CFG_SLEEP_MODE (0x18)
-        // | Setting               | Value |
-        // |-----------------------|-------|
-        // | SLEEP_MODE_EN (bit 0) | 1     |
-        ~0U,
-        // # CFG_UAP_PAIRING_KEY_WRITE (0x20)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | WRITE_PKEY_SLOT_0        | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | WRITE_PKEY_SLOT_1        | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | WRITE_PKEY_SLOT_2        | 0 (bit 16)    | 0 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | WRITE_PKEY_SLOT_3        | 0 (bit 24)    | 0 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(17) & ~BIT(24) & ~BIT(25),
-        // # CFG_UAP_PAIRING_KEY_READ (0x24)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | READ_PKEY_SLOT_0         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | READ_PKEY_SLOT_1         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | READ_PKEY_SLOT_2         | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | READ_PKEY_SLOT_3         | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_PAIRING_KEY_INVALIDATE (0x28)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | INVALIDATE_PKEY_SLOT_0   |   0 (bit 0)   |   1 (bit 1)   |   1 (bit 2)   |   1 (bit 3)   |
-        // | INVALIDATE_PKEY_SLOT_1   |   0 (bit 8)   |   1 (bit 9)   |   1 (bit 10)  |   1 (bit 11)  |
-        // | INVALIDATE_PKEY_SLOT_2   |   0 (bit 16)  |   1 (bit 17)  |   1 (bit 18)  |   1 (bit 19)  |
-        // | INVALIDATE_PKEY_SLOT_3   |   0 (bit 24)  |   1 (bit 25)  |   1 (bit 26)  |   1 (bit 27)  |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_R_CONFIG_WRITE_ERASE (0x30)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | R_CONFIG_WRITE_ERASE     | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        ~0U & ~BIT(0) & ~BIT(1),
-        // # CFG_UAP_R_CONFIG_READ (0x34)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | R_CONFIG_READ_CFG        | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | R_CONFIG_READ_FUNC       | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        ~0U & ~BIT(0) & ~BIT(8),
-        // # CFG_UAP_I_CONFIG_WRITE (0x40)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | I_CONFIG_WRITE_CFG       | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | I_CONFIG_WRITE_FUNC      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        ~0U & ~BIT(0) & ~BIT(8),
-        // # CFG_UAP_I_CONFIG_READ (0x44)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | I_CONFIG_READ_CFG        | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | I_CONFIG_READ_FUNC       | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        ~0U & ~BIT(0) & ~BIT(8),
-        // # CFG_UAP_PING (0x100)
-        // | Setting | Pairing Key 0  | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |---------|----------------|---------------|---------------|---------------|
-        // | PING    | 0 (bit 0)      | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        ~0U & ~BIT(0),
-        // # CFG_UAP_R_MEM_DATA_WRITE (0x110)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | WRITE_UDATA_SLOT_0_127   | 0 (bit 0)   | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | WRITE_UDATA_SLOT_128_255 | 0 (bit 8)   | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | WRITE_UDATA_SLOT_256_383 | 0 (bit 16)  | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | WRITE_UDATA_SLOT_384_511 | 0 (bit 24)  | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_R_MEM_DATA_READ (0x114)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | READ_UDATA_SLOT_0_127    | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | READ_UDATA_SLOT_128_255  | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | READ_UDATA_SLOT_256_383  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | READ_UDATA_SLOT_384_511  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_R_MEM_DATA_ERASE (0x118)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | ERASE_UDATA_SLOT_0_127   | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | ERASE_UDATA_SLOT_128_255 | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | ERASE_UDATA_SLOT_256_383 | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | ERASE_UDATA_SLOT_384_511 | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_RANDOM_VALUE_GET (0x120)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | RANDOM_VALUE_GET         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        ~0U & ~BIT(0),
-        // # CFG_UAP_ECC_KEY_GENERATE (0x130)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | GEN_ECCKEY_SLOT_0_7      | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | GEN_ECCKEY_SLOT_8_15     | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | GEN_ECCKEY_SLOT_16_23    | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | GEN_ECCKEY_SLOT_24_31    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_ECC_KEY_STORE (0x134)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | STORE_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | STORE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | STORE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | STORE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_ECC_KEY_READ (0x138)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | READ_ECCKEY_SLOT_0_7     | 0 (bit 0)    | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | READ_ECCKEY_SLOT_8_15    | 0 (bit 8)    | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | READ_ECCKEY_SLOT_16_23   | 0 (bit 16)   | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | READ_ECCKEY_SLOT_24_31   | 0 (bit 24)   | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_ECC_KEY_ERASE (0x13c)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | ERASE_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | ERASE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | ERASE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | ERASE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_ECDSA_SIGN (0x140)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | ECDSA_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | ECDSA_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | ECDSA_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | ECDSA_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_EDDSA_SIGN (0x144)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | EDDSA_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | EDDSA_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | EDDSA_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | EDDSA_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_MCOUNTER_INIT (0x150)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MCOUNTER_INIT_0_3        | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | MCOUNTER_INIT_4_7        | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | MCOUNTER_INIT_8_11       | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | MCOUNTER_INIT_12_15      | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_MCOUNTER_GET (0x154)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MCOUNTER_GET_0_3         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | MCOUNTER_GET_4_7         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | MCOUNTER_GET_8_11        | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | MCOUNTER_GET_12_15       | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_MCOUNTER_UPDATE (0x158)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MCOUNTER_UPDATE_0_3      | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | MCOUNTER_UPDATE_4_7      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | MCOUNTER_UPDATE_8_11     | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | MCOUNTER_UPDATE_12_15    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
-        // # CFG_UAP_MAC_AND_DESTROY (0x160)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-        // | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-        // | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
-    }};
-
-// TODO: Adjust the configuration to match the revision of the provisioned
-// tropics.
-static const struct lt_config_t g_reversible_configuration = {
-    .obj = {
-        // # CFG_START_UP (0x00)
-        // | Setting                 | Value                     |
-        // |-------------------------|---------------------------|
-        // | RFU_1 (bit 0)           | 1                         |
-        // | MBIST_DIS (bit 1)       | 0 (TEST_ON)               |
-        // | RNGTEST_DIS (bit 2)     | 0 (TEST_ON)               |
-        // | MAINTENANCE_ENA (bit 3) | 0 (MAINTENANCE_FORBIDDEN) |
-        BIT(0),
-        // # CFG_SENSORS (0x08)
-        // | Setting                         | Value                |
-        // |---------------------------------|----------------------|
-        // | PTRNG0_TEST_DIS (bit 0)         | 0 (ENTER_ALARM_MODE) |
-        // | PTRNG1_TEST_DIS (bit 1)         | 0 (ENTER_ALARM_MODE) |
-        // | OSCILLATOR_MON_DIS (bit 2)      | 0 (ENTER_ALARM_MODE) |
-        // | SHIELD_DIS (bit 3)              | 0 (ENTER_ALARM_MODE) |
-        // | VOLTAGE_MON_DIS (bit 4)         | 0 (ENTER_ALARM_MODE) |
-        // | GLITCH_DET_DIS (bit 5)          | 0 (ENTER_ALARM_MODE) |
-        // | TEMP_SENS_DIS (bit 6)           | 0 (ENTER_ALARM_MODE) |
-        // | LASER_DET_DIS (bit 7)           | 0 (ENTER_ALARM_MODE) |
-        // | EM_PULSE_DET_DIS (bit 8)        | 0 (ENTER_ALARM_MODE) |
-        // | CPU_ALERT_DIS (bit 9)           | 0 (ENTER_ALARM_MODE) |
-        // | PIN_VERIF_BIT_FLIP_DIS (bit 10) | 0 (ENTER_ALARM_MODE) |
-        // | SCB_BIT_FLIP_DIS (bit 11)       | 0 (ENTER_ALARM_MODE) |
-        // | CPB_BIT_FLIP_DIS (bit 12)       | 0 (ENTER_ALARM_MODE) |
-        // | ECC_BIT_FLIP_DIS (bit 13)       | 0 (ENTER_ALARM_MODE) |
-        // | R_MEM_BIT_FLIP_DIS (bit 14)     | 0 (ENTER_ALARM_MODE) |
-        // | EKDB_BIT_FLIP_DIS (bit 15)      | 0 (ENTER_ALARM_MODE) |
-        // | I_MEM_BIT_FLIP_DIS (bit 16)     | 0 (ENTER_ALARM_MODE) |
-        // | PLATFORM_BIT_FLIP_DIS (bit 17)  | 0 (ENTER_ALARM_MODE) |
-        0,
-        // # CFG_DEBUG (0x10)
-        // | Setting           | Value |
-        // |-------------------|-------|
-        // | FW_LOG_EN (bit 0) | 0     |
-        0,
-        // # CFG_GPO (0x14)
-        0,
-        // # CFG_SLEEP_MODE (0x18)
-        // | Setting               | Value |
-        // |-----------------------|-------|
-        // | SLEEP_MODE_EN (bit 0) | 1     |
-        BIT(0),
-        // # CFG_UAP_PAIRING_KEY_WRITE (0x20)
-        // | Target                   | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | WRITE_PKEY_SLOT_0        | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | WRITE_PKEY_SLOT_1        | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | WRITE_PKEY_SLOT_2        | 0 (bit 16)    | 0 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | WRITE_PKEY_SLOT_3        | 0 (bit 24)    | 0 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(2) | BIT(10) | BIT(18) | BIT(26),
-        // # CFG_UAP_PAIRING_KEY_READ (0x24)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | READ_PKEY_SLOT_0         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | READ_PKEY_SLOT_1         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | READ_PKEY_SLOT_2         | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | READ_PKEY_SLOT_3         | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_PAIRING_KEY_INVALIDATE (0x28)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | INVALIDATE_PKEY_SLOT_0   |   0 (bit 0)   |   1 (bit 1)   |   1 (bit 2)   |   0 (bit 3)   |
-        // | INVALIDATE_PKEY_SLOT_1   |   0 (bit 8)   |   1 (bit 9)   |   1 (bit 10)  |   0 (bit 11)  |
-        // | INVALIDATE_PKEY_SLOT_2   |   0 (bit 16)  |   1 (bit 17)  |   1 (bit 18)  |   0 (bit 19)  |
-        // | INVALIDATE_PKEY_SLOT_3   |   0 (bit 24)  |   1 (bit 25)  |   1 (bit 26)  |   0 (bit 27)  |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_R_CONFIG_WRITE_ERASE (0x30)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | R_CONFIG_WRITE_ERASE     | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        BIT(2),
-        // # CFG_UAP_R_CONFIG_READ (0x34)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | R_CONFIG_READ_CFG        | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | R_CONFIG_READ_FUNC       | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10),
-        // # CFG_UAP_I_CONFIG_WRITE (0x40)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | I_CONFIG_WRITE_CFG       | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | I_CONFIG_WRITE_FUNC      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10),
-        // # CFG_UAP_I_CONFIG_READ (0x44)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | I_CONFIG_READ_CFG        | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | I_CONFIG_READ_FUNC       | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10),
-        // # CFG_UAP_PING (0x100)
-        // | Setting | Pairing Key 0  | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |---------|----------------|---------------|---------------|---------------|
-        // | PING    | 0 (bit 0)      | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        BIT(1) | BIT(2),
-        // # CFG_UAP_R_MEM_DATA_WRITE (0x110)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | WRITE_UDATA_SLOT_0_127   | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | WRITE_UDATA_SLOT_128_255 | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | WRITE_UDATA_SLOT_256_383 | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | WRITE_UDATA_SLOT_384_511 | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_R_MEM_DATA_READ (0x114)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | READ_UDATA_SLOT_0_127    | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | READ_UDATA_SLOT_128_255  | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | READ_UDATA_SLOT_256_383  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | READ_UDATA_SLOT_384_511  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_R_MEM_DATA_ERASE (0x118)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | ERASE_UDATA_SLOT_0_127   | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | ERASE_UDATA_SLOT_128_255 | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | ERASE_UDATA_SLOT_256_383 | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | ERASE_UDATA_SLOT_384_511 | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_RANDOM_VALUE_GET (0x120)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | RANDOM_VALUE_GET         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        BIT(1) | BIT(2),
-        // # CFG_UAP_ECC_KEY_GENERATE (0x130)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | GEN_ECCKEY_SLOT_0_7      | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | GEN_ECCKEY_SLOT_8_15     | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | GEN_ECCKEY_SLOT_16_23    | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | GEN_ECCKEY_SLOT_24_31    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_ECC_KEY_STORE (0x134)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | STORE_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | STORE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | STORE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | STORE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_ECC_KEY_READ (0x138)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | READ_ECCKEY_SLOT_0_7     | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | READ_ECCKEY_SLOT_8_15    | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | READ_ECCKEY_SLOT_16_23   | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | READ_ECCKEY_SLOT_24_31   | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_ECC_KEY_ERASE (0x13c)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | ERASE_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | ERASE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | ERASE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | ERASE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_ECDSA_SIGN (0x140)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | ECDSA_ECCKEY_SLOT_0_7    | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | ECDSA_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | ECDSA_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | ECDSA_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_EDDSA_SIGN (0x144)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | EDDSA_ECCKEY_0_7         | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | EDDSA_ECCKEY_8_15        | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | EDDSA_ECCKEY_16_23       | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | EDDSA_ECCKEY_24_31       | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_MCOUNTER_INIT (0x148)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MCOUNTER_INIT_0_3        | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | MCOUNTER_INIT_4_7        | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | MCOUNTER_INIT_8_11       | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | MCOUNTER_INIT_12_15      | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_MCOUNTER_GET (0x154)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MCOUNTER_GET_0_3         | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | MCOUNTER_GET_4_7         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | MCOUNTER_GET_8_11        | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | MCOUNTER_GET_12_15       | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_MCOUNTER_UPDATE (0x158)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MCOUNTER_UPDATE_0_3      | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | MCOUNTER_UPDATE_4_7      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | MCOUNTER_UPDATE_8_11     | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | MCOUNTER_UPDATE_12_15    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-        // # CFG_UAP_MAC_AND_DESTROY (0x160)
-        // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-        // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-        // | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-        // | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
-    }};
-// clang-format on
 
 // Total number of MAC-and-destroy slots.
 #define TROPIC_MAC_AND_DESTROY_SLOT_TOTAL \
@@ -555,7 +138,7 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
-  struct lt_chip_id_t chip_id;
+  lt_chip_id_t chip_id;
   lt_ret_t ret = lt_get_info_chip_id(tropic_handle, &chip_id);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_CHIP_ID,
@@ -639,38 +222,89 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     }
   }
 
-  struct lt_config_t configuration_read = {0};
+  tropic_expected_config_t config = {0};
+  if (!tropic_get_expected_tropic_config_from_distribution_version(
+          tropic_prodtest_config_distribution_version, &config)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_EXPECTED_CONFIG,
+              "Prodtest expected configuration not found.");
+    return TROPIC_LOCKED_ERROR;
+  }
 
-  ret = lt_read_whole_R_config(tropic_handle, &configuration_read);
+  lt_config_t configuration_read = {0};
+  ret = lt_read_whole_R_config_retry(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_R_CONFIG_READ,
-              "`lt_read_whole_R_config()` failed with error '%s'",
+              "`lt_read_whole_R_config_retry()` failed with error '%s'",
               lt_ret_verbose(ret));
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(g_reversible_configuration)) != 0) {
+  if (memcmp(config.max_r_config, (uint8_t*)&configuration_read,
+             sizeof(*config.max_r_config)) != 0) {
     cli_trace(cli,
               "The reversible configuration read does not match the expected "
               "reversible configuration.");
     return TROPIC_LOCKED_FALSE;
   }
 
-  ret = lt_read_whole_I_config(tropic_handle, &configuration_read);
+  ret = lt_read_whole_I_config_retry(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_I_CONFIG_READ,
-              "`lt_read_whole_I_config()` failed with error '%s'",
+              "`lt_read_whole_I_config_retry()` failed with error '%s'",
               lt_ret_verbose(ret));
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(g_irreversible_configuration)) != 0) {
+  if (memcmp(config.i_config, (uint8_t*)&configuration_read,
+             sizeof(*config.i_config)) != 0) {
     cli_trace(cli,
               "The irreversible configuration read does not match the expected "
               "irreversible configuration.");
     return TROPIC_LOCKED_FALSE;
+  }
+
+  uint8_t distribution_version_bytes[sizeof(
+      tropic_prodtest_config_distribution_version)] = {0};
+  uint16_t distribution_version_read_length = 0;
+  ret = lt_r_mem_data_read(
+      tropic_handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+      distribution_version_bytes, sizeof(distribution_version_bytes),
+      &distribution_version_read_length);
+  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+    cli_trace(cli, "The distribution version slot is empty.");
+    return TROPIC_LOCKED_FALSE;
+  } else if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_DISTR_VERSION_READ,
+              "`lt_r_mem_data_read()` failed with error '%s'",
+              lt_ret_verbose(ret));
+    return TROPIC_LOCKED_ERROR;
+  }
+
+  if (distribution_version_read_length != sizeof(distribution_version_bytes) ||
+      read_be(distribution_version_bytes) !=
+          tropic_prodtest_config_distribution_version) {
+    cli_trace(cli,
+              "The distribution version read does not match the expected "
+              "distribution version.");
+    return TROPIC_LOCKED_FALSE;
+  }
+
+  ret = lt_r_mem_data_read(
+      tropic_handle, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
+      distribution_version_bytes, sizeof(distribution_version_bytes),
+      &distribution_version_read_length);
+
+  switch (ret) {
+    case LT_L3_R_MEM_DATA_READ_SLOT_EMPTY:
+      break;  // the backup slot is expected to be empty
+    case LT_OK:
+      cli_trace(cli, "The backup distribution version slot is not empty.");
+      return TROPIC_LOCKED_FALSE;
+    default:
+      cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_CHECK_BACKUP_DISTR_VERSION_READ,
+                "`lt_r_mem_data_read()` failed with error '%s'",
+                lt_ret_verbose(ret));
+      return TROPIC_LOCKED_ERROR;
   }
 
   return TROPIC_LOCKED_TRUE;
@@ -765,7 +399,7 @@ cleanup:
 }
 
 static void prodtest_tropic_pair(cli_t* cli) {
-  // If this functions successfully completes, it is ensured that:
+  // If this function successfully completes, it is ensured that:
   //  * The public tropic key is written to MCU's flash.
   //  * The factory pairing key in tropic's `TR01_PAIRING_KEY_SLOT_INDEX_0` is
   //  invalidated.
@@ -1328,7 +962,15 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  struct lt_config_t configuration_read = {0};
+  tropic_expected_config_t config = {0};
+  if (!tropic_get_expected_tropic_config_from_distribution_version(
+          tropic_prodtest_config_distribution_version, &config)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_EXPECTED_CONFIG,
+              "Prodtest expected configuration not found.");
+    return;
+  }
+
+  lt_config_t configuration_read = {0};
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   ret = lt_r_config_erase(tropic_handle);
@@ -1339,7 +981,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = lt_write_whole_R_config(tropic_handle, &g_reversible_configuration);
+  ret = lt_write_whole_R_config(tropic_handle, config.max_r_config);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_R_CONFIG_WRITE,
               "`lt_write_whole_R_config()` failed with error '%s'",
@@ -1355,14 +997,14 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(g_reversible_configuration)) != 0) {
+  if (memcmp(config.max_r_config, (uint8_t*)&configuration_read,
+             sizeof(*config.max_r_config)) != 0) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_MISMATCH,
               "Reversible configuration mismatch after write.");
     return;
   }
 
-  ret = lt_write_whole_I_config(tropic_handle, &g_irreversible_configuration);
+  ret = lt_write_whole_I_config(tropic_handle, config.i_config);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_WRITE,
               "`lt_write_whole_I_config()` failed with error '%s'",
@@ -1370,19 +1012,96 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = lt_read_whole_I_config(tropic_handle, &configuration_read);
+  ret = lt_read_whole_I_config_retry(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_VERIFY_READ,
-              "`lt_read_whole_I_config()` failed with error '%s'",
+              "`lt_read_whole_I_config_retry()` failed with error '%s'",
               lt_ret_verbose(ret));
     return;
   }
 
-  if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(g_irreversible_configuration)) != 0) {
+  if (memcmp(config.i_config, (uint8_t*)&configuration_read,
+             sizeof(*config.i_config)) != 0) {
     cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_I_CONFIG_MISMATCH,
               "Irreversible configuration mismatch after write.");
     return;
+  }
+
+  ret = lt_r_mem_data_erase(tropic_handle,
+                            TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT);
+  if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_ERASE,
+              "`lt_r_mem_data_erase()` failed with error '%s'",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  uint8_t distribution_version_bytes[sizeof(config.distribution_version)] = {0};
+  write_be(distribution_version_bytes, config.distribution_version);
+  ret = lt_r_mem_data_write(
+      tropic_handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+      distribution_version_bytes, sizeof(distribution_version_bytes));
+  if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_WRITE,
+              "`lt_r_mem_data_write()` failed with error '%s'",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  uint16_t distribution_version_read_length = 0;
+  ret = lt_r_mem_data_read(
+      tropic_handle, TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+      distribution_version_bytes, sizeof(distribution_version_bytes),
+      &distribution_version_read_length);
+  if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_READ,
+              "`lt_r_mem_data_read()` failed with error '%s'",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  if (distribution_version_read_length != sizeof(distribution_version_bytes)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_LEN,
+              "Distribution version length mismatch after write. Expected %zu, "
+              "got %u.",
+              sizeof(distribution_version_bytes),
+              (unsigned int)distribution_version_read_length);
+    return;
+  }
+
+  if (config.distribution_version != read_be(distribution_version_bytes)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_MISMATCH,
+              "Distribution version mismatch after write. Expected %u, got %u.",
+              (unsigned int)config.distribution_version,
+              (unsigned int)read_be(distribution_version_bytes));
+    return;
+  }
+
+  ret = lt_r_mem_data_erase(tropic_handle,
+                            TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT);
+  if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_ERASE,
+              "`lt_r_mem_data_erase()` failed with error '%s'",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  ret = lt_r_mem_data_read(
+      tropic_handle, TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
+      distribution_version_bytes, sizeof(distribution_version_bytes),
+      &distribution_version_read_length);
+  switch (ret) {
+    case LT_L3_R_MEM_DATA_READ_SLOT_EMPTY:
+      break;  // the backup slot is expected to be empty
+    case LT_OK:
+      cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_NOT_EMPTY,
+                "The backup distribution version slot is not empty.");
+      return;
+    default:
+      cli_error(cli, PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_READ,
+                "`lt_r_mem_data_read()` failed with error '%s'",
+                lt_ret_verbose(ret));
+      return;
   }
 
   cli_ok(cli, "");
@@ -2991,7 +2710,7 @@ static void prodtest_tropic_set_sensors(cli_t* cli) {
     }
   }
 
-  struct lt_config_t configuration = {0};
+  lt_config_t configuration = {0};
   lt_ret_t ret = lt_read_whole_R_config_retry(tropic_handle, &configuration);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_READ_CONFIG,
@@ -3012,7 +2731,7 @@ static void prodtest_tropic_set_sensors(cli_t* cli) {
   }
 
   // Verify the write
-  struct lt_config_t verify_configuration = {0};
+  lt_config_t verify_configuration = {0};
   ret = lt_read_whole_R_config_retry(tropic_handle, &verify_configuration);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_SENSORS_SLOT_READ,
@@ -3087,7 +2806,7 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
   }
 
   // read reversible configuration
-  struct lt_config_t r_config = {0};
+  lt_config_t r_config = {0};
   lt_ret_t ret = lt_read_whole_R_config_retry(tropic_handle, &r_config);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_R_CONFIG,
@@ -3103,11 +2822,12 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
   }
 
   // read irreversible configuration
-  struct lt_config_t i_config = {0};
-  ret = lt_read_whole_I_config(tropic_handle, &i_config);
+  lt_config_t i_config = {0};
+  ret = lt_read_whole_I_config_retry(tropic_handle, &i_config);
   if (ret != LT_OK) {
     cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_I_CONFIG,
-              "`lt_read_whole_I_config()` failed with error %s",
+
+              "`lt_read_whole_I_config_retry()` failed with error %s",
               lt_ret_verbose(ret));
     return;
   }
@@ -3117,6 +2837,49 @@ static void prodtest_tropic_read_configs(cli_t* cli) {
   for (size_t i = 0; i < LT_CONFIG_OBJ_CNT; i++) {
     cli_trace(cli, "  I_config.obj[%zu]: 0x%08X  (addr: 0x%02zX)", i,
               i_config.obj[i], i * 0x08);
+  }
+
+  cli_trace(cli, "");
+  cli_trace(cli, "=== Configuration Distribution Version ===");
+  uint8_t read_value_bytes[sizeof(uint32_t)] = {0};
+  uint16_t read_length = 0;
+  ret = lt_r_mem_data_read(
+      tropic_get_handle(), TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT,
+      read_value_bytes, sizeof(read_value_bytes), &read_length);
+  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+    cli_trace(cli, "Configuration distribution version: empty");
+  } else if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_DISTR_VERSION_READ,
+              "`lt_r_mem_data_read()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  } else if (read_length != sizeof(read_value_bytes)) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_DISTR_VERSION_LEN,
+              "Unexpected length of configuration distribution version data");
+    return;
+  } else {
+    cli_trace(cli, "Configuration distribution version: %u",
+              (unsigned int)read_be(read_value_bytes));
+  }
+  read_length = 0;
+  ret = lt_r_mem_data_read(
+      tropic_get_handle(), TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT,
+      read_value_bytes, sizeof(read_value_bytes), &read_length);
+  if (ret == LT_L3_R_MEM_DATA_READ_SLOT_EMPTY) {
+    cli_trace(cli, "Configuration backup distribution version: empty");
+  } else if (ret != LT_OK) {
+    cli_error(cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_BACKUP_DISTR_VERSION_READ,
+              "`lt_r_mem_data_read()` failed with error %s",
+              lt_ret_verbose(ret));
+    return;
+  } else if (read_length != sizeof(read_value_bytes)) {
+    cli_error(
+        cli, PRODTEST_ERR_TROPIC_READ_CONFIGS_BACKUP_DISTR_VERSION_LEN,
+        "Unexpected length of configuration backup distribution version data");
+    return;
+  } else {
+    cli_trace(cli, "Configuration backup distribution version: %u",
+              (unsigned int)read_be(read_value_bytes));
   }
 
   cli_ok(cli, "");

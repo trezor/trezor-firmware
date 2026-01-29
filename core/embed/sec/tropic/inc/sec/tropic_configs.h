@@ -1,0 +1,45 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#include <libtropic.h>
+
+typedef struct {
+  uint32_t version;
+  lt_config_t config;
+} tropic_versioned_config_t;
+
+typedef struct {
+  uint32_t distribution_version;
+  uint32_t min_reversible_version;
+  uint32_t max_reversible_version;
+  uint32_t irreversible_version;
+} tropic_config_distribution_t;
+
+extern const tropic_versioned_config_t tropic_irreversible_configs[];
+extern const size_t tropic_irreversible_config_count;
+
+extern const tropic_versioned_config_t tropic_reversible_configs[];
+extern const size_t tropic_reversible_config_count;
+
+extern const tropic_config_distribution_t tropic_config_distributions[];
+extern const size_t tropic_config_distribution_count;
+
+extern const uint32_t tropic_prodtest_config_distribution_version;

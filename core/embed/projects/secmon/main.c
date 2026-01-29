@@ -126,7 +126,14 @@ static void drivers_init(void) {
 
 #ifdef USE_TROPIC
   tropic_init();
-#endif
+#if defined(USE_SECRET) && defined(LOCKABLE_BOOTLOADER)
+  if (secfalse != secret_bootloader_locked()) {
+    ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
+  }
+#else
+  ensure(tropic_ensure_configuration(), "Tropic configuration check failed");
+#endif  // USE_SECRET && LOCKABLE_BOOTLOADER
+#endif  // USE_TROPIC
 
 #ifdef USE_BACKUP_RAM
   backup_ram_init();

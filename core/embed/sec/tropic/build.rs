@@ -23,7 +23,7 @@ pub fn def_module(lib: &mut CLibrary) -> Result<()> {
         bail_unsupported!();
     }
 
-    lib.add_sources(["tropic/tropic.c"]);
+    lib.add_sources(["tropic/tropic.c", "tropic/config/tropic_configs.c"]);
 
     lib.add_sources_in_dir(
         &tropic_dir,

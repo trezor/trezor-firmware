@@ -1538,116 +1538,196 @@
     },
     {
       "code": 20120,
-      "name": "PRODTEST_ERR_TROPIC_STRESS_MAC_AND_DESTROY",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_CHECK_EXPECTED_CONFIG",
       "module": "tropic"
     },
     {
       "code": 20121,
-      "name": "PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_CHECK_DISTR_VERSION_READ",
       "module": "tropic"
     },
     {
       "code": 20122,
-      "name": "PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY_MISMATCH",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_CHECK_BACKUP_DISTR_VERSION_READ",
       "module": "tropic"
     },
     {
       "code": 20123,
-      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_KEY_READ",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_EXPECTED_CONFIG",
       "module": "tropic"
     },
     {
       "code": 20124,
-      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_CURVE",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_ERASE",
       "module": "tropic"
     },
     {
       "code": 20125,
-      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_VERIFY",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_WRITE",
       "module": "tropic"
     },
     {
       "code": 20126,
-      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_READ",
       "module": "tropic"
     },
     {
       "code": 20127,
-      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_GET",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_LEN",
       "module": "tropic"
     },
     {
       "code": 20128,
-      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT_MISMATCH",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_DISTR_VERSION_MISMATCH",
       "module": "tropic"
     },
     {
       "code": 20129,
-      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_UPDATE",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_ERASE",
       "module": "tropic"
     },
     {
       "code": 20130,
-      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_MISMATCH",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_NOT_EMPTY",
       "module": "tropic"
     },
     {
       "code": 20131,
-      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_ERASE",
+      "name": "PRODTEST_ERR_TROPIC_LOCK_BACKUP_DISTR_VERSION_READ",
       "module": "tropic"
     },
     {
       "code": 20132,
-      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_WRITE",
+      "name": "PRODTEST_ERR_TROPIC_READ_CONFIGS_DISTR_VERSION_READ",
       "module": "tropic"
     },
     {
       "code": 20133,
-      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_READ",
+      "name": "PRODTEST_ERR_TROPIC_READ_CONFIGS_DISTR_VERSION_LEN",
       "module": "tropic"
     },
     {
       "code": 20134,
-      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_MISMATCH",
+      "name": "PRODTEST_ERR_TROPIC_READ_CONFIGS_BACKUP_DISTR_VERSION_READ",
       "module": "tropic"
     },
     {
       "code": 20135,
-      "name": "PRODTEST_ERR_TROPIC_TEST_RNG_ZERO",
+      "name": "PRODTEST_ERR_TROPIC_READ_CONFIGS_BACKUP_DISTR_VERSION_LEN",
       "module": "tropic"
     },
     {
       "code": 20136,
-      "name": "PRODTEST_ERR_TROPIC_TEST_RNG_REPEAT",
+      "name": "PRODTEST_ERR_TROPIC_STRESS_MAC_AND_DESTROY",
       "module": "tropic"
     },
     {
       "code": 20137,
-      "name": "PRODTEST_ERR_TROPIC_EXPLICIT_SLOT_COUNT",
+      "name": "PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY",
       "module": "tropic"
     },
     {
       "code": 20138,
-      "name": "PRODTEST_ERR_TROPIC_EXPLICIT_SLOT_RANGE",
+      "name": "PRODTEST_ERR_TROPIC_TEST_MAC_AND_DESTROY_MISMATCH",
       "module": "tropic"
     },
     {
       "code": 20139,
-      "name": "PRODTEST_ERR_TROPIC_SENSORS_REBOOT",
+      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_KEY_READ",
       "module": "tropic"
     },
     {
       "code": 20140,
-      "name": "PRODTEST_ERR_TROPIC_TESTS_CLEANUP_RMEM",
+      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_CURVE",
       "module": "tropic"
     },
     {
       "code": 20141,
-      "name": "PRODTEST_ERR_TROPIC_TESTS_CLEANUP_ECC",
+      "name": "PRODTEST_ERR_TROPIC_TEST_SIGN_VERIFY",
       "module": "tropic"
     },
     {
       "code": 20142,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT",
+      "module": "tropic"
+    },
+    {
+      "code": 20143,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_GET",
+      "module": "tropic"
+    },
+    {
+      "code": 20144,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_INIT_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20145,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_UPDATE",
+      "module": "tropic"
+    },
+    {
+      "code": 20146,
+      "name": "PRODTEST_ERR_TROPIC_TEST_COUNTER_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20147,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_ERASE",
+      "module": "tropic"
+    },
+    {
+      "code": 20148,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_WRITE",
+      "module": "tropic"
+    },
+    {
+      "code": 20149,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_READ",
+      "module": "tropic"
+    },
+    {
+      "code": 20150,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RMEM_MISMATCH",
+      "module": "tropic"
+    },
+    {
+      "code": 20151,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RNG_ZERO",
+      "module": "tropic"
+    },
+    {
+      "code": 20152,
+      "name": "PRODTEST_ERR_TROPIC_TEST_RNG_REPEAT",
+      "module": "tropic"
+    },
+    {
+      "code": 20153,
+      "name": "PRODTEST_ERR_TROPIC_EXPLICIT_SLOT_COUNT",
+      "module": "tropic"
+    },
+    {
+      "code": 20154,
+      "name": "PRODTEST_ERR_TROPIC_EXPLICIT_SLOT_RANGE",
+      "module": "tropic"
+    },
+    {
+      "code": 20155,
+      "name": "PRODTEST_ERR_TROPIC_SENSORS_REBOOT",
+      "module": "tropic"
+    },
+    {
+      "code": 20156,
+      "name": "PRODTEST_ERR_TROPIC_TESTS_CLEANUP_RMEM",
+      "module": "tropic"
+    },
+    {
+      "code": 20157,
+      "name": "PRODTEST_ERR_TROPIC_TESTS_CLEANUP_ECC",
+      "module": "tropic"
+    },
+    {
+      "code": 20158,
       "name": "PRODTEST_ERR_TROPIC_TESTS_CLEANUP_COUNTER",
       "module": "tropic"
     },
