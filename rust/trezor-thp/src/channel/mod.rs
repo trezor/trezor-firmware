@@ -341,7 +341,7 @@ pub trait ChannelIO {
     ///
     /// Returns [`Error::NotReady`] if there is no reassembled message.
     ///
-    /// Returns [`Error::InvalidDigest`] if message integrity failed. Usually the other side
+    /// Returns [`Error::InvalidChecksum`] if message integrity failed. Usually the other side
     /// will retransmit the message.
     fn message_out<'a>(&mut self, receive_buffer: &'a mut [u8]) -> Result<(u8, u16, &'a [u8])>;
 

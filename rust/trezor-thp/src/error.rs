@@ -64,7 +64,7 @@ pub enum Error {
     /// Invalid data from the wire.
     MalformedData,
     /// Checksum doesn't match.
-    InvalidDigest,
+    InvalidChecksum,
     /// Provided buffer is too small.
     InsufficientBuffer,
     /// Secure channel cryptography failed.

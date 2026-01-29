@@ -135,7 +135,7 @@ impl<C: ChannelIO> Client<C> {
             }
             result = match self.channel.message_out(recv_buf.as_mut_slice()) {
                 Ok((sid, message_type, message)) => Some((sid, message_type, Vec::from(message))),
-                Err(Error::InvalidDigest | Error::MalformedData) => {
+                Err(Error::InvalidChecksum | Error::MalformedData) => {
                     log::error!("Received bad message, waiting for retransmission.");
                     continue;
                 }

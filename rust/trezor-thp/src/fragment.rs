@@ -180,11 +180,11 @@ impl<R: Role> Reassembler<R> {
             usize::from(self.header.payload_len()).saturating_sub(CHECKSUM_LEN);
         let received_checksum = *buffer
             .get(length_no_checksum..)
-            .ok_or(Error::InvalidDigest)?
+            .ok_or(Error::InvalidChecksum)?
             .first_chunk::<CHECKSUM_LEN>()
-            .ok_or(Error::InvalidDigest)?;
+            .ok_or(Error::InvalidChecksum)?;
         if computed_checksum != received_checksum {
-            return Err(Error::InvalidDigest);
+            return Err(Error::InvalidChecksum);
         }
         Ok(length_no_checksum)
     }
