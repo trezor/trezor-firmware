@@ -169,19 +169,10 @@ static void* thread_trampoline(void* arg) {
   }
   pthread_mutex_unlock(&scheduler->lock);
 
-  invoke_pushed_fn_call(task);
+  int exit_code = (int)invoke_pushed_fn_call(task);
 
-  // Cooperative exit: pick someone else if possible
-  pthread_mutex_lock(&scheduler->lock);
-  task->killed = true;
+  systask_exit(task, exit_code);
 
-  // If we're still active, hand off to the kernel thread
-  if (scheduler->active_task == task) {
-    scheduler->active_task = &scheduler->kernel_task;
-    pthread_cond_signal(&scheduler->kernel_task.cv);
-  }
-
-  pthread_mutex_unlock(&scheduler->lock);
   return 0;
 }
 
