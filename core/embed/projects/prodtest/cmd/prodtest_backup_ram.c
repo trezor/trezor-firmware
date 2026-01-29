@@ -187,14 +187,14 @@ PRODTEST_CLI_CMD(
    .args = ""
 );
 
+#if !PRODUCTION
+
 PRODTEST_CLI_CMD(
     .name = "backup-ram-erase",
     .func = prodtest_backup_ram_erase,
     .info = "Erase all backup RAM",
     .args = ""
 );
-
-#if !PRODUCTION
 
 PRODTEST_CLI_CMD(
    .name = "backup-ram-read",
