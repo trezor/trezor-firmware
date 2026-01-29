@@ -4,6 +4,7 @@ from common import *  # isort:skip
 from trezor import io
 
 
+@unittest.skipUnless(utils.USE_SD_CARD, "requires SD card")
 class TestTrezorIoSdcard(unittest.TestCase):
     def test_start(self):
         self.assertTrue(io.sdcard.is_present())
@@ -44,5 +45,4 @@ class TestTrezorIoSdcard(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if utils.USE_SD_CARD:
-        unittest.main()
+    unittest.main()
