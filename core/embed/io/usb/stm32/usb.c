@@ -259,65 +259,103 @@ void usb_stop(void) {
   memset(&drv->dev_handle, 0, sizeof(drv->dev_handle));
 }
 
-static secbool usb_configured(void) {
+// Returns the USB configured state without the grace period workaround.
+// This is used for event detection where we need to track actual state
+// transitions rather than a "smoothed" connection status.
+//
+// Unlike usb_configured(), this function:
+// - Does NOT apply the 2-second grace period after disconnection
+// - Does NOT apply the first-run USB-powered workaround
+// - DOES treat suspended-but-was-configured as connected (to avoid
+//   spurious events during host autosuspend)
+static secbool usb_configured_raw(void) {
   usb_driver_t *drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
-    // The driver is not initialized
     return secfalse;
   }
 
   const USBD_HandleTypeDef *pdev = &drv->dev_handle;
 
   if (pdev->dev_state == USBD_STATE_UNINITIALIZED) {
-    // The driver has not been started yet
     return secfalse;
   }
 
-  secbool powered_from_usb = sectrue;  // TODO
-
-  secbool ready = secfalse;
-
   if (pdev->dev_state == USBD_STATE_CONFIGURED) {
-    // USB is configured, ready to transfer data
-    ready = sectrue;
-  } else if (pdev->dev_state == USBD_STATE_SUSPENDED &&
-             pdev->dev_old_state == USBD_STATE_CONFIGURED) {
-    // USB is suspended, but was configured before
-    //
-    // Linux has autosuspend device after 2 seconds by default.
-    // So a suspended device that was seen as configured is reported as
-    // configured.
-    //
-    ready = sectrue;
-  } else if ((drv->was_ready == secfalse) && (powered_from_usb == sectrue)) {
-    // First run after the startup with USB power
-    drv->was_ready = sectrue;
-    ready = sectrue;
+    return sectrue;
   }
 
-  uint32_t now = hal_ticks_ms();
+  // Treat suspended-but-was-configured as still configured.
+  // Linux autosuspends USB devices after ~2 seconds of inactivity by default.
+  // Without this check, we would generate spurious DECONFIGURED events
+  // during normal operation.
+  // if (pdev->dev_state == USBD_STATE_SUSPENDED &&
+  //     pdev->dev_old_state == USBD_STATE_CONFIGURED) {
+  //   return sectrue;
+  // }
 
-  if (ready == sectrue) {
-    irq_key_t irq_key = irq_lock();
-    drv->ready_time = now;
-    irq_unlock(irq_key);
-  } else {
-    // This is a workaround to handle the glitches in the USB connection,
-    // especially for USB-powered-only devices. This should be
-    // revisited and probably fixed elsewhere.
-
-    irq_key_t irq_key = irq_lock();
-    bool ready_recently = (int32_t)(now - drv->ready_time) < 2000;
-    irq_unlock(irq_key);
-
-    if ((drv->was_ready == sectrue) && ready_recently) {
-      ready = sectrue;
-    }
-  }
-
-  return ready;
+  return secfalse;
 }
+
+// static secbool usb_configured(void) {
+//   usb_driver_t *drv = &g_usb_driver;
+//
+//   if (drv->initialized != sectrue) {
+//     // The driver is not initialized
+//     return secfalse;
+//   }
+//
+//   const USBD_HandleTypeDef *pdev = &drv->dev_handle;
+//
+//   if (pdev->dev_state == USBD_STATE_UNINITIALIZED) {
+//     // The driver has not been started yet
+//     return secfalse;
+//   }
+//
+//   secbool powered_from_usb = sectrue;  // TODO
+//
+//   secbool ready = secfalse;
+//
+//   if (pdev->dev_state == USBD_STATE_CONFIGURED) {
+//     // USB is configured, ready to transfer data
+//     ready = sectrue;
+//   } else if (pdev->dev_state == USBD_STATE_SUSPENDED &&
+//              pdev->dev_old_state == USBD_STATE_CONFIGURED) {
+//     // USB is suspended, but was configured before
+//     //
+//     // Linux has autosuspend device after 2 seconds by default.
+//     // So a suspended device that was seen as configured is reported as
+//     // configured.
+//     //
+//     ready = sectrue;
+//   } else if ((drv->was_ready == secfalse) && (powered_from_usb == sectrue)) {
+//     // First run after the startup with USB power
+//     drv->was_ready = sectrue;
+//     ready = sectrue;
+//   }
+//
+//   uint32_t now = hal_ticks_ms();
+//
+//   if (ready == sectrue) {
+//     irq_key_t irq_key = irq_lock();
+//     drv->ready_time = now;
+//     irq_unlock(irq_key);
+//   } else {
+//     // This is a workaround to handle the glitches in the USB connection,
+//     // especially for USB-powered-only devices. This should be
+//     // revisited and probably fixed elsewhere.
+//
+//     irq_key_t irq_key = irq_lock();
+//     bool ready_recently = (int32_t)(now - drv->ready_time) < 2000;
+//     irq_unlock(irq_key);
+//
+//     if ((drv->was_ready == sectrue) && ready_recently) {
+//       ready = sectrue;
+//     }
+//   }
+//
+//   return ready;
+// }
 
 usb_event_t usb_get_event(void) {
   usb_driver_t *drv = &g_usb_driver;
@@ -327,14 +365,14 @@ usb_event_t usb_get_event(void) {
     return USB_EVENT_NONE;
   }
 
-  usb_state_t new_state;
-  usb_get_state(&new_state);
+  // Use raw state for event detection (no grace period)
+  bool raw_configured = (usb_configured_raw() == sectrue);
 
   usb_driver_tls_t *tls = &drv->tls[systask_id(systask_active())];
 
-  if (new_state.configured != tls->state.configured) {
-    tls->state.configured = new_state.configured;
-    return new_state.configured ? USB_EVENT_CONFIGURED : USB_EVENT_DECONFIGURED;
+  if (raw_configured != tls->state.configured) {
+    tls->state.configured = raw_configured;
+    return raw_configured ? USB_EVENT_CONFIGURED : USB_EVENT_DECONFIGURED;
   }
 
   return USB_EVENT_NONE;
@@ -342,7 +380,7 @@ usb_event_t usb_get_event(void) {
 
 void usb_get_state(usb_state_t *state) {
   usb_state_t s = {0};
-  s.configured = (usb_configured() == sectrue);
+  s.configured = (usb_configured_raw() == sectrue);
   *state = s;
 }
 
