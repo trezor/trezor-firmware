@@ -25,8 +25,7 @@ from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 from trezorlib.transport.session import SessionV1
 
-from ..emulators import EmulatorWrapper
-from . import for_all
+from . import for_all, upgrade_emulator
 
 SOURCE_ASK = 0
 SOURCE_DEVICE = 1
@@ -47,7 +46,7 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 @pytest.fixture
 def emulator(gen: str, tag: str, model: str) -> Iterator[Emulator]:
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         # set up a passphrase-protected device
         device.setup(
             emu.client.get_seedless_session(),

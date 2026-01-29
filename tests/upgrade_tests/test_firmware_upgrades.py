@@ -38,9 +38,9 @@ from trezorlib.tools import H_, parse_path
 from ..click_tests import recovery
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of6_SECRET
 from ..device_handler import BackgroundDeviceHandler
-from ..emulators import ALL_TAGS, EmulatorWrapper
+from ..emulators import ALL_TAGS
 from ..input_flows import InputFlowSlip39BasicBackup
-from . import for_all, for_tags, recovery_old, version_from_tag
+from . import for_all, for_tags, recovery_old, upgrade_emulator, version_from_tag
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -127,7 +127,7 @@ def test_upgrade_load(
             == ADDRESS
         )
 
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -139,7 +139,7 @@ def test_upgrade_load(
         asserts(emu.client)
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
 
@@ -163,7 +163,7 @@ def test_upgrade_load_pin(
             session = client.get_session()
             assert btc.get_address(session, "Bitcoin", PATH) == ADDRESS
 
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -175,7 +175,7 @@ def test_upgrade_load_pin(
         asserts(emu.client)
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
 
@@ -204,7 +204,7 @@ def test_storage_upgrade_progressive(gen: str, tags: List[str]):
         client.use_pin_sequence([PIN])
         assert btc.get_address(client.get_session(), "Bitcoin", PATH) == ADDRESS
 
-    with EmulatorWrapper(gen, tags[0], model="T1B1") as emu:
+    with upgrade_emulator(gen, tags[0], model="T1B1") as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -217,10 +217,10 @@ def test_storage_upgrade_progressive(gen: str, tags: List[str]):
         storage = emu.get_storage()
 
     for tag in tags[1:]:
-        with EmulatorWrapper(gen, tag, model="T1B1", storage=storage) as emu:
+        with upgrade_emulator(gen, tag, model="T1B1", storage=storage) as emu:
             storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
 
@@ -243,7 +243,7 @@ def test_upgrade_wipe_code(
         client.use_pin_sequence([PIN])
         assert btc.get_address(client.get_session(), "Bitcoin", PATH) == ADDRESS
 
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -262,7 +262,7 @@ def test_upgrade_wipe_code(
         asserts(emu.client)
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
 
@@ -293,7 +293,7 @@ def test_upgrade_reset(
         assert not client.features.unfinished_backup
         assert not client.features.no_backup
 
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             strength=STRENGTH,
@@ -308,7 +308,7 @@ def test_upgrade_reset(
         address = btc.get_address(emu.client.get_session(), "Bitcoin", PATH)
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
         assert btc.get_address(emu.client.get_session(), "Bitcoin", PATH) == address
@@ -330,7 +330,7 @@ def test_upgrade_reset_skip_backup(
         assert not client.features.unfinished_backup
         assert not client.features.no_backup
 
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             strength=STRENGTH,
@@ -346,7 +346,7 @@ def test_upgrade_reset_skip_backup(
         address = btc.get_address(emu.client.get_session(), "Bitcoin", PATH)
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
         assert btc.get_address(emu.client.get_session(), "Bitcoin", PATH) == address
@@ -368,7 +368,7 @@ def test_upgrade_reset_no_backup(
         assert not client.features.unfinished_backup
         assert client.features.no_backup
 
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             strength=STRENGTH,
@@ -385,7 +385,7 @@ def test_upgrade_reset_no_backup(
         address = btc.get_address(emu.client.get_session(), "Bitcoin", PATH)
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
         assert btc.get_address(emu.client.get_session(), "Bitcoin", PATH) == address
@@ -400,7 +400,7 @@ def test_upgrade_shamir_recovery(
     model: str | None,
 ):
     with (
-        EmulatorWrapper(gen, tag, model) as emu,
+        upgrade_emulator(gen, tag, model) as emu,
         BackgroundDeviceHandler(emu.client) as device_handler,
     ):
         assert emu.client.features.recovery_status == RecoveryStatus.Nothing
@@ -424,7 +424,7 @@ def test_upgrade_shamir_recovery(
         storage = emu.get_storage()
         device_handler.check_finalize()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         assert emu.client.features.recovery_status == RecoveryStatus.Recovery
         debug = emu.client.debug
@@ -458,7 +458,7 @@ def test_upgrade_shamir_backup(
     tag: str | None,
     model: str | None,
 ):
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         session = emu.client.get_seedless_session()
         # Generate a new encrypted master secret and record it.
         device.setup(
@@ -488,7 +488,7 @@ def test_upgrade_shamir_backup(
         assert emu.client.features.backup_availability == BackupAvailability.Required
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         assert emu.client.features.device_id == device_id
 
         # Create a backup of the encrypted master secret.
@@ -535,7 +535,7 @@ def test_upgrade_u2f(
     model: str | None,
 ):
     """Check U2F counter stayed the same after an upgrade."""
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         debuglink.load_device_by_mnemonic(
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
@@ -550,7 +550,7 @@ def test_upgrade_u2f(
         assert counter == 11
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         session = emu.client.get_seedless_session()
         counter = fido.get_next_counter(session)
         assert counter == 12
@@ -585,7 +585,7 @@ def test_cardano_address_does_not_change_by_upgrade(
         # SLIP-39 was not implemented for Cardano in v2.1.2
         return
 
-    with EmulatorWrapper(gen, tag, model) as emu:
+    with upgrade_emulator(gen, tag, model) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             pin_protection=False,
@@ -598,7 +598,7 @@ def test_cardano_address_does_not_change_by_upgrade(
         old_key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
         storage = emu.get_storage()
 
-    with EmulatorWrapper(gen, storage=storage) as emu:
+    with upgrade_emulator(gen, storage=storage) as emu:
         session = emu.client.get_session(derive_cardano=True)
         new_key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
 
