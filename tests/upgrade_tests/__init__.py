@@ -20,9 +20,34 @@ from typing import List, Tuple
 import pytest
 from _pytest.mark.structures import MarkDecorator
 
-from trezorlib.models import CORE_MODELS, LEGACY_MODELS, T1B1, T2T1, by_internal_name
+from trezorlib.models import (
+    CORE_MODELS, 
+    LEGACY_MODELS, 
+    T1B1, 
+    T2T1, 
+    T3W1, 
+    by_internal_name
+)
 
-from ..emulators import ALL_TAGS, LOCAL_BUILD_PATHS, gen_from_model
+from ..emulators import ALL_TAGS, LOCAL_BUILD_PATHS, EmulatorWrapper, gen_from_model
+
+
+def upgrade_emulator(
+    gen: str,
+    tag: str | None = None,
+    model: str | None = None,
+    **kwargs,
+) -> EmulatorWrapper:
+    model_name = model or os.environ.get("TREZOR_MODEL")
+    disable_tropic = os.environ.get("TREZOR_DISABLE_TROPIC_MODEL") == "1"
+    launch_tropic = (model_name == "T3W1") and not disable_tropic
+    return EmulatorWrapper(
+        gen,
+        tag,
+        model,
+        launch_tropic_model=launch_tropic,
+        **kwargs,
+    )
 
 SELECTED_GENS = [
     gen.strip() for gen in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",") if gen
@@ -63,6 +88,7 @@ def for_all(
     *args: str,
     legacy_minimum_version: Tuple[int, int, int] = (1, 0, 0),
     core_minimum_version: Tuple[int, int, int] = (2, 0, 0),
+    t3w1_minimum_version: Tuple[int, int, int] = (2, 9, 3),
 ) -> "MarkDecorator":
     """Parametrizing decorator for test cases.
 
@@ -73,7 +99,7 @@ def for_all(
     >>>     assert True
 
     Arguments can be trezor models (e.g."T1B1" and "T2T1") or aliases "core" and "legacy",
-    and you can specify core_minimum_version and legacy_minimum_version as triplets.
+    and you can specify core_minimum_version, legacy_minimum_version, and t3w1_minimum_version as triplets.
 
     The test function should have arguments `gen` ("core" or "legacy") and `tag`
     (version tag usable in EmulatorWrapper call)
@@ -97,7 +123,7 @@ def for_all(
 
     if not args:
         gens = ["core", "legacy"]
-        models = [T1B1, T2T1]
+        models = [T1B1, T2T1, T3W1]
 
     # If any gens were selected, use them. If none, select all.
     enabled_gens = SELECTED_GENS or list(gens)
@@ -106,6 +132,8 @@ def for_all(
     for model in models:
         if model in LEGACY_MODELS:
             minimum_version = legacy_minimum_version
+        elif model == T3W1:
+            minimum_version = t3w1_minimum_version            
         elif model in CORE_MODELS:
             minimum_version = core_minimum_version
         else:
