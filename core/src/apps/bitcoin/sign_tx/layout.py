@@ -292,9 +292,13 @@ async def confirm_total(
     await layouts.confirm_total(
         format_coin_amount(spending, coin, amount_unit),
         format_coin_amount(fee, coin, amount_unit),
-        fee_rate_amount=format_fee_rate(fee_rate, coin) if fee_rate >= 0 else None,
         source_account=account_label(coin, address_n),
         source_account_path=address_n_to_str(address_n) if address_n else None,
+        fee_items=(
+            [(TR.confirm_total__fee_rate, format_fee_rate(fee_rate, coin), None)]
+            if fee_rate >= 0
+            else None
+        ),
     )
 
 

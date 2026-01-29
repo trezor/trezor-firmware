@@ -583,10 +583,12 @@ class EthereumFlow:
         if go_back_from_summary:
             # Get back to the address screen
             self.debug.swipe_down()
+            assert (yield).name == "confirm_output"
             title = self.debug.read_layout().title()
             assert TR.words__address in title
             # Get back to the summary screen
             self.debug.swipe_up()
+            assert (yield).name == "confirm_total"
             layout = self.debug.read_layout()
             assert layout.title() == TR.words__title_summary
             assert TR.send__maximum_fee in layout.text_content()
@@ -632,10 +634,12 @@ class EthereumFlow:
         if go_back_from_summary:
             # Get back to the address screen
             self.debug.click(self.debug.screen_buttons.cancel())
+            assert (yield).name == "confirm_output"
             title = self.debug.read_layout().title()
             assert title_exp in title
             # Get back to the summary screen
             self.debug.click(self.debug.screen_buttons.ok())
+            assert (yield).name == "confirm_total"
             layout = self.debug.read_layout()
             assert layout.title() == title_exp
             assert TR.send__maximum_fee in layout.text_content()
