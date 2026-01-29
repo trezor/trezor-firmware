@@ -93,7 +93,7 @@
     "backup__title_skip": "Skip backup",
     "backup__want_to_skip": "Are you sure you want to skip the backup?",
     "bitcoin__commitment_data": "Commitment data",
-    "bitcoin__confirm_locktime": "Confirm locktime",
+    "bitcoin__confirm_locktime": "Confirm Locktime",
     "bitcoin__create_proof_of_ownership": "Do you want to create a proof of ownership?",
     "bitcoin__high_mining_fee_template": "The mining fee of\n{0}\nis unexpectedly high.",
     "bitcoin__locktime_no_effect": "Locktime is set but will have no effect.",
