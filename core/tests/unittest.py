@@ -5,6 +5,7 @@ from trezor.utils import ensure
 DEFAULT_COLOR = "\033[0m"
 ERROR_COLOR = "\033[31m"
 OK_COLOR = "\033[32m"
+SKIPPED_COLOR = "\033[33m"
 
 
 class SkipTest(Exception):
@@ -189,10 +190,22 @@ class TestCase:
 
 
 def skip(msg):
-    def _decor(fun):
-        # We just replace original fun with _inner
+
+    def _decor(obj):
+        # Function skip
         def _inner(self):
             raise SkipTest(msg)
+
+        # Class skip
+        if isinstance(obj, type):
+
+            class _SkipClass(TestCase):
+                pass
+
+            for name in iter_test_cases(obj):
+                setattr(_SkipClass, name, _inner)
+            _SkipClass.__qualname__ = obj.__qualname__
+            return _SkipClass
 
         return _inner
 
@@ -235,6 +248,12 @@ class TestResult:
 generator_type = type((lambda: (yield))())
 
 
+def iter_test_cases(obj):
+    for name in dir(obj):
+        if name.startswith("test"):
+            yield name
+
+
 def run_class(c, test_result):
     o = c()
     set_up_class = getattr(o, "setUpClass", lambda: None)
@@ -244,9 +263,8 @@ def run_class(c, test_result):
     print("class", c.__qualname__)
     try:
         set_up_class()
-        for name in dir(o):
-            if name.startswith("test"):
-                run_test_method(o, name, set_up, tear_down, test_result)
+        for name in iter_test_cases(o):
+            run_test_method(o, name, set_up, tear_down, test_result)
     finally:
         tear_down_class()
 
@@ -269,7 +287,7 @@ def run_test_method(o, name, set_up, tear_down, test_result):
             tear_down()
         print(f"{OK_COLOR} ok{DEFAULT_COLOR}")
     except SkipTest as e:
-        print(" skipped:", e.args[0])
+        print(f"{SKIPPED_COLOR} skipped:{DEFAULT_COLOR}", e.args[0])
         test_result.skippedNum += 1
     except AssertionError as e:
         print(f"{ERROR_COLOR} failed{DEFAULT_COLOR}")
