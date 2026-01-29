@@ -23,6 +23,7 @@
 #include <sec/storage.h>
 #endif
 #include <rtl/cli.h>
+#include <sec/tropic_configs.h>
 #include <trezor_types.h>
 
 #include "ed25519-donna/ed25519.h"
@@ -40,6 +41,11 @@
 #define TROPIC_DEVICE_CERT_FIRST_SLOT 3
 #define TROPIC_DEVICE_CERT_SLOT_COUNT 3
 #define TROPIC_DEVICE_KEY_SLOT 0  // ECC_SLOT_0
+
+// Slot reserved for the version of Tropic configuration.
+#define TROPIC_CONFIG_DISTRIBUTION_VERSION_SLOT 6
+// Slot reserved for the backup distribution version of Tropic configuration.
+#define TROPIC_CONFIG_BACKUP_DISTRIBUTION_VERSION_SLOT 7
 
 // Pairing key used by prodtest to inject the privileged and unprivileged
 // pairing keys.
@@ -66,6 +72,13 @@ bool tropic_init(void);
 void tropic01_reset(void);
 
 void tropic_deinit(void);
+
+typedef struct {
+  uint32_t distribution_version;
+  const lt_config_t* i_config;
+  const lt_config_t* min_r_config;
+  const lt_config_t* max_r_config;
+} tropic_expected_config_t;
 
 #ifdef TREZOR_PRODTEST
 #include "libtropic.h"
@@ -94,14 +107,22 @@ lt_ret_t lt_mac_and_destroy_retry(lt_handle_t* tropic_handle,
                                   const uint8_t* data_out, uint8_t* data_in);
 
 lt_ret_t lt_read_whole_R_config_retry(lt_handle_t* tropic_handle,
-                                      struct lt_config_t* config);
+                                      lt_config_t* config);
+
+lt_ret_t lt_read_whole_I_config_retry(lt_handle_t* tropic_handle,
+                                      lt_config_t* config);
 
 lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t* tropic_handle,
-                                           const struct lt_config_t* config);
+                                           const lt_config_t* config);
 
-#endif
+bool tropic_get_expected_tropic_config_from_distribution_version(
+    uint32_t distribution_version, tropic_expected_config_t* config_out);
 
-#endif
+#endif  // TREZOR_PRODTEST
+
+#endif  // KERNEL_MODE
+
+secbool tropic_ensure_configuration(void);
 
 typedef secbool (*tropic_ui_progress_t)(void);
 
@@ -160,4 +181,5 @@ bool tropic_pin_unmask_kek(
     uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]);
 
 void tropic_pin_unmask_kek_time(uint32_t* time_ms);
+
 #endif

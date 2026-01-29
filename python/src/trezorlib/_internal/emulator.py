@@ -19,6 +19,7 @@ from __future__ import annotations
 import atexit
 import logging
 import os
+import signal
 import socket
 import subprocess
 import time
@@ -84,7 +85,7 @@ class TropicModel:
         if self.process:
             LOG.info("Terminating Tropic model...")
             start = time.monotonic()
-            self.process.terminate()
+            self.process.send_signal(signal.SIGINT)
             try:
                 self.process.wait(TROPIC_MODEL_WAIT_TIME)
                 end = time.monotonic()
