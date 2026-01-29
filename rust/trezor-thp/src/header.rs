@@ -16,7 +16,7 @@ pub const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
 /// Represents packet header, i.e. control byte, channel id and possibly payload length.
 /// Please note that `seq_bit` and `ack_bit` which are also part of the header are handled separately.
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Header<R: Role> {
     Continuation {
         channel_id: u16,
@@ -50,7 +50,7 @@ pub enum Header<R: Role> {
 }
 
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum HandshakeMessage {
     InitiationRequest,

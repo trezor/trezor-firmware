@@ -2,7 +2,7 @@ use trezor_noise_protocol::{Error as NoiseError, ErrorKind as NoiseErrorKind};
 
 /// Payload of `transport_error` message type (0x42).
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum TransportError {
     /// Issued by the recipient when the transport layer is busy reassembling a message
@@ -52,7 +52,7 @@ impl TryFrom<&[u8]> for TransportError {
 }
 
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum Error {
     /// Numeric field has forbidden value.
     OutOfBounds,

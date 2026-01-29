@@ -19,7 +19,7 @@ pub trait Role: Clone + PartialEq {
 }
 
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Host;
 
 impl Role for Host {
@@ -29,7 +29,7 @@ impl Role for Host {
 }
 
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Device;
 
 impl Role for Device {

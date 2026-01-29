@@ -15,7 +15,7 @@ use noise::{HANDSHAKE_HASH_LEN, NoiseCiphers, TAG_LEN};
 const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
 /// Used during channel allocation on broadcast channel.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 struct Nonce([u8; NONCE_LEN as _]);
 
 impl Nonce {

@@ -64,7 +64,7 @@ impl Default for SyncBits {
 }
 
 /// Alternating Bit Protocol state for a single channel.
-#[cfg_attr(any(test, debug_assertions), derive(Debug, PartialEq))]
+#[cfg_attr(any(test, debug_assertions), derive(Debug, PartialEq, Eq))]
 pub struct ChannelSync {
     /// If true we are waiting for an ACK and cannot send further messages.
     can_send: bool,
