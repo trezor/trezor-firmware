@@ -89,25 +89,29 @@ impl<B: Backend> NoiseHandshake<Host, B> {
 
     pub fn complete_pairing<'a>(
         &mut self,
-        incoming: &[u8],
         cred_store: &mut impl CredentialStore,
-        dest: &'a mut [u8],
+        buffer: &'a mut [u8],
+        incoming_len: usize,
     ) -> Result<(NoiseCiphers<B>, &'a [u8]), Error> {
-        if incoming.len() != self.hss.get_next_message_overhead() {
+        if incoming_len != self.hss.get_next_message_overhead() {
             log::error!("Unexpected message length during handshake.");
             return Err(Error::MalformedData);
         }
+        let incoming = buffer
+            .get(..incoming_len)
+            .ok_or(Error::InsufficientBuffer)?;
         self.hss.read_message(incoming, &mut [])?;
 
         // Look up static key based on remote keys, or generate a new one.
         let remote_static_key = self.hss.get_rs().ok_or(Error::CryptoError)?;
         let remote_ephemeral_key = self.hss.get_re().ok_or(Error::CryptoError)?;
         let (local_static, pairing_credential) =
-            Self::credential_from_store(cred_store, &remote_ephemeral_key, &remote_static_key);
+            Self::credential_from_store(cred_store, &remote_ephemeral_key, &remote_static_key)?;
         self.hss.set_s(local_static);
 
+        buffer.fill(0);
         let len = self.hss.get_next_message_overhead();
-        let dest = dest.get_mut(..len).ok_or(Error::InsufficientBuffer)?;
+        let dest = buffer.get_mut(..len).ok_or(Error::InsufficientBuffer)?;
         self.hss
             .write_message(pairing_credential.as_slice(), dest)?;
         if !self.hss.completed() {
@@ -129,7 +133,7 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         cs: &impl CredentialStore,
         re: &DHPubKey<B>,
         rs: &DHPubKey<B>,
-    ) -> (DHPrivKey<B>, heapless::Vec<u8, MAX_KEY_AND_CREDENTIAL_LEN>)
+    ) -> Result<(DHPrivKey<B>, heapless::Vec<u8, MAX_KEY_AND_CREDENTIAL_LEN>), Error>
     where
         DHPrivKey<B>: U8Array,
     {
@@ -138,11 +142,12 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         let result = cs.lookup(re.as_slice(), rs.as_slice(), buf.as_mut_slice());
         if let Some(found) = result {
             let found_key = <DHPrivKey<B> as U8Array>::from_slice(found.local_static_privkey);
-            let found_credential = heapless::Vec::from_slice(found.auth_credential).unwrap();
-            return (found_key, found_credential);
+            let found_credential = heapless::Vec::from_slice(found.auth_credential)
+                .map_err(|_| Error::InsufficientBuffer)?;
+            return Ok((found_key, found_credential));
         }
         buf.clear();
         let new_key = <B::DH as DH>::genkey();
-        (new_key, buf)
+        Ok((new_key, buf))
     }
 }

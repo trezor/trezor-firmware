@@ -10,8 +10,7 @@ pub struct FoundCredential<'a> {
 pub trait CredentialStore {
     /// Find a record such that `remote_static_pubkey` satisfies
     /// `masked_static_pubkey == X25519(SHA-256(remote_static_pubkey || ephemeral_pubkey), remote_static_pubkey)`.
-    /// If found, write `local_static_privkey` and `auth_credential` to `dest` and return the written subslice.
-    /// The private key must occupy the first [`CREDENTIAL_PRIVKEY_LENGTH`] bytes, the rest is the credential.
+    /// If found, write `local_static_privkey` and `auth_credential` to `dest` and return the written subslices.
     fn lookup<'a>(
         &self,
         ephemeral_pubkey: &[u8],

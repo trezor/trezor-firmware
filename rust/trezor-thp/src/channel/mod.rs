@@ -106,8 +106,8 @@ impl<R: Role, B: Backend> Channel<R, B> {
         }
     }
 
-    fn noise(&mut self) -> &mut NoiseCiphers<B> {
-        self.noise.as_mut().unwrap()
+    fn noise(&mut self) -> Result<&mut NoiseCiphers<B>> {
+        self.noise.as_mut().ok_or(Error::UnexpectedInput)
     }
 
     fn is_broadcast(&self) -> bool {
@@ -268,10 +268,6 @@ impl PacketInResult {
 
     pub const fn got_error(&self) -> bool {
         self.error.is_some()
-    }
-
-    pub const fn which_error(&self) -> TransportError {
-        self.error.unwrap()
     }
 }
 
@@ -438,14 +434,14 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             // We end up sending reply while the other side is retransmitting.
             // Is this recoverable?
             PacketState::Sending(_) => PacketInResult::nothing(),
-            PacketState::Failed(_e) => panic!(),
+            PacketState::Failed(_e) => unreachable!(),
         }
     }
 
     fn packet_out(&mut self, packet_buffer: &mut [u8], send_buffer: &[u8]) -> Result<()> {
         // Send pending ACK.
         if let Some(sb) = self.send_ack.take() {
-            let header = Header::<R>::new_ack(self.channel_id);
+            let header = Header::<R>::new_ack(self.channel_id)?;
             Fragmenter::single(header, sb, &[], packet_buffer)?;
             return Ok(());
         }
@@ -485,8 +481,8 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         if send_buffer.len() < encrypted_len {
             return Err(Error::InsufficientBuffer);
         }
-        self.noise().encrypt(send_buffer, plaintext_len)?;
-        let header = Header::new_encrypted(self.channel_id, &send_buffer[..encrypted_len]);
+        self.noise()?.encrypt(send_buffer, plaintext_len)?;
+        let header = Header::new_encrypted(self.channel_id, &send_buffer[..encrypted_len])?;
         self.raw_in(header, send_buffer)
     }
 
@@ -506,7 +502,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             return Err(Error::MalformedData);
         }
 
-        let receive_buffer = match self.noise().decrypt(receive_buffer) {
+        let receive_buffer = match self.noise()?.decrypt(receive_buffer) {
             Ok(plaintext_len) => &receive_buffer[..plaintext_len],
             Err(e) => {
                 log::error!("[{}] Decryption failed, channel closed.", self.channel_id);

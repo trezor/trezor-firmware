@@ -130,7 +130,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
             self.channel.channel_id,
             HandshakeMessage::InitiationRequest,
             msg,
-        );
+        )?;
         self.noise = Some(hss);
         self.channel.raw_in(header, msg)?;
         let len = msg.len();
@@ -139,20 +139,21 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     }
 
     fn continue_handshake(&mut self) -> Result<(), Error> {
-        let payload = &self.internal_buffer.clone();
-        self.zero_internal_buffer();
-        let (nc, msg) = self.noise.as_mut().unwrap().complete_pairing(
-            payload,
-            &mut self.cred_store,
-            &mut self.internal_buffer,
-        )?;
+        let payload_len = self.internal_buffer.len();
+        // Buffer used both for input and output - pad with zeros.
+        self.internal_buffer
+            .resize(self.internal_buffer.capacity(), 0u8)
+            .unwrap();
+        let noise = self.noise.as_mut().ok_or(Error::UnexpectedInput)?;
+        let (nc, msg) =
+            noise.complete_pairing(&mut self.cred_store, &mut self.internal_buffer, payload_len)?;
         self.channel.noise = Some(nc);
         self.noise = None;
         let header = Header::new_handshake(
             self.channel.channel_id,
             HandshakeMessage::CompletionRequest,
             msg,
-        );
+        )?;
         self.channel.raw_in(header, msg)?;
         let len = msg.len();
         self.internal_buffer.truncate(len);
@@ -160,8 +161,8 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     }
 
     fn finish_handshake(&mut self) -> Result<PairingState, Error> {
-        let mut payload = self.internal_buffer.clone();
-        let len = self.channel.noise().decrypt(payload.as_mut_slice())?;
+        let payload = &mut self.internal_buffer;
+        let len = self.channel.noise()?.decrypt(payload.as_mut_slice())?;
         payload.truncate(len); // assumes tag at the end
         PairingState::try_from(payload.as_slice())
     }
@@ -247,6 +248,7 @@ where
     }
 
     fn message_in(&mut self, _plaintext_len: usize, _send_buffer: &mut [u8]) -> Result<(), Error> {
+        // Messages from application are ignored during the handshake.
         Ok(())
     }
 

@@ -113,38 +113,29 @@ impl<R: Role> Header<R> {
         // strip padding if there is any
         let without_padding = rest.len().min(payload_len.into());
         let rest = &rest[..without_padding];
-        if let Some(fixed) = Self::parse_fixed(cb, channel_id, payload_len)? {
-            return Ok((fixed, rest));
+        // check for single-packet messages, validate length
+        let mut header: Option<_> = Self::parse_single(cb, channel_id, payload_len)?;
+        if channel_id == BROADCAST_CHANNEL_ID {
+            // fragmentable, broadcast-only messages
+            header = header.or_else(|| Self::parse_broadcast(cb, payload_len));
+        } else {
+            // fragmentable, unicast-only messages
+            header = header.or_else(|| Self::parse_unicast(cb, channel_id, payload_len));
         }
-        if let Some(phase) = HandshakeMessage::from_u8::<R>(cb.into()) {
-            return Ok((
-                Self::Handshake {
-                    phase,
-                    channel_id,
-                    payload_len,
-                },
-                rest,
-            ));
+        if let Some(header) = header {
+            return Ok((header, rest));
         }
-        if cb.is_encrypted_transport() {
-            return Ok((
-                Self::Encrypted {
-                    channel_id,
-                    payload_len,
-                },
-                rest,
-            ));
-        }
-        if R::is_host() && channel_id == BROADCAST_CHANNEL_ID && cb.is_channel_allocation_response()
-        {
-            return Ok((Self::ChannelAllocationResponse { payload_len }, rest));
-        }
-        log::error!("Unknown control byte {}.", u8::from(cb));
+        log::error!(
+            "Unknown header: ({}, {}, {}).",
+            u8::from(cb),
+            channel_id,
+            payload_len
+        );
         Err(Error::MalformedData)
     }
 
-    fn parse_fixed(cb: ControlByte, channel_id: u16, payload_len: u16) -> Result<Option<Self>> {
-        let res = if cb.is_ack() {
+    fn parse_single(cb: ControlByte, channel_id: u16, payload_len: u16) -> Result<Option<Self>> {
+        let res = if cb.is_ack() && channel_id != BROADCAST_CHANNEL_ID {
             Self::Ack {
                 channel_id,
                 _phantom: PhantomData,
@@ -170,6 +161,30 @@ impl<R: Role> Header<R> {
             log::error!("Unexpected payload length.");
             Err(Error::MalformedData)
         }
+    }
+
+    fn parse_broadcast(cb: ControlByte, payload_len: u16) -> Option<Self> {
+        if R::is_host() && cb.is_channel_allocation_response() {
+            return Some(Self::ChannelAllocationResponse { payload_len });
+        }
+        None
+    }
+
+    fn parse_unicast(cb: ControlByte, channel_id: u16, payload_len: u16) -> Option<Self> {
+        if let Some(phase) = HandshakeMessage::from_u8::<R>(cb.into()) {
+            return Some(Self::Handshake {
+                phase,
+                channel_id,
+                payload_len,
+            });
+        }
+        if cb.is_encrypted_transport() {
+            return Some(Self::Encrypted {
+                channel_id,
+                payload_len,
+            });
+        }
+        None
     }
 
     pub(crate) fn control_byte(&self, sync_bits: SyncBits) -> Option<ControlByte> {
@@ -263,45 +278,76 @@ impl<R: Role> Header<R> {
         }
     }
 
-    pub const fn new_continuation(channel_id: u16) -> Self {
-        Self::Continuation { channel_id }
+    fn validate_len(payload: &[u8]) -> Result<u16> {
+        if let Ok(payload_len) = u16::try_from(payload.len()) {
+            let with_crc = payload_len.saturating_add(CHECKSUM_LEN);
+            if with_crc <= MAX_PAYLOAD_LEN {
+                return Ok(with_crc);
+            }
+        }
+        log::error!("Cannot construct: message too long {}.", payload.len());
+        Err(Error::UnexpectedInput)
+    }
+
+    fn validate_channel(channel_id: u16) -> Result<u16> {
+        if !channel_id_valid(channel_id) {
+            log::error!("Cannot construct: invalid channel id {}.", channel_id);
+            return Err(Error::UnexpectedInput);
+        }
+        Ok(channel_id)
+    }
+
+    fn validate_channel_unicast(channel_id: u16) -> Result<u16> {
+        let channel_id = Self::validate_channel(channel_id)?;
+        if channel_id == BROADCAST_CHANNEL_ID {
+            log::error!("Cannot construct: illegal broadcast.");
+            return Err(Error::UnexpectedInput);
+        }
+        Ok(channel_id)
+    }
+
+    pub fn new_continuation(channel_id: u16) -> Result<Self> {
+        Ok(Self::Continuation {
+            channel_id: Self::validate_channel(channel_id)?,
+        })
     }
 
     pub const fn new_channel_request() -> Self {
         Self::ChannelAllocationRequest
     }
 
-    pub const fn new_channel_response(payload: &[u8]) -> Self {
-        Self::ChannelAllocationResponse {
-            payload_len: (payload.len() as u16) + NONCE_LEN + CHECKSUM_LEN,
-        }
+    pub fn new_channel_response(payload: &[u8]) -> Result<Self> {
+        Ok(Self::ChannelAllocationResponse {
+            payload_len: Self::validate_len(payload)?,
+        })
     }
 
-    pub const fn new_handshake(channel_id: u16, phase: HandshakeMessage, payload: &[u8]) -> Self {
-        Self::Handshake {
+    pub fn new_handshake(channel_id: u16, phase: HandshakeMessage, payload: &[u8]) -> Result<Self> {
+        Ok(Self::Handshake {
             phase,
-            channel_id,
-            payload_len: payload.len() as u16 + CHECKSUM_LEN,
-        }
+            channel_id: Self::validate_channel_unicast(channel_id)?,
+            payload_len: Self::validate_len(payload)?,
+        })
     }
 
-    pub const fn new_encrypted(channel_id: u16, payload: &[u8]) -> Self {
-        // FIXME validate payload length, channel id?
-        Self::Encrypted {
-            channel_id,
-            payload_len: payload.len() as u16 + CHECKSUM_LEN,
-        }
+    pub fn new_encrypted(channel_id: u16, payload: &[u8]) -> Result<Self> {
+        Ok(Self::Encrypted {
+            channel_id: Self::validate_channel_unicast(channel_id)?,
+            payload_len: Self::validate_len(payload)?,
+        })
     }
 
-    pub const fn new_error(channel_id: u16) -> Self {
-        Self::TransportError { channel_id }
+    pub fn new_error(channel_id: u16) -> Result<Self> {
+        Ok(Self::TransportError {
+            channel_id: Self::validate_channel(channel_id)?,
+        })
     }
 
-    pub const fn new_ack(channel_id: u16) -> Self {
-        Self::Ack {
-            channel_id,
+    pub fn new_ack(channel_id: u16) -> Result<Self> {
+        Ok(Self::Ack {
+            channel_id: Self::validate_channel_unicast(channel_id)?,
             _phantom: PhantomData,
-        }
+        })
     }
 
     pub const fn new_ping() -> Self {
@@ -445,8 +491,13 @@ mod test {
             },
         ),
         ("8012345678", Header::Continuation { channel_id: 0x1234 }),
-        ("201337000463061764", Header::new_ack(0x1337)),
-        ("20ffff000460132e1c", Header::new_ack(BROADCAST_CHANNEL_ID)),
+        (
+            "201337000463061764",
+            Header::Ack {
+                channel_id: 0x1337,
+                _phantom: PhantomData,
+            },
+        ),
         (
             "041337000457479ea0",
             Header::Encrypted {
