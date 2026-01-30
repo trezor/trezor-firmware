@@ -192,14 +192,20 @@ class TestCase:
 def skip(msg):
 
     def _decor(obj):
-        # Class skip
-        if isinstance(obj, type):
-            obj.__skip__ = msg
-            return obj
-
         # Function skip
         def _inner(self):
             raise SkipTest(msg)
+
+        # Class skip
+        if isinstance(obj, type):
+
+            class _SkipClass(TestCase):
+                pass
+
+            for name in iter_test_cases(obj):
+                setattr(_SkipClass, name, _inner)
+            _SkipClass.__qualname__ = obj.__qualname__
+            return _SkipClass
 
         return _inner
 
@@ -242,32 +248,32 @@ class TestResult:
 generator_type = type((lambda: (yield))())
 
 
+def iter_test_cases(obj):
+    for name in dir(obj):
+        if name.startswith("test"):
+            yield name
+
+
 def run_class(c, test_result):
     o = c()
     set_up_class = getattr(o, "setUpClass", lambda: None)
     tear_down_class = getattr(o, "tearDownClass", lambda: None)
     set_up = getattr(o, "setUp", lambda: None)
     tear_down = getattr(o, "tearDown", lambda: None)
-    class_skip = getattr(c, "__skip__", None)
     print("class", c.__qualname__)
     try:
-        if class_skip is None:
-            set_up_class()
-        for name in dir(o):
-            if name.startswith("test"):
-                run_test_method(o, name, set_up, tear_down, test_result, class_skip)
+        set_up_class()
+        for name in iter_test_cases(o):
+            run_test_method(o, name, set_up, tear_down, test_result)
     finally:
-        if class_skip is None:
-            tear_down_class()
+        tear_down_class()
 
 
-def run_test_method(o, name, set_up, tear_down, test_result, class_skip):
+def run_test_method(o, name, set_up, tear_down, test_result):
     print(" ", name, end=" ...")
     m = getattr(o, name)
     test_result.testsRun += 1
     try:
-        if class_skip is not None:
-            raise SkipTest(class_skip)
         try:
             set_up()
             retval = m()
