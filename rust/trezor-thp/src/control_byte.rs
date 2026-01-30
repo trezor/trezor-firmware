@@ -1,4 +1,4 @@
-use crate::alternating_bit::SyncBits;
+use crate::{alternating_bit::SyncBits, error::Error};
 
 pub const CODEC_V1: u8 = 0x3F;
 pub const CONTINUATION_PACKET: u8 = 0x80;
@@ -72,12 +72,28 @@ impl ControlByte {
     pub const fn is_channel_allocation_response(&self) -> bool {
         self.0 == CHANNEL_ALLOCATION_RES
     }
+
+    pub const fn is_handshake(&self) -> bool {
+        self.0 & DATA_MASK == HANDSHAKE_INIT_REQ
+            || self.0 & DATA_MASK == HANDSHAKE_INIT_RES
+            || self.0 & DATA_MASK == HANDSHAKE_COMP_REQ
+            || self.0 & DATA_MASK == HANDSHAKE_COMP_RES
+    }
 }
 
 // Note consider TryFrom + validation
 impl From<u8> for ControlByte {
     fn from(byte: u8) -> Self {
         Self(byte)
+    }
+}
+
+impl TryFrom<&[u8]> for ControlByte {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Error> {
+        let first_byte = bytes.first().ok_or(Error::MalformedData)?;
+        Ok(Self::from(*first_byte))
     }
 }
 
