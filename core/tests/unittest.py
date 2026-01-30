@@ -251,12 +251,14 @@ def run_class(c, test_result):
     class_skip = getattr(c, "__skip__", None)
     print("class", c.__qualname__)
     try:
-        set_up_class()
+        if class_skip is None:
+            set_up_class()
         for name in dir(o):
             if name.startswith("test"):
                 run_test_method(o, name, set_up, tear_down, test_result, class_skip)
     finally:
-        tear_down_class()
+        if class_skip is None:
+            tear_down_class()
 
 
 def run_test_method(o, name, set_up, tear_down, test_result, class_skip):
