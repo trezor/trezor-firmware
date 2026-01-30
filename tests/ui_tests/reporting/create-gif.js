@@ -2,8 +2,8 @@
 
 function createGif() {
     // Finds all the screenshots on the screen, creates a new img
-    // element at the top and switches the src attribute every 200ms
-    // to create a notion of GIF.
+    // element at the top and switches the src attribute periodically
+    // (interval based on defaultDelay) to create a notion of GIF.
     // Adds some controlling possibilities - buttons, input fields
     // and sliders to enable pausing, stepping back and forth, changing
     // the delay, etc.
@@ -28,7 +28,7 @@ function createGif() {
     const delayText = 'Delay (ms):';
     const sliderText = 'Progress:';
 
-    const defaultDelay = 200;
+    const defaultDelay = 1000;
 
     const keyboardShortcutPrev = 'ArrowLeft';
     const keyboardShortcutNext = 'ArrowRight';
