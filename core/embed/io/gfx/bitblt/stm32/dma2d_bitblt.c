@@ -28,15 +28,24 @@
 
 #include <io/dma2d_bitblt.h>
 #include <io/gfx_color.h>
+#include <sys/irq.h>
+#include <sys/systick.h>
 
 // Number of DMA2D layers - background (0) and foreground (1)
 #define DMA2D_LAYER_COUNT 2
+
+// Timeout for waiting for DMA2D transfer completion in milliseconds.
+#define DMA2D_TIMEOUT_MS 10
 
 typedef struct {
   // Set if the driver is initialized
   bool initialized;
   // ST DMA2D driver handle
   DMA2D_HandleTypeDef handle;
+
+  // Tracking of ongoing DMA transfer.
+  volatile bool dma_transfer_in_progress;
+
   // CLUT cache
   struct {
     gfx_color32_t c_fg;
@@ -64,6 +73,17 @@ static inline bool dma2d_accessible(const void* ptr) {
 #endif
 }
 
+// DMA start failed: ensure no transfer is marked in progress and reset DMA2D
+// state.
+static inline void dma2d_error_handler(void) {
+  dma2d_driver_t* drv = &g_dma2d_driver;
+
+  drv->dma_transfer_in_progress = false;
+  HAL_DMA2D_Abort(&drv->handle);
+  // Re-enable interrupts to be prepared for next usage.
+  __HAL_DMA2D_ENABLE_IT(&drv->handle, DMA2D_IT_TC | DMA2D_IT_TE | DMA2D_IT_CE);
+}
+
 void dma2d_init(void) {
   dma2d_driver_t* drv = &g_dma2d_driver;
   if (drv->initialized) {
@@ -76,11 +96,27 @@ void dma2d_init(void) {
   __HAL_RCC_DMA2D_RELEASE_RESET();
   __HAL_RCC_DMA2D_CLK_ENABLE();
 
+  // Disable NVIC DMA2D_IRQn (precaution).
+  NVIC_DisableIRQ(DMA2D_IRQn);
+
+  // Enable the transfer complete, transfer error and configuration error
+  // interrupts (used for waking up from sleep in dma2d_wait()).
+  __HAL_DMA2D_ENABLE_IT(&drv->handle, DMA2D_IT_TC | DMA2D_IT_TE | DMA2D_IT_CE);
+  drv->dma_transfer_in_progress = false;
+
   drv->initialized = true;
 }
 
 void dma2d_deinit(void) {
   dma2d_driver_t* drv = &g_dma2d_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  HAL_DMA2D_Abort(&drv->handle);
+
+  __HAL_DMA2D_DISABLE_IT(&drv->handle, DMA2D_IT_TC | DMA2D_IT_TE | DMA2D_IT_CE);
 
   __HAL_RCC_DMA2D_CLK_DISABLE();
   __HAL_RCC_DMA2D_FORCE_RESET();
@@ -91,13 +127,74 @@ void dma2d_deinit(void) {
 
 void dma2d_wait(void) {
   dma2d_driver_t* drv = &g_dma2d_driver;
+  bool timeout_occurred = false;
 
   if (!drv->initialized) {
     return;
   }
 
-  while (HAL_DMA2D_PollForTransfer(&drv->handle, 10) != HAL_OK)
-    ;
+  if (!drv->dma_transfer_in_progress) {
+    return;
+  }
+
+  if (!__HAL_DMA2D_GET_FLAG(&drv->handle,
+                            DMA2D_FLAG_TC | DMA2D_FLAG_TE | DMA2D_FLAG_CE)) {
+    irq_key_t key = irq_lock();
+    // Enabled events and all interrupts, including disabled interrupts, can
+    // wakeup the processor put into sleep via WFE (Wait For Event) instruction.
+    uint32_t scb_scr_sevonpend_bkp = READ_BIT(SCB->SCR, SCB_SCR_SEVONPEND_Msk);
+    SET_BIT(SCB->SCR, SCB_SCR_SEVONPEND_Msk);
+    irq_unlock(key);
+
+    uint32_t timeout = ticks_timeout(DMA2D_TIMEOUT_MS);
+
+    // It is recommended to execute the SEV instruction (to generate the event)
+    // before falling asleep (the WFE instruction consumes it i.e. clears it and
+    // the next one will react on the event being expected).
+    __SEV();
+    __WFE();
+
+    // Periodically check the DMA2D transfer status until it is complete or
+    // an error occurs.
+    while (!__HAL_DMA2D_GET_FLAG(
+        &drv->handle, DMA2D_FLAG_TC | DMA2D_FLAG_TE | DMA2D_FLAG_CE)) {
+      // Ensure that all memory accesses are completed before checking the flag.
+      __DSB();
+      __WFE();
+
+      if (ticks_expired(timeout)) {
+        timeout_occurred = true;
+        break;
+      }
+    }
+
+    key = irq_lock();
+    // Restore SEVONPEND state
+    if (READ_BIT(scb_scr_sevonpend_bkp, SCB_SCR_SEVONPEND_Msk) == 0) {
+      CLEAR_BIT(SCB->SCR, SCB_SCR_SEVONPEND_Msk);
+    }
+    irq_unlock(key);
+  }
+
+  if (__HAL_DMA2D_GET_FLAG(&drv->handle, DMA2D_FLAG_TE | DMA2D_FLAG_CE) ||
+      timeout_occurred) {
+    HAL_DMA2D_Abort(&drv->handle);
+    // Re-enable interrupts to be prepared for next usage.
+    __HAL_DMA2D_ENABLE_IT(&drv->handle,
+                          DMA2D_IT_TC | DMA2D_IT_TE | DMA2D_IT_CE);
+  }
+
+  // Clear all pending flags and pending IRQ to be prepared for next usage.
+  __HAL_DMA2D_CLEAR_FLAG(&drv->handle,
+                         DMA2D_FLAG_TC | DMA2D_FLAG_TE | DMA2D_FLAG_CE);
+  __NVIC_ClearPendingIRQ(DMA2D_IRQn);
+
+  // Necessary to unlock HAL DMA2D handle to be prepared for next usage. It's
+  // usually done within the HAL_DMA2D_IRQHandler() called from the interrupt
+  // handler or HAL_DMA2D_PollForTransfer() or HAL_DMA2D_Abort() functions.
+  __HAL_UNLOCK(&drv->handle);
+
+  drv->dma_transfer_in_progress = false;
 }
 
 bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
@@ -124,9 +221,15 @@ bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
         bb->dst_stride / sizeof(uint16_t) - bb->width;
     HAL_DMA2D_Init(&drv->handle);
 
-    HAL_DMA2D_Start(&drv->handle, gfx_color_to_color32(bb->src_fg),
-                    (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                    bb->width, bb->height);
+    if (HAL_OK ==
+        HAL_DMA2D_Start(&drv->handle, gfx_color_to_color32(bb->src_fg),
+                        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                        bb->width, bb->height)) {
+      drv->dma_transfer_in_progress = true;
+    } else {
+      dma2d_error_handler();
+      return false;
+    }
   } else {
 #ifdef STM32U5
     drv->handle.Init.ColorMode = DMA2D_OUTPUT_RGB565;
@@ -148,11 +251,17 @@ bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
     drv->handle.LayerCfg[0].InputAlpha = 0;
     HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-    HAL_DMA2D_BlendingStart(
-        &drv->handle, gfx_color_to_color32(bb->src_fg),
-        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t), bb->width,
-        bb->height);
+    if (HAL_OK == HAL_DMA2D_BlendingStart(
+                      &drv->handle, gfx_color_to_color32(bb->src_fg),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                      bb->width, bb->height)) {
+      drv->dma_transfer_in_progress = true;
+    } else {
+      dma2d_error_handler();
+      return false;
+    }
+
 #else
     // STM32F4 can not accelerate blending with the fixed color
     return false;
@@ -285,9 +394,16 @@ bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t* params) {
   dma2d_config_clut(1, gfx_color_to_color32(bb->src_fg),
                     gfx_color_to_color32(bb->src_bg));
 
-  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                  bb->width, bb->height);
+  if (HAL_OK ==
+      HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                      bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    return false;
+  }
+
   return true;
 }
 
@@ -320,10 +436,17 @@ bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[1].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle,
-                  (uint32_t)bb->src_row + bb->src_x * sizeof(uint16_t),
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                  bb->width, bb->height);
+  if (HAL_OK ==
+      HAL_DMA2D_Start(&drv->handle,
+                      (uint32_t)bb->src_row + bb->src_x * sizeof(uint16_t),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                      bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    return false;
+  }
+
   return true;
 }
 
@@ -420,11 +543,16 @@ bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t* params) {
     drv->handle.LayerCfg[0].InputAlpha = 0;
     HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-    HAL_DMA2D_BlendingStart(
-        &drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
-        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t), bb->width,
-        bb->height);
+    if (HAL_OK == HAL_DMA2D_BlendingStart(
+                      &drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                      bb->width, bb->height)) {
+      drv->dma_transfer_in_progress = true;
+    } else {
+      dma2d_error_handler();
+      return false;
+    }
   }
 
   return true;
@@ -465,10 +593,16 @@ bool dma2d_rgb565_blend_mono8(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[0].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-  HAL_DMA2D_BlendingStart(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
-                          (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                          (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                          bb->width, bb->height);
+  if (HAL_OK == HAL_DMA2D_BlendingStart(
+                    &drv->handle, (uint32_t)bb->src_row + bb->src_x,
+                    (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                    (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                    bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    return false;
+  }
 
   return true;
 }
@@ -497,9 +631,16 @@ bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb) {
         bb->dst_stride / sizeof(uint32_t) - bb->width;
     HAL_DMA2D_Init(&drv->handle);
 
-    HAL_DMA2D_Start(&drv->handle, gfx_color_to_color32(bb->src_fg),
-                    (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                    bb->width, bb->height);
+    if (HAL_OK ==
+        HAL_DMA2D_Start(&drv->handle, gfx_color_to_color32(bb->src_fg),
+                        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                        bb->width, bb->height)) {
+      drv->dma_transfer_in_progress = true;
+    } else {
+      dma2d_error_handler();
+      return false;
+    }
+
   } else {
 #ifdef STM32U5
     drv->handle.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
@@ -521,11 +662,17 @@ bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb) {
     drv->handle.LayerCfg[0].InputAlpha = 0;
     HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-    HAL_DMA2D_BlendingStart(
-        &drv->handle, gfx_color_to_color32(bb->src_fg),
-        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t), bb->width,
-        bb->height);
+    if (HAL_OK == HAL_DMA2D_BlendingStart(
+                      &drv->handle, gfx_color_to_color32(bb->src_fg),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      bb->width, bb->height)) {
+      drv->dma_transfer_in_progress = true;
+    } else {
+      dma2d_error_handler();
+      return false;
+    }
+
 #else
     // STM32F4 can not accelerate blending with the fixed color
     return false;
@@ -620,9 +767,16 @@ bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* params) {
   dma2d_config_clut(1, gfx_color_to_color32(bb->src_fg),
                     gfx_color_to_color32(bb->src_bg));
 
-  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  if (HAL_OK ==
+      HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    return false;
+  }
+
   return true;
 }
 
@@ -655,10 +809,17 @@ bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[1].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle,
-                  (uint32_t)bb->src_row + bb->src_x * sizeof(uint16_t),
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  if (HAL_OK ==
+      HAL_DMA2D_Start(&drv->handle,
+                      (uint32_t)bb->src_row + bb->src_x * sizeof(uint16_t),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    return false;
+  }
+
   return true;
 }
 
@@ -755,11 +916,16 @@ bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* params) {
     drv->handle.LayerCfg[0].InputAlpha = 0;
     HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-    HAL_DMA2D_BlendingStart(
-        &drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
-        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-        (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t), bb->width,
-        bb->height);
+    if (HAL_OK == HAL_DMA2D_BlendingStart(
+                      &drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      bb->width, bb->height)) {
+      drv->dma_transfer_in_progress = true;
+    } else {
+      dma2d_error_handler();
+      return false;
+    }
   }
 
   return true;
@@ -803,10 +969,16 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[0].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-  HAL_DMA2D_BlendingStart(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
-                          (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                          (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                          bb->width, bb->height);
+  if (HAL_OK == HAL_DMA2D_BlendingStart(
+                    &drv->handle, (uint32_t)bb->src_row + bb->src_x,
+                    (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                    (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                    bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    return false;
+  }
 
   return true;
 }
@@ -839,9 +1011,15 @@ bool dma2d_rgba8888_copy_mono8(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[1].InputAlpha = gfx_color_to_color32(bb->src_fg);
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  if (HAL_OK ==
+      HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    return false;
+  }
 
   return true;
 }
@@ -879,10 +1057,17 @@ bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[1].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle,
-                  (uint32_t)bb->src_row + bb->src_x * sizeof(uint32_t),
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  if (HAL_OK ==
+      HAL_DMA2D_Start(&drv->handle,
+                      (uint32_t)bb->src_row + bb->src_x * sizeof(uint32_t),
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    return false;
+  }
+
   return true;
 }
 
@@ -916,9 +1101,17 @@ static bool dma2d_rgba8888_copy_ycbcr(const gfx_bitblt_t* bb, uint32_t css) {
   drv->handle.LayerCfg[1].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row,
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  if (HAL_OK ==
+      HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row,
+                      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                      bb->width, bb->height)) {
+    drv->dma_transfer_in_progress = true;
+  } else {
+    dma2d_error_handler();
+    drv->clut_valid = false;
+
+    return false;
+  }
 
   // DMA2D overwrites CLUT during YCbCr conversion
   // (seems to be a bug or an undocumented feature)
