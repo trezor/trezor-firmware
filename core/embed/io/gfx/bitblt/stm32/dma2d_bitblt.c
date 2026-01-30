@@ -72,22 +72,20 @@ void dma2d_init(void) {
   memset(drv, 0, sizeof(dma2d_driver_t));
   drv->handle.Instance = DMA2D;
 
-#ifdef KERNEL_MODE
   __HAL_RCC_DMA2D_FORCE_RESET();
   __HAL_RCC_DMA2D_RELEASE_RESET();
   __HAL_RCC_DMA2D_CLK_ENABLE();
-#endif
+
   drv->initialized = true;
 }
 
 void dma2d_deinit(void) {
   dma2d_driver_t* drv = &g_dma2d_driver;
 
-#ifdef KERNEL_MODE
   __HAL_RCC_DMA2D_CLK_DISABLE();
   __HAL_RCC_DMA2D_FORCE_RESET();
   __HAL_RCC_DMA2D_RELEASE_RESET();
-#endif
+
   memset(drv, 0, sizeof(dma2d_driver_t));
 }
 
@@ -577,8 +575,6 @@ bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* params) {
       !gfx_bitblt_check_src_x(params, 4)) {
     return false;
   }
-
-  dma2d_wait();
 
   const gfx_color32_t* src_gradient = NULL;
   gfx_bitblt_t bb_copy = *params;
