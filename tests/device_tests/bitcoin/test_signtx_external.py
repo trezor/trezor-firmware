@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SafetyCheckLevel
 from trezorlib.tools import parse_path
@@ -142,7 +142,7 @@ def test_p2pkh_presigned(session: Session):
     )
 
     # Test with first input as pre-signed external.
-    with session.client:
+    with session.test_ctx:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -155,7 +155,7 @@ def test_p2pkh_presigned(session: Session):
     assert serialized_tx.hex() == expected_tx
 
     # Test with second input as pre-signed external.
-    with session.client:
+    with session.test_ctx:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -216,7 +216,7 @@ def test_p2wpkh_in_p2sh_presigned(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -267,7 +267,7 @@ def test_p2wpkh_in_p2sh_presigned(session: Session):
 
     # Test corrupted script hash in scriptsig.
     inp1.script_sig[10] ^= 1
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -339,7 +339,7 @@ def test_p2wpkh_presigned(session: Session):
     )
 
     # Test with second input as pre-signed external.
-    with session.client:
+    with session.test_ctx:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -399,7 +399,7 @@ def test_p2wsh_external_presigned(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -444,7 +444,7 @@ def test_p2wsh_external_presigned(session: Session):
 
     # Test corrupted signature in witness.
     inp2.witness[10] ^= 1
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -509,7 +509,7 @@ def test_p2tr_external_presigned(session: Session):
         amount=4_600,
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -541,7 +541,7 @@ def test_p2tr_external_presigned(session: Session):
 
     # Test corrupted signature in witness.
     inp2.witness[10] ^= 1
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -610,7 +610,7 @@ def test_p2wpkh_with_proof(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         is_t1 = session.model is models.T1B1
         client.set_expected_responses(
             [
@@ -703,7 +703,7 @@ def test_p2tr_with_proof(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         is_t1 = session.model is models.T1B1
         client.set_expected_responses(
             [
@@ -770,7 +770,7 @@ def test_p2wpkh_with_false_proof(session: Session):
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),

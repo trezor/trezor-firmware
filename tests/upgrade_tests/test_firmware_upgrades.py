@@ -24,7 +24,6 @@ from shamir_mnemonic import shamir
 
 from trezorlib import btc, debuglink, device, exceptions, fido, messages, models
 from trezorlib.cardano import get_public_key
-from trezorlib.client import ProtocolVersion
 from trezorlib.messages import (
     ApplySettings,
     BackupAvailability,
@@ -43,8 +42,8 @@ from ..input_flows import InputFlowSlip39BasicBackup
 from . import for_all, for_tags, recovery_old, version_from_tag
 
 if TYPE_CHECKING:
-    from trezorlib.debuglink import TrezorClientDebugLink as Client
-    from trezorlib.transport.session import Session
+    from trezorlib.client import Session
+    from trezorlib.debuglink import TrezorTestContext as Client
 
 # **** COMMON DEFINITIONS ****
 
@@ -84,12 +83,12 @@ def lower_models_minimum_version(func):
 
 
 def _get_session(client: "Client", passphrase: str | object = "") -> "Session":
-    if client.protocol_version != ProtocolVersion.V1:
+    if not client.is_protocol_v1():
         return client.get_session(passphrase=passphrase)
     if client.version >= (2, 3, 0):
         return client.get_session(passphrase=passphrase)
 
-    from trezorlib.transport.session import SessionV1
+    from trezorlib.client import SessionV1
 
     from ..common import TEST_ADDRESS_N
 
@@ -480,8 +479,6 @@ def test_upgrade_shamir_backup(
         # Get a passphrase-less and a passphrased address.
         session = _get_session(emu.client)
         address = btc.get_address(session, "Bitcoin", PATH)
-        if emu.client.protocol_version == ProtocolVersion.V1:
-            session.call(messages.Initialize(new_session=True))
         new_session = _get_session(emu.client, passphrase="TREZOR")
         address_passphrase = btc.get_address(new_session, "Bitcoin", PATH)
 

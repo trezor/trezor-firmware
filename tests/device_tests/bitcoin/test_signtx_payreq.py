@@ -20,7 +20,7 @@ from itertools import product
 import pytest
 
 from trezorlib import btc, ethereum, messages, misc
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 

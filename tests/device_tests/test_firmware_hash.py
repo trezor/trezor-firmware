@@ -3,7 +3,7 @@ from hashlib import blake2s
 import pytest
 
 from trezorlib import firmware, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 # size of FIRMWARE_MAXSIZE, see core/embed/models/<model>/model_<model>.h
 FIRMWARE_LENGTHS = {

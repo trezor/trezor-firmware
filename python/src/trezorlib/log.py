@@ -14,20 +14,15 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import logging
-from typing import Optional, Set, Type
+import typing as t
 
-from typing_extensions import Protocol, runtime_checkable
+if t.TYPE_CHECKING:
+    from . import protobuf
 
-from . import protobuf
-
-
-@runtime_checkable
-class HasProtobuf(Protocol):
-    protobuf: protobuf.MessageType
-
-
-OMITTED_MESSAGES: Set[Type[protobuf.MessageType]] = set()
+OMITTED_MESSAGES: set[type[protobuf.MessageType]] = set()
 
 DUMP_BYTES = 5
 DUMP_PACKETS = 4
@@ -38,23 +33,35 @@ logging.addLevelName(DUMP_PACKETS, "PACKETS")
 
 class PrettyProtobufFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
+        from . import client, protobuf
+
+        session = getattr(record, "session", None)
+        if isinstance(session, client.Session):
+            session = f" [s:{session._log_short_id()}]"
+        else:
+            session = ""
+
         time = self.formatTime(record)
-        message = "[{time}] {source} {level}: {msg}".format(
+        message = "[{time}] {source} {level}{session}: {msg}".format(
             time=time,
             level=record.levelname.upper(),
             source=record.name,
             msg=super().format(record),
+            session=session,
         )
-        if isinstance(record, HasProtobuf):
-            if type(record.protobuf) in OMITTED_MESSAGES:
-                message += f" ({record.protobuf.ByteSize()} bytes)"
+
+        proto_msg = getattr(record, "protobuf", None)
+        if isinstance(proto_msg, protobuf.MessageType):
+            if type(proto_msg) in OMITTED_MESSAGES:
+                message += f" ({proto_msg.ByteSize()} bytes)"
             else:
-                message += "\n" + protobuf.format_message(record.protobuf)
+                message += "\n" + protobuf.format_message(proto_msg)
+
         return message
 
 
 def enable_debug_output(
-    verbosity: int = 1, handler: Optional[logging.Handler] = None
+    verbosity: int = 1, handler: logging.Handler | None = None
 ) -> None:
     if handler is None:
         handler = logging.StreamHandler()

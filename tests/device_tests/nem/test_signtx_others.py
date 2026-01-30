@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import nem
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -32,7 +32,7 @@ pytestmark = [
 
 # assertion data from T1
 def test_nem_signtx_importance_transfer(session: Session):
-    with session.client:
+    with session.test_ctx:
         tx = nem.sign_tx(
             session,
             parse_path("m/44h/1h/0h/0h/0h"),

@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.solana import get_public_key
 from trezorlib.tools import parse_path
 

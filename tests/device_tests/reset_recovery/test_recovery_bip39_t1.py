@@ -17,21 +17,24 @@
 import pytest
 
 from trezorlib import device, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext
 from trezorlib.tools import parse_path
-from trezorlib.transport.session import SessionV1
 
-from ...common import MNEMONIC12
+from ...common import MNEMONIC12, get_test_address
 
 PIN4 = "1234"
 PIN6 = "789456"
 
-pytestmark = [pytest.mark.models("legacy"), pytest.mark.uninitialized_session]
+pytestmark = [
+    pytest.mark.models("legacy"),
+    pytest.mark.setup_client(uninitialized=True),
+]
 
 
-@pytest.mark.setup_client(uninitialized=True)
-def test_pin_passphrase(session: Session):
-    debug = session.client.debug
+def test_pin_passphrase(test_ctx: TrezorTestContext):
+    session = test_ctx.get_seedless_session()
+    debug = session.debug
     mnemonic = MNEMONIC12.split(" ")
     ret = session.call_raw(
         messages.RecoveryDevice(
@@ -79,23 +82,32 @@ def test_pin_passphrase(session: Session):
     assert mnemonic == [None] * 12
 
     # Mnemonic is the same
-    session = SessionV1.new(session.client)
-    session.client.refresh_features()
     assert debug.state().mnemonic_secret == MNEMONIC12.encode()
 
-    assert session.features.pin_protection is True
-    assert session.features.passphrase_protection is True
+    with test_ctx:
+        test_ctx.set_expected_responses(
+            [
+                # -> Initialize
+                messages.Features,
+                # -> GetPublicKey (via `derive()`)
+                messages.PassphraseRequest,
+                # -> PassphraseAck (via `derive()`)
+                messages.PublicKey,
+                # -> GetFeatures (via `refresh_features()` via `derive()`)
+                messages.Features,
+                # -> GetAddress (below)
+                messages.Address,
+            ]
+        )
+        session = test_ctx.get_session()
+        assert session.features.pin_protection is True
+        assert session.features.passphrase_protection is True
+        # Do passphrase-protected action, PassphraseRequest should be raised
+        get_test_address(session)
 
-    # Do passphrase-protected action, PassphraseRequest should be raised
-    resp = session.call_raw(
-        messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0"))
-    )
-    assert isinstance(resp, messages.PassphraseRequest)
-    session.call_raw(messages.Cancel())
 
-
-@pytest.mark.setup_client(uninitialized=True)
-def test_nopin_nopassphrase(session: Session):
+def test_nopin_nopassphrase(test_ctx: TrezorTestContext):
+    session = test_ctx.get_seedless_session()
     mnemonic = MNEMONIC12.split(" ")
     ret = session.call_raw(
         messages.RecoveryDevice(
@@ -109,7 +121,7 @@ def test_nopin_nopassphrase(session: Session):
 
     # click through confirmation
     assert isinstance(ret, messages.ButtonRequest)
-    debug = session.client.debug
+    debug = session.debug
     debug.press_yes()
     ret = session.call_raw(messages.ButtonAck())
 
@@ -133,10 +145,9 @@ def test_nopin_nopassphrase(session: Session):
     assert mnemonic == [None] * 12
 
     # Mnemonic is the same
-    session = SessionV1.new(session.client)
-    session.client.refresh_features()
     assert debug.state().mnemonic_secret == MNEMONIC12.encode()
 
+    session = test_ctx.get_session()
     assert session.features.pin_protection is False
     assert session.features.passphrase_protection is False
 
@@ -147,9 +158,8 @@ def test_nopin_nopassphrase(session: Session):
     assert isinstance(resp, messages.Address)
 
 
-@pytest.mark.setup_client(uninitialized=True)
 def test_word_fail(session: Session):
-    debug = session.client.debug
+    debug = session.debug
     ret = session.call_raw(
         messages.RecoveryDevice(
             word_count=12,
@@ -176,9 +186,8 @@ def test_word_fail(session: Session):
             session.call_raw(messages.WordAck(word=word))
 
 
-@pytest.mark.setup_client(uninitialized=True)
 def test_pin_fail(session: Session):
-    debug = session.client.debug
+    debug = session.debug
     ret = session.call_raw(
         messages.RecoveryDevice(
             word_count=12,
@@ -209,6 +218,7 @@ def test_pin_fail(session: Session):
     assert isinstance(ret, messages.Failure)
 
 
+@pytest.mark.setup_client(uninitialized=False)
 def test_already_initialized(session: Session):
     with pytest.raises(RuntimeError):
         device.recover(
@@ -217,7 +227,7 @@ def test_already_initialized(session: Session):
             pin_protection=False,
             passphrase_protection=False,
             label="label",
-            input_callback=session.client.mnemonic_callback,
+            input_callback=session.test_ctx.mnemonic_callback,
         )
 
     ret = session.call_raw(

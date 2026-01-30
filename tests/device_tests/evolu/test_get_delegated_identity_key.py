@@ -1,6 +1,6 @@
 import pytest
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import EvoluDelegatedIdentityKey, EvoluGetDelegatedIdentityKey
 

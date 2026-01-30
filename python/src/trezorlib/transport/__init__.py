@@ -17,8 +17,10 @@
 from __future__ import annotations
 
 import logging
-import os
 import typing as t
+from abc import ABCMeta, abstractmethod
+
+import typing_extensions as tx
 
 from ..exceptions import TrezorException
 
@@ -51,17 +53,21 @@ class Timeout(TransportException):
     pass
 
 
-class Transport:
-    PATH_PREFIX: str
+class Transport(metaclass=ABCMeta):
+    PATH_PREFIX: t.ClassVar[str]
+    CHUNK_SIZE: t.ClassVar[int | None]
+    ENABLED: t.ClassVar[bool]
+
+    _opened: int = 0
 
     @classmethod
     def enumerate(
-        cls: t.Type[T], models: t.Iterable[TrezorModel] | None = None
-    ) -> t.Iterable[T]:
+        cls, models: t.Iterable[TrezorModel] | None = None
+    ) -> t.Iterable[tx.Self]:
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls: t.Type[T], path: str, prefix_search: bool = False) -> T:
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> tx.Self:
         for device in cls.enumerate():
 
             if device.get_path() == path:
@@ -72,56 +78,87 @@ class Transport:
 
         raise TransportException(f"{cls.PATH_PREFIX} device not found: {path}")
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.get_path()})"
+
+    @abstractmethod
     def get_path(self) -> str:
         raise NotImplementedError
 
-    def find_debug(self: T) -> T:
+    # find_debug is allowed to return a different type than Self
+    def find_debug(self) -> Transport:
         raise NotImplementedError
 
     def open(self) -> None:
-        raise NotImplementedError
+        LOG.info(f"Opening transport: {self}")
+        self._open()
+        self._opened = max(self._opened, 1)
 
     def close(self) -> None:
+        LOG.info(f"Closing transport: {self}")
+        self._close()
+        self._opened = 0
+
+    def __enter__(self) -> Transport:
+        self._opened += 1
+        if self._opened == 1:  # means it previously was 0
+            self.open()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        if self._opened > 0:
+            self._opened -= 1
+            if self._opened == 0:
+                self.close()
+
+    @abstractmethod
+    def _open(self) -> None:
         raise NotImplementedError
 
-    def write_chunk(self, chunk: bytes) -> None:
+    @abstractmethod
+    def _close(self) -> None:
         raise NotImplementedError
 
-    def read_chunk(self, timeout: float | None = None) -> bytes:
+    @abstractmethod
+    def write_chunk(self, chunk: bytes, /) -> None:
         raise NotImplementedError
 
-    def ping(self) -> bool:
+    @abstractmethod
+    def read_chunk(self, *, timeout: float | None = None) -> bytes:
         raise NotImplementedError
 
-    CHUNK_SIZE: t.ClassVar[int | None]
+    @abstractmethod
+    def is_ready(self) -> bool:
+        raise NotImplementedError
 
 
-def all_transports(ble_enabled: bool | None = None) -> t.Iterable[t.Type["Transport"]]:
+def all_transports() -> t.Iterable[type[Transport]]:
     from .ble import BleTransport
     from .bridge import BridgeTransport
     from .hid import HidTransport
     from .udp import UdpTransport
     from .webusb import WebUsbTransport
 
-    transports: t.Tuple[t.Type["Transport"], ...] = (
+    transports: tuple[type[Transport], ...] = (
         BridgeTransport,
         HidTransport,
         UdpTransport,
         WebUsbTransport,
+        BleTransport,
     )
-    if ble_enabled is None:
-        ble_enabled = os.environ.get("TREZOR_BLE") == "1"
-    if ble_enabled:
-        transports += (BleTransport,)
     return set(t for t in transports if t.ENABLED)
 
 
 def enumerate_devices(
     models: t.Iterable[TrezorModel] | None = None,
-    ble_enabled: bool | None = None,
 ) -> t.Sequence[Transport]:
-    devices: t.List[Transport] = []
-    for transport in all_transports(ble_enabled=ble_enabled):
+    devices: list[Transport] = []
+    for transport in all_transports():
         name = transport.__name__
         try:
             found = list(transport.enumerate(models))
@@ -135,14 +172,10 @@ def enumerate_devices(
     return devices
 
 
-def get_transport(
-    path: str | None = None,
-    prefix_search: bool = False,
-    ble_enabled: bool | None = None,
-) -> Transport:
+def get_transport(path: str | None = None, prefix_search: bool = False) -> Transport:
     if path is None:
         try:
-            return next(iter(enumerate_devices(ble_enabled=ble_enabled)))
+            return next(iter(enumerate_devices()))
         except StopIteration:
             raise TransportException("No Trezor device found") from None
 
@@ -157,11 +190,7 @@ def get_transport(
             "prefix" if prefix_search else "full path", path
         )
     )
-    transports = [
-        t
-        for t in all_transports(ble_enabled=ble_enabled)
-        if match_prefix(path, t.PATH_PREFIX)
-    ]
+    transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)
 

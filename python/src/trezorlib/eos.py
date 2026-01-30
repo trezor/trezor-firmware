@@ -18,11 +18,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List, Tuple
 
 from . import exceptions, messages
-from .tools import b58decode
+from .tools import b58decode, workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
 
 def name_to_number(name: str) -> int:
@@ -318,6 +318,7 @@ def parse_transaction_json(
 # ====== Client functions ====== #
 
 
+@workflow(capability=messages.Capability.EOS)
 def get_public_key(
     session: "Session", n: "Address", show_display: bool = False
 ) -> messages.EosPublicKey:
@@ -327,6 +328,7 @@ def get_public_key(
     )
 
 
+@workflow(capability=messages.Capability.EOS)
 def sign_tx(
     session: "Session",
     address: "Address",

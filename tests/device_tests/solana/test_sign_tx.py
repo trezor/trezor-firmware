@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, misc
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.solana import get_authenticated_address, sign_tx
 from trezorlib.tools import b58decode, parse_path
@@ -52,8 +52,8 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core"
 def test_solana_sign_tx(session: Session, parameters, result):
     serialized_tx = _serialize_tx(parameters["construct"])
 
-    with session.client as client:
-        IF = InputFlowConfirmAllWarnings(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowConfirmAllWarnings(session)
         client.set_input_flow(IF.get())
         additional_info = None
         if "additional_info" in parameters:

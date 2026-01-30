@@ -22,7 +22,7 @@ from trezorlib.cardano import (
     get_public_key,
     parse_optional_bytes,
 )
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.messages import CardanoAddressType, CardanoDerivationType
 from trezorlib.tools import parse_path
 
@@ -91,8 +91,8 @@ def test_cardano_get_address(session: Session, chunkify: bool, parameters, resul
     "cardano/get_public_key.derivations.json",
 )
 def test_cardano_get_public_key(session: Session, parameters, result):
-    with session.client as client:
-        IF = InputFlowShowXpubQRCode(session.client, passphrase_request_expected=False)
+    with session.test_ctx as client:
+        IF = InputFlowShowXpubQRCode(session, passphrase_request_expected=False)
         client.set_input_flow(IF.get())
         # session.init_device(new_session=True, derive_cardano=True)
 

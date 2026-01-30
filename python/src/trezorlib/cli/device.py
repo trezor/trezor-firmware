@@ -29,7 +29,7 @@ from ..tools import format_path
 from . import ChoiceType, with_session
 
 if t.TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
     from . import TrezorConnection
 
 RECOVERY_DEVICE_INPUT_METHOD = {
@@ -319,7 +319,7 @@ def reboot_to_bootloader(obj: "TrezorConnection") -> None:
     # avoid using @with_session because it closes the session afterwards,
     # which triggers double prompt on device
     with obj.client_context() as client:
-        device.reboot_to_bootloader(client.get_seedless_session())
+        device.reboot_to_bootloader(client.get_session(passphrase=None))
 
 
 @cli.command()

@@ -17,16 +17,19 @@
 from typing import TYPE_CHECKING, Optional
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
 
+@workflow(capability=messages.Capability.Crypto)
 def get_entropy(session: "Session", size: int) -> bytes:
     return session.call(messages.GetEntropy(size=size), expect=messages.Entropy).entropy
 
 
+@workflow(capability=messages.Capability.Crypto)
 def sign_identity(
     session: "Session",
     identity: messages.IdentityType,
@@ -45,6 +48,7 @@ def sign_identity(
     )
 
 
+@workflow(capability=messages.Capability.Crypto)
 def get_ecdh_session_key(
     session: "Session",
     identity: messages.IdentityType,
@@ -61,6 +65,7 @@ def get_ecdh_session_key(
     )
 
 
+@workflow(capability=messages.Capability.Crypto)
 def encrypt_keyvalue(
     session: "Session",
     n: "Address",
@@ -84,6 +89,7 @@ def encrypt_keyvalue(
     ).value
 
 
+@workflow(capability=messages.Capability.Crypto)
 def decrypt_keyvalue(
     session: "Session",
     n: "Address",
@@ -107,10 +113,12 @@ def decrypt_keyvalue(
     ).value
 
 
+@workflow(capability=messages.Capability.Crypto)
 def get_nonce(session: "Session") -> bytes:
     return session.call(messages.GetNonce(), expect=messages.Nonce).nonce
 
 
+@workflow()
 def payment_notification(
     session: "Session", payment_req: messages.PaymentRequest
 ) -> None:

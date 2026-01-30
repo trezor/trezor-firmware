@@ -19,7 +19,7 @@ import time
 import pytest
 
 from trezorlib import btc, device
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.messages import SafetyCheckLevel
 from trezorlib.tools import H_
 

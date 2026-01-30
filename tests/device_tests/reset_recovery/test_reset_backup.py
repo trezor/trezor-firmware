@@ -19,7 +19,7 @@ import pytest
 from shamir_mnemonic import shamir
 
 from trezorlib import device
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.messages import BackupAvailability, BackupType
 
 from ...common import MOCK_GET_ENTROPY
@@ -32,7 +32,7 @@ from ...input_flows import (
 
 
 def backup_flow_bip39(session: Session) -> bytes:
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowBip39Backup(client)
         client.set_input_flow(IF.get())
         device.backup(session)
@@ -42,7 +42,7 @@ def backup_flow_bip39(session: Session) -> bytes:
 
 
 def backup_flow_slip39_basic(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39BasicBackup(client, False)
         client.set_input_flow(IF.get())
         device.backup(session)
@@ -53,7 +53,7 @@ def backup_flow_slip39_basic(session: Session):
 
 
 def backup_flow_slip39_advanced(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedBackup(client, False)
         client.set_input_flow(IF.get())
         device.backup(session)
@@ -74,11 +74,10 @@ VECTORS = [
 @pytest.mark.models("core")
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_skip_backup_msg(session: Session, backup_type, backup_flow):
     assert session.features.initialized is False
 
-    with session.client:
+    with session.test_ctx:
         device.setup(
             session,
             skip_backup=True,
@@ -97,14 +96,13 @@ def test_skip_backup_msg(session: Session, backup_type, backup_flow):
 
     secret = backup_flow(session)
 
-    session = session.client.get_session()
     assert session.features.initialized is True
     assert session.features.backup_availability == BackupAvailability.NotAvailable
     assert session.features.unfinished_backup is False
     assert session.features.backup_type is backup_type
 
     assert secret is not None
-    state = session.client.debug.state()
+    state = session.debug.state()
     assert state.mnemonic_type is backup_type
     assert state.mnemonic_secret == secret
 
@@ -112,11 +110,10 @@ def test_skip_backup_msg(session: Session, backup_type, backup_flow):
 @pytest.mark.models("core")
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_skip_backup_manual(session: Session, backup_type: BackupType, backup_flow):
     assert session.features.initialized is False
 
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowResetSkipBackup(client)
         client.set_input_flow(IF.get())
         device.setup(
@@ -136,13 +133,13 @@ def test_skip_backup_manual(session: Session, backup_type: BackupType, backup_fl
 
     secret = backup_flow(session)
 
-    session = session.client.get_session()
+    session.refresh_features()
     assert session.features.initialized is True
     assert session.features.backup_availability == BackupAvailability.NotAvailable
     assert session.features.unfinished_backup is False
     assert session.features.backup_type is backup_type
 
     assert secret is not None
-    state = session.client.debug.state()
+    state = session.debug.state()
     assert state.mnemonic_type is backup_type
     assert state.mnemonic_secret == secret

@@ -17,12 +17,14 @@
 from typing import TYPE_CHECKING
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
 
+@workflow()
 def get_pubkey(session: "Session", n: "Address") -> bytes:
     return session.call(
         messages.NostrGetPubkey(
@@ -32,6 +34,7 @@ def get_pubkey(session: "Session", n: "Address") -> bytes:
     ).pubkey
 
 
+@workflow()
 def sign_event(
     session: "Session",
     sign_event: messages.NostrSignEvent,

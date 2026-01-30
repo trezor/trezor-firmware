@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import messages, misc
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 from ...common import MNEMONIC12
 

@@ -16,26 +16,24 @@
 
 from __future__ import annotations
 
-import typing as t
+from enum import IntEnum
 
-from ... import messages
-from ...mapping import ProtobufMapping
-from .. import Transport
+from .. import exceptions
 
 
-class Channel:
-    _DEFAULT_READ_TIMEOUT: t.ClassVar[float | None] = None
+class ThpErrorCode(IntEnum):
+    TRANSPORT_BUSY = 1
+    UNALLOCATED_CHANNEL = 2
+    DECRYPTION_FAILED = 3
+    DEVICE_LOCKED = 5
 
-    def __init__(
-        self,
-        transport: Transport,
-        mapping: ProtobufMapping,
-    ) -> None:
-        self.transport = transport
-        self.mapping = mapping
 
-    def get_features(self) -> messages.Features:
-        raise NotImplementedError()
-
-    def update_features(self) -> None:
-        raise NotImplementedError
+class ThpError(exceptions.TrezorException):
+    def __init__(self, code: int) -> None:
+        self.code = code
+        try:
+            self.code = ThpErrorCode(code)
+            self.name = self.code.name
+        except ValueError:
+            self.name = "unknown"
+        super().__init__(self.code, self.name)

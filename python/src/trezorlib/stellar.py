@@ -18,10 +18,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, List, Tuple, Union
 
 from . import exceptions, messages
+from .tools import workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
     StellarMessageType = Union[
         messages.StellarAccountMergeOp,
@@ -325,6 +326,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
 
+@workflow(capability=messages.Capability.Stellar)
 def get_authenticated_address(
     session: "Session",
     address_n: "Address",
@@ -339,6 +341,7 @@ def get_authenticated_address(
     )
 
 
+@workflow(capability=messages.Capability.Stellar)
 def sign_tx(
     session: "Session",
     tx: messages.StellarSignTx,

@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, misc
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 

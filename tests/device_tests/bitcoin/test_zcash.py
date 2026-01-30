@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -75,7 +75,7 @@ def test_v3_not_supported(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client, pytest.raises(TrezorFailure, match="DataError"):
+    with session.test_ctx, pytest.raises(TrezorFailure, match="DataError"):
         btc.sign_tx(
             session,
             "Zcash Testnet",
@@ -106,7 +106,7 @@ def test_one_one_fee_sapling(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -210,7 +210,7 @@ def test_spend_old_versions(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client:
+    with session.test_ctx:
         _, serialized_tx = btc.sign_tx(
             session,
             "Zcash Testnet",
@@ -259,7 +259,7 @@ def test_external_presigned(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),

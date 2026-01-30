@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -61,7 +61,7 @@ def test_signtx_testnet(session: Session, amount_unit):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=100_000 - 40_000 - 10_000,
     )
-    with session.client:
+    with session.test_ctx:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -95,7 +95,7 @@ def test_signtx_btc(session: Session, amount_unit):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client:
+    with session.test_ctx:
         _, serialized_tx = btc.sign_tx(
             session,
             "Bitcoin",

@@ -25,16 +25,13 @@ import io
 import sys
 
 from trezorlib import misc
-from trezorlib.client import TrezorClient
-from trezorlib.transport import get_transport
+from trezorlib.client import get_default_client, get_default_session
 
 
 def main() -> None:
     try:
-        transport = get_transport()
-        transport.open()
-        client = TrezorClient(transport)
-        session = client.get_seedless_session()
+        client = get_default_client("rng_entropy_collector")
+        session = get_default_session(client)
     except Exception as e:
         print(e)
         return
@@ -43,12 +40,11 @@ def main() -> None:
     arg2 = int(sys.argv[2], 10)  # total number of how many bytes of entropy to read
     step = 1024 if arg2 >= 1024 else arg2  # trezor will only return 1KB at a time
 
-    with io.open(arg1, "wb") as f:
-        for _ in range(0, arg2, step):
-            entropy = misc.get_entropy(session, step)
-            f.write(entropy)
-
-    transport.close()
+    with session:
+        with io.open(arg1, "wb") as f:
+            for _ in range(0, arg2, step):
+                entropy = misc.get_entropy(session, step)
+                f.write(entropy)
 
 
 if __name__ == "__main__":

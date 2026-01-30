@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import ethereum, exceptions
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 @pytest.mark.models("core")
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data(session: Session, parameters, result):
-    with session.client:
+    with session.test_ctx:
         address_n = parse_path(parameters["path"])
         ret = ethereum.sign_typed_data(
             session,
@@ -49,7 +49,7 @@ def test_ethereum_sign_typed_data(session: Session, parameters, result):
 @pytest.mark.models("legacy")
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data_blind(session: Session, parameters, result):
-    with session.client:
+    with session.test_ctx:
         address_n = parse_path(parameters["path"])
         ret = ethereum.sign_typed_data_hash(
             session,
@@ -102,7 +102,7 @@ DATA = {
 
 @pytest.mark.models("core")
 def test_ethereum_sign_typed_data_show_more_button(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         client.watch_layout()
         IF = InputFlowEIP712ShowMore(client)
         client.set_input_flow(IF.get())
@@ -116,9 +116,9 @@ def test_ethereum_sign_typed_data_show_more_button(session: Session):
 
 @pytest.mark.models("core")
 def test_ethereum_sign_typed_data_cancel(session: Session):
-    with session.client as client, pytest.raises(exceptions.Cancelled):
-        session.client.watch_layout()
-        IF = InputFlowEIP712Cancel(session.client)
+    with session.test_ctx as client, pytest.raises(exceptions.Cancelled):
+        client.watch_layout()
+        IF = InputFlowEIP712Cancel(client)
         client.set_input_flow(IF.get())
         ethereum.sign_typed_data(
             session,
@@ -131,7 +131,7 @@ def test_ethereum_sign_typed_data_cancel(session: Session):
 @pytest.mark.models("core")
 def test_ethereum_sign_typed_data_bad_show_message_hash(session: Session):
     with (
-        session.client,
+        session.test_ctx,
         pytest.raises(exceptions.TrezorFailure, match="Message hash mismatch"),
     ):
         ethereum.sign_typed_data(

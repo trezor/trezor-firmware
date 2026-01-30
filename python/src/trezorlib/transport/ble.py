@@ -53,7 +53,8 @@ SHUTDOWN_TIMEOUT_SECONDS = 10
 
 
 class BleTransport(Transport):
-    ENABLED = True
+
+    ENABLED = BLEAK_IMPORTED
     PATH_PREFIX = "ble"
     CHUNK_SIZE = 244
 
@@ -97,10 +98,10 @@ class BleTransport(Transport):
         else:
             raise TransportException(f"No BLE device: {path}")
 
-    def open(self) -> None:
+    def _open(self) -> None:
         self.ble_proxy().connect(self.device)
 
-    def close(self) -> None:
+    def _close(self) -> None:
         # would be a logical place to call self.ble_proxy().disconnect()
         # instead we rely on atexit handler to avoid reconnecting
         pass
@@ -121,6 +122,9 @@ class BleTransport(Transport):
         if cls._ble is None:
             cls._ble = BleProxy()
         return cls._ble
+
+    def is_ready(self) -> bool:
+        return self._ble is not None
 
 
 class BleProxy:

@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -67,7 +67,7 @@ def test_send_p2sh(session: Session, chunkify: bool):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=123_456_789 - 11_000 - 12_300_000,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -125,7 +125,7 @@ def test_send_p2sh_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         amount=123_456_789 - 11_000 - 12_300_000,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -180,7 +180,7 @@ def test_testnet_segwit_big_amount(session: Session):
         amount=2**32 + 1,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -255,7 +255,7 @@ def test_send_multisig_1(session: Session):
         request_finished(),
     ]
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(expected_responses)
         signatures, _ = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
@@ -266,7 +266,7 @@ def test_send_multisig_1(session: Session):
     # sign with third key
     inp1.address_n[2] = H_(3)
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(expected_responses)
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
@@ -283,8 +283,6 @@ def test_attack_change_input_address(session: Session):
     # Simulates an attack where the user is coerced into unknowingly
     # transferring funds from one account to another one of their accounts,
     # potentially resulting in privacy issues.
-    client = session.client
-
     inp1 = messages.TxInputType(
         address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -305,7 +303,7 @@ def test_attack_change_input_address(session: Session):
     )
 
     # Test if the transaction can be signed normally.
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -351,7 +349,7 @@ def test_attack_change_input_address(session: Session):
         return msg
 
     # Now run the attack, must trigger the exception
-    with client:
+    with session.test_ctx as client:
         client.set_filter(messages.TxAck, attack_processor)
         with pytest.raises(TrezorFailure):
             btc.sign_tx(
@@ -362,7 +360,6 @@ def test_attack_change_input_address(session: Session):
 def test_attack_mixed_inputs(session: Session):
     TRUE_AMOUNT = 123_456_789
     FAKE_AMOUNT = 120_000_000
-    client = session.client
 
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),
@@ -424,7 +421,7 @@ def test_attack_mixed_inputs(session: Session):
         # T1 asks for first input for witness again
         expected_responses.insert(-2, request_input(0))
 
-    with client:
+    with session.test_ctx as client:
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())

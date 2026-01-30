@@ -16,50 +16,34 @@
 
 from __future__ import annotations
 
-import copy
 import functools
 import hashlib
-import inspect
 import re
 import struct
+import typing as t
 import unicodedata
-import warnings
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    AnyStr,
-    Callable,
-    Dict,
-    List,
-    NewType,
-    Optional,
-    Type,
-    Union,
-    overload,
-)
+from contextlib import AbstractContextManager
+from enum import Enum
 
 import construct
+import typing_extensions as tx
 
-if TYPE_CHECKING:
-    # Needed to enforce a return value from decorators
-    # More details: https://www.python.org/dev/peps/pep-0612/
-    from typing import TypeVar
+from . import messages
 
-    from typing_extensions import ParamSpec
+P = tx.ParamSpec("P")
+R = t.TypeVar("R")
+C = t.TypeVar("C")
+CM = t.TypeVar("CM", bound=AbstractContextManager)
 
-    from . import client
-    from .messages import Success
-    from .protobuf import MessageType
+if t.TYPE_CHECKING:
+    from .client import Session
 
-    MT = TypeVar("MT", bound=MessageType)
-    P = ParamSpec("P")
-    R = TypeVar("R")
-
-    TrezorClient = TypeVar("TrezorClient", bound=client.TrezorClient)
+    SessionFunc = t.Callable[tx.Concatenate[Session, P], R]
+    ContextFunc = t.Callable[tx.Concatenate[CM, P], R]
 
 HARDENED_FLAG = 1 << 31
 
-Address = NewType("Address", List[int])
+Address = t.NewType("Address", list[int])
 
 
 def H_(x: int) -> int:
@@ -166,7 +150,7 @@ def b58decode_int(v: str) -> int:
     return decimal
 
 
-def b58decode(v: AnyStr, length: Optional[int] = None) -> bytes:
+def b58decode(v: t.AnyStr, length: int | None = None) -> bytes:
     """decode v into a string of len bytes."""
     v_str = v if isinstance(v, str) else v.decode()
     origlen = len(v_str)
@@ -187,7 +171,7 @@ def b58check_encode(v: bytes) -> str:
     return b58encode(v + checksum)
 
 
-def b58check_decode(v: AnyStr, length: Optional[int] = None) -> bytes:
+def b58check_decode(v: t.AnyStr, length: int | None = None) -> bytes:
     dec = b58decode(v, length)
     data, checksum = dec[:-4], dec[-4:]
     if btc_hash(data)[:4] != checksum:
@@ -245,7 +229,7 @@ def format_path(path: Address, flag: str = "h") -> str:
     return nstr
 
 
-def prepare_message_bytes(txt: AnyStr) -> bytes:
+def prepare_message_bytes(txt: t.AnyStr) -> bytes:
     """
     Make message suitable for protobuf.
     If the message is a Unicode string, normalize it.
@@ -254,139 +238,6 @@ def prepare_message_bytes(txt: AnyStr) -> bytes:
     if isinstance(txt, bytes):
         return txt
     return unicodedata.normalize("NFC", txt).encode()
-
-
-# NOTE for type tests (mypy/pyright):
-# Overloads below have a goal of enforcing the return value
-# that should be returned from the original function being decorated
-# while still preserving the function signature (the inputted arguments
-# are going to be type-checked).
-# Currently (November 2021) mypy does not support "ParamSpec" typing
-# construct, so it will not understand it and will complain about
-# definitions below.
-
-
-@overload
-def expect(
-    expected: "Type[MT]",
-) -> "Callable[[Callable[P, MessageType]], Callable[P, MT]]": ...
-
-
-@overload
-def expect(
-    expected: "Type[MT]", *, field: str, ret_type: "Type[R]"
-) -> "Callable[[Callable[P, MessageType]], Callable[P, R]]": ...
-
-
-def expect(
-    expected: "Type[MT]",
-    *,
-    field: Optional[str] = None,
-    ret_type: "Optional[Type[R]]" = None,
-) -> "Callable[[Callable[P, MessageType]], Callable[P, Union[MT, R]]]":
-    """
-    Decorator checks if the method returned one of expected protobuf messages or raises
-    an exception.
-
-    Deprecated. Use `client.call(msg, expect=expected)` instead.
-    """
-    warnings.warn(
-        "Use `client.call(msg, expect=expected)` instead",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    def decorator(f: "Callable[P, MessageType]") -> "Callable[P, Union[MT, R]]":
-        @functools.wraps(f)
-        def wrapped_f(*args: "P.args", **kwargs: "P.kwargs") -> "Union[MT, R]":
-            __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-            ret = f(*args, **kwargs)
-            if not isinstance(ret, expected):
-                raise RuntimeError(f"Got {ret.__class__}, expected {expected}")
-            if field is not None:
-                return getattr(ret, field)
-            else:
-                return ret
-
-        return wrapped_f
-
-    return decorator
-
-
-def _deprecation_retval_helper(value: Any, stacklevel: int = 0) -> Any:
-    stack = inspect.stack()
-    func_name = stack[stacklevel + 1].function
-
-    warning_text = (
-        f"The return value {value!r} of function {func_name}() "
-        "is deprecated and it will be removed in a future version."
-    )
-
-    # start with warnings disabled, otherwise we emit a lot of warnings while still
-    # constructing the deprecation warnings helper
-    warning_enabled = False
-
-    def deprecation_warning_wrapper(orig_value: Callable[P, R]) -> Callable[P, R]:
-        def emit(*args: P.args, **kwargs: P.kwargs) -> R:
-            nonlocal warning_enabled
-
-            if warning_enabled:
-                warnings.warn(warning_text, DeprecationWarning, stacklevel=2)
-                # only warn once per use
-                warning_enabled = False
-            return orig_value(*args, **kwargs)
-
-        return emit
-
-    # Deprecation wrapper class.
-    # Defined as empty at start.
-    class Deprecated(value.__class__):
-        pass
-
-    # Here we install the deprecation_warning_wrapper for all dunder methods.
-    # This implicitly includes __getattribute__, which causes all non-dunder attribute
-    # accesses to also raise the warning.
-    for key in dir(value.__class__):
-        if not key.startswith("__"):
-            # skip non-dunder methods
-            continue
-        if key in ("__new__", "__init__", "__class__"):
-            # skip some problematic items
-            continue
-        orig_value = getattr(value.__class__, key)
-        if not callable(orig_value):
-            # skip non-functions
-            continue
-        # replace the method with a wrapper that emits a warning
-        setattr(Deprecated, key, deprecation_warning_wrapper(orig_value))
-
-    from .protobuf import MessageType
-
-    # construct an instance:
-    if isinstance(value, str):
-        # for str, invoke the copy constructor
-        ret = Deprecated(value)
-    elif isinstance(value, MessageType):
-        # MessageTypes don't have a copy constructor, so
-        # 1. we make an explicit copy
-        value = copy.copy(value)
-        # 2. we change the class of the copy
-        value.__class__ = Deprecated
-        # note: we don't need deep copy because all accesses to inner objects already
-        # trigger the warning via __getattribute__
-        ret = value
-    else:
-        # we don't support other types currently
-        raise NotImplementedError
-
-    # enable warnings
-    warning_enabled = True
-
-    return ret
-
-
-def _return_success(msg: "Success") -> str | None:
-    return _deprecation_retval_helper(msg.message, stacklevel=1)
 
 
 # de-camelcasifier
@@ -401,14 +252,16 @@ def from_camelcase(s: str) -> str:
     return ALL_CAP_RE.sub(r"\1_\2", s).lower()
 
 
-def dict_from_camelcase(d: Any, renames: Optional[dict] = None) -> dict:
+def dict_from_camelcase(
+    d: t.Any, renames: dict[str, str] | None = None
+) -> dict[str, t.Any]:
     if not isinstance(d, dict):
         return d
 
     if renames is None:
         renames = {}
 
-    res: Dict[str, Any] = {}
+    res = {}
     for key, value in d.items():
         newkey = from_camelcase(key)
         renamed_key = renames.get(newkey) or renames.get(key)
@@ -472,16 +325,16 @@ def descriptor_checksum(desc: str) -> str:
 
 
 class EnumAdapter(construct.Adapter):
-    def __init__(self, subcon: Any, enum: Any) -> None:
+    def __init__(self, subcon: construct.Adapter, enum: type[Enum]) -> None:
         self.enum = enum
         super().__init__(subcon)
 
-    def _encode(self, obj: Any, ctx: Any, path: Any) -> Any:
+    def _encode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
         if isinstance(obj, self.enum):
             return obj.value
         return obj
 
-    def _decode(self, obj: Any, ctx: Any, path: Any) -> Any:
+    def _decode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
         try:
             return self.enum(obj)
         except ValueError:
@@ -489,11 +342,63 @@ class EnumAdapter(construct.Adapter):
 
 
 class TupleAdapter(construct.Adapter):
-    def __init__(self, *subcons: Any) -> None:
+    def __init__(self, *subcons: construct.Adapter) -> None:
         super().__init__(construct.Sequence(*subcons))
 
-    def _encode(self, obj: Any, ctx: Any, path: Any) -> Any:
+    def _encode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
         return obj
 
-    def _decode(self, obj: Any, ctx: Any, path: Any) -> Any:
+    def _decode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
         return tuple(obj)
+
+
+def enter_context(context_func: ContextFunc[CM, P, R]) -> ContextFunc[CM, P, R]:
+    """Generic wrapper around any function or method that accepts a context manager
+    as its first argument.
+
+    The function will run inside the context.
+    """
+
+    @functools.wraps(context_func)
+    def wrapper(context: CM, *args: P.args, **kwargs: P.kwargs) -> R:
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
+        with context:
+            return context_func(context, *args, **kwargs)
+
+    return wrapper
+
+
+class workflow(t.Generic[P, R]):
+    """Trezor workflow call decorator.
+
+    Functionally, keeps a connection open between steps of the workflow.
+    Can also carry metadata about supported Trezor version and required capabilities.
+    """
+
+    def __init__(
+        self,
+        *,
+        from_version: tuple[int, int, int] | None = None,
+        capability: messages.Capability | None = None,
+        capabilities: set[messages.Capability] | None = None,
+    ) -> None:
+        self.from_version = from_version
+        if capability is not None and capabilities is not None:
+            raise ValueError("Cannot specify both capability and capabilities")
+        if capability is not None:
+            capabilities = {capability}
+        elif capabilities is None:
+            capabilities = set()
+        self.capabilities = capabilities
+        self.func: SessionFunc[P, R] | None = None
+
+    def __call__(self, func: SessionFunc[P, R]) -> SessionFunc[P, R]:
+        self.func = func
+        return self.wrapper
+
+    def wrapper(self, session: Session, *args: P.args, **kwargs: P.kwargs) -> R:
+        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
+        if self.func is None:
+            raise RuntimeError("workflow decorator must be used with a function")
+        with session:
+            return self.func(session, *args, **kwargs)

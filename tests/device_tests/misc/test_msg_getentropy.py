@@ -20,7 +20,7 @@ import pytest
 
 from trezorlib import messages as m
 from trezorlib import misc
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 ENTROPY_LENGTHS_POW2 = [2**l for l in range(10)]
 ENTROPY_LENGTHS_POW2_1 = [2**l + 1 for l in range(10)]
@@ -41,7 +41,7 @@ def entropy(data):
 
 @pytest.mark.parametrize("entropy_length", ENTROPY_LENGTHS)
 def test_entropy(session: Session, entropy_length):
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [m.ButtonRequest(code=m.ButtonRequestType.ProtectCall), m.Entropy]
         )

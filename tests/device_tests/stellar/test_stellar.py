@@ -55,7 +55,7 @@ from base64 import b64encode
 import pytest
 
 from trezorlib import btc, messages, misc, protobuf, stellar
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -178,8 +178,8 @@ def test_get_address(session: Session, parameters, result):
 @pytest.mark.models("core")
 @parametrize_using_common_fixtures("stellar/get_address.json")
 def test_get_address_chunkify_details(session: Session, parameters, result):
-    with session.client as client:
-        IF = InputFlowShowAddressQRCode(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowShowAddressQRCode(session)
         client.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
         address = stellar.get_address(

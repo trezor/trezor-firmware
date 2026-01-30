@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import messages, nem
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12, is_core
@@ -33,7 +33,7 @@ pytestmark = [
 # assertion data from T1
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_nem_signtx_simple(session: Session, chunkify: bool):
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 # Confirm transfer and network fee
@@ -83,7 +83,7 @@ def test_nem_signtx_simple(session: Session, chunkify: bool):
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_nem_signtx_encrypted_payload(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 # Confirm transfer and network fee
