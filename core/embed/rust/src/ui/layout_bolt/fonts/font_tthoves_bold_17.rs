@@ -325,4 +325,5 @@ pub const Font_TTHoves_Bold_17_upper_info: FontInfo = FontInfo {
     baseline: 4,
     glyph_data: &Font_TTHoves_Bold_17_upper,
     glyph_nonprintable: &Font_TTHoves_Bold_17_glyph_nonprintable,
+    kernings: None,
 };
