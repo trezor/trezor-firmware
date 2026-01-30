@@ -264,12 +264,12 @@ def run_class(c, test_result):
 def run_test_method(o, name, set_up, tear_down, test_result, class_skip):
     print(" ", name, end=" ...")
     m = getattr(o, name)
+    test_result.testsRun += 1
     try:
         if class_skip is not None:
             raise SkipTest(class_skip)
         try:
             set_up()
-            test_result.testsRun += 1
             retval = m()
             if isinstance(retval, generator_type):
                 raise RuntimeError(
