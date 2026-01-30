@@ -120,28 +120,29 @@ jobs:
 
       - run: git checkout ${REF}
 
-      - run: mkdir _fingerprints/
+      - run: mkdir _artifacts/
 
       - name: Build prodtest & bootloader
         run: |
           ./build-docker.sh --models ${{ matrix.model }} --targets 'prodtest,bootloader' --skip-bitcoinonly ${REF}
-          cp -v --parents build/*/*/*.fingerprint _fingerprints/
+          cd build/ && cp -v --recursive --parents * ../_artifacts/
 
       - name: Build secmon
         if: ${{ matrix.model == 'T3W1' }}
         run: |
           ./build-docker.sh --no-init --models ${{ matrix.model }} --targets 'secmon' --skip-bitcoinonly ${REF}
-          cp -v --parents build/*/*/*.fingerprint _fingerprints/
+          cd build/ && cp -v --recursive --parents * ../_artifacts/
 
       - name: Build firmware
         # T3W1 requires a signed secmon.
         run: |
           ./build-docker.sh --no-init --models ${{ matrix.model }} --targets 'firmware' ${REF}
-          cp -v --parents build/*/*/*.fingerprint _fingerprints/
+          cd build/ && cp -v --recursive --parents * ../_artifacts/
 
       - name: Show fingerprints
         run: |
-          for file in _fingerprints/build/*/*/*.fingerprint
+          tree _artifacts
+          for file in _artifacts/*/*/*.fingerprint
           do
             echo "\`$(tr -d '\n' < $file)\` ${file%.fingerprint}" >> $GITHUB_STEP_SUMMARY
           done
@@ -152,5 +153,5 @@ jobs:
         with:
           name: reproducible-${{ matrix.model }}
           path: |
-            build/*/*/*.bin
+            _artifacts/
           retention-days: 7
