@@ -84,6 +84,7 @@ async def sign_tx_eip1559(
     await confirm_tx_data(
         msg,
         defs,
+        None,
         address_bytes,
         maximum_fee,
         fee_items,

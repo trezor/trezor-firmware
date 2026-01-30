@@ -1241,6 +1241,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__approve_unlimited_template;
   MP_QSTR_ethereum__contract_address;
   MP_QSTR_ethereum__data_size_template;
+  MP_QSTR_ethereum__eip_7702;
+  MP_QSTR_ethereum__eip_7702_title;
   MP_QSTR_ethereum__gas_limit;
   MP_QSTR_ethereum__gas_price;
   MP_QSTR_ethereum__interaction_contract;
