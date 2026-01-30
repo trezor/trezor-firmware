@@ -1,0 +1,2 @@
+../tests/device_tests/test_pin.py::test_correct_pin
+../tests/click_tests/test_pin.py::test_pin_short
