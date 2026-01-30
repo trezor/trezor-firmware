@@ -322,8 +322,7 @@ static secbool config_upgrade_v10(void) {
   if (config.has_pin) {
     size_t pin_len =
         MIN(strnlen(config.pin, sizeof(config.pin)), (size_t)MAX_PIN_LEN);
-    storage_change_pin(PIN_EMPTY, PIN_EMPTY_LEN, (const uint8_t *)config.pin,
-                       pin_len, NULL, NULL);
+    storage_change_pin((const uint8_t *)config.pin, pin_len, NULL);
   }
 
   while (pin_wait != 0) {
@@ -505,7 +504,7 @@ void config_loadDevice(const LoadDevice *msg) {
                                  msg->passphrase_protection);
 
   if (msg->has_pin) {
-    config_changePin("", msg->pin);
+    config_changePin(msg->pin);
   }
 
   if (msg->mnemonics_count) {
@@ -809,23 +808,22 @@ bool config_containsMnemonic(const char *mnemonic) {
  */
 bool config_unlock(const char *pin) {
   char oldTiny = usbTiny(1);
-  secbool ret =
+  storage_unlock_result_t ret =
       storage_unlock((const uint8_t *)pin, strnlen(pin, MAX_PIN_LEN), NULL);
   usbTiny(oldTiny);
-  return sectrue == ret;
+  return UNLOCK_OK == ret;
 }
 
 bool config_hasPin(void) { return sectrue == storage_has_pin(); }
 
-bool config_changePin(const char *old_pin, const char *new_pin) {
+bool config_changePin(const char *new_pin) {
   char oldTiny = usbTiny(1);
-  secbool ret = storage_change_pin(
-      (const uint8_t *)old_pin, strnlen(old_pin, MAX_PIN_LEN),
-      (const uint8_t *)new_pin, strnlen(new_pin, MAX_PIN_LEN), NULL, NULL);
+  storage_pin_change_result_t ret = storage_change_pin(
+      (const uint8_t *)new_pin, strnlen(new_pin, MAX_PIN_LEN), NULL);
   usbTiny(oldTiny);
 
 #if DEBUG_LINK
-  if (sectrue == ret) {
+  if (PIN_CHANGE_OK == ret) {
     if (new_pin[0] != '\0') {
       storage_set(KEY_DEBUG_LINK_PIN, new_pin, strnlen(new_pin, MAX_PIN_LEN));
     } else {
@@ -834,7 +832,7 @@ bool config_changePin(const char *old_pin, const char *new_pin) {
   }
 #endif
 
-  return sectrue == ret;
+  return PIN_CHANGE_OK == ret;
 }
 
 #if DEBUG_LINK
