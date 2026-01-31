@@ -1174,5 +1174,9 @@
   "1172": "secure_sync__evolu_node_no_optiga",
   "1173": "secure_sync__header",
   "1174": "words__note",
-  "1175": "words__fee_limit"
+  "1175": "words__fee_limit",
+  "1176": "ripple__confirm_account_warning",
+  "1177": "words__account_deletion",
+  "1178": "ripple__account_deletion_warning",
+  "1179": "ripple__account_to_be_deleted"
 }

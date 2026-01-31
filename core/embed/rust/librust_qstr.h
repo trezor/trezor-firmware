@@ -978,6 +978,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__about;
   MP_QSTR_words__account;
   MP_QSTR_words__account_colon;
+  MP_QSTR_words__account_deletion;
   MP_QSTR_words__address;
   MP_QSTR_words__amount;
   MP_QSTR_words__are_you_sure;
@@ -1371,6 +1372,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_nem__unencrypted;
   MP_QSTR_nem__unknown_mosaic;
   MP_QSTR_nostr__event_kind_template;
+  MP_QSTR_ripple__account_deletion_warning;
+  MP_QSTR_ripple__account_to_be_deleted;
   MP_QSTR_ripple__confirm_tag;
   MP_QSTR_ripple__destination_tag_missing;
   MP_QSTR_ripple__destination_tag_template;

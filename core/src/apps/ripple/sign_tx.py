@@ -1,3 +1,5 @@
+# pyright: reportOptionalMemberAccess=false
+
 from typing import TYPE_CHECKING
 
 from apps.common.keychain import auto_keychain
@@ -24,14 +26,18 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     from . import SLIP44_ID, helpers, layout
     from .serialize import serialize
 
-    payment = msg.payment  # local_cache_attribute
-
-    if payment.amount > helpers.MAX_ALLOWED_AMOUNT:
-        raise ProcessError("Amount exceeds maximum allowed amount.")
     await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     source_address = helpers.address_from_public_key(node.public_key())
+
+    IS_PAYMENT_TRANSACTION = helpers.is_payment_transaction(msg)
+
+    if IS_PAYMENT_TRANSACTION:
+        payment = msg.payment  # local_cache_attribute
+
+        if payment.amount > helpers.MAX_ALLOWED_AMOUNT:
+            raise ProcessError("Amount exceeds maximum allowed amount.")
 
     # Setting canonical flag
     # Our ECDSA implementation already returns fully-canonical signatures,
@@ -60,19 +66,29 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
             address, msg.payment_req, msg.address_n
         )
     else:
-        if payment.destination_tag is not None:
-            await layout.require_confirm_destination_tag(payment.destination_tag)
-        else:
-            await show_warning(
-                br_name="confirm_destination_tag",
-                content=TR.ripple__destination_tag_missing,
+        if IS_PAYMENT_TRANSACTION:
+            if payment.destination_tag is not None:
+                await layout.require_confirm_destination_tag(payment.destination_tag)
+            else:
+                await show_warning(
+                    br_name="confirm_destination_tag",
+                    content=TR.ripple__destination_tag_missing,
+                )
+
+            await layout.require_confirm_tx(
+                payment.destination, payment.amount, chunkify=bool(msg.chunkify)
             )
 
-        await layout.require_confirm_tx(
-            payment.destination, payment.amount, chunkify=bool(msg.chunkify)
-        )
-
-    await layout.require_confirm_total(payment.amount + msg.fee, msg.fee)
+    if IS_PAYMENT_TRANSACTION:
+        await layout.require_confirm_total(payment.amount + msg.fee, msg.fee)
+    else:
+        await layout.confirm_account_deletion(
+            source_address,
+            msg.address_n,
+            msg.account_delete.destination,
+            msg.fee,
+            msg.chunkify or True,
+        )  # pyright: ignore[reportOptionalMemberAccess]
 
     # Signs and encodes signature into DER format
     first_half_of_sha512 = sha512(to_sign).digest()[:32]

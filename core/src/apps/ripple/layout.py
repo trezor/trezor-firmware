@@ -99,3 +99,48 @@ async def require_confirm_payment_request(
         None,
         None,
     )
+
+
+async def confirm_account_deletion(
+    source_address: str,
+    source_account_path: list[int],
+    destination_address: str,
+    fee: int,
+    chunkify: bool,
+) -> None:
+    from trezor import TR
+    from trezor.ui.layouts import confirm_address, confirm_value, show_warning
+
+    from apps.common.paths import address_n_to_str
+
+    await show_warning(
+        br_name="account_deletion_warning",
+        content=TR.ripple__account_deletion_warning,
+    )
+    await confirm_address(
+        title=TR.words__account_deletion,
+        subtitle=TR.ripple__account_to_be_deleted,
+        address=source_address,
+        chunkify=chunkify or True,
+        br_name="confirm_source_account",
+    )
+    await confirm_address(
+        title=TR.words__account_deletion,
+        subtitle=TR.words__recipient,
+        address=destination_address,
+        chunkify=chunkify or True,
+        br_name="confirm_recipient_account",
+    )
+    await confirm_value(
+        title=TR.words__account_deletion,
+        value=format_amount_unit(format_amount(fee, 0), "drop"),
+        br_name="confirm_account_deletion",
+        description=TR.words__fee_limit,
+        info_items=[
+            (
+                TR.words__account,
+                address_n_to_str(source_account_path),
+                False,
+            )
+        ],
+    )
