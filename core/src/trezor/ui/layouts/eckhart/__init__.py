@@ -924,15 +924,15 @@ def confirm_total(
     fee_label: str | None = None,
     source_account: str | None = None,
     source_account_path: str | None = None,
-    fee_rate_amount: str | None = None,
+    fee_items: list[PropertyType] | None = None,
+    back_button: bool = False,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     title = title or TR.words__send  # def_arg
     total_label = total_label or TR.send__total_amount  # def_arg
     fee_label = fee_label or TR.send__incl_transaction_fee  # def_arg
 
-    fee_items: list[PropertyType] = []
     account_items: list[PropertyType] = []
     if source_account:
         account_items.append((TR.words__account, source_account, True))
@@ -940,8 +940,6 @@ def confirm_total(
         account_items.append(
             (TR.address_details__derivation_path, source_account_path, True)
         )
-    if fee_rate_amount:
-        fee_items.append((TR.confirm_total__fee_rate, fee_rate_amount, True))
 
     return raise_if_not_confirmed(
         trezorui_api.confirm_summary(
@@ -951,7 +949,7 @@ def confirm_total(
             fee_label=fee_label,
             title=title,
             account_items=account_items or None,
-            extra_items=fee_items or None,
+            extra_items=fee_items,
             extra_title=TR.confirm_total__title_fee,
         ),
         br_name,
@@ -1058,6 +1056,8 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
+        from trezor.ui.layouts.menu import Menu, interact_with_menu
+
         subtitle = (
             None
             if is_contract_interaction and recipient is None
@@ -1068,36 +1068,61 @@ if not utils.BITCOIN_ONLY:
             )
         )
         title = TR.words__send
-        fee_items: list[PropertyType] | None = (
-            list(fee_info_items) if fee_info_items else None
-        )
-        await raise_if_not_confirmed(
-            trezorui_api.flow_confirm_output(
-                title=title,
-                subtitle=subtitle,
-                description=None,
-                extra=None,
-                message=(recipient or TR.ethereum__new_contract),
-                chunkify=(chunkify if recipient else False),
-                text_mono=(True if recipient else False),
-                account_title=TR.send__send_from,
-                account=account,
-                account_path=account_path,
-                address_item=None,
-                extra_item=None,
-                br_code=br_code,
-                br_name="confirm_output",
-                summary_items=[
-                    (TR.words__amount, total_amount, True),
-                    (TR.send__maximum_fee, maximum_fee, True),
-                ],
-                fee_items=fee_items,
-                summary_title=title,
-                summary_br_name=br_name,
-                summary_br_code=br_code,
-                cancel_text=TR.buttons__cancel,
+
+        account_properties: list[StrPropertyType] = []
+        if account:
+            account_properties.append((TR.words__account, account, None))
+        if account_path:
+            account_properties.append(
+                (
+                    TR.address_details__derivation_path,
+                    account_path,
+                    None,
+                )
+            )
+        if account_properties:
+            menu_items = [
+                create_details(
+                    TR.address_details__account_info,
+                    account_properties,
+                    title=TR.address_details__account_info,
+                    subtitle=TR.send__send_from,
+                )
+            ]
+        else:
+            menu_items = []
+
+        await confirm_linear_flow(
+            lambda: interact_with_menu(
+                trezorui_api.confirm_value(
+                    title=title,
+                    value=recipient or TR.ethereum__new_contract,
+                    is_data=bool(recipient),
+                    description="",
+                    subtitle=subtitle,
+                    verb=TR.buttons__continue,
+                    info=False,
+                    hold=False,
+                    chunkify=chunkify,
+                    external_menu=True,
+                ),
+                Menu.root(menu_items, TR.send__cancel_sign),
+                "confirm_output",
             ),
-            None,
+            lambda: interact(
+                trezorui_api.confirm_summary(
+                    amount=total_amount,
+                    amount_label=TR.words__amount,
+                    fee=maximum_fee,
+                    fee_label=TR.send__maximum_fee,
+                    extra_title=TR.confirm_total__title_fee,
+                    extra_items=list(fee_info_items),
+                    title=title,
+                    back_button=True,
+                ),
+                br_name,
+                br_code,
+            ),
         )
 
     def ethereum_address_title() -> str:

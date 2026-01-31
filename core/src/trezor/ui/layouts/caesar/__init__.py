@@ -992,23 +992,18 @@ def confirm_value(
 def confirm_total(
     total_amount: str,
     fee_amount: str,
-    fee_rate_amount: str | None = None,
     title: str | None = None,
     total_label: str | None = None,
     fee_label: str | None = None,
     source_account: str | None = None,
     source_account_path: str | None = None,
+    fee_items: list[PropertyType] | None = None,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
     total_label = total_label or f"{TR.send__total_amount}:"  # def_arg
     fee_label = fee_label or TR.send__including_fee  # def_arg
 
-    fee_info_items: list[PropertyType] | None = (
-        [(TR.confirm_total__fee_rate_colon, fee_rate_amount, None)]
-        if fee_rate_amount is not None
-        else None
-    )
     account_info_items: list[PropertyType] | None = (
         [(TR.words__account_colon, source_account, None)]
         if source_account is not None
@@ -1022,7 +1017,7 @@ def confirm_total(
             fee=fee_amount,
             fee_label=fee_label,
             account_items=account_info_items,
-            extra_items=fee_info_items,
+            extra_items=fee_items,
             extra_title=TR.confirm_total__title_fee,
         ),
         br_name,

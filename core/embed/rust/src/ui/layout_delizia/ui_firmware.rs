@@ -392,7 +392,7 @@ impl FirmwareUI for UIDelizia {
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        _back_button: bool,
+        back_button: bool,
         _external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut summary_params = ShowInfoParams::new(title.unwrap_or(TString::empty()))
@@ -435,6 +435,7 @@ impl FirmwareUI for UIDelizia {
             extra_params,
             extra_title,
             verb_cancel,
+            back_button,
         )?;
         Ok(flow)
     }
