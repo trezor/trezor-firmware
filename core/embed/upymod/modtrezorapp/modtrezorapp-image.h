@@ -58,9 +58,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorapp_AppImage_write_obj,
 
 /// def finalize(self, bool accept) -> None:
 ///     """
-/// Finalizes loading of the application image. If `accept` is true,
-/// the image is marked as loaded and will be available for execution.
-/// If `accept` is false, the image is discarded.
+///     Finalizes loading of the application image. If `accept` is true,
+///     the image is marked as loaded and will be available for execution.
+///     If `accept` is false, the image is discarded.
 ///     """
 STATIC mp_obj_t mod_trezorapp_AppImage_finalize(mp_obj_t self,
                                                 mp_obj_t accept_obj) {
