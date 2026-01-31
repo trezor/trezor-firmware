@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <trezor_types.h>
+
 typedef enum {
   LOG_LEVEL_OFF = 0,
   LOG_LEVEL_ERR = 1,
@@ -50,6 +52,13 @@ typedef struct {
 
 #define LOG_HEXDUMP_DBG(prefix, data, data_size) \
   SYSLOG_LOG_HEXDUMP_DBG(prefix, data, data_size)
+
+// Override TSH_LOG_ macro to log error with the current module name
+#undef TSH_LOG_
+#define TSH_LOG_(status)                                                \
+  do {                                                                  \
+    LOG_ERR("%s at %s:%d", ts_string(status), __FILE_NAME__, __LINE__); \
+  } while (0)
 
 #else
 

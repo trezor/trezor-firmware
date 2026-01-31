@@ -32,6 +32,9 @@
  * @param applet Pointer to the applet_t structure to be initialized
  * @param elf_ptr Pointer to the pointer to the ELF image loaded in memory
  * @param elf_size Size of the ELF image in memory
- * @return true on success, false on failure
+ *
+ * @return TS_OK on success, or an error code on failure:
+ *         TS_ENOMEM if there is not enough memory,
+ *         TS_EINVAL if the ELF image is invalid,
  */
-bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size);
+ts_t __wur elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size);

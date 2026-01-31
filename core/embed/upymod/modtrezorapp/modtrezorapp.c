@@ -52,7 +52,8 @@ STATIC mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
   const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
 
   systask_id_t task_id;
-  if (!app_task_spawn(hash_ptr, &task_id)) {
+  ts_t status = app_task_spawn(hash_ptr, &task_id);
+  if (ts_error(status)) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to spawn app from app cache"));
   }
@@ -114,7 +115,8 @@ STATIC mp_obj_t mod_trezorapp_load_file(mp_obj_t app_hash_obj,
 
   const char *filename = mp_obj_str_get_str(filename_obj);
 
-  if (!app_cache_load_file(hash_ptr, filename)) {
+  ts_t status = app_cache_load_file(hash_ptr, filename);
+  if (ts_error(status)) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to load app image from file"));
   }

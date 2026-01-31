@@ -26,7 +26,7 @@
 // Maximum default log level for all modules if not overriden in
 // by defining SYSLOG_<module_name>_MAX_LOG_LEVEL during compilation
 #ifndef SYSLOG_DEFAULT_LOG_LEVEL
-#define SYSLOG_DEFAULT_LOG_LEVEL LOG_LEVEL_OFF
+#define SYSLOG_DEFAULT_LOG_LEVEL LOG_LEVEL_WARN
 #endif
 
 // Maximum default log level for specific modules
@@ -58,6 +58,10 @@
 
 #ifndef SYSLOG_ble_driver_MAX_LOG_LEVEL
 #define SYSLOG_ble_driver_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
+#endif
+
+#ifndef SYSLOG_elf_loader_MAX_LOG_LEVEL
+#define SYSLOG_elf_loader_MAX_LOG_LEVEL SYSLOG_DEFAULT_LOG_LEVEL
 #endif
 
 // Optiga command log is relatively quiet
