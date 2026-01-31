@@ -1467,7 +1467,7 @@
       "Bolt": "Share already entered",
       "Caesar": "Share already entered",
       "Delizia": "Share already entered",
-      "Eckhart": "Share already entered."
+      "Eckhart": "Share already entered. Enter a different share."
     },
     "recovery__share_does_not_match": "Share doesn't match",
     "recovery__share_from_another_multi_share_backup": "You have entered a share from a different backup.",
