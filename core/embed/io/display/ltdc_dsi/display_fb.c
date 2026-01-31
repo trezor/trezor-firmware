@@ -24,6 +24,7 @@
 #include <io/display.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/systick.h>
 #include <sys/trustzone.h>
 
 #include "display_internal.h"
@@ -139,6 +140,20 @@ void display_refresh(void) {
     return;
   }
 
+#if REFRESH_RATE_SCALING_SUPPORTED
+  // IRQs locked to make sure that no IRQ gets served in beween the following
+  // 2 function calls including the IRQ context call of
+  // display_refresh_rate_timeout_check() function.
+  irq_key_t key = irq_lock();
+
+  // Change the display refresh rate to the high refresh rate.
+  display_refresh_rate_set(REFRESH_RATE_HI);
+  // Set/refresh the timeout for return to the low refresh rate.
+  display_refresh_rate_timeout_set();
+
+  irq_unlock(key);
+#endif
+
   fb_queue_put(&drv->ready_frames, fb_queue_take(&drv->empty_frames));
 }
 
@@ -193,6 +208,42 @@ void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc) {
     return;
   }
 
+#if REFRESH_RATE_SCALING_SUPPORTED
+  if (drv->refresh_rate_state == REFRESH_RATE_UPDATING) {
+    display_refresh_rate_config();
+
+    // Configure the next line event for standard operation.
+    HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LINE_EVENT_GENERAL_LINE);
+  } else {
+    display_refresh_rate_timeout_check();
+
+    // Process pending frame buffer update.
+    if (drv->update_pending > 0) {
+      drv->update_pending--;
+    }
+
+    int16_t fb_idx = fb_queue_take(&drv->ready_frames);
+    if (fb_idx >= 0) {
+      fb_queue_put(&drv->empty_frames, drv->active_frame);
+      drv->active_frame = fb_idx;
+      display_set_fb((uint32_t)get_fb_ptr(drv->active_frame));
+      drv->update_pending = 3;
+    }
+
+    // Is refresh rate update requested? Configure the line event for the
+    // proper time to perform VFP update.
+    if (drv->refresh_rate_state == REFRESH_RATE_REQUESTED) {
+      // Configure the line event for the proper time to perform VFP update.
+      HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LINE_EVENT_REFRESH_RATE_LINE);
+
+      // The line event has been configured. Moving to the UPDATING state.
+      drv->refresh_rate_state = REFRESH_RATE_UPDATING;
+    } else {
+      // Configure the next line event for standard operation.
+      HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LINE_EVENT_GENERAL_LINE);
+    }
+  }
+#else
   if (drv->update_pending > 0) {
     drv->update_pending--;
   }
@@ -205,7 +256,8 @@ void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc) {
     drv->update_pending = 3;
   }
 
-  HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LCD_HEIGHT);
+  HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LINE_EVENT_GENERAL_LINE);
+#endif  // REFRESH_RATE_SCALING_SUPPORTED
 }
 
 #endif
