@@ -53,10 +53,16 @@ runs:
         # Upload report
         du -sh ${{ github.run_id }}
         ls -l ${{ github.run_id }}
-        aws s3 cp --recursive ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}
+        aws s3 cp --recursive --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }} &
+        PID1=$!
 
         # Upload test screen recording
         du -sh ci/ui_test_records
-        aws s3 sync ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests
+        aws s3 cp --recursive --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests &
+        PID2=$!
         # TODO: generate directory listing / autoindex
+
+        # Wait for the above copy jobs to finish (fail if one of them fails)
+        wait $PID1
+        wait $PID2
       shell: sh
