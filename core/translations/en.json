@@ -1567,9 +1567,9 @@
     "reset__group_info": "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.",
     "reset__group_share_checked_successfully_template": "Group {0} - Share {1} checked successfully.",
     "reset__group_share_title_template": {
-      "Bolt": "Group {0} - share {1}",
-      "Caesar": "Group {0} - share {1}",
-      "Delizia": "Group {0} - share {1}",
+      "Bolt": "Group {0} - Share {1}",
+      "Caesar": "Group {0} - Share {1}",
+      "Delizia": "Group {0} - Share {1}",
       "Eckhart": "Group #{0} - Share #{1}"
     },
     "reset__incorrect_word_selected": {
