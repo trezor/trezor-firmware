@@ -23,6 +23,7 @@
 #include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
+#include <sec/tropic_configs.h>
 #include <sys/systick.h>
 
 #include "hmac.h"
@@ -983,6 +984,56 @@ cleanup:
 
 void tropic_pin_unmask_kek_time(uint32_t *time_ms) {
   lt_r_mem_data_read_time(time_ms);
+}
+
+bool tropic_validate_configs(void) {
+  lt_handle_t *tropic_handle = tropic_get_handle();
+  if (!tropic_handle) {
+    return false;
+  }
+
+  lt_config_t r_config = {0};
+  lt_ret_t ret = lt_read_whole_R_config(tropic_handle, &r_config);
+  if (ret != LT_OK) {
+    return false;
+  }
+  if (memcmp(&r_config, &g_reversible_configuration, sizeof(lt_config_t)) !=
+      0) {
+    ret = lt_write_whole_R_config(tropic_handle, &g_reversible_configuration);
+    if (ret != LT_OK) {
+      return false;
+    }
+    ret = lt_read_whole_R_config(tropic_handle, &r_config);
+    if (ret != LT_OK) {
+      return false;
+    }
+    if (memcmp(&r_config, &g_reversible_configuration, sizeof(lt_config_t)) !=
+        0) {
+      return false;
+    }
+  }
+
+  lt_config_t i_config = {0};
+  ret = lt_read_whole_I_config(tropic_handle, &i_config);
+  if (ret != LT_OK) {
+    return false;
+  }
+  if (memcmp(&i_config, &g_irreversible_configuration, sizeof(lt_config_t)) !=
+      0) {
+    ret = lt_write_whole_I_config(tropic_handle, &g_irreversible_configuration);
+    if (ret != LT_OK) {
+      return false;
+    }
+    ret = lt_read_whole_I_config(tropic_handle, &i_config);
+    if (ret != LT_OK) {
+      return false;
+    }
+    if (memcmp(&i_config, &g_irreversible_configuration, sizeof(lt_config_t)) !=
+        0) {
+      return false;
+    }
+  }
+  return true;
 }
 
 #endif  // USE_STORAGE

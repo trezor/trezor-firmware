@@ -164,4 +164,6 @@ bool tropic_pin_unmask_kek(
     uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]);
 
 void tropic_pin_unmask_kek_time(uint32_t* time_ms);
+
+bool tropic_validate_configs(void);
 #endif

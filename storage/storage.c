@@ -1727,6 +1727,12 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
     goto end;
   }
 
+#if USE_TROPIC
+  if (!tropic_validate_configs()) {
+    handle_fault("Tropic config mismatch");
+  }
+#endif  // USE_TROPIC
+
   ret = set_pin(newpin, newpin_len, new_ext_salt);
 
 end:
