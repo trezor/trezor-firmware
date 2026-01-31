@@ -27,7 +27,6 @@
 #include <sec/boot_image.h>
 #include <sec/option_bytes.h>
 #include <sec/random_delays.h>
-#include <sec/secret.h>
 #include <sec/secure_aes.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
@@ -61,6 +60,10 @@
 
 #ifdef USE_HASH_PROCESSOR
 #include <sec/hash_processor.h>
+#endif
+
+#ifdef USE_SECRET
+#include <sec/secret.h>
 #endif
 
 #ifdef USE_OPTIGA
@@ -112,6 +115,10 @@ void drivers_init() {
 #ifdef SECURE_MODE
   parse_boardloader_capabilities();
   unit_properties_init();
+
+#ifdef USE_SECRET
+  secret_init();
+#endif
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
