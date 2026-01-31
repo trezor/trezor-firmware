@@ -61,6 +61,9 @@ def configure(
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
 
+        if "usb_iface_debug" in features_wanted:
+            sources += ["embed/io/button/button_debug.c"]
+
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
         paths += ["embed/io/sbu/inc"]
