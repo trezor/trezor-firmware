@@ -5,12 +5,13 @@ HARDENED = const(0x8000_0000)
 SLIP25_PURPOSE = const(10025 | HARDENED)
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Callable, Collection, Container, Iterable, Sequence, TypeVar
 
     from typing_extensions import Protocol
 
     Bip32Path = list[int]
-    Slip21Path = Sequence[bytes]
+    Slip21Path = Sequence[AnyBytes]
     PathType = TypeVar("PathType", Bip32Path, Slip21Path, contravariant=True)
 
     class PathSchemaType(Protocol):
@@ -371,7 +372,7 @@ def address_n_slip21_to_str(address_n: Slip21Path) -> str:
     if not address_n:
         return "m"
 
-    def label_to_str(label: bytes) -> str:
+    def label_to_str(label: AnyBytes) -> str:
         out = []
         for b in label:
             if b == ord("\\"):

@@ -4,9 +4,10 @@ from buffer_types import *
 
 # upymod/modtrezorutils/modtrezorutils-meminfo.h
 def meminfo(filename: str | None) -> None:
-    """Dumps map of micropython GC arena to a file.
+    """
+    Dumps map of micropython GC arena to a file.
     The JSON file can be decoded by analyze-memory-dump.py
-     """
+    """
 from trezor import utils
 
 

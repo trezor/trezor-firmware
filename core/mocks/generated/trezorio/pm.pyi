@@ -22,10 +22,10 @@ EVENT_SOC_UPDATED: int
 
 # upymod/modtrezorio/modtrezorio-pm.h
 def soc() -> int:
-   """
-   Returns the state of charge (SoC) in percent (0-100). Raises RuntimeError
-   on failure.
-   """
+    """
+    Returns the state of charge (SoC) in percent (0-100). Raises
+    RuntimeError on failure.
+    """
 
 
 # upymod/modtrezorio/modtrezorio-pm.h

@@ -121,9 +121,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_from_secret_obj,
                                  mod_trezorcrypto_from_secret);
 
 /// def from_seed_slip23(seed: AnyBytes) -> HDNode:
-///    """
-///    Creates a Cardano HD node from a seed via SLIP-23 derivation.
-///    """
+///     """
+///     Creates a Cardano HD node from a seed via SLIP-23 derivation.
+///     """
 STATIC mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(seed, &bufinfo, MP_BUFFER_READ);

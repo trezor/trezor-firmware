@@ -27,9 +27,9 @@ def from_secret(secret: AnyBytes) -> HDNode:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
 def from_seed_slip23(seed: AnyBytes) -> HDNode:
-   """
-   Creates a Cardano HD node from a seed via SLIP-23 derivation.
-   """
+    """
+    Creates a Cardano HD node from a seed via SLIP-23 derivation.
+    """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h

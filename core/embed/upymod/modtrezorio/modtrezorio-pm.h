@@ -41,10 +41,10 @@
 /// EVENT_SOC_UPDATED: int
 
 /// def soc() -> int:
-///    """
-///    Returns the state of charge (SoC) in percent (0-100). Raises RuntimeError
-///    on failure.
-///    """
+///     """
+///     Returns the state of charge (SoC) in percent (0-100). Raises
+///     RuntimeError on failure.
+///     """
 STATIC mp_obj_t mod_trezorio_pm_soc() {
   pm_state_t state = {0};
   pm_status_t res = pm_get_state(&state);

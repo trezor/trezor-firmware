@@ -15,9 +15,9 @@ class AppImage:
 
     def finalize(self, bool accept) -> None:
         """
-    Finalizes loading of the application image. If `accept` is true,
-    the image is marked as loaded and will be available for execution.
-    If `accept` is false, the image is discarded.
+        Finalizes loading of the application image. If `accept` is true,
+        the image is marked as loaded and will be available for execution.
+        If `accept` is false, the image is discarded.
         """
 
 
