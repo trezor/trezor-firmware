@@ -19,7 +19,9 @@
 
 // Turning off the stack protector for this file improves
 // the performance of drawing operations when called frequently.
-#pragma GCC optimize("no-stack-protector")
+
+#pragma GCC optimize ("O0")
+//#pragma GCC optimize("no-stack-protector")
 
 #ifdef KERNEL_MODE
 
@@ -30,6 +32,8 @@
 
 #include <io/dma2d_bitblt.h>
 #include <io/gfx_color.h>
+
+#include <sys/systick.h>
 
 // Number of DMA2D layers - background (0) and foreground (1)
 #define DMA2D_LAYER_COUNT 2
@@ -52,6 +56,10 @@ typedef struct {
   bool clut_valid;
 
 } dma2d_driver_t;
+
+volatile uint32_t dmawait_t_total = 0;
+volatile uint32_t dmawait_t_max = 0;
+volatile uint32_t dmawait_count = 0;
 
 static dma2d_driver_t g_dma2d_driver = {
     .initialized = false,
@@ -107,6 +115,10 @@ void dma2d_init(void) {
 
   drv->dma_transfer_in_progress = false;
 
+  dmawait_t_total = 0;
+  dmawait_t_max = 0;
+  dmawait_count = 0;
+
   drv->initialized = true;
 }
 
@@ -124,10 +136,22 @@ void dma2d_deinit(void) {
 
 void dma2d_wait(void) {
   dma2d_driver_t* drv = &g_dma2d_driver;
+  uint64_t dmawait_t0;
+  uint64_t dmawait_t1;
+  uint32_t dmawait_t_diff;
+  uint32_t loop_ctr = 0;
+  uint32_t ICSR[2];
+  uint32_t vect_active[2];
+  uint32_t ret_to_base[2];
+  uint32_t vect_pending[2];
+  uint32_t isr_pending[2];
 
   if (!drv->initialized) {
     return;
   }
+
+  dmawait_count++;
+  dmawait_t0 = systick_us();
 
   // Enabled events and all interrupts, including disabled interrupts, can
   // wakeup the processor.
@@ -136,27 +160,57 @@ void dma2d_wait(void) {
   irq_key_t key = irq_lock();
 
   while (drv->dma_transfer_in_progress) {
-    if (HAL_DMA2D_GetState(&drv->handle) != HAL_DMA2D_STATE_BUSY) {
+    HAL_DMA2D_StateTypeDef state = HAL_DMA2D_GetState(&drv->handle);
+
+    loop_ctr++;
+
+    if (state != HAL_DMA2D_STATE_BUSY) {
       // This case is weird because "drv->dma_transfer_in_progress" is "true"
       // but the DMA2D state isn't "HAL_DMA2D_STATE_BUSY".
       drv->dma_transfer_in_progress = false;
       HAL_DMA2D_Abort(&drv->handle);  // Defensive cleanup
       irq_unlock(key);
+
+      dmawait_t1 = systick_us();
+      dmawait_t_diff = (uint32_t)(dmawait_t1 - dmawait_t0);
+      dmawait_t_total += dmawait_t_diff;
+      dmawait_t_max = MAX(dmawait_t_max, dmawait_t_diff);
       return;
     }
+
+    ICSR[0] = SCB->ICSR;
 
     irq_unlock(key);
 
     __DSB();
     __WFE();
 
+    ICSR[1] = SCB->ICSR;
+
     // Execute pending IRQs.
     __NOP();
+
+    for (int i = 0; i < 2; i++) {
+      vect_active[i] = (ICSR[i] & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos;
+      ret_to_base[i] = (ICSR[i] & SCB_ICSR_RETTOBASE_Msk) >> SCB_ICSR_RETTOBASE_Pos;
+      vect_pending[i] = (ICSR[i] & SCB_ICSR_VECTPENDING_Msk) >> SCB_ICSR_VECTPENDING_Pos;
+      isr_pending[i] = (ICSR[i] & SCB_ICSR_ISRPENDING_Msk) >> SCB_ICSR_ISRPENDING_Pos;
+    }
 
     key = irq_lock();
   }
 
   irq_unlock(key);
+
+  dmawait_t1 = systick_us();
+  dmawait_t_diff = (uint32_t)(dmawait_t1 - dmawait_t0);
+  dmawait_t_total += dmawait_t_diff;
+  dmawait_t_max = MAX(dmawait_t_max, dmawait_t_diff);
+
+  UNUSED(vect_active[0]);
+  UNUSED(ret_to_base[0]);
+  UNUSED(vect_pending[0]);
+  UNUSED(isr_pending[0]);
 }
 
 // Transfer complete callback
