@@ -35,8 +35,10 @@ from ..transport import DeviceIsBusy, enumerate_devices
 from ..transport.ble import BleTransport
 from ..transport.udp import UdpTransport
 from . import (
+    ENV_TREZOR_SESSION_ID,
     AliasedGroup,
     PassphraseSource,
+    SessionIdentifier,
     TrezorConnection,
     benchmark,
     ble,
@@ -61,8 +63,6 @@ from . import (
     tezos,
     tron,
     with_client,
-    ENV_TREZOR_SESSION_ID,
-    SessionIdentifier,
 )
 
 F = TypeVar("F", bound=Callable)

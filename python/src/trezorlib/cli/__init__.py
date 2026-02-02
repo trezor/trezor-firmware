@@ -16,9 +16,10 @@
 
 from __future__ import annotations
 
+import base64
+import dataclasses
 import functools
 import json
-import base64
 import logging
 import os
 import random
@@ -26,7 +27,6 @@ import re
 import sys
 import typing as t
 from contextlib import contextmanager
-import dataclasses
 from enum import Enum
 from pathlib import Path
 
@@ -465,7 +465,7 @@ class TrezorConnection:
     ) -> t.Generator[R, None, None]:
         try:
             conn = connect_fn(*args, **kwargs)
-        except click.ClickException as e:
+        except click.ClickException:
             raise
         except Exception as e:
             self._print_exception(e, "Failed to connect")
