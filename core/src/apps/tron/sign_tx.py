@@ -130,7 +130,7 @@ async def process_known_trc20_contract(
     """Returns False when the contract is unrecoginsed. i.e. not (Transfer and known TRC-20)"""
     from trezor.utils import BufferReader
 
-    from ..ethereum.sc_constants import (
+    from .sc_constants import (
         SC_ARGUMENT_ADDRESS_BYTES,
         SC_ARGUMENT_BYTES,
         SC_FUNC_SIG_BYTES,
