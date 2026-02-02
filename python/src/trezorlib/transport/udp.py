@@ -146,9 +146,13 @@ class UdpTransport(Transport):
         finally:
             self.close()
 
+    def is_open(self) -> bool:
+        return self.socket is not None
+
     def is_ready(self) -> bool:
         """Test if the device is listening."""
-        assert self.socket is not None
+        if not self.is_open():
+            return False
         try:
             LOG.log(DUMP_PACKETS, f"PINGing {self.device}")
             self.socket.sendall(b"PINGPING")
