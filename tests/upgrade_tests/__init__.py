@@ -15,6 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
+import tempfile
+from contextlib import contextmanager
 from typing import List, Tuple
 
 import pytest
@@ -29,18 +31,41 @@ from trezorlib.models import (
     by_internal_name
 )
 
-from ..emulators import ALL_TAGS, LOCAL_BUILD_PATHS, EmulatorWrapper, gen_from_model
+from ..emulators import (
+    ALL_TAGS,
+    LOCAL_BUILD_PATHS,
+    EmulatorWrapper,
+    gen_from_model,
+    stop_shared_tropic_model,
+)
+
+
+@contextmanager
+def shared_profile_dir() -> tempfile.TemporaryDirectory:
+    profile_dir = tempfile.TemporaryDirectory()
+    try:
+        yield profile_dir
+    finally:
+        stop_shared_tropic_model(profile_dir.name)
+        if os.environ.get("TREZOR_KEEP_PROFILE_DIR") != "1":
+            profile_dir.cleanup()
 
 
 def upgrade_emulator(
-    gen: str,
     tag: str | None = None,
     model: str | None = None,
     **kwargs,
 ) -> EmulatorWrapper:
-    model_name = model or os.environ.get("TREZOR_MODEL")
+    # Use provided model or get from environment, default to T3W1
+    model_name = model or os.environ.get("TREZOR_MODEL") or "T3W1"
+    
+    # Determine gen from model
+    gen = gen_from_model(model_name)
+    
+    # Only launch Tropic model for T3W1
     disable_tropic = os.environ.get("TREZOR_DISABLE_TROPIC_MODEL") == "1"
     launch_tropic = (model_name == "T3W1") and not disable_tropic
+    
     return EmulatorWrapper(
         gen,
         tag,
@@ -94,76 +119,80 @@ def for_all(
 
     Usage example:
 
-    >>> @for_all()
-    >>> def test_runs_for_all_old_versions(gen, tag, model):
+    >>> @for_all("T1B1", "T2T1", "T3W1")
+    >>> def test_runs_for_all_models(tag, model):
     >>>     assert True
 
-    Arguments can be trezor models (e.g."T1B1" and "T2T1") or aliases "core" and "legacy",
-    and you can specify core_minimum_version, legacy_minimum_version, and t3w1_minimum_version as triplets.
+    Arguments should be trezor model names (e.g. "T1B1", "T2T1", "T3W1").
+    If no arguments provided, defaults to T3W1 only.
+    You can specify minimum versions for each model type.
 
-    The test function should have arguments `gen` ("core" or "legacy") and `tag`
-    (version tag usable in EmulatorWrapper call)
+    The test function should have arguments `tag` (version tag) and `model` (internal model name).
     """
     if not ALL_TAGS:
         raise ValueError(
             "No files found. Use download_emulators.sh to download emulators."
         )
-    models = []
-    gens = set()
+    
+    # Map model names to TrezorModel objects
+    models_to_test = []
     for item in args:
-        if item == "core":
-            models.extend(CORE_MODELS)
-            gens.add("core")
-        elif item == "legacy":
-            models.extend(LEGACY_MODELS)
-            gens.add("legacy")
+        model_obj = by_internal_name(item)
+        if model_obj is not None:
+            models_to_test.append(model_obj)
         else:
-            models.append(by_internal_name(item))
-            gens.add(gen_from_model(item))
+            raise ValueError(f"Unknown model: {item}")
 
+    # If no args provided, default to T3W1
     if not args:
-        gens = ["core", "legacy"]
-        models = [T1B1, T2T1, T3W1]
+        models_to_test = [T3W1]
 
-    # If any gens were selected, use them. If none, select all.
-    enabled_gens = SELECTED_GENS or list(gens)
-
-    all_params: set[tuple[str, str | None, str | None]] = set()
-    for model in models:
-        if model in LEGACY_MODELS:
+    all_params: set[tuple[str | None, str | None]] = set()
+    
+    for model in models_to_test:
+        # Determine minimum version based on model
+        if model == T1B1:
             minimum_version = legacy_minimum_version
         elif model == T3W1:
             minimum_version = t3w1_minimum_version            
-        elif model in CORE_MODELS:
+        elif model == T2T1:
             minimum_version = core_minimum_version
         else:
-            raise ValueError
+            minimum_version = core_minimum_version
 
-        gen = gen_from_model(model.internal_name)
-        if gen not in enabled_gens:
-            continue
         try:
             for tag in ALL_TAGS[model.internal_name]:
                 tag_version = version_from_tag(tag)
                 if tag_version is not None and tag_version < minimum_version:
                     continue
-                all_params.add((gen, tag, model.internal_name))
+                all_params.add((tag, model.internal_name))
 
-            # At the end, add (gen, None, None), which is the current master.
-            # The same (gen, None, None) can be added multiple times as there are
-            # more models than gens. That is why all_params is defined as a set.
-            all_params.add((gen, None, None))
+            # At the end, add (None, model.internal_name) for the current master.
+            all_params.add((None, model.internal_name))
         except KeyError:
             pass
 
     if not all_params:
         return pytest.mark.skip("no versions are applicable")
 
-    return pytest.mark.parametrize("gen, tag, model", all_params)
+    return pytest.mark.parametrize("tag, model", all_params)
 
 
 def for_tags(*args: Tuple[str, List[str]]) -> "MarkDecorator":
-    enabled_gens = SELECTED_GENS or ("core", "legacy")
-    return pytest.mark.parametrize(
-        "gen, tags", [(gen, tags) for gen, tags in args if gen in enabled_gens]
-    )
+    """Parametrizing decorator for tests that need specific version tags.
+    
+    Usage: @for_tags(("T1B1", ["v1.7.0", "v1.8.0"]))
+    
+    Returns parameters: (tags, model)
+    """
+    params = []
+    for model_name, tags in args:
+        # Map model name to model object to get gen
+        model_obj = by_internal_name(model_name)
+        if model_obj is not None:
+            params.append((tags, model_name))
+    
+    if not params:
+        return pytest.mark.skip("no versions are applicable")
+    
+    return pytest.mark.parametrize("tags, model", params)
