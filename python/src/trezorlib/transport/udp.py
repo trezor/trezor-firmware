@@ -150,6 +150,7 @@ class UdpTransport(Transport):
         """Test if the device is listening."""
         if not self.is_open():
             return False
+        assert self.socket is not None  # pyright fails otherwise
         try:
             LOG.log(DUMP_PACKETS, f"PINGing {self.device}")
             self.socket.sendall(b"PINGPING")
