@@ -157,6 +157,13 @@ class TrezorctlGroup(AliasedGroup):
         else:
             return super().result_callback()
 
+    def invoke(self, ctx: click.Context) -> Any:
+        try:
+            return super().invoke(ctx)
+        finally:
+            if ctx.obj is not None:
+                ctx.obj.close()
+
 
 def configure_logging(verbose: int) -> None:
     if verbose:
@@ -244,10 +251,6 @@ def cli_main(
         script=script,
         record_dir=record,
     )
-    # Enumerate and open the underyling device.
-    # Currently, we rely on this call to register lower-level `atexit` callbacks.
-    ctx.obj.open()
-    atexit.register(ctx.obj.close)
 
 
 # Creating a cli function that has the right types for future usage
