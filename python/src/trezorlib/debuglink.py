@@ -1324,6 +1324,7 @@ class TrezorTestContext:
         self.debug.version = self.version = self.client.version
         self.debug.model = self.model = self.client.model
         self.layout_type = self.debug.layout_type
+        self.is_emulator = self.features.fw_vendor == "EMULATOR"
 
     def _get_client(self) -> client.TrezorClient:
         if self.protocol_version is ProtocolVersion.V1:
