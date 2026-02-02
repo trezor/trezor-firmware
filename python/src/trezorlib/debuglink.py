@@ -516,11 +516,7 @@ def _make_input_func(
 
 class DebugLink:
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
-        try:
-            transport.close()
-        except Exception:
-            pass
-        transport.open()
+        transport.open(reopen=True)
 
         self.transport = transport
         self.allow_interactions = auto_interact
