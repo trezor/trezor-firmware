@@ -89,20 +89,40 @@ class Transport(metaclass=ABCMeta):
     def find_debug(self) -> Transport:
         raise NotImplementedError
 
-    def open(self) -> None:
-        LOG.info(f"Opening transport: {self}")
-        self._open()
-        self._opened = max(self._opened, 1)
+    def open(self, reopen: bool = False) -> None:
+        if self._opened == 0:
+            # the natural case: open a closed transport
+            LOG.info(f"Opening transport: {self}")
+            self._open()
+            self._opened = 1
+            return
+
+        if reopen:
+            # transport is already open, we want to close and reestablish
+            # the connection at the same open-height
+            LOG.info(f"Closing transport and reopening: {self}")
+            self._close()
+            self._open()
+            return
+
+        # finally, someone's calling open() when they're already open
+        # via a context manager.
+        LOG.warning(f"Transport {self} is already open")
 
     def close(self) -> None:
+        if self._opened > 1:
+            LOG.warning(
+                f"Transport {self} is open via a context manager. Closing unconditionally."
+            )
         LOG.info(f"Closing transport: {self}")
         self._close()
         self._opened = 0
 
     def __enter__(self) -> Transport:
-        self._opened += 1
-        if self._opened == 1:  # means it previously was 0
-            self.open()
+        if self._opened == 0:
+            self.open()  # resets self._opened to 1
+        else:
+            self._opened += 1
         return self
 
     def __exit__(
@@ -115,6 +135,10 @@ class Transport(metaclass=ABCMeta):
             self._opened -= 1
             if self._opened == 0:
                 self.close()
+
+    @abstractmethod
+    def is_open(self) -> bool:
+        raise NotImplementedError
 
     @abstractmethod
     def _open(self) -> None:
@@ -132,9 +156,8 @@ class Transport(metaclass=ABCMeta):
     def read_chunk(self, *, timeout: float | None = None) -> bytes:
         raise NotImplementedError
 
-    @abstractmethod
     def is_ready(self) -> bool:
-        raise NotImplementedError
+        return self.is_open()
 
 
 def all_transports() -> t.Iterable[type[Transport]]:

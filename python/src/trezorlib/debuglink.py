@@ -516,11 +516,7 @@ def _make_input_func(
 
 class DebugLink:
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
-        try:
-            self.transport.close()
-        except Exception:
-            pass
-        transport.open()
+        transport.open(reopen=True)
 
         self.transport = transport
         self.allow_interactions = auto_interact
@@ -1354,13 +1350,7 @@ class TrezorTestContext:
         return client
 
     def reset_instance(self) -> None:
-        try:
-            height = self.transport._opened
-            self.transport.close()
-        except Exception:
-            pass
-        self.transport.open()
-        self.transport._opened = height
+        self.transport.open(reopen=True)
 
         # debug-specific initialization
         self.ui: DebugUI = DebugUI(self.debug)
