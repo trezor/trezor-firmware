@@ -165,5 +165,5 @@ bool tropic_pin_unmask_kek(
 
 void tropic_pin_unmask_kek_time(uint32_t* time_ms);
 
-bool tropic_validate_configs(void);
+bool tropic_validate_sensors(void);
 #endif

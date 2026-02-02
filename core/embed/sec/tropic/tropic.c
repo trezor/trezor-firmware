@@ -986,53 +986,39 @@ void tropic_pin_unmask_kek_time(uint32_t *time_ms) {
   lt_r_mem_data_read_time(time_ms);
 }
 
-bool tropic_validate_configs(void) {
+bool tropic_validate_sensors(void) {
+  if (!tropic_session_start()) {
+    return false;
+  }
+
   lt_handle_t *tropic_handle = tropic_get_handle();
   if (!tropic_handle) {
     return false;
   }
 
-  lt_config_t r_config = {0};
-  lt_ret_t ret = lt_read_whole_R_config(tropic_handle, &r_config);
+  uint32_t sensors_config = 0;
+  lt_ret_t ret =
+      lt_r_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config);
   if (ret != LT_OK) {
     return false;
-  }
-  if (memcmp(&r_config, &g_reversible_configuration, sizeof(lt_config_t)) !=
-      0) {
-    ret = lt_write_whole_R_config(tropic_handle, &g_reversible_configuration);
-    if (ret != LT_OK) {
-      return false;
-    }
-    ret = lt_read_whole_R_config(tropic_handle, &r_config);
-    if (ret != LT_OK) {
-      return false;
-    }
-    if (memcmp(&r_config, &g_reversible_configuration, sizeof(lt_config_t)) !=
-        0) {
-      return false;
-    }
   }
 
-  lt_config_t i_config = {0};
-  ret = lt_read_whole_I_config(tropic_handle, &i_config);
+  uint32_t expected_sensors_config =
+      g_reversible_configuration.obj[TR01_CFG_SENSORS_IDX];
+  if (sensors_config != expected_sensors_config) {
+    return false;
+  }
+
+  ret = lt_i_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config);
   if (ret != LT_OK) {
     return false;
   }
-  if (memcmp(&i_config, &g_irreversible_configuration, sizeof(lt_config_t)) !=
-      0) {
-    ret = lt_write_whole_I_config(tropic_handle, &g_irreversible_configuration);
-    if (ret != LT_OK) {
-      return false;
-    }
-    ret = lt_read_whole_I_config(tropic_handle, &i_config);
-    if (ret != LT_OK) {
-      return false;
-    }
-    if (memcmp(&i_config, &g_irreversible_configuration, sizeof(lt_config_t)) !=
-        0) {
-      return false;
-    }
+  expected_sensors_config =
+      g_irreversible_configuration.obj[TR01_CFG_SENSORS_IDX];
+  if (sensors_config != expected_sensors_config) {
+    return false;
   }
+
   return true;
 }
 

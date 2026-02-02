@@ -879,6 +879,10 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
       "rng_fill_buffer_strong failed");
   ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek),
          "derive_kek_set failed");
+#if USE_TROPIC
+  ensure(tropic_validate_sensors() ? sectrue : secfalse,
+         "Tropic sensors config mismatch");
+#endif  // USE_TROPIC
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
   chacha20poly1305_encrypt(&ctx, cached_keys, ekeys, KEYS_SIZE);
@@ -1726,12 +1730,6 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
   if (sectrue != ret) {
     goto end;
   }
-
-#if USE_TROPIC
-  if (!tropic_validate_configs()) {
-    handle_fault("Tropic config mismatch");
-  }
-#endif  // USE_TROPIC
 
   ret = set_pin(newpin, newpin_len, new_ext_salt);
 
