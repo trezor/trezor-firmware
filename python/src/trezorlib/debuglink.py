@@ -91,6 +91,18 @@ class LayoutType(Enum):
             return cls.Eckhart
         if model in (models.T1B1,):
             return cls.T1
+        internal_name = getattr(model, "internal_name", None)
+        if internal_name:
+            if internal_name in (models.T2T1.internal_name,):
+                return cls.Bolt
+            if internal_name in (models.T2B1.internal_name, models.T3B1.internal_name):
+                return cls.Caesar
+            if internal_name in (models.T3T1.internal_name,):
+                return cls.Delizia
+            if internal_name in (models.T3W1.internal_name,):
+                return cls.Eckhart
+            if internal_name in (models.T1B1.internal_name,):
+                return cls.T1
         raise ValueError(f"Unknown model: {model}")
 
     def __str__(self) -> str:
