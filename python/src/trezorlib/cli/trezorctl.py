@@ -244,7 +244,9 @@ def cli_main(
         script=script,
         record_dir=record,
     )
-    #ctx.obj.open()
+    # Enumerate and open the underyling device.
+    # Currently, we rely on this call to register lower-level `atexit` callbacks.
+    ctx.obj.open()
     atexit.register(ctx.obj.close)
 
 
