@@ -21,7 +21,7 @@ dependencies = [
     "pyserial",
     "mnemonic>=0.21,<0.22",
     "shamir-mnemonic>=0.3.0,<0.4",
-    "slip10>=1.0.1,<2",
+    "slip10>=1.1.0,<2",
     "fido2>=0.8.0,<0.9",
     "python-bitcoinlib>=0.11.0,<0.12",
     "typing-extensions>=4.7.1",

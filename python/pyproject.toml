@@ -22,7 +22,7 @@ requires-python = ">=3.9"
 dependencies = [
     "mnemonic>=0.20",
     "shamir-mnemonic>=0.3.0",
-    "slip10>=1.0.1",
+    "slip10>=1.1.0",
     "requests>=2.4.0",
     "click>=8,<8.3",
     "libusb1>=1.6.4",
