@@ -35,7 +35,10 @@ def select_number_of_words(
 
 
 def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
-    debug.click(debug.screen_buttons.ok())
+    layout = debug.read_layout()
+    while "MnemonicKeyboard" not in layout.all_components():
+        debug.click(debug.screen_buttons.ok())
+        layout = debug.read_layout()
     for word in share.split(" "):
         _enter_word(debug, word, is_slip39=True)
 

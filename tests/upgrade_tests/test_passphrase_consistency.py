@@ -42,8 +42,8 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
-def emulator(gen: str, tag: str, model: str) -> Iterator[Emulator]:
-    with upgrade_emulator(gen, tag, model) as emu:
+def emulator(tag: str, model: str) -> Iterator[Emulator]:
+    with upgrade_emulator(tag, model) as emu:
         # set up a passphrase-protected device
         device.setup(
             emu.client.get_seedless_session(),
@@ -62,8 +62,9 @@ def emulator(gen: str, tag: str, model: str) -> Iterator[Emulator]:
 
 
 @for_all(
-    core_minimum_version=models.TREZOR_T.minimum_version,
+    "T1B1", "T2T1", "T3W1",
     legacy_minimum_version=models.TREZOR_ONE.minimum_version,
+    core_minimum_version=models.TREZOR_T.minimum_version,
 )
 def test_passphrase_works(emulator: Emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
@@ -102,8 +103,9 @@ def test_passphrase_works(emulator: Emulator):
 
 
 @for_all(
-    core_minimum_version=models.TREZOR_T.minimum_version,
+    "T1B1", "T2T1", "T3W1",
     legacy_minimum_version=(1, 9, 0),
+    core_minimum_version=models.TREZOR_T.minimum_version,
 )
 def test_init_device(emulator: Emulator):
     """Check that passphrase caching and session_id retaining works correctly across
