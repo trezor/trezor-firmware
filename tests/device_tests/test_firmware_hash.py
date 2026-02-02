@@ -17,7 +17,7 @@ FIRMWARE_LENGTHS = {
 
 
 def test_firmware_hash_emu(session: Session) -> None:
-    if session.features.fw_vendor != "EMULATOR":
+    if not session.test_ctx.is_emulator:
         pytest.skip("Only for emulator")
 
     data = b"\xff" * FIRMWARE_LENGTHS[session.model]
@@ -33,7 +33,7 @@ def test_firmware_hash_emu(session: Session) -> None:
 
 
 def test_firmware_hash_hw(session: Session) -> None:
-    if session.features.fw_vendor == "EMULATOR":
+    if session.test_ctx.is_emulator:
         pytest.skip("Only for hardware")
 
     # TODO get firmware image from outside the environment, check for actual result

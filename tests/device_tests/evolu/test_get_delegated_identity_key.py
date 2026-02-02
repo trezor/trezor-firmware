@@ -23,7 +23,7 @@ def test_evolu_get_delegated_identity_is_constant(client: Client):
 
 def test_evolu_get_delegated_identity_test_vector(client: Client):
     # on emulator, the master key is all zeroes. So the delegated identity key is constant.
-    if client.get_session().features.fw_vendor != "EMULATOR":
+    if not client.is_emulator:
         pytest.skip("Only for emulator")
 
     private_key = get_delegated_identity_key(client)
