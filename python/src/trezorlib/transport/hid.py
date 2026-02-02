@@ -156,7 +156,7 @@ class HidTransport(Transport):
             return 1
         raise TransportException("Unknown HID version")
 
-    def is_ready(self) -> bool:
+    def is_open(self) -> bool:
         return self.handle is not None
 
 

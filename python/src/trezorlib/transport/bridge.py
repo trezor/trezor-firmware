@@ -195,5 +195,5 @@ class BridgeTransport(Transport):
     def read_chunk(self, *, timeout: float | None = None) -> bytes:
         return self.handle.read_buf(timeout=timeout)
 
-    def is_ready(self) -> bool:
+    def is_open(self) -> bool:
         return self.session is not None

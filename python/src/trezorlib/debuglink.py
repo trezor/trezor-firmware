@@ -1341,13 +1341,7 @@ class TrezorTestContext:
         return client
 
     def reset_instance(self) -> None:
-        try:
-            height = self.transport._opened
-            self.transport.close()
-        except Exception:
-            pass
-        self.transport.open()
-        self.transport._opened = max(height, self.transport._opened)
+        self.transport.open(reopen=True)
 
         # debug-specific initialization
         self.ui: DebugUI = DebugUI(self.debug)

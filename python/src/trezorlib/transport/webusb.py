@@ -181,7 +181,7 @@ class WebUsbTransport(Transport):
         # For v1 protocol, find debug USB interface for the same serial number
         return self.__class__(self.device, debug=True)
 
-    def is_ready(self) -> bool:
+    def is_open(self) -> bool:
         return self.handle is not None
 
 
