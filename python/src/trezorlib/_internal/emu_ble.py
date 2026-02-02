@@ -227,8 +227,7 @@ class EmuBleTransport(Transport):
         return UdpTransport(f"{host}:{port - 3}")
 
     def wait_until_ready(self, timeout: float = 10) -> None:
-        try:
-            self.open()
+        with self:
             start = time.monotonic()
             while True:
                 if self.ping():
@@ -238,8 +237,6 @@ class EmuBleTransport(Transport):
                     raise Timeout("Timed out waiting for connection.")
 
                 time.sleep(0.05)
-        finally:
-            self.close()
 
     def ping(self) -> bool:
         """Test if the device is listening."""

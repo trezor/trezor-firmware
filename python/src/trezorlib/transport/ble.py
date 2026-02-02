@@ -106,6 +106,9 @@ class BleTransport(Transport):
         # instead we rely on atexit handler to avoid reconnecting
         pass
 
+    def is_open(self) -> bool:
+        return self.ble_proxy().is_connected(self.device)
+
     def write_chunk(self, chunk: bytes) -> None:
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
         self.ble_proxy().write(self.device, chunk)
@@ -302,6 +305,12 @@ class BleAsync:
         periph.client = client
         periph.queue = queue
         LOG.info(f"Connected to {client.address}")
+
+    async def is_connected(self, address: str) -> bool:
+        periph = self.devices.get(address)
+        if not periph:
+            return False
+        return bool(periph.client)
 
     async def disconnect(self, address: str) -> None:
         periph = self.devices.get(address)

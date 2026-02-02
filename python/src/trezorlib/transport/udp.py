@@ -132,8 +132,7 @@ class UdpTransport(Transport):
         return UdpTransport(f"{host}:{port + 1}")
 
     def wait_until_ready(self, timeout: float = 10) -> None:
-        try:
-            self.open()
+        with self:
             start = time.monotonic()
             while True:
                 if self.is_ready():
@@ -143,12 +142,15 @@ class UdpTransport(Transport):
                     raise Timeout("Timed out waiting for connection.")
 
                 time.sleep(0.05)
-        finally:
-            self.close()
+
+    def is_open(self) -> bool:
+        return self.socket is not None
 
     def is_ready(self) -> bool:
         """Test if the device is listening."""
-        assert self.socket is not None
+        if not self.is_open():
+            return False
+        assert self.socket is not None  # pyright fails otherwise
         try:
             LOG.log(DUMP_PACKETS, f"PINGing {self.device}")
             self.socket.sendall(b"PINGPING")
