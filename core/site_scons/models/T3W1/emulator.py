@@ -81,10 +81,9 @@ def configure(
             "vendor/libtropic/src/lt_crc16.c",
             "vendor/libtropic/src/lt_hkdf.c",
             "vendor/libtropic/src/lt_l1.c",
-            "vendor/libtropic/src/lt_l1_port_wrap.c",
             "vendor/libtropic/src/lt_l2_frame_check.c",
             "vendor/libtropic/src/lt_l3_process.c",
-            "vendor/libtropic/src/lt_random.c",
+            "vendor/libtropic/src/lt_port_wrap.c",
             "vendor/libtropic/src/lt_tr01_attrs.c",
         ]
         paths += ["embed/sec/tropic/inc"]

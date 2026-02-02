@@ -204,10 +204,9 @@ def configure(
         sources += ["vendor/libtropic/src/lt_crc16.c"]
         sources += ["vendor/libtropic/src/lt_hkdf.c"]
         sources += ["vendor/libtropic/src/lt_l1.c"]
-        sources += ["vendor/libtropic/src/lt_l1_port_wrap.c"]
         sources += ["vendor/libtropic/src/lt_l2_frame_check.c"]
         sources += ["vendor/libtropic/src/lt_l3_process.c"]
-        sources += ["vendor/libtropic/src/lt_random.c"]
+        sources += ["vendor/libtropic/src/lt_port_wrap.c"]
         sources += ["vendor/libtropic/src/lt_tr01_attrs.c"]
 
         paths += ["embed/sec/tropic/inc"]
