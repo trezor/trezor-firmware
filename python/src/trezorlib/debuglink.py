@@ -1705,7 +1705,7 @@ class TrezorTestContext:
         so that we get consistent storage contents (specifically device id)
         after the wipe.
         """
-        if reseed:
+        if reseed and self.is_emulator:
             self.debug.reseed(0)
         if self.model is models.T1B1:
             self.client._get_any_session().call(
