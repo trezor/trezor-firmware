@@ -88,12 +88,17 @@
       "Delizia": "Wallet backup completed",
       "Eckhart": "Wallet backup completed."
     },
-    "backup__title_backup_wallet": "Back up wallet",
+    "backup__title_backup_wallet": {
+      "Bolt": "",
+      "Caesar": "Back up wallet",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "backup__title_create_wallet_backup": "Create wallet backup",
     "backup__title_skip": "Skip backup",
     "backup__want_to_skip": "Are you sure you want to skip the backup?",
     "bitcoin__commitment_data": "Commitment data",
-    "bitcoin__confirm_locktime": "Confirm locktime",
+    "bitcoin__confirm_locktime": "Confirm Locktime",
     "bitcoin__create_proof_of_ownership": "Do you want to create a proof of ownership?",
     "bitcoin__high_mining_fee_template": "The mining fee of\n{0}\nis unexpectedly high.",
     "bitcoin__locktime_no_effect": "Locktime is set but will have no effect.",
@@ -1474,7 +1479,7 @@
       "Bolt": "Share already entered",
       "Caesar": "Share already entered",
       "Delizia": "Share already entered",
-      "Eckhart": "Share already entered."
+      "Eckhart": "Share already entered. Enter a different share."
     },
     "recovery__share_does_not_match": "Share doesn't match",
     "recovery__share_from_another_multi_share_backup": "You have entered a share from a different backup.",
@@ -1574,9 +1579,9 @@
     "reset__group_info": "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.",
     "reset__group_share_checked_successfully_template": "Group {0} - Share {1} checked successfully.",
     "reset__group_share_title_template": {
-      "Bolt": "Group {0} - share {1}",
-      "Caesar": "Group {0} - share {1}",
-      "Delizia": "Group {0} - share {1}",
+      "Bolt": "Group {0} - Share {1}",
+      "Caesar": "Group {0} - Share {1}",
+      "Delizia": "Group {0} - Share {1}",
       "Eckhart": "Group #{0} - Share #{1}"
     },
     "reset__incorrect_word_selected": {
