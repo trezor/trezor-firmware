@@ -30,7 +30,7 @@ def save_json(path: Path, data: Dict[str, Any]) -> None:
 def infer_layout(file_path: Path) -> str:
     # Expect pattern <lang>_<Layout>.json
     stem = file_path.stem  # en_Bolt
-    parts = stem.split("_", 1)
+    parts = stem.rsplit("_", 1)
     if len(parts) != 2:
         raise ValueError(f"Cannot infer layout from filename: {file_path.name}")
     return parts[1]
@@ -227,7 +227,7 @@ def run_cleanup(
     "config_path",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to layout_rules.json",
+    help="Path to rules JSON file",
 )
 @click.option(
     "--locales-dir",
