@@ -124,11 +124,8 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn confirm_long(
-        title: TString<'static>,
-        content_length: u32,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
-        let screen = LongContentScreen::new(title, content_length);
+    fn confirm_long(title: TString<'static>, pages: usize) -> Result<impl LayoutMaybeTrace, Error> {
+        let screen = LongContentScreen::new(title, pages);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
@@ -1776,10 +1773,12 @@ impl FirmwareUI for UIEckhart {
                 )?;
                 LayoutObj::new_root(layout)
             }
-            ArchivedTrezorUiEnum::ConfirmLong { title, content_len } => {
+            ArchivedTrezorUiEnum::ConfirmLong { title, pages } => {
                 // Use safe Deref trait instead of raw pointers
-                let layout =
-                    Self::confirm_long(tstr_from_archived(title), u32::from(*content_len))?;
+                let layout = Self::confirm_long(
+                    tstr_from_archived(title),
+                    unwrap!(usize::try_from(pages.to_native())),
+                )?;
                 LayoutObj::new_root(layout)
             }
             ArchivedTrezorUiEnum::ConfirmProperties { title, props } => {

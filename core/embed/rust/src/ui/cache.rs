@@ -1,18 +1,4 @@
-use crate::{
-    debug,
-    ipc::{IpcMessage, RemoteSysTask},
-    micropython::buffer::StrBuffer,
-    strutil::TString,
-    ui::component::{base::AttachType, Event, EventCtx},
-};
-use core::mem::MaybeUninit;
-use rkyv::{
-    api::low::to_bytes_in_with_alloc,
-    rancor::Failure,
-    ser::{allocator::SubAllocator, writer::Buffer},
-    util::Align,
-};
-use trezor_structs::UtilEnum;
+use crate::{micropython::buffer::StrBuffer, strutil::TString};
 
 /// A node in the linked list cache
 struct CacheNode<const T: usize> {
@@ -79,77 +65,43 @@ impl<const T: usize> CacheNode<T> {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum CacheState {
-    Uninit,
-    Waiting(usize),
-    Ready,
-}
-
 /// LRU-style linked list cache with N slots.
 ///
 /// head <-> ... <-> tail
 /// - Adding next: add after head, evict tail if full
 /// - Adding prev: add before tail, evict head if full
-pub struct Cache<const A: usize, const T: usize, const N: usize> {
-    state: CacheState,
+pub struct Cache<const T: usize, const N: usize> {
     nodes: [CacheNode<T>; N],
     head: Option<usize>, // newest towards next direction
     tail: Option<usize>, // newest towards prev direction
-    current_node: usize,
-    current_page: u16,
-    total_pages: u16,
+    current: Option<usize>,
     len: usize,
 }
 
-impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
+impl<const T: usize, const N: usize> Cache<T, N> {
     const EMPTY_NODE: CacheNode<T> = CacheNode::empty();
 
-    pub const fn new(total_pages: u16) -> Self {
+    pub const fn new() -> Self {
         Self {
-            state: CacheState::Uninit,
             nodes: [Self::EMPTY_NODE; N],
             head: None,
             tail: None,
-            current_node: 0,
-            total_pages,
-            current_page: 0,
+            current: None,
             len: 0,
         }
     }
 
-    pub fn event(&mut self, ctx: &mut EventCtx, event: Event) {
-        if matches!(event, Event::Attach(AttachType::Initial)) {
-            // debug_assert!(self.cache.state == CacheState::Empty);
-            // Load content into cache if needed
-            self.request_page(ctx, 0);
-        }
-
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if let Some(data) = IpcMessage::try_receive(RemoteSysTask::Unknown(2)) {
-                self.update(&data.data(), ctx);
-            } else {
-                ctx.request_anim_frame();
-            }
-        }
+    pub fn initialized(&self) -> bool {
+        self.current.is_some()
     }
-
     pub fn init(&mut self, data: &[u8]) {
-        debug_assert!(self.state == CacheState::Uninit);
+        debug_assert!(self.len == 0);
 
-        self.current_node = 0;
-        self.nodes[self.current_node].set_content(data);
-        self.insert_at_head(self.current_node);
+        let current = 0;
+        self.nodes[current].set_content(data);
+        self.insert_at_head(current);
         self.len = 1;
-        self.state = CacheState::Ready;
-    }
-
-    pub fn has_next(&self) -> bool {
-        self.current_page + 1 < self.total_pages
-    }
-
-    pub fn has_prev(&self) -> bool {
-        self.current_page > 0
+        self.current = Some(current);
     }
 
     /// Find a free node slot
@@ -229,6 +181,8 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
 
     /// Get a slot for a new node, evicting from specified end if needed
     fn get_slot_evict_tail(&mut self) -> usize {
+        debug_assert!(self.len >= 1);
+
         if let Some(idx) = self.find_free_slot() {
             idx
         } else {
@@ -237,6 +191,8 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
     }
 
     fn get_slot_evict_head(&mut self) -> usize {
+        debug_assert!(self.len >= 1);
+
         if let Some(idx) = self.find_free_slot() {
             idx
         } else {
@@ -244,130 +200,67 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
         }
     }
 
-    fn request_page(&mut self, ctx: &mut EventCtx, page_idx: u16) {
-        let data = UtilEnum::RequestSlice {
-            offset: (page_idx as u32) * (A as u32),
-            size: A as u32,
-        };
-
-        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
-        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
-
-        let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
-            &data,
-            Buffer::from(&mut *out),
-            SubAllocator::new(&mut arena),
-        )
-        .unwrap();
-
-        let msg = IpcMessage::new(9, &bytes);
-        unwrap!(msg.send(RemoteSysTask::Unknown(2), 6));
-        ctx.request_anim_frame();
-    }
-
-    pub fn update(&mut self, data: &[u8], ctx: &mut EventCtx) -> u16 {
-        debug_assert!(matches!(
-            self.state,
-            CacheState::Uninit | CacheState::Waiting(_)
-        ));
-
-        match self.state {
-            CacheState::Uninit => {
-                self.init(data);
-                if self.has_next() {
-                    let idx = self.current_page as usize + 1;
-                    self.state = CacheState::Waiting(idx);
-                    self.request_page(ctx, idx as u16);
-                } else {
-                    self.state = CacheState::Ready;
-                }
-                ctx.request_paint();
-            }
-            CacheState::Waiting(next_page) if self.current_page + 1 == next_page as u16 => {
-                debug_assert!(self.head.is_some());
-                debug_assert!(self.current_node == self.head.unwrap());
-                self.set_next(data);
-            }
-            CacheState::Waiting(prev_page) if self.current_page == prev_page as u16 + 1 => {
-                debug_assert!(self.tail.is_some());
-                debug_assert!(self.current_node == self.tail.unwrap());
-                self.set_prev(data);
-            }
-            _ => {
-                unimplemented!("Unexpected page received");
-            }
-        }
-        0
-    }
-
     /// Add next page data (adds at head, evicts from tail if full)
-    pub fn set_next(&mut self, data: &[u8]) {
-        debug_assert!(self.has_next() && matches!(self.state, CacheState::Waiting(_)));
-        debug_assert!(self.current_node == self.head.unwrap());
+    pub fn push_head(&mut self, data: &[u8]) {
+        debug_assert!(self.current == self.head);
 
         let idx = self.get_slot_evict_tail();
         self.nodes[idx].set_content(data);
         self.insert_at_head(idx);
         self.len += 1;
-        self.state = CacheState::Ready;
     }
 
     /// Add prev page data (adds at tail, evicts from head if full)
-    pub fn set_prev(&mut self, data: &[u8]) {
-        debug_assert!(self.has_prev() && matches!(self.state, CacheState::Waiting(_)));
-        debug_assert!(self.current_node == self.tail.unwrap());
+    pub fn push_tail(&mut self, data: &[u8]) {
+        // debug_assert!(self.has_prev() && matches!(self.state,
+        // CacheState::Waiting(_)));
+        debug_assert!(self.current == self.tail);
         let idx = self.get_slot_evict_head();
         self.nodes[idx].set_content(data);
         self.insert_at_tail(idx);
         self.len += 1;
-        self.state = CacheState::Ready;
     }
 
-    /// Switch to next page in cache
-    pub fn switch_next(&mut self, ctx: &mut EventCtx) {
-        debug_assert!(self.has_next() && self.state == CacheState::Ready);
+    pub fn go_next(&mut self) {
+        debug_assert!(self.current.is_some());
+        debug_assert!(self.nodes[unwrap!(self.current)].has_next());
 
-        let next_node = self.nodes[self.current_node].next;
-        debug_assert!(next_node.is_some());
-        self.current_node = next_node.unwrap();
-        self.current_page += 1;
-
-        // Request prefetch if there's another page after
-        if self.has_next() && self.nodes[self.current_node].next.is_none() {
-            let next_idx = self.current_page as usize + 1;
-            self.state = CacheState::Waiting(next_idx);
-            self.request_page(ctx, next_idx as u16);
-        }
+        self.current = self.nodes[unwrap!(self.current)].next;
     }
 
-    /// Switch to prev page in cache
-    pub fn switch_prev(&mut self, ctx: &mut EventCtx) {
-        debug_assert!(self.has_prev() && self.state == CacheState::Ready);
+    pub fn go_prev(&mut self) {
+        debug_assert!(self.current.is_some());
+        debug_assert!(self.nodes[unwrap!(self.current)].has_prev());
 
-        let prev_node = self.nodes[self.current_node].prev;
-        debug_assert!(prev_node.is_some());
-        self.current_node = prev_node.unwrap();
-        self.current_page -= 1;
-
-        // Request prefetch if there's another page before
-        if self.has_prev() && self.nodes[self.current_node].prev.is_none() {
-            let prev_idx = self.current_page as usize - 1;
-            self.state = CacheState::Waiting(prev_idx);
-            self.request_page(ctx, prev_idx as u16);
-        }
+        self.current = self.nodes[unwrap!(self.current)].prev;
     }
 
-    pub fn current_page_data(&self) -> TString<'static> {
-        if self.state == CacheState::Uninit {
-            return TString::empty();
+    pub fn is_at_head(&self) -> bool {
+        debug_assert!(self.current.is_some());
+        self.current == self.head
+    }
+
+    pub fn is_at_tail(&self) -> bool {
+        debug_assert!(self.current.is_some());
+        self.current == self.tail
+    }
+
+    pub fn current_data(&self) -> Option<TString<'static>> {
+        if let Some(current) = self.current {
+            unsafe {
+                return Some(
+                    StrBuffer::from_ptr_and_len(
+                        self.nodes[current].content.as_ptr(),
+                        self.nodes[current].content_len,
+                    )
+                    .into(),
+                );
+            }
+        } else {
+            None
         }
-
-        let node = &self.nodes[self.current_node];
-        debug_assert!(node.valid);
-
-        unsafe { StrBuffer::from_ptr_and_len(node.content.as_ptr(), node.content_len) }.into()
     }
 }
 
 /// Type alias for the default cache configuration
-pub type PageCache<const A: usize, const T: usize> = Cache<A, T, 3>;
+pub type PageCache = Cache<360, 3>;

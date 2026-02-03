@@ -96,20 +96,23 @@ impl<'a, T: Into<u16>> IpcRemote<'a, T> {
 
                 let archived = unsafe { rkyv::access_unchecked::<ArchivedUtilEnum>(data) };
                 match archived {
-                    ArchivedUtilEnum::RequestSlice { offset, size } => {
-                        let offset_val = offset.to_native() as usize;
-                        let size_val = size.to_native() as usize;
+                    ArchivedUtilEnum::RequestPage { idx } => {
+                        let page_idx = idx.to_native() as usize;
+
                         // Find byte range for the requested char slice
                         let mut chars = long_content.chars();
                         let start_byte = chars
                             .by_ref()
-                            .take(offset_val)
+                            .take(page_idx * crate::ui::CHARS_PER_PAGE)
                             .map(|c| c.len_utf8())
                             .sum::<usize>();
-                        let slice_len = chars.take(size_val).map(|c| c.len_utf8()).sum::<usize>();
+                        let slice_len = chars
+                            .take(crate::ui::CHARS_PER_PAGE)
+                            .map(|c| c.len_utf8())
+                            .sum::<usize>();
                         let slice = &long_content.as_bytes()[start_byte..start_byte + slice_len];
 
-                        // TODO implement Debuf for Api error
+                        // TODO implement Debug for Api error
                         let _ = IpcMessage::new(10, slice).send(RemoteSysTask::CoreApp, 6);
                     }
                     _ => return Err(Error::UnexpectedResponse(reply)),

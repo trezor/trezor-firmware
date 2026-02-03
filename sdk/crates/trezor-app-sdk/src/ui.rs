@@ -33,6 +33,8 @@ use crate::util::Timeout;
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
 
+pub const CHARS_PER_PAGE: usize = 96;
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -52,19 +54,17 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
     Ok(deserialized)
 }
 
-
 fn ipc_ui_long_call(value: &TrezorUiEnum, long_content: &str) -> UiResult {
     let bytes = to_bytes::<Failure>(value).unwrap();
     let message = IpcMessage::new(0, &bytes);
-    let result = services_or_die().call_long(CoreIpcService::Ui, &message, Timeout::max(), long_content)?;
+    let result =
+        services_or_die().call_long(CoreIpcService::Ui, &message, Timeout::max(), long_content)?;
 
     // Safe validation using bytecheck before accessing archived data
     let archived = rkyv::access::<ArchivedTrezorUiResult, Failure>(result.data()).unwrap();
     let deserialized = deserialize::<TrezorUiResult, Failure>(archived).unwrap();
     Ok(deserialized)
 }
-
-
 
 /// Send a UI call and expect a boolean confirmation result
 fn ipc_ui_call_confirm(value: TrezorUiEnum) -> UiResult {
@@ -102,7 +102,7 @@ pub fn confirm_value(title: &str, content: &str) -> UiResult {
 pub fn confirm_long_value(title: &str, content: &str) -> UiResult {
     let value = TrezorUiEnum::ConfirmLong {
         title: ShortString::from_str(title).unwrap(),
-        content_len: content.chars().count() as u32,
+        pages: (content.chars().count() as usize + CHARS_PER_PAGE - 1) / CHARS_PER_PAGE,
     };
 
     match ipc_ui_long_call(&value, content) {
