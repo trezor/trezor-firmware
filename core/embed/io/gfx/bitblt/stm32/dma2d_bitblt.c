@@ -139,6 +139,8 @@ void dma2d_wait(void) {
     if (HAL_DMA2D_GetState(&drv->handle) != HAL_DMA2D_STATE_BUSY) {
       // This case is weird because "drv->dma_transfer_in_progress" is "true"
       // but the DMA2D state isn't "HAL_DMA2D_STATE_BUSY".
+      drv->dma_transfer_in_progress = false;
+      HAL_DMA2D_Abort(&drv->handle);  // Defensive cleanup
       irq_unlock(key);
       return;
     }
