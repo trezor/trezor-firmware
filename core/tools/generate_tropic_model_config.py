@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -8,13 +9,19 @@ import click
 import yaml
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
-import json
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent.parent.resolve()
 CONFIG_DIR = ROOT / "tests" / "tropic_model"
 DEST_PATH = CONFIG_DIR / "config.yml"
-CFG_SPEC_DIR = ROOT / "core" / "embed" / "sec" / "tropic" / "inc" / "sec" / "tropic_configs_manual.json"
+CFG_SPEC_DIR = (
+    ROOT
+    / "core"
+    / "embed"
+    / "sec"
+    / "tropic"
+    / "tropic_configs.json"
+)
 
 # private key used by the Tropic model to sign
 TROPIC_KEY = CONFIG_DIR / "tropic_key.pem"
@@ -37,22 +44,27 @@ RISCV_FW_MAJOR = 1
 RISCV_FW_MINOR = 0
 RISCV_FW_PATCH = 0
 
+
 def get_tropic_configuration(path: Path) -> dict:
     with open(path, "r") as f:
         config = json.load(f)
-    numbers = {'i_config': {}, 'r_config': {}}
-    for key in config['irreversible_configuration']:
-        assert list(config['irreversible_configuration'][key].keys()) == ['all_except'], config['irreversible_configuration'][key].keys()
+    numbers = {"i_config": {}, "r_config": {}}
+    for key in config["irreversible_configuration"]:
+        assert list(config["irreversible_configuration"][key].keys()) == [
+            "all_except"
+        ], config["irreversible_configuration"][key].keys()
         number = 0xFFFFFFFF
-        for exclude in config['irreversible_configuration'][key]['all_except']:
+        for exclude in config["irreversible_configuration"][key]["all_except"]:
             number &= ~exclude
-        numbers['i_config'][key] = number
-    for key in config['reversible_configuration']:
-        assert list(config['reversible_configuration'][key].keys()) == ['bits'], config['reversible_configuration'][key].keys()
+        numbers["i_config"][key] = number
+    for key in config["reversible_configuration"]:
+        assert list(config["reversible_configuration"][key].keys()) == ["bits"], config[
+            "reversible_configuration"
+        ][key].keys()
         number = 0
-        for include in config['reversible_configuration'][key]['bits']:
+        for include in config["reversible_configuration"][key]["bits"]:
             number |= include
-        numbers['r_config'][key] = number
+        numbers["r_config"][key] = number
     return numbers
 
 
