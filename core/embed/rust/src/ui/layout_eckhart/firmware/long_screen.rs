@@ -1,8 +1,10 @@
 use crate::{
+    ipc::{IpcMessage, RemoteSysTask},
     strutil::TString,
     ui::{
         cache::PageCache,
         component::{
+            base::AttachType,
             text::{layout::LayoutFit, LineBreaking},
             Component, Event, EventCtx, Never, TextLayout,
         },
@@ -12,9 +14,16 @@ use crate::{
     },
 };
 
-use super::{constant::SCREEN, theme, ActionBar, ActionBarMsg, Header, Hint};
+use core::mem::MaybeUninit;
+use rkyv::{
+    api::low::to_bytes_in_with_alloc,
+    rancor::Failure,
+    ser::{allocator::SubAllocator, writer::Buffer},
+    util::Align,
+};
+use trezor_structs::UtilEnum;
 
-pub const CHARS_PER_PAGE: usize = 10;
+use super::{constant::SCREEN, theme, ActionBar, ActionBarMsg, Header, Hint};
 
 pub enum LongContentScreenMsg {
     Confirmed,
@@ -29,8 +38,8 @@ pub struct LongContentScreen<'a> {
 }
 
 impl<'a> LongContentScreen<'a> {
-    pub fn new(title: TString<'static>, text_length: u32) -> Self {
-        let content = LongContent::new(text_length);
+    pub fn new(title: TString<'static>, pages: usize) -> Self {
+        let content = LongContent::new(pages as u16);
         let mut action_bar = ActionBar::new_cancel_confirm();
         action_bar.update(content.pager);
 
@@ -127,20 +136,18 @@ impl<'a> crate::trace::Trace for LongContentScreen<'a> {
 
 struct LongContent {
     pager: Pager,
-    content_length: u32,
-    cache: PageCache<CHARS_PER_PAGE, { 4 * CHARS_PER_PAGE }>,
+    cache: PageCache,
     area: Rect,
+    state: ContentState,
 }
 
 impl LongContent {
-    fn new(content_length: u32) -> Self {
-        let total_pages =
-            ((content_length as u16) + CHARS_PER_PAGE as u16 - 1) / CHARS_PER_PAGE as u16;
+    fn new(pages: u16) -> Self {
         Self {
-            pager: Pager::new(total_pages),
-            content_length,
-            cache: PageCache::<CHARS_PER_PAGE, { 4 * CHARS_PER_PAGE }>::new(total_pages),
+            pager: Pager::new(pages),
+            cache: PageCache::new(),
             area: Rect::zero(),
+            state: ContentState::Uninit,
         }
     }
 
@@ -150,14 +157,48 @@ impl LongContent {
 
     fn switch_next(&mut self, ctx: &mut EventCtx) {
         debug_assert!(!self.pager.is_last());
+        debug_assert!(matches!(self.state, ContentState::Ready));
         self.pager.goto_next();
-        self.cache.switch_next(ctx);
+        self.cache.go_next();
+
+        // Request prefetch if there's another page after
+        if self.pager.has_next() && self.cache.is_at_head() {
+            let next = self.pager.next() as usize;
+            self.request_page(ctx, next);
+            self.state = ContentState::Waiting(next);
+        }
     }
 
     fn switch_prev(&mut self, ctx: &mut EventCtx) {
         debug_assert!(!self.pager.is_first());
+        debug_assert!(matches!(self.state, ContentState::Ready));
         self.pager.goto_prev();
-        self.cache.switch_prev(ctx);
+        self.cache.go_prev();
+
+        // Request prefetch if there's another page before
+        if self.pager.has_prev() && self.cache.is_at_tail() {
+            let prev = self.pager.prev() as usize;
+            self.request_page(ctx, prev);
+            self.state = ContentState::Waiting(prev);
+        }
+    }
+
+    fn request_page(&mut self, ctx: &mut EventCtx, idx: usize) {
+        let data = UtilEnum::RequestPage { idx };
+
+        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
+        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
+
+        let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
+            &data,
+            Buffer::from(&mut *out),
+            SubAllocator::new(&mut arena),
+        )
+        .unwrap();
+
+        let msg = IpcMessage::new(9, &bytes);
+        unwrap!(msg.send(RemoteSysTask::Unknown(2), 6));
+        ctx.request_anim_frame();
     }
 }
 
@@ -170,13 +211,58 @@ impl Component for LongContent {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.cache.event(ctx, event);
+        if matches!(event, Event::Attach(AttachType::Initial)) {
+            // debug_assert!(self.cache.state == CacheState::Empty);
+            // Load content into cache if needed
+            self.request_page(ctx, 0);
+        }
+
+        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+            if let Some(data) = IpcMessage::try_receive(RemoteSysTask::Unknown(2)) {
+                debug_assert!(matches!(
+                    self.state,
+                    ContentState::Uninit | ContentState::Waiting(_)
+                ));
+                self.state = match self.state {
+                    ContentState::Uninit => {
+                        self.cache.init(data.data());
+                        ctx.request_paint();
+                        if self.pager.has_next() {
+                            let idx = self.pager.next() as usize;
+                            self.request_page(ctx, idx);
+                            ContentState::Waiting(idx)
+                        } else {
+                            ContentState::Ready
+                        }
+                    }
+                    ContentState::Waiting(next_page)
+                        if self.pager.current() + 1 == next_page as u16 =>
+                    {
+                        debug_assert!(self.cache.is_at_head());
+                        self.cache.push_head(data.data());
+                        ContentState::Ready
+                    }
+                    ContentState::Waiting(prev_page)
+                        if self.pager.current() == prev_page as u16 + 1 =>
+                    {
+                        debug_assert!(self.cache.is_at_tail());
+                        self.cache.push_tail(data.data());
+                        ContentState::Ready
+                    }
+                    _ => {
+                        unimplemented!("Unexpected page received");
+                    }
+                }
+            } else {
+                ctx.request_anim_frame();
+            }
+        }
 
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let current_page = self.cache.current_page_data();
+        let current_page = self.cache.current_data().unwrap_or(TString::empty());
 
         current_page.map(|text| {
             let layout = TextLayout::new(
@@ -196,8 +282,14 @@ impl Component for LongContent {
 impl crate::trace::Trace for LongContent {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("LongContent");
-        t.int("content length", self.content_length as i64);
         t.int("current_page", self.pager.current() as i64);
         t.int("total_pages", self.pager.total() as i64);
     }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ContentState {
+    Uninit,
+    Waiting(usize),
+    Ready,
 }

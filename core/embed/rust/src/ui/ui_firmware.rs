@@ -40,7 +40,7 @@ pub trait FirmwareUI {
 
     fn confirm_long(
         title: TString<'static>,
-        content_length: u32,
+        pages: usize,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_address(
