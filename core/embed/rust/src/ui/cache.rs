@@ -1,9 +1,18 @@
 use crate::{
     debug,
+    ipc::{IpcMessage, RemoteSysTask},
     micropython::buffer::StrBuffer,
     strutil::TString,
-    ui::{cache, component::text::op::Op},
+    ui::component::{base::AttachType, Event, EventCtx},
 };
+use core::mem::MaybeUninit;
+use rkyv::{
+    api::low::to_bytes_in_with_alloc,
+    rancor::Failure,
+    ser::{allocator::SubAllocator, writer::Buffer},
+    util::Align,
+};
+use trezor_structs::UtilEnum;
 
 /// A node in the linked list cache
 struct CacheNode<const T: usize> {
@@ -18,6 +27,7 @@ impl<const T: usize> CacheNode<T> {
     const fn empty() -> Self {
         Self {
             valid: false,
+            // Utf8 characters might have bigger size, allocate double space
             content: [0; T],
             content_len: 0,
             prev: None,
@@ -26,14 +36,23 @@ impl<const T: usize> CacheNode<T> {
     }
 
     fn is_empty(&self) -> bool {
-        self.valid == false
+        !self.valid
     }
 
-    // fn clear(&mut self) {
-    //     self.valid = false;
-    //     self.content = [0; T];
-    //     self.content_len = 0;
-    // }
+    fn clear(&mut self) {
+        self.valid = false;
+        self.content_len = 0;
+        self.prev = None;
+        self.next = None;
+    }
+
+    fn set_content(&mut self, data: &[u8]) {
+        self.valid = true;
+        let len = data.len();
+        debug_assert!(len <= T);
+        self.content[..len].copy_from_slice(&data);
+        self.content_len = len;
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -45,20 +64,21 @@ pub enum CacheState {
 
 /// LRU-style linked list cache with N slots.
 ///
-/// Uses a doubly-linked list to track usage order.
-/// Head is most recently used, tail is least recently used.
-pub struct Cache<const T: usize, const N: usize> {
+/// head <-> ... <-> tail
+/// - Adding next: add after head, evict tail if full
+/// - Adding prev: add before tail, evict head if full
+pub struct Cache<const A: usize, const T: usize, const N: usize> {
     state: CacheState,
     nodes: [CacheNode<T>; N],
-    head: Option<usize>,
-    tail: Option<usize>,
+    head: Option<usize>, // newest towards next direction
+    tail: Option<usize>, // newest towards prev direction
     current_node: usize,
     current_page: u16,
     total_pages: u16,
-    cap: usize,
+    len: usize,
 }
 
-impl<const T: usize, const N: usize> Cache<T, N> {
+impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
     const EMPTY_NODE: CacheNode<T> = CacheNode::empty();
 
     pub const fn new(total_pages: u16) -> Self {
@@ -70,23 +90,37 @@ impl<const T: usize, const N: usize> Cache<T, N> {
             current_node: 0,
             total_pages,
             current_page: 0,
-            cap: 0,
+            len: 0,
+        }
+    }
+
+    pub fn event(&mut self, ctx: &mut EventCtx, event: Event) {
+        if matches!(event, Event::Attach(AttachType::Initial)) {
+            // debug_assert!(self.cache.state == CacheState::Empty);
+            // Load content into cache if needed
+            self.request_page(ctx, 0);
+        }
+
+        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+            if let Some(data) = IpcMessage::try_receive(RemoteSysTask::Unknown(2)) {
+                self.update(&data.data(), ctx);
+            } else {
+                ctx.request_anim_frame();
+            }
         }
     }
 
     pub fn init(&mut self, data: &[u8]) {
         debug_assert!(self.state == CacheState::Uninit);
-        self.state = CacheState::Ready;
 
         self.current_node = 0;
-        self.nodes[0].valid = true;
-        self.nodes[0].content[..data.len()].copy_from_slice(data);
-        self.nodes[0].content_len = data.len();
-        self.nodes[0].prev = None;
-        self.nodes[0].next = None;
-        self.head = Some(0);
-        self.tail = Some(0);
-        self.cap = 1;
+        self.nodes[self.current_node].set_content(data);
+        self.nodes[self.current_node].prev = None;
+        self.nodes[self.current_node].next = None;
+        self.head = Some(self.current_node);
+        self.tail = Some(self.current_node);
+        self.len = 1;
+        self.state = CacheState::Ready;
     }
 
     pub fn has_next(&self) -> bool {
@@ -105,129 +139,214 @@ impl<const T: usize, const N: usize> Cache<T, N> {
         self.current_page
     }
 
-    pub fn find_free_node(&mut self) -> Option<usize> {
-        if self.cap >= N {
-            return None;
-        }
-        for (idx, node) in self.nodes.iter_mut().enumerate() {
-            if node.is_empty() {
-                return Some(idx);
-            }
-        }
-        None
-    }
-
-    pub fn set_next(&mut self, data: &[u8]) {
-        debug_assert!(self.has_next() && matches!(self.state, CacheState::Waiting(_)));
-
-        if self.cap < N {
-            self.cap += 1;
-
-            let new_head_idx = self.find_free_node().unwrap();
-            let old_head_node = &mut self.nodes[self.head.unwrap()];
-            old_head_node.next = Some(new_head_idx);
-            let new_head_node = &mut self.nodes[new_head_idx];
-            new_head_node.valid = true;
-            new_head_node.content[..data.len()].copy_from_slice(data);
-            new_head_node.content_len = data.len();
-            new_head_node.prev = Some(self.current_node);
-            new_head_node.next = None;
-
-            self.head = Some(new_head_idx);
-        } else {
-            let old_tail_idx = self.tail.unwrap();
-            let old_tail_node = &mut self.nodes[old_tail_idx];
-
-            let new_tail_idx = old_tail_node.next.unwrap();
-            let new_tail_node = &mut self.nodes[new_tail_idx];
-            self.tail = Some(new_tail_idx);
-
-            let new_head_idx = old_tail_idx;
-            let old_head = &mut self.nodes[self.head.unwrap()];
-            old_head.next = Some(new_head_idx);
-            self.head = Some(new_head_idx);
-            let new_head_node = &mut self.nodes[new_head_idx];
-            new_head_node.valid = true;
-            new_head_node.content[..data.len()].copy_from_slice(data);
-            new_head_node.content_len = data.len();
-            new_head_node.prev = Some(self.current_node);
-            new_head_node.next = None;
-        }
-
-        self.state = CacheState::Ready;
-    }
-
-    pub fn set_prev(&mut self, data: &[u8]) {
-        debug_assert!(self.has_prev() && matches!(self.state, CacheState::Waiting(_)));
-
-        if self.cap < N {
-            self.cap += 1;
-
-            let new_tail_idx = self.find_free_node().unwrap();
-
-            let old_tail_node = &mut self.nodes[self.tail.unwrap()];
-            old_tail_node.prev = Some(new_tail_idx);
-
-            let new_tail_node = &mut self.nodes[new_tail_idx];
-
-            new_tail_node.valid = true;
-            new_tail_node.content[..data.len()].copy_from_slice(data);
-            new_tail_node.content_len = data.len();
-            new_tail_node.prev = None;
-            new_tail_node.next = Some(self.current_node);
-
-            self.tail = Some(new_tail_idx);
-        } else {
-            let old_head_idx = self.head.unwrap();
-            let old_head_node = &mut self.nodes[old_head_idx];
-
-            let new_head_idx = old_head_node.prev.unwrap();
-            let new_head_node = &mut self.nodes[new_head_idx];
-            self.head = Some(new_head_idx);
-
-            let new_tail_idx = old_head_idx;
-            let old_tail = &mut self.nodes[self.tail.unwrap()];
-            old_tail.prev = Some(new_tail_idx);
-            self.tail = Some(new_tail_idx);
-            let new_tail_node = &mut self.nodes[new_tail_idx];
-            new_tail_node.valid = true;
-            new_tail_node.content[..data.len()].copy_from_slice(data);
-            new_tail_node.content_len = data.len();
-            new_tail_node.prev = None;
-            new_tail_node.next = Some(self.current_node);
-        }
-
-        self.state = CacheState::Ready;
+    pub fn state(&self) -> CacheState {
+        self.state
     }
 
     pub fn set_state(&mut self, state: CacheState) {
         self.state = state;
     }
 
-    pub fn switch_next(&mut self) -> CacheState {
-        debug_assert!(self.has_next() && self.state == CacheState::Ready);
-        let old_current_node = &self.nodes[self.current_node];
-        debug_assert!(old_current_node.next.is_some());
-        self.current_node = old_current_node.next.unwrap();
-        self.current_page += 1;
-
-        if self.has_next() {
-            self.state = CacheState::Waiting(self.current_page as usize + 1);
-        }
-        self.state
+    /// Find a free node slot
+    fn find_free_slot(&self) -> Option<usize> {
+        self.nodes.iter().position(|n| n.is_empty())
     }
 
-    pub fn switch_prev(&mut self) -> CacheState {
+    /// Insert node at head (next direction)
+    fn insert_at_head(&mut self, idx: usize) {
+        self.nodes[idx].next = None;
+        self.nodes[idx].prev = self.head;
+
+        if let Some(h) = self.head {
+            self.nodes[h].next = Some(idx);
+        }
+        self.head = Some(idx);
+
+        if self.tail.is_none() {
+            self.tail = Some(idx);
+        }
+    }
+
+    /// Insert node at tail (prev direction)
+    fn insert_at_tail(&mut self, idx: usize) {
+        self.nodes[idx].prev = None;
+        self.nodes[idx].next = self.tail;
+
+        if let Some(t) = self.tail {
+            self.nodes[t].prev = Some(idx);
+        }
+        self.tail = Some(idx);
+
+        if self.head.is_none() {
+            self.head = Some(idx);
+        }
+    }
+
+    /// Evict tail node and return its index
+    fn evict_tail(&mut self) -> usize {
+        debug_assert!(self.len > 1);
+        debug_assert!(self.tail.is_some());
+
+        let idx = unwrap!(self.tail);
+        debug_assert!(self.nodes[idx].prev.is_none());
+        debug_assert!(self.nodes[idx].next.is_some());
+
+        let next_idx = unwrap!(self.nodes[idx].next);
+        self.nodes[next_idx].prev = None;
+        self.tail = Some(next_idx);
+
+        self.nodes[idx].clear();
+
+        self.len -= 1;
+        idx
+    }
+
+    /// Evict head node and return its index
+    fn evict_head(&mut self) -> usize {
+        debug_assert!(self.len > 1);
+        debug_assert!(self.head.is_some());
+
+        let idx = unwrap!(self.head);
+        debug_assert!(self.nodes[idx].prev.is_some());
+        debug_assert!(self.nodes[idx].next.is_none());
+
+        let prev_idx = unwrap!(self.nodes[idx].prev);
+        self.nodes[prev_idx].next = None;
+        self.head = Some(prev_idx);
+
+        self.nodes[idx].clear();
+        self.len -= 1;
+        idx
+    }
+
+    /// Get a slot for a new node, evicting from specified end if needed
+    fn get_slot_evict_tail(&mut self) -> usize {
+        if let Some(idx) = self.find_free_slot() {
+            idx
+        } else {
+            self.evict_tail()
+        }
+    }
+
+    fn get_slot_evict_head(&mut self) -> usize {
+        if let Some(idx) = self.find_free_slot() {
+            idx
+        } else {
+            self.evict_head()
+        }
+    }
+
+    fn request_page(&mut self, ctx: &mut EventCtx, page_idx: u16) {
+        let data = UtilEnum::RequestSlice {
+            offset: (page_idx as u32) * (A as u32),
+            size: A as u32,
+        };
+
+        let mut arena = [MaybeUninit::<u8>::uninit(); 200];
+        let mut out = Align([MaybeUninit::<u8>::uninit(); 200]);
+
+        let bytes = to_bytes_in_with_alloc::<_, _, Failure>(
+            &data,
+            Buffer::from(&mut *out),
+            SubAllocator::new(&mut arena),
+        )
+        .unwrap();
+
+        let msg = IpcMessage::new(9, &bytes);
+        unwrap!(msg.send(RemoteSysTask::Unknown(2), 6));
+        ctx.request_anim_frame();
+    }
+
+    pub fn update(&mut self, data: &[u8], ctx: &mut EventCtx) -> u16 {
+        debug_assert!(matches!(
+            self.state,
+            CacheState::Uninit | CacheState::Waiting(_)
+        ));
+
+        match self.state() {
+            CacheState::Uninit => {
+                self.init(data);
+                if self.has_next() {
+                    let idx = self.current_page as usize + 1;
+                    self.set_state(CacheState::Waiting(idx));
+                    self.request_page(ctx, idx as u16);
+                } else {
+                    self.set_state(CacheState::Ready);
+                }
+                ctx.request_paint();
+            }
+            CacheState::Waiting(next_page) if self.current_page() + 1 == next_page as u16 => {
+                debug_assert!(self.head.is_some());
+                debug_assert!(self.current_node == self.head.unwrap());
+                self.set_next(data);
+            }
+            CacheState::Waiting(prev_page) if self.current_page() == prev_page as u16 + 1 => {
+                debug_assert!(self.tail.is_some());
+                debug_assert!(self.current_node == self.tail.unwrap());
+                self.set_prev(data);
+            }
+            _ => {
+                unimplemented!("Unexpected page received");
+            }
+        }
+        0
+    }
+
+    /// Add next page data (adds at head, evicts from tail if full)
+    pub fn set_next(&mut self, data: &[u8]) {
+        debug_assert!(self.has_next() && matches!(self.state, CacheState::Waiting(_)));
+        debug_assert!(self.current_node == self.head.unwrap());
+
+        let idx = self.get_slot_evict_tail();
+        self.nodes[idx].set_content(data);
+        self.insert_at_head(idx);
+        self.len += 1;
+        self.state = CacheState::Ready;
+    }
+
+    /// Add prev page data (adds at tail, evicts from head if full)
+    pub fn set_prev(&mut self, data: &[u8]) {
+        debug_assert!(self.has_prev() && matches!(self.state, CacheState::Waiting(_)));
+        debug_assert!(self.current_node == self.tail.unwrap());
+        let idx = self.get_slot_evict_head();
+        self.nodes[idx].set_content(data);
+        self.insert_at_tail(idx);
+        self.len += 1;
+        self.state = CacheState::Ready;
+    }
+
+    /// Switch to next page in cache
+    pub fn switch_next(&mut self, ctx: &mut EventCtx) {
+        debug_assert!(self.has_next() && self.state == CacheState::Ready);
+
+        let next_node = self.nodes[self.current_node].next;
+        debug_assert!(next_node.is_some());
+        self.current_node = next_node.unwrap();
+        self.current_page += 1;
+
+        // Request prefetch if there's another page after
+        if self.has_next() && self.nodes[self.current_node].next.is_none() {
+            let next_idx = self.current_page as usize + 1;
+            self.set_state(CacheState::Waiting(next_idx));
+            self.request_page(ctx, next_idx as u16);
+        }
+    }
+
+    /// Switch to prev page in cache
+    pub fn switch_prev(&mut self, ctx: &mut EventCtx) {
         debug_assert!(self.has_prev() && self.state == CacheState::Ready);
-        let old_current_node = &self.nodes[self.current_node];
-        debug_assert!(old_current_node.prev.is_some());
-        self.current_node = old_current_node.prev.unwrap();
+
+        let prev_node = self.nodes[self.current_node].prev;
+        debug_assert!(prev_node.is_some());
+        self.current_node = prev_node.unwrap();
         self.current_page -= 1;
 
-        if self.has_prev() {
-            self.state = CacheState::Waiting(self.current_page as usize - 1);
+        // Request prefetch if there's another page before
+        if self.has_prev() && self.nodes[self.current_node].prev.is_none() {
+            let prev_idx = self.current_page as usize - 1;
+            self.set_state(CacheState::Waiting(prev_idx));
+            self.request_page(ctx, prev_idx as u16);
         }
-        self.state
     }
 
     pub fn current_page_data(&self) -> TString<'static> {
@@ -235,18 +354,12 @@ impl<const T: usize, const N: usize> Cache<T, N> {
             return TString::empty();
         }
 
-        debug_assert!(self.state != CacheState::Uninit);
-        let node: &CacheNode<T> = &self.nodes[self.current_node];
+        let node = &self.nodes[self.current_node];
         debug_assert!(node.valid);
 
-        unsafe { StrBuffer::from_ptr_and_len(node.content.as_ptr(), node.content_len as usize) }
-            .into()
-    }
-
-    pub fn state(&self) -> CacheState {
-        self.state
+        unsafe { StrBuffer::from_ptr_and_len(node.content.as_ptr(), node.content_len) }.into()
     }
 }
 
 /// Type alias for the default cache configuration
-pub type PageCache = Cache<20, 3>;
+pub type PageCache<const A: usize, const T: usize> = Cache<A, T, 3>;

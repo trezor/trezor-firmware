@@ -71,9 +71,10 @@ def main():
     print(f"Serialized ({len(request_data)} bytes): {request_data.hex()}")
 
     # Load the app and get its hash
-    app_path = Path(__file__).parent.parent / "target" / "debug" / "ethereum_rust"
+    # app_path = Path(__file__).parent.parent / "target" / "debug" / "ethereum_rust"
+    app_path = Path(__file__).parent.parent / "target" / "release" / "ethereum_rust"
     #app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "debug" / "ethereum_rust.min"
-    #app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "release" / "ethereum_rust.min"
+    # app_path = Path(__file__).parent.parent / "target" / "thumbv7em-none-eabihf" / "release" / "ethereum_rust.min"
     print(f"\nLoading app from: {app_path}")
 
     session = client.get_session()

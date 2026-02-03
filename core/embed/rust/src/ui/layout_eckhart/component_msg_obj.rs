@@ -110,7 +110,7 @@ where
     }
 }
 
-impl ComponentMsgObj for LongContentScreen {
+impl<'a> ComponentMsgObj for LongContentScreen<'a> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             LongContentScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
