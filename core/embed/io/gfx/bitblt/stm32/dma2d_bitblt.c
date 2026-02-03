@@ -129,6 +129,10 @@ void dma2d_wait(void) {
     return;
   }
 
+  // Enabled events and all interrupts, including disabled interrupts, can
+  // wakeup the processor.
+  SET_BIT(SCB->SCR, SCB_SCR_SEVONPEND_Msk);
+
   irq_key_t key = irq_lock();
 
   while (drv->dma_transfer_in_progress) {
@@ -139,10 +143,10 @@ void dma2d_wait(void) {
       return;
     }
 
-    __DSB();
-    __WFI();
-
     irq_unlock(key);
+
+    __DSB();
+    __WFE();
 
     // Execute pending IRQs.
     __NOP();
