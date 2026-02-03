@@ -42,8 +42,8 @@ impl<const T: usize> CacheNode<T> {
     fn clear(&mut self) {
         self.valid = false;
         self.content_len = 0;
-        self.prev = None;
-        self.next = None;
+        self.clear_next();
+        self.clear_prev();
     }
 
     fn set_content(&mut self, data: &[u8]) {
@@ -52,6 +52,30 @@ impl<const T: usize> CacheNode<T> {
         debug_assert!(len <= T);
         self.content[..len].copy_from_slice(&data);
         self.content_len = len;
+    }
+
+    fn set_next(&mut self, next: Option<usize>) {
+        self.next = next;
+    }
+
+    fn clear_next(&mut self) {
+        self.next = None;
+    }
+
+    fn set_prev(&mut self, prev: Option<usize>) {
+        self.prev = prev;
+    }
+
+    fn clear_prev(&mut self) {
+        self.prev = None;
+    }
+
+    fn has_prev(&self) -> bool {
+        self.prev.is_some()
+    }
+
+    fn has_next(&self) -> bool {
+        self.next.is_some()
     }
 }
 
@@ -115,10 +139,7 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
 
         self.current_node = 0;
         self.nodes[self.current_node].set_content(data);
-        self.nodes[self.current_node].prev = None;
-        self.nodes[self.current_node].next = None;
-        self.head = Some(self.current_node);
-        self.tail = Some(self.current_node);
+        self.insert_at_head(self.current_node);
         self.len = 1;
         self.state = CacheState::Ready;
     }
@@ -131,34 +152,21 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
         self.current_page > 0
     }
 
-    pub fn total_pages(&self) -> u16 {
-        self.total_pages
-    }
-
-    pub fn current_page(&self) -> u16 {
-        self.current_page
-    }
-
-    pub fn state(&self) -> CacheState {
-        self.state
-    }
-
-    pub fn set_state(&mut self, state: CacheState) {
-        self.state = state;
-    }
-
     /// Find a free node slot
     fn find_free_slot(&self) -> Option<usize> {
+        if self.len >= N {
+            return None;
+        }
         self.nodes.iter().position(|n| n.is_empty())
     }
 
     /// Insert node at head (next direction)
     fn insert_at_head(&mut self, idx: usize) {
-        self.nodes[idx].next = None;
-        self.nodes[idx].prev = self.head;
+        self.nodes[idx].clear_next();
+        self.nodes[idx].set_prev(self.head);
 
         if let Some(h) = self.head {
-            self.nodes[h].next = Some(idx);
+            self.nodes[h].set_next(Some(idx));
         }
         self.head = Some(idx);
 
@@ -169,11 +177,11 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
 
     /// Insert node at tail (prev direction)
     fn insert_at_tail(&mut self, idx: usize) {
-        self.nodes[idx].prev = None;
-        self.nodes[idx].next = self.tail;
+        self.nodes[idx].clear_prev();
+        self.nodes[idx].set_next(self.tail);
 
         if let Some(t) = self.tail {
-            self.nodes[t].prev = Some(idx);
+            self.nodes[t].set_prev(Some(idx));
         }
         self.tail = Some(idx);
 
@@ -184,15 +192,15 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
 
     /// Evict tail node and return its index
     fn evict_tail(&mut self) -> usize {
-        debug_assert!(self.len > 1);
+        debug_assert!(self.len >= 1);
         debug_assert!(self.tail.is_some());
 
         let idx = unwrap!(self.tail);
-        debug_assert!(self.nodes[idx].prev.is_none());
-        debug_assert!(self.nodes[idx].next.is_some());
+        debug_assert!(!self.nodes[idx].has_prev());
+        debug_assert!(self.nodes[idx].has_next());
 
         let next_idx = unwrap!(self.nodes[idx].next);
-        self.nodes[next_idx].prev = None;
+        self.nodes[next_idx].clear_prev();
         self.tail = Some(next_idx);
 
         self.nodes[idx].clear();
@@ -203,15 +211,15 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
 
     /// Evict head node and return its index
     fn evict_head(&mut self) -> usize {
-        debug_assert!(self.len > 1);
+        debug_assert!(self.len >= 1);
         debug_assert!(self.head.is_some());
 
         let idx = unwrap!(self.head);
-        debug_assert!(self.nodes[idx].prev.is_some());
-        debug_assert!(self.nodes[idx].next.is_none());
+        debug_assert!(self.nodes[idx].has_prev());
+        debug_assert!(!self.nodes[idx].has_next());
 
         let prev_idx = unwrap!(self.nodes[idx].prev);
-        self.nodes[prev_idx].next = None;
+        self.nodes[prev_idx].clear_next();
         self.head = Some(prev_idx);
 
         self.nodes[idx].clear();
@@ -263,24 +271,24 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
             CacheState::Uninit | CacheState::Waiting(_)
         ));
 
-        match self.state() {
+        match self.state {
             CacheState::Uninit => {
                 self.init(data);
                 if self.has_next() {
                     let idx = self.current_page as usize + 1;
-                    self.set_state(CacheState::Waiting(idx));
+                    self.state = CacheState::Waiting(idx);
                     self.request_page(ctx, idx as u16);
                 } else {
-                    self.set_state(CacheState::Ready);
+                    self.state = CacheState::Ready;
                 }
                 ctx.request_paint();
             }
-            CacheState::Waiting(next_page) if self.current_page() + 1 == next_page as u16 => {
+            CacheState::Waiting(next_page) if self.current_page + 1 == next_page as u16 => {
                 debug_assert!(self.head.is_some());
                 debug_assert!(self.current_node == self.head.unwrap());
                 self.set_next(data);
             }
-            CacheState::Waiting(prev_page) if self.current_page() == prev_page as u16 + 1 => {
+            CacheState::Waiting(prev_page) if self.current_page == prev_page as u16 + 1 => {
                 debug_assert!(self.tail.is_some());
                 debug_assert!(self.current_node == self.tail.unwrap());
                 self.set_prev(data);
@@ -327,7 +335,7 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
         // Request prefetch if there's another page after
         if self.has_next() && self.nodes[self.current_node].next.is_none() {
             let next_idx = self.current_page as usize + 1;
-            self.set_state(CacheState::Waiting(next_idx));
+            self.state = CacheState::Waiting(next_idx);
             self.request_page(ctx, next_idx as u16);
         }
     }
@@ -344,7 +352,7 @@ impl<const A: usize, const T: usize, const N: usize> Cache<A, T, N> {
         // Request prefetch if there's another page before
         if self.has_prev() && self.nodes[self.current_node].prev.is_none() {
             let prev_idx = self.current_page as usize - 1;
-            self.set_state(CacheState::Waiting(prev_idx));
+            self.state = CacheState::Waiting(prev_idx);
             self.request_page(ctx, prev_idx as u16);
         }
     }
