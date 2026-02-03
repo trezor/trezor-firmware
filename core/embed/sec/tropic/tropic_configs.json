@@ -1,0 +1,441 @@
+{
+  "irreversible_configuration": {
+    "cfg_start_up": {
+      "all_except": [
+        1,
+        2
+      ]
+    },
+    "cfg_sensors": {
+      "all_except": []
+    },
+    "cfg_debug": {
+      "all_except": [
+        0
+      ]
+    },
+    "cfg_gpo": {
+      "all_except": []
+    },
+    "cfg_sleep_mode": {
+      "all_except": []
+    },
+    "cfg_uap_pairing_key_write": {
+      "all_except": [
+        0,
+        1,
+        8,
+        9,
+        16,
+        17,
+        24,
+        25
+      ]
+    },
+    "cfg_uap_pairing_key_read": {
+      "all_except": [
+        0,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_pairing_key_invalidate": {
+      "all_except": [
+        0,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_r_config_write_erase": {
+      "all_except": [
+        0,
+        1
+      ]
+    },
+    "cfg_uap_r_config_read": {
+      "all_except": [
+        0,
+        8
+      ]
+    },
+    "cfg_uap_i_config_write": {
+      "all_except": [
+        0,
+        8
+      ]
+    },
+    "cfg_uap_i_config_read": {
+      "all_except": [
+        0,
+        8
+      ]
+    },
+    "cfg_uap_ping": {
+      "all_except": [
+        0
+      ]
+    },
+    "cfg_uap_r_mem_data_write": {
+      "all_except": [
+        0,
+        1,
+        8,
+        9,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_r_mem_data_read": {
+      "all_except": [
+        0,
+        8,
+        9,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_r_mem_data_erase": {
+      "all_except": [
+        0,
+        8,
+        9,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_random_value_get": {
+      "all_except": [
+        0
+      ]
+    },
+    "cfg_uap_ecc_key_generate": {
+      "all_except": [
+        0,
+        1,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_ecc_key_store": {
+      "all_except": [
+        0,
+        1,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_ecc_key_read": {
+      "all_except": [
+        0,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_ecc_key_erase": {
+      "all_except": [
+        0,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_ecdsa_sign": {
+      "all_except": [
+        0,
+        1,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_eddsa_sign": {
+      "all_except": [
+        0,
+        1,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_mcounter_init": {
+      "all_except": [
+        0,
+        1,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_mcounter_get": {
+      "all_except": [
+        0,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_mcounter_update": {
+      "all_except": [
+        0,
+        8,
+        16,
+        24
+      ]
+    },
+    "cfg_uap_mac_and_destroy": {
+      "all_except": [
+        0,
+        1,
+        8,
+        9,
+        16,
+        24
+      ]
+    }
+  },
+  "reversible_configuration": {
+    "cfg_start_up": {
+      "bits": [
+        0,
+        3
+      ]
+    },
+    "cfg_sensors": {
+      "bits": []
+    },
+    "cfg_debug": {
+      "bits": []
+    },
+    "cfg_gpo": {
+      "bits": []
+    },
+    "cfg_sleep_mode": {
+      "bits": [
+        0
+      ]
+    },
+    "cfg_uap_pairing_key_write": {
+      "bits": [
+        2,
+        10,
+        18,
+        26
+      ]
+    },
+    "cfg_uap_pairing_key_read": {
+      "bits": [
+        1,
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_pairing_key_invalidate": {
+      "bits": [
+        1,
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_r_config_write_erase": {
+      "bits": [
+        2
+      ]
+    },
+    "cfg_uap_r_config_read": {
+      "bits": [
+        1,
+        2,
+        9,
+        10
+      ]
+    },
+    "cfg_uap_i_config_write": {
+      "bits": [
+        1,
+        2,
+        9,
+        10
+      ]
+    },
+    "cfg_uap_i_config_read": {
+      "bits": [
+        1,
+        2,
+        9,
+        10
+      ]
+    },
+    "cfg_uap_ping": {
+      "bits": [
+        1,
+        2
+      ]
+    },
+    "cfg_uap_r_mem_data_write": {
+      "bits": [
+        2,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_r_mem_data_read": {
+      "bits": [
+        1,
+        2,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_r_mem_data_erase": {
+      "bits": [
+        1,
+        2,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_random_value_get": {
+      "bits": [
+        1,
+        2
+      ]
+    },
+    "cfg_uap_ecc_key_generate": {
+      "bits": [
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_ecc_key_store": {
+      "bits": [
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_ecc_key_read": {
+      "bits": [
+        1,
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_ecc_key_erase": {
+      "bits": [
+        1,
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_ecdsa_sign": {
+      "bits": [
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_eddsa_sign": {
+      "bits": [
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_mcounter_init": {
+      "bits": [
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_mcounter_get": {
+      "bits": [
+        1,
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_mcounter_update": {
+      "bits": [
+        1,
+        2,
+        9,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    },
+    "cfg_uap_mac_and_destroy": {
+      "bits": [
+        2,
+        10,
+        17,
+        18,
+        25,
+        26
+      ]
+    }
+  }
+}

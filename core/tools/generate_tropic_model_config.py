@@ -8,11 +8,13 @@ import click
 import yaml
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
+import json
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent.parent.resolve()
 CONFIG_DIR = ROOT / "tests" / "tropic_model"
 DEST_PATH = CONFIG_DIR / "config.yml"
+CFG_SPEC_DIR = ROOT / "core" / "embed" / "sec" / "tropic" / "inc" / "sec" / "tropic_configs_manual.json"
 
 # private key used by the Tropic model to sign
 TROPIC_KEY = CONFIG_DIR / "tropic_key.pem"
@@ -35,10 +37,29 @@ RISCV_FW_MAJOR = 1
 RISCV_FW_MINOR = 0
 RISCV_FW_PATCH = 0
 
+def get_tropic_configuration(path: Path) -> dict:
+    with open(path, "r") as f:
+        config = json.load(f)
+    numbers = {'i_config': {}, 'r_config': {}}
+    for key in config['irreversible_configuration']:
+        assert list(config['irreversible_configuration'][key].keys()) == ['all_except'], config['irreversible_configuration'][key].keys()
+        number = 0xFFFFFFFF
+        for exclude in config['irreversible_configuration'][key]['all_except']:
+            number &= ~exclude
+        numbers['i_config'][key] = number
+    for key in config['reversible_configuration']:
+        assert list(config['reversible_configuration'][key].keys()) == ['bits'], config['reversible_configuration'][key].keys()
+        number = 0
+        for include in config['reversible_configuration'][key]['bits']:
+            number |= include
+        numbers['r_config'][key] = number
+    return numbers
+
 
 @click.command()
 @click.option("--check", is_flag=True)
-def generate_config(check: bool) -> None:
+@click.option("--config-path", type=Path, default=CFG_SPEC_DIR)
+def generate_config(check: bool, config_path: Path) -> None:
     tropic_key = serialization.load_pem_private_key(
         TROPIC_KEY.read_bytes(), password=None
     )
@@ -104,6 +125,7 @@ def generate_config(check: bool) -> None:
         + RISCV_FW_MINOR.to_bytes(1, "little")
         + RISCV_FW_MAJOR.to_bytes(1, "little")
     )
+    tropic_cfg = get_tropic_configuration(config_path)
     config_dict = {
         "s_t_priv": "tropic01_ese_private_key_1.pem",
         "s_t_pub": "tropic01_ese_public_key_1.pem",
@@ -119,6 +141,8 @@ def generate_config(check: bool) -> None:
             }
         },
         "riscv_fw_version": riscv_fw_version,
+        "r_config": tropic_cfg["r_config"],
+        "i_config": tropic_cfg["i_config"],
     }
 
     config = yaml.dump(config_dict)
