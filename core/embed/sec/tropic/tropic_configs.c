@@ -21,14 +21,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include <libtropic.h>
 
 // TODO: Adjust the configuration to match the revision of the provisioned
 // tropics.
 // clang-format off
-static const struct lt_config_t g_irreversible_configuration = {
+const struct lt_config_t g_irreversible_configuration = {
     .obj = {
         // # CFG_START_UP (0x00)
         // | Setting                 | Value                   |
@@ -237,7 +235,7 @@ static const struct lt_config_t g_irreversible_configuration = {
 
 // TODO: Adjust the configuration to match the revision of the provisioned
 // tropics.
-static const struct lt_config_t g_reversible_configuration = {
+const struct lt_config_t g_reversible_configuration = {
     .obj = {
         // # CFG_START_UP (0x00)
         // | Setting                 | Value                   |
