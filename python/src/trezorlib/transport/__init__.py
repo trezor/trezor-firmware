@@ -106,11 +106,8 @@ class Transport(metaclass=ABCMeta):
             return
 
         # finally, someone's calling open() when they're already open
-        # via a context manager. warn...
+        # via a context manager.
         LOG.warning(f"Transport {self} is already open")
-        # ...TODO we're now raising a ValueError but we probably want to
-        # just ignore the call
-        raise ValueError("catch me")
 
     def close(self) -> None:
         if self._opened > 1:
