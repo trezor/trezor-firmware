@@ -371,9 +371,14 @@ if TYPE_CHECKING:
         QrCode = 3
         NFC = 4
 
+    class TronResourceCode(IntEnum):
+        BANDWIDTH = 0
+        ENERGY = 1
+
     class TronRawContractType(IntEnum):
         TransferContract = 1
         TriggerSmartContract = 31
+        FreezeBalanceV2Contract = 54
 
     class MessageType(IntEnum):
         Initialize = 0
@@ -642,6 +647,7 @@ if TYPE_CHECKING:
         TronContractRequest = 2204
         TronTransferContract = 2205
         TronTriggerSmartContract = 2206
+        TronFreezeBalanceV2Contract = 2207
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

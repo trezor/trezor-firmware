@@ -47,6 +47,7 @@ message TronSignTx {
  * Response: Device ready to receive contract details
  * @next TronTransferContract
  * @next TronTriggerSmartContract
+ * @next TronFreezeBalanceV2Contract
  */
 message TronContractRequest {
 }
@@ -68,11 +69,30 @@ message TronTransferContract {
  * Request: Fill in TriggerSmartContract details. TRC-10 not supported.
  * @next TronSignature
  */
- //https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/smart_contract.proto#L74
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/smart_contract.proto#L74
 message TronTriggerSmartContract {
     required bytes owner_address = 1;       // Sender account, signs transaction
     required bytes contract_address = 2;    // Target smart contract address
     required bytes data = 4;                // ABI-encoded function call data
+}
+
+/**
+ * Request: Freeze(Stake) TRX for Energy or Bandwidth (FreezeBalanceV2Contract. FreezeBalanceContract deprecated)
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L84-L88
+message TronFreezeBalanceV2Contract {
+    required bytes owner_address = 1;                                 // Account whose TRX has to be frozen
+    required uint64 frozen_balance = 2;                               // Amount to be frozen (in SUN)
+    optional TronResourceCode resource = 3 [default = BANDWIDTH];     // Resource obtained against freezing. Optional with default required in proto2
+
+    // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/common.proto#L9C1-L13C2
+    // Staking can not happen just for TRON_POWER:
+    // https://developers.tron.network/reference/freezebalancev2-1
+    enum TronResourceCode {
+        BANDWIDTH = 0;
+        ENERGY = 1;
+    }
 }
 
 /**
@@ -110,6 +130,7 @@ message TronRawTransaction {
         enum TronRawContractType {
             TransferContract = 1;
             TriggerSmartContract = 31;
+            FreezeBalanceV2Contract = 54;
         }
 
         required TronRawContractType type = 1;

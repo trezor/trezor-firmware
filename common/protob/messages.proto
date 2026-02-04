@@ -357,6 +357,7 @@ enum MessageType {
     MessageType_TronContractRequest = 2204 [(wire_out) = true];
     MessageType_TronTransferContract = 2205 [(wire_in) = true];
     MessageType_TronTriggerSmartContract = 2206 [(wire_in) = true];
+    MessageType_TronFreezeBalanceV2Contract = 2207 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
