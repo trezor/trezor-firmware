@@ -101,6 +101,10 @@ impl<R: Role> Fragmenter<R> {
         }
         Ok(())
     }
+
+    pub fn header(&self) -> &Header<R> {
+        &self.header
+    }
 }
 
 pub struct Reassembler<R: Role> {
@@ -194,8 +198,8 @@ impl<R: Role> Reassembler<R> {
         Ok(length_no_checksum)
     }
 
-    pub fn header(&self) -> Header<R> {
-        self.header.clone()
+    pub fn header(&self) -> &Header<R> {
+        &self.header
     }
 
     // Shortcut to deserialize single packet message.
@@ -208,6 +212,32 @@ impl<R: Role> Reassembler<R> {
         let reply_len = reassembler.verify(dest)?;
         let header = reassembler.header;
         Ok((header, &dest[..reply_len]))
+    }
+
+    pub fn single_inplace(buffer: &[u8]) -> Result<(Header<R>, &[u8])> {
+        let (header, after_header) = Header::parse(buffer)?;
+        if header.is_continuation() {
+            return Err(Error::unexpected_input());
+        }
+        let payload_len: usize = header.payload_len().into();
+        if payload_len != after_header.len() {
+            log::error!("Single packet message expected.");
+            return Err(Error::malformed_data());
+        }
+
+        let mut checksum = Crc32::new();
+        checksum.update(&buffer[..header.header_len()]);
+        let checksum_off = payload_len.saturating_sub(CHECKSUM_LEN);
+        checksum.update(&after_header[..checksum_off]);
+        let computed_checksum = checksum.finalize();
+
+        let received_checksum = *after_header
+            .last_chunk::<CHECKSUM_LEN>()
+            .ok_or_else(Error::invalid_checksum)?;
+        if computed_checksum != received_checksum {
+            return Err(Error::invalid_checksum());
+        }
+        Ok((header, &after_header[..checksum_off]))
     }
 }
 

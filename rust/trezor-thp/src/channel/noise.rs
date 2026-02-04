@@ -2,7 +2,7 @@ use trezor_noise_protocol::{
     Cipher, CipherState, DH, HandshakeState, Hash, U8Array, patterns::noise_xx,
 };
 
-use crate::{Error, Host, Role, credential::CredentialStore};
+use crate::{Error, Host, Role, credential::CredentialStore, util::prepare_zeroed};
 
 use core::marker::PhantomData;
 
@@ -138,7 +138,7 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         DHPrivKey<B>: U8Array,
     {
         let mut buf = heapless::Vec::new();
-        buf.resize(buf.capacity(), 0u8).unwrap();
+        prepare_zeroed(&mut buf);
         let result = cs.lookup(re.as_slice(), rs.as_slice(), buf.as_mut_slice());
         if let Some(found) = result {
             let found_key = <DHPrivKey<B> as U8Array>::from_slice(found.local_static_privkey);

@@ -10,6 +10,7 @@ pub mod credential;
 pub mod error;
 pub mod fragment;
 pub mod header;
+mod util;
 
 pub use channel::{Backend, Channel, ChannelIO};
 pub use error::Error;

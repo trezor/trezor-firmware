@@ -86,8 +86,8 @@ enum ChannelState<R: Role> {
 
 /// THP channel with established secure layer.
 ///
-/// There is no constructor, to obtain a channel please use [`host::ChannelOpen`]
-/// or `device::ChannelOpen`.
+/// There is no constructor, to obtain a channel please use [`host::Mux`]
+/// or [`device::Mux`].
 /// For actually sending and receiving messages please see [`ChannelIO`].
 pub struct Channel<R: Role, B: Backend> {
     channel_id: u16,
@@ -112,10 +112,6 @@ impl<R: Role, B: Backend> Channel<R, B> {
         self.noise.as_mut().ok_or_else(Error::unexpected_input)
     }
 
-    fn is_broadcast(&self) -> bool {
-        self.channel_id == BROADCAST_CHANNEL_ID
-    }
-
     pub fn channel_id(&self) -> u16 {
         self.channel_id
     }
@@ -128,18 +124,13 @@ impl<R: Role, B: Backend> Channel<R, B> {
         let ChannelState::Idle = self.state else {
             return Err(Error::not_ready());
         };
-        let sb = if self.is_broadcast() {
-            SyncBits::new()
-        } else {
-            self.sync.send_start().ok_or_else(Error::not_ready)?
-        };
+        let sb = self.sync.send_start().ok_or_else(Error::not_ready)?;
         let frag = Fragmenter::new(header, sb, send_buffer)?;
         self.state = ChannelState::Sending(frag);
         Ok(())
     }
 
     fn raw_out(&mut self, receive_buffer: &[u8]) -> Result<(Header<R>, usize)> {
-        let has_cid = !self.is_broadcast();
         let ChannelState::Receiving(r) = &mut self.state else {
             return Err(Error::not_ready());
         };
@@ -156,10 +147,8 @@ impl<R: Role, B: Backend> Channel<R, B> {
                 return Err(e);
             }
         };
-        if has_cid {
-            self.send_ack = Some(self.sync.receive_acknowledge());
-        }
-        let header = r.header();
+        self.send_ack = Some(self.sync.receive_acknowledge());
+        let header = r.header().clone();
         self.state = ChannelState::Idle;
         Ok((header, len))
     }
@@ -264,7 +253,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
         receive_buffer: &mut [u8],
     ) -> Result<(bool, Option<u16>)> {
         let sb = SyncBits::try_from(packet_buffer)?;
-        if !self.is_broadcast() && !self.sync.receive_start(sb) {
+        if !self.sync.receive_start(sb) {
             // Bad sync bit, drop this packet and continuations.
             log::debug!("[{}] Bad sync bit, ignoring packet.", self.channel_id);
             self.state = ChannelState::Idle;
@@ -580,8 +569,10 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             return Err(Error::not_ready());
         }
         if f.is_done() {
-            if self.is_broadcast() {
-                // No ACKs without channel ID, assume delivered.
+            if f.header().channel_id() == BROADCAST_CHANNEL_ID {
+                // This is a special case for `channel_allocation_response` which is the only
+                // message sent through Channel (by `device::ChannelOpen`) but does not
+                // wait for ACK because as it is sent on broadcast channel.
                 self.state = ChannelState::Idle;
             } else {
                 self.sync.send_finish();
