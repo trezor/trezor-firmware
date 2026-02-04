@@ -75,10 +75,13 @@ impl<C: ChannelIO> Client<C> {
     }
 
     fn read_ack(&mut self, packet_buffer: &[u8]) -> bool {
-        self.channel
-            .packet_in(packet_buffer, &mut [])
-            .unwrap()
-            .got_ack()
+        let pir = self
+            .channel
+            .packet_in(packet_buffer, &[])
+            .check_failed()
+            .unwrap();
+        assert!(!pir.got_transport_error());
+        pir.got_ack()
     }
 
     pub fn write(&mut self, sid: u8, message_type: u16, message: &[u8]) {
@@ -130,6 +133,7 @@ impl<C: ChannelIO> Client<C> {
                 message_ready = self
                     .channel
                     .packet_in(&sockbuf[..reply_len], recv_buf.as_mut_slice())
+                    .check_failed()
                     .unwrap()
                     .got_message();
             }

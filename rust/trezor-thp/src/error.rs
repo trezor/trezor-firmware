@@ -27,6 +27,12 @@ impl TransportError {
     }
 }
 
+impl From<TransportError> for u8 {
+    fn from(val: TransportError) -> u8 {
+        val as u8
+    }
+}
+
 impl TryFrom<u8> for TransportError {
     type Error = Error;
 
@@ -52,7 +58,7 @@ impl TryFrom<&[u8]> for TransportError {
 }
 
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Error {
     /// Invalid data/operation from crate user.
     UnexpectedInput,
