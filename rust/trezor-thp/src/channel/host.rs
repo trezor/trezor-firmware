@@ -2,12 +2,13 @@ use heapless;
 
 use crate::{
     Backend, Channel, ChannelIO, Error, Host,
+    alternating_bit::SyncBits,
     channel::{ChannelState, Nonce, PacketInResult, PairingState, noise::NoiseHandshake},
     credential::CredentialStore,
     fragment::{Fragmenter, Reassembler},
     header::{
-        BROADCAST_CHANNEL_ID, HandshakeMessage, Header, SyncBits, channel_id_valid,
-        parse_cb_channel, parse_u16,
+        BROADCAST_CHANNEL_ID, HandshakeMessage, Header, channel_id_valid, parse_cb_channel,
+        parse_u16,
     },
     util::prepare_zeroed,
 };
@@ -20,7 +21,6 @@ use core::marker::PhantomData;
 // - DH key + credential + 2 AEAD tags + overhead
 const INTERNAL_BUFFER_LEN: usize = 192;
 const MAX_DEVICE_PROPERTIES_LEN: usize = 128;
-const MESSAGE_TYPE_END_RESPONSE: u16 = 1019; // ThpMessageType_ThpEndResponse
 
 enum AllocationState {
     None,
@@ -43,6 +43,16 @@ enum AllocationState {
     },
 }
 
+#[derive(PartialEq, Eq)]
+enum PingState {
+    /// Ping not requested, pong not expected.
+    None,
+    /// Application requested ping to be sent.
+    SendingPing,
+    /// Ping was sent, awaiting pong.
+    AwaitingPong(Nonce),
+}
+
 /// Handles broadcast channel messages, notably channel allocation requests.
 /// Because host often only needs a single channel, you can throw away the Mux
 /// after allocating one, if you don't need the keep-alive functionality.
@@ -50,7 +60,7 @@ pub struct Mux<C, B> {
     cred_store: C,
     internal_buffer: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
     channel_allocation: AllocationState,
-    ping: Option<(bool, Nonce)>,
+    ping: PingState,
     _phantom: PhantomData<B>,
 }
 
@@ -66,17 +76,17 @@ where
             cred_store,
             internal_buffer,
             channel_allocation: AllocationState::None,
-            ping: None,
+            ping: PingState::None,
             _phantom: PhantomData,
         }
     }
 
     /// Enqueue a keep-alive message.
     pub fn ping(&mut self) {
-        if self.ping.is_some() {
+        if !matches!(self.ping, PingState::None) {
             log::warn!("Dropping previous ping attempt.");
         }
-        self.ping = Some((false, Nonce::random::<B>()));
+        self.ping = PingState::SendingPing;
     }
 
     /// Enqueue channel allocation request.
@@ -124,11 +134,11 @@ where
             Header::Pong => {
                 let (_header, payload) = Reassembler::<Host>::single_inplace(packet)?;
                 let (nonce, _rest) = Nonce::parse(payload)?;
-                if Some((true, nonce)) != self.ping {
+                if PingState::AwaitingPong(nonce) != self.ping {
                     log::warn!("Ignoring PONG with invalid nonce.");
                     return Err(Error::malformed_data());
                 }
-                self.ping = None;
+                self.ping = PingState::None;
                 Ok(PacketInResult::pong())
             }
             Header::ChannelAllocationResponse { .. } => {
@@ -216,7 +226,7 @@ where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
-        let Ok((_cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
+        let Ok((cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
             // parse_cb_channel already writes to log
             return PacketInResult::ignore(Error::malformed_data());
         };
@@ -224,7 +234,7 @@ where
             log::warn!("Invalid channel id {}.", channel_id);
             return PacketInResult::ignore(Error::malformed_data());
         }
-        if channel_id != BROADCAST_CHANNEL_ID {
+        if channel_id != BROADCAST_CHANNEL_ID && !cb.is_codec_v1() {
             return PacketInResult::route(channel_id);
         }
         PacketInResult::from_result(self.handle_broadcast(packet_buffer))
@@ -247,7 +257,7 @@ where
                 try_to_unlock,
                 nonce,
             };
-        } else if let Some((false, _)) = self.ping {
+        } else if let PingState::SendingPing = self.ping {
             let nonce = Nonce::random::<B>();
             Fragmenter::<Host>::single(
                 Header::new_ping(),
@@ -255,7 +265,7 @@ where
                 nonce.as_slice(),
                 packet_buffer,
             )?;
-            self.ping = Some((true, nonce));
+            self.ping = PingState::AwaitingPong(nonce);
         } else {
             return Err(Error::not_ready());
         }
@@ -263,7 +273,7 @@ where
     }
 
     fn packet_out_ready(&self) -> bool {
-        let send_ping = matches!(self.ping, Some((false, _)));
+        let send_ping = matches!(self.ping, PingState::SendingPing);
         let send_channel_allocation = matches!(
             self.channel_allocation,
             AllocationState::SendingRequest { .. }
@@ -298,11 +308,11 @@ where
 #[derive(Copy, Clone)]
 enum HandshakeState {
     /// `HH1`.
-    SentInitiationRequest,
+    SendingInitiationRequest,
     /// `HH2`.
-    SentCompletionRequest,
+    SendingCompletionRequest,
     /// `HP0`.
-    Finished(PairingState),
+    Finished { pairing_state: PairingState },
     /// Handshake cannot be finished.
     Failed,
 }
@@ -313,9 +323,7 @@ enum HandshakeState {
 /// - perform [`ChannelIO`] with empty messages until [`PacketInResult::ChannelAllocation`] is returned
 /// - calling [`Mux::channel_alloc`] to obtain [`ChannelOpen`]
 /// - perform [`ChannelIO`] with empty messages until [`ChannelOpen::handshake_done`]
-/// - call [`ChannelOpen::complete`] to obtain [`ChannelPairing`]
-/// - perform [`ChannelIO`] until [`ChannelPairing::pairing_done`]
-/// - call [`ChannelPairing::complete`] to get established [`Channel`]
+/// - call [`ChannelOpen::complete`] to obtain [`Channel`]
 pub struct ChannelOpen<C: CredentialStore, B: Backend> {
     channel: Channel<Host, B>,
     state: HandshakeState,
@@ -337,7 +345,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
 
         let mut internal_buffer = heapless::Vec::new();
         prepare_zeroed(&mut internal_buffer);
-        let (hss, msg) = NoiseHandshake::initiation_request(
+        let (hss, msg) = NoiseHandshake::write_initiation_request(
             &device_properties,
             try_to_unlock,
             &mut internal_buffer,
@@ -349,7 +357,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         internal_buffer.truncate(len);
         let res = Self {
             channel,
-            state: HandshakeState::SentInitiationRequest,
+            state: HandshakeState::SendingInitiationRequest,
             noise: hss,
             internal_buffer,
             device_properties,
@@ -363,13 +371,19 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         self.internal_buffer.truncate(len);
 
         match (self.state, header.handshake_phase()) {
-            (HandshakeState::SentInitiationRequest, Some(HandshakeMessage::InitiationResponse)) => {
+            (
+                HandshakeState::SendingInitiationRequest,
+                Some(HandshakeMessage::InitiationResponse),
+            ) => {
                 self.continue_handshake()?;
-                self.state = HandshakeState::SentCompletionRequest;
+                self.state = HandshakeState::SendingCompletionRequest;
             }
-            (HandshakeState::SentCompletionRequest, Some(HandshakeMessage::CompletionResponse)) => {
-                let device_state = self.finish_handshake()?;
-                self.state = HandshakeState::Finished(device_state);
+            (
+                HandshakeState::SendingCompletionRequest,
+                Some(HandshakeMessage::CompletionResponse),
+            ) => {
+                let pairing_state = self.finish_handshake()?;
+                self.state = HandshakeState::Finished { pairing_state };
             }
             _ => {
                 log::error!("Unexpected handshake state.");
@@ -385,7 +399,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         self.internal_buffer
             .resize(self.internal_buffer.capacity(), 0u8)
             .unwrap();
-        let (nc, msg) = self.noise.completion_request(
+        let (nc, msg) = self.noise.write_completion_request(
             &mut self.cred_store,
             &mut self.internal_buffer,
             payload_len,
@@ -413,29 +427,43 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         self.device_properties.as_slice()
     }
 
+    /// Returns pairing state if handshake finished, or None otherwise.
+    pub fn pairing_state(&self) -> Option<PairingState> {
+        match self.state {
+            HandshakeState::Finished { pairing_state } => Some(pairing_state),
+            _ => None,
+        }
+    }
+
     /// True if handshake finished and [`ChannelOpen::complete()`] can be called.
     pub fn handshake_done(&self) -> bool {
-        matches!(self.state, HandshakeState::Finished(_))
+        self.pairing_state().is_some()
     }
 
     /// True if the handshake failed and the object should be discarded.
     pub fn handshake_failed(&self) -> bool {
         matches!(self.state, HandshakeState::Failed)
+            || matches!(self.channel.state, ChannelState::Failed(_))
     }
 
-    /// Transition into the pairing phase.
-    pub fn complete(self) -> Result<ChannelPairing<B>, Error> {
+    /// Finish the handshake.
+    ///
+    /// Please note that the returned [`Channel`] is in the [Pairing phase] (state `HP0`). The peers
+    /// must exchange protobuf messages as described in the [Pairing phase] and [Credential phase]
+    /// section of THP spec. Only after `ThpMessageType_ThpEndResponse` is sent from the device to
+    /// the host can regular application messages be transported. The library does not track whether
+    /// the channel is in the pairing, credential, or application transport phase and it is the
+    /// responsibility of the application to separate these message contexts.
+    ///
+    /// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
+    /// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
+    pub fn complete(self) -> Result<Channel<Host, B>, Error> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }
         log::debug!("Handshake complete.");
         Ok(match self.state {
-            HandshakeState::Finished(ps) => ChannelPairing {
-                channel: self.channel,
-                device_properties: self.device_properties,
-                pairing_state: ps,
-                is_finished: false,
-            },
+            HandshakeState::Finished { .. } => self.channel,
             _ => return Err(Error::unexpected_input()),
         })
     }
@@ -462,7 +490,7 @@ where
             );
             // Possibly damaged length field, ignore continuations.
             self.channel.state = ChannelState::Idle;
-            return PacketInResult::ignore(Error::MalformedData);
+            return PacketInResult::ignore(Error::malformed_data());
         }
         if res.got_ack() {
             prepare_zeroed(&mut self.internal_buffer);
@@ -470,7 +498,9 @@ where
         if res.got_message() {
             let handled = self.incoming_internal();
             if let Err(e) = handled {
-                if e != Error::InvalidChecksum {
+                if e == Error::InvalidChecksum {
+                    return PacketInResult::ignore(e);
+                } else {
                     self.state = HandshakeState::Failed;
                     return PacketInResult::fail(e);
                 }
@@ -502,91 +532,6 @@ where
         receive_buffer: &'a mut [u8],
     ) -> Result<(u8, u16, &'a [u8]), Error> {
         Ok((0, 0, &receive_buffer[..0]))
-    }
-
-    fn message_out_ready(&self) -> bool {
-        self.channel.message_out_ready()
-    }
-
-    fn message_retransmit(&mut self) -> Result<(), Error> {
-        self.channel.message_retransmit()
-    }
-}
-
-/// Channel in the pairing or credentials phase.
-///
-/// Application must use this object to exchange protobuf messages as described in
-/// the [Pairing phase] and [Credential phase] section of THP spec. After
-/// `ThpMessageType_ThpEndResponse` is received, call [`ChannelPairing::complete`]
-/// to obtain a [`Channel`].
-///
-/// Corresponds to states `HP0`..`HC2` in the spec.
-///
-/// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
-/// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
-pub struct ChannelPairing<B: Backend> {
-    channel: Channel<Host, B>,
-    device_properties: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
-    pairing_state: PairingState,
-    is_finished: bool, // true after Trezor sends ThpEndResponse, should we block sending messages afterwards?
-}
-
-impl<B: Backend> ChannelPairing<B> {
-    pub fn pairing_done(&self) -> bool {
-        self.is_finished
-    }
-
-    pub fn device_properties(&self) -> &[u8] {
-        self.device_properties.as_slice()
-    }
-
-    pub fn pairing_state(&self) -> PairingState {
-        self.pairing_state
-    }
-
-    pub fn complete(self) -> Result<Channel<Host, B>, Error> {
-        if !self.is_finished {
-            return Err(Error::unexpected_input());
-        }
-        log::debug!("Pairing and credentials complete, begin application level transport.");
-        Ok(self.channel)
-    }
-}
-
-impl<B: Backend> ChannelIO for ChannelPairing<B> {
-    fn packet_in(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> PacketInResult {
-        self.channel.packet_in(packet_buffer, receive_buffer)
-    }
-
-    fn packet_out(&mut self, packet_buffer: &mut [u8], send_buffer: &[u8]) -> Result<(), Error> {
-        self.channel.packet_out(packet_buffer, send_buffer)
-    }
-
-    fn packet_out_ready(&self) -> bool {
-        self.channel.packet_out_ready()
-    }
-
-    fn message_in(&mut self, plaintext_len: usize, send_buffer: &mut [u8]) -> Result<(), Error> {
-        self.channel.message_in(plaintext_len, send_buffer)
-    }
-
-    fn message_in_ready(&self) -> bool {
-        self.channel.message_in_ready()
-    }
-
-    fn message_out<'a>(
-        &mut self,
-        receive_buffer: &'a mut [u8],
-    ) -> Result<(u8, u16, &'a [u8]), Error> {
-        let (sid, message_type, message) = self.channel.message_out(receive_buffer)?;
-        if sid != 0 {
-            log::error!("Invalid session id in pairing phase.");
-            return Err(Error::malformed_data());
-        }
-        if message_type == MESSAGE_TYPE_END_RESPONSE {
-            self.is_finished = true;
-        }
-        Ok((0, message_type, message))
     }
 
     fn message_out_ready(&self) -> bool {

@@ -117,20 +117,18 @@ impl<R: Role> Reassembler<R> {
     pub fn new(input: &[u8], buffer: &mut [u8]) -> Result<Self> {
         let (header, after_header) = Header::parse(input)?;
         if header.is_continuation() {
-            return Err(Error::unexpected_input());
+            return Err(Error::malformed_data());
         }
 
-        let payload_len = header.payload_len().into();
-        if buffer.len() < payload_len {
+        let nbytes = after_header.len(); // Header::parse strips padding
+        let payload_len: usize = header.payload_len().into();
+        if buffer.len() < nbytes {
             return Err(Error::insufficient_buffer());
         }
+        buffer[..nbytes].copy_from_slice(after_header);
 
         let mut checksum = Crc32::new();
         checksum.update(&input[..header.header_len()]);
-
-        let nbytes = after_header.len(); // Header::parse strips padding
-        buffer[..nbytes].copy_from_slice(after_header);
-
         let checksum_bytes = payload_len.saturating_sub(CHECKSUM_LEN).min(nbytes);
         checksum.update(&after_header[..checksum_bytes]);
 
@@ -217,7 +215,7 @@ impl<R: Role> Reassembler<R> {
     pub fn single_inplace(buffer: &[u8]) -> Result<(Header<R>, &[u8])> {
         let (header, after_header) = Header::parse(buffer)?;
         if header.is_continuation() {
-            return Err(Error::unexpected_input());
+            return Err(Error::malformed_data());
         }
         let payload_len: usize = header.payload_len().into();
         if payload_len != after_header.len() {
@@ -233,7 +231,7 @@ impl<R: Role> Reassembler<R> {
 
         let received_checksum = *after_header
             .last_chunk::<CHECKSUM_LEN>()
-            .ok_or_else(Error::invalid_checksum)?;
+            .ok_or_else(Error::malformed_data)?;
         if computed_checksum != received_checksum {
             return Err(Error::invalid_checksum());
         }

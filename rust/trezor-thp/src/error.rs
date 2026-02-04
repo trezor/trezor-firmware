@@ -20,10 +20,7 @@ pub enum TransportError {
 
 impl TransportError {
     pub fn is_recoverable(&self) -> bool {
-        matches!(
-            self,
-            TransportError::TransportBusy | TransportError::DeviceLocked
-        )
+        matches!(self, TransportError::TransportBusy)
     }
 }
 
@@ -79,7 +76,6 @@ impl From<NoiseError> for Error {
     fn from(val: NoiseError) -> Self {
         match val.kind() {
             NoiseErrorKind::DH | NoiseErrorKind::Decryption => Self::crypto_error(),
-            NoiseErrorKind::NeedPSK => panic!(),
             NoiseErrorKind::TooShort => Self::malformed_data(),
         }
     }
