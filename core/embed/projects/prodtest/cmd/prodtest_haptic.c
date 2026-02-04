@@ -23,6 +23,7 @@
 
 #include <io/haptic.h>
 #include <rtl/cli.h>
+#include <sys/systick.h>
 
 static void prodtest_haptic_test(cli_t* cli) {
   uint32_t duration_ms = 0;  // ms
@@ -56,6 +57,39 @@ static void prodtest_haptic_test(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_haptic_test_prc(cli_t* cli) {
+  uint32_t haptic_amp_perc = 0;
+
+  if (cli_arg_count(cli) != 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (!cli_arg_uint32(cli, "amplitude", &haptic_amp_perc)) {
+    cli_error_arg(cli, "Expecting amplitude percentage (0-100).");
+    return;
+  }
+
+  if (haptic_amp_perc > 100) {
+    cli_error_arg(cli, "Amplitude percentage must be in range 0-100.");
+    return;
+  }
+
+  cli_trace(cli, "Starting haptic feedback test with amplitude %d%%...",
+            haptic_amp_perc);
+
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_ok(cli, "Haptic drive test aborted.");
+      return;
+    }
+
+    haptic_play_custom(haptic_amp_perc, 100);
+
+    systick_delay_ms(50);
+  }
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -64,5 +98,12 @@ PRODTEST_CLI_CMD(
   .info = "Test the haptic feedback actuator",
   .args = "<duration>"
 );
+
+PRODTEST_CLI_CMD(
+  .name = "haptic-test-prc",
+  .func = prodtest_haptic_test_prc,
+  .info = "Test the haptic feedback actuator with given amplitude percentage",
+  .args = "<amplitude>"
+)
 
 #endif  // USE_HAPTIC
