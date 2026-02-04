@@ -23,10 +23,9 @@ from . import (
     ThpDeviceLockedError,
     ThpErrorType,
     ThpUnallocatedSessionError,
-    control_byte,
-    get_encoded_device_properties,
-    session_manager,
 )
+from . import alternating_bit_protocol as ABP
+from . import control_byte, get_encoded_device_properties, session_manager
 from .crypto import PUBKEY_LENGTH, Handshake
 from .session_context import SeedlessSessionContext
 
@@ -104,7 +103,23 @@ async def _handle_state_handshake(
     if __debug__:
         log.debug(__name__, "handle_state_handshake", iface=ctx.iface)
 
-    payload = await ctx.recv_payload(control_byte.is_handshake_init_req)
+    def is_handshake_init_req(ctrl_byte: int) -> bool:
+        success = control_byte.is_handshake_init_req(ctrl_byte)
+
+        if success and control_byte.get_ack_bit(ctrl_byte):
+            # Newer Suite versions will send `handshake_init_req` with a non-zero ACK bit.
+            # The device should not use ACK piggybacking with older Suite versions.
+            ABP.allow_ack_piggybacking(ctx.channel_cache)
+
+        if __debug__:
+            ctx._log(
+                "THP ACK piggybacking = ",
+                str(ABP.is_ack_piggybacking_allowed(ctx.channel_cache)),
+            )
+
+        return success
+
+    payload = await ctx.recv_payload(is_handshake_init_req)
 
     if len(payload) != PUBKEY_LENGTH + 1:
         if __debug__:
