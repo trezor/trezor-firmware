@@ -1,6 +1,6 @@
 #![doc = include_str!("../README.md")]
-#![no_std]
 #![forbid(unsafe_code)]
+#![cfg_attr(not(feature = "use_std"), no_std)]
 
 mod alternating_bit;
 pub mod channel;

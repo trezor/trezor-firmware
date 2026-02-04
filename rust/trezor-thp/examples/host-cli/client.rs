@@ -3,7 +3,8 @@ use std::net::{SocketAddr, UdpSocket};
 use std::time::Duration;
 
 use trezor_thp::{
-    Backend, ChannelIO, Error, channel::host::ChannelOpen, credential::CredentialStore,
+    Backend, ChannelIO, Error, channel::buffered::Buffered, channel::host::ChannelOpen,
+    credential::CredentialStore,
 };
 
 use protobuf::{Enum, Message};
@@ -11,13 +12,12 @@ use protobuf::{Enum, Message};
 const ACK_TIMEOUT: Duration = Duration::from_secs(1);
 const READ_TIMEOUT: Duration = Duration::from_secs(30);
 const PACKET_LEN: usize = 64;
-const BUFFER_LEN: usize = 1024;
 
 const MESSAGE_TYPE_BUTTONREQUEST: u16 = 26;
 const MESSAGE_TYPE_BUTTONACK: u16 = 27;
 
 pub struct Client<C> {
-    pub channel: C,
+    pub channel: Buffered<C>,
     socket: UdpSocket,
     emu_addr: SocketAddr,
 }
@@ -28,6 +28,8 @@ where
     C: CredentialStore,
 {
     pub fn open(emu_addr: SocketAddr, channel: ChannelOpen<C, B>) -> Self {
+        let mut channel = Buffered::new(channel);
+        channel.set_packet_len(PACKET_LEN);
         Client {
             channel,
             socket: UdpSocket::bind("127.0.0.1:0").unwrap(),
@@ -39,7 +41,7 @@ where
 impl<C: ChannelIO> Client<C> {
     pub fn map<D>(self, func: impl FnOnce(C) -> D) -> Client<D> {
         Client {
-            channel: func(self.channel),
+            channel: self.channel.map(|c| Ok(func(c))).unwrap(),
             socket: self.socket,
             emu_addr: self.emu_addr,
         }
@@ -50,14 +52,16 @@ impl<C: ChannelIO> Client<C> {
         self.socket.send_to(buf, self.emu_addr).unwrap();
     }
 
-    fn recv_from(&mut self, buf: &mut [u8], timeout: Duration) -> Option<usize> {
+    fn recv_from(&mut self, timeout: Duration) -> Option<Vec<u8>> {
         self.socket.set_read_timeout(Some(timeout)).unwrap();
-        let res = self.socket.recv_from(buf);
+        let mut sockbuf = vec![0u8; PACKET_LEN];
+        let res = self.socket.recv_from(sockbuf.as_mut_slice());
         match res {
             Ok((reply_len, src_addr)) => {
                 assert_eq!(src_addr, self.emu_addr);
-                log::trace!("< {}", hex::encode(&buf[..reply_len]));
-                Some(reply_len)
+                sockbuf.truncate(reply_len);
+                log::trace!("< {}", hex::encode(&sockbuf));
+                Some(sockbuf)
             }
             Err(e) if matches!(e.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut) => {
                 log::debug!("UDP receive timeout after {:?}.", timeout);
@@ -70,34 +74,25 @@ impl<C: ChannelIO> Client<C> {
         }
     }
 
-    fn write_ack(&mut self, packet_buffer: &mut [u8]) {
-        self.channel.packet_out(packet_buffer, &[]).unwrap()
+    fn write_ack(&mut self) -> Vec<u8> {
+        self.channel.packet_out().unwrap()
     }
 
-    fn read_ack(&mut self, packet_buffer: &[u8]) -> bool {
-        let pir = self
-            .channel
-            .packet_in(packet_buffer, &[])
-            .check_failed()
-            .unwrap();
+    fn read_ack(&mut self, packet: &[u8]) -> bool {
+        let pir = self.channel.packet_in(packet).check_failed().unwrap();
         assert!(!pir.got_transport_error());
         pir.got_ack()
     }
 
     pub fn write(&mut self, sid: u8, message_type: u16, message: &[u8]) {
-        let mut send_buffer = vec![0; message.len() + C::BUFFER_OVERHEAD];
-        self.channel
-            .message_in_from(sid, message_type, message, send_buffer.as_mut_slice())
-            .unwrap();
+        self.channel.message_in(sid, message_type, message).unwrap();
 
         let mut sockbuf = [0u8; PACKET_LEN];
         let mut acked = false;
         while !acked {
             while self.channel.packet_out_ready() {
-                self.channel
-                    .packet_out(&mut sockbuf, send_buffer.as_mut_slice())
-                    .unwrap();
-                self.send_to(&sockbuf);
+                let packet = self.channel.packet_out().unwrap();
+                self.send_to(&packet);
                 sockbuf.fill(0);
             }
             // Only true if channel ID is not known, otherwise we need to wait for an ACK.
@@ -105,14 +100,14 @@ impl<C: ChannelIO> Client<C> {
                 break;
             }
             while !acked {
-                match self.recv_from(&mut sockbuf, ACK_TIMEOUT) {
+                match self.recv_from(ACK_TIMEOUT) {
                     None => {
                         // timeout
                         self.channel.message_retransmit().unwrap();
                         break;
                     }
-                    Some(reply_len) => {
-                        acked = self.read_ack(&sockbuf[..reply_len]);
+                    Some(packet) => {
+                        acked = self.read_ack(&packet);
                     }
                 }
             }
@@ -120,25 +115,23 @@ impl<C: ChannelIO> Client<C> {
     }
 
     pub fn read(&mut self) -> (u8, u16, Vec<u8>) {
-        let mut recv_buf = vec![0u8; BUFFER_LEN];
-        let mut sockbuf = [0u8; PACKET_LEN];
         let mut result: Option<(u8, u16, Vec<u8>)> = None;
         while result.is_none() {
             let mut message_ready = false;
             while !message_ready {
-                let Some(reply_len) = self.recv_from(&mut sockbuf, READ_TIMEOUT) else {
+                let Some(packet) = self.recv_from(READ_TIMEOUT) else {
                     log::error!("Timed out waiting for response for {:?}.", READ_TIMEOUT);
                     panic!();
                 };
                 message_ready = self
                     .channel
-                    .packet_in(&sockbuf[..reply_len], recv_buf.as_mut_slice())
+                    .packet_in(&packet)
                     .check_failed()
                     .unwrap()
                     .got_message();
             }
-            result = match self.channel.message_out(recv_buf.as_mut_slice()) {
-                Ok((sid, message_type, message)) => Some((sid, message_type, Vec::from(message))),
+            result = match self.channel.message_out() {
+                Ok(r) => Some(r),
                 Err(Error::InvalidChecksum | Error::MalformedData) => {
                     log::error!("Received bad message, waiting for retransmission.");
                     continue;
@@ -150,9 +143,8 @@ impl<C: ChannelIO> Client<C> {
             }
         }
         // Send ACK
-        sockbuf.fill(0);
-        self.write_ack(&mut sockbuf);
-        self.send_to(&sockbuf);
+        let packet = self.write_ack();
+        self.send_to(&packet);
         result.unwrap()
     }
 

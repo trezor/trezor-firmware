@@ -1,3 +1,5 @@
+#[cfg(feature = "use_std")]
+pub mod buffered;
 pub mod host;
 mod noise;
 
