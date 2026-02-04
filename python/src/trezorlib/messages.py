@@ -424,9 +424,15 @@ class ThpPairingMethod(IntEnum):
     NFC = 4
 
 
+class TronResourceCode(IntEnum):
+    BANDWIDTH = 0
+    ENERGY = 1
+
+
 class TronRawContractType(IntEnum):
     TransferContract = 1
     TriggerSmartContract = 31
+    FreezeBalanceV2Contract = 54
 
 
 class MessageType(IntEnum):
@@ -696,6 +702,7 @@ class MessageType(IntEnum):
     TronContractRequest = 2204
     TronTransferContract = 2205
     TronTriggerSmartContract = 2206
+    TronFreezeBalanceV2Contract = 2207
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -8724,6 +8731,26 @@ class TronTriggerSmartContract(protobuf.MessageType):
         self.owner_address = owner_address
         self.contract_address = contract_address
         self.data = data
+
+
+class TronFreezeBalanceV2Contract(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2207
+    FIELDS = {
+        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("frozen_balance", "uint64", repeated=False, required=True),
+        3: protobuf.Field("resource", "TronResourceCode", repeated=False, required=False, default=TronResourceCode.BANDWIDTH),
+    }
+
+    def __init__(
+        self,
+        *,
+        owner_address: "bytes",
+        frozen_balance: "int",
+        resource: Optional["TronResourceCode"] = TronResourceCode.BANDWIDTH,
+    ) -> None:
+        self.owner_address = owner_address
+        self.frozen_balance = frozen_balance
+        self.resource = resource
 
 
 class TronSignature(protobuf.MessageType):

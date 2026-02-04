@@ -1115,6 +1115,8 @@ class TR:
     words__show_next: str = "Show next"
     words__sign: str = "Sign"
     words__signer: str = "Signer"
+    words__staking_for: str = "Staking for"
+    words__staking_from: str = "Staking from"
     words__swap: str = "Swap"
     words__title_check: str = "Check"
     words__title_done: str = "Done"

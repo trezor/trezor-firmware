@@ -70,6 +70,7 @@ if TYPE_CHECKING:
     from trezor.enums import ThpMessageType  # noqa: F401
     from trezor.enums import ThpPairingMethod  # noqa: F401
     from trezor.enums import TronRawContractType  # noqa: F401
+    from trezor.enums import TronResourceCode  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
 
     class BenchmarkListNames(protobuf.MessageType):
@@ -6918,6 +6919,24 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TronTriggerSmartContract"]:
+            return isinstance(msg, cls)
+
+    class TronFreezeBalanceV2Contract(protobuf.MessageType):
+        owner_address: "AnyBytes"
+        frozen_balance: "int"
+        resource: "TronResourceCode"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+            frozen_balance: "int",
+            resource: "TronResourceCode | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronFreezeBalanceV2Contract"]:
             return isinstance(msg, cls)
 
     class TronSignature(protobuf.MessageType):
