@@ -149,7 +149,7 @@ pub fn new_confirm_summary(
 
     if account_paragraphs.is_some() {
         menu.item(Button::new_menu_item(
-            TR::address_details__account_info.into(),
+            account_title.unwrap_or(TR::address_details__account_info.into()),
             theme::menu_item_title(),
         ));
         unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
@@ -186,7 +186,7 @@ pub fn new_confirm_summary(
     // AccountInfo
     let content_account = content_menu_info(
         account_title.unwrap_or(TR::address_details__account_info.into()),
-        Some(TR::send__send_from.into()),
+        Some(TR::send__send_from.into()), // TODO
         account_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty())),
     );
 
