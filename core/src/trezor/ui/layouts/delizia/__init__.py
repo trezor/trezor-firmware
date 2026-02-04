@@ -1005,6 +1005,31 @@ async def confirm_trade(
 
 if not utils.BITCOIN_ONLY:
 
+    def _get_ethereum_info_items(
+        account: str | None, account_path: str | None
+    ) -> list[tuple[str, list[StrPropertyType], str]]:
+        account_properties: list[StrPropertyType] = []
+        if account:
+            account_properties.append((TR.words__account, account, None))
+        if account_path:
+            account_properties.append(
+                (
+                    TR.address_details__derivation_path,
+                    account_path,
+                    None,
+                )
+            )
+        if account_properties:
+            return [
+                (
+                    TR.address_details__account_info,
+                    account_properties,
+                    TR.send__send_from,
+                )
+            ]
+        else:
+            return []
+
     def confirm_ethereum_unknown_contract_warning(
         _title: str | None,
     ) -> Awaitable[None]:
@@ -1026,41 +1051,31 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        fee_items: list[PropertyType] | None = (
-            list(fee_info_items) if fee_info_items else None
-        )
-        summary_items: list[PropertyType] | None = [
-            (TR.words__amount, total_amount, None),
-            (TR.send__maximum_fee, maximum_fee, None),
-        ]
-        await raise_if_not_confirmed(
-            trezorui_api.flow_confirm_output(
-                title=TR.words__address,
+        await confirm_linear_flow(
+            lambda: confirm_value(
+                TR.words__address,
+                recipient or TR.ethereum__new_contract,
+                description="",
+                br_name="confirm_output",
+                br_code=br_code,
                 subtitle=(
                     TR.words__recipient
                     if is_send
                     else TR.ethereum__interaction_contract
                 ),
-                description=None,
-                extra=None,
-                message=(recipient or TR.ethereum__new_contract),
-                chunkify=(chunkify if recipient else False),
-                text_mono=True,
-                account_title=TR.send__send_from,
-                account=account,
-                account_path=account_path,
-                address_item=None,
-                extra_item=None,
-                br_code=ButtonRequestType.SignTx,
-                br_name="confirm_output",
-                summary_items=summary_items,
-                fee_items=fee_items,
-                summary_title=TR.words__title_summary,
-                summary_br_name="confirm_total",
-                summary_br_code=ButtonRequestType.SignTx,
+                chunkify=chunkify if recipient else False,
                 cancel_text=TR.buttons__cancel,
+                info_items=_get_ethereum_info_items(account, account_path),
             ),
-            None,
+            lambda: confirm_total(
+                total_amount,
+                maximum_fee,
+                title=None,
+                total_label=TR.words__amount,
+                fee_label=TR.send__maximum_fee,
+                fee_items=fee_info_items,
+                back_button=True,
+            ),
         )
 
     def ethereum_address_title() -> str:
@@ -1207,40 +1222,38 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_ethereum_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        summary_items: list[PropertyType] = []
-        if verb == TR.ethereum__staking_claim:
-            summary_items.extend([(TR.send__maximum_fee, maximum_fee, None)])
-        else:
-            summary_items.extend(
-                [
-                    (TR.words__amount, total_amount, None),
-                    (TR.send__maximum_fee, maximum_fee, None),
-                ]
-            )
-        await raise_if_not_confirmed(
-            trezorui_api.flow_confirm_output(
-                title=verb,
-                subtitle=None,
-                description=None,
-                extra=None,
-                message=intro_question,
-                chunkify=False,
-                text_mono=False,
-                account_title=TR.address_details__account_info,
-                account=account,
-                account_path=account_path,
-                br_code=br_code,
+        assert verb in (
+            TR.ethereum__staking_claim,
+            TR.ethereum__staking_stake,
+            TR.ethereum__staking_unstake,
+        )
+
+        address_info_items: list[tuple[str, list[StrPropertyType], None]] = [
+            (address_title, [(address_title, address, chunkify)], None)
+        ]
+        await confirm_linear_flow(
+            lambda: confirm_value(
+                verb,
+                intro_question,
+                description="",
                 br_name=br_name,
-                address_item=(address_title, address, None),
-                extra_item=None,
-                summary_items=summary_items,
-                fee_items=list(info_items) if info_items else None,
-                summary_title=verb,
-                summary_br_name="confirm_total",
-                summary_br_code=ButtonRequestType.SignTx,
-                cancel_text=TR.buttons__cancel,  # cancel staking
+                br_code=br_code,
+                subtitle=None,
+                is_data=False,
+                chunkify=False,
+                cancel_text=TR.buttons__cancel,
+                info_items=address_info_items
+                + _get_ethereum_info_items(account, account_path),
             ),
-            br_name=None,
+            lambda: confirm_total(
+                total_amount if not verb == TR.ethereum__staking_claim else None,
+                maximum_fee,
+                title=verb,
+                total_label=TR.words__amount,
+                fee_label=TR.send__maximum_fee,
+                fee_items=fee_info_items,
+                back_button=True,
+            ),
         )
 
     def confirm_solana_unknown_token_warning() -> Awaitable[None]:
@@ -1305,34 +1318,34 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        summary_items: list[StrPropertyType] = []
-        if amount_item:
-            summary_items.append(amount_item)
-        summary_items.append(fee_item)
-        await raise_if_not_confirmed(
-            trezorui_api.flow_confirm_output(
-                title=title,
-                subtitle=None,
+        info_items = []
+        if stake_item:
+            info_items.append((stake_item[0], [stake_item], None))
+        info_items.extend(_get_ethereum_info_items(account, account_path))
+
+        await confirm_linear_flow(
+            lambda: confirm_value(
+                title,
+                vote_account,
                 description=description,
-                extra=f"\n{TR.words__provider}:" if vote_account else None,
-                message=vote_account,
-                chunkify=True,
-                text_mono=True,
-                account_title=TR.address_details__account_info,
-                account=account,
-                account_path=account_path,
-                br_code=br_code,
                 br_name=br_name,
-                address_item=stake_item,
-                extra_item=blockhash_item,
-                fee_items=list(fee_details) if fee_details else None,
-                summary_title=title,
-                summary_items=summary_items,
-                summary_br_name="confirm_total",
-                summary_br_code=ButtonRequestType.SignTx,
+                br_code=br_code,
+                subtitle=TR.words__provider if vote_account else None,
+                is_data=False,
+                chunkify=True,
                 cancel_text=TR.buttons__cancel,
+                info_items=info_items,
             ),
-            br_name=None,
+            lambda: confirm_total(
+                amount_item[1] if amount_item else None,
+                fee_item[1] or "",
+                title=title,
+                total_label=amount_item[0] if amount_item else None,
+                account_title=blockhash_item[0],
+                account_items=[blockhash_item],
+                fee_label=fee_item[0],
+                fee_items=fee_details,
+            ),
         )
 
     def confirm_cardano_tx(
