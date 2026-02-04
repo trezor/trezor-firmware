@@ -150,7 +150,12 @@
       "Delizia": "Wallet-Backup abgeschlossen",
       "Eckhart": "Wallet-Backup abgeschlossen."
     },
-    "backup__title_backup_wallet": "Wallet-Backup",
+    "backup__title_backup_wallet": {
+      "Bolt": "",
+      "Caesar": "Wallet-Backup",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "backup__title_create_wallet_backup": "Wallet-Backup erstellen",
     "backup__title_skip": "Backup überspringen",
     "backup__want_to_skip": "Möchtest du das Backup wirklich überspringen?",
@@ -943,6 +948,8 @@
       "Eckhart": "{provider} Kontraktadresse"
     },
     "ethereum__data_size_template": "Größe: {0} Bytes",
+    "ethereum__eip_7702": "",
+    "ethereum__eip_7702_title": "",
     "ethereum__gas_limit": "Gas-Grenze",
     "ethereum__gas_price": "Gas-Preis",
     "ethereum__interaction_contract": "Interaktionsvertrag",
@@ -3210,7 +3217,7 @@
     "words__enabled": "Aktiviert",
     "words__error": "Fehler",
     "words__fee": "Gebühr",
-    "words__fee_limit": "",
+    "words__fee_limit": "Gebührenlimit",
     "words__forget": "Vergessen",
     "words__from": "von",
     "words__good_to_know": "Gut zu wissen",
@@ -3229,7 +3236,7 @@
     "words__name": "Name",
     "words__no": "Nein",
     "words__not_recommended": "Nicht empfohlen!",
-    "words__note": "",
+    "words__note": "Anmerkung",
     "words__off": "AUS",
     "words__on": "EIN",
     "words__operation_cancelled": "Vorgang abgebrochen",
