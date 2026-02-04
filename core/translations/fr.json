@@ -186,10 +186,10 @@
       "Eckhart": "Sauvegarde du portefeuille terminée."
     },
     "backup__title_backup_wallet": {
-      "Bolt": "Sauveg. portef.",
+      "Bolt": "",
       "Caesar": "Sauvegarder le portefeuille",
-      "Delizia": "Sauvegarder le portefeuille",
-      "Eckhart": "Sauvegarder le portefeuille"
+      "Delizia": "",
+      "Eckhart": ""
     },
     "backup__title_create_wallet_backup": "Créez une sauvegarde de portefeuille",
     "backup__title_skip": {
@@ -205,12 +205,7 @@
       "Delizia": "Données d'engagement",
       "Eckhart": "Données d'engagement"
     },
-    "bitcoin__confirm_locktime": {
-      "Bolt": "Conf. délai de verr.",
-      "Caesar": "Confirmer le délai de verrouillage",
-      "Delizia": "Confirmer le délai de verrouillage",
-      "Eckhart": "Confirmer le délai de verrouillage"
-    },
+    "bitcoin__confirm_locktime": "Confirmer le délai de verrouillage",
     "bitcoin__create_proof_of_ownership": "Voulez-vous créer une preuve de propriété ?",
     "bitcoin__high_mining_fee_template": {
       "Bolt": "Les frais de minage de {0}\nsont trop élevés.",
@@ -973,6 +968,8 @@
     "ethereum__approve_unlimited_template": "Autoriser un montant illimité de {0}",
     "ethereum__contract_address": "Adresse de contrat du fournisseur",
     "ethereum__data_size_template": "Taille : {0} octets",
+    "ethereum__eip_7702": "",
+    "ethereum__eip_7702_title": "",
     "ethereum__gas_limit": "Limite de gas",
     "ethereum__gas_price": "Prix du gas",
     "ethereum__interaction_contract": "Contrat d'interaction",
@@ -1889,7 +1886,7 @@
     "reset__check_share_backup_template": "Vérifions rapidement le Fragment #{0}.",
     "reset__check_share_title_template": {
       "Bolt": "Vérifier fragm. #{0}",
-      "Caesar": "Vérifier le fragment #{0}",
+      "Caesar": "Vérifier fragm. #{0}",
       "Delizia": "Vérifier le fragm. #{0}",
       "Eckhart": "Vérifier le fragment #{0}"
     },
@@ -2680,7 +2677,7 @@
     "words__enabled": "Activé",
     "words__error": "Erreur",
     "words__fee": "Frais",
-    "words__fee_limit": "",
+    "words__fee_limit": "Limite de frais",
     "words__forget": "Oublier",
     "words__from": "du",
     "words__good_to_know": "Bon à savoir",
@@ -2694,7 +2691,7 @@
     "words__name": "Nom",
     "words__no": "Non",
     "words__not_recommended": "Non recommandé !",
-    "words__note": "",
+    "words__note": "Remarque",
     "words__off": "DÉSACTIVÉ",
     "words__on": "ACTIVÉ",
     "words__operation_cancelled": "Opération annulée",
