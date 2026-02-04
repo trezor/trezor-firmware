@@ -153,7 +153,7 @@ impl<R: Role> Reassembler<R> {
                 self.header.channel_id(),
                 header.channel_id()
             );
-            return Err(Error::out_of_bounds());
+            return Err(Error::malformed_data());
         }
 
         let payload_len = self.header.payload_len().into();

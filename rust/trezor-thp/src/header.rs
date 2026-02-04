@@ -101,7 +101,7 @@ impl<R: Role> Header<R> {
         }
         if !channel_id_valid(channel_id) {
             log::error!("Invalid channel id {}.", channel_id);
-            return Err(Error::out_of_bounds());
+            return Err(Error::malformed_data());
         }
         if cb.is_continuation() {
             return Ok((Header::Continuation { channel_id }, rest));
@@ -109,7 +109,7 @@ impl<R: Role> Header<R> {
         let (payload_len, rest) = parse_u16(rest)?;
         if payload_len > MAX_PAYLOAD_LEN {
             log::error!("Payload length exceeds {}.", MAX_PAYLOAD_LEN);
-            return Err(Error::out_of_bounds());
+            return Err(Error::malformed_data());
         }
         // strip padding if there is any
         let without_padding = rest.len().min(payload_len.into());

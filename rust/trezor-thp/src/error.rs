@@ -36,7 +36,7 @@ impl TryFrom<u8> for TransportError {
             2 => Self::UnallocatedChannel,
             3 => Self::DecryptionFailed,
             5 => Self::DeviceLocked,
-            _ => return Err(Error::out_of_bounds()),
+            _ => return Err(Error::malformed_data()),
         })
     }
 }
@@ -54,8 +54,6 @@ impl TryFrom<&[u8]> for TransportError {
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
 #[derive(PartialEq, Eq)]
 pub enum Error {
-    /// Numeric field has forbidden value.
-    OutOfBounds,
     /// Invalid data/operation from crate user.
     UnexpectedInput,
     /// Channel is not ready to send another message, or there is no message ready to be passed
@@ -84,10 +82,6 @@ impl From<NoiseError> for Error {
 pub type Result<T> = core::result::Result<T, Error>;
 
 impl Error {
-    pub const fn out_of_bounds() -> Self {
-        Self::OutOfBounds
-    }
-
     pub const fn unexpected_input() -> Self {
         Self::UnexpectedInput
     }
