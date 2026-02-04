@@ -1,5 +1,5 @@
 use crate::{
-    ipc::{IpcMessage, RemoteSysTask},
+    ipc::{CoreIpcService, IpcMessage, RemoteSysTask},
     strutil::TString,
     ui::{
         cache::PageCache,
@@ -38,8 +38,8 @@ pub struct LongContentScreen<'a> {
 }
 
 impl<'a> LongContentScreen<'a> {
-    pub fn new(title: TString<'static>, pages: usize) -> Self {
-        let content = LongContent::new(pages as u16);
+    pub fn new(title: TString<'static>, pages: usize, remote: u8) -> Self {
+        let content = LongContent::new(pages as u16, remote);
         let mut action_bar = ActionBar::new_cancel_confirm();
         action_bar.update(content.pager);
 
@@ -139,15 +139,17 @@ struct LongContent {
     cache: PageCache,
     area: Rect,
     state: ContentState,
+    remote: u8,
 }
 
 impl LongContent {
-    fn new(pages: u16) -> Self {
+    fn new(pages: u16, remote: u8) -> Self {
         Self {
             pager: Pager::new(pages),
             cache: PageCache::new(),
             area: Rect::zero(),
             state: ContentState::Uninit,
+            remote,
         }
     }
 
@@ -196,8 +198,8 @@ impl LongContent {
         )
         .unwrap();
 
-        let msg = IpcMessage::new(9, &bytes);
-        unwrap!(msg.send(RemoteSysTask::Unknown(2), 6));
+        let msg = IpcMessage::new(idx as u16, &bytes);
+        unwrap!(msg.send(RemoteSysTask::Unknown(self.remote), CoreIpcService::Util.into()));
         ctx.request_anim_frame();
     }
 }
@@ -218,14 +220,15 @@ impl Component for LongContent {
         }
 
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if let Some(data) = IpcMessage::try_receive(RemoteSysTask::Unknown(2)) {
+            if let Some(message) = IpcMessage::try_receive(RemoteSysTask::Unknown(2)) {
                 debug_assert!(matches!(
                     self.state,
                     ContentState::Uninit | ContentState::Waiting(_)
                 ));
                 self.state = match self.state {
                     ContentState::Uninit => {
-                        self.cache.init(data.data());
+                        debug_assert!(message.id() == 0);
+                        self.cache.init(message.data());
                         ctx.request_paint();
                         if self.pager.has_next() {
                             let idx = self.pager.next() as usize;
@@ -238,15 +241,17 @@ impl Component for LongContent {
                     ContentState::Waiting(next_page)
                         if self.pager.current() + 1 == next_page as u16 =>
                     {
+                        debug_assert!(message.id() == next_page as u16);
                         debug_assert!(self.cache.is_at_head());
-                        self.cache.push_head(data.data());
+                        self.cache.push_head(message.data());
                         ContentState::Ready
                     }
                     ContentState::Waiting(prev_page)
                         if self.pager.current() == prev_page as u16 + 1 =>
                     {
+                        debug_assert!(message.id() == prev_page as u16);
                         debug_assert!(self.cache.is_at_tail());
-                        self.cache.push_tail(data.data());
+                        self.cache.push_tail(message.data());
                         ContentState::Ready
                     }
                     _ => {

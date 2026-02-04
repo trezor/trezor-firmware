@@ -1320,7 +1320,7 @@ impl FirmwareUI for UIBolt {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
-    fn process_ipc_message(_data: &[u8]) -> Result<Gc<LayoutObj>, Error> {
+    fn process_ipc_message(_data: &[u8], _remote: u8) -> Result<Gc<LayoutObj>, Error> {
         Err(Error::NotImplementedError)
     }
 }

@@ -1492,7 +1492,7 @@ impl FirmwareUI for UICaesar {
         Ok(layout)
     }
 
-    fn process_ipc_message(_data: &[u8]) -> Result<Gc<LayoutObj>, Error> {
+    fn process_ipc_message(_data: &[u8], _remote: u8) -> Result<Gc<LayoutObj>, Error> {
         Err(Error::NotImplementedError)
     }
 }

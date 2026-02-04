@@ -67,6 +67,10 @@ impl IpcMessage<'_> {
     pub fn data(&self) -> &[u8] {
         self.data
     }
+
+    pub fn remote(&self) -> RemoteSysTask {
+        self.remote
+    }
 }
 
 impl<'a> IpcMessage<'a> {

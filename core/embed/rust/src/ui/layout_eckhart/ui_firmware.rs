@@ -124,8 +124,12 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn confirm_long(title: TString<'static>, pages: usize) -> Result<impl LayoutMaybeTrace, Error> {
-        let screen = LongContentScreen::new(title, pages);
+    fn confirm_long(
+        title: TString<'static>,
+        pages: usize,
+        remote: u8,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let screen = LongContentScreen::new(title, pages, remote);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
@@ -1744,7 +1748,7 @@ impl FirmwareUI for UIEckhart {
         Ok(flow)
     }
 
-    fn process_ipc_message(data: &[u8]) -> Result<Gc<LayoutObj>, Error> {
+    fn process_ipc_message(data: &[u8], remote: u8) -> Result<Gc<LayoutObj>, Error> {
         // Safe helper to convert archived string to TString using Deref
         fn tstr_from_archived<const N: usize>(s: &ArchivedStringN<N>) -> TString<'static> {
             unsafe { StrBuffer::from_ptr_and_len(s.data.as_ptr(), s.len as usize) }.into()
@@ -1778,6 +1782,7 @@ impl FirmwareUI for UIEckhart {
                 let layout = Self::confirm_long(
                     tstr_from_archived(title),
                     unwrap!(usize::try_from(pages.to_native())),
+                    remote,
                 )?;
                 LayoutObj::new_root(layout)
             }

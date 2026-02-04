@@ -10,6 +10,49 @@ pub const CORE_SERVICE_REMOTE: RemoteSysTask = RemoteSysTask::CoreApp;
 
 use trezor_structs::ArchivedUtilEnum;
 
+// ============================================================================
+// Trait-based Call Abstraction
+// ============================================================================
+/// Context for handling utility messages, contains info from the original request
+pub struct UtilContext {
+    pub service: u16,
+    pub id: u16,
+    pub remote: RemoteSysTask,
+}
+
+/// Result of handling a utility message
+pub enum UtilHandleResult {
+    /// Continue waiting for more messages
+    Continue,
+    /// Unexpected message received
+    Unexpected,
+}
+
+/// Trait for handling utility service messages during IPC calls
+pub trait UtilHandler {
+    /// Returns true if this handler expects utility messages
+    fn expects_util_messages(&self) -> bool;
+
+    /// Handle an incoming utility enum message
+    /// Returns `UtilHandleResult::Continue` if handled successfully and should keep waiting
+    /// Returns `UtilHandleResult::Unexpected` if the message was not expected
+    fn handle(&self, ctx: &UtilContext, archived: &ArchivedUtilEnum) -> UtilHandleResult;
+}
+
+/// No utility message handling - for regular calls
+pub struct NoUtilHandler;
+
+impl UtilHandler for NoUtilHandler {
+    fn expects_util_messages(&self) -> bool {
+        false
+    }
+
+    fn handle(&self, _ctx: &UtilContext, _archived: &ArchivedUtilEnum) -> UtilHandleResult {
+        // Should never receive utility messages
+        UtilHandleResult::Unexpected
+    }
+}
+
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, num_enum::IntoPrimitive, num_enum::FromPrimitive)]
 #[repr(u16)]
 pub enum CoreIpcService {
@@ -19,10 +62,9 @@ pub enum CoreIpcService {
     WireContinue = 3,
     WireEnd = 4,
     Crypto = 5,
-    LongConfirm = 6,
+    Util = 6,
     #[num_enum(catch_all)]
     Unknown(u16),
-    Ping = 0xffff,
 }
 
 pub struct IpcRemote<'a, T> {
@@ -38,7 +80,7 @@ pub enum Error<'a> {
     UnexpectedResponse(IpcMessage<'a>),
 }
 
-impl<'a, T: Into<u16>> IpcRemote<'a, T> {
+impl<'a, T: Into<u16> + Copy> IpcRemote<'a, T> {
     pub const fn new(inbox: IpcInbox<'a>) -> Self {
         Self {
             inbox,
@@ -65,25 +107,7 @@ impl<'a, T: Into<u16>> IpcRemote<'a, T> {
         service: T,
         message: &IpcMessage,
         timeout: Timeout,
-    ) -> Result<IpcMessage<'a>, Error<'a>> {
-        let service_id = service.into();
-        message
-            .send(self.inbox.remote(), service_id)
-            .map_err(|_| Error::FailedToSend)?;
-        let reply = self.receive(timeout)?;
-        if reply.service() != service_id {
-            Err(Error::UnexpectedService(reply))
-        } else {
-            Ok(reply)
-        }
-    }
-
-    pub fn call_long(
-        &self,
-        service: T,
-        message: &IpcMessage,
-        timeout: Timeout,
-        long_content: &str,
+        util_handler: &dyn UtilHandler,
     ) -> Result<IpcMessage<'a>, Error<'a>> {
         let service_id = service.into();
         message
@@ -91,31 +115,21 @@ impl<'a, T: Into<u16>> IpcRemote<'a, T> {
             .map_err(|_| Error::FailedToSend)?;
         loop {
             let reply = self.receive(timeout)?;
-            if reply.service() == 6 {
+
+            if reply.service() == u16::from(CoreIpcService::Util)
+                && util_handler.expects_util_messages()
+            {
+                let util_ctx = UtilContext {
+                    service: reply.service(),
+                    id: reply.id(),
+                    remote: reply.remote(),
+                };
                 let data = reply.data();
-
                 let archived = unsafe { rkyv::access_unchecked::<ArchivedUtilEnum>(data) };
-                match archived {
-                    ArchivedUtilEnum::RequestPage { idx } => {
-                        let page_idx = idx.to_native() as usize;
 
-                        // Find byte range for the requested char slice
-                        let mut chars = long_content.chars();
-                        let start_byte = chars
-                            .by_ref()
-                            .take(page_idx * crate::ui::CHARS_PER_PAGE)
-                            .map(|c| c.len_utf8())
-                            .sum::<usize>();
-                        let slice_len = chars
-                            .take(crate::ui::CHARS_PER_PAGE)
-                            .map(|c| c.len_utf8())
-                            .sum::<usize>();
-                        let slice = &long_content.as_bytes()[start_byte..start_byte + slice_len];
-
-                        // TODO implement Debug for Api error
-                        let _ = IpcMessage::new(10, slice).send(RemoteSysTask::CoreApp, 6);
-                    }
-                    _ => return Err(Error::UnexpectedResponse(reply)),
+                match util_handler.handle(&util_ctx, archived) {
+                    UtilHandleResult::Continue => continue,
+                    UtilHandleResult::Unexpected => return Err(Error::UnexpectedResponse(reply)),
                 }
             } else if reply.service() != service_id {
                 return Err(Error::UnexpectedService(reply));
