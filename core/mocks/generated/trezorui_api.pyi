@@ -309,9 +309,9 @@ def confirm_summary(
     fee: str,
     fee_label: str,
     title: str | None = None,
-    account_items: Sequence[PropertyType] | None = None,
+    account_items: Iterable[StrPropertyType] | None = None,
     account_title: str | None = None,
-    extra_items: Sequence[PropertyType] | None = None,
+    extra_items: Iterable[StrPropertyType] | None = None,
     extra_title: str | None = None,
     verb_cancel: str | None = None,
     back_button: bool = False,
@@ -706,7 +706,7 @@ def show_info(
 def show_info_with_cancel(
     *,
     title: str,
-    items: Sequence[PropertyType],
+    items: Iterable[StrPropertyType],
     horizontal: bool = False,
     chunkify: bool = False,
 ) -> LayoutObj[UiResult]:
