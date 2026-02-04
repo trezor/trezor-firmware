@@ -3,7 +3,7 @@ use std::net::{SocketAddr, UdpSocket};
 use std::time::Duration;
 
 use trezor_thp::{
-    Backend, ChannelIO, Error, channel::buffered::Buffered, channel::host::ChannelOpen,
+    Backend, ChannelIO, Error, channel::buffered::Buffered, channel::host::Mux,
     credential::CredentialStore,
 };
 
@@ -22,12 +22,12 @@ pub struct Client<C> {
     emu_addr: SocketAddr,
 }
 
-impl<C, B> Client<ChannelOpen<C, B>>
+impl<C, B> Client<Mux<C, B>>
 where
     B: Backend,
     C: CredentialStore,
 {
-    pub fn open(emu_addr: SocketAddr, channel: ChannelOpen<C, B>) -> Self {
+    pub fn open(emu_addr: SocketAddr, channel: Mux<C, B>) -> Self {
         let mut channel = Buffered::new(channel);
         channel.set_packet_len(PACKET_LEN);
         Client {
@@ -116,19 +116,18 @@ impl<C: ChannelIO> Client<C> {
 
     pub fn read(&mut self) -> (u8, u16, Vec<u8>) {
         let mut result: Option<(u8, u16, Vec<u8>)> = None;
+        let mut send_ack = true;
         while result.is_none() {
-            let mut message_ready = false;
-            while !message_ready {
+            let mut done = false;
+            while !done {
                 let Some(packet) = self.recv_from(READ_TIMEOUT) else {
                     log::error!("Timed out waiting for response for {:?}.", READ_TIMEOUT);
                     panic!();
                 };
-                message_ready = self
-                    .channel
-                    .packet_in(&packet)
-                    .check_failed()
-                    .unwrap()
-                    .got_message();
+                let pir = self.channel.packet_in(&packet).check_failed().unwrap();
+                assert!(!pir.got_transport_error());
+                done = pir.got_message() || pir.got_channel();
+                send_ack = !pir.got_channel();
             }
             result = match self.channel.message_out() {
                 Ok(r) => Some(r),
@@ -140,11 +139,14 @@ impl<C: ChannelIO> Client<C> {
                     log::error!("Cannot read message from channel: {:?}.", e);
                     panic!();
                 }
-            }
+            };
         }
         // Send ACK
-        let packet = self.write_ack();
-        self.send_to(&packet);
+        if send_ack {
+            log::trace!("Sending ACK.");
+            let packet = self.write_ack();
+            self.send_to(&packet);
+        }
         result.unwrap()
     }
 

@@ -7,7 +7,7 @@ pub struct FoundCredential<'a> {
 
 /// Host-side credential store.
 /// Basically a set of (`remote_static_pubkey`, `local_static_privkey`, `auth_credential`).
-pub trait CredentialStore {
+pub trait CredentialStore: Clone {
     /// Find a record such that `remote_static_pubkey` satisfies
     /// `masked_static_pubkey == X25519(SHA-256(remote_static_pubkey || ephemeral_pubkey), remote_static_pubkey)`.
     /// If found, write `local_static_privkey` and `auth_credential` to `dest` and return the written subslices.
@@ -20,6 +20,7 @@ pub trait CredentialStore {
 }
 
 /// Never finds a matching credential.
+#[derive(Clone)]
 pub struct NullCredentialStore;
 
 impl CredentialStore for NullCredentialStore {

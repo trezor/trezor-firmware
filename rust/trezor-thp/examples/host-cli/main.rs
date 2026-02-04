@@ -7,7 +7,7 @@ use protobuf::Message;
 
 use trezor_thp::{
     Backend, Channel, Host,
-    channel::host::{ChannelOpen, ChannelPairing},
+    channel::host::{ChannelOpen, ChannelPairing, Mux},
     credential::{CredentialStore, NullCredentialStore},
 };
 
@@ -29,16 +29,21 @@ impl Backend for RustCrypto {
     }
 }
 
+fn do_allocation<C>(client: &mut Client<Mux<C, RustCrypto>>)
+where
+    C: CredentialStore,
+{
+    client.call(0, &[]);
+}
+
 fn do_handshake<C>(client: &mut Client<ChannelOpen<C, RustCrypto>>)
 where
     C: CredentialStore,
 {
-    // Handshake should finish within 3 request-response cycles.
-    // Device properties and channel id are available after the first one.
-    client.call(0, &[]);
     let device_properties =
         ThpDeviceProperties::parse_from_bytes(client.channel.device_properties()).unwrap();
     log::debug!("Device properties: {:?}.", device_properties);
+    // Handshake should finish within 2 request-response cycles.
     client.call(0, &[]);
     client.call(0, &[]);
 }
@@ -100,8 +105,13 @@ pub fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::default().filter_or("RUST_LOG", "info"));
 
     let cred_lookup = NullCredentialStore;
-    let channel = ChannelOpen::<_, RustCrypto>::new(false, cred_lookup).unwrap();
+    let mut channel = Mux::<_, RustCrypto>::new(cred_lookup);
+    channel.request_channel(false);
     let mut client = Client::open(get_address(), channel);
+
+    do_allocation(&mut client);
+    assert!(client.channel.channel_alloc_ready());
+    let mut client = client.map(|c| c.complete().unwrap());
 
     do_handshake(&mut client);
     assert!(client.channel.handshake_done());
