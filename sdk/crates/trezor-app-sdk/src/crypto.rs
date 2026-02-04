@@ -13,8 +13,7 @@ use trezor_structs::{DerivationPath, LongString, TrezorCryptoEnum};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
-use crate::low_level_api::ffi::HDNode;
-use crate::service::{CoreIpcService, Error};
+use crate::service::{CoreIpcService, Error, NoUtilHandler};
 use crate::util::Timeout;
 pub type ArchivedTrezorCryptoResult = Archived<TrezorCryptoResult>;
 pub type ArchivedTrezorCryptoEnum = Archived<TrezorCryptoEnum>;
@@ -29,7 +28,12 @@ type CryptoResult = Result<TrezorCryptoResult>;
 fn ipc_crypto_call(value: &TrezorCryptoEnum) -> CryptoResult {
     let bytes = to_bytes::<Failure>(value).unwrap();
     let message = IpcMessage::new(0, &bytes);
-    let result = services_or_die().call(CoreIpcService::Crypto, &message, Timeout::max())?;
+    let result = services_or_die().call(
+        CoreIpcService::Crypto,
+        &message,
+        Timeout::max(),
+        &NoUtilHandler {},
+    )?;
 
     // Safe validation using bytecheck before accessing archived data
     let archived = rkyv::access::<ArchivedTrezorCryptoResult, Failure>(result.data()).unwrap();

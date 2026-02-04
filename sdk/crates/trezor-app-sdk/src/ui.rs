@@ -23,17 +23,63 @@ use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 pub use trezor_structs::TrezorUiResult;
-use trezor_structs::{LongString, PropsList, ShortString, TrezorUiEnum};
+use trezor_structs::{ArchivedUtilEnum, LongString, PropsList, ShortString, TrezorUiEnum};
 
 use crate::core_services::services_or_die;
 use crate::error;
 use crate::ipc::IpcMessage;
-use crate::service::{CoreIpcService, Error};
+use crate::service::{
+    CoreIpcService, Error, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler,
+};
 use crate::util::Timeout;
+
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
 
 pub const CHARS_PER_PAGE: usize = 96;
+
+/// Long content handler - responds to page requests
+pub struct LongContentHandler<'a>(pub &'a str);
+
+impl<'a> LongContentHandler<'a> {
+    fn send_page(&self, ctx: &UtilContext, page_idx: usize) {
+        let long_content = self.0;
+
+        // Find byte range for the requested char slice
+        let mut chars = long_content.chars();
+        let start_byte = chars
+            .by_ref()
+            .take(page_idx * crate::ui::CHARS_PER_PAGE)
+            .map(|c| c.len_utf8())
+            .sum::<usize>();
+        let slice_len = chars
+            .take(crate::ui::CHARS_PER_PAGE)
+            .map(|c| c.len_utf8())
+            .sum::<usize>();
+        let slice = &long_content.as_bytes()[start_byte..start_byte + slice_len];
+
+        // Send response with the same service ID as the request
+        let _ = IpcMessage::new(ctx.id, slice).send(ctx.remote, ctx.service);
+    }
+}
+
+impl<'a> UtilHandler for LongContentHandler<'a> {
+    fn expects_util_messages(&self) -> bool {
+        true
+    }
+
+    fn handle(&self, ctx: &UtilContext, archived: &ArchivedUtilEnum) -> UtilHandleResult {
+        match archived {
+            ArchivedUtilEnum::RequestPage { idx } => {
+                let page_idx = idx.to_native() as usize;
+                self.send_page(ctx, page_idx);
+                UtilHandleResult::Continue
+            }
+            // Only RequestPage is allowed for LongContentHandler
+            _ => UtilHandleResult::Unexpected,
+        }
+    }
+}
 
 // ============================================================================
 // Helper Functions
@@ -42,33 +88,39 @@ pub const CHARS_PER_PAGE: usize = 96;
 type Result<T> = core::result::Result<T, Error<'static>>;
 type UiResult = Result<TrezorUiResult>;
 
-/// Send a UI enum over IPC and get the response
-fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
+/// Send a UI enum over IPC with optional long content
+fn ipc_ui_call(value: &TrezorUiEnum, util_handler: &dyn UtilHandler) -> UiResult {
     let bytes = to_bytes::<Failure>(value).unwrap();
     let message = IpcMessage::new(0, &bytes);
-    let result = services_or_die().call(CoreIpcService::Ui, &message, Timeout::max())?;
 
-    // Safe validation using bytecheck before accessing archived data
-    let archived = rkyv::access::<ArchivedTrezorUiResult, Failure>(result.data()).unwrap();
-    let deserialized = deserialize::<TrezorUiResult, Failure>(archived).unwrap();
-    Ok(deserialized)
-}
-
-fn ipc_ui_long_call(value: &TrezorUiEnum, long_content: &str) -> UiResult {
-    let bytes = to_bytes::<Failure>(value).unwrap();
-    let message = IpcMessage::new(0, &bytes);
     let result =
-        services_or_die().call_long(CoreIpcService::Ui, &message, Timeout::max(), long_content)?;
-
+        services_or_die().call(CoreIpcService::Ui, &message, Timeout::max(), util_handler)?;
     // Safe validation using bytecheck before accessing archived data
     let archived = rkyv::access::<ArchivedTrezorUiResult, Failure>(result.data()).unwrap();
     let deserialized = deserialize::<TrezorUiResult, Failure>(archived).unwrap();
     Ok(deserialized)
 }
+
+/// Send a UI enum over IPC and get the response
+// fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
+//     ipc_ui_call_with_content(value, &NoUtilHandler)
+// }
+
+// fn ipc_ui_call_with_content(value: &TrezorUiEnum, util_handler: &dyn UtilHandler) -> UiResult {
+//     let bytes = to_bytes::<Failure>(value).unwrap();
+//     let message = IpcMessage::new(0, &bytes);
+
+//     let result = services_or_die().call(CoreIpcService::Ui, &message, Timeout::max(), util_handler)?;
+
+//     // Safe validation using bytecheck before accessing archived data
+//     let archived = rkyv::access::<ArchivedTrezorUiResult, Failure>(result.data()).unwrap();
+//     let deserialized = deserialize::<TrezorUiResult, Failure>(archived).unwrap();
+//     Ok(deserialized)
+// }
 
 /// Send a UI call and expect a boolean confirmation result
 fn ipc_ui_call_confirm(value: TrezorUiEnum) -> UiResult {
-    match ipc_ui_call(&value) {
+    match ipc_ui_call(&value, &NoUtilHandler {}) {
         Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
         Ok(_) => Ok(TrezorUiResult::Cancelled),
         Err(e) => {
@@ -80,9 +132,13 @@ fn ipc_ui_call_confirm(value: TrezorUiEnum) -> UiResult {
 
 /// Send a UI call that doesn't expect a meaningful response
 fn ipc_ui_call_void(value: TrezorUiEnum) -> Result<()> {
-    ipc_ui_call(&value)?;
+    ipc_ui_call(&value, &NoUtilHandler {})?;
     Ok(())
 }
+
+// fn ipc_ui_long_call(value: &TrezorUiEnum, long_content: &str) -> UiResult {
+//     ipc_ui_call_with_content(value, &LongContentHandler(long_content))
+// }
 
 // ============================================================================
 // Public API Functions
@@ -105,7 +161,7 @@ pub fn confirm_long_value(title: &str, content: &str) -> UiResult {
         pages: (content.chars().count() as usize + CHARS_PER_PAGE - 1) / CHARS_PER_PAGE,
     };
 
-    match ipc_ui_long_call(&value, content) {
+    match ipc_ui_call(&value, &LongContentHandler(content)) {
         Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
         Ok(_) => Ok(TrezorUiResult::Cancelled),
         Err(e) => {
@@ -149,7 +205,7 @@ pub fn request_string(prompt: &str) -> UiResult {
     let value = TrezorUiEnum::RequestString {
         prompt: ShortString::from_str(prompt).unwrap(),
     };
-    let result = ipc_ui_call(&value)?;
+    let result = ipc_ui_call(&value, &NoUtilHandler {})?;
     match result {
         TrezorUiResult::String(_) => Ok(result),
         _ => Ok(TrezorUiResult::Cancelled),
@@ -166,7 +222,7 @@ pub fn request_number(title: &str, content: &str, initial: u32, min: u32, max: u
         max,
     };
 
-    let result = ipc_ui_call(&value)?;
+    let result = ipc_ui_call(&value, &NoUtilHandler {})?;
     match result {
         TrezorUiResult::Integer(_) => Ok(result),
         _ => Ok(TrezorUiResult::Cancelled),
@@ -177,20 +233,9 @@ pub fn show_public_key(key: &str) -> UiResult {
     let value = TrezorUiEnum::ShowPublicKey {
         key: LongString::from_str(key).unwrap(),
     };
-    let result = ipc_ui_call(&value)?;
+    let result = ipc_ui_call(&value, &NoUtilHandler {})?;
     match result {
         TrezorUiResult::Confirmed => Ok(result),
         _ => Ok(TrezorUiResult::Cancelled),
-    }
-}
-
-/// Send a ping message (for testing)
-pub fn ping(msg: &str) -> Result<()> {
-    let ping = IpcMessage::new(0, msg.as_bytes());
-    let resp = services_or_die().call(CoreIpcService::Ping, &ping, Timeout::max())?;
-    if resp.data() == msg.as_bytes() {
-        Ok(())
-    } else {
-        Err(Error::UnexpectedResponse(resp))
     }
 }
