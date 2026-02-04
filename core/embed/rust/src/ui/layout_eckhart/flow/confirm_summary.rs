@@ -166,7 +166,7 @@ pub fn new_confirm_summary(
 
     if account_paragraphs.is_some() {
         menu.item(Button::new_menu_item(
-            TR::address_details__account_info.into(),
+            account_title.unwrap_or(TR::address_details__account_info.into()),
             theme::menu_item_title(),
         ));
         unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
