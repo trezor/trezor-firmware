@@ -148,7 +148,7 @@
     "bitcoin__locktime_set_to_blockheight": "Tiempo de bloqueo es alt. bloque",
     "bitcoin__lot_of_change_outputs": "Muchas salidas de cambio.",
     "bitcoin__multiple_accounts": "Múltiples cuentas",
-    "bitcoin__new_fee_rate": "Nueva tasa de comisión:",
+    "bitcoin__new_fee_rate": "Nueva tasa de comisión",
     "bitcoin__simple_send_of": "Envío simple de",
     "bitcoin__ticket_amount": "Importe del ticket",
     "bitcoin__title_confirm_details": "Confirmar detalles",

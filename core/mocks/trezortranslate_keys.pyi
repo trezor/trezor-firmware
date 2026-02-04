@@ -59,7 +59,7 @@ class TR:
     bitcoin__locktime_set_to_blockheight: str = "Locktime set to blockheight"
     bitcoin__lot_of_change_outputs: str = "A lot of change-outputs."
     bitcoin__multiple_accounts: str = "Multiple accounts"
-    bitcoin__new_fee_rate: str = "New fee rate:"
+    bitcoin__new_fee_rate: str = "New fee rate"
     bitcoin__simple_send_of: str = "Simple send of"
     bitcoin__ticket_amount: str = "Ticket amount"
     bitcoin__title_confirm_details: str = "Confirm details"

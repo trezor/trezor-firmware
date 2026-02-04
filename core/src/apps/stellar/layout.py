@@ -9,8 +9,11 @@ from apps.common.paths import address_n_to_str
 from . import consts
 
 if TYPE_CHECKING:
+    from typing import Iterable
+
     from trezor.enums import StellarMemoType
     from trezor.messages import PaymentRequest, StellarAsset
+    from trezor.ui.layouts import StrPropertyType
 
     from apps.common.paths import Bip32Path
 
@@ -126,7 +129,7 @@ async def require_confirm_final(
     from . import PATTERN, SLIP44_ID
 
     timebounds_start, timebounds_end = timebounds
-    extra_items = [
+    extra_items: Iterable[StrPropertyType] = (
         (
             TR.stellar__valid_from,
             (
@@ -145,7 +148,7 @@ async def require_confirm_final(
             ),
             None,
         ),
-    ]
+    )
 
     account_name = paths.get_account_name("Stellar", address_n, PATTERN, SLIP44_ID)
     account_path = paths.address_n_to_str(address_n)
