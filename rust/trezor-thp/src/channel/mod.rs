@@ -1,7 +1,10 @@
 #[cfg(feature = "use_std")]
 pub mod buffered;
+pub mod device;
 pub mod host;
 mod noise;
+#[cfg(test)]
+mod test;
 
 use crate::{
     Error, Role,
@@ -11,8 +14,10 @@ use crate::{
     header::{BROADCAST_CHANNEL_ID, Header, NONCE_LEN, parse_cb_channel, parse_u16},
 };
 
-pub use noise::Backend;
-use noise::{HANDSHAKE_HASH_LEN, NoiseCiphers, TAG_LEN};
+use noise::NoiseCiphers;
+pub use noise::{
+    Backend, Cipher, DH, HANDSHAKE_HASH_LEN, Hash, PRIVKEY_LEN, PUBKEY_LEN, TAG_LEN, U8Array,
+};
 
 const APP_HEADER_LEN: usize = 3; // session id (1) + message type (2)
 
@@ -264,6 +269,13 @@ impl<R: Role, B: Backend> Channel<R, B> {
         let is_done = r.is_done();
         let payload_len = r.header().payload_len();
         let enlarge = (usize::from(payload_len) > receive_buffer.len()).then_some(payload_len);
+        if enlarge.is_some() {
+            log::debug!(
+                "Message is larger ({}) than receive buffer ({}), requesting reallocation.",
+                payload_len,
+                receive_buffer.len()
+            );
+        }
         self.state = ChannelState::Receiving(r);
         Ok((is_done, enlarge))
     }
@@ -313,9 +325,17 @@ pub enum PacketInResult {
         channel_id: u16,
     },
     /// Channel allocation request/response was received. Event loop should call
-    /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and[`host::Mux`]
+    /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and [`host::Mux`]
     /// return this variant. There is no queue, do it before processing the next packet.
+    ///
+    /// Please note that the library does not keep track of allocated ids, that is left to
+    /// the application. By creating a lot of new channels an attacker can obtain an id that
+    /// was issued earlier. If there is existing channel with such id it should be destroyed.
+    /// (This is only relevant on the device side.)
     ChannelAllocation { channel_id: u16 },
+    /// Call [`device::ChannelOpen::set_static_key`] or [`device::ChannelOpen::send_device_locked`].
+    /// Only [`device::ChannelOpen`] returns this variant.
+    HandshakeKeyRequired { try_to_unlock: bool },
 }
 
 impl PacketInResult {
@@ -544,7 +564,7 @@ pub trait ChannelIO {
 impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     fn packet_in(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> PacketInResult {
         if let ChannelState::Failed(_e) = self.state {
-            return PacketInResult::fail(Error::UnexpectedInput);
+            return PacketInResult::fail(Error::unexpected_input());
         }
         let res = PacketInResult::from_result(self.handle_packet(packet_buffer, receive_buffer));
         if let PacketInResult::Failed { .. } = res {

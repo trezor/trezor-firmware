@@ -8,7 +8,7 @@ mod control_byte;
 mod crc32;
 pub mod credential;
 pub mod error;
-pub mod fragment;
+mod fragment;
 pub mod header;
 mod util;
 

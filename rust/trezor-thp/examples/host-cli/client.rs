@@ -18,6 +18,7 @@ const MESSAGE_TYPE_BUTTONACK: u16 = 27;
 
 pub struct Client<C> {
     pub channel: Buffered<C>,
+    pub device_properties: Vec<u8>,
     socket: UdpSocket,
     emu_addr: SocketAddr,
 }
@@ -32,6 +33,7 @@ where
         channel.set_packet_len(PACKET_LEN);
         Client {
             channel,
+            device_properties: Vec::new(),
             socket: UdpSocket::bind("127.0.0.1:0").unwrap(),
             emu_addr,
         }
@@ -42,6 +44,7 @@ impl<C: ChannelIO> Client<C> {
     pub fn map<D>(self, func: impl FnOnce(C) -> D) -> Client<D> {
         Client {
             channel: self.channel.map(|c| Ok(func(c))).unwrap(),
+            device_properties: self.device_properties,
             socket: self.socket,
             emu_addr: self.emu_addr,
         }

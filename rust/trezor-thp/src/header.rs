@@ -1,5 +1,5 @@
 use crate::Role;
-pub use crate::alternating_bit::SyncBits;
+use crate::alternating_bit::SyncBits;
 use crate::control_byte::{self, ControlByte};
 use crate::crc32;
 use crate::error::{Error, Result};
@@ -10,8 +10,8 @@ const CHECKSUM_LEN: u16 = crc32::CHECKSUM_LEN as u16;
 pub const NONCE_LEN: u16 = 8;
 const MAX_PAYLOAD_LEN: u16 = 60000;
 
-const MIN_CHANNEL_ID: u16 = 0x0001;
-const MAX_CHANNEL_ID: u16 = 0xFFEF;
+pub const MIN_CHANNEL_ID: u16 = 0x0001;
+pub const MAX_CHANNEL_ID: u16 = 0xFFEF;
 pub const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
 
 /// Represents packet header, i.e. control byte, channel id and possibly payload length.
@@ -60,6 +60,7 @@ pub enum HandshakeMessage {
     CompletionResponse,
 }
 
+/// Check whether channel id is valid. Please note this also includes broadcast channel.
 pub const fn channel_id_valid(channel_id: u16) -> bool {
     (MIN_CHANNEL_ID <= channel_id && channel_id <= MAX_CHANNEL_ID)
         || channel_id == BROADCAST_CHANNEL_ID
@@ -361,6 +362,14 @@ impl<R: Role> Header<R> {
 
     pub const fn new_pong() -> Self {
         Self::Pong
+    }
+
+    pub const fn new_codec1_request(is_continuation: bool) -> Self {
+        Self::CodecV1Request { is_continuation }
+    }
+
+    pub const fn new_codec1_response() -> Self {
+        Self::CodecV1Response
     }
 
     pub const fn is_continuation(&self) -> bool {

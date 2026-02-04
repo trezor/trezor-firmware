@@ -1,7 +1,7 @@
-pub const CREDENTIAL_PRIVKEY_LENGTH: usize = 32;
+use crate::channel::{PRIVKEY_LEN, PairingState};
 
 pub struct FoundCredential<'a> {
-    pub local_static_privkey: &'a [u8; CREDENTIAL_PRIVKEY_LENGTH],
+    pub local_static_privkey: &'a [u8; PRIVKEY_LEN],
     pub auth_credential: &'a [u8],
 }
 
@@ -32,4 +32,13 @@ impl CredentialStore for NullCredentialStore {
     ) -> Option<FoundCredential<'a>> {
         None
     }
+}
+
+/// Device-side credential handling.
+pub trait CredentialVerifier: Clone {
+    /// Validate given protobuf-encoded credential.
+    fn verify(&self, remote_static_pubkey: &[u8], credential: &[u8]) -> PairingState;
+
+    /// Return protobuf-encoded device properties to be used in `ChannelAllocationResponse` message.
+    fn device_properties(&self) -> &[u8];
 }
