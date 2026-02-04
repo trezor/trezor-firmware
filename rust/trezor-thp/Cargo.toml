@@ -17,7 +17,7 @@ default-features = false
 version = "0.2.0"
 default-features = false
 git = "https://github.com/trezor/noise-rust"
-rev = "916ce4dc25b0dc830832a51f6f37021e2214e4c7"
+rev = "eed802833831e0daf74fc030b2ddb4177c8c11e0"
 
 [dev-dependencies]
 env_logger = "0.11.8"
@@ -36,4 +36,4 @@ version = "0.6.2"
 default-features = false
 features = ["use-x25519", "use-aes-256-gcm", "use-sha2"]
 git = "https://github.com/trezor/noise-rust"
-rev = "916ce4dc25b0dc830832a51f6f37021e2214e4c7"
+rev = "eed802833831e0daf74fc030b2ddb4177c8c11e0"

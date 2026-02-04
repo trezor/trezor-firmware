@@ -79,7 +79,6 @@ impl From<NoiseError> for Error {
     fn from(val: NoiseError) -> Self {
         match val.kind() {
             NoiseErrorKind::DH | NoiseErrorKind::Decryption => Self::crypto_error(),
-            NoiseErrorKind::NeedPSK => panic!(),
             NoiseErrorKind::TooShort => Self::malformed_data(),
         }
     }
