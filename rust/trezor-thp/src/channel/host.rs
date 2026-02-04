@@ -204,6 +204,10 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
             _ => return Err(Error::unexpected_input()),
         })
     }
+
+    pub fn channel_id(&self) -> u16 {
+        self.channel.channel_id
+    }
 }
 
 impl<C, B> ChannelIO for ChannelOpen<C, B>
@@ -211,36 +215,38 @@ where
     C: CredentialStore,
     B: Backend,
 {
-    fn packet_in(
-        &mut self,
-        packet_buffer: &[u8],
-        _receive_buffer: &mut [u8],
-    ) -> Result<PacketInResult, Error> {
+    fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
         let res = self
             .channel
-            .packet_in(packet_buffer, &mut self.internal_buffer)?;
+            .packet_in(packet_buffer, &mut self.internal_buffer);
+        if let PacketInResult::EnlargeBuffer { buffer_size, .. } = res {
+            log::error!(
+                "[{}] Payload length {} exceeds handshake limit.",
+                self.channel_id(),
+                buffer_size
+            );
+            // Possibly damaged length field, ignore continuations.
+            self.channel.state = ChannelState::Idle;
+            return PacketInResult::ignore(Error::MalformedData);
+        }
         if res.got_ack() {
             self.zero_internal_buffer();
         }
         if res.got_message() {
             let handled = self.incoming_internal();
-            if handled.is_err() {
-                self.state = HostHandshakeState::Failed;
+            if let Err(e) = handled {
+                if e != Error::InvalidChecksum {
+                    self.state = HostHandshakeState::Failed;
+                    return PacketInResult::fail(e);
+                }
             }
-            handled?;
         }
-        Ok(res)
+        res
     }
 
     fn packet_out(&mut self, packet_buffer: &mut [u8], _send_buffer: &[u8]) -> Result<(), Error> {
         self.channel
-            .packet_out(packet_buffer, &self.internal_buffer)?;
-
-        if self.channel.is_broadcast() && matches!(self.channel.state, ChannelState::Idle) {
-            // no ack/retransmits on broadcast
-            self.zero_internal_buffer();
-        }
-        Ok(())
+            .packet_out(packet_buffer, &self.internal_buffer)
     }
 
     fn packet_out_ready(&self) -> bool {
@@ -313,11 +319,7 @@ impl<B: Backend> ChannelPairing<B> {
 }
 
 impl<B: Backend> ChannelIO for ChannelPairing<B> {
-    fn packet_in(
-        &mut self,
-        packet_buffer: &[u8],
-        receive_buffer: &mut [u8],
-    ) -> Result<PacketInResult, Error> {
+    fn packet_in(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> PacketInResult {
         self.channel.packet_in(packet_buffer, receive_buffer)
     }
 
