@@ -104,11 +104,28 @@ def filter_by_features(values: list[str], keep_debug: bool, keep_altcoin: bool) 
 
     # Currently all English words fit into a single chunk
     [encoded] = TranslatedStringsChunk.from_items(filter_by_features(layout_data, *enabled_features))
+
+    # Emit one string per line (to minimize merge conflicts)
+    concat_strings = encoded.strings.decode()
+    strings = [
+        concat_strings[begin:end]
+        for begin, end in zip(encoded.offsets[:-1], encoded.offsets[1:])
+    ]
+    assert "".join(strings) == concat_strings
 %>\
             ${cfg_line}
-            pub const ENGLISH_STRINGS: &'static str = ${encode_str(encoded.strings.decode())};
+            pub const ENGLISH_STRINGS: &'static str = concat!(
+% for s in strings:
+                ${encode_str(s)},
+% endfor
+            );
+
             ${cfg_line}
-            pub const ENGLISH_OFFSETS: &'static [u16] = &${encoded.offsets};
+            pub const ENGLISH_OFFSETS: &'static [u16] = &[
+% for offset in encoded.offsets:
+                ${offset},
+% endfor
+            ];
 
 % endfor
 % endfor
