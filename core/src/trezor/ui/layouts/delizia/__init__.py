@@ -603,7 +603,7 @@ async def confirm_output(
         account_properties: list[StrPropertyType] = []
         if source_account:
             account_properties.append((TR.words__account, source_account, None))
-        if source_account_path:
+        if source_account_path and source_account_path != source_account:
             account_properties.append(
                 (
                     TR.address_details__derivation_path,
