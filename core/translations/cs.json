@@ -143,7 +143,7 @@
     "bitcoin__locktime_set_to_blockheight": "Locktime je nastaven na výšku bloku",
     "bitcoin__lot_of_change_outputs": "Hodně výstupů zpět na peněženku.",
     "bitcoin__multiple_accounts": "Více účtů",
-    "bitcoin__new_fee_rate": "Nová výše poplatku:",
+    "bitcoin__new_fee_rate": "Nová výše poplatku",
     "bitcoin__simple_send_of": "Jednoduché odeslání",
     "bitcoin__ticket_amount": "Částka za lístek",
     "bitcoin__title_confirm_details": "Potvrdit údaje",
@@ -357,20 +357,20 @@
     "cardano__address_no_staking": "Adresa - žádné odměny za staking.",
     "cardano__always_abstain": "Vždy se zdržet",
     "cardano__always_no_confidence": "Vždy hlasovat Ne",
-    "cardano__amount_burned_decimals_unknown": "Spálená částka (neznámý počet desetinných míst):",
-    "cardano__amount_minted_decimals_unknown": "Vytěžená částka (neznámý počet nedesetinných míst):",
-    "cardano__amount_sent_decimals_unknown": "Odeslaná částka (neznámý počet desetinných míst):",
+    "cardano__amount_burned_decimals_unknown": "Spálená částka (neznámý počet desetinných míst)",
+    "cardano__amount_minted_decimals_unknown": "Vytěžená částka (neznámý počet nedesetinných míst)",
+    "cardano__amount_sent_decimals_unknown": "Odeslaná částka (neznámý počet desetinných míst)",
     "cardano__anonymous_pool": "Pool nemá žádná metadata (anonymní pool)",
-    "cardano__asset_fingerprint": "Otisk aktiva:",
-    "cardano__auxiliary_data_hash": "Pomocný datový hash:",
+    "cardano__asset_fingerprint": "Otisk aktiva",
+    "cardano__auxiliary_data_hash": "Pomocný datový hash",
     "cardano__block": "Blok",
     "cardano__catalyst": "Katalyzátor",
     "cardano__certificate": "Certifikát",
     "cardano__change_output": "Výstup zpět na peněženku",
     "cardano__check_all_items": "Pozorně zkontrolujte všechny položky.",
     "cardano__choose_level_of_details": "Vyberte úroveň podrobností:",
-    "cardano__collateral_input_id": "ID vstupu zástavy:",
-    "cardano__collateral_input_index": "Index vstupu zástavy:",
+    "cardano__collateral_input_id": "ID vstupu zástavy",
+    "cardano__collateral_input_index": "Index vstupu zástavy",
     "cardano__collateral_output_contains_tokens": "Výstup vrácení zástavy obsahuje tokeny.",
     "cardano__collateral_return": "Vrácení zástavy",
     "cardano__confirm_message": "Potvrdit zprávu",
@@ -382,59 +382,59 @@
     "cardano__confirming_transaction": "Potvrzování transakce.",
     "cardano__cost": "Náklady",
     "cardano__credential_mismatch": "Údaje neodpovídají platebním údajům.",
-    "cardano__datum_hash": "Hash dat:",
-    "cardano__delegating_to": "Delegování:",
-    "cardano__delegating_to_key_hash": "Delegování na hash klíče:",
-    "cardano__delegating_to_script": "Delegování na skript:",
-    "cardano__deposit": "Vklad:",
+    "cardano__datum_hash": "Hash dat",
+    "cardano__delegating_to": "Delegování",
+    "cardano__delegating_to_key_hash": "Delegování na hash klíče",
+    "cardano__delegating_to_script": "Delegování na skript",
+    "cardano__deposit": "Vklad",
     "cardano__empty_message": "Prázdná zpráva",
-    "cardano__for_account_and_index_template": "pro účet {0} a index {1}:",
-    "cardano__for_account_template": "pro účet {0}:",
-    "cardano__for_key_hash": "pro hash klíče:",
-    "cardano__for_script": "pro skript:",
+    "cardano__for_account_and_index_template": "Pro účet {0} a index {1}",
+    "cardano__for_account_template": "Pro účet {0}",
+    "cardano__for_key_hash": "Pro hash klíče",
+    "cardano__for_script": "Pro skript",
     "cardano__inline_datum": "Data výstupu transakce",
-    "cardano__input_id": "ID vstupu:",
-    "cardano__input_index": "Index vstupu:",
+    "cardano__input_id": "ID vstupu",
+    "cardano__input_index": "Index vstupu",
     "cardano__intro_text_change": "Následující adresa je adresu zpět na peněženku. Jeho",
     "cardano__intro_text_owned_by_device": "Následující adresu vlastní toto zařízení. Jeho",
     "cardano__intro_text_registration_payment": "Platební adresa pro registraci hlasovacího klíče je ve vlastnictví tohoto zařízení. Jeho",
     "cardano__key_hash": "hash klíče",
     "cardano__margin": "Marže",
-    "cardano__message_hash": "Hash zprávy:",
+    "cardano__message_hash": "Hash zprávy",
     "cardano__message_hex": "Hex zprávy",
     "cardano__message_text": "Text zprávy",
     "cardano__multisig_path": "cesta multisig",
     "cardano__nested_scripts_template": "Obsahuje {0} vnořených skriptů.",
-    "cardano__network": "Síť:",
+    "cardano__network": "Síť",
     "cardano__no_output_tx": "Transakce nemá žádné výstupy, síť nelze ověřit.",
-    "cardano__nonce": "Nonce:",
-    "cardano__other": "jiné",
+    "cardano__nonce": "Nonce",
+    "cardano__other": "Jiné",
     "cardano__path": "cesta",
     "cardano__pledge": "Závazek",
     "cardano__pointer": "ukazatel",
     "cardano__policy_id": "ID zásady",
-    "cardano__pool_metadata_hash": "Hash metadat poolu:",
-    "cardano__pool_metadata_url": "Adresa URL metadat poolu:",
-    "cardano__pool_owner": "Vlastník poolu:",
-    "cardano__pool_reward_account": "Účet pro odměny v poolu:",
-    "cardano__reference_input_id": "Referenční ID vstupu:",
-    "cardano__reference_input_index": "Referenční index vstupu:",
+    "cardano__pool_metadata_hash": "Hash metadat poolu",
+    "cardano__pool_metadata_url": "Adresa URL metadat poolu",
+    "cardano__pool_owner": "Vlastník poolu",
+    "cardano__pool_reward_account": "Účet pro odměny v poolu",
+    "cardano__reference_input_id": "Referenční ID vstupu",
+    "cardano__reference_input_index": "Referenční index vstupu",
     "cardano__reference_script": "Referenční skript",
     "cardano__required_signer": "Povinná podepisující osoba",
-    "cardano__reward": "odměna",
+    "cardano__reward": "Odměna",
     "cardano__reward_address": "Adresa je adresa pro odměny.",
     "cardano__reward_eligibility_warning": "Varování: Adresa není platební, nelze použít pro odměny.",
-    "cardano__rewards_go_to": "Odměnu dostane:",
+    "cardano__rewards_go_to": "Odměnu dostane",
     "cardano__script": "skript",
     "cardano__script_all": "Vše",
     "cardano__script_any": "Libovolné",
-    "cardano__script_data_hash": "Datový hash skriptu:",
-    "cardano__script_hash": "Hash skriptu:",
+    "cardano__script_data_hash": "Datový hash skriptu",
+    "cardano__script_hash": "Hash skriptu",
     "cardano__script_invalid_before": "Neplatné před",
     "cardano__script_invalid_hereafter": "Neplatné dále",
     "cardano__script_key": "Klíč",
     "cardano__script_n_of_k": "N z K",
-    "cardano__script_reward": "odměna za skript",
+    "cardano__script_reward": "Odměna za skript",
     "cardano__sending": "Odesílání",
     "cardano__show_simple": "Zjednodušeně",
     "cardano__sign_message_hash_path_template": "Podepsat hash zprávy s {0}",
@@ -443,11 +443,11 @@
     "cardano__stake_delegation": "Delegace staku",
     "cardano__stake_deregistration": "Zrušení registrace stake klíče",
     "cardano__stake_pool_registration": "Registrace stakepoolu",
-    "cardano__stake_pool_registration_pool_id": "Registrace stake poolu\nID poolu:",
+    "cardano__stake_pool_registration_pool_id": "Registrace stake poolu\nID poolu",
     "cardano__stake_registration": "Registrace stake klíče",
     "cardano__staking_key_for_account": "Klíč účtu pro staking",
-    "cardano__to_pool": "poolu:",
-    "cardano__token_minting_path": "cesta vytváření tokenů",
+    "cardano__to_pool": "Poolu",
+    "cardano__token_minting_path": "Cesta vytváření tokenů",
     "cardano__total_collateral": "Celková zástava:",
     "cardano__transaction": "Transakce",
     "cardano__transaction_contains_minting_or_burning": "Transakce obsahuje vytváření nebo pálení tokenů.",
@@ -456,18 +456,18 @@
     "cardano__transaction_no_collateral_input": "Transakce neobsahuje žádné vstupy zástavy. Skript Plutus nebude možné spustit.",
     "cardano__transaction_no_script_data_hash": "Transakce neobsahuje žádný datový hash skriptu. Skript Plutus nebude možné spustit.",
     "cardano__transaction_output_contains_tokens": "Následující výstup transakce obsahuje tokeny.",
-    "cardano__ttl": "TTL:",
+    "cardano__ttl": "TTL",
     "cardano__unknown_collateral_amount": "Neznámá částka zástavy.",
     "cardano__unusual_path": "Neobvyklá cesta.",
-    "cardano__valid_since": "Platné od:",
+    "cardano__valid_since": "Platné od",
     "cardano__verify_script": "Ověřit skript",
     "cardano__vote_delegation": "Delegace hlasování",
     "cardano__vote_key_registration": "Registrace hlasovacího klíče (CIP-36)",
-    "cardano__vote_public_key": "Veřejný hlasovací klíč:",
-    "cardano__voting_purpose": "Účel hlasování:",
+    "cardano__vote_public_key": "Veřejný hlasovací klíč",
+    "cardano__voting_purpose": "Účel hlasování",
     "cardano__warning": "Varování",
-    "cardano__weight": "Váha:",
-    "cardano__withdrawal_for_address_template": "Potvrďte výběr pro adresu {0}:",
+    "cardano__weight": "Váha",
+    "cardano__withdrawal_for_address_template": "Potvrďte výběr pro adresu {0}",
     "cardano__x_of_y_signatures_template": "Vyžaduje {0} podpis ze {1}.",
     "coinjoin__access_account": "Získat přístup k účtu coinjoin?",
     "coinjoin__do_not_disconnect": "Neodpojujte Trezor!",
@@ -502,7 +502,7 @@
       "Eckhart": ""
     },
     "eos__action_name": {
-      "Bolt": "Název akce:",
+      "Bolt": "Název akce",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -520,7 +520,7 @@
       "Eckhart": ""
     },
     "eos__bytes": {
-      "Bolt": "Bajty:",
+      "Bolt": "Bajty",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -532,31 +532,31 @@
       "Eckhart": ""
     },
     "eos__checksum": {
-      "Bolt": "Kontrolní součet:",
+      "Bolt": "Kontrolní součet",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__code": {
-      "Bolt": "Kód:",
+      "Bolt": "Kód",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__contract": {
-      "Bolt": "Kontrakt:",
+      "Bolt": "Kontrakt",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__cpu": {
-      "Bolt": "Procesor:",
+      "Bolt": "Procesor",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__creator": {
-      "Bolt": "Tvůrce:",
+      "Bolt": "Tvůrce",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -574,7 +574,7 @@
       "Eckhart": ""
     },
     "eos__from": {
-      "Bolt": "Od:",
+      "Bolt": "Od",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -592,13 +592,13 @@
       "Eckhart": ""
     },
     "eos__name": {
-      "Bolt": "Název:",
+      "Bolt": "Název",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__net": {
-      "Bolt": "SÍŤ:",
+      "Bolt": "SÍŤ",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -610,37 +610,37 @@
       "Eckhart": ""
     },
     "eos__owner": {
-      "Bolt": "Vlastník:",
+      "Bolt": "Vlastník",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__parent": {
-      "Bolt": "Nadřazený účet:",
+      "Bolt": "Nadřazený účet",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__payer": {
-      "Bolt": "Plátce:",
+      "Bolt": "Plátce",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__permission": {
-      "Bolt": "Oprávnění:",
+      "Bolt": "Oprávnění",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__proxy": {
-      "Bolt": "Proxy:",
+      "Bolt": "Proxy",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__receiver": {
-      "Bolt": "Příjemce:",
+      "Bolt": "Příjemce",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -652,7 +652,7 @@
       "Eckhart": ""
     },
     "eos__requirement": {
-      "Bolt": "Požadavek:",
+      "Bolt": "Požadavek",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -664,31 +664,31 @@
       "Eckhart": ""
     },
     "eos__sender": {
-      "Bolt": "Odesílatel:",
+      "Bolt": "Odesílatel",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__threshold": {
-      "Bolt": "Prahová hodnota:",
+      "Bolt": "Prahová hodnota",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__to": {
-      "Bolt": "Komu:",
+      "Bolt": "Komu",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__transfer": {
-      "Bolt": "Převod:",
+      "Bolt": "Převod",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__type": {
-      "Bolt": "Typ:",
+      "Bolt": "Typ",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -724,7 +724,7 @@
       "Eckhart": ""
     },
     "eos__voter": {
-      "Bolt": "Hlasující:",
+      "Bolt": "Hlasující",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -931,8 +931,8 @@
     "instructions__tap_to_continue": "Klepnutím pokračujte",
     "instructions__view_all_data": "Zobrazit všechna data v menu.",
     "joint__title": "Společná transakce",
-    "joint__to_the_total_amount": "Do celkové částky:",
-    "joint__you_are_contributing": "Přispíváte:",
+    "joint__to_the_total_amount": "Do celkové částky",
+    "joint__you_are_contributing": "Přispíváte",
     "language__change_to_template": "Změnit jazyk na {0}?",
     "language__changed": "Jazyk byl změněn",
     "language__progress": {
@@ -1159,7 +1159,7 @@
       "Eckhart": ""
     },
     "nem__description": {
-      "Bolt": "Popis:",
+      "Bolt": "Popis",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1195,7 +1195,7 @@
       "Eckhart": ""
     },
     "nem__initial_supply": {
-      "Bolt": "Počáteční zdroj:",
+      "Bolt": "Počáteční zdroj",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1207,13 +1207,13 @@
       "Eckhart": ""
     },
     "nem__levy_divisibility": {
-      "Bolt": "Dělitelnost daně:",
+      "Bolt": "Dělitelnost daně",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_fee": {
-      "Bolt": "Daň:",
+      "Bolt": "Daň",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1225,25 +1225,25 @@
       "Eckhart": ""
     },
     "nem__levy_mosaic": {
-      "Bolt": "Mozaika daně:",
+      "Bolt": "Mozaika daně",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_namespace": {
-      "Bolt": "Obor názvů daně:",
+      "Bolt": "Obor názvů daně",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_recipient": {
-      "Bolt": "Příjemce daně:",
+      "Bolt": "Příjemce daně",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_type": {
-      "Bolt": "Typ daně:",
+      "Bolt": "Typ daně",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1321,7 +1321,7 @@
       "Eckhart": ""
     },
     "nem__transferable": {
-      "Bolt": "Přenosné?",
+      "Bolt": "Přenosné",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1884,7 +1884,7 @@
     "send__confirm_sending": "Odesílání částky",
     "send__from_multiple_accounts": "Odesílání z více účtů.",
     "send__incl_transaction_fee": "vč. transakčního poplatku",
-    "send__including_fee": "Včetně poplatku:",
+    "send__including_fee": "Včetně poplatku",
     "send__maximum_fee": "Maximální poplatek",
     "send__multisig_different_paths": "Použití různých cest pro různé XPUB.",
     "send__receiving_to_multisig": "Příjem na adresách multisig.",
@@ -1963,7 +1963,7 @@
     "stellar__allow_trust": "Povolit důvěru",
     "stellar__balance_id": "ID zůstatku",
     "stellar__bump_sequence": "Sekvence urychlení",
-    "stellar__buying": "Nákup:",
+    "stellar__buying": "Nákup",
     "stellar__claim_claimable_balance": "Získat nárokovatelný zůstatek",
     "stellar__clear_data": "Vymazat data",
     "stellar__clear_flags": "Vymazat příznaky",
@@ -1980,15 +1980,15 @@
     "stellar__exchanges_require_memo": "Memo není nastaveno.\nObvykle vyžadováno při odesílání na burzy.",
     "stellar__final_confirm": "Konečné potvrzení",
     "stellar__hash": "Hash",
-    "stellar__high": "Vysoký:",
+    "stellar__high": "Vysoký",
     "stellar__home_domain": "Domácí doména",
     "stellar__inflation": "Inflace",
     "stellar__issuer_template": "Vydavatel {0}",
-    "stellar__key": "Klíč:",
+    "stellar__key": "Klíč",
     "stellar__limit": "Limit",
-    "stellar__low": "Nízký:",
-    "stellar__master_weight": "Váha hlavního klíče:",
-    "stellar__medium": "Střední:",
+    "stellar__low": "Nízký",
+    "stellar__master_weight": "Váha hlavního klíče",
+    "stellar__medium": "Střední",
     "stellar__new_offer": "Nová nabídka",
     "stellar__new_passive_offer": "Nová pasivní nabídka",
     "stellar__no_memo_set": "Není nastavena poznámka!",
@@ -1998,10 +1998,10 @@
     "stellar__pay": "Platba",
     "stellar__pay_at_most": "Maximální platba",
     "stellar__preauth_transaction": "Transakce před ověřením",
-    "stellar__price_per_template": "Cena za {0}:",
+    "stellar__price_per_template": "Cena za {0}",
     "stellar__remove_signer": "Odstranit podepisující osobu",
     "stellar__revoke_trust": "Zrušit důvěru",
-    "stellar__selling": "Prodej:",
+    "stellar__selling": "Prodej",
     "stellar__set_data": "Nastavit data",
     "stellar__set_flags": "Nastavit příznaky",
     "stellar__set_sequence_to_template": "Nastavit sekvenci na {0}?",
@@ -2017,7 +2017,7 @@
     "stellar__update": "Aktualizovat",
     "stellar__valid_from": "Platí od (UTC)",
     "stellar__valid_to": "Platí do (UTC)",
-    "stellar__value_sha256": "Hodnota (SHA-256):",
+    "stellar__value_sha256": "Hodnota (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Chcete vymazat klíč hodnoty {0}?",
     "storage_msg__processing": {
       "Bolt": "Zpracovávání",
@@ -2034,8 +2034,8 @@
     },
     "storage_msg__wrong_pin": "Špatný PIN",
     "tezos__baker_address": "Adresa bakera",
-    "tezos__balance": "Zůstatek:",
-    "tezos__ballot": "Hlasování:",
+    "tezos__balance": "Zůstatek",
+    "tezos__ballot": "Hlasování",
     "tezos__confirm_delegation": "Potvrdit delegaci",
     "tezos__confirm_origination": "Potvrdit původ",
     "tezos__delegator": "Delegující osoba",

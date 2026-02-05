@@ -106,7 +106,7 @@
     "bitcoin__locktime_set_to_blockheight": "Locktime set to blockheight",
     "bitcoin__lot_of_change_outputs": "A lot of change-outputs.",
     "bitcoin__multiple_accounts": "Multiple accounts",
-    "bitcoin__new_fee_rate": "New fee rate:",
+    "bitcoin__new_fee_rate": "New fee rate",
     "bitcoin__simple_send_of": "Simple send of",
     "bitcoin__ticket_amount": "Ticket amount",
     "bitcoin__title_confirm_details": "Confirm details",
@@ -317,23 +317,23 @@
     "cardano__addr_legacy": "Legacy",
     "cardano__addr_pointer": "Pointer",
     "cardano__addr_reward": "Reward",
-    "cardano__address_no_staking": "address - no staking rewards.",
+    "cardano__address_no_staking": "Address - no staking rewards.",
     "cardano__always_abstain": "Always Abstain",
     "cardano__always_no_confidence": "Always No Confidence",
-    "cardano__amount_burned_decimals_unknown": "Amount burned (decimals unknown):",
-    "cardano__amount_minted_decimals_unknown": "Amount minted (decimals unknown):",
-    "cardano__amount_sent_decimals_unknown": "Amount sent (decimals unknown):",
+    "cardano__amount_burned_decimals_unknown": "Amount burned (decimals unknown)",
+    "cardano__amount_minted_decimals_unknown": "Amount minted (decimals unknown)",
+    "cardano__amount_sent_decimals_unknown": "Amount sent (decimals unknown)",
     "cardano__anonymous_pool": "Pool has no metadata (anonymous pool)",
-    "cardano__asset_fingerprint": "Asset fingerprint:",
-    "cardano__auxiliary_data_hash": "Auxiliary data hash:",
+    "cardano__asset_fingerprint": "Asset fingerprint",
+    "cardano__auxiliary_data_hash": "Auxiliary data hash",
     "cardano__block": "Block",
     "cardano__catalyst": "Catalyst",
     "cardano__certificate": "Certificate",
     "cardano__change_output": "Change output",
     "cardano__check_all_items": "Check all items carefully.",
     "cardano__choose_level_of_details": "Choose level of details:",
-    "cardano__collateral_input_id": "Collateral input ID:",
-    "cardano__collateral_input_index": "Collateral input index:",
+    "cardano__collateral_input_id": "Collateral input ID",
+    "cardano__collateral_input_index": "Collateral input index",
     "cardano__collateral_output_contains_tokens": "The collateral return output contains tokens.",
     "cardano__collateral_return": "Collateral return",
     "cardano__confirm_message": "Confirm message",
@@ -345,59 +345,59 @@
     "cardano__confirming_transaction": "Confirming a transaction.",
     "cardano__cost": "Cost",
     "cardano__credential_mismatch": "Credential doesn't match payment credential.",
-    "cardano__datum_hash": "Datum hash:",
-    "cardano__delegating_to": "Delegating to:",
-    "cardano__delegating_to_key_hash": "Delegating to key hash:",
-    "cardano__delegating_to_script": "Delegating to script:",
-    "cardano__deposit": "Deposit:",
+    "cardano__datum_hash": "Datum hash",
+    "cardano__delegating_to": "Delegating to",
+    "cardano__delegating_to_key_hash": "Delegating to key hash",
+    "cardano__delegating_to_script": "Delegating to script",
+    "cardano__deposit": "Deposit",
     "cardano__empty_message": "Empty message",
-    "cardano__for_account_and_index_template": "for account {0} and index {1}:",
-    "cardano__for_account_template": "for account {0}:",
-    "cardano__for_key_hash": "for key hash:",
-    "cardano__for_script": "for script:",
+    "cardano__for_account_and_index_template": "For account {0} and index {1}",
+    "cardano__for_account_template": "For account {0}",
+    "cardano__for_key_hash": "For key hash",
+    "cardano__for_script": "For script",
     "cardano__inline_datum": "Inline datum",
-    "cardano__input_id": "Input ID:",
-    "cardano__input_index": "Input index:",
+    "cardano__input_id": "Input ID",
+    "cardano__input_index": "Input index",
     "cardano__intro_text_change": "The following address is a change address. Its",
     "cardano__intro_text_owned_by_device": "The following address is owned by this device. Its",
     "cardano__intro_text_registration_payment": "The vote key registration payment address is owned by this device. Its",
     "cardano__key_hash": "key hash",
     "cardano__margin": "Margin",
-    "cardano__message_hash": "Message hash:",
+    "cardano__message_hash": "Message hash",
     "cardano__message_hex": "Message hex",
     "cardano__message_text": "Message text",
     "cardano__multisig_path": "multi-sig path",
     "cardano__nested_scripts_template": "Contains {0} nested scripts.",
-    "cardano__network": "Network:",
+    "cardano__network": "Network",
     "cardano__no_output_tx": "Transaction has no outputs, network cannot be verified.",
-    "cardano__nonce": "Nonce:",
-    "cardano__other": "other",
+    "cardano__nonce": "Nonce",
+    "cardano__other": "Other",
     "cardano__path": "path",
     "cardano__pledge": "Pledge",
     "cardano__pointer": "pointer",
     "cardano__policy_id": "Policy ID",
-    "cardano__pool_metadata_hash": "Pool metadata hash:",
-    "cardano__pool_metadata_url": "Pool metadata url:",
-    "cardano__pool_owner": "Pool owner:",
-    "cardano__pool_reward_account": "Pool reward account:",
-    "cardano__reference_input_id": "Reference input ID:",
-    "cardano__reference_input_index": "Reference input index:",
+    "cardano__pool_metadata_hash": "Pool metadata hash",
+    "cardano__pool_metadata_url": "Pool metadata url",
+    "cardano__pool_owner": "Pool owner",
+    "cardano__pool_reward_account": "Pool reward account",
+    "cardano__reference_input_id": "Reference input ID",
+    "cardano__reference_input_index": "Reference input index",
     "cardano__reference_script": "Reference script",
     "cardano__required_signer": "Required signer",
-    "cardano__reward": "reward",
+    "cardano__reward": "Reward",
     "cardano__reward_address": "Address is a reward address.",
     "cardano__reward_eligibility_warning": "Warning: The address is not a payment address, it is not eligible for rewards.",
-    "cardano__rewards_go_to": "Rewards go to:",
+    "cardano__rewards_go_to": "Rewards go to",
     "cardano__script": "script",
     "cardano__script_all": "All",
     "cardano__script_any": "Any",
-    "cardano__script_data_hash": "Script data hash:",
-    "cardano__script_hash": "Script hash:",
+    "cardano__script_data_hash": "Script data hash",
+    "cardano__script_hash": "Script hash",
     "cardano__script_invalid_before": "Invalid before",
     "cardano__script_invalid_hereafter": "Invalid hereafter",
     "cardano__script_key": "Key",
     "cardano__script_n_of_k": "N of K",
-    "cardano__script_reward": "script reward",
+    "cardano__script_reward": "Script reward",
     "cardano__sending": "Sending",
     "cardano__show_simple": "Show Simple",
     "cardano__sign_message_hash_path_template": "Sign message hash with {0}",
@@ -406,31 +406,31 @@
     "cardano__stake_delegation": "Stake delegation",
     "cardano__stake_deregistration": "Stake key deregistration",
     "cardano__stake_pool_registration": "Stakepool registration",
-    "cardano__stake_pool_registration_pool_id": "Stake pool registration\nPool ID:",
+    "cardano__stake_pool_registration_pool_id": "Stake pool registration\nPool ID",
     "cardano__stake_registration": "Stake key registration",
     "cardano__staking_key_for_account": "Staking key for account",
-    "cardano__to_pool": "to pool:",
+    "cardano__to_pool": "To pool",
     "cardano__token_minting_path": "token minting path",
-    "cardano__total_collateral": "Total collateral:",
+    "cardano__total_collateral": "Total collateral",
     "cardano__transaction": "Transaction",
     "cardano__transaction_contains_minting_or_burning": "The transaction contains minting or burning of tokens.",
     "cardano__transaction_contains_script_address_no_datum": "The following transaction output contains a script address, but does not contain a datum.",
-    "cardano__transaction_id": "Transaction ID:",
+    "cardano__transaction_id": "Transaction ID",
     "cardano__transaction_no_collateral_input": "The transaction contains no collateral inputs. Plutus script will not be able to run.",
     "cardano__transaction_no_script_data_hash": "The transaction contains no script data hash. Plutus script will not be able to run.",
     "cardano__transaction_output_contains_tokens": "The following transaction output contains tokens.",
-    "cardano__ttl": "TTL:",
+    "cardano__ttl": "TTL",
     "cardano__unknown_collateral_amount": "Unknown collateral amount.",
     "cardano__unusual_path": "Path is unusual.",
-    "cardano__valid_since": "Valid since:",
+    "cardano__valid_since": "Valid since",
     "cardano__verify_script": "Verify script",
     "cardano__vote_delegation": "Vote delegation",
     "cardano__vote_key_registration": "Vote key registration (CIP-36)",
-    "cardano__vote_public_key": "Vote public key:",
-    "cardano__voting_purpose": "Voting purpose:",
+    "cardano__vote_public_key": "Vote public key",
+    "cardano__voting_purpose": "Voting purpose",
     "cardano__warning": "Warning",
-    "cardano__weight": "Weight:",
-    "cardano__withdrawal_for_address_template": "Confirm withdrawal for {0} address:",
+    "cardano__weight": "Weight",
+    "cardano__withdrawal_for_address_template": "Confirm withdrawal for {0} address",
     "cardano__x_of_y_signatures_template": "Requires {0} out of {1} signatures.",
     "coinjoin__access_account": "Access your coinjoin account?",
     "coinjoin__do_not_disconnect": "Do not disconnect your Trezor!",
@@ -465,7 +465,7 @@
       "Eckhart": ""
     },
     "eos__action_name": {
-      "Bolt": "Action Name:",
+      "Bolt": "Action Name",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -483,7 +483,7 @@
       "Eckhart": ""
     },
     "eos__bytes": {
-      "Bolt": "Bytes:",
+      "Bolt": "Bytes",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -495,31 +495,31 @@
       "Eckhart": ""
     },
     "eos__checksum": {
-      "Bolt": "Checksum:",
+      "Bolt": "Checksum",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__code": {
-      "Bolt": "Code:",
+      "Bolt": "Code",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__contract": {
-      "Bolt": "Contract:",
+      "Bolt": "Contract",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__cpu": {
-      "Bolt": "CPU:",
+      "Bolt": "CPU",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__creator": {
-      "Bolt": "Creator:",
+      "Bolt": "Creator",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -537,7 +537,7 @@
       "Eckhart": ""
     },
     "eos__from": {
-      "Bolt": "From:",
+      "Bolt": "From",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -555,13 +555,13 @@
       "Eckhart": ""
     },
     "eos__name": {
-      "Bolt": "Name:",
+      "Bolt": "Name",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__net": {
-      "Bolt": "NET:",
+      "Bolt": "NET",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -573,37 +573,37 @@
       "Eckhart": ""
     },
     "eos__owner": {
-      "Bolt": "Owner:",
+      "Bolt": "Owner",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__parent": {
-      "Bolt": "Parent:",
+      "Bolt": "Parent",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__payer": {
-      "Bolt": "Payer:",
+      "Bolt": "Payer",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__permission": {
-      "Bolt": "Permission:",
+      "Bolt": "Permission",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__proxy": {
-      "Bolt": "Proxy:",
+      "Bolt": "Proxy",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__receiver": {
-      "Bolt": "Receiver:",
+      "Bolt": "Receiver",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -615,7 +615,7 @@
       "Eckhart": ""
     },
     "eos__requirement": {
-      "Bolt": "Requirement:",
+      "Bolt": "Requirement",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -627,31 +627,31 @@
       "Eckhart": ""
     },
     "eos__sender": {
-      "Bolt": "Sender:",
+      "Bolt": "Sender",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__threshold": {
-      "Bolt": "Threshold:",
+      "Bolt": "Threshold",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__to": {
-      "Bolt": "To:",
+      "Bolt": "To",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__transfer": {
-      "Bolt": "Transfer:",
+      "Bolt": "Transfer",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__type": {
-      "Bolt": "Type:",
+      "Bolt": "Type",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -687,7 +687,7 @@
       "Eckhart": ""
     },
     "eos__voter": {
-      "Bolt": "Voter:",
+      "Bolt": "Voter",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -916,8 +916,8 @@
     "instructions__tap_to_continue": "Tap to continue",
     "instructions__view_all_data": "View all data in the menu.",
     "joint__title": "Joint transaction",
-    "joint__to_the_total_amount": "To the total amount:",
-    "joint__you_are_contributing": "You are contributing:",
+    "joint__to_the_total_amount": "To the total amount",
+    "joint__you_are_contributing": "You are contributing",
     "language__change_to_template": "Change language to {0}?",
     "language__changed": "Language changed successfully",
     "language__progress": {
@@ -1144,7 +1144,7 @@
       "Eckhart": ""
     },
     "nem__description": {
-      "Bolt": "Description:",
+      "Bolt": "Description",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1180,7 +1180,7 @@
       "Eckhart": ""
     },
     "nem__initial_supply": {
-      "Bolt": "Initial supply:",
+      "Bolt": "Initial supply",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1192,13 +1192,13 @@
       "Eckhart": ""
     },
     "nem__levy_divisibility": {
-      "Bolt": "Levy divisibility:",
+      "Bolt": "Levy divisibility",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_fee": {
-      "Bolt": "Levy fee:",
+      "Bolt": "Levy fee",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1210,25 +1210,25 @@
       "Eckhart": ""
     },
     "nem__levy_mosaic": {
-      "Bolt": "Levy mosaic:",
+      "Bolt": "Levy mosaic",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_namespace": {
-      "Bolt": "Levy namespace:",
+      "Bolt": "Levy namespace",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_recipient": {
-      "Bolt": "Levy recipient:",
+      "Bolt": "Levy recipient",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_type": {
-      "Bolt": "Levy type:",
+      "Bolt": "Levy type",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1306,7 +1306,7 @@
       "Eckhart": ""
     },
     "nem__transferable": {
-      "Bolt": "Transferable?",
+      "Bolt": "Transferable",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1889,7 +1889,7 @@
     "send__confirm_sending": "Sending amount",
     "send__from_multiple_accounts": "Sending from multiple accounts.",
     "send__incl_transaction_fee": "incl. Transaction fee",
-    "send__including_fee": "Including fee:",
+    "send__including_fee": "Including fee",
     "send__maximum_fee": "Maximum fee",
     "send__multisig_different_paths": "Using different paths for different XPUBs.",
     "send__receiving_to_multisig": "Receiving to a multisig address.",
@@ -1968,7 +1968,7 @@
     "stellar__allow_trust": "Allow trust",
     "stellar__balance_id": "Balance ID",
     "stellar__bump_sequence": "Bump Sequence",
-    "stellar__buying": "Buying:",
+    "stellar__buying": "Buying",
     "stellar__claim_claimable_balance": "Claim Claimable Balance",
     "stellar__clear_data": "Clear data",
     "stellar__clear_flags": "Clear flags",
@@ -1985,15 +1985,15 @@
     "stellar__exchanges_require_memo": "Memo is not set.\nTypically needed when sending to exchanges.",
     "stellar__final_confirm": "Final confirm",
     "stellar__hash": "Hash",
-    "stellar__high": "High:",
+    "stellar__high": "High",
     "stellar__home_domain": "Home Domain",
     "stellar__inflation": "Inflation",
     "stellar__issuer_template": "{0} issuer",
-    "stellar__key": "Key:",
+    "stellar__key": "Key",
     "stellar__limit": "Limit",
-    "stellar__low": "Low:",
-    "stellar__master_weight": "Master Weight:",
-    "stellar__medium": "Medium:",
+    "stellar__low": "Low",
+    "stellar__master_weight": "Master Weight",
+    "stellar__medium": "Medium",
     "stellar__new_offer": "New Offer",
     "stellar__new_passive_offer": "New Passive Offer",
     "stellar__no_memo_set": "No memo set!",
@@ -2003,10 +2003,10 @@
     "stellar__pay": "Pay",
     "stellar__pay_at_most": "Pay at most",
     "stellar__preauth_transaction": "Pre-auth transaction",
-    "stellar__price_per_template": "Price per {0}:",
+    "stellar__price_per_template": "Price per {0}",
     "stellar__remove_signer": "Remove Signer",
     "stellar__revoke_trust": "Revoke trust",
-    "stellar__selling": "Selling:",
+    "stellar__selling": "Selling",
     "stellar__set_data": "Set data",
     "stellar__set_flags": "Set flags",
     "stellar__set_sequence_to_template": "Set sequence to {0}?",
@@ -2022,7 +2022,7 @@
     "stellar__update": "Update",
     "stellar__valid_from": "Valid from (UTC)",
     "stellar__valid_to": "Valid to (UTC)",
-    "stellar__value_sha256": "Value (SHA-256):",
+    "stellar__value_sha256": "Value (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Do you want to clear value key {0}?",
     "storage_msg__processing": {
       "Bolt": "Processing",
@@ -2039,8 +2039,8 @@
     },
     "storage_msg__wrong_pin": "Wrong PIN",
     "tezos__baker_address": "Baker address",
-    "tezos__balance": "Balance:",
-    "tezos__ballot": "Ballot:",
+    "tezos__balance": "Balance",
+    "tezos__ballot": "Ballot",
     "tezos__confirm_delegation": "Confirm delegation",
     "tezos__confirm_origination": "Confirm origination",
     "tezos__delegator": "Delegator",

@@ -143,7 +143,7 @@
     "bitcoin__locktime_set_to_blockheight": "Bloq. temporal def. para blockheight",
     "bitcoin__lot_of_change_outputs": "Muitas saídas de troco.",
     "bitcoin__multiple_accounts": "Múltiplas contas",
-    "bitcoin__new_fee_rate": "Novo fator de taxa:",
+    "bitcoin__new_fee_rate": "Novo fator de taxa",
     "bitcoin__simple_send_of": "Envio simples de",
     "bitcoin__ticket_amount": "Quantidade de tickets",
     "bitcoin__title_confirm_details": "Confirmar detalhes",
@@ -372,20 +372,20 @@
     "cardano__address_no_staking": "- endereço sem recompensas de staking.",
     "cardano__always_abstain": "Abster-se sempre",
     "cardano__always_no_confidence": "Não Confiança sempre",
-    "cardano__amount_burned_decimals_unknown": "Quantia queimada (casas decimais desconhecidas):",
-    "cardano__amount_minted_decimals_unknown": "Quantia cunhada (casas decimais desconhecidas):",
-    "cardano__amount_sent_decimals_unknown": "Quantia enviada (casas decimais desconhecidas):",
+    "cardano__amount_burned_decimals_unknown": "Quantia queimada (casas decimais desconhecidas)",
+    "cardano__amount_minted_decimals_unknown": "Quantia cunhada (casas decimais desconhecidas)",
+    "cardano__amount_sent_decimals_unknown": "Quantia enviada (casas decimais desconhecidas)",
     "cardano__anonymous_pool": "A pool não tem metadados (pool anônima)",
-    "cardano__asset_fingerprint": "Impressão digital do ativo:",
-    "cardano__auxiliary_data_hash": "Hash de dados auxiliar:",
+    "cardano__asset_fingerprint": "Impressão digital do ativo",
+    "cardano__auxiliary_data_hash": "Hash de dados auxiliar",
     "cardano__block": "Bloco",
     "cardano__catalyst": "Catalisador",
     "cardano__certificate": "Certificado",
     "cardano__change_output": "Saída de troco",
     "cardano__check_all_items": "Verifique todos os itens com atenção.",
     "cardano__choose_level_of_details": "Escolha o nível de detalhes:",
-    "cardano__collateral_input_id": "ID de entrada do colateral:",
-    "cardano__collateral_input_index": "Índice de entrada do colateral:",
+    "cardano__collateral_input_id": "ID de entrada do colateral",
+    "cardano__collateral_input_index": "Índice de entrada do colateral",
     "cardano__collateral_output_contains_tokens": "A saída de retorno do colateral contém tokens.",
     "cardano__collateral_return": "Retorno do colateral",
     "cardano__confirm_message": "Confirmar mensagem",
@@ -397,59 +397,59 @@
     "cardano__confirming_transaction": "Confirmando uma transação.",
     "cardano__cost": "Custo",
     "cardano__credential_mismatch": "A credencial não coincide com a credencial de pagamento.",
-    "cardano__datum_hash": "Hash do datum:",
-    "cardano__delegating_to": "Delegando a:",
-    "cardano__delegating_to_key_hash": "Delegando à chave com hash:",
-    "cardano__delegating_to_script": "Delegando ao script:",
-    "cardano__deposit": "Depósito:",
+    "cardano__datum_hash": "Hash do datum",
+    "cardano__delegating_to": "Delegando a",
+    "cardano__delegating_to_key_hash": "Delegando à chave com hash",
+    "cardano__delegating_to_script": "Delegando ao script",
+    "cardano__deposit": "Depósito",
     "cardano__empty_message": "Mensagem vazia",
-    "cardano__for_account_and_index_template": "para a conta {0} e o índice {1}:",
-    "cardano__for_account_template": "para a conta {0}:",
-    "cardano__for_key_hash": "para a chave com hash:",
-    "cardano__for_script": "para o script:",
+    "cardano__for_account_and_index_template": "Para a conta {0} e o índice {1}",
+    "cardano__for_account_template": "Para a conta {0}",
+    "cardano__for_key_hash": "Para a chave com hash",
+    "cardano__for_script": "Para o script",
     "cardano__inline_datum": "Datum inline",
     "cardano__input_id": "ID de entrada:",
-    "cardano__input_index": "Índice de entrada:",
+    "cardano__input_index": "Índice de entrada",
     "cardano__intro_text_change": "O endereço a seguir é um endereço de troco. Sua",
     "cardano__intro_text_owned_by_device": "O endereço a seguir pertence a este dispositivo. Sua",
     "cardano__intro_text_registration_payment": "O endereço de pagamento do registro da chave de voto pertence a este dispositivo. Sua",
     "cardano__key_hash": "hash de chave",
     "cardano__margin": "Margem",
-    "cardano__message_hash": "Hash da mensagem:",
+    "cardano__message_hash": "Hash da mensagem",
     "cardano__message_hex": "Hex da mensagem",
     "cardano__message_text": "Texto da mensagem",
     "cardano__multisig_path": "caminho multiassinatura",
     "cardano__nested_scripts_template": "Contém {0} scripts aninhados.",
-    "cardano__network": "Rede:",
+    "cardano__network": "Rede",
     "cardano__no_output_tx": "A transação não tem saídas; a rede não pode ser verificada.",
-    "cardano__nonce": "Nonce:",
-    "cardano__other": "outros",
+    "cardano__nonce": "Nonce",
+    "cardano__other": "Outros",
     "cardano__path": "caminho",
     "cardano__pledge": "Compromisso",
     "cardano__pointer": "ponteiro",
     "cardano__policy_id": "ID da política",
-    "cardano__pool_metadata_hash": "Hash de metadados da pool:",
-    "cardano__pool_metadata_url": "URL de metadados da pool:",
-    "cardano__pool_owner": "Proprietário da pool:",
-    "cardano__pool_reward_account": "Conta de recompensa da pool:",
-    "cardano__reference_input_id": "ID da entrada de referência:",
-    "cardano__reference_input_index": "Índice da entrada de referência:",
+    "cardano__pool_metadata_hash": "Hash de metadados da pool",
+    "cardano__pool_metadata_url": "URL de metadados da pool",
+    "cardano__pool_owner": "Proprietário da pool",
+    "cardano__pool_reward_account": "Conta de recompensa da pool",
+    "cardano__reference_input_id": "ID da entrada de referência",
+    "cardano__reference_input_index": "Índice da entrada de referência",
     "cardano__reference_script": "Script de referência",
     "cardano__required_signer": "Signatário requerido",
-    "cardano__reward": "recompensa",
+    "cardano__reward": "Recompensa",
     "cardano__reward_address": "O endereço é um endereço de recompensa.",
     "cardano__reward_eligibility_warning": "Aviso: o endereço não é um endereço de pagamento; ele não é elegível para recompensas.",
-    "cardano__rewards_go_to": "As recompensas vão para:",
+    "cardano__rewards_go_to": "As recompensas vão para",
     "cardano__script": "script",
     "cardano__script_all": "Todos",
     "cardano__script_any": "Qualquer",
-    "cardano__script_data_hash": "Hash de dados do script:",
-    "cardano__script_hash": "Hash do script:",
+    "cardano__script_data_hash": "Hash de dados do script",
+    "cardano__script_hash": "Hash do script",
     "cardano__script_invalid_before": "Inválido antes de",
     "cardano__script_invalid_hereafter": "Inválido a partir de",
     "cardano__script_key": "Chave",
     "cardano__script_n_of_k": "N de K",
-    "cardano__script_reward": "recompensa de script",
+    "cardano__script_reward": "Recompensa de script",
     "cardano__sending": "Enviando",
     "cardano__show_simple": {
       "Bolt": "Exib. simples",
@@ -463,31 +463,31 @@
     "cardano__stake_delegation": "Delegação de stake",
     "cardano__stake_deregistration": "Cancelamento do registro da chave de stake",
     "cardano__stake_pool_registration": "Registro de pool de staking",
-    "cardano__stake_pool_registration_pool_id": "Registro da pool de staking\nID da pool:",
+    "cardano__stake_pool_registration_pool_id": "Registro da pool de staking\nID da pool",
     "cardano__stake_registration": "Registro da chave de stake",
     "cardano__staking_key_for_account": "Chave de staking da conta",
-    "cardano__to_pool": "para a pool:",
-    "cardano__token_minting_path": "caminho de cunhagem de token",
-    "cardano__total_collateral": "Colateral total:",
+    "cardano__to_pool": "Para a pool",
+    "cardano__token_minting_path": "Caminho de cunhagem de token",
+    "cardano__total_collateral": "Colateral total",
     "cardano__transaction": "Transação",
     "cardano__transaction_contains_minting_or_burning": "A transação contém cunhagem ou queima de tokens.",
     "cardano__transaction_contains_script_address_no_datum": "A saída de transação a seguir contém um endereço de script, mas não contém um datum.",
-    "cardano__transaction_id": "ID da transação:",
+    "cardano__transaction_id": "ID da transação",
     "cardano__transaction_no_collateral_input": "A transação não contém entradas de colateral. O script Plutus não poderá ser executado.",
     "cardano__transaction_no_script_data_hash": "A transação não contém hash de dados do script. O script Plutus não poderá ser executado.",
     "cardano__transaction_output_contains_tokens": "A saída de transação a seguir contém tokens.",
-    "cardano__ttl": "Validade:",
+    "cardano__ttl": "Validade",
     "cardano__unknown_collateral_amount": "Quantia de colateral desconhecida.",
     "cardano__unusual_path": "O caminho é incomum.",
-    "cardano__valid_since": "Válido desde:",
+    "cardano__valid_since": "Válido desde",
     "cardano__verify_script": "Verificar script",
     "cardano__vote_delegation": "Delegação de voto",
     "cardano__vote_key_registration": "Registro da chave de voto (CIP-36)",
-    "cardano__vote_public_key": "Chave pública de voto:",
-    "cardano__voting_purpose": "Objetivo da votação:",
+    "cardano__vote_public_key": "Chave pública de voto",
+    "cardano__voting_purpose": "Objetivo da votação",
     "cardano__warning": "Aviso",
-    "cardano__weight": "Peso:",
-    "cardano__withdrawal_for_address_template": "Confirmar retirada para endereço de {0}:",
+    "cardano__weight": "Peso",
+    "cardano__withdrawal_for_address_template": "Confirmar retirada para endereço de {0}",
     "cardano__x_of_y_signatures_template": "Requer {0} de {1} assinaturas.",
     "coinjoin__access_account": "Acessar sua conta coinjoin?",
     "coinjoin__do_not_disconnect": "Não desconecte o seu Trezor!",
@@ -527,7 +527,7 @@
       "Eckhart": ""
     },
     "eos__action_name": {
-      "Bolt": "Nome da ação:",
+      "Bolt": "Nome da ação",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -545,7 +545,7 @@
       "Eckhart": ""
     },
     "eos__bytes": {
-      "Bolt": "Bytes:",
+      "Bolt": "Bytes",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -557,31 +557,31 @@
       "Eckhart": ""
     },
     "eos__checksum": {
-      "Bolt": "Soma de verificação:",
+      "Bolt": "Soma de verificação",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__code": {
-      "Bolt": "Código:",
+      "Bolt": "Código",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__contract": {
-      "Bolt": "Contrato:",
+      "Bolt": "Contrato",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__cpu": {
-      "Bolt": "CPU:",
+      "Bolt": "CPU",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__creator": {
-      "Bolt": "Criador:",
+      "Bolt": "Criador",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -599,7 +599,7 @@
       "Eckhart": ""
     },
     "eos__from": {
-      "Bolt": "De:",
+      "Bolt": "De",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -617,13 +617,13 @@
       "Eckhart": ""
     },
     "eos__name": {
-      "Bolt": "Nome:",
+      "Bolt": "Nome",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__net": {
-      "Bolt": "NET:",
+      "Bolt": "NET",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -635,37 +635,37 @@
       "Eckhart": ""
     },
     "eos__owner": {
-      "Bolt": "Proprietário:",
+      "Bolt": "Proprietário",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__parent": {
-      "Bolt": "Pai hierárquico:",
+      "Bolt": "Pai hierárquico",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__payer": {
-      "Bolt": "Pagador:",
+      "Bolt": "Pagador",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__permission": {
-      "Bolt": "Permissão:",
+      "Bolt": "Permissão",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__proxy": {
-      "Bolt": "Proxy:",
+      "Bolt": "Proxy",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__receiver": {
-      "Bolt": "Destinatário:",
+      "Bolt": "Destinatário",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -677,7 +677,7 @@
       "Eckhart": ""
     },
     "eos__requirement": {
-      "Bolt": "Requisito:",
+      "Bolt": "Requisito",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -689,31 +689,31 @@
       "Eckhart": ""
     },
     "eos__sender": {
-      "Bolt": "Remetente:",
+      "Bolt": "Remetente",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__threshold": {
-      "Bolt": "Limiar:",
+      "Bolt": "Limiar",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__to": {
-      "Bolt": "Para:",
+      "Bolt": "Para",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__transfer": {
-      "Bolt": "Transferência:",
+      "Bolt": "Transferência",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__type": {
-      "Bolt": "Tipo:",
+      "Bolt": "Tipo",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -749,7 +749,7 @@
       "Eckhart": ""
     },
     "eos__voter": {
-      "Bolt": "Eleitor:",
+      "Bolt": "Eleitor",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -996,8 +996,8 @@
     "instructions__tap_to_continue": "Toque para continuar",
     "instructions__view_all_data": "Veja todos os dados no menu.",
     "joint__title": "Transação conjunta",
-    "joint__to_the_total_amount": "À quantia total de:",
-    "joint__you_are_contributing": "Você está contribuindo:",
+    "joint__to_the_total_amount": "À quantia total de",
+    "joint__you_are_contributing": "Você está contribuindo",
     "language__change_to_template": "Alterar idioma para {0}?",
     "language__changed": "Idioma alterado com sucesso",
     "language__progress": {
@@ -1234,7 +1234,7 @@
       "Eckhart": ""
     },
     "nem__description": {
-      "Bolt": "Descrição:",
+      "Bolt": "Descrição",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1270,7 +1270,7 @@
       "Eckhart": ""
     },
     "nem__initial_supply": {
-      "Bolt": "Oferta inicial:",
+      "Bolt": "Oferta inicial",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1282,13 +1282,13 @@
       "Eckhart": ""
     },
     "nem__levy_divisibility": {
-      "Bolt": "Divisibilidade da cobrança:",
+      "Bolt": "Divisibilidade da cobrança",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_fee": {
-      "Bolt": "Taxa de cobrança:",
+      "Bolt": "Taxa de cobrança",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1300,25 +1300,25 @@
       "Eckhart": ""
     },
     "nem__levy_mosaic": {
-      "Bolt": "Mosaico da cobrança:",
+      "Bolt": "Mosaico da cobrança",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_namespace": {
-      "Bolt": "Namespace da cobrança:",
+      "Bolt": "Namespace da cobrança",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_recipient": {
-      "Bolt": "Destinatário da cobrança:",
+      "Bolt": "Destinatário da cobrança",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_type": {
-      "Bolt": "Tipo da cobrança:",
+      "Bolt": "Tipo da cobrança",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1396,7 +1396,7 @@
       "Eckhart": ""
     },
     "nem__transferable": {
-      "Bolt": "Transferível?",
+      "Bolt": "Transferível",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2084,7 +2084,7 @@
     "send__confirm_sending": "Quantia de envio",
     "send__from_multiple_accounts": "Enviando de múltiplas contas.",
     "send__incl_transaction_fee": "incluindo taxa de transação",
-    "send__including_fee": "Incluindo taxa:",
+    "send__including_fee": "Incluindo taxa",
     "send__maximum_fee": "Taxa máxima",
     "send__multisig_different_paths": "Usando caminhos diferentes para XPUBs diferentes.",
     "send__receiving_to_multisig": "Recebendo em um endereço multiass.",
@@ -2168,7 +2168,7 @@
     "stellar__allow_trust": "Permitir Trust",
     "stellar__balance_id": "ID de saldo",
     "stellar__bump_sequence": "Incremento de Sequência",
-    "stellar__buying": "Comprando:",
+    "stellar__buying": "Comprando",
     "stellar__claim_claimable_balance": "Resgatar saldo resgatável",
     "stellar__clear_data": "Limpar dados",
     "stellar__clear_flags": "Limpar flags",
@@ -2190,15 +2190,15 @@
     "stellar__exchanges_require_memo": "Memo não definido.\nNormalmente exigido ao enviar para exchanges.",
     "stellar__final_confirm": "Confirmação final",
     "stellar__hash": "Hash",
-    "stellar__high": "Alto:",
+    "stellar__high": "Alto",
     "stellar__home_domain": "Domínio de Origem",
     "stellar__inflation": "Inflação",
     "stellar__issuer_template": "Emissor {0}",
-    "stellar__key": "Chave:",
+    "stellar__key": "Chave",
     "stellar__limit": "Limite",
-    "stellar__low": "Baixo:",
-    "stellar__master_weight": "Peso da Principal:",
-    "stellar__medium": "Médio:",
+    "stellar__low": "Baixo",
+    "stellar__master_weight": "Peso da Principal",
+    "stellar__medium": "Médio",
     "stellar__new_offer": "Nova oferta",
     "stellar__new_passive_offer": "Nova Oferta Passiva",
     "stellar__no_memo_set": "Nenhum memo definido!",
@@ -2208,10 +2208,10 @@
     "stellar__pay": "Pagar",
     "stellar__pay_at_most": "Pagar no máximo",
     "stellar__preauth_transaction": "Transação pré-autorizada",
-    "stellar__price_per_template": "Preço por {0}:",
+    "stellar__price_per_template": "Preço por {0}",
     "stellar__remove_signer": "Remover Signatário",
     "stellar__revoke_trust": "Revogar Trust",
-    "stellar__selling": "Vendendo:",
+    "stellar__selling": "Vendendo",
     "stellar__set_data": "Definir dados",
     "stellar__set_flags": "Definir flags",
     "stellar__set_sequence_to_template": "Definir nº de sequência como {0}?",
@@ -2227,7 +2227,7 @@
     "stellar__update": "Atualizar",
     "stellar__valid_from": "Válido de (UTC)",
     "stellar__valid_to": "Válido até (UTC)",
-    "stellar__value_sha256": "Valor (SHA-256):",
+    "stellar__value_sha256": "Valor (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Deseja limpar a chave de valor {0}?",
     "storage_msg__processing": {
       "Bolt": "Processando",
@@ -2244,8 +2244,8 @@
     },
     "storage_msg__wrong_pin": "PIN incorreto",
     "tezos__baker_address": "Endereço de baker",
-    "tezos__balance": "Saldo:",
-    "tezos__ballot": "Voto:",
+    "tezos__balance": "Saldo",
+    "tezos__ballot": "Voto",
     "tezos__confirm_delegation": "Confirmar delegação",
     "tezos__confirm_origination": "Confirmar originação",
     "tezos__delegator": "Delegante",
