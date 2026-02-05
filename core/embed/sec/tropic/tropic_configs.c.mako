@@ -1,6 +1,6 @@
-// generated from header_maker.py.mako
+// generated from `tropic_configs.yaml` by `tropic_configs.c.mako`
 // (by running `make templates` in `core`)
-// do not edit manually!
+// DO NOT EDIT MANUALLY!
 
 /*
  * This file is part of the Trezor project, https://trezor.io/
@@ -42,10 +42,10 @@ def bits(selceted_bits: list[int], counter: Counter) -> str:
     else:
         return " | ".join(f"BIT({b})" for b in selceted_bits) + ","
 
-import json
-in_filename = ROOT / "core" / "embed" / "sec" / "tropic" / "tropic_configs.json"
+import yaml
+in_filename = ROOT / "core" / "embed" / "sec" / "tropic" / "tropic_configs.yaml"
 with open(in_filename, "r") as f:
-    configs = json.load(f)
+    configs = yaml.safe_load(f)
 reversible_config = configs["reversible_configuration"]
 irreversible_config = configs["irreversible_configuration"]
 i_names = list(irreversible_config.keys())

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import hashlib
-import json
 import os
 from pathlib import Path
 
@@ -14,7 +13,7 @@ HERE = Path(__file__).parent
 ROOT = HERE.parent.parent.resolve()
 CONFIG_DIR = ROOT / "tests" / "tropic_model"
 DEST_PATH = CONFIG_DIR / "config.yml"
-CFG_SPEC_DIR = ROOT / "core" / "embed" / "sec" / "tropic" / "tropic_configs.json"
+CFG_SPEC_DIR = ROOT / "core" / "embed" / "sec" / "tropic" / "tropic_configs.yaml"
 
 # private key used by the Tropic model to sign
 TROPIC_KEY = CONFIG_DIR / "tropic_key.pem"
@@ -40,7 +39,7 @@ RISCV_FW_PATCH = 0
 
 def get_tropic_configuration(path: Path) -> dict:
     with open(path, "r") as f:
-        config = json.load(f)
+        config = yaml.safe_load(f)
     numbers = {"i_config": {}, "r_config": {}}
     for key in config["irreversible_configuration"]:
         assert list(config["irreversible_configuration"][key].keys()) == [
