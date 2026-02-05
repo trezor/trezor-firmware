@@ -26,6 +26,7 @@
 #include <sec/option_bytes.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
+#include <sys/flash_utils.h>
 #include <sys/reset_flags.h>
 #include <sys/rng.h>
 #include <sys/system.h>
@@ -314,9 +315,13 @@ int main(void) {
     // or a potential hardware fault or exploit attempt.
 
 #ifdef USE_SECRET
-    // Make storage data inaccessible.
+    // Make storage data inaccessible - if supported by MCU
     secret_safety_erase();
 #endif
+
+    // For other MCUs, erase the entire storage (do this for all MCUs for double
+    // protection)
+    ensure(erase_storage(NULL), NULL);
 
     // Display an error message on the screen and reset the device.
     return 0;
