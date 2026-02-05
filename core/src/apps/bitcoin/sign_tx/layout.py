@@ -54,7 +54,7 @@ def account_label(coin: CoinInfo, address_n: Bip32Path | None) -> str:
         TR.bitcoin__multiple_accounts
         if address_n is None
         else address_n_to_name(coin, list(address_n) + [0] * BIP32_WALLET_DEPTH)
-        or f"Path {address_n_to_str(address_n)}"
+        or address_n_to_str(address_n)
     )
 
 
