@@ -273,46 +273,6 @@ irreversible_configuration:
     # | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
     {'all_except': [0, 1, 8, 9, 16, 24]}
 
-  cfg_uap_mac_and_destroy:
-    # # CFG_UAP_MAC_AND_DESTROY (0x160)
-    # | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-    # |--------------------------|---------------|---------------|---------------|---------------|
-    # | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-    # | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-    # | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-    # | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-    {'all_except': [0, 1, 8, 9, 16, 24]}
-
-  cfg_uap_mac_and_destroy:
-    # # CFG_UAP_MAC_AND_DESTROY (0x160)
-    # | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-    # |--------------------------|---------------|---------------|---------------|---------------|
-    # | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-    # | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-    # | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-    # | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-    {'all_except': [0, 1, 8, 9, 16, 24]}
-
-  cfg_uap_mac_and_destroy:
-    # # CFG_UAP_MAC_AND_DESTROY (0x160)
-    # | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-    # |--------------------------|---------------|---------------|---------------|---------------|
-    # | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-    # | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-    # | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-    # | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-    {'all_except': [0, 1, 8, 9, 16, 24]}
-
-  cfg_uap_mac_and_destroy:
-    # # CFG_UAP_MAC_AND_DESTROY (0x160)
-    # | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-    # |--------------------------|---------------|---------------|---------------|---------------|
-    # | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-    # | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
-    # | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
-    # | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-    {'all_except': [0, 1, 8, 9, 16, 24]}
-
 reversible_configuration:
   cfg_start_up:
     # # CFG_START_UP (0x00)
@@ -560,26 +520,6 @@ reversible_configuration:
     # | MCOUNTER_UPDATE_8_11     | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
     # | MCOUNTER_UPDATE_12_15    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
     {'bits': [1, 2, 9, 10, 17, 18, 25, 26]}
-
-  cfg_uap_mac_and_destroy:
-    # # CFG_UAP_MAC_AND_DESTROY (0x160)
-    # | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-    # |--------------------------|---------------|---------------|---------------|---------------|
-    # | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-    # | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-    # | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-    # | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-    {'bits': [2, 10, 17, 18, 25, 26]}
-
-  cfg_uap_mac_and_destroy:
-    # # CFG_UAP_MAC_AND_DESTROY (0x160)
-    # | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
-    # |--------------------------|---------------|---------------|---------------|---------------|
-    # | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-    # | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
-    # | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
-    # | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-    {'bits': [2, 10, 17, 18, 25, 26]}
 
   cfg_uap_mac_and_destroy:
     # # CFG_UAP_MAC_AND_DESTROY (0x160)
