@@ -29,7 +29,8 @@
 #include "hmac.h"
 #include "memzero.h"
 
-#ifdef USE_SECRET
+#if defined(USE_TROPIC) || defined(USE_NRF_AUTH) || \
+    (!SECRET_PRIVILEGED_MASTER_KEY_SLOT && defined(USE_OPTIGA))
 #include <sec/secret.h>
 #endif
 

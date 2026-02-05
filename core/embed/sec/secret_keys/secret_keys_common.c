@@ -24,7 +24,7 @@
 
 #include <sec/secret_keys.h>
 
-#ifdef USE_SECRET
+#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
 #include <sec/secret.h>
 #endif
 
