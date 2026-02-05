@@ -77,15 +77,24 @@ function resetState(whichState) {
 }
 
 
-function findNextForHref(doc, href) {
-    let foundIt = false;
-    for (let tr of doc.body.querySelectorAll("tr")) {
-        if (!tr.dataset.actualHash) continue
-        let a = tr.querySelector("a")
-        if (!a) continue
-        if (foundIt) return a.href
-        else if (a.href === href) foundIt = true
+function findForHref(doc, href, direction = 1) {
+    const links = [];
+    for (const tr of doc.body.querySelectorAll("tr")) {
+        if (!tr.dataset.actualHash) {
+            continue;
+        }
+        const a = tr.querySelector("a");
+        if (a) {
+            links.push(a.href);
+        }
     }
+
+    const index = links.indexOf(href);
+    if (index === -1) {
+        return;
+    }
+
+    return links[index + direction];
 }
 
 
@@ -119,25 +128,55 @@ function onLoadIndex() {
 
 function onLoadTestCase() {
     if (window.opener) {
-        window.nextHref = findNextForHref(window.opener.document, window.location.href)
-        if (window.nextHref) {
-            markbox = document.getElementById("markbox")
-            par = document.createElement("p")
-            par.append("and proceed to ")
-            a = document.createElement("a")
-            a.append("next case")
-            a.href = window.nextHref
-            a.onclick = ev => {
-                console.log("on click")
-                ev.preventDefault()
-                window.location.assign(window.nextHref)
+        window.prevHref = findForHref(window.opener.document, window.location.href, -1);
+        window.nextHref = findForHref(window.opener.document, window.location.href, 1);
+
+        const markbox = document.getElementById("markbox");
+
+        const links = [];
+        for (const [url, label, key] of [[window.prevHref, "[p]rev case", "p"], [window.nextHref, "[n]ext case", "n"]]) {
+            if (url) {
+                const p = document.createElement("p");
+                const a = document.createElement("a");
+                a.append(label);
+                a.href = url;
+                a.onclick = ev => {
+                    ev.preventDefault();
+                    window.location.assign(url);
+                }
+                p.append(a);
+                markbox.append(p);
+                links.push([a, key]);
+            }
+        }
+
+        const p = document.createElement("p");
+        p.append("[j] / [k] to scroll");
+        markbox.append(p);
+
+        document.addEventListener("keydown", (e) => {
+            // don't hijack typing in inputs (just in case there will be some)
+            if (["INPUT", "TEXTAREA"].includes(e.target?.tagName) || e.target?.isContentEditable) {
+                return;
             }
 
-            par.append(a)
-            markbox.append(par)
-        }
+            const scrollAmount = window.location.href.includes("T3W1") ? 1000 : 500;
+            if (e.key === "j") {
+                window.scrollBy({ top: scrollAmount, behavior: "smooth" });
+            }
+            if (e.key === "k") {
+                window.scrollBy({ top: -scrollAmount, behavior: "smooth" });
+            }
+            for (const [a, key] of links) {
+                if (e.key.toLowerCase() === key) {
+                    e.preventDefault();
+                    a.click();
+                }
+            }
+        });
     } else {
-        window.nextHref = null
+        window.prevHref = null;
+        window.nextHref = null;
     }
 }
 
