@@ -1,6 +1,6 @@
-// generated from header_maker.py.mako
+// generated from `tropic_configs.yaml` by `tropic_configs.c.mako`
 // (by running `make templates` in `core`)
-// do not edit manually!
+// DO NOT EDIT MANUALLY!
 
 /*
  * This file is part of the Trezor project, https://trezor.io/
