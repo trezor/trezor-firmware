@@ -50,12 +50,12 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
 
 
 def account_label(coin: CoinInfo, address_n: Bip32Path | None) -> str:
-    return (
-        TR.bitcoin__multiple_accounts
-        if address_n is None
-        else address_n_to_name(coin, list(address_n) + [0] * BIP32_WALLET_DEPTH)
-        or f"Path {address_n_to_str(address_n)}"
-    )
+    if address_n is None:
+        return TR.bitcoin__multiple_accounts
+    else:
+        return address_n_to_name(
+            coin, list(address_n) + [0] * BIP32_WALLET_DEPTH
+        ) or address_n_to_str(address_n)
 
 
 async def confirm_output(

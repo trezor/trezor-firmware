@@ -597,7 +597,9 @@ async def confirm_output(
         account_properties: list[StrPropertyType] = []
         if source_account:
             account_properties.append((TR.words__wallet, source_account, None))
-        if source_account_path:
+        if source_account_path and source_account_path != source_account:
+            # the reason for this check is account_label in bitcoin/sign_tx/layout.py
+            # which can return the derivation path instead of the account
             account_properties.append(
                 (
                     TR.address_details__derivation_path,
