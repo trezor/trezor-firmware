@@ -916,14 +916,15 @@ def confirm_total(
     account_title: str | None = None,
     account_items: Iterable[StrPropertyType] | None = None,
     fee_items: Iterable[StrPropertyType] | None = None,
+    back_button: bool = False,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     title = title or TR.words__title_summary  # def_arg
     total_label = total_label or TR.send__total_amount  # def_arg
     fee_label = fee_label or TR.send__incl_transaction_fee  # def_arg
 
-    return raise_if_not_confirmed(
+    return interact(
         trezorui_api.confirm_summary(
             amount=total_amount,
             amount_label=total_label,
@@ -934,6 +935,7 @@ def confirm_total(
             account_items=account_items,
             extra_items=fee_items,
             extra_title=TR.confirm_total__title_fee,
+            back_button=back_button,
         ),
         br_name,
         br_code,

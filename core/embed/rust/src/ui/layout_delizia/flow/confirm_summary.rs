@@ -44,6 +44,7 @@ impl FlowController for ConfirmSummary {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
+            (Self::Summary, Direction::Down) => self.return_msg(FlowMsg::Back),
             (Self::Summary, Direction::Up) => Self::Hold.swipe(direction),
             (Self::Hold, Direction::Down) => Self::Summary.swipe(direction),
             _ => self.do_nothing(),
@@ -72,10 +73,14 @@ pub fn new_confirm_summary(
     extra_params: Option<ShowInfoParams>,
     extra_title: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
+    can_go_back: bool,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
-    let content_summary = summary_params
-        .with_flow_menu(true)
+    let mut content_summary = summary_params.with_flow_menu(true);
+    if can_go_back {
+        content_summary = content_summary.with_swipe_down();
+    }
+    let content_summary = content_summary
         .into_layout()?
         // Summary(1) + Hold(1)
         .with_pages(|summary_pages| summary_pages + 1);
