@@ -87,6 +87,10 @@ static void drivers_init(void) {
 
   unit_properties_init();
 
+#ifdef USE_SECRET
+  secret_init();
+#endif
+
   display_init(DISPLAY_RESET_CONTENT);
 
 #if USE_TOUCH
