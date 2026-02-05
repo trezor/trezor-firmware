@@ -1,0 +1,135 @@
+syntax = "proto2";
+package hw.trezor.messages.debug;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageDebug";
+
+import "messages.proto";
+
+
+/**
+ * Request: Host asks for device state
+ * @start
+ * @next DebugLinkState
+ */
+message DebugLinkGetState {
+    /// Wait behavior of the call.
+    enum DebugWaitType {
+        /// Respond immediately. If no layout is currently displayed, the layout
+        /// response will be empty.
+        IMMEDIATE = 0;
+        /// Wait for next layout. If a layout is displayed, waits for it to change.
+        /// If no layout is displayed, waits for one to come up.
+        NEXT_LAYOUT = 1;
+        /// Return current layout. If no layout is currently displayed, waits for
+        /// one to come up.
+        CURRENT_LAYOUT = 2;
+    }
+
+    // Trezor T < 2.6.0 only - wait until mnemonic words are shown
+    optional bool wait_word_list = 1 [deprecated=true];
+    // Trezor T < 2.6.0 only - wait until reset word position is requested
+    optional bool wait_word_pos = 2  [deprecated=true];
+    // trezor-core only - wait until current layout changes
+    // changed in 2.6.4: multiple wait types instead of true/false.
+    optional DebugWaitType wait_layout = 3 [default=IMMEDIATE];
+    // Responds immediately with an empty `DebugLinkState` (used for client-side synchronization).
+    optional bool return_empty_state = 4 [default=false];
+}
+
+/**
+ * Response: Device current state
+ * @end
+ */
+message DebugLinkState {
+    optional bytes layout = 1;                              // raw buffer of display
+    repeated string tokens = 13;                            // current layout represented as a list of string tokens
+}
+
+
+/**
+ * Request: "Press" the button on the device
+ * @start
+ * @next DebugLinkLayout
+ */
+message DebugLinkDecision {
+    optional DebugButton button = 1;  // button press
+    optional DebugSwipeDirection swipe = 2;  // swipe direction
+    optional string input = 3;  // keyboard input
+    /**
+    * Structure representing swipe direction
+    */
+    enum DebugSwipeDirection {
+        UP = 0;
+        DOWN = 1;
+        LEFT = 2;
+        RIGHT = 3;
+    }
+
+    /**
+    * Structure representing button presses
+    */
+    enum DebugButton {
+        NO = 0;
+        YES = 1;
+        INFO = 2;
+    }
+
+    /**
+    * Structure representing button presses of UI Caesar
+    */
+    // TODO: probably delete the middle_btn as it is not a physical one
+    enum DebugPhysicalButton {
+        LEFT_BTN = 0;
+        MIDDLE_BTN = 1;
+        RIGHT_BTN = 2;
+    }
+
+    optional uint32 x = 4;                             // touch X coordinate
+    optional uint32 y = 5;                             // touch Y coordinate
+    optional bool wait = 6 [deprecated=true];          // wait for layout change
+    optional uint32 hold_ms = 7;                       // touch hold duration
+    optional DebugPhysicalButton physical_button = 8;  // physical button press
+
+    /**
+     * Explicit touch event type, used to separate TOUCH_START and TOUCH_END
+     * If not set, defaults to full click behavior (TOUCH_START + optional hold + TOUCH_END)
+     */
+    enum DebugTouchEventType {
+        TOUCH_FULL_CLICK = 0;
+        TOUCH_START = 1;
+        TOUCH_END = 2;
+    }
+
+    optional DebugTouchEventType touch_event_type = 9;
+}
+
+/**
+ * Response: Device text layout as a list of tokens as returned by Rust
+ * @end
+ */
+message DebugLinkLayout {
+    option deprecated = true;
+    repeated string tokens = 1;
+}
+
+/**
+ * Request: Re-seed RNG with given value
+ * @start
+ * @next Success
+ */
+message DebugLinkReseedRandom {
+    optional uint32 value = 1;
+}
+
+/**
+ * Request: Start or stop recording screen changes into given target directory
+ * @start
+ * @next Success
+ */
+message DebugLinkRecordScreen {
+    optional string target_directory = 1;           // empty or missing to stop recording
+    optional uint32 refresh_index = 2 [default=0];  // which index to give the screenshots (after emulator restarts)
+}
+
