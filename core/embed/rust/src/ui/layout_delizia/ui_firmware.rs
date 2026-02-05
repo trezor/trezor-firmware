@@ -433,6 +433,7 @@ impl FirmwareUI for UIDelizia {
         let flow = flow::new_confirm_summary(
             summary_params,
             account_params,
+            account_title,
             extra_params,
             extra_title,
             verb_cancel,
