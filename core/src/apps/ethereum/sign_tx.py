@@ -20,7 +20,7 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         EthereumTxAck,
     )
-    from trezor.ui.layouts import PropertyType, StrPropertyType
+    from trezor.ui.layouts import StrPropertyType
 
     from apps.common.keychain import Keychain
     from apps.common.payment_request import PaymentRequestVerifier
@@ -291,7 +291,7 @@ async def handle_staking(
     network: EthereumNetworkInfo,
     address_bytes: bytes,
     maximum_fee: str,
-    fee_items: Iterable[PropertyType],
+    fee_items: Iterable[StrPropertyType],
 ) -> bool:
 
     data_reader = BufferReader(msg.data_initial_chunk)
@@ -478,7 +478,7 @@ async def _handle_staking_tx_stake(
     network: EthereumNetworkInfo,
     address_bytes: bytes,
     maximum_fee: str,
-    fee_items: Iterable[PropertyType],
+    fee_items: Iterable[StrPropertyType],
 ) -> None:
     from .layout import require_confirm_stake
 
@@ -508,7 +508,7 @@ async def _handle_staking_tx_unstake(
     network: EthereumNetworkInfo,
     address_bytes: bytes,
     maximum_fee: str,
-    fee_items: Iterable[PropertyType],
+    fee_items: Iterable[StrPropertyType],
 ) -> None:
     from .layout import require_confirm_unstake
 
@@ -543,7 +543,7 @@ async def _handle_staking_tx_claim(
     msg: MsgInSignTx,
     staking_addr: bytes,
     maximum_fee: str,
-    fee_items: Iterable[PropertyType],
+    fee_items: Iterable[StrPropertyType],
     network: EthereumNetworkInfo,
     chunkify: bool,
 ) -> None:

@@ -11,6 +11,7 @@ from trezor.enums import (
 from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata, confirm_properties
+from trezor.utils import hexlify_if_bytes
 
 from apps.common.paths import address_n_to_str
 
@@ -26,7 +27,7 @@ from .helpers.utils import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, Literal
+    from typing import Callable, Iterable, Literal
 
     from trezor import messages
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
@@ -111,12 +112,12 @@ async def show_native_script(
             elif key_hash:
                 script_type_name_suffix = "hash"
 
-        props: list[PropertyType] = [
+        props: list[StrPropertyType] = [
             (
-                f"{script_heading} - {SCRIPT_TYPE_NAMES[script_type]} {script_type_name_suffix}:",
+                f"{script_heading} - {SCRIPT_TYPE_NAMES[script_type]} {script_type_name_suffix}",
                 None,
                 None,
-            )
+            ),
         ]
         append = props.append  # local_cache_attribute
 
@@ -127,24 +128,24 @@ async def show_native_script(
                     (None, bech32.encode(bech32.HRP_SHARED_KEY_HASH, key_hash), True)
                 )
             elif key_path:
-                append((address_n_to_str(key_path), None, None))
+                append((None, address_n_to_str(key_path), None))
         elif script_type == CNST.N_OF_K:
             assert script.required_signatures_count is not None  # validate_script
             append(
                 (
+                    None,
                     TR.cardano__x_of_y_signatures_template.format(
                         script.required_signatures_count, len(scripts)
                     ),
-                    None,
                     None,
                 )
             )
         elif script_type == CNST.INVALID_BEFORE:
             assert script.invalid_before is not None  # validate_script
-            append((str(script.invalid_before), None, None))
+            append((None, str(script.invalid_before), None))
         elif script_type == CNST.INVALID_HEREAFTER:
             assert script.invalid_hereafter is not None  # validate_script
-            append((str(script.invalid_hereafter), None, None))
+            append((None, str(script.invalid_hereafter), None))
 
         if script_type in (
             CNST.ALL,
@@ -153,7 +154,7 @@ async def show_native_script(
         ):
             assert scripts  # validate_script
             append(
-                (TR.cardano__nested_scripts_template.format(len(scripts)), None, None)
+                (None, TR.cardano__nested_scripts_template.format(len(scripts)), None)
             )
 
         await confirm_properties(
@@ -377,13 +378,13 @@ def _get_data_chunk_props(
     bytes_optional_plural = "byte" if data_size == 1 else "bytes"
     props: list[PropertyType] = [
         (
-            f"{title} ({data_size} {bytes_optional_plural}):",
+            f"{title} ({data_size} {bytes_optional_plural})",
             decoder(displayed_bytes) if decoder else displayed_bytes,
             True,
         )
     ]
     if max_displayed_size is not None and data_size > max_displayed_size:
-        props.append(("...", None, None))
+        props.append((None, "...", None))
 
     return props
 
@@ -479,7 +480,7 @@ async def _show_credential(
         # TODO: handle translation
         append(
             (
-                f"{intro_text} {credential.type_name} credential is a {credential_title}:",
+                f"{intro_text} {credential.type_name} credential is a {credential_title}",
                 None,
                 None,
             )
@@ -492,18 +493,18 @@ async def _show_credential(
         append((None, TR.cardano__credential_mismatch, False))
     if credential.is_reward and purpose != "cvote_reg_payment_address":
         # for cvote registrations, this is handled by extra_text at the end
-        append((TR.cardano__reward_address, None, None))
+        append((None, TR.cardano__reward_address, None))
     if credential.is_no_staking:
         append(
             (
-                f"{ADDRESS_TYPE_NAMES[credential.address_type]} {TR.cardano__address_no_staking}",
                 None,
+                f"{ADDRESS_TYPE_NAMES[credential.address_type]} {TR.cardano__address_no_staking}",
                 None,
             )
         )
 
     if extra_text:
-        append((extra_text, None, None))
+        append((None, extra_text, None))
 
     if len(props) > 0:
         await confirm_properties(
@@ -622,15 +623,15 @@ async def confirm_tx(
 ) -> None:
     total_amount = format_coin_amount(spending, network_id)
     fee_amount = format_coin_amount(fee, network_id)
-    items: list[PropertyType] = [
-        (TR.cardano__network, f"{protocol_magics.to_ui_string(protocol_magic)}", True),
+    items: Iterable[StrPropertyType] = (
+        (TR.cardano__network, protocol_magics.to_ui_string(protocol_magic), True),
         (
             TR.cardano__valid_since,
-            f"{format_optional_int(validity_interval_start)}",
+            format_optional_int(validity_interval_start),
             True,
         ),
-        (TR.cardano__ttl, f"{format_optional_int(ttl)}", True),
-    ]
+        (TR.cardano__ttl, format_optional_int(ttl), True),
+    )
 
     await layouts.confirm_cardano_tx(
         total_amount,
@@ -649,13 +650,13 @@ async def confirm_tx_details(
     is_network_id_verifiable: bool,
     tx_hash: bytes | None,
 ) -> None:
-    props: list[PropertyType] = []
+    props: list[StrPropertyType] = []
     append = props.append  # local_cache_attribute
 
     if fee is not None:
         append(
             (
-                f"{TR.words__transaction_fee}:",
+                TR.words__transaction_fee,
                 format_coin_amount(fee, network_id),
                 False,
             )
@@ -673,23 +674,23 @@ async def confirm_tx_details(
     if is_network_id_verifiable:
         append(
             (
-                f"{TR.cardano__network} {protocol_magics.to_ui_string(protocol_magic)}",
-                None,
+                TR.cardano__network,
+                protocol_magics.to_ui_string(protocol_magic),
                 None,
             )
         )
 
     append(
         (
-            f"{TR.cardano__valid_since} {format_optional_int(validity_interval_start)}",
-            None,
+            TR.cardano__valid_since,
+            format_optional_int(validity_interval_start),
             None,
         )
     )
-    append((f"{TR.cardano__ttl} {format_optional_int(ttl)}", None, None))
+    append((TR.cardano__ttl, format_optional_int(ttl), None))
 
     if tx_hash:
-        append((TR.cardano__transaction_id, tx_hash, True))
+        append((TR.cardano__transaction_id, hexlify_if_bytes(tx_hash), True))
 
     if props:
         await confirm_properties(
@@ -709,7 +710,7 @@ async def confirm_certificate(
     assert certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
 
     props: list[PropertyType] = [
-        (f"{TR.words__confirm}:", CERTIFICATE_TYPE_NAMES[certificate.type], False),
+        (TR.words__confirm, CERTIFICATE_TYPE_NAMES[certificate.type], False),
         _format_stake_credential(
             certificate.path, certificate.script_hash, certificate.key_hash
         ),
@@ -765,10 +766,10 @@ async def confirm_stake_pool_parameters(
             ),
             (TR.cardano__pool_reward_account, pool_parameters.reward_account, True),
             (
+                None,
                 f"{TR.cardano__pledge}: {format_coin_amount(pool_parameters.pledge, network_id)}\n"
                 + f"{TR.cardano__cost}: {format_coin_amount(pool_parameters.cost, network_id)}\n"
                 + f"{TR.cardano__margin}: {percentage_formatted}%",
-                None,
                 None,
             ),
         ),
@@ -791,6 +792,7 @@ async def confirm_stake_pool_owner(
         )
         props.append(
             (
+                None,
                 addresses.derive_human_readable(
                     keychain,
                     messages.CardanoAddressParametersType(
@@ -800,7 +802,6 @@ async def confirm_stake_pool_owner(
                     protocol_magic,
                     network_id,
                 ),
-                None,
                 None,
             )
         )
@@ -837,7 +838,7 @@ async def confirm_stake_pool_metadata(
         await confirm_properties(
             "confirm_pool_metadata",
             TR.cardano__confirm_transaction,
-            ((TR.cardano__anonymous_pool, None, None),),
+            ((None, TR.cardano__anonymous_pool, None),),
             br_code=BRT_Other,
         )
         return
@@ -862,7 +863,7 @@ async def confirm_stake_pool_registration_final(
         "confirm_pool_final",
         TR.cardano__confirm_transaction,
         (
-            (TR.cardano__confirm_signing_stake_pool, None, None),
+            (None, TR.cardano__confirm_signing_stake_pool, None),
             (TR.cardano__network, protocol_magics.to_ui_string(protocol_magic), True),
             (
                 TR.cardano__valid_since,
@@ -902,7 +903,7 @@ async def confirm_withdrawal(
 
     props.append(
         (
-            f"{TR.words__amount}:",
+            TR.words__amount,
             format_coin_amount(withdrawal.amount, network_id),
             True,
         )
@@ -983,7 +984,7 @@ async def confirm_cvote_registration_delegation(
     weight: int,
 ) -> None:
     props: list[PropertyType] = [
-        (TR.cardano__vote_key_registration, None, None),
+        (None, TR.cardano__vote_key_registration, None),
         (TR.cardano__delegating_to, public_key, True),
     ]
     if weight is not None:
@@ -1002,11 +1003,11 @@ async def confirm_cvote_registration_payment_address(
     should_show_payment_warning: bool,
 ) -> None:
     props: list[PropertyType] = [
-        (TR.cardano__vote_key_registration, None, None),
+        (None, TR.cardano__vote_key_registration, None),
         (TR.cardano__rewards_go_to, payment_address, True),
     ]
     if should_show_payment_warning:
-        props.append((CVOTE_REWARD_ELIGIBILITY_WARNING, None, None))
+        props.append((None, CVOTE_REWARD_ELIGIBILITY_WARNING, None))
     await confirm_properties(
         "confirm_cvote_registration_payment_address",
         title=TR.cardano__confirm_transaction,
@@ -1021,13 +1022,13 @@ async def confirm_cvote_registration(
     nonce: int,
     voting_purpose: int | None,
 ) -> None:
-    props: list[PropertyType] = [(TR.cardano__vote_key_registration, None, None)]
+    props: list[PropertyType] = [(None, TR.cardano__vote_key_registration, None)]
     if vote_public_key is not None:
         props.append((TR.cardano__vote_public_key, vote_public_key, True))
     props.extend(
         [
             (
-                f"{TR.cardano__staking_key_for_account} {format_account_number(staking_path)}:",
+                f"{TR.cardano__staking_key_for_account} {format_account_number(staking_path)}",
                 address_n_to_str(staking_path),
                 True,
             ),

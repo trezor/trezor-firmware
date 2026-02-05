@@ -197,9 +197,9 @@ class Credential:
             ]
         elif pointer:
             return [
-                (f"{TR.cardano__block}: {pointer.block_index}", None, None),
-                (f"{TR.cardano__transaction}: {pointer.tx_index}", None, None),
-                (f"{TR.cardano__certificate}: {pointer.certificate_index}", None, None),
+                (TR.cardano__block, f"{pointer.block_index}", None),
+                (TR.cardano__transaction, f"{pointer.tx_index}", None),
+                (TR.cardano__certificate, f"{pointer.certificate_index}", None),
             ]
         else:
             return []

@@ -22,7 +22,7 @@ async def require_confirm_fee(value: int, fee: int) -> None:
     await confirm_total(
         format_tezos_amount(value),
         format_tezos_amount(fee),
-        total_label=f"{TR.words__amount}:",
+        total_label=TR.words__amount,
     )
 
 
@@ -42,7 +42,7 @@ async def require_confirm_origination_fee(balance: int, fee: int) -> None:
         TR.tezos__confirm_origination,
         (
             (TR.tezos__balance, format_tezos_amount(balance), False),
-            (f"{TR.words__fee}:", format_tezos_amount(fee), False),
+            (TR.words__fee, format_tezos_amount(fee), False),
         ),
         hold=True,
     )
@@ -74,8 +74,8 @@ async def require_confirm_register_delegate(address: str, fee: int) -> None:
         "confirm_register_delegate",
         TR.tezos__register_delegate,
         (
-            (f"{TR.words__fee}:", format_tezos_amount(fee), True),
-            (f"{TR.words__address}:", address, True),
+            (TR.words__fee, format_tezos_amount(fee), True),
+            (TR.words__address, address, True),
         ),
         hold=True,
         br_code=BR_SIGN_TX,
@@ -97,7 +97,7 @@ async def require_confirm_ballot(proposal: str, ballot: str) -> None:
         TR.tezos__submit_ballot,
         (
             (TR.tezos__ballot, ballot, True),
-            (f"{TR.tezos__proposal}:", proposal, True),
+            (TR.tezos__proposal, proposal, True),
         ),
         hold=True,
         br_code=BR_SIGN_TX,

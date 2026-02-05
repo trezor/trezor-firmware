@@ -48,12 +48,12 @@ def _get_address_reference_props(
 ) -> Sequence[StrPropertyType]:
     return (
         (
+            None,
             TR.solana__is_provided_via_lookup_table_template.format(display_name),
             None,
-            None,
         ),
-        (f"{TR.solana__lookup_table_address}:", base58.encode(address[0]), True),
-        (f"{TR.solana__account_index}:", f"{address[1]}", True),
+        (TR.solana__lookup_table_address, base58.encode(address[0]), True),
+        (TR.solana__account_index, f"{address[1]}", True),
     )
 
 
@@ -181,7 +181,7 @@ async def confirm_instruction(
 
             signers.append(
                 (
-                    f"{TR.words__signer} {i}{path_str}:",
+                    f"{TR.words__signer} {i}{path_str}",
                     base58.encode(multisig_signer[0]),
                     True,
                 )
@@ -235,7 +235,7 @@ async def confirm_unsupported_instruction_details(
             title,
             (
                 (
-                    f"{TR.solana__instruction_data}:",
+                    f"{TR.solana__instruction_data}",
                     bytes(instruction.instruction_data),
                     True,
                 ),
@@ -254,7 +254,7 @@ async def confirm_unsupported_instruction_details(
 
                 accounts.append(
                     (
-                        f"{TR.words__account} {i}{path_str} {address_type}:",
+                        f"{TR.words__account} {i}{path_str} {address_type}",
                         base58.encode(account_public_key),
                         True,
                     )
@@ -361,7 +361,7 @@ async def confirm_token_transfer(
 def _fee_ui_info(fee: Fee | None) -> tuple[str, str, list[StrPropertyType]]:
     fee_items: list[StrPropertyType] = []
     if fee is None:
-        fee_title = f"{TR.solana__max_fees_rent}:"
+        fee_title = f"{TR.solana__max_fees_rent}"
         fee_str = TR.words__unknown
     else:
         fee_str = format_amount_unit(format_amount(fee.total, 9), "SOL")
@@ -371,11 +371,11 @@ def _fee_ui_info(fee: Fee | None) -> tuple[str, str, list[StrPropertyType]]:
             priority_fee_str = format_amount_unit(format_amount(fee.priority, 9), "SOL")
             fee_items.append((TR.solana__priority_fee, priority_fee_str, True))
         if fee.rent:
-            fee_title = f"{TR.solana__max_fees_rent}:"
+            fee_title = f"{TR.solana__max_fees_rent}"
             rent_str = format_amount_unit(format_amount(fee.rent, 9), "SOL")
             fee_items.append((TR.solana__max_rent_fee, rent_str, True))
         else:
-            fee_title = f"{TR.words__transaction_fee}:"
+            fee_title = f"{TR.words__transaction_fee}"
     return fee_title, fee_str, fee_items
 
 
@@ -455,7 +455,7 @@ async def confirm_stake_transaction(
             True,
         ),
         amount_item=(
-            f"{TR.words__amount}:",
+            f"{TR.words__amount}",
             format_amount_unit(format_amount(create.lamports, 9), "SOL"),
             True,
         ),
@@ -505,7 +505,7 @@ async def confirm_claim_transaction(
         vote_account="",
         stake_item=None,
         amount_item=(
-            f"{TR.words__amount}:",
+            f"{TR.words__amount}",
             format_amount_unit(format_amount(total_amount, 9), "SOL"),
             True,
         ),

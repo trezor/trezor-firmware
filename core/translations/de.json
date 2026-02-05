@@ -163,12 +163,7 @@
     "bitcoin__locktime_set_to_blockheight": "Sperrzeit festgelegt auf Blockhöhe",
     "bitcoin__lot_of_change_outputs": "Viele Wechselgeldausgaben.",
     "bitcoin__multiple_accounts": "Mehrere Konten",
-    "bitcoin__new_fee_rate": {
-      "Bolt": "Neuer Gebührensatz:",
-      "Caesar": "Neuer Gebührensatz:",
-      "Delizia": "Neuer Gebührensatz:",
-      "Eckhart": "Neue Gebühren-Rate:"
-    },
+    "bitcoin__new_fee_rate": "Neuer Gebührensatz",
     "bitcoin__simple_send_of": "Einfaches Senden von",
     "bitcoin__ticket_amount": "Ticketbetrag",
     "bitcoin__title_confirm_details": "Details bestätigen",
@@ -437,20 +432,20 @@
     "cardano__address_no_staking": "Adresse - keine Staking-Belohnungen.",
     "cardano__always_abstain": "Immer enthalten",
     "cardano__always_no_confidence": "Immer „Nein“",
-    "cardano__amount_burned_decimals_unknown": "Verbrannter Betrag (Dezimalstellen unbekannt):",
-    "cardano__amount_minted_decimals_unknown": "Geminteter Betrag (Dezimalstellen unbekannt):",
-    "cardano__amount_sent_decimals_unknown": "Gesendeter Betrag (Dezimalstellen unbekannt):",
+    "cardano__amount_burned_decimals_unknown": "Verbrannter Betrag (Dezimalstellen unbekannt)",
+    "cardano__amount_minted_decimals_unknown": "Geminteter Betrag (Dezimalstellen unbekannt)",
+    "cardano__amount_sent_decimals_unknown": "Gesendeter Betrag (Dezimalstellen unbekannt)",
     "cardano__anonymous_pool": "Pool hat keine Metadaten (anonymer Pool)",
-    "cardano__asset_fingerprint": "Fingerabdruck:",
-    "cardano__auxiliary_data_hash": "Hilfsdaten-Hash:",
+    "cardano__asset_fingerprint": "Fingerabdruck",
+    "cardano__auxiliary_data_hash": "Hilfsdaten-Hash",
     "cardano__block": "Block",
     "cardano__catalyst": "Catalyst",
     "cardano__certificate": "Zertifikat",
     "cardano__change_output": "Wechselgeldausgabe",
     "cardano__check_all_items": "Prüfe alle Elemente sorgfältig.",
     "cardano__choose_level_of_details": "Detailebene auswählen:",
-    "cardano__collateral_input_id": "Sicherheiten-Eingabe-ID:",
-    "cardano__collateral_input_index": "Sicherheiten-Eingabeindex:",
+    "cardano__collateral_input_id": "Sicherheiten-Eingabe-ID",
+    "cardano__collateral_input_index": "Sicherheiten-Eingabeindex",
     "cardano__collateral_output_contains_tokens": "Die Rückgabe von Sicherheiten beinhaltet Token.",
     "cardano__collateral_return": "Rückgabe von Sicherheiten",
     "cardano__confirm_message": {
@@ -473,28 +468,28 @@
     "cardano__cost": "Kosten",
     "cardano__credential_mismatch": "Daten stimmen nicht mit Zahlungsdaten überein.",
     "cardano__datum_hash": {
-      "Bolt": "Datum-Hash:",
-      "Caesar": "Bezugspunkt-Hash:",
-      "Delizia": "Bezugspunkt-Hash:",
-      "Eckhart": "Bezugspunkt-Hash:"
+      "Bolt": "Datum-Hash",
+      "Caesar": "Bezugspunkt-Hash",
+      "Delizia": "Bezugspunkt-Hash",
+      "Eckhart": "Bezugspunkt-Hash"
     },
-    "cardano__delegating_to": "Delegieren an:",
-    "cardano__delegating_to_key_hash": "Delegieren an Key-Hash:",
-    "cardano__delegating_to_script": "Delegieren an Skript:",
-    "cardano__deposit": "Einzahlung:",
+    "cardano__delegating_to": "Delegieren an",
+    "cardano__delegating_to_key_hash": "Delegieren an Key-Hash",
+    "cardano__delegating_to_script": "Delegieren an Skript",
+    "cardano__deposit": "Einzahlung",
     "cardano__empty_message": "Leere Nachricht",
-    "cardano__for_account_and_index_template": "für Konto {0} und Index {1}:",
-    "cardano__for_account_template": "für Konto {0}:",
-    "cardano__for_key_hash": "für Key-Hash:",
-    "cardano__for_script": "für Skript:",
+    "cardano__for_account_and_index_template": "Für Konto {0} und Index {1}",
+    "cardano__for_account_template": "Für Konto {0}",
+    "cardano__for_key_hash": "Für Key-Hash",
+    "cardano__for_script": "Für Skript",
     "cardano__inline_datum": {
       "Bolt": "Inline-Datum",
       "Caesar": "Inline-Bezugspunkt",
       "Delizia": "Inline-Bezugspunkt",
       "Eckhart": "Inline-Datum"
     },
-    "cardano__input_id": "Eingabe-ID:",
-    "cardano__input_index": "Eingabenindex:",
+    "cardano__input_id": "Eingabe-ID",
+    "cardano__input_index": "Eingabenindex",
     "cardano__intro_text_change": {
       "Bolt": "Die folgende Adresse ist eine Wechselgeldadresse.",
       "Caesar": "Die folgende Adresse ist eine Wechselgeldadresse. Ihr(e)",
@@ -515,14 +510,14 @@
     },
     "cardano__key_hash": "Key-Hash",
     "cardano__margin": "Marge",
-    "cardano__message_hash": "Nachrichten-Hash:",
+    "cardano__message_hash": "Nachrichten-Hash",
     "cardano__message_hex": "Nachrichten-Hex",
     "cardano__message_text": "Nachrichtentext",
     "cardano__multisig_path": "Multisig-Pfad",
     "cardano__nested_scripts_template": "Enthält {0} verschachtelte Skripte.",
-    "cardano__network": "Netzwerk:",
+    "cardano__network": "Netzwerk",
     "cardano__no_output_tx": "Transaktion hat keine Ausgaben. Netzwerk kann nicht verifiziert werden.",
-    "cardano__nonce": "Nonce:",
+    "cardano__nonce": "Nonce",
     "cardano__other": "andere",
     "cardano__path": "Pfad",
     "cardano__pledge": {
@@ -533,28 +528,28 @@
     },
     "cardano__pointer": "Pointer",
     "cardano__policy_id": "Richtlinien-ID",
-    "cardano__pool_metadata_hash": "Pool-Metadaten-Hash:",
-    "cardano__pool_metadata_url": "Pool-Metadaten-URL:",
-    "cardano__pool_owner": "Pool-Eigentümer:",
-    "cardano__pool_reward_account": "Pool-Belohnungskonto:",
-    "cardano__reference_input_id": "Referenz-Eingabe-ID:",
-    "cardano__reference_input_index": "Referenz-Eingabeindex:",
+    "cardano__pool_metadata_hash": "Pool-Metadaten-Hash",
+    "cardano__pool_metadata_url": "Pool-Metadaten-URL",
+    "cardano__pool_owner": "Pool-Eigentümer",
+    "cardano__pool_reward_account": "Pool-Belohnungskonto",
+    "cardano__reference_input_id": "Referenz-Eingabe-ID",
+    "cardano__reference_input_index": "Referenz-Eingabeindex",
     "cardano__reference_script": "Referenzskript",
     "cardano__required_signer": "Erforderlicher Unterzeichner",
     "cardano__reward": "Belohnung",
     "cardano__reward_address": "Adresse ist eine Adresse für Belohnungen.",
     "cardano__reward_eligibility_warning": "Warnung: Die Adresse ist keine Zahlungsadresse und somit nicht für Belohnungen berechtigt.",
     "cardano__rewards_go_to": {
-      "Bolt": "Belohnung geht an:",
-      "Caesar": "Belohnung geht an:",
-      "Delizia": "Belohnung geht an:",
-      "Eckhart": "Belohnungen gehen an:"
+      "Bolt": "Belohnung geht an",
+      "Caesar": "Belohnung geht an",
+      "Delizia": "Belohnung geht an",
+      "Eckhart": "Belohnungen gehen an"
     },
     "cardano__script": "Skript",
     "cardano__script_all": "Alle",
     "cardano__script_any": "Beliebige",
-    "cardano__script_data_hash": "Skriptdaten-Hash:",
-    "cardano__script_hash": "Skript-Hash:",
+    "cardano__script_data_hash": "Skriptdaten-Hash",
+    "cardano__script_hash": "Skript-Hash",
     "cardano__script_invalid_before": "Ungültig vor",
     "cardano__script_invalid_hereafter": "Ungültig nach",
     "cardano__script_key": {
@@ -603,46 +598,31 @@
       "Delizia": "Staking-Pool-Registrierung",
       "Eckhart": "Staking-Pool-Anmeldung"
     },
-    "cardano__stake_pool_registration_pool_id": {
-      "Bolt": "Staking-Pool-Registrierung\nPool-ID:",
-      "Caesar": "Staking-Pool-Registrierung\nPool-ID:",
-      "Delizia": "Staking-Pool-Registrierung\nPool-ID:",
-      "Eckhart": "Staking-Pool-Anmeldung\nPool-ID:"
-    },
-    "cardano__stake_registration": {
-      "Bolt": "Stake-Key-Registrierung",
-      "Caesar": "Stake-Key-Registrierung",
-      "Delizia": "Stake-Key-Registrierung",
-      "Eckhart": "Stake-Key-Anmeldung"
-    },
+    "cardano__stake_pool_registration_pool_id": "Staking-Pool-Anmeldung\nPool-ID",
+    "cardano__stake_registration": "Stake-Key-Anmeldung",
     "cardano__staking_key_for_account": "Staking-Key für Konto",
     "cardano__to_pool": "an Pool:",
     "cardano__token_minting_path": "Token-Minting-Pfad",
-    "cardano__total_collateral": "Gesamtsicherheiten:",
+    "cardano__total_collateral": "Gesamtsicherheiten",
     "cardano__transaction": "Transaktion",
     "cardano__transaction_contains_minting_or_burning": "Die Transaktion beinhaltet das Minting oder Burning von Token.",
-    "cardano__transaction_contains_script_address_no_datum": {
-      "Bolt": "Die folgende Transaktionsausgabe enthält eine Skriptadresse, aber keinen Bezugspunkt.",
-      "Caesar": "Die folgende Transaktionsausgabe enthält eine Skriptadresse, aber keinen Bezugspunkt.",
-      "Delizia": "Die folgende Transaktionsausgabe enthält eine Skriptadresse, aber keinen Bezugspunkt.",
-      "Eckhart": "Die folgende Transaktionsausgabe enthält eine Skriptadresse, aber kein Datum."
-    },
-    "cardano__transaction_id": "Transaktions-ID:",
+    "cardano__transaction_contains_script_address_no_datum": "Die folgende Transaktionsausgabe enthält eine Skriptadresse, aber kein Datum.",
+    "cardano__transaction_id": "Transaktions-ID",
     "cardano__transaction_no_collateral_input": "Die Transaktion enthält keine Sicherheiten. Das Plutus-Skript kann nicht ausgeführt werden.",
     "cardano__transaction_no_script_data_hash": "Die Transaktion enthält keinen Skriptdaten-Hash. Das Plutus-Skript kann nicht ausgeführt werden.",
     "cardano__transaction_output_contains_tokens": "Die folgende Transaktionsausgabe beinhaltet Token.",
-    "cardano__ttl": "TTL:",
+    "cardano__ttl": "TTL",
     "cardano__unknown_collateral_amount": "Unbekannter Sicherheitenbetrag.",
     "cardano__unusual_path": "Pfad ist ungewöhnlich.",
-    "cardano__valid_since": "Gültig seit:",
+    "cardano__valid_since": "Gültig seit",
     "cardano__verify_script": "Skript verifizieren",
     "cardano__vote_delegation": "Vote-Delegierung",
     "cardano__vote_key_registration": "Vote-Key-Registrierung (CIP-36)",
-    "cardano__vote_public_key": "Public Key für Vote:",
-    "cardano__voting_purpose": "Voting-Zweck:",
+    "cardano__vote_public_key": "Public Key für Vote",
+    "cardano__voting_purpose": "Voting-Zweck",
     "cardano__warning": "Warnung",
-    "cardano__weight": "Gewicht:",
-    "cardano__withdrawal_for_address_template": "Auszahlung für {0} Adresse bestätigen:",
+    "cardano__weight": "Gewicht",
+    "cardano__withdrawal_for_address_template": "Auszahlung für {0} Adresse bestätigen",
     "cardano__x_of_y_signatures_template": "Erfordert {0} von {1} Signaturen.",
     "coinjoin__access_account": "Auf CoinJoin-Konto zugreifen?",
     "coinjoin__do_not_disconnect": "Trenne deinen Trezor nicht!",
@@ -697,7 +677,7 @@
       "Eckhart": ""
     },
     "eos__action_name": {
-      "Bolt": "Aktionsname:",
+      "Bolt": "Aktionsname",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -715,7 +695,7 @@
       "Eckhart": ""
     },
     "eos__bytes": {
-      "Bolt": "Bytes:",
+      "Bolt": "Bytes",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -727,31 +707,31 @@
       "Eckhart": ""
     },
     "eos__checksum": {
-      "Bolt": "Prüfsumme:",
+      "Bolt": "Prüfsumme",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__code": {
-      "Bolt": "Code:",
+      "Bolt": "Code",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__contract": {
-      "Bolt": "Kontrakt:",
+      "Bolt": "Kontrakt",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__cpu": {
-      "Bolt": "CPU:",
+      "Bolt": "CPU",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__creator": {
-      "Bolt": "Ersteller:",
+      "Bolt": "Ersteller",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -769,7 +749,7 @@
       "Eckhart": ""
     },
     "eos__from": {
-      "Bolt": "Von:",
+      "Bolt": "Von",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -787,13 +767,13 @@
       "Eckhart": ""
     },
     "eos__name": {
-      "Bolt": "Name:",
+      "Bolt": "Name",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__net": {
-      "Bolt": "NET:",
+      "Bolt": "NET",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -805,37 +785,37 @@
       "Eckhart": ""
     },
     "eos__owner": {
-      "Bolt": "Eigentümer:",
+      "Bolt": "Eigentümer",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__parent": {
-      "Bolt": "Elternteil:",
+      "Bolt": "Elternteil",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__payer": {
-      "Bolt": "Zahlender:",
+      "Bolt": "Zahlender",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__permission": {
-      "Bolt": "Berechtigung:",
+      "Bolt": "Berechtigung",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__proxy": {
-      "Bolt": "Proxy:",
+      "Bolt": "Proxy",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__receiver": {
-      "Bolt": "Empfänger:",
+      "Bolt": "Empfänger",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -847,7 +827,7 @@
       "Eckhart": ""
     },
     "eos__requirement": {
-      "Bolt": "Anforderung:",
+      "Bolt": "Anforderung",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -859,31 +839,31 @@
       "Eckhart": ""
     },
     "eos__sender": {
-      "Bolt": "Sender:",
+      "Bolt": "Sender",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__threshold": {
-      "Bolt": "Schwelle:",
+      "Bolt": "Schwelle",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__to": {
-      "Bolt": "An:",
+      "Bolt": "An",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__transfer": {
-      "Bolt": "Überweisung:",
+      "Bolt": "Überweisung",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__type": {
-      "Bolt": "Typ:",
+      "Bolt": "Typ",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -919,7 +899,7 @@
       "Eckhart": ""
     },
     "eos__voter": {
-      "Bolt": "Voter:",
+      "Bolt": "Voter",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1236,8 +1216,8 @@
       "Delizia": "Gemeins. transakt.",
       "Eckhart": "Gemeins. Transakt."
     },
-    "joint__to_the_total_amount": "Gesamtbetrag:",
-    "joint__you_are_contributing": "Dein Anteil:",
+    "joint__to_the_total_amount": "Gesamtbetrag",
+    "joint__you_are_contributing": "Dein Anteil",
     "language__change_to_template": "Sprache in {0} ändern?",
     "language__changed": {
       "Bolt": "Sprache erfolgreich geändert",
@@ -1489,7 +1469,7 @@
       "Eckhart": ""
     },
     "nem__description": {
-      "Bolt": "Beschreibung:",
+      "Bolt": "Beschreibung",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1525,7 +1505,7 @@
       "Eckhart": ""
     },
     "nem__initial_supply": {
-      "Bolt": "Anfängliches Angebot:",
+      "Bolt": "Anfängliches Angebot",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1555,25 +1535,25 @@
       "Eckhart": ""
     },
     "nem__levy_mosaic": {
-      "Bolt": "Abgabenmosaik:",
+      "Bolt": "Abgabenmosaik",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_namespace": {
-      "Bolt": "Abgaben-Namespace:",
+      "Bolt": "Abgaben-Namespace",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_recipient": {
-      "Bolt": "Abgabenempfänger:",
+      "Bolt": "Abgabenempfänger",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__levy_type": {
-      "Bolt": "Abgabentyp:",
+      "Bolt": "Abgabentyp",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1651,7 +1631,7 @@
       "Eckhart": ""
     },
     "nem__transferable": {
-      "Bolt": "Übertragbar?",
+      "Bolt": "Übertragbar",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2560,10 +2540,10 @@
     },
     "send__incl_transaction_fee": "inkl. Transaktionsgebühr",
     "send__including_fee": {
-      "Bolt": "Einschließ. Gebühr:",
-      "Caesar": "Einschließ. Gebühr:",
-      "Delizia": "Einschließ. Gebühr:",
-      "Eckhart": "Einschließlich Gebühr:"
+      "Bolt": "Einschließ. Gebühr",
+      "Caesar": "Einschließ. Gebühr",
+      "Delizia": "Einschließ. Gebühr",
+      "Eckhart": "Einschließlich Gebühr"
     },
     "send__maximum_fee": {
       "Bolt": "Max. Gebühr",
@@ -2733,7 +2713,7 @@
     "stellar__allow_trust": "Trust zulassen",
     "stellar__balance_id": "Guthaben-ID",
     "stellar__bump_sequence": "Bump-Sequenz",
-    "stellar__buying": "Kaufen:",
+    "stellar__buying": "Kaufen",
     "stellar__claim_claimable_balance": {
       "Bolt": "Anspruchsfähiges Guthaben beanspruchen",
       "Caesar": "Anspruchsfähiges Guthaben beanspruchen",
@@ -2760,7 +2740,7 @@
     },
     "stellar__final_confirm": "Letzte Bestätigung",
     "stellar__hash": "Hash",
-    "stellar__high": "Hoch:",
+    "stellar__high": "Hoch",
     "stellar__home_domain": {
       "Bolt": "Startseite",
       "Caesar": "Startseite",
@@ -2769,11 +2749,11 @@
     },
     "stellar__inflation": "Inflation",
     "stellar__issuer_template": "{0} Aussteller",
-    "stellar__key": "Key:",
+    "stellar__key": "Key",
     "stellar__limit": "Grenze",
-    "stellar__low": "Niedrig:",
-    "stellar__master_weight": "Master-Gewicht:",
-    "stellar__medium": "Mittel:",
+    "stellar__low": "Niedrig",
+    "stellar__master_weight": "Master-Gewicht",
+    "stellar__medium": "Mittel",
     "stellar__new_offer": "Neues Angebot",
     "stellar__new_passive_offer": "Neues passives Angebot",
     "stellar__no_memo_set": {
@@ -2788,10 +2768,10 @@
     "stellar__pay": "Zahlen",
     "stellar__pay_at_most": "Maximal",
     "stellar__preauth_transaction": "Vor-Auth-Transaktion",
-    "stellar__price_per_template": "Preis pro {0}:",
+    "stellar__price_per_template": "Preis pro {0}",
     "stellar__remove_signer": "Unterzeichner entfernen",
     "stellar__revoke_trust": "Trust aufheben",
-    "stellar__selling": "Verkaufen:",
+    "stellar__selling": "Verkaufen",
     "stellar__set_data": "Daten festlegen",
     "stellar__set_flags": "Flags festlegen",
     "stellar__set_sequence_to_template": "Sequenz auf {0} setzen?",
@@ -2827,7 +2807,7 @@
     },
     "stellar__valid_from": "Gültig von (UTC)",
     "stellar__valid_to": "Gültig bis (UTC)",
-    "stellar__value_sha256": "Wert (SHA-256):",
+    "stellar__value_sha256": "Wert (SHA-256)",
     "stellar__wanna_clean_value_key_template": "Möchtest du den Wert-Key {0} löschen?",
     "storage_msg__processing": {
       "Bolt": "Verarbeitung",
@@ -2844,8 +2824,8 @@
     },
     "storage_msg__wrong_pin": "Falscher PIN",
     "tezos__baker_address": "Baker-Adresse",
-    "tezos__balance": "Guthaben:",
-    "tezos__ballot": "Abstimmung:",
+    "tezos__balance": "Guthaben",
+    "tezos__ballot": "Abstimmung",
     "tezos__confirm_delegation": "Delegierung bestätigen",
     "tezos__confirm_origination": "Herkunft bestätigen",
     "tezos__delegator": {
