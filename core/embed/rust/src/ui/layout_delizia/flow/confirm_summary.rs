@@ -68,6 +68,7 @@ impl FlowController for ConfirmSummary {
 pub fn new_confirm_summary(
     summary_params: ShowInfoParams,
     account_params: Option<ShowInfoParams>,
+    account_title: Option<TString<'static>>,
     extra_params: Option<ShowInfoParams>,
     extra_title: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
@@ -112,7 +113,7 @@ pub fn new_confirm_summary(
     if content_account.is_some() {
         menu = menu.item(
             theme::ICON_CHEVRON_RIGHT,
-            TR::address_details__account_info.into(),
+            account_title.unwrap_or(TR::address_details__account_info.into()),
         );
         unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
