@@ -1,61 +1,74 @@
 debug_random_value: !!binary |
   AMD/7g==
 i_config:
-  cfg_debug: 4294967295
+  cfg_debug: 4294967294
   cfg_gpo: 4294967295
   cfg_sensors: 4294967295
   cfg_sleep_mode: 4294967295
-  cfg_start_up: 4294967292
-  cfg_uap_ecc_key_erase: 4294967271
-  cfg_uap_ecc_key_generate: 4294967270
-  cfg_uap_ecc_key_read: 4294967271
-  cfg_uap_ecc_key_store: 4294967270
-  cfg_uap_ecdsa_sign: 4294967270
-  cfg_uap_eddsa_sign: 4294967270
-  cfg_uap_i_config_read: 4294967287
-  cfg_uap_i_config_write: 4294967287
-  cfg_uap_mac_and_destroy: 4294967270
-  cfg_uap_mcounter_get: 4294967271
-  cfg_uap_mcounter_init: 4294967270
-  cfg_uap_mcounter_update: 4294967271
-  cfg_uap_pairing_key_invalidate: 4294967271
-  cfg_uap_pairing_key_read: 4294967271
-  cfg_uap_pairing_key_write: 4294967270
-  cfg_uap_ping: 4294967295
-  cfg_uap_r_config_read: 4294967287
-  cfg_uap_r_config_write_erase: 4294967294
-  cfg_uap_r_mem_data_erase: 4294967270
-  cfg_uap_r_mem_data_read: 4294967270
-  cfg_uap_r_mem_data_write: 4294967270
-  cfg_uap_random_value_get: 4294967295
+  cfg_start_up: 4294967289
+  cfg_uap_ecc_key_erase: 4278124286
+  cfg_uap_ecc_key_generate: 4278124284
+  cfg_uap_ecc_key_read: 4278124286
+  cfg_uap_ecc_key_store: 4278124284
+  cfg_uap_ecdsa_sign: 4278124284
+  cfg_uap_eddsa_sign: 4278124284
+  cfg_uap_i_config_read: 4294967038
+  cfg_uap_i_config_write: 4294967038
+  cfg_uap_mac_and_destroy: 4278123772
+  cfg_uap_mcounter_get: 4278124286
+  cfg_uap_mcounter_init: 4278124284
+  cfg_uap_mcounter_update: 4278124286
+  cfg_uap_pairing_key_invalidate: 4278124286
+  cfg_uap_pairing_key_read: 4278124286
+  cfg_uap_pairing_key_write: 4244438268
+  cfg_uap_ping: 4294967294
+  cfg_uap_r_config_read: 4294967038
+  cfg_uap_r_config_write_erase: 4294967292
+  cfg_uap_r_mem_data_erase: 4278123774
+  cfg_uap_r_mem_data_read: 4278123774
+  cfg_uap_r_mem_data_write: 4278123772
+  cfg_uap_random_value_get: 4294967294
+i_pairing_keys:
+  0:
+    state: invalid
+    value: !!binary |
+      AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+  1:
+    state: written
+    value: !!binary |
+      zo060cy2M+x7cMF4FKXHbs0CloUFDTRHRboFhw5YfVk=
+  2:
+    state: written
+    value: !!binary |
+      hC/jIagkdAg3N/8rm4iir0JELbDYqsxtxp6ZUzNEskY=
 r_config:
   cfg_debug: 0
   cfg_gpo: 0
   cfg_sensors: 0
-  cfg_sleep_mode: 0
-  cfg_start_up: 3
-  cfg_uap_ecc_key_erase: 27
-  cfg_uap_ecc_key_generate: 27
-  cfg_uap_ecc_key_read: 27
-  cfg_uap_ecc_key_store: 27
-  cfg_uap_ecdsa_sign: 27
-  cfg_uap_eddsa_sign: 27
-  cfg_uap_i_config_read: 11
-  cfg_uap_i_config_write: 11
-  cfg_uap_mac_and_destroy: 27
-  cfg_uap_mcounter_get: 27
-  cfg_uap_mcounter_init: 27
-  cfg_uap_mcounter_update: 27
-  cfg_uap_pairing_key_invalidate: 27
-  cfg_uap_pairing_key_read: 27
-  cfg_uap_pairing_key_write: 26
-  cfg_uap_ping: 3
-  cfg_uap_r_config_read: 11
-  cfg_uap_r_config_write_erase: 2
-  cfg_uap_r_mem_data_erase: 27
-  cfg_uap_r_mem_data_read: 27
-  cfg_uap_r_mem_data_write: 27
-  cfg_uap_random_value_get: 3
+  cfg_sleep_mode: 1
+  cfg_start_up: 9
+  cfg_uap_ecc_key_erase: 101058054
+  cfg_uap_ecc_key_generate: 101058052
+  cfg_uap_ecc_key_read: 101058054
+  cfg_uap_ecc_key_store: 101058052
+  cfg_uap_ecdsa_sign: 101058052
+  cfg_uap_eddsa_sign: 101058052
+  cfg_uap_i_config_read: 1542
+  cfg_uap_i_config_write: 1542
+  cfg_uap_mac_and_destroy: 101057540
+  cfg_uap_mcounter_get: 101058054
+  cfg_uap_mcounter_init: 101058052
+  cfg_uap_mcounter_update: 101058054
+  cfg_uap_pairing_key_invalidate: 101058054
+  cfg_uap_pairing_key_read: 101058054
+  cfg_uap_pairing_key_write: 67372036
+  cfg_uap_ping: 6
+  cfg_uap_r_config_read: 1542
+  cfg_uap_r_config_write_erase: 4
+  cfg_uap_r_mem_data_erase: 101057542
+  cfg_uap_r_mem_data_read: 101057542
+  cfg_uap_r_mem_data_write: 101057540
+  cfg_uap_random_value_get: 6
 r_ecc_keys:
   0:
     a: !!binary |

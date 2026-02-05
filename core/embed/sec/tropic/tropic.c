@@ -352,7 +352,7 @@ bool tropic_session_start(void) {
   }
 #endif
 #if !PRODUCTION
-  if (tropic_custom_session_start(NULL, TROPIC_FACTORY_PAIRING_KEY_SLOT) ==
+  if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
   }

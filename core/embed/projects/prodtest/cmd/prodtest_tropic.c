@@ -318,7 +318,7 @@ cleanup:
 }
 
 static void prodtest_tropic_pair(cli_t* cli) {
-  // If this functions successfully completes, it is ensured that:
+  // If this function successfully completes, it is ensured that:
   //  * The public tropic key is written to MCU's flash.
   //  * The factory pairing key in tropic's `TR01_PAIRING_KEY_SLOT_INDEX_0` is
   //  invalidated.
