@@ -34,6 +34,7 @@ use crate::{
         ModelUI,
     },
 };
+use heapless::Vec;
 
 use super::{
     component::{
@@ -1180,19 +1181,36 @@ impl FirmwareUI for UIDelizia {
             return flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)));
         }
 
-        let mut params = ShowInfoParams::new(title).with_cancel_button();
+        let mut items: Vec<(TString<'static>, TString<'static>, bool), 4> = Vec::new();
         for property in IterBuf::new().try_iterate(value)? {
-            let [header, text, _is_data]: [Obj; 3] = util::iter_into_array(property)?;
+            let [header, text, is_data]: [Obj; 3] = util::iter_into_array(property)?;
             let header = header
                 .try_into_option::<TString>()?
                 .unwrap_or_else(TString::empty);
             let text = text
                 .try_into_option::<TString>()?
                 .unwrap_or_else(TString::empty);
-            params = unwrap!(params.add(header, text));
+            let is_data = is_data.try_into_option::<bool>()?.unwrap_or(false);
+            unwrap!(items.push((header, text, is_data)));
         }
-        let layout = params.into_layout()?;
-        flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
+
+        if items.len() == 1 {
+            let (header, value, is_data) = unwrap!(items.pop());
+            let confirm = ConfirmValue::new(title, value.into(), None)
+                .with_subtitle(Some(header))
+                .with_cancel_button()
+                .with_chunkify(is_data)
+                .with_text_mono(true);
+            let layout = confirm.into_layout()?;
+            flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
+        } else {
+            let mut params = ShowInfoParams::new(title).with_cancel_button();
+            for (header, text, _is_data) in items {
+                params = unwrap!(params.add(header, text));
+            }
+            let layout = params.into_layout()?;
+            flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
+        }
     }
 
     fn show_share_words(
