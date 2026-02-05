@@ -917,7 +917,7 @@ def confirm_properties(
 
 
 def confirm_total(
-    total_amount: str,
+    total_amount: str | None,
     fee_amount: str,
     title: str | None = None,
     total_label: str | None = None,
