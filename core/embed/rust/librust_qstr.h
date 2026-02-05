@@ -643,8 +643,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_regulatory__title;
   MP_QSTR_reject_pairing;
   MP_QSTR_remaining_shares;
-  MP_QSTR_remote;
   MP_QSTR_request_bip39;
+  MP_QSTR_request_cb;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_request_duration;
   MP_QSTR_request_number;

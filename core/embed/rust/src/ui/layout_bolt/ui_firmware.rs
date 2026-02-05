@@ -1319,10 +1319,6 @@ impl FirmwareUI for UIBolt {
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
-
-    fn process_ipc_message(_data: &[u8], _remote: u8) -> Result<Gc<LayoutObj>, Error> {
-        Err(Error::NotImplementedError)
-    }
 }
 
 #[allow(clippy::too_many_arguments)]

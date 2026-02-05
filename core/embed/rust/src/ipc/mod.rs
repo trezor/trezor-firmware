@@ -157,17 +157,3 @@ impl Drop for IpcMessage<'_> {
         unsafe { ffi::ipc_message_free(&mut lowlevel_message) };
     }
 }
-
-#[derive(Copy, Clone, PartialEq, Eq, num_enum::IntoPrimitive, num_enum::FromPrimitive)]
-#[repr(u16)]
-pub enum CoreIpcService {
-    Lifecycle = 0,
-    Ui = 1,
-    WireStart = 2,
-    WireContinue = 3,
-    WireEnd = 4,
-    Crypto = 5,
-    Util = 6,
-    #[num_enum(catch_all)]
-    Unknown(u16),
-}

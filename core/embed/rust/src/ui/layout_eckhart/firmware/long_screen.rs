@@ -1,5 +1,5 @@
 use crate::{
-    ipc::{CoreIpcService, IpcMessage, RemoteSysTask},
+    ipc::{IpcMessage, RemoteSysTask},
     strutil::TString,
     ui::{
         cache::PageCache,
@@ -30,16 +30,22 @@ pub enum LongContentScreenMsg {
     Cancelled,
 }
 
-pub struct LongContentScreen<'a> {
+pub struct LongContentScreen<'a, F>
+where
+    F: Fn(&[u8], u16),
+{
     header: Header,
-    content: LongContent,
+    content: LongContent<F>,
     hint: Hint<'a>,
     action_bar: ActionBar,
 }
 
-impl<'a> LongContentScreen<'a> {
-    pub fn new(title: TString<'static>, pages: usize, remote: u8) -> Self {
-        let content = LongContent::new(pages as u16, remote);
+impl<'a, F> LongContentScreen<'a, F>
+where
+    F: Fn(&[u8], u16),
+{
+    pub fn new(title: TString<'static>, pages: usize, request_cb: F) -> Self {
+        let content = LongContent::new(pages as u16, request_cb);
         let mut action_bar = ActionBar::new_cancel_confirm();
         action_bar.update(content.pager);
 
@@ -55,28 +61,27 @@ impl<'a> LongContentScreen<'a> {
     }
 
     fn switch_next(&mut self, ctx: &mut EventCtx) {
-        // The next button shoudn't be available at the last page
         debug_assert!(!self.content.pager.is_last());
         self.content.switch_next(ctx);
-        let new_pager = self.content.pager();
-        self.hint.update(new_pager);
-        self.action_bar.update(new_pager);
+        self.hint.update(self.content.pager());
+        self.action_bar.update(self.content.pager());
     }
 
     fn switch_prev(&mut self, ctx: &mut EventCtx) {
-        // The prev button shoudn't be available at the first page
         debug_assert!(!self.content.pager.is_first());
         self.content.switch_prev(ctx);
-        let new_pager = self.content.pager();
-        self.hint.update(new_pager);
-        self.action_bar.update(new_pager);
+        self.hint.update(self.content.pager());
+        self.action_bar.update(self.content.pager());
     }
 }
 
-impl<'a> Component for LongContentScreen<'a> {
+impl<'a, F> Component for LongContentScreen<'a, F>
+where
+    F: Fn(&[u8], u16),
+{
     type Msg = LongContentScreenMsg;
+
     fn place(&mut self, bounds: Rect) -> Rect {
-        // assert full screen
         debug_assert_eq!(bounds.height(), SCREEN.height());
         debug_assert_eq!(bounds.width(), SCREEN.width());
 
@@ -124,7 +129,10 @@ impl<'a> Component for LongContentScreen<'a> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<'a> crate::trace::Trace for LongContentScreen<'a> {
+impl<'a, F> crate::trace::Trace for LongContentScreen<'a, F>
+where
+    F: Fn(&[u8], u16),
+{
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("LongContentScreen");
         t.child("Header", &self.header);
@@ -134,22 +142,28 @@ impl<'a> crate::trace::Trace for LongContentScreen<'a> {
     }
 }
 
-struct LongContent {
+struct LongContent<F>
+where
+    F: Fn(&[u8], u16),
+{
     pager: Pager,
     cache: PageCache,
     area: Rect,
     state: ContentState,
-    remote: u8,
+    request_cb: F,
 }
 
-impl LongContent {
-    fn new(pages: u16, remote: u8) -> Self {
+impl<F> LongContent<F>
+where
+    F: Fn(&[u8], u16),
+{
+    fn new(pages: u16, request_cb: F) -> Self {
         Self {
             pager: Pager::new(pages),
             cache: PageCache::new(),
             area: Rect::zero(),
             state: ContentState::Uninit,
-            remote,
+            request_cb,
         }
     }
 
@@ -163,7 +177,6 @@ impl LongContent {
         self.pager.goto_next();
         self.cache.go_next();
 
-        // Request prefetch if there's another page after
         if self.pager.has_next() && self.cache.is_at_head() {
             let next = self.pager.next() as usize;
             self.request_page(ctx, next);
@@ -177,7 +190,6 @@ impl LongContent {
         self.pager.goto_prev();
         self.cache.go_prev();
 
-        // Request prefetch if there's another page before
         if self.pager.has_prev() && self.cache.is_at_tail() {
             let prev = self.pager.prev() as usize;
             self.request_page(ctx, prev);
@@ -185,7 +197,7 @@ impl LongContent {
         }
     }
 
-    fn request_page(&mut self, ctx: &mut EventCtx, idx: usize) {
+    fn request_page(&self, ctx: &mut EventCtx, idx: usize) {
         let data = UtilEnum::RequestPage { idx };
 
         let mut arena = [MaybeUninit::<u8>::uninit(); 200];
@@ -198,13 +210,15 @@ impl LongContent {
         )
         .unwrap();
 
-        let msg = IpcMessage::new(idx as u16, &bytes);
-        unwrap!(msg.send(RemoteSysTask::Unknown(self.remote), CoreIpcService::Util.into()));
+        (self.request_cb)(&bytes, idx as u16);
         ctx.request_anim_frame();
     }
 }
 
-impl Component for LongContent {
+impl<F> Component for LongContent<F>
+where
+    F: Fn(&[u8], u16),
+{
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -214,8 +228,7 @@ impl Component for LongContent {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if matches!(event, Event::Attach(AttachType::Initial)) {
-            // debug_assert!(self.cache.state == CacheState::Empty);
-            // Load content into cache if needed
+            debug_assert!(self.state == ContentState::Uninit);
             self.request_page(ctx, 0);
         }
 
@@ -275,16 +288,17 @@ impl Component for LongContent {
             )
             .with_bounds(self.area);
 
-            // must fit parameter doesn't have effect here
             debug_assert!(matches!(layout.fit_text(text), LayoutFit::Fitting { .. }));
-
             layout.render_text(text, target, true)
         });
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for LongContent {
+impl<F> crate::trace::Trace for LongContent<F>
+where
+    F: Fn(&[u8], u16),
+{
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("LongContent");
         t.int("current_page", self.pager.current() as i64);

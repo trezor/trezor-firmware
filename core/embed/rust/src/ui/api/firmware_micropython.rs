@@ -1351,10 +1351,21 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
 
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
-        let remote: u8 = kwargs.get(Qstr::MP_QSTR_remote)?.try_into()?;
+
+        let request_callback: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_request_cb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let request_cb = request_callback.map(|cb| {
+            move |bytes: &[u8], idx: u16| {
+                cb.call_with_n_args(&[bytes.try_into().unwrap(), idx.try_into().unwrap()])
+                    .unwrap();
+            }
+        });
 
         // Pass the slice directly to the trait function
-        let layout = ModelUI::process_ipc_message(data, remote)?;
+        let layout = ModelUI::process_ipc_message(data, request_cb.unwrap())?;
         Ok(layout.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -2282,7 +2293,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def process_ipc_message(
     ///     *,
     ///     data: bytes,
-    ///     remote: int,
+    ///     request_cb: Callable[[bytes, int], None] | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),

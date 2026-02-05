@@ -868,7 +868,7 @@ def tutorial() -> LayoutObj[UiResult]:
 def process_ipc_message(
     *,
     data: bytes,
-    remote: int,
+    request_cb: Callable[[bytes, int], None] | None = None,
 ) -> LayoutObj[UiResult]:
     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
 

@@ -42,7 +42,7 @@ pub trait FirmwareUI {
     fn confirm_long(
         title: TString<'static>,
         pages: usize,
-        remote: u8,
+        request_cb: impl Fn(&[u8], u16) + 'static,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_address(
@@ -514,10 +514,14 @@ pub trait FirmwareUI {
     ///
     /// # Arguments
     /// * `data` - Byte slice containing the rkyv-encoded TrezorEnum message
-    /// * `app_id` - Application identifier
+    /// * `request_cb` - Callback function to request firther information during
+    ///   processing
     ///
     /// # Returns
     /// A Result containing the layout object or an error if deserialization
     /// fails
-    fn process_ipc_message(data: &[u8], extapp_id: u8) -> Result<Gc<LayoutObj>, Error>;
+    fn process_ipc_message(
+        data: &[u8],
+        request_cb: impl Fn(&[u8], u16) + 'static,
+    ) -> Result<Gc<LayoutObj>, Error>;
 }

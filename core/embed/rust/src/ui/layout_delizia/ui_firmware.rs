@@ -1356,8 +1356,4 @@ impl FirmwareUI for UIDelizia {
         let flow = flow::show_tutorial::new_show_tutorial()?;
         Ok(flow)
     }
-
-    fn process_ipc_message(_data: &[u8], _remote: u8) -> Result<Gc<LayoutObj>, Error> {
-        Err(Error::NotImplementedError)
-    }
 }

@@ -74,6 +74,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         task.unload()
         raise exception
 
+    def request_callback(data: bytes, id: int = 0) -> None:
+        io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UTIL, id), data)
+
     while True:
         if not task.is_running():
             raise DataError(f"Task stopped: {request.instance_id}")
@@ -88,7 +91,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 
         if service == _SERVICE_UI:
             result = await interact(
-                trezorui_api.process_ipc_message(data=bytes(msg.data), remote=msg.remote),
+                trezorui_api.process_ipc_message(
+                    data=bytes(msg.data), request_cb=request_callback
+                ),
                 None,
                 raise_on_cancel=None,
             )
