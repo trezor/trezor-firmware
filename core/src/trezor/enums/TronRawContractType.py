@@ -4,4 +4,4 @@
 
 TransferContract = 1
 TriggerSmartContract = 31
-TronFreezeBalanceV2Contract = 54
+FreezeBalanceV2Contract = 54

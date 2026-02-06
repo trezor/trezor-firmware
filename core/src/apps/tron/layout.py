@@ -9,6 +9,7 @@ from .helpers import get_encoded_address
 if TYPE_CHECKING:
     from trezor.messages import (
         EthereumTokenInfo,
+        TronFreezeBalanceV2Contract,
         TronTransferContract,
         TronTriggerSmartContract,
     )
@@ -85,4 +86,33 @@ async def confirm_known_trc20_smart_contract(
         total_amount=format_token_amount(amount, token),
         maximum_fee=format_energy_amount(fee_limit),
         chunkify=True,
+    )
+
+
+async def confirm_freeze_balance(contract: TronFreezeBalanceV2Contract) -> None:
+    from trezor.enums import TronResourceCode
+    from trezor.ui.layouts import confirm_address, confirm_properties
+
+    await confirm_address(
+        title=TR.ethereum__staking_stake,
+        address=get_encoded_address(contract.owner_address),
+        chunkify=True,
+    )
+
+    await confirm_properties(
+        br_name="confirm_tron_freeze",
+        title=TR.words__title_summary,
+        props=(
+            (TR.words__amount, format_trx_amount(contract.frozen_balance), False),
+            (
+                TR.words__resource_requested,
+                (
+                    "Bandwidth"
+                    if contract.resource == TronResourceCode.BANDWIDTH
+                    else "Energy"
+                ),
+                False,
+            ),
+        ),
+        hold=True,
     )

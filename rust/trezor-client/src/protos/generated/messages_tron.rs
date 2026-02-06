@@ -2770,8 +2770,8 @@ pub mod tron_raw_transaction {
             TransferContract = 1,
             // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.TriggerSmartContract)
             TriggerSmartContract = 31,
-            // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.TronFreezeBalanceV2Contract)
-            TronFreezeBalanceV2Contract = 54,
+            // @@protoc_insertion_point(enum_value:hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRawContractType.FreezeBalanceV2Contract)
+            FreezeBalanceV2Contract = 54,
         }
 
         impl ::protobuf::Enum for TronRawContractType {
@@ -2785,7 +2785,7 @@ pub mod tron_raw_transaction {
                 match value {
                     1 => ::std::option::Option::Some(TronRawContractType::TransferContract),
                     31 => ::std::option::Option::Some(TronRawContractType::TriggerSmartContract),
-                    54 => ::std::option::Option::Some(TronRawContractType::TronFreezeBalanceV2Contract),
+                    54 => ::std::option::Option::Some(TronRawContractType::FreezeBalanceV2Contract),
                     _ => ::std::option::Option::None
                 }
             }
@@ -2794,7 +2794,7 @@ pub mod tron_raw_transaction {
                 match str {
                     "TransferContract" => ::std::option::Option::Some(TronRawContractType::TransferContract),
                     "TriggerSmartContract" => ::std::option::Option::Some(TronRawContractType::TriggerSmartContract),
-                    "TronFreezeBalanceV2Contract" => ::std::option::Option::Some(TronRawContractType::TronFreezeBalanceV2Contract),
+                    "FreezeBalanceV2Contract" => ::std::option::Option::Some(TronRawContractType::FreezeBalanceV2Contract),
                     _ => ::std::option::Option::None
                 }
             }
@@ -2802,7 +2802,7 @@ pub mod tron_raw_transaction {
             const VALUES: &'static [TronRawContractType] = &[
                 TronRawContractType::TransferContract,
                 TronRawContractType::TriggerSmartContract,
-                TronRawContractType::TronFreezeBalanceV2Contract,
+                TronRawContractType::FreezeBalanceV2Contract,
             ];
         }
 
@@ -2816,7 +2816,7 @@ pub mod tron_raw_transaction {
                 let index = match self {
                     TronRawContractType::TransferContract => 0,
                     TronRawContractType::TriggerSmartContract => 1,
-                    TronRawContractType::TronFreezeBalanceV2Contract => 2,
+                    TronRawContractType::FreezeBalanceV2Contract => 2,
                 };
                 Self::enum_descriptor().value_by_index(index)
             }
@@ -2861,22 +2861,22 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0e2E.hw.trezor.messages.tron.TronFreezeBalanceV2Contract.TronResourceC\
     odeR\x08resource\"-\n\x10TronResourceCode\x12\r\n\tBANDWIDTH\x10\0\x12\n\
     \n\x06ENERGY\x10\x01\"-\n\rTronSignature\x12\x1c\n\tsignature\x18\x01\
-    \x20\x02(\x0cR\tsignature\"\xbc\x05\n\x12TronRawTransaction\x12&\n\x0fre\
+    \x20\x02(\x0cR\tsignature\"\xb8\x05\n\x12TronRawTransaction\x12&\n\x0fre\
     f_block_bytes\x18\x01\x20\x02(\x0cR\rrefBlockBytes\x12$\n\x0eref_block_h\
     ash\x18\x04\x20\x02(\x0cR\x0crefBlockHash\x12\x1e\n\nexpiration\x18\x08\
     \x20\x02(\x04R\nexpiration\x12\x12\n\x04data\x18\n\x20\x01(\x0cR\x04data\
     \x12W\n\x08contract\x18\x0b\x20\x03(\x0b2;.hw.trezor.messages.tron.TronR\
     awTransaction.TronRawContractR\x08contract\x12\x1c\n\ttimestamp\x18\x0e\
     \x20\x02(\x04R\ttimestamp\x12\x1b\n\tfee_limit\x18\x12\x20\x01(\x04R\x08\
-    feeLimit\x1a\x8f\x03\n\x0fTronRawContract\x12c\n\x04type\x18\x01\x20\x02\
+    feeLimit\x1a\x8b\x03\n\x0fTronRawContract\x12c\n\x04type\x18\x01\x20\x02\
     (\x0e2O.hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronR\
     awContractTypeR\x04type\x12j\n\tparameter\x18\x02\x20\x02(\x0b2L.hw.trez\
     or.messages.tron.TronRawTransaction.TronRawContract.TronRawParameterR\tp\
     arameter\x1aC\n\x10TronRawParameter\x12\x19\n\x08type_url\x18\x01\x20\
-    \x02(\tR\x07typeUrl\x12\x14\n\x05value\x18\x02\x20\x02(\x0cR\x05value\"f\
+    \x02(\tR\x07typeUrl\x12\x14\n\x05value\x18\x02\x20\x02(\x0cR\x05value\"b\
     \n\x13TronRawContractType\x12\x14\n\x10TransferContract\x10\x01\x12\x18\
-    \n\x14TriggerSmartContract\x10\x1f\x12\x1f\n\x1bTronFreezeBalanceV2Contr\
-    act\x106B8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageTron\
+    \n\x14TriggerSmartContract\x10\x1f\x12\x1b\n\x17FreezeBalanceV2Contract\
+    \x106B8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageTron\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

@@ -378,7 +378,7 @@ if TYPE_CHECKING:
     class TronRawContractType(IntEnum):
         TransferContract = 1
         TriggerSmartContract = 31
-        TronFreezeBalanceV2Contract = 54
+        FreezeBalanceV2Contract = 54
 
     class MessageType(IntEnum):
         Initialize = 0

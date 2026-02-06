@@ -40,7 +40,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     await paths.validate_path(keychain, msg.address_n)
     node = keychain.derive(msg.address_n)
 
-    # It is also not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
+    # It is not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
     if msg.data and msg.data != b"":
         if len(msg.data) > _MAX_DATA_LENGTH:
             raise DataError("Tron: data field too long")
@@ -84,6 +84,9 @@ async def process_contract(
     contract: MessageType,
     fee_limit: int,
 ) -> TronRawContract:
+
+    # Importing individual enums would de-clutter the code a bit.
+    # But it causes type error in messages.TronRawContract.type.
     from trezor.enums import TronRawContractType
     from trezor.ui.layouts import confirm_tron_send
 
@@ -95,9 +98,15 @@ async def process_contract(
         if contract.amount > _INT64_MAX:
             raise DataError("Tron: invalid transfer amount")
         await confirm_tron_send(layout.format_trx_amount(contract.amount), None)
+
     elif messages.TronTriggerSmartContract.is_type_of(contract):
         contract_type = TronRawContractType.TriggerSmartContract
         await process_smart_contract(contract, fee_limit)
+
+    elif messages.TronFreezeBalanceV2Contract.is_type_of(contract):
+        contract_type = TronRawContractType.FreezeBalanceV2Contract
+        await layout.confirm_freeze_balance(contract)
+
     else:
         raise DataError("Tron: contract type unknown")
 
@@ -123,7 +132,6 @@ async def process_smart_contract(
         await layout.confirm_unknown_smart_contract(contract, fee_limit)
 
 
-# TODO: Maybe refactor with ETH. Code duplicated from ethereum/sign_tx.py:_handle_known_contract_calls
 async def process_known_trc20_contract(
     contract: TronTriggerSmartContract, fee_limit: int
 ) -> bool:
@@ -166,7 +174,6 @@ async def process_known_trc20_contract(
         return False
 
 
-# TODO: Placeholder for actual logic
 def get_token_info(token_address: AnyBytes) -> EthereumTokenInfo | None:
     # Shasta testnet USDT
     if (
