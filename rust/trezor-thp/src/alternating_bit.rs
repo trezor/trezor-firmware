@@ -1,4 +1,7 @@
-use crate::control_byte::{ACK_BIT, SEQ_BIT};
+use crate::{
+    control_byte::{ACK_BIT, SEQ_BIT},
+    error::Error,
+};
 
 #[derive(Clone, Copy)]
 pub struct SyncBits(u8);
@@ -39,6 +42,15 @@ impl From<u8> for SyncBits {
     }
 }
 
+impl TryFrom<&[u8]> for SyncBits {
+    type Error = Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Error> {
+        let first_byte = bytes.first().ok_or(Error::MalformedData)?;
+        Ok(Self::from(*first_byte))
+    }
+}
+
 impl From<SyncBits> for u8 {
     fn from(sb: SyncBits) -> Self {
         sb.0
@@ -52,7 +64,7 @@ impl Default for SyncBits {
 }
 
 /// Alternating Bit Protocol state for a single channel.
-#[cfg_attr(any(test, debug_assertions), derive(Debug, PartialEq))]
+#[cfg_attr(any(test, debug_assertions), derive(Debug, PartialEq, Eq))]
 pub struct ChannelSync {
     /// If true we are waiting for an ACK and cannot send further messages.
     can_send: bool,
@@ -91,6 +103,7 @@ impl ChannelSync {
         Some(sb) // start sending, use these bits
     }
 
+    /// FIXME maybe set can_send in send_start and remove this?
     /// Call after sending last message fragment, wait for ACK before allowing next message.
     /// NOTE: Consider saving some kind of timestamp or identifier instead of bool.
     pub fn send_finish(&mut self) {
@@ -128,6 +141,7 @@ impl ChannelSync {
 
     /// Serialize for storage.
     /// can_send_bit | sync_receive_bit | sync_send_bit | ack_piggybacking | rfu(4)
+    #[cfg(test)]
     pub fn to_u8(&self) -> u8 {
         let mut res = 0u8;
         if self.can_send {
@@ -146,6 +160,7 @@ impl ChannelSync {
     }
 
     /// Deserialize from storage.
+    #[cfg(test)]
     pub fn from_u8(val: u8) -> Self {
         Self {
             can_send: (val & 0x80 != 0),
