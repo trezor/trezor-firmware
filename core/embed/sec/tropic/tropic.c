@@ -1022,7 +1022,8 @@ secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
     goto cleanup;
   }
 
-  if (lt_r_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config) != LT_OK){
+  if (lt_r_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config) !=
+      LT_OK) {
     goto cleanup;
   }
 
@@ -1032,7 +1033,8 @@ secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
     goto cleanup;
   }
 
-  if (lt_i_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config) != LT_OK) {
+  if (lt_i_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config) !=
+      LT_OK) {
     goto cleanup;
   }
 
@@ -1044,7 +1046,7 @@ secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
 
   ret = sectrue;
 
-  cleanup:
+cleanup:
   memzero(&sensors_config, sizeof(sensors_config));
   tropic_set_ui_progress(NULL);
   return ret;
