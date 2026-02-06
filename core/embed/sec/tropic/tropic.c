@@ -1000,40 +1000,54 @@ void tropic_validate_sensors_time(uint32_t *time_ms) {
   lt_i_config_read_time(time_ms);
 }
 
-secbool tropic_validate_sensors(void) {
+secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
+  tropic_set_ui_progress(ui_progress);
+
+  secbool ret = secfalse;
+  uint32_t sensors_config = 0;
+
   if (!tropic_session_start()) {
-    return secfalse;
+    goto cleanup;
+  }
+
+  tropic_driver_t *drv = &g_tropic_driver;
+  if (drv->pairing_key_index == TROPIC_FACTORY_PAIRING_KEY_SLOT) {
+    // In development builds the Tropic configuration might not bet set.
+    ret = sectrue;
+    goto cleanup;
   }
 
   lt_handle_t *tropic_handle = tropic_get_handle();
   if (!tropic_handle) {
-    return secfalse;
+    goto cleanup;
   }
 
-  uint32_t sensors_config = 0;
-  lt_ret_t ret =
-      lt_r_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config);
-  if (ret != LT_OK) {
-    return secfalse;
+  if (lt_r_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config) != LT_OK){
+    goto cleanup;
   }
 
   uint32_t expected_sensors_config =
       g_reversible_configuration.obj[TR01_CFG_SENSORS_IDX];
   if (sensors_config != expected_sensors_config) {
-    return secfalse;
+    goto cleanup;
   }
 
-  ret = lt_i_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config);
-  if (ret != LT_OK) {
-    return secfalse;
+  if (lt_i_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config) != LT_OK) {
+    goto cleanup;
   }
+
   expected_sensors_config =
       g_irreversible_configuration.obj[TR01_CFG_SENSORS_IDX];
   if (sensors_config != expected_sensors_config) {
-    return secfalse;
+    goto cleanup;
   }
 
-  return sectrue;
+  ret = sectrue;
+
+  cleanup:
+  memzero(&sensors_config, sizeof(sensors_config));
+  tropic_set_ui_progress(NULL);
+  return ret;
 }
 
 #endif  // USE_STORAGE
