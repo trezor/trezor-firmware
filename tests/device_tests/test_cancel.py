@@ -36,13 +36,18 @@ from ..common import TEST_ADDRESS_N
     ],
 )
 def test_cancel_message_via_cancel(session: Session, message):
-    def input_flow():
+    def input_flow(cancel_fn):
         yield
-        session.cancel()
+        cancel_fn()
 
     with session.test_ctx as client, pytest.raises(Cancelled):
         client.set_expected_responses([m.ButtonRequest(), m.Failure()])
-        client.set_input_flow(input_flow)
+        client.set_input_flow(input_flow(session.cancel))
+        session.call(message)
+
+    with session.test_ctx as client, pytest.raises(Cancelled):
+        client.set_expected_responses([m.ButtonRequest(), m.Failure()])
+        client.set_input_flow(input_flow(session.client.cancel))
         session.call(message)
 
 

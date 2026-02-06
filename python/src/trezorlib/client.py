@@ -553,11 +553,8 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
 
     def cancel(self) -> None:
         """Send a Cancel signal to the device, interrupting the current workflow."""
-        try:
-            with self._get_any_session() as session:
-                session.call_raw(messages.Cancel())
-        except exceptions.Cancelled:
-            pass
+        with self._get_any_session() as session:
+            session.cancel()
 
     def lock(self, *, _use_session: SessionType | None = None) -> None:
         """Lock the device with a PIN prompt, if enabled."""
