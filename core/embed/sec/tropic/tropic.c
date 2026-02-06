@@ -1012,7 +1012,7 @@ secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
 
   tropic_driver_t *drv = &g_tropic_driver;
   if (drv->pairing_key_index == TROPIC_FACTORY_PAIRING_KEY_SLOT) {
-    // In development builds the Tropic configuration might not bet set.
+    // In development builds the Tropic configuration might not be set.
     ret = sectrue;
     goto cleanup;
   }
