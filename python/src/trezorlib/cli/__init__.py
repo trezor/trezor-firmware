@@ -196,6 +196,7 @@ ENV_TREZOR_SESSION_ID = os.environ.get("TREZOR_SESSION_ID")
 class TrezorConnection:
     _client: TrezorClient | None = None
     _features: messages.Features | None = None
+    _version: tuple[int, int, int] | None = None
     _transport: Transport | None = None
     _standard_session: Session | None = None
 
@@ -312,6 +313,7 @@ class TrezorConnection:
         self._transport = None
         self._client = None
         self._features = None
+        self._version = None
         self._standard_session = None
 
     def _passphrase_source_resolved(self) -> PassphraseSource:
