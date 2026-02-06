@@ -13,6 +13,7 @@ HERE = Path(__file__).parent
 ROOT = HERE.parent.parent.resolve()
 CONFIG_DIR = ROOT / "tests" / "tropic_model"
 DEST_PATH = CONFIG_DIR / "config.yml"
+CFG_SPEC_DIR = ROOT / "core" / "embed" / "sec" / "tropic" / "tropic_configs.yaml"
 
 # private key used by the Tropic model to sign
 TROPIC_KEY = CONFIG_DIR / "tropic_key.pem"
@@ -36,9 +37,33 @@ RISCV_FW_MINOR = 0
 RISCV_FW_PATCH = 0
 
 
+def get_tropic_configuration(path: Path) -> dict:
+    with open(path, "r") as f:
+        config = yaml.safe_load(f)
+    numbers = {"i_config": {}, "r_config": {}}
+    for key in config["irreversible_configuration"]:
+        assert list(config["irreversible_configuration"][key].keys()) == [
+            "all_except"
+        ], f'unexpected key in i_config: {config["irreversible_configuration"][key].keys()}'
+        number = 0xFFFFFFFF
+        for exclude in config["irreversible_configuration"][key]["all_except"]:
+            number &= ~(1 << exclude)
+        numbers["i_config"][key] = number
+    for key in config["reversible_configuration"]:
+        assert list(config["reversible_configuration"][key].keys()) == [
+            "bits"
+        ], f'unexpected key in r_config: {config["reversible_configuration"][key].keys()}'
+        number = 0
+        for include in config["reversible_configuration"][key]["bits"]:
+            number |= 1 << include
+        numbers["r_config"][key] = number
+    return numbers
+
+
 @click.command()
 @click.option("--check", is_flag=True)
-def generate_config(check: bool) -> None:
+@click.option("--config-path", type=Path, default=CFG_SPEC_DIR)
+def generate_config(check: bool, config_path: Path) -> None:
     tropic_key = serialization.load_pem_private_key(
         TROPIC_KEY.read_bytes(), password=None
     )
@@ -104,6 +129,7 @@ def generate_config(check: bool) -> None:
         + RISCV_FW_MINOR.to_bytes(1, "little")
         + RISCV_FW_MAJOR.to_bytes(1, "little")
     )
+    tropic_cfg = get_tropic_configuration(config_path)
     config_dict = {
         "s_t_priv": "tropic01_ese_private_key_1.pem",
         "s_t_pub": "tropic01_ese_public_key_1.pem",
@@ -119,6 +145,28 @@ def generate_config(check: bool) -> None:
             }
         },
         "riscv_fw_version": riscv_fw_version,
+        "r_config": tropic_cfg["r_config"],
+        "i_config": tropic_cfg["i_config"],
+        "i_pairing_keys": {
+            0: {
+                "value": bytes.fromhex(
+                    "0000000000000000000000000000000000000000000000000000000000000000"
+                ),
+                "state": "invalid",
+            },
+            1: {
+                "value": bytes.fromhex(
+                    "ce8d3ad1ccb633ec7b70c17814a5c76ecd029685050d344745ba05870e587d59"
+                ),
+                "state": "written",
+            },
+            2: {
+                "value": bytes.fromhex(
+                    "842fe321a82474083737ff2b9b88a2af42442db0d8aacc6dc69e99533344b246"
+                ),
+                "state": "written",
+            },
+        },
     }
 
     config = yaml.dump(config_dict)
