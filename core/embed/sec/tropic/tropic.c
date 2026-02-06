@@ -350,9 +350,14 @@ bool tropic_session_start(void) {
       LT_OK) {
     return true;
   }
+#else
+  if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
+      LT_OK) {
+    return true;
+  }
 #endif
 #if !PRODUCTION
-  if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
+  if (tropic_custom_session_start(NULL, TROPIC_FACTORY_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
   }
@@ -595,6 +600,10 @@ static uint16_t get_kek_masks_slot(tropic_driver_t *drv) {
              ? TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT
              : TROPIC_KEK_MASKS_PRIVILEGED_SLOT;
 }
+
+static void lt_r_config_read_time(uint32_t *time_ms) { *time_ms += 51; }
+
+static void lt_i_config_read_time(uint32_t *time_ms) { *time_ms += 51; }
 
 static void lt_mac_and_destroy_time(uint32_t *time_ms) { *time_ms += 51; }
 
@@ -986,40 +995,45 @@ void tropic_pin_unmask_kek_time(uint32_t *time_ms) {
   lt_r_mem_data_read_time(time_ms);
 }
 
-bool tropic_validate_sensors(void) {
+void tropic_validate_sensors_time(uint32_t *time_ms) {
+  lt_r_config_read_time(time_ms);
+  lt_i_config_read_time(time_ms);
+}
+
+secbool tropic_validate_sensors(void) {
   if (!tropic_session_start()) {
-    return false;
+    return secfalse;
   }
 
   lt_handle_t *tropic_handle = tropic_get_handle();
   if (!tropic_handle) {
-    return false;
+    return secfalse;
   }
 
   uint32_t sensors_config = 0;
   lt_ret_t ret =
       lt_r_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config);
   if (ret != LT_OK) {
-    return false;
+    return secfalse;
   }
 
   uint32_t expected_sensors_config =
       g_reversible_configuration.obj[TR01_CFG_SENSORS_IDX];
   if (sensors_config != expected_sensors_config) {
-    return false;
+    return secfalse;
   }
 
   ret = lt_i_config_read(tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config);
   if (ret != LT_OK) {
-    return false;
+    return secfalse;
   }
   expected_sensors_config =
       g_irreversible_configuration.obj[TR01_CFG_SENSORS_IDX];
   if (sensors_config != expected_sensors_config) {
-    return false;
+    return secfalse;
   }
 
-  return true;
+  return sectrue;
 }
 
 #endif  // USE_STORAGE

@@ -879,10 +879,12 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
       "rng_fill_buffer_strong failed");
   ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek),
          "derive_kek_set failed");
-#if USE_TROPIC
-  ensure(tropic_validate_sensors() ? sectrue : secfalse,
-         "Tropic sensors config mismatch");
-#endif  // USE_TROPIC
+
+#if USE_TROPIC & PRODUCTION
+  // In developmnet builds the Trpoic configuration migt not bet set.
+  ensure(tropic_validate_sensors(), "Tropic sensors config mismatch");
+#endif  // USE_TROPIC & PRODUCTION
+
   rfc7539_init(&ctx, kek, keiv);
   memzero(kek, sizeof(kek));
   chacha20poly1305_encrypt(&ctx, cached_keys, ekeys, KEYS_SIZE);
@@ -927,6 +929,7 @@ void set_pin_time(uint32_t *time_ms, uint8_t *optiga_sec,
 #if USE_TROPIC
     rng_fill_buffer_strong_time(time_ms);  // kek
     tropic_pin_set_kek_masks_time(time_ms);
+    tropic_validate_sensors_time(time_ms);
 #endif
   }
 

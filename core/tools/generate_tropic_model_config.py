@@ -44,7 +44,7 @@ def get_tropic_configuration(path: Path) -> dict:
     for key in config["irreversible_configuration"]:
         assert list(config["irreversible_configuration"][key].keys()) == [
             "all_except"
-        ], f'unexpected key in i_congig: {config["irreversible_configuration"][key].keys()}'
+        ], f'unexpected key in i_config: {config["irreversible_configuration"][key].keys()}'
         number = 0xFFFFFFFF
         for exclude in config["irreversible_configuration"][key]["all_except"]:
             number &= ~(1 << exclude)
@@ -52,7 +52,7 @@ def get_tropic_configuration(path: Path) -> dict:
     for key in config["reversible_configuration"]:
         assert list(config["reversible_configuration"][key].keys()) == [
             "bits"
-        ], f'unexpected key in r_congig: {config["reversible_configuration"][key].keys()}'
+        ], f'unexpected key in r_config: {config["reversible_configuration"][key].keys()}'
         number = 0
         for include in config["reversible_configuration"][key]["bits"]:
             number |= 1 << include
