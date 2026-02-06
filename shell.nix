@@ -106,7 +106,7 @@ stdenvNoCC.mkDerivation ({
     pkg-config
     poetry
     ps
-    oldNixpkgs.protobuf3_19
+    protobuf_31  # version needs to be <= than the one in pyproject.toml
     pyright
     python3
     (mkBinOnlyWrapper rustNightly)
