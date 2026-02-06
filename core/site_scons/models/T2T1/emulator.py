@@ -40,6 +40,11 @@ def configure(
         ("FLASH_BLOCK_WORDS", "1"),
     ]
 
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/unix/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
+
     if "sd_card" in features_wanted:
         features_available.append("sd_card")
         sources += [

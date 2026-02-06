@@ -63,7 +63,7 @@ secbool secret_verify_header(void) {
   return bootloader_locked;
 }
 
-static void secret_erase(void) {
+void secret_erase(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
   mpu_restore(mpu_mode);
@@ -199,10 +199,6 @@ void secret_prepare_fw(secbool allow_run_with_secret,
 
 void secret_init(void) {}
 
-void secret_safety_erase(void) {
-  // On STM32F4, secret keys are not used, so the entire
-  // storage must be erased.
-  ensure(erase_storage(NULL), NULL);
-}
+void secret_safety_erase(void) {}
 
 #endif  // KERNEL_MODE

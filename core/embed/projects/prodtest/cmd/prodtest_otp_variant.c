@@ -23,7 +23,6 @@
 
 #include <rtl/cli.h>
 #include <rtl/printf.h>
-#include <sec/secret.h>
 #include <sys/flash_otp.h>
 
 #include <stdlib.h>
@@ -31,6 +30,10 @@
 
 #ifdef USE_TROPIC
 #include "prodtest_tropic.h"
+#endif
+
+#ifdef USE_SECRET
+#include <sec/secret.h>
 #endif
 
 static void prodtest_otp_variant_read(cli_t* cli) {

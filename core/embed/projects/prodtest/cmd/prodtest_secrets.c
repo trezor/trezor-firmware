@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef USE_SECRET
+
 #include <trezor_model.h>
 
 #include <string.h>
@@ -348,6 +350,19 @@ static void prodtest_secrets_lock(cli_t* cli) {
 }
 #endif
 
+#if !PRODUCTION
+static void prodtest_secrets_reset(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  secret_erase();
+
+  cli_ok(cli, "");
+}
+#endif
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -387,4 +402,15 @@ PRODTEST_CLI_CMD(
   .info = "Locks the secret sector",
   .args = ""
 );
+#endif
+
+#if !PRODUCTION
+PRODTEST_CLI_CMD(
+  .name = "secrets-reset",
+  .func = prodtest_secrets_reset,
+  .info = "Erase the whole secret sector",
+  .args = ""
+);
+
+#endif
 #endif

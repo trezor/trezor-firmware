@@ -25,13 +25,19 @@
 #include <sec/fwutils.h>
 #include <sec/random_delays.h>
 #include <sec/rng_strong.h>
-#include <sec/secret.h>
-#include <sec/secret_keys.h>
 #include <sec/unit_properties.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/system.h>
+
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
+
+#ifdef USE_SECRET_KEYS
+#include <sec/secret_keys.h>
+#endif
 
 #ifdef USE_BACKUP_RAM
 #include <sec/backup_ram.h>
@@ -136,10 +142,12 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
                                                  device_sn_size);
     } break;
 
+#ifdef USE_SECRET
 #ifdef LOCKABLE_BOOTLOADER
     case SMCALL_SECRET_BOOTLOADER_LOCKED: {
       args[0] = secret_bootloader_locked();
     } break;
+#endif
 #endif
 
 #ifdef USE_NRF_AUTH
@@ -212,10 +220,12 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
 #endif
 #endif  // USE_OPTIGA
 
+#ifdef USE_SECRET_KEYS
     case SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
       uint8_t *dest = (uint8_t *)args[0];
       args[0] = secret_key_delegated_identity__verified(dest);
     } break;
+#endif
 
     case SMCALL_STORAGE_SETUP: {
       PIN_UI_WAIT_CALLBACK callback = (PIN_UI_WAIT_CALLBACK)args[0];
