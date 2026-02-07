@@ -163,12 +163,7 @@
     "bitcoin__locktime_set_to_blockheight": "Sperrzeit festgelegt auf Blockhöhe",
     "bitcoin__lot_of_change_outputs": "Viele Wechselgeldausgaben.",
     "bitcoin__multiple_accounts": "Mehrere Konten",
-    "bitcoin__new_fee_rate": {
-      "Bolt": "Neuer Gebührensatz:",
-      "Caesar": "Neuer Gebührensatz:",
-      "Delizia": "Neuer Gebührensatz:",
-      "Eckhart": "Neue Gebühren-Rate:"
-    },
+    "bitcoin__new_fee_rate": "Neuer Gebührensatz",
     "bitcoin__simple_send_of": "Einfaches Senden von",
     "bitcoin__ticket_amount": "Ticketbetrag",
     "bitcoin__title_confirm_details": "Details bestätigen",

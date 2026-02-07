@@ -106,7 +106,7 @@
     "bitcoin__locktime_set_to_blockheight": "Locktime set to blockheight",
     "bitcoin__lot_of_change_outputs": "A lot of change-outputs.",
     "bitcoin__multiple_accounts": "Multiple accounts",
-    "bitcoin__new_fee_rate": "New fee rate:",
+    "bitcoin__new_fee_rate": "New fee rate",
     "bitcoin__simple_send_of": "Simple send of",
     "bitcoin__ticket_amount": "Ticket amount",
     "bitcoin__title_confirm_details": "Confirm details",

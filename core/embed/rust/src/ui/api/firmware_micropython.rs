@@ -1701,15 +1701,23 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     fee: str,
     ///     fee_label: str,
     ///     title: str | None = None,
-    ///     account_items: Sequence[PropertyType] | None = None,
+    ///     account_items: Iterable[StrPropertyType] | None = None,
     ///     account_title: str | None = None,
-    ///     extra_items: Sequence[PropertyType] | None = None,
+    ///     extra_items: Iterable[StrPropertyType] | None = None,
     ///     extra_title: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     back_button: bool = False,
     ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Confirm summary of a transaction."""
+    ///     """Confirm summary of a transaction.
+    ///
+    ///     account_items and extra_items need to be:
+    ///      * a list (on Eckhart and Caesar)
+    ///      * an iterable (on Delizia)
+    ///      * None / non-None on Bolt
+    ///
+    ///     TODO: get rid of account_items and extra_items for consistency!
+    ///     """
     Qstr::MP_QSTR_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),
 
     /// def confirm_with_info(
@@ -2065,7 +2073,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_info_with_cancel(
     ///     *,
     ///     title: str,
-    ///     items: Sequence[PropertyType],
+    ///     items: list[StrPropertyType],
     ///     horizontal: bool = False,
     ///     chunkify: bool = False,
     /// ) -> LayoutObj[UiResult]:

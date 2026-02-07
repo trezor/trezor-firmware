@@ -26,7 +26,7 @@ from .helpers.utils import (
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Callable, Literal
+    from typing import Callable, Iterable, Literal
 
     from trezor import messages
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
@@ -622,15 +622,15 @@ async def confirm_tx(
 ) -> None:
     total_amount = format_coin_amount(spending, network_id)
     fee_amount = format_coin_amount(fee, network_id)
-    items: list[PropertyType] = [
-        (TR.cardano__network, f"{protocol_magics.to_ui_string(protocol_magic)}", True),
+    items: Iterable[StrPropertyType] = (
+        (TR.cardano__network, protocol_magics.to_ui_string(protocol_magic), True),
         (
             TR.cardano__valid_since,
-            f"{format_optional_int(validity_interval_start)}",
+            format_optional_int(validity_interval_start),
             True,
         ),
-        (TR.cardano__ttl, f"{format_optional_int(ttl)}", True),
-    ]
+        (TR.cardano__ttl, format_optional_int(ttl), True),
+    )
 
     await layouts.confirm_cardano_tx(
         total_amount,

@@ -143,7 +143,7 @@
     "bitcoin__locktime_set_to_blockheight": "Locktime je nastaven na výšku bloku",
     "bitcoin__lot_of_change_outputs": "Hodně výstupů zpět na peněženku.",
     "bitcoin__multiple_accounts": "Více účtů",
-    "bitcoin__new_fee_rate": "Nová výše poplatku:",
+    "bitcoin__new_fee_rate": "Nová výše poplatku",
     "bitcoin__simple_send_of": "Jednoduché odeslání",
     "bitcoin__ticket_amount": "Částka za lístek",
     "bitcoin__title_confirm_details": "Potvrdit údaje",

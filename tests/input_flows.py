@@ -1309,32 +1309,32 @@ class InputFlowSignTxInformation(InputFlowBase):
     def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
-    def assert_content(self, content: str, title_path: str) -> None:
-        assert TR.translate(title_path) in content
+    def assert_content(self, content: str) -> None:
+        assert TR.words__account in content
         assert "Legacy #6" in content
         assert TR.confirm_total__fee_rate in content
         assert "71.56 sat" in content
 
     def input_flow_bolt(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_bolt(self.client)
-        self.assert_content(content, "confirm_total__sending_from_account")
+        self.assert_content(content)
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_caesar(self.client)
         print("content", content)
-        self.assert_content(content, "confirm_total__title_sending_from")
+        self.assert_content(content)
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_delizia(self.client)
-        self.assert_content(content, "confirm_total__sending_from_account")
+        self.assert_content(content)
         self.debug.swipe_up()
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_eckhart(self.client)
-        self.assert_content(content, "words__account")
+        self.assert_content(content)
         self.debug.press_yes()
 
 
@@ -1342,8 +1342,8 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
     def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
-    def assert_content(self, content: str, title_path: str) -> None:
-        assert TR.translate(title_path) in content
+    def assert_content(self, content: str) -> None:
+        assert TR.words__account in content
         assert TR.bitcoin__multiple_accounts in content
         assert TR.confirm_total__fee_rate in content
         assert "18.33 sat" in content
@@ -1354,7 +1354,7 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         self.debug.press_yes()
 
         content = yield from sign_tx_go_to_info_bolt(self.client)
-        self.assert_content(content, "confirm_total__sending_from_account")
+        self.assert_content(content)
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
@@ -1363,18 +1363,18 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         self.debug.press_yes()
 
         content = yield from sign_tx_go_to_info_caesar(self.client)
-        self.assert_content(content, "confirm_total__title_sending_from")
+        self.assert_content(content)
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_delizia(self.client, multi_account=True)
-        self.assert_content(content, "confirm_total__sending_from_account")
+        self.assert_content(content)
         self.debug.swipe_up()
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         content = yield from sign_tx_go_to_info_eckhart(self.client, multi_account=True)
-        self.assert_content(content, "words__account")
+        self.assert_content(content)
         self.debug.press_yes()
 
 
