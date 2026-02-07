@@ -5,9 +5,10 @@ from trezor import protobuf
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from trezorio import WireInterface
-    from typing import Awaitable, Container, TypeVar, overload
+    from typing import Any, Awaitable, Container, NoReturn, TypeVar, overload
 
     from storage.cache_common import DataCache
+    from trezor import loop
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
     T = TypeVar("T")
@@ -27,6 +28,23 @@ class Message:
     ) -> None:
         self.data = message_data
         self.type = message_type
+
+
+class UnexpectedHandler:
+    """Create a task for handling unexpected messages."""
+
+    def __init__(self, ctx: "Context") -> None:
+        self.ctx = ctx
+
+    def create(self) -> loop.Task[NoReturn]: ...
+
+    def __enter__(self) -> None:
+        assert self.ctx._unexpected_handler is None
+        self.ctx._unexpected_handler = self
+
+    def __exit__(self, _exc_type: Any, _exc_val: Any, _tb: Any) -> None:
+        assert self.ctx._unexpected_handler is self
+        self.ctx._unexpected_handler = None
 
 
 class Context:
@@ -49,6 +67,8 @@ class Context:
         self.message_type_enum_name = message_type_enum_name
         if channel_id is not None:
             self.channel_id = channel_id
+        # set via `UnexpectedHandler` context manager
+        self._unexpected_handler: UnexpectedHandler | None = None
 
     if TYPE_CHECKING:
 
@@ -98,6 +118,17 @@ class Context:
         await self.write(msg)
         del msg
         return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
+
+    def create_unexpected_handler(self) -> loop.Task[NoReturn]:
+        if self._unexpected_handler is not None:
+            return self._unexpected_handler.create()
+
+        async def _task() -> NoReturn:
+            """Default unexpected message handler - cancels current workflow."""
+            await self.read(expected_types=())
+            assert False  # the above read will always raise
+
+        return _task()
 
     def release(self) -> None:
         """Release resources used by the context, eg. clear context cache."""
