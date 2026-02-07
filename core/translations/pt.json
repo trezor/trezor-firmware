@@ -130,7 +130,12 @@
       "Delizia": "Backup da carteira concluído",
       "Eckhart": "Backup da carteira concluído."
     },
-    "backup__title_backup_wallet": "Fazer backup da carteira",
+    "backup__title_backup_wallet": {
+      "Bolt": "",
+      "Caesar": "Fazer backup da carteira",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "backup__title_create_wallet_backup": "Criar backup da carteira",
     "backup__title_skip": "Pular backup",
     "backup__want_to_skip": "Tem certeza de que deseja pular o backup?",
@@ -768,6 +773,8 @@
     "ethereum__approve_unlimited_template": "Aprovando quantia ilimitada de {0}",
     "ethereum__contract_address": "Endereço de contr. do provedor",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
+    "ethereum__eip_7702": "",
+    "ethereum__eip_7702_title": "",
     "ethereum__gas_limit": "Limite de gás",
     "ethereum__gas_price": "Preço do gás",
     "ethereum__interaction_contract": "Contrato de interação",
@@ -1624,7 +1631,7 @@
       "Bolt": "Share já inserido",
       "Caesar": "Share já inserido",
       "Delizia": "Share já inserido",
-      "Eckhart": "Share já inserido."
+      "Eckhart": "Parte já inserida."
     },
     "recovery__share_does_not_match": "O share não corresponde",
     "recovery__share_from_another_multi_share_backup": "Você informou um share de um backup diferente.",
@@ -2545,7 +2552,7 @@
     "words__enabled": "Ativado",
     "words__error": "Erro",
     "words__fee": "Taxa",
-    "words__fee_limit": "",
+    "words__fee_limit": "Limite de taxa",
     "words__forget": "Esquecer",
     "words__from": "do",
     "words__good_to_know": "Bom saber",
@@ -2559,7 +2566,7 @@
     "words__name": "Nome",
     "words__no": "Não",
     "words__not_recommended": "Não recomendado!",
-    "words__note": "",
+    "words__note": "Anotação",
     "words__off": "DESL",
     "words__on": "LIG",
     "words__operation_cancelled": "Operação cancelada",
