@@ -105,7 +105,7 @@ async def confirm_freeze_balance(contract: TronFreezeBalanceV2Contract) -> None:
         props=(
             (TR.words__amount, format_trx_amount(contract.frozen_balance), False),
             (
-                TR.words__resource_requested,
+                TR.words__staking_for,
                 (
                     "Bandwidth"
                     if contract.resource == TronResourceCode.BANDWIDTH
