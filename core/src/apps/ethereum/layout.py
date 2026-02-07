@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 
 
 async def require_confirm_approve(
+    recipient_str: str | None,
     to_bytes: AnyBytes,
     value: int | None,
     address_n: list[int],
@@ -40,21 +41,13 @@ async def require_confirm_approve(
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo,
     token_address: AnyBytes,
+    is_revoke: bool,
     chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_approve
 
-    from apps.ethereum.sc_constants import APPROVE_KNOWN_ADDRESSES as KNOWN_ADDRESSES
-    from apps.ethereum.sc_constants import (
-        SC_FUNC_APPROVE_REVOKE_AMOUNT as REVOKE_AMOUNT,
-    )
-
     from . import networks, tokens
 
-    if to_bytes in KNOWN_ADDRESSES:
-        recipient_str = KNOWN_ADDRESSES[to_bytes]
-    else:
-        recipient_str = None
     recipient_addr = address_from_bytes(to_bytes, network)
     chain_id_str = f"{chain_id} ({hex(chain_id)})"
     token_address_str = address_from_bytes(token_address, network)
@@ -72,7 +65,7 @@ async def require_confirm_approve(
         network is networks.UNKNOWN_NETWORK,
         chain_id_str,
         network.name,
-        value == REVOKE_AMOUNT,
+        is_revoke,
         total_amount,
         account,
         account_path,
@@ -271,7 +264,7 @@ async def require_confirm_claim(
     )
 
 
-async def require_confirm_unknown_token(title: str | None) -> None:
+async def require_confirm_unknown_token(title: str) -> None:
     from trezor.ui.layouts import confirm_ethereum_unknown_contract_warning
 
     await confirm_ethereum_unknown_contract_warning(title)
