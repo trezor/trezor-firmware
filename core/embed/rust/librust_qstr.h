@@ -1035,7 +1035,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__receive;
   MP_QSTR_words__recipient;
   MP_QSTR_words__recovery_share;
-  MP_QSTR_words__resource_requested;
   MP_QSTR_words__review;
   MP_QSTR_words__security;
   MP_QSTR_words__send;
@@ -1043,6 +1042,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
+  MP_QSTR_words__staking_for;
   MP_QSTR_words__swap;
   MP_QSTR_words__title_check;
   MP_QSTR_words__title_done;
