@@ -228,7 +228,7 @@ extern "C" {
 #define USE_HAL_DCMI_REGISTER_CALLBACKS \
   0U /* DCMI register callback disabled      */
 #define USE_HAL_DMA2D_REGISTER_CALLBACKS \
-  0U /* DMA2D register callback disabled     */
+  1U /* DMA2D register callback enabled      */
 #define USE_HAL_DSI_REGISTER_CALLBACKS \
   0U /* DSI register callback disabled       */
 #define USE_HAL_ETH_REGISTER_CALLBACKS \

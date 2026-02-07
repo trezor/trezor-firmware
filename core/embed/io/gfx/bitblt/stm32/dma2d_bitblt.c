@@ -23,6 +23,8 @@
 
 #ifdef KERNEL_MODE
 
+#include <sys/irq.h>
+#include <sys/mpu.h>
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -37,6 +39,9 @@ typedef struct {
   bool initialized;
   // ST DMA2D driver handle
   DMA2D_HandleTypeDef handle;
+
+  volatile bool dma_transfer_in_progress;
+
   // CLUT cache
   struct {
     gfx_color32_t c_fg;
@@ -51,6 +56,26 @@ typedef struct {
 static dma2d_driver_t g_dma2d_driver = {
     .initialized = false,
 };
+
+static void DMA2D_XferCpltCallback(DMA2D_HandleTypeDef* hdma2d);
+
+static inline void dma2d_XferCplt_callback_register(void) {
+  dma2d_driver_t* drv = &g_dma2d_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+#if defined(STM32U5)
+  HAL_DMA2D_RegisterCallback(&drv->handle, HAL_DMA2D_TRANSFERCOMPLETE_CB_ID,
+                             &DMA2D_XferCpltCallback);
+#elif defined(STM32F4)
+  drv->handle.XferCpltCallback = DMA2D_XferCpltCallback;
+#else
+  UNUSED(drv);
+#error "Unsupported platform"
+#endif
+}
 
 // Returns `true` if the specified address is accessible by DMA2D
 // and can be used by any of the following functions
@@ -72,22 +97,28 @@ void dma2d_init(void) {
   memset(drv, 0, sizeof(dma2d_driver_t));
   drv->handle.Instance = DMA2D;
 
-#ifdef KERNEL_MODE
   __HAL_RCC_DMA2D_FORCE_RESET();
   __HAL_RCC_DMA2D_RELEASE_RESET();
   __HAL_RCC_DMA2D_CLK_ENABLE();
-#endif
+
+  // Configure and enable DMA2D IRQ
+  NVIC_SetPriority(DMA2D_IRQn, IRQ_PRI_NORMAL);
+  NVIC_EnableIRQ(DMA2D_IRQn);
+
+  drv->dma_transfer_in_progress = false;
+
   drv->initialized = true;
 }
 
 void dma2d_deinit(void) {
   dma2d_driver_t* drv = &g_dma2d_driver;
 
-#ifdef KERNEL_MODE
+  NVIC_DisableIRQ(DMA2D_IRQn);
+
   __HAL_RCC_DMA2D_CLK_DISABLE();
   __HAL_RCC_DMA2D_FORCE_RESET();
   __HAL_RCC_DMA2D_RELEASE_RESET();
-#endif
+
   memset(drv, 0, sizeof(dma2d_driver_t));
 }
 
@@ -98,8 +129,55 @@ void dma2d_wait(void) {
     return;
   }
 
-  while (HAL_DMA2D_PollForTransfer(&drv->handle, 10) != HAL_OK)
-    ;
+  // Enabled events and all interrupts, including disabled interrupts, can
+  // wakeup the processor.
+  SET_BIT(SCB->SCR, SCB_SCR_SEVONPEND_Msk);
+
+  irq_key_t key = irq_lock();
+
+  while (drv->dma_transfer_in_progress) {
+    if (HAL_DMA2D_GetState(&drv->handle) != HAL_DMA2D_STATE_BUSY) {
+      // This case is weird because "drv->dma_transfer_in_progress" is "true"
+      // but the DMA2D state isn't "HAL_DMA2D_STATE_BUSY".
+      drv->dma_transfer_in_progress = false;
+      HAL_DMA2D_Abort(&drv->handle);  // Defensive cleanup
+      irq_unlock(key);
+      return;
+    }
+
+    irq_unlock(key);
+
+    __DSB();
+    __WFE();
+
+    // Execute pending IRQs.
+    __NOP();
+
+    key = irq_lock();
+  }
+
+  irq_unlock(key);
+}
+
+// Transfer complete callback
+static void DMA2D_XferCpltCallback(DMA2D_HandleTypeDef* hdma2d) {
+  dma2d_driver_t* drv = &g_dma2d_driver;
+
+  drv->dma_transfer_in_progress = false;
+
+  UNUSED(hdma2d);
+}
+
+void DMA2D_IRQHandler(void) {
+  IRQ_LOG_ENTER();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+
+  dma2d_driver_t* drv = &g_dma2d_driver;
+
+  HAL_DMA2D_IRQHandler(&drv->handle);
+
+  mpu_restore(mpu_mode);
+  IRQ_LOG_EXIT();
 }
 
 bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
@@ -126,9 +204,13 @@ bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
         bb->dst_stride / sizeof(uint16_t) - bb->width;
     HAL_DMA2D_Init(&drv->handle);
 
-    HAL_DMA2D_Start(&drv->handle, gfx_color_to_color32(bb->src_fg),
-                    (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                    bb->width, bb->height);
+    dma2d_XferCplt_callback_register();
+
+    drv->dma_transfer_in_progress = true;
+
+    HAL_DMA2D_Start_IT(&drv->handle, gfx_color_to_color32(bb->src_fg),
+                       (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                       bb->width, bb->height);
   } else {
 #ifdef STM32U5
     drv->handle.Init.ColorMode = DMA2D_OUTPUT_RGB565;
@@ -150,7 +232,11 @@ bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
     drv->handle.LayerCfg[0].InputAlpha = 0;
     HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-    HAL_DMA2D_BlendingStart(
+    dma2d_XferCplt_callback_register();
+
+    drv->dma_transfer_in_progress = true;
+
+    HAL_DMA2D_BlendingStart_IT(
         &drv->handle, gfx_color_to_color32(bb->src_fg),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t), bb->width,
@@ -287,9 +373,13 @@ bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t* params) {
   dma2d_config_clut(1, gfx_color_to_color32(bb->src_fg),
                     gfx_color_to_color32(bb->src_bg));
 
-  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                  bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_Start_IT(&drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
+                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                     bb->width, bb->height);
   return true;
 }
 
@@ -322,10 +412,14 @@ bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[1].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle,
-                  (uint32_t)bb->src_row + bb->src_x * sizeof(uint16_t),
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                  bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_Start_IT(&drv->handle,
+                     (uint32_t)bb->src_row + bb->src_x * sizeof(uint16_t),
+                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+                     bb->width, bb->height);
   return true;
 }
 
@@ -422,7 +516,11 @@ bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t* params) {
     drv->handle.LayerCfg[0].InputAlpha = 0;
     HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-    HAL_DMA2D_BlendingStart(
+    dma2d_XferCplt_callback_register();
+
+    drv->dma_transfer_in_progress = true;
+
+    HAL_DMA2D_BlendingStart_IT(
         &drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t), bb->width,
@@ -467,10 +565,15 @@ bool dma2d_rgb565_blend_mono8(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[0].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-  HAL_DMA2D_BlendingStart(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
-                          (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                          (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
-                          bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_BlendingStart_IT(
+      &drv->handle, (uint32_t)bb->src_row + bb->src_x,
+      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t),
+      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint16_t), bb->width,
+      bb->height);
 
   return true;
 }
@@ -499,9 +602,13 @@ bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb) {
         bb->dst_stride / sizeof(uint32_t) - bb->width;
     HAL_DMA2D_Init(&drv->handle);
 
-    HAL_DMA2D_Start(&drv->handle, gfx_color_to_color32(bb->src_fg),
-                    (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                    bb->width, bb->height);
+    dma2d_XferCplt_callback_register();
+
+    drv->dma_transfer_in_progress = true;
+
+    HAL_DMA2D_Start_IT(&drv->handle, gfx_color_to_color32(bb->src_fg),
+                       (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                       bb->width, bb->height);
   } else {
 #ifdef STM32U5
     drv->handle.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
@@ -523,7 +630,11 @@ bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb) {
     drv->handle.LayerCfg[0].InputAlpha = 0;
     HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-    HAL_DMA2D_BlendingStart(
+    dma2d_XferCplt_callback_register();
+
+    drv->dma_transfer_in_progress = true;
+
+    HAL_DMA2D_BlendingStart_IT(
         &drv->handle, gfx_color_to_color32(bb->src_fg),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t), bb->width,
@@ -578,8 +689,6 @@ bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* params) {
     return false;
   }
 
-  dma2d_wait();
-
   const gfx_color32_t* src_gradient = NULL;
   gfx_bitblt_t bb_copy = *params;
   gfx_bitblt_t* bb = &bb_copy;
@@ -624,9 +733,13 @@ bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* params) {
   dma2d_config_clut(1, gfx_color_to_color32(bb->src_fg),
                     gfx_color_to_color32(bb->src_bg));
 
-  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_Start_IT(&drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
+                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                     bb->width, bb->height);
   return true;
 }
 
@@ -659,10 +772,14 @@ bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[1].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle,
-                  (uint32_t)bb->src_row + bb->src_x * sizeof(uint16_t),
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_Start_IT(&drv->handle,
+                     (uint32_t)bb->src_row + bb->src_x * sizeof(uint16_t),
+                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                     bb->width, bb->height);
   return true;
 }
 
@@ -759,7 +876,11 @@ bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* params) {
     drv->handle.LayerCfg[0].InputAlpha = 0;
     HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-    HAL_DMA2D_BlendingStart(
+    dma2d_XferCplt_callback_register();
+
+    drv->dma_transfer_in_progress = true;
+
+    HAL_DMA2D_BlendingStart_IT(
         &drv->handle, (uint32_t)bb->src_row + bb->src_x / 2,
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
         (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t), bb->width,
@@ -807,10 +928,15 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[0].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 0);
 
-  HAL_DMA2D_BlendingStart(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
-                          (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                          (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                          bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_BlendingStart_IT(
+      &drv->handle, (uint32_t)bb->src_row + bb->src_x,
+      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+      (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t), bb->width,
+      bb->height);
 
   return true;
 }
@@ -843,9 +969,13 @@ bool dma2d_rgba8888_copy_mono8(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[1].InputAlpha = gfx_color_to_color32(bb->src_fg);
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_Start_IT(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
+                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                     bb->width, bb->height);
 
   return true;
 }
@@ -883,10 +1013,14 @@ bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
   drv->handle.LayerCfg[1].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle,
-                  (uint32_t)bb->src_row + bb->src_x * sizeof(uint32_t),
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_Start_IT(&drv->handle,
+                     (uint32_t)bb->src_row + bb->src_x * sizeof(uint32_t),
+                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                     bb->width, bb->height);
   return true;
 }
 
@@ -920,9 +1054,13 @@ static bool dma2d_rgba8888_copy_ycbcr(const gfx_bitblt_t* bb, uint32_t css) {
   drv->handle.LayerCfg[1].InputAlpha = 0;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
-  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row,
-                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
-                  bb->width, bb->height);
+  dma2d_XferCplt_callback_register();
+
+  drv->dma_transfer_in_progress = true;
+
+  HAL_DMA2D_Start_IT(&drv->handle, (uint32_t)bb->src_row,
+                     (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                     bb->width, bb->height);
 
   // DMA2D overwrites CLUT during YCbCr conversion
   // (seems to be a bug or an undocumented feature)
