@@ -17,6 +17,7 @@ _Updating HWI to the latest version should be enough._
 - Wasabi https://github.com/zkSNACKs/WalletWasabi
 
 ### Using no Trezor libraries
+- Sparrow Wallet https://github.com/sparrowwallet/sparrow
 - Monero https://github.com/monero-project/monero
 - Mycelium Android https://github.com/mycelium-com/wallet-android
 - Mycelium iOS https://github.com/mycelium-com/wallet-ios
