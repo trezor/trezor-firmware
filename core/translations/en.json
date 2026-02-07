@@ -1560,19 +1560,29 @@
     "reset__cancel_create_wallet": "Cancel create wallet",
     "reset__check_backup_instructions": "Let's do a quick check of your backup.",
     "reset__check_backup_title": "Check backup",
-    "reset__check_group_share_title_template": "Check g{0} - share {1}",
+    "reset__check_group_share_title_template": "Check gr. {0} - share {1}",
     "reset__check_share_backup_template": "Let's do a quick check of Share #{0}.",
     "reset__check_share_title_template": "Check share #{0}",
     "reset__check_wallet_backup_title": "Check wallet backup",
     "reset__continue_with_next_share": "Continue with the next share.",
     "reset__continue_with_share_template": "Continue with share #{0}.",
     "reset__create_x_of_y_multi_share_backup_template": "Do you want to create a {0} of {1} multi-share backup?",
-    "reset__finished_verifying_group_template": "You have finished verifying your recovery shares for group {0}.",
+    "reset__finished_verifying_group_template": {
+      "Bolt": "You have finished verifying your recovery shares for group {0}.",
+      "Caesar": "You have finished verifying your recovery shares for group {0}.",
+      "Delizia": "Group {0} verified.",
+      "Eckhart": "You have finished verifying your recovery shares for group {0}."
+    },
     "reset__finished_verifying_shares": "You have finished verifying your recovery shares.",
     "reset__finished_verifying_wallet_backup": "You have finished verifying your wallet backup.",
     "reset__group_description": "A group is made up of recovery shares.",
     "reset__group_info": "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.",
-    "reset__group_share_checked_successfully_template": "Group {0} - Share {1} checked successfully.",
+    "reset__group_share_checked_successfully_template": {
+      "Bolt": "Group {0} - Share {1} checked successfully.",
+      "Caesar": "Group {0} - Share {1} checked successfully.",
+      "Delizia": "Gr. {0} - Share {1} checked.",
+      "Eckhart": "Group {0} - Share {1} checked successfully."
+    },
     "reset__group_share_title_template": {
       "Bolt": "Group {0} - Share {1}",
       "Caesar": "Group {0} - Share {1}",
