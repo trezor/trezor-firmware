@@ -82,9 +82,9 @@ message TronTriggerSmartContract {
 */
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L84-L88
 message TronFreezeBalanceV2Contract {
-    required bytes owner_address = 1;       // Account whose TRX has to be frozen
-    required uint64 frozen_balance = 2;     // Amount to be frozen (in SUN)
-    required TronResourceCode resource = 3;     // Resource obtained against freezing
+    required bytes owner_address = 1;                                 // Account whose TRX has to be frozen
+    required uint64 frozen_balance = 2;                               // Amount to be frozen (in SUN)
+    optional TronResourceCode resource = 3 [default = BANDWIDTH];     // Resource obtained against freezing.
 
     // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/common.proto#L9C1-L13C2
     // Staking can not happen just for TRON_POWER:

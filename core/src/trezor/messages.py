@@ -6931,7 +6931,7 @@ if TYPE_CHECKING:
             *,
             owner_address: "AnyBytes",
             frozen_balance: "int",
-            resource: "TronResourceCode",
+            resource: "TronResourceCode | None" = None,
         ) -> None:
             pass
 

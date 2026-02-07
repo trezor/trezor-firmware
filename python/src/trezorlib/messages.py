@@ -8738,7 +8738,7 @@ class TronFreezeBalanceV2Contract(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
         2: protobuf.Field("frozen_balance", "uint64", repeated=False, required=True),
-        3: protobuf.Field("resource", "TronResourceCode", repeated=False, required=True),
+        3: protobuf.Field("resource", "TronResourceCode", repeated=False, required=False, default=TronResourceCode.BANDWIDTH),
     }
 
     def __init__(
@@ -8746,7 +8746,7 @@ class TronFreezeBalanceV2Contract(protobuf.MessageType):
         *,
         owner_address: "bytes",
         frozen_balance: "int",
-        resource: "TronResourceCode",
+        resource: Optional["TronResourceCode"] = TronResourceCode.BANDWIDTH,
     ) -> None:
         self.owner_address = owner_address
         self.frozen_balance = frozen_balance

@@ -1565,7 +1565,7 @@ impl TronFreezeBalanceV2Contract {
         self.frozen_balance = ::std::option::Option::Some(v);
     }
 
-    // required .hw.trezor.messages.tron.TronFreezeBalanceV2Contract.TronResourceCode resource = 3;
+    // optional .hw.trezor.messages.tron.TronFreezeBalanceV2Contract.TronResourceCode resource = 3;
 
     pub fn resource(&self) -> tron_freeze_balance_v2contract::TronResourceCode {
         match self.resource {
@@ -1621,9 +1621,6 @@ impl ::protobuf::Message for TronFreezeBalanceV2Contract {
             return false;
         }
         if self.frozen_balance.is_none() {
-            return false;
-        }
-        if self.resource.is_none() {
             return false;
         }
         true
@@ -2855,28 +2852,29 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x06amount\"~\n\x18TronTriggerSmartContract\x12#\n\rowner_address\x18\
     \x01\x20\x02(\x0cR\x0cownerAddress\x12)\n\x10contract_address\x18\x02\
     \x20\x02(\x0cR\x0fcontractAddress\x12\x12\n\x04data\x18\x04\x20\x02(\x0c\
-    R\x04data\"\xfb\x01\n\x1bTronFreezeBalanceV2Contract\x12#\n\rowner_addre\
+    R\x04data\"\x86\x02\n\x1bTronFreezeBalanceV2Contract\x12#\n\rowner_addre\
     ss\x18\x01\x20\x02(\x0cR\x0cownerAddress\x12%\n\x0efrozen_balance\x18\
-    \x02\x20\x02(\x04R\rfrozenBalance\x12a\n\x08resource\x18\x03\x20\x02(\
+    \x02\x20\x02(\x04R\rfrozenBalance\x12l\n\x08resource\x18\x03\x20\x01(\
     \x0e2E.hw.trezor.messages.tron.TronFreezeBalanceV2Contract.TronResourceC\
-    odeR\x08resource\"-\n\x10TronResourceCode\x12\r\n\tBANDWIDTH\x10\0\x12\n\
-    \n\x06ENERGY\x10\x01\"-\n\rTronSignature\x12\x1c\n\tsignature\x18\x01\
-    \x20\x02(\x0cR\tsignature\"\xb8\x05\n\x12TronRawTransaction\x12&\n\x0fre\
-    f_block_bytes\x18\x01\x20\x02(\x0cR\rrefBlockBytes\x12$\n\x0eref_block_h\
-    ash\x18\x04\x20\x02(\x0cR\x0crefBlockHash\x12\x1e\n\nexpiration\x18\x08\
-    \x20\x02(\x04R\nexpiration\x12\x12\n\x04data\x18\n\x20\x01(\x0cR\x04data\
-    \x12W\n\x08contract\x18\x0b\x20\x03(\x0b2;.hw.trezor.messages.tron.TronR\
-    awTransaction.TronRawContractR\x08contract\x12\x1c\n\ttimestamp\x18\x0e\
-    \x20\x02(\x04R\ttimestamp\x12\x1b\n\tfee_limit\x18\x12\x20\x01(\x04R\x08\
-    feeLimit\x1a\x8b\x03\n\x0fTronRawContract\x12c\n\x04type\x18\x01\x20\x02\
-    (\x0e2O.hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronR\
-    awContractTypeR\x04type\x12j\n\tparameter\x18\x02\x20\x02(\x0b2L.hw.trez\
-    or.messages.tron.TronRawTransaction.TronRawContract.TronRawParameterR\tp\
-    arameter\x1aC\n\x10TronRawParameter\x12\x19\n\x08type_url\x18\x01\x20\
-    \x02(\tR\x07typeUrl\x12\x14\n\x05value\x18\x02\x20\x02(\x0cR\x05value\"b\
-    \n\x13TronRawContractType\x12\x14\n\x10TransferContract\x10\x01\x12\x18\
-    \n\x14TriggerSmartContract\x10\x1f\x12\x1b\n\x17FreezeBalanceV2Contract\
-    \x106B8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessageTron\
+    ode:\tBANDWIDTHR\x08resource\"-\n\x10TronResourceCode\x12\r\n\tBANDWIDTH\
+    \x10\0\x12\n\n\x06ENERGY\x10\x01\"-\n\rTronSignature\x12\x1c\n\tsignatur\
+    e\x18\x01\x20\x02(\x0cR\tsignature\"\xb8\x05\n\x12TronRawTransaction\x12\
+    &\n\x0fref_block_bytes\x18\x01\x20\x02(\x0cR\rrefBlockBytes\x12$\n\x0ere\
+    f_block_hash\x18\x04\x20\x02(\x0cR\x0crefBlockHash\x12\x1e\n\nexpiration\
+    \x18\x08\x20\x02(\x04R\nexpiration\x12\x12\n\x04data\x18\n\x20\x01(\x0cR\
+    \x04data\x12W\n\x08contract\x18\x0b\x20\x03(\x0b2;.hw.trezor.messages.tr\
+    on.TronRawTransaction.TronRawContractR\x08contract\x12\x1c\n\ttimestamp\
+    \x18\x0e\x20\x02(\x04R\ttimestamp\x12\x1b\n\tfee_limit\x18\x12\x20\x01(\
+    \x04R\x08feeLimit\x1a\x8b\x03\n\x0fTronRawContract\x12c\n\x04type\x18\
+    \x01\x20\x02(\x0e2O.hw.trezor.messages.tron.TronRawTransaction.TronRawCo\
+    ntract.TronRawContractTypeR\x04type\x12j\n\tparameter\x18\x02\x20\x02(\
+    \x0b2L.hw.trezor.messages.tron.TronRawTransaction.TronRawContract.TronRa\
+    wParameterR\tparameter\x1aC\n\x10TronRawParameter\x12\x19\n\x08type_url\
+    \x18\x01\x20\x02(\tR\x07typeUrl\x12\x14\n\x05value\x18\x02\x20\x02(\x0cR\
+    \x05value\"b\n\x13TronRawContractType\x12\x14\n\x10TransferContract\x10\
+    \x01\x12\x18\n\x14TriggerSmartContract\x10\x1f\x12\x1b\n\x17FreezeBalanc\
+    eV2Contract\x106B8\n#com.satoshilabs.trezor.lib.protobufB\x11TrezorMessa\
+    geTron\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
