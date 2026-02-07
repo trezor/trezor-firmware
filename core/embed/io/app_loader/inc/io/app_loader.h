@@ -30,9 +30,9 @@
 /**
  * Initializes the app loader module.
  *
- * @return true on success, false on failure.
+ * @return TS_OK on success, or an error code on failure.
  */
-bool app_loader_init(void);
+ts_t __wur app_loader_init(void);
 
 #endif
 
@@ -42,9 +42,12 @@ bool app_loader_init(void);
  * @param hash Pointer to the application hash.
  * @param task_id Pointer to store the spawned application's task ID.
  *
- * @return true if the application was successfully spawned, false otherwise.
+ * @return TS_OK on success, or an error code on failure:
+ *         TS_ENOENT if image not found, or an pother error
+ *         TS_ENOMEM if there is not enough memory
+ *         TS_EINVAL if the application image is invalid
  */
-bool app_task_spawn(const app_hash_t* hash, systask_id_t* task_id);
+ts_t __wur app_task_spawn(const app_hash_t* hash, systask_id_t* task_id);
 
 /**
  * Checks if an application is currently running.
@@ -58,9 +61,10 @@ bool app_task_is_running(systask_id_t task_id);
  *
  * @param task_id The system task identifier of the application.
  * @param info Pointer to a structure to receive postmortem information.
- * @return true if postmortem information was retrieved, false otherwise.
+ * @return TS_OK on success, or an error code on failure.
  */
-bool app_task_get_pminfo(systask_id_t task_id, systask_postmortem_t* pminfo);
+ts_t __wur app_task_get_pminfo(systask_id_t task_id,
+                               systask_postmortem_t* pminfo);
 
 /**
  * Unloads an application and frees all associated resources.

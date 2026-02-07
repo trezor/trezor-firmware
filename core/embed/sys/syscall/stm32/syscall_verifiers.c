@@ -1378,7 +1378,7 @@ access_violation:
 
 #ifdef USE_APP_LOADING
 
-bool app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id) {
+ts_t app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id) {
   if (!probe_read_access(hash, sizeof(*hash))) {
     goto access_violation;
   }
@@ -1390,10 +1390,10 @@ bool app_task_spawn__verified(const app_hash_t *hash, systask_id_t *task_id) {
   return app_task_spawn(hash, task_id);
 access_violation:
   apptask_access_violation();
-  return false;
+  return TS_EACCES;
 }
 
-bool app_task_get_pminfo__verified(systask_id_t task_id,
+ts_t app_task_get_pminfo__verified(systask_id_t task_id,
                                    systask_postmortem_t *pminfo) {
   if (!probe_write_access(pminfo, sizeof(*pminfo))) {
     goto access_violation;
@@ -1402,7 +1402,7 @@ bool app_task_get_pminfo__verified(systask_id_t task_id,
   return app_task_get_pminfo(task_id, pminfo);
 access_violation:
   apptask_access_violation();
-  return false;
+  return TS_EACCES;
 }
 
 app_cache_handle_t app_cache_create_image__verified(const app_hash_t *hash,
@@ -1418,7 +1418,7 @@ access_violation:
   return APP_CACHE_INVALID_HANDLE;
 }
 
-bool app_cache_write_image__verified(app_cache_handle_t handle,
+ts_t app_cache_write_image__verified(app_cache_handle_t handle,
                                      uintptr_t offset, const void *data,
                                      size_t data_size) {
   if (!probe_read_access(data, data_size)) {
@@ -1428,7 +1428,7 @@ bool app_cache_write_image__verified(app_cache_handle_t handle,
 
 access_violation:
   apptask_access_violation();
-  return false;
+  return TS_EACCES;
 }
 
 #endif  // USE_APP_LOADING

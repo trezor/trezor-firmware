@@ -937,18 +937,18 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
 
 #include <io/app_loader.h>
 
-bool app_task_spawn(const app_hash_t *hash, systask_id_t *task_id) {
-  return (bool)syscall_invoke2((uint32_t)hash, (uint32_t)task_id,
-                               SYSCALL_APP_TASK_SPAWN);
+ts_t app_task_spawn(const app_hash_t *hash, systask_id_t *task_id) {
+  return ts_make(syscall_invoke2((uint32_t)hash, (uint32_t)task_id,
+                                 SYSCALL_APP_TASK_SPAWN));
 }
 
 bool app_task_is_running(systask_id_t task_id) {
   return (bool)syscall_invoke1((uint32_t)task_id, SYSCALL_APP_TASK_IS_RUNNING);
 }
 
-bool app_task_get_pminfo(systask_id_t task_id, systask_postmortem_t *pminfo) {
-  return (bool)syscall_invoke2((uint32_t)task_id, (uint32_t)pminfo,
-                               SYSCALL_APP_TASK_GET_PMINFO);
+ts_t app_task_get_pminfo(systask_id_t task_id, systask_postmortem_t *pminfo) {
+  return ts_make(syscall_invoke2((uint32_t)task_id, (uint32_t)pminfo,
+                                 SYSCALL_APP_TASK_GET_PMINFO));
 }
 
 void app_task_unload(systask_id_t task_id) {
@@ -960,16 +960,16 @@ app_cache_handle_t app_cache_create_image(const app_hash_t *hash, size_t size) {
                                              SYSCALL_APP_CACHE_CREATE_IMAGE);
 }
 
-bool app_cache_write_image(app_cache_handle_t handle, uintptr_t offset,
+ts_t app_cache_write_image(app_cache_handle_t handle, uintptr_t offset,
                            const void *data, size_t data_size) {
-  return (bool)syscall_invoke4((uint32_t)handle, (uint32_t)offset,
-                               (uint32_t)data, data_size,
-                               SYSCALL_APP_CACHE_WRITE_IMAGE);
+  return ts_make(syscall_invoke4((uint32_t)handle, (uint32_t)offset,
+                                 (uint32_t)data, data_size,
+                                 SYSCALL_APP_CACHE_WRITE_IMAGE));
 }
 
-bool app_cache_finalize_image(app_cache_handle_t handle, bool accept) {
-  return (bool)syscall_invoke2((uint32_t)handle, (uint32_t)accept,
-                               SYSCALL_APP_CACHE_FINALIZE_IMAGE);
+ts_t app_cache_finalize_image(app_cache_handle_t handle, bool accept) {
+  return ts_make(syscall_invoke2((uint32_t)handle, (uint32_t)accept,
+                                 SYSCALL_APP_CACHE_FINALIZE_IMAGE));
 }
 
 #endif

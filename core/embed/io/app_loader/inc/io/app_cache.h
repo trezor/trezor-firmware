@@ -39,9 +39,9 @@ typedef uintptr_t app_cache_handle_t;
 /**
  * Initializes the app cache subsystem.
  *
- * @return true on success, false on failure.
+ * @return TS_OK on success, error code on failure.
  */
-bool app_cache_init(void);
+ts_t __wur app_cache_init(void);
 
 #endif
 
@@ -70,10 +70,10 @@ app_cache_handle_t app_cache_create_image(const app_hash_t* hash, size_t size);
  * @param data Pointer to the data to write.
  * @param size The size of the data to write.
  *
- * @return true on success, false on failure.
+ * @return TS_OK on success, error code on failure.
  */
-bool app_cache_write_image(app_cache_handle_t handle, uintptr_t offset,
-                           const void* data, size_t size);
+ts_t __wur app_cache_write_image(app_cache_handle_t handle, uintptr_t offset,
+                                 const void* data, size_t size);
 
 /**
  * Finalizes loading of the application image. If `accept` is true,
@@ -83,10 +83,9 @@ bool app_cache_write_image(app_cache_handle_t handle, uintptr_t offset,
  * @param handle The application image handle.
  * @param accept If true, the image is marked as loaded; if false,
  *               the image is discarded.
- * @return true on success, false on failure.
+ * @return TS_OK on success, error code on failure.
  */
-
-bool app_cache_finalize_image(app_cache_handle_t handle, bool accept);
+ts_t __wur app_cache_finalize_image(app_cache_handle_t handle, bool accept);
 
 #ifdef KERNEL_MODE
 
@@ -97,7 +96,7 @@ bool app_cache_finalize_image(app_cache_handle_t handle, bool accept);
  * @param ptr Pointer to store the address of the application image.
  * @param size Pointer to store the size of the application image.
  *
- * @return true on success, false on failure.
+ * @return A handle to the locked application image.
  */
 
 app_cache_handle_t app_cache_lock_image(const app_hash_t* hash, void** ptr,
@@ -122,8 +121,8 @@ void app_cache_unlock_image(app_cache_handle_t handle);
  * @param hash The application hash.
  * @param filename The path to the file containing the application image.
  *
- * @return true on success, false on failure.
+ * @return TS_OK on success, error code on failure.
  */
-bool app_cache_load_file(const app_hash_t* hash, const char* filename);
+ts_t __wur app_cache_load_file(const app_hash_t* hash, const char* filename);
 
 #endif  // TREZOR_EMULATOR

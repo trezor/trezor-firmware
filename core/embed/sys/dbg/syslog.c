@@ -256,6 +256,17 @@ void syslog_print_hex(const log_source_t* source, log_level_t level,
   }
 }
 
+// declared in rtl/error_handling.h
+void syslog_tsh_error(ts_t status, const char* file, int line) {
+  log_source_t source = {
+      .name = "tsh",
+      .name_len = sizeof("tsh") - 1,
+  };
+
+  syslog_printf(&source, LOG_LEVEL_ERR, "%s at %s:%d", ts_string(status), file,
+                line);
+}
+
 #ifdef TREZOR_PRODTEST
 
 #include <rtl/cli.h>
