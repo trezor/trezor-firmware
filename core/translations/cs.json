@@ -1567,12 +1567,7 @@
     "reset__cancel_create_wallet": "Zrušit vytvoření peněženky",
     "reset__check_backup_instructions": "Rychle zkontrolujeme vaši zálohu.",
     "reset__check_backup_title": "Zkontr. zálohu",
-    "reset__check_group_share_title_template": {
-      "Bolt": "Kontrola skupiny {0} - podílu {1}",
-      "Caesar": "Zkont. sk. {0} - podíl {1}",
-      "Delizia": "Zkont. sk. {0} - podíl {1}",
-      "Eckhart": "Zkont. sk. {0} - podíl {1}"
-    },
+    "reset__check_group_share_title_template": "Zkont. sk. {0} - podíl {1}",
     "reset__check_share_backup_template": "Zkontrolujeme v rychlosti podíl {0}.",
     "reset__check_share_title_template": "Kontrola podílu č. {0}",
     "reset__check_wallet_backup_title": "Zkontrolovat zálohu",
