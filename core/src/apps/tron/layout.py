@@ -94,7 +94,7 @@ async def confirm_freeze_balance(contract: TronFreezeBalanceV2Contract) -> None:
     from trezor.ui.layouts import confirm_address, confirm_properties
 
     await confirm_address(
-        title=TR.ethereum__staking_stake,
+        title=TR.words__staking_from,
         address=get_encoded_address(contract.owner_address),
         chunkify=True,
     )
