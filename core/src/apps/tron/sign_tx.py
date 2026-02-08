@@ -2,7 +2,6 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import messages
-from trezor.messages import EthereumTokenInfo
 from trezor.protobuf import dump_message_buffer
 from trezor.wire import DataError
 
@@ -12,6 +11,7 @@ from . import CURVE, PATTERN, SLIP44_ID, consts, layout
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from typing import Tuple
 
     from trezor.messages import (
         TronRawContract,
@@ -123,7 +123,6 @@ async def process_smart_contract(
         await layout.confirm_unknown_smart_contract(contract, fee_limit)
 
 
-# TODO: Maybe refactor with ETH. Code duplicated from ethereum/sign_tx.py:_handle_known_contract_calls
 async def process_known_trc20_contract(
     contract: TronTriggerSmartContract, fee_limit: int
 ) -> bool:
@@ -137,48 +136,42 @@ async def process_known_trc20_contract(
         SC_FUNC_SIG_TRANSFER,
     )
 
-    token = get_token_info(contract.contract_address)
-    if token and len(contract.data) == 68:
-        data_reader = BufferReader(contract.data)
-        func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
-        if func_sig == SC_FUNC_SIG_TRANSFER:
-            if data_reader.remaining_count() < SC_ARGUMENT_BYTES * 2:
-                return False
-            arg0 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-            assert all(
-                byte == 0
-                for byte in arg0[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
-            )
-            # TRON truncates the mandatory prefix \x41 from addresses in data
-            recipient = b"\x41" + bytes(
-                arg0[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :]
-            )
-            arg1 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-            value = int.from_bytes(arg1, "big")
-        else:
-            return False
-
-        await layout.confirm_known_trc20_smart_contract(
-            recipient, value, fee_limit, token
-        )
-        return True
-    else:
+    token_info = get_token_info(contract.contract_address)
+    if token_info is None or len(contract.data) != 68:
         return False
 
+    token_decimals, token_symbol = token_info
 
-# TODO: Placeholder for actual logic
-def get_token_info(token_address: AnyBytes) -> EthereumTokenInfo | None:
-    # Shasta testnet USDT
-    if (
-        token_address
-        == b"\x41\x42\xa1\xe3\x9a\xef\xa4\x92\x90\xf2\xb3\xf9\xed\x68\x8d\x7c\xec\xf8\x6c\xd6\xe0"
-    ):
-        return EthereumTokenInfo(
-            address=b"\x41\x42\xa1\xe3\x9a\xef\xa4\x92\x90\xf2\xb3\xf9\xed\x68\x8d\x7c\xec\xf8\x6c\xd6\xe0",
-            chain_id=195,
-            decimals=6,
-            name="",
-            symbol="tUSDT",
-        )
-    else:
-        return None
+    data_reader = BufferReader(contract.data)
+    func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
+    if func_sig != SC_FUNC_SIG_TRANSFER:
+        return False
+
+    if data_reader.remaining_count() < SC_ARGUMENT_BYTES * 2:
+        return False
+
+    arg0 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
+    assert all(
+        byte == 0 for byte in arg0[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
+    )
+    # TRON truncates the mandatory prefix \x41 from addresses in data
+    recipient = b"\x41" + bytes(arg0[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :])
+
+    arg1 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
+    value = int.from_bytes(arg1, "big")
+
+    await layout.confirm_known_trc20_smart_contract(
+        recipient,
+        value,
+        fee_limit,
+        token_decimals,
+        token_symbol,
+    )
+    return True
+
+
+def get_token_info(token_address: AnyBytes) -> Tuple[int, str] | None:
+    for address, decimals, symbol in consts.token_iterator():
+        if token_address == address:
+            return decimals, symbol
+    return None
