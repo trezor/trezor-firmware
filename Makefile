@@ -9,9 +9,9 @@ PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./to
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
-style_check: pystyle_check ruststyle_check cstyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
+style_check: pystyle_check ruststyle_check cstyle_check protobuf_style_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
 
-style: pystyle ruststyle cstyle changelog_style translations_style ## apply all code styles (C+Rust+Py+Changelog+translation JSON)
+style: pystyle ruststyle cstyle protobuf_style changelog_style translations_style ## apply all code styles (Python+Rust+C+protobuf+changelog+translation JSON)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -56,9 +56,11 @@ pystyle: ## apply code style on application sources and tests
 	make -C python style
 
 changelog_check: ## check changelog format
+	@echo [CHANGELOG-CHECK]
 	./tools/changelog.py check
 
 changelog_style: ## fix changelog format
+	@echo [CHANGELOG-STYLE]
 	./tools/changelog.py style
 
 translations_style: ## Format translation files
@@ -69,10 +71,20 @@ translations_style_check: ## Check that translation files are properly formatted
 	@echo [TRANSLATIONS-STYLE-CHECK]
 	@./core/tools/translations/sort_keys.py check
 
+protobuf_style: ## Format protobuf definitions
+	@echo [PROTOBUF-STYLE]
+	@./core/tools/proto_style.sh format
+
+protobuf_style_check: ## Check that protobuf definitions are properly formatted
+	@echo [PROTOBUF-STYLE-CHECK]
+	@./core/tools/proto_style.sh check
+
 yaml_check: ## check yaml formatting
+	@echo [YAML-STYLE-CHECK]
 	yamllint .
 
 editor_check: ## check editorconfig formatting
+	@echo [EDITORCONFIG-STYLE-CHECK]
 	editorconfig-checker -exclude '.*\.(so|dat|toif|der)|^crypto/aes/'
 
 cstyle_check: ## run code style check on low-level C code

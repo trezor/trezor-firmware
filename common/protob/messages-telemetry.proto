@@ -1,12 +1,12 @@
 syntax = "proto2";
 package hw.trezor.messages.telemetry;
 
-// Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
-option java_outer_classname = "TrezorMessageTelemetry";
-
 import "options.proto";
 
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageTelemetry";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+// Include in BTC-only firmware
 option (include_in_bitcoin_only) = true;
 
 /**
@@ -15,16 +15,15 @@ option (include_in_bitcoin_only) = true;
  * @next Telemetry
  * @next Failure
  */
-message TelemetryGet {
-}
+message TelemetryGet {}
 
 /**
  * Response: Reports telemetry data
  * @end
  */
 message Telemetry {
-    optional sint32 min_temp_c = 1;      // Minimum recorded battery temperature in milli-Celsius
-    optional sint32 max_temp_c = 2;      // Maximum recorded battery temperature in milli-Celsius
-    optional uint32 battery_errors = 3;  // Bitfield of battery errors
-    optional uint32 battery_cycles = 4;  // Total battery milli-cycles
+  optional sint32 min_temp_c = 1; // Minimum recorded battery temperature in milli-Celsius
+  optional sint32 max_temp_c = 2; // Maximum recorded battery temperature in milli-Celsius
+  optional uint32 battery_errors = 3; // Bitfield of battery errors
+  optional uint32 battery_cycles = 4; // Total battery milli-cycles
 }

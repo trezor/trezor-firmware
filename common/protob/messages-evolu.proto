@@ -1,12 +1,12 @@
 syntax = "proto2";
 package hw.trezor.messages.evolu;
 
-// Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
-option java_outer_classname = "TrezorMessageEvolu";
-
 import "options.proto";
 
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageEvolu";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+// Include in BTC-only firmware
 option (include_in_bitcoin_only) = true;
 
 /**
@@ -24,7 +24,7 @@ message EvoluGetNode {
  * @end
  */
 message EvoluNode {
-    required bytes data = 1;
+  required bytes data = 1;
 }
 
 /**
@@ -34,9 +34,9 @@ message EvoluNode {
  * @next Failure
  */
 message EvoluSignRegistrationRequest {
-    required bytes challenge_from_server = 1;  // replay attack protection
-    required uint32 size_to_acquire = 2;       // number of bytes to acquire
-    required bytes proof_of_delegated_identity = 3;
+  required bytes challenge_from_server = 1; // replay attack protection
+  required uint32 size_to_acquire = 2; // number of bytes to acquire
+  required bytes proof_of_delegated_identity = 3;
 }
 
 /**
@@ -45,8 +45,8 @@ message EvoluSignRegistrationRequest {
  * @end
  */
 message EvoluRegistrationRequest {
-    repeated bytes certificate_chain = 1;
-    required bytes signature = 2;
+  repeated bytes certificate_chain = 1;
+  required bytes signature = 2;
 }
 
 /**
@@ -56,8 +56,8 @@ message EvoluRegistrationRequest {
  * @next Failure
  */
 message EvoluGetDelegatedIdentityKey {
-    optional bytes thp_credential = 1; // THP credential so that we can display the host on the device
-    reserved 2;   //  host_static_public_key is deprecated, the key stored in the channel cache is used instead
+  optional bytes thp_credential = 1; // THP credential so that we can display the host on the device
+  reserved 2; //  host_static_public_key is deprecated, the key stored in the channel cache is used instead
 }
 
 /**
@@ -65,5 +65,5 @@ message EvoluGetDelegatedIdentityKey {
  * @end
  */
 message EvoluDelegatedIdentityKey {
-  required bytes private_key = 1;  // nist256p1 private key
+  required bytes private_key = 1; // nist256p1 private key
 }
