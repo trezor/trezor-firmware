@@ -40,7 +40,7 @@ message RippleSignTx {
   optional uint32 last_ledger_sequence = 5; // see https://developers.ripple.com/reliable-transaction-submission.html#lastledgersequence
   required RipplePayment payment = 6; // Payment transaction type
   optional bool chunkify = 7; // display the address in chunks of 4 characters
-  optional common.PaymentRequest payment_req = 8; // SLIP-24 payment reques
+  optional common.PaymentRequest payment_req = 8; // SLIP-24 payment request
 
   /**
    * Payment transaction type
