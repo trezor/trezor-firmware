@@ -207,7 +207,7 @@ message MoneroTransactionInputViniAck {
 }
 
 /**
- * Request: Sub request of MoneroTransactionSign. Sent after all inputs have been sent. Useful for rangeisg offloading.
+ * Request: Sub request of MoneroTransactionSign. Sent after all inputs have been sent. Useful for rangesig offloading.
  * @next MoneroTransactionAllInputsSetAck
  */
 message MoneroTransactionAllInputsSetRequest {
@@ -299,7 +299,7 @@ message MoneroTransactionSignInputAck {
 }
 
 /**
- * Request: Sub request of MoneroTransactionSign. Final message of the procol after all UTXOs are signed
+ * Request: Sub request of MoneroTransactionSign. Final message of the protocol after all UTXOs are signed
  * @next MoneroTransactionFinalAck
  */
 message MoneroTransactionFinalRequest {
