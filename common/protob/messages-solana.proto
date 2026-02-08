@@ -3,6 +3,10 @@ package hw.trezor.messages.solana;
 
 import "messages-common.proto";
 
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageSolana";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
 /**
  * Request: Ask device for public key corresponding to address_n path
  * @start
