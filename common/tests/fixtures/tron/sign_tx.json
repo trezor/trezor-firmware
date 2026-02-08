@@ -265,8 +265,97 @@
       "result": {
         "signature": "f99e2f704c78b07d49fcfa4cc7cd032635807f9a1f09b57adc2232cac38d0d42428008bd9953944e0276123ee6851a266078df9c68e5c4db158be05377dadd7b1C"
       }
-    }
-    ,
+    },
+    {
+      "name": "Stake_for_Energy",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "a8a8",
+          "ref_block_hash": "c75f97d5331c50f7",
+          "expiration": 1770386202000,
+          "timestamp": 1770386142000
+        },
+        "contract": {
+          "_message_type": "TronFreezeBalanceV2Contract",
+          "owner_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+          "frozen_balance": 50000000,
+          "resource": "ENERGY"
+        },
+        "raw_data_hex": "0a02a8a82208c75f97d5331c50f74090bbf699c3335a5a083612560a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e7472616374121e0a1541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f1080e1eb17180170b0e6f299c333",
+        "raw": {
+          "visible": false,
+          "txID": "c7e2509e21914cf31874df6b91a38a88c882e2db87d2dd192fde817d48681416",
+          "raw_data_hex": "0a02a8a82208c75f97d5331c50f74090bbf699c3335a5a083612560a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e7472616374121e0a1541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f1080e1eb17180170b0e6f299c333",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+                    "frozen_balance": 50000000,
+                    "resource": "ENERGY"
+                  },
+                  "type_url": "type.googleapis.com/protocol.FreezeBalanceV2Contract"
+                },
+                "type": "FreezeBalanceV2Contract"
+              }
+            ],
+            "ref_block_bytes": "a8a8",
+            "ref_block_hash": "c75f97d5331c50f7",
+            "expiration": 1770386202000,
+            "timestamp": 1770386142000
+          }
+        }
+      },
+      "result": {
+        "signature": "f8aca83d3b81c707443d51194953140ffe40249ac1dcee84f373f7386f3aed2b4a4dda0a1d79e708c2ce2d4a8aa3817f9dcab6a741eb0996a6f36c4e826da0491c"
+      }
+    },
+    {
+      "name": "Stake_for_Bandwidth",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "650a",
+          "ref_block_hash": "7280317008fe2c62",
+          "expiration": 1770532344000,
+          "timestamp": 1770532284000
+        },
+        "contract": {
+          "_message_type": "TronFreezeBalanceV2Contract",
+          "owner_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+          "frozen_balance": 9223372036854740
+        },
+        "raw_data_hex": "0a02650a22087280317008fe2c6240c0a1cedfc3335a5c083612580a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e747261637412200a1541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f10d4a78dafba93b11070e0cccadfc333",
+        "raw": {
+          "visible": false,
+          "txID": "e0229b67d2306e303c879316fceb0648041b3bf2321873e850c0f0745ecea880",
+          "raw_data_hex": "0a02650a22087280317008fe2c6240c0a1cedfc3335a5c083612580a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e747261637412200a1541f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f10d4a78dafba93b11070e0cccadfc333",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f59b1e8c74ed1a925eef999c9f6f2dac11c11a9f",
+                    "frozen_balance": 9223372036854740
+                  },
+                  "type_url": "type.googleapis.com/protocol.FreezeBalanceV2Contract"
+                },
+                "type": "FreezeBalanceV2Contract"
+              }
+            ],
+            "ref_block_bytes": "650a",
+            "ref_block_hash": "7280317008fe2c62",
+            "expiration": 1770532344000,
+            "timestamp": 1770532284000
+          }
+        }
+      },
+      "result": {
+        "signature": "4ca823d3dc1d2ede21b670f38749dab4bce80320e48e26d6b8e22221739599193801af9780936f0aef58e0e8187985b7d3dd64e16a8971c3d5c21e35baee7bac1c"
+      }
+    },
     {
       "name": "TriggerSmartContract_USDD_transfer",
       "parameters": {
