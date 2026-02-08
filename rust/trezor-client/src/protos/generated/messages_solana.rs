@@ -1688,7 +1688,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x03\x20\x01(\x0b21.hw.trezor.messages.solana.SolanaTxAdditionalInfoR\
     \x0eadditionalInfo\x12J\n\x0bpayment_req\x18\x04\x20\x01(\x0b2).hw.trezo\
     r.messages.common.PaymentRequestR\npaymentReq\"1\n\x11SolanaTxSignature\
-    \x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
+    \x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignatureB:\n#com.satoshila\
+    bs.trezor.lib.protobufB\x13TrezorMessageSolana\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
