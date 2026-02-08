@@ -1,16 +1,16 @@
 syntax = "proto2";
 package hw.trezor.messages.cardano;
 
-// Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
-option java_outer_classname = "TrezorMessageCardano";
-
 import "messages-common.proto";
 
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageCardano";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
 enum CardanoDerivationType {
-    LEDGER = 0;
-    ICARUS = 1;
-    ICARUS_TREZOR = 2;
+  LEDGER = 0;
+  ICARUS = 1;
+  ICARUS_TREZOR = 2;
 }
 
 /**
@@ -18,82 +18,82 @@ enum CardanoDerivationType {
  * Script addresses are only supported in transaction outputs.
  */
 enum CardanoAddressType {
-    BASE = 0;
-    BASE_SCRIPT_KEY = 1;
-    BASE_KEY_SCRIPT = 2;
-    BASE_SCRIPT_SCRIPT = 3;
-    POINTER = 4;
-    POINTER_SCRIPT = 5;
-    ENTERPRISE = 6;
-    ENTERPRISE_SCRIPT = 7;
-    BYRON = 8;
-    REWARD = 14;
-    REWARD_SCRIPT = 15;
+  BASE = 0;
+  BASE_SCRIPT_KEY = 1;
+  BASE_KEY_SCRIPT = 2;
+  BASE_SCRIPT_SCRIPT = 3;
+  POINTER = 4;
+  POINTER_SCRIPT = 5;
+  ENTERPRISE = 6;
+  ENTERPRISE_SCRIPT = 7;
+  BYRON = 8;
+  REWARD = 14;
+  REWARD_SCRIPT = 15;
 }
 
 enum CardanoNativeScriptType {
-    PUB_KEY = 0;
-    ALL = 1;
-    ANY = 2;
-    N_OF_K = 3;
-    INVALID_BEFORE = 4;
-    INVALID_HEREAFTER = 5;
+  PUB_KEY = 0;
+  ALL = 1;
+  ANY = 2;
+  N_OF_K = 3;
+  INVALID_BEFORE = 4;
+  INVALID_HEREAFTER = 5;
 }
 
 enum CardanoNativeScriptHashDisplayFormat {
-    HIDE = 0;
-    BECH32 = 1;
-    POLICY_ID = 2;
+  HIDE = 0;
+  BECH32 = 1;
+  POLICY_ID = 2;
 }
 
 enum CardanoTxOutputSerializationFormat {
-    ARRAY_LEGACY = 0; // legacy_transaction_output in CDDL
-    MAP_BABBAGE = 1;  // post_alonzo_transaction_output in CDDL
+  ARRAY_LEGACY = 0; // legacy_transaction_output in CDDL
+  MAP_BABBAGE = 1; // post_alonzo_transaction_output in CDDL
 }
 
 enum CardanoCertificateType {
-    STAKE_REGISTRATION = 0;
-    STAKE_DEREGISTRATION = 1;
-    STAKE_DELEGATION = 2;
-    STAKE_POOL_REGISTRATION = 3;
-    STAKE_REGISTRATION_CONWAY = 7;
-    STAKE_DEREGISTRATION_CONWAY = 8;
-    VOTE_DELEGATION = 9;
+  STAKE_REGISTRATION = 0;
+  STAKE_DEREGISTRATION = 1;
+  STAKE_DELEGATION = 2;
+  STAKE_POOL_REGISTRATION = 3;
+  STAKE_REGISTRATION_CONWAY = 7;
+  STAKE_DEREGISTRATION_CONWAY = 8;
+  VOTE_DELEGATION = 9;
 }
 
 enum CardanoDRepType {
-    KEY_HASH = 0;
-    SCRIPT_HASH = 1;
-    ABSTAIN = 2;
-    NO_CONFIDENCE = 3;
+  KEY_HASH = 0;
+  SCRIPT_HASH = 1;
+  ABSTAIN = 2;
+  NO_CONFIDENCE = 3;
 }
 
 enum CardanoPoolRelayType {
-    SINGLE_HOST_IP = 0;
-    SINGLE_HOST_NAME = 1;
-    MULTIPLE_HOST_NAME = 2;
+  SINGLE_HOST_IP = 0;
+  SINGLE_HOST_NAME = 1;
+  MULTIPLE_HOST_NAME = 2;
 }
 
 enum CardanoTxAuxiliaryDataSupplementType {
-    NONE = 0;
-    CVOTE_REGISTRATION_SIGNATURE = 1;
+  NONE = 0;
+  CVOTE_REGISTRATION_SIGNATURE = 1;
 }
 
 enum CardanoCVoteRegistrationFormat {
-    CIP15 = 0;
-    CIP36 = 1;
+  CIP15 = 0;
+  CIP36 = 1;
 }
 
 enum CardanoTxSigningMode {
-    ORDINARY_TRANSACTION = 0;
-    POOL_REGISTRATION_AS_OWNER = 1;
-    MULTISIG_TRANSACTION = 2;
-    PLUTUS_TRANSACTION = 3;
+  ORDINARY_TRANSACTION = 0;
+  POOL_REGISTRATION_AS_OWNER = 1;
+  MULTISIG_TRANSACTION = 2;
+  PLUTUS_TRANSACTION = 3;
 }
 
 enum CardanoTxWitnessType {
-    BYRON_WITNESS = 0;
-    SHELLEY_WITNESS = 1;
+  BYRON_WITNESS = 0;
+  SHELLEY_WITNESS = 1;
 }
 
 /**
@@ -102,23 +102,23 @@ enum CardanoTxWitnessType {
  * @embed
  */
 message CardanoBlockchainPointerType {
-    required uint32 block_index = 1;
-    required uint32 tx_index = 2;
-    required uint32 certificate_index = 3;
+  required uint32 block_index = 1;
+  required uint32 tx_index = 2;
+  required uint32 certificate_index = 3;
 }
 
 /*
  * @embed
  */
 message CardanoNativeScript {
-    required CardanoNativeScriptType type = 1;
-    repeated CardanoNativeScript scripts = 2;
+  required CardanoNativeScriptType type = 1;
+  repeated CardanoNativeScript scripts = 2;
 
-    optional bytes key_hash = 3;
-    repeated uint32 key_path = 4;
-    optional uint32 required_signatures_count = 5;
-    optional uint64 invalid_before = 6;
-    optional uint64 invalid_hereafter = 7;
+  optional bytes key_hash = 3;
+  repeated uint32 key_path = 4;
+  optional uint32 required_signatures_count = 5;
+  optional uint64 invalid_before = 6;
+  optional uint64 invalid_hereafter = 7;
 }
 
 /**
@@ -128,9 +128,9 @@ message CardanoNativeScript {
  * @next Failure
  */
 message CardanoGetNativeScriptHash {
-    required CardanoNativeScript script = 1;
-    required CardanoNativeScriptHashDisplayFormat display_format = 2;   // display hash as bech32 or policy id
-    required CardanoDerivationType derivation_type = 3;
+  required CardanoNativeScript script = 1;
+  required CardanoNativeScriptHashDisplayFormat display_format = 2; // display hash as bech32 or policy id
+  required CardanoDerivationType derivation_type = 3;
 }
 
 /**
@@ -138,7 +138,7 @@ message CardanoGetNativeScriptHash {
  * @end
  */
 message CardanoNativeScriptHash {
-    required bytes script_hash = 1;
+  required bytes script_hash = 1;
 }
 
 /**
@@ -150,15 +150,15 @@ message CardanoNativeScriptHash {
  * @embed
  */
 message CardanoAddressParametersType {
-    required CardanoAddressType address_type = 1;                   // one of the CardanoAddressType-s
-    repeated uint32 address_n = 2;                                  // BIP-32-style path to derive the spending key from master node
-    repeated uint32 address_n_staking = 3;                          // BIP-32-style path to derive staking key from master node
-    optional bytes staking_key_hash = 4;                            // staking key can be derived from address_n_staking, or
-                                                                    // can be sent directly e.g. if it doesn't belong to
-                                                                    // the same account as address_n
-    optional CardanoBlockchainPointerType certificate_pointer = 5;  // a pointer to the staking key registration certificate
-    optional bytes script_payment_hash = 6;
-    optional bytes script_staking_hash = 7;
+  required CardanoAddressType address_type = 1; // one of the CardanoAddressType-s
+  repeated uint32 address_n = 2; // BIP-32-style path to derive the spending key from master node
+  repeated uint32 address_n_staking = 3; // BIP-32-style path to derive staking key from master node
+  optional bytes staking_key_hash = 4; // staking key can be derived from address_n_staking, or
+  // can be sent directly e.g. if it doesn't belong to
+  // the same account as address_n
+  optional CardanoBlockchainPointerType certificate_pointer = 5; // a pointer to the staking key registration certificate
+  optional bytes script_payment_hash = 6;
+  optional bytes script_staking_hash = 7;
 }
 
 /**
@@ -168,13 +168,13 @@ message CardanoAddressParametersType {
  * @next Failure
  */
 message CardanoGetAddress {
-    // repeated uint32 address_n = 1;                               // moved to address_parameters
-    optional bool show_display = 2 [default=false];                 // optionally prompt for confirmation on Trezor display
-    required uint32 protocol_magic = 3;                             // network's protocol magic - needed for Byron addresses on testnets
-    required uint32 network_id = 4;                                 // network id - mainnet or testnet
-    required CardanoAddressParametersType address_parameters = 5;   // parameters used to derive the address
-    required CardanoDerivationType derivation_type = 6;
-    optional bool chunkify = 7;                                     // display the address in chunks of 4 characters
+  // repeated uint32 address_n = 1;                               // moved to address_parameters
+  optional bool show_display = 2 [default = false]; // optionally prompt for confirmation on Trezor display
+  required uint32 protocol_magic = 3; // network's protocol magic - needed for Byron addresses on testnets
+  required uint32 network_id = 4; // network id - mainnet or testnet
+  required CardanoAddressParametersType address_parameters = 5; // parameters used to derive the address
+  required CardanoDerivationType derivation_type = 6;
+  optional bool chunkify = 7; // display the address in chunks of 4 characters
 }
 
 /**
@@ -182,8 +182,8 @@ message CardanoGetAddress {
  * @end
  */
 message CardanoAddress {
-    required string address = 1;    // Base58 cardano address
-    optional bytes mac = 2;         // Address authentication code
+  required string address = 1; // Base58 cardano address
+  optional bytes mac = 2; // Address authentication code
 }
 
 /**
@@ -193,9 +193,9 @@ message CardanoAddress {
  * @next Failure
  */
 message CardanoGetPublicKey {
-    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
-    optional bool show_display = 2; // optionally show on display before sending the result
-    required CardanoDerivationType derivation_type = 3;
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  optional bool show_display = 2; // optionally show on display before sending the result
+  required CardanoDerivationType derivation_type = 3;
 }
 
 /**
@@ -203,8 +203,8 @@ message CardanoGetPublicKey {
  * @end
  */
 message CardanoPublicKey {
-    required string xpub = 1;                               // Xpub key
-    required hw.trezor.messages.common.HDNodeType node = 2; // BIP-32 public node
+  required string xpub = 1; // Xpub key
+  required hw.trezor.messages.common.HDNodeType node = 2; // BIP-32 public node
 }
 
 /**
@@ -214,30 +214,30 @@ message CardanoPublicKey {
  * @next Failure
  */
 message CardanoSignTxInit {
-    required CardanoTxSigningMode signing_mode = 1;
-    required uint32 protocol_magic = 2;                         // network's protocol magic
-    required uint32 network_id = 3;                             // network id - mainnet or testnet
-    required uint32 inputs_count = 4;
-    required uint32 outputs_count = 5;
-    required uint64 fee = 6;                                    // transaction fee - added in shelley
-    optional uint64 ttl = 7;                                    // transaction ttl - added in shelley
-    required uint32 certificates_count = 8;
-    required uint32 withdrawals_count = 9;
-    required bool has_auxiliary_data = 10;
-    optional uint64 validity_interval_start = 11;
-    required uint32 witness_requests_count = 12;
-    required uint32 minting_asset_groups_count = 13;
-    required CardanoDerivationType derivation_type = 14;
-    optional bool include_network_id = 15 [default=false];      // network id included as tx body item
-    optional bytes script_data_hash = 16;
-    required uint32 collateral_inputs_count = 17;
-    required uint32 required_signers_count = 18;
-    optional bool has_collateral_return = 19 [default=false];
-    optional uint64 total_collateral = 20;
-    optional uint32 reference_inputs_count = 21 [default=0];
-    optional bool chunkify = 22;                                // display the address in chunks of 4 characters
-    optional bool tag_cbor_sets = 23 [default=false];           // use tag 258 for sets in cbor
-    optional common.PaymentRequest payment_req = 24;            // SLIP-24 payment request
+  required CardanoTxSigningMode signing_mode = 1;
+  required uint32 protocol_magic = 2; // network's protocol magic
+  required uint32 network_id = 3; // network id - mainnet or testnet
+  required uint32 inputs_count = 4;
+  required uint32 outputs_count = 5;
+  required uint64 fee = 6; // transaction fee - added in shelley
+  optional uint64 ttl = 7; // transaction ttl - added in shelley
+  required uint32 certificates_count = 8;
+  required uint32 withdrawals_count = 9;
+  required bool has_auxiliary_data = 10;
+  optional uint64 validity_interval_start = 11;
+  required uint32 witness_requests_count = 12;
+  required uint32 minting_asset_groups_count = 13;
+  required CardanoDerivationType derivation_type = 14;
+  optional bool include_network_id = 15 [default = false]; // network id included as tx body item
+  optional bytes script_data_hash = 16;
+  required uint32 collateral_inputs_count = 17;
+  required uint32 required_signers_count = 18;
+  optional bool has_collateral_return = 19 [default = false];
+  optional uint64 total_collateral = 20;
+  optional uint32 reference_inputs_count = 21 [default = 0];
+  optional bool chunkify = 22; // display the address in chunks of 4 characters
+  optional bool tag_cbor_sets = 23 [default = false]; // use tag 258 for sets in cbor
+  optional common.PaymentRequest payment_req = 24; // SLIP-24 payment request
 }
 
 /**
@@ -245,8 +245,8 @@ message CardanoSignTxInit {
  * @next CardanoTxItemAck
  */
 message CardanoTxInput {
-    required bytes prev_hash = 1;   // hash of previous transaction output to spend by this input
-    required uint32 prev_index = 2; // index of previous output to spend
+  required bytes prev_hash = 1; // hash of previous transaction output to spend by this input
+  required uint32 prev_index = 2; // index of previous output to spend
 }
 
 /**
@@ -254,14 +254,14 @@ message CardanoTxInput {
  * @next CardanoTxItemAck
  */
 message CardanoTxOutput {
-    optional string address = 1;                                                    // target coin address in bech32 or base58
-    optional CardanoAddressParametersType address_parameters = 2;                   // parameters used to derive the address
-    required uint64 amount = 3;                                                     // amount to spend
-    required uint32 asset_groups_count = 4;
-    optional bytes datum_hash = 5;
-    optional CardanoTxOutputSerializationFormat format = 6 [default=ARRAY_LEGACY];
-    optional uint32 inline_datum_size = 7 [default=0];                              // 0 means no inline datum
-    optional uint32 reference_script_size = 8 [default=0];                          // 0 means no reference script
+  optional string address = 1; // target coin address in bech32 or base58
+  optional CardanoAddressParametersType address_parameters = 2; // parameters used to derive the address
+  required uint64 amount = 3; // amount to spend
+  required uint32 asset_groups_count = 4;
+  optional bytes datum_hash = 5;
+  optional CardanoTxOutputSerializationFormat format = 6 [default = ARRAY_LEGACY];
+  optional uint32 inline_datum_size = 7 [default = 0]; // 0 means no inline datum
+  optional uint32 reference_script_size = 8 [default = 0]; // 0 means no reference script
 }
 
 /**
@@ -269,8 +269,8 @@ message CardanoTxOutput {
  * @next CardanoTxItemAck
  */
 message CardanoAssetGroup {
-    required bytes policy_id = 1;                  // asset group policy id
-    required uint32 tokens_count = 2;
+  required bytes policy_id = 1; // asset group policy id
+  required uint32 tokens_count = 2;
 }
 
 /**
@@ -278,9 +278,9 @@ message CardanoAssetGroup {
  * @next CardanoTxItemAck
  */
 message CardanoToken {
-    required bytes asset_name_bytes = 1;     // asset name as bytestring (may be either ascii string or hash)
-    optional uint64 amount = 2;              // asset amount
-    optional sint64 mint_amount = 3;         // mint amount (can also be negative in which case the tokens are burnt)
+  required bytes asset_name_bytes = 1; // asset name as bytestring (may be either ascii string or hash)
+  optional uint64 amount = 2; // asset amount
+  optional sint64 mint_amount = 3; // mint amount (can also be negative in which case the tokens are burnt)
 }
 
 /**
@@ -288,7 +288,7 @@ message CardanoToken {
  * @next CardanoTxItemAck
  */
 message CardanoTxInlineDatumChunk {
-    required bytes data = 1;                // expected maximum chunk size is 1024 bytes
+  required bytes data = 1; // expected maximum chunk size is 1024 bytes
 }
 
 /**
@@ -296,7 +296,7 @@ message CardanoTxInlineDatumChunk {
  * @next CardanoTxItemAck
  */
 message CardanoTxReferenceScriptChunk {
-    required bytes data = 1;                // expected maximum chunk size is 1024 bytes
+  required bytes data = 1; // expected maximum chunk size is 1024 bytes
 }
 
 /**
@@ -304,8 +304,8 @@ message CardanoTxReferenceScriptChunk {
  * @next CardanoTxItemAck
  */
 message CardanoPoolOwner {
-    repeated uint32 staking_key_path = 1;   // BIP-32-style path to derive staking key of the owner
-    optional bytes staking_key_hash = 2;    // owner's staking key if it is an external owner
+  repeated uint32 staking_key_path = 1; // BIP-32-style path to derive staking key of the owner
+  optional bytes staking_key_hash = 2; // owner's staking key if it is an external owner
 }
 
 /**
@@ -313,11 +313,11 @@ message CardanoPoolOwner {
  * @next CardanoTxItemAck
  */
 message CardanoPoolRelayParameters {
-    required CardanoPoolRelayType type = 1;   // pool relay type
-    optional bytes ipv4_address = 2;          // ipv4 address of the relay given as 4 bytes
-    optional bytes ipv6_address = 3;          // ipv6 address of the relay given as 16 bytes
-    optional string host_name = 4;            // relay host name given as URL, at most 64 characters
-    optional uint32 port = 5;                 // relay port number in the range 0-65535
+  required CardanoPoolRelayType type = 1; // pool relay type
+  optional bytes ipv4_address = 2; // ipv4 address of the relay given as 4 bytes
+  optional bytes ipv6_address = 3; // ipv6 address of the relay given as 16 bytes
+  optional string host_name = 4; // relay host name given as URL, at most 64 characters
+  optional uint32 port = 5; // relay port number in the range 0-65535
 }
 
 /**
@@ -325,8 +325,8 @@ message CardanoPoolRelayParameters {
  * @embed
  */
 message CardanoPoolMetadataType {
-    required string url = 1;   // stake pool url hosting metadata, at most 64 characters
-    required bytes hash = 2;   // stake pool metadata hash
+  required string url = 1; // stake pool url hosting metadata, at most 64 characters
+  required bytes hash = 2; // stake pool metadata hash
 }
 
 /**
@@ -334,28 +334,28 @@ message CardanoPoolMetadataType {
  * @embed
  */
 message CardanoPoolParametersType {
-    required bytes pool_id = 1;                         // stake pool cold public key hash (28 bytes)
-    required bytes vrf_key_hash = 2;                    // VRF key hash (32 bytes)
-    required uint64 pledge = 3;                         // pledge amount in lovelace
-    required uint64 cost = 4;                           // cost in lovelace
-    required uint64 margin_numerator = 5;               // pool margin numerator
-    required uint64 margin_denominator = 6;             // pool margin denominator
-    required string reward_account = 7;                 // bech32 reward address where the pool receives rewards
-    // repeated CardanoPoolOwner owners = 8;            // legacy pool owners list - support for pre-tx-streaming firmwares dropped
-    // repeated CardanoPoolRelayParameters relays = 9;  // legacy pool relays list - support for pre-tx-streaming firmwares dropped
-    optional CardanoPoolMetadataType metadata = 10;     // pool metadata
-    required uint32 owners_count = 11;                  // number of pool owners
-    required uint32 relays_count = 12;                  // number of pool relays
+  required bytes pool_id = 1; // stake pool cold public key hash (28 bytes)
+  required bytes vrf_key_hash = 2; // VRF key hash (32 bytes)
+  required uint64 pledge = 3; // pledge amount in lovelace
+  required uint64 cost = 4; // cost in lovelace
+  required uint64 margin_numerator = 5; // pool margin numerator
+  required uint64 margin_denominator = 6; // pool margin denominator
+  required string reward_account = 7; // bech32 reward address where the pool receives rewards
+  // repeated CardanoPoolOwner owners = 8;            // legacy pool owners list - support for pre-tx-streaming firmwares dropped
+  // repeated CardanoPoolRelayParameters relays = 9;  // legacy pool relays list - support for pre-tx-streaming firmwares dropped
+  optional CardanoPoolMetadataType metadata = 10; // pool metadata
+  required uint32 owners_count = 11; // number of pool owners
+  required uint32 relays_count = 12; // number of pool relays
 }
 
 /**
  * DRep delegation parameters
  * @embed
-*/
+ */
 message CardanoDRep {
-    required CardanoDRepType type = 1;  // drep type
-    optional bytes key_hash = 2;        // drep key hash
-    optional bytes script_hash = 3;     // drep script hash
+  required CardanoDRepType type = 1; // drep type
+  optional bytes key_hash = 2; // drep key hash
+  optional bytes script_hash = 3; // drep script hash
 }
 
 /**
@@ -363,14 +363,14 @@ message CardanoDRep {
  * @next CardanoTxItemAck
  */
 message CardanoTxCertificate {
-    required CardanoCertificateType type = 1;                 // certificate type
-    repeated uint32 path = 2;                                 // stake credential key path
-    optional bytes pool = 3;                                  // pool hash
-    optional CardanoPoolParametersType pool_parameters = 4;   // used for stake pool registration certificate
-    optional bytes script_hash = 5;                           // stake credential script hash
-    optional bytes key_hash = 6;                              // stake credential key hash
-    optional uint64 deposit = 7;                              // used for stake key registration certificate
-    optional CardanoDRep drep = 8;                            // used for vote delegation certificate
+  required CardanoCertificateType type = 1; // certificate type
+  repeated uint32 path = 2; // stake credential key path
+  optional bytes pool = 3; // pool hash
+  optional CardanoPoolParametersType pool_parameters = 4; // used for stake pool registration certificate
+  optional bytes script_hash = 5; // stake credential script hash
+  optional bytes key_hash = 6; // stake credential key hash
+  optional uint64 deposit = 7; // used for stake key registration certificate
+  optional CardanoDRep drep = 8; // used for vote delegation certificate
 }
 
 /**
@@ -378,32 +378,32 @@ message CardanoTxCertificate {
  * @next CardanoTxItemAck
  */
 message CardanoTxWithdrawal {
-    repeated uint32 path = 1;           // stake credential key path
-    required uint64 amount = 2;
-    optional bytes script_hash = 3;     // stake credential script hash
-    optional bytes key_hash = 4;        // stake credential key hash
+  repeated uint32 path = 1; // stake credential key path
+  required uint64 amount = 2;
+  optional bytes script_hash = 3; // stake credential script hash
+  optional bytes key_hash = 4; // stake credential key hash
 }
 
 /**
  * @embed
  */
 message CardanoCVoteRegistrationDelegation {
-    required bytes vote_public_key = 1;
-    required uint32 weight = 2;
+  required bytes vote_public_key = 1;
+  required uint32 weight = 2;
 }
 
 /**
  * @embed
  */
 message CardanoCVoteRegistrationParametersType {
-    optional bytes vote_public_key = 1; // mutually exclusive with delegations
-    repeated uint32 staking_path = 2;
-    optional CardanoAddressParametersType payment_address_parameters = 3; // mutually exclusive with payment_address
-    required uint64 nonce = 4;
-    optional CardanoCVoteRegistrationFormat format = 5 [default=CIP15];
-    repeated CardanoCVoteRegistrationDelegation delegations = 6;  // mutually exclusive with vote_public_key; max 32 delegations
-    optional uint64 voting_purpose = 7;
-    optional string payment_address = 8; // mutually exclusive with payment_address_parameters
+  optional bytes vote_public_key = 1; // mutually exclusive with delegations
+  repeated uint32 staking_path = 2;
+  optional CardanoAddressParametersType payment_address_parameters = 3; // mutually exclusive with payment_address
+  required uint64 nonce = 4;
+  optional CardanoCVoteRegistrationFormat format = 5 [default = CIP15];
+  repeated CardanoCVoteRegistrationDelegation delegations = 6; // mutually exclusive with vote_public_key; max 32 delegations
+  optional uint64 voting_purpose = 7;
+  optional string payment_address = 8; // mutually exclusive with payment_address_parameters
 }
 
 /**
@@ -412,8 +412,8 @@ message CardanoCVoteRegistrationParametersType {
  * @next CardanoTxAuxiliaryDataSupplement
  */
 message CardanoTxAuxiliaryData {
-    optional CardanoCVoteRegistrationParametersType cvote_registration_parameters = 1;
-    optional bytes hash = 2;
+  optional CardanoCVoteRegistrationParametersType cvote_registration_parameters = 1;
+  optional bytes hash = 2;
 }
 
 /**
@@ -421,7 +421,7 @@ message CardanoTxAuxiliaryData {
  * @next CardanoTxItemAck
  */
 message CardanoTxMint {
-    required uint32 asset_groups_count = 1;
+  required uint32 asset_groups_count = 1;
 }
 
 /**
@@ -429,8 +429,8 @@ message CardanoTxMint {
  * @next CardanoTxItemAck
  */
 message CardanoTxCollateralInput {
-    required bytes prev_hash = 1;
-    required uint32 prev_index = 2;
+  required bytes prev_hash = 1;
+  required uint32 prev_index = 2;
 }
 
 /**
@@ -438,8 +438,8 @@ message CardanoTxCollateralInput {
  * @next CardanoTxItemAck
  */
 message CardanoTxRequiredSigner {
-    optional bytes key_hash = 1;
-    repeated uint32 key_path = 2;
+  optional bytes key_hash = 1;
+  repeated uint32 key_path = 2;
 }
 
 /**
@@ -447,8 +447,8 @@ message CardanoTxRequiredSigner {
  * @next CardanoTxItemAck
  */
 message CardanoTxReferenceInput {
-    required bytes prev_hash = 1;
-    required uint32 prev_index = 2;
+  required bytes prev_hash = 1;
+  required uint32 prev_index = 2;
 }
 
 /**
@@ -470,17 +470,16 @@ message CardanoTxReferenceInput {
  * @next CardanoTxRequiredSigner
  * @next CardanoTxReferenceInput
  */
-message CardanoTxItemAck {
-}
+message CardanoTxItemAck {}
 
 /**
  * Response: Device-generated supplement for the auxiliary data
  * @next CardanoTxWitnessRequest
  */
 message CardanoTxAuxiliaryDataSupplement {
-    required CardanoTxAuxiliaryDataSupplementType type = 1;
-    optional bytes auxiliary_data_hash = 2;
-    optional bytes cvote_registration_signature = 3;
+  required CardanoTxAuxiliaryDataSupplementType type = 1;
+  optional bytes auxiliary_data_hash = 2;
+  optional bytes cvote_registration_signature = 3;
 }
 
 /**
@@ -488,7 +487,7 @@ message CardanoTxAuxiliaryDataSupplement {
  * @next CardanoTxWitnessResponse
  */
 message CardanoTxWitnessRequest {
-    repeated uint32 path = 1;
+  repeated uint32 path = 1;
 }
 
 /**
@@ -497,10 +496,10 @@ message CardanoTxWitnessRequest {
  * @next CardanoTxHostAck
  */
 message CardanoTxWitnessResponse {
-    required CardanoTxWitnessType type = 1;
-    required bytes pub_key = 2;
-    required bytes signature = 3;
-    optional bytes chain_code = 4;
+  required CardanoTxWitnessType type = 1;
+  required bytes pub_key = 2;
+  required bytes signature = 3;
+  optional bytes chain_code = 4;
 }
 
 /**
@@ -508,23 +507,21 @@ message CardanoTxWitnessResponse {
  * @next CardanoTxBodyHash
  * @next CardanoSignTxFinished
  */
-message CardanoTxHostAck {
-}
+message CardanoTxHostAck {}
 
 /**
  * Response: Hash of the serialized transaction body
  * @next CardanoTxHostAck
  */
 message CardanoTxBodyHash {
-    required bytes tx_hash = 1;
+  required bytes tx_hash = 1;
 }
 
 /**
  * Response: Confirm the successful completion of the signing process
  * @end
  */
-message CardanoSignTxFinished {
-}
+message CardanoSignTxFinished {}
 
 /**
  * Request: Ask device to sign a message containing arbitrary data
@@ -533,13 +530,13 @@ message CardanoSignTxFinished {
  * @next CardanoMessageSignature
  */
 message CardanoSignMessageInit {
-    optional uint32 protocol_magic = 1;                           // network's protocol magic
-    optional uint32 network_id = 2;                               // network id - mainnet or testnet
-    repeated uint32 signing_path = 3;                             // BIP-32-style path to derive the signing key from master node
-    required uint32 payload_size = 4;                             // size of the payload to be signed
-    required bool prefer_hex_display = 5;                         // whether to decode payload as hex even if valid ascii
-    optional CardanoAddressParametersType address_parameters = 6;
-    required CardanoDerivationType derivation_type = 7;
+  optional uint32 protocol_magic = 1; // network's protocol magic
+  optional uint32 network_id = 2; // network id - mainnet or testnet
+  repeated uint32 signing_path = 3; // BIP-32-style path to derive the signing key from master node
+  required uint32 payload_size = 4; // size of the payload to be signed
+  required bool prefer_hex_display = 5; // whether to decode payload as hex even if valid ascii
+  optional CardanoAddressParametersType address_parameters = 6;
+  required CardanoDerivationType derivation_type = 7;
 }
 
 /**
@@ -547,8 +544,8 @@ message CardanoSignMessageInit {
  * @next CardanoMessageDataResponse
  */
 message CardanoMessageDataRequest {
-    required uint32 length = 1;        // size of data chunk to read
-    required uint32 offset = 2;        // offset from start of payload
+  required uint32 length = 1; // size of data chunk to read
+  required uint32 offset = 2; // offset from start of payload
 }
 
 /**
@@ -557,16 +554,15 @@ message CardanoMessageDataRequest {
  * @next CardanoMessageSignature
  */
 message CardanoMessageDataResponse {
-    required bytes data = 1;  // the requested data chunk
+  required bytes data = 1; // the requested data chunk
 }
-
 
 /**
  * Response: Contains signature for message and address used in signed headers
  * @end
  */
 message CardanoMessageSignature {
-    required bytes signature = 1; // signature for structure containing payload and protected headers
-    required bytes address = 2;   // value of the address field in protected headers
-    required bytes pub_key = 3;   // public key given by signing path
+  required bytes signature = 1; // signature for structure containing payload and protected headers
+  required bytes address = 2; // value of the address field in protected headers
+  required bytes pub_key = 3; // public key given by signing path
 }

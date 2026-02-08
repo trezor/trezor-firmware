@@ -1,61 +1,61 @@
 syntax = "proto2";
 package hw.trezor.messages.bitcoin;
 
-// Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
-option java_outer_classname = "TrezorMessageBitcoin";
-
 import "messages-common.proto";
 import "options.proto";
 
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageBitcoin";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+// Include in BTC-only firmware
 option (include_in_bitcoin_only) = true;
 
 /**
  * Type of script which will be used for transaction input
  */
 enum InputScriptType {
-    SPENDADDRESS = 0;       // standard P2PKH address
-    SPENDMULTISIG = 1;      // P2SH multisig address
-    EXTERNAL = 2;           // reserved for external inputs (coinjoin)
-    SPENDWITNESS = 3;       // native SegWit
-    SPENDP2SHWITNESS = 4;   // SegWit over P2SH (backward compatible)
-    SPENDTAPROOT = 5;       // Taproot
+  SPENDADDRESS = 0; // standard P2PKH address
+  SPENDMULTISIG = 1; // P2SH multisig address
+  EXTERNAL = 2; // reserved for external inputs (coinjoin)
+  SPENDWITNESS = 3; // native SegWit
+  SPENDP2SHWITNESS = 4; // SegWit over P2SH (backward compatible)
+  SPENDTAPROOT = 5; // Taproot
 }
 
 /**
  * Type of script which will be used for transaction output
  */
 enum OutputScriptType {
-    PAYTOADDRESS = 0;       // used for all addresses (bitcoin, p2sh, witness)
-    PAYTOSCRIPTHASH = 1;    // p2sh address (deprecated; use PAYTOADDRESS)
-    PAYTOMULTISIG = 2;      // only for change output
-    PAYTOOPRETURN = 3;      // op_return
-    PAYTOWITNESS = 4;       // only for change output
-    PAYTOP2SHWITNESS = 5;   // only for change output
-    PAYTOTAPROOT = 6;       // only for change output
+  PAYTOADDRESS = 0; // used for all addresses (bitcoin, p2sh, witness)
+  PAYTOSCRIPTHASH = 1; // p2sh address (deprecated; use PAYTOADDRESS)
+  PAYTOMULTISIG = 2; // only for change output
+  PAYTOOPRETURN = 3; // op_return
+  PAYTOWITNESS = 4; // only for change output
+  PAYTOP2SHWITNESS = 5; // only for change output
+  PAYTOTAPROOT = 6; // only for change output
 }
 
 /**
  * Type of script which will be used for decred stake transaction input
  */
 enum DecredStakingSpendType {
-    SSGen = 0;
-    SSRTX = 1;
+  SSGen = 0;
+  SSRTX = 1;
 }
 
 /**
  * Unit to be used when showing amounts on the display
  */
 enum AmountUnit {
-    BITCOIN = 0;        // BTC
-    MILLIBITCOIN = 1;   // mBTC
-    MICROBITCOIN = 2;   // uBTC
-    SATOSHI = 3;        // sat
+  BITCOIN = 0; // BTC
+  MILLIBITCOIN = 1; // mBTC
+  MICROBITCOIN = 2; // uBTC
+  SATOSHI = 3; // sat
 }
 
 enum MultisigPubkeysOrder {
-    PRESERVED = 0;      // order of pubkeys is preserved
-    LEXICOGRAPHIC = 1;  // pubkeys are sorted lexicographically (BIP-67)
+  PRESERVED = 0; // order of pubkeys is preserved
+  LEXICOGRAPHIC = 1; // pubkeys are sorted lexicographically (BIP-67)
 }
 
 /**
@@ -63,19 +63,19 @@ enum MultisigPubkeysOrder {
  * @embed
  */
 message MultisigRedeemScriptType {
-    repeated HDNodePathType pubkeys = 1;    // this field is deprecated and will be removed in the future, use nodes together with address_n instead
-    repeated bytes signatures = 2;          // existing signatures for partially signed input
-    required uint32 m = 3;                  // "m" from n, how many valid signatures is necessary for spending
-    repeated common.HDNodeType nodes = 4;
-    repeated uint32 address_n = 5;          // path to derive pubkeys from nodes
-    optional MultisigPubkeysOrder pubkeys_order = 6 [default=PRESERVED]; // order of pubkeys in script pubkey
-    /**
-    * Structure representing HDNode + Path
-    */
-    message HDNodePathType {
-        required common.HDNodeType node = 1; // BIP-32 node in deserialized form
-        repeated uint32 address_n = 2;                          // BIP-32 path to derive the key from node
-    }
+  repeated HDNodePathType pubkeys = 1; // this field is deprecated and will be removed in the future, use nodes together with address_n instead
+  repeated bytes signatures = 2; // existing signatures for partially signed input
+  required uint32 m = 3; // "m" from n, how many valid signatures is necessary for spending
+  repeated common.HDNodeType nodes = 4;
+  repeated uint32 address_n = 5; // path to derive pubkeys from nodes
+  optional MultisigPubkeysOrder pubkeys_order = 6 [default = PRESERVED]; // order of pubkeys in script pubkey
+  /**
+   * Structure representing HDNode + Path
+   */
+  message HDNodePathType {
+    required common.HDNodeType node = 1; // BIP-32 node in deserialized form
+    repeated uint32 address_n = 2; // BIP-32 path to derive the key from node
+  }
 }
 
 /**
@@ -85,12 +85,12 @@ message MultisigRedeemScriptType {
  * @next Failure
  */
 message GetPublicKey {
-    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
-    optional string ecdsa_curve_name = 2;                               // ECDSA curve name to use
-    optional bool show_display = 3;                                     // optionally show on display before sending the result
-    optional string coin_name = 4 [default='Bitcoin'];                  // coin to use for verifying
-    optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
-    optional bool ignore_xpub_magic = 6;                                // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  optional string ecdsa_curve_name = 2; // ECDSA curve name to use
+  optional bool show_display = 3; // optionally show on display before sending the result
+  optional string coin_name = 4 [default = 'Bitcoin']; // coin to use for verifying
+  optional InputScriptType script_type = 5 [default = SPENDADDRESS]; // used to distinguish between various address formats (non-segwit, segwit, etc.)
+  optional bool ignore_xpub_magic = 6; // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
 }
 
 /**
@@ -98,10 +98,10 @@ message GetPublicKey {
  * @end
  */
 message PublicKey {
-    required common.HDNodeType node = 1;        // BIP-32 public node
-    required string xpub = 2;                   // serialized form of public node
-    optional uint32 root_fingerprint = 3;       // master root node fingerprint
-    optional string descriptor = 4;             // BIP-380 descriptor
+  required common.HDNodeType node = 1; // BIP-32 public node
+  required string xpub = 2; // serialized form of public node
+  optional uint32 root_fingerprint = 3; // master root node fingerprint
+  optional string descriptor = 4; // BIP-380 descriptor
 }
 
 /**
@@ -111,13 +111,13 @@ message PublicKey {
  * @next Failure
  */
 message GetAddress {
-    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
-    optional string coin_name = 2 [default='Bitcoin'];                  // coin to use
-    optional bool show_display = 3;                                     // optionally show on display before sending the result
-    optional MultisigRedeemScriptType multisig = 4;                     // filled if we are showing a multisig address
-    optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
-    optional bool ignore_xpub_magic = 6;                                // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
-    optional bool chunkify = 7;                                         // display the address in chunks of 4 characters
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  optional string coin_name = 2 [default = 'Bitcoin']; // coin to use
+  optional bool show_display = 3; // optionally show on display before sending the result
+  optional MultisigRedeemScriptType multisig = 4; // filled if we are showing a multisig address
+  optional InputScriptType script_type = 5 [default = SPENDADDRESS]; // used to distinguish between various address formats (non-segwit, segwit, etc.)
+  optional bool ignore_xpub_magic = 6; // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+  optional bool chunkify = 7; // display the address in chunks of 4 characters
 }
 
 /**
@@ -125,8 +125,8 @@ message GetAddress {
  * @end
  */
 message Address {
-    required string address = 1;    // Coin address in Base58 encoding
-    optional bytes mac = 2;         // Address authentication code
+  required string address = 1; // Coin address in Base58 encoding
+  optional bytes mac = 2; // Address authentication code
 }
 
 /**
@@ -136,10 +136,10 @@ message Address {
  * @next Failure
  */
 message GetOwnershipId {
-    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
-    optional string coin_name = 2 [default='Bitcoin'];                  // coin to use
-    optional MultisigRedeemScriptType multisig = 3;                     // filled if we are dealing with a multisig scriptPubKey
-    optional InputScriptType script_type = 4 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  optional string coin_name = 2 [default = 'Bitcoin']; // coin to use
+  optional MultisigRedeemScriptType multisig = 3; // filled if we are dealing with a multisig scriptPubKey
+  optional InputScriptType script_type = 4 [default = SPENDADDRESS]; // used to distinguish between various address formats (non-segwit, segwit, etc.)
 }
 
 /**
@@ -147,7 +147,7 @@ message GetOwnershipId {
  * @end
  */
 message OwnershipId {
-    required bytes ownership_id = 1;    // ownership identifier
+  required bytes ownership_id = 1; // ownership identifier
 }
 
 /**
@@ -157,12 +157,12 @@ message OwnershipId {
  * @next Failure
  */
 message SignMessage {
-    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
-    required bytes message = 2;                                         // message to be signed
-    optional string coin_name = 3 [default='Bitcoin'];                  // coin to use for signing
-    optional InputScriptType script_type = 4 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
-    optional bool no_script_type = 5;                                   // don't include script type information in the recovery byte of the signature, same as in Bitcoin Core
-    optional bool chunkify = 6;                                         // display the address in chunks of 4 characters
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  required bytes message = 2; // message to be signed
+  optional string coin_name = 3 [default = 'Bitcoin']; // coin to use for signing
+  optional InputScriptType script_type = 4 [default = SPENDADDRESS]; // used to distinguish between various address formats (non-segwit, segwit, etc.)
+  optional bool no_script_type = 5; // don't include script type information in the recovery byte of the signature, same as in Bitcoin Core
+  optional bool chunkify = 6; // display the address in chunks of 4 characters
 }
 
 /**
@@ -170,8 +170,8 @@ message SignMessage {
  * @end
  */
 message MessageSignature {
-    required string address = 1;    // address used to sign the message
-    required bytes signature = 2;   // signature of the message
+  required string address = 1; // address used to sign the message
+  required bytes signature = 2; // signature of the message
 }
 
 /**
@@ -181,11 +181,11 @@ message MessageSignature {
  * @next Failure
  */
 message VerifyMessage {
-    required string address = 1;                        // address to verify
-    required bytes signature = 2;                       // signature to verify
-    required bytes message = 3;                         // message to verify
-    optional string coin_name = 4 [default='Bitcoin'];  // coin to use for verifying
-    optional bool chunkify = 5;                         // display the address in chunks of 4 characters
+  required string address = 1; // address to verify
+  required bytes signature = 2; // signature to verify
+  required bytes message = 3; // message to verify
+  optional string coin_name = 4 [default = 'Bitcoin']; // coin to use for verifying
+  optional bool chunkify = 5; // display the address in chunks of 4 characters
 }
 
 /**
@@ -195,32 +195,32 @@ message VerifyMessage {
  * @next Failure
  */
 message SignTx {
-    required uint32 outputs_count = 1;                         // number of transaction outputs
-    required uint32 inputs_count = 2;                          // number of transaction inputs
-    optional string coin_name = 3 [default='Bitcoin'];         // coin to use
-    optional uint32 version = 4 [default=1];                   // transaction version
-    optional uint32 lock_time = 5 [default=0];                 // transaction lock_time
-    optional uint32 expiry = 6;                                // only for Decred and Zcash
-    optional bool overwintered = 7 [deprecated=true];          // deprecated in 2.3.2, the field is not needed as it can be derived from `version`
-    optional uint32 version_group_id = 8;                      // only for Zcash, nVersionGroupId
-    optional uint32 timestamp = 9;                             // only for Peercoin
-    optional uint32 branch_id = 10;                            // only for Zcash, BRANCH_ID
-    optional AmountUnit amount_unit = 11 [default=BITCOIN];    // show amounts in
-    optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
-    optional bool serialize = 13 [default=true];               // serialize the full transaction, as opposed to only outputting the signatures
-    optional CoinJoinRequest coinjoin_request = 14;            // only for preauthorized CoinJoins
-    optional bool chunkify = 15;                               // display the address in chunks of 4 characters
+  required uint32 outputs_count = 1; // number of transaction outputs
+  required uint32 inputs_count = 2; // number of transaction inputs
+  optional string coin_name = 3 [default = 'Bitcoin']; // coin to use
+  optional uint32 version = 4 [default = 1]; // transaction version
+  optional uint32 lock_time = 5 [default = 0]; // transaction lock_time
+  optional uint32 expiry = 6; // only for Decred and Zcash
+  optional bool overwintered = 7 [deprecated = true]; // deprecated in 2.3.2, the field is not needed as it can be derived from `version`
+  optional uint32 version_group_id = 8; // only for Zcash, nVersionGroupId
+  optional uint32 timestamp = 9; // only for Peercoin
+  optional uint32 branch_id = 10; // only for Zcash, BRANCH_ID
+  optional AmountUnit amount_unit = 11 [default = BITCOIN]; // show amounts in
+  optional bool decred_staking_ticket = 12 [default = false]; // only for Decred, this is signing a ticket purchase
+  optional bool serialize = 13 [default = true]; // serialize the full transaction, as opposed to only outputting the signatures
+  optional CoinJoinRequest coinjoin_request = 14; // only for preauthorized CoinJoins
+  optional bool chunkify = 15; // display the address in chunks of 4 characters
 
-    /**
-     * Signing request for a CoinJoin transaction.
-     */
-    message CoinJoinRequest {
-        required uint32 fee_rate = 1;                // coordination fee rate in units of 10^-6 percent
-        required uint64 no_fee_threshold = 2;        // PlebsDontPayThreshold in Wasabi, the input amount above which the fee rate applies
-        required uint64 min_registrable_amount = 3;  // minimum registrable output amount
-        optional bytes mask_public_key = 4;          // ephemeral secp256k1 public key used for masking coinjoin_flags, 33 bytes in compressed form
-        optional bytes signature = 5;                // the trusted party's signature of the CoinJoin request digest
-    }
+  /**
+   * Signing request for a CoinJoin transaction.
+   */
+  message CoinJoinRequest {
+    required uint32 fee_rate = 1; // coordination fee rate in units of 10^-6 percent
+    required uint64 no_fee_threshold = 2; // PlebsDontPayThreshold in Wasabi, the input amount above which the fee rate applies
+    required uint64 min_registrable_amount = 3; // minimum registrable output amount
+    optional bytes mask_public_key = 4; // ephemeral secp256k1 public key used for masking coinjoin_flags, 33 bytes in compressed form
+    optional bytes signature = 5; // the trusted party's signature of the CoinJoin request digest
+  }
 }
 
 /**
@@ -237,39 +237,39 @@ message SignTx {
  * @next PaymentRequest
  */
 message TxRequest {
-    optional RequestType request_type = 1;              // what should be filled in TxAck message?
-    optional TxRequestDetailsType details = 2;          // request for tx details
-    optional TxRequestSerializedType serialized = 3;    // serialized data and request for next
-    /**
-    * Type of information required by transaction signing process
-    */
-    enum RequestType {
-        TXINPUT = 0;
-        TXOUTPUT = 1;
-        TXMETA = 2;
-        TXFINISHED = 3;
-        TXEXTRADATA = 4;
-        TXORIGINPUT = 5;
-        TXORIGOUTPUT = 6;
-        TXPAYMENTREQ = 7;
-    }
-    /**
-    * Structure representing request details
-    */
-    message TxRequestDetailsType {
-        optional uint32 request_index = 1;      // device expects TxAck message from the computer
-        optional bytes tx_hash = 2;             // tx_hash of requested transaction
-        optional uint32 extra_data_len = 3;     // length of requested extra data (only for Dash, Zcash)
-        optional uint32 extra_data_offset = 4;  // offset of requested extra data (only for Dash, Zcash)
-    }
-    /**
-    * Structure representing serialized data
-    */
-    message TxRequestSerializedType {
-        optional uint32 signature_index = 1;    // 'signature' field contains signed input of this index
-        optional bytes signature = 2;           // signature of the signature_index input
-        optional bytes serialized_tx = 3;       // part of serialized and signed transaction
-    }
+  optional RequestType request_type = 1; // what should be filled in TxAck message?
+  optional TxRequestDetailsType details = 2; // request for tx details
+  optional TxRequestSerializedType serialized = 3; // serialized data and request for next
+  /**
+   * Type of information required by transaction signing process
+   */
+  enum RequestType {
+    TXINPUT = 0;
+    TXOUTPUT = 1;
+    TXMETA = 2;
+    TXFINISHED = 3;
+    TXEXTRADATA = 4;
+    TXORIGINPUT = 5;
+    TXORIGOUTPUT = 6;
+    TXPAYMENTREQ = 7;
+  }
+  /**
+   * Structure representing request details
+   */
+  message TxRequestDetailsType {
+    optional uint32 request_index = 1; // device expects TxAck message from the computer
+    optional bytes tx_hash = 2; // tx_hash of requested transaction
+    optional uint32 extra_data_len = 3; // length of requested extra data (only for Dash, Zcash)
+    optional uint32 extra_data_offset = 4; // offset of requested extra data (only for Dash, Zcash)
+  }
+  /**
+   * Structure representing serialized data
+   */
+  message TxRequestSerializedType {
+    optional uint32 signature_index = 1; // 'signature' field contains signed input of this index
+    optional bytes signature = 2; // signature of the signature_index input
+    optional bytes serialized_tx = 3; // part of serialized and signed transaction
+  }
 }
 
 /**
@@ -285,78 +285,78 @@ message TxRequest {
  * @next TxRequest
  */
 message TxAck {
-    option deprecated = true;
+  option deprecated = true;
 
-    optional TransactionType tx = 1;
+  optional TransactionType tx = 1;
+  /**
+   * Structure representing transaction
+   */
+  message TransactionType {
+    optional uint32 version = 1;
+    repeated TxInputType inputs = 2;
+    repeated TxOutputBinType bin_outputs = 3;
+    optional uint32 lock_time = 4;
+    repeated TxOutputType outputs = 5;
+    optional uint32 inputs_cnt = 6;
+    optional uint32 outputs_cnt = 7;
+    optional bytes extra_data = 8; // only for Dash, Zcash
+    optional uint32 extra_data_len = 9; // only for Dash, Zcash
+    optional uint32 expiry = 10; // only for Decred and Zcash
+    optional bool overwintered = 11 [deprecated = true]; // Zcash only; deprecated in 2.3.2, the field is not needed, it can be derived from `version`
+    optional uint32 version_group_id = 12; // only for Zcash, nVersionGroupId
+    optional uint32 timestamp = 13; // only for Peercoin
+    optional uint32 branch_id = 14; // only for Zcash, BRANCH_ID
     /**
-    * Structure representing transaction
-    */
-    message TransactionType {
-        optional uint32 version = 1;
-        repeated TxInputType inputs = 2;
-        repeated TxOutputBinType bin_outputs = 3;
-        optional uint32 lock_time = 4;
-        repeated TxOutputType outputs = 5;
-        optional uint32 inputs_cnt = 6;
-        optional uint32 outputs_cnt = 7;
-        optional bytes extra_data = 8;          // only for Dash, Zcash
-        optional uint32 extra_data_len = 9;     // only for Dash, Zcash
-        optional uint32 expiry = 10;            // only for Decred and Zcash
-        optional bool overwintered = 11 [deprecated=true];   // Zcash only; deprecated in 2.3.2, the field is not needed, it can be derived from `version`
-        optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId
-        optional uint32 timestamp = 13;         // only for Peercoin
-        optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID
-        /**
-        * Structure representing transaction input
-        */
-        message TxInputType {
-            repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
-            required bytes prev_hash = 2;                                       // hash of previous transaction output to spend by this input
-            required uint32 prev_index = 3;                                     // index of previous output to spend
-            optional bytes script_sig = 4;                                      // script signature, unset for tx to sign
-            optional uint32 sequence = 5 [default=4294967295];                  // sequence (default=0xffffffff)
-            optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // defines template of input script
-            optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
-            optional uint64 amount = 8;                                         // amount of previous transaction output (for segwit only)
-            optional uint32 decred_tree = 9;                                    // only for Decred, 0 is a normal transaction while 1 is a stake transaction
-            // optional uint32 decred_script_version = 10;                         // only for Decred  // deprecated -> only 0 is supported
-            // optional bytes prev_block_hash_bip115 = 11;     // BIP-115 support dropped
-            // optional uint32 prev_block_height_bip115 = 12;  // BIP-115 support dropped
-            optional bytes witness = 13;                                        // witness data, only set for EXTERNAL inputs
-            optional bytes ownership_proof = 14;                                // SLIP-0019 proof of ownership, only set for EXTERNAL inputs
-            optional bytes commitment_data = 15;                                // optional commitment data for the SLIP-0019 proof of ownership
-            optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
-            optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
-            optional DecredStakingSpendType decred_staking_spend = 18;          // if not None this holds the type of stake spend: revocation or stake generation
-            optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
-            optional uint32 coinjoin_flags = 20 [default=0];                    // bit field of CoinJoin-specific flags
-        }
-        /**
-        * Structure representing compiled transaction output
-        */
-        message TxOutputBinType {
-            required uint64 amount = 1;
-            required bytes script_pubkey = 2;
-            optional uint32 decred_script_version = 3;      // only for Decred, currently only 0 is supported
-        }
-        /**
-        * Structure representing transaction output
-        */
-        message TxOutputType {
-            optional string address = 1;                    // target coin address in Base58 encoding
-            repeated uint32 address_n = 2;                  // BIP-32 path to derive the key from master node; has higher priority than "address"
-            required uint64 amount = 3;                     // amount to spend in satoshis
-            optional OutputScriptType script_type = 4 [default=PAYTOADDRESS];      // output script type
-            optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
-            optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
-            // optional uint32 decred_script_version = 7;      // only for Decred  // deprecated -> only 0 is supported
-            // optional bytes block_hash_bip115 = 8;        // BIP-115 support dropped
-            // optional uint32 block_height_bip115 = 9;     // BIP-115 support dropped
-            optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
-            optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
-            optional uint32 payment_req_index = 12;         // index of the PaymentRequest containing this output
-        }
+     * Structure representing transaction input
+     */
+    message TxInputType {
+      repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+      required bytes prev_hash = 2; // hash of previous transaction output to spend by this input
+      required uint32 prev_index = 3; // index of previous output to spend
+      optional bytes script_sig = 4; // script signature, unset for tx to sign
+      optional uint32 sequence = 5 [default = 4294967295]; // sequence (default=0xffffffff)
+      optional InputScriptType script_type = 6 [default = SPENDADDRESS]; // defines template of input script
+      optional MultisigRedeemScriptType multisig = 7; // Filled if input is going to spend multisig tx
+      optional uint64 amount = 8; // amount of previous transaction output (for segwit only)
+      optional uint32 decred_tree = 9; // only for Decred, 0 is a normal transaction while 1 is a stake transaction
+      // optional uint32 decred_script_version = 10;                         // only for Decred  // deprecated -> only 0 is supported
+      // optional bytes prev_block_hash_bip115 = 11;     // BIP-115 support dropped
+      // optional uint32 prev_block_height_bip115 = 12;  // BIP-115 support dropped
+      optional bytes witness = 13; // witness data, only set for EXTERNAL inputs
+      optional bytes ownership_proof = 14; // SLIP-0019 proof of ownership, only set for EXTERNAL inputs
+      optional bytes commitment_data = 15; // optional commitment data for the SLIP-0019 proof of ownership
+      optional bytes orig_hash = 16; // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
+      optional uint32 orig_index = 17; // index of the input in the original transaction (used when creating a replacement transaction)
+      optional DecredStakingSpendType decred_staking_spend = 18; // if not None this holds the type of stake spend: revocation or stake generation
+      optional bytes script_pubkey = 19; // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
+      optional uint32 coinjoin_flags = 20 [default = 0]; // bit field of CoinJoin-specific flags
     }
+    /**
+     * Structure representing compiled transaction output
+     */
+    message TxOutputBinType {
+      required uint64 amount = 1;
+      required bytes script_pubkey = 2;
+      optional uint32 decred_script_version = 3; // only for Decred, currently only 0 is supported
+    }
+    /**
+     * Structure representing transaction output
+     */
+    message TxOutputType {
+      optional string address = 1; // target coin address in Base58 encoding
+      repeated uint32 address_n = 2; // BIP-32 path to derive the key from master node; has higher priority than "address"
+      required uint64 amount = 3; // amount to spend in satoshis
+      optional OutputScriptType script_type = 4 [default = PAYTOADDRESS]; // output script type
+      optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
+      optional bytes op_return_data = 6; // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
+      // optional uint32 decred_script_version = 7;      // only for Decred  // deprecated -> only 0 is supported
+      // optional bytes block_hash_bip115 = 8;        // BIP-115 support dropped
+      // optional uint32 block_height_bip115 = 9;     // BIP-115 support dropped
+      optional bytes orig_hash = 10; // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
+      optional uint32 orig_index = 11; // index of the output in the original transaction (used when creating a replacement transaction)
+      optional uint32 payment_req_index = 12; // index of the PaymentRequest containing this output
+    }
+  }
 }
 
 /** Data type for transaction input to be signed.
@@ -366,58 +366,58 @@ message TxAck {
  * @embed
  */
 message TxInput {
-    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
-    required bytes prev_hash = 2;                                       // hash of previous transaction output to spend by this input
-    required uint32 prev_index = 3;                                     // index of previous output to spend
-    optional bytes script_sig = 4;                                      // script signature, only set for EXTERNAL inputs
-    optional uint32 sequence = 5 [default=0xffffffff];                  // sequence
-    optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // defines template of input script
-    optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
-    required uint64 amount = 8;                                         // amount of previous transaction output
-    optional uint32 decred_tree = 9;                                    // only for Decred, 0 is a normal transaction while 1 is a stake transaction
-    reserved 10, 11, 12;                                                // fields which are in use, or have been in the past, in TxInputType
-    optional bytes witness = 13;                                        // witness data, only set for EXTERNAL inputs
-    optional bytes ownership_proof = 14;                                // SLIP-0019 proof of ownership, only set for EXTERNAL inputs
-    optional bytes commitment_data = 15;                                // optional commitment data for the SLIP-0019 proof of ownership
-    optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
-    optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
-    optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
-    optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
-    optional uint32 coinjoin_flags = 20 [default=0];                    // bit field of CoinJoin-specific flags
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  required bytes prev_hash = 2; // hash of previous transaction output to spend by this input
+  required uint32 prev_index = 3; // index of previous output to spend
+  optional bytes script_sig = 4; // script signature, only set for EXTERNAL inputs
+  optional uint32 sequence = 5 [default = 0xffffffff]; // sequence
+  optional InputScriptType script_type = 6 [default = SPENDADDRESS]; // defines template of input script
+  optional MultisigRedeemScriptType multisig = 7; // Filled if input is going to spend multisig tx
+  required uint64 amount = 8; // amount of previous transaction output
+  optional uint32 decred_tree = 9; // only for Decred, 0 is a normal transaction while 1 is a stake transaction
+  reserved 10, 11, 12; // fields which are in use, or have been in the past, in TxInputType
+  optional bytes witness = 13; // witness data, only set for EXTERNAL inputs
+  optional bytes ownership_proof = 14; // SLIP-0019 proof of ownership, only set for EXTERNAL inputs
+  optional bytes commitment_data = 15; // optional commitment data for the SLIP-0019 proof of ownership
+  optional bytes orig_hash = 16; // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
+  optional uint32 orig_index = 17; // index of the input in the original transaction (used when creating a replacement transaction)
+  optional DecredStakingSpendType decred_staking_spend = 18; // if not None this holds the type of stake spend: revocation or stake generation
+  optional bytes script_pubkey = 19; // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
+  optional uint32 coinjoin_flags = 20 [default = 0]; // bit field of CoinJoin-specific flags
 }
 
 /** Data type for transaction output to be signed.
  * @embed
  */
 message TxOutput {
-    optional string address = 1;                    // destination address in Base58 encoding; script_type must be PAYTOADDRESS
-    repeated uint32 address_n = 2;                  // BIP-32 path to derive the destination (used for change addresses)
-    required uint64 amount = 3;                     // amount to spend in satoshis
-    optional OutputScriptType script_type = 4 [default=PAYTOADDRESS];      // output script type
-    optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
-    optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
-    reserved 7, 8, 9;                               // fields which are in use, or have been in the past, in TxOutputType
-    optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
-    optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
-    optional uint32 payment_req_index = 12;         // index of the PaymentRequest containing this output
+  optional string address = 1; // destination address in Base58 encoding; script_type must be PAYTOADDRESS
+  repeated uint32 address_n = 2; // BIP-32 path to derive the destination (used for change addresses)
+  required uint64 amount = 3; // amount to spend in satoshis
+  optional OutputScriptType script_type = 4 [default = PAYTOADDRESS]; // output script type
+  optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
+  optional bytes op_return_data = 6; // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
+  reserved 7, 8, 9; // fields which are in use, or have been in the past, in TxOutputType
+  optional bytes orig_hash = 10; // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
+  optional uint32 orig_index = 11; // index of the output in the original transaction (used when creating a replacement transaction)
+  optional uint32 payment_req_index = 12; // index of the PaymentRequest containing this output
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.
  * @embed
  */
 message PrevTx {
-    required uint32 version = 1;
-    required uint32 lock_time = 4;
-    required uint32 inputs_count = 6;
-    required uint32 outputs_count = 7;
-    optional uint32 extra_data_len = 9 [default=0];     // only for Dash, Zcash
-    optional uint32 expiry = 10;            // only for Decred and Zcash
-    optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId
-    optional uint32 timestamp = 13;         // only for Peercoin
-    optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID
+  required uint32 version = 1;
+  required uint32 lock_time = 4;
+  required uint32 inputs_count = 6;
+  required uint32 outputs_count = 7;
+  optional uint32 extra_data_len = 9 [default = 0]; // only for Dash, Zcash
+  optional uint32 expiry = 10; // only for Decred and Zcash
+  optional uint32 version_group_id = 12; // only for Zcash, nVersionGroupId
+  optional uint32 timestamp = 13; // only for Peercoin
+  optional uint32 branch_id = 14; // only for Zcash, BRANCH_ID
 
-    // fields which are in use, or have been in the past, in TransactionType
-    reserved 2, 3, 5, 8, 11;
+  // fields which are in use, or have been in the past, in TransactionType
+  reserved 2, 3, 5, 8, 11;
 }
 
 /** Data type for inputs of previous transactions.
@@ -426,23 +426,23 @@ message PrevTx {
  * @embed
  */
 message PrevInput {
-    required bytes prev_hash = 2;                                       // hash of previous transaction output to spend by this input
-    required uint32 prev_index = 3;                                     // index of previous output to spend
-    required bytes script_sig = 4;                                      // script signature
-    required uint32 sequence = 5;                                       // sequence
-    optional uint32 decred_tree = 9;                                    // only for Decred
+  required bytes prev_hash = 2; // hash of previous transaction output to spend by this input
+  required uint32 prev_index = 3; // index of previous output to spend
+  required bytes script_sig = 4; // script signature
+  required uint32 sequence = 5; // sequence
+  optional uint32 decred_tree = 9; // only for Decred
 
-    // fields that are in use, or have been in the past, in TxInputType
-    reserved 1, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19;
+  // fields that are in use, or have been in the past, in TxInputType
+  reserved 1, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19;
 }
 
 /** Data type for outputs of previous transactions.
  * @embed
  */
 message PrevOutput {
-    required uint64 amount = 1;                     // amount sent to this output
-    required bytes script_pubkey = 2;               // scriptPubkey of this output
-    optional uint32 decred_script_version = 3;      // only for Decred
+  required uint64 amount = 1; // amount sent to this output
+  required bytes script_pubkey = 2; // scriptPubkey of this output
+  optional uint32 decred_script_version = 3; // only for Decred
 }
 
 /**
@@ -455,13 +455,13 @@ message PrevOutput {
  * @next TxRequest
  */
 message TxAckInput {
-    option (wire_type) = 22;
+  option (wire_type) = 22;
 
-    required TxAckInputWrapper tx = 1;
+  required TxAckInputWrapper tx = 1;
 
-    message TxAckInputWrapper {
-        required TxInput input = 2;
-    }
+  message TxAckInputWrapper {
+    required TxInput input = 2;
+  }
 }
 
 /**
@@ -474,13 +474,13 @@ message TxAckInput {
  * @next TxRequest
  */
 message TxAckOutput {
-    option (wire_type) = 22;
+  option (wire_type) = 22;
 
-    required TxAckOutputWrapper tx = 1;
+  required TxAckOutputWrapper tx = 1;
 
-    message TxAckOutputWrapper {
-        required TxOutput output = 5;
-    }
+  message TxAckOutputWrapper {
+    required TxOutput output = 5;
+  }
 }
 
 /**
@@ -493,9 +493,9 @@ message TxAckOutput {
  * @next TxRequest
  */
 message TxAckPrevMeta {
-    option (wire_type) = 22;
+  option (wire_type) = 22;
 
-    required PrevTx tx = 1;
+  required PrevTx tx = 1;
 }
 
 /**
@@ -508,14 +508,13 @@ message TxAckPrevMeta {
  * @next TxRequest
  */
 message TxAckPrevInput {
-    option (wire_type) = 22;
+  option (wire_type) = 22;
 
-    required TxAckPrevInputWrapper tx = 1;
+  required TxAckPrevInputWrapper tx = 1;
 
-    message TxAckPrevInputWrapper {
-        required PrevInput input = 2;
-
-    }
+  message TxAckPrevInputWrapper {
+    required PrevInput input = 2;
+  }
 }
 
 /**
@@ -528,13 +527,13 @@ message TxAckPrevInput {
  * @next TxRequest
  */
 message TxAckPrevOutput {
-    option (wire_type) = 22;
+  option (wire_type) = 22;
 
-    required TxAckPrevOutputWrapper tx = 1;
+  required TxAckPrevOutputWrapper tx = 1;
 
-    message TxAckPrevOutputWrapper {
-        required PrevOutput output = 3;
-    }
+  message TxAckPrevOutputWrapper {
+    required PrevOutput output = 3;
+  }
 }
 
 /**
@@ -546,13 +545,13 @@ message TxAckPrevOutput {
  * @next TxRequest
  */
 message TxAckPrevExtraData {
-    option (wire_type) = 22;
+  option (wire_type) = 22;
 
-    required TxAckPrevExtraDataWrapper tx = 1;
+  required TxAckPrevExtraDataWrapper tx = 1;
 
-    message TxAckPrevExtraDataWrapper {
-        required bytes extra_data_chunk = 8;
-    }
+  message TxAckPrevExtraDataWrapper {
+    required bytes extra_data_chunk = 8;
+  }
 }
 
 /**
@@ -562,13 +561,13 @@ message TxAckPrevExtraData {
  * @next Failure
  */
 message GetOwnershipProof {
-    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
-    optional string coin_name = 2 [default='Bitcoin'];                  // coin to use
-    optional InputScriptType script_type = 3 [default=SPENDWITNESS];    // used to distinguish between various scriptPubKey types
-    optional MultisigRedeemScriptType multisig = 4;                     // filled if proof is for a multisig address
-    optional bool user_confirmation = 5 [default=false];                // show a confirmation dialog and set the "user confirmation" bit in the proof
-    repeated bytes ownership_ids = 6;                                   // list of ownership identifiers in case of multisig
-    optional bytes commitment_data = 7 [default=''];                    // additional data to which the proof should commit
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  optional string coin_name = 2 [default = 'Bitcoin']; // coin to use
+  optional InputScriptType script_type = 3 [default = SPENDWITNESS]; // used to distinguish between various scriptPubKey types
+  optional MultisigRedeemScriptType multisig = 4; // filled if proof is for a multisig address
+  optional bool user_confirmation = 5 [default = false]; // show a confirmation dialog and set the "user confirmation" bit in the proof
+  repeated bytes ownership_ids = 6; // list of ownership identifiers in case of multisig
+  optional bytes commitment_data = 7 [default = '']; // additional data to which the proof should commit
 }
 
 /**
@@ -576,8 +575,8 @@ message GetOwnershipProof {
  * @end
  */
 message OwnershipProof {
-    required bytes ownership_proof = 1;     // SLIP-0019 proof of ownership
-    required bytes signature = 2;           // signature of the proof
+  required bytes ownership_proof = 1; // SLIP-0019 proof of ownership
+  required bytes signature = 2; // signature of the proof
 }
 
 /**
@@ -587,12 +586,12 @@ message OwnershipProof {
  * @next Failure
  */
 message AuthorizeCoinJoin {
-    required string coordinator = 1;                                    // coordinator identifier to approve as a prefix in commitment data (max. 36 ASCII characters)
-    required uint64 max_rounds = 2;                                     // maximum number of rounds that Trezor is authorized to take part in
-    required uint32 max_coordinator_fee_rate = 3;                       // maximum coordination fee rate in units of 10^-6 percent
-    required uint32 max_fee_per_kvbyte = 4;                             // maximum mining fee rate in units of satoshis per 1000 vbytes
-    repeated uint32 address_n = 5;                                      // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
-    optional string coin_name = 6 [default='Bitcoin'];                  // coin to use
-    optional InputScriptType script_type = 7 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
-    optional AmountUnit amount_unit = 8 [default=BITCOIN];              // show amounts in
+  required string coordinator = 1; // coordinator identifier to approve as a prefix in commitment data (max. 36 ASCII characters)
+  required uint64 max_rounds = 2; // maximum number of rounds that Trezor is authorized to take part in
+  required uint32 max_coordinator_fee_rate = 3; // maximum coordination fee rate in units of 10^-6 percent
+  required uint32 max_fee_per_kvbyte = 4; // maximum mining fee rate in units of satoshis per 1000 vbytes
+  repeated uint32 address_n = 5; // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
+  optional string coin_name = 6 [default = 'Bitcoin']; // coin to use
+  optional InputScriptType script_type = 7 [default = SPENDADDRESS]; // used to distinguish between various address formats (non-segwit, segwit, etc.)
+  optional AmountUnit amount_unit = 8 [default = BITCOIN]; // show amounts in
 }

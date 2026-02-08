@@ -2,17 +2,17 @@ syntax = "proto2";
 package hw.trezor.messages.definitions;
 
 // Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageDefinitions";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 /**
  * Definitions type enum.
  * Used to check the encoded EthereumNetworkInfo/EthereumTokenInfo/SolanaTokenInfo message.
  */
 enum DefinitionType {
-    ETHEREUM_NETWORK = 0;
-    ETHEREUM_TOKEN = 1;
-    SOLANA_TOKEN = 2;
+  ETHEREUM_NETWORK = 0;
+  ETHEREUM_TOKEN = 1;
+  SOLANA_TOKEN = 2;
 }
 
 // ****** CROSS-PARSEABILITY NOTE ******
@@ -32,10 +32,10 @@ enum DefinitionType {
  * @embed
  */
 message EthereumNetworkInfo {
-    required uint64 chain_id = 1;
-    required string symbol = 2;
-    required uint32 slip44 = 3;
-    required string name = 4;
+  required uint64 chain_id = 1;
+  required string symbol = 2;
+  required uint32 slip44 = 3;
+  required string name = 4;
 }
 
 /**
@@ -43,11 +43,11 @@ message EthereumNetworkInfo {
  * @embed
  */
 message EthereumTokenInfo {
-    required bytes address = 1;
-    required uint64 chain_id = 2;
-    required string symbol = 3;
-    required uint32 decimals = 4;
-    required string name = 5;
+  required bytes address = 1;
+  required uint64 chain_id = 2;
+  required string symbol = 3;
+  required uint32 decimals = 4;
+  required string name = 5;
 }
 
 /**
@@ -55,7 +55,7 @@ message EthereumTokenInfo {
  * @embed
  */
 message SolanaTokenInfo {
-    required bytes mint = 1;         // token mint - unique token id
-    required string symbol = 2;
-    required string name = 3;
+  required bytes mint = 1; // token mint - unique token id
+  required string symbol = 2;
+  required string name = 3;
 }

@@ -1,12 +1,12 @@
 syntax = "proto2";
 package hw.trezor.messages.bitcoin;
 
-// Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
-option java_outer_classname = "TrezorMessageBenchmark";
-
 import "options.proto";
 
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageBenchmark";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+// Include in BTC-only firmware
 option (include_in_bitcoin_only) = true;
 
 /**
@@ -15,15 +15,14 @@ option (include_in_bitcoin_only) = true;
  * @next Benchmarks
  * @next Failure
  */
-message BenchmarkListNames {
-}
+message BenchmarkListNames {}
 
 /**
  * Response: Contains the list of names of all supported benchmarks
  * @end
  */
 message BenchmarkNames {
-    repeated string names = 1;
+  repeated string names = 1;
 }
 
 /**
@@ -33,7 +32,7 @@ message BenchmarkNames {
  * @next Failure
  */
 message BenchmarkRun {
-    optional string name = 1;
+  optional string name = 1;
 }
 
 /**
@@ -41,6 +40,6 @@ message BenchmarkRun {
  * @end
  */
 message BenchmarkResult {
-    optional string value = 1;
-    optional string unit = 3;
+  optional string value = 1;
+  optional string unit = 3;
 }
