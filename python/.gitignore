@@ -10,3 +10,4 @@ MANIFEST
 mypy_report
 uv.lock
 /.venv
+/site
