@@ -54,6 +54,8 @@ secbool touch_suspend(void);
 // Returns `sectrue` if the driver has been successfully resumed,
 // or `secfalse` otherwise.
 secbool touch_resume(void);
+
+void touch_sleep(void);
 #endif  // USE_SUSPEND
 
 // Powers on/off the touch controller

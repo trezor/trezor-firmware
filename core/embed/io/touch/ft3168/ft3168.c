@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize("O0")
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -38,6 +40,8 @@
 #endif
 
 #include "../touch_poll.h"
+
+#include <sys/dbg_console.h>
 
 LOG_DECLARE(touch_driver)
 
@@ -469,6 +473,12 @@ secbool touch_resume(void) {
 cleanup:
   touch_deinit();
   return secfalse;
+}
+
+void touch_sleep(void) {
+  touch_driver_t* driver = &g_touch_driver;
+  
+  ft3168_power_mode_set(driver->i2c_bus, P_HIBERNATE_MODE);  
 }
 #endif  // USE_SUSPEND
 
