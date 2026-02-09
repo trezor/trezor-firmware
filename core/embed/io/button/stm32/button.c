@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma GCC optimize("O0")
 
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
@@ -29,6 +30,8 @@
 
 #ifdef USE_SUSPEND
 #include <io/suspend.h>
+#include <io/display.h>
+#include <io/touch.h>
 #endif
 
 #ifdef KERNEL_MODE
@@ -168,6 +171,13 @@ void BTN_EXTI_INTERRUPT_HANDLER(void) {
 #ifdef USE_SUSPEND
   // Inform the powerctl module about button press
   wakeup_flags_set(WAKEUP_FLAG_BUTTON);
+
+#if 1
+  display_panel_suspend();
+#else
+  touch_sleep();
+#endif
+
 #endif
 
   mpu_restore(mpu_mode);

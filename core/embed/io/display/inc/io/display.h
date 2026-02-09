@@ -90,6 +90,8 @@ bool display_suspend(display_wakeup_params_t *wakeup_params);
 // Returns `true` if the driver was successfully resumed,
 // `false` otherwise.
 bool display_resume(const display_wakeup_params_t *wakeup_params);
+
+void display_panel_suspend(void);
 #endif  // USE_SUSPEND
 
 // Allows unprivileged access to the display framebuffer from
