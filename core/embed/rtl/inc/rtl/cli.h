@@ -269,3 +269,8 @@ void cli_enable_crc(cli_t* cli);
  * Disables CRC check for the CLI.
  */
 void cli_disable_crc(cli_t* cli);
+
+/**
+ * Returns true if CRC check is enabled.
+ */
+bool cli_crc_enabled(cli_t* cli);

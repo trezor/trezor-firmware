@@ -39,6 +39,15 @@ static void prodtest_crc_disable(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_crc_status(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_ok(cli, "%d", cli_crc_enabled(cli) ? 1 : 0);
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -51,4 +60,10 @@ PRODTEST_CLI_CMD(
   .name = "crc-disable",
   .func = prodtest_crc_disable,
   .info = "Disables CRC check",
+  .args = "");
+
+PRODTEST_CLI_CMD(
+  .name = "crc-status",
+  .func = prodtest_crc_status,
+  .info = "Returns CRC check status",
   .args = "");
