@@ -86,6 +86,8 @@ void display_suspend(display_wakeup_params_t *wakeup_params);
 //
 // Restores the display state from `wakeup_params`.
 void display_resume(const display_wakeup_params_t *wakeup_params);
+
+void display_panel_suspend(void);
 #endif  // USE_SUSPEND
 
 // Allows unprivileged access to the display framebuffer from
