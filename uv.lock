@@ -2231,7 +2231,7 @@ dependencies = [
 requires-dist = [
     { name = "bleak", marker = "extra == 'ble'", specifier = ">=1.1.0" },
     { name = "bleak", marker = "extra == 'full'", specifier = ">=1.1.0" },
-    { name = "click", specifier = ">=8,<8.3" },
+    { name = "click", specifier = ">=8,<9" },
     { name = "construct", specifier = ">=2.9,!=2.10.55" },
     { name = "construct-classes", specifier = ">=0.1.2" },
     { name = "cryptography", specifier = ">=41" },
