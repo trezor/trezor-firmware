@@ -24,7 +24,7 @@ dependencies = [
     "shamir-mnemonic>=0.3.0",
     "slip10>=1.0.1",
     "requests>=2.4.0",
-    "click>=8,<8.3",
+    "click>=8,<9",
     "libusb1>=1.6.4",
     "construct>=2.9,!=2.10.55",
     "typing_extensions>=4.7.1",
