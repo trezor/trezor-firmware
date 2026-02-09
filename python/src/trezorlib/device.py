@@ -652,5 +652,6 @@ def get_serial_number(session: "Session") -> str:
     return ret.serial_number
 
 
+@workflow()
 def get_telemetry(session: "Session") -> messages.Telemetry:
     return session.call(messages.TelemetryGet(), expect=messages.Telemetry)
