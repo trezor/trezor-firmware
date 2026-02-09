@@ -1,0 +1,1169 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for trezorlib and trezorctl command">
+      
+      
+        <meta name="author" content="Trezor/Satoshilabs">
+      
+      
+      
+        <link rel="prev" href="../examples_trezorlib/">
+      
+      
+        <link rel="next" href="../API/btc/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Transaction Format - Trezorlib</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#trezorctl-bitcoin-transaction-json-format" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Trezorlib" class="md-header__button md-logo" aria-label="Trezorlib" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Trezorlib
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Transaction Format
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/trezor/trezor-firmware" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Trezorlib" class="md-nav__button md-logo" aria-label="Trezorlib" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Trezorlib
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/trezor/trezor-firmware" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trezorlib and Trezorctl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXAMPLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trezorctl examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../OPTIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trezorctl commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples_trezorlib/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trezorlib examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transaction Format
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transaction Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#derivation-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Derivation paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transaction-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transaction metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#previous-transactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Previous transactions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Encoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/btc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bitcoin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/debuglink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debuglink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/device/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Device
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/ethereum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ethereum
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/fido/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FIDO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#derivation-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Derivation paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transaction-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transaction metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#previous-transactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Previous transactions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Encoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="trezorctl-bitcoin-transaction-json-format">trezorctl Bitcoin transaction JSON format</h1>
+<p>Since version 0.11.2, <code>trezorctl</code> allows fully offline signing of Bitcoin and
+Bitcoin-like altcoin transactions encoded in a custom JSON structure. Starting with
+version 0.11.6, this is the only supported format for signing.</p>
+<h2 id="structure">Structure</h2>
+<p>The structure of the JSON matches the shape of the relevant protobuf messages. See
+file <a href="../../common/protob/messages-bitcoin.proto">messages-bitcoin.proto</a> for up-to-date structure.</p>
+<p>The root is an object with the following attributes:</p>
+<ul>
+<li><strong><code>coin_name</code></strong>: string representing the coin name as listed in <a href="../../common/defs/bitcoin">coin defs</a>. If
+  missing, <code>"Bitcoin"</code> is used.</li>
+<li><strong><code>inputs</code></strong>: array of <code>TxInputType</code> objects. Must be present.</li>
+<li><strong><code>outputs</code></strong>: array of <code>TxOutputType</code> objects. Must be present.</li>
+<li><strong><code>details</code></strong>: object whose keys correspond to metadata on the <code>SignTx</code> type. Can be
+  omitted.</li>
+<li><strong><code>prev_txes</code></strong>: object whose keys are hex-encoded transaction hashes, and values are
+  objects of type <code>TransactionType</code>. When signing a transaction with non-SegWit inputs,
+  each previous transaction must have an entry in <code>prev_txes</code>. With pure SegWit
+  transactions, this field can be omitted.</li>
+</ul>
+<p>See definition of the respective object types in <a href="../../common/protob/messages-bitcoin.proto">messages-bitcoin.proto</a> for
+descriptions of individual fields.</p>
+<p><strong>Please note</strong> that the <code>optional</code> keyword in the protobuf definition does <em>not</em>
+indicate that the field can be omitted, nor does the <code>default</code> extension mean that the
+default value will be used if missing.</p>
+<h3 id="derivation-paths">Derivation paths</h3>
+<p>A derivation path in the field <code>address_n</code> is encoded as an array of numbers according
+to the BIP-32 specification. Use <code>trezorlib.tools.parse_path</code> to convert a string
+derivation path to the corresponding array.</p>
+<h3 id="inputs">Inputs</h3>
+<pre><code class="language-protobuf">enum InputScriptType {
+    SPENDADDRESS = 0;       // standard P2PKH address
+    SPENDMULTISIG = 1;      // P2SH multisig address
+    EXTERNAL = 2;           // reserved for external inputs (coinjoin)
+    SPENDWITNESS = 3;       // native SegWit
+    SPENDP2SHWITNESS = 4;   // SegWit over P2SH (backward compatible)
+}
+
+message TxInputType {
+    repeated uint32 address_n = 1;   // BIP-32 path to derive the key from master node
+    required bytes prev_hash = 2;    // hash of previous transaction output to spend by this input
+    required uint32 prev_index = 3;  // index of previous output to spend
+    optional bytes script_sig = 4;   // script signature, unset for tx to sign
+    optional uint32 sequence = 5;    // sequence (default=0xffffffff)
+    optional InputScriptType script_type = 6   ;    // defines template of input script
+    optional MultisigRedeemScriptType multisig = 7; // Filled if input is going to spend multisig tx
+    optional uint64 amount = 8;                     // amount of previous transaction output
+    optional uint32 decred_tree = 9;                // only for Decred
+    optional uint32 decred_script_version = 10;     // only for Decred
+}
+</code></pre>
+<p>Each input must have a derivation path (<code>address_n</code>), <code>prev_hash</code> and <code>prev_index</code>
+refering to the output being spent, <code>sequence</code> number, <code>script_type</code> corresponding to
+the desired signature type, and <code>amount</code>.</p>
+<p>The field <code>script_sig</code> must not be set.</p>
+<p>The field <code>multisig</code> can be used for multisig inputs. Documenting the multisig structure is TBD. With regular inputs, <code>multisig</code> must not be set.</p>
+<p><code>decred</code> fields must only be set when relevant to your currency.</p>
+<h3 id="outputs">Outputs</h3>
+<pre><code class="language-protobuf">enum OutputScriptType {
+    PAYTOADDRESS = 0;       // string address output; change is a P2PKH address
+    PAYTOMULTISIG = 2;      // change output is a multisig address
+    PAYTOOPRETURN = 3;      // op_return
+    PAYTOWITNESS = 4;       // change output is native SegWit
+    PAYTOP2SHWITNESS = 5;   // change output is SegWit over P2SH
+}
+
+message TxOutputType {
+    optional string address = 1;    // destination address in Base58 encoding
+    repeated uint32 address_n = 2;  // derivation path for change address
+    required uint64 amount = 3;     // amount to spend in satoshis
+    required OutputScriptType script_type = 4;      // output script type
+    optional MultisigRedeemScriptType multisig = 5; // multisig output definition
+    optional bytes op_return_data = 6;              // defines op_return data
+    optional uint32 decred_script_version = 7;      // only for Decred
+</code></pre>
+<p>All outputs must have an <code>amount</code> and a <code>script_type</code>.</p>
+<p>For normal (non-change) outputs, the field <code>address</code> must be set to an address string,
+and the <code>script_type</code> must be set to <code>"PAYTOADDRESS"</code>. <code>address_n</code> must not be set.</p>
+<p>For outputs returning change, <code>address</code> must not be set, and <code>address_n</code> must be a
+derivation path of the desired change address. <code>script_type</code> indicates the desired
+address type of the change output.</p>
+<p>For <code>OP_RETURN</code> outputs, <code>script_type</code> must be set to <code>"PAYTOOPRETURN"</code> and
+<code>op_return_data</code> must be filled appropriately. <code>address_n</code> and <code>address</code> must not be
+set.</p>
+<p><code>decred</code> fields must only be set when relevant to your currency.</p>
+<h3 id="transaction-metadata">Transaction metadata</h3>
+<p>The following is a shortened definition of the <code>SignTx</code> protobuf message, containing
+all possible fields that are accepted in the <code>details</code> object.</p>
+<p>All fields are optional unless required by your currency.</p>
+<pre><code class="language-protobuf">message SignTx {
+    optional uint32 version = 4;           // transaction version
+    optional uint32 lock_time = 5;         // transaction lock_time
+    optional uint32 expiry = 6;            // only for Decred and Zcash
+    optional uint32 version_group_id = 8;  // only for Zcash, nVersionGroupId when overwintered is set
+    optional uint32 timestamp = 9;         // only for Peercoin, transaction timestamp
+    optional uint32 branch_id = 10;        // only for Zcash, BRANCH_ID when overwintered is set
+}
+</code></pre>
+<h3 id="previous-transactions">Previous transactions</h3>
+<p>For inputs that do not use BIP-143 (SegWit) signing, each input transaction must have an
+entry in the <code>prev_txes</code> object. The following object definitions are used:</p>
+<pre><code class="language-protobuf">message TxInputType {
+    required bytes prev_hash = 2;     // hash of previous transaction output to spend by this input
+    required uint32 prev_index = 3;   // index of previous output to spend
+    optional bytes script_sig = 4;    // script signature, unset for tx to sign
+    optional uint32 sequence = 5;     // sequence (default=0xffffffff)
+    optional uint32 decred_tree = 9;  // only for Decred
+}
+
+message TxOutputBinType {
+    required uint64 amount = 1;
+    required bytes script_pubkey = 2;
+    optional uint32 decred_script_version = 3;  // only for Decred
+}
+
+message TransactionType {
+    optional uint32 version = 1;
+    repeated TxInputType inputs = 2;
+    repeated TxOutputBinType bin_outputs = 3;
+    optional uint32 lock_time = 4;
+    optional bytes extra_data = 8;          // only for Zcash
+    optional uint32 expiry = 10;            // only for Decred and Zcash
+    optional bool overwintered = 11;        // only for Zcash
+    optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId when overwintered is set
+    optional uint32 timestamp = 13;         // only for Peercoin, transaction timestamp
+    optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID when overwintered is set
+}
+</code></pre>
+<h2 id="encoding">Encoding</h2>
+<p>Object types are encoded by a variant of <a href="https://developers.google.com/protocol-buffers/docs/proto3#json">proto3 JSON mapping</a>.
+The following notable differences exist:</p>
+<ol>
+<li>due to the fact that Trezor protocol uses proto2, the logic for omitted fields is
+   different. If a value is missing or null in JSON, it is considered unset for the
+   corresponding protobuf.</li>
+<li>proto3 JSON mapping encodes <code>bytes</code> as Base64. The transaction format encodes them as
+   hexadecimal strings. This will be changed in a future revision, but the hex strings
+   will still be understood.</li>
+<li>Field names are expected in <code>snake_case</code>, identical to the protobuf definition. In
+   the future, support for <code>camelCase</code> field names will be added.</li>
+</ol>
+<p>Otherwise the encoding is identical:</p>
+<ul>
+<li>numeric fields (<code>uint32</code>, <code>uint64</code>) are encoded as JSON numbers</li>
+<li><code>bool</code> fields are encoded as JSON booleans (<code>true</code>, <code>false</code>)</li>
+<li><code>string</code> fields are encoded as JSON strings</li>
+<li><code>bytes</code> fields are encoded as JSON strings with hex representation of the bytes content</li>
+<li><code>repeated</code> fields are JSON arrays of the inner type</li>
+<li><code>enum</code> fields can be either a JSON number of the value, or a JSON string of the name</li>
+<li>nested objects are JSON objects</li>
+</ul>
+<h2 id="example">Example</h2>
+<p>The JSON below encodes a transaction with the following inputs:</p>
+<ul>
+<li><a href="https://btc5.trezor.io/tx/e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a">e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a</a>
+  output <strong>0</strong> (P2PKH address 1Jw5FrKhi2aWbbF4h3QRWLog5AjsJYGswv)
+  at derivation path <strong>m/44'/0'/0'/0/282</strong>
+  amount <strong>85 170</strong> sat</li>
+<li><a href="https://btc5.trezor.io/tx/1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155">1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155</a>
+  output <strong>0</strong> (P2SH-SegWit address 3DEAk9KGrgvj2gHQ1hyfCXus9hZr9K8Beh)
+  at derivation path <strong>m/49'/0'/0'/0/55</strong>
+  amount <strong>500 000</strong> sat</li>
+</ul>
+<p>And the following outputs:</p>
+<ul>
+<li><strong>12 345</strong> sat to address <strong>3DDEgt7quAq7XqoG6PjVXi1eeAea4rfWck</strong></li>
+<li><strong>562 825</strong> sat to a P2SH-SegWit change address at derivation path <strong>m/49'/0'/0'/1/99</strong></li>
+<li>fee of 10 000 sat</li>
+</ul>
+<p>(Note that Trezor does not support change addresses when mixing input types. The example
+is designed purely to showcase the JSON structure. Usually, all inputs should have the
+same <code>script_type</code>.)</p>
+<p>Transaction version is <strong>2</strong>, other metadata is not set.</p>
+<pre><code class="language-json">{
+  &quot;coin_name&quot;: &quot;Bitcoin&quot;,
+  &quot;details&quot;: {
+    &quot;version&quot;: 2
+  },
+  &quot;inputs&quot;: [
+    {
+      &quot;address_n&quot;: [
+        2147483692,
+        2147483648,
+        2147483648,
+        0,
+        282
+      ],
+      &quot;amount&quot;: 85170,
+      &quot;prev_hash&quot;: &quot;e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a&quot;,
+      &quot;prev_index&quot;: 0,
+      &quot;script_type&quot;: &quot;SPENDADDRESS&quot;,
+      &quot;sequence&quot;: 4294967293
+    },
+    {
+      &quot;address_n&quot;: [
+        2147483697,
+        2147483648,
+        2147483648,
+        0,
+        55
+      ],
+      &quot;amount&quot;: 500000,
+      &quot;prev_hash&quot;: &quot;1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155&quot;,
+      &quot;prev_index&quot;: 0,
+      &quot;script_type&quot;: &quot;SPENDP2SHWITNESS&quot;,
+      &quot;sequence&quot;: 4294967293
+    }
+  ],
+  &quot;outputs&quot;: [
+    {
+      &quot;address&quot;: &quot;3DDEgt7quAq7XqoG6PjVXi1eeAea4rfWck&quot;,
+      &quot;amount&quot;: 12345,
+      &quot;script_type&quot;: &quot;PAYTOADDRESS&quot;
+    },
+    {
+      &quot;address_n&quot;: [
+        2147483697,
+        2147483648,
+        2147483648,
+        1,
+        99
+      ],
+      &quot;amount&quot;: 562825,
+      &quot;script_type&quot;: &quot;PAYTOP2SHWITNESS&quot;
+    }
+  ],
+  &quot;prev_txes&quot;: {
+    &quot;e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a&quot;: {
+      &quot;bin_outputs&quot;: [
+        {
+          &quot;amount&quot;: 85170,
+          &quot;script_pubkey&quot;: &quot;76a914c4b4272ca6d3b069dcf7afdda172a7dae677d4c988ac&quot;
+        },
+        {
+          &quot;amount&quot;: 2375277,
+          &quot;script_pubkey&quot;: &quot;a914115125511fa9f301ecdda8bb73401644c260c61b87&quot;
+        }
+      ],
+      &quot;inputs&quot;: [
+        {
+          &quot;prev_hash&quot;: &quot;59ef8b5633c2a8bf0a21edcbc4b9f271572061f81d42b366fe3b8bc0ec68014e&quot;,
+          &quot;prev_index&quot;: 1,
+          &quot;script_sig&quot;: &quot;1600149043ed42ab198d95067d8760c247f164c4933f3f&quot;,
+          &quot;sequence&quot;: 4294967295
+        }
+      ],
+      &quot;lock_time&quot;: 0,
+      &quot;version&quot;: 1
+    }
+  }
+}
+
+</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

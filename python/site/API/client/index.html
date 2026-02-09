@@ -1,0 +1,3970 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for trezorlib and trezorctl command">
+      
+      
+        <meta name="author" content="Trezor/Satoshilabs">
+      
+      
+      
+        <link rel="prev" href="../btc/">
+      
+      
+        <link rel="next" href="../debuglink/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Client - Trezorlib</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#python.src.trezorlib.client" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Trezorlib" class="md-header__button md-logo" aria-label="Trezorlib" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Trezorlib
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Client
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/trezor/trezor-firmware" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Trezorlib" class="md-nav__button md-logo" aria-label="Trezorlib" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Trezorlib
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/trezor/trezor-firmware" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trezorlib and Trezorctl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../EXAMPLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trezorctl examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../OPTIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trezorctl commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples_trezorlib/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trezorlib examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transaction-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transaction Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../btc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bitcoin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        client
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TrezorClient
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TrezorClient">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.call_raw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_raw
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.check_firmware_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_firmware_version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.clear_session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear_session
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.end_session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        end_session
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.ensure_unlocked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ensure_unlocked
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.get_device_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_device_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.init_device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init_device
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="init_device">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.init_device--version-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version notes:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.is_outdated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_outdated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.lock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.open" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        open
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.ping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.refresh_features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        refresh_features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.get_default_client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_default_client
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debuglink/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debuglink
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../device/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Device
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ethereum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ethereum
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fido/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FIDO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        client
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TrezorClient
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TrezorClient">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.call_raw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        call_raw
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.check_firmware_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_firmware_version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.clear_session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear_session
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.end_session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        end_session
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.ensure_unlocked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ensure_unlocked
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.get_device_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_device_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.init_device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init_device
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="init_device">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.init_device--version-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version notes:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.is_outdated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_outdated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.lock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.open" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        open
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.ping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.TrezorClient.refresh_features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        refresh_features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python.src.trezorlib.client.get_default_client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_default_client
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>Client</h1>
+
+<pre><code class="language-python">from trezorlib import client
+</code></pre>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="python.src.trezorlib.client"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="python.src.trezorlib.client.TrezorClient" class="doc doc-heading">
+            <code>TrezorClient</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Trezor client, a connection to a Trezor device.</p>
+<p>This class allows you to manage connection state, send and receive protobuf
+messages, handle user interactions, and perform some generic tasks
+(send a cancel message, initialize or clear a session, ping the device).</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TrezorClient</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Trezor client, a connection to a Trezor device.</span>
+
+<span class="sd">    This class allows you to manage connection state, send and receive protobuf</span>
+<span class="sd">    messages, handle user interactions, and perform some generic tasks</span>
+<span class="sd">    (send a cancel message, initialize or clear a session, ping the device).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">transport</span><span class="p">:</span> <span class="s2">&quot;Transport&quot;</span><span class="p">,</span>
+        <span class="n">ui</span><span class="p">:</span> <span class="s2">&quot;TrezorClientUI&quot;</span><span class="p">,</span>
+        <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">derive_cardano</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">TrezorModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">_init_device</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a TrezorClient instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transport: Transport instance</span>
+<span class="sd">            ui: UI instance</span>
+<span class="sd">            session_id: attempt to resume session with the given ID</span>
+<span class="sd">            derive_cardano: enable the Cardano app, if available</span>
+<span class="sd">            model: Optional model of the device</span>
+<span class="sd">            _init_device: Whether to initialize the device (more below)</span>
+
+<span class="sd">        You have to provide a `transport`, i.e., a raw connection to the device. You can</span>
+<span class="sd">        use `trezorlib.transport.get_transport` to find one.</span>
+
+<span class="sd">        You have to provide an UI implementation for the three kinds of interaction:</span>
+<span class="sd">        - button request (notify the user that their interaction is needed)</span>
+<span class="sd">        - PIN request (on T1, ask the user to input numbers for a PIN matrix)</span>
+<span class="sd">        - passphrase request (ask the user to enter a passphrase) See `trezorlib.ui` for</span>
+<span class="sd">          details.</span>
+
+<span class="sd">        See `TrezorClient.init_device` for details about `session_id` and</span>
+<span class="sd">        `derive_cardano`.</span>
+
+<span class="sd">        You can provide Trezor model information. If not provided, it is detected from</span>
+<span class="sd">        the model name reported at initialization time.</span>
+
+<span class="sd">        By default, the instance will open a connection to the Trezor device, send an</span>
+<span class="sd">        `Initialize` message, set up the `features` field from the response, and connect</span>
+<span class="sd">        to a session. By specifying `_init_device=False`, this step is skipped. Notably,</span>
+<span class="sd">        this means that `client.features` is unset. Use `client.init_device()` or</span>
+<span class="sd">        `client.refresh_features()` to fix that, otherwise A LOT OF THINGS will break.</span>
+<span class="sd">        Only use this if you are _sure_ that you know what you are doing. This feature</span>
+<span class="sd">        might be removed at any time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;creating client instance for device: </span><span class="si">{</span><span class="n">transport</span><span class="o">.</span><span class="n">get_path</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">default_mapping</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">.</span><span class="n">DEFAULT_MAPPING</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transport</span> <span class="o">=</span> <span class="n">transport</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span> <span class="o">=</span> <span class="n">ui</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+        <span class="k">if</span> <span class="n">_init_device</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_device</span><span class="p">(</span><span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span> <span class="n">derive_cardano</span><span class="o">=</span><span class="n">derive_cardano</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Open a connection with the device.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transport</span><span class="o">.</span><span class="n">begin_session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the connection with the device.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># TODO call EndSession here?</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transport</span><span class="o">.</span><span class="n">end_session</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a Cancel message to the device, aborting the current operation.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_write</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Cancel</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">call_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a protobuf message to the device and return the immediate response.</span>
+
+<span class="sd">        Bypasses handling of auxilliary flows like `ButtonRequest`, `PinRequest`,</span>
+<span class="sd">        `PassphraseRequest`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">__tracebackhide__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># for pytest # pylint: disable=W0612</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_write</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_read</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_raw_write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a protobuf message to the device.&quot;&quot;&quot;</span>
+        <span class="n">__tracebackhide__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># for pytest # pylint: disable=W0612</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;sending message: </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;protobuf&quot;</span><span class="p">:</span> <span class="n">msg</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">msg_type</span><span class="p">,</span> <span class="n">msg_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="n">DUMP_BYTES</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;encoded as type </span><span class="si">{</span><span class="n">msg_type</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">msg_bytes</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes): </span><span class="si">{</span><span class="n">msg_bytes</span><span class="o">.</span><span class="n">hex</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transport</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">msg_type</span><span class="p">,</span> <span class="n">msg_bytes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_raw_read</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read and return a response message from the device.&quot;&quot;&quot;</span>
+        <span class="n">__tracebackhide__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># for pytest # pylint: disable=W0612</span>
+        <span class="n">msg_type</span><span class="p">,</span> <span class="n">msg_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transport</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="n">DUMP_BYTES</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;received type </span><span class="si">{</span><span class="n">msg_type</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">msg_bytes</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes): </span><span class="si">{</span><span class="n">msg_bytes</span><span class="o">.</span><span class="n">hex</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">msg_type</span><span class="p">,</span> <span class="n">msg_bytes</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;received message: </span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;protobuf&quot;</span><span class="p">:</span> <span class="n">msg</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">msg</span>
+
+    <span class="k">def</span> <span class="nf">_callback_pin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="n">messages</span><span class="o">.</span><span class="n">PinMatrixRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Obtain PIN from the UI implementation and send it to the device.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">get_pin</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">Cancelled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Cancel</span><span class="p">())</span>
+            <span class="k">raise</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">&quot;123456789&quot;</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">pin</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="mi">1</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">MAX_PIN_LENGTH</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Cancel</span><span class="p">())</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid PIN provided&quot;</span><span class="p">)</span>
+
+        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">PinMatrixAck</span><span class="p">(</span><span class="n">pin</span><span class="o">=</span><span class="n">pin</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Failure</span><span class="p">)</span> <span class="ow">and</span> <span class="n">resp</span><span class="o">.</span><span class="n">code</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">FailureType</span><span class="o">.</span><span class="n">PinInvalid</span><span class="p">,</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">FailureType</span><span class="o">.</span><span class="n">PinCancelled</span><span class="p">,</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">FailureType</span><span class="o">.</span><span class="n">PinExpected</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">PinException</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resp</span>
+
+    <span class="k">def</span> <span class="nf">_callback_passphrase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="n">messages</span><span class="o">.</span><span class="n">PassphraseRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Obtain passphrase from the UI implementation and send it into the device.&quot;&quot;&quot;</span>
+        <span class="n">available_on_device</span> <span class="o">=</span> <span class="n">Capability</span><span class="o">.</span><span class="n">PassphraseEntry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">capabilities</span>
+
+        <span class="k">def</span> <span class="nf">send_passphrase</span><span class="p">(</span>
+            <span class="n">passphrase</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">on_device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">messages</span><span class="o">.</span><span class="n">PassphraseAck</span><span class="p">(</span><span class="n">passphrase</span><span class="o">=</span><span class="n">passphrase</span><span class="p">,</span> <span class="n">on_device</span><span class="o">=</span><span class="n">on_device</span><span class="p">)</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Deprecated_PassphraseStateRequest</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">state</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Deprecated_PassphraseStateAck</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">resp</span>
+
+        <span class="c1"># short-circuit old style entry</span>
+        <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">_on_device</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">send_passphrase</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">passphrase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">get_passphrase</span><span class="p">(</span><span class="n">available_on_device</span><span class="o">=</span><span class="n">available_on_device</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">Cancelled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Cancel</span><span class="p">())</span>
+            <span class="k">raise</span>
+
+        <span class="k">if</span> <span class="n">passphrase</span> <span class="ow">is</span> <span class="n">PASSPHRASE_ON_DEVICE</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">available_on_device</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Cancel</span><span class="p">())</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Device is not capable of entering passphrase&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">send_passphrase</span><span class="p">(</span><span class="n">on_device</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># else process host-entered passphrase</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">passphrase</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Passphrase must be a str&quot;</span><span class="p">)</span>
+        <span class="n">passphrase</span> <span class="o">=</span> <span class="n">Mnemonic</span><span class="o">.</span><span class="n">normalize_string</span><span class="p">(</span><span class="n">passphrase</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">passphrase</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_PASSPHRASE_LENGTH</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Cancel</span><span class="p">())</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Passphrase too long&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">send_passphrase</span><span class="p">(</span><span class="n">passphrase</span><span class="p">,</span> <span class="n">on_device</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_callback_button</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="n">messages</span><span class="o">.</span><span class="n">ButtonRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Acknowledge to the device the ButtonRequest was received, send</span>
+<span class="sd">        it to the UI and wait for the device response.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            msg: the ButtonRequest message received from the device.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the device.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">__tracebackhide__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># for pytest # pylint: disable=W0612</span>
+        <span class="c1"># do this raw - send ButtonAck first, notify UI later</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_write</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">ButtonAck</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ui</span><span class="o">.</span><span class="n">button_request</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_read</span><span class="p">()</span>
+
+    <span class="nd">@session</span>
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a protobuf message to the device and return the response.</span>
+
+<span class="sd">        Automatically handles auxilliary flows like `ButtonRequest` etc. While `call()`</span>
+<span class="sd">        is running, there can be any number of callbacks into the UI implementation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            msg: protobuf message to send</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Protobuf message received from the device</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_firmware_version</span><span class="p">()</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">PinMatrixRequest</span><span class="p">):</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_pin</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">PassphraseRequest</span><span class="p">):</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_passphrase</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">ButtonRequest</span><span class="p">):</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_button</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Failure</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">messages</span><span class="o">.</span><span class="n">FailureType</span><span class="o">.</span><span class="n">ActionCancelled</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">Cancelled</span>
+                <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorFailure</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">resp</span>
+
+    <span class="k">def</span> <span class="nf">_refresh_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">messages</span><span class="o">.</span><span class="n">Features</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update internal fields based on passed-in Features message.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            features: Features message coming from the device.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span>
+            <span class="c1"># Trezor Model One bootloader 1.8.0 or older does not send model name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">by_name</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unsupported Trezor model&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">features</span><span class="o">.</span><span class="n">vendor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">vendors</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unsupported device&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">major_version</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">minor_version</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">patch_version</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_firmware_version</span><span class="p">(</span><span class="n">warn_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">session_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">session_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@session</span>
+    <span class="k">def</span> <span class="nf">refresh_features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">messages</span><span class="o">.</span><span class="n">Features</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reload features from the device.</span>
+
+<span class="sd">        Should be called after changing settings or performing operations that affect</span>
+<span class="sd">        device state.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Features message from the device.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">GetFeatures</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Features</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorException</span><span class="p">(</span><span class="s2">&quot;Unexpected response to GetFeatures&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_features</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">resp</span>
+
+    <span class="nd">@session</span>
+    <span class="k">def</span> <span class="nf">init_device</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_session</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">derive_cardano</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the device and return a session ID.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            session_id: Attempt to resume a session with this ID.</span>
+<span class="sd">            new_session: If True, a new session ID will be generated and returned.</span>
+<span class="sd">            derive_cardano: If True, the Cardano app will be initialized.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Session ID, if we manage to get it, otherwise None.</span>
+
+<span class="sd">        You can optionally specify a session ID. If the session still exists on the</span>
+<span class="sd">        device, the same session ID will be returned and the session is resumed.</span>
+<span class="sd">        Otherwise a different session ID is returned.</span>
+
+<span class="sd">        Specify `new_session=True` to open a fresh session. Since firmware version</span>
+<span class="sd">        1.9.0/2.3.0, the previous session will remain cached on the device, and can be</span>
+<span class="sd">        resumed by calling `init_device` again with the appropriate session ID.</span>
+
+<span class="sd">        If neither `new_session` nor `session_id` is specified, the current session ID</span>
+<span class="sd">        will be reused. If no session ID was cached, a new session ID will be allocated</span>
+<span class="sd">        and returned.</span>
+
+<span class="sd">        If `derive_cardano` is True, and the device supports it, the Cardano master</span>
+<span class="sd">        secrets will be derived. This is required for using Cardano derivations other</span>
+<span class="sd">        than `LEDGER` -- attempting to call Cardano functions in a session without</span>
+<span class="sd">        `derive_cardano` will result in an error.</span>
+
+<span class="sd">        Enabling `derive_cardano` can increase session startup time by up to 5 seconds.</span>
+
+<span class="sd">        # Version notes:</span>
+
+<span class="sd">        Trezor One older than 1.9.0 does not have session management. Optional arguments</span>
+<span class="sd">        have no effect and the function returns None</span>
+
+<span class="sd">        Trezor T older than 2.3.0 does not have session cache. Requesting a new session</span>
+<span class="sd">        will overwrite the old one. In addition, this function will always return None.</span>
+<span class="sd">        A valid session_id can be obtained from the `session_id` attribute, but only</span>
+<span class="sd">        after a passphrase-protected call is performed. You can use the following code:</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        client.init_device()</span>
+<span class="sd">        client.ensure_unlocked()</span>
+<span class="sd">        valid_session_id = client.session_id</span>
+<span class="sd">        ```</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_session</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">session_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+
+        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">Initialize</span><span class="p">(</span>
+                <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                <span class="n">derive_cardano</span><span class="o">=</span><span class="n">derive_cardano</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Failure</span><span class="p">):</span>
+            <span class="c1"># can happen if `derive_cardano` does not match the current session</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorFailure</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Features</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorException</span><span class="p">(</span><span class="s2">&quot;Unexpected response to Initialize&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">resp</span><span class="o">.</span><span class="n">session_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Successfully resumed session&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">session_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Failed to resume session&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TT &lt; 2.3.0 compatibility:</span>
+        <span class="c1"># _refresh_features will clear out the session_id field. We want this function</span>
+        <span class="c1"># to return its value, so that callers can rely on it being either a valid</span>
+        <span class="c1"># session_id, or None if we can&#39;t do that.</span>
+        <span class="c1"># Older TT FW does not report session_id in Features and self.session_id might</span>
+        <span class="c1"># be invalid because TT will not allocate a session_id until a passphrase</span>
+        <span class="c1"># exchange happens.</span>
+        <span class="n">reported_session_id</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">session_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_features</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">reported_session_id</span>
+
+    <span class="k">def</span> <span class="nf">is_outdated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the device firmware is outdated.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if the device firmware is outdated, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">bootloader_mode</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># should happen in _refresh_features</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">minimum_version</span>
+
+    <span class="k">def</span> <span class="nf">check_firmware_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">warn_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the firmware version is still actively supported.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            warn_only: If True, only log a warning. Otherwise, raise an exception.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            OutdatedFirmwareError: If the firmware version is too old.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_outdated</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">warn_only</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Firmware is out of date&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">OutdatedFirmwareError</span><span class="p">(</span><span class="n">OUTDATED_FIRMWARE_ERROR</span><span class="p">)</span>
+
+    <span class="nd">@expect</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Success</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="n">ret_type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">button_protection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ping the device.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            msg: Message to display on the device.</span>
+<span class="sd">            button_protection: Require button press to confirm.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The success message/string returned by the device.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># We would like ping to work on any valid TrezorClient instance, but</span>
+        <span class="c1"># due to the protection modes, we need to go through self.call, and that will</span>
+        <span class="c1"># raise an exception if the firmware is too old.</span>
+        <span class="c1"># So we short-circuit the simplest variant of ping with call_raw.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">button_protection</span><span class="p">:</span>
+            <span class="c1"># XXX this should be: `with self:`</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Ping</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">))</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">ButtonRequest</span><span class="p">):</span>
+                    <span class="c1"># device is PIN-locked.</span>
+                    <span class="c1"># respond and hope for the best</span>
+                    <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_button</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">resp</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">Ping</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span> <span class="n">button_protection</span><span class="o">=</span><span class="n">button_protection</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_device_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get device ID.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Device ID in hexadecimal string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">device_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">device_id</span>
+
+    <span class="nd">@session</span>
+    <span class="k">def</span> <span class="nf">lock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">_refresh_features</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lock the device.</span>
+
+<span class="sd">        If the device does not have a PIN configured, this will do nothing.</span>
+<span class="sd">        Otherwise, a lock screen will be shown and the device will prompt for PIN</span>
+<span class="sd">        before further actions.</span>
+
+<span class="sd">        This call does _not_ invalidate passphrase cache. If passphrase is in use,</span>
+<span class="sd">        the device will not prompt for it after unlocking.</span>
+
+<span class="sd">        To invalidate passphrase cache, use `end_session()`. To lock _and_ invalidate</span>
+<span class="sd">        passphrase cache, use `clear_session()`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Private argument _refresh_features can be used internally to avoid</span>
+        <span class="c1"># refreshing in cases where we will refresh soon anyway. This is used</span>
+        <span class="c1"># in TrezorClient.clear_session()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">LockDevice</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">_refresh_features</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refresh_features</span><span class="p">()</span>
+
+    <span class="nd">@session</span>
+    <span class="k">def</span> <span class="nf">ensure_unlocked</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure the device is unlocked and a passphrase is cached.</span>
+
+<span class="sd">        If the device is locked, this will prompt for PIN. If passphrase is enabled</span>
+<span class="sd">        and no passphrase is cached for the current session, the device will also</span>
+<span class="sd">        prompt for passphrase.</span>
+
+<span class="sd">        After calling this method, further actions on the device will not prompt for</span>
+<span class="sd">        PIN or passphrase until the device is locked or the session becomes invalid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.btc</span> <span class="kn">import</span> <span class="n">get_address</span>
+
+        <span class="n">get_address</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Testnet&quot;</span><span class="p">,</span> <span class="n">PASSPHRASE_TEST_PATH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_features</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">end_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the current session and clear cached passphrase.</span>
+
+<span class="sd">        The session will become invalid until `init_device()` is called again.</span>
+<span class="sd">        If passphrase is enabled, further actions will prompt for it again.</span>
+
+<span class="sd">        This is a no-op in bootloader mode, as it does not support session management.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># since: 2.3.4, 1.9.4</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">bootloader_mode</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">EndSession</span><span class="p">())</span>
+        <span class="k">except</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorFailure</span><span class="p">:</span>
+            <span class="c1"># A failure most likely means that the FW version does not support</span>
+            <span class="c1"># the EndSession call. We ignore the failure and clear the local session_id.</span>
+            <span class="c1"># The client-side end result is identical.</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@session</span>
+    <span class="k">def</span> <span class="nf">clear_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lock the device and present a fresh session.</span>
+
+<span class="sd">        The current session will be invalidated and a new one will be started. If the</span>
+<span class="sd">        device has PIN enabled, it will become locked.</span>
+
+<span class="sd">        Equivalent to calling `lock()`, `end_session()` and `init_device()`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">(</span><span class="n">_refresh_features</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_device</span><span class="p">(</span><span class="n">new_session</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">transport</span><span class="p">,</span> <span class="n">ui</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">derive_cardano</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_init_device</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Create a TrezorClient instance.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>transport</code>
+            </td>
+            <td>
+                  <code><span title="python.src.trezorlib.transport.Transport">Transport</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Transport instance</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>ui</code>
+            </td>
+            <td>
+                  <code><span title="python.src.trezorlib.ui.TrezorClientUI">TrezorClientUI</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>UI instance</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>session_id</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="bytes">bytes</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>attempt to resume session with the given ID</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>derive_cardano</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="bool">bool</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>enable the Cardano app, if available</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="python.src.trezorlib.models.TrezorModel">TrezorModel</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional model of the device</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>_init_device</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to initialize the device (more below)</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>You have to provide a <code>transport</code>, i.e., a raw connection to the device. You can
+use <code>trezorlib.transport.get_transport</code> to find one.</p>
+<p>You have to provide an UI implementation for the three kinds of interaction:
+- button request (notify the user that their interaction is needed)
+- PIN request (on T1, ask the user to input numbers for a PIN matrix)
+- passphrase request (ask the user to enter a passphrase) See <code>trezorlib.ui</code> for
+  details.</p>
+<p>See <code>TrezorClient.init_device</code> for details about <code>session_id</code> and
+<code>derive_cardano</code>.</p>
+<p>You can provide Trezor model information. If not provided, it is detected from
+the model name reported at initialization time.</p>
+<p>By default, the instance will open a connection to the Trezor device, send an
+<code>Initialize</code> message, set up the <code>features</code> field from the response, and connect
+to a session. By specifying <code>_init_device=False</code>, this step is skipped. Notably,
+this means that <code>client.features</code> is unset. Use <code>client.init_device()</code> or
+<code>client.refresh_features()</code> to fix that, otherwise A LOT OF THINGS will break.
+Only use this if you are <em>sure</em> that you know what you are doing. This feature
+might be removed at any time.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">transport</span><span class="p">:</span> <span class="s2">&quot;Transport&quot;</span><span class="p">,</span>
+    <span class="n">ui</span><span class="p">:</span> <span class="s2">&quot;TrezorClientUI&quot;</span><span class="p">,</span>
+    <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">derive_cardano</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">TrezorModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">_init_device</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a TrezorClient instance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        transport: Transport instance</span>
+<span class="sd">        ui: UI instance</span>
+<span class="sd">        session_id: attempt to resume session with the given ID</span>
+<span class="sd">        derive_cardano: enable the Cardano app, if available</span>
+<span class="sd">        model: Optional model of the device</span>
+<span class="sd">        _init_device: Whether to initialize the device (more below)</span>
+
+<span class="sd">    You have to provide a `transport`, i.e., a raw connection to the device. You can</span>
+<span class="sd">    use `trezorlib.transport.get_transport` to find one.</span>
+
+<span class="sd">    You have to provide an UI implementation for the three kinds of interaction:</span>
+<span class="sd">    - button request (notify the user that their interaction is needed)</span>
+<span class="sd">    - PIN request (on T1, ask the user to input numbers for a PIN matrix)</span>
+<span class="sd">    - passphrase request (ask the user to enter a passphrase) See `trezorlib.ui` for</span>
+<span class="sd">      details.</span>
+
+<span class="sd">    See `TrezorClient.init_device` for details about `session_id` and</span>
+<span class="sd">    `derive_cardano`.</span>
+
+<span class="sd">    You can provide Trezor model information. If not provided, it is detected from</span>
+<span class="sd">    the model name reported at initialization time.</span>
+
+<span class="sd">    By default, the instance will open a connection to the Trezor device, send an</span>
+<span class="sd">    `Initialize` message, set up the `features` field from the response, and connect</span>
+<span class="sd">    to a session. By specifying `_init_device=False`, this step is skipped. Notably,</span>
+<span class="sd">    this means that `client.features` is unset. Use `client.init_device()` or</span>
+<span class="sd">    `client.refresh_features()` to fix that, otherwise A LOT OF THINGS will break.</span>
+<span class="sd">    Only use this if you are _sure_ that you know what you are doing. This feature</span>
+<span class="sd">    might be removed at any time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;creating client instance for device: </span><span class="si">{</span><span class="n">transport</span><span class="o">.</span><span class="n">get_path</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">default_mapping</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapping</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">.</span><span class="n">DEFAULT_MAPPING</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">transport</span> <span class="o">=</span> <span class="n">transport</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ui</span> <span class="o">=</span> <span class="n">ui</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+    <span class="k">if</span> <span class="n">_init_device</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_device</span><span class="p">(</span><span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span> <span class="n">derive_cardano</span><span class="o">=</span><span class="n">derive_cardano</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.call" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Send a protobuf message to the device and return the response.</p>
+<p>Automatically handles auxilliary flows like <code>ButtonRequest</code> etc. While <code>call()</code>
+is running, there can be any number of callbacks into the UI implementation.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>msg</code>
+            </td>
+            <td>
+                  <code><span title="python.src.trezorlib.protobuf.MessageType">MessageType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>protobuf message to send</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="python.src.trezorlib.protobuf.MessageType">MessageType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Protobuf message received from the device</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@session</span>
+<span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send a protobuf message to the device and return the response.</span>
+
+<span class="sd">    Automatically handles auxilliary flows like `ButtonRequest` etc. While `call()`</span>
+<span class="sd">    is running, there can be any number of callbacks into the UI implementation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        msg: protobuf message to send</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Protobuf message received from the device</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">check_firmware_version</span><span class="p">()</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">PinMatrixRequest</span><span class="p">):</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_pin</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">PassphraseRequest</span><span class="p">):</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_passphrase</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">ButtonRequest</span><span class="p">):</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_button</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Failure</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">messages</span><span class="o">.</span><span class="n">FailureType</span><span class="o">.</span><span class="n">ActionCancelled</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">Cancelled</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorFailure</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resp</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.call_raw" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">call_raw</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Send a protobuf message to the device and return the immediate response.</p>
+<p>Bypasses handling of auxilliary flows like <code>ButtonRequest</code>, <code>PinRequest</code>,
+<code>PassphraseRequest</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">call_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send a protobuf message to the device and return the immediate response.</span>
+
+<span class="sd">    Bypasses handling of auxilliary flows like `ButtonRequest`, `PinRequest`,</span>
+<span class="sd">    `PassphraseRequest`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__tracebackhide__</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># for pytest # pylint: disable=W0612</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_raw_write</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_read</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.cancel" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">cancel</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Send a Cancel message to the device, aborting the current operation.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send a Cancel message to the device, aborting the current operation.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_raw_write</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Cancel</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.check_firmware_version" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">check_firmware_version</span><span class="p">(</span><span class="n">warn_only</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Check if the firmware version is still actively supported.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>warn_only</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, only log a warning. Otherwise, raise an exception.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="OutdatedFirmwareError">OutdatedFirmwareError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If the firmware version is too old.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">check_firmware_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">warn_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the firmware version is still actively supported.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        warn_only: If True, only log a warning. Otherwise, raise an exception.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        OutdatedFirmwareError: If the firmware version is too old.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_outdated</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">warn_only</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Firmware is out of date&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">OutdatedFirmwareError</span><span class="p">(</span><span class="n">OUTDATED_FIRMWARE_ERROR</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.clear_session" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">clear_session</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Lock the device and present a fresh session.</p>
+<p>The current session will be invalidated and a new one will be started. If the
+device has PIN enabled, it will become locked.</p>
+<p>Equivalent to calling <code>lock()</code>, <code>end_session()</code> and <code>init_device()</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@session</span>
+<span class="k">def</span> <span class="nf">clear_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lock the device and present a fresh session.</span>
+
+<span class="sd">    The current session will be invalidated and a new one will be started. If the</span>
+<span class="sd">    device has PIN enabled, it will become locked.</span>
+
+<span class="sd">    Equivalent to calling `lock()`, `end_session()` and `init_device()`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">(</span><span class="n">_refresh_features</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">end_session</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">init_device</span><span class="p">(</span><span class="n">new_session</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.close" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">close</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Close the connection with the device.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Close the connection with the device.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># TODO call EndSession here?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transport</span><span class="o">.</span><span class="n">end_session</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.end_session" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">end_session</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Close the current session and clear cached passphrase.</p>
+<p>The session will become invalid until <code>init_device()</code> is called again.
+If passphrase is enabled, further actions will prompt for it again.</p>
+<p>This is a no-op in bootloader mode, as it does not support session management.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">end_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Close the current session and clear cached passphrase.</span>
+
+<span class="sd">    The session will become invalid until `init_device()` is called again.</span>
+<span class="sd">    If passphrase is enabled, further actions will prompt for it again.</span>
+
+<span class="sd">    This is a no-op in bootloader mode, as it does not support session management.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># since: 2.3.4, 1.9.4</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">bootloader_mode</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">EndSession</span><span class="p">())</span>
+    <span class="k">except</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorFailure</span><span class="p">:</span>
+        <span class="c1"># A failure most likely means that the FW version does not support</span>
+        <span class="c1"># the EndSession call. We ignore the failure and clear the local session_id.</span>
+        <span class="c1"># The client-side end result is identical.</span>
+        <span class="k">pass</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.ensure_unlocked" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">ensure_unlocked</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Ensure the device is unlocked and a passphrase is cached.</p>
+<p>If the device is locked, this will prompt for PIN. If passphrase is enabled
+and no passphrase is cached for the current session, the device will also
+prompt for passphrase.</p>
+<p>After calling this method, further actions on the device will not prompt for
+PIN or passphrase until the device is locked or the session becomes invalid.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@session</span>
+<span class="k">def</span> <span class="nf">ensure_unlocked</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure the device is unlocked and a passphrase is cached.</span>
+
+<span class="sd">    If the device is locked, this will prompt for PIN. If passphrase is enabled</span>
+<span class="sd">    and no passphrase is cached for the current session, the device will also</span>
+<span class="sd">    prompt for passphrase.</span>
+
+<span class="sd">    After calling this method, further actions on the device will not prompt for</span>
+<span class="sd">    PIN or passphrase until the device is locked or the session becomes invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.btc</span> <span class="kn">import</span> <span class="n">get_address</span>
+
+    <span class="n">get_address</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Testnet&quot;</span><span class="p">,</span> <span class="n">PASSPHRASE_TEST_PATH</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_features</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.get_device_id" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_device_id</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Get device ID.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Device ID in hexadecimal string.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_device_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get device ID.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Device ID in hexadecimal string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">device_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">device_id</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.init_device" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">init_device</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">new_session</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">derive_cardano</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Initialize the device and return a session ID.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>session_id</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="bytes">bytes</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Attempt to resume a session with this ID.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>new_session</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, a new session ID will be generated and returned.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>derive_cardano</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="bool">bool</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, the Cardano app will be initialized.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="bytes">bytes</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Session ID, if we manage to get it, otherwise None.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>You can optionally specify a session ID. If the session still exists on the
+device, the same session ID will be returned and the session is resumed.
+Otherwise a different session ID is returned.</p>
+<p>Specify <code>new_session=True</code> to open a fresh session. Since firmware version
+1.9.0/2.3.0, the previous session will remain cached on the device, and can be
+resumed by calling <code>init_device</code> again with the appropriate session ID.</p>
+<p>If neither <code>new_session</code> nor <code>session_id</code> is specified, the current session ID
+will be reused. If no session ID was cached, a new session ID will be allocated
+and returned.</p>
+<p>If <code>derive_cardano</code> is True, and the device supports it, the Cardano master
+secrets will be derived. This is required for using Cardano derivations other
+than <code>LEDGER</code> -- attempting to call Cardano functions in a session without
+<code>derive_cardano</code> will result in an error.</p>
+<p>Enabling <code>derive_cardano</code> can increase session startup time by up to 5 seconds.</p>
+<h4 id="python.src.trezorlib.client.TrezorClient.init_device--version-notes">Version notes:</h4>
+<p>Trezor One older than 1.9.0 does not have session management. Optional arguments
+have no effect and the function returns None</p>
+<p>Trezor T older than 2.3.0 does not have session cache. Requesting a new session
+will overwrite the old one. In addition, this function will always return None.
+A valid session_id can be obtained from the <code>session_id</code> attribute, but only
+after a passphrase-protected call is performed. You can use the following code:</p>
+<pre><code class="language-python">client.init_device()
+client.ensure_unlocked()
+valid_session_id = client.session_id
+</code></pre>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@session</span>
+<span class="k">def</span> <span class="nf">init_device</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">new_session</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">derive_cardano</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the device and return a session ID.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        session_id: Attempt to resume a session with this ID.</span>
+<span class="sd">        new_session: If True, a new session ID will be generated and returned.</span>
+<span class="sd">        derive_cardano: If True, the Cardano app will be initialized.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Session ID, if we manage to get it, otherwise None.</span>
+
+<span class="sd">    You can optionally specify a session ID. If the session still exists on the</span>
+<span class="sd">    device, the same session ID will be returned and the session is resumed.</span>
+<span class="sd">    Otherwise a different session ID is returned.</span>
+
+<span class="sd">    Specify `new_session=True` to open a fresh session. Since firmware version</span>
+<span class="sd">    1.9.0/2.3.0, the previous session will remain cached on the device, and can be</span>
+<span class="sd">    resumed by calling `init_device` again with the appropriate session ID.</span>
+
+<span class="sd">    If neither `new_session` nor `session_id` is specified, the current session ID</span>
+<span class="sd">    will be reused. If no session ID was cached, a new session ID will be allocated</span>
+<span class="sd">    and returned.</span>
+
+<span class="sd">    If `derive_cardano` is True, and the device supports it, the Cardano master</span>
+<span class="sd">    secrets will be derived. This is required for using Cardano derivations other</span>
+<span class="sd">    than `LEDGER` -- attempting to call Cardano functions in a session without</span>
+<span class="sd">    `derive_cardano` will result in an error.</span>
+
+<span class="sd">    Enabling `derive_cardano` can increase session startup time by up to 5 seconds.</span>
+
+<span class="sd">    # Version notes:</span>
+
+<span class="sd">    Trezor One older than 1.9.0 does not have session management. Optional arguments</span>
+<span class="sd">    have no effect and the function returns None</span>
+
+<span class="sd">    Trezor T older than 2.3.0 does not have session cache. Requesting a new session</span>
+<span class="sd">    will overwrite the old one. In addition, this function will always return None.</span>
+<span class="sd">    A valid session_id can be obtained from the `session_id` attribute, but only</span>
+<span class="sd">    after a passphrase-protected call is performed. You can use the following code:</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    client.init_device()</span>
+<span class="sd">    client.ensure_unlocked()</span>
+<span class="sd">    valid_session_id = client.session_id</span>
+<span class="sd">    ```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">new_session</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">session_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+
+    <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">Initialize</span><span class="p">(</span>
+            <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+            <span class="n">derive_cardano</span><span class="o">=</span><span class="n">derive_cardano</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Failure</span><span class="p">):</span>
+        <span class="c1"># can happen if `derive_cardano` does not match the current session</span>
+        <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorFailure</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Features</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorException</span><span class="p">(</span><span class="s2">&quot;Unexpected response to Initialize&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">resp</span><span class="o">.</span><span class="n">session_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Successfully resumed session&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">session_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Failed to resume session&quot;</span><span class="p">)</span>
+
+    <span class="c1"># TT &lt; 2.3.0 compatibility:</span>
+    <span class="c1"># _refresh_features will clear out the session_id field. We want this function</span>
+    <span class="c1"># to return its value, so that callers can rely on it being either a valid</span>
+    <span class="c1"># session_id, or None if we can&#39;t do that.</span>
+    <span class="c1"># Older TT FW does not report session_id in Features and self.session_id might</span>
+    <span class="c1"># be invalid because TT will not allocate a session_id until a passphrase</span>
+    <span class="c1"># exchange happens.</span>
+    <span class="n">reported_session_id</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">session_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_features</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reported_session_id</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.is_outdated" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">is_outdated</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Check if the device firmware is outdated.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>True if the device firmware is outdated, False otherwise.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_outdated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the device firmware is outdated.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if the device firmware is outdated, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">bootloader_mode</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># should happen in _refresh_features</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">minimum_version</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.lock" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">lock</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">_refresh_features</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Lock the device.</p>
+<p>If the device does not have a PIN configured, this will do nothing.
+Otherwise, a lock screen will be shown and the device will prompt for PIN
+before further actions.</p>
+<p>This call does <em>not</em> invalidate passphrase cache. If passphrase is in use,
+the device will not prompt for it after unlocking.</p>
+<p>To invalidate passphrase cache, use <code>end_session()</code>. To lock <em>and</em> invalidate
+passphrase cache, use <code>clear_session()</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@session</span>
+<span class="k">def</span> <span class="nf">lock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">_refresh_features</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lock the device.</span>
+
+<span class="sd">    If the device does not have a PIN configured, this will do nothing.</span>
+<span class="sd">    Otherwise, a lock screen will be shown and the device will prompt for PIN</span>
+<span class="sd">    before further actions.</span>
+
+<span class="sd">    This call does _not_ invalidate passphrase cache. If passphrase is in use,</span>
+<span class="sd">    the device will not prompt for it after unlocking.</span>
+
+<span class="sd">    To invalidate passphrase cache, use `end_session()`. To lock _and_ invalidate</span>
+<span class="sd">    passphrase cache, use `clear_session()`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Private argument _refresh_features can be used internally to avoid</span>
+    <span class="c1"># refreshing in cases where we will refresh soon anyway. This is used</span>
+    <span class="c1"># in TrezorClient.clear_session()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">LockDevice</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">_refresh_features</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_features</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.open" class="doc doc-heading">
+            <code class="highlight language-python"><span class="nb">open</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Open a connection with the device.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a connection with the device.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transport</span><span class="o">.</span><span class="n">begin_session</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.ping" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">ping</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">button_protection</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Ping the device.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>msg</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Message to display on the device.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>button_protection</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Require button press to confirm.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="python.src.trezorlib.protobuf.MessageType">MessageType</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The success message/string returned by the device.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@expect</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Success</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="n">ret_type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">ping</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">button_protection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MessageType&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ping the device.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        msg: Message to display on the device.</span>
+<span class="sd">        button_protection: Require button press to confirm.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The success message/string returned by the device.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># We would like ping to work on any valid TrezorClient instance, but</span>
+    <span class="c1"># due to the protection modes, we need to go through self.call, and that will</span>
+    <span class="c1"># raise an exception if the firmware is too old.</span>
+    <span class="c1"># So we short-circuit the simplest variant of ping with call_raw.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">button_protection</span><span class="p">:</span>
+        <span class="c1"># XXX this should be: `with self:`</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">Ping</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">ButtonRequest</span><span class="p">):</span>
+                <span class="c1"># device is PIN-locked.</span>
+                <span class="c1"># respond and hope for the best</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_button</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">resp</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">Ping</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span> <span class="n">button_protection</span><span class="o">=</span><span class="n">button_protection</span><span class="p">)</span>
+    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="python.src.trezorlib.client.TrezorClient.refresh_features" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">refresh_features</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Reload features from the device.</p>
+<p>Should be called after changing settings or performing operations that affect
+device state.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="python.src.trezorlib.messages.Features">Features</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Features message from the device.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@session</span>
+<span class="k">def</span> <span class="nf">refresh_features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">messages</span><span class="o">.</span><span class="n">Features</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reload features from the device.</span>
+
+<span class="sd">    Should be called after changing settings or performing operations that affect</span>
+<span class="sd">    device state.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Features message from the device.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_raw</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">GetFeatures</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">Features</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">TrezorException</span><span class="p">(</span><span class="s2">&quot;Unexpected response to GetFeatures&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_features</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="python.src.trezorlib.client.get_default_client" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_default_client</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ui</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Get a client for a connected Trezor device.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>path</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional path to the device, e.g. "udp:21324"</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>ui</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="python.src.trezorlib.ui.TrezorClientUI">TrezorClientUI</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional UI instance</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+                  <code><span title="typing.Any">Any</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional arguments to pass to the TrezorClient constructor</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="TrezorClient (python.src.trezorlib.client.TrezorClient)" href="#python.src.trezorlib.client.TrezorClient">TrezorClient</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>TrezorClient instance</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>Returns a <code>TrezorClient</code> instance with minimum fuss.</p>
+<p>If path is specified, does a prefix-search for the specified device. Otherwise, uses
+the value of <code>TREZOR_PATH</code> env variable, or finds first connected Trezor.
+If no UI is supplied, instantiates the default CLI UI - <code>ClickUI</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/trezorlib/client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_default_client</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ui</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TrezorClientUI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrezorClient&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a client for a connected Trezor device.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: Optional path to the device, e.g. &quot;udp:21324&quot;</span>
+<span class="sd">        ui: Optional UI instance</span>
+<span class="sd">        **kwargs: Additional arguments to pass to the TrezorClient constructor</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        TrezorClient instance</span>
+
+<span class="sd">    Returns a `TrezorClient` instance with minimum fuss.</span>
+
+<span class="sd">    If path is specified, does a prefix-search for the specified device. Otherwise, uses</span>
+<span class="sd">    the value of `TREZOR_PATH` env variable, or finds first connected Trezor.</span>
+<span class="sd">    If no UI is supplied, instantiates the default CLI UI - `ClickUI`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.transport</span> <span class="kn">import</span> <span class="n">get_transport</span>
+    <span class="kn">from</span> <span class="nn">.ui</span> <span class="kn">import</span> <span class="n">ClickUI</span>
+
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TREZOR_PATH&quot;</span><span class="p">)</span>
+
+    <span class="n">transport</span> <span class="o">=</span> <span class="n">get_transport</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">prefix_search</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ui</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ui</span> <span class="o">=</span> <span class="n">ClickUI</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">TrezorClient</span><span class="p">(</span><span class="n">transport</span><span class="p">,</span> <span class="n">ui</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

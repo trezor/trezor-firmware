@@ -9,11 +9,11 @@ theme:
   highlightjs: true
 
 plugins:
-- mkdocstrings:
-    handlers:
-      python:
-        paths: [..]  # so it works from the monorepo root (on readthedocs)
-- search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [..]  # so it works from the monorepo root (on readthedocs)
+  - search
 
 nav:
   - Trezorlib and Trezorctl: index.md
@@ -22,12 +22,12 @@ nav:
   - Trezorlib examples: examples_trezorlib.md
   - Transaction Format: transaction-format.md
   - API Reference:
-    - Bitcoin: API/btc.md
-    - Client: API/client.md
-    - Debuglink: API/debuglink.md
-    - Device: API/device.md
-    - Ethereum: API/ethereum.md
-    - FIDO: API/fido.md
+      - Bitcoin: API/btc.md
+      - Client: API/client.md
+      - Debuglink: API/debuglink.md
+      - Device: API/device.md
+      - Ethereum: API/ethereum.md
+      - FIDO: API/fido.md
 
 watch:
   - src
