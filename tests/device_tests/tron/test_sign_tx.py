@@ -5,6 +5,7 @@ import pytest
 
 from trezorlib import messages, protobuf, tron
 from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import LayoutType
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -45,6 +46,7 @@ def test_sign_tx(session: Session, parameters: dict, result: dict):
         "TransferContract",
         "Note_hello_world",
         "TriggerSmartContract_USDT_transfer",
+        "Stake_for_Energy",
     ],
 )
 def test_cancel_sign_tx(session: Session, fixture: str):
@@ -56,6 +58,51 @@ def test_cancel_sign_tx(session: Session, fixture: str):
 
     with pytest.raises(Cancelled), session.test_ctx as client:
         client.set_input_flow(input_flow)
+        tron.sign_tx(session, tx, contract, address_n)
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        # "TransferContract",
+        "Stake_for_Energy",
+        "Stake_for_Bandwidth",
+        "TriggerSmartContract_USDT_transfer",
+    ],
+)
+def test_ui_cancel_flow(session: Session, fixture: str):
+    tx, contract, address_n = build_from_fixture(fixture)
+
+    def ui_cancel_flow():
+        yield
+        if session.layout_type == LayoutType.Caesar:
+            session.debug.press_right()
+        else:
+            session.debug.press_yes()
+        session.debug.press_no()  # Wrong staking reason / wrong amount / wrong token
+
+    with pytest.raises(Cancelled), session.test_ctx as client:
+        client.set_input_flow(ui_cancel_flow)
+        tron.sign_tx(session, tx, contract, address_n)
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        "TriggerSmartContract_unknown_contract",
+    ],
+)
+def test_ui_cancel_unknown_contract(session: Session, fixture: str):
+    tx, contract, address_n = build_from_fixture(fixture)
+
+    def ui_cancel_flow():
+        yield
+        session.debug.press_yes()  # Accept warning
+        session.debug.press_yes()  # Accept contract address
+        session.debug.press_no()  # Data feels wrong
+
+    with pytest.raises(Cancelled), session.test_ctx as client:
+        client.set_input_flow(ui_cancel_flow)
         tron.sign_tx(session, tx, contract, address_n)
 
 

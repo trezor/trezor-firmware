@@ -40,7 +40,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     await paths.validate_path(keychain, msg.address_n)
     node = keychain.derive(msg.address_n)
 
-    # It is also not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
+    # It is not necessary for it to be UTF-8 encoded but all applications using it use it as a Note to be attached with the transaction.
     if msg.data and msg.data != b"":
         if len(msg.data) > _MAX_DATA_LENGTH:
             raise DataError("Tron: data field too long")
@@ -84,6 +84,9 @@ async def process_contract(
     contract: MessageType,
     fee_limit: int,
 ) -> TronRawContract:
+
+    # Importing individual enums would de-clutter the code a bit.
+    # But it causes type error in messages.TronRawContract.type.
     from trezor.enums import TronRawContractType
     from trezor.ui.layouts import confirm_tron_send
 
@@ -95,9 +98,27 @@ async def process_contract(
         if contract.amount > _INT64_MAX:
             raise DataError("Tron: invalid transfer amount")
         await confirm_tron_send(layout.format_trx_amount(contract.amount), None)
+
     elif messages.TronTriggerSmartContract.is_type_of(contract):
         contract_type = TronRawContractType.TriggerSmartContract
         await process_smart_contract(contract, fee_limit)
+
+    elif messages.TronFreezeBalanceV2Contract.is_type_of(contract):
+        from trezor.enums import TronResourceCode
+
+        contract_type = TronRawContractType.FreezeBalanceV2Contract
+        await layout.confirm_freeze_balance(contract)
+
+        # TRON protocol uses proto3, which omits fields with default values from
+        # serialization. Since BANDWIDTH=0 is the default, we must set resource=None
+        # to match proto3 encoding and produce the correct transaction hash.
+        if contract.resource == TronResourceCode.BANDWIDTH:
+            contract = messages.TronFreezeBalanceV2Contract(
+                owner_address=contract.owner_address,
+                frozen_balance=contract.frozen_balance,
+                resource=None,
+            )
+
     else:
         raise DataError("Tron: contract type unknown")
 
@@ -154,6 +175,7 @@ async def process_known_trc20_contract(
     assert all(
         byte == 0 for byte in arg0[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
     )
+
     # TRON truncates the mandatory prefix \x41 from addresses in data
     recipient = b"\x41" + bytes(arg0[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :])
 
