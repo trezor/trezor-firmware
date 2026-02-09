@@ -640,9 +640,9 @@ const cli_command_t* cli_process_io(cli_t* cli) {
   size_t crc_offset = cstr_starts_with(cli->line_buffer, CLI_CRC_PREFIX)
                           ? strlen(CLI_CRC_PREFIX)
                           : 0;
-  uint32_t calculated_crc =
-      ~cli_crc32(CRC32_INITIAL, cli->line_buffer + crc_offset,
-                 MAX((int)cli->line_len - (int)crc_offset - CLI_CRC_LENGTH, 0));
+  uint32_t calculated_crc = ~cli_crc32(
+      CRC32_INITIAL, cli->line_buffer + crc_offset,
+      MAX((int)cli->line_len - (int)crc_offset - CLI_CRC_LENGTH - 1, 0));
 
   // Split command line into arguments
   if (!cli_split_args(cli)) {
