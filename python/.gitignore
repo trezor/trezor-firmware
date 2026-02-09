@@ -8,3 +8,4 @@ MANIFEST
 *.py.cache
 /.tox
 mypy_report
+site/
