@@ -19,7 +19,8 @@
 
 // Turning off the stack protector for this file improves
 // the performance of drawing operations when called frequently.
-#pragma GCC optimize("no-stack-protector")
+#pragma GCC optimize("O0")
+// #pragma GCC optimize("no-stack-protector")
 
 #ifdef KERNEL_MODE
 
@@ -29,6 +30,8 @@
 
 #include <io/dma2d_bitblt.h>
 #include <io/gfx_color.h>
+
+#include <sys/systick.h>
 
 // Number of DMA2D layers - background (0) and foreground (1)
 #define DMA2D_LAYER_COUNT 2
@@ -53,6 +56,20 @@ typedef struct {
 
 } dma2d_driver_t;
 
+volatile uint32_t dmawait_t_total = 0;
+volatile uint32_t dmawait_t_max = 0;
+volatile uint32_t dmawait_t_min = UINT32_MAX;
+volatile uint32_t dmawait_t_avg = 0;
+volatile uint32_t dmawait_count = 0;
+
+static inline void dmawait_t_update(uint64_t t0, uint64_t t1) {
+  uint32_t dmawait_t_diff = (uint32_t)(t1 - t0);
+  dmawait_t_total += dmawait_t_diff;
+  dmawait_t_max = MAX(dmawait_t_max, dmawait_t_diff);
+  dmawait_t_min = MIN(dmawait_t_min, dmawait_t_diff);
+  dmawait_t_avg = dmawait_t_total / dmawait_count;
+}
+
 static dma2d_driver_t g_dma2d_driver = {
     .initialized = false,
 };
@@ -67,6 +84,10 @@ static inline bool dma2d_accessible(const void* ptr) {
 #else
   return true;
 #endif
+}
+
+static void dma2d_error_handler(void) {
+  __NOP();
 }
 
 void dma2d_init(void) {
@@ -89,6 +110,12 @@ void dma2d_init(void) {
   __HAL_DMA2D_ENABLE_IT(&drv->handle, DMA2D_IT_TC | DMA2D_IT_TE | DMA2D_IT_CE);
   drv->dma_transfer_in_progress = false;
 
+  dmawait_t_total = 0;
+  dmawait_t_max = 0;
+  dmawait_t_min = UINT32_MAX;
+  dmawait_t_avg = 0;
+  dmawait_count = 0;
+
   drv->initialized = true;
 }
 
@@ -106,6 +133,8 @@ void dma2d_deinit(void) {
 
 void dma2d_wait(void) {
   dma2d_driver_t* drv = &g_dma2d_driver;
+  uint64_t dmawait_t0;
+  uint64_t dmawait_t1;
 
   if (!drv->initialized) {
     return;
@@ -114,6 +143,12 @@ void dma2d_wait(void) {
   if (!drv->dma_transfer_in_progress) {
     return;
   }
+
+  dmawait_count++;
+  dmawait_t0 = systick_us();
+
+#if 1
+  uint32_t loop_counter = 0;
 
   irq_key_t key = irq_lock();
   // Enabled events and all interrupts, including disabled interrupts, can
@@ -132,6 +167,7 @@ void dma2d_wait(void) {
   // an error occurs.
   while (!__HAL_DMA2D_GET_FLAG(&drv->handle,
                                DMA2D_FLAG_TC | DMA2D_FLAG_TE | DMA2D_FLAG_CE)) {
+    loop_counter++;
     // Ensure that all memory accesses are completed before checking the flag.
     __DSB();
     __WFE();
@@ -147,6 +183,7 @@ void dma2d_wait(void) {
 
   if (__HAL_DMA2D_GET_FLAG(&drv->handle, DMA2D_FLAG_TE | DMA2D_FLAG_CE)) {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   // Clear all pending flags and pending IRQ to be prepared for next usage.
@@ -158,8 +195,15 @@ void dma2d_wait(void) {
   // usually done within the HAL_DMA2D_IRQHandler() called from the interrupt
   // handler or HAL_DMA2D_PollForTransfer() or HAL_DMA2D_Abort() functions.
   __HAL_UNLOCK(&drv->handle);
+#else
+  while (HAL_DMA2D_PollForTransfer(&drv->handle, 10) != HAL_OK)
+    ;
+#endif
 
   drv->dma_transfer_in_progress = false;
+
+  dmawait_t1 = systick_us();
+  dmawait_t_update(dmawait_t0, dmawait_t1);
 }
 
 bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
@@ -193,6 +237,7 @@ bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
       drv->dma_transfer_in_progress = true;
     } else {
       // TODO: error handling
+      dma2d_error_handler();
     }
   } else {
 #ifdef STM32U5
@@ -223,6 +268,7 @@ bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
       drv->dma_transfer_in_progress = true;
     } else {
       // TODO: error handling
+      dma2d_error_handler();
     }
 
 #else
@@ -364,6 +410,7 @@ bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t* params) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   return true;
@@ -406,6 +453,7 @@ bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t* bb) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   return true;
@@ -512,6 +560,7 @@ bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t* params) {
       drv->dma_transfer_in_progress = true;
     } else {
       // TODO: error handling
+      dma2d_error_handler();
     }
   }
 
@@ -561,6 +610,7 @@ bool dma2d_rgb565_blend_mono8(const gfx_bitblt_t* bb) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   return true;
@@ -597,6 +647,7 @@ bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb) {
       drv->dma_transfer_in_progress = true;
     } else {
       // TODO: error handling
+      dma2d_error_handler();
     }
 
   } else {
@@ -628,6 +679,7 @@ bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb) {
       drv->dma_transfer_in_progress = true;
     } else {
       // TODO: error handling
+      dma2d_error_handler();
     }
 
 #else
@@ -731,6 +783,7 @@ bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* params) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   return true;
@@ -773,6 +826,7 @@ bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t* bb) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   return true;
@@ -879,6 +933,7 @@ bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* params) {
       drv->dma_transfer_in_progress = true;
     } else {
       // TODO: error handling
+      dma2d_error_handler();
     }
   }
 
@@ -931,6 +986,7 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   return true;
@@ -971,6 +1027,7 @@ bool dma2d_rgba8888_copy_mono8(const gfx_bitblt_t* bb) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   return true;
@@ -1017,6 +1074,7 @@ bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   return true;
@@ -1059,6 +1117,7 @@ static bool dma2d_rgba8888_copy_ycbcr(const gfx_bitblt_t* bb, uint32_t css) {
     drv->dma_transfer_in_progress = true;
   } else {
     // TODO: error handling
+    dma2d_error_handler();
   }
 
   // DMA2D overwrites CLUT during YCbCr conversion

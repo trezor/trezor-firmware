@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma GCC optimize("O0")
 
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -42,6 +43,9 @@
 #include <io/app_cache.h>
 #include <io/app_loader.h>
 #endif
+
+#include <sys/dbg_console.h>
+#include <sys/irq.h>
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -107,6 +111,12 @@
 #include <io/usb.h>
 #include <io/usb_config.h>
 #endif
+
+extern volatile uint32_t dmawait_t_total;
+extern volatile uint32_t dmawait_t_max;
+extern volatile uint32_t dmawait_t_min;
+extern volatile uint32_t dmawait_t_avg;
+extern volatile uint32_t dmawait_count;
 
 void drivers_init() {
 #ifdef SECURE_MODE
@@ -206,6 +216,9 @@ void drivers_init() {
 //
 // Returns when the coreapp task is terminated
 static void kernel_loop(applet_t *coreapp) {
+  uint32_t time0 = ticks();
+  uint32_t time1 = time0 + 30000; // 30000ms period
+
 #if SECURE_MODE && USE_STORAGE_HWKEY
   secure_aes_set_applet(coreapp);
 #endif
@@ -222,6 +235,31 @@ static void kernel_loop(applet_t *coreapp) {
 
     if (signalled.read_ready & (1 << SYSHANDLE_SYSCALL)) {
       syscall_ipc_dequeue();
+    }
+
+    uint32_t time_tmp = ticks();
+
+    if (time_tmp > time1) {
+      float dmawait_t_total_ratio =
+          (dmawait_t_total * 100.0f) / (1000.0f * (time_tmp - time0));
+
+      dbg_printf(
+          "dmawait_count=%d, dmawait_t_total=%dus (%d.%d%%), "
+          "dmawait_t_max=%dus, dmawait_t_min=%uus, dmawait_t_avg=%dus\n",
+          (int)dmawait_count, (int)dmawait_t_total, (int)dmawait_t_total_ratio,
+          (int)((dmawait_t_total_ratio - (int)dmawait_t_total_ratio) * 100),
+          (int)dmawait_t_max, (unsigned int)dmawait_t_min, (int)dmawait_t_avg);
+
+      irq_key_t key = irq_lock();
+      dmawait_t_total = 0;
+      //dmawait_t_max = 0;
+      //dmawait_t_min = UINT32_MAX;
+      dmawait_t_avg = 0;
+      dmawait_count = 0;
+      irq_unlock(key);
+
+      time0 = time_tmp;
+      time1 = time0 + 30000;  // 30000ms period
     }
 
   } while (applet_is_alive(coreapp));
