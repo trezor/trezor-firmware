@@ -103,12 +103,12 @@ OK ABC 24DA4527
 
 Example with `checked-` prefix (enforces CRC for a single command even if CRC is otherwise disabled):
 ```
-checked-ping ABC 35F69145
+checked-ping ABC 3240F7DC
 OK ABC 24DA4527
 ```
 If the command has no arguments, the format is `checked-<command> <CRC32>`:
 ```
-checked-ping D720F16C
+checked-ping 25D53DFD
 OK  D38BF920
 ```
 
