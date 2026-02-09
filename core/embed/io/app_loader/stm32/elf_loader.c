@@ -31,10 +31,13 @@
 #include <sec/image.h>
 #include <sys/applet.h>
 #include <sys/coreapp.h>
+#include <sys/logging.h>
 #include <sys/mpu.h>
 
 #include "../app_arena.h"
 #include "elf.h"
+
+LOG_DECLARE(elf_loader)
 
 // Alignment required for MPU regions
 #define MPU_ALIGNMENT 32
@@ -240,38 +243,33 @@ static Elf32_Addr map_va(va_mapping_t* map, Elf32_Addr va) {
   return 0;
 }
 
-static bool relocate_section(const Elf32_Ehdr* ehdr, const Elf32_Shdr* shdr,
+static ts_t relocate_section(const Elf32_Ehdr* ehdr, const Elf32_Shdr* shdr,
                              va_mapping_t* map) {
+  TSH_DECLARE;
+
   const Elf32_Rel* rel = (Elf32_Rel*)((uint32_t)ehdr + shdr->sh_offset);
   const Elf32_Rel* rel_end = (Elf32_Rel*)((uint32_t)rel + shdr->sh_size);
 
   // Get section we are relocating
   const Elf32_Shdr* target_shdr = elf_get_shdr(ehdr, shdr->sh_info);
-  if (target_shdr == NULL) {
-    return false;
-  }
+
+  TSH_CHECK(target_shdr != NULL, TS_EINVAL);
 
   // Get target section boundaries
   uint32_t target_start = map_va(map, target_shdr->sh_addr);
   uint32_t target_end = target_start + target_shdr->sh_size;
 
   while (rel < rel_end) {
-    if (ELF32_R_TYPE(rel->r_info) != R_ARM_ABS32) {
-      // Unsupported relocation type
-      return false;
-    }
+    // Is relocation type supported?
+    TSH_CHECK(ELF32_R_TYPE(rel->r_info) == R_ARM_ABS32, TS_EINVAL);
 
     // Get pointer to the relocated 32-bit word
     uint32_t* mem_ptr = (uint32_t*)map_va(map, rel->r_offset);
-    if (mem_ptr == NULL) {
-      return false;
-    }
+    TSH_CHECK(mem_ptr != NULL, TS_EINVAL);
 
     // Ensure the pointer is within the target section
-    if ((uint32_t)mem_ptr < target_start ||
-        (uint32_t)mem_ptr + 4 > target_end) {
-      return false;
-    }
+    TSH_CHECK((uint32_t)mem_ptr >= target_start, TS_EINVAL);
+    TSH_CHECK((uint32_t)mem_ptr + 4 <= target_end, TS_EINVAL);
 
     // Relocate the 32-bit word
     *mem_ptr = map_va(map, *mem_ptr);
@@ -279,7 +277,8 @@ static bool relocate_section(const Elf32_Ehdr* ehdr, const Elf32_Shdr* shdr,
     ++rel;
   }
 
-  return true;
+cleanup:
+  TSH_RETURN;
 }
 
 static void get_stack_info(const Elf32_Ehdr* ehdr, uint32_t* stack_base,
@@ -311,8 +310,12 @@ static void elf_unload_cb(applet_t* applet) {
   }
 }
 
-bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
-  bool retval = false;
+ts_t elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
+  TSH_DECLARE;
+  ts_t status;
+
+  void* ram_ptr = NULL;
+  size_t ram_size = 0;
 
   applet_init(applet, NULL, NULL);
 
@@ -325,28 +328,20 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
 
   // Read and validate ELF header
   const Elf32_Ehdr* ehdr = elf_read_header(elf_ptr, elf_size);
-  if (ehdr == NULL) {
-    goto cleanup;
-  }
+  TSH_CHECK(ehdr != NULL, TS_EINVAL);
 
   // Read and validate RO segment
   const Elf32_Phdr* ro_phdr = elf_read_ro_phdr(ehdr, elf_size);
-  if (ro_phdr == NULL) {
-    goto cleanup;
-  }
+  TSH_CHECK(ro_phdr != NULL, TS_EINVAL);
 
   // Read and validate RW segment
   const Elf32_Phdr* rw_phdr = elf_read_rw_phdr(ehdr, elf_size);
-  if (rw_phdr == NULL) {
-    goto cleanup;
-  }
+  TSH_CHECK(rw_phdr != NULL, TS_EINVAL);
 
   // Allocate RAM for RW segment
-  size_t ram_size = ALIGN_UP(rw_phdr->p_memsz, MPU_ALIGNMENT);
-  void* ram_ptr = app_arena_alloc(ram_size, APP_ALLOC_DATA);
-  if (ram_ptr == NULL) {
-    goto cleanup;
-  }
+  ram_size = ALIGN_UP(rw_phdr->p_memsz, MPU_ALIGNMENT);
+  ram_ptr = app_arena_alloc(ram_size, APP_ALLOC_DATA);
+  TSH_CHECK(ram_ptr != NULL, TS_ENOMEM);
 
   // Make sure ELF and allocated RAM are accessible
   // (temporarily map it as data => we can apply relocation fixups)
@@ -376,9 +371,8 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   for (int i = 0; i < ehdr->e_shnum; i++) {
     const Elf32_Shdr* shdr = elf_get_shdr(ehdr, i);
     if (shdr->sh_type == SHT_REL) {
-      if (!relocate_section(ehdr, shdr, &map)) {
-        goto cleanup;
-      }
+      status = relocate_section(ehdr, shdr, &map);
+      TSH_CHECK_OK(status);
     }
   }
 
@@ -387,9 +381,7 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   uint32_t stack_size = 0;
   get_stack_info(ehdr, &stack_base, &stack_size);
   stack_base = map_va(&map, stack_base);
-  if (stack_base == 0 || stack_size == 0) {
-    goto cleanup;
-  }
+  TSH_CHECK(stack_base != 0 && stack_size > 0, TS_EINVAL);
 
   // Get static base address
   uint32_t sb_addr = (uintptr_t)ram_ptr;
@@ -417,9 +409,9 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
   mpu_set_active_applet(&applet->layout);
 
   // Initialize the applet task
-  if (!systask_init(&applet->task, stack_base, stack_size, sb_addr, applet)) {
-    goto cleanup;
-  }
+  bool ok =
+      systask_init(&applet->task, stack_base, stack_size, sb_addr, applet);
+  TSH_CHECK(ok, TS_ENOMEM);
 
   // Enable coreapp TLS area swapping
   systask_enable_tls(&applet->task, coreapp_get_tls_area());
@@ -428,26 +420,23 @@ bool elf_load(applet_t* applet, const void* elf_ptr, size_t elf_size) {
 
   // Prepare the applet to run - push exception frame on the stack
   // with the entrypoint address
-  if (!systask_push_call(&applet->task, (void*)entrypoint, api_getter, 0, 0)) {
-    goto cleanup;
-  }
-
-  retval = true;
-
-cleanup:
-
-  if (ram_ptr != NULL) {
-    app_arena_free(ram_ptr);
-  }
-
-  if (!retval) {
-    applet_unload(applet);
-  }
+  ok = systask_push_call(&applet->task, (void*)entrypoint, api_getter, 0, 0);
+  TSH_CHECK(ok, TS_ENOMEM);
 
   // Recover MPU state for the active task
   systask_set_mpu(systask_active());
 
-  return retval;
+  TSH_RETURN;
+
+cleanup:
+
+  app_arena_free(ram_ptr);
+  applet_unload(applet);
+
+  // Recover MPU state for the active task
+  systask_set_mpu(systask_active());
+
+  TSH_RETURN;
 }
 
 #endif  // KERNEL_MODE

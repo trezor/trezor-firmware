@@ -51,21 +51,25 @@ typedef struct {
 // Global app cache instance
 static app_cache_t g_app_cache;
 
-bool app_cache_init(void) {
+ts_t app_cache_init(void) {
   app_cache_t* cache = &g_app_cache;
 
   if (cache->initialized) {
-    return true;
+    return TS_OK;
   }
 
-  if (!app_arena_init()) {
-    return false;
-  }
+  TSH_DECLARE;
+  ts_t status;
 
   memset(cache, 0, sizeof(*cache));
 
+  status = app_arena_init();
+  TSH_CHECK_OK(status);
+
   cache->initialized = true;
-  return true;
+
+cleanup:
+  TSH_RETURN;
 }
 
 static app_cache_image_t* find_entry_by_hash(const app_hash_t* hash) {
@@ -176,51 +180,46 @@ app_cache_handle_t app_cache_create_image(const app_hash_t* hash, size_t size) {
   return image_to_handle(image);
 }
 
-bool app_cache_write_image(app_cache_handle_t handle, uintptr_t offset,
+ts_t app_cache_write_image(app_cache_handle_t handle, uintptr_t offset,
                            const void* data, size_t size) {
   app_cache_t* cache = &g_app_cache;
 
-  if (!cache->initialized) {
-    return false;
-  }
+  TSH_DECLARE;
+
+  TSH_CHECK(cache->initialized, TS_ENOINIT);
 
   app_cache_image_t* image = validate_image_handle(handle);
 
   // Check whether the image exists and can be written to
-  if (image == NULL || !image->loading) {
-    return false;
-  }
+  TSH_CHECK(image != NULL, TS_ENOENT);
+  TSH_CHECK(image->loading, TS_EBUSY);
+
+  // Check whether the image data is allocated
+  TSH_CHECK(image->image_data != NULL, TS_EINVAL);
 
   // Check whether the offset and size are within bounds
-  if (image->image_data == NULL || offset >= image->image_size ||
-      size > image->image_size - offset) {
-    return false;
-  }
+  TSH_CHECK(offset < image->image_size, TS_EINVAL);
+  TSH_CHECK(size <= image->image_size - offset, TS_EINVAL);
 
   // TODO: Consider a special new mpu mode or reusing MPU_MODE_APP here
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DISABLED);
   memcpy((uint8_t*)image->image_data + offset, data, size);
   mpu_restore(mpu_mode);
 
-  return true;
+cleanup:
+  TSH_RETURN;
 }
 
-bool app_cache_finalize_image(app_cache_handle_t handle, bool accept) {
+ts_t app_cache_finalize_image(app_cache_handle_t handle, bool accept) {
   app_cache_t* cache = &g_app_cache;
 
-  if (!cache->initialized) {
-    return false;
-  }
+  TSH_DECLARE;
+
+  TSH_CHECK(cache->initialized, TS_ENOINIT);
 
   app_cache_image_t* image = validate_image_handle(handle);
-
-  if (image == NULL) {
-    return false;
-  }
-
-  if (!image->loading) {
-    return false;
-  }
+  TSH_CHECK(image != NULL, TS_ENOENT);
+  TSH_CHECK(image->loading, TS_EINVAL);
 
   if (accept) {
     image->loading = false;
@@ -228,7 +227,8 @@ bool app_cache_finalize_image(app_cache_handle_t handle, bool accept) {
     remove_entry(image);
   }
 
-  return true;
+cleanup:
+  TSH_RETURN;
 }
 
 app_cache_handle_t app_cache_lock_image(const app_hash_t* hash, void** ptr,
@@ -269,43 +269,45 @@ void app_cache_unlock_image(app_cache_handle_t handle) {
 }
 
 #ifdef TREZOR_EMULATOR
-bool app_cache_load_file(const app_hash_t* hash, const char* filename) {
-  bool retval = false;
+ts_t app_cache_load_file(const app_hash_t* hash, const char* filename) {
+  TSH_DECLARE;
+  ts_t status;
 
   app_cache_handle_t image = APP_CACHE_INVALID_HANDLE;
 
   FILE* f = fopen(filename, "rb");
-  if (f == NULL) {
-    goto cleanup;
-  }
+  TSH_CHECK(f != NULL, TS_EIO);
 
   fseek(f, 0, SEEK_END);
   size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
 
   image = app_cache_create_image(hash, size);
-
-  if (image == APP_CACHE_INVALID_HANDLE) {
-    goto cleanup;
-  }
+  TSH_CHECK(image != APP_CACHE_INVALID_HANDLE, TS_ENOMEM);
 
   uintptr_t offset = 0;
 
   while (size > 0) {
     uint8_t buffer[1024];
     size_t to_read = size < sizeof(buffer) ? size : sizeof(buffer);
+
     size_t read = fread(buffer, 1, to_read, f);
-    if (read != to_read) {
-      goto cleanup;
-    }
-    if (!app_cache_write_image(image, offset, buffer, read)) {
-      goto cleanup;
-    }
+    TSH_CHECK(read == to_read, TS_EIO);
+
+    status = app_cache_write_image(image, offset, buffer, read);
+    TSH_CHECK_OK(status);
+
     offset += read;
     size -= read;
   }
 
-  retval = true;
+  fclose(f);
+  f = NULL;
+
+  status = app_cache_finalize_image(image, true);
+  TSH_CHECK_OK(status);
+
+  image = APP_CACHE_INVALID_HANDLE;
 
 cleanup:
   if (f != NULL) {
@@ -313,10 +315,11 @@ cleanup:
   }
 
   if (image != APP_CACHE_INVALID_HANDLE) {
-    app_cache_finalize_image(image, retval);
+    status = app_cache_finalize_image(image, false);
+    UNUSED(status);
   }
 
-  return retval;
+  TSH_RETURN;
 }
 
 #endif
