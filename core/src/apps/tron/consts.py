@@ -16,12 +16,14 @@ TYPE_URL_TEMPLATE = "type.googleapis.com/protocol."
 CONTRACT_TYPES = (
     MessageType.TronTransferContract,
     MessageType.TronTriggerSmartContract,
+    MessageType.TronFreezeBalanceV2Contract,
 )
 
 # https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L339-L379
 CONTRACT_TYPE_NAMES = {
     1: "TransferContract",
     31: "TriggerSmartContract",
+    54: "FreezeBalanceV2Contract",
 }
 
 

@@ -9,7 +9,9 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
     TronMessageType = Union[
-        messages.TronTransferContract, messages.TronTriggerSmartContract
+        messages.TronTransferContract,
+        messages.TronTriggerSmartContract,
+        messages.TronFreezeBalanceV2Contract,
     ]
 
 DEFAULT_BIP32_PATH = "m/44h/195h/0h/0/0"
@@ -51,6 +53,16 @@ def from_raw_data(
             owner_address=raw_contract.owner_address,
             contract_address=raw_contract.contract_address,
             data=raw_contract.data,
+        )
+    elif contract_type == messages.TronRawContractType.FreezeBalanceV2Contract:
+        raw_contract = load_message(
+            io.BytesIO(raw_tx.contract[0].parameter.value),
+            messages.TronFreezeBalanceV2Contract,
+        )
+        contract = messages.TronFreezeBalanceV2Contract(
+            owner_address=raw_contract.owner_address,
+            frozen_balance=raw_contract.frozen_balance,
+            resource=raw_contract.resource,
         )
     else:
         raise ValueError(f"Unsupported contract type: {contract_type}")
