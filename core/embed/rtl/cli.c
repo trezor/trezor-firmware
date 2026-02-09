@@ -236,6 +236,8 @@ void cli_enable_crc(cli_t* cli) { cli->crc_auto = true; }
 
 void cli_disable_crc(cli_t* cli) { cli->crc_auto = false; }
 
+bool cli_crc_enabled(cli_t* cli) { return cli->crc_auto; }
+
 // Finds a command record by name
 //
 // Returns NULL if the command is not found

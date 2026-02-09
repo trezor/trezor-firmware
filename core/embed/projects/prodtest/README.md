@@ -323,6 +323,15 @@ crc-disable @939BC008
 OK
 ```
 
+### crc-status
+Returns the current CRC check status. Prints `OK 1` if CRC is enabled and `OK 0` if disabled.
+
+Example:
+```
+crc-status
+OK 1
+```
+
 ### display-bars
 Draws vertical color bars on the screen according to a specified string of color codes.
 
