@@ -53,7 +53,7 @@ _DEFAULT_READ_TIMEOUT: int | None = None
 
 
 class PassphraseSetting(enum.Enum):
-    """Passphrase setting for a session."""
+    """Passphrase setting for a connection."""
 
     STANDARD_WALLET = ""
     """Open the default wallet with no passphrase."""
@@ -64,7 +64,7 @@ class PassphraseSetting(enum.Enum):
     entry on the device. Otherwise, open the default wallet with no
     passphrase."""
     NONE = None
-    """Create a management session where wallet operations are disabled."""
+    """Create a management connection where wallet operations are disabled."""
 
 
 GET_ROOT_FINGERPRINT_MESSAGE = messages.GetPublicKey(
@@ -107,7 +107,7 @@ class Session(t.Generic[ClientType, SessionIdType]):
         expect: type[MT] = MessageType,
         timeout: float | None = None,
     ) -> MT:
-        """Call a method on this session, process and return the response."""
+        """Call a method on this connection, process and return the response."""
         if self.is_invalid:
             raise exceptions.InvalidSessionError(self.id)
         with self:
@@ -130,7 +130,7 @@ class Session(t.Generic[ClientType, SessionIdType]):
         return self.client._write(self, msg)
 
     def close(self) -> None:
-        """End and invalidate this session."""
+        """End and invalidate this connection."""
         LOG.info("Closing session %s", self)
         try:
             self.call(messages.EndSession())
@@ -174,11 +174,11 @@ class Session(t.Generic[ClientType, SessionIdType]):
     def ensure_unlocked(self) -> None:
         """Ensure that the device is unlocked.
 
-        This method only works on sessions that have a passphrase derived, and
+        This method only works on connections that have a passphrase derived, and
         transitively, only on an initialized device.
 
         Go through `client.ensure_unlocked()` if you want to abstract away the
-        choice of a correct session for this operation.
+        choice of a correct connection for this operation.
         """
         resp = self.call(GET_ROOT_FINGERPRINT_MESSAGE, expect=messages.PublicKey)
         assert resp.root_fingerprint is not None
@@ -232,8 +232,17 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         mapping: ProtobufMapping | None,
         pairing: pairing.PairingController,
     ) -> None:
-        """
-        TODO
+        """Create a TrezorClient instance.
+
+        You should not normally create instances of this class directly. Use
+        `get_default_client()` or `get_client()` instead.
+
+        Args:
+            app: Application manifest with callbacks and credentials
+            transport: Transport instance
+            model: Optional model of the device
+            mapping: Optional protobuf mapping
+            pairing: Pairing controller for THP devices
         """
         LOG.info(
             f"creating client instance {type(self).__name__} for device: {transport}"
@@ -286,7 +295,7 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
     # ===== Common implementations =====
 
     def __enter__(self) -> tx.Self:
-        """(Re)Open a connection to the device."""
+        """Open a connection to the device."""
         self.transport.__enter__()
         return self
 
@@ -336,7 +345,7 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         *,
         derive_cardano: bool = False,
     ) -> SessionType:
-        """Get a new session with the given passphrase.
+        """Open a connection with the given passphrase.
 
         Passphrase can be provided as a string or a [`PassphraseSetting`] enum
         value. Set `passphrase=PassphraseSetting.ON_DEVICE` to request the
@@ -344,13 +353,13 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         automatically determine whether to request the passphrase on the device
         based on the device's capabilities.
 
-        If passphrase is None or `PassphraseSetting.NONE`, the returned session
+        If passphrase is None or `PassphraseSetting.NONE`, the returned connection
         will be "seedless", that is, it will not be possible to call any methods
         that require the user's seed (such as wallet addresses or signature
         operations).
 
         Use `derive_cardano=True` to request activation of Cardano-specific
-        operations in this session. If Cardano is not available, an exception
+        operations in this connection. If Cardano is not available, an exception
         will be raised. (Note that Cardano operations may still be available
         even if `derive_cardano` is set to False.)
 
@@ -560,7 +569,15 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
             pass
 
     def lock(self, *, _use_session: SessionType | None = None) -> None:
-        """Lock the device with a PIN prompt, if enabled."""
+        """Lock the device.
+
+        If the device does not have a PIN configured, this will do nothing.
+        Otherwise, a lock screen will be shown and the device will prompt for PIN
+        before further actions.
+
+        This call does _not_ invalidate passphrase cache. If passphrase is in use,
+        the device will not prompt for it after unlocking.
+        """
         session = _use_session or self._get_any_session()
         with session:
             session.call_raw(messages.LockDevice())
@@ -595,7 +612,16 @@ def get_default_client(
 ) -> "TrezorClient":
     """Get a client for a connected Trezor device.
 
-    Returns a TrezorClient instance with minimum fuss.
+    Args:
+        app_name: Name of the application using the client
+        path_or_transport: Optional path to the device or Transport instance, e.g. "udp:21324"
+        credentials: Collection of THP credentials
+        button_callback: Function to be called when the device requests a button press
+        pin_callback: Function to be called when the device requests a PIN
+        code_entry_callback: Function to be called when the device requests a pairing code
+
+    Returns:
+        TrezorClient instance with minimum fuss.
 
     If path is specified, does a prefix-search for the specified device. Otherwise, uses
     the value of TREZOR_PATH env variable, or finds first connected Trezor.
@@ -632,10 +658,15 @@ def get_default_session(
     *,
     derive_cardano: bool = False,
 ) -> Session:
-    """Get a default session for a connected Trezor device.
+    """Open a connection for a connected Trezor device.
 
-    The first argument must be a previously created and paired client instance,
-    e.g., via `get_client` or `get_default_client`.
+    Args:
+        client: Previously created and paired client instance, e.g., via `get_client` or `get_default_client`
+        passphrase_callback: Function to be called to get the passphrase
+        derive_cardano: Enable the Cardano app, if available
+
+    Returns:
+        Session instance
 
     The logic for determining what passphrase to use is as follows:
 

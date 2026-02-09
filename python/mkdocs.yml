@@ -5,7 +5,7 @@ site_description: Documentation for trezorlib and trezorctl command
 site_author: Trezor/Satoshilabs
 
 theme:
-  name: "readthedocs"
+  name: "material"
   highlightjs: true
 
 plugins:
@@ -20,9 +20,13 @@ nav:
   - Trezorctl examples: EXAMPLES.md
   - Trezorctl commands: OPTIONS.md
   - Transaction Format: transaction-format.md
+  - Trezorlib examples: examples_trezorlib.md
   - API Reference:
     - Client: API/client.md
     - Bitcoin: API/btc.md
+    - Device: API/device.md
+    - Ethereum: API/ethereum.md
+    - FIDO: API/fido.md
     - Debuglink: API/debuglink.md
 
 watch:
