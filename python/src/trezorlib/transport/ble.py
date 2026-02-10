@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import atexit
 import logging
+import sys
 import typing as t
 from dataclasses import dataclass
 from multiprocessing import Pipe, Process
@@ -50,6 +51,8 @@ TREZOR_CHARACTERISTIC_TX = "8c000003-a59b-4d58-a9ad-073df69fa1b1"
 
 SCAN_INTERVAL_SECONDS = 3
 SHUTDOWN_TIMEOUT_SECONDS = 10
+
+SHOULD_WRITE_WITH_RESPONSE = sys.platform == "darwin"
 
 
 class BleTransport(Transport):
@@ -293,6 +296,12 @@ class BleAsync:
         except BleakError:
             LOG.error("BLE pairing failed - make sure to open system pairing dialog")
             raise
+        except NotImplementedError:
+            # expected on macOS
+            if sys.platform != "darwin":
+                LOG.warning(
+                    "Failed to initiate pairing. You may need to pair the device manually."
+                )
 
         queue = asyncio.Queue()
 
@@ -340,7 +349,7 @@ class BleAsync:
     async def write(self, address: str, chunk: bytes) -> None:
         periph = self.devices[address]
         await periph.client.write_gatt_char(
-            TREZOR_CHARACTERISTIC_RX, chunk, response=False
+            TREZOR_CHARACTERISTIC_RX, chunk, response=SHOULD_WRITE_WITH_RESPONSE
         )
 
     async def shutdown(self) -> None:
