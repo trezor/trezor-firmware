@@ -23,6 +23,7 @@ rev = "eed802833831e0daf74fc030b2ddb4177c8c11e0"
 env_logger = "0.11.8"
 getrandom = "0.3.4"
 hex = "0.4.3"
+test-case = "3.3.1"
 # regenerate examples/host-cli/pb after upgrading protobuf
 protobuf = "=3.7.2"
 protobuf-codegen = "=3.7.2"

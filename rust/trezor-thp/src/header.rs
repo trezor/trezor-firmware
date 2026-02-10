@@ -10,8 +10,8 @@ const CHECKSUM_LEN: u16 = crc32::CHECKSUM_LEN as u16;
 pub const NONCE_LEN: u16 = 8;
 const MAX_PAYLOAD_LEN: u16 = 60000;
 
-const MIN_CHANNEL_ID: u16 = 0x0001;
-const MAX_CHANNEL_ID: u16 = 0xFFEF;
+pub const MIN_CHANNEL_ID: u16 = 0x0001;
+pub const MAX_CHANNEL_ID: u16 = 0xFFEF;
 pub const BROADCAST_CHANNEL_ID: u16 = 0xFFFF;
 
 /// Represents packet header, i.e. control byte, channel id and possibly payload length.
@@ -357,6 +357,14 @@ impl<R: Role> Header<R> {
 
     pub const fn new_pong() -> Self {
         Self::Pong
+    }
+
+    pub const fn new_codec1_request(is_continuation: bool) -> Self {
+        Self::CodecV1Request { is_continuation }
+    }
+
+    pub const fn new_codec1_response() -> Self {
+        Self::CodecV1Response
     }
 
     pub const fn is_continuation(&self) -> bool {

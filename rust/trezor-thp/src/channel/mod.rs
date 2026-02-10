@@ -1,7 +1,10 @@
 #[cfg(feature = "use_std")]
 pub mod buffered;
+pub mod device;
 pub mod host;
 mod noise;
+#[cfg(test)]
+mod test;
 
 use crate::{
     Error, Role,
