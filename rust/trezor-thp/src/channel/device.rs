@@ -2,12 +2,13 @@ use heapless;
 
 use crate::{
     Backend, Channel, ChannelIO, Device, Error,
+    alternating_bit::SyncBits,
     channel::{ChannelState, Nonce, PacketInResult, PairingState, noise::NoiseHandshake},
     credential::CredentialVerifier,
     error::TransportError,
     fragment::{Fragmenter, Reassembler},
     header::{
-        BROADCAST_CHANNEL_ID, HandshakeMessage, Header, MAX_CHANNEL_ID, SyncBits, channel_id_valid,
+        BROADCAST_CHANNEL_ID, HandshakeMessage, Header, MAX_CHANNEL_ID, channel_id_valid,
         parse_cb_channel,
     },
     util::prepare_zeroed,

@@ -1,5 +1,5 @@
 use crate::Role;
-pub use crate::alternating_bit::SyncBits;
+use crate::alternating_bit::SyncBits;
 use crate::control_byte::{self, ControlByte};
 use crate::crc32;
 use crate::error::{Error, Result};
