@@ -10,8 +10,8 @@ from trezor import log, utils
 try:
     enable = storage.device.get_ble()
     ble.set_enabled(enable)
+    ble.start_comm()
     if enable:
-        ble.start_comm()
 
         start_ms = utime.ticks_ms()
 
