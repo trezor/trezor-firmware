@@ -1564,7 +1564,12 @@
     "reset__check_share_backup_template": "Let's do a quick check of Share #{0}.",
     "reset__check_share_title_template": "Check share #{0}",
     "reset__check_wallet_backup_title": "Check wallet backup",
-    "reset__continue_with_next_share": "Continue with the next share.",
+    "reset__continue_with_next_share": {
+      "Bolt": "Continue with next share.",
+      "Caesar": "Continue with next share.",
+      "Delizia": "Continue with next share.",
+      "Eckhart": "Continue with next share"
+    },
     "reset__continue_with_share_template": "Continue with share #{0}.",
     "reset__create_x_of_y_multi_share_backup_template": "Do you want to create a {0} of {1} multi-share backup?",
     "reset__finished_verifying_group_template": {
