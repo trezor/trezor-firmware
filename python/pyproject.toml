@@ -92,3 +92,9 @@ dev = [
     "tox>=4.25.0",
     "tox-uv>=1.13.1",
 ]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9,<10",
+    "mkdocstrings>=0.30,<1",
+    "mkdocstrings-python>=1,<3",
+]

@@ -144,6 +144,13 @@ def encode_data(value: Any, type_name: str) -> bytes:
 
 
 def get_address(*args: Any, **kwargs: Any) -> str:
+    """Get Ethereum address for specified path.
+
+    See `get_authenticated_address` for possible parameters and their meaning.
+
+    Returns:
+        str: Ethereum address
+    """
     resp = get_authenticated_address(*args, **kwargs)
     assert resp.address is not None
     return resp.address
@@ -157,6 +164,18 @@ def get_authenticated_address(
     encoded_network: Optional[bytes] = None,
     chunkify: bool = False,
 ) -> messages.EthereumAddress:
+    """Get authenticated Ethereum address for specified path.
+
+    Args:
+        session: Session instance
+        n: BIP32 path
+        show_display: show address on device before sending the result
+        encoded_network: encoded network definition
+        chunkify: split the address into chunks for easier reading
+
+    Returns:
+        EthereumAddress message
+    """
     resp = session.call(
         messages.EthereumGetAddress(
             address_n=n,
@@ -173,6 +192,16 @@ def get_authenticated_address(
 def get_public_node(
     session: "Session", n: "Address", show_display: bool = False
 ) -> messages.EthereumPublicKey:
+    """Get Ethereum public node for specified path.
+
+    Args:
+        session: Session instance
+        n: BIP32 path
+        show_display: show public key on device before sending the result
+
+    Returns:
+        EthereumPublicKey message
+    """
     return session.call(
         messages.EthereumGetPublicKey(address_n=n, show_display=show_display),
         expect=messages.EthereumPublicKey,
@@ -195,6 +224,28 @@ def sign_tx(
     chunkify: bool = False,
     payment_req: Optional[messages.PaymentRequest] = None,
 ) -> Tuple[int, bytes, bytes]:
+    """Sign Ethereum transaction.
+
+    Args:
+        session: Session instance
+        n: BIP32 path
+        nonce: transaction nonce - <=256 bit unsigned big endian
+        gas_price: gas price - <=256 bit unsigned big endian (in wei)
+        gas_limit: gas limit - <=256 bit unsigned big endian
+        to: recipient address
+        value: transaction value - <=256 bit unsigned big endian (in wei)
+        data: transaction data
+        chain_id: chain Id for EIP 155
+        tx_type: transaction type - used for Wanchain
+        definitions: network definition
+        chunkify: split the transaction into chunks for easier reading
+        payment_req: payment request
+
+    Returns:
+        signature-v
+        signature-r
+        signature-s
+    """
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
 
@@ -258,6 +309,29 @@ def sign_tx_eip1559(
     chunkify: bool = False,
     payment_req: Optional[messages.PaymentRequest] = None,
 ) -> Tuple[int, bytes, bytes]:
+    """Sign Ethereum EIP-1559 transaction.
+
+    Args:
+        session: Session instance
+        n: BIP32 path
+        nonce: transaction nonce - <=256 bit unsigned big endian
+        gas_limit: gas limit - <=256 bit unsigned big endian
+        to: recipient address
+        value: transaction value - <=256 bit unsigned big endian (in wei)
+        data: transaction data
+        chain_id: chain Id for EIP 155
+        max_gas_fee: maximum gas fee - <=256 bit unsigned big endian (in wei)
+        max_priority_fee: maximum priority fee - <=256 bit unsigned big endian (in wei)
+        access_list: access list
+        definitions: network definition
+        chunkify: split the transaction into chunks for easier reading
+        payment_req: payment request
+
+    Returns:
+        signature-v
+        signature-r
+        signature-s
+    """
     length = len(data)
     data, chunk = data[1024:], data[:1024]
     msg = messages.EthereumSignTxEIP1559(
@@ -300,6 +374,18 @@ def sign_message(
     encoded_network: Optional[bytes] = None,
     chunkify: bool = False,
 ) -> messages.EthereumMessageSignature:
+    """Sign a message by an Ethereum address.
+
+    Args:
+        session: Session instance
+        n: BIP32 path
+        message: message to sign
+        encoded_network: encoded network definition
+        chunkify: split the message into chunks for easier reading
+
+    Returns:
+        EthereumMessageSignature message
+    """
     return session.call(
         messages.EthereumSignMessage(
             address_n=n,
@@ -321,6 +407,21 @@ def sign_typed_data(
     definitions: Optional[messages.EthereumDefinitions] = None,
     show_message_hash: Optional[bytes] = None,
 ) -> messages.EthereumTypedDataSignature:
+    """Sign EIP-712 Ethereum typed data.
+
+    Not available on Trezor One.
+
+    Args:
+        session: Session instance
+        n: BIP32 path
+        data: typed data to sign
+        metamask_v4_compat: be compatible with Metamask v4 implementation
+        definitions: network definition
+        show_message_hash: show message hash on device
+
+    Returns:
+        EthereumTypedDataSignature message
+    """
     data = sanitize_typed_data(data)
     types = data["types"]
 
@@ -397,6 +498,18 @@ def verify_message(
     message: AnyStr,
     chunkify: bool = False,
 ) -> bool:
+    """Verify a message signed by an Ethereum address.
+
+    Args:
+        session: Session instance
+        address: address to verify the signature with
+        signature: signature to verify
+        message: message to verify
+        chunkify: split the message into chunks for easier reading
+
+    Returns:
+        True if the signature is valid, False otherwise
+    """
     try:
         session.call(
             messages.EthereumVerifyMessage(
@@ -420,6 +533,21 @@ def sign_typed_data_hash(
     message_hash: Optional[bytes],
     encoded_network: Optional[bytes] = None,
 ) -> messages.EthereumTypedDataSignature:
+    """Sign EIP-712 typed data hash.
+
+    Only available on Trezor One that cannot run the full EIP-712 `sign_typed_data`
+    workflow.
+
+    Args:
+        session: Session instance
+        n: BIP32 path
+        domain_hash: Hash of domainSeparator of typed data to be signed
+        message_hash: Hash of the typed data to be signed (empty if domain-only data)
+        encoded_network: encoded network definition
+
+    Returns:
+        EthereumTypedDataSignature message
+    """
     return session.call(
         messages.EthereumSignTypedHash(
             address_n=n,

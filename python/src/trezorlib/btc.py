@@ -73,6 +73,15 @@ if TYPE_CHECKING:
 
 
 def from_json(json_dict: "Transaction") -> messages.TransactionType:
+    """Translate transaction from JSON to protobuf message.
+
+    Args:
+        json_dict: Transaction in JSON format.
+
+    Returns:
+        TransactionType
+    """
+
     def make_input(vin: "Vin") -> messages.TxInputType:
         if "coinbase" in vin:
             return messages.TxInputType(
@@ -116,6 +125,22 @@ def get_public_node(
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
 ) -> messages.PublicKey:
+    """Get public key corresponding to given path.
+
+    Args:
+        session: Session instance
+        n: BIP-32 path to derive the key from master node
+        ecdsa_curve_name: ECDSA curve name to use
+        show_display: optionally show on the display before sending the result
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        script_type: script type to use (non-segwit, segwit, etc.)
+        ignore_xpub_magic: ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+        unlock_path: BIP-32 path to unlock the device
+        unlock_path_mac: MAC returned by UnlockedPathRequest
+
+    Returns:
+        PublicKey
+    """
     if unlock_path:
         session.call(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),
@@ -136,6 +161,13 @@ def get_public_node(
 
 
 def get_address(*args: Any, **kwargs: Any) -> str:
+    """Get address corresponding to given path.
+
+    See `get_authenticated_address` for possible parameters and their meaning.
+
+    Returns:
+        str: address
+    """
     return get_authenticated_address(*args, **kwargs).address
 
 
@@ -152,6 +184,23 @@ def get_authenticated_address(
     unlock_path_mac: Optional[bytes] = None,
     chunkify: bool = False,
 ) -> messages.Address:
+    """Get address for given path.
+
+    Args:
+        session: Session instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        n: BIP-32 path to derive the key from master node
+        show_display: optionally show on the display before sending the result
+        multisig: multisig configuration
+        script_type: script type to use (non-segwit, segwit, etc.)
+        ignore_xpub_magic: ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
+        unlock_path: protected BIP-32 path to be unlocked
+        unlock_path_mac: MAC returned by UnlockedPathRequest
+        chunkify: split the address into chunks for easier reading
+
+    Returns:
+        Address
+    """
     if unlock_path:
         session.call(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),
@@ -180,6 +229,18 @@ def get_ownership_id(
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> bytes:
+    """Get SLIP-19 ownership identifier corresponding to scriptPubKey for given path.
+
+    Args:
+        session: Session instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        n: BIP-32 path to derive the key from master node
+        multisig: multisig configuration
+        script_type: script type to use (non-segwit, segwit, etc.)
+
+    Returns:
+        bytes: ownership identifier
+    """
     return session.call(
         messages.GetOwnershipId(
             address_n=n,
@@ -203,6 +264,23 @@ def get_ownership_proof(
     commitment_data: Optional[bytes] = None,
     preauthorized: bool = False,
 ) -> Tuple[bytes, bytes]:
+    """Get SLIP-19 proof of ownership corresponding to given path.
+
+    Args:
+        session: Session instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        n: BIP-32 path to derive the key from master node
+        multisig: multisig configuration
+        script_type: script type to use (non-segwit, segwit, etc.)
+        user_confirmation: show a confirmation dialog and set the "user confirmation" bit in the proof
+        ownership_ids: list of ownership identifiers in case of multisig
+        commitment_data: additional data to which the proof should commit
+        preauthorized: `True` to skip user prompt if the operation is preauthorized via `authorize_coinjoin`
+
+    Returns:
+        ownership_proof
+        signature
+    """
     if preauthorized:
         session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
@@ -232,6 +310,20 @@ def sign_message(
     no_script_type: bool = False,
     chunkify: bool = False,
 ) -> messages.MessageSignature:
+    """Sign a message.
+
+    Args:
+        session: Session instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        n: BIP-32 path to derive the key from master node
+        message: message to sign
+        script_type: script type to use (non-segwit, segwit, etc.)
+        no_script_type: don't include script type information in the recovery byte of the signature, same as in Bitcoin Core
+        chunkify: split the message into chunks for easier reading
+
+    Returns:
+        MessageSignature
+    """
     return session.call(
         messages.SignMessage(
             coin_name=coin_name,
@@ -253,6 +345,19 @@ def verify_message(
     message: AnyStr,
     chunkify: bool = False,
 ) -> bool:
+    """Verify message.
+
+    Args:
+        session: Session instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        address: address to verify the signature against
+        signature: signature to verify
+        message: message to verify
+        chunkify: split the message into chunks for easier reading
+
+    Returns:
+        bool: True if the signature is valid, False otherwise
+    """
     try:
         session.call(
             messages.VerifyMessage(
@@ -284,6 +389,22 @@ def sign_tx(
     **kwargs: Any,
 ) -> Tuple[Sequence[Optional[bytes]], bytes]:
     """Sign a Bitcoin-like transaction.
+
+    Args:
+        session: Session instance
+        coin_name: coin name, e.g. "Bitcoin" or "Testnet"
+        inputs: list of transaction inputs
+        outputs: list of transaction outputs
+        details: additional transaction details
+        prev_txes: dictionary of previous transactions
+        payment_reqs: list of payment requests
+        preauthorized: `True` to automatically confirm if the transaction is preauthorized via `authorize_coinjoin`
+        unlock_path: protected BIP-32 path to be unlocked
+        unlock_path_mac: MAC returned by UnlockedPathRequest
+
+    Returns:
+        list of signatures
+        serialized transaction
 
     Returns a list of signatures (one for each provided input) and the
     network-serialized transaction.
@@ -435,6 +556,21 @@ def authorize_coinjoin(
     coin_name: str,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> None:
+    """Authorize a CoinJoin transaction.
+
+    Args:
+        session: Session instance
+        coordinator: coordinator identifier to approve as a prefix in commitment data (max. 36 ASCII characters)
+        max_rounds: maximum number of rounds that Trezor is authorized to take part in
+        max_coordinator_fee_rate: maximum coordination fee rate in units of 10^-6 percent
+        max_fee_per_kvbyte: maximum mining fee rate in units of satoshis per 1000 vbytes
+        n: prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
+        coin_name: name of the coin, e.g. "Bitcoin", "Testnet"
+        script_type: script type of the account (default: SPENDADDRESS)
+
+    Returns:
+        Success message
+    """
     session.call(
         messages.AuthorizeCoinJoin(
             coordinator=coordinator,

@@ -57,6 +57,26 @@ def apply_settings(
     hide_passphrase_from_host: Optional[bool] = None,
     haptic_feedback: Optional[bool] = None,
 ) -> None:
+    """Change device settings.
+
+    Args:
+        session: Session instance
+        label: New label for the device
+        language: New language for the device (deprecated, use change_language)
+        use_passphrase: Whether to use passphrase
+        homescreen: New homescreen for the device
+        passphrase_always_on_device: Whether to always enter passphrase on device
+        auto_lock_delay_ms: Delay in milliseconds after which the device with PIN will lock itself
+        auto_lock_delay_battery_ms: Delay in milliseconds after which the device with PIN will lock itself when on battery
+        display_rotation: Display rotation in degrees from North
+        safety_checks: Safety check level
+        experimental_features: Whether to enable experimental features
+        hide_passphrase_from_host: Whether to hide passphrase from host
+        haptic_feedback: Whether to enable haptic feedback
+
+    Returns:
+        Success message
+    """
     if language is not None:
         warnings.warn(
             "language ignored. Use change_language() to set device language.",
@@ -105,6 +125,16 @@ def change_language(
     language_data: bytes,
     show_display: bool | None = None,
 ) -> None:
+    """Change device language.
+
+    Args:
+        session: Session instance
+        language_data: Language data blob
+        show_display: Whether to show the language change on the display
+
+    Returns:
+        Success message
+    """
     data_length = len(language_data)
     msg = messages.ChangeLanguage(data_length=data_length, show_display=show_display)
 
@@ -119,30 +149,83 @@ def change_language(
 
 @workflow()
 def apply_flags(session: "Session", flags: int) -> None:
+    """Change device flags.
+
+    Flags/bits can be only set, not unset.
+
+    Args:
+        session: Session instance
+        flags: New flags for the device - bitmask
+
+    Returns:
+        Success message
+    """
     session.call(messages.ApplyFlags(flags=flags), expect=messages.Success)
     session.refresh_features()
 
 
 @workflow()
 def change_pin(session: "Session", remove: bool = False) -> None:
+    """Set up, change, or remove PIN on the device.
+
+    Args:
+        session: Session instance
+        remove: Set to True to remove the PIN.
+
+    Returns:
+        Success message
+    """
     session.call(messages.ChangePin(remove=remove), expect=messages.Success)
     session.refresh_features()
 
 
 @workflow()
 def change_wipe_code(session: "Session", remove: bool = False) -> None:
+    """Set up, change, or remove wipe code on the device.
+
+    When entered instead of the unlock PIN, the wipe code, or "duress PIN", will cause the device to be erased.
+    Wipe code can only be configured when the unlock PIN is already set up.
+
+    Args:
+        session: Session instance
+        remove: Set to True to remove the wipe code.
+
+    Returns:
+        Success message
+    """
     session.call(messages.ChangeWipeCode(remove=remove), expect=messages.Success)
     session.refresh_features()
 
 
 @workflow()
 def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -> None:
+    """Update SD card protection.
+
+    Args:
+        session: Session instance
+        operation: Operation to perform
+
+    Returns:
+        Success message
+    """
     session.call(messages.SdProtect(operation=operation), expect=messages.Success)
     session.refresh_features()
 
 
 @workflow()
 def wipe(session: "Session") -> None:
+    """Wipe the device.
+
+    In normal mode, this will erase the seed and all user settings.
+
+    When sent in bootloader mode, this will also completely erase the firmware.
+
+    Args:
+        session: Session instance
+
+    Returns:
+        Success message
+    """
     session.call(messages.WipeDevice(), expect=messages.Success)
     session.client._invalidate()
 
@@ -162,6 +245,36 @@ def recover(
     *,
     type: Optional[messages.RecoveryType] = None,
 ) -> None:
+    """Restore a wallet from a mnemonic seed.
+
+    Must be either run on a wiped device, or with the type set to RecoveryType.DryRun.
+
+    On Trezor 1, `input_callback` is required. When `input_method` is `ScrambledWords`,
+    each call to callback must return a single word from the mnemonic seed. Trezor
+    screen specifies which word to enter.
+
+    When `input_method` is `Matrix`, each call to callback must return a single digit
+    corresponding to the position of a letter / word in the matrix on the Trezor screen,
+    or a backspace character.
+
+    On Trezors with on-screen entry, `input_callback` is ignored.
+
+    Args:
+        session: Session instance
+        word_count: Number of words in mnemonic
+        passphrase_protection: Whether to enable passphrase protection
+        pin_protection: Whether to enable PIN protection
+        label: Label for the device
+        language: Language for the device (deprecated, use change_language)
+        input_callback: Function to be called for each word. It should return the word.
+        input_method: Recovery input method
+        dry_run: Whether to perform a dry run - simulate recovery (deprecated, use type=RecoveryType.DryRun)
+        u2f_counter: U2F counter value
+        type: Recovery type
+
+    Returns:
+        Success message
+    """
     if language is not None:
         warnings.warn(
             "language ignored. Use change_language() to set device language.",
@@ -564,6 +677,23 @@ def backup(
     group_threshold: Optional[int] = None,
     groups: Iterable[tuple[int, int]] = (),
 ) -> None:
+    """Back up the mnemonic seed.
+
+    Must be run on a device that is already set up but is not backed up yet.
+    Backup can be only performed once after device setup -- either as part of the
+    `setup` workflow, or separately using this function.
+
+    The backup process is fully interactive on the Trezor device itself and does not
+    interact with the host.
+
+    Args:
+        session: Session instance
+        group_threshold: For SLIP-39, the number of groups required to recover the seed
+        groups: For SLIP-39, a list of (member_threshold, member_count) tuples
+
+    Returns:
+        Success message
+    """
     session.call(
         messages.BackupDevice(
             group_threshold=group_threshold,
@@ -579,11 +709,28 @@ def backup(
 
 @workflow()
 def cancel_authorization(session: "Session") -> None:
+    """Cancel any outstanding authorization in the current connection.
+
+    Args:
+        session: Session instance
+
+    Returns:
+        Success message
+    """
     session.call(messages.CancelAuthorization(), expect=messages.Success)
 
 
 @workflow()
 def unlock_path(session: "Session", n: "Address") -> bytes:
+    """Unlock a subtree of the keychain.
+
+    Args:
+        session: Session instance
+        n: Path to unlock
+
+    Returns:
+        MAC of the path: bytes
+    """
     resp = session.call(
         messages.UnlockPath(address_n=n), expect=messages.UnlockedPathRequest
     )
@@ -603,6 +750,16 @@ def reboot_to_bootloader(
     boot_command: messages.BootCommand = messages.BootCommand.STOP_AND_WAIT,
     firmware_header: Optional[bytes] = None,
 ) -> None:
+    """Reboot firmware to bootloader mode.
+
+    Args:
+        session: Session instance
+        boot_command: Boot command to execute
+        firmware_header: Firmware header to use
+
+    Returns:
+        Success message
+    """
     session.call(
         messages.RebootToBootloader(
             boot_command=boot_command,
@@ -614,11 +771,27 @@ def reboot_to_bootloader(
 
 @workflow()
 def show_device_tutorial(session: "Session") -> None:
+    """Show device tutorial.
+
+    Args:
+        session: Session instance
+
+    Returns:
+        Success message
+    """
     session.call(messages.ShowDeviceTutorial(), expect=messages.Success)
 
 
 @workflow()
 def unlock_bootloader(session: "Session") -> None:
+    """Unlock the bootloader.
+
+    Args:
+        session: Session instance
+
+    Returns:
+        Success message
+    """
     session.call(messages.UnlockBootloader(), expect=messages.Success)
 
 
@@ -635,6 +808,15 @@ def set_busy(session: "Session", expiry_ms: Optional[int]) -> None:
 
 @workflow()
 def authenticate(session: "Session", challenge: bytes) -> messages.AuthenticityProof:
+    """Authenticate the device.
+
+    Args:
+        session: Session instance
+        challenge: Challenge bytes
+
+    Returns:
+        AuthenticityProof
+    """
     return session.call(
         messages.AuthenticateDevice(challenge=challenge),
         expect=messages.AuthenticityProof,
@@ -643,15 +825,40 @@ def authenticate(session: "Session", challenge: bytes) -> messages.AuthenticityP
 
 @workflow()
 def set_brightness(session: "Session", value: Optional[int] = None) -> None:
+    """Set display brightness.
+
+    Args:
+        session: Session instance
+        value: Brightness value (0-255), or None to reset to default
+
+    Returns:
+        Success message
+    """
     session.call(messages.SetBrightness(value=value), expect=messages.Success)
 
 
 @workflow()
 def get_serial_number(session: "Session") -> str:
+    """Get device serial number.
+
+    Args:
+        session: Session instance
+
+    Returns:
+        str: Serial number
+    """
     ret = session.call(messages.GetSerialNumber(), expect=messages.SerialNumber)
     return ret.serial_number
 
 
 @workflow()
 def get_telemetry(session: "Session") -> messages.Telemetry:
+    """Get device telemetry.
+
+    Args:
+        session: Session instance
+
+    Returns:
+        Telemetry
+    """
     return session.call(messages.TelemetryGet(), expect=messages.Telemetry)
