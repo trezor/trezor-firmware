@@ -48,7 +48,7 @@ def format_address_n_hex(address_n: list[int]) -> str:
 
 
 def main():
-    client = get_default_client()
+    client = get_default_client("ethereum")
 
     derivation_path = "m/44'/60'/0'"
     print(f"Derivation path: {derivation_path}")
