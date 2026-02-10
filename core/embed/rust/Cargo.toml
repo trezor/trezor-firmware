@@ -61,6 +61,7 @@ storage = []
 telemetry = []
 n4w1 = []
 translations = ["crypto"]
+miniscript = ["dep:miniscript"]
 secmon_layout = []
 dbg_console = []
 app_loading = []
@@ -169,6 +170,11 @@ features = ["libm"]
 [dependencies.minicbor]
 version = "1.0.0"
 default-features = false
+
+[dependencies.miniscript]
+version = "13.0.0"
+default-features = false
+optional = true
 
 
 # Build dependencies

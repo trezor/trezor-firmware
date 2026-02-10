@@ -59,7 +59,7 @@ fn make_translations_header(header: &super::blob::TranslationsHeader<'_>) -> Res
         Qstr::MP_QSTR_language => header.language.try_into()?,
         Qstr::MP_QSTR_version => util::new_tuple(&version_objs)?,
         Qstr::MP_QSTR_data_len => header.data_len.try_into()?,
-        Qstr::MP_QSTR_data_hash => header.data_hash.as_ref().try_into()?,
+        Qstr::MP_QSTR_data_hash => header.data_hash.as_slice().try_into()?,
         Qstr::MP_QSTR_total_len => header.total_len.try_into()?,
     }
 }

@@ -43,6 +43,9 @@ mod trace;
 mod translations;
 mod trezorhal;
 
+#[cfg(feature = "miniscript")]
+mod miniscript_bridge;
+
 // mod ui is `pub` because of the re-export pattern in individual models, which
 // would trigger a brickload of "unused symbol" warnings otherwise.
 // TODO: maybe get rid of the re-export pattern :shrugs:

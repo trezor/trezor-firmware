@@ -960,6 +960,9 @@ if PYOPT == '0':
     features.append('ui_debug_overlay')
 if EVERYTHING:
     features.append('universal_fw')
+else:  # BITCOIN_ONLY
+    features.append('miniscript')
+
 if not PRODUCTION:
     features.append('dev_keys')
 

@@ -282,6 +282,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_coinjoin__title_progress;
   MP_QSTR_coinjoin__waiting_for_others;
   MP_QSTR_coinjoin_authorized;
+  MP_QSTR_compile;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
   MP_QSTR_confirm_cancel;
@@ -892,6 +893,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_trace;
   MP_QSTR_trezorble;
   MP_QSTR_trezorlog;
+  MP_QSTR_trezorminiscript;
   MP_QSTR_trezorproto;
   MP_QSTR_trezorui_api;
   MP_QSTR_tutorial;
