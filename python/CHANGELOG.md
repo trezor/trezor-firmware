@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] (2026-02-10)
+[0.20.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.20.0-dev0...python/v0.20.0
+
+Version 0.20.0 introduces a set of **major breaking API changes**. All user code must be upgraded.
+
+As announced, the API has changed significantly since the pre-release version 0.20.0-dev.
+
+### Incompatible changes
+- Refactor trezorlib session-based API.  [#6273]
+
+### Added
+- Use keyring package for storing THP keys and credentials.  [#6273]
+
+### Removed
+- Deprecate uploading language blob during firmware update.  [#6103]
+- debuglink: Remove vestigial memory_write/read/erase methods.  [#6273]
+- Deprecated `@expect` decorator was removed.  [#6273]
+- Deprecated `str` return values in functions whose result is a success have been removed.  [#6273]
+
+### Fixed
+- Avoid dropping WebUSB chunks in case of a timeout.  [#6112]
+- Support resuming THP sessions.  [#6273]
+- trezorctl: BLE behavior on macOS was improved.
+
 ## [0.20.0-dev0] (2025-10-21)
 [0.20.0-dev0]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.10...python/v0.20.0-dev0
 
@@ -939,3 +963,6 @@ This version is a pre-release. The new API is unstable and may change until 0.20
 [#5499]: https://github.com/trezor/trezor-firmware/pull/5499
 [#5760]: https://github.com/trezor/trezor-firmware/pull/5760
 [#5928]: https://github.com/trezor/trezor-firmware/pull/5928
+[#6103]: https://github.com/trezor/trezor-firmware/pull/6103
+[#6112]: https://github.com/trezor/trezor-firmware/pull/6112
+[#6273]: https://github.com/trezor/trezor-firmware/pull/6273
