@@ -19,6 +19,9 @@ pub mod simple_type;
 pub mod typ;
 pub mod util;
 
+#[cfg(feature = "miniscript")]
+mod miniscript;
+
 #[cfg(feature = "debug")]
 pub mod logging;
 
