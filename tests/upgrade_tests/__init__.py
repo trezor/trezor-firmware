@@ -124,7 +124,7 @@ def for_all(
     >>>     assert True
 
     Arguments should be trezor model names (e.g. "T1B1", "T2T1", "T3W1").
-    If no arguments provided, defaults to T3W1 only.
+    If no arguments provided, defaults to all supported models.
     You can specify minimum versions for each model type.
 
     The test function should have arguments `tag` (version tag) and `model` (internal model name).
@@ -143,9 +143,9 @@ def for_all(
         else:
             raise ValueError(f"Unknown model: {item}")
 
-    # If no args provided, default to T3W1
+    # If no args provided, default to all supported models
     if not args:
-        models_to_test = [T3W1]
+        models_to_test = [T1B1, T2T1, T3W1]
 
     all_params: set[tuple[str | None, str | None]] = set()
     
@@ -167,8 +167,6 @@ def for_all(
                     continue
                 all_params.add((tag, model.internal_name))
 
-            # At the end, add (None, model.internal_name) for the current master.
-            all_params.add((None, model.internal_name))
         except KeyError:
             pass
 

@@ -356,7 +356,7 @@ def test_upgrade_reset_skip_backup(tag: str | None,
             assert btc.get_address(emu.client.get_session(), "Bitcoin", PATH) == address
 
 
-@for_all("T1B1", legacy_minimum_version=(1, 7, 2))
+@for_all(legacy_minimum_version=(1, 7, 2))
 @lower_models_minimum_version
 def test_upgrade_reset_no_backup(tag: str | None,
     model: str | None,
@@ -566,7 +566,7 @@ def test_upgrade_shamir_backup(tag: str | None,
             )
 
 
-@for_all("T1B1", legacy_minimum_version=(1, 8, 4), core_minimum_version=(2, 1, 9))
+@for_all(legacy_minimum_version=(1, 8, 4), core_minimum_version=(2, 1, 9))
 @lower_models_minimum_version
 def test_upgrade_u2f(tag: str | None,
     model: str | None,

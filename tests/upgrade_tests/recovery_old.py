@@ -9,7 +9,7 @@ def _enter_word(debug: "DebugLink", word: str, is_slip39: bool = False) -> None:
     for coords in debug.button_actions.type_word(typed_word, is_slip39=is_slip39):
         debug.click(coords, wait=False)
 
-    debug.click(debug.screen_buttons.mnemonic_confirm())
+    debug.click(debug.screen_buttons.mnemonic_confirm(), wait=False)
 
 
 def confirm_recovery(debug: "DebugLink") -> None:
@@ -36,10 +36,27 @@ def select_number_of_words(
 
 def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
     layout = debug.read_layout()
-    while "MnemonicKeyboard" not in layout.all_components():
+    # Check for both MnemonicKeyboard (newer) and Slip39Keyboard (older firmware)
+    # For old firmware, tokens may be plain string (not JSON), so check json_str directly
+    while ("MnemonicKeyboard" not in layout.all_components() and "Slip39Keyboard" not in layout.all_components() and
+           "MnemonicKeyboard" not in layout.json_str and "Slip39Keyboard" not in layout.json_str):
         debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
+    
+    # Fast entry of all 20 words
     for word in share.split(" "):
         _enter_word(debug, word, is_slip39=True)
-
-    return debug.read_layout()
+    
+    # After all words entered, poll for recovery status to appear
+    import time
+    for _ in range(10):  # max 1 second total
+        time.sleep(0.1)
+        layout = debug.read_layout()
+        # Check if we left the keyboard
+        if ("MnemonicKeyboard" not in layout.all_components() and 
+            "Slip39Keyboard" not in layout.all_components() and
+            "MnemonicKeyboard" not in layout.json_str and 
+            "Slip39Keyboard" not in layout.json_str):
+            break
+    
+    return layout
