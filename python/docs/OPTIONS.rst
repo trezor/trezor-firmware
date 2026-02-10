@@ -27,12 +27,13 @@ on one page here.
 
   Options:
     -p, --path TEXT           Select device by specific path.
+    -B, --ble / --no-ble      Enable/disable support for Bluetooth Low Energy.
     -v, --verbose             Show communication messages.
     -j, --json                Print result as JSON object
     -P, --passphrase-on-host  Enter passphrase on host.
     -S, --script              Use UI for usage in scripts.
-    -s, --session-id HEX      Resume given session ID.
-    -r, --record TEXT         Record screen changes into a specified directory.
+    -s, --session-id DATA     Resume given session.
+    -r, --record DIRECTORY    Record screen changes into a specified directory.
     --version                 Show the version and exit.
     --help                    Show this message and exit.
 
@@ -41,7 +42,7 @@ on one page here.
     ble                BLE commands.
     btc                Bitcoin and Bitcoin-like coins commands.
     cardano            Cardano commands.
-    clear-session      Clear session (remove cached PIN, passphrase, etc.).
+    clear-session      Clear current session and lock the device.
     crypto             Miscellaneous cryptography features.
     debug              Miscellaneous debug features.
     device             Device management commands - setup, recover seed, wipe, etc.
@@ -61,6 +62,7 @@ on one page here.
     set                Device settings.
     solana             Solana commands.
     stellar            Stellar commands.
+    telemetry          Telemetry commands.
     tezos              Tezos commands.
     tron               Tron commands.
     usb-reset          Perform USB reset on stuck devices.
@@ -104,7 +106,8 @@ BLE commands.
     --help  Show this message and exit.
 
   Commands:
-    unpair  Erase bond of currently connected device, or all devices (on device side)
+    connect  Connect to the device via BLE.
+    unpair   Erase bond of currently connected device, or all devices (on device side).
 
 Bitcoin and Bitcoin-like coins commands.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,6 +197,7 @@ Miscellaneous debug features.
     optiga-set-sec-max  Set Optiga's security event counter to maximum.
     prodtest-t1         Perform a prodtest on Model One.
     record              Record screen changes into a specified directory.
+    set-log-filter      Set logging filter string.
 
 Device management commands - setup, recover seed, wipe, etc.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,10 +218,12 @@ Device management commands - setup, recover seed, wipe, etc.
   Commands:
     authenticate          Verify the authenticity of the device.
     backup                Perform device seed backup.
+    forget                Forget a THP pairing key.
     load                  Upload seed and custom configuration to the device.
     reboot-to-bootloader  Reboot device into bootloader mode.
     recover               Start safe recovery workflow.
     sd-protect            Secure the device with SD card protection.
+    serial-number         Get serial number.
     set-busy              Show a "Do not disconnect" dialog.
     setup                 Perform device setup and generate new seed.
     tutorial              Show on-device tutorial.
@@ -304,7 +310,9 @@ Evolu commands.
     --help  Show this message and exit.
 
   Commands:
-    get-node  Return the SLIP-21 node for Evolu.
+    get-delegated-identity-key  Request the delegated identity key of this device.
+    get-node                    Return the SLIP-21 node for Evolu.
+    sign-registration-request   Sign a registration request for this device to be registered at...
 
 FIDO2, U2F and WebAuthN management commands.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -500,6 +508,25 @@ Stellar commands.
     get-address       Get Stellar public address.
     sign-transaction  Sign a base64-encoded transaction envelope.
 
+Telemetry commands.
+~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl telemetry --help
+
+.. code::
+
+  Usage: trezorctl telemetry [OPTIONS] COMMAND [ARGS]...
+
+    Telemetry commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    get  Read telemetry data from the device.
+
 Tezos commands.
 ~~~~~~~~~~~~~~~
 
@@ -520,4 +547,24 @@ Tezos commands.
     get-address     Get Tezos address for specified path.
     get-public-key  Get Tezos public key.
     sign-tx         Sign Tezos transaction.
+
+Tron commands.
+~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl tron --help
+
+.. code::
+
+  Usage: trezorctl tron [OPTIONS] COMMAND [ARGS]...
+
+    Tron commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    get-address  Get Tron address
+    sign-tx      Sign a raw transaction.
 
