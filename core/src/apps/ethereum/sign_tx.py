@@ -12,7 +12,7 @@ from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Iterable
+    from typing import Any, Coroutine, Iterable
 
     from trezor.messages import (
         EthereumNetworkInfo,
@@ -182,8 +182,11 @@ async def confirm_tx_data(
     REVOKE_AMOUNT = constants.SC_FUNC_APPROVE_REVOKE_AMOUNT
     EIP_7702_TX_TYPE = constants.EIP_7702_TX_TYPE
 
-    if await handle_staking(msg, defs.network, address_bytes, maximum_fee, fee_items):
-        return
+    staking_approver = get_staking_approver(
+        msg, defs.network, address_bytes, maximum_fee, fee_items
+    )
+    if staking_approver is not None:
+        return await staking_approver
 
     if tx_type == EIP_7702_TX_TYPE:
         # we have already made sure that the address is a known address
@@ -286,34 +289,37 @@ async def confirm_tx_data(
             )
 
 
-async def handle_staking(
+def get_staking_approver(
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
     address_bytes: bytes,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-) -> bool:
+) -> Coroutine[Any, Any, None] | None:
+    """
+    Returns a awaitable confirmation for ETH staking approval.
+
+    `None` is returned for non-staking related transactions.
+    """
 
     data_reader = BufferReader(msg.data_initial_chunk)
     if data_reader.remaining_count() < constants.SC_FUNC_SIG_BYTES:
-        return False
+        return None
 
     func_sig = data_reader.read_memoryview(constants.SC_FUNC_SIG_BYTES)
     if address_bytes in constants.ADDRESSES_POOL:
         if func_sig == constants.SC_FUNC_SIG_STAKE:
-            await _handle_staking_tx_stake(
+            return _handle_staking_tx_stake(
                 data_reader, msg, network, address_bytes, maximum_fee, fee_items
             )
-            return True
         if func_sig == constants.SC_FUNC_SIG_UNSTAKE:
-            await _handle_staking_tx_unstake(
+            return _handle_staking_tx_unstake(
                 data_reader, msg, network, address_bytes, maximum_fee, fee_items
             )
-            return True
 
     if address_bytes in constants.ADDRESSES_ACCOUNTING:
         if func_sig == constants.SC_FUNC_SIG_CLAIM:
-            await _handle_staking_tx_claim(
+            return _handle_staking_tx_claim(
                 data_reader,
                 msg,
                 address_bytes,
@@ -322,10 +328,9 @@ async def handle_staking(
                 network,
                 bool(msg.chunkify),
             )
-            return True
 
     # data not corresponding to staking transaction
-    return False
+    return None
 
 
 async def _handle_known_contract_calls(
