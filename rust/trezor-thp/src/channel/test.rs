@@ -1,11 +1,13 @@
 use std::collections::{HashSet, VecDeque};
 use std::sync::Once;
 
+use super::super::crc32;
 use super::buffered::{Buffered, ChannelExt};
 use super::*;
 use crate::{
     Device, Host,
     credential::{CREDENTIAL_PRIVKEY_LEN, CredentialVerifier, NullCredentialStore},
+    header::{BROADCAST_CHANNEL_ID, MAX_CHANNEL_ID, MIN_CHANNEL_ID},
 };
 
 use test_case::{test_case, test_matrix};
@@ -545,6 +547,268 @@ fn test_packet_damage_handshake(
     Ok(())
 }
 
-// TODO invalid channel id
-// TODO good CRC but invalid tag
-// TODO codec_v1
+#[test]
+fn test_packet_damage_application() -> Result<()> {
+    setup();
+
+    let (mut h, mut d) = open_channel(DEFAULT_PACKET_LEN)?;
+    h.message_in(0, 0, b"the quick brown fox jumps over the lazy dog")?;
+    let res = take_turns_mutate(&mut h, &mut d, damage_nth(HostToDevice, 0, 16));
+    assert_eq!(res, Err(Error::InvalidChecksum));
+    h.message_retransmit().unwrap();
+    take_turns(&mut h, &mut d)?;
+
+    d.message_in(0, 0, b"the quick lazy dog crawls under the brown fox")?;
+    let res = take_turns_mutate(&mut h, &mut d, damage_nth(DeviceToHost, 0, 50));
+    assert_eq!(res, Err(Error::InvalidChecksum));
+    d.message_retransmit().unwrap();
+    take_turns(&mut h, &mut d)?;
+
+    Ok(())
+}
+
+#[test]
+fn test_codec_v1() -> Result<()> {
+    setup();
+
+    fn assert_ignored<C: ChannelIO>(channel: &mut Buffered<C>, packet: &[u8]) {
+        let pir = channel.packet_in(&packet);
+        assert!(matches!(pir, PacketInResult::Ignored { .. }));
+        assert!(!channel.packet_out_ready());
+    }
+
+    let v1_init = "3f23230001000000080a0470696e671001000000000000000000000000000000\
+                   0000000000000000000000000000000000000000000000000000000000000000";
+    let v1_cont = "3f61616161616161616161616161616161616161616141414141414141414141\
+                   4141414141414141414141414141414141414141414141414141414141414141";
+    let v1_init = hex::decode(v1_init).unwrap();
+    let v1_cont = hex::decode(v1_cont).unwrap();
+
+    // broadcast handling
+    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
+    dm.set_packet_len(DEFAULT_PACKET_LEN);
+    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+    hm.set_packet_len(DEFAULT_PACKET_LEN);
+    // device::Mux shoud respond
+    let pir = dm.packet_in(&v1_init);
+    assert!(matches!(
+        pir,
+        PacketInResult::Accepted {
+            ack_received: false,
+            message_ready: false,
+            pong: false
+        }
+    ));
+    let response = dm.packet_out().unwrap();
+    assert!(response.starts_with(b"?##"));
+    assert!(!dm.packet_out_ready());
+    // in other cases the packet should be ignored
+    assert_ignored(&mut dm, &v1_cont);
+    assert_ignored(&mut hm, &v1_init);
+    assert_ignored(&mut hm, &v1_cont);
+
+    // non-broadcast handling
+    let (mut h, mut d) = open_channel(DEFAULT_PACKET_LEN)?;
+    assert_ne!(h.channel_id, 0x2323);
+    assert_ne!(d.channel_id, 0x2323);
+    assert_ignored(&mut d, &v1_init);
+    assert_ignored(&mut d, &v1_cont);
+    assert_ignored(&mut h, &v1_init);
+    assert_ignored(&mut h, &v1_cont);
+
+    // non-broadcast handling, channel_id == "##"
+    h.channel_id = 0x2323;
+    d.channel_id = 0x2323;
+    assert_ignored(&mut d, &v1_init);
+    assert_ignored(&mut d, &v1_cont);
+    assert_ignored(&mut h, &v1_init);
+    assert_ignored(&mut h, &v1_cont);
+
+    Ok(())
+}
+
+#[test]
+fn test_ping() -> Result<()> {
+    setup();
+
+    // mux handling
+    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
+    dm.set_packet_len(DEFAULT_PACKET_LEN);
+    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+    hm.set_packet_len(DEFAULT_PACKET_LEN);
+
+    // host->device ping
+    hm.ping();
+    let ping_packet = hm.packet_out()?;
+    let pir = dm.packet_in(&ping_packet);
+    assert!(matches!(
+        pir,
+        PacketInResult::Accepted {
+            ack_received: false,
+            message_ready: false,
+            pong: false
+        }
+    ));
+    let pong_packet = dm.packet_out()?;
+    let pir = hm.packet_in(&pong_packet);
+    assert!(matches!(
+        pir,
+        PacketInResult::Accepted {
+            ack_received: false,
+            message_ready: false,
+            pong: true
+        }
+    ));
+    assert!(pir.got_pong());
+    // duplicates are ignored
+    let pir = hm.packet_in(&pong_packet);
+    assert!(matches!(pir, PacketInResult::Ignored { .. }));
+    assert!(!pir.got_pong());
+
+    // device->host ping is not implemented
+    let pir = hm.packet_in(&ping_packet);
+    assert!(matches!(pir, PacketInResult::Ignored { .. }));
+
+    // non-broadcast channels ignore ping
+    let (mut h, mut d) = open_channel(DEFAULT_PACKET_LEN)?;
+    let pir = h.packet_in(&ping_packet);
+    assert!(matches!(pir, PacketInResult::Ignored { .. }));
+    let pir = d.packet_in(&ping_packet);
+    assert!(matches!(pir, PacketInResult::Ignored { .. }));
+
+    Ok(())
+}
+
+#[test]
+fn test_invalid_channel_id() -> Result<()> {
+    setup();
+
+    const INVALID: &[u16] = &[
+        MIN_CHANNEL_ID - 1,
+        MAX_CHANNEL_ID + 1,
+        BROADCAST_CHANNEL_ID - 1,
+    ];
+
+    fn make_packet(channel_id: u16) -> Vec<u8> {
+        let mut res = Vec::new();
+        res.push(0x04);
+        res.push((channel_id >> 8) as u8);
+        res.push((channel_id & 0xff) as u8);
+        res.extend_from_slice(&[0x00, 0x10]);
+        res.resize(DEFAULT_PACKET_LEN, 0x00);
+        res
+    }
+
+    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
+    dm.set_packet_len(DEFAULT_PACKET_LEN);
+    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+    hm.set_packet_len(DEFAULT_PACKET_LEN);
+
+    // muxes return Route(cid) for valid non-broadcast channel
+    let pir = dm.packet_in(&make_packet(66));
+    assert_eq!(pir, PacketInResult::Route { channel_id: 66 });
+    let pir = hm.packet_in(&make_packet(66));
+    assert_eq!(pir, PacketInResult::Route { channel_id: 66 });
+
+    // muxes return error for invalid channel ids
+    for channel_id in INVALID {
+        assert_eq!(
+            dm.packet_in(&make_packet(*channel_id)),
+            PacketInResult::Ignored {
+                error: Error::MalformedData
+            }
+        );
+        assert_eq!(
+            hm.packet_in(&make_packet(*channel_id)),
+            PacketInResult::Ignored {
+                error: Error::MalformedData
+            }
+        );
+    }
+
+    // normal channels return error for invalid ids
+    let (mut h, mut d) = open_channel(DEFAULT_PACKET_LEN)?;
+    for channel_id in INVALID {
+        assert_eq!(
+            d.packet_in(&make_packet(*channel_id)),
+            PacketInResult::Ignored {
+                error: Error::MalformedData
+            }
+        );
+        assert_eq!(
+            h.packet_in(&make_packet(*channel_id)),
+            PacketInResult::Ignored {
+                error: Error::MalformedData
+            }
+        );
+    }
+
+    Ok(())
+}
+
+fn recompute_crc<R: Role>(wire: &mut VecDeque<Packet>) {
+    let payload_len: usize = u16::from_be_bytes([wire[0][3], wire[0][4]]).into();
+    let mut crc_start = 5 + payload_len - crc32::CHECKSUM_LEN;
+    let mut buf = Vec::new();
+    for p in wire.iter() {
+        buf.extend_from_slice(p);
+    }
+    buf.truncate(crc_start);
+    let checksum = crc32::digest(&buf);
+    for i in 0..wire.len() {
+        if crc_start > wire[i].len() {
+            crc_start -= wire[i].len()
+        } else {
+            wire[i][crc_start..crc_start + crc32::CHECKSUM_LEN].copy_from_slice(&checksum);
+            break;
+        }
+    }
+}
+
+fn damage_nth_fix_crc(
+    dir: Direction,
+    packet_index: usize,
+    byte_index: usize,
+) -> impl FnMut(Direction, &mut VecDeque<Packet>) {
+    let mut index = Some(packet_index);
+    return move |cur_dir: Direction, wire: &mut VecDeque<Packet>| {
+        if dir != cur_dir {
+            return;
+        }
+        let Some(pi) = index else {
+            return;
+        };
+        if pi < wire.len() {
+            // only way to damage continuations which are 1XXXXXXX (X = any)
+            wire[pi][byte_index] ^= 0b1000_0000;
+            if dir == HostToDevice {
+                recompute_crc::<Device>(wire);
+            } else {
+                recompute_crc::<Host>(wire);
+            }
+            log::trace!("damaged+crc {}", hex::encode(&wire[pi]));
+            index = None;
+        } else {
+            index = Some(pi.checked_sub(wire.len()).unwrap());
+        }
+    };
+}
+
+#[test]
+fn test_invalid_tag() -> Result<()> {
+    setup();
+
+    let (mut h, mut d) = open_channel(DEFAULT_PACKET_LEN)?;
+    h.message_in(0, 404, b"hello world hello world hello")
+        .unwrap();
+    let res = take_turns_mutate(&mut h, &mut d, damage_nth_fix_crc(HostToDevice, 0, 10));
+    assert_eq!(res, Err(Error::CryptoError));
+
+    let (mut h, mut d) = open_channel(DEFAULT_PACKET_LEN)?;
+    d.message_in(0, 403, b"hello world hello world hello")
+        .unwrap();
+    let res = take_turns_mutate(&mut h, &mut d, damage_nth_fix_crc(DeviceToHost, 0, 20));
+    assert_eq!(res, Err(Error::CryptoError));
+
+    Ok(())
+}
