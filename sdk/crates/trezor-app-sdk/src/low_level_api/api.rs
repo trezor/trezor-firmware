@@ -212,12 +212,14 @@ pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
     core::intrinsics::abort();
 }
 
-unsafe extern "C" {
-    pub fn hdnode_deserialize_public(
-        str_: *const core::ffi::c_char,
-        version: u32,
-        curve: *const core::ffi::c_char,
-        node: *mut HDNode,
-        fingerprint: *mut u32,
-    ) -> core::ffi::c_int;
+pub fn hdnode_deserialize_public(
+    str_: *const core::ffi::c_char,
+    version: u32,
+    curve: *const core::ffi::c_char,
+    node: *mut HDNode,
+    fingerprint: *mut u32,
+) -> core::ffi::c_int {
+    unsafe {
+        (get_crypto_or_die().hdnode_deserialize_public)(str_, version, curve, node, fingerprint)
+    }
 }

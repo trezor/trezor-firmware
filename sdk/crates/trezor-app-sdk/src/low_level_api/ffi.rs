@@ -121,24 +121,12 @@ pub struct trezor_api_v1_t {
 /// Trezor crypto v1 function pointers
 #[repr(C)]
 pub struct trezor_crypto_v1_t {
-    pub hdnode_from_xpub: unsafe extern "C" fn(
-        depth: u32,
-        child_num: u32,
-        chain_code: *const u8,
-        public_key: *const u8,
-        curve: *const core::ffi::c_char,
-        out: *mut HDNode,
-    ) -> core::ffi::c_int,
-    pub hdnode_sign: unsafe extern "C" fn(
+    pub hdnode_deserialize_public: unsafe extern "C" fn(
+        str_: *const cty::c_char,
+        version: u32,
+        curve: *const cty::c_char,
         node: *mut HDNode,
-        msg: *const u8,
-        msg_len: u32,
-        hasher_sign: HasherType,
-        sig: *mut u8,
-        pby: *mut u8,
-        is_canonical: ::core::option::Option<
-            unsafe extern "C" fn(by: u8, sig: *mut u8) -> core::ffi::c_int,
-        >,
+        fingerprint: *mut u32,
     ) -> core::ffi::c_int,
 }
 

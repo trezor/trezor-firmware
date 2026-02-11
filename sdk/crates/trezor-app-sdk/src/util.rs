@@ -103,15 +103,13 @@ pub fn hdnode_deserialize_public(serialized: &str, version: u32) -> Result<(HDNo
         curve: &curve_info,
     };
     let mut fingerprint: u32 = 0;
-    let result = unsafe {
-        low_level_api::hdnode_deserialize_public(
-            serialized.as_ptr() as *const core::ffi::c_char,
-            version,
-            b"secp256k1\0".as_ptr() as *const core::ffi::c_char,
-            &mut node,
-            &mut fingerprint,
-        )
-    };
+    let result = low_level_api::hdnode_deserialize_public(
+        serialized.as_ptr() as *const core::ffi::c_char,
+        version,
+        b"secp256k1\0".as_ptr() as *const core::ffi::c_char,
+        &mut node,
+        &mut fingerprint,
+    );
     if result == 0 {
         Ok((node, fingerprint))
     } else {
