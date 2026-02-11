@@ -27,7 +27,7 @@ ssize_t dbg_console_write(const void* data, size_t data_size) {
 #endif
 
 const trezor_crypto_v1_t trezor_crypto_v1 = {
-    .hdnode_from_xpub = hdnode_from_xpub,
+    .hdnode_deserialize_public = hdnode_deserialize_public,
 };
 
 const trezor_api_v1_t trezor_api_v1 = {

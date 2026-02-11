@@ -100,6 +100,7 @@ unsafe extern "Rust" {
 
 /// Result type alias
 pub use low_level_api::ApiError;
+pub use low_level_api::ffi::{HDNode, HasherType, curve_info, ecdsa_curve, bignum256};
 pub type Result<T> = core::result::Result<T, Error>;
 pub use ipc::IpcMessage;
 

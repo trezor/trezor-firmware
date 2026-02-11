@@ -33,16 +33,15 @@
 
 #include "bip32.h"
 
-
 #ifndef USE_DBG_CONSOLE
 // temporary hack to allow compilation when DBG console is disabled
 ssize_t dbg_console_write(const void* data, size_t data_size);
 #endif
 
 typedef struct {
- int (*hdnode_from_xpub) (uint32_t depth, uint32_t child_num,
-                     const uint8_t *chain_code, const uint8_t *public_key,
-                     const char *curve, HDNode *out);
+  int (*hdnode_deserialize_public)(const char* str, uint32_t version,
+                                   const char* curve, HDNode* node,
+                                   uint32_t* fingerprint);
 } trezor_crypto_v1_t;
 
 typedef struct {
