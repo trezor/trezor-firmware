@@ -733,7 +733,7 @@ class TR:
     reset__select_correct_word: str = "Select the correct word for each position."
     reset__select_threshold: str = "Select the minimum shares required to recover your wallet."
     reset__select_word_from_share_template: str = "Select word #{0} from\nShare #{1}"
-    reset__select_word_template: str = "Select {0} word"
+    reset__select_word_template: str = "Select word #{0} from your wallet backup"
     reset__select_word_x_of_y_template: str = "Select word {0} of {1}:"
     reset__set_it_to_count_template: str = "Set it to {0} and you will need "
     reset__share_checked_successfully_template: str = "Share #{0} checked successfully."
