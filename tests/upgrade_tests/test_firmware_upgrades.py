@@ -115,7 +115,7 @@ def _get_session(client: "Client", passphrase: str | object = "") -> "Session":
     return session
 
 
-@for_all("T2T1", "T3W1")
+@for_all()
 @lower_models_minimum_version
 def test_upgrade_load(
     tag: str | None,
@@ -319,7 +319,7 @@ def test_upgrade_reset(tag: str | None,
             assert btc.get_address(emu.client.get_session(), "Bitcoin", PATH) == address
 
 
-@for_all("T2T1", "T3W1")
+@for_all()
 @lower_models_minimum_version
 def test_upgrade_reset_skip_backup(tag: str | None,
     model: str | None,
@@ -508,11 +508,11 @@ def test_upgrade_shamir_backup(tag: str | None,
             resp = session.call(ApplySettings(_passphrase_source=2, use_passphrase=True))
             assert isinstance(resp, Success)
 
-        # Get a passphrase-less and a passphrased address.
-        session = _get_session(emu.client)
-        address = btc.get_address(session, "Bitcoin", PATH)
-        new_session = _get_session(emu.client, passphrase="TREZOR")
-        address_passphrase = btc.get_address(new_session, "Bitcoin", PATH)
+            # Get a passphrase-less and a passphrased address.
+            session = _get_session(emu.client)
+            address = btc.get_address(session, "Bitcoin", PATH)
+            new_session = _get_session(emu.client, passphrase="TREZOR")
+            address_passphrase = btc.get_address(new_session, "Bitcoin", PATH)
 
             assert (
                 emu.client.features.backup_availability

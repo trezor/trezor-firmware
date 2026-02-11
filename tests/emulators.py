@@ -137,7 +137,7 @@ class EmulatorWrapper:
         tag: str | None = None,
         model: str | None = None,
         storage: bytes | None = None,
-           profile_dir: tempfile.TemporaryDirectory | None = None,
+        profile_dir: tempfile.TemporaryDirectory | None = None,
         worker_id: int = 0,
         headless: bool = True,
         auto_interact: bool = True,
