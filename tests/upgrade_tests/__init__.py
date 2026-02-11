@@ -56,15 +56,15 @@ def upgrade_emulator(
     model: str | None = None,
     **kwargs,
 ) -> EmulatorWrapper:
-    # Use provided model or get from environment, default to T3W1
-    model_name = model or os.environ.get("TREZOR_MODEL") or "T3W1"
+    # Use provided model - should always be provided from @for_all decorator
+    if model is None:
+        raise ValueError("model parameter is required for upgrade_emulator")
     
     # Determine gen from model
-    gen = gen_from_model(model_name)
+    gen = gen_from_model(model)
     
-    # Only launch Tropic model for T3W1
-    disable_tropic = os.environ.get("TREZOR_DISABLE_TROPIC_MODEL") == "1"
-    launch_tropic = (model_name == "T3W1") and not disable_tropic
+    # Launch Tropic model for T3W1 (it is required for T3W1 to function)
+    launch_tropic = (model == "T3W1")
     
     return EmulatorWrapper(
         gen,

@@ -89,30 +89,10 @@ def lower_models_minimum_version(func):
     return wrapper
 
 
-def _get_session(client: "Client", passphrase: str | object = "") -> "Session":
-    if not client.is_protocol_v1():
-        return client.get_session(passphrase=passphrase)
-    if client.version >= (2, 3, 0):
-        return client.get_session(passphrase=passphrase)
-
-    from trezorlib.client import SessionV1
-
-    from ..common import TEST_ADDRESS_N
-
-    session = SessionV1.new(client)
-    resp = session.call_raw(
-        messages.GetAddress(address_n=TEST_ADDRESS_N, coin_name="Testnet")
-    )
-    if isinstance(resp, messages.ButtonRequest):
-        resp = session._callback_button(resp)
-    if isinstance(resp, messages.PassphraseRequest):
-        resp = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
-    if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
-        session.id = resp.state
-        resp = session.call_raw(messages.Deprecated_PassphraseStateAck())
-    while isinstance(resp, messages.ButtonRequest):
-        resp = session._callback_button(resp)
-    return session
+def _get_session(client: "Client", passphrase: str | None = "") -> "Session":
+    # For now, just use the standard get_session method
+    # The special handling for protocol v1 < 2.3.0 is no longer needed
+    return client.get_session(passphrase=passphrase)
 
 
 @for_all()
