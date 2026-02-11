@@ -214,7 +214,7 @@ where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
-        let Ok((_cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
+        let Ok((cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
             // parse_cb_channel already writes to log
             return PacketInResult::ignore(Error::malformed_data());
         };
@@ -222,7 +222,7 @@ where
             log::warn!("Invalid channel id {}.", channel_id);
             return PacketInResult::ignore(Error::malformed_data());
         }
-        if channel_id != BROADCAST_CHANNEL_ID {
+        if channel_id != BROADCAST_CHANNEL_ID && !cb.is_codec_v1() {
             return PacketInResult::route(channel_id);
         }
         PacketInResult::from_result(self.handle_broadcast(packet_buffer))

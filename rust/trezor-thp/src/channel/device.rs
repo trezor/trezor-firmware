@@ -106,9 +106,6 @@ where
     fn handle_broadcast(&mut self, packet: &[u8]) -> Result<Option<u16>, Error> {
         let (header, payload) = Reassembler::<Device>::single_inplace(packet)?;
         match header {
-            Header::CodecV1Request {
-                is_continuation: false,
-            } => self.enqueue(MuxOutgoing::CodecV1Response).map(|_| None),
             Header::Ping if payload.len() == Nonce::LEN => {
                 let (nonce, _rest) = Nonce::parse(payload).unwrap();
                 self.enqueue(MuxOutgoing::Pong(nonce)).map(|_| None)
@@ -136,6 +133,29 @@ where
             }
         }
     }
+
+    fn handle_v1(&mut self, packet: &[u8]) -> PacketInResult {
+        match Header::<Device>::parse(packet) {
+            Ok((
+                Header::CodecV1Request {
+                    is_continuation: false,
+                },
+                _,
+            )) => {
+                let res = self
+                    .enqueue(MuxOutgoing::CodecV1Response)
+                    .map(|_| PacketInResult::accept(false));
+                return PacketInResult::from_result(res);
+            }
+            Ok((Header::CodecV1Request { .. }, _)) => {
+                log::debug!("Ignoring v1 continuation.");
+            }
+            _ => {
+                log::error!("Malformed v1 packet.");
+            }
+        };
+        PacketInResult::ignore(Error::malformed_data())
+    }
 }
 
 impl<C, B> ChannelIO for Mux<C, B>
@@ -144,10 +164,13 @@ where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
-        let Ok((_cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
+        let Ok((cb, channel_id, _rest)) = parse_cb_channel(packet_buffer) else {
             // parse_cb_channel already writes to log
             return PacketInResult::ignore(Error::malformed_data());
         };
+        if cb.is_codec_v1() {
+            return self.handle_v1(packet_buffer);
+        }
         if !channel_id_valid(channel_id) {
             log::warn!("Invalid channel id {}.", channel_id);
             return PacketInResult::ignore(Error::malformed_data());
