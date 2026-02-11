@@ -119,12 +119,19 @@ static bool pm_fsm_update(pm_fsm_t* fsm, pm_state_t* new_state) {
     fsm->events.flags.soc_updated = true;
   }
 
+#ifdef USE_TELEMETRY
+  telemetry_batt_errors_t errors = {0};
+#endif
+
   // Detect battery temperature jump
   const float TEMP_JUMP_THRESHOLD_C = 5.0f;
   const uint32_t TEMP_JUMP_WINDOW_MS = 5000;  // 5 seconds
   if (pm_detect_jump(&fsm->temp_detector, new_state->battery_temp,
                      TEMP_JUMP_THRESHOLD_C, TEMP_JUMP_WINDOW_MS)) {
     fsm->events.flags.battery_temp_jump_detected = true;
+#ifdef USE_TELEMETRY
+    errors.bits.battery_temp_jump_detected = true;
+#endif
   }
 
   // Detect battery OCV jump
@@ -133,6 +140,9 @@ static bool pm_fsm_update(pm_fsm_t* fsm, pm_state_t* new_state) {
   if (pm_detect_jump(&fsm->ocv_detector, new_state->battery_ocv,
                      OCV_JUMP_THRESHOLD_V, OCV_JUMP_WINDOW_MS)) {
     fsm->events.flags.battery_ocv_jump_detected = true;
+#ifdef USE_TELEMETRY
+    errors.bits.battery_ocv_jump_detected = true;
+#endif
   }
 
   if (new_state->usb_connected != fsm->last_state.usb_connected) {
@@ -153,26 +163,41 @@ static bool pm_fsm_update(pm_fsm_t* fsm, pm_state_t* new_state) {
 
   if (new_state->ntc_connected != fsm->last_state.ntc_connected) {
     fsm->events.flags.ntc_connected_changed = true;
+#ifdef USE_TELEMETRY
+    if (!new_state->ntc_connected) {
+      errors.bits.ntc_disconnected = true;
+    }
+#endif
   }
 
   if (new_state->charging_limited != fsm->last_state.charging_limited) {
     fsm->events.flags.charging_limited_changed = true;
+#ifdef USE_TELEMETRY
+    if (new_state->charging_limited) {
+      errors.bits.charging_limited = true;
+    }
+#endif
   }
 
   if (new_state->battery_connected != fsm->last_state.battery_connected) {
     fsm->events.flags.battery_connected_changed = true;
+#ifdef USE_TELEMETRY
+    if (!new_state->battery_connected) {
+      errors.bits.battery_disconnected = true;
+    }
+#endif
+  }
+
+  if (new_state->temp_control_active != fsm->last_state.temp_control_active) {
+    fsm->events.flags.temp_control_active_changed = true;
+#ifdef USE_TELEMETRY
+    if (new_state->temp_control_active) {
+      errors.bits.temp_control_active = true;
+    }
+#endif
   }
 
 #ifdef USE_TELEMETRY
-  telemetry_batt_errors_t errors = {0};
-  errors.bits.ntc_disconnected = !new_state->ntc_connected;
-  errors.bits.charging_limited = new_state->charging_limited;
-  errors.bits.battery_disconnected = !new_state->battery_connected;
-  errors.bits.temp_control_active = new_state->temp_control_active;
-  errors.bits.battery_ocv_jump_detected =
-      fsm->events.flags.battery_ocv_jump_detected;
-  errors.bits.battery_temp_jump_detected =
-      fsm->events.flags.battery_temp_jump_detected;
   telemetry_update_battery_errors(errors);
 #endif
 
