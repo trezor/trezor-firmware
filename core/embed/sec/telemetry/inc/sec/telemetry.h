@@ -87,3 +87,10 @@ void telemetry_update_battery_cycles(float battery_cycles_inc);
  * @return true if values are available (initialized), false otherwise.
  */
 bool telemetry_get(telemetry_data_t* out);
+
+/**
+ * @brief Reset telemetry data to initial state.
+ *
+ * Clears all stored telemetry data and reinitializes to default values.
+ */
+void telemetry_reset(void);
