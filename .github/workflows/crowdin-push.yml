@@ -18,7 +18,7 @@ jobs:
     environment: crowdin
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -31,8 +31,8 @@ jobs:
       - name: Upload sources to Crowdin
         uses: crowdin/github-action@v2
         with:
-          upload_sources: true
           config: core/translations/crowdin.yml
+          upload_sources: true
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_TOKEN }}
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
