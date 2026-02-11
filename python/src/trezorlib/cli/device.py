@@ -361,7 +361,7 @@ def set_busy(session: "Session", enable: bool | None, expiry: int | None) -> Non
     device.set_busy(session, expiry * 1000)
 
 
-PUBKEY_WHITELIST_URL_TEMPLATE = (
+PUBKEY_ALLOWLIST_URL_TEMPLATE = (
     "https://data.trezor.io/firmware/{model}/authenticity.json"
 )
 
@@ -386,9 +386,9 @@ def _print_auth_data(signature: bytes, certificates: t.Sequence[bytes]) -> None:
 )
 @click.option(
     "-s",
-    "--skip-whitelist",
+    "--offline",
     is_flag=True,
-    help="Do not check intermediate certificates against the whitelist.",
+    help="Do not check intermediate certificates against the online whitelist/CRL.",
 )
 @with_session(seedless=True)
 def authenticate(
@@ -397,16 +397,16 @@ def authenticate(
     p256_root: t.BinaryIO | None,
     ed25519_root: t.BinaryIO | None,
     raw: bool | None,
-    skip_whitelist: bool | None,
+    offline: bool | None,
 ) -> None:
     """Verify the authenticity of the device.
 
     Use the --raw option to get the raw challenge, signature, and certificate data.
 
     Otherwise, trezorctl will attempt to decode the signatures and check their
-    authenticity. By default, it will also check the public keys against a whitelist
-    downloaded from Trezor servers. You can skip this check with the --skip-whitelist
-    option.
+    authenticity. By default, it will also check the public keys against a
+    whitelist or CRL downloaded from Trezor servers. You can skip this check
+    with the --offline option.
     """
     if hex_challenge is None:
         hex_challenge = secrets.token_hex(32)
@@ -452,15 +452,22 @@ def authenticate(
     authentication.LOG.addHandler(handler)
     authentication.LOG.setLevel(logging.DEBUG)
 
-    if skip_whitelist:
-        whitelist = None
+    if offline:
+        allowlist = None
     else:
-        whitelist_json = requests.get(
-            PUBKEY_WHITELIST_URL_TEMPLATE.format(
+        req = requests.get(
+            PUBKEY_ALLOWLIST_URL_TEMPLATE.format(
                 model=session.model.internal_name.lower()
             )
-        ).json()
-        whitelist = [bytes.fromhex(pk) for pk in whitelist_json["ca_pubkeys"]]
+        )
+        try:
+            req.raise_for_status()
+            allowlist = authentication.AllowList(req.json())
+        except Exception as e:
+            raise click.ClickException(
+                f"Failed to download allow list: {e}"
+                "\nUse --offline to skip the check."
+            ) from e
 
     try:
         authentication.authenticate_device(
@@ -468,7 +475,7 @@ def authenticate(
             challenge,
             p256_root_pubkey=p256_root_bytes,
             ed25519_root_pubkey=ed25519_root_bytes,
-            whitelist=whitelist,
+            allowlist=allowlist,
         )
     except authentication.DeviceNotAuthentic:
         click.echo("Device is not authentic.")

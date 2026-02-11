@@ -59,6 +59,27 @@ class DeviceNotAuthentic(Exception):
     pass
 
 
+class AllowList:
+    def __init__(self, data: dict[str, t.Any]) -> None:
+        self.whitelist = None
+        self.blacklist = None
+        if "ca_pubkeys" in data:
+            self.whitelist = [bytes.fromhex(pk) for pk in data["ca_pubkeys"]]
+        if "revoked_pubkeys" in data:
+            self.blacklist = [bytes.fromhex(pk) for pk in data["revoked_pubkeys"]]
+        if self.whitelist is None and self.blacklist is None:
+            raise ValueError(
+                "Invalid allow list: no CA public keys or revoked public keys."
+            )
+
+    def is_allowed(self, pubkey: bytes) -> bool:
+        if self.whitelist is not None:
+            return pubkey in self.whitelist
+        if self.blacklist is not None:
+            return pubkey not in self.blacklist
+        raise RuntimeError("Invalid allow list: no whitelist or blacklist entries.")
+
+
 class PublicKey:
     @staticmethod
     def from_bytes_and_oid(data: bytes, oid: ObjectIdentifier) -> PublicKey:
@@ -395,7 +416,7 @@ def verify_authentication_response(
     signature: bytes,
     cert_chain: t.Iterable[bytes],
     *,
-    whitelist: t.Collection[bytes] | None,
+    allowlist: AllowList | None,
     allow_development_devices: bool = False,
     root_pubkey: bytes | PublicKey | None = None,
 ) -> RootCertificate | None:
@@ -443,11 +464,11 @@ def verify_authentication_response(
             failed = True
             continue
 
-        if whitelist is None:
-            LOG.warning("Skipping public key whitelist check.")
+        if allowlist is None:
+            LOG.warning("Skipping public key allowlist check.")
         else:
-            if ca_cert.public_key.to_bytes() not in whitelist:
-                LOG.error(f"CA certificate #{i} not in whitelist: %s", ca_cert)
+            if not allowlist.is_allowed(ca_cert.public_key.to_bytes()):
+                LOG.error(f"CA certificate #{i} denied by allowlist: %s", ca_cert)
                 failed = True
 
         if not cert.is_issued_by(ca_cert, i - 1):
@@ -513,7 +534,7 @@ def authenticate_device(
     session: Session,
     challenge: bytes | None = None,
     *,
-    whitelist: t.Collection[bytes] | None = None,
+    allowlist: AllowList | None = None,
     allow_development_devices: bool = False,
     p256_root_pubkey: bytes | PublicKey | None = None,
     ed25519_root_pubkey: bytes | PublicKey | None = None,
@@ -527,7 +548,7 @@ def authenticate_device(
         challenge,
         resp.optiga_signature,
         resp.optiga_certificates,
-        whitelist=whitelist,
+        allowlist=allowlist,
         allow_development_devices=allow_development_devices,
         root_pubkey=p256_root_pubkey,
     )
@@ -537,7 +558,7 @@ def authenticate_device(
             challenge,
             resp.tropic_signature,
             resp.tropic_certificates,
-            whitelist=whitelist,
+            allowlist=allowlist,
             allow_development_devices=allow_development_devices,
             root_pubkey=ed25519_root_pubkey,
         )
