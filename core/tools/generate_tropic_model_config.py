@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -13,7 +14,9 @@ HERE = Path(__file__).parent
 ROOT = HERE.parent.parent.resolve()
 CONFIG_DIR = ROOT / "tests" / "tropic_model"
 DEST_PATH = CONFIG_DIR / "config.yml"
-CFG_SPEC_DIR = ROOT / "core" / "embed" / "sec" / "tropic" / "tropic_configs.yaml"
+CFG_SPEC_PATH = (
+    ROOT / "core" / "embed" / "sec" / "tropic" / "config" / "tropic_configs.json"
+)
 
 # private key used by the Tropic model to sign
 TROPIC_KEY = CONFIG_DIR / "tropic_key.pem"
@@ -39,31 +42,57 @@ RISCV_FW_PATCH = 0
 
 def get_tropic_configuration(path: Path) -> dict:
     with open(path, "r") as f:
-        config = yaml.safe_load(f)
+        config = json.load(f)
     numbers = {"i_config": {}, "r_config": {}}
-    for key in config["irreversible_configuration"]:
-        assert list(config["irreversible_configuration"][key].keys()) == [
-            "all_except"
-        ], f'unexpected key in i_config: {config["irreversible_configuration"][key].keys()}'
+    for category in config["irreversible_configuration"]:
         number = 0xFFFFFFFF
-        for exclude in config["irreversible_configuration"][key]["all_except"]:
-            number &= ~(1 << exclude)
-        numbers["i_config"][key] = number
-    for key in config["reversible_configuration"]:
-        assert list(config["reversible_configuration"][key].keys()) == [
-            "bits"
-        ], f'unexpected key in r_config: {config["reversible_configuration"][key].keys()}'
+        if category != "uap":
+            for details in config["irreversible_configuration"][category][
+                "setting"
+            ].values():
+                if not details["value"]:
+                    number &= ~(1 << details["bit"])
+            numbers["i_config"][category] = number
+        else:
+            for subcategory in list(
+                config["irreversible_configuration"]["uap"]["pairing_key_0"].keys()
+            ):
+                number = 0xFFFFFFFF
+                for i in range(4):
+                    for details in config["irreversible_configuration"]["uap"][
+                        f"pairing_key_{i}"
+                    ][subcategory]["setting"].values():
+                        if not details["value"]:
+                            number &= ~(1 << details["bit"])
+                numbers["i_config"][subcategory] = number
+
+    for category in config["reversible_configuration"]:
         number = 0
-        for include in config["reversible_configuration"][key]["bits"]:
-            number |= 1 << include
-        numbers["r_config"][key] = number
+        if category != "uap":
+            for details in config["reversible_configuration"][category][
+                "setting"
+            ].values():
+                if details["value"]:
+                    number |= 1 << details["bit"]
+            numbers["r_config"][category] = number
+        else:
+            for subcategory in list(
+                config["reversible_configuration"]["uap"]["pairing_key_0"].keys()
+            ):
+                number = 0
+                for i in range(4):
+                    for details in config["reversible_configuration"]["uap"][
+                        f"pairing_key_{i}"
+                    ][subcategory]["setting"].values():
+                        if details["value"]:
+                            number |= 1 << details["bit"]
+                numbers["r_config"][subcategory] = number
     return numbers
 
 
 @click.command()
 @click.option("--check", is_flag=True)
-@click.option("--config-path", type=Path, default=CFG_SPEC_DIR)
-def generate_config(check: bool, config_path: Path) -> None:
+def generate_config(check: bool) -> None:
     tropic_key = serialization.load_pem_private_key(
         TROPIC_KEY.read_bytes(), password=None
     )
@@ -129,7 +158,7 @@ def generate_config(check: bool, config_path: Path) -> None:
         + RISCV_FW_MINOR.to_bytes(1, "little")
         + RISCV_FW_MAJOR.to_bytes(1, "little")
     )
-    tropic_cfg = get_tropic_configuration(config_path)
+    tropic_cfg = get_tropic_configuration(CFG_SPEC_PATH)
     config_dict = {
         "s_t_priv": "tropic01_ese_private_key_1.pem",
         "s_t_pub": "tropic01_ese_public_key_1.pem",
@@ -190,6 +219,7 @@ def generate_config(check: bool, config_path: Path) -> None:
         tropic_key_stat = TROPIC_KEY.stat()
         tropic_cert_stat = TROPIC_CERT.stat()
         root_cert_stat = ROOT_CERT.stat()
+        tropic_config_stat = CFG_SPEC_PATH.stat()
         DEST_PATH.write_text(config)
         os.utime(
             DEST_PATH,
@@ -198,11 +228,13 @@ def generate_config(check: bool, config_path: Path) -> None:
                     tropic_key_stat.st_atime_ns,
                     tropic_cert_stat.st_atime_ns,
                     root_cert_stat.st_atime_ns,
+                    tropic_config_stat.st_atime_ns,
                 ),
                 max(
                     tropic_key_stat.st_mtime_ns,
                     tropic_cert_stat.st_mtime_ns,
                     root_cert_stat.st_mtime_ns,
+                    tropic_config_stat.st_mtime_ns,
                 ),
             ),
         )

@@ -67,7 +67,7 @@ def configure(
     if "tropic" in features_wanted:
         sources += [
             "embed/sec/tropic/tropic.c",
-            "embed/sec/tropic/tropic_configs.c",
+            "embed/sec/tropic/config/tropic_configs.c",
             "embed/sec/tropic/unix/tropic01.c",
             "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_aesgcm.c",
             "vendor/libtropic/cal/trezor_crypto/lt_trezor_crypto_common.c",
