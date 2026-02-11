@@ -55,7 +55,7 @@ def sign_registration_request(
     challenge: str,
     size: int,
 ) -> dict[str, str]:
-    """Sign a registration request for this device to be registred at the Quota Manager server."""
+    """Sign a registration request for this device to be registered at the Quota Manager server."""
 
     response = evolu.sign_registration_request(
         session=session,
