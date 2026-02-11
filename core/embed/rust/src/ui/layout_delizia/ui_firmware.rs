@@ -551,12 +551,6 @@ impl FirmwareUI for UIDelizia {
         br_code: u16,
         br_name: TString<'static>,
         address_item: Option<Obj>,
-        extra_item: Option<Obj>,
-        summary_items: Option<Obj>,
-        fee_items: Option<Obj>,
-        summary_title: Option<TString<'static>>,
-        summary_br_code: Option<u16>,
-        summary_br_name: Option<TString<'static>>,
         cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let confirm_main = ConfirmValue::new(
@@ -585,43 +579,6 @@ impl FirmwareUI for UIDelizia {
             .with_text_mono(true)
         });
 
-        let confirm_extra = extra_item.map(|extra_item| {
-            let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(extra_item));
-            ConfirmValue::new(
-                key.try_into().unwrap_or(TString::empty()),
-                value.try_into().unwrap_or(StrOrBytes::Str("".into())),
-                None,
-            )
-            .with_cancel_button()
-            .with_chunkify(true)
-            .with_text_mono(true)
-        });
-
-        let mut fee_items_params =
-            ShowInfoParams::new(TR::confirm_total__title_fee.into()).with_cancel_button();
-        if fee_items.is_some() {
-            for pair in IterBuf::new().try_iterate(fee_items.unwrap())? {
-                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
-                fee_items_params =
-                    unwrap!(fee_items_params.add(key.try_into()?, value.try_into()?));
-            }
-        }
-
-        let summary_items_params: Option<ShowInfoParams> = if summary_items.is_some() {
-            let mut summary =
-                ShowInfoParams::new(summary_title.unwrap_or(TR::words__title_summary.into()))
-                    .with_menu_button()
-                    .with_swipeup_footer(None)
-                    .with_swipe_down();
-            for property in IterBuf::new().try_iterate(summary_items.unwrap())? {
-                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(property)?;
-                summary = unwrap!(summary.add(key.try_into()?, value.try_into()?));
-            }
-            Some(summary)
-        } else {
-            None
-        };
-
         let flow = flow::confirm_output::new_confirm_output(
             confirm_main,
             account_title,
@@ -630,11 +587,6 @@ impl FirmwareUI for UIDelizia {
             br_name,
             br_code,
             confirm_address,
-            confirm_extra,
-            summary_items_params,
-            fee_items_params,
-            summary_br_name,
-            summary_br_code,
             cancel_text,
         )?;
         Ok(flow)

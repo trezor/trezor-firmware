@@ -341,11 +341,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_experimental_mode__title;
   MP_QSTR_external_menu;
   MP_QSTR_extra;
-  MP_QSTR_extra_item;
   MP_QSTR_extra_items;
   MP_QSTR_extra_title;
   MP_QSTR_fee;
-  MP_QSTR_fee_items;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
   MP_QSTR_fingerprint;
@@ -858,10 +856,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_storage_msg__wrong_pin;
   MP_QSTR_subtext;
   MP_QSTR_subtitle;
-  MP_QSTR_summary_br_code;
-  MP_QSTR_summary_br_name;
-  MP_QSTR_summary_items;
-  MP_QSTR_summary_title;
   MP_QSTR_switch_off;
   MP_QSTR_text;
   MP_QSTR_text_check;

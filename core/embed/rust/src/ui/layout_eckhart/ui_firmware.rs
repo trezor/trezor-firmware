@@ -677,12 +677,6 @@ impl FirmwareUI for UIEckhart {
         br_code: u16,
         br_name: TString<'static>,
         address_item: Option<Obj>,
-        extra_item: Option<Obj>,
-        summary_items: Option<Obj>,
-        fee_items: Option<Obj>,
-        summary_title: Option<TString<'static>>,
-        summary_br_code: Option<u16>,
-        summary_br_name: Option<TString<'static>>,
         cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut main_paragraphs = ParagraphVecShort::new();
@@ -755,46 +749,6 @@ impl FirmwareUI for UIEckhart {
             }
         };
 
-        let summary_paragraphs = if let Some(items) = summary_items {
-            Some(PropsList::new_styled(
-                items,
-                &theme::TEXT_SMALL_LIGHT,
-                &theme::TEXT_MONO_MEDIUM_LIGHT,
-                &theme::TEXT_MONO_MEDIUM_LIGHT,
-                theme::PROP_INNER_SPACING,
-                theme::PROPS_SPACING,
-            )?)
-        } else {
-            None
-        };
-
-        let fee_paragraphs = if let Some(items) = fee_items {
-            Some(PropsList::new_styled(
-                items,
-                &theme::TEXT_SMALL_LIGHT,
-                &theme::TEXT_MONO_MEDIUM_LIGHT,
-                &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
-                theme::PROP_INNER_SPACING,
-                theme::PROPS_SPACING,
-            )?)
-        } else {
-            None
-        };
-
-        let (extra_title, extra_paragraph) = if let Some(extra_item) = extra_item {
-            let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(extra_item)?;
-            let paragraph = Paragraph::new(
-                &theme::TEXT_MONO_ADDRESS,
-                value.try_into().unwrap_or(TString::empty()),
-            );
-            (
-                Some(key.try_into().unwrap_or(TString::empty())),
-                Some(paragraph),
-            )
-        } else {
-            (None, None)
-        };
-
         let flow = flow::confirm_output::new_confirm_output(
             title,
             subtitle,
@@ -805,13 +759,6 @@ impl FirmwareUI for UIEckhart {
             account_paragraphs,
             address_title,
             address_paragraph,
-            summary_title,
-            summary_paragraphs,
-            summary_br_code,
-            summary_br_name,
-            extra_title,
-            extra_paragraph,
-            fee_paragraphs,
             cancel_text,
         )?;
         Ok(flow)

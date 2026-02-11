@@ -540,18 +540,6 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
 
         let address_item: Option<Obj> =
             kwargs.get(Qstr::MP_QSTR_address_item)?.try_into_option()?;
-        let extra_item: Option<Obj> = kwargs.get(Qstr::MP_QSTR_extra_item)?.try_into_option()?;
-        let summary_items: Option<Obj> =
-            kwargs.get(Qstr::MP_QSTR_summary_items)?.try_into_option()?;
-        let fee_items: Option<Obj> = kwargs.get(Qstr::MP_QSTR_fee_items)?.try_into_option()?;
-        let summary_title: Option<TString> =
-            kwargs.get(Qstr::MP_QSTR_summary_title)?.try_into_option()?;
-        let summary_br_code: Option<u16> = kwargs
-            .get(Qstr::MP_QSTR_summary_br_code)?
-            .try_into_option()?;
-        let summary_br_name: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_summary_br_name)?
-            .try_into_option()?;
         let cancel_text: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_cancel_text)?.try_into_option()?;
 
@@ -569,12 +557,6 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
             br_code,
             br_name,
             address_item,
-            extra_item,
-            summary_items,
-            fee_items,
-            summary_title,
-            summary_br_code,
-            summary_br_name,
             cancel_text,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -1775,12 +1757,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
     ///     address_item: PropertyType | None,
-    ///     extra_item: PropertyType | None,
-    ///     summary_items: Sequence[PropertyType] | None = None,
-    ///     fee_items: Sequence[PropertyType] | None = None,
-    ///     summary_title: str | None = None,
-    ///     summary_br_code: ButtonRequestType | None = None,
-    ///     summary_br_name: str | None = None,
     ///     cancel_text: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""

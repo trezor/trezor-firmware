@@ -714,12 +714,6 @@ impl FirmwareUI for UICaesar {
         _br_code: u16,
         _br_name: TString<'static>,
         _address_item: Option<Obj>,
-        _extra_item: Option<Obj>,
-        _summary_items: Option<Obj>,
-        _fee_items: Option<Obj>,
-        _summary_title: Option<TString<'static>>,
-        _summary_br_code: Option<u16>,
-        _summary_br_name: Option<TString<'static>>,
         _cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
