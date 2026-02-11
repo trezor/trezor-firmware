@@ -153,6 +153,7 @@ async def process_known_trc20_contract(
     from .sc_constants import (
         SC_ARGUMENT_ADDRESS_BYTES,
         SC_ARGUMENT_BYTES,
+        SC_FUNC_SIG_APPROVE,
         SC_FUNC_SIG_BYTES,
         SC_FUNC_SIG_TRANSFER,
     )
@@ -165,26 +166,29 @@ async def process_known_trc20_contract(
 
     data_reader = BufferReader(contract.data)
     func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
-    if func_sig != SC_FUNC_SIG_TRANSFER:
+    if func_sig not in (SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_TRANSFER):
         return False
 
     if data_reader.remaining_count() < SC_ARGUMENT_BYTES * 2:
         return False
 
-    arg0 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
+    address_arg = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
     assert all(
-        byte == 0 for byte in arg0[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
+        byte == 0
+        for byte in address_arg[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
     )
 
     # TRON truncates the mandatory prefix \x41 from addresses in data
-    recipient = b"\x41" + bytes(arg0[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :])
+    recipient = b"\x41" + bytes(
+        address_arg[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :]
+    )
 
-    arg1 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-    value = int.from_bytes(arg1, "big")
+    amount_arg = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
 
     await layout.confirm_known_trc20_smart_contract(
+        func_sig == SC_FUNC_SIG_APPROVE,
         recipient,
-        value,
+        amount_arg,
         fee_limit,
         token_decimals,
         token_symbol,

@@ -1494,7 +1494,7 @@ if not utils.BITCOIN_ONLY:
         # TODO: #6364 Consider simplifying with confirm_tron_send like ETH flows.
         async def confirm_tron_transfer(
             recipient_addr: str,
-            total_amount: str,
+            amount_str: str,
             maximum_fee: str,
             chunkify: bool = True,
         ) -> None:
@@ -1513,10 +1513,10 @@ if not utils.BITCOIN_ONLY:
                 cancel=True,
             )
 
-            properties: Iterable[PropertyType] = (
+            properties: Iterable[StrPropertyType] = (
                 (
-                    TR.words__amount,
-                    total_amount,
+                    f"{TR.words__amount}:",
+                    amount_str,
                     False,
                 ),
                 (TR.words__chain, "Tron", True),
@@ -1543,39 +1543,49 @@ if not utils.BITCOIN_ONLY:
         # TODO: #6359 Redo as ETH confirm_tx
         async def confirm_tron_approve(
             recipient_addr: str,
-            total_amount: str,
+            amount_str: str,
+            is_revoke: bool,
             maximum_fee: str,
             chunkify: bool = True,
         ) -> None:
 
             br_name = "confirm_tron_approve"
-            title = TR.ethereum__approve_intro_title
+            if is_revoke:
+                title = TR.ethereum__approve_intro_title_revoke
+                action_subtitle = TR.ethereum__approve_intro_revoke
+                value_subtitle = TR.ethereum__approve_revoke_from
+                summary_view = (TR.words__token, amount_str[2:], True)
+            else:
+                title = TR.ethereum__approve_intro_title
+                action_subtitle = TR.ethereum__approve_intro
+                value_subtitle = TR.ethereum__approve_to
+                summary_view = (
+                    TR.ethereum__approve_amount_allowance,
+                    amount_str,
+                    False,
+                )
 
             await confirm_action(
                 br_name,
                 title,
-                TR.ethereum__approve_intro,
+                action_subtitle,
                 verb=TR.buttons__continue,
             )
             await confirm_value(
                 title,
                 recipient_addr,
                 "",
-                subtitle=TR.ethereum__approve_to,
+                subtitle=value_subtitle,
                 chunkify=chunkify,
                 br_name=br_name,
                 verb=TR.buttons__continue,
                 cancel=True,
             )
 
-            properties: Iterable[PropertyType] = (
-                (
-                    TR.ethereum__approve_amount_allowance,
-                    total_amount,
-                    False,
-                ),
-                (TR.words__chain, "Tron", True),
-            )
+            properties: list[StrPropertyType] = [
+                summary_view,
+                (f"{TR.words__chain}:", "Tron", True),
+            ]
 
             await confirm_properties(
                 br_name,
