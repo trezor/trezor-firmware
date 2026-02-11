@@ -553,7 +553,14 @@ def authenticate_device(
         root_pubkey=p256_root_pubkey,
     )
 
-    if resp.tropic_signature:
+    if (
+        getattr(optiga_root, "ed25519_pubkey", None) is not None
+        or ed25519_root_pubkey is not None
+    ):
+        if not resp.tropic_signature:
+            LOG.error("Missing Tropic signature.")
+            raise DeviceNotAuthentic
+
         tropic_root = verify_authentication_response(
             challenge,
             resp.tropic_signature,
