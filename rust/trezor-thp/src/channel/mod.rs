@@ -310,15 +310,14 @@ pub enum PacketInResult {
     Failed { error: Error },
     /// This packet is addressed to different channel. Event loop should look up the channel
     /// by its ID and call its [`ChannelIO::packet_in`].
-    /// Only [`device::ChannelMux`] and [`host::ChannelMux`] return this variant.
+    /// Only [`device::Mux`] and [`host::Mux`] return this variant.
     Route {
         /// Channel id of the destination. Never a broadcast.
         channel_id: u16,
     },
     /// Channel allocation request/response was received. Event loop should call
-    /// [`ChannelMux::channel_alloc`] to create new channel object.
-    /// Only [`device::ChannelMux`] and [`host::ChannelMux`] return this variant.\
-    /// There is no queue, do it before processing the next packet.
+    /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and[`host::Mux`]
+    /// return this variant. There is no queue, do it before processing the next packet.
     ChannelAllocation { channel_id: u16 },
 }
 
