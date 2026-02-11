@@ -1,6 +1,6 @@
 use core::ffi::c_void;
 
-use super::ffi::{self, ipc_message_t};
+use super::ffi::{self, HDNode, ipc_message_t};
 use crate::log::info;
 
 pub const TREZOR_API_SUPPORTED_VERSION: u32 = ffi::TREZOR_API_VERSION_1;
@@ -212,27 +212,12 @@ pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
     core::intrinsics::abort();
 }
 
-pub fn hdnode_from_xpub(
-    depth: u32,
-    child_num: u32,
-    chain_code: &[u8; 32],
-    public_key: &[u8; 33],
-    curve: &core::ffi::CStr,
-    out: &mut ffi::HDNode,
-) -> Result<(), ApiError> {
-    let res = unsafe {
-        (get_crypto_or_die().hdnode_from_xpub)(
-            depth,
-            child_num,
-            chain_code.as_ptr(),
-            public_key.as_ptr(),
-            curve.as_ptr(),
-            out,
-        )
-    };
-    if res == 0 {
-        Ok(())
-    } else {
-        Err(ApiError::Failed)
-    }
+unsafe extern "C" {
+    pub fn hdnode_deserialize_public(
+        str_: *const core::ffi::c_char,
+        version: u32,
+        curve: *const core::ffi::c_char,
+        node: *mut HDNode,
+        fingerprint: *mut u32,
+    ) -> core::ffi::c_int;
 }
