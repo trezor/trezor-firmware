@@ -30,4 +30,8 @@ bool telemetry_get(telemetry_data_t* out) {
   return true;
 }
 
+void telemetry_reset(void) {
+  // No-op for emulator
+}
+
 #endif

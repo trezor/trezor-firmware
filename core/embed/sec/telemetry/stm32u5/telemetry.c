@@ -129,4 +129,6 @@ bool telemetry_get(telemetry_data_t* out) {
   return true;
 }
 
+void telemetry_reset(void) { telemetry_init_record(); }
+
 #endif

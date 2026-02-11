@@ -1580,3 +1580,31 @@ Example:
 rtc-get
 OK 2025 07 03 14 23 00 4
 ```
+
+### telemetry-read
+Retrieves stored telemetry data, including minimum and maximum recorded battery temperatures, battery error flags, and battery cycle count.
+
+Response format:
+`OK <min_temp_c> <max_temp_c> <battery_errors> <battery_cycles>`
+
+- `min_temp_c`: Minimum temperature in millidegrees Celsius (°C × 1000)
+- `max_temp_c`: Maximum temperature in millidegrees Celsius (°C × 1000)
+- `battery_errors`: Battery error flags as hexadecimal
+- `battery_cycles`: Battery cycles in millicycles (cycles × 1000)
+
+If telemetry data is not available (not yet initialized), the command returns an error.
+
+Example:
+```
+telemetry-read
+OK 18500 42300 0x00 12450
+```
+
+### telemetry-reset
+Resets all telemetry data to initial state. This clears all stored telemetry values and reinitializes them to default values.
+
+Example:
+```
+telemetry-reset
+OK
+```
