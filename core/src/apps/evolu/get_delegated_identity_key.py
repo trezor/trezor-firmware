@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import EvoluDelegatedIdentityKey, EvoluGetDelegatedIdentityKey
 
-from index_management import ROTATION_INDEX_LIMIT
+from .index_management import ROTATION_INDEX_LIMIT
 from trezor import utils
 
 
@@ -33,6 +33,12 @@ async def get_delegated_identity_key(
     from trezorutils import delegated_identity
 
     from trezor.messages import EvoluDelegatedIdentityKey
+
+    if isinstance(msg.rotation_index, int):
+        if msg.rotation_index < 0 or msg.rotation_index > ROTATION_INDEX_LIMIT:
+            raise ValueError(
+                f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
+            )
 
     if msg.rotate:
         await rotate_index()
