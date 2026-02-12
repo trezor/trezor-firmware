@@ -1,6 +1,6 @@
 use core::ffi::c_void;
 
-use super::ffi::{self, HDNode, ipc_message_t};
+use super::ffi::{self, ipc_message_t};
 use crate::log::info;
 
 pub const TREZOR_API_SUPPORTED_VERSION: u32 = ffi::TREZOR_API_VERSION_1;
@@ -210,16 +210,4 @@ pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
     // If API is not initialized, or if `system_exit_fatal_ex` returns despite
     // not being supposed to, we abort.
     core::intrinsics::abort();
-}
-
-pub fn hdnode_deserialize_public(
-    str_: *const core::ffi::c_char,
-    version: u32,
-    curve: *const core::ffi::c_char,
-    node: *mut HDNode,
-    fingerprint: *mut u32,
-) -> core::ffi::c_int {
-    unsafe {
-        (get_crypto_or_die().hdnode_deserialize_public)(str_, version, curve, node, fingerprint)
-    }
 }

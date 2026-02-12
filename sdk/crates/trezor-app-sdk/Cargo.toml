@@ -8,12 +8,16 @@ crate-type = ["rlib"]
 
 [dependencies]
 trezor-structs = { path = "../trezor-structs" }
-rkyv = { version = "0.8", default-features = false, features = ["bytecheck", "alloc"] }
+rkyv = { version = "0.8", default-features = false, features = [
+    "bytecheck",
+    "alloc",
+] }
 critical-section = "1.2.0"
 ufmt = "0.2.0"
 spin = "0.10.0"
 cty = "0.2.2"
 num_enum = { version = "0.7.5", default-features = false }
+bs58 = { version = "0.5", default-features = false }
 
 [build-dependencies]
 quote = "1.0"

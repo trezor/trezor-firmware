@@ -426,6 +426,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__view_all_data;
   MP_QSTR_instructions_verb;
   MP_QSTR_interface;
+  MP_QSTR_ipc_cb;
   MP_QSTR_is_connectable;
   MP_QSTR_is_connected;
   MP_QSTR_is_data;
@@ -813,7 +814,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
-  MP_QSTR_serialize_crypto_result;
+  MP_QSTR_send_crypto_result;
   MP_QSTR_serialize_ui_result;
   MP_QSTR_set_brightness;
   MP_QSTR_set_enabled;

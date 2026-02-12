@@ -77,6 +77,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
     def request_callback(data: bytes, id: int = 0) -> None:
         io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UTIL, id), data)
 
+    def crypto_resp_cb(data: bytes) -> None:
+        io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_CRYPTO, 0), data)
+
     while True:
         if not task.is_running():
             raise DataError(f"Task stopped: {request.instance_id}")
@@ -124,10 +127,11 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 public_key=pubkey,
             )
             print("Derived pubkey:", hexlify(pubkey).decode())
+            print("Depth: ", node_type.depth, "fp: ", node_type.fingerprint)
+            print("str len:", len(node_xpub))
 
             # Serialize the result into a compact binary response
-            resp = trezorcrypto_api.serialize_crypto_result(result=node_xpub)
-            io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_CRYPTO, 0), resp)
+            trezorcrypto_api.send_crypto_result(result=node_xpub, ipc_cb=crypto_resp_cb)
 
         elif service == _SERVICE_WIRE_CONTINUE:
             # usb request/ack

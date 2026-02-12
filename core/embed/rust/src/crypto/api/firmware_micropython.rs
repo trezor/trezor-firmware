@@ -29,6 +29,17 @@ use trezor_structs::{
 extern "C" fn new_process_crypto_message(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let ipc_callback: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_ipc_cb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let ipc_cb = ipc_callback
+            .map(|cb| {
+                move |bytes: &[u8]| {
+                    cb.call_with_n_args(&[bytes.try_into().unwrap()]).unwrap();
+                }
+            })
+            .unwrap();
 
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
@@ -58,9 +69,10 @@ extern "C" fn new_process_crypto_message(n_args: usize, args: *const Obj, kwargs
         )
         .unwrap();
 
-        // Convert to Python bytes object
-        let py_bytes: Obj = (&bytes[..]).try_into()?;
-        Ok(py_bytes)
+        //Send the response back via the ipc_cb callback
+        ipc_cb(bytes.as_ref());
+
+        Ok(Obj::const_none())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -109,15 +121,24 @@ extern "C" fn new_deserialize_derivation_path(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_serialize_crypto_result(
-    n_args: usize,
-    args: *const Obj,
-    kwargs: *mut Map,
-) -> Obj {
+extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
 
-        // Map MicroPython UiResult object to Rust enum for serialization
+        let ipc_callback: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_ipc_cb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let ipc_cb = ipc_callback
+            .map(|cb| {
+                move |bytes: &[u8]| {
+                    cb.call_with_n_args(&[bytes.try_into().unwrap()]).unwrap();
+                }
+            })
+            .unwrap();
+
+        // Map MicroPython CryptoResult object to Rust enum for serialization
         let msg = if obj.is_str() {
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
             TrezorCryptoResult::Xpub(unwrap!(LongString::from_str(unwrap!(
@@ -137,9 +158,10 @@ extern "C" fn new_serialize_crypto_result(
         )
         .unwrap();
 
-        // Convert to Python bytes object
-        let py_bytes: Obj = (&bytes[..]).try_into()?;
-        Ok(py_bytes)
+        //Send the response back via the ipc_cb callback
+        ipc_cb(bytes.as_ref());
+
+        Ok(Obj::const_none())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -149,24 +171,26 @@ pub static mp_module_trezorcrypto_api: Module = obj_module! {
     /// def process_crypto_message(
     ///     *,
     ///     data: bytes,
+    ///     ipc_cb: Callable[[bytes], None],
     /// ) -> bytes:
     ///     """Process an IPC message by deserializing it and dispatching to the appropriate crypto function.
-    ///         The response is serialized and returned as bytes.
+    ///         The response is serialized and sent via the ipc_cb callback.
     ///     """
     Qstr::MP_QSTR_process_crypto_message => obj_fn_kw!(0, new_process_crypto_message).as_obj(),
+
+    /// def send_crypto_result(
+    ///     *,
+    ///     result: CryptoResult,
+    ///     ipc_cb: Callable[[bytes], None],
+    /// ) -> bytes:
+    ///     """Serialize a crypto result (e.g. CryptoResult) into bytes and send it back via the ipc_cb callback."""
+    Qstr::MP_QSTR_send_crypto_result => obj_fn_kw!(0, new_send_crypto_result).as_obj(),
 
     /// def deserialize_derivation_path(
     ///     *,
     ///     data: bytes,
-    /// ) -> list[int]:
-    ///     """Deserialize a derivation path from bytes and return it as a list of integers.
-    ///     """
+    /// ) -> List[int]:
+    ///     """Deserialize a derivation path from bytes and return it as a list of integers."""
     Qstr::MP_QSTR_deserialize_derivation_path => obj_fn_kw!(0, new_deserialize_derivation_path).as_obj(),
 
-    /// def serialize_crypto_result(
-    ///     *,
-    ///     result: Obj,
-    /// ) -> bytes:
-    ///     """Serialize a crypto result into a compact binary format."""
-    Qstr::MP_QSTR_serialize_crypto_result => obj_fn_kw!(0, new_serialize_crypto_result).as_obj(),
 };

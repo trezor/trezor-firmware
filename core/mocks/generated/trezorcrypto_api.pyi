@@ -6,24 +6,25 @@ from buffer_types import *
 def process_crypto_message(
     *,
     data: bytes,
+    ipc_cb: Callable[[bytes], None],
 ) -> bytes:
     """Process an IPC message by deserializing it and dispatching to the appropriate crypto function.
-        The response is serialized and returned as bytes.
+        The response is serialized and sent via the ipc_cb callback.
     """
+
+
+# rust/src/crypto/api/firmware_micropython.rs
+def send_crypto_result(
+    *,
+    result: CryptoResult,
+    ipc_cb: Callable[[bytes], None],
+) -> bytes:
+    """Serialize a crypto result (e.g. CryptoResult) into bytes and send it back via the ipc_cb callback."""
 
 
 # rust/src/crypto/api/firmware_micropython.rs
 def deserialize_derivation_path(
     *,
     data: bytes,
-) -> list[int]:
-    """Deserialize a derivation path from bytes and return it as a list of integers.
-    """
-
-
-# rust/src/crypto/api/firmware_micropython.rs
-def serialize_crypto_result(
-    *,
-    result: Obj,
-) -> bytes:
-    """Serialize a crypto result into a compact binary format."""
+) -> List[int]:
+    """Deserialize a derivation path from bytes and return it as a list of integers."""
