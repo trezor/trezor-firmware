@@ -60,7 +60,7 @@ message EvoluGetDelegatedIdentityKey {
     optional bytes thp_credential = 1; // THP credential so that we can display the host on the device
     reserved 2;   //  host_static_public_key is deprecated, the key stored in the channel cache is used instead
     optional uint32 rotation_index = 3; // The required rotation index of the delegated identity key
-    optional bool rotate = 4; // If true, rotate the delegeated identity key and return it
+    optional bool rotate = 4; // If true, rotate the delegated identity key and return it
 }
 
 /**

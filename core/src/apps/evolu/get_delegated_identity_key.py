@@ -1,12 +1,10 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import EvoluDelegatedIdentityKey, EvoluGetDelegatedIdentityKey
 
 from trezor import utils
-
-ROTATION_INDEX_LIMIT = const((1 << 16) - 1)
+from index_management import ROTATION_INDEX_LIMIT
 
 
 async def get_delegated_identity_key(

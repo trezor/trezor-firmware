@@ -45,7 +45,8 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite
 
-    return EvoluNode(data=await derive_evolu_node(msg.node_rotation_index))
+    index = msg.node_rotation_index if msg.node_rotation_index is not None else 0
+    return EvoluNode(data=await derive_evolu_node(index))
 
 
 async def derive_evolu_node(index: int) -> bytes:

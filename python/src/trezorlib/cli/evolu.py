@@ -77,7 +77,7 @@ def sign_registration_request(
 
 @click.option("--credential", "-c", type=str)
 @click.option("--rotation_index", "-i", type=int)
-@click.option("--rotate", is_flag=True, help="Rotate the delegated identity key.")
+@click.option("--rotate", type=bool, help="Rotate the delegated identity key.")
 @cli.command()
 @with_session
 def get_delegated_identity_key(

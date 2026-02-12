@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 def get_node(
     session: Session,
     proof: bytes,
-    node_rotation_index: int,
+    node_rotation_index: Optional[int] = None,
 ) -> bytes:
     return session.call(
         messages.EvoluGetNode(
