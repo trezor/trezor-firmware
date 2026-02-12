@@ -397,6 +397,8 @@ impl ButtonDetails {
             "" => Self::cancel_icon(),
             "<" => Self::left_arrow_icon(),
             "^" => Self::up_arrow_icon(),
+            "V" => Self::down_arrow_icon(),
+            "i" => Self::info_icon(),
             _ => Self::text(text),
         })
     }
@@ -409,6 +411,13 @@ impl ButtonDetails {
     /// Cross-style-icon cancel button with no outline.
     pub fn cancel_icon() -> Self {
         Self::icon(theme::ICON_CANCEL).with_offset(Offset::new(3, -3))
+    }
+
+    /// Info icon with an outline.
+    pub fn info_icon() -> Self {
+        Self::text("i".into())
+            .with_fixed_width(theme::BUTTON_ICON_WIDTH)
+            .with_font(fonts::FONT_NORMAL)
     }
 
     /// Left arrow to signal going back. No outline.
@@ -425,6 +434,12 @@ impl ButtonDetails {
     /// to not be on the boundary.
     pub fn up_arrow_icon() -> Self {
         Self::icon(theme::ICON_ARROW_UP).with_offset(Offset::new(3, -4))
+    }
+
+    /// Down arrow to signal paginating forward. No outline. Offsetted little
+    /// right to not be on the boundary.
+    pub fn down_arrow_icon() -> Self {
+        Self::icon(theme::ICON_ARROW_DOWN).with_offset(Offset::new(-3, -4))
     }
 
     /// Down arrow to signal paginating forward. Takes half the screen's width
@@ -558,24 +573,38 @@ impl ButtonLayout {
         Self::new(
             Some(ButtonDetails::from_text_possible_icon(left)),
             Some(ButtonDetails::armed_text(middle)),
-            Some(
-                ButtonDetails::text("i".into())
-                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(fonts::FONT_NORMAL),
-            ),
+            Some(ButtonDetails::info_icon()),
         )
     }
 
-    /// Left cancel, armed text and right info icon/text.
+    /// Left text, armed text and right info text.
+    pub fn text_armed_text(
+        left: TString<'static>,
+        middle: TString<'static>,
+        right: TString<'static>,
+    ) -> Self {
+        Self::new(
+            Some(ButtonDetails::from_text_possible_icon(left)),
+            Some(ButtonDetails::armed_text(middle)),
+            Some(ButtonDetails::from_text_possible_icon(right)),
+        )
+    }
+
+    /// Left cancel, armed text and right info icon.
     pub fn cancel_armed_info(middle: TString<'static>) -> Self {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(middle)),
-            Some(
-                ButtonDetails::text("i".into())
-                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(fonts::FONT_NORMAL),
-            ),
+            Some(ButtonDetails::info_icon()),
+        )
+    }
+
+    /// Left cancel, armed text and right info icon/text.
+    pub fn cancel_armed_text(middle: TString<'static>, right: TString<'static>) -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon()),
+            Some(ButtonDetails::armed_text(middle)),
+            Some(ButtonDetails::from_text_possible_icon(right)),
         )
     }
 
@@ -692,11 +721,7 @@ impl ButtonLayout {
         Self::new(
             Some(ButtonDetails::up_arrow_icon()),
             Some(ButtonDetails::armed_text(text)),
-            Some(
-                ButtonDetails::text("i".into())
-                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(fonts::FONT_NORMAL),
-            ),
+            Some(ButtonDetails::info_icon()),
         )
     }
 

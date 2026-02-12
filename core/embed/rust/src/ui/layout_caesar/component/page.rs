@@ -10,8 +10,7 @@ use crate::{
 };
 
 use super::{
-    constant, fonts, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout,
-    ButtonPos,
+    constant, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos,
 };
 
 pub struct ButtonPage<T>
@@ -114,11 +113,7 @@ where
             (false, false) => (None, self.confirm_btn_details.clone()),
             (false, true) => (
                 self.confirm_btn_details.clone().map(|b| b.with_arms()),
-                Some(
-                    ButtonDetails::text("i".into())
-                        .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                        .with_font(fonts::FONT_NORMAL),
-                ),
+                Some(ButtonDetails::info_icon()),
             ),
         };
         ButtonLayout::new(btn_left, btn_middle, btn_right)

@@ -515,11 +515,7 @@ impl FirmwareUI for UICaesar {
             // if there are no info pages, the right button is not needed
             // if verb_cancel is "^", the left button is an arrow pointing up
             let left_btn = Some(ButtonDetails::from_text_possible_icon(verb_cancel));
-            let right_btn = (has_pages_after || external_menu).then(|| {
-                ButtonDetails::text("i".into())
-                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(fonts::FONT_NORMAL)
-            });
+            let right_btn = (has_pages_after || external_menu).then(ButtonDetails::info_icon);
             let middle_btn = Some(ButtonDetails::armed_text(TR::buttons__confirm.into()));
 
             (
@@ -627,7 +623,7 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
-        _verb_info: TString<'static>,
+        verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -654,6 +650,7 @@ impl FirmwareUI for UICaesar {
                 paragraphs.into_paragraphs(),
                 verb_cancel,
                 verb,
+                verb_info,
             )
             .with_menu(external_menu),
         ));

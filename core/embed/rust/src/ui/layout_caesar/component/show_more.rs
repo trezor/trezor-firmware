@@ -30,11 +30,12 @@ where
         content: T,
         cancel_button: Option<TString<'static>>,
         button: TString<'static>,
+        verb_info: TString<'static>,
     ) -> Self {
         let btn_layout = if let Some(cancel_text) = cancel_button {
-            ButtonLayout::text_armed_info(cancel_text, button)
+            ButtonLayout::text_armed_text(cancel_text, button, verb_info)
         } else {
-            ButtonLayout::cancel_armed_info(button)
+            ButtonLayout::cancel_armed_text(button, verb_info)
         };
         Self {
             content: Child::new(content),
