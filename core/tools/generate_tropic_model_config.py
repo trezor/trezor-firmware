@@ -51,7 +51,7 @@ def get_tropic_configuration(path: Path) -> dict:
     numbers = {"i_config": {}, "r_config": {}}
     for category in config["irreversible_configuration"]:
         number = 0xFFFFFFFF
-        if category != "uap":
+        if "uap" not in category:
             for details in config["irreversible_configuration"][category][
                 "setting"
             ].values():
@@ -59,21 +59,15 @@ def get_tropic_configuration(path: Path) -> dict:
                     number &= ~(1 << details["bit"])
             numbers["i_config"][category] = number
         else:
-            for subcategory in list(
-                config["irreversible_configuration"]["uap"]["pairing_key_0"].keys()
-            ):
-                number = 0xFFFFFFFF
-                for i in range(4):
-                    for details in config["irreversible_configuration"]["uap"][
-                        f"pairing_key_{i}"
-                    ][subcategory]["setting"].values():
-                        if not details["value"]:
-                            number &= ~(1 << details["bit"])
-                numbers["i_config"][subcategory] = number
+            for i in range(4):
+                for details in config["irreversible_configuration"][category]["setting"][f"pairing_key_{i}"].values():
+                    if not details["value"]:
+                        number &= ~(1 << details["bit"])
+            numbers["i_config"][category] = number
 
     for category in config["reversible_configuration"]:
         number = 0
-        if category != "uap":
+        if "uap" not in category:
             for details in config["reversible_configuration"][category][
                 "setting"
             ].values():
@@ -81,17 +75,11 @@ def get_tropic_configuration(path: Path) -> dict:
                     number |= 1 << details["bit"]
             numbers["r_config"][category] = number
         else:
-            for subcategory in list(
-                config["reversible_configuration"]["uap"]["pairing_key_0"].keys()
-            ):
-                number = 0
-                for i in range(4):
-                    for details in config["reversible_configuration"]["uap"][
-                        f"pairing_key_{i}"
-                    ][subcategory]["setting"].values():
-                        if details["value"]:
-                            number |= 1 << details["bit"]
-                numbers["r_config"][subcategory] = number
+            for i in range(4):
+                for details in config["reversible_configuration"][category]["setting"][f"pairing_key_{i}"].values():
+                    if details["value"]:
+                        number |= 1 << details["bit"]
+            numbers["r_config"][category] = number
     return numbers
 
 

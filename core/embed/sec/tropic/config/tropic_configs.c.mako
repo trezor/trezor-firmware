@@ -35,20 +35,20 @@ def bits(selected_bits: list[int]) -> str:
         result |= (1 << bit)
     return f"0x{result:08X}U," if result != 0 else "0,"
 
-def get_uap_all_except(configs, category):
+def uap_all_except(configs, category):
     selected_bits = []
     config = configs["irreversible_configuration"]
     for key in range(4):
-        for details in config['uap'][f'pairing_key_{key}'][category]['setting'].values():
+        for details in config[category]['setting'][f'pairing_key_{key}'].values():
             if not details['value']:
                 selected_bits.append(details['bit'])
     return all_except(selected_bits)
 
-def get_uap_bits(configs, category):
+def uap_bits(configs, category):
     selected_bits = []
     config = configs["reversible_configuration"]
     for key in range(4):
-        for details in config['uap'][f'pairing_key_{key}'][category]['setting'].values():
+        for details in config[category]['setting'][f'pairing_key_{key}'].values():
             if details['value']:
                 selected_bits.append(details['bit'])
     return bits(selected_bits)
@@ -59,8 +59,12 @@ with open(in_filename, "r") as f:
     configs = json.load(f)
 reversible_config = configs["reversible_configuration"]
 irreversible_config = configs["irreversible_configuration"]
-i_names = list(irreversible_config.keys())
-r_names = list(reversible_config.keys())
+i_names = [category for category in irreversible_config.keys() if not('uap' in category)]
+r_names = [category for category in reversible_config.keys() if not('uap' in category)]
+
+i_uap_names = [category for category in irreversible_config.keys() if 'uap' in category]
+r_uap_names = [category for category in reversible_config.keys() if 'uap' in category]
+
 %>
 // See the documentation of Tropic configurations in
 // `docs/core/misc/tropic_configs.md` for more details.
@@ -68,22 +72,22 @@ r_names = list(reversible_config.keys())
 // clang-format off
 const struct lt_config_t g_irreversible_configuration = {
     .obj = {
-% for category in i_names[:-1]:
+% for category in i_names:
         ${all_except([c['bit'] for c in irreversible_config[category]["setting"].values() if not(c['value'])])}
 % endfor
-% for category in irreversible_config['uap']['pairing_key_0'].keys():
-        ${get_uap_all_except(configs, category)}
+% for category in i_uap_names:
+        ${uap_all_except(configs, category)}
 %endfor
     }
 };
 
 const struct lt_config_t g_reversible_configuration = {
     .obj = {
-% for category in r_names[:-1]:
+% for category in r_names:
         ${bits([c['bit'] for c in reversible_config[category]["setting"].values() if c['value']])}
 % endfor
-% for category in reversible_config['uap']['pairing_key_0'].keys():
-        ${get_uap_bits(configs, category)}
+% for category in r_uap_names:
+        ${uap_bits(configs, category)}
 %endfor
     }
 };
