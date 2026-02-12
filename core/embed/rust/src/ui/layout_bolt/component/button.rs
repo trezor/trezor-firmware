@@ -411,6 +411,14 @@ impl Button {
         Self::cancel_confirm(left, right, left_is_small)
     }
 
+    pub fn with_text_or_icon_down(verb: TString<'static>) -> Self {
+        if verb.map(|v| v == "V") {
+            Button::with_icon(theme::ICON_DOWN)
+        } else {
+            Button::with_text(verb)
+        }
+    }
+
     pub fn cancel_info_confirm(
         confirm: Button,
         verb_info: TString<'static>,
@@ -422,7 +430,7 @@ impl Button {
         let right = confirm.map(|msg| {
             (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
         });
-        let top = Button::with_text(verb_info)
+        let top = Button::with_text_or_icon_down(verb_info)
             .styled(theme::button_moreinfo())
             .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info));
         let left = Button::with_icon(theme::ICON_CANCEL).map(|msg| {

@@ -513,12 +513,7 @@ impl FirmwareUI for UIBolt {
             }
         }
 
-        let confirm_button = if verb.map(|v| v == "V") {
-            Button::with_icon(theme::ICON_DOWN)
-        } else {
-            Button::with_text(verb)
-        }
-        .styled(theme::button_confirm());
+        let confirm_button = Button::with_text_or_icon_down(verb).styled(theme::button_confirm());
 
         let buttons = Button::cancel_info_confirm(confirm_button, verb_info);
 
