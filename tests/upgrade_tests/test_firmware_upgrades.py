@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, List
 import pytest
 from shamir_mnemonic import shamir
 
-from trezorlib import btc, debuglink, device, exceptions, fido, messages, models
+from trezorlib import btc, debuglink, device, exceptions, fido, models
 from trezorlib.cardano import get_public_key
 from trezorlib.messages import (
     ApplySettings,
@@ -125,7 +125,9 @@ def test_upgrade_load(
             asserts(emu.client)
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert device_id == emu.client.features.device_id
             asserts(emu.client)
 
@@ -161,7 +163,9 @@ def test_upgrade_load_pin(
             asserts(emu.client)
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert device_id == emu.client.features.device_id
             asserts(emu.client)
 
@@ -204,17 +208,22 @@ def test_storage_upgrade_progressive(tags: List[str], model: str):
             storage = emu.get_storage()
 
         for tag in tags[1:]:
-            with upgrade_emulator(tag, model, storage=storage, profile_dir=profile_dir) as emu:
+            with upgrade_emulator(
+                tag, model, storage=storage, profile_dir=profile_dir
+            ) as emu:
                 storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert device_id == emu.client.features.device_id
             asserts(emu.client)
 
 
 @for_all("T1B1", legacy_minimum_version=(1, 9, 0))
 @lower_models_minimum_version
-def test_upgrade_wipe_code(tag: str | None,
+def test_upgrade_wipe_code(
+    tag: str | None,
     model: str | None,
 ):
     PIN = "1234"
@@ -248,7 +257,9 @@ def test_upgrade_wipe_code(tag: str | None,
             asserts(emu.client)
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert device_id == emu.client.features.device_id
             asserts(emu.client)
 
@@ -265,7 +276,8 @@ def test_upgrade_wipe_code(tag: str | None,
 
 @for_all("T1B1")
 @lower_models_minimum_version
-def test_upgrade_reset(tag: str | None,
+def test_upgrade_reset(
+    tag: str | None,
     model: str | None,
 ):
     def asserts(client: "Client"):
@@ -293,7 +305,9 @@ def test_upgrade_reset(tag: str | None,
             address = btc.get_address(emu.client.get_session(), "Bitcoin", PATH)
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert device_id == emu.client.features.device_id
             asserts(emu.client)
             assert btc.get_address(emu.client.get_session(), "Bitcoin", PATH) == address
@@ -301,7 +315,8 @@ def test_upgrade_reset(tag: str | None,
 
 @for_all()
 @lower_models_minimum_version
-def test_upgrade_reset_skip_backup(tag: str | None,
+def test_upgrade_reset_skip_backup(
+    tag: str | None,
     model: str | None,
 ):
     def asserts(client: "Client"):
@@ -330,7 +345,9 @@ def test_upgrade_reset_skip_backup(tag: str | None,
             address = btc.get_address(emu.client.get_session(), "Bitcoin", PATH)
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert device_id == emu.client.features.device_id
             asserts(emu.client)
             assert btc.get_address(emu.client.get_session(), "Bitcoin", PATH) == address
@@ -338,7 +355,8 @@ def test_upgrade_reset_skip_backup(tag: str | None,
 
 @for_all(legacy_minimum_version=(1, 7, 2))
 @lower_models_minimum_version
-def test_upgrade_reset_no_backup(tag: str | None,
+def test_upgrade_reset_no_backup(
+    tag: str | None,
     model: str | None,
 ):
     def asserts(client: "Client"):
@@ -368,7 +386,9 @@ def test_upgrade_reset_no_backup(tag: str | None,
             address = btc.get_address(emu.client.get_session(), "Bitcoin", PATH)
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert device_id == emu.client.features.device_id
             asserts(emu.client)
             assert btc.get_address(emu.client.get_session(), "Bitcoin", PATH) == address
@@ -377,7 +397,8 @@ def test_upgrade_reset_no_backup(tag: str | None,
 # Although Shamir was introduced in 2.1.2 already, the debug instrumentation was not present until 2.1.9.
 @for_all("T2T1", "T3W1", core_minimum_version=(2, 1, 9))
 @lower_models_minimum_version
-def test_upgrade_shamir_recovery(tag: str | None,
+def test_upgrade_shamir_recovery(
+    tag: str | None,
     model: str | None,
 ):
     with shared_profile_dir() as profile_dir:
@@ -407,7 +428,9 @@ def test_upgrade_shamir_recovery(tag: str | None,
             storage = emu.get_storage()
             device_handler.check_finalize()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert device_id == emu.client.features.device_id
             assert emu.client.features.recovery_status == RecoveryStatus.Recovery
             debug = emu.client.debug
@@ -465,7 +488,8 @@ def test_upgrade_shamir_recovery(tag: str | None,
 
 @for_all("T2T1", "T3W1", core_minimum_version=(2, 1, 9))
 @lower_models_minimum_version
-def test_upgrade_shamir_backup(tag: str | None,
+def test_upgrade_shamir_backup(
+    tag: str | None,
     model: str | None,
 ):
     with shared_profile_dir() as profile_dir:
@@ -485,7 +509,9 @@ def test_upgrade_shamir_backup(tag: str | None,
 
             # Set passphrase_source = HOST.
             session = emu.client.get_seedless_session()
-            resp = session.call(ApplySettings(_passphrase_source=2, use_passphrase=True))
+            resp = session.call(
+                ApplySettings(_passphrase_source=2, use_passphrase=True)
+            )
             assert isinstance(resp, Success)
 
             # Get a passphrase-less and a passphrased address.
@@ -495,18 +521,18 @@ def test_upgrade_shamir_backup(tag: str | None,
             address_passphrase = btc.get_address(new_session, "Bitcoin", PATH)
 
             assert (
-                emu.client.features.backup_availability
-                == BackupAvailability.Required
+                emu.client.features.backup_availability == BackupAvailability.Required
             )
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             assert emu.client.features.device_id == device_id
 
             # Create a backup of the encrypted master secret.
             assert (
-                emu.client.features.backup_availability
-                == BackupAvailability.Required
+                emu.client.features.backup_availability == BackupAvailability.Required
             )
             session = emu.client.get_seedless_session()
             with emu.client as client:
@@ -534,10 +560,7 @@ def test_upgrade_shamir_backup(tag: str | None,
             assert ems.ciphertext == mnemonic_secret
 
             # Check that addresses are the same after firmware upgrade and backup.
-            assert (
-                btc.get_address(_get_session(emu.client), "Bitcoin", PATH)
-                == address
-            )
+            assert btc.get_address(_get_session(emu.client), "Bitcoin", PATH) == address
             assert (
                 btc.get_address(
                     _get_session(emu.client, passphrase="TREZOR"), "Bitcoin", PATH
@@ -548,7 +571,8 @@ def test_upgrade_shamir_backup(tag: str | None,
 
 @for_all(legacy_minimum_version=(1, 8, 4), core_minimum_version=(2, 1, 9))
 @lower_models_minimum_version
-def test_upgrade_u2f(tag: str | None,
+def test_upgrade_u2f(
+    tag: str | None,
     model: str | None,
 ):
     """Check U2F counter stayed the same after an upgrade."""
@@ -568,7 +592,9 @@ def test_upgrade_u2f(tag: str | None,
             assert counter == 11
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             session = emu.client.get_seedless_session()
             counter = fido.get_next_counter(session)
             assert counter == 12
@@ -581,7 +607,8 @@ def test_upgrade_u2f(tag: str | None,
     "derivation_type",
     [CardanoDerivationType.ICARUS, CardanoDerivationType.ICARUS_TREZOR],
 )
-def test_cardano_address_does_not_change_by_upgrade(tag: str,
+def test_cardano_address_does_not_change_by_upgrade(
+    tag: str,
     model: str,
     backup_type: BackupType,
     derivation_type: CardanoDerivationType,
@@ -617,7 +644,9 @@ def test_cardano_address_does_not_change_by_upgrade(tag: str,
             )
             storage = emu.get_storage()
 
-        with upgrade_emulator(storage=storage, model=model, profile_dir=profile_dir) as emu:
+        with upgrade_emulator(
+            storage=storage, model=model, profile_dir=profile_dir
+        ) as emu:
             session = emu.client.get_session(derive_cardano=True)
             new_key = get_public_key(
                 session, ADDRESS_N, derivation_type, show_display=True

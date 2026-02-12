@@ -63,7 +63,9 @@ def emulator(tag: str, model: str) -> Iterator[Emulator]:
 
 
 @for_all(
-    "T1B1", "T2T1", "T3W1",
+    "T1B1",
+    "T2T1",
+    "T3W1",
     legacy_minimum_version=models.TREZOR_ONE.minimum_version,
     core_minimum_version=models.TREZOR_T.minimum_version,
 )
@@ -105,7 +107,9 @@ def test_passphrase_works(emulator: Emulator):
 
 
 @for_all(
-    "T1B1", "T2T1", "T3W1",
+    "T1B1",
+    "T2T1",
+    "T3W1",
     legacy_minimum_version=(1, 9, 0),
     core_minimum_version=models.TREZOR_T.minimum_version,
 )

@@ -21,8 +21,13 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Sequence, Tuple
 
-from trezorlib._internal.emulator import CoreEmulator, Emulator, LegacyEmulator, TropicModel
-from trezorlib.models import CORE_MODELS, LEGACY_MODELS, by_internal_name
+from trezorlib._internal.emulator import (
+    CoreEmulator,
+    Emulator,
+    LegacyEmulator,
+    TropicModel,
+)
+from trezorlib.models import CORE_MODELS, LEGACY_MODELS
 
 ROOT = Path(__file__).resolve().parent.parent
 BINDIR = ROOT / "tests" / "emulators"
@@ -46,7 +51,7 @@ def gen_from_model(model_internal_name: str) -> str:
     # because the models module may be patched during tests
     legacy_names = {m.internal_name for m in LEGACY_MODELS}
     core_names = {m.internal_name for m in CORE_MODELS}
-    
+
     if model_internal_name in legacy_names:
         return "legacy"
     if model_internal_name in core_names:
@@ -185,7 +190,11 @@ class EmulatorWrapper:
                 workdir=workdir,
                 port=_get_tropic_model_port(worker_id),
                 configfile=tropic_configfile,
-                logfile=tropic_model_logfile if isinstance(tropic_model_logfile, Path) else None,
+                logfile=(
+                    tropic_model_logfile
+                    if isinstance(tropic_model_logfile, Path)
+                    else None
+                ),
             )
             os.environ["TROPIC_MODEL_PORT"] = str(shared_model.port)
             launch_tropic_model_for_emulator = False

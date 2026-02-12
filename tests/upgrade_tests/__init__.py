@@ -22,14 +22,7 @@ from typing import List, Tuple
 import pytest
 from _pytest.mark.structures import MarkDecorator
 
-from trezorlib.models import (
-    CORE_MODELS, 
-    LEGACY_MODELS, 
-    T1B1, 
-    T2T1, 
-    T3W1, 
-    by_internal_name
-)
+from trezorlib.models import T1B1, T2T1, T3W1, by_internal_name
 
 from ..emulators import (
     ALL_TAGS,
@@ -59,13 +52,13 @@ def upgrade_emulator(
     # Use provided model - should always be provided from @for_all decorator
     if model is None:
         raise ValueError("model parameter is required for upgrade_emulator")
-    
+
     # Determine gen from model
     gen = gen_from_model(model)
-    
+
     # Launch Tropic model for T3W1 (it is required for T3W1 to function)
-    launch_tropic = (model == "T3W1")
-    
+    launch_tropic = model == "T3W1"
+
     return EmulatorWrapper(
         gen,
         tag,
@@ -74,6 +67,7 @@ def upgrade_emulator(
         **kwargs,
     )
 
+
 SELECTED_GENS = [
     gen.strip() for gen in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",") if gen
 ]
@@ -81,12 +75,30 @@ SELECTED_GENS = [
 if SELECTED_GENS:
     # if any gens were selected via the environment variable, force enable all selected
     LEGACY_ENABLED = "legacy" in SELECTED_GENS
-    CORE_ENABLED = "core" in SELECTED_GENS
+    if "core" in SELECTED_GENS:
+        raise ValueError(
+            "TREZOR_UPGRADE_TEST=core is ambiguous. Use core-t2t1 or core-t3w1."
+        )
+    CORE_T2T1_ENABLED = "core-t2t1" in SELECTED_GENS
+    CORE_T3W1_ENABLED = "core-t3w1" in SELECTED_GENS
+    CORE_ENABLED = CORE_T2T1_ENABLED or CORE_T3W1_ENABLED
 
 else:
     # if no selection was provided, select those for which we have emulators
     LEGACY_ENABLED = LOCAL_BUILD_PATHS["legacy"].exists()
     CORE_ENABLED = LOCAL_BUILD_PATHS["core"].exists()
+    CORE_T2T1_ENABLED = CORE_ENABLED
+    CORE_T3W1_ENABLED = CORE_ENABLED
+
+
+def _is_model_enabled(model) -> bool:
+    if model == T1B1:
+        return LEGACY_ENABLED
+    if model == T2T1:
+        return CORE_T2T1_ENABLED
+    if model == T3W1:
+        return CORE_T3W1_ENABLED
+    return CORE_ENABLED
 
 
 legacy_only = pytest.mark.skipif(
@@ -133,7 +145,7 @@ def for_all(
         raise ValueError(
             "No files found. Use download_emulators.sh to download emulators."
         )
-    
+
     # Map model names to TrezorModel objects
     models_to_test = []
     for item in args:
@@ -148,13 +160,17 @@ def for_all(
         models_to_test = [T1B1, T2T1, T3W1]
 
     all_params: set[tuple[str | None, str | None]] = set()
-    
+
+    models_to_test = [model for model in models_to_test if _is_model_enabled(model)]
+    if not models_to_test:
+        return pytest.mark.skip("no models are enabled")
+
     for model in models_to_test:
         # Determine minimum version based on model
         if model == T1B1:
             minimum_version = legacy_minimum_version
         elif model == T3W1:
-            minimum_version = t3w1_minimum_version            
+            minimum_version = t3w1_minimum_version
         elif model == T2T1:
             minimum_version = core_minimum_version
         else:
@@ -178,19 +194,19 @@ def for_all(
 
 def for_tags(*args: Tuple[str, List[str]]) -> "MarkDecorator":
     """Parametrizing decorator for tests that need specific version tags.
-    
+
     Usage: @for_tags(("T1B1", ["v1.7.0", "v1.8.0"]))
-    
+
     Returns parameters: (tags, model)
     """
     params = []
     for model_name, tags in args:
         # Map model name to model object to get gen
         model_obj = by_internal_name(model_name)
-        if model_obj is not None:
+        if model_obj is not None and _is_model_enabled(model_obj):
             params.append((tags, model_name))
-    
+
     if not params:
         return pytest.mark.skip("no versions are applicable")
-    
+
     return pytest.mark.parametrize("tags, model", params)
