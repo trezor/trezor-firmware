@@ -81,6 +81,8 @@ static void drivers_init(void) {
   // as some old bootloaders rely on display being initialized
   // (skipping alows faster boot time so generally a good idea)
   display_init(DISPLAY_RESET_CONTENT);
+  display_ep_init(DISPLAY_RESET_CONTENT);
+  display_ep_demo();
 #endif
 }
 
@@ -89,6 +91,7 @@ static void drivers_deinit(void) {
   // TODO
 #endif
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
+  display_ep_deinit(DISPLAY_RESET_CONTENT);
 #ifdef USE_PMIC
   pmic_deinit();
 #endif
