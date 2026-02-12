@@ -694,7 +694,7 @@ async def should_show_more(
         trezorui_api.confirm_with_info(
             title=title,
             items=para,
-            verb=confirm or TR.buttons__confirm,
+            verb=(TR.buttons__confirm if confirm is None else confirm),
             verb_info=button_text,
         ),
         br_name,

@@ -487,12 +487,17 @@ impl FirmwareUI for UIDelizia {
             }
         }
 
+        let mut strings = ConfirmActionStrings::new(title, None, None, None);
+        if !verb.is_empty() {
+            // skip footer if verb is an empty string
+            strings = strings.with_footer_description(Some(verb));
+        }
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
             ConfirmActionExtra::Menu(
                 ConfirmActionMenuStrings::new().with_verb_info(Some(verb_info)),
             ),
-            ConfirmActionStrings::new(title, None, None, None).with_footer_description(Some(verb)),
+            strings,
             ConfirmActionOptions::new(),
         )?;
         Ok(flow)
