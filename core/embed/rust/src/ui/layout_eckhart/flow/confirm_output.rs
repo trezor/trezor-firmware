@@ -230,7 +230,7 @@ pub fn new_confirm_output(
         TextScreen::new(main_paragraphs.into_paragraphs().with_placement(
             LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING),
         ))
-        .with_flow_menu()
+        .with_flow_menu(true)
         .with_header(Header::new(title.unwrap_or(TString::empty())).with_menu_button())
         .with_subtitle(subtitle.unwrap_or(TString::empty()))
         .with_hint(Hint::new_page_counter())
