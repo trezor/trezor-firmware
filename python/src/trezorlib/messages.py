@@ -5594,7 +5594,7 @@ class EvoluGetNode(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2100
     FIELDS = {
         1: protobuf.Field("proof_of_delegated_identity", "bytes", repeated=False, required=True),
-        2: protobuf.Field("node_rotation_index", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("node_rotation_index", "uint32", repeated=False, required=False, default=0),
     }
 
     def __init__(
