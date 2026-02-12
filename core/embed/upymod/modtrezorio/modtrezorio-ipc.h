@@ -44,17 +44,6 @@ STATIC mp_obj_t mod_trezorio_ipc_send(mp_obj_t remote_obj, mp_obj_t fn_obj,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_ipc_send_obj,
                                  mod_trezorio_ipc_send);
 
-/// def ipc_has_message(remote: int) -> bool:
-///     """
-///     Checks if there are pending IPC messages from the specified remote task.
-///     """
-STATIC mp_obj_t mod_trezorio_ipc_has_message(mp_obj_t remote_obj) {
-  systask_id_t remote = (systask_id_t)mp_obj_get_int(remote_obj);
-  return mp_obj_new_bool(ipc_has_message(remote));
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_ipc_has_message_obj,
-                                 mod_trezorio_ipc_has_message);
-
 /// class IpcMessage(NamedTuple):
 ///     """
 ///     IPC message structure.

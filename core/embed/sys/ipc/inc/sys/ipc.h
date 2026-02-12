@@ -73,14 +73,6 @@ bool ipc_register(systask_id_t remote, void* buffer, size_t size);
 void ipc_unregister(systask_id_t remote);
 
 /**
- * @brief Checks if there are any pending IPC messages from the specified task.
- *
- * @param remote The remote task ID to check for messages.
- * @return true if there are pending messages, false otherwise
- */
-bool ipc_has_message(systask_id_t remote);
-
-/**
  * @brief Attempts to receive an IPC message without blocking.
  *
  * @param msg Pointer to an `ipc_message_t` structure to store the received

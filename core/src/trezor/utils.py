@@ -24,6 +24,7 @@ from trezorutils import (  # noqa: F401
     USE_APP_LOADING,
     USE_BACKLIGHT,
     USE_BLE,
+    USE_IPC,
     USE_BUTTON,
     USE_DBG_CONSOLE,
     USE_HAPTIC,
