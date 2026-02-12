@@ -1507,8 +1507,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///         def ble_event(self, event: int, data: bytes) -> LayoutState | None:
     ///             """Receive a BLE events."""
     ///
-    ///     def ipc_event(self) -> LayoutState | None:
-    ///         """Signal an incoming IPC message."""
+    ///     if utils.USE_IPC:
+    ///         def ipc_event(self, id: int, data: bytes) -> LayoutState | None:
+    ///             """Signal an incoming IPC message."""
     ///
     ///     if utils.USE_POWER_MANAGER:
     ///         def pm_event(self, flags: int) -> LayoutState | None:
@@ -1557,6 +1558,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///
     ///     def button_request(self) -> tuple[ButtonRequestType, str] | None:
     ///         """Return (code, type) of button request made during the last event or timer pass."""
+    ///
+    ///     def set_ipc_data(self) -> bytes | None:
+    ///         """Return (id, data) of the received IPC response."""
     ///
     ///     def get_transition_out(self) -> AttachType:
     ///         """Return the transition type."""

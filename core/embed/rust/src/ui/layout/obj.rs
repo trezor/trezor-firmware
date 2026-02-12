@@ -208,6 +208,7 @@ struct LayoutObjInner {
     root: Option<GcBox<dyn LayoutMaybeTrace>>,
     event_ctx: EventCtx,
     timer_fn: Obj,
+    data_message: Option<Obj>,
     page_count: u16,
     repaint: Repaint,
     transition_out: AttachType,
@@ -228,6 +229,7 @@ impl LayoutObjInner {
             repaint: Repaint::Full,
             transition_out: AttachType::Initial,
             button_request: None,
+            data_message: None,
         };
 
         // invoke the initial placement
@@ -372,6 +374,13 @@ impl LayoutObjInner {
         }
     }
 
+    fn obj_ipc_data(&mut self) -> Obj {
+        match self.data_message.take() {
+            None => Obj::const_none(),
+            Some(data) => data,
+        }
+    }
+
     fn obj_get_transition_out(&self) -> Obj {
         self.transition_out.to_obj()
     }
@@ -415,7 +424,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
                 Qstr::MP_QSTR_usb_event => obj_fn_var!(2, 2, ui_layout_usb_event).as_obj(),
                 Qstr::MP_QSTR_ble_event => obj_fn_var!(2, 3, ui_layout_ble_event).as_obj(),
-                Qstr::MP_QSTR_ipc_event => obj_fn_var!(1, 1, ui_layout_ipc_event).as_obj(),
+                Qstr::MP_QSTR_ipc_event => obj_fn_var!(3, 3, ui_layout_ipc_event).as_obj(),
                 Qstr::MP_QSTR_pm_event => obj_fn_2!(ui_layout_pm_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
@@ -424,6 +433,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR___del__ => obj_fn_1!(ui_layout_delete).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
+                Qstr::MP_QSTR_ipc_data => obj_fn_1!(ui_layout_ipc_data).as_obj(),
                 Qstr::MP_QSTR_get_transition_out => obj_fn_1!(ui_layout_get_transition_out).as_obj(),
                 Qstr::MP_QSTR_return_value => obj_fn_1!(ui_layout_return_value).as_obj(),
             }),
@@ -433,6 +443,10 @@ impl LayoutObj {
 
     pub fn skip_first_paint(&self) {
         self.inner_mut().repaint = Repaint::None;
+    }
+
+    pub fn set_ipc_data(&self, data: Obj) {
+        self.inner_mut().data_message = Some(data);
     }
 }
 
@@ -579,13 +593,16 @@ extern "C" fn ui_layout_ble_event(_n_args: usize, _args: *const Obj) -> Obj {
 
 extern "C" fn ui_layout_ipc_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
-        if args.len() != 1 {
+        if args.len() != 3 {
             return Err(Error::TypeError);
         }
         let this: Gc<LayoutObj> = args[0].try_into()?;
+        let id: u32 = args[1].try_into()?;
+        let data: Obj = args[2];
 
-        let event = IpcEvent::new()?;
+        let event = IpcEvent::new(id)?;
         let msg = this.inner_mut().obj_event(Event::IPC(event))?;
+        this.set_ipc_data(data);
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
@@ -684,6 +701,15 @@ extern "C" fn ui_layout_button_request(this: Obj) -> Obj {
         let this: Gc<LayoutObj> = this.try_into()?;
         let button_request = this.inner_mut().obj_button_request();
         button_request
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_ipc_data(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        let ipc_data = this.inner_mut().obj_ipc_data();
+        Ok(ipc_data)
     };
     unsafe { util::try_or_raise(block) }
 }

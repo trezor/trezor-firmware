@@ -129,10 +129,10 @@ void ipc_unregister(systask_id_t remote) {
   }
 }
 
-bool ipc_has_message(systask_id_t remote) {
+bool ipc_try_receive(ipc_message_t* msg) {
   systask_id_t target = systask_id(systask_active());
 
-  ipc_queue_t* queue = ipc_queue(target, remote);
+  ipc_queue_t* queue = ipc_queue(target, msg->remote);
 
   if (queue == NULL || queue->ptr == NULL) {
     // Invalid target or no queue registered
@@ -151,16 +151,6 @@ bool ipc_has_message(systask_id_t remote) {
     // Invalid item size
     return false;
   }
-  return true;
-}
-
-bool ipc_try_receive(ipc_message_t* msg) {
-  if (!ipc_has_message(msg->remote)) {
-    return false;
-  }
-
-  ipc_queue_t* queue = ipc_queue(systask_id(systask_active()), msg->remote);
-  ipc_queue_item_t* item = (ipc_queue_item_t*)queue->rptr;
 
   msg->fn = item->fn;
   msg->data = item->data;

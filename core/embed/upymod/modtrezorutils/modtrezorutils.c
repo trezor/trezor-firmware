@@ -107,8 +107,8 @@ STATIC mp_obj_t mod_trezorutils_consteq(mp_obj_t sec, mp_obj_t pub) {
 
   size_t diff = secbuf.len - pubbuf.len;
   for (size_t i = 0; i < pubbuf.len; i++) {
-    const uint8_t *s = (uint8_t *)secbuf.buf;
-    const uint8_t *p = (uint8_t *)pubbuf.buf;
+    const uint8_t* s = (uint8_t*)secbuf.buf;
+    const uint8_t* p = (uint8_t*)pubbuf.buf;
     diff |= s[i] - p[i];
   }
 
@@ -134,7 +134,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_consteq_obj,
 ///     copied bytes. If `n` is not specified, tries to copy
 ///     as much as possible.
 ///     """
-STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t* args) {
   mp_arg_check_num(n_args, 0, 4, 5, false);
 
   mp_buffer_info_t dst = {0};
@@ -156,7 +156,7 @@ STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
   size_t src_rem = (src_ofs < src.len) ? src.len - src_ofs : 0;
   size_t ncpy = MIN(n, MIN(src_rem, dst_rem));
 
-  memmove(((char *)dst.buf) + dst_ofs, ((const char *)src.buf) + src_ofs, ncpy);
+  memmove(((char*)dst.buf) + dst_ofs, ((const char*)src.buf) + src_ofs, ncpy);
 
   return mp_obj_new_int(ncpy);
 }
@@ -182,7 +182,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_memzero_obj,
 ///     """
 ///     Halts execution.
 ///     """
-STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t* args) {
   mp_buffer_info_t msg = {0};
   if (n_args > 0 && mp_get_buffer(args[0], &msg, MP_BUFFER_READ)) {
     error_shutdown(msg.buf);
@@ -203,7 +203,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
 ///     the key.
 ///     """
 STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
-                                              const mp_obj_t *args) {
+                                              const mp_obj_t* args) {
   mp_buffer_info_t chal = {0};
   if (n_args > 0 && args[0] != mp_const_none) {
     mp_get_buffer_raise(args[0], &chal, MP_BUFFER_READ);
@@ -226,7 +226,7 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
   int progress = 0;
 
   while (progress < 100) {
-    progress = firmware_hash_continue((uint8_t *)vstr.buf, vstr.len);
+    progress = firmware_hash_continue((uint8_t*)vstr.buf, vstr.len);
 
     if (progress < 0) {
       vstr_clear(&vstr);
@@ -253,14 +253,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
 ///     """
 STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 #ifdef TREZOR_EMULATOR
-  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)"EMULATOR", 8);
+  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t*)"EMULATOR", 8);
 #else
   char vendor[64] = {0};
   if (sectrue != firmware_get_vendor(vendor, sizeof(vendor))) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to read vendor header."));
   }
-  return mp_obj_new_str_copy(&mp_type_str, (byte *)vendor, strlen(vendor));
+  return mp_obj_new_str_copy(&mp_type_str, (byte*)vendor, strlen(vendor));
 #endif
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
@@ -327,7 +327,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_packaging_obj,
 ///     unavailable.
 ///     """
 STATIC mp_obj_t mod_trezorutils_unit_production_date(void) {
-  const unit_properties_t *props = unit_properties();
+  const unit_properties_t* props = unit_properties();
   if (props == NULL) {
     return mp_const_none;
   }
@@ -394,7 +394,7 @@ STATIC mp_obj_t mod_trezorutils_presize_module(mp_obj_t mod, mp_obj_t n) {
     mp_raise_TypeError(MP_ERROR_TEXT("expected module type"));
   }
   mp_uint_t size = trezor_obj_get_uint(n);
-  mp_obj_dict_t *globals = mp_obj_module_get_globals(mod);
+  mp_obj_dict_t* globals = mp_obj_module_get_globals(mod);
   mp_obj_dict_presize(globals, size);
   return mp_const_none;
 }
@@ -419,10 +419,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_zero_unused_stack_obj,
 ///     Estimate unused stack size.
 ///     """
 STATIC mp_obj_t mod_trezorutils_estimate_unused_stack(void) {
-  const uint8_t *stack_top = (const uint8_t *)MP_STATE_THREAD(stack_top);
+  const uint8_t* stack_top = (const uint8_t*)MP_STATE_THREAD(stack_top);
   size_t stack_limit = MP_STATE_THREAD(stack_limit);
 
-  const uint8_t *stack = stack_top - stack_limit;
+  const uint8_t* stack = stack_top - stack_limit;
   size_t offset = 0;
   for (; offset < stack_limit; ++offset) {
     if (stack[offset] != 0) {
@@ -529,7 +529,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_update_gc_info_obj,
 ///         """
 STATIC mp_obj_t mod_trezorutils_check_heap_fragmentation(void) {
 #if MICROPY_MODULE_FROZEN_MPY
-  mp_obj_dict_t *modules = &MP_STATE_VM(mp_loaded_modules_dict);
+  mp_obj_dict_t* modules = &MP_STATE_VM(mp_loaded_modules_dict);
   if (modules->map.alloc > MICROPY_LOADED_MODULES_DICT_SIZE) {
     mp_raise_msg(&mp_type_AssertionError,
                  MP_ERROR_TEXT("sys.modules dict is reallocated"));
@@ -577,7 +577,7 @@ STATIC mp_obj_t mod_trezorutils_reboot_and_upgrade(mp_obj_t hash_obj) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
   }
 
-  reboot_and_upgrade((uint8_t *)hash.buf);
+  reboot_and_upgrade((uint8_t*)hash.buf);
   return mp_const_none;
 }
 
@@ -731,28 +731,28 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_set_log_filter_obj,
 #endif
 
 STATIC const mp_obj_str_t mod_trezorutils_revision_obj = {
-    {&mp_type_bytes}, 0, sizeof(SCM_REVISION), (const byte *)SCM_REVISION};
+    {&mp_type_bytes}, 0, sizeof(SCM_REVISION), (const byte*)SCM_REVISION};
 
 STATIC const mp_obj_str_t mod_trezorutils_model_name_obj = {
-    {&mp_type_str}, 0, sizeof(MODEL_NAME) - 1, (const byte *)MODEL_NAME};
+    {&mp_type_str}, 0, sizeof(MODEL_NAME) - 1, (const byte*)MODEL_NAME};
 
 STATIC const mp_obj_str_t mod_trezorutils_full_name_obj = {
     {&mp_type_str},
     0,
     sizeof(MODEL_FULL_NAME) - 1,
-    (const byte *)MODEL_FULL_NAME};
+    (const byte*)MODEL_FULL_NAME};
 
 STATIC const mp_obj_str_t mod_trezorutils_model_usb_manufacturer_obj = {
     {&mp_type_str},
     0,
     sizeof(MODEL_USB_MANUFACTURER) - 1,
-    (const byte *)MODEL_USB_MANUFACTURER};
+    (const byte*)MODEL_USB_MANUFACTURER};
 
 STATIC const mp_obj_str_t mod_trezorutils_model_usb_product_obj = {
     {&mp_type_str},
     0,
     sizeof(MODEL_USB_PRODUCT) - 1,
-    (const byte *)MODEL_USB_PRODUCT};
+    (const byte*)MODEL_USB_PRODUCT};
 
 STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
     {&mp_type_tuple},
@@ -766,6 +766,8 @@ STATIC const mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Firmware version as a tuple (major, minor, patch, build)."""
 /// USE_BLE: bool
 /// """Whether the hardware supports BLE."""
+/// USE_IPC: bool
+/// """Whether the hardware supports IPC."""
 /// USE_SD_CARD: bool
 /// """Whether the hardware supports SD card."""
 /// USE_SERIAL_NUMBER: bool
@@ -1055,7 +1057,7 @@ STATIC MP_DEFINE_CONST_DICT(mp_module_trezorutils_globals,
 
 const mp_obj_module_t mp_module_trezorutils = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mp_module_trezorutils_globals,
+    .globals = (mp_obj_dict_t*)&mp_module_trezorutils_globals,
 };
 
 MP_REGISTER_MODULE(MP_QSTR_trezorutils, mp_module_trezorutils);

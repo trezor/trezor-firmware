@@ -427,6 +427,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions_verb;
   MP_QSTR_interface;
   MP_QSTR_ipc_cb;
+  MP_QSTR_ipc_data;
   MP_QSTR_ipc_event;
   MP_QSTR_is_connectable;
   MP_QSTR_is_connected;

@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
     from trezor.enums import ButtonRequestType
     from trezorui_api import LayoutObj, UiResult  # noqa: F401
+    from trezorio import IpcMessage
 
     T = TypeVar("T", covariant=True)
     ButtonRequestMsg = tuple[ButtonRequestType, str] | None
@@ -530,14 +531,16 @@ class Layout(Generic[T]):
             except Shutdown:
                 return
 
-    async def _handle_ipc_events(self) -> None:
-        try:
-            while True:
-                if io.ipc_has_message(2):
-                    self._event(self.layout.ipc_event)
-                await loop.sleep(10)
-        except Shutdown:
-            return
+    if utils.USE_IPC:
+
+        async def _handle_ipc_events(self) -> None:
+            ipc_check = loop.wait(io.IPC2_EVENT | io.POLL_READ)
+            try:
+                while True:
+                    msg: IpcMessage = await ipc_check
+                    self._event(self.layout.ipc_event, msg.fn, bytes(msg.data))
+            except Shutdown:
+                return
 
     if utils.USE_POWER_MANAGER:
 

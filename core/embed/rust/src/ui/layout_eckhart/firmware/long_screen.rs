@@ -1,5 +1,5 @@
 use crate::{
-    ipc::{IpcMessage, RemoteSysTask},
+    // ipc::{IpcMessage, RemoteSysTask},
     strutil::TString,
     ui::{
         cache::PageCache,
@@ -232,48 +232,68 @@ where
             self.request_page(0);
         }
 
-        if let Event::IPC(IpcEvent::Received) = event {
-            if let Some(message) = IpcMessage::try_receive(RemoteSysTask::Unknown(2)) {
-                debug_assert!(matches!(
-                    self.state,
-                    ContentState::Uninit | ContentState::Waiting(_)
-                ));
-                self.state = match self.state {
-                    ContentState::Uninit => {
-                        debug_assert!(message.id() == 0);
-                        self.cache.init(message.data());
-                        ctx.request_paint();
-                        if self.pager.has_next() {
-                            let idx = self.pager.next() as usize;
-                            self.request_page(idx);
-                            ContentState::Waiting(idx)
-                        } else {
-                            ContentState::Ready
-                        }
-                    }
-                    ContentState::Waiting(next_page)
-                        if self.pager.current() + 1 == next_page as u16 =>
-                    {
-                        debug_assert!(message.id() == next_page as u16);
-                        debug_assert!(self.cache.is_at_head());
-                        self.cache.push_head(message.data());
-                        ContentState::Ready
-                    }
-                    ContentState::Waiting(prev_page)
-                        if self.pager.current() == prev_page as u16 + 1 =>
-                    {
-                        debug_assert!(message.id() == prev_page as u16);
-                        debug_assert!(self.cache.is_at_tail());
-                        self.cache.push_tail(message.data());
-                        ContentState::Ready
-                    }
-                    _ => {
-                        unimplemented!("Unexpected page received");
-                    }
+        if let Event::IPC(IpcEvent::Received(id)) = event {
+            match self.state {
+                ContentState::Uninit => {
+                    debug_assert!(id == 0);
                 }
-            } else {
-                unimplemented!("Unexpected IPC message received");
+                ContentState::Waiting(next_page) => {
+                    debug_assert_eq!(id, next_page as u32);
+                }
+                _ => {
+                    unimplemented!("Unexpected page received");
+                }
             }
+
+            ctx.ipc_data().map(|data| {
+                self.cache.init(data);
+                ctx.request_paint();
+            });
+
+            // ctx.button_request()
+
+            // if let Some(message) =
+            // IpcMessage::try_receive(RemoteSysTask::Unknown(2)) {
+            //     debug_assert!(matches!(
+            //         self.state,
+            //         ContentState::Uninit | ContentState::Waiting(_)
+            //     ));
+            //     self.state = match self.state {
+            //         ContentState::Uninit => {
+            //             debug_assert!(message.id() == 0);
+            //             self.cache.init(message.data());
+            //             ctx.request_paint();
+            //             if self.pager.has_next() {
+            //                 let idx = self.pager.next() as usize;
+            //                 self.request_page(idx);
+            //                 ContentState::Waiting(idx)
+            //             } else {
+            //                 ContentState::Ready
+            //             }
+            //         }
+            //         ContentState::Waiting(next_page)
+            //             if self.pager.current() + 1 == next_page as u16 =>
+            //         {
+            //             debug_assert!(message.id() == next_page as u16);
+            //             debug_assert!(self.cache.is_at_head());
+            //             self.cache.push_head(message.data());
+            //             ContentState::Ready
+            //         }
+            //         ContentState::Waiting(prev_page)
+            //             if self.pager.current() == prev_page as u16 + 1 =>
+            //         {
+            //             debug_assert!(message.id() == prev_page as u16);
+            //             debug_assert!(self.cache.is_at_tail());
+            //             self.cache.push_tail(message.data());
+            //             ContentState::Ready
+            //         }
+            //         _ => {
+            //             unimplemented!("Unexpected page received");
+            //         }
+            //     }
+            // } else {
+            //     unimplemented!("Unexpected IPC message received");
+            // }
         }
 
         None
