@@ -30,15 +30,9 @@ async def get_delegated_identity_key(
         ValueError: If THP is enabled but the credential is missing or invalid.
     """
 
-    from trezorutils import delegated_identity
+    from .common import get_delegated_identity_key
 
     from trezor.messages import EvoluDelegatedIdentityKey
-
-    if isinstance(msg.rotation_index, int):
-        if msg.rotation_index < 0 or msg.rotation_index > ROTATION_INDEX_LIMIT:
-            raise ValueError(
-                f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
-            )
 
     if msg.rotate:
         await rotate_index()
@@ -49,7 +43,7 @@ async def get_delegated_identity_key(
             await confirm_no_thp()
 
     rotation_index = get_rotation_index(msg)
-    private_key = delegated_identity(
+    private_key = get_delegated_identity_key(
         rotation_index if rotation_index is not None else 0
     )
 

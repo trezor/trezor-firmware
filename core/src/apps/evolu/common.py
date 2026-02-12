@@ -5,21 +5,29 @@ if TYPE_CHECKING:
     from typing import Sequence
 
 
+def get_delegated_identity_key(delegated_identity_rotation_index: int) -> bytes:
+    from .index_management import ROTATION_INDEX_LIMIT
+    from trezorutils import delegated_identity
+    if delegated_identity_rotation_index < 0 or delegated_identity_rotation_index > ROTATION_INDEX_LIMIT:
+        raise ValueError(
+            f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
+        )
+    return delegated_identity(delegated_identity_rotation_index)
+
+
 def check_delegated_identity_proof(
     provided_proof: AnyBytes,
     delegated_identity_rotation_index: int,
     header: AnyBytes,
     arguments: Sequence[AnyBytes] | None = None,
 ) -> bool:
-    from trezorutils import delegated_identity
-
     from trezor.crypto.curve import nist256p1
     from trezor.crypto.hashlib import sha256
     from trezor.utils import HashWriter
 
     from apps.common.writers import write_compact_size
 
-    private_key = delegated_identity(delegated_identity_rotation_index)
+    private_key = get_delegated_identity_key(delegated_identity_rotation_index)
     public_key = get_public_key_from_private_key(private_key)
 
     hash_writer = HashWriter(sha256())
