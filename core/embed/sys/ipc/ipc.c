@@ -43,9 +43,9 @@ typedef struct {
 } ipc_queue_item_t;
 
 typedef struct {
-  uint8_t *ptr;
-  uint8_t *wptr;
-  uint8_t *rptr;
+  uint8_t* ptr;
+  uint8_t* wptr;
+  uint8_t* rptr;
   size_t size;
 } ipc_queue_t;
 
@@ -63,7 +63,7 @@ static ipc_driver_t g_ipc_driver = {
 static const syshandle_vmt_t g_ipc_handle_vmt;
 
 bool ipc_init(void) {
-  ipc_driver_t *drv = &g_ipc_driver;
+  ipc_driver_t* drv = &g_ipc_driver;
 
   if (drv->initialized) {
     return true;
@@ -73,7 +73,7 @@ bool ipc_init(void) {
 
   for (systask_id_t task_id = 0; task_id < SYSTASK_MAX_TASKS; task_id++) {
     syshandle_t handle = SYSHANDLE_IPC0 + task_id;
-    void *context = (void *)(uintptr_t)task_id;
+    void* context = (void*)(uintptr_t)task_id;
     if (!syshandle_register(handle, &g_ipc_handle_vmt, context)) {
       return false;
     }
@@ -83,8 +83,8 @@ bool ipc_init(void) {
   return true;
 }
 
-ipc_queue_t *ipc_queue(systask_id_t target, systask_id_t origin) {
-  ipc_driver_t *drv = &g_ipc_driver;
+ipc_queue_t* ipc_queue(systask_id_t target, systask_id_t origin) {
+  ipc_driver_t* drv = &g_ipc_driver;
 
   if (!drv->initialized) {
     return NULL;
@@ -97,9 +97,9 @@ ipc_queue_t *ipc_queue(systask_id_t target, systask_id_t origin) {
   return &drv->queue[target][origin];
 }
 
-bool ipc_register(systask_id_t remote, void *buffer, size_t size) {
+bool ipc_register(systask_id_t remote, void* buffer, size_t size) {
   systask_id_t target = systask_id(systask_active());
-  ipc_queue_t *queue = ipc_queue(target, remote);
+  ipc_queue_t* queue = ipc_queue(target, remote);
 
   if (queue == NULL) {
     return false;
@@ -123,16 +123,16 @@ bool ipc_register(systask_id_t remote, void *buffer, size_t size) {
 
 void ipc_unregister(systask_id_t remote) {
   systask_id_t target = systask_id(systask_active());
-  ipc_queue_t *queue = ipc_queue(target, remote);
+  ipc_queue_t* queue = ipc_queue(target, remote);
   if (queue != NULL) {
     memset(queue, 0, sizeof(ipc_queue_t));
   }
 }
 
-bool ipc_try_receive(ipc_message_t *msg) {
+bool ipc_has_message(systask_id_t remote) {
   systask_id_t target = systask_id(systask_active());
 
-  ipc_queue_t *queue = ipc_queue(target, msg->remote);
+  ipc_queue_t* queue = ipc_queue(target, remote);
 
   if (queue == NULL || queue->ptr == NULL) {
     // Invalid target or no queue registered
@@ -144,13 +144,23 @@ bool ipc_try_receive(ipc_message_t *msg) {
     return false;
   }
 
-  ipc_queue_item_t *item = (ipc_queue_item_t *)queue->rptr;
+  ipc_queue_item_t* item = (ipc_queue_item_t*)queue->rptr;
 
   if (queue->wptr - queue->rptr - sizeof(ipc_queue_item_t) <
       ALIGN_UP(item->size, IPC_DATA_ALIGNMENT)) {
     // Invalid item size
     return false;
   }
+  return true;
+}
+
+bool ipc_try_receive(ipc_message_t* msg) {
+  if (!ipc_has_message(msg->remote)) {
+    return false;
+  }
+
+  ipc_queue_t* queue = ipc_queue(systask_id(systask_active()), msg->remote);
+  ipc_queue_item_t* item = (ipc_queue_item_t*)queue->rptr;
 
   msg->fn = item->fn;
   msg->data = item->data;
@@ -163,21 +173,21 @@ bool ipc_try_receive(ipc_message_t *msg) {
   return true;
 }
 
-void ipc_message_free(ipc_message_t *msg) {
+void ipc_message_free(ipc_message_t* msg) {
   systask_id_t target = systask_id(systask_active());
 
-  ipc_queue_t *queue = ipc_queue(target, msg->remote);
+  ipc_queue_t* queue = ipc_queue(target, msg->remote);
 
   if (queue == NULL || queue->ptr == NULL) {
     // Invalid target or no queue registered
     return;
   }
 
-  ipc_queue_item_t *item = (ipc_queue_item_t *)queue->ptr;
-  ipc_queue_item_t *new_wptr = item;
+  ipc_queue_item_t* item = (ipc_queue_item_t*)queue->ptr;
+  ipc_queue_item_t* new_wptr = item;
 
-  while (item < (ipc_queue_item_t *)queue->wptr) {
-    size_t remaining_size = (uint8_t *)queue->wptr - (uint8_t *)item;
+  while (item < (ipc_queue_item_t*)queue->wptr) {
+    size_t remaining_size = (uint8_t*)queue->wptr - (uint8_t*)item;
 
     if (remaining_size < sizeof(ipc_queue_item_t) ||
         item->size > remaining_size - sizeof(ipc_queue_item_t)) {
@@ -195,25 +205,25 @@ void ipc_message_free(ipc_message_t *msg) {
     // Move to next item
     size_t item_size =
         ALIGN_UP(sizeof(ipc_queue_item_t) + item->size, IPC_DATA_ALIGNMENT);
-    item = (ipc_queue_item_t *)((uint8_t *)item + item_size);
+    item = (ipc_queue_item_t*)((uint8_t*)item + item_size);
 
     if (advance_wptr) {
       new_wptr = item;
     }
   }
 
-  queue->wptr = (uint8_t *)new_wptr;
+  queue->wptr = (uint8_t*)new_wptr;
 
   if (queue->wptr < queue->rptr) {
     queue->rptr = queue->wptr;
   }
 }
 
-bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
+bool ipc_send(systask_id_t remote, uint32_t fn, const void* data,
               size_t data_size) {
   systask_id_t origin = systask_id(systask_active());
 
-  ipc_queue_t *queue = ipc_queue(remote, origin);
+  ipc_queue_t* queue = ipc_queue(remote, origin);
 
   if (queue == NULL || queue->ptr == NULL) {
     // Invalid target or no queue registered
@@ -241,7 +251,7 @@ bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
       .size = data_size,
   };
 
-  ipc_queue_item_t *item = (ipc_queue_item_t *)queue->wptr;
+  ipc_queue_item_t* item = (ipc_queue_item_t*)queue->wptr;
   ipc_memcpy(item, &item_hdr, sizeof(item_hdr));
 
   if (data_size > 0) {
@@ -253,13 +263,13 @@ bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
   return true;
 }
 
-static void on_task_created(void *context, systask_id_t task_id) {
+static void on_task_created(void* context, systask_id_t task_id) {
   systask_id_t origin = (systask_id_t)(uintptr_t)context;
-  ipc_queue_t *queue = ipc_queue(task_id, origin);
+  ipc_queue_t* queue = ipc_queue(task_id, origin);
   memset(queue, 0, sizeof(ipc_queue_t));
 }
 
-static void on_event_poll(void *context, bool read_awaited,
+static void on_event_poll(void* context, bool read_awaited,
                           bool write_awaited) {
   systask_id_t origin = (systask_id_t)(uintptr_t)context;
 
@@ -271,13 +281,13 @@ static void on_event_poll(void *context, bool read_awaited,
   }
 }
 
-static bool on_check_read_ready(void *context, systask_id_t task_id,
-                                void *param) {
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
   systask_id_t origin = (systask_id_t)(uintptr_t)context;
 
   UNUSED(param);
 
-  ipc_queue_t *queue = ipc_queue(task_id, origin);
+  ipc_queue_t* queue = ipc_queue(task_id, origin);
   return (queue != NULL && queue->rptr < queue->wptr);
 }
 

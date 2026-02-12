@@ -10,6 +10,13 @@ def ipc_send(remote: int, fn: int, data: AnyBytes) -> None:
 
 
 # upymod/modtrezorio/modtrezorio-ipc.h
+def ipc_has_message(remote: int) -> bool:
+    """
+    Checks if there are pending IPC messages from the specified remote task.
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ipc.h
 class IpcMessage(NamedTuple):
     """
     IPC message structure.

@@ -8,6 +8,7 @@ use crate::{
             text::{layout::LayoutFit, LineBreaking},
             Component, Event, EventCtx, Never, TextLayout,
         },
+        event::IpcEvent,
         geometry::Rect,
         shape::Renderer,
         util::Pager,
@@ -60,16 +61,16 @@ where
         }
     }
 
-    fn switch_next(&mut self, ctx: &mut EventCtx) {
+    fn switch_next(&mut self) {
         debug_assert!(!self.content.pager.is_last());
-        self.content.switch_next(ctx);
+        self.content.switch_next();
         self.hint.update(self.content.pager());
         self.action_bar.update(self.content.pager());
     }
 
-    fn switch_prev(&mut self, ctx: &mut EventCtx) {
+    fn switch_prev(&mut self) {
         debug_assert!(!self.content.pager.is_first());
-        self.content.switch_prev(ctx);
+        self.content.switch_prev();
         self.hint.update(self.content.pager());
         self.action_bar.update(self.content.pager());
     }
@@ -106,12 +107,12 @@ where
                 ActionBarMsg::Cancelled => return Some(LongContentScreenMsg::Cancelled),
                 ActionBarMsg::Next => {
                     debug_assert!(!self.content.pager.is_last());
-                    self.switch_next(ctx);
+                    self.switch_next();
                     return None;
                 }
                 ActionBarMsg::Prev => {
                     debug_assert!(!self.content.pager.is_first());
-                    self.switch_prev(ctx);
+                    self.switch_prev();
                     return None;
                 }
             }
@@ -171,7 +172,7 @@ where
         self.pager
     }
 
-    fn switch_next(&mut self, ctx: &mut EventCtx) {
+    fn switch_next(&mut self) {
         debug_assert!(!self.pager.is_last());
         debug_assert!(matches!(self.state, ContentState::Ready));
         self.pager.goto_next();
@@ -179,12 +180,12 @@ where
 
         if self.pager.has_next() && self.cache.is_at_head() {
             let next = self.pager.next() as usize;
-            self.request_page(ctx, next);
+            self.request_page(next);
             self.state = ContentState::Waiting(next);
         }
     }
 
-    fn switch_prev(&mut self, ctx: &mut EventCtx) {
+    fn switch_prev(&mut self) {
         debug_assert!(!self.pager.is_first());
         debug_assert!(matches!(self.state, ContentState::Ready));
         self.pager.goto_prev();
@@ -192,12 +193,12 @@ where
 
         if self.pager.has_prev() && self.cache.is_at_tail() {
             let prev = self.pager.prev() as usize;
-            self.request_page(ctx, prev);
+            self.request_page(prev);
             self.state = ContentState::Waiting(prev);
         }
     }
 
-    fn request_page(&self, ctx: &mut EventCtx, idx: usize) {
+    fn request_page(&self, idx: usize) {
         let data = UtilEnum::RequestPage { idx };
 
         let mut arena = [MaybeUninit::<u8>::uninit(); 200];
@@ -211,7 +212,6 @@ where
         .unwrap();
 
         (self.request_cb)(&bytes, idx as u16);
-        ctx.request_anim_frame();
     }
 }
 
@@ -229,10 +229,10 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if matches!(event, Event::Attach(AttachType::Initial)) {
             debug_assert!(self.state == ContentState::Uninit);
-            self.request_page(ctx, 0);
+            self.request_page(0);
         }
 
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+        if let Event::IPC(IpcEvent::Received) = event {
             if let Some(message) = IpcMessage::try_receive(RemoteSysTask::Unknown(2)) {
                 debug_assert!(matches!(
                     self.state,
@@ -245,7 +245,7 @@ where
                         ctx.request_paint();
                         if self.pager.has_next() {
                             let idx = self.pager.next() as usize;
-                            self.request_page(ctx, idx);
+                            self.request_page(idx);
                             ContentState::Waiting(idx)
                         } else {
                             ContentState::Ready
@@ -272,7 +272,7 @@ where
                     }
                 }
             } else {
-                ctx.request_anim_frame();
+                unimplemented!("Unexpected IPC message received");
             }
         }
 

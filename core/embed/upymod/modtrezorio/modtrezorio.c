@@ -41,7 +41,7 @@ uint32_t last_touch_sample_time = 0;
 
 #define CHECK_PARAM_RANGE(value, minimum, maximum) \
   if (value < minimum || value > maximum) {        \
-    const char *msg = (#value " is out of range"); \
+    const char* msg = (#value " is out of range"); \
     mp_raise_ValueError((mp_rom_error_text_t)msg); \
   }
 
@@ -139,6 +139,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #ifdef USE_IPC
     {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},
     {MP_ROM_QSTR(MP_QSTR_ipc_send), MP_ROM_PTR(&mod_trezorio_ipc_send_obj)},
+    {MP_ROM_QSTR(MP_QSTR_ipc_has_message),
+     MP_ROM_PTR(&mod_trezorio_ipc_has_message_obj)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezorio_USB_type)},
     {MP_ROM_QSTR(MP_QSTR_USBIF), MP_ROM_PTR(&mod_trezorio_USBIF_type)},
@@ -158,7 +160,7 @@ STATIC MP_DEFINE_CONST_DICT(mp_module_trezorio_globals,
 
 const mp_obj_module_t mp_module_trezorio = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mp_module_trezorio_globals,
+    .globals = (mp_obj_dict_t*)&mp_module_trezorio_globals,
 };
 
 MP_REGISTER_MODULE(MP_QSTR_trezorio, mp_module_trezorio);
