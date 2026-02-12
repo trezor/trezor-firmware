@@ -24,16 +24,16 @@
 #include <libtropic.h>
 <%
 def all_except(selected_bits: list[int]) -> str:
-    if len(selected_bits) == 0:
-        return "~0U,"
-    else:
-        return f"~0U & " + " & ".join(f"~BIT({b})" for b in sorted(selected_bits)) + ","
+    result = 0xFFFFFFFF
+    for bit in selected_bits:
+        result &= ~(1 << bit)
+    return f"0x{result:08X}U,"
 
 def bits(selected_bits: list[int]) -> str:
-    if len(selected_bits) == 0:
-        return "0,"
-    else:
-        return " | ".join(f"BIT({b})" for b in sorted(selected_bits)) + ","
+    result = 0
+    for bit in selected_bits:
+        result |= (1 << bit)
+    return f"0x{result:08X}U," if result != 0 else "0,"
 
 def get_uap_all_except(configs, category):
     selected_bits = []
