@@ -1565,6 +1565,8 @@ pub enum TranslatedString {
     ethereum__eip_7702_title = 1176,  // "Smart accounts"
     #[cfg(feature = "universal_fw")]
     ethereum__eip_7702 = 1177,  // {"Bolt": "Authorize the following contract as an EIP-7702 on your account", "Caesar": "Authorize the following contract as an EIP-7702 on your account", "Delizia": "Authorize the following contract as an EIP-7702 on your account?", "Eckhart": "Authorize the following contract as an EIP-7702 on your account?"}
+    words__confirm_all = 1178,  // "Confirm all"
+    words__show_next = 1179,  // "Show next"
 }
 
 impl TranslatedString {
@@ -2750,6 +2752,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -3933,6 +3937,8 @@ impl TranslatedString {
                 21574,
                 21588,
                 21651,
+                21662,
+                21671,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5115,6 +5121,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6298,6 +6306,8 @@ impl TranslatedString {
                 21574,
                 21588,
                 21651,
+                21662,
+                21671,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7480,6 +7490,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8663,6 +8675,8 @@ impl TranslatedString {
                 21574,
                 21588,
                 21651,
+                21662,
+                21671,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -9845,6 +9859,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11028,6 +11044,8 @@ impl TranslatedString {
                 21574,
                 21588,
                 21651,
+                21662,
+                21671,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12211,6 +12229,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13394,6 +13414,8 @@ impl TranslatedString {
                 18687,
                 18701,
                 18764,
+                18775,
+                18784,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14576,6 +14598,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15759,6 +15783,8 @@ impl TranslatedString {
                 18687,
                 18701,
                 18764,
+                18775,
+                18784,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -16941,6 +16967,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18124,6 +18152,8 @@ impl TranslatedString {
                 18687,
                 18701,
                 18764,
+                18775,
+                18784,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19306,6 +19336,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20489,6 +20521,8 @@ impl TranslatedString {
                 18687,
                 18701,
                 18764,
+                18775,
+                18784,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -21672,6 +21706,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account?",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -22855,6 +22891,8 @@ impl TranslatedString {
                 20575,
                 20589,
                 20653,
+                20664,
+                20673,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24037,6 +24075,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account?",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25220,6 +25260,8 @@ impl TranslatedString {
                 20575,
                 20589,
                 20653,
+                20664,
+                20673,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -26402,6 +26444,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account?",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27585,6 +27629,8 @@ impl TranslatedString {
                 20575,
                 20589,
                 20653,
+                20664,
+                20673,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -28767,6 +28813,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account?",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29950,6 +29998,8 @@ impl TranslatedString {
                 20575,
                 20589,
                 20653,
+                20664,
+                20673,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -31133,6 +31183,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account?",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -32316,6 +32368,8 @@ impl TranslatedString {
                 21330,
                 21344,
                 21408,
+                21419,
+                21428,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -33498,6 +33552,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account?",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34681,6 +34737,8 @@ impl TranslatedString {
                 21330,
                 21344,
                 21408,
+                21419,
+                21428,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -35863,6 +35921,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account?",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37046,6 +37106,8 @@ impl TranslatedString {
                 21330,
                 21344,
                 21408,
+                21419,
+                21428,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -38228,6 +38290,8 @@ impl TranslatedString {
                 "Fee limit",
                 "Smart accounts",
                 "Authorize the following contract as an EIP-7702 on your account?",
+                "Confirm all",
+                "Show next",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39411,6 +39475,8 @@ impl TranslatedString {
                 21330,
                 21344,
                 21408,
+                21419,
+                21428,
             ];
 
         }
@@ -40902,6 +40968,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__comm_trouble, Self::words__comm_trouble),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
+        (Qstr::MP_QSTR_words__confirm_all, Self::words__confirm_all),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
         (Qstr::MP_QSTR_words__connect, Self::words__connect),
         (Qstr::MP_QSTR_words__connected, Self::words__connected),
@@ -40949,6 +41016,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__send, Self::words__send),
         (Qstr::MP_QSTR_words__set, Self::words__set),
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
+        (Qstr::MP_QSTR_words__show_next, Self::words__show_next),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),
         (Qstr::MP_QSTR_words__signer, Self::words__signer),
         (Qstr::MP_QSTR_words__swap, Self::words__swap),

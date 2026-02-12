@@ -993,6 +993,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__chain;
   MP_QSTR_words__comm_trouble;
   MP_QSTR_words__confirm;
+  MP_QSTR_words__confirm_all;
   MP_QSTR_words__confirm_fee;
   MP_QSTR_words__connect;
   MP_QSTR_words__connected;
@@ -1040,6 +1041,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__send;
   MP_QSTR_words__set;
   MP_QSTR_words__settings;
+  MP_QSTR_words__show_next;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
   MP_QSTR_words__swap;
