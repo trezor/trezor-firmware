@@ -355,7 +355,14 @@ impl FirmwareUI for UIEckhart {
             None
         };
         let extra_paragraphs = if let Some(items) = extra_items {
-            Some(PropsList::new(items)?)
+            Some(PropsList::new_styled(
+                items,
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_MEDIUM_LIGHT,
+                &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            )?)
         } else {
             None
         };
