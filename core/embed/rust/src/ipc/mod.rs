@@ -122,6 +122,10 @@ impl<'a> IpcMessage<'a> {
         }
     }
 
+    pub fn has_message(remote: RemoteSysTask) -> bool {
+        unsafe { ffi::ipc_has_message(remote.into()) }
+    }
+
     pub fn try_receive(remote: RemoteSysTask) -> Option<Self> {
         let mut lowlevel_message = ffi::ipc_message_t {
             remote: remote.into(),

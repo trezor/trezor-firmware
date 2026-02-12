@@ -31,7 +31,7 @@ typedef struct {
   // Function code with flags (IPC_FN_xxx)
   uint32_t fn;
   // Pointer to the message payload data
-  const void *data;
+  const void* data;
   // Size of the payload data
   size_t size;
 } ipc_message_t;
@@ -62,7 +62,7 @@ bool ipc_init(void);
  * @return true if the buffer was successfully registered
  *
  */
-bool ipc_register(systask_id_t remote, void *buffer, size_t size);
+bool ipc_register(systask_id_t remote, void* buffer, size_t size);
 
 /**
  * @brief Unregisters the IPC message buffer for the given task ID.
@@ -73,13 +73,21 @@ bool ipc_register(systask_id_t remote, void *buffer, size_t size);
 void ipc_unregister(systask_id_t remote);
 
 /**
+ * @brief Checks if there are any pending IPC messages from the specified task.
+ *
+ * @param remote The remote task ID to check for messages.
+ * @return true if there are pending messages, false otherwise
+ */
+bool ipc_has_message(systask_id_t remote);
+
+/**
  * @brief Attempts to receive an IPC message without blocking.
  *
  * @param msg Pointer to an `ipc_message_t` structure to store the received
  * message.
  * @return true if a message was received and stored in `msg`
  */
-bool ipc_try_receive(ipc_message_t *msg);
+bool ipc_try_receive(ipc_message_t* msg);
 
 /**
  * @brief Releases resources associated with a received IPC message.
@@ -89,7 +97,7 @@ bool ipc_try_receive(ipc_message_t *msg);
  *
  * @param msg Pointer to the freed `ipc_message_t` structure.
  */
-void ipc_message_free(ipc_message_t *msg);
+void ipc_message_free(ipc_message_t* msg);
 
 /**
  * @brief Sends an IPC message to the specified destination task.
@@ -105,5 +113,5 @@ void ipc_message_free(ipc_message_t *msg);
  *
  * @return true if the message was successfully sent
  */
-bool ipc_send(systask_id_t remote, uint32_t fn, const void *data,
+bool ipc_send(systask_id_t remote, uint32_t fn, const void* data,
               size_t data_size);

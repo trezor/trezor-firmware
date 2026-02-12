@@ -6,19 +6,19 @@ use alloc::string::ToString;
 use trezor_app_sdk::{Result, crypto, log, ui, util};
 
 pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
-    // let long_string: &str = "asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
-    // asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
-    // asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
-    // asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
-    // asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
-    // asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789";
-    // log::info!(
-    //     "string chars: {}, string bytes: {}",
-    //     long_string.chars().count(),
-    //     long_string.len()
-    // );
+    let long_string: &str = "asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
+    asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
+    asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
+    asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
+    asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789\
+    asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM0123456789";
+    log::info!(
+        "string chars: {}, string bytes: {}",
+        long_string.chars().count(),
+        long_string.len()
+    );
 
-    // ui::confirm_long_value("title", long_string)?;
+    ui::confirm_long_value("title", long_string)?;
 
     // TODO: Implement Ethereum public key retrieval"
     let mut public_key = EthereumPublicKey::default();

@@ -430,6 +430,7 @@ class Layout(Generic[T]):
             yield self._handle_touch_events()
         if utils.USE_BLE:
             yield self._handle_ble_events()
+        yield self._handle_ipc_events()
         if utils.USE_POWER_MANAGER:
             yield self._handle_power_manager()
 
@@ -528,6 +529,15 @@ class Layout(Generic[T]):
                     self._event(self.layout.ble_event, *event)
             except Shutdown:
                 return
+
+    async def _handle_ipc_events(self) -> None:
+        try:
+            while True:
+                if io.ipc_has_message(2):
+                    self._event(self.layout.ipc_event)
+                await loop.sleep(10)
+        except Shutdown:
+            return
 
     if utils.USE_POWER_MANAGER:
 

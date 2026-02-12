@@ -14,6 +14,8 @@ use num_traits::ToPrimitive;
 #[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
 
+use crate::ui::event::IpcEvent;
+
 #[cfg(feature = "button")]
 use crate::{
     trezorhal::button::{PhysicalButton, PhysicalButtonEvent},
@@ -412,7 +414,8 @@ impl LayoutObj {
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
                 Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
                 Qstr::MP_QSTR_usb_event => obj_fn_var!(2, 2, ui_layout_usb_event).as_obj(),
-                Qstr::MP_QSTR_ble_event => obj_fn_var!(3, 3, ui_layout_ble_event).as_obj(),
+                Qstr::MP_QSTR_ble_event => obj_fn_var!(2, 3, ui_layout_ble_event).as_obj(),
+                Qstr::MP_QSTR_ipc_event => obj_fn_var!(1, 1, ui_layout_ipc_event).as_obj(),
                 Qstr::MP_QSTR_pm_event => obj_fn_2!(ui_layout_pm_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
@@ -572,6 +575,20 @@ extern "C" fn ui_layout_ble_event(n_args: usize, args: *const Obj) -> Obj {
 #[cfg(not(feature = "ble"))]
 extern "C" fn ui_layout_ble_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
+}
+
+extern "C" fn ui_layout_ipc_event(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 1 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+
+        let event = IpcEvent::new()?;
+        let msg = this.inner_mut().obj_event(Event::IPC(event))?;
+        Ok(msg)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
 #[cfg(feature = "power_manager")]

@@ -586,6 +586,7 @@ fn generate_ipc_bindings() {
         .allowlist_function("ipc_send")
         .allowlist_function("ipc_message_free")
         .allowlist_function("ipc_try_receive")
+        .allowlist_function("ipc_has_message")
         .allowlist_function("ipc_register")
         .allowlist_function("ipc_unregister")
         .allowlist_type("ipc_message_t")

@@ -1507,6 +1507,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///         def ble_event(self, event: int, data: bytes) -> LayoutState | None:
     ///             """Receive a BLE events."""
     ///
+    ///     def ipc_event(self) -> LayoutState | None:
+    ///         """Signal an incoming IPC message."""
+    ///
     ///     if utils.USE_POWER_MANAGER:
     ///         def pm_event(self, flags: int) -> LayoutState | None:
     ///             """Receive a power management event with packed flags."""

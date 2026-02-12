@@ -15,6 +15,7 @@ use crate::{
 
 #[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
+use crate::ui::event::IpcEvent;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "power_manager")]
@@ -327,6 +328,7 @@ pub enum Event {
     Touch(TouchEvent),
     #[cfg(feature = "ble")]
     BLE(BLEEvent),
+    IPC(IpcEvent),
     #[cfg(feature = "power_manager")]
     PM(PMEvent),
     USBWire,
