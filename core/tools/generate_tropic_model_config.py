@@ -60,7 +60,9 @@ def get_tropic_configuration(path: Path) -> dict:
             numbers["i_config"][category] = number
         else:
             for i in range(4):
-                for details in config["irreversible_configuration"][category]["setting"][f"pairing_key_{i}"].values():
+                for details in config["irreversible_configuration"][category][
+                    "setting"
+                ][f"pairing_key_{i}"].values():
                     if not details["value"]:
                         number &= ~(1 << details["bit"])
             numbers["i_config"][category] = number
@@ -76,7 +78,9 @@ def get_tropic_configuration(path: Path) -> dict:
             numbers["r_config"][category] = number
         else:
             for i in range(4):
-                for details in config["reversible_configuration"][category]["setting"][f"pairing_key_{i}"].values():
+                for details in config["reversible_configuration"][category]["setting"][
+                    f"pairing_key_{i}"
+                ].values():
                     if details["value"]:
                         number |= 1 << details["bit"]
             numbers["r_config"][category] = number
@@ -197,8 +201,7 @@ def generate_config(check: bool) -> None:
         if not DEST_PATH.exists():
             print(f"{DEST_PATH} missing")
             raise click.ClickException("Config file is missing")
-        elif config != DEST_PATH.read_text():
-            print(f"{DEST_PATH} is out of date")
+        elif (HEADER + config) != DEST_PATH.read_text():
             raise click.ClickException("Config file is out of date")
         for extra_file in EXTRA_FILES:
             extra_file_dest = CONFIG_DIR / extra_file.name

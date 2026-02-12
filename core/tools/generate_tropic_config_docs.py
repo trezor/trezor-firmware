@@ -70,13 +70,13 @@ def json_to_markdown(json_filename: Path, md_filename: Path) -> None:
                     print_value_lines(value_lines, md_file)
 
                 else:
-                    value_lines = [
-                        ["Setting"] + [f"Pairing Key {i}" for i in range(4)]
-                    ]
-                    for value_name in details["setting"]['pairing_key_0'].keys():
+                    value_lines = [["Setting"] + [f"Pairing Key {i}" for i in range(4)]]
+                    for value_name in details["setting"]["pairing_key_0"].keys():
                         value_line = [f"{value_name.upper()}"]
                         for key in range(4):
-                            values = details["setting"][f"pairing_key_{key}"][value_name]
+                            values = details["setting"][f"pairing_key_{key}"][
+                                value_name
+                            ]
                             bit = values["bit"]
                             value = "1" if values["value"] else "0"
                             value_line.append(f"{value} (bit {bit})")
