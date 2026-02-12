@@ -25,6 +25,7 @@ use super::super::{
         ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
+    flow,
     flow::util::content_menu_info,
     theme::{self, gradient::Gradient},
 };
@@ -35,8 +36,10 @@ const MENU_ITEM_ACCOUNT_INFO: usize = 2;
 
 const TIMEOUT: Duration = Duration::from_secs(2);
 
+// TODO: this should eventually disappear as we will use external menu
+// everywhere
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum ConfirmSummary {
+pub enum ConfirmSummaryWithMenu {
     Summary,
     Menu,
     ExtraInfo,
@@ -45,7 +48,7 @@ pub enum ConfirmSummary {
     Cancelled,
 }
 
-impl FlowController for ConfirmSummary {
+impl FlowController for ConfirmSummaryWithMenu {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -85,7 +88,16 @@ pub fn new_confirm_summary(
     extra_paragraphs: Option<PropsList>,
     verb_cancel: Option<TString<'static>>,
     back_button: bool,
+    external_menu: bool,
 ) -> Result<SwipeFlow, error::Error> {
+    if external_menu
+        && (account_title.is_some()
+            || account_paragraphs.is_some()
+            || extra_title.is_some()
+            || extra_paragraphs.is_some())
+    {
+        return Err(error::Error::NotImplementedError);
+    }
     // Summary
     let mut summary_paragraphs = ParagraphVecShort::new();
     if let Some(amount_label) = amount_label {
@@ -123,7 +135,8 @@ pub fn new_confirm_summary(
             .with_placement(LinearPlacement::vertical()),
     )
     .with_header(Header::new(title).with_menu_button())
-    .with_flow_menu()
+    .with_flow_menu(!external_menu)
+    .with_external_menu(external_menu)
     .with_action_bar(if back_button {
         ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), confirm_button)
     } else {
@@ -142,6 +155,10 @@ pub fn new_confirm_summary(
         }),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
     });
+
+    if external_menu {
+        return flow::util::single_page(content_summary);
+    }
 
     // Menu
     let mut menu = VerticalMenu::<ShortMenuVec>::empty();
@@ -224,13 +241,13 @@ pub fn new_confirm_summary(
     .with_page_limit(1)
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?;
-    res.add_page(&ConfirmSummary::Summary, content_summary)?
-        .add_page(&ConfirmSummary::Menu, content_menu)?
-        .add_page(&ConfirmSummary::ExtraInfo, content_extra)?
-        .add_page(&ConfirmSummary::AccountInfo, content_account)?
-        .add_page(&ConfirmSummary::Cancel, content_cancel)?
-        .add_page(&ConfirmSummary::Cancelled, content_cancelled)?;
+    let mut res = SwipeFlow::new(&ConfirmSummaryWithMenu::Summary)?;
+    res.add_page(&ConfirmSummaryWithMenu::Summary, content_summary)?
+        .add_page(&ConfirmSummaryWithMenu::Menu, content_menu)?
+        .add_page(&ConfirmSummaryWithMenu::ExtraInfo, content_extra)?
+        .add_page(&ConfirmSummaryWithMenu::AccountInfo, content_account)?
+        .add_page(&ConfirmSummaryWithMenu::Cancel, content_cancel)?
+        .add_page(&ConfirmSummaryWithMenu::Cancelled, content_cancelled)?;
 
     Ok(res)
 }

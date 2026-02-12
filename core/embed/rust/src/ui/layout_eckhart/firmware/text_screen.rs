@@ -131,13 +131,13 @@ where
     // Once we have eventually replaced all these with new style "external menu",
     // we should get rid of this flag and the related debuglink code.
     #[cfg(feature = "ui_debug")]
-    pub fn with_flow_menu(mut self) -> Self {
+    pub fn with_flow_menu(mut self, has_flow_menu: bool) -> Self {
         // Allow visiting this menu automatically by tests
-        self.has_flow_menu = true;
+        self.has_flow_menu = has_flow_menu;
         self
     }
     #[cfg(not(feature = "ui_debug"))]
-    pub fn with_flow_menu(self) -> Self {
+    pub fn with_flow_menu(self, _has_flow_menu: bool) -> Self {
         self
     }
 
@@ -403,6 +403,8 @@ where
             t.int("page_limit", page_limit as i64);
         }
         t.int("page_count", self.content.pager().total() as i64);
+
+        debug_assert!(!(self.external_menu && self.has_flow_menu));
         t.bool("has_menu", self.external_menu);
         t.bool("has_flow_menu", self.has_flow_menu);
     }

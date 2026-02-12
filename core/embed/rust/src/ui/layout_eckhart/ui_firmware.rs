@@ -346,7 +346,7 @@ impl FirmwareUI for UIEckhart {
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         back_button: bool,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
@@ -372,6 +372,7 @@ impl FirmwareUI for UIEckhart {
             extra_paragraphs,
             verb_cancel,
             back_button,
+            external_menu,
         )?;
         Ok(flow)
     }
