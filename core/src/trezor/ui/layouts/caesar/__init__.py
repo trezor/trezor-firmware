@@ -23,6 +23,7 @@ CANCELLED = trezorui_api.CANCELLED
 INFO = trezorui_api.INFO
 
 DOWN_ARROW = "V"
+INFO_ICON = "i"
 BR_CODE_OTHER = ButtonRequestType.Other  # global_import_cache
 
 
@@ -605,7 +606,7 @@ async def confirm_payment_request(
             title=title,
             items=[(TR.words__provider, True), (recipient_name, False)],
             verb=TR.buttons__continue,
-            verb_info=TR.buttons__info,
+            verb_info=INFO_ICON,
             external_menu=True,
         )
 
@@ -721,13 +722,15 @@ async def should_show_more(
     Raises ActionCancelled if the user cancels.
     """
 
+    if button_text != DOWN_ARROW:
+        button_text = INFO_ICON
     result = await interact(
         trezorui_api.confirm_with_info(
             title=title,
             items=para,
             verb=confirm or TR.buttons__confirm,
             verb_cancel=verb_cancel,
-            verb_info=button_text or TR.buttons__show_all,  # unused on caesar
+            verb_info=button_text,  # use info icon by default
         ),
         br_name,
         br_code,
@@ -967,7 +970,7 @@ def confirm_value(
         title=title,
         items=((value, False),),
         verb=verb or TR.buttons__confirm,
-        verb_info=TR.buttons__info,
+        verb_info=INFO_ICON,
         external_menu=True,
     )
 
