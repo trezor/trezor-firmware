@@ -39,9 +39,6 @@ ssize_t dbg_console_write(const void* data, size_t data_size);
 #endif
 
 typedef struct {
-  int (*hdnode_deserialize_public)(const char* str, uint32_t version,
-                                   const char* curve, HDNode* node,
-                                   uint32_t* fingerprint);
 } trezor_crypto_v1_t;
 
 typedef struct {

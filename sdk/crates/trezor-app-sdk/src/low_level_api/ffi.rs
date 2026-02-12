@@ -120,64 +120,7 @@ pub struct trezor_api_v1_t {
 
 /// Trezor crypto v1 function pointers
 #[repr(C)]
-pub struct trezor_crypto_v1_t {
-    pub hdnode_deserialize_public: unsafe extern "C" fn(
-        str_: *const cty::c_char,
-        version: u32,
-        curve: *const cty::c_char,
-        node: *mut HDNode,
-        fingerprint: *mut u32,
-    ) -> core::ffi::c_int,
-}
-
-pub type HasherType = core::ffi::c_uint;
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bignum256 {
-    pub val: [u32; 9usize],
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct curve_point {
-    pub x: bignum256,
-    pub y: bignum256,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct ecdsa_curve {
-    pub prime: bignum256,
-    pub G: curve_point,
-    pub order: bignum256,
-    pub order_half: bignum256,
-    pub a: core::ffi::c_int,
-    pub b: bignum256,
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct curve_info {
-    pub bip32_name: *const core::ffi::c_char,
-    pub params: *const ecdsa_curve,
-    pub hasher_base58: HasherType,
-    pub hasher_sign: HasherType,
-    pub hasher_pubkey: HasherType,
-    pub hasher_script: HasherType,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct HDNode {
-    pub depth: u32,
-    pub child_num: u32,
-    pub chain_code: [u8; 32usize],
-    pub private_key: [u8; 32usize],
-    pub private_key_extension: [u8; 32usize],
-    pub public_key: [u8; 33usize],
-    pub is_public_key_set: bool,
-    pub curve: *const curve_info,
-}
+pub struct trezor_crypto_v1_t {}
 
 unsafe impl Sync for trezor_api_v1_t {}
 unsafe impl Sync for trezor_crypto_v1_t {}

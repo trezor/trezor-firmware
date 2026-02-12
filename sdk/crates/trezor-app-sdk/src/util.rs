@@ -3,7 +3,7 @@ extern crate alloc;
 use ufmt::derive::uDebug;
 
 use crate::sysevent::SysEvents;
-use crate::{HDNode, bignum256, curve_info, ecdsa_curve, low_level_api};
+use crate::{log, low_level_api};
 
 #[derive(uDebug, Copy, Clone, PartialEq, Eq)]
 pub struct Timeout(u32);
@@ -70,51 +70,48 @@ impl<'a> AsRef<str> for SliceWriter<'a> {
     }
 }
 
-pub fn hdnode_deserialize_public(serialized: &str, version: u32) -> Result<(HDNode, u32), ()> {
-    let mut params = ecdsa_curve {
-        prime: bignum256 { val: [0u32; 9] },
-        G: crate::low_level_api::ffi::curve_point {
-            x: bignum256 { val: [0u32; 9] },
-            y: bignum256 { val: [0u32; 9] },
-        },
-        order: bignum256 { val: [0u32; 9] },
-        order_half: bignum256 { val: [0u32; 9] },
-        a: 0,
-        b: bignum256 { val: [0u32; 9] },
-    };
+pub struct HdNodeData {
+    pub depth: u32,
+    pub fingerprint: u32,
+    pub child_num: u32,
+    pub chain_code: [u8; 32],
+    pub public_key: [u8; 33],
+}
 
-    let curve_info = curve_info {
-        bip32_name: b"secp256k1\0".as_ptr() as *const core::ffi::c_char,
-        params: &params,
-        hasher_base58: 0,
-        hasher_sign: 0,
-        hasher_pubkey: 0,
-        hasher_script: 0,
-    };
+pub fn hdnode_deserialize_public(serialized: &str, version: u32) -> Result<HdNodeData, i32> {
+    let mut node_data = [0u8; 82];
 
-    let mut node = HDNode {
-        depth: 0,
-        child_num: 0,
-        chain_code: [0u8; 32],
-        private_key: [0u8; 32],
-        public_key: [0u8; 33],
-        private_key_extension: [0u8; 32],
-        is_public_key_set: false,
-        curve: &curve_info,
-    };
-    let mut fingerprint: u32 = 0;
-    let result = low_level_api::hdnode_deserialize_public(
-        serialized.as_ptr() as *const core::ffi::c_char,
-        version,
-        b"secp256k1\0".as_ptr() as *const core::ffi::c_char,
-        &mut node,
-        &mut fingerprint,
-    );
-    if result == 0 {
-        Ok((node, fingerprint))
-    } else {
-        Err(())
+    let decoded = bs58::decode(serialized).onto(&mut node_data).unwrap();
+    if decoded != 82 {
+        return Err(-1); // decode failed
     }
+
+    log::info!("decoded len {}", decoded);
+
+    // Check version
+    let ver = u32::from_be_bytes(node_data[0..4].try_into().unwrap());
+    if ver != version {
+        return Err(-3); // invalid version
+    }
+
+    // Extract fields from node_data
+    let depth = node_data[4];
+    let fingerprint = u32::from_be_bytes(node_data[5..9].try_into().unwrap());
+    let child_num = u32::from_be_bytes(node_data[9..13].try_into().unwrap());
+
+    let mut chain_code = [0u8; 32];
+    chain_code.copy_from_slice(&node_data[13..45]);
+
+    let mut public_key = [0u8; 33];
+    public_key.copy_from_slice(&node_data[45..78]);
+
+    Ok(HdNodeData {
+        depth: depth as u32,
+        fingerprint,
+        child_num,
+        chain_code,
+        public_key,
+    })
 }
 
 pub fn hex_encode(bytes: &[u8]) -> alloc::string::String {
