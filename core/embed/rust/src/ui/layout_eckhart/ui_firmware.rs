@@ -1529,7 +1529,11 @@ impl FirmwareUI for UIEckhart {
                         // subtitle is already quite prominent
                         &theme::TEXT_SMALL_LIGHT
                     },
-                    header,
+                    if header != title {
+                        header
+                    } else {
+                        TString::empty()
+                    },
                 )
                 .no_break();
                 if !first_item_is_address.unwrap_or(false) {
