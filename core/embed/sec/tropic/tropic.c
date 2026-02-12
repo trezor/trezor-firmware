@@ -1010,7 +1010,6 @@ secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
     goto cleanup;
   }
 
-
   lt_handle_t *tropic_handle = tropic_get_handle();
   if (!tropic_handle) {
     goto cleanup;

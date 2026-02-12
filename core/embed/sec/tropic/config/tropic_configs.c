@@ -1,6 +1,6 @@
 // generated from `tropic_configs.json` by `tropic_configs.c.mako`
 // (by running `make templates` in `core`)
-// do not edit manually!
+// Do not edit manually!
 
 /*
  * This file is part of the Trezor project, https://trezor.io/
@@ -22,6 +22,9 @@
  */
 
 #include <libtropic.h>
+
+// See the documentation of Tropic configurations in
+// `docs/core/misc/tropic_configs.md` for more details.
 
 // clang-format off
 const struct lt_config_t g_irreversible_configuration = {

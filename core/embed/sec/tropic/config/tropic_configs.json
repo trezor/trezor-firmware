@@ -2204,26 +2204,26 @@
         "cfg_uap_eddsa_sign": {
           "address": "0x144",
           "setting": {
-            "eddsa_ecckey_0_7": {
+            "eddsa_ecckey_slot_0_7": {
               "value": false,
               "bit": 0
             },
-            "eddsa_ecckey_8_15": {
+            "eddsa_ecckey_slot_8_15": {
               "value": false,
               "bit": 8
             },
-            "eddsa_ecckey_16_23": {
+            "eddsa_ecckey_slot_16_23": {
               "value": false,
               "bit": 16
             },
-            "eddsa_ecckey_24_31": {
+            "eddsa_ecckey_slot_24_31": {
               "value": false,
               "bit": 24
             }
           }
         },
         "cfg_uap_mcounter_init": {
-          "address": "0x148",
+          "address": "0x150",
           "setting": {
             "mcounter_init_0_3": {
               "value": false,
@@ -2608,26 +2608,26 @@
         "cfg_uap_eddsa_sign": {
           "address": "0x144",
           "setting": {
-            "eddsa_ecckey_0_7": {
+            "eddsa_ecckey_slot_0_7": {
               "value": false,
               "bit": 1
             },
-            "eddsa_ecckey_8_15": {
+            "eddsa_ecckey_slot_8_15": {
               "value": true,
               "bit": 9
             },
-            "eddsa_ecckey_16_23": {
+            "eddsa_ecckey_slot_16_23": {
               "value": true,
               "bit": 17
             },
-            "eddsa_ecckey_24_31": {
+            "eddsa_ecckey_slot_24_31": {
               "value": true,
               "bit": 25
             }
           }
         },
         "cfg_uap_mcounter_init": {
-          "address": "0x148",
+          "address": "0x150",
           "setting": {
             "mcounter_init_0_3": {
               "value": false,
@@ -3012,26 +3012,26 @@
         "cfg_uap_eddsa_sign": {
           "address": "0x144",
           "setting": {
-            "eddsa_ecckey_0_7": {
+            "eddsa_ecckey_slot_0_7": {
               "value": true,
               "bit": 2
             },
-            "eddsa_ecckey_8_15": {
+            "eddsa_ecckey_slot_8_15": {
               "value": true,
               "bit": 10
             },
-            "eddsa_ecckey_16_23": {
+            "eddsa_ecckey_slot_16_23": {
               "value": true,
               "bit": 18
             },
-            "eddsa_ecckey_24_31": {
+            "eddsa_ecckey_slot_24_31": {
               "value": true,
               "bit": 26
             }
           }
         },
         "cfg_uap_mcounter_init": {
-          "address": "0x148",
+          "address": "0x150",
           "setting": {
             "mcounter_init_0_3": {
               "value": true,
@@ -3416,26 +3416,26 @@
         "cfg_uap_eddsa_sign": {
           "address": "0x144",
           "setting": {
-            "eddsa_ecckey_0_7": {
+            "eddsa_ecckey_slot_0_7": {
               "value": false,
               "bit": 3
             },
-            "eddsa_ecckey_8_15": {
+            "eddsa_ecckey_slot_8_15": {
               "value": false,
               "bit": 11
             },
-            "eddsa_ecckey_16_23": {
+            "eddsa_ecckey_slot_16_23": {
               "value": false,
               "bit": 19
             },
-            "eddsa_ecckey_24_31": {
+            "eddsa_ecckey_slot_24_31": {
               "value": false,
               "bit": 27
             }
           }
         },
         "cfg_uap_mcounter_init": {
-          "address": "0x148",
+          "address": "0x150",
           "setting": {
             "mcounter_init_0_3": {
               "value": false,
