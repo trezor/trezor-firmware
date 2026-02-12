@@ -851,7 +851,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or f"{TR.words__amount}:"  # def_arg
+    description = description or TR.words__amount  # def_arg
     return confirm_value(
         title,
         amount,
@@ -1071,9 +1071,9 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
 
         if is_send:
-            description = f"{TR.words__recipient}:"
+            description = TR.words__recipient
         else:
-            description = f"{TR.ethereum__interaction_contract}:" if recipient else None
+            description = TR.ethereum__interaction_contract if recipient else None
 
         address_layout = trezorui_api.confirm_value(
             title=TR.words__address,
@@ -1085,7 +1085,7 @@ if not utils.BITCOIN_ONLY:
             chunkify=(chunkify if recipient else False),
         )
 
-        items = list(
+        items: list[StrPropertyType] = list(
             (
                 (TR.words__account, account, None),
                 (TR.address_details__derivation_path, account_path, None),
@@ -1100,9 +1100,9 @@ if not utils.BITCOIN_ONLY:
 
         total_layout = trezorui_api.confirm_summary(
             amount=total_amount,
-            amount_label=f"{TR.words__amount}:",
+            amount_label=TR.words__amount,
             fee=maximum_fee,
-            fee_label=f"{TR.send__maximum_fee}:",
+            fee_label=TR.send__maximum_fee,
             title=TR.words__title_summary,
             extra_items=extra_items,  # used so that info button is shown
             extra_title=TR.confirm_total__title_fee,
@@ -1357,7 +1357,7 @@ if not utils.BITCOIN_ONLY:
         confirm_layout = trezorui_api.confirm_value(
             title=title,
             description=description,
-            extra=f"{TR.words__provider}:" if vote_account else None,
+            extra=TR.words__provider if vote_account else None,
             value=vote_account,
             verb=TR.buttons__continue,
             info=True,
@@ -1669,7 +1669,7 @@ async def confirm_modify_output(
                 value=address,
                 verb=TR.buttons__continue,
                 verb_cancel=None,
-                description=TR.words__address + ":",
+                description=TR.words__address,
             ),
             "modify_output" if send_button_request else None,
             ButtonRequestType.ConfirmOutput,

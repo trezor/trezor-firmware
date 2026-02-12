@@ -62,7 +62,7 @@ async def require_confirm_set_delegate(fee: int) -> None:
     await confirm_metadata(
         "confirm_delegation_final",
         TR.tezos__confirm_delegation,
-        f"{TR.words__fee}:\n{{}}",
+        f"{TR.words__fee}\n{{}}",
         format_tezos_amount(fee),
         BR_SIGN_TX,
         hold=True,
@@ -131,7 +131,7 @@ async def require_confirm_manager_remove_delegate(fee: int) -> None:
     await confirm_metadata(
         "confirm_undelegation_final",
         TR.tezos__remove_delegation,
-        f"{TR.words__fee}:\n{{}}",
+        f"{TR.words__fee}\n{{}}",
         format_tezos_amount(fee),
         BR_SIGN_TX,
         hold=True,

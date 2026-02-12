@@ -910,7 +910,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or f"{TR.words__amount}:"  # def_arg
+    description = description or TR.words__amount  # def_arg
     return confirm_blob(
         br_name,
         title,
@@ -1249,7 +1249,7 @@ if not utils.BITCOIN_ONLY:
             amount_title = verb
             amount_value = ""
         else:
-            amount_title = f"{TR.words__amount}:"
+            amount_title = TR.words__amount
             amount_value = total_amount
         await raise_if_not_confirmed(
             trezorui_api.confirm_summary(
@@ -1348,7 +1348,7 @@ if not utils.BITCOIN_ONLY:
         items.append(blockhash_item)
 
         if vote_account:
-            description = f"{description}\n{TR.words__provider}:"
+            description = f"{description}\n{TR.words__provider}"
             title = None  # so the layout will fit in a single page
         else:
             description = f"\n{description}"
@@ -1707,7 +1707,7 @@ async def confirm_modify_output(
         title=TR.modify_amount__title,
         value=address,
         verb=TR.buttons__continue,
-        description=f"{TR.words__address}:",
+        description=TR.words__address,
     )
 
     modify_layout = trezorui_api.confirm_modify_output(
