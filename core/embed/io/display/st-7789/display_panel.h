@@ -49,7 +49,7 @@ void display_panel_reinit(void);
 void display_panel_set_little_endian(void);
 void display_panel_set_big_endian(void);
 
-void display_panel_sleep(void);
+void display_panel_deep_sleep(void);
 void display_panel_unsleep(void);
 void display_panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
                               uint16_t y1);

@@ -14,6 +14,61 @@
 #define BACKLIGHT_PIN_PORT GPIOI
 #define BACKLIGHT_PIN_CLK_ENABLE() __HAL_RCC_GPIOI_CLK_ENABLE()
 
+// DISPLAY      : DISC2 && MCU
+// BUSY (OUT)   : PB11 (CN9 pin 24, IN/SPI2_RDY)
+// RES  (IN)    : PD0 (CN10 pin 35, OUT)
+// D/C  (IN)    : PD9 (CN10 pin 11, OUT)
+// CS   (IN)    : PB12 (CN10 pin 17, SPI2 NSS)
+// SCK  (IN)    : PB13 (CN10 pin 15, SPI2 SCK)
+// SDI  (IN/OUT): PD4 (CN10 pin 13, SPI2 MOSI)
+// GND          : GND (CN10 pin 8)
+// 3.3V         : 3.3V (CN9 pin 7)
+
+// BUSY: Electronic paper busy signal. When the electronic paper screen is
+// refreshed, BUSY pin sends a busy signal to MCU, at this time, MCU cannot read
+// or write the electronic paper drive IC; When the electronic paper is
+// refreshed, BUSY pin sends the idle status signal, and MCU can read and write
+// the electronic paper drive IC. Busy state of BUSY pin is low level, idle
+// state is high level.
+// RES: Electronic paper reset signal, valid at low level.
+// D/C: Data/command read/write selection, high level is data, low level is
+// command.
+// CS： Chip selection, active at low level.
+// SCL： SPI serial communication clock signal line.
+// SDA ：SPI serial communication data signal line. It's I/O from display side!!
+#define DISPLAY_EP_BUSY_PIN GPIO_PIN_11
+#define DISPLAY_EP_BUSY_PORT GPIOB
+#define DISPLAY_EP_BUSY_CLK_ENA __HAL_RCC_GPIOB_CLK_ENABLE
+
+#define DISPLAY_EP_RESET_PIN GPIO_PIN_0
+#define DISPLAY_EP_RESET_PORT GPIOD
+#define DISPLAY_EP_RESET_CLK_ENA __HAL_RCC_GPIOD_CLK_ENABLE
+
+#define DISPLAY_EP_DC_PIN GPIO_PIN_9
+#define DISPLAY_EP_DC_PORT GPIOD
+#define DISPLAY_EP_DC_CLK_ENA __HAL_RCC_GPIOD_CLK_ENABLE
+
+#define DISPLAY_EP_SPI_INSTANCE SPI2
+#define DISPLAY_EP_SPI_PIN_AF GPIO_AF5_SPI2
+#define DISPLAY_EP_SPI_CLK_CFG __HAL_RCC_SPI2_CONFIG
+#define DISPLAY_EP_SPI_CLK_SRC RCC_SPI2CLKSOURCE_PCLK1
+#define DISPLAY_EP_SPI_CLK_EN __HAL_RCC_SPI2_CLK_ENABLE
+#define DISPLAY_EP_SPI_CLK_DIS __HAL_RCC_SPI2_CLK_DISABLE
+#define DISPLAY_EP_SPI_FORCE_RESET __HAL_RCC_SPI2_FORCE_RESET
+#define DISPLAY_EP_SPI_RELEASE_RESET __HAL_RCC_SPI2_RELEASE_RESET
+#define DISPLAY_EP_SPI_MISO_PORT GPIOD // MISO not used
+#define DISPLAY_EP_SPI_MISO_PIN GPIO_PIN_3 // MISO not used
+#define DISPLAY_EP_SPI_MISO_CLK_EN __HAL_RCC_GPIOD_CLK_ENABLE // MISO not used
+#define DISPLAY_EP_SPI_MOSI_PORT GPIOD
+#define DISPLAY_EP_SPI_MOSI_PIN GPIO_PIN_4
+#define DISPLAY_EP_SPI_MOSI_CLK_EN __HAL_RCC_GPIOD_CLK_ENABLE
+#define DISPLAY_EP_SPI_SCK_PORT GPIOB
+#define DISPLAY_EP_SPI_SCK_PIN GPIO_PIN_13
+#define DISPLAY_EP_SPI_SCK_CLK_EN __HAL_RCC_GPIOB_CLK_ENABLE
+#define DISPLAY_EP_SPI_NSS_PORT GPIOB
+#define DISPLAY_EP_SPI_NSS_PIN GPIO_PIN_12
+#define DISPLAY_EP_SPI_NSS_CLK_EN __HAL_RCC_GPIOB_CLK_ENABLE
+
 #define I2C_COUNT 1
 #define I2C_INSTANCE_0 I2C5
 #define I2C_INSTANCE_0_CLK_EN __HAL_RCC_I2C5_CLK_ENABLE

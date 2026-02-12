@@ -61,6 +61,7 @@ typedef enum {
 //
 // Returns `true` if the initialization was successful.
 bool display_init(display_content_mode_t mode);
+bool display_ep_init(display_content_mode_t mode);
 
 // Deinitializes the display controller.
 //
@@ -69,6 +70,8 @@ bool display_init(display_content_mode_t mode);
 //  application can safely proceed to the next boot stage and call
 // `display_init(DISPLAY_RETAIN_CONTENT)`.
 void display_deinit(display_content_mode_t mode);
+void display_ep_deinit(display_content_mode_t mode);
+void display_ep_demo(void);
 
 // Allows unprivileged access to the display framebuffer from
 // perspective of the GTZC (Global TrustZone Controller).

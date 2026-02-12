@@ -130,7 +130,7 @@ bool display_panel_is_inverted() {
   return inv_on;
 }
 
-void display_panel_sleep(void) {
+void display_panel_deep_sleep(void) {
   uint32_t id = display_panel_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
       (id == DISPLAY_ID_ST7789V)) {

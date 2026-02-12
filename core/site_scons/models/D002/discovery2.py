@@ -61,6 +61,7 @@ def configure(
 
     if "display" in features_wanted:
         sources += [
+            "embed/io/display/gdem0154f51h/display_driver.c",
             "embed/io/display/ltdc_dsi/display_driver.c",
             "embed/io/display/ltdc_dsi/panels/stm32u5a9j-dk/stm32u5a9j-dk.c",
             "embed/io/display/ltdc_dsi/display_fb.c",
