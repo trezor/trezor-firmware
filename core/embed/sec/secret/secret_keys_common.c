@@ -31,6 +31,7 @@
 #include "secret_keys_common.h"
 
 static void diversify_and_derive(uint16_t index, uint16_t subindex,
+                                 uint16_t rotation_index,
                                  const uint8_t master_key[SHA256_DIGEST_LENGTH],
                                  uint8_t master_key_length,
                                  uint8_t dest[SHA256_DIGEST_LENGTH]) {
@@ -38,17 +39,30 @@ static void diversify_and_derive(uint16_t index, uint16_t subindex,
   // - the key derivation index (2 bytes big-endian), which identifies the
   //   purpose of the key,
   // - the subindex (2 bytes big-endian), which is incremented until the derived
-  //   key meets required criteria, and
+  //   key meets required criteria,
   // - the block index (1 byte), which can be used to produce outputs that are
-  //   longer than 32 bytes.
-  uint8_t diversifier[] = {index >> 8, index & 0xff, subindex >> 8,
-                           subindex & 0xff, 0};
+  //   longer than 32 bytes, and
+  // - the rotation index (2 bytes), which can be used to produce a new key when
+  //   the previous one is revoked.
+  // For backwards compatibility the rotation index is included in the HMAC
+  // calculation only if it is non-zero.
 
-  hmac_sha256(master_key, master_key_length, diversifier, sizeof(diversifier),
+  uint8_t diversifier[] = {(index >> 8) & 0xFF,
+                           index & 0xFF,
+                           (subindex >> 8) & 0xFF,
+                           subindex & 0xFF,
+                           0,
+                           (rotation_index >> 8) & 0xFF,
+                           rotation_index & 0xFF};
+
+  size_t diversifier_size = rotation_index == 0 ? 5 : 7;
+
+  hmac_sha256(master_key, master_key_length, diversifier, diversifier_size,
               dest);
 }
 
 secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
+                              uint16_t rotation_index,
                               uint8_t dest[SHA256_DIGEST_LENGTH]) {
   secbool ret = sectrue;
 
@@ -69,8 +83,8 @@ secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
     goto cleanup;
   }
 
-  diversify_and_derive(index, subindex, master_key.bytes, master_key.size,
-                       dest);
+  diversify_and_derive(index, subindex, rotation_index, master_key.bytes,
+                       master_key.size, dest);
 
 cleanup:
   memzero(master_key.bytes, master_key.size);
@@ -78,6 +92,7 @@ cleanup:
 }
 
 secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
+                                    uint16_t rotation_index,
                                     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   // `slot` argument is not used unless SECRET_PRIVILEGED_MASTER_KEY_SLOT is
   // defined
@@ -87,7 +102,7 @@ secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
   secbool ret = sectrue;
   bignum256 s = {0};
   for (uint16_t i = 0; i < 10000; i++) {
-    ret = secret_key_derive_sym(slot, index, i, dest);
+    ret = secret_key_derive_sym(slot, index, i, rotation_index, dest);
     if (ret != sectrue) {
       goto cleanup;
     }

@@ -689,6 +689,8 @@ class MessageType(IntEnum):
     EvoluRegistrationRequest = 2103
     EvoluGetDelegatedIdentityKey = 2104
     EvoluDelegatedIdentityKey = 2105
+    EvoluIndexManagement = 2106
+    EvoluIndexManagementResponse = 2107
     TronGetAddress = 2200
     TronAddress = 2201
     TronSignTx = 2202
@@ -5592,14 +5594,17 @@ class EvoluGetNode(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2100
     FIELDS = {
         1: protobuf.Field("proof_of_delegated_identity", "bytes", repeated=False, required=True),
+        2: protobuf.Field("node_rotation_index", "uint32", repeated=False, required=False, default=0),
     }
 
     def __init__(
         self,
         *,
         proof_of_delegated_identity: "bytes",
+        node_rotation_index: Optional["int"] = 0,
     ) -> None:
         self.proof_of_delegated_identity = proof_of_delegated_identity
+        self.node_rotation_index = node_rotation_index
 
 
 class EvoluNode(protobuf.MessageType):
@@ -5657,28 +5662,65 @@ class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2104
     FIELDS = {
         1: protobuf.Field("thp_credential", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("rotation_index", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("rotate", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         thp_credential: Optional["bytes"] = None,
+        rotation_index: Optional["int"] = None,
+        rotate: Optional["bool"] = None,
     ) -> None:
         self.thp_credential = thp_credential
+        self.rotation_index = rotation_index
+        self.rotate = rotate
 
 
 class EvoluDelegatedIdentityKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2105
     FIELDS = {
         1: protobuf.Field("private_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("rotation_index", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         private_key: "bytes",
+        rotation_index: Optional["int"] = None,
     ) -> None:
         self.private_key = private_key
+        self.rotation_index = rotation_index
+
+
+class EvoluIndexManagement(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2106
+    FIELDS = {
+        1: protobuf.Field("rotation_index", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        rotation_index: Optional["int"] = None,
+    ) -> None:
+        self.rotation_index = rotation_index
+
+
+class EvoluIndexManagementResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2107
+    FIELDS = {
+        1: protobuf.Field("rotation_index", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        rotation_index: Optional["int"] = None,
+    ) -> None:
+        self.rotation_index = rotation_index
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

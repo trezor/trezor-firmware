@@ -14,10 +14,10 @@ pytestmark = [pytest.mark.models("core")]
 
 
 def test_evolu_get_delegated_identity_is_constant(client: Client):
-    private_key = get_delegated_identity_key(client)
+    private_key = get_delegated_identity_key(client).private_key
     assert len(private_key) == 32
 
-    private_key_2 = get_delegated_identity_key(client)
+    private_key_2 = get_delegated_identity_key(client).private_key
     assert private_key_2 == private_key
 
 
@@ -26,7 +26,7 @@ def test_evolu_get_delegated_identity_test_vector(client: Client):
     if not client.is_emulator:
         pytest.skip("Only for emulator")
 
-    private_key = get_delegated_identity_key(client)
+    private_key = get_delegated_identity_key(client).private_key
     # hardcoded expected value for the emulator with zeroed master key
     assert private_key == bytes.fromhex(
         "10e39ed3a40dd63a47a14608d4bccd4501170cf9f2188223208084d39c37b369"

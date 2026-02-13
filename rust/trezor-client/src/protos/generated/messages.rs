@@ -545,6 +545,10 @@ pub enum MessageType {
     MessageType_EvoluGetDelegatedIdentityKey = 2104,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluDelegatedIdentityKey)
     MessageType_EvoluDelegatedIdentityKey = 2105,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluIndexManagement)
+    MessageType_EvoluIndexManagement = 2106,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluIndexManagementResponse)
+    MessageType_EvoluIndexManagementResponse = 2107,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronGetAddress)
     MessageType_TronGetAddress = 2200,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronAddress)
@@ -841,6 +845,8 @@ impl ::protobuf::Enum for MessageType {
             2103 => ::std::option::Option::Some(MessageType::MessageType_EvoluRegistrationRequest),
             2104 => ::std::option::Option::Some(MessageType::MessageType_EvoluGetDelegatedIdentityKey),
             2105 => ::std::option::Option::Some(MessageType::MessageType_EvoluDelegatedIdentityKey),
+            2106 => ::std::option::Option::Some(MessageType::MessageType_EvoluIndexManagement),
+            2107 => ::std::option::Option::Some(MessageType::MessageType_EvoluIndexManagementResponse),
             2200 => ::std::option::Option::Some(MessageType::MessageType_TronGetAddress),
             2201 => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             2202 => ::std::option::Option::Some(MessageType::MessageType_TronSignTx),
@@ -1119,6 +1125,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_EvoluRegistrationRequest" => ::std::option::Option::Some(MessageType::MessageType_EvoluRegistrationRequest),
             "MessageType_EvoluGetDelegatedIdentityKey" => ::std::option::Option::Some(MessageType::MessageType_EvoluGetDelegatedIdentityKey),
             "MessageType_EvoluDelegatedIdentityKey" => ::std::option::Option::Some(MessageType::MessageType_EvoluDelegatedIdentityKey),
+            "MessageType_EvoluIndexManagement" => ::std::option::Option::Some(MessageType::MessageType_EvoluIndexManagement),
+            "MessageType_EvoluIndexManagementResponse" => ::std::option::Option::Some(MessageType::MessageType_EvoluIndexManagementResponse),
             "MessageType_TronGetAddress" => ::std::option::Option::Some(MessageType::MessageType_TronGetAddress),
             "MessageType_TronAddress" => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             "MessageType_TronSignTx" => ::std::option::Option::Some(MessageType::MessageType_TronSignTx),
@@ -1396,6 +1404,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_EvoluRegistrationRequest,
         MessageType::MessageType_EvoluGetDelegatedIdentityKey,
         MessageType::MessageType_EvoluDelegatedIdentityKey,
+        MessageType::MessageType_EvoluIndexManagement,
+        MessageType::MessageType_EvoluIndexManagementResponse,
         MessageType::MessageType_TronGetAddress,
         MessageType::MessageType_TronAddress,
         MessageType::MessageType_TronSignTx,
@@ -1679,19 +1689,21 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_EvoluRegistrationRequest => 256,
             MessageType::MessageType_EvoluGetDelegatedIdentityKey => 257,
             MessageType::MessageType_EvoluDelegatedIdentityKey => 258,
-            MessageType::MessageType_TronGetAddress => 259,
-            MessageType::MessageType_TronAddress => 260,
-            MessageType::MessageType_TronSignTx => 261,
-            MessageType::MessageType_TronSignature => 262,
-            MessageType::MessageType_TronContractRequest => 263,
-            MessageType::MessageType_TronTransferContract => 264,
-            MessageType::MessageType_TronTriggerSmartContract => 265,
-            MessageType::MessageType_BenchmarkListNames => 266,
-            MessageType::MessageType_BenchmarkNames => 267,
-            MessageType::MessageType_BenchmarkRun => 268,
-            MessageType::MessageType_BenchmarkResult => 269,
-            MessageType::MessageType_TelemetryGet => 270,
-            MessageType::MessageType_Telemetry => 271,
+            MessageType::MessageType_EvoluIndexManagement => 259,
+            MessageType::MessageType_EvoluIndexManagementResponse => 260,
+            MessageType::MessageType_TronGetAddress => 261,
+            MessageType::MessageType_TronAddress => 262,
+            MessageType::MessageType_TronSignTx => 263,
+            MessageType::MessageType_TronSignature => 264,
+            MessageType::MessageType_TronContractRequest => 265,
+            MessageType::MessageType_TronTransferContract => 266,
+            MessageType::MessageType_TronTriggerSmartContract => 267,
+            MessageType::MessageType_BenchmarkListNames => 268,
+            MessageType::MessageType_BenchmarkNames => 269,
+            MessageType::MessageType_BenchmarkRun => 270,
+            MessageType::MessageType_BenchmarkResult => 271,
+            MessageType::MessageType_TelemetryGet => 272,
+            MessageType::MessageType_Telemetry => 273,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1710,7 +1722,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xfb^\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xe5_\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -2007,26 +2019,29 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     uRegistrationRequest\x10\xb7\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\
     \x127\n(MessageType_EvoluGetDelegatedIdentityKey\x10\xb8\x10\x1a\x08\x80\
     \xa6\x1d\x01\x90\xb5\x18\x01\x124\n%MessageType_EvoluDelegatedIdentityKe\
-    y\x10\xb9\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x1aMessageT\
-    ype_TronGetAddress\x10\x98\x11\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17Messag\
-    eType_TronAddress\x10\x99\x11\x1a\x04\x98\xb5\x18\x01\x12!\n\x16MessageT\
-    ype_TronSignTx\x10\x9a\x11\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType\
-    _TronSignature\x10\x9b\x11\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageType\
-    _TronContractRequest\x10\x9c\x11\x1a\x04\x98\xb5\x18\x01\x12+\n\x20Messa\
-    geType_TronTransferContract\x10\x9d\x11\x1a\x04\x90\xb5\x18\x01\x12/\n$M\
-    essageType_TronTriggerSmartContract\x10\x9e\x11\x1a\x04\x90\xb5\x18\x01\
-    \x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\
-    \x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\
-    \x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\
-    \x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\
-    \x12'\n\x18MessageType_TelemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\
-    \x90\xb5\x18\x01\x12$\n\x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\
-    \xa6\x1d\x01\x98\xb5\x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\
-    \x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\
-    \x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\
-    \x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\
-    \x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com\
-    .satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    y\x10\xb9\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12/\n\x20MessageT\
+    ype_EvoluIndexManagement\x10\xba\x10\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
+    \x01\x127\n(MessageType_EvoluIndexManagementResponse\x10\xbb\x10\x1a\x08\
+    \x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x1aMessageType_TronGetAddress\
+    \x10\x98\x11\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_TronAddress\
+    \x10\x99\x11\x1a\x04\x98\xb5\x18\x01\x12!\n\x16MessageType_TronSignTx\
+    \x10\x9a\x11\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_TronSignature\
+    \x10\x9b\x11\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageType_TronContractR\
+    equest\x10\x9c\x11\x1a\x04\x98\xb5\x18\x01\x12+\n\x20MessageType_TronTra\
+    nsferContract\x10\x9d\x11\x1a\x04\x90\xb5\x18\x01\x12/\n$MessageType_Tro\
+    nTriggerSmartContract\x10\x9e\x11\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMess\
+    ageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMe\
+    ssageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18Mess\
+    ageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageT\
+    ype_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x12'\n\x18MessageTy\
+    pe_TelemetryGet\x10\xcc\x08\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\
+    \n\x15MessageType_Telemetry\x10\xcd\x08\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
+    \x18\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\
+    \x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\
+    \xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\
+    \x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\
+    \x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezo\
+    r.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

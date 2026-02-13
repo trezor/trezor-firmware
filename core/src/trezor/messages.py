@@ -4122,11 +4122,13 @@ if TYPE_CHECKING:
 
     class EvoluGetNode(protobuf.MessageType):
         proof_of_delegated_identity: "AnyBytes"
+        node_rotation_index: "int"
 
         def __init__(
             self,
             *,
             proof_of_delegated_identity: "AnyBytes",
+            node_rotation_index: "int | None" = None,
         ) -> None:
             pass
 
@@ -4184,11 +4186,15 @@ if TYPE_CHECKING:
 
     class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
         thp_credential: "AnyBytes | None"
+        rotation_index: "int | None"
+        rotate: "bool | None"
 
         def __init__(
             self,
             *,
             thp_credential: "AnyBytes | None" = None,
+            rotation_index: "int | None" = None,
+            rotate: "bool | None" = None,
         ) -> None:
             pass
 
@@ -4198,16 +4204,46 @@ if TYPE_CHECKING:
 
     class EvoluDelegatedIdentityKey(protobuf.MessageType):
         private_key: "AnyBytes"
+        rotation_index: "int | None"
 
         def __init__(
             self,
             *,
             private_key: "AnyBytes",
+            rotation_index: "int | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EvoluDelegatedIdentityKey"]:
+            return isinstance(msg, cls)
+
+    class EvoluIndexManagement(protobuf.MessageType):
+        rotation_index: "int | None"
+
+        def __init__(
+            self,
+            *,
+            rotation_index: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EvoluIndexManagement"]:
+            return isinstance(msg, cls)
+
+    class EvoluIndexManagementResponse(protobuf.MessageType):
+        rotation_index: "int | None"
+
+        def __init__(
+            self,
+            *,
+            rotation_index: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EvoluIndexManagementResponse"]:
             return isinstance(msg, cls)
 
     class MoneroTransactionSourceEntry(protobuf.MessageType):
