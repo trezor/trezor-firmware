@@ -682,6 +682,7 @@ async def should_show_more(
     br_name: str = "should_show_more",
     br_code: ButtonRequestType = BR_CODE_OTHER,
     confirm: str | None = None,
+    subtitle: str | None = None,
 ) -> bool:
     """Return True if the user wants to show more (they click a special button)
     and False when the user wants to continue without showing details.
@@ -693,6 +694,7 @@ async def should_show_more(
     result = await interact(
         trezorui_api.confirm_with_info(
             title=title,
+            subtitle=subtitle,
             items=para,
             verb=(TR.buttons__confirm if confirm is None else confirm),
             verb_info=button_text,
