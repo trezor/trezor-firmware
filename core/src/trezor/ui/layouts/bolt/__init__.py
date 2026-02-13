@@ -987,28 +987,28 @@ def _confirm_summary(
 ) -> Awaitable[None]:
     title = title or TR.words__title_summary  # def_arg
 
-    account_items_colon = list(account_items) if account_items else None
-    extra_items_colon = list(extra_items) if extra_items else None
+    account_items_list = list(account_items) if account_items is not None else None
+    extra_items_list = list(extra_items) if extra_items is not None else None
     total_layout = trezorui_api.confirm_summary(
         amount=amount,
         amount_label=amount_label,
         fee=fee,
         fee_label=fee_label,
         title=title,
-        account_items=account_items_colon,
+        account_items=account_items_list,
         account_title=account_title,
-        extra_items=extra_items_colon,
+        extra_items=extra_items_list,
     )
 
     # TODO: use `_info` params directly in this^ layout instead of using `with_info`
-    info_props_colon: list[StrPropertyType] = []
-    if account_items_colon:
-        info_props_colon.extend(account_items_colon)
-    if extra_items_colon:
-        info_props_colon.extend(extra_items_colon)
+    info_props: list[StrPropertyType] = []
+    if account_items_list:
+        info_props.extend(account_items_list)
+    if extra_items_list:
+        info_props.extend(extra_items_list)
     info_layout = trezorui_api.show_info_with_cancel(
         title=extra_title if extra_title else TR.words__title_information,
-        items=info_props_colon,
+        items=info_props,
     )
     return with_info(total_layout, info_layout, br_name, br_code)
 

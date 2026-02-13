@@ -1043,8 +1043,8 @@ def confirm_total(
             fee=fee_amount,
             fee_label=fee_label,
             account_title=account_title,
-            account_items=list(account_items) if account_items else None,
-            extra_items=list(fee_items) if fee_items else None,
+            account_items=list(account_items) if account_items is not None else None,
+            extra_items=list(fee_items) if fee_items is not None else None,
             extra_title=TR.confirm_total__title_fee,
         ),
         br_name,
@@ -1207,7 +1207,9 @@ if not utils.BITCOIN_ONLY:
                 fee=maximum_fee,
                 fee_label=TR.send__maximum_fee,
                 title=TR.words__title_summary,
-                account_items=list(account_items) if account_items else None,
+                account_items=(
+                    list(account_items) if account_items is not None else None
+                ),
                 account_title=TR.address_details__account_info,
                 extra_items=list(fee_info_items),
                 extra_title=TR.confirm_total__title_fee,
