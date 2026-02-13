@@ -1386,8 +1386,21 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// from trezor import utils
     /// from trezor.enums import ButtonRequestType, RecoveryType
     ///
+    /// # Note: `PropertyType` / `StrPropertyType` are very much WIP.
+    /// # Historical context: Initially all we had was
+    /// # `tuple[str, str]`, `tuple[str | None, str | bytes | None, bool | None]`, etc.
+    /// # which we unified under `PropertyType`.
+    /// # We then later introduced `StrPropertyType` for cases where the value
+    /// # cannot be `bytes` and started getting rid of `PropertyType` uses.
+    /// # There are still a few instances where properties use `bytes`,
+    /// # but we should probably get rid of all and drop `PropertyType` completely.
+    /// # The next goal would be to replace the `bool` with something
+    /// # that can encode actual types / rendering strategies.
+    /// # See more details here: https://github.com/trezor/trezor-firmware/issues/5411
     /// PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
     /// StrPropertyType = tuple[str | None, str | None, bool | None]
+    ///
+    ///
     /// T = TypeVar("T")
     ///
     /// class LayoutObj(Generic[T]):
