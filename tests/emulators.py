@@ -45,6 +45,24 @@ ENV = {"SDL_VIDEODRIVER": "dummy"}
 
 TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
 
+# Models that require Tropic model support
+# For these models, two sets of emulator binaries can coexist:
+#   1. Regular binaries (tropic disabled): tests/emulators/{MODEL}/
+#   2. Tropic-enabled binaries: tests/emulators/{MODEL}/{MODEL}_tropic_on/
+# Both variants are discovered by get_tags() and can be used in tests.
+# Use tropic_enabled=True parameter to select the tropic-enabled variant.
+TROPIC_MODELS = {"T3W1"}
+
+
+def uses_tropic(model: str) -> bool:
+    """Check if a model uses Tropic model support."""
+    return model in TROPIC_MODELS
+
+
+def get_tropic_subdir(model: str) -> str:
+    """Get the subdirectory name for tropic-enabled models."""
+    return f"{model}_tropic_on"
+
 
 def gen_from_model(model_internal_name: str) -> str:
     # Compare by internal_name string, not by object equality,
@@ -93,19 +111,40 @@ def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
             raise RuntimeError(f"Version mismatch: tag {tag} reports version {version}")
 
 
-def get_emulator_path(gen: str, model: str, tag: str) -> Path:
+def get_emulator_path(gen: str, model: str, tag: str, tropic_enabled: bool = False) -> Path:
+    """Get the path to an emulator binary.
+    
+    Args:
+        gen: Generation ("core" or "legacy")
+        model: Model name (e.g., "T3W1")
+        tag: Version tag (e.g., "v2.9.3")
+        tropic_enabled: If True and model supports tropic, use tropic-enabled subdirectory
+    """
+    if tropic_enabled and uses_tropic(model):
+        return BINDIR / model / get_tropic_subdir(model) / f"trezor-emu-{gen}-{model}-{tag}"
     return BINDIR / model / f"trezor-emu-{gen}-{model}-{tag}"
 
 
 def get_tags() -> dict[str, list[str]]:
+    """Get all available emulator tags.
+    
+    Scans for emulators in both regular locations and tropic-enabled subdirectories.
+    For models with tropic support, both regular and tropic-enabled versions are discovered.
+    """
     files = [p for p in BINDIR.glob("*/trezor-emu-*") if p.is_file()]
+    # Also check tropic-enabled variants in their subdirectories
+    for model in TROPIC_MODELS:
+        pattern = f"{model}/{get_tropic_subdir(model)}/trezor-emu-*"
+        files.extend([p for p in BINDIR.glob(pattern) if p.is_file()])
 
     result = defaultdict(list)
     for f in sorted(files):
         try:
             # example: "trezor-emu-core-T2T1-v2.0.8" or "trezor-emu-core-T2T1-v2.0.8-46ab42fw"
             _, _, _, model, tag = f.name.split("-", maxsplit=4)
-            result[model].append(tag)
+            # Avoid duplicates - if same tag exists in both regular and tropic dirs
+            if tag not in result[model]:
+                result[model].append(tag)
         except ValueError:
             pass
     return result
@@ -148,10 +187,11 @@ class EmulatorWrapper:
         auto_interact: bool = True,
         main_args: Sequence[str] = ("-m", "main"),
         launch_tropic_model: bool = False,
+        tropic_enabled: bool = False,
     ) -> None:
 
         if tag is not None and model is not None:
-            executable = get_emulator_path(gen, model, tag)
+            executable = get_emulator_path(gen, model, tag, tropic_enabled=tropic_enabled)
         else:
             executable = LOCAL_BUILD_PATHS[gen]
 

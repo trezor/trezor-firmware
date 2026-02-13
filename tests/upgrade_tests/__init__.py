@@ -49,6 +49,19 @@ def upgrade_emulator(
     model: str | None = None,
     **kwargs,
 ) -> EmulatorWrapper:
+    """Create an emulator for upgrade tests.
+    
+    Args:
+        tag: Version tag of the emulator
+        model: Model name (e.g., "T3W1")
+        **kwargs: Additional arguments passed to EmulatorWrapper, including:
+            - tropic_enabled: Use tropic-enabled emulator binary variant (default: False)
+            - Other EmulatorWrapper parameters
+    
+    Note: For T3W1, launch_tropic_model is automatically set based on whether
+    the model requires it. Use tropic_enabled=True in kwargs to use the
+    tropic-enabled binary variant located in the T3W1_tropic_on subdirectory.
+    """
     # Use provided model - should always be provided from @for_all decorator
     if model is None:
         raise ValueError("model parameter is required for upgrade_emulator")
@@ -56,8 +69,9 @@ def upgrade_emulator(
     # Determine gen from model
     gen = gen_from_model(model)
 
-    # Launch Tropic model for T3W1 (it is required for T3W1 to function)
-    launch_tropic = model == "T3W1"
+    # Launch Tropic model for T3W1 when using tropic-enabled binaries
+    # Note: Regular T3W1 binaries (tropic disabled) don't need this
+    launch_tropic = model == "T3W1" and kwargs.get("tropic_enabled", False)
 
     return EmulatorWrapper(
         gen,

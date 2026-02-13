@@ -8,7 +8,7 @@ from typing import TypeAlias
 
 import click
 import requests
-from emulators import gen_from_model
+from emulators import gen_from_model, get_tropic_subdir, uses_tropic
 
 from trezorlib.models import ALL_MODELS
 
@@ -47,10 +47,12 @@ class Emulator:
     model: str
     url: str
     save_path: Path | None = None
+    tropic_enabled: bool = False
 
-    def __init__(self, version: str, model: str) -> None:
+    def __init__(self, version: str, model: str, tropic_enabled: bool = False) -> None:
         self.version = version
         self.model = model
+        self.tropic_enabled = tropic_enabled
         self.url = self._get_download_url()
 
     def download(
@@ -99,6 +101,13 @@ class Emulator:
         return f"trezor-emu-{gen_from_model(self.model)}-{self.model}-v{self.version}"
 
     def _get_default_save_path(self) -> Path:
+        """Get the default save path for the emulator.
+        
+        Regular emulators go to: tests/emulators/{MODEL}/
+        Tropic-enabled emulators go to: tests/emulators/{MODEL}/{MODEL}_tropic_on/
+        """
+        if self.tropic_enabled and uses_tropic(self.model):
+            return SAVE_DIR / self.model / get_tropic_subdir(self.model) / self._get_filename()
         return SAVE_DIR / self.model / self._get_filename()
 
     def _get_download_url(self) -> str:

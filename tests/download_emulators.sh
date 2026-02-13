@@ -14,4 +14,12 @@ uv run python download_emulators.py "$MODEL"
 
 cd ..
 # are we in Nix(OS)?
-command -v nix-shell >/dev/null && nix-shell --run 'NIX_BINTOOLS=$NIX_BINTOOLS_FOR_TARGET autoPatchelf tests/emulators/$MODEL'
+if command -v nix-shell >/dev/null; then
+  # Check if model has a tropic subdirectory (e.g., T3W1_tropic_on)
+  TROPIC_DIR="tests/emulators/$MODEL/${MODEL}_tropic_on"
+  if [ -d "$TROPIC_DIR" ]; then
+    nix-shell --run "NIX_BINTOOLS=\$NIX_BINTOOLS_FOR_TARGET autoPatchelf $TROPIC_DIR"
+  else
+    nix-shell --run "NIX_BINTOOLS=\$NIX_BINTOOLS_FOR_TARGET autoPatchelf tests/emulators/$MODEL"
+  fi
+fi
