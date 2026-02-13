@@ -1,10 +1,11 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from trezor.messages import EvoluDelegatedIdentityKey, EvoluGetDelegatedIdentityKey
 
-from .index_management import ROTATION_INDEX_LIMIT
 from trezor import utils
+
+from .index_management import ROTATION_INDEX_LIMIT
 
 
 async def get_delegated_identity_key(
@@ -34,7 +35,7 @@ async def get_delegated_identity_key(
 
     from trezor.messages import EvoluDelegatedIdentityKey
 
-    if isinstance(msg.rotation_index, int):
+    if msg.rotation_index is not None:
         if msg.rotation_index < 0 or msg.rotation_index > ROTATION_INDEX_LIMIT:
             raise ValueError(
                 f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
@@ -49,9 +50,7 @@ async def get_delegated_identity_key(
             await confirm_no_thp()
 
     rotation_index = get_rotation_index(msg)
-    private_key = delegated_identity(
-        rotation_index if rotation_index is not None else 0
-    )
+    private_key = delegated_identity(rotation_index or 0)
 
     return EvoluDelegatedIdentityKey(
         private_key=private_key, rotation_index=rotation_index
@@ -95,15 +94,14 @@ async def confirm_no_thp() -> None:
     )
 
 
-def get_rotation_index(msg: EvoluGetDelegatedIdentityKey) -> int | None:
+def get_rotation_index(msg: EvoluGetDelegatedIdentityKey) -> Optional[int]:
     from storage.device import get_delegated_identity_key_rotation_index
     from trezor.wire.errors import DataError
 
     rotation_index = get_delegated_identity_key_rotation_index()
-    rotation_index_int = rotation_index if rotation_index is not None else 0
 
     if isinstance(msg.rotation_index, int):
-        if msg.rotation_index <= rotation_index_int:
+        if msg.rotation_index <= (rotation_index or 0):
             rotation_index = msg.rotation_index
         else:
             raise DataError(
@@ -122,9 +120,7 @@ async def rotate_index() -> None:
     from trezor.ui.layouts import confirm_action
     from trezor.wire.errors import DataError
 
-    rotation_index = get_delegated_identity_key_rotation_index()
-    if rotation_index is None:
-        rotation_index = 0
+    rotation_index = get_delegated_identity_key_rotation_index() or 0
     await confirm_action(
         "secure_sync",
         TR.suite_sync__header,

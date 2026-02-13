@@ -32,9 +32,9 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
 
-    delegated_identity_key_rotation_index = get_delegated_identity_key_rotation_index()
-    if delegated_identity_key_rotation_index is None:
-        delegated_identity_key_rotation_index = 0
+    delegated_identity_key_rotation_index = (
+        get_delegated_identity_key_rotation_index() or 0
+    )
 
     if not check_delegated_identity_proof(
         bytes(msg.proof_of_delegated_identity),
@@ -45,7 +45,7 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite
 
-    index = msg.node_rotation_index if msg.node_rotation_index is not None else 0
+    index = msg.node_rotation_index or 0
     return EvoluNode(data=await derive_evolu_node(index))
 
 

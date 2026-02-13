@@ -39,25 +39,23 @@ static void diversify_and_derive(uint16_t index, uint16_t subindex,
   // - the key derivation index (2 bytes big-endian), which identifies the
   //   purpose of the key,
   // - the subindex (2 bytes big-endian), which is incremented until the derived
-  //   key meets required criteria, and
+  //   key meets required criteria,
   // - the block index (1 byte), which can be used to produce outputs that are
-  //   longer than 32 bytes.
+  //   longer than 32 bytes, and
+  // - the rotation index (2 bytes), which can be used to produce a new key when
+  //   the previous one is revoked.
+  // For backwards compatibility the rotation index is included in the HMAC
+  // calculation only if it is non-zero.
 
-  uint8_t diversifier[rotation_index == 0 ? 5 : 7];
+  uint8_t diversifier[] = {(index >> 8) & 0xFF,
+                           index & 0xFF,
+                           (subindex >> 8) & 0xFF,
+                           subindex & 0xFF,
+                           0,
+                           (rotation_index >> 8) & 0xFF,
+                           rotation_index & 0xFF};
 
-  /* first bytes (index + subindex) are common */
-  diversifier[0] = (index >> 8) & 0xFF;
-  diversifier[1] = index & 0xFF;
-  diversifier[2] = (subindex >> 8) & 0xFF;
-  diversifier[3] = subindex & 0xFF;
-
-  if (rotation_index == 0) {
-    diversifier[4] = 0;
-  } else {
-    diversifier[4] = (rotation_index >> 8) & 0xFF;
-    diversifier[5] = rotation_index & 0xFF;
-    diversifier[6] = 0;
-  }
+  size_t diversifier_size = rotation_index == 0 ? 5 : 7;
 
   hmac_sha256(master_key, master_key_length, diversifier, sizeof(diversifier),
               dest);
