@@ -150,6 +150,7 @@ function onLoadTestCase() {
             }
         }
 
+        const scrollAmount = window.location.href.includes("T3W1") ? 1000 : 500;
         const p = document.createElement("p");
         p.append("[j] / [k] to scroll");
         markbox.append(p);
@@ -160,11 +161,24 @@ function onLoadTestCase() {
                 return;
             }
 
-            const scrollAmount = window.location.href.includes("T3W1") ? 1000 : 500;
+            if (e.key === "a") {
+                e.preventDefault();
+                document.getElementById("mark-ok").click();
+            }
+            if (e.key === "s") {
+                e.preventDefault();
+                document.getElementById("mark-update").click();
+            }
+            if (e.key === "d") {
+                e.preventDefault();
+                document.getElementById("mark-bad").click();
+            }
             if (e.key === "j") {
+                e.preventDefault();
                 window.scrollBy({ top: scrollAmount, behavior: "smooth" });
             }
             if (e.key === "k") {
+                e.preventDefault();
                 window.scrollBy({ top: -scrollAmount, behavior: "smooth" });
             }
             for (const [a, key] of links) {
