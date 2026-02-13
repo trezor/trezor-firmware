@@ -5,8 +5,6 @@ if TYPE_CHECKING:
 
 from trezor import utils
 
-from .index_management import ROTATION_INDEX_LIMIT
-
 
 async def get_delegated_identity_key(
     msg: EvoluGetDelegatedIdentityKey,
@@ -34,6 +32,10 @@ async def get_delegated_identity_key(
     from trezorutils import delegated_identity
 
     from trezor.messages import EvoluDelegatedIdentityKey
+
+    from .common import ROTATION_INDEX_LIMIT, check_delegated_identity_rotation_index
+
+    check_delegated_identity_rotation_index(msg.rotation_index)
 
     if msg.rotation_index is not None:
         if msg.rotation_index < 0 or msg.rotation_index > ROTATION_INDEX_LIMIT:
@@ -119,6 +121,8 @@ async def rotate_index() -> None:
     from trezor import TR
     from trezor.ui.layouts import confirm_action
     from trezor.wire.errors import DataError
+
+    from .common import ROTATION_INDEX_LIMIT
 
     rotation_index = get_delegated_identity_key_rotation_index() or 0
     await confirm_action(

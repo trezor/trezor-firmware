@@ -51,7 +51,8 @@ async def sign_registration_request(
 
     if not check_delegated_identity_proof(
         provided_proof=msg.proof_of_delegated_identity,
-        delegated_identity_rotation_index=0,  # this is happening right after the delegated_identity_key is generated and never more
+        # this is happening right after the delegated_identity_key is generated and never more
+        delegated_identity_rotation_index=0,
         header=b"EvoluSignRegistrationRequest",
         arguments=[
             challenge_bytes,

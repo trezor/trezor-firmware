@@ -77,14 +77,14 @@ def sign_registration_request(
 
 @click.option("--credential", "-c", type=str)
 @click.option("--rotation_index", "-i", type=int)
-@click.option("--rotate", type=bool, help="Rotate the delegated identity key.")
+@click.option("--rotate", is_flag=True, help="Rotate the delegated identity key.")
 @cli.command()
 @with_session
 def get_delegated_identity_key(
     session: Session,
     credential: Optional[str] = None,
     rotation_index: Optional[int] = None,
-    rotate: Optional[bool] = None,
+    rotate: bool = False,
 ) -> dict[str, str | int | None]:
     """
     Request the delegated identity key of this device.

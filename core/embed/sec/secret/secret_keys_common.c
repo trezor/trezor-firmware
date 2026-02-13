@@ -57,7 +57,7 @@ static void diversify_and_derive(uint16_t index, uint16_t subindex,
 
   size_t diversifier_size = rotation_index == 0 ? 5 : 7;
 
-  hmac_sha256(master_key, master_key_length, diversifier, sizeof(diversifier),
+  hmac_sha256(master_key, master_key_length, diversifier, diversifier_size,
               dest);
 }
 

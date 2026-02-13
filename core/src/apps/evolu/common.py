@@ -1,8 +1,19 @@
-from typing import TYPE_CHECKING
+from micropython import const
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Sequence
+
+ROTATION_INDEX_LIMIT = const((1 << 16) - 1)
+
+
+def check_delegated_identity_rotation_index(rotation_index: Optional[int]) -> None:
+    if rotation_index is not None:
+        if not 0 <= (rotation_index or 0) <= ROTATION_INDEX_LIMIT:
+            raise ValueError(
+                f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
+            )
 
 
 def check_delegated_identity_proof(

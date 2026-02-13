@@ -1,10 +1,7 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import EvoluIndexManagement, EvoluIndexManagementResponse
-
-ROTATION_INDEX_LIMIT = const((1 << 16) - 1)
 
 
 async def index_management(msg: EvoluIndexManagement) -> EvoluIndexManagementResponse:
@@ -17,6 +14,10 @@ async def index_management(msg: EvoluIndexManagement) -> EvoluIndexManagementRes
         set_delegated_identity_key_rotation_index,
     )
     from trezor.messages import EvoluIndexManagementResponse
+
+    from .common import ROTATION_INDEX_LIMIT, check_delegated_identity_rotation_index
+
+    check_delegated_identity_rotation_index(msg.rotation_index)
 
     stored_index = get_delegated_identity_key_rotation_index()
 

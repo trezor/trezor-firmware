@@ -59,7 +59,6 @@ def get_delegated_identity_key(
     thp_credential: Optional[bytes] = None,
     rotate: Optional[bool] = False,
 ) -> messages.EvoluDelegatedIdentityKey:
-
     return session.call(
         messages.EvoluGetDelegatedIdentityKey(
             thp_credential=thp_credential,
@@ -74,7 +73,6 @@ def index_management(
     session: Session,
     rotation_index: Optional[int] = None,
 ) -> messages.EvoluIndexManagementResponse:
-
     return session.call(
         messages.EvoluIndexManagement(
             rotation_index=rotation_index,
