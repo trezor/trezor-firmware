@@ -812,3 +812,35 @@ fn test_invalid_tag() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_channel_id_wraparound() -> Result<()> {
+    setup();
+
+    fn alloc_test(
+        hm: &mut Buffered<host::Mux<NullCredentialStore, RustCrypto>>,
+        dm: &mut Buffered<device::Mux<TestCredentialVerifier, RustCrypto>>,
+        expected_id: u16,
+    ) -> Result<()> {
+        hm.request_channel(false);
+        take_turns(hm, dm)?;
+        let mut d = dm.channel_alloc()?.into_buffered();
+        take_turns(hm, &mut d)?;
+        let h = hm.channel_alloc()?.into_buffered();
+        assert_eq!(h.channel_id(), expected_id);
+        Ok(())
+    }
+
+    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+    hm.set_packet_len(DEFAULT_PACKET_LEN);
+    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
+    dm.set_packet_len(DEFAULT_PACKET_LEN);
+
+    dm.set_next_channel_id(MAX_CHANNEL_ID - 1);
+    alloc_test(&mut hm, &mut dm, MAX_CHANNEL_ID - 1)?;
+    alloc_test(&mut hm, &mut dm, MAX_CHANNEL_ID)?;
+    alloc_test(&mut hm, &mut dm, MIN_CHANNEL_ID)?;
+    alloc_test(&mut hm, &mut dm, MIN_CHANNEL_ID + 1)?;
+
+    Ok(())
+}

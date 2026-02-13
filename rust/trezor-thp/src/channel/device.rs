@@ -8,8 +8,8 @@ use crate::{
     error::TransportError,
     fragment::{Fragmenter, Reassembler},
     header::{
-        BROADCAST_CHANNEL_ID, HandshakeMessage, Header, MAX_CHANNEL_ID, channel_id_valid,
-        parse_cb_channel,
+        BROADCAST_CHANNEL_ID, HandshakeMessage, Header, MAX_CHANNEL_ID, MIN_CHANNEL_ID,
+        channel_id_valid, parse_cb_channel,
     },
     util::prepare_zeroed,
 };
@@ -22,8 +22,10 @@ use core::marker::PhantomData;
 // - DH key + credential + 2 AEAD tags + overhead
 const INTERNAL_BUFFER_LEN: usize = 192;
 const MESSAGE_TYPE_END_RESPONSE: u16 = 1019; // ThpMessageType_ThpEndResponse
+// As long as `packet_out` is called soon after `packet_in` there shouldn't be an accumulation
+// of outgoing messages. However there still can be >1 during normal operation, e.g. when we're
+// responding to PING at the same time the application requests sending an error.
 const BROADCAST_OUTGOING_QUEUE_LEN: usize = 8;
-const STARTING_CHANNEL_ID: u16 = 1000;
 // "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
 const CODEC_V1_RESPONSE: &[u8] = b"?##\x00\x03\x00\x00\x00\x14\x08\x11";
 
@@ -52,8 +54,10 @@ where
     B: Backend,
 {
     pub fn new(cred_verif: C) -> Self {
+        // Use random starting id to avoid giving out the number of channels allocated since boot.
+        let next_channel_id = random_channel_id::<B>();
         Self {
-            next_channel_id: STARTING_CHANNEL_ID,
+            next_channel_id,
             cred_verif,
             outgoing: heapless::Deque::new(),
             new_channel: None,
@@ -113,10 +117,11 @@ where
             Header::ChannelAllocationRequest if payload.len() == Nonce::LEN => {
                 let (nonce, _rest) = Nonce::parse(payload)?;
                 let channel_id = self.next_channel_id;
-                if channel_id > MAX_CHANNEL_ID {
-                    return Err(Error::unexpected_input()); // not recoverable
-                }
                 self.next_channel_id += 1;
+                if self.next_channel_id > MAX_CHANNEL_ID {
+                    log::debug!("Channel id max value reached, wrapping around.");
+                    self.next_channel_id = MIN_CHANNEL_ID;
+                }
                 if self.new_channel.is_some() {
                     log::warn!("Dropping previous channel allocation request.");
                 }
@@ -155,6 +160,12 @@ where
             }
         };
         PacketInResult::ignore(Error::malformed_data())
+    }
+
+    #[cfg(test)]
+    pub(crate) fn set_next_channel_id(&mut self, channel_id: u16) {
+        assert!(channel_id_valid(channel_id));
+        self.next_channel_id = channel_id;
     }
 }
 
@@ -540,4 +551,16 @@ impl<B: Backend> ChannelIO for ChannelPairing<B> {
     fn message_retransmit(&mut self) -> Result<(), Error> {
         self.channel.message_retransmit()
     }
+}
+
+fn random_channel_id<B: Backend>() -> u16 {
+    let mut bytes = [0u8, 0u8];
+    for _i in 0..16 {
+        B::random_bytes(&mut bytes);
+        let channel_id = u16::from_be_bytes(bytes);
+        if channel_id_valid(channel_id) && channel_id != BROADCAST_CHANNEL_ID {
+            return channel_id;
+        }
+    }
+    panic!("Cannot generate random channel id.");
 }

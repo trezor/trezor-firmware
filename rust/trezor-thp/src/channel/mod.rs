@@ -316,8 +316,13 @@ pub enum PacketInResult {
         channel_id: u16,
     },
     /// Channel allocation request/response was received. Event loop should call
-    /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and[`host::Mux`]
+    /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and [`host::Mux`]
     /// return this variant. There is no queue, do it before processing the next packet.
+    ///
+    /// Please note that the library does not keep track of allocated ids, that is left to
+    /// the application. By creating a lot of new channels an attacker can obtain an id that
+    /// was issued earlier. If there is existing channel with such id it should be destroyed.
+    /// (This is only relevant on the device side.)
     ChannelAllocation { channel_id: u16 },
 }
 

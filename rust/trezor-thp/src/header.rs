@@ -60,6 +60,7 @@ pub enum HandshakeMessage {
     CompletionResponse,
 }
 
+/// Check whether channel id is valid. Please note this also includes broadcast channel.
 pub const fn channel_id_valid(channel_id: u16) -> bool {
     (MIN_CHANNEL_ID <= channel_id && channel_id <= MAX_CHANNEL_ID)
         || channel_id == BROADCAST_CHANNEL_ID
