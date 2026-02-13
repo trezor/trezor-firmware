@@ -15,7 +15,7 @@ async def index_management(msg: EvoluIndexManagement) -> EvoluIndexManagementRes
     )
     from trezor.messages import EvoluIndexManagementResponse
 
-    from .common import ROTATION_INDEX_LIMIT, check_delegated_identity_rotation_index
+    from .common import check_delegated_identity_rotation_index
 
     check_delegated_identity_rotation_index(msg.rotation_index)
 
