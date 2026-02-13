@@ -126,3 +126,26 @@ pub fn hex_encode(bytes: &[u8]) -> alloc::string::String {
     }
     result
 }
+
+pub fn hed_decode(hex: &str) -> Result<alloc::vec::Vec<u8>, ()> {
+    if hex.len() % 2 != 0 {
+        return Err(()); // Invalid hex string
+    }
+    let mut bytes = alloc::vec::Vec::with_capacity(hex.len() / 2);
+    for i in (0..hex.len()).step_by(2) {
+        let high = hex[i..i + 1]
+            .chars()
+            .next()
+            .unwrap()
+            .to_digit(16)
+            .ok_or(())?;
+        let low = hex[i + 1..i + 2]
+            .chars()
+            .next()
+            .unwrap()
+            .to_digit(16)
+            .ok_or(())?;
+        bytes.push((high << 4 | low) as u8);
+    }
+    Ok(bytes)
+}
