@@ -30,9 +30,11 @@ async def get_delegated_identity_key(
     """
 
     from trezorutils import delegated_identity
+
     from trezor.messages import EvoluDelegatedIdentityKey
-    from .common import check_delegated_identity_rotation_index
     from trezor.wire.errors import DataError
+
+    from .common import check_delegated_identity_rotation_index
 
     if msg.rotate and msg.rotation_index is not None:
         raise DataError("Cannot rotate and request a specific index simultaneously")

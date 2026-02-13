@@ -266,7 +266,7 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
                                  mod_trezorutils_firmware_vendor);
 
-/// def delegated_identity(index: int) -> bytes:
+/// def delegated_identity(rotation_index: int) -> bytes:
 ///     """
 ///     Returns the delegated identity key used for registration and space
 ///     management at Quota Manager.
