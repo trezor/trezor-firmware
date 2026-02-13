@@ -402,7 +402,7 @@ where
             );
             // Possibly damaged length field, ignore continuations.
             self.channel.state = ChannelState::Idle;
-            return PacketInResult::ignore(Error::MalformedData);
+            return PacketInResult::ignore(Error::malformed_data());
         }
         if res.got_ack() {
             prepare_zeroed(&mut self.internal_buffer);

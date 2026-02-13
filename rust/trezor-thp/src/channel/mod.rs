@@ -547,7 +547,7 @@ pub trait ChannelIO {
 impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     fn packet_in(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> PacketInResult {
         if let ChannelState::Failed(_e) = self.state {
-            return PacketInResult::fail(Error::UnexpectedInput);
+            return PacketInResult::fail(Error::unexpected_input());
         }
         let res = PacketInResult::from_result(self.handle_packet(packet_buffer, receive_buffer));
         if let PacketInResult::Failed { .. } = res {
