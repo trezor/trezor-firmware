@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import EvoluDelegatedIdentityKey, EvoluGetDelegatedIdentityKey
@@ -33,15 +33,9 @@ async def get_delegated_identity_key(
 
     from trezor.messages import EvoluDelegatedIdentityKey
 
-    from .common import ROTATION_INDEX_LIMIT, check_delegated_identity_rotation_index
+    from .common import check_delegated_identity_rotation_index
 
     check_delegated_identity_rotation_index(msg.rotation_index)
-
-    if msg.rotation_index is not None:
-        if msg.rotation_index < 0 or msg.rotation_index > ROTATION_INDEX_LIMIT:
-            raise ValueError(
-                f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
-            )
 
     if msg.rotate:
         await rotate_index()
@@ -96,7 +90,7 @@ async def confirm_no_thp() -> None:
     )
 
 
-def get_rotation_index(msg: EvoluGetDelegatedIdentityKey) -> Optional[int]:
+def get_rotation_index(msg: EvoluGetDelegatedIdentityKey) -> int | None:
     from storage.device import get_delegated_identity_key_rotation_index
     from trezor.wire.errors import DataError
 

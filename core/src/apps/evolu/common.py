@@ -1,5 +1,5 @@
 from micropython import const
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
@@ -8,9 +8,9 @@ if TYPE_CHECKING:
 ROTATION_INDEX_LIMIT = const((1 << 16) - 1)
 
 
-def check_delegated_identity_rotation_index(rotation_index: Optional[int]) -> None:
+def check_delegated_identity_rotation_index(rotation_index: int | None) -> None:
     if rotation_index is not None:
-        if not 0 <= (rotation_index or 0) <= ROTATION_INDEX_LIMIT:
+        if not 0 <= rotation_index <= ROTATION_INDEX_LIMIT:
             raise ValueError(
                 f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
             )

@@ -79,6 +79,15 @@ static inline uint8_t trezor_obj_get_uint8(mp_obj_t obj) {
   return u;
 }
 
+static inline uint16_t trezor_obj_get_uint16(mp_obj_t obj) {
+  mp_uint_t u = trezor_obj_get_uint(obj);
+  if (u > 0xFFFF) {
+    mp_raise_msg(&mp_type_OverflowError,
+                 MP_ERROR_TEXT("value does not fit into uint16 type"));
+  }
+  return (uint16_t)u;
+}
+
 static inline uint64_t trezor_obj_get_uint64(mp_const_obj_t obj) {
   if (MP_OBJ_IS_SMALL_INT(obj)) {
     mp_int_t i = MP_OBJ_SMALL_INT_VALUE(obj);

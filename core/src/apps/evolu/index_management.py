@@ -23,10 +23,6 @@ async def index_management(msg: EvoluIndexManagement) -> EvoluIndexManagementRes
 
     if stored_index is None:
         if msg.rotation_index is not None:
-            if not 0 <= msg.rotation_index <= ROTATION_INDEX_LIMIT:
-                raise ValueError(
-                    f"Rotation index must be between 0 and {ROTATION_INDEX_LIMIT}"
-                )
             set_delegated_identity_key_rotation_index(msg.rotation_index)
             stored_index = msg.rotation_index
 

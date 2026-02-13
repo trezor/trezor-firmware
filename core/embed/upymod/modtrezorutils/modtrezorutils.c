@@ -272,7 +272,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
 ///     management at Quota Manager.
 ///     """
 STATIC mp_obj_t mod_trezorutils_delegated_identity(mp_obj_t index) {
-  mp_uint_t rotation_index = trezor_obj_get_uint(index);
+  uint16_t rotation_index = trezor_obj_get_uint16(index);
   uint8_t private_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
   if (secret_key_delegated_identity(rotation_index, private_key) != sectrue) {
     mp_raise_msg(&mp_type_RuntimeError,
