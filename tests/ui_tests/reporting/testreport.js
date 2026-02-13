@@ -133,6 +133,15 @@ function onLoadTestCase() {
 
         const markbox = document.getElementById("markbox");
 
+        if (!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) {
+            const updateButton = document.getElementById("mark-update");
+            updateButton.disabled = true;
+            updateButton.style.backgroundColor = "#ccc";
+            updateButton.style.color = "#666";
+            updateButton.style.cursor = "not-allowed";
+            updateButton.title = "Only possible locally";
+        }
+
         const links = [];
         for (const [url, label, key] of [[window.prevHref, "[p]rev case", "p"], [window.nextHref, "[n]ext case", "n"]]) {
             if (url) {
