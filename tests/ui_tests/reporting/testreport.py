@@ -340,11 +340,17 @@ def failed(result: TestResult) -> Path:
         _header(result.test.id, result.expected_hash, result.actual_hash)
 
         with div(id="markbox", _class="script-hidden"):
-            p("Click a button to mark the test result as:")
+            p("Mark the test result as:")
             with div(id="buttons"):
-                t.button("OK", id="mark-ok")
-                t.button("OK & UPDATE", id="mark-update")
-                t.button("BAD", id="mark-bad")
+                with div(_class="mark"):
+                    t.span("[a]", _class="helper")
+                    t.button("OK", id="mark-ok")
+                with div(_class="mark"):
+                    t.span("[s]", _class="helper")
+                    t.button("OK & UPDATE", id="mark-update")
+                with div(_class="mark"):
+                    t.span("[d]", _class="helper")
+                    t.button("BAD", id="mark-bad")
 
         if download_failed:
             with p():
