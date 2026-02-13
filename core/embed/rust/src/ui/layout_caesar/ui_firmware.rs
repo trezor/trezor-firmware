@@ -626,7 +626,7 @@ impl FirmwareUI for UICaesar {
         verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    ) -> Result<Gc<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
@@ -644,7 +644,7 @@ impl FirmwareUI for UICaesar {
             }
         }
 
-        let layout = RootComponent::new(Frame::new(
+        LayoutObj::new(Frame::new(
             title,
             ShowMore::<Paragraphs<ParagraphVecShort>>::new(
                 paragraphs.into_paragraphs(),
@@ -653,8 +653,7 @@ impl FirmwareUI for UICaesar {
                 verb_info,
             )
             .with_menu(external_menu),
-        ));
-        Ok(layout)
+        ))
     }
 
     fn check_homescreen_format(image: BinaryData, _accept_toif: bool) -> bool {

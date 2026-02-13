@@ -469,7 +469,7 @@ impl FirmwareUI for UIDelizia {
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    ) -> Result<Gc<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
@@ -500,7 +500,7 @@ impl FirmwareUI for UIDelizia {
             strings,
             ConfirmActionOptions::new(),
         )?;
-        Ok(flow)
+        LayoutObj::new_root(flow)
     }
 
     fn check_homescreen_format(image: BinaryData, __accept_toif: bool) -> bool {
