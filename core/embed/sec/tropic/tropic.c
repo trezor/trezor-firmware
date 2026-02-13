@@ -341,17 +341,12 @@ bool tropic_session_start(void) {
     return true;
   }
 
+  if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
+      LT_OK) {
+    return true;
+  }
 #ifndef TREZOR_EMULATOR
-  if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
-      LT_OK) {
-    return true;
-  }
   if (tropic_custom_session_start(NULL, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT) ==
-      LT_OK) {
-    return true;
-  }
-#else
-  if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
   }

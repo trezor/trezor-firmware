@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import tempfile
 from io import TextIOWrapper
 from pathlib import Path
 from typing import List
@@ -88,15 +89,16 @@ def json_to_markdown(json_filename: Path, md_filename: Path) -> None:
 @click.option("--check", is_flag=True)
 def generate_tropic_config_docs(check: bool) -> None:
     if check:
-        original_content = MD_FILE.read_text()
-
-    json_to_markdown(JSON_FILE, MD_FILE)
-
-    if check:
-        new_content = MD_FILE.read_text()
+        with tempfile.NamedTemporaryFile() as f:
+            temp = Path(f.name)
+            json_to_markdown(JSON_FILE, temp)
+            new_content = temp.read_text()
+            original_content = MD_FILE.read_text()
         if original_content != new_content:
             MD_FILE.write_text(original_content)
             raise click.ClickException(f"{MD_FILE.name} file is out of date.")
+    else:
+        json_to_markdown(JSON_FILE, MD_FILE)
 
 
 if __name__ == "__main__":
