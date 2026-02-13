@@ -7,13 +7,13 @@ use trezor_app_sdk::{
     ui, {Error, Result},
 };
 
-use crate::common::require_confirm_address;
+use crate::common::{Bip32Path, require_confirm_address};
 use crate::proto::ethereum::EthereumTypedDataSignature;
 use crate::proto::ethereum_eip712::EthereumSignTypedData;
 
 /// Ethereum uses Bitcoin xpub format
 pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSignature> {
-    let dp = msg.address_n;
+    let dp = Bip32Path::from_slice(&msg.address_n);
 
     // msg.primary_type
     // msg.metamask_v4_compat
@@ -40,8 +40,10 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
     // node = keychain.derive(msg.address_n)
     // address_bytes: bytes = node.ethereum_pubkeyhash()
 
+    let hash = vec![0u8; 32]; // TODO: generate actual hash of the typed data
+
     // # Display address so user can validate it
-    require_confirm_address(address_bytes, None, None, None, None, None)?;
+    require_confirm_address(&hash, None, None, None, None, None)?;
 
     // data_hash = await _generate_typed_data_hash(
     //     msg.primary_type, msg.metamask_v4_compat, msg.show_message_hash
