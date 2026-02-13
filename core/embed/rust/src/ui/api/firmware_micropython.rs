@@ -476,7 +476,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             .try_into_option()?;
         let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
-        let layout = ModelUI::confirm_with_info(
+        let obj = ModelUI::confirm_with_info(
             title,
             subtitle,
             items,
@@ -485,7 +485,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             verb_cancel,
             external_menu,
         )?;
-        Ok(LayoutObj::new_root(layout)?.into())
+        Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }

@@ -495,7 +495,7 @@ impl FirmwareUI for UIBolt {
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    ) -> Result<Gc<LayoutObj>, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
@@ -520,14 +520,22 @@ impl FirmwareUI for UIBolt {
         }
         .styled(theme::button_confirm());
 
-        let buttons = Button::cancel_info_confirm(confirm_button, verb_info);
-
-        let layout = RootComponent::new(Frame::left_aligned(
-            theme::label_title(),
-            title,
-            Dialog::new(paragraphs.into_paragraphs(), buttons),
-        ));
-        Ok(layout)
+        if verb_info.is_empty() {
+            // hide the info button if its verb is empty
+            let buttons = Button::cancel_confirm_text(None, Some(verb));
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
+                title,
+                Dialog::new(paragraphs.into_paragraphs(), buttons),
+            ))
+        } else {
+            let buttons = Button::cancel_info_confirm(confirm_button, verb_info);
+            LayoutObj::new(Frame::left_aligned(
+                theme::label_title(),
+                title,
+                Dialog::new(paragraphs.into_paragraphs(), buttons),
+            ))
+        }
     }
 
     fn check_homescreen_format(image: BinaryData, _accept_toif: bool) -> bool {

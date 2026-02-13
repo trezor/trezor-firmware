@@ -649,7 +649,7 @@ async def should_show_more(
             title=title,
             items=items,
             verb=confirm or TR.buttons__confirm,
-            verb_info=button_text or TR.buttons__show_all,
+            verb_info=TR.buttons__show_all if button_text is None else button_text,
         ),
         br_name,
         br_code,

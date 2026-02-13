@@ -169,7 +169,7 @@ pub trait FirmwareUI {
         verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
         external_menu: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error>;
+    ) -> Result<Gc<LayoutObj>, Error>;
 
     fn continue_recovery_homepage(
         text: TString<'static>,
