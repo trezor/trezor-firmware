@@ -44,8 +44,10 @@ ALL_SCREENS = "all_screens.html"
 ALL_UNIQUE_SCREENS = "all_unique_screens.html"
 
 
-def _header(test_name: str, expected_hash: str | None, actual_hash: str) -> None:
-    h1(test_name)
+def _header(result: TestResult, dir: str) -> None:
+    expected_hash, actual_hash = result.expected_hash, result.actual_hash
+
+    h1(result.test.id)
     with div():
         if actual_hash == expected_hash:
             p(
@@ -64,6 +66,11 @@ def _header(test_name: str, expected_hash: str | None, actual_hash: str) -> None
             )
         p("Expected: ", expected_hash or "(new test case)")
         p("Actual: ", actual_hash)
+
+    if result.images:
+        first_screen = result.images[0]
+        html.image_link(first_screen, TESTREPORT_PATH / dir, img_id="gif")
+
     hr()
 
 
@@ -337,7 +344,7 @@ def failed(result: TestResult) -> Path:
 
     with doc:
 
-        _header(result.test.id, result.expected_hash, result.actual_hash)
+        _header(result, "failed")
 
         with div(id="markbox", _class="script-hidden"):
             p("Mark the test result as:")
@@ -389,7 +396,7 @@ def recorded(result: TestResult, header: str = "Recorded", dir: str = "passed") 
     with doc.head:
         script(type="text/javascript", src="../testreport.js")
     with doc:
-        _header(result.test.id, result.actual_hash, result.actual_hash)
+        _header(result, dir)
 
         with table(border=1):
             with tr():
