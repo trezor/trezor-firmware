@@ -463,7 +463,7 @@ impl FirmwareUI for UIDelizia {
 
     fn confirm_with_info(
         title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
         verb_info: TString<'static>,
@@ -487,7 +487,7 @@ impl FirmwareUI for UIDelizia {
             }
         }
 
-        let mut strings = ConfirmActionStrings::new(title, None, None, None);
+        let mut strings = ConfirmActionStrings::new(title, subtitle, None, None);
         if !verb.is_empty() {
             // skip footer if verb is an empty string
             strings = strings.with_footer_description(Some(verb));
