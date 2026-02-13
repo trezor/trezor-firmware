@@ -586,7 +586,11 @@ impl ButtonLayout {
         Self::new(
             Some(ButtonDetails::from_text_possible_icon(left)),
             Some(ButtonDetails::armed_text(middle)),
-            Some(ButtonDetails::from_text_possible_icon(right)),
+            if right.is_empty() {
+                None
+            } else {
+                Some(ButtonDetails::from_text_possible_icon(right))
+            },
         )
     }
 
@@ -604,7 +608,11 @@ impl ButtonLayout {
         Self::new(
             Some(ButtonDetails::cancel_icon()),
             Some(ButtonDetails::armed_text(middle)),
-            Some(ButtonDetails::from_text_possible_icon(right)),
+            if right.is_empty() {
+                None
+            } else {
+                Some(ButtonDetails::from_text_possible_icon(right))
+            },
         )
     }
 

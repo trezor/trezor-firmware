@@ -722,7 +722,7 @@ async def should_show_more(
     Raises ActionCancelled if the user cancels.
     """
 
-    if button_text != DOWN_ARROW:
+    if button_text not in (DOWN_ARROW, ""):
         button_text = INFO_ICON
     result = await interact(
         trezorui_api.confirm_with_info(
