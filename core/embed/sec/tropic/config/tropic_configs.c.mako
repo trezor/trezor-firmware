@@ -70,7 +70,7 @@ r_uap_names = [category for category in reversible_config.keys() if 'uap' in cat
 // `docs/core/misc/tropic_configs.md` for more details.
 
 // clang-format off
-const struct lt_config_t g_irreversible_configuration = {
+const struct lt_config_t tropic_configs_irreversible = {
     .obj = {
 % for category in i_names:
         ${all_except([c['bit'] for c in irreversible_config[category]["setting"].values() if not(c['value'])])}
@@ -81,7 +81,7 @@ const struct lt_config_t g_irreversible_configuration = {
     }
 };
 
-const struct lt_config_t g_reversible_configuration = {
+const struct lt_config_t tropic_configs_reversible = {
     .obj = {
 % for category in r_names:
         ${bits([c['bit'] for c in reversible_config[category]["setting"].values() if c['value']])}

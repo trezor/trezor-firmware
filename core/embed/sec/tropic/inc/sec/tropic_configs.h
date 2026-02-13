@@ -22,5 +22,5 @@
 #include <libtropic.h>
 
 // Declare the configurations as extern
-extern const struct lt_config_t g_irreversible_configuration;
-extern const struct lt_config_t g_reversible_configuration;
+extern const struct lt_config_t tropic_configs_irreversible;
+extern const struct lt_config_t tropic_configs_reversible;

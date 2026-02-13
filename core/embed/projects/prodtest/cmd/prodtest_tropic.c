@@ -202,8 +202,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(g_reversible_configuration)) != 0) {
+  if (memcmp(&tropic_configs_reversible, (uint8_t*)&configuration_read,
+             sizeof(tropic_configs_reversible)) != 0) {
     cli_trace(cli,
               "The reversible configuration read does not match the expected "
               "reversible configuration.");
@@ -218,8 +218,8 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
     return TROPIC_LOCKED_ERROR;
   }
 
-  if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(g_irreversible_configuration)) != 0) {
+  if (memcmp(&tropic_configs_irreversible, (uint8_t*)&configuration_read,
+             sizeof(tropic_configs_irreversible)) != 0) {
     cli_trace(cli,
               "The irreversible configuration read does not match the expected "
               "irreversible configuration.");
@@ -776,7 +776,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = lt_write_whole_R_config(tropic_handle, &g_reversible_configuration);
+  ret = lt_write_whole_R_config(tropic_handle, &tropic_configs_reversible);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`lt_write_whole_R_config()` failed with error '%s'",
@@ -792,13 +792,13 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (memcmp(&g_reversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(g_reversible_configuration)) != 0) {
+  if (memcmp(&tropic_configs_reversible, (uint8_t*)&configuration_read,
+             sizeof(tropic_configs_reversible)) != 0) {
     cli_error(cli, CLI_ERROR, "Reversible configuration mismatch after write.");
     return;
   }
 
-  ret = lt_write_whole_I_config(tropic_handle, &g_irreversible_configuration);
+  ret = lt_write_whole_I_config(tropic_handle, &tropic_configs_irreversible);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`lt_write_whole_I_config()` failed with error '%s'",
@@ -814,8 +814,8 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  if (memcmp(&g_irreversible_configuration, (uint8_t*)&configuration_read,
-             sizeof(g_irreversible_configuration)) != 0) {
+  if (memcmp(&tropic_configs_irreversible, (uint8_t*)&configuration_read,
+             sizeof(tropic_configs_irreversible)) != 0) {
     cli_error(cli, CLI_ERROR,
               "Irreversible configuration mismatch after write.");
     return;

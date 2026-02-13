@@ -1021,7 +1021,7 @@ secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
   }
 
   uint32_t expected_sensors_config =
-      g_reversible_configuration.obj[TR01_CFG_SENSORS_IDX];
+      tropic_configs_reversible.obj[TR01_CFG_SENSORS_IDX];
   if (sensors_config != expected_sensors_config) {
     goto cleanup;
   }
@@ -1032,7 +1032,7 @@ secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
   }
 
   expected_sensors_config =
-      g_irreversible_configuration.obj[TR01_CFG_SENSORS_IDX];
+      tropic_configs_irreversible.obj[TR01_CFG_SENSORS_IDX];
   if (sensors_config != expected_sensors_config) {
     goto cleanup;
   }

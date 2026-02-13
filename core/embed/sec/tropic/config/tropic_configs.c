@@ -27,7 +27,7 @@
 // `docs/core/misc/tropic_configs.md` for more details.
 
 // clang-format off
-const struct lt_config_t g_irreversible_configuration = {
+const struct lt_config_t tropic_configs_irreversible = {
     .obj = {
         0xFFFFFFF9U,
         0xFFFFFFFFU,
@@ -59,7 +59,7 @@ const struct lt_config_t g_irreversible_configuration = {
     }
 };
 
-const struct lt_config_t g_reversible_configuration = {
+const struct lt_config_t tropic_configs_reversible = {
     .obj = {
         0x00000009U,
         0,
