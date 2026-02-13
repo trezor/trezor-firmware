@@ -1658,7 +1658,7 @@ async def confirm_modify_output(
                 value=address,
                 verb=TR.buttons__continue,
                 verb_cancel=None,
-                description=TR.words__address + ":",
+                description=TR.words__address,
             ),
             "modify_output" if send_button_request else None,
             ButtonRequestType.ConfirmOutput,

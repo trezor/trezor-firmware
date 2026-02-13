@@ -356,9 +356,19 @@
       "Delizia": "Auxiliary data hash",
       "Eckhart": "Auxiliary data hash"
     },
-    "cardano__block": "Block",
+    "cardano__block": {
+      "Bolt": "Block:",
+      "Caesar": "Block:",
+      "Delizia": "Block",
+      "Eckhart": "Block"
+    },
     "cardano__catalyst": "Catalyst",
-    "cardano__certificate": "Certificate",
+    "cardano__certificate": {
+      "Bolt": "Certificate:",
+      "Caesar": "Certificate:",
+      "Delizia": "Certificate",
+      "Eckhart": "Certificate"
+    },
     "cardano__change_output": "Change output",
     "cardano__check_all_items": "Check all items carefully.",
     "cardano__choose_level_of_details": "Choose level of details:",
@@ -383,12 +393,7 @@
     "cardano__confirming_a_plutus_transaction": "Confirming a Plutus transaction.",
     "cardano__confirming_pool_registration": "Confirming pool registration as owner.",
     "cardano__confirming_transaction": "Confirming a transaction.",
-    "cardano__cost": {
-      "Bolt": "Cost:",
-      "Caesar": "Cost:",
-      "Delizia": "Cost",
-      "Eckhart": "Cost"
-    },
+    "cardano__cost": "Cost:",
     "cardano__credential_mismatch": "Credential doesn't match payment credential.",
     "cardano__datum_hash": {
       "Bolt": "Datum hash:",
@@ -462,12 +467,7 @@
     "cardano__intro_text_owned_by_device": "The following address is owned by this device. Its",
     "cardano__intro_text_registration_payment": "The vote key registration payment address is owned by this device. Its",
     "cardano__key_hash": "key hash",
-    "cardano__margin": {
-      "Bolt": "Margin:",
-      "Caesar": "Margin:",
-      "Delizia": "Margin",
-      "Eckhart": "Margin"
-    },
+    "cardano__margin": "Margin:",
     "cardano__message_hash": {
       "Bolt": "Message hash:",
       "Caesar": "Message hash:",
@@ -492,13 +492,13 @@
       "Eckhart": "Nonce"
     },
     "cardano__other": "Other",
-    "cardano__path": "path",
-    "cardano__pledge": {
-      "Bolt": "Pledge:",
-      "Caesar": "Pledge:",
-      "Delizia": "Pledge",
-      "Eckhart": "Pledge"
+    "cardano__path": {
+      "Bolt": "path:",
+      "Caesar": "path:",
+      "Delizia": "path",
+      "Eckhart": "path"
     },
+    "cardano__pledge": "Pledge:",
     "cardano__pointer": "pointer",
     "cardano__policy_id": "Policy ID",
     "cardano__pool_metadata_hash": {
@@ -538,7 +538,12 @@
       "Eckhart": "Reference input index"
     },
     "cardano__reference_script": "Reference script",
-    "cardano__required_signer": "Required signer",
+    "cardano__required_signer": {
+      "Bolt": "Required signer:",
+      "Caesar": "Required signer:",
+      "Delizia": "Required signer",
+      "Eckhart": "Required signer"
+    },
     "cardano__reward": "Reward",
     "cardano__reward_address": "Address is a reward address.",
     "cardano__reward_eligibility_warning": "Warning: The address is not a payment address, it is not eligible for rewards.",
@@ -548,9 +553,24 @@
       "Delizia": "Rewards go to",
       "Eckhart": "Rewards go to"
     },
-    "cardano__script": "script",
-    "cardano__script_all": "All",
-    "cardano__script_any": "Any",
+    "cardano__script": {
+      "Bolt": "script:",
+      "Caesar": "script:",
+      "Delizia": "script",
+      "Eckhart": "script"
+    },
+    "cardano__script_all": {
+      "Bolt": "All:",
+      "Caesar": "All:",
+      "Delizia": "All",
+      "Eckhart": "All"
+    },
+    "cardano__script_any": {
+      "Bolt": "Any:",
+      "Caesar": "Any:",
+      "Delizia": "Any",
+      "Eckhart": "Any"
+    },
     "cardano__script_data_hash": {
       "Bolt": "Script data hash:",
       "Caesar": "Script data hash:",
@@ -563,10 +583,25 @@
       "Delizia": "Script hash",
       "Eckhart": "Script hash"
     },
-    "cardano__script_invalid_before": "Invalid before",
-    "cardano__script_invalid_hereafter": "Invalid hereafter",
+    "cardano__script_invalid_before": {
+      "Bolt": "Invalid before:",
+      "Caesar": "Invalid before:",
+      "Delizia": "Invalid before",
+      "Eckhart": "Invalid before"
+    },
+    "cardano__script_invalid_hereafter": {
+      "Bolt": "Invalid hereafter:",
+      "Caesar": "Invalid hereafter:",
+      "Delizia": "Invalid hereafter",
+      "Eckhart": "Invalid hereafter"
+    },
     "cardano__script_key": "Key",
-    "cardano__script_n_of_k": "N of K",
+    "cardano__script_n_of_k": {
+      "Bolt": "N of K:",
+      "Caesar": "N of K:",
+      "Delizia": "N of K",
+      "Eckhart": "N of K"
+    },
     "cardano__script_reward": "Script reward",
     "cardano__sending": "Sending",
     "cardano__show_simple": "Show Simple",
@@ -597,7 +632,12 @@
       "Delizia": "Total collateral",
       "Eckhart": "Total collateral"
     },
-    "cardano__transaction": "Transaction",
+    "cardano__transaction": {
+      "Bolt": "Transaction:",
+      "Caesar": "Transaction:",
+      "Delizia": "Transaction",
+      "Eckhart": "Transaction"
+    },
     "cardano__transaction_contains_minting_or_burning": "The transaction contains minting or burning of tokens.",
     "cardano__transaction_contains_script_address_no_datum": "The following transaction output contains a script address, but does not contain a datum.",
     "cardano__transaction_id": {
@@ -769,7 +809,7 @@
       "Eckhart": ""
     },
     "eos__memo": {
-      "Bolt": "Memo",
+      "Bolt": "Memo:",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -914,7 +954,12 @@
     },
     "ethereum__amount_sent": "Amount sent:",
     "ethereum__approve": "Approve",
-    "ethereum__approve_amount_allowance": "Amount allowance",
+    "ethereum__approve_amount_allowance": {
+      "Bolt": "Amount allowance:",
+      "Caesar": "Amount allowance:",
+      "Delizia": "Amount allowance",
+      "Eckhart": "Amount allowance"
+    },
     "ethereum__approve_chain_id": "Chain ID",
     "ethereum__approve_intro": "Review details to approve token spending.",
     "ethereum__approve_intro_revoke": "Review details to revoke token approval.",
@@ -933,8 +978,18 @@
       "Eckhart": "Authorize the following contract as an EIP-7702 on your account?"
     },
     "ethereum__eip_7702_title": "Smart accounts",
-    "ethereum__gas_limit": "Gas limit",
-    "ethereum__gas_price": "Gas price",
+    "ethereum__gas_limit": {
+      "Bolt": "Gas limit:",
+      "Caesar": "Gas limit:",
+      "Delizia": "Gas limit",
+      "Eckhart": "Gas limit"
+    },
+    "ethereum__gas_price": {
+      "Bolt": "Gas price:",
+      "Caesar": "Gas price:",
+      "Delizia": "Gas price",
+      "Eckhart": "Gas price"
+    },
     "ethereum__interaction_contract": {
       "Bolt": "Interaction contract:",
       "Caesar": "Interaction contract:",
@@ -1341,7 +1396,7 @@
       "Eckhart": ""
     },
     "nem__confirm_transfer_of": {
-      "Bolt": "Confirm transfer of",
+      "Bolt": "Confirm transfer of:",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1365,13 +1420,13 @@
       "Eckhart": ""
     },
     "nem__create_mosaic": {
-      "Bolt": "Create mosaic",
+      "Bolt": "Create mosaic:",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "nem__create_namespace": {
-      "Bolt": "Create namespace",
+      "Bolt": "Create namespace:",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1449,7 +1504,7 @@
       "Eckhart": ""
     },
     "nem__levy_fee_of": {
-      "Bolt": "Confirm mosaic levy fee of",
+      "Bolt": "Confirm mosaic levy fee of:",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1479,7 +1534,7 @@
       "Eckhart": ""
     },
     "nem__modify_supply_for": {
-      "Bolt": "Modify supply for",
+      "Bolt": "Modify supply for:",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1497,7 +1552,7 @@
       "Eckhart": ""
     },
     "nem__of": {
-      "Bolt": "of",
+      "Bolt": "of:",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1557,7 +1612,7 @@
       "Eckhart": ""
     },
     "nem__under_namespace": {
-      "Bolt": "under namespace",
+      "Bolt": "under namespace:",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -2334,7 +2389,12 @@
     "send__title_sending_amount": "Sending amount",
     "send__title_sending_to": "Sending to",
     "send__to_the_total_amount": "To the total amount:",
-    "send__total_amount": "Total amount",
+    "send__total_amount": {
+      "Bolt": "Total amount:",
+      "Caesar": "Total amount:",
+      "Delizia": "Total amount",
+      "Eckhart": "Total amount"
+    },
     "send__transaction_id": "Transaction ID",
     "send__transaction_signed": "Transaction signed",
     "send__you_are_contributing": "You are contributing:",
@@ -2356,7 +2416,12 @@
     "sign_message__confirm_address": "Signing address",
     "sign_message__confirm_message": "Confirm message",
     "sign_message__confirm_without_review": "Confirm without review",
-    "sign_message__message_size": "Message size",
+    "sign_message__message_size": {
+      "Bolt": "Message size:",
+      "Caesar": "Message size:",
+      "Delizia": "Message size",
+      "Eckhart": "Message size"
+    },
     "sign_message__verify_address": "Verify address",
     "sn__action": {
       "Bolt": "",
@@ -2372,7 +2437,12 @@
     },
     "solana__account_index": "Account index",
     "solana__associated_token_account": "Associated token account",
-    "solana__base_fee": "Base fee",
+    "solana__base_fee": {
+      "Bolt": "Base fee:",
+      "Caesar": "Base fee:",
+      "Delizia": "Base fee",
+      "Eckhart": "Base fee"
+    },
     "solana__claim": "Claim",
     "solana__claim_question": "Claim SOL from stake account?",
     "solana__claim_recipient_warning": "Claiming SOL to address outside your current wallet.",
@@ -2383,7 +2453,12 @@
     "solana__instruction_is_multisig": "The following instruction is a multisig instruction.",
     "solana__is_provided_via_lookup_table_template": "{0} is provided via a lookup table.",
     "solana__lookup_table_address": "Lookup table address",
-    "solana__max_fees_rent": "Max fees and rent",
+    "solana__max_fees_rent": {
+      "Bolt": "Max fees and rent:",
+      "Caesar": "Max fees and rent:",
+      "Delizia": "Max fees and rent",
+      "Eckhart": "Max fees and rent"
+    },
     "solana__max_rent_fee": "Max rent fee",
     "solana__multiple_signers": "Multiple signers",
     "solana__priority_fee": "Priority fee",
@@ -2498,7 +2573,12 @@
     "stellar__token_info": "Token info",
     "stellar__transaction_source": "Transaction source",
     "stellar__transaction_source_diff_warning": "Transaction source does not belong to this Trezor.",
-    "stellar__trusted_account": "Trusted Account",
+    "stellar__trusted_account": {
+      "Bolt": "Trusted Account:",
+      "Caesar": "Trusted Account:",
+      "Delizia": "Trusted Account",
+      "Eckhart": "Trusted Account"
+    },
     "stellar__update": "Update",
     "stellar__valid_from": "Valid from (UTC)",
     "stellar__valid_to": "Valid to (UTC)",
@@ -2765,7 +2845,12 @@
     },
     "words__are_you_sure": "Are you sure?",
     "words__array_of": "Array of",
-    "words__asset": "Asset",
+    "words__asset": {
+      "Bolt": "Asset:",
+      "Caesar": "Asset:",
+      "Delizia": "Asset",
+      "Eckhart": "Asset"
+    },
     "words__assets": "Assets",
     "words__authenticate": "Authenticate",
     "words__blockhash": "Blockhash",
@@ -2773,9 +2858,19 @@
     "words__buying": "Buying",
     "words__cancel_and_exit": "Cancel and exit",
     "words__cancel_question": "Cancel?",
-    "words__chain": "Chain",
+    "words__chain": {
+      "Bolt": "Chain:",
+      "Caesar": "Chain:",
+      "Delizia": "Chain",
+      "Eckhart": "Chain"
+    },
     "words__comm_trouble": "Your Trezor is having trouble communicating with your connected device.",
-    "words__confirm": "Confirm",
+    "words__confirm": {
+      "Bolt": "Confirm:",
+      "Caesar": "Confirm:",
+      "Delizia": "Confirm",
+      "Eckhart": "Confirm"
+    },
     "words__confirm_all": "Confirm all",
     "words__confirm_fee": "Confirm fee",
     "words__connect": "Connect",
@@ -2796,7 +2891,12 @@
       "Delizia": "Fee",
       "Eckhart": "Fee"
     },
-    "words__fee_limit": "Fee limit",
+    "words__fee_limit": {
+      "Bolt": "Fee limit:",
+      "Caesar": "Fee limit:",
+      "Delizia": "Fee limit",
+      "Eckhart": "Fee limit"
+    },
     "words__forget": "Forget",
     "words__from": {
       "Bolt": "from",
@@ -2893,8 +2993,18 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "words__token": "Token",
-    "words__transaction_fee": "Transaction fee",
+    "words__token": {
+      "Bolt": "Token:",
+      "Caesar": "Token:",
+      "Delizia": "Token",
+      "Eckhart": "Token"
+    },
+    "words__transaction_fee": {
+      "Bolt": "Transaction fee:",
+      "Caesar": "Transaction fee:",
+      "Delizia": "Transaction fee",
+      "Eckhart": "Transaction fee"
+    },
     "words__try_again": {
       "Bolt": "Try again.",
       "Caesar": "Try again.",
