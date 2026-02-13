@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 import trezorui_api
@@ -713,6 +714,45 @@ async def _confirm_ask_pagination(
             return
 
     assert False
+
+
+_INFO_DATA_ROWS = const(3)
+_INFO_DATA_WIDTH_BYTES = const(9)
+
+
+async def confirm_blob_prefix(
+    title: str,
+    data: memoryview,
+    *,
+    total_len: int,
+    confirmed_len: int,
+    br_name: str,
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+) -> int | None:
+    """
+    Returns the number of bytes confirmed, or `None` if confirmation should be skipped.
+    """
+    # 3 rows x 18 hex digits (the maximal width is 19 digits)
+    prefix = data[: _INFO_DATA_ROWS * _INFO_DATA_WIDTH_BYTES]
+    prefix_parts = (
+        prefix[i * _INFO_DATA_WIDTH_BYTES : (i + 1) * _INFO_DATA_WIDTH_BYTES]
+        for i in range(_INFO_DATA_ROWS)
+    )
+    confirmed_len += len(prefix)
+
+    button_text = TR.words__show_next if confirmed_len < total_len else ""
+
+    show_more = await should_show_more(
+        title=f"{title}:\n{confirmed_len} / {total_len} bytes",
+        items=[(utils.hexlify_if_bytes(part), True) for part in prefix_parts],
+        button_text=button_text,  # will return True
+        confirm=TR.words__confirm_all,  # will return False
+        br_name=br_name,
+        br_code=br_code,
+    )
+    if show_more:
+        return len(prefix)
+    return None
 
 
 def confirm_blob(

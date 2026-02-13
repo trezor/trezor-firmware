@@ -712,6 +712,35 @@ async def should_show_more(
         raise ActionCancelled
 
 
+async def confirm_blob_prefix(
+    title: str,
+    data: memoryview,
+    *,
+    total_len: int,
+    confirmed_len: int,
+    br_name: str,
+    br_code: ButtonRequestType = BR_CODE_OTHER,
+) -> int | None:
+    """
+    Returns the number of bytes confirmed, or `None` if confirmation should be skipped.
+    """
+    prefix = data[: 7 * 9]  # 7 rows x 18 hex digits
+    confirmed_len += len(prefix)
+
+    show_more = not await should_show_more(
+        title=title,
+        subtitle=f"{confirmed_len} / {total_len} bytes",
+        para=[(utils.hexlify_if_bytes(prefix), True)],
+        confirm="",  # will return False
+        button_text=TR.words__confirm_all,  # will return True
+        br_name=br_name,
+        br_code=br_code,
+    )
+    if show_more:
+        return len(prefix)
+    return None
+
+
 def confirm_blob(
     br_name: str,
     title: str,
