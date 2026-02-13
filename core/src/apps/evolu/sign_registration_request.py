@@ -84,7 +84,7 @@ def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
 
 
 def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
-    from .common import get_delegated_identity_key
+    from trezorutils import delegated_identity
 
     from trezor import utils, wire
     from trezor.crypto import optiga
@@ -94,7 +94,7 @@ def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
 
     from .common import get_public_key_from_private_key
 
-    private_key = get_delegated_identity_key(0)
+    private_key = delegated_identity(0)
     public_key = get_public_key_from_private_key(private_key)
 
     header = b"EvoluSignRegistrationRequestV1:"
