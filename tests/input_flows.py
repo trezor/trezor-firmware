@@ -1706,46 +1706,69 @@ class InputFlowEthereumSignTxGoBackFromSummary(InputFlowBase):
         yield from self.ETH.confirm_tx(go_back_from_summary=True)
 
 
-class InputFlowEthereumSignTxDataSkip(InputFlowBase):
-    def __init__(self, client: Client | DebugSession, cancel: bool = False):
+class InputFlowEthereumSignTxData(InputFlowBase):
+    def __init__(self, client: Client | DebugSession, *, scroll: bool, cancel: bool):
         super().__init__(client)
+        self.scroll = scroll
         self.cancel = cancel
+        self.confirm_tx = self.ETH.confirm_tx()
 
     def input_flow_common(self) -> BRGeneratorType:
-        yield from self.ETH.confirm_data()
-        yield from self.ETH.confirm_tx(cancel=self.cancel)
+        confirm_tx = None  # will be used to confirm tx details
 
+        while True:
+            # first BRs are related to data confirmation
+            br = yield
+            if br.name == "confirm_data":
+                assert br.pages == 1
+                assert confirm_tx is None
 
-class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
-    def __init__(self, client: Client | DebugSession, cancel: bool = False):
-        super().__init__(client)
-        self.cancel = cancel
+                if self.client.layout_type is LayoutType.Eckhart:
+                    TR.regexp("ethereum__title_all_input_data_template").fullmatch(
+                        self.debug.read_layout().title().strip()
+                    )
+                else:
+                    assert (
+                        TR.ethereum__title_input_data
+                        in self.debug.read_layout().title()
+                    )
 
-    def input_flow_common(self) -> BRGeneratorType:
-        # this flow will not test for the cancel case,
-        # because once we enter the "view all data",
-        # the only way to cancel is by going back to the 1st page view
-        # but that case would be covered by InputFlowEthereumSignTxDataGoBack
-        assert not self.cancel
+                if self.scroll:
+                    self._go_to_next_page()
+                    if self.cancel:
+                        self.scroll = False  # stop pagination & cancel on next page
+                else:
+                    if self.cancel:
+                        self._cancel_flow()
+                    else:
+                        self._confirm_all()
+                continue
 
-        yield from self.ETH.confirm_data(info=True)
-        yield from self.ETH.paginate_data()
-        yield from self.ETH.confirm_tx()
+            # data confirmation is over - confirm tx details
+            if confirm_tx is None:
+                confirm_tx = self.confirm_tx
+                next(confirm_tx)
 
+            confirm_tx.send(br)
 
-class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
-    def __init__(self, client: Client | DebugSession, cancel: bool = False):
-        super().__init__(client)
-        self.cancel = cancel
-
-    def input_flow_common(self) -> BRGeneratorType:
-        yield from self.ETH.confirm_data(info=True)
-        yield from self.ETH.paginate_data_go_back()
-        if self.cancel:
-            yield from self.ETH.confirm_data(cancel=True)
+    def _go_to_next_page(self):
+        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
+            self.debug.press_info()  # pagination is a special button
+        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            self.debug.press_yes()  # pagination is a regular button
         else:
-            yield from self.ETH.confirm_data()
-            yield from self.ETH.confirm_tx()
+            raise RuntimeError
+
+    def _cancel_flow(self):
+        self.debug.press_no()
+
+    def _confirm_all(self):
+        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
+            self.debug.press_yes()  # confirmation is a regular button
+        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            self.debug.press_info()  # confirmation is available via menu
+        else:
+            raise RuntimeError
 
 
 class InputFlowEthereumSignTxStaking(InputFlowBase):

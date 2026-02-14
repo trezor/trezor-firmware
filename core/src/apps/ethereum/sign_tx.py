@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import TR
 from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
 from trezor.utils import BufferReader
@@ -12,7 +13,7 @@ from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Coroutine, Iterable
+    from typing import Any, Awaitable, Callable, Coroutine, Iterable
 
     from trezor.messages import (
         EthereumNetworkInfo,
@@ -28,6 +29,8 @@ if TYPE_CHECKING:
     from .definitions import Definitions
     from .keychain import MsgInSignTx
 
+    ConfirmDataFn = Callable[[AnyBytes], Awaitable[None]]
+
 
 # Maximum chain_id which returns the full signature_v (which must fit into an uint32).
 # chain_ids larger than this will only return one bit and the caller must recalculate
@@ -41,10 +44,8 @@ async def sign_tx(
     keychain: Keychain,
     defs: Definitions,
 ) -> EthereumTxRequest:
-    from trezor import TR
     from trezor.crypto.hashlib import sha3_256
     from trezor.ui.layouts import show_continue_in_app
-    from trezor.ui.layouts.progress import progress
     from trezor.utils import HashWriter
 
     from apps.common import paths, safety_checks
@@ -92,7 +93,9 @@ async def sign_tx(
             amount_size_bytes=32,
         )
 
-    await confirm_tx_data(
+    # data chunks will be confirmed during digest (see below)
+    # tx summary will confirmed before signing the digest (see below)
+    confirm_data_chunk, confirm_summary = await confirm_tx_data(
         msg,
         defs,
         tx_type,
@@ -103,14 +106,7 @@ async def sign_tx(
         payment_req_verifier,
     )
 
-    progress_obj = progress(title=TR.progress__signing_transaction)
-    progress_obj.report(100)
-
-    # sign
-    data = bytearray()
-    data += msg.data_initial_chunk
-    data_left = data_total - len(msg.data_initial_chunk)
-
+    # digest
     total_length = _get_total_length(msg, data_total)
 
     sha = HashWriter(sha3_256(keccak=True))
@@ -122,22 +118,16 @@ async def sign_tx(
     for field in (msg.nonce, msg.gas_price, msg.gas_limit, address_bytes, msg.value):
         rlp.write(sha, field)
 
-    if data_left == 0:
-        rlp.write(sha, data)
-    else:
-        rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, data)
-        sha.extend(data)
+    await confirm_data_chunk(msg.data_initial_chunk)
+    data_left = data_total - len(msg.data_initial_chunk)
+    rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, msg.data_initial_chunk)
+    sha.extend(msg.data_initial_chunk)
 
-    progress_obj.report(500)
-
-    initial_data_left = data_left
     while data_left > 0:
         resp = await send_request_chunk(data_left)
+        await confirm_data_chunk(resp.data_chunk)
         data_left -= len(resp.data_chunk)
         sha.extend(resp.data_chunk)
-        progress_obj.report(
-            500 + int((initial_data_left - data_left) / initial_data_left * 400)
-        )
 
     # eip 155 replay protection
     rlp.write(sha, msg.chain_id)
@@ -145,12 +135,86 @@ async def sign_tx(
     rlp.write(sha, 0)
 
     digest = sha.get_digest()
-    result = _sign_digest(msg, keychain, digest)
 
-    progress_obj.stop()
+    # show tx summary and confirm
+    await confirm_summary
+    # transaction data confirmed, proceed with signing
+    result = _sign_digest(msg, keychain, digest)
 
     show_continue_in_app(TR.send__transaction_signed)
     return result
+
+
+def make_progress(total_len: int, progress_len: int = 0) -> ConfirmDataFn:
+    from trezor.ui.layouts.progress import progress
+
+    if __debug__:
+        from trezor import log
+
+    def _progress_value() -> int:
+        assert 0 <= progress_len <= total_len
+        if total_len == 0:
+            return 1000
+        return (1000 * progress_len) // total_len
+
+    layout = progress(title=TR.progress__loading_transaction)
+    layout.value = _progress_value()
+
+    async def confirm_fn(chunk: AnyBytes) -> None:
+        nonlocal progress_len
+
+        if __debug__:
+            log.debug(
+                __name__,
+                "chunk=%d [%d/%d]",
+                len(chunk),
+                progress_len,
+                total_len,
+            )
+        progress_len += len(chunk)
+        layout.report(_progress_value())
+
+    return confirm_fn
+
+
+def make_confirm_data(total_len: int) -> ConfirmDataFn:
+    from trezor.enums import ButtonRequestType
+    from trezor.ui.layouts import confirm_blob_prefix
+
+    confirmed_len = 0
+    progress_bar: ConfirmDataFn | None = None
+
+    async def confirm_fn(chunk: AnyBytes) -> None:
+        nonlocal confirmed_len
+        nonlocal progress_bar
+
+        if progress_bar is not None:
+            return await progress_bar(chunk)
+
+        # for efficient chunk slicing (see below)
+        chunk = memoryview(chunk)
+        while True:
+            assert 0 <= confirmed_len <= total_len
+            prefix_len = await confirm_blob_prefix(
+                title=TR.ethereum__title_input_data,
+                data=chunk,
+                total_len=total_len,
+                confirmed_len=confirmed_len,
+                br_name="confirm_data",
+                br_code=ButtonRequestType.SignTx,
+            )
+            if prefix_len is None:
+                # skip this and following chunks confirmation - use a progress bar instead
+                assert progress_bar is None
+                progress_bar = make_progress(total_len, confirmed_len)
+                return await progress_bar(chunk)
+            else:
+                confirmed_len += prefix_len
+                chunk = chunk[prefix_len:]
+                if not chunk:
+                    return
+
+    return confirm_fn
 
 
 async def confirm_tx_data(
@@ -162,15 +226,15 @@ async def confirm_tx_data(
     fee_items: Iterable[StrPropertyType],
     data_total_len: int,
     payment_req_verifier: PaymentRequestVerifier | None,
-) -> None:
-    from trezor import TR
+) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]]:
+    """Returns data chunk callback and transaction summary layout to be awaited."""
+
     from trezor.ui.layouts import confirm_value, ethereum_address_title
 
     from . import tokens
     from .layout import (
         require_confirm_address,
         require_confirm_approve,
-        require_confirm_other_data,
         require_confirm_payment_request,
         require_confirm_tx,
         require_confirm_unknown_token,
@@ -186,7 +250,7 @@ async def confirm_tx_data(
         msg, defs.network, address_bytes, maximum_fee, fee_items
     )
     if staking_approver is not None:
-        return await staking_approver
+        return make_progress(data_total_len), staking_approver
 
     if tx_type == EIP_7702_TX_TYPE:
         # we have already made sure that the address is a known address
@@ -230,7 +294,7 @@ async def confirm_tx_data(
         if payment_req_verifier is not None:
             raise DataError("Payment Requests not supported for the APPROVE call")
 
-        await require_confirm_approve(
+        return make_progress(data_total_len), require_confirm_approve(
             recipient,
             value,
             msg.address_n,
@@ -261,7 +325,7 @@ async def confirm_tx_data(
             assert recipient_str is not None
             payment_req_verifier.add_output(value, recipient_str or "")
             payment_req_verifier.verify()
-            await require_confirm_payment_request(
+            return make_progress(data_total_len), require_confirm_payment_request(
                 recipient_str,
                 payment_req,
                 msg.address_n,
@@ -274,9 +338,11 @@ async def confirm_tx_data(
             )
         else:
             if is_contract_interaction:
-                await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
+                confirm_data_chunk = make_confirm_data(data_total_len)
+            else:
+                confirm_data_chunk = make_progress(data_total_len)
 
-            await require_confirm_tx(
+            return confirm_data_chunk, require_confirm_tx(
                 recipient_str,
                 value,
                 msg.address_n,

@@ -5,7 +5,6 @@ from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorTestContext as Client
 
 from . import translations as TR
-from .click_tests.common import go_next
 from .common import BRGeneratorType, get_text_possible_pagination
 
 B = messages.ButtonRequestType
@@ -419,87 +418,9 @@ class RecoveryFlow:
 
 
 class EthereumFlow:
-    GO_BACK = (16, 220)
-
     def __init__(self, client: Client):
         self.client = client
         self.debug = self.client.debug
-
-    def confirm_data(self, info: bool = False, cancel: bool = False) -> BRGeneratorType:
-        assert (yield).name == "confirm_data"
-        if self.client.layout_type is LayoutType.Eckhart:
-            TR.regexp("ethereum__title_all_input_data_template").fullmatch(
-                self.debug.read_layout().title().strip()
-            )
-        else:
-            assert TR.ethereum__title_input_data in self.debug.read_layout().title()
-        if info:
-            self.debug.press_info()
-        elif cancel:
-            self.debug.press_no()
-        else:
-            self.debug.press_yes()
-
-    def paginate_data(self) -> BRGeneratorType:
-        br = yield
-        assert br.name == "confirm_data"
-        assert br.pages is not None
-        if self.client.layout_type is LayoutType.Eckhart:
-            TR.regexp("ethereum__title_all_input_data_template").fullmatch(
-                self.debug.read_layout().title().strip()
-            )
-        else:
-            assert TR.ethereum__title_input_data in self.debug.read_layout().title()
-        for _ in range(br.pages - 1):
-            self.debug.read_layout()
-            go_next(self.debug)
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
-            self.debug.read_layout()
-            go_next(self.debug)
-            self.debug.read_layout()
-        elif self.client.layout_type is LayoutType.Delizia:
-            self.debug.read_layout()
-            self.debug.click(self.debug.screen_buttons.tap_to_confirm())
-        elif self.client.layout_type is LayoutType.Eckhart:
-            self.debug.read_layout()
-            self.debug.click(self.debug.screen_buttons.ok())
-
-    def paginate_data_go_back(self) -> BRGeneratorType:
-        br = yield
-        assert br.name == "confirm_data"
-        assert br.pages is not None
-        assert br.pages > 2
-        if self.client.layout_type is LayoutType.Eckhart:
-            TR.regexp("ethereum__title_all_input_data_template").fullmatch(
-                self.debug.read_layout().title().strip()
-            )
-        else:
-            assert TR.ethereum__title_input_data in self.debug.read_layout().title()
-        if self.client.layout_type is LayoutType.Bolt:
-            self.debug.swipe_up()
-            self.debug.swipe_up()
-            self.debug.click(self.GO_BACK)
-        elif self.client.layout_type is LayoutType.Caesar:
-            self.debug.press_right()
-            self.debug.press_right()
-            self.debug.press_left()
-            self.debug.press_left()
-            self.debug.press_left()
-        elif self.client.layout_type is LayoutType.Delizia:
-            # Scroll to the last page data page
-            for _ in range(br.pages - 2):
-                self.debug.swipe_up()
-            # Close the menu wuth the cross button
-            self.debug.click(self.debug.screen_buttons.menu())
-        elif self.client.layout_type is LayoutType.Eckhart:
-            # Scroll to the last page
-            for _ in range(br.pages - 1):
-                self.debug.click(self.debug.screen_buttons.ok())
-            # Go back to the first page and then cancel
-            for _ in range(br.pages):
-                self.debug.click(self.debug.screen_buttons.cancel())
-        else:
-            raise ValueError(f"Unknown layout: {self.client.layout_type}")
 
     def _confirm_tx_bolt(
         self, cancel: bool, info: bool, go_back_from_summary: bool

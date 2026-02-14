@@ -301,20 +301,6 @@ def require_confirm_address(
     )
 
 
-def require_confirm_other_data(data: AnyBytes, data_total: int) -> Awaitable[None]:
-    return confirm_blob(
-        "confirm_data",
-        TR.ethereum__title_input_data,
-        data,
-        description=TR.ethereum__data_size_template.format(data_total),
-        subtitle=TR.ethereum__title_all_input_data_template.format(data_total),
-        verb=TR.buttons__confirm,
-        verb_cancel=TR.send__cancel_sign,
-        br_code=ButtonRequestType.SignTx,
-        ask_pagination=True,
-    )
-
-
 async def confirm_message_hash(message_hash: bytes) -> None:
     from ubinascii import hexlify
 
