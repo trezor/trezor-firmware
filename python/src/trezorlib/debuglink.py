@@ -1032,8 +1032,8 @@ class DebugUI:
             key="buttons", default=None, only_type=list
         )
         for menu_button, item_button in zip(menu_buttons, item_buttons):
-            if menu_button.get("is_cancel"):
-                continue  # don't click cancel
+            if menu_button.get("skip_test_visit"):
+                continue  # visit only idempotent entries (e.g. for showing more information)
             self.debuglink.click(item_button)
             self.debuglink.click(close_button)
 
