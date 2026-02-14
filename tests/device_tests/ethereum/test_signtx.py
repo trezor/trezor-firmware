@@ -16,13 +16,13 @@
 
 from __future__ import annotations
 
+import typing as t
 from itertools import product
 
 import pytest
 
 from trezorlib import device, ethereum, exceptions, messages, models
 from trezorlib.debuglink import DebugSession as Session
-from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path, unharden
@@ -31,13 +31,14 @@ from ...common import parametrize_using_common_fixtures
 from ...definitions import encode_eth_network
 from ...input_flows import (
     InputFlowConfirmAllWarnings,
-    InputFlowEthereumSignTxDataGoBack,
-    InputFlowEthereumSignTxDataScrollDown,
-    InputFlowEthereumSignTxDataSkip,
+    InputFlowEthereumSignTxData,
     InputFlowEthereumSignTxGoBackFromSummary,
     InputFlowEthereumSignTxShowFeeInfo,
     InputFlowEthereumSignTxStaking,
 )
+
+if t.TYPE_CHECKING:
+    from trezorlib.debuglink import ExpectedResponse
 
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
@@ -276,38 +277,32 @@ def test_data_streaming(session: Session):
     checked in vectorized function above.
     """
     with session.test_ctx as client:
-        client.set_expected_responses(
-            [
-                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                message_filters.EthereumTxRequest(
-                    data_length=1_024,
-                    signature_r=None,
-                    signature_s=None,
-                    signature_v=None,
-                ),
-                message_filters.EthereumTxRequest(
-                    data_length=1_024,
-                    signature_r=None,
-                    signature_s=None,
-                    signature_v=None,
-                ),
-                message_filters.EthereumTxRequest(
-                    data_length=1_024,
-                    signature_r=None,
-                    signature_s=None,
-                    signature_v=None,
-                ),
-                message_filters.EthereumTxRequest(
-                    data_length=3,
-                    signature_r=None,
-                    signature_s=None,
-                    signature_v=None,
-                ),
-                message_filters.EthereumTxRequest(data_length=None),
-            ]
+        flow = InputFlowEthereumSignTxData(client, scroll=False, cancel=False)
+        flow.confirm_tx = client.ui.default_input_flow()
+        client.set_input_flow(flow.get())
+        is_legacy = client.model in models.LEGACY_MODELS
+
+        br_sign_tx = messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)
+
+        expected_responses: list[ExpectedResponse] = [br_sign_tx]
+        if is_legacy:
+            expected_responses += [br_sign_tx, br_sign_tx]
+
+        expected_responses.extend(
+            message_filters.EthereumTxRequest(
+                data_length=data_length,
+                signature_r=None,
+                signature_s=None,
+                signature_v=None,
+            )
+            for data_length in (1_024, 1_024, 1_024, 3)
         )
+
+        if not is_legacy:
+            expected_responses += [br_sign_tx, br_sign_tx]
+
+        expected_responses += [message_filters.EthereumTxRequest(data_length=None)]
+        client.set_expected_responses(expected_responses)
 
         ethereum.sign_tx(
             session,
@@ -483,26 +478,12 @@ def test_sanity_checks_eip1559(session: Session):
         )
 
 
-def input_flow_data_skip(client: Client | Session, cancel: bool = False):
-    return InputFlowEthereumSignTxDataSkip(client, cancel).get()
-
-
-def input_flow_data_scroll_down(client: Client | Session, cancel: bool = False):
-    return InputFlowEthereumSignTxDataScrollDown(client, cancel).get()
-
-
-def input_flow_data_go_back(client: Client | Session, cancel: bool = False):
-    return InputFlowEthereumSignTxDataGoBack(client, cancel).get()
-
-
 HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd030000056789abcd040000006789abcd050000000789abcd060000000089abcd070000000009abcd080000000000abcd090000000001abcd0a0000000011abcd0b0000000111abcd0c0000001111abcd0d0000011111abcd0e0000111111abcd0f0000000002abcd100000000022abcd110000000222abcd120000002222abcd130000022222abcd140000222222abcd15"
 
 
-@pytest.mark.parametrize(
-    "flow", (input_flow_data_skip, input_flow_data_scroll_down, input_flow_data_go_back)
-)
+@pytest.mark.parametrize("scroll", [True, False])
 @pytest.mark.models("core")
-def test_signtx_data_pagination(session: Session, flow):
+def test_signtx_data_pagination(session: Session, scroll: bool):
     def _sign_tx_call():
         ethereum.sign_tx(
             session,
@@ -517,16 +498,19 @@ def test_signtx_data_pagination(session: Session, flow):
             data=bytes.fromhex(HEXDATA),
         )
 
+    # test pagination
+    flow = InputFlowEthereumSignTxData(session, scroll=scroll, cancel=False)
     with session.test_ctx as client:
         client.watch_layout()
-        client.set_input_flow(flow(client))
+        client.set_input_flow(flow.get())
         _sign_tx_call()
 
-    if flow is not input_flow_data_scroll_down:
-        with client, pytest.raises(exceptions.Cancelled):
-            client.watch_layout()
-            client.set_input_flow(flow(session, cancel=True))
-            _sign_tx_call()
+    # test cancellation
+    flow = InputFlowEthereumSignTxData(session, scroll=scroll, cancel=True)
+    with client, pytest.raises(exceptions.Cancelled):
+        client.watch_layout()
+        client.set_input_flow(flow.get())
+        _sign_tx_call()
 
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking.json")
