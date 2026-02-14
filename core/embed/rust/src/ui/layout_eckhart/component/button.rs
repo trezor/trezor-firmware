@@ -47,7 +47,7 @@ pub struct Button {
     haptic: bool,
     subtext_marquee: Option<Marquee>,
     #[cfg(feature = "ui_debug")]
-    is_cancel: bool, // used by debuglink
+    skip_test_visit: bool, // used by debuglink
 }
 
 impl Button {
@@ -90,7 +90,7 @@ impl Button {
             haptic: true,
             subtext_marquee,
             #[cfg(feature = "ui_debug")]
-            is_cancel: false,
+            skip_test_visit: false,
         }
     }
 
@@ -280,7 +280,7 @@ impl Button {
 
     #[cfg(feature = "ui_debug")]
     pub fn set_is_cancel(mut self) -> Self {
-        self.is_cancel = true;
+        self.skip_test_visit = true;
         self
     }
 
@@ -808,7 +808,7 @@ impl Component for Button {
 impl crate::trace::Trace for Button {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Button");
-        t.bool("is_cancel", self.is_cancel);
+        t.bool("skip_test_visit", self.skip_test_visit);
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text { text, .. } => t.string("text", *text),
