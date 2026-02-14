@@ -39,7 +39,6 @@ async def sign_tx_eip1559(
     from trezor.crypto import rlp  # local_cache_global
     from trezor.crypto.hashlib import sha3_256
     from trezor.ui.layouts import show_continue_in_app
-    from trezor.ui.layouts.progress import progress
     from trezor.utils import HashWriter
 
     from apps.common import paths
@@ -81,7 +80,9 @@ async def sign_tx_eip1559(
             msg.payment_req, slip44_id, keychain, amount_size_bytes=32
         )
 
-    await confirm_tx_data(
+    # data chunks will be confirmed during digest (see below)
+    # tx summary will approved before signing the digest (see below)
+    confirm_data_chunk, approve_summary = await confirm_tx_data(
         msg,
         defs,
         None,
@@ -92,14 +93,7 @@ async def sign_tx_eip1559(
         payment_req_verifier,
     )
 
-    progress_obj = progress(title=TR.progress__signing_transaction)
-    progress_obj.report(100)
-
-    # transaction data confirmed, proceed with signing
-    data = bytearray()
-    data += msg.data_initial_chunk
-    data_left = data_total - len(msg.data_initial_chunk)
-
+    # digest
     total_length = _get_total_length(msg, data_total)
 
     sha = HashWriter(sha3_256(keccak=True))
@@ -120,22 +114,16 @@ async def sign_tx_eip1559(
     for field in fields:
         rlp.write(sha, field)
 
-    if data_left == 0:
-        rlp.write(sha, data)
-    else:
-        rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, data)
-        sha.extend(data)
+    await confirm_data_chunk(msg.data_initial_chunk)
+    data_left = data_total - len(msg.data_initial_chunk)
+    rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, msg.data_initial_chunk)
+    sha.extend(msg.data_initial_chunk)
 
-    progress_obj.report(500)
-
-    initial_data_left = data_left
     while data_left > 0:
         resp = await send_request_chunk(data_left)
+        await confirm_data_chunk(resp.data_chunk)
         data_left -= len(resp.data_chunk)
         sha.extend(resp.data_chunk)
-        progress_obj.report(
-            500 + int((initial_data_left - data_left) / initial_data_left * 400)
-        )
 
     # write_access_list
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)
@@ -149,9 +137,9 @@ async def sign_tx_eip1559(
         rlp.write(sha, item.storage_keys)
 
     digest = sha.get_digest()
+    await approve_summary
+    # transaction data confirmed, proceed with signing
     result = _sign_digest(msg, keychain, digest)
-
-    progress_obj.stop()
 
     show_continue_in_app(TR.send__transaction_signed)
     return result
