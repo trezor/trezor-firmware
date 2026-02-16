@@ -23,6 +23,19 @@ on:
         type: string
         required: true
         default: "[\"T2B1\",\"T2T1\",\"T3B1\",\"T3T1\"]"
+      checkout_tag:
+        description: "Optional: Git tag/branch to build from (e.g., core/v2.9.6). If empty, uses current branch"
+        type: string
+        required: false
+      tropic_enabled:
+        description: "Build with Tropic enabled (DISABLE_TROPIC=0)"
+        type: boolean
+        default: false
+      tropic_models:
+        description: "Models that support tropic (JSON list)"
+        type: string
+        required: false
+        default: "[\"T3W1\"]"
 
 permissions:
   id-token: write       # for fetching the OIDC token
@@ -56,7 +69,7 @@ jobs:
 
   core_emu:
     if: startsWith(github.ref, 'refs/tags/core/v') || inputs.project == 'core'
-    name: Build emu
+    name: Build emu ${{ inputs.tropic_enabled && '(Tropic)' || '' }}
     needs: get_models
     runs-on: ubuntu-latest
     strategy:
@@ -75,10 +88,17 @@ jobs:
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       ADDRESS_SANITIZER: "0"
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+      DISABLE_TROPIC: ${{ inputs.tropic_enabled && '0' || '1' }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Checkout specific version if provided
+        if: inputs.checkout_tag
+        run: |
+          git fetch origin tag "${{ inputs.checkout_tag }}" --depth=1 2>/dev/null || git fetch origin "${{ inputs.checkout_tag }}" --depth=1
+          git checkout "${{ inputs.checkout_tag }}"
+          git submodule update --init --recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal'
@@ -93,8 +113,14 @@ jobs:
         continue-on-error: true
 
       - name: Upload emulator binaries
+        env:
+          TROPIC_MODELS: ${{ inputs.tropic_models || '[\"T3W1\"]' }}
         run: |
-            aws s3 mv core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }} s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model}}/
+          UPLOAD_PATH="s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model }}/"
+          if [[ "${{ inputs.tropic_enabled }}" == "true" ]] && echo "$TROPIC_MODELS" | grep -q "${{ matrix.model }}"; then
+            UPLOAD_PATH="${UPLOAD_PATH}${{ matrix.model }}_tropic_on/"
+          fi
+          aws s3 mv "core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}" "$UPLOAD_PATH"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -106,7 +132,7 @@ jobs:
 
   core_emu_arm:
     if: startsWith(github.ref, 'refs/tags/core/v') || inputs.project == 'core'
-    name: Build core emu arm
+    name: Build core emu arm ${{ inputs.tropic_enabled && '(Tropic)' || '' }}
     needs: get_models
     runs-on: ubuntu-latest-arm64
     strategy:
@@ -125,10 +151,17 @@ jobs:
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+      DISABLE_TROPIC: ${{ inputs.tropic_enabled && '0' || '1' }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Checkout specific version if provided
+        if: inputs.checkout_tag
+        run: |
+          git fetch origin tag "${{ inputs.checkout_tag }}" --depth=1 2>/dev/null || git fetch origin "${{ inputs.checkout_tag }}" --depth=1
+          git checkout "${{ inputs.checkout_tag }}"
+          git submodule update --init --recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal'
@@ -143,8 +176,14 @@ jobs:
         continue-on-error: true
 
       - name: Upload emulator binaries
+        env:
+          TROPIC_MODELS: ${{ inputs.tropic_models || '[\"T3W1\"]' }}
         run: |
-            aws s3 cp core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model}}/
+          UPLOAD_PATH="s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model }}/"
+          if [[ "${{ inputs.tropic_enabled }}" == "true" ]] && echo "$TROPIC_MODELS" | grep -q "${{ matrix.model }}"; then
+            UPLOAD_PATH="${UPLOAD_PATH}${{ matrix.model }}_tropic_on/"
+          fi
+          aws s3 cp "core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm" "$UPLOAD_PATH"
 
       - uses: actions/upload-artifact@v4
         with:
