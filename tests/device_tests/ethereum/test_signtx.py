@@ -272,6 +272,11 @@ def test_sanity_checks(session: Session):
         )
 
 
+# ≤5 pages of data are shown on T1B1.
+# Otherwise, a warning is shown and the rest of the data is skipped.
+LEGACY_MAX_DATA_PAGES = 5
+
+
 def test_data_streaming(session: Session):
     """Only verifying the expected responses, the signatures are
     checked in vectorized function above.
@@ -283,10 +288,14 @@ def test_data_streaming(session: Session):
         is_legacy = client.model in models.LEGACY_MODELS
 
         br_sign_tx = messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)
+        br_protect = messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall)
 
         expected_responses: list[ExpectedResponse] = [br_sign_tx]
         if is_legacy:
-            expected_responses += [br_sign_tx, br_sign_tx]
+            expected_responses += [br_sign_tx] * LEGACY_MAX_DATA_PAGES + [
+                br_protect,
+                br_sign_tx,
+            ]
 
         expected_responses.extend(
             message_filters.EthereumTxRequest(
