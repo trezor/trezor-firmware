@@ -466,7 +466,12 @@
     "cardano__intro_text_change": "The following address is a change address. Its",
     "cardano__intro_text_owned_by_device": "The following address is owned by this device. Its",
     "cardano__intro_text_registration_payment": "The vote key registration payment address is owned by this device. Its",
-    "cardano__key_hash": "key hash",
+    "cardano__key_hash": {
+      "Bolt": "key hash:",
+      "Caesar": "key hash:",
+      "Delizia": "key hash",
+      "Eckhart": "key hash"
+    },
     "cardano__margin": "Margin:",
     "cardano__message_hash": {
       "Bolt": "Message hash:",
@@ -499,7 +504,12 @@
       "Eckhart": "path"
     },
     "cardano__pledge": "Pledge:",
-    "cardano__pointer": "pointer",
+    "cardano__pointer": {
+      "Bolt": "pointer:",
+      "Caesar": "pointer:",
+      "Delizia": "pointer",
+      "Eckhart": "pointer"
+    },
     "cardano__policy_id": "Policy ID",
     "cardano__pool_metadata_hash": {
       "Bolt": "Pool metadata hash:",
@@ -996,11 +1006,21 @@
       "Delizia": "Interaction contract",
       "Eckhart": "Interaction contract address"
     },
-    "ethereum__max_gas_price": "Max fee per gas",
+    "ethereum__max_gas_price": {
+      "Bolt": "Max fee per gas:",
+      "Caesar": "Max fee per gas:",
+      "Delizia": "Max fee per gas",
+      "Eckhart": "Max fee per gas"
+    },
     "ethereum__name_and_version": "Name and version",
     "ethereum__new_contract": "New contract will be deployed",
     "ethereum__no_message_field": "No message field",
-    "ethereum__priority_fee": "Max priority fee",
+    "ethereum__priority_fee": {
+      "Bolt": "Max priority fee:",
+      "Caesar": "Max priority fee:",
+      "Delizia": "Max priority fee",
+      "Eckhart": "Max priority fee"
+    },
     "ethereum__show_full_array": "Show full array",
     "ethereum__show_full_domain": "Show full domain",
     "ethereum__show_full_message": "Show full message",
@@ -2459,9 +2479,19 @@
       "Delizia": "Max fees and rent",
       "Eckhart": "Max fees and rent"
     },
-    "solana__max_rent_fee": "Max rent fee",
+    "solana__max_rent_fee": {
+      "Bolt": "Max rent fee:",
+      "Caesar": "Max rent fee:",
+      "Delizia": "Max rent fee",
+      "Eckhart": "Max rent fee"
+    },
     "solana__multiple_signers": "Multiple signers",
-    "solana__priority_fee": "Priority fee",
+    "solana__priority_fee": {
+      "Bolt": "Priority fee:",
+      "Caesar": "Priority fee:",
+      "Delizia": "Priority fee",
+      "Eckhart": "Priority fee"
+    },
     "solana__stake": "Stake",
     "solana__stake_account": "Stake account",
     "solana__stake_on_question": "Stake SOL on {0}?",
@@ -2580,8 +2610,18 @@
       "Eckhart": "Trusted Account"
     },
     "stellar__update": "Update",
-    "stellar__valid_from": "Valid from (UTC)",
-    "stellar__valid_to": "Valid to (UTC)",
+    "stellar__valid_from": {
+      "Bolt": "Valid from (UTC):",
+      "Caesar": "Valid from (UTC):",
+      "Delizia": "Valid from (UTC)",
+      "Eckhart": "Valid from (UTC)"
+    },
+    "stellar__valid_to": {
+      "Bolt": "Valid to (UTC):",
+      "Caesar": "Valid to (UTC):",
+      "Delizia": "Valid to (UTC)",
+      "Eckhart": "Valid to (UTC)"
+    },
     "stellar__value_sha256": {
       "Bolt": "Value (SHA-256):",
       "Caesar": "Value (SHA-256):",
@@ -2853,7 +2893,12 @@
     },
     "words__assets": "Assets",
     "words__authenticate": "Authenticate",
-    "words__blockhash": "Blockhash",
+    "words__blockhash": {
+      "Bolt": "Blockhash:",
+      "Caesar": "Blockhash:",
+      "Delizia": "Blockhash",
+      "Eckhart": "Blockhash"
+    },
     "words__bluetooth": "Bluetooth",
     "words__buying": "Buying",
     "words__cancel_and_exit": "Cancel and exit",

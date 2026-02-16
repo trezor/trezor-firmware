@@ -56,9 +56,12 @@ def get_ping_button(lang: str, session: Session) -> str:
     return ping_button
 
 
-def get_ping_title(lang: str) -> str:
+def get_ping_title(lang: str, session: Session) -> str:
     content = get_lang_json(lang)
-    return content["translations"]["words__confirm"]
+    ping_title = content["translations"]["words__confirm"]
+    if isinstance(ping_title, dict):
+        ping_title = ping_title[session.layout_type.name]
+    return ping_title
 
 
 @pytest.fixture
@@ -116,7 +119,7 @@ def test_error_too_long(session: Session):
         device.change_language(session, language_data=bad_data)
     assert session.features.language == "en-US"
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", client)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -133,7 +136,7 @@ def test_error_invalid_data_length(session: Session):
         device.change_language(session, language_data=bad_data)
     assert session.features.language == "en-US"
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -150,7 +153,7 @@ def test_error_invalid_header_magic(session: Session):
         device.change_language(session, language_data=bad_data)
     assert session.features.language == "en-US"
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -172,7 +175,7 @@ def test_error_invalid_data_hash(session: Session):
         )
     assert session.features.language == "en-US"
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -191,7 +194,7 @@ def test_error_version_mismatch(session: Session):
         )
     assert session.features.language == "en-US"
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -215,7 +218,7 @@ def test_error_invalid_signature(session: Session):
         )
     assert session.features.language == "en-US"
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -229,7 +232,7 @@ def test_full_language_change(session: Session, lang: str):
     assert session.features.language[:2] == lang
     assert session.features.language_version_matches is True
     _check_ping_screen_texts(
-        session, get_ping_title(lang), get_ping_button(lang, session)
+        session, get_ping_title(lang, session), get_ping_button(lang, session)
     )
 
     # Setting the default language via empty data
@@ -237,7 +240,7 @@ def test_full_language_change(session: Session, lang: str):
     assert session.features.language == "en-US"
     assert session.features.language_version_matches is True
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -255,7 +258,7 @@ def test_build_version_mismatch(session: Session):
     )
     assert session.features.language == "cs-CZ"
     _check_ping_screen_texts(
-        session, get_ping_title("cs"), get_ping_button("cs", session.client)
+        session, get_ping_title("cs", session), get_ping_button("cs", session)
     )
 
 
@@ -264,7 +267,7 @@ def test_language_is_removed_after_wipe(client: Client):
     assert session.features.language == "en-US"
 
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
     # Setting cs language
@@ -272,7 +275,7 @@ def test_language_is_removed_after_wipe(client: Client):
     assert session.features.language == "cs-CZ"
 
     _check_ping_screen_texts(
-        session, get_ping_title("cs"), get_ping_button("cs", session)
+        session, get_ping_title("cs", session), get_ping_button("cs", session)
     )
 
     # Wipe device
@@ -292,7 +295,7 @@ def test_language_is_removed_after_wipe(client: Client):
     assert session.features.language == "en-US"
 
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -305,14 +308,14 @@ def test_translations_renders_on_screen(session: Session):
 
     # Normal english
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
     # Normal czech
     set_language(session, "cs")
 
     assert session.features.language == "cs-CZ"
     _check_ping_screen_texts(
-        session, get_ping_title("cs"), get_ping_button("cs", session)
+        session, get_ping_title("cs", session), get_ping_button("cs", session)
     )
 
     # Modified czech - changed value
@@ -333,7 +336,7 @@ def test_translations_renders_on_screen(session: Session):
         language_data=build_and_sign_blob(czech_data_copy, session),
     )
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("cs", session)
+        session, get_ping_title("en", session), get_ping_button("cs", session)
     )
 
 
@@ -354,7 +357,7 @@ def test_reject_update(session: Session):
     assert session.features.language == "en-US"
 
     _check_ping_screen_texts(
-        session, get_ping_title("en"), get_ping_button("en", session)
+        session, get_ping_title("en", session), get_ping_button("en", session)
     )
 
 
@@ -470,5 +473,5 @@ def test_header_trailing_data(session: Session):
     device.change_language(session, language_data)
     assert session.features.language == "cs-CZ"
     _check_ping_screen_texts(
-        session, get_ping_title(lang), get_ping_button(lang, session)
+        session, get_ping_title(lang, session), get_ping_button(lang, session)
     )
