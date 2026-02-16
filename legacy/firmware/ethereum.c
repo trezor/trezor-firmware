@@ -416,12 +416,32 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
                     _("Send"), amount.value, _to1, _to2, _to3, NULL);
 }
 
-static void layoutEthereumData(const uint8_t *data, uint32_t len,
-                               uint32_t total_len) {
+// Format number in decimal, going backwards from `ptr`.
+// The caller must allocate enough memory for the resulting string.
+static inline char *_format_decimal_backwards(char *ptr, uint32_t number) {
+  while (number > 0) {
+    *(--ptr) = '0' + number % 10;
+    number = number / 10;
+  }
+  return ptr;
+}
+
+// Prepend null-terminated string, going backwards from `ptr`.
+// The caller must allocate enough memory for the resulting string.
+static inline char *_prepend_string(char *ptr, const char *str) {
+  size_t len = strlen(str);
+  while (len > 0) {
+    *(--ptr) = str[--len];
+  }
+  return ptr;
+}
+
+static uint32_t layoutEthereumData(const uint8_t *data, uint32_t len,
+                                   uint32_t total_len, uint32_t offset) {
   char hexdata[3][17] = {0};
-  char summary[20] = {0};
+  char summary[32] = "... 4294967296/4294967296 bytes";
   uint32_t printed = 0;
-  for (int i = 0; i < 3; i++) {
+  for (size_t i = 0; i < 3; i++) {
     uint32_t linelen = len - printed;
     if (linelen > 8) {
       linelen = 8;
@@ -430,20 +450,24 @@ static void layoutEthereumData(const uint8_t *data, uint32_t len,
     data += linelen;
     printed += linelen;
   }
+  offset += printed;
 
-  strcpy(summary, "...          bytes");
-  char *p = summary + 11;
-  uint32_t number = total_len;
-  while (number > 0) {
-    *p-- = '0' + number % 10;
-    number = number / 10;
+  // start from the terminating '\0'
+  char *ptr = summary + sizeof(summary) - 1;
+
+  ptr = _prepend_string(ptr, " bytes");
+  ptr = _format_decimal_backwards(ptr, total_len);
+  ptr = _prepend_string(ptr, "/");
+  ptr = _format_decimal_backwards(ptr, offset);
+
+  if (offset < total_len) {
+    // add ellipsis if not all data has been shown
+    ptr = _prepend_string(ptr, "... ");
   }
-  char *summarystart = summary;
-  if (total_len == printed) summarystart = summary + 4;
-
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Transaction data:"), hexdata[0], hexdata[1], hexdata[2],
-                    summarystart, NULL);
+                    ptr, NULL);
+  return printed;
 }
 
 static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
@@ -711,6 +735,8 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
   return true;
 }
 
+static const size_t MAX_DATA_PAGES = 5;
+
 static bool ethereum_signing_confirm_common(
     const struct signing_params *params) {
   enum staking_operation_t staking_op;
@@ -744,11 +770,30 @@ static bool ethereum_signing_confirm_common(
   }
 
   if (params->token == NULL && data_total > 0) {
-    layoutEthereumData(params->data_initial_chunk_bytes,
-                       params->data_initial_chunk_size, data_total);
-    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      return false;
+    const uint8_t *chunk = params->data_initial_chunk_bytes;
+    uint32_t chunk_len = params->data_initial_chunk_size;
+    uint32_t offset = 0;
+
+    for (size_t i = 0; i < MAX_DATA_PAGES && offset < data_total; ++i) {
+      uint32_t confirmed =
+          layoutEthereumData(chunk, chunk_len, data_total, offset);
+      chunk += confirmed;
+      chunk_len -= confirmed;
+      offset += confirmed;
+
+      if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        return false;
+      }
+    }
+    if (offset < data_total) {
+      layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                        _("Warning! Too long"), _("data to view."), NULL,
+                        _("Proceed with caution."), NULL, NULL);
+      if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        return false;
+      }
     }
   }
 
