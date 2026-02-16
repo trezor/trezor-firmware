@@ -386,7 +386,7 @@ jobs:
         model: [T2T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
-      TREZOR_UPGRADE_TEST: core
+      TREZOR_UPGRADE_TEST: core-t2t1
       PYTEST_TIMEOUT: 20
       TESTOPTS: "--durations 10"
     steps:
