@@ -49,8 +49,9 @@ TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
 # For these models, two sets of emulator binaries can coexist:
 #   1. Regular binaries (tropic disabled): tests/emulators/{MODEL}/
 #   2. Tropic-enabled binaries: tests/emulators/{MODEL}/{MODEL}_tropic_on/
-# Both variants are discovered by get_tags() and can be used in tests.
-# Use tropic_enabled=True parameter to select the tropic-enabled variant.
+# Both variants are discovered by get_tags().
+# By default, EmulatorWrapper uses regular variants (faster, no tropic overhead).
+# Upgrade tests (via upgrade_emulator) auto-detect and use tropic-enabled variants when available.
 TROPIC_MODELS = {"T3W1"}
 
 
@@ -118,7 +119,7 @@ def get_emulator_path(gen: str, model: str, tag: str, tropic_enabled: bool = Fal
         gen: Generation ("core" or "legacy")
         model: Model name (e.g., "T3W1")
         tag: Version tag (e.g., "v2.9.3")
-        tropic_enabled: If True and model supports tropic, use tropic-enabled subdirectory
+        tropic_enabled: If True, use tropic-enabled subdirectory (default: False)
     """
     if tropic_enabled and uses_tropic(model):
         return BINDIR / model / get_tropic_subdir(model) / f"trezor-emu-{gen}-{model}-{tag}"

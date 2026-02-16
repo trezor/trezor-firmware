@@ -55,13 +55,20 @@ def upgrade_emulator(
         tag: Version tag of the emulator
         model: Model name (e.g., "T3W1")
         **kwargs: Additional arguments passed to EmulatorWrapper, including:
-            - tropic_enabled: Use tropic-enabled emulator binary variant (default: False)
+            - tropic_enabled: Use tropic-enabled emulator binary variant (default: auto-detect)
             - Other EmulatorWrapper parameters
     
-    Note: For T3W1, launch_tropic_model is automatically set based on whether
-    the model requires it. Use tropic_enabled=True in kwargs to use the
-    tropic-enabled binary variant located in the T3W1_tropic_on subdirectory.
+    Auto-detection:
+        For models that support tropic (like T3W1), the system automatically detects
+        and uses tropic-enabled emulators if they exist in the T3W1_tropic_on subdirectory.
+        Otherwise, it falls back to regular emulators.
+        
+    Note:
+        This auto-detection only happens in upgrade_emulator. Other test suites using
+        EmulatorWrapper directly will use regular (faster) emulators by default.
     """
+    from ..emulators import BINDIR, get_tropic_subdir, uses_tropic
+    
     # Use provided model - should always be provided from @for_all decorator
     if model is None:
         raise ValueError("model parameter is required for upgrade_emulator")
@@ -69,15 +76,23 @@ def upgrade_emulator(
     # Determine gen from model
     gen = gen_from_model(model)
 
-    # Launch Tropic model for T3W1 when using tropic-enabled binaries
-    # Note: Regular T3W1 binaries (tropic disabled) don't need this
-    launch_tropic = model == "T3W1" and kwargs.get("tropic_enabled", False)
+    # Auto-detect tropic-enabled variant if not explicitly specified
+    if "tropic_enabled" not in kwargs and tag is not None and uses_tropic(model):
+        tropic_path = BINDIR / model / get_tropic_subdir(model) / f"trezor-emu-{gen}-{model}-{tag}"
+        regular_path = BINDIR / model / f"trezor-emu-{gen}-{model}-{tag}"
+        
+        # Prefer tropic-enabled if it exists, otherwise use regular
+        if tropic_path.exists():
+            kwargs["tropic_enabled"] = True
+            kwargs["launch_tropic_model"] = True
+        elif regular_path.exists():
+            kwargs["tropic_enabled"] = False
+            kwargs["launch_tropic_model"] = False
 
     return EmulatorWrapper(
         gen,
         tag,
         model,
-        launch_tropic_model=launch_tropic,
         **kwargs,
     )
 
