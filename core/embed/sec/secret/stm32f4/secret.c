@@ -199,6 +199,10 @@ void secret_prepare_fw(secbool allow_run_with_secret,
 
 void secret_init(void) {}
 
-void secret_safety_erase(void) {}
+void secret_safety_erase(void) {
+  // On STM32F4, secret keys are not used, so the entire
+  // storage must be erased.
+  ensure(erase_storage(NULL), NULL);
+}
 
 #endif  // KERNEL_MODE

@@ -315,13 +315,12 @@ int main(void) {
     // or a potential hardware fault or exploit attempt.
 
 #ifdef USE_SECRET
-    // Make storage data inaccessible - if supported by MCU
+    // if secret is used, it is responsible for making storage data inaccessible
     secret_safety_erase();
-#endif
-
-    // For other MCUs, erase the entire storage (do this for all MCUs for double
-    // protection)
+#else
+    // Otherwise, erase storage here directly
     ensure(erase_storage(NULL), NULL);
+#endif
 
     // Display an error message on the screen and reset the device.
     return 0;
