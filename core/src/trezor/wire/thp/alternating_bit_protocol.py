@@ -37,7 +37,7 @@ def is_sending_allowed(cache: ChannelCache) -> bool:
     Note: Sending a message in a channel before receipt of ACK message for the previously
     sent message (in the channel) is prohibited, as it can lead to desynchronization.
     """
-    return bool(cache.sync >> 7)
+    return bool(cache.sync & 0x80)
 
 
 def get_send_seq_bit(cache: ChannelCache) -> int:
