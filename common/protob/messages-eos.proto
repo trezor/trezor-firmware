@@ -2,8 +2,8 @@ syntax = "proto2";
 package hw.trezor.messages.eos;
 
 // Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageEos";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 /**
  * Request: Ask device for Eos public key corresponding to address_n path
@@ -12,9 +12,9 @@ option java_outer_classname = "TrezorMessageEos";
  * @next Failure
  */
 message EosGetPublicKey {
-    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node 44'/194'/0'
-    optional bool show_display = 2; // optionally show on display before sending the result
-    optional bool chunkify = 3;     // display the address in chunks of 4 characters
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node 44'/194'/0'
+  optional bool show_display = 2; // optionally show on display before sending the result
+  optional bool chunkify = 3; // display the address in chunks of 4 characters
 }
 
 /**
@@ -22,8 +22,8 @@ message EosGetPublicKey {
  * @end
  */
 message EosPublicKey {
-    required string wif_public_key = 1; // EOS pub key in Base58 encoding
-    required bytes raw_public_key = 2;  // Raw public key
+  required string wif_public_key = 1; // EOS pub key in Base58 encoding
+  required bytes raw_public_key = 2; // Raw public key
 }
 
 /**
@@ -33,23 +33,23 @@ message EosPublicKey {
  * @next Failure
  */
 message EosSignTx {
-    repeated uint32 address_n = 1;   // BIP-32 path to derive the key from master node 44'/194'/0'
-    required bytes chain_id = 2;     // 256-bit long chain id
-    required EosTxHeader header = 3; // EOS transaction header
-    required uint32 num_actions = 4; // number of actions
-    optional bool chunkify = 5;      // display the address in chunks of 4 characters
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node 44'/194'/0'
+  required bytes chain_id = 2; // 256-bit long chain id
+  required EosTxHeader header = 3; // EOS transaction header
+  required uint32 num_actions = 4; // number of actions
+  optional bool chunkify = 5; // display the address in chunks of 4 characters
 
-    /**
-     * Structure representing EOS transaction header
-     */
-    message EosTxHeader {
-        required uint32 expiration = 1;          // time at which transaction expires
-        required uint32 ref_block_num = 2;       // 16-bit specifies a block num in the last 2^16 blocks.
-        required uint32 ref_block_prefix = 3;    // specifies the lower 32 bits of the blockid at get_ref_blocknum
-        required uint32 max_net_usage_words = 4; // upper limit on total network bandwidth (in 8 byte words) billed for this transaction
-        required uint32 max_cpu_usage_ms = 5;    // 8-bit upper limit on the total CPU time billed for this transaction
-        required uint32 delay_sec = 6;           // number of seconds to delay this transaction for during which it may be canceled.
-    }
+  /**
+   * Structure representing EOS transaction header
+   */
+  message EosTxHeader {
+    required uint32 expiration = 1; // time at which transaction expires
+    required uint32 ref_block_num = 2; // 16-bit specifies a block num in the last 2^16 blocks.
+    required uint32 ref_block_prefix = 3; // specifies the lower 32 bits of the blockid at get_ref_blocknum
+    required uint32 max_net_usage_words = 4; // upper limit on total network bandwidth (in 8 byte words) billed for this transaction
+    required uint32 max_cpu_usage_ms = 5; // 8-bit upper limit on the total CPU time billed for this transaction
+    required uint32 delay_sec = 6; // number of seconds to delay this transaction for during which it may be canceled.
+  }
 }
 
 /**
@@ -57,7 +57,7 @@ message EosSignTx {
  * @next EosTxActionAck
  */
 message EosTxActionRequest {
-    optional uint32 data_size = 1;
+  optional uint32 data_size = 1;
 }
 
 /**
@@ -67,210 +67,210 @@ message EosTxActionRequest {
  * @next Failure
  */
 message EosTxActionAck {
-    required EosActionCommon common = 1;
-    optional EosActionTransfer transfer = 2;
-    optional EosActionDelegate delegate = 3;
-    optional EosActionUndelegate undelegate = 4;
-    optional EosActionRefund refund = 5;
-    optional EosActionBuyRam buy_ram = 6;
-    optional EosActionBuyRamBytes buy_ram_bytes = 7;
-    optional EosActionSellRam sell_ram = 8;
-    optional EosActionVoteProducer vote_producer = 9;
-    optional EosActionUpdateAuth update_auth = 10;
-    optional EosActionDeleteAuth delete_auth = 11;
-    optional EosActionLinkAuth link_auth = 12;
-    optional EosActionUnlinkAuth unlink_auth = 13;
-    optional EosActionNewAccount new_account = 14;
-    optional EosActionUnknown unknown = 15;
+  required EosActionCommon common = 1;
+  optional EosActionTransfer transfer = 2;
+  optional EosActionDelegate delegate = 3;
+  optional EosActionUndelegate undelegate = 4;
+  optional EosActionRefund refund = 5;
+  optional EosActionBuyRam buy_ram = 6;
+  optional EosActionBuyRamBytes buy_ram_bytes = 7;
+  optional EosActionSellRam sell_ram = 8;
+  optional EosActionVoteProducer vote_producer = 9;
+  optional EosActionUpdateAuth update_auth = 10;
+  optional EosActionDeleteAuth delete_auth = 11;
+  optional EosActionLinkAuth link_auth = 12;
+  optional EosActionUnlinkAuth unlink_auth = 13;
+  optional EosActionNewAccount new_account = 14;
+  optional EosActionUnknown unknown = 15;
 
-    /**
-     * Structure representing asset type
-     */
-    message EosAsset {
-        required sint64 amount = 1;
-        required uint64 symbol = 2; // Lowest 8 bits used for precision.
-    }
+  /**
+   * Structure representing asset type
+   */
+  message EosAsset {
+    required sint64 amount = 1;
+    required uint64 symbol = 2; // Lowest 8 bits used for precision.
+  }
 
-    /**
-     * Structure representing action permission level
-     */
-    message EosPermissionLevel {
-        required uint64 actor = 1;
-        required uint64 permission = 2;
-    }
+  /**
+   * Structure representing action permission level
+   */
+  message EosPermissionLevel {
+    required uint64 actor = 1;
+    required uint64 permission = 2;
+  }
 
-    /**
-     * Structure representing auth key
-     */
-    message EosAuthorizationKey {
-        required uint32 type = 1;
-        optional bytes key = 2;        // Explicit public key bytes; when present, address_n must be empty
-        repeated uint32 address_n = 3; // BIP-32 path to derive key; when filled out, key must not be present
-        required uint32 weight = 4;
-    }
+  /**
+   * Structure representing auth key
+   */
+  message EosAuthorizationKey {
+    required uint32 type = 1;
+    optional bytes key = 2; // Explicit public key bytes; when present, address_n must be empty
+    repeated uint32 address_n = 3; // BIP-32 path to derive key; when filled out, key must not be present
+    required uint32 weight = 4;
+  }
 
-    /**
-     * Structure representing auth account
-     */
-    message EosAuthorizationAccount {
-        required EosPermissionLevel account = 1;
-        required uint32 weight = 2;
-    }
+  /**
+   * Structure representing auth account
+   */
+  message EosAuthorizationAccount {
+    required EosPermissionLevel account = 1;
+    required uint32 weight = 2;
+  }
 
-    /**
-     * Structure representing auth delays
-     */
-    message EosAuthorizationWait {
-        required uint32 wait_sec = 1;
-        required uint32 weight = 2;
-    }
+  /**
+   * Structure representing auth delays
+   */
+  message EosAuthorizationWait {
+    required uint32 wait_sec = 1;
+    required uint32 weight = 2;
+  }
 
-    /**
-     * Structure representing authorization settings
-     */
-    message EosAuthorization {
-        required uint32 threshold = 1;
-        repeated EosAuthorizationKey keys = 2;
-        repeated EosAuthorizationAccount accounts = 3;
-        repeated EosAuthorizationWait waits = 4;
-    }
+  /**
+   * Structure representing authorization settings
+   */
+  message EosAuthorization {
+    required uint32 threshold = 1;
+    repeated EosAuthorizationKey keys = 2;
+    repeated EosAuthorizationAccount accounts = 3;
+    repeated EosAuthorizationWait waits = 4;
+  }
 
-    /**
-     * Structure representing the common part of every action
-     */
-    message EosActionCommon {
-        required uint64 account = 1; // Contract name
-        required uint64 name = 2;    // Action name
-        repeated EosPermissionLevel authorization = 3;
-    }
+  /**
+   * Structure representing the common part of every action
+   */
+  message EosActionCommon {
+    required uint64 account = 1; // Contract name
+    required uint64 name = 2; // Action name
+    repeated EosPermissionLevel authorization = 3;
+  }
 
-    /**
-     * Structure representing transfer data structure
-     */
-    message EosActionTransfer {
-        required uint64 sender = 1; // Asset sender
-        required uint64 receiver = 2;
-        required EosAsset quantity = 3;
-        required string memo = 4;
-    }
+  /**
+   * Structure representing transfer data structure
+   */
+  message EosActionTransfer {
+    required uint64 sender = 1; // Asset sender
+    required uint64 receiver = 2;
+    required EosAsset quantity = 3;
+    required string memo = 4;
+  }
 
-    /**
-     * Structure representing delegation data structure
-     */
-    message EosActionDelegate {
-        required uint64 sender = 1;
-        required uint64 receiver = 2;
-        required EosAsset net_quantity = 3; // Asset format '1.0000 EOS'
-        required EosAsset cpu_quantity = 4; // Asset format '1.0000 EOS'
-        required bool transfer = 5;         // Transfer delegated tokens or not.
-    }
+  /**
+   * Structure representing delegation data structure
+   */
+  message EosActionDelegate {
+    required uint64 sender = 1;
+    required uint64 receiver = 2;
+    required EosAsset net_quantity = 3; // Asset format '1.0000 EOS'
+    required EosAsset cpu_quantity = 4; // Asset format '1.0000 EOS'
+    required bool transfer = 5; // Transfer delegated tokens or not.
+  }
 
-    /**
-     * Structure representing the removal of delegated resources from `sender`
-     */
-    message EosActionUndelegate {
-        required uint64 sender = 1;
-        required uint64 receiver = 2;
-        required EosAsset net_quantity = 3; // Asset format '1.0000 EOS'
-        required EosAsset cpu_quantity = 4; // Asset format '1.0000 EOS'
-    }
+  /**
+   * Structure representing the removal of delegated resources from `sender`
+   */
+  message EosActionUndelegate {
+    required uint64 sender = 1;
+    required uint64 receiver = 2;
+    required EosAsset net_quantity = 3; // Asset format '1.0000 EOS'
+    required EosAsset cpu_quantity = 4; // Asset format '1.0000 EOS'
+  }
 
-    /**
-     * Structure representing fallback if undelegate wasnt executed automaticaly.
-     */
-    message EosActionRefund {
-        required uint64 owner = 1;
-    }
+  /**
+   * Structure representing fallback if undelegate wasnt executed automaticaly.
+   */
+  message EosActionRefund {
+    required uint64 owner = 1;
+  }
 
-    /**
-     * Structure representing buying RAM operation for EOS tokens
-     */
-    message EosActionBuyRam {
-        required uint64 payer = 1;
-        required uint64 receiver = 2;
-        required EosAsset quantity = 3; // Asset format '1.0000 EOS'
-    }
+  /**
+   * Structure representing buying RAM operation for EOS tokens
+   */
+  message EosActionBuyRam {
+    required uint64 payer = 1;
+    required uint64 receiver = 2;
+    required EosAsset quantity = 3; // Asset format '1.0000 EOS'
+  }
 
-    /**
-     * Structure representing buying bytes according to RAM market price.
-     */
-    message EosActionBuyRamBytes {
-        required uint64 payer = 1;
-        required uint64 receiver = 2;
-        required uint32 bytes = 3; // Number of bytes
-    }
+  /**
+   * Structure representing buying bytes according to RAM market price.
+   */
+  message EosActionBuyRamBytes {
+    required uint64 payer = 1;
+    required uint64 receiver = 2;
+    required uint32 bytes = 3; // Number of bytes
+  }
 
-    /**
-     * Structure representing sell RAM
-     */
-    message EosActionSellRam {
-        required uint64 account = 1;
-        required uint64 bytes = 2; // Number of bytes
-    }
+  /**
+   * Structure representing sell RAM
+   */
+  message EosActionSellRam {
+    required uint64 account = 1;
+    required uint64 bytes = 2; // Number of bytes
+  }
 
-    /**
-     * Structure representing voting. Currently, there could be up to 30 producers.
-     */
-    message EosActionVoteProducer {
-        required uint64 voter = 1;     // Voter account
-        required uint64 proxy = 2;     // Proxy voter account
-        repeated uint64 producers = 3; // List of producers
-    }
+  /**
+   * Structure representing voting. Currently, there could be up to 30 producers.
+   */
+  message EosActionVoteProducer {
+    required uint64 voter = 1; // Voter account
+    required uint64 proxy = 2; // Proxy voter account
+    repeated uint64 producers = 3; // List of producers
+  }
 
-    /**
-     * Structure representing update authorization.
-     */
-    message EosActionUpdateAuth {
-        required uint64 account = 1;
-        required uint64 permission = 2;
-        required uint64 parent = 3;
-        required EosAuthorization auth = 4;
-    }
+  /**
+   * Structure representing update authorization.
+   */
+  message EosActionUpdateAuth {
+    required uint64 account = 1;
+    required uint64 permission = 2;
+    required uint64 parent = 3;
+    required EosAuthorization auth = 4;
+  }
 
-    /**
-     * Structure representing delete authorization.
-     */
-    message EosActionDeleteAuth {
-        required uint64 account = 1;
-        required uint64 permission = 2;
-    }
+  /**
+   * Structure representing delete authorization.
+   */
+  message EosActionDeleteAuth {
+    required uint64 account = 1;
+    required uint64 permission = 2;
+  }
 
-    /**
-     * Structure representing link authorization to action.
-     */
-    message EosActionLinkAuth {
-        required uint64 account = 1;
-        required uint64 code = 2;
-        required uint64 type = 3;
-        required uint64 requirement = 4;
-    }
+  /**
+   * Structure representing link authorization to action.
+   */
+  message EosActionLinkAuth {
+    required uint64 account = 1;
+    required uint64 code = 2;
+    required uint64 type = 3;
+    required uint64 requirement = 4;
+  }
 
-    /**
-     * Structure representing unlink authorization from action.
-     */
-    message EosActionUnlinkAuth {
-        required uint64 account = 1;
-        required uint64 code = 2;
-        required uint64 type = 3;
-    }
+  /**
+   * Structure representing unlink authorization from action.
+   */
+  message EosActionUnlinkAuth {
+    required uint64 account = 1;
+    required uint64 code = 2;
+    required uint64 type = 3;
+  }
 
-    /**
-     * Structure representing creation of a new account.
-     */
-    message EosActionNewAccount {
-        required uint64 creator = 1;
-        required uint64 name = 2;
-        required EosAuthorization owner = 3;
-        required EosAuthorization active = 4;
-    }
+  /**
+   * Structure representing creation of a new account.
+   */
+  message EosActionNewAccount {
+    required uint64 creator = 1;
+    required uint64 name = 2;
+    required EosAuthorization owner = 3;
+    required EosAuthorization active = 4;
+  }
 
-    /**
-     * Structure representing actions not implemented above.
-     */
-    message EosActionUnknown {
-        required uint32 data_size = 1;
-        required bytes data_chunk = 2;
-    }
+  /**
+   * Structure representing actions not implemented above.
+   */
+  message EosActionUnknown {
+    required uint32 data_size = 1;
+    required bytes data_chunk = 2;
+  }
 }
 
 /**
@@ -279,5 +279,5 @@ message EosTxActionAck {
  * @end
  */
 message EosSignedTx {
-    required string signature = 1; // Computed signature
+  required string signature = 1; // Computed signature
 }

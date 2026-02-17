@@ -1,13 +1,13 @@
 syntax = "proto2";
 package hw.trezor.messages.crypto;
 
-// Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
-option java_outer_classname = "TrezorMessageCrypto";
-
 import "messages-common.proto";
 import "options.proto";
 
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageCrypto";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+// Include in BTC-only firmware
 option (include_in_bitcoin_only) = true;
 
 /**
@@ -17,13 +17,13 @@ option (include_in_bitcoin_only) = true;
  * @next Failure
  */
 message CipherKeyValue {
-    repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
-    required string key = 2;            // key component of key:value
-    required bytes value = 3;           // value component of key:value
-    optional bool encrypt = 4;          // are we encrypting (True) or decrypting (False)?
-    optional bool ask_on_encrypt = 5;   // should we ask on encrypt operation?
-    optional bool ask_on_decrypt = 6;   // should we ask on decrypt operation?
-    optional bytes iv = 7;              // initialization vector (will be computed if not set)
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  required string key = 2; // key component of key:value
+  required bytes value = 3; // value component of key:value
+  optional bool encrypt = 4; // are we encrypting (True) or decrypting (False)?
+  optional bool ask_on_encrypt = 5; // should we ask on encrypt operation?
+  optional bool ask_on_decrypt = 6; // should we ask on decrypt operation?
+  optional bytes iv = 7; // initialization vector (will be computed if not set)
 }
 
 /**
@@ -31,7 +31,7 @@ message CipherKeyValue {
  * @end
  */
 message CipheredKeyValue {
-    required bytes value = 1;           // ciphered/deciphered value
+  required bytes value = 1; // ciphered/deciphered value
 }
 
 /**
@@ -39,12 +39,12 @@ message CipheredKeyValue {
  * @embed
  */
 message IdentityType {
-    optional string proto = 1;              // proto part of URI
-    optional string user = 2;               // user part of URI
-    optional string host = 3;               // host part of URI
-    optional string port = 4;               // port part of URI
-    optional string path = 5;               // path part of URI
-    optional uint32 index = 6 [default=0];  // identity index
+  optional string proto = 1; // proto part of URI
+  optional string user = 2; // user part of URI
+  optional string host = 3; // host part of URI
+  optional string port = 4; // port part of URI
+  optional string path = 5; // path part of URI
+  optional uint32 index = 6 [default = 0]; // identity index
 }
 
 /**
@@ -54,10 +54,10 @@ message IdentityType {
  * @next Failure
  */
 message SignIdentity {
-    required IdentityType identity = 1;                  // identity
-    optional bytes challenge_hidden = 2 [default=""];    // non-visible challenge
-    optional string challenge_visual = 3 [default=""];   // challenge shown on display (e.g. date+time)
-    optional string ecdsa_curve_name = 4;                // ECDSA curve name to use
+  required IdentityType identity = 1; // identity
+  optional bytes challenge_hidden = 2 [default = ""]; // non-visible challenge
+  optional string challenge_visual = 3 [default = ""]; // challenge shown on display (e.g. date+time)
+  optional string ecdsa_curve_name = 4; // ECDSA curve name to use
 }
 
 /**
@@ -65,9 +65,9 @@ message SignIdentity {
  * @end
  */
 message SignedIdentity {
-    optional string address = 1;    // identity address
-    required bytes public_key = 2;  // identity public key
-    required bytes signature = 3;   // signature of the identity data
+  optional string address = 1; // identity address
+  required bytes public_key = 2; // identity public key
+  required bytes signature = 3; // signature of the identity data
 }
 
 /**
@@ -77,9 +77,9 @@ message SignedIdentity {
  * @next Failure
  */
 message GetECDHSessionKey {
-    required IdentityType identity = 1;     // identity
-    required bytes peer_public_key = 2;     // peer's public key
-    optional string ecdsa_curve_name = 3;   // ECDSA curve name to use
+  required IdentityType identity = 1; // identity
+  required bytes peer_public_key = 2; // peer's public key
+  optional string ecdsa_curve_name = 3; // ECDSA curve name to use
 }
 
 /**
@@ -87,8 +87,8 @@ message GetECDHSessionKey {
  * @end
  */
 message ECDHSessionKey {
-    required bytes session_key = 1;     // ECDH session key
-    optional bytes public_key = 2;  // identity public key
+  required bytes session_key = 1; // ECDH session key
+  optional bytes public_key = 2; // identity public key
 }
 
 /**
@@ -97,5 +97,5 @@ message ECDHSessionKey {
  * @next Success
  */
 message PaymentNotification {
-    optional common.PaymentRequest payment_req = 1;  // SLIP-24 payment request
+  optional common.PaymentRequest payment_req = 1; // SLIP-24 payment request
 }

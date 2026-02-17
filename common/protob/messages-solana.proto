@@ -3,6 +3,10 @@ package hw.trezor.messages.solana;
 
 import "messages-common.proto";
 
+// Sugar for easier handling in Java
+option java_outer_classname = "TrezorMessageSolana";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+
 /**
  * Request: Ask device for public key corresponding to address_n path
  * @start
@@ -10,8 +14,8 @@ import "messages-common.proto";
  * @next Failure
  */
 message SolanaGetPublicKey {
-    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
-    optional bool show_display = 2; // optionally show on display before sending the result
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  optional bool show_display = 2; // optionally show on display before sending the result
 }
 
 /**
@@ -19,7 +23,7 @@ message SolanaGetPublicKey {
  * @end
  */
 message SolanaPublicKey {
-    required bytes public_key = 1;
+  required bytes public_key = 1;
 }
 
 /**
@@ -29,9 +33,9 @@ message SolanaPublicKey {
  * @next Failure
  */
 message SolanaGetAddress {
-    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
-    optional bool show_display = 2; // optionally show on display before sending the result
-    optional bool chunkify = 3;     // display the address in chunks of 4 characters
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+  optional bool show_display = 2; // optionally show on display before sending the result
+  optional bool chunkify = 3; // display the address in chunks of 4 characters
 }
 
 /**
@@ -39,26 +43,26 @@ message SolanaGetAddress {
  * @end
  */
 message SolanaAddress {
-    required string address = 1; // Solana address as Base58 encoded string
-    optional bytes mac = 2;      // Address authentication code
+  required string address = 1; // Solana address as Base58 encoded string
+  optional bytes mac = 2; // Address authentication code
 }
 
 /**
  * @embed
  */
 message SolanaTxTokenAccountInfo {
-    required string base_address = 1;
-    required string token_program = 2;
-    required string token_mint = 3;
-    required string token_account = 4;
+  required string base_address = 1;
+  required string token_program = 2;
+  required string token_mint = 3;
+  required string token_account = 4;
 }
 
 /**
  * @embed
  */
 message SolanaTxAdditionalInfo {
-    repeated SolanaTxTokenAccountInfo token_accounts_infos = 1;
-    optional bytes encoded_token = 2;
+  repeated SolanaTxTokenAccountInfo token_accounts_infos = 1;
+  optional bytes encoded_token = 2;
 }
 
 /**
@@ -68,10 +72,10 @@ message SolanaTxAdditionalInfo {
  * @next Failure
  */
 message SolanaSignTx {
-    repeated uint32 address_n = 1;      // BIP-32 path to derive the key to sign with
-    required bytes serialized_tx = 2;   // serialized tx to be signed
-    optional SolanaTxAdditionalInfo additional_info = 3;
-    optional common.PaymentRequest payment_req = 4; // SLIP-24 payment request
+  repeated uint32 address_n = 1; // BIP-32 path to derive the key to sign with
+  required bytes serialized_tx = 2; // serialized tx to be signed
+  optional SolanaTxAdditionalInfo additional_info = 3;
+  optional common.PaymentRequest payment_req = 4; // SLIP-24 payment request
 }
 
 /**
@@ -79,5 +83,5 @@ message SolanaSignTx {
  * @end
  */
 message SolanaTxSignature {
-    required bytes signature = 1;   // tx signature
+  required bytes signature = 1; // tx signature
 }
