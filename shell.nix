@@ -104,7 +104,6 @@ stdenvNoCC.mkDerivation ({
     openssl
     perl
     pkg-config
-    poetry
     ps
     oldNixpkgs.protobuf3_19
     pyright
