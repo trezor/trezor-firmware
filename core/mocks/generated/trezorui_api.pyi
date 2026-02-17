@@ -125,6 +125,7 @@ def confirm_action(
     description: str | None,
     subtitle: str | None = None,
     verb: str | None = None,
+    cancel: bool = True,
     verb_cancel: str | None = None,
     hold: bool = False,
     hold_danger: bool = False,
