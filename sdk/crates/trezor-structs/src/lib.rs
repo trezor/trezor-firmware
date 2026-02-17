@@ -18,23 +18,25 @@ pub type ArchivedLongString = rkyv::Archived<String<150>>;
 
 impl<const N: usize> String<N> {
     pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
-        if N > (u8::MAX as usize) || slice.len() > N {
-            return Err(());
-        }
-        let mut data = [0u8; N];
-        data[..slice.len()].copy_from_slice(slice);
-        Ok(Self {
-            data,
-            len: slice.len() as u8,
-        })
+        let s = core::str::from_utf8(slice).map_err(|_| ())?;
+        Self::from_str(s)
     }
 
     pub fn from_str(s: &str) -> core::result::Result<Self, ()> {
-        Self::from_slice(s.as_bytes())
+        if N > (u8::MAX as usize) || s.len() > N {
+            return Err(());
+        }
+
+        let mut data = [0u8; N];
+        data[..s.len()].copy_from_slice(s.as_bytes());
+        Ok(Self {
+            data,
+            len: s.len() as u8,
+        })
     }
 
     pub fn as_str(&self) -> &str {
-        core::str::from_utf8(&self.data[..self.len as usize]).unwrap_or("")
+        core::str::from_utf8(&self.data[..self.len as usize]).unwrap_or("#INVALID#")
     }
 }
 
@@ -72,6 +74,10 @@ impl Default for PropsList {
 
 impl PropsList {
     pub fn from_prop_slice(slice: &[(&str, &str)]) -> core::result::Result<Self, ()> {
+        if slice.len() > 5 {
+            return Err(());
+        }
+
         let mut props = Self::default();
         for (key, value) in slice {
             let key = ShortString::from_str(key)?;
@@ -83,7 +89,40 @@ impl PropsList {
     }
 }
 
+type StrExt = (ShortString, bool);
+
 #[derive(Archive, Serialize)]
+pub struct StrExtList {
+    pub data: [StrExt; 5],
+    pub len: u8,
+}
+
+impl Default for StrExtList {
+    fn default() -> Self {
+        Self {
+            data: [StrExt::default(); 5],
+            len: 0,
+        }
+    }
+}
+
+impl StrExtList {
+    pub fn from_str_slice(slice: &[(&str, bool)]) -> core::result::Result<Self, ()> {
+        if slice.len() > 5 {
+            return Err(());
+        }
+
+        let mut list = Self::default();
+        for (s, flag) in slice {
+            let s = ShortString::from_str(s)?;
+            list.data[list.len as usize] = (s, *flag);
+            list.len += 1;
+        }
+        Ok(list)
+    }
+}
+
+#[derive(Archive, Serialize, Default)]
 pub struct DerivationPath {
     pub data: [u32; 8],
     pub len: u8,
@@ -107,18 +146,34 @@ impl DerivationPath {
     }
 }
 
-impl Default for DerivationPath {
-    fn default() -> Self {
-        Self {
-            data: [0u32; 8],
-            len: 0,
+#[derive(Default, Archive, Serialize)]
+pub struct TypedHash {
+    pub data: [u8; 32],
+}
+
+impl TypedHash {
+    pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
+        if slice.len() != 32 {
+            return Err(());
         }
+        let mut data = [0u8; 32];
+        data.copy_from_slice(slice);
+        Ok(Self { data })
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data
     }
 }
 
 #[derive(Archive, Serialize)]
 pub enum TrezorUiEnum {
     ConfirmAction {
+        title: ShortString,
+        action: ShortString,
+        hold: bool,
+    },
+    ConfirmValue {
         title: ShortString,
         content: ShortString,
     },
@@ -127,6 +182,10 @@ pub enum TrezorUiEnum {
         pages: usize,
     },
     Warning {
+        title: ShortString,
+        content: ShortString,
+    },
+    Danger {
         title: ShortString,
         content: ShortString,
     },
@@ -151,6 +210,11 @@ pub enum TrezorUiEnum {
     ShowPublicKey {
         key: LongString,
     },
+    ShouldShowMore {
+        title: ShortString,
+        items: StrExtList,
+        button_text: ShortString,
+    },
 }
 
 /// Outgoing UI result message for IPC
@@ -170,9 +234,12 @@ pub enum TrezorCryptoEnum {
     GetXpub {
         address_n: DerivationPath,
     },
-    SignHash {
-        title: ShortString,
-        content: ShortString,
+    GetEthPubkeyHash {
+        address_n: DerivationPath,
+    },
+    SignTypedHash {
+        address_n: DerivationPath,
+        hash: TypedHash,
     },
 }
 
@@ -184,6 +251,7 @@ pub enum TrezorCryptoResult {
     Cancelled,
     Xpub(LongString),
     Signature([u8; 64]),
+    EthPubkeyHash([u8; 20]),
 }
 
 /// Outgoing Crypto result message for IPC

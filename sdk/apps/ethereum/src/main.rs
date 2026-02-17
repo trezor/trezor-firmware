@@ -3,29 +3,31 @@
 
 extern crate alloc;
 
-use prost::Message as _;
-use trezor_app_sdk::service::{self, CoreIpcService};
+use prost::Message;
+use trezor_app_sdk::service::{self, CoreIpcService, NoUtilHandler};
 use trezor_app_sdk::util::Timeout;
 use trezor_app_sdk::{CORE_SERVICE, Error, IpcMessage, Result, error};
-
 // Include generated protobuf code
 pub(crate) mod proto;
 
 mod common;
-
+mod definitions;
 mod get_address;
 mod get_public_key;
+mod helpers;
+mod keychain;
+mod paths;
 mod sign_message;
 mod sign_tx;
 mod sign_typed_data;
+mod strutil;
+mod ed25519;
 
 use proto::ethereum::{
-    EthereumAddress, EthereumGetAddress, EthereumGetPublicKey, EthereumMessageSignature,
-    EthereumPublicKey, EthereumSignMessage, EthereumSignTx, EthereumTxRequest,
+    EthereumGetAddress, EthereumGetPublicKey, EthereumSignMessage, EthereumSignTx,
 };
-use proto::ethereum_eip712::{EthereumSignTypedData};
+use proto::ethereum_eip712::EthereumSignTypedData;
 use ufmt::derive::uDebug;
-use ufmt_utils::WriteAdapter;
 
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, num_enum::FromPrimitive, num_enum::IntoPrimitive)]
 #[repr(u16)]
@@ -63,6 +65,40 @@ macro_rules! wire_handler {
         }
     };
 }
+
+pub fn wire_request<Req, Resp>(req: &Req) -> Result<Resp>
+where
+    Req: Message,
+    Resp: Message + Default,
+{
+    let req_bytes = req.encode_to_vec();
+    let message = IpcMessage::new(0, &req_bytes);
+
+    let result = CORE_SERVICE.call(
+        CoreIpcService::WireCall,
+        &message,
+        Timeout::max(),
+        &NoUtilHandler,
+    )?;
+    Resp::decode(result.data()).map_err(|_| Error::InvalidMessage)
+}
+
+// #[macro_export]
+// macro_rules! wire_request {
+//     ($req:expr, $resp_ty:ty) => {{
+//         let req_bytes = req.encode_to_vec();
+//         let message = IpcMessage::new(0, &req_bytes);
+
+//         let result = CORE_SERVICE.call(
+//             CoreIpcService::WireCall,
+//             &message,
+//             Timeout::max(),
+//             &NoUtilHandler,
+//         )?;
+
+//         <$resp_ty>::decode(result.data()).map_err(|_| Error::InvalidMessage)
+//     }};
+// }
 
 // Generate all handler functions
 wire_handler!(

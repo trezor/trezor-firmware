@@ -1,12 +1,14 @@
 // Include generated protobuf code
 
-// pub mod bitcoin {
-//     include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.bitcoin.rs"));
-// }
 pub mod common {
-    // include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.rs"));
     include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.common.rs"));
-    // include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.management.rs"));
+}
+
+pub mod definitions {
+    include!(concat!(
+        env!("OUT_DIR"),
+        "/hw.trezor.messages.definitions.rs"
+    ));
 }
 pub mod ethereum {
     include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.ethereum.rs"));

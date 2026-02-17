@@ -1834,6 +1834,14 @@ impl FirmwareUI for UIEckhart {
                 false,
                 false,
             ),
+            ArchivedTrezorUiEnum::Danger { title, content } => Self::show_warning(
+                tstr_from_archived(title),
+                TR::buttons__continue.into(),
+                tstr_from_archived(content),
+                TString::empty(),
+                true,
+                true,
+            ),
             ArchivedTrezorUiEnum::Success { title, content } => Self::show_success(
                 tstr_from_archived(title),
                 TR::buttons__continue.into(),

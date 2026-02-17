@@ -111,8 +111,41 @@ class GenericSessionContext(Context):
 
         return message_handler.wrap_protobuf_load(message.data, expected_type)
 
+    async def read_serialized(
+        self,
+        expected_type: type[protobuf.MessageType],
+    ) -> bytes:
+        if __debug__:
+            exp_type: str = str(expected_type)
+            if expected_type is not None:
+                exp_type = expected_type.MESSAGE_NAME
+            log.debug(
+                __name__,
+                "Read - with expected type %s",
+                exp_type,
+                iface=self.iface,
+            )
+
+        message = await self._read_next_message()
+
+        if message.type != expected_type.MESSAGE_WIRE_TYPE:
+            if __debug__:
+                log.debug(
+                    __name__,
+                    "EXPECTED TYPE: %s\nRECEIVED TYPE: %s",
+                    expected_type.MESSAGE_WIRE_TYPE,
+                    message.type,
+                    iface=self.iface,
+                )
+            raise UnexpectedMessageException(message)
+
+        return bytes(message.data)
+
     def write(self, msg: protobuf.MessageType) -> Awaitable[None]:
         return self.channel.write(msg, self.session_id)
+
+    def write_serialized(self, serialized: bytes, msg_type: type[protobuf.MessageType]) -> Awaitable[None]:
+        return self.channel.write_serialized(serialized, msg_type, self.session_id)
 
     def get_session_state(self) -> SessionState: ...
 

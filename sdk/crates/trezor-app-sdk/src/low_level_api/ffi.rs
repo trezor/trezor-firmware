@@ -118,9 +118,27 @@ pub struct trezor_api_v1_t {
     pub trezor_crypto_v1_t: *const trezor_crypto_v1_t,
 }
 
+pub type ed25519_signature = [core::ffi::c_uchar; 64usize];
+pub type ed25519_public_key = [core::ffi::c_uchar; 32usize];
+
 /// Trezor crypto v1 function pointers
 #[repr(C)]
-pub struct trezor_crypto_v1_t {}
+pub struct trezor_crypto_v1_t {
+    pub ed25519_cosi_combine_publickeys: unsafe extern "C" fn(
+        res: *mut core::ffi::c_uchar,
+        pks: *const ed25519_public_key,
+        n: usize,
+    ) -> core::ffi::c_int,
+    pub ed25519_sign_open: unsafe extern "C" fn(
+        m: *const u8,
+        mlen: usize,
+        pk: *const u8,
+        RS: *const u8,
+    ) -> core::ffi::c_int,
+    pub sha3_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
+    pub sha_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
+    pub keccak_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
+}
 
 unsafe impl Sync for trezor_api_v1_t {}
 unsafe impl Sync for trezor_crypto_v1_t {}

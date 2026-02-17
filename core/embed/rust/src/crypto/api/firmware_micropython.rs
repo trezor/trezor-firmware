@@ -21,8 +21,8 @@ use rkyv::{
     util::Align,
 };
 use trezor_structs::{
-    ArchivedDerivationPath, ArchivedShortString, ArchivedTrezorCryptoEnum, DerivationPath,
-    LongString, TrezorCryptoResult,
+    ArchivedDerivationPath, ArchivedShortString, ArchivedTrezorCryptoEnum, ArchivedTypedHash,
+    DerivationPath, LongString, TrezorCryptoResult,
 };
 
 // TODO preparation for the complete Rust implementation of TrezorCrypto API
@@ -121,6 +121,68 @@ extern "C" fn new_deserialize_derivation_path(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_deserialize_crypto_message(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+
+        let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+
+        // Safe helper to convert archived string to DerivationPath using Deref
+        fn dp_from_archived(s: &ArchivedDerivationPath) -> DerivationPath {
+            let slice = unsafe {
+                core::slice::from_raw_parts(s.data.as_ptr() as *const u32, s.len as usize)
+            };
+            DerivationPath::from_slice(slice).unwrap_or_default()
+        }
+
+        fn obj_from_dp(dp: &DerivationPath) -> Obj {
+            let mut tuple_objs = heapless::Vec::<Obj, 10>::new();
+            for i in 0..(dp.as_slice().len() as usize) {
+                dp.as_slice()
+                    .get(i)
+                    .map(|&x| unwrap!(tuple_objs.push(unwrap!(x.try_into()))))
+                    .ok_or(Error::TypeError)
+                    .unwrap();
+            }
+            List::alloc(&tuple_objs).unwrap().into()
+        }
+
+        fn obj_from_archived_hash(s: &ArchivedTypedHash) -> Obj {
+            let bytes =
+                unsafe { core::slice::from_raw_parts(s.data.as_ptr(), s.data.len() as usize) };
+            // Convert the bytes to a Python bytes object
+            unwrap!(bytes.try_into())
+        }
+
+        // Deserialize the rkyv archived data directly from the static buffer
+        let archived = unsafe { rkyv::access_unchecked::<ArchivedTrezorCryptoEnum>(data) };
+
+        // Access the archived data zero-copy using safe Deref access
+        let result: Obj = match archived {
+            ArchivedTrezorCryptoEnum::GetXpub { address_n } => {
+                let dp = dp_from_archived(address_n);
+                (Obj::try_from(0i32)?, obj_from_dp(&dp)).try_into()?
+            }
+            ArchivedTrezorCryptoEnum::GetEthPubkeyHash { address_n } => {
+                let dp = dp_from_archived(address_n);
+                (Obj::try_from(1i32)?, obj_from_dp(&dp)).try_into()?
+            }
+            ArchivedTrezorCryptoEnum::SignTypedHash { address_n, hash } => {
+                let dp = dp_from_archived(address_n);
+                let hash_obj = obj_from_archived_hash(hash);
+                (Obj::try_from(2i32)?, obj_from_dp(&dp), hash_obj).try_into()?
+            }
+        };
+
+        Ok(result)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let obj: Obj = kwargs.get(Qstr::MP_QSTR_result)?;
@@ -145,7 +207,12 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
                 core::str::from_utf8(data)
             ))))
         } else {
-            return Err(Error::TypeError);
+            let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+            match data.len() {
+                64 => TrezorCryptoResult::Signature(data.try_into().unwrap()),
+                20 => TrezorCryptoResult::EthPubkeyHash(data.try_into().unwrap()),
+                _ => return Err(Error::TypeError),
+            }
         };
 
         let mut arena = [MaybeUninit::<u8>::uninit(); 200];
@@ -193,4 +260,11 @@ pub static mp_module_trezorcrypto_api: Module = obj_module! {
     ///     """Deserialize a derivation path from bytes and return it as a list of integers."""
     Qstr::MP_QSTR_deserialize_derivation_path => obj_fn_kw!(0, new_deserialize_derivation_path).as_obj(),
 
+
+    /// def deserialize_crypto_message(
+    ///     *,
+    ///     data: bytes,
+    /// ) -> Obj:
+    ///     """Deserialize a crypto message from bytes and return it as a MicroPython object."""
+    Qstr::MP_QSTR_deserialize_crypto_message => obj_fn_kw!(0, new_deserialize_crypto_message).as_obj(),
 };

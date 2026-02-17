@@ -408,6 +408,37 @@ class Channel:
 
         return await self.write_encrypted_payload(ENCRYPTED, buffer[:payload_length])
 
+    async def write_serialized(
+        self,
+        serialized: bytes,
+        msg_type: type[protobuf.MessageType],
+        session_id: int = 0,
+    ) -> None:
+        assert ABP.is_sending_allowed(self.channel_cache)
+        msg_size = len(serialized)
+
+        if __debug__:
+            self._log(
+                f"write raw message with length {msg_size}",
+                logger=log.info,
+            )
+
+        # cannot write message without wire type
+        assert msg_type.MESSAGE_WIRE_TYPE is not None
+
+        payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
+        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + PacketHeader.INIT_LENGTH
+
+        buffer = self.write_buf.get(length)
+        noise_payload_len = memory_manager.encode_serialized_msg_into_buffer(
+            buffer, serialized, msg_type.MESSAGE_WIRE_TYPE, session_id
+        )
+
+        self._encrypt(buffer, noise_payload_len)
+        payload_length = noise_payload_len + TAG_LENGTH
+
+        return await self.write_encrypted_payload(ENCRYPTED, buffer[:payload_length])
+
     async def write_encrypted_payload(self, ctrl_byte: int, payload: AnyBytes) -> None:
         assert ABP.is_sending_allowed(self.channel_cache)
 

@@ -60,6 +60,9 @@ pub mod service;
 pub mod ui;
 pub mod util;
 
+#[macro_use]
+pub mod macros;
+
 /// A wrapper which aligns its inner value to 4 bytes.
 #[derive(Clone, Copy, Debug)]
 #[repr(C, align(8))]
@@ -78,6 +81,7 @@ pub enum Error {
     InvalidFunction,
     InvalidMessage,
     InvalidArgument,
+    DataError,
     Cancelled,
 }
 

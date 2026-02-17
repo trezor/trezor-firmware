@@ -44,6 +44,28 @@ def encode_into_buffer(
     return payload_size
 
 
+def encode_serialized_msg_into_buffer(
+    buffer: AnyBuffer, serialized: bytes, msg_type: int, session_id: int
+) -> int:
+    """Encode protobuf message `msg` into the `buffer`, including session id
+    an messages's wire type. Will fail if provided message has no wire type."""
+
+    msg_size = len(serialized)
+    payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
+
+    _encode_session_into_buffer(memoryview(buffer), session_id)
+    _encode_message_type_into_buffer(memoryview(buffer), msg_type, SESSION_ID_LENGTH)
+
+    # Copy serialized bytes directly with offset
+    offset = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH
+    sent = utils.memcpy(buffer, offset, serialized, 0)
+
+    if sent != msg_size:
+        raise Exception("Failed to copy the entire serialized message into the buffer.")
+
+    return payload_size
+
+
 def _encode_session_into_buffer(
     buffer: AnyBuffer, session_id: int, buffer_offset: int = 0
 ) -> None:

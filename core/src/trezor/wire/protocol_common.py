@@ -75,8 +75,24 @@ class Context:
         """
         ...
 
+    async def read_serialized(
+        self,
+        expected_type: type[protobuf.MessageType],
+    ) -> bytes:
+        """Read a serialized message from the wire.
+
+        The read message must be passed as `expected_type`,
+        """
+        ...
+
     def write(self, msg: protobuf.MessageType) -> Awaitable[None]:
         """Write a message to the wire."""
+        ...
+
+    def write_serialized(
+        self, serialized: bytes, msg_type: type[protobuf.MessageType]
+    ) -> Awaitable[None]:
+        """Write raw bytes to the wire."""
         ...
 
     async def call(
@@ -98,6 +114,27 @@ class Context:
         await self.write(msg)
         del msg
         return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
+
+    async def call_serialized(
+        self,
+        serialized: bytes,
+        msg_type: type[protobuf.MessageType],
+        expected_type: type[LoadedMessageType],
+    ) -> bytes:
+        """Write already serialized message to the wire, then await and return the serialized response message."""
+        assert expected_type.MESSAGE_WIRE_TYPE is not None
+
+        if __debug__:
+            # Check if `expected_type` is in the used `message_type_enum`
+            # Test skipped for MESSAGE_WIRE_TYPE == 22 because of "TxAck polymorphism" (PR #1266)
+            if expected_type.MESSAGE_WIRE_TYPE != 22:
+                protobuf.type_for_wire(
+                    self.message_type_enum_name, expected_type.MESSAGE_WIRE_TYPE
+                )
+
+        await self.write_serialized(serialized, msg_type)
+        del serialized
+        return await self.read_serialized(expected_type)
 
     def release(self) -> None:
         """Release resources used by the context, eg. clear context cache."""

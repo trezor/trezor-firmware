@@ -320,6 +320,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_decode;
   MP_QSTR_deinit;
   MP_QSTR_description;
+  MP_QSTR_deserialize_crypto_message;
   MP_QSTR_deserialize_derivation_path;
   MP_QSTR_details_title;
   MP_QSTR_device_name;

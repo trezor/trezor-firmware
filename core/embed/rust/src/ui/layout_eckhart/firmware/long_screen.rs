@@ -245,10 +245,10 @@ where
                 }
             }
 
-            ctx.ipc_data().map(|data| {
-                self.cache.init(data);
-                ctx.request_paint();
-            });
+            // ctx.ipc_data().map(|data| {
+            //     self.cache.init(data);
+            //     ctx.request_paint();
+            // });
 
             // ctx.button_request()
 

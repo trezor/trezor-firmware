@@ -69,6 +69,20 @@ async def call(
     return await CURRENT_CONTEXT.call(msg, expected_type)
 
 
+async def call_serialized(
+    serialized: bytes,
+    msg_type: type[protobuf.MessageType],
+    expected_type: type[LoadedMessageType],
+) -> bytes:
+    """Send already serialized message to the host and wait for a serialized response of a particular type.
+
+    Raises if there is no context for this workflow."""
+    if CURRENT_CONTEXT is None:
+        raise NoWireContext
+
+    return await CURRENT_CONTEXT.call_serialized(serialized, msg_type, expected_type)
+
+
 async def call_any(
     msg: protobuf.MessageType, *expected_wire_types: int
 ) -> protobuf.MessageType:

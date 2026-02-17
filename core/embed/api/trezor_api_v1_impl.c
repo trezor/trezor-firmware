@@ -26,7 +26,13 @@ ssize_t dbg_console_write(const void* data, size_t data_size) {
 }
 #endif
 
-const trezor_crypto_v1_t trezor_crypto_v1 = {};
+const trezor_crypto_v1_t trezor_crypto_v1 = {
+    .ed25519_cosi_combine_publickeys = ed25519_cosi_combine_publickeys,
+    .ed25519_sign_open = ed25519_sign_open,
+    .sha3_256 = sha3_256,
+    .sha_256 = sha_256,
+    .keccak_256 = keccak_256,
+};
 
 const trezor_api_v1_t trezor_api_v1 = {
     .system_exit = system_exit,

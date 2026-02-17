@@ -1,15 +1,12 @@
-from typing import TYPE_CHECKING
-
 import ustruct
+from typing import TYPE_CHECKING
 
 from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
-
 from trezor import app
 from trezor.crypto import random
+from trezor.messages import DataChunkAck, DataChunkRequest, ExtAppLoad, ExtAppLoaded
 from trezor.wire import context
-
-from trezor.messages import ExtAppLoad, ExtAppLoaded, DataChunkRequest, DataChunkAck
 from trezor.wire.errors import DataError
 
 if TYPE_CHECKING:
@@ -41,12 +38,12 @@ async def _load_image(hash: AnyBytes, size: int) -> None:
 
 
 async def load(msg: ExtAppLoad) -> ExtAppLoaded:
+    """Load external application from a host and return its hash."""
     from trezor import app
 
-    """Load external application from a host and return its hash."""
     try:
         task = app.spawn_task(msg.hash)
-    except RuntimeError as e:
+    except RuntimeError:
         try:
             await _load_image(msg.hash, msg.size)
         except Exception as e:
