@@ -1453,6 +1453,7 @@ if not utils.BITCOIN_ONLY:
                         action=vote_account,
                         description=description,
                         verb=TR.buttons__continue,
+                        cancel=False,
                         external_menu=True,
                     )
                 ),

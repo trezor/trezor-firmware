@@ -64,6 +64,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, true)?;
         let verb_cancel: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -84,6 +85,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             description,
             subtitle,
             verb,
+            cancel,
             verb_cancel,
             hold,
             hold_danger,
@@ -1515,6 +1517,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     description: str | None,
     ///     subtitle: str | None = None,
     ///     verb: str | None = None,
+    ///     cancel: bool = True,
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
     ///     hold_danger: bool = False,

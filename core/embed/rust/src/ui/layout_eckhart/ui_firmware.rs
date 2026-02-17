@@ -63,6 +63,7 @@ impl FirmwareUI for UIEckhart {
         description: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
+        cancel: bool,
         _verb_cancel: Option<TString<'static>>,
         hold: bool,
         hold_danger: bool,
@@ -111,10 +112,11 @@ impl FirmwareUI for UIEckhart {
 
         let mut screen = TextScreen::new(paragraphs)
             .with_header(Header::new(title))
-            .with_action_bar(ActionBar::new_double(
-                Button::with_icon(theme::ICON_CROSS),
-                right_button,
-            ));
+            .with_action_bar(if cancel {
+                ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
+            } else {
+                ActionBar::new_single(right_button)
+            });
         if let Some(subtitle) = subtitle {
             screen = screen.with_hint(Hint::new_instruction(subtitle, None));
         }
