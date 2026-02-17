@@ -30,7 +30,7 @@ const trezor_crypto_v1_t trezor_crypto_v1 = {
     .ed25519_cosi_combine_publickeys = ed25519_cosi_combine_publickeys,
     .ed25519_sign_open = ed25519_sign_open,
     .sha3_256 = sha3_256,
-    .sha_256 = sha_256,
+    // .sha_256 = sha_256,
     .keccak_256 = keccak_256,
 };
 

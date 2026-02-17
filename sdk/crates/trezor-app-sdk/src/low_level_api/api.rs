@@ -221,11 +221,14 @@ pub fn sha3_256(data: &[u8]) -> [u8; 32] {
 }
 
 pub fn sha_256(data: &[u8]) -> [u8; 32] {
-    let mut digest = [0u8; 32];
-    unsafe {
-        (get_crypto_or_die().sha_256)(data.as_ptr(), data.len(), digest.as_mut_ptr());
-    }
-    digest
+    // let mut digest = [0u8; 32];
+    // unsafe {
+    //     (get_crypto_or_die().sha_256)(data.as_ptr(), data.len(), digest.as_mut_ptr());
+    // }
+    // digest
+
+    // TODO implementation of sha256 in Rust, as it's currently not available in the API
+    [0u8; 32]
 }
 
 pub fn keccak_256(data: &[u8]) -> [u8; 32] {

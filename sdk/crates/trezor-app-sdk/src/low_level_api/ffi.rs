@@ -136,7 +136,7 @@ pub struct trezor_crypto_v1_t {
         RS: *const u8,
     ) -> core::ffi::c_int,
     pub sha3_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
-    pub sha_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
+    // pub sha_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
     pub keccak_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
 }
 
