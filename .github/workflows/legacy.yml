@@ -197,7 +197,7 @@ jobs:
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
-      - run: nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
+      - run: nix-shell --arg fullDeps true --run "cd HWI && uv sync && uv run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
 
   legacy_upload_emu:
     name: Upload emulator binaries
