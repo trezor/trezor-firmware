@@ -70,7 +70,7 @@ impl FirmwareUI for UIEckhart {
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
-        _external_menu: bool, // TODO: will eventually replace the internal menu
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = {
             let action = action.unwrap_or("".into());
@@ -110,8 +110,14 @@ impl FirmwareUI for UIEckhart {
             }
         };
 
+        let mut header = Header::new(title);
+        if external_menu {
+            header = header.with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu);
+        }
+
         let mut screen = TextScreen::new(paragraphs)
-            .with_header(Header::new(title))
+            .with_header(header)
+            .with_external_menu(external_menu)
             .with_action_bar(if cancel {
                 ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
             } else {
