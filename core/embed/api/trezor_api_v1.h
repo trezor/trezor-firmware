@@ -32,6 +32,9 @@
 #endif
 
 #include "bip32.h"
+#include "ed25519-donna/ed25519.h"
+#include "sha2.h"
+#include "sha3.h"
 
 #ifndef USE_DBG_CONSOLE
 // temporary hack to allow compilation when DBG console is disabled
@@ -39,6 +42,17 @@ ssize_t dbg_console_write(const void* data, size_t data_size);
 #endif
 
 typedef struct {
+  int (*ed25519_cosi_combine_publickeys)(ed25519_public_key res,
+                                         CONST ed25519_public_key* pks,
+                                         size_t n);
+  int (*ed25519_sign_open)(const unsigned char* m, size_t mlen,
+                           const ed25519_public_key pk,
+                           const ed25519_signature RS);
+  void (*sha3_256)(const unsigned char* data, size_t len,
+                   unsigned char* digest);
+  void (*sha_256)(const unsigned char* data, size_t len, unsigned char* digest);
+  void (*keccak_256)(const unsigned char* data, size_t len,
+                     unsigned char* digest);
 } trezor_crypto_v1_t;
 
 typedef struct {

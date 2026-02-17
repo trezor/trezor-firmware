@@ -1,11 +1,8 @@
 extern crate alloc;
 
-use alloc::vec::Vec;
 use alloc::{string::String, vec};
 
-use trezor_app_sdk::{
-    ui, {Error, Result},
-};
+use trezor_app_sdk::{Result, ui};
 
 use crate::proto::ethereum::{EthereumMessageSignature, EthereumSignMessage};
 

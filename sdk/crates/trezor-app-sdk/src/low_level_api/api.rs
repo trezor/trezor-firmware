@@ -211,3 +211,80 @@ pub fn system_exit_fatal(message: &str, file: &str, line: i32) -> ! {
     // not being supposed to, we abort.
     core::intrinsics::abort();
 }
+
+pub fn sha3_256(data: &[u8]) -> [u8; 32] {
+    let mut digest = [0u8; 32];
+    unsafe {
+        (get_crypto_or_die().sha3_256)(data.as_ptr(), data.len(), digest.as_mut_ptr());
+    }
+    digest
+}
+
+pub fn sha_256(data: &[u8]) -> [u8; 32] {
+    let mut digest = [0u8; 32];
+    unsafe {
+        (get_crypto_or_die().sha_256)(data.as_ptr(), data.len(), digest.as_mut_ptr());
+    }
+    digest
+}
+
+pub fn keccak_256(data: &[u8]) -> [u8; 32] {
+    let mut digest = [0u8; 32];
+    unsafe {
+        (get_crypto_or_die().keccak_256)(data.as_ptr(), data.len(), digest.as_mut_ptr());
+    }
+    digest
+}
+
+pub fn ed25519_sign_open(
+    public_key: &[u8],
+    signature: &[u8],
+    message: &[u8],
+) -> Result<bool, ApiError> {
+    if public_key.len() != 32 || signature.len() != 64 || message.is_empty() {
+        return Err(ApiError::Failed);
+    }
+
+    let result = unsafe {
+        (get_crypto_or_die().ed25519_sign_open)(
+            message.as_ptr(),
+            message.len(),
+            public_key.as_ptr() as *const _,
+            signature.as_ptr() as *const _,
+        )
+    };
+    Ok(result == 0)
+}
+
+pub fn ed25519_cosi_combine_publickeys(
+    pks: &[&ffi::ed25519_public_key],
+) -> Result<[u8; 32], ApiError> {
+    let n = pks.len();
+
+    if n > 15 {
+        // Can't combine more than 15 COSI signatures
+        return Err(ApiError::Failed);
+    }
+
+    // for pk in pks {
+    //     if pk.len() != 32 {
+    //         // Invalid length of  public key
+    //         return Err(ApiError::Failed);
+    //     }
+    // }
+
+    let mut res = [0u8; 32];
+    let result = unsafe {
+        (get_crypto_or_die().ed25519_cosi_combine_publickeys)(
+            res.as_mut_ptr(),
+            pks.as_ptr() as *const _,
+            n,
+        )
+    };
+    if result == 0 {
+        Ok(res)
+    } else {
+        // TODO: better error handling
+        Err(ApiError::Failed)
+    }
+}

@@ -4,6 +4,7 @@ fn main() {
         .compile_protos(
             &[
                 "../../../common/protob/messages-common.proto",
+                "../../../common/protob/messages-definitions.proto",
                 "../../../common/protob/messages-ethereum.proto",
                 "../../../common/protob/messages-ethereum-eip712.proto",
             ],

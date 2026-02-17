@@ -2,8 +2,8 @@ extern crate alloc;
 
 use ufmt::derive::uDebug;
 
+use crate::low_level_api;
 use crate::sysevent::SysEvents;
-use crate::{log, low_level_api};
 
 #[derive(uDebug, Copy, Clone, PartialEq, Eq)]
 pub struct Timeout(u32);
@@ -78,74 +78,76 @@ pub struct HdNodeData {
     pub public_key: [u8; 33],
 }
 
-pub fn hdnode_deserialize_public(serialized: &str, version: u32) -> Result<HdNodeData, i32> {
-    let mut node_data = [0u8; 82];
+impl HdNodeData {
+    const TOTAL: usize = 82;
+    const VERSION_LEN: usize = 4;
+    const VERSION_OFFSET: usize = 0;
+    const DEPTH_LEN: usize = 1;
+    const DEPTH_OFFSET: usize = HdNodeData::VERSION_LEN;
+    const FINGERPRINT_LEN: usize = 4;
+    const FINGERPRINT_OFFSET: usize = HdNodeData::DEPTH_OFFSET + HdNodeData::DEPTH_LEN;
+    const CHILD_NUM_LEN: usize = 4;
+    const CHILD_NUM_OFFSET: usize = HdNodeData::FINGERPRINT_OFFSET + HdNodeData::FINGERPRINT_LEN;
+    const CHAIN_CODE_LEN: usize = 32;
+    const CHAIN_CODE_OFFSET: usize = HdNodeData::CHILD_NUM_OFFSET + HdNodeData::CHILD_NUM_LEN;
+    const PUBLIC_KEY_LEN: usize = 33;
+    const PUBLIC_KEY_OFFSET: usize = HdNodeData::CHAIN_CODE_OFFSET + HdNodeData::CHAIN_CODE_LEN;
 
-    let decoded = bs58::decode(serialized).onto(&mut node_data).unwrap();
-    if decoded != 82 {
-        return Err(-1); // decode failed
+    pub fn deserialize_public(serialized: &str, version: u32) -> Result<Self, ()> {
+        let mut node_data = [0u8; 82];
+
+        // Decode base58 string
+        let decoded_len = bs58::decode(serialized)
+            .onto(&mut node_data)
+            .map_err(|_| ())?;
+        if decoded_len != Self::TOTAL {
+            // TODO: decode failed or invalid length
+            return Err(());
+        }
+
+        // Check version
+        let ver = u32::from_be_bytes(
+            node_data[Self::VERSION_OFFSET..Self::VERSION_OFFSET + Self::VERSION_LEN]
+                .try_into()
+                .map_err(|_| ())?,
+        );
+        if ver != version {
+            // TODO: invalid version
+            return Err(());
+        }
+
+        // Extract fields from node_data
+        let depth = u8::from_be_bytes(
+            node_data[Self::DEPTH_OFFSET..Self::DEPTH_OFFSET + Self::DEPTH_LEN]
+                .try_into()
+                .map_err(|_| ())?,
+        );
+        let fingerprint = u32::from_be_bytes(
+            node_data[Self::FINGERPRINT_OFFSET..Self::FINGERPRINT_OFFSET + Self::FINGERPRINT_LEN]
+                .try_into()
+                .map_err(|_| ())?,
+        );
+        let child_num = u32::from_be_bytes(
+            node_data[Self::CHILD_NUM_OFFSET..Self::CHILD_NUM_OFFSET + Self::CHILD_NUM_LEN]
+                .try_into()
+                .map_err(|_| ())?,
+        );
+
+        let mut chain_code = [0u8; Self::CHAIN_CODE_LEN];
+        chain_code.copy_from_slice(
+            &node_data[Self::CHAIN_CODE_OFFSET..Self::CHAIN_CODE_OFFSET + Self::CHAIN_CODE_LEN],
+        );
+
+        let mut public_key = [0u8; Self::PUBLIC_KEY_LEN];
+        public_key.copy_from_slice(
+            &node_data[Self::PUBLIC_KEY_OFFSET..Self::PUBLIC_KEY_OFFSET + Self::PUBLIC_KEY_LEN],
+        );
+        Ok(HdNodeData {
+            depth: depth as u32,
+            fingerprint,
+            child_num,
+            chain_code,
+            public_key,
+        })
     }
-
-    log::info!("decoded len {}", decoded);
-
-    // Check version
-    let ver = u32::from_be_bytes(node_data[0..4].try_into().unwrap());
-    if ver != version {
-        return Err(-3); // invalid version
-    }
-
-    // Extract fields from node_data
-    let depth = node_data[4];
-    let fingerprint = u32::from_be_bytes(node_data[5..9].try_into().unwrap());
-    let child_num = u32::from_be_bytes(node_data[9..13].try_into().unwrap());
-
-    let mut chain_code = [0u8; 32];
-    chain_code.copy_from_slice(&node_data[13..45]);
-
-    let mut public_key = [0u8; 33];
-    public_key.copy_from_slice(&node_data[45..78]);
-
-    Ok(HdNodeData {
-        depth: depth as u32,
-        fingerprint,
-        child_num,
-        chain_code,
-        public_key,
-    })
-}
-
-pub fn hex_encode(bytes: &[u8]) -> alloc::string::String {
-    use alloc::string::String;
-    let mut result = String::new();
-    for byte in bytes {
-        // Manually append hex digits
-        let high = (byte >> 4) & 0x0F;
-        let low = byte & 0x0F;
-        result.push(char::from_digit(high as u32, 16).unwrap());
-        result.push(char::from_digit(low as u32, 16).unwrap());
-    }
-    result
-}
-
-pub fn hed_decode(hex: &str) -> Result<alloc::vec::Vec<u8>, ()> {
-    if hex.len() % 2 != 0 {
-        return Err(()); // Invalid hex string
-    }
-    let mut bytes = alloc::vec::Vec::with_capacity(hex.len() / 2);
-    for i in (0..hex.len()).step_by(2) {
-        let high = hex[i..i + 1]
-            .chars()
-            .next()
-            .unwrap()
-            .to_digit(16)
-            .ok_or(())?;
-        let low = hex[i + 1..i + 2]
-            .chars()
-            .next()
-            .unwrap()
-            .to_digit(16)
-            .ok_or(())?;
-        bytes.push((high << 4 | low) as u8);
-    }
-    Ok(bytes)
 }

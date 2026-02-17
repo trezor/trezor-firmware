@@ -28,3 +28,11 @@ def deserialize_derivation_path(
     data: bytes,
 ) -> List[int]:
     """Deserialize a derivation path from bytes and return it as a list of integers."""
+
+
+# rust/src/crypto/api/firmware_micropython.rs
+def deserialize_crypto_message(
+    *,
+    data: bytes,
+) -> Obj:
+    """Deserialize a crypto message from bytes and return it as a MicroPython object."""

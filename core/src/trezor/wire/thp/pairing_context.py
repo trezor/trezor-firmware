@@ -123,8 +123,39 @@ class PairingContext(Context):
 
         return message_handler.wrap_protobuf_load(message.data, expected_type)
 
+    async def read_serialized(
+        self,
+        expected_type: type[protobuf.MessageType],
+    ) -> bytes:
+        if __debug__:
+            exp_type = expected_type.MESSAGE_NAME
+            log.debug(
+                __name__,
+                "Read - with expected type %s",
+                exp_type,
+                iface=self.iface,
+            )
+
+        _, message = await self.channel_ctx.decrypt_message()
+        if message.type != expected_type.MESSAGE_WIRE_TYPE:
+            from trezor.messages import Cancel
+
+            if message.type == Cancel.MESSAGE_WIRE_TYPE:
+                raise ActionCancelled
+
+            raise UnexpectedMessageException(message)
+
+        return bytes(message.data)
+
     def write(self, msg: protobuf.MessageType) -> Awaitable[None]:
         return self.channel_ctx.write(msg)
+
+    def write_serialized(
+        self,
+        serialized: bytes,
+        msg_type: type[protobuf.MessageType],
+    ) -> Awaitable[None]:
+        return self.channel_ctx.write_serialized(serialized, msg_type)
 
     async def call_any(
         self, msg: protobuf.MessageType, *expected_types: int

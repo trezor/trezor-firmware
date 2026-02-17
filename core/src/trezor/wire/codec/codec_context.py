@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Awaitable, Container
 
 from storage import cache_codec
 from storage.cache_common import DataCache, InvalidSessionError
-from trezor import protobuf
+from trezor import protobuf, utils
 from trezor.wire.codec import codec_v1
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import wrap_protobuf_load
@@ -78,6 +78,36 @@ class CodecContext(Context):
         # look up the protobuf class and parse the message
         return wrap_protobuf_load(msg.data, expected_type)
 
+    async def read_serialized(
+        self,
+        expected_type: type[protobuf.MessageType],
+    ) -> bytes:
+        if __debug__:
+            log.debug(
+                __name__,
+                "expect: %s",
+                expected_type.MESSAGE_NAME,
+                iface=self.iface,
+            )
+
+        # Load the full message into a buffer, parse out type and data payload
+        msg = await self.read_from_wire()
+
+        # If we got a message with unexpected type, raise the message via
+        # `UnexpectedMessageError` and let the session handler deal with it.
+        if msg.type != expected_type.MESSAGE_WIRE_TYPE:
+            raise UnexpectedMessageException(msg)
+
+        if __debug__:
+            log.debug(
+                __name__,
+                "read: %s",
+                expected_type.MESSAGE_NAME,
+                iface=self.iface,
+            )
+
+        return bytes(msg.data)
+
     async def write(self, msg: protobuf.MessageType) -> None:
         if __debug__:
             log.debug(
@@ -108,6 +138,47 @@ class CodecContext(Context):
         await codec_v1.write_message(
             self.iface,
             msg.MESSAGE_WIRE_TYPE,
+            memoryview(buffer)[:msg_size],
+        )
+
+    async def write_serialized(
+        self, serialized: bytes, msg_type: type[protobuf.MessageType]
+    ) -> None:
+
+        if __debug__:
+            log.debug(
+                __name__,
+                "write serialized: %s",
+                msg_type,
+                iface=self.iface,
+            )
+
+        # cannot write message without wire type
+        assert msg_type.MESSAGE_WIRE_TYPE is not None
+
+        msg_size = len(serialized)
+
+        buffer = self._get_buffer()
+        if buffer is None:
+            if msg_size > 128:
+                raise IOError
+            # allow sending small responses (for error reporting when another session is in progress)
+            buffer = bytearray(msg_size)
+
+        # try to reuse reallocated buffer
+        if msg_size > len(buffer):
+            # message is too big, we need to allocate a new buffer
+            buffer = bytearray(msg_size)
+
+        sent = utils.memcpy(buffer, 0, serialized, 0)
+        if sent != msg_size:
+            raise Exception(
+                "Failed to copy the entire serialized message into the buffer."
+            )
+
+        await codec_v1.write_message(
+            self.iface,
+            msg_type.MESSAGE_WIRE_TYPE,
             memoryview(buffer)[:msg_size],
         )
 

@@ -1,30 +1,31 @@
 import ustruct
 from micropython import const
 from typing import TYPE_CHECKING
-
-from storage.cache import get_sessionless_cache
-from storage import cache_common as cc
-
-from trezor.ui.layouts import interact
-from trezor import io, loop, app
-from trezor.wire import context
-from trezor.wire.errors import DataError
-import trezorui_api
-import trezorcrypto_api
-from trezor.messages import ExtAppMessage, ExtAppResponse
-from trezor.ui.layouts import show_pubkey
 from ubinascii import hexlify
 
-from trezor.messages import HDNodeType
+import trezorcrypto_api
+import trezorui_api
+from storage import cache_common as cc
+from storage.cache import get_sessionless_cache
+from trezor import app, io, loop
 from trezor.enums import InputScriptType
-from apps.common.keychain import Keychain
-from apps.common import paths, coininfo
+from trezor.messages import (
+    ExtAppMessage,
+    ExtAppResponse,
+    HDNodeType,
+    EthereumTypedDataStructRequest,
+    EthereumTypedDataStructAck,
+)
+from trezor.ui.layouts import interact
+from trezor.wire import context
+from trezor.wire.errors import DataError
+
+from apps.common import coininfo, paths
 from apps.common.keychain import get_keychain
 
-
 if TYPE_CHECKING:
-    from typing import NoReturn
     from trezorio import IpcMessage
+    from typing import NoReturn
 
 _SYSTASK_ID_EXTAPP = const(2)
 
@@ -35,6 +36,7 @@ _SERVICE_WIRE_CONTINUE = const(3)
 _SERVICE_WIRE_END = const(4)
 _SERVICE_CRYPTO = const(5)
 _SERVICE_UTIL = const(6)
+_SERVICE_WIRE_CALL = const(7)
 
 
 def fn_id(service: int, message_id: int) -> int:
@@ -105,33 +107,76 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UI, 0), resp)
 
         elif service == _SERVICE_CRYPTO:
-            # resp = trezorcrypto_api.process_crypto_message(data=bytes(msg.data))
-            # io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_CRYPTO, 0), resp)
 
-            # io.ipc_send(_SYSTASK_ID_EXTAPP, fn
-            address_n = trezorcrypto_api.deserialize_derivation_path(
-                data=bytes(msg.data)
-            )
-            print("Derivation path:", address_n)
-            node = keychain.derive(address_n)
+            obj = trezorcrypto_api.deserialize_crypto_message(data=bytes(msg.data))
 
-            assert script_type is InputScriptType.SPENDADDRESS
-            assert coin.xpub_magic is not None
-            node_xpub = node.serialize_public(coin.xpub_magic)
-            pubkey = node.public_key()
-            node_type = HDNodeType(
-                depth=node.depth(),
-                child_num=node.child_num(),
-                fingerprint=node.fingerprint(),
-                chain_code=node.chain_code(),
-                public_key=pubkey,
-            )
-            print("Derived pubkey:", hexlify(pubkey).decode())
-            print("Depth: ", node_type.depth, "fp: ", node_type.fingerprint)
-            print("str len:", len(node_xpub))
+            assert isinstance(obj, tuple)
+            if obj[0] == 0:
+                # get xpub case, only address_n is present
+                assert len(obj) == 2
+                address_n: list[int] = obj[1]
+                print("Derivation path:", address_n)
+                node = keychain.derive(address_n)
+
+                assert script_type is InputScriptType.SPENDADDRESS
+                assert coin.xpub_magic is not None
+                node_xpub = node.serialize_public(coin.xpub_magic)
+                pubkey = node.public_key()
+                node_type = HDNodeType(
+                    depth=node.depth(),
+                    child_num=node.child_num(),
+                    fingerprint=node.fingerprint(),
+                    chain_code=node.chain_code(),
+                    public_key=pubkey,
+                )
+                print("Derived pubkey:", hexlify(pubkey).decode())
+                print("Depth: ", node_type.depth, "fp: ", node_type.fingerprint)
+                print("str len:", len(node_xpub))
+                result = node_xpub
+
+            elif obj[0] == 1:
+                # get_eth_xpub_hash case, only address_n is present
+                assert len(obj) == 2
+                address_n: list[int] = obj[1]
+
+                print("Derivation path:", address_n)
+                node = keychain.derive(address_n)
+                address_bytes: bytes = node.ethereum_pubkeyhash()
+                print("Derived Ethereum address hash:", hexlify(address_bytes).decode())
+                print("str len:", len(address_bytes))
+                result = address_bytes
+
+            elif obj[0] == 2:
+                from trezor import TR
+                from trezor.crypto.curve import secp256k1
+                from trezor.ui.layouts.progress import progress
+
+                # sign_typed_hash case, both address_n and hash are present
+                assert len(obj) == 3
+
+                address_n: list[int] = obj[1]
+                data_hash: bytes = obj[2]
+                print("Derivation path:", address_n)
+                print("Data hash:", hexlify(data_hash).decode())
+                node = keychain.derive(address_n)
+
+                progress_obj = progress(title=TR.progress__signing_transaction)
+                progress_obj.report(600)
+                signature = secp256k1.sign(
+                    node.private_key(),
+                    data_hash,
+                    False,
+                    secp256k1.CANONICAL_SIG_ETHEREUM,
+                )
+                progress_obj.stop()
+                print("Signature:", hexlify(signature).decode())
+                result = signature
+
+            else:
+                die(DataError("Unknown crypto operation"))
 
             # Serialize the result into a compact binary response
-            trezorcrypto_api.send_crypto_result(result=node_xpub, ipc_cb=crypto_resp_cb)
+            trezorcrypto_api.send_crypto_result(result=result, ipc_cb=crypto_resp_cb)
 
         elif service == _SERVICE_WIRE_CONTINUE:
             # usb request/ack
@@ -145,6 +190,16 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 _SYSTASK_ID_EXTAPP,
                 fn_id(_SERVICE_WIRE_CONTINUE, ack.message_id),
                 ack.data,
+            )
+
+        elif service == _SERVICE_WIRE_CALL:
+            resp = await context.call_serialized(
+                bytes(msg.data), EthereumTypedDataStructRequest, EthereumTypedDataStructAck
+            )
+            io.ipc_send(
+                _SYSTASK_ID_EXTAPP,
+                msg.fn,
+                resp,
             )
 
         elif service == _SERVICE_WIRE_END:
