@@ -177,10 +177,7 @@ impl Direction {
 fn test_open() -> Result<()> {
     setup();
 
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
+    let (mut hm, mut dm) = create_mux();
     // channel allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
@@ -217,15 +214,25 @@ fn test_open() -> Result<()> {
     Ok(())
 }
 
+fn create_mux() -> (
+    Buffered<host::Mux<NullCredentialStore, RustCrypto>>,
+    Buffered<device::Mux<TestCredentialVerifier, RustCrypto>>,
+) {
+    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+    hm.set_packet_len(DEFAULT_PACKET_LEN);
+    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
+    dm.set_packet_len(DEFAULT_PACKET_LEN);
+    (hm, dm)
+}
+
 fn open_channel(
     packet_len: usize,
 ) -> Result<(
     Buffered<Channel<Host, RustCrypto>>,
     Buffered<Channel<Device, RustCrypto>>,
 )> {
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+    let (mut hm, mut dm) = create_mux();
     hm.set_packet_len(packet_len);
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
     dm.set_packet_len(packet_len);
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
@@ -355,11 +362,7 @@ fn lose_nth(dir: Direction, i: usize) -> impl FnMut(Direction, &mut VecDeque<Pac
 fn test_packet_loss_alloc() -> Result<()> {
     setup();
 
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
-
+    let (mut hm, mut dm) = create_mux();
     // channel allocation request lost
     hm.request_channel(false);
     take_turns_mutate(&mut hm, &mut dm, lose_nth(HostToDevice, 0))?;
@@ -394,10 +397,7 @@ fn test_packet_loss_alloc() -> Result<()> {
 fn test_packet_loss_handshake(dir: Direction, lost_index: usize) -> Result<()> {
     setup();
 
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
+    let (mut hm, mut dm) = create_mux();
     // channel allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
@@ -461,11 +461,7 @@ fn damage_nth(
 fn test_packet_damage_alloc(byte_index: usize) -> Result<()> {
     setup();
 
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
-
+    let (mut hm, mut dm) = create_mux();
     // channel allocation request lost
     hm.request_channel(false);
     take_turns_mutate(&mut hm, &mut dm, damage_nth(HostToDevice, 0, byte_index))?;
@@ -511,10 +507,7 @@ fn test_packet_damage_handshake(
         return Ok(());
     }
 
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
+    let (mut hm, mut dm) = create_mux();
     // channel allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
@@ -585,10 +578,7 @@ fn test_codec_v1() -> Result<()> {
     let v1_cont = hex::decode(v1_cont).unwrap();
 
     // broadcast handling
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
+    let (mut hm, mut dm) = create_mux();
     // device::Mux shoud respond
     let pir = dm.packet_in(&v1_init);
     assert!(matches!(
@@ -631,12 +621,7 @@ fn test_codec_v1() -> Result<()> {
 fn test_ping() -> Result<()> {
     setup();
 
-    // mux handling
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
-
+    let (mut hm, mut dm) = create_mux();
     // host->device ping
     hm.ping();
     let ping_packet = hm.packet_out()?;
@@ -699,11 +684,7 @@ fn test_invalid_channel_id() -> Result<()> {
         res
     }
 
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
-
+    let (mut hm, mut dm) = create_mux();
     // muxes return Route(cid) for valid non-broadcast channel
     let pir = dm.packet_in(&make_packet(66));
     assert_eq!(pir, PacketInResult::Route { channel_id: 66 });
@@ -831,11 +812,7 @@ fn test_channel_id_wraparound() -> Result<()> {
         Ok(())
     }
 
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
-    hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
-    dm.set_packet_len(DEFAULT_PACKET_LEN);
-
+    let (mut hm, mut dm) = create_mux();
     dm.set_next_channel_id(MAX_CHANNEL_ID - 1);
     alloc_test(&mut hm, &mut dm, MAX_CHANNEL_ID - 1)?;
     alloc_test(&mut hm, &mut dm, MAX_CHANNEL_ID)?;
