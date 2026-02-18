@@ -60,6 +60,11 @@
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
+
+#ifdef USE_IPC
+#include <sys/ipc.h>
+#endif
+
 #ifdef USE_NRF
 #include <io/nrf.h>
 #endif
@@ -947,6 +952,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_BLE), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_BLE), mp_const_false},
+#endif
+#ifdef USE_IPC
+    {MP_ROM_QSTR(MP_QSTR_USE_IPC), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_IPC), mp_const_false},
 #endif
 #ifdef USE_BACKLIGHT
     {MP_ROM_QSTR(MP_QSTR_USE_BACKLIGHT), mp_const_true},
