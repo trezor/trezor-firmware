@@ -74,7 +74,8 @@
       "reset__the_threshold_sets_the_number_of_shares",
       "reset__to_form_group_template",
       "reset__use_your_backup",
-      "reset__you_need_one_share"
+      "reset__you_need_one_share",
+      "words__title_provider"
     ],
     "allowedLayouts": [ "Bolt" ],
     "description": "These are specific to Bolt layout"
@@ -125,7 +126,8 @@
     "exact": [
       "reset__continue_with_share_template",
       "reset__share_checked_successfully_template",
-      "reset__slip39_checklist_write_down"
+      "reset__slip39_checklist_write_down",
+      "words__title_confirm"
     ],
     "allowedLayouts": [ "Bolt", "Caesar" ],
     "description": "These are specific to Bolt and Caesar layouts"

@@ -567,7 +567,7 @@ async def confirm_payment_request(
 
     from ..slip24 import is_swap
 
-    title = TR.words__swap if is_swap(trades) else TR.words__confirm
+    title = TR.words__swap if is_swap(trades) else TR.words__title_confirm
 
     for t, text in texts:
         await raise_if_not_confirmed(

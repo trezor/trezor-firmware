@@ -1048,9 +1048,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__staking_from;
   MP_QSTR_words__swap;
   MP_QSTR_words__title_check;
+  MP_QSTR_words__title_confirm;
   MP_QSTR_words__title_done;
   MP_QSTR_words__title_group;
   MP_QSTR_words__title_information;
+  MP_QSTR_words__title_provider;
   MP_QSTR_words__title_remember;
   MP_QSTR_words__title_share;
   MP_QSTR_words__title_shares;

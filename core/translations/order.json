@@ -1180,5 +1180,7 @@
   "1178": "words__confirm_all",
   "1179": "words__show_next",
   "1180": "words__staking_for",
-  "1181": "words__staking_from"
+  "1181": "words__staking_from",
+  "1182": "words__title_confirm",
+  "1183": "words__title_provider"
 }

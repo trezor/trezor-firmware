@@ -500,7 +500,7 @@ async def confirm_payment_request(
 ) -> None:
     from ..slip24 import is_swap
 
-    title = TR.words__swap if is_swap(trades) else TR.words__confirm
+    title = TR.words__swap if is_swap(trades) else TR.words__title_confirm
 
     for t, text in texts:
         await raise_if_not_confirmed(
@@ -528,10 +528,10 @@ async def confirm_payment_request(
     await with_info(
         trezorui_api.confirm_value(
             title=title,
-            subtitle=TR.words__provider,
+            subtitle=TR.words__title_provider,
             value=recipient_name,
             description=None,
-            verb=TR.words__confirm,
+            verb=TR.buttons__confirm,
             verb_cancel=None,
             chunkify=False,
             info=True,
@@ -1379,7 +1379,7 @@ if not utils.BITCOIN_ONLY:
 
         info_layout = trezorui_api.show_info_with_cancel(
             title=title,
-            items=list(items),
+            items=items,
             horizontal=True,
         )
 
@@ -1712,7 +1712,7 @@ def confirm_modify_fee(
         items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, None))
     info_layout = trezorui_api.show_info_with_cancel(
         title=TR.confirm_total__title_fee,
-        items=list(items),
+        items=items,
     )
     return with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)
 
@@ -1784,7 +1784,7 @@ async def confirm_signverify(
 
     info_layout = trezorui_api.show_info_with_cancel(
         title=TR.words__title_information,
-        items=list(items),
+        items=items,
         horizontal=True,
     )
 
