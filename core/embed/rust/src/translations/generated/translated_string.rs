@@ -1569,6 +1569,8 @@ pub enum TranslatedString {
     words__show_next = 1179,  // "Show next"
     words__staking_for = 1180,  // {"Bolt": "Staking for:", "Caesar": "Staking for:", "Delizia": "Staking for", "Eckhart": "Staking for"}
     words__staking_from = 1181,  // "Staking from"
+    words__title_confirm = 1182,  // {"Bolt": "Confirm", "Caesar": "Confirm", "Delizia": "", "Eckhart": ""}
+    words__title_provider = 1183,  // {"Bolt": "Provider", "Caesar": "", "Delizia": "", "Eckhart": ""}
 }
 
 impl TranslatedString {
@@ -2758,6 +2760,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for:",
                 "Staking from",
+                "Confirm",
+                "Provider",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -3945,6 +3949,8 @@ impl TranslatedString {
                 21811,
                 21823,
                 21835,
+                21842,
+                21850,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5131,6 +5137,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for:",
                 "Staking from",
+                "Confirm",
+                "Provider",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6318,6 +6326,8 @@ impl TranslatedString {
                 21811,
                 21823,
                 21835,
+                21842,
+                21850,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7504,6 +7514,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for:",
                 "Staking from",
+                "Confirm",
+                "Provider",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8691,6 +8703,8 @@ impl TranslatedString {
                 21811,
                 21823,
                 21835,
+                21842,
+                21850,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -9877,6 +9891,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for:",
                 "Staking from",
+                "Confirm",
+                "Provider",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11064,6 +11080,8 @@ impl TranslatedString {
                 21811,
                 21823,
                 21835,
+                21842,
+                21850,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12251,6 +12269,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for:",
                 "Staking from",
+                "Confirm",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13438,6 +13458,8 @@ impl TranslatedString {
                 18884,
                 18896,
                 18908,
+                18915,
+                18915,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14624,6 +14646,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for:",
                 "Staking from",
+                "Confirm",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15811,6 +15835,8 @@ impl TranslatedString {
                 18884,
                 18896,
                 18908,
+                18915,
+                18915,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -16997,6 +17023,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for:",
                 "Staking from",
+                "Confirm",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18184,6 +18212,8 @@ impl TranslatedString {
                 18884,
                 18896,
                 18908,
+                18915,
+                18915,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19370,6 +19400,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for:",
                 "Staking from",
+                "Confirm",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20557,6 +20589,8 @@ impl TranslatedString {
                 18884,
                 18896,
                 18908,
+                18915,
+                18915,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -21744,6 +21778,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for",
                 "Staking from",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -22931,6 +22967,8 @@ impl TranslatedString {
                 20676,
                 20687,
                 20699,
+                20699,
+                20699,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24117,6 +24155,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for",
                 "Staking from",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25304,6 +25344,8 @@ impl TranslatedString {
                 20676,
                 20687,
                 20699,
+                20699,
+                20699,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -26490,6 +26532,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for",
                 "Staking from",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27677,6 +27721,8 @@ impl TranslatedString {
                 20676,
                 20687,
                 20699,
+                20699,
+                20699,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -28863,6 +28909,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for",
                 "Staking from",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30049,6 +30097,8 @@ impl TranslatedString {
                 20667,
                 20676,
                 20687,
+                20699,
+                20699,
                 20699,
             ];
 
@@ -31237,6 +31287,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for",
                 "Staking from",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -32424,6 +32476,8 @@ impl TranslatedString {
                 21431,
                 21442,
                 21454,
+                21454,
+                21454,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -33610,6 +33664,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for",
                 "Staking from",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34797,6 +34853,8 @@ impl TranslatedString {
                 21431,
                 21442,
                 21454,
+                21454,
+                21454,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -35983,6 +36041,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for",
                 "Staking from",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37170,6 +37230,8 @@ impl TranslatedString {
                 21431,
                 21442,
                 21454,
+                21454,
+                21454,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -38356,6 +38418,8 @@ impl TranslatedString {
                 "Show next",
                 "Staking for",
                 "Staking from",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39542,6 +39606,8 @@ impl TranslatedString {
                 21422,
                 21431,
                 21442,
+                21454,
+                21454,
                 21454,
             ];
 
@@ -41089,9 +41155,11 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__staking_from, Self::words__staking_from),
         (Qstr::MP_QSTR_words__swap, Self::words__swap),
         (Qstr::MP_QSTR_words__title_check, Self::words__title_check),
+        (Qstr::MP_QSTR_words__title_confirm, Self::words__title_confirm),
         (Qstr::MP_QSTR_words__title_done, Self::words__title_done),
         (Qstr::MP_QSTR_words__title_group, Self::words__title_group),
         (Qstr::MP_QSTR_words__title_information, Self::words__title_information),
+        (Qstr::MP_QSTR_words__title_provider, Self::words__title_provider),
         (Qstr::MP_QSTR_words__title_remember, Self::words__title_remember),
         (Qstr::MP_QSTR_words__title_share, Self::words__title_share),
         (Qstr::MP_QSTR_words__title_shares, Self::words__title_shares),

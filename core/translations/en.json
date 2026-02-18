@@ -3011,6 +3011,12 @@
     "words__staking_from": "Staking from",
     "words__swap": "Swap",
     "words__title_check": "Check",
+    "words__title_confirm": {
+      "Bolt": "Confirm",
+      "Caesar": "Confirm",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_done": "Done",
     "words__title_group": {
       "Bolt": "",
@@ -3019,6 +3025,12 @@
       "Eckhart": ""
     },
     "words__title_information": "Information",
+    "words__title_provider": {
+      "Bolt": "Provider",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_remember": {
       "Bolt": "",
       "Caesar": "Remember",
