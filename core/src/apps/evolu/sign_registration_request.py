@@ -51,8 +51,6 @@ async def sign_registration_request(
 
     if not check_delegated_identity_proof(
         provided_proof=msg.proof_of_delegated_identity,
-        # this is happening right after the delegated_identity_key is generated and never more
-        delegated_identity_rotation_index=0,
         header=b"EvoluSignRegistrationRequest",
         arguments=[
             challenge_bytes,
@@ -87,6 +85,7 @@ def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
 def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
     from trezorutils import delegated_identity
 
+    from storage.device import get_delegated_identity_key_rotation_index
     from trezor import utils, wire
     from trezor.crypto import optiga
     from trezor.crypto.hashlib import sha256
@@ -95,7 +94,7 @@ def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
 
     from .common import get_public_key_from_private_key
 
-    private_key = delegated_identity(0)
+    private_key = delegated_identity(get_delegated_identity_key_rotation_index() or 0)
     public_key = get_public_key_from_private_key(private_key)
 
     header = b"EvoluSignRegistrationRequestV1:"

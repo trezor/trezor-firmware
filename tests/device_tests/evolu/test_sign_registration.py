@@ -210,3 +210,35 @@ def test_evolu_sign_request_data_higher_bound(client: Client):
     check_signature_optiga(
         response.signature, response.certificate_chain, client.model, data
     )
+
+
+@pytest.mark.models("safe")
+@pytest.mark.parametrize("rotation_index", [None, 0, 1, 2, 42])
+def test_evolu_sign_request_with_different_rotation_indices(
+    client: Client, rotation_index
+):
+    if optiga_unavailable(client):
+        pytest.xfail("Optiga is not available on this device.")
+
+    evolu.index_management(client.get_session(), rotation_index=rotation_index)
+    delegated_identity_key = get_delegated_identity_key(client).private_key
+    challenge = bytes.fromhex("1234")
+    size = 10
+    proof = get_proof(
+        client,
+        b"EvoluSignRegistrationRequest",
+        [challenge, size.to_bytes(4, "big")],
+        rotation_index=rotation_index,
+    )
+
+    response = evolu.sign_registration_request(
+        client.get_session(),
+        challenge=challenge,
+        size=size,
+        proof=proof,
+    )
+
+    data = signing_buffer(delegated_identity_key, challenge, size)
+    check_signature_optiga(
+        response.signature, response.certificate_chain, client.model, data
+    )

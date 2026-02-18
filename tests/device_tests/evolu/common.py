@@ -17,8 +17,13 @@ TEST_host_static_private_key = curve25519.get_private_key(TEST_randomness)
 TEST_host_static_public_key = curve25519.get_public_key(TEST_host_static_private_key)
 
 
-def get_proof(client: Client, header: bytes, arguments: List[bytes]) -> bytes:
-    private_key = get_delegated_identity_key(client).private_key
+def get_proof(
+    client: Client,
+    header: bytes,
+    arguments: List[bytes],
+    rotation_index: int | None = None,
+) -> bytes:
+    private_key = get_delegated_identity_key(client, rotation_index).private_key
     signing_key = SigningKey.from_string(private_key, curve=NIST256p)
 
     ctx = sha256()

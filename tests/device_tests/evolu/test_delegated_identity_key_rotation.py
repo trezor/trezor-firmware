@@ -87,7 +87,13 @@ def test_delegated_identity_key_rotation_max_index(client: Client):
 def test_rotate_affects_index_management(client: Client):
     evolu.get_delegated_identity_key(client.get_session(), rotate=True)
 
-    response = evolu.index_management(client.get_session(), rotation_index=50)
+    with pytest.raises(
+        TrezorFailure,
+        match=r"FirmwareError: Rotation index already set.",
+    ):
+        evolu.index_management(client.get_session(), rotation_index=50)
+
+    response = evolu.index_management(client.get_session())
     assert response.rotation_index == 1
 
 
@@ -95,11 +101,17 @@ def test_index_management_cannot_overwrite_existing_index(client: Client):
     response = evolu.index_management(client.get_session(), rotation_index=10)
     assert response.rotation_index == 10
 
-    response = evolu.index_management(client.get_session(), rotation_index=5)
-    assert response.rotation_index == 10
+    with pytest.raises(
+        TrezorFailure,
+        match=r"FirmwareError: Rotation index already set.",
+    ):
+        evolu.index_management(client.get_session(), rotation_index=5)
 
-    response = evolu.index_management(client.get_session(), rotation_index=15)
-    assert response.rotation_index == 10
+    with pytest.raises(
+        TrezorFailure,
+        match=r"FirmwareError: Rotation index already set.",
+    ):
+        evolu.index_management(client.get_session(), rotation_index=15)
 
     key = get_delegated_identity_key(client)
     assert key.rotation_index == 10

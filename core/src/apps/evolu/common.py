@@ -18,18 +18,19 @@ def check_delegated_identity_rotation_index(rotation_index: int | None) -> None:
 
 def check_delegated_identity_proof(
     provided_proof: AnyBytes,
-    delegated_identity_rotation_index: int,
     header: AnyBytes,
     arguments: Sequence[AnyBytes] | None = None,
 ) -> bool:
     from trezorutils import delegated_identity
 
+    from storage.device import get_delegated_identity_key_rotation_index
     from trezor.crypto.curve import nist256p1
     from trezor.crypto.hashlib import sha256
     from trezor.utils import HashWriter
 
     from apps.common.writers import write_compact_size
 
+    delegated_identity_rotation_index = get_delegated_identity_key_rotation_index() or 0
     private_key = delegated_identity(delegated_identity_rotation_index)
     public_key = get_public_key_from_private_key(private_key)
 
