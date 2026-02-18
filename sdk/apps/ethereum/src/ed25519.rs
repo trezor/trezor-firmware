@@ -6,7 +6,7 @@ use trezor_app_sdk::{
     crypto::{ed25519_cosi_combine_publickeys, ed25519_sign_open},
 };
 
-pub fn select_keys<'a>(sigmask: u8, keys: &'a [&[u8; 32]]) -> Result<Vec<&'a [u8; 32]>> {
+fn select_keys<'a>(sigmask: u8, keys: &'a [&[u8; 32]]) -> Result<Vec<&'a [u8; 32]>> {
     let mut selected_keys = Vec::new();
     let mut sigmask = sigmask;
     for key in keys {

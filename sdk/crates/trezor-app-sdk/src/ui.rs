@@ -135,7 +135,7 @@ pub fn confirm_value(title: &str, content: &str) -> UiResult {
 
     let value = TrezorUiEnum::ConfirmValue {
         title: ShortString::from_str(title).unwrap(),
-        content: ShortString::from_str(content).unwrap(),
+        value: ShortString::from_str(content).unwrap(),
     };
     ipc_ui_call_confirm(&value)
 }

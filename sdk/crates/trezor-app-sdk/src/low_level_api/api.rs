@@ -70,7 +70,7 @@ fn get_or_die() -> &'static ffi::trezor_api_v1_t {
 }
 
 #[inline]
-fn get_crypto_or_die() -> &'static ffi::trezor_crypto_v1_t {
+pub(crate) fn get_crypto_or_die() -> &'static ffi::trezor_crypto_v1_t {
     unsafe {
         (get_or_die().trezor_crypto_v1_t)
             .as_ref()
@@ -220,17 +220,6 @@ pub fn sha3_256(data: &[u8]) -> [u8; 32] {
     digest
 }
 
-pub fn sha_256(data: &[u8]) -> [u8; 32] {
-    // let mut digest = [0u8; 32];
-    // unsafe {
-    //     (get_crypto_or_die().sha_256)(data.as_ptr(), data.len(), digest.as_mut_ptr());
-    // }
-    // digest
-
-    // TODO implementation of sha256 in Rust, as it's currently not available in the API
-    [0u8; 32]
-}
-
 pub fn keccak_256(data: &[u8]) -> [u8; 32] {
     let mut digest = [0u8; 32];
     unsafe {
@@ -240,11 +229,11 @@ pub fn keccak_256(data: &[u8]) -> [u8; 32] {
 }
 
 pub fn ed25519_sign_open(
-    public_key: &[u8],
-    signature: &[u8],
+    public_key: &[u8; 32],
+    signature: &[u8; 64],
     message: &[u8],
 ) -> Result<bool, ApiError> {
-    if public_key.len() != 32 || signature.len() != 64 || message.is_empty() {
+    if message.is_empty() {
         return Err(ApiError::Failed);
     }
 
@@ -268,13 +257,6 @@ pub fn ed25519_cosi_combine_publickeys(
         // Can't combine more than 15 COSI signatures
         return Err(ApiError::Failed);
     }
-
-    // for pk in pks {
-    //     if pk.len() != 32 {
-    //         // Invalid length of  public key
-    //         return Err(ApiError::Failed);
-    //     }
-    // }
 
     let mut res = [0u8; 32];
     let result = unsafe {

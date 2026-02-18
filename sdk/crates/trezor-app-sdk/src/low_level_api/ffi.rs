@@ -1,4 +1,5 @@
 #![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 use ufmt::derive::uDebug;
 
 /// FFI type definitions that mirror the C API without requiring bindgen.
@@ -121,6 +122,15 @@ pub struct trezor_api_v1_t {
 pub type ed25519_signature = [core::ffi::c_uchar; 64usize];
 pub type ed25519_public_key = [core::ffi::c_uchar; 32usize];
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SHA256_CTX {
+    pub state: [u32; 8usize],
+    pub bitcount: u64,
+    pub buffer: [u32; 16usize],
+}
+pub type SHA256_CTX = _SHA256_CTX;
+
 /// Trezor crypto v1 function pointers
 #[repr(C)]
 pub struct trezor_crypto_v1_t {
@@ -136,8 +146,10 @@ pub struct trezor_crypto_v1_t {
         RS: *const u8,
     ) -> core::ffi::c_int,
     pub sha3_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
-    // pub sha_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
     pub keccak_256: unsafe extern "C" fn(data: *const u8, len: usize, digest: *mut u8),
+    pub sha256_Init: unsafe extern "C" fn(arg1: *mut SHA256_CTX),
+    pub sha256_Update: unsafe extern "C" fn(arg1: *mut SHA256_CTX, arg2: *const u8, arg3: usize),
+    pub sha256_Final: unsafe extern "C" fn(arg1: *mut SHA256_CTX, arg2: *mut u8),
 }
 
 unsafe impl Sync for trezor_api_v1_t {}

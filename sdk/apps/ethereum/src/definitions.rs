@@ -6,7 +6,7 @@ use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
 use prost::Message;
-use trezor_app_sdk::crypto::sha_256;
+use trezor_app_sdk::crypto::Sha256;
 
 const THRESHOLD: usize = 2;
 const PUBLIC_KEYS: [&[u8;32]; 3] = [
@@ -148,10 +148,9 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
     // at the end compute Merkle tree root hash using
     // provided leaf data (payload with prefix) and proof
 
-    let mut buf = vec![0u8; 1 + offset];
-    buf[0] = 0x00;
-    buf[1..].copy_from_slice(&encoded[..offset]);
-    let mut hash = sha_256(&buf);
+    let mut hasher = Sha256::new(Some(b"\x00"));
+    hasher.update(&encoded[..offset]);
+    let hash = hasher.digest();
 
     let proof_len = encoded[offset];
     offset += 1;
@@ -169,12 +168,10 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
             (proof_entry, hash.as_slice())
         };
 
-        let mut buf = vec![0u8; 1 + hash_a.len() + hash_b.len()];
-        buf[0] = 0x01;
-        buf[1..1 + hash_a.len()].copy_from_slice(hash_a);
-        buf[1 + hash_a.len()..].copy_from_slice(hash_b);
-
-        hash = sha_256(&buf);
+        let mut hasher = Sha256::new(Some(b"\x01"));
+        hasher.update(&hash_a);
+        hasher.update(&hash_b);
+        let hash = hasher.digest();
     }
 
     if offset + 1 + 64 >= encoded.len() {

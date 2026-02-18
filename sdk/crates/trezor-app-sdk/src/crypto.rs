@@ -4,9 +4,6 @@
 //! ```
 
 // Re-export the archived types for convenience
-extern crate alloc;
-use alloc::vec::Vec;
-
 pub use rkyv::Archived;
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
@@ -16,8 +13,10 @@ use trezor_structs::{DerivationPath, LongString, TrezorCryptoEnum, TypedHash};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
+pub use crate::low_level_api::ffi::SHA256_CTX;
+use crate::low_level_api::get_crypto_or_die;
 pub use crate::low_level_api::{
-    ed25519_cosi_combine_publickeys, ed25519_sign_open, keccak_256, sha_256, sha3_256,
+    ed25519_cosi_combine_publickeys, ed25519_sign_open, keccak_256, sha3_256,
 };
 use crate::service::{CoreIpcService, Error, NoUtilHandler};
 use crate::util::Timeout;
@@ -97,5 +96,34 @@ pub fn sign_typed_hash(address_n: &[u32], hash: &[u8]) -> Result<[u8; 64]> {
     } else {
         // TODO: use proper error type
         Err(Error::Timeout)
+    }
+}
+
+pub struct Sha256 {
+    ctx: SHA256_CTX,
+}
+
+impl Sha256 {
+    pub fn new(data: Option<&[u8]>) -> Self {
+        let mut ctx = SHA256_CTX {
+            state: [0u32; 8],
+            bitcount: 0,
+            buffer: [0u32; 16],
+        };
+        unsafe { (get_crypto_or_die().sha256_Init)(&mut ctx) };
+        if let Some(data) = data {
+            unsafe { (get_crypto_or_die().sha256_Update)(&mut ctx, data.as_ptr(), data.len()) };
+        }
+        Self { ctx }
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        unsafe { (get_crypto_or_die().sha256_Update)(&mut self.ctx, data.as_ptr(), data.len()) };
+    }
+
+    pub fn digest(mut self) -> [u8; 32] {
+        let mut digest = [0u8; 32];
+        unsafe { (get_crypto_or_die().sha256_Final)(&mut self.ctx, digest.as_mut_ptr()) };
+        digest
     }
 }

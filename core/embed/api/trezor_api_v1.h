@@ -50,9 +50,11 @@ typedef struct {
                            const ed25519_signature RS);
   void (*sha3_256)(const unsigned char* data, size_t len,
                    unsigned char* digest);
-  // void (*sha_256)(const unsigned char* data, size_t len, unsigned char* digest);
   void (*keccak_256)(const unsigned char* data, size_t len,
                      unsigned char* digest);
+  void (*sha256_Init)(SHA256_CTX* ctx);
+  void (*sha256_Update)(SHA256_CTX* ctx, const unsigned char* data, size_t len);
+  void (*sha256_Final)(SHA256_CTX* ctx, unsigned char* digest);
 } trezor_crypto_v1_t;
 
 typedef struct {
