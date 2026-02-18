@@ -13,8 +13,6 @@ from trezor.messages import (
     ExtAppMessage,
     ExtAppResponse,
     HDNodeType,
-    EthereumTypedDataStructRequest,
-    EthereumTypedDataStructAck,
 )
 from trezor.ui.layouts import interact
 from trezor.wire import context
@@ -190,16 +188,6 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 _SYSTASK_ID_EXTAPP,
                 fn_id(_SERVICE_WIRE_CONTINUE, ack.message_id),
                 ack.data,
-            )
-
-        elif service == _SERVICE_WIRE_CALL:
-            resp = await context.call_serialized(
-                bytes(msg.data), EthereumTypedDataStructRequest, EthereumTypedDataStructAck
-            )
-            io.ipc_send(
-                _SYSTASK_ID_EXTAPP,
-                msg.fn,
-                resp,
             )
 
         elif service == _SERVICE_WIRE_END:

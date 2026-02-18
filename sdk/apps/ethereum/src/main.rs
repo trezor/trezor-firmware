@@ -12,6 +12,7 @@ pub(crate) mod proto;
 
 mod common;
 mod definitions;
+mod ed25519;
 mod get_address;
 mod get_public_key;
 mod helpers;
@@ -21,7 +22,6 @@ mod sign_message;
 mod sign_tx;
 mod sign_typed_data;
 mod strutil;
-mod ed25519;
 
 use proto::ethereum::{
     EthereumGetAddress, EthereumGetPublicKey, EthereumSignMessage, EthereumSignTx,
@@ -75,7 +75,7 @@ where
     let message = IpcMessage::new(0, &req_bytes);
 
     let result = CORE_SERVICE.call(
-        CoreIpcService::WireCall,
+        CoreIpcService::WireContinue,
         &message,
         Timeout::max(),
         &NoUtilHandler,
