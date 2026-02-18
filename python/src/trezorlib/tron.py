@@ -12,6 +12,8 @@ if TYPE_CHECKING:
         messages.TronTransferContract,
         messages.TronTriggerSmartContract,
         messages.TronFreezeBalanceV2Contract,
+        messages.TronUnfreezeBalanceV2Contract,
+        messages.TronWithdrawUnfreeze,
     ]
 
 DEFAULT_BIP32_PATH = "m/44h/195h/0h/0/0"
@@ -34,9 +36,11 @@ def from_raw_data(
         raise ValueError("Only single contract transactions are supported.")
 
     contract_type = raw_tx.contract[0].type
+    parameter_value = raw_tx.contract[0].parameter.value
+
     if contract_type == messages.TronRawContractType.TransferContract:
         raw_contract = load_message(
-            io.BytesIO(raw_tx.contract[0].parameter.value),
+            io.BytesIO(parameter_value),
             messages.TronTransferContract,
         )
         contract = messages.TronTransferContract(
@@ -46,7 +50,7 @@ def from_raw_data(
         )
     elif contract_type == messages.TronRawContractType.TriggerSmartContract:
         raw_contract = load_message(
-            io.BytesIO(raw_tx.contract[0].parameter.value),
+            io.BytesIO(parameter_value),
             messages.TronTriggerSmartContract,
         )
         contract = messages.TronTriggerSmartContract(
@@ -56,13 +60,31 @@ def from_raw_data(
         )
     elif contract_type == messages.TronRawContractType.FreezeBalanceV2Contract:
         raw_contract = load_message(
-            io.BytesIO(raw_tx.contract[0].parameter.value),
+            io.BytesIO(parameter_value),
             messages.TronFreezeBalanceV2Contract,
         )
         contract = messages.TronFreezeBalanceV2Contract(
             owner_address=raw_contract.owner_address,
-            frozen_balance=raw_contract.frozen_balance,
+            balance=raw_contract.balance,
             resource=raw_contract.resource,
+        )
+    elif contract_type == messages.TronRawContractType.UnfreezeBalanceV2Contract:
+        raw_contract = load_message(
+            io.BytesIO(parameter_value),
+            messages.TronUnfreezeBalanceV2Contract,
+        )
+        contract = messages.TronUnfreezeBalanceV2Contract(
+            owner_address=raw_contract.owner_address,
+            balance=raw_contract.balance,
+            resource=raw_contract.resource,
+        )
+    elif contract_type == messages.TronRawContractType.WithdrawExpireUnfreezeContract:
+        raw_contract = load_message(
+            io.BytesIO(parameter_value),
+            messages.TronWithdrawUnfreeze,
+        )
+        contract = messages.TronWithdrawUnfreeze(
+            owner_address=raw_contract.owner_address,
         )
     else:
         raise ValueError(f"Unsupported contract type: {contract_type}")

@@ -108,7 +108,7 @@ def test_ui_cancel_unknown_contract(session: Session, fixture: str):
 
 def make_contract(contract):
     type_name = contract["_message_type"]
-    assert type_name.startswith("Tron") and type_name.endswith("Contract")
+    assert type_name.startswith("Tron")
     cls = getattr(messages, type_name)
     return protobuf.dict_to_proto(cls, contract)
 

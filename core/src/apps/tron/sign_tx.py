@@ -87,6 +87,7 @@ async def process_contract(
 
     # Importing individual enums would de-clutter the code a bit.
     # But it causes type error in messages.TronRawContract.type.
+    from trezor import TR
     from trezor.enums import TronRawContractType
     from trezor.ui.layouts import confirm_tron_send
 
@@ -107,7 +108,13 @@ async def process_contract(
         from trezor.enums import TronResourceCode
 
         contract_type = TronRawContractType.FreezeBalanceV2Contract
-        await layout.confirm_freeze_balance(contract)
+
+        await layout.confirm_freeze_operations(
+            owner_address=contract.owner_address,
+            balance=contract.balance,
+            resource=contract.resource,
+            title=TR.ethereum__staking_stake,
+        )
 
         # TRON protocol uses proto3, which omits fields with default values from
         # serialization. Since BANDWIDTH=0 is the default, we must set resource=None
@@ -115,9 +122,31 @@ async def process_contract(
         if contract.resource == TronResourceCode.BANDWIDTH:
             contract = messages.TronFreezeBalanceV2Contract(
                 owner_address=contract.owner_address,
-                frozen_balance=contract.frozen_balance,
+                balance=contract.balance,
                 resource=None,
             )
+    elif messages.TronUnfreezeBalanceV2Contract.is_type_of(contract):
+        from trezor.enums import TronResourceCode
+
+        contract_type = TronRawContractType.UnfreezeBalanceV2Contract
+
+        await layout.confirm_freeze_operations(
+            owner_address=contract.owner_address,
+            balance=contract.balance,
+            resource=contract.resource,
+            title=TR.ethereum__staking_unstake,
+        )
+
+        if contract.resource == TronResourceCode.BANDWIDTH:
+            contract = messages.TronUnfreezeBalanceV2Contract(
+                owner_address=contract.owner_address,
+                balance=contract.balance,
+                resource=None,
+            )
+
+    elif messages.TronWithdrawUnfreeze.is_type_of(contract):
+        contract_type = TronRawContractType.WithdrawExpireUnfreezeContract
+        await layout.confirm_withdraw_unfreeze(contract.owner_address)
 
     else:
         raise DataError("Tron: contract type unknown")

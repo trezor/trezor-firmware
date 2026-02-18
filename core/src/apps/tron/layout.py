@@ -7,11 +7,9 @@ from trezor import TR, strings
 from .helpers import get_encoded_address
 
 if TYPE_CHECKING:
-    from trezor.messages import (
-        TronFreezeBalanceV2Contract,
-        TronTransferContract,
-        TronTriggerSmartContract,
-    )
+    from buffer_types import AnyBytes
+
+    from trezor.messages import TronTransferContract, TronTriggerSmartContract
 
 
 def format_trx_amount(amount: int) -> str:
@@ -114,30 +112,45 @@ async def confirm_known_trc20_smart_contract(
         )
 
 
-async def confirm_freeze_balance(contract: TronFreezeBalanceV2Contract) -> None:
+async def confirm_freeze_operations(
+    owner_address: AnyBytes,
+    balance: int,
+    resource: int,
+    title: str,
+) -> None:
     from trezor.enums import TronResourceCode
     from trezor.ui.layouts import confirm_address, confirm_properties
 
     await confirm_address(
-        title=TR.words__staking_from,
-        address=get_encoded_address(contract.owner_address),
+        title=title,
+        address=get_encoded_address(owner_address),
         chunkify=True,
     )
 
     await confirm_properties(
-        br_name="confirm_tron_freeze",
+        br_name="confirm_tron_freeze_ops",
         title=TR.words__title_summary,
         props=(
-            (TR.words__amount, format_trx_amount(contract.frozen_balance), False),
+            (TR.words__amount, format_trx_amount(balance), False),
             (
                 TR.words__resource,
-                (
-                    "Energy"
-                    if contract.resource == TronResourceCode.ENERGY
-                    else "Bandwidth"
-                ),
+                ("Energy" if resource == TronResourceCode.ENERGY else "Bandwidth"),
                 False,
             ),
         ),
         hold=True,
+    )
+
+
+async def confirm_withdraw_unfreeze(owner_address: AnyBytes) -> None:
+    from trezor.ui.layouts import confirm_value
+
+    await confirm_value(
+        title=TR.ethereum__staking_claim_address,
+        value=get_encoded_address(owner_address),
+        description="",
+        chunkify=True,
+        hold=True,
+        br_name="tron/claim",
+        cancel=True,
     )
