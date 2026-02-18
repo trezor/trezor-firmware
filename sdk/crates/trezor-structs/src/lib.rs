@@ -175,7 +175,7 @@ pub enum TrezorUiEnum {
     },
     ConfirmValue {
         title: ShortString,
-        content: ShortString,
+        value: ShortString,
     },
     ConfirmLong {
         title: ShortString,

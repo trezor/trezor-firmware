@@ -1621,20 +1621,47 @@ impl FirmwareUI for UIEckhart {
 
         // Access the archived data zero-copy using safe Deref access
         match archived {
-            ArchivedTrezorUiEnum::ConfirmAction { title, content } => {
+            ArchivedTrezorUiEnum::ConfirmAction {
+                title,
+                action,
+                hold,
+            } => {
                 // Use safe Deref trait instead of raw pointers
                 let layout = Self::confirm_action(
                     tstr_from_archived(title),
-                    Some(tstr_from_archived(content)),
+                    Some(tstr_from_archived(action)),
                     None,  // description
                     None,  // subtitle
                     None,  // verb
                     None,  // verb_cancel
-                    false, // hold
+                    *hold, // hold
                     false, // hold_danger
                     false, // reverse
                     false, // prompt_screen
                     None,  // prompt_title
+                    false, // external_menu
+                )?;
+                LayoutObj::new_root(layout)
+            }
+            ArchivedTrezorUiEnum::ConfirmValue { title, value } => {
+                // Use safe Deref trait instead of raw pointers
+                let layout = Self::confirm_value(
+                    tstr_from_archived(title),
+                    unwrap!(tstr_from_archived(value).try_into()),
+                    None,  // description
+                    false, // is_data
+                    None,  // extra
+                    None,  // subtitle
+                    None,  // verb
+                    None,  // verb_cancel
+                    false, // info
+                    false, // hold
+                    false, // chunkify
+                    false, // page_counter
+                    false, // prompt_screen
+                    false, // cancel
+                    false, // back_button
+                    None,  // warning_footer
                     false, // external_menu
                 )?;
                 LayoutObj::new_root(layout)
@@ -1647,6 +1674,39 @@ impl FirmwareUI for UIEckhart {
                     request_cb,
                 )?;
                 LayoutObj::new_root(layout)
+            }
+            ArchivedTrezorUiEnum::ShouldShowMore {
+                title,
+                items,
+                button_text,
+            } => {
+                let mut tuple_objs = heapless::Vec::<Obj, 5>::new();
+                for i in 0..(items.len as usize) {
+                    let str = unsafe {
+                        core::str::from_raw_parts(
+                            items.data[i].0.data.as_ptr(),
+                            items.data[i].0.len as usize,
+                        )
+                    };
+                    let prop: Obj =
+                        unwrap!(
+                            (unwrap!(Obj::try_from(str)), Obj::from(items.data[i].1),).try_into()
+                        );
+
+                    unwrap!(tuple_objs.push(prop));
+                }
+
+                let list = List::alloc(&tuple_objs)?;
+                let layout = Self::confirm_with_info(
+                    tstr_from_archived(title),
+                    None,
+                    list.into(),
+                    TString::empty(),
+                    tstr_from_archived(button_text),
+                    None,
+                    false,
+                )?;
+                Ok(layout)
             }
             ArchivedTrezorUiEnum::ConfirmProperties { title, props } => {
                 let mut tuple_objs = heapless::Vec::<Obj, 5>::new();
