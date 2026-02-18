@@ -135,7 +135,12 @@
       "Delizia": "C. seg. de la billetera completada",
       "Eckhart": "Copia de seguridad de la billetera completada."
     },
-    "backup__title_backup_wallet": "C. seg. billetera",
+    "backup__title_backup_wallet": {
+      "Bolt": "",
+      "Caesar": "C. seg. billetera",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "backup__title_create_wallet_backup": "Crear copia de seguridad",
     "backup__title_skip": "Omitir c. seg.",
     "backup__want_to_skip": "¿Quieres omitir la copia de seguridad?",
@@ -773,6 +778,8 @@
     "ethereum__approve_unlimited_template": "Aprobando una cantidad ilimitada de {0}",
     "ethereum__contract_address": "Dir. del contrato del proveedor",
     "ethereum__data_size_template": "Tamaño: {0} bytes",
+    "ethereum__eip_7702": "",
+    "ethereum__eip_7702_title": "",
     "ethereum__gas_limit": "Límite de gas",
     "ethereum__gas_price": "Precio de gas",
     "ethereum__interaction_contract": {
@@ -2400,7 +2407,7 @@
     "words__enabled": "Activado",
     "words__error": "Error",
     "words__fee": "Comisión",
-    "words__fee_limit": "",
+    "words__fee_limit": "Límite de comisión",
     "words__forget": "Olvidar",
     "words__from": "del",
     "words__good_to_know": "Bueno saber",
@@ -2414,7 +2421,7 @@
     "words__name": "Nombre",
     "words__no": "No",
     "words__not_recommended": "¡No es recomendable!",
-    "words__note": "",
+    "words__note": "Nota",
     "words__off": "APAGAR",
     "words__on": "ENCENDER",
     "words__operation_cancelled": "Operación cancelada",
