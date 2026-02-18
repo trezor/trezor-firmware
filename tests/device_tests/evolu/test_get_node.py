@@ -34,7 +34,9 @@ def test_evolu_get_node(client: Client):
 @pytest.mark.parametrize("passphrase", ["", "TREZOR"])
 def test_evolu_get_node_different_seed(client: Client, passphrase: str):
     proof = get_proof(client, b"EvoluGetNode", [])
-    node = evolu.get_node(client.get_session(passphrase=passphrase), proof=proof, node_rotation_index=0)
+    node = evolu.get_node(
+        client.get_session(passphrase=passphrase), proof=proof, node_rotation_index=0
+    )
 
     # expected node for the SLIP-14 seed
     check_value = bytes.fromhex(

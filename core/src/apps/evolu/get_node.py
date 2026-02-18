@@ -43,6 +43,7 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
     index = msg.node_rotation_index or 0
     return EvoluNode(data=await derive_evolu_node(index))
 
+
 # The `node_rotation_index` is NOT protected like the `delegated_identity_key_index`.
 # A compromised application with access to the current `delegated_identity_key` can enumerate all possible nodes by calling this function with different indices.
 #
