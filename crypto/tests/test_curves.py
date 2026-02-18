@@ -417,11 +417,11 @@ def test_sign_native(curve, r):
     public_key = private_key.public_key()
 
     # Verify the C library signature
-    r_from_sig = int.from_bytes(bytes(bytearray(sig[:32])), "big")
-    s_from_sig = int.from_bytes(bytes(bytearray(sig[32:])), "big")
+    r_from_sig = int.from_bytes(sig[:32], "big")
+    s_from_sig = int.from_bytes(sig[32:], "big")
     der_verify = encode_dss_signature(r_from_sig, s_from_sig)
     public_key.verify(
-        der_verify, bytes(bytearray(digest)), ec.ECDSA(Prehashed(hashes.SHA256()))
+        der_verify, bytes(digest), ec.ECDSA(Prehashed(hashes.SHA256()))
     )
 
 
@@ -441,11 +441,11 @@ def test_sign_zkp(r):
     public_key = private_key.public_key()
 
     # Verify the C library signature
-    r_from_sig = int.from_bytes(bytes(bytearray(sig[:32])), "big")
-    s_from_sig = int.from_bytes(bytes(bytearray(sig[32:])), "big")
+    r_from_sig = int.from_bytes(sig[:32], "big")
+    s_from_sig = int.from_bytes(sig[32:], "big")
     der_verify = encode_dss_signature(r_from_sig, s_from_sig)
     public_key.verify(
-        der_verify, bytes(bytearray(digest)), ec.ECDSA(Prehashed(hashes.SHA256()))
+        der_verify, bytes(digest), ec.ECDSA(Prehashed(hashes.SHA256()))
     )
 
 
