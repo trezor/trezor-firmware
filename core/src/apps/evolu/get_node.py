@@ -43,7 +43,17 @@ async def get_node(msg: EvoluGetNode) -> EvoluNode:
     index = msg.node_rotation_index or 0
     return EvoluNode(data=await derive_evolu_node(index))
 
-
+# The `node_rotation_index` is NOT protected like the `delegated_identity_key_index`.
+# A compromised application with access to the current `delegated_identity_key` can enumerate all possible nodes by calling this function with different indices.
+#
+# Rationale for this:
+# 1. This index is dependent on passphrase and thus we cannot store the index on the device due to plausible deniability.
+# 2. We cannot include the `delegated_identity_key_index` in the SLIP-21 path because we need to get the same node on the same seed regardless of the device.
+#
+# This index protects against a passive attacker who gains access to one of the nodes but not to the unlocked device.
+# Rotating the node to a new index then restricts the attacker's ability to read new labels.
+#
+# Note: The need for node rotation has diminished recently as we now handle data deletion through other mechanisms.
 async def derive_evolu_node(index: int) -> bytes:
     from apps.common.seed import Slip21Node, get_seed
 
