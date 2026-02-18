@@ -93,7 +93,7 @@ def set_seq_bit(ctrl_byte: int, seq_bit: bool) -> int:
     return ctrl_byte | (DATA_SEQ_BIT * seq_bit)
 
 
-def add_ack_bit_to_ctrl_byte(ctrl_byte: int, ack_bit: int) -> int:
+def set_ack_bit(ctrl_byte: int, ack_bit: int) -> int:
     return ctrl_byte | (DATA_ACK_SEQ_BIT * ack_bit)
 
 

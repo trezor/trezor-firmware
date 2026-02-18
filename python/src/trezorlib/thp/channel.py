@@ -16,11 +16,13 @@
 
 from __future__ import annotations
 
+import functools
 import io
 import logging
 import secrets
 import time
 import typing as t
+from contextlib import contextmanager
 from enum import Enum, IntEnum, auto
 
 import typing_extensions as tx
@@ -139,6 +141,14 @@ class Channel:
         self._noise: NoiseConnection | None = None
         self.state = channel_state
         self.trezor_public_keys: TrezorPublicKeys | None = None
+        self._active_workflow: object | None = None
+
+    @functools.cached_property
+    def is_ack_piggybacking_allowed(self) -> bool:
+        """See https://github.com/trezor/trezor-firmware/pull/6202 for details."""
+        major = self.device_properties.protocol_version_major
+        minor = self.device_properties.protocol_version_minor
+        return (major, minor) >= (2, 1)
 
     @property
     def noise(self) -> NoiseConnection:
@@ -361,7 +371,11 @@ class Channel:
             self.state = ChannelState.CREDENTIAL_PHASE
 
     def _send_message(self, message: Message) -> None:
-        msg_with_seq_bit = message.with_seq_bit(self.sync_bit_send)
+        message = message.with_seq_bit(self.sync_bit_send)
+        # older firmware ignores ACK bit on non-ACK THP packets.
+        # newer firmware will use non-zero ACK bit on HANDSHAKE_INIT_REQ as a signal from the host to enable ACK piggybacking.
+        message = message.with_ack_bit(not self.sync_bit_receive)
+
         self.sync_bit_send = not self.sync_bit_send
 
         retries_left = self.BUSY_RETRIES
@@ -378,9 +392,9 @@ class Channel:
 
         while True:
             try:
-                thp_io.write_payload_to_wire(self.transport, msg_with_seq_bit)
+                thp_io.write_payload_to_wire(self.transport, message)
                 try:
-                    self._read_ack(msg_with_seq_bit)
+                    self._read_ack(message)
                 except transport.Timeout:
                     if should_back_off():
                         continue

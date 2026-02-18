@@ -126,6 +126,13 @@ class Message:
             self.data,
         )
 
+    def with_ack_bit(self, ack_bit: bool) -> Self:
+        return self.__class__(
+            control_byte.set_ack_bit(self.ctrl_byte, ack_bit),
+            self.cid,
+            self.data,
+        )
+
     @cached_property
     def seq_bit(self) -> bool | None:
         return control_byte.get_seq_bit(self.ctrl_byte)
