@@ -133,7 +133,7 @@ function onLoadTestCase() {
 
         const markbox = document.getElementById("markbox");
 
-        if (!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) {
+        if (!["localhost", "127.0.0.1", "::1", "[::1]"].includes(window.location.hostname)) {
             const updateButton = document.getElementById("mark-update");
             updateButton.disabled = true;
             updateButton.style.backgroundColor = "#ccc";
