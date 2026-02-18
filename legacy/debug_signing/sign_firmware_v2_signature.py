@@ -5,7 +5,14 @@ import pprint
 import sys
 from hashlib import sha1, sha256
 
-import ecdsa
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    decode_dss_signature,
+    encode_dss_signature,
+)
+from cryptography.exceptions import InvalidSignature
+
 from fill_t1_fw_signatures import Signatures
 
 secret_keys_hex = [
@@ -17,13 +24,19 @@ secret_keys_hex = [
 ]
 
 secret_keys = [
-    ecdsa.SigningKey.from_string(
-        bytes.fromhex(sk), curve=ecdsa.SECP256k1, hashfunc=sha256
+    ec.derive_private_key(
+        int.from_bytes(bytes.fromhex(sk), "big"), ec.SECP256K1()
     )
     for sk in secret_keys_hex
 ]
-public_keys = [sk.get_verifying_key() for sk in secret_keys]
-public_keys_hex = [pk.to_string("compressed").hex() for pk in public_keys]
+public_keys = [sk.public_key() for sk in secret_keys]
+public_keys_hex = [
+    pk.public_bytes(
+        serialization.Encoding.X962,
+        serialization.PublicFormat.CompressedPoint,
+    ).hex()
+    for pk in public_keys
+]
 
 # arg1 is input trezor.bin filename to be signed
 # arg2 is output filename, if omitted, will use input file + ".signed"
@@ -54,21 +67,21 @@ assert public_keys_hex == [
 
 print("Sanity check")
 for sk, pk_hex in zip(secret_keys, public_keys_hex):
-    pk = ecdsa.VerifyingKey.from_string(
-        bytes.fromhex(pk_hex), curve=ecdsa.SECP256k1, hashfunc=sha256
+    pk = ec.EllipticCurvePublicKey.from_encoded_point(
+        ec.SECP256K1(), bytes.fromhex(pk_hex)
     )
     message = bytes(os.urandom(64))
 
     # These should work
-    sig = sk.sign_deterministic(message, hashfunc=sha256)
-    pk.verify(sig, message, hashfunc=sha256)  # throws exception if wrong
+    der_sig = sk.sign(message, ec.ECDSA(hashes.SHA256()))
+    pk.verify(der_sig, message, ec.ECDSA(hashes.SHA256()))  # throws exception if wrong
 
     # These should fail
     try:
-        sig = sk.sign_deterministic(message, hashfunc=sha1)
-        pk.verify(sig, message, hashfunc=sha256)  # should throw
+        der_sig = sk.sign(message, ec.ECDSA(hashes.SHA1()))
+        pk.verify(der_sig, message, ec.ECDSA(hashes.SHA256()))  # should throw
         raise RuntimeError("These should not have matched!")
-    except ecdsa.keys.BadSignatureError:
+    except InvalidSignature:
         # print("Bad sig check fail test ok")
         pass  # fine, should have failed
 
@@ -87,13 +100,16 @@ for i in sig_indices:
     index = i - 1  # in FW indices are indexed from 1, 0 means none
     print(f"--- Key {index}, sigindex {i}")
     sk = secret_keys[index]
-    sig_64bytes = sk.sign_deterministic(header, hashfunc=sha256)
+    der_sig = sk.sign(header, ec.ECDSA(hashes.SHA256()))
+    r, s = decode_dss_signature(der_sig)
+    sig_64bytes = r.to_bytes(32, "big") + s.to_bytes(32, "big")
     assert len(sig_64bytes) == 64
     print("Signature:", sig_64bytes.hex())
-    pk = ecdsa.VerifyingKey.from_string(
-        bytes.fromhex(public_keys_hex[index]), curve=ecdsa.SECP256k1, hashfunc=sha256
+    pk = ec.EllipticCurvePublicKey.from_encoded_point(
+        ec.SECP256K1(), bytes.fromhex(public_keys_hex[index])
     )
-    pk.verify(sig_64bytes, header, hashfunc=sha256)  # throws exception if wrong
+    der_sig_verify = encode_dss_signature(r, s)
+    pk.verify(der_sig_verify, header, ec.ECDSA(hashes.SHA256()))  # throws exception if wrong
     print(f"Public key {public_keys_hex[index]}")
     print("Verified created sig with public key")
     print("=================================")

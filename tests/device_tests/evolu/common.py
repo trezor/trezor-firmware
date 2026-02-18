@@ -2,7 +2,9 @@ import os
 from hashlib import sha256
 from typing import List
 
-from ecdsa import NIST256p, SigningKey
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import Prehashed, decode_dss_signature
 
 from trezorlib import evolu
 from trezorlib.debuglink import DebugSession as Session
@@ -19,7 +21,9 @@ TEST_host_static_public_key = curve25519.get_public_key(TEST_host_static_private
 
 def get_proof(client: Client, header: bytes, arguments: List[bytes]) -> bytes:
     private_key = get_delegated_identity_key(client)
-    signing_key = SigningKey.from_string(private_key, curve=NIST256p)
+    signing_key = ec.derive_private_key(
+        int.from_bytes(private_key, "big"), ec.SECP256R1()
+    )
 
     ctx = sha256()
     ctx.update(compact_size(len(header)))
@@ -27,7 +31,9 @@ def get_proof(client: Client, header: bytes, arguments: List[bytes]) -> bytes:
     for arg in arguments:
         ctx.update(compact_size(len(arg)))
         ctx.update(arg)
-    return signing_key.sign_digest(ctx.digest())
+    der_sig = signing_key.sign(ctx.digest(), ec.ECDSA(Prehashed(hashes.SHA256())))
+    r, s = decode_dss_signature(der_sig)
+    return r.to_bytes(32, "big") + s.to_bytes(32, "big")
 
 
 def get_invalid_proof(client: Client, header: bytes, arguments: List[bytes]) -> bytes:

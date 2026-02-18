@@ -39,7 +39,7 @@ dependencies = [
     "requests~=2.32",
     "termcolor",
     "Pillow>=11",
-    "ecdsa>=0.16,<0.17",
+
     "pyasn1",
     "noiseprotocol>=0.3.1,<0.4",
     "west>=1.4.0,<2",
