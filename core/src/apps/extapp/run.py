@@ -9,11 +9,8 @@ from storage import cache_common as cc
 from storage.cache import get_sessionless_cache
 from trezor import app, io, loop
 from trezor.enums import InputScriptType
-from trezor.messages import (
-    ExtAppMessage,
-    ExtAppResponse,
-    HDNodeType,
-)
+from trezor.messages import ExtAppMessage, ExtAppResponse, HDNodeType
+from trezor.ui import ProgressLayout
 from trezor.ui.layouts import interact
 from trezor.wire import context
 from trezor.wire.errors import DataError
@@ -34,7 +31,11 @@ _SERVICE_WIRE_CONTINUE = const(3)
 _SERVICE_WIRE_END = const(4)
 _SERVICE_CRYPTO = const(5)
 _SERVICE_UTIL = const(6)
-_SERVICE_WIRE_CALL = const(7)
+_SERVICE_PROGRESS = const(7)
+
+_SERVICE_PROGRESS_INIT = const(0)
+_SERVICE_PROGRESS_REPORT = const(1)
+_SERVICE_PROGRESS_STOP = const(2)
 
 
 def fn_id(service: int, message_id: int) -> int:
@@ -69,6 +70,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
     coin = coininfo.by_name("Bitcoin")
     script_type = InputScriptType.SPENDADDRESS
     keychain = await get_keychain(coin.curve_name, [paths.AlwaysMatchingSchema])
+    progress_obj: ProgressLayout | None = None
 
     def die(exception: Exception) -> NoReturn:
         task.unload()
@@ -197,6 +199,55 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             )
             task.unload()
             return response
+
+        elif service == _SERVICE_PROGRESS:
+            obj = trezorui_api.deserialize_progress_message(data=bytes(msg.data))
+            if message_id == _SERVICE_PROGRESS_INIT:
+                # Initialize a progress context
+                assert isinstance(obj, tuple)
+                assert len(obj) == 4
+                description: str = obj[0]
+                title: str | None = obj[1]
+                indeterminate: bool = obj[2]
+                danger: bool = obj[3]
+                progress_obj = progress(
+                    description=description,
+                    title=title,
+                    indeterminate=indeterminate,
+                    danger=danger,
+                )
+                io.ipc_send(
+                    _SYSTASK_ID_EXTAPP,
+                    fn_id(_SERVICE_PROGRESS_INIT, message_id),
+                    b"",
+                )
+            elif message_id == _SERVICE_PROGRESS_REPORT:
+                if progress_obj is None:
+                    die(DataError("Progress not initialized"))
+                # Report progress update
+                assert isinstance(obj, tuple)
+                assert len(obj) == 2
+                description: str = obj[0]
+                value: int = obj[1]
+                progress_obj.report(value, description=description)
+                io.ipc_send(
+                    _SYSTASK_ID_EXTAPP,
+                    fn_id(_SERVICE_PROGRESS_REPORT, message_id),
+                    b"",
+                )
+            elif message_id == _SERVICE_PROGRESS_STOP:
+                if progress_obj is None:
+                    die(DataError("Progress not initialized"))
+                # Stop the progress context
+                progress_obj.stop()
+                io.ipc_send(
+                    _SYSTASK_ID_EXTAPP,
+                    fn_id(_SERVICE_PROGRESS_STOP, message_id),
+                    b"",
+                )
+                progress_obj = None
+            else:
+                die(DataError("Unknown progress message ID"))
 
         else:
             die(RuntimeError("Unknown IPC function"))

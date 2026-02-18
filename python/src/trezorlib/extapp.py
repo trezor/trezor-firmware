@@ -14,8 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING
 from hashlib import sha256
+from typing import TYPE_CHECKING
 
 from . import messages
 

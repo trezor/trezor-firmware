@@ -259,3 +259,18 @@ pub enum TrezorCryptoResult {
 pub enum UtilEnum {
     RequestPage { idx: usize },
 }
+
+#[derive(Archive, Serialize, Deserialize)]
+pub enum TrezorProgressEnum {
+    Init {
+        description: ShortString,
+        title: ShortString,
+        indeterminate: bool,
+        danger: bool,
+    },
+    Update {
+        description: ShortString,
+        value: u32,
+    },
+    End,
+}

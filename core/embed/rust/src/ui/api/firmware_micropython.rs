@@ -42,7 +42,7 @@ use rkyv::{
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
-use trezor_structs::{ShortString, TrezorUiResult};
+use trezor_structs::{ArchivedStringN, ArchivedTrezorProgressEnum, ShortString, TrezorUiResult};
 
 #[cfg(feature = "backlight")]
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
@@ -1355,6 +1355,56 @@ extern "C" fn new_serialize_ui_result(n_args: usize, args: *const Obj, kwargs: *
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_deserialize_progress_message(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let obj: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+
+        let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+
+        fn str_from_archived<'a, const N: usize>(s: &'a ArchivedStringN<N>) -> &'a str {
+            let str = unsafe { core::str::from_raw_parts(s.data.as_ptr(), s.len as usize) };
+            str
+        }
+
+        // Deserialize the rkyv archived data directly from the static buffer
+        let archived = unsafe { rkyv::access_unchecked::<ArchivedTrezorProgressEnum>(data) };
+
+        // Access the archived data zero-copy using safe Deref access
+        let result: Obj = match archived {
+            ArchivedTrezorProgressEnum::Init {
+                description,
+                title,
+                indeterminate,
+                danger,
+            } => {
+                let description = str_from_archived(description);
+                let title = str_from_archived(title);
+
+                (
+                    Obj::try_from(description)?,
+                    Obj::try_from(title)?,
+                    Obj::try_from(*indeterminate)?,
+                    Obj::try_from(*danger)?,
+                )
+                    .try_into()?
+            }
+            ArchivedTrezorProgressEnum::Update { description, value } => {
+                let description = str_from_archived(description);
+                let value = value.to_native();
+                (Obj::try_from(description)?, Obj::try_from(value)?).try_into()?
+            }
+            ArchivedTrezorProgressEnum::End => Obj::const_none(),
+        };
+
+        Ok(result)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     let block = || {
         let buffer = data.try_into()?;
@@ -2227,6 +2277,13 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> bytes:
     ///     """Serialize a UI result into a compact binary format."""
     Qstr::MP_QSTR_serialize_ui_result => obj_fn_kw!(0, new_serialize_ui_result).as_obj(),
+
+    /// def deserialize_progress_message(
+    ///     *,
+    ///     data: bytes,
+    /// ) -> Obj:
+    ///     """Deserialize a progress message from bytes and return it as a MicroPython object."""
+    Qstr::MP_QSTR_deserialize_progress_message => obj_fn_kw!(0, new_deserialize_progress_message).as_obj(),
 
     /// class BacklightLevels:
     ///     """Backlight levels. Values dynamically update based on user settings."""

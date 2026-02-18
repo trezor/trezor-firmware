@@ -319,6 +319,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_description;
   MP_QSTR_deserialize_crypto_message;
   MP_QSTR_deserialize_derivation_path;
+  MP_QSTR_deserialize_progress_message;
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;

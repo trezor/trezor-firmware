@@ -334,6 +334,23 @@ impl TryFrom<(Obj, Obj, Obj)> for Obj {
     }
 }
 
+impl TryFrom<(Obj, Obj, Obj, Obj)> for Obj {
+    type Error = Error;
+
+    fn try_from(val: (Obj, Obj, Obj, Obj)) -> Result<Self, Self::Error> {
+        // SAFETY:
+        //  - Should work with any micropython objects.
+        // EXCEPTION: Will raise if allocation fails.
+        let values = [val.0, val.1, val.2, val.3];
+        let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(4, values.as_ptr()) })?;
+        if obj.is_null() {
+            Err(Error::AllocationFailed)
+        } else {
+            Ok(obj)
+        }
+    }
+}
+
 //
 // # Additional conversions based on the methods above.
 //
