@@ -130,7 +130,7 @@ async def confirm_freeze_balance(contract: TronFreezeBalanceV2Contract) -> None:
         props=(
             (TR.words__amount, format_trx_amount(contract.frozen_balance), False),
             (
-                TR.words__staking_for,
+                TR.words__resource,
                 (
                     "Energy"
                     if contract.resource == TronResourceCode.ENERGY

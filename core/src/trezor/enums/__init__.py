@@ -379,6 +379,8 @@ if TYPE_CHECKING:
         TransferContract = 1
         TriggerSmartContract = 31
         FreezeBalanceV2Contract = 54
+        UnfreezeBalanceV2Contract = 55
+        WithdrawExpireUnfreezeContract = 56
 
     class MessageType(IntEnum):
         Initialize = 0
@@ -648,6 +650,8 @@ if TYPE_CHECKING:
         TronTransferContract = 2205
         TronTriggerSmartContract = 2206
         TronFreezeBalanceV2Contract = 2207
+        TronUnfreezeBalanceV2Contract = 2208
+        TronWithdrawUnfreeze = 2209
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

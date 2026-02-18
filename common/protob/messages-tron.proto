@@ -7,6 +7,8 @@ option java_outer_classname = "TrezorMessageTron";
 
 // All uint64 are actually int64 in TRON. int64 is not supported on our firmware.
 
+// Transaction types in TRON docs: https://developers.tron.network/docs/tron-contracttype
+
 /**
  * Request: Ask device for Tron address corresponding to address_n path
  * @start
@@ -48,6 +50,8 @@ message TronSignTx {
  * @next TronTransferContract
  * @next TronTriggerSmartContract
  * @next TronFreezeBalanceV2Contract
+ * @next TronUnfreezeBalanceV2Contract
+ * @next TronWithdrawUnfreeze
  */
 message TronContractRequest {
 }
@@ -83,16 +87,36 @@ message TronTriggerSmartContract {
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L84-L88
 message TronFreezeBalanceV2Contract {
     required bytes owner_address = 1;                                 // Account whose TRX has to be frozen
-    required uint64 frozen_balance = 2;                               // Amount to be frozen (in SUN)
+    required uint64 balance = 2;                                      // Amount to be frozen (in SUN)
     optional TronResourceCode resource = 3 [default = BANDWIDTH];     // Resource obtained against freezing. Optional with default required in proto2
+}
 
-    // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/common.proto#L9C1-L13C2
-    // Staking can not happen just for TRON_POWER:
-    // https://developers.tron.network/reference/freezebalancev2-1
-    enum TronResourceCode {
-        BANDWIDTH = 0;
-        ENERGY = 1;
-    }
+/**
+ * Request: Unfreeze TRX (UnfreezeBalanceV2Contract)
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L90-L94
+message TronUnfreezeBalanceV2Contract {
+    required bytes owner_address = 1;                                 // Account whose TRX has to be unfrozen
+    required uint64 balance = 2;                                      // Amount to be unfrozen (in SUN)
+    optional TronResourceCode resource = 3 [default = BANDWIDTH];     // Resource being forfeited.
+}
+
+/**
+ * Request: Claim unfrozen TRX after their unstaking duration (WithdrawExpireUnfreezeContract)
+ * @next TronSignature
+ */
+// https://github.com/tronprotocol/protocol/blob/4c726956542b8dff5a4bd5c54aa07cd9da257d08/core/contract/balance_contract.proto#L96
+message TronWithdrawUnfreeze {
+    required bytes owner_address = 1;                                 // Address to claim all unfrozen TRX.
+}
+
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/common.proto#L9C1-L13C2
+// Staking/Unstaking can not happen just for TRON_POWER:
+// https://developers.tron.network/reference/freezebalancev2-1
+enum TronResourceCode {
+    BANDWIDTH = 0;
+    ENERGY = 1;
 }
 
 /**
@@ -131,6 +155,8 @@ message TronRawTransaction {
             TransferContract = 1;
             TriggerSmartContract = 31;
             FreezeBalanceV2Contract = 54;
+            UnfreezeBalanceV2Contract = 55;
+            WithdrawExpireUnfreezeContract = 56;
         }
 
         required TronRawContractType type = 1;
@@ -138,4 +164,3 @@ message TronRawTransaction {
 
     }
 }
-
