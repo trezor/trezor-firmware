@@ -5,3 +5,5 @@
 TransferContract = 1
 TriggerSmartContract = 31
 FreezeBalanceV2Contract = 54
+UnfreezeBalanceV2Contract = 55
+WithdrawExpireUnfreezeContract = 56

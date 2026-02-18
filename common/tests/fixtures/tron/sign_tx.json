@@ -279,7 +279,7 @@
         "contract": {
           "_message_type": "TronFreezeBalanceV2Contract",
           "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
-          "frozen_balance": 50000000,
+          "balance": 50000000,
           "resource": "ENERGY"
         },
         "raw_data_hex": "0a027e0b2208ed0f599cb230d51240f884eee8c3335a5a083612560a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e7472616374121e0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080e1eb1718017098b0eae8c333",
@@ -293,7 +293,7 @@
                 "parameter": {
                   "value": {
                     "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
-                    "frozen_balance": 50000000,
+                    "balance": 50000000,
                     "resource": "ENERGY"
                   },
                   "type_url": "type.googleapis.com/protocol.FreezeBalanceV2Contract"
@@ -325,7 +325,7 @@
         "contract": {
           "_message_type": "TronFreezeBalanceV2Contract",
           "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
-          "frozen_balance": 9223372036854740
+          "balance": 9223372036854740
         },
         "raw_data_hex": "0a027dd72208007205b57e8b55104098c2e4e8c3335a5c083612580a34747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e467265657a6542616c616e63655632436f6e747261637412200a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5810d4a78dafba93b11070b8ede0e8c333",
         "raw": {
@@ -338,7 +338,7 @@
                 "parameter": {
                   "value": {
                     "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
-                    "frozen_balance": 9223372036854740
+                    "balance": 9223372036854740
                   },
                   "type_url": "type.googleapis.com/protocol.FreezeBalanceV2Contract"
                 },
@@ -354,6 +354,138 @@
       },
       "result": {
         "signature": "046e780100fff665c831d7d70d5fe34e5c5a29aadfb18cd15fd707576799690e75006369ea9327121862edbd17abd218ec40a50f32e7636975f7b4d5445f1fce1C"
+      }
+    },
+    {
+      "name": "Unstake_for_Energy",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "d991",
+          "ref_block_hash": "43b74d04209c1777",
+          "expiration": 1771418313000,
+          "timestamp": 1771417053000
+        },
+        "contract": {
+          "_message_type": "TronUnfreezeBalanceV2Contract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "balance": 10000000,
+          "resource": "ENERGY"
+        },
+        "raw_data_hex": "0a02d991220843b74d04209c177740a8c28986c7335a5c083712580a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121e0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080ade204180170c8cebc85c733",
+        "raw": {
+          "visible": false,
+          "txID": "6b2f6aa8875e887094d51d9e8a8e4c9e1653ffd20c92640a71eebdc919fbe48b",
+          "raw_data_hex": "0a02d991220843b74d04209c177740a8c28986c7335a5c083712580a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121e0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080ade204180170c8cebc85c733",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "resource": "ENERGY",
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "balance": 10000000
+                  },
+                  "type_url": "type.googleapis.com/protocol.UnfreezeBalanceV2Contract"
+                },
+                "type": "UnfreezeBalanceV2Contract"
+              }
+            ],
+            "ref_block_bytes": "d991",
+            "ref_block_hash": "43b74d04209c1777",
+            "expiration": 1771418313000,
+            "timestamp": 1771417053000
+          }
+        }
+      },
+      "result": {
+        "signature": "1f3a3c4028ef2e11a1c904b746f1136f2535c1eacf652eec89d7d3604565af7d0a1cfa24a10408d8146ac01e055b7fec25fc863bb636c7b85dad7018de528b161B"
+      }
+    },
+    {
+      "name": "Unstake_for_Bandwidth",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "f2b7",
+          "ref_block_hash": "fb75c38816f843ef",
+          "expiration": 1771437825000,
+          "timestamp": 1771436565000
+        },
+        "contract": {
+          "_message_type": "TronUnfreezeBalanceV2Contract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "balance": 10000000
+        },
+        "raw_data_hex": "0a02f2b72208fb75c38816f843ef40e8b7b08fc7335a5a083712560a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121c0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080ade2047088c4e38ec733",
+        "raw": {
+          "visible": false,
+          "txID": "4a530390c629644f05b974ca6d55ccc2684bebf9b0441f09dc7c53b129e520db",
+          "raw_data_hex": "0a02f2b72208fb75c38816f843ef40e8b7b08fc7335a5a083712560a36747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e556e667265657a6542616c616e63655632436f6e7472616374121c0a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a581080ade2047088c4e38ec733",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "balance": 10000000
+                  },
+                  "type_url": "type.googleapis.com/protocol.UnfreezeBalanceV2Contract"
+                },
+                "type": "UnfreezeBalanceV2Contract"
+              }
+            ],
+            "ref_block_bytes": "f2b7",
+            "ref_block_hash": "fb75c38816f843ef",
+            "expiration": 1771437825000,
+            "timestamp": 1771436565000
+          }
+        }
+      },
+      "result": {
+        "signature": "b4d10dbd35e1c4e925f45c38809e648df9936f6e5a9fa49ffd90f6ca81abc0595aa388f797114963a5a2be71b982832112846dfdd5b8125c0bcedb2822047a591B"
+      }
+    },
+    {
+      "name": "Claim_Unfrozen_Balance",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "f55c",
+          "ref_block_hash": "e53dfa7c93866297",
+          "expiration": 1771439874000,
+          "timestamp": 1771438614000
+        },
+        "contract": {
+          "_message_type": "TronWithdrawUnfreeze",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58"
+        },
+        "raw_data_hex": "0a02f55c2208e53dfa7c9386629740d0bfad90c7335a5a083812560a3b747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5769746864726177457870697265556e667265657a65436f6e747261637412170a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5870f0cbe08fc733",
+        "raw": {
+          "visible": false,
+          "txID": "0e9a64350214495a4a6439c3ca27e8d3707c47c7ca489ed8cb12d9783f676603",
+          "raw_data_hex": "0a02f55c2208e53dfa7c9386629740d0bfad90c7335a5a083812560a3b747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5769746864726177457870697265556e667265657a65436f6e747261637412170a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5870f0cbe08fc733",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58"
+                  },
+                  "type_url": "type.googleapis.com/protocol.WithdrawExpireUnfreezeContract"
+                },
+                "type": "WithdrawExpireUnfreezeContract"
+              }
+            ],
+            "ref_block_bytes": "f55c",
+            "ref_block_hash": "e53dfa7c93866297",
+            "expiration": 1771439874000,
+            "timestamp": 1771438614000
+          }
+        }
+      },
+      "result": {
+        "signature": "833f6ba5c449a28ee6c58d98298f2f7cce8be1b7f70396e763ec216ca1d396b152bcefe9c7dde9970db2f1d38ecfba5aa20023f966f685da0048944415cb56f31C"
       }
     },
     {

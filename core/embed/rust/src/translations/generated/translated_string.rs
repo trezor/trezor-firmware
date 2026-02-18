@@ -1567,8 +1567,7 @@ pub enum TranslatedString {
     ethereum__eip_7702 = 1177,  // {"Bolt": "Authorize the following contract as an EIP-7702 on your account", "Caesar": "Authorize the following contract as an EIP-7702 on your account", "Delizia": "Authorize the following contract as an EIP-7702 on your account?", "Eckhart": "Authorize the following contract as an EIP-7702 on your account?"}
     words__confirm_all = 1178,  // "Confirm all"
     words__show_next = 1179,  // "Show next"
-    words__staking_for = 1180,  // "Staking for"
-    words__staking_from = 1181,  // "Staking from"
+    words__resource = 1180,  // "Resource"
 }
 
 impl TranslatedString {
@@ -2756,8 +2755,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -3943,8 +3941,7 @@ impl TranslatedString {
                 21651,
                 21662,
                 21671,
-                21682,
-                21694,
+                21679,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5129,8 +5126,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6316,8 +6312,7 @@ impl TranslatedString {
                 21651,
                 21662,
                 21671,
-                21682,
-                21694,
+                21679,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7502,8 +7497,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8689,8 +8683,7 @@ impl TranslatedString {
                 21651,
                 21662,
                 21671,
-                21682,
-                21694,
+                21679,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -9875,8 +9868,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11062,8 +11054,7 @@ impl TranslatedString {
                 21651,
                 21662,
                 21671,
-                21682,
-                21694,
+                21679,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12249,8 +12240,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13436,8 +13426,7 @@ impl TranslatedString {
                 18764,
                 18775,
                 18784,
-                18795,
-                18807,
+                18792,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14622,8 +14611,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15809,8 +15797,7 @@ impl TranslatedString {
                 18764,
                 18775,
                 18784,
-                18795,
-                18807,
+                18792,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -16995,8 +16982,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18182,8 +18168,7 @@ impl TranslatedString {
                 18764,
                 18775,
                 18784,
-                18795,
-                18807,
+                18792,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19368,8 +19353,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20555,8 +20539,7 @@ impl TranslatedString {
                 18764,
                 18775,
                 18784,
-                18795,
-                18807,
+                18792,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -21742,8 +21725,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account?",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -22929,8 +22911,7 @@ impl TranslatedString {
                 20653,
                 20664,
                 20673,
-                20684,
-                20696,
+                20681,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24115,8 +24096,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account?",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25302,8 +25282,7 @@ impl TranslatedString {
                 20653,
                 20664,
                 20673,
-                20684,
-                20696,
+                20681,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -26488,8 +26467,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account?",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27675,8 +27653,7 @@ impl TranslatedString {
                 20653,
                 20664,
                 20673,
-                20684,
-                20696,
+                20681,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -28861,8 +28838,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account?",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30048,8 +30024,7 @@ impl TranslatedString {
                 20653,
                 20664,
                 20673,
-                20684,
-                20696,
+                20681,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -31235,8 +31210,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account?",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -32422,8 +32396,7 @@ impl TranslatedString {
                 21408,
                 21419,
                 21428,
-                21439,
-                21451,
+                21436,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -33608,8 +33581,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account?",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34795,8 +34767,7 @@ impl TranslatedString {
                 21408,
                 21419,
                 21428,
-                21439,
-                21451,
+                21436,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -35981,8 +35952,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account?",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37168,8 +37138,7 @@ impl TranslatedString {
                 21408,
                 21419,
                 21428,
-                21439,
-                21451,
+                21436,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -38354,8 +38323,7 @@ impl TranslatedString {
                 "Authorize the following contract as an EIP-7702 on your account?",
                 "Confirm all",
                 "Show next",
-                "Staking for",
-                "Staking from",
+                "Resource",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39541,8 +39509,7 @@ impl TranslatedString {
                 21408,
                 21419,
                 21428,
-                21439,
-                21451,
+                21436,
             ];
 
         }
@@ -41077,6 +41044,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__receive, Self::words__receive),
         (Qstr::MP_QSTR_words__recipient, Self::words__recipient),
         (Qstr::MP_QSTR_words__recovery_share, Self::words__recovery_share),
+        (Qstr::MP_QSTR_words__resource, Self::words__resource),
         (Qstr::MP_QSTR_words__review, Self::words__review),
         (Qstr::MP_QSTR_words__security, Self::words__security),
         (Qstr::MP_QSTR_words__send, Self::words__send),
@@ -41085,8 +41053,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__show_next, Self::words__show_next),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),
         (Qstr::MP_QSTR_words__signer, Self::words__signer),
-        (Qstr::MP_QSTR_words__staking_for, Self::words__staking_for),
-        (Qstr::MP_QSTR_words__staking_from, Self::words__staking_from),
         (Qstr::MP_QSTR_words__swap, Self::words__swap),
         (Qstr::MP_QSTR_words__title_check, Self::words__title_check),
         (Qstr::MP_QSTR_words__title_done, Self::words__title_done),

@@ -6923,20 +6923,52 @@ if TYPE_CHECKING:
 
     class TronFreezeBalanceV2Contract(protobuf.MessageType):
         owner_address: "AnyBytes"
-        frozen_balance: "int"
+        balance: "int"
         resource: "TronResourceCode"
 
         def __init__(
             self,
             *,
             owner_address: "AnyBytes",
-            frozen_balance: "int",
+            balance: "int",
             resource: "TronResourceCode | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TronFreezeBalanceV2Contract"]:
+            return isinstance(msg, cls)
+
+    class TronUnfreezeBalanceV2Contract(protobuf.MessageType):
+        owner_address: "AnyBytes"
+        balance: "int"
+        resource: "TronResourceCode"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+            balance: "int",
+            resource: "TronResourceCode | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronUnfreezeBalanceV2Contract"]:
+            return isinstance(msg, cls)
+
+    class TronWithdrawUnfreeze(protobuf.MessageType):
+        owner_address: "AnyBytes"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronWithdrawUnfreeze"]:
             return isinstance(msg, cls)
 
     class TronSignature(protobuf.MessageType):
