@@ -1,0 +1,7 @@
+device STM32U5G9ZJ
+if swd
+speed 20000
+loadbin build/firmware/firmware.bin.padded.bin 0x0C044000
+r
+g
+exit
