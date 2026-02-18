@@ -188,6 +188,19 @@ class TrezorClientThp(client.TrezorClient[ThpSession]):
             else:
                 self._session_message_queue[session_id].append(msg)
 
+    def _call(
+        self,
+        session: ThpSession,
+        msg: client.MessageType,
+        *,
+        expect: type[client.MT] = client.MessageType,
+        timeout: float | None = None,
+    ) -> client.MT:
+        with self.channel.piggyback_acks(msg):
+            return super()._call(
+                session=session, msg=msg, expect=expect, timeout=timeout
+            )
+
     @staticmethod
     def detect_model(props: messages.ThpDeviceProperties) -> models.TrezorModel:
         internal_model = props.internal_model
