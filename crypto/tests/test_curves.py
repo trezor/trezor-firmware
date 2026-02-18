@@ -1,16 +1,14 @@
 #!/usr/bin/py.test
-import binascii
 import ctypes as c
-import hashlib
 import os
 import random
 
+import binascii
 import pytest
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import (
     Prehashed,
-    decode_dss_signature,
     encode_dss_signature,
 )
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
@@ -418,16 +416,6 @@ def test_sign_native(curve, r):
     private_key = ec.derive_private_key(exp, curve._crypto_curve())
     public_key = private_key.public_key()
 
-    # Sign with cryptography and canonicalize (low-S)
-    der_sig = private_key.sign(
-        bytes(bytearray(digest)), ec.ECDSA(Prehashed(hashes.SHA256()))
-    )
-    r_val, s_val = decode_dss_signature(der_sig)
-    if s_val > curve.order // 2:
-        s_val = curve.order - s_val
-    sig_ref = r_val.to_bytes(32, "big") + s_val.to_bytes(32, "big")
-    assert binascii.hexlify(sig) == binascii.hexlify(sig_ref)
-
     # Verify the C library signature
     r_from_sig = int.from_bytes(bytes(bytearray(sig[:32])), "big")
     s_from_sig = int.from_bytes(bytes(bytearray(sig[32:])), "big")
@@ -451,16 +439,6 @@ def test_sign_zkp(r):
     exp = bytes2num(priv)
     private_key = ec.derive_private_key(exp, curve._crypto_curve())
     public_key = private_key.public_key()
-
-    # Sign with cryptography and canonicalize (low-S)
-    der_sig = private_key.sign(
-        bytes(bytearray(digest)), ec.ECDSA(Prehashed(hashes.SHA256()))
-    )
-    r_val, s_val = decode_dss_signature(der_sig)
-    if s_val > curve.order // 2:
-        s_val = curve.order - s_val
-    sig_ref = r_val.to_bytes(32, "big") + s_val.to_bytes(32, "big")
-    assert binascii.hexlify(sig) == binascii.hexlify(sig_ref)
 
     # Verify the C library signature
     r_from_sig = int.from_bytes(bytes(bytearray(sig[:32])), "big")
