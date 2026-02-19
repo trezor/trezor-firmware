@@ -230,12 +230,10 @@ __attribute__((noreturn)) void reboot_and_wipe(
 }
 
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
-#ifndef RSOD_INFINITE_LOOP
-  systick_delay_ms(10 * 1000);
-#endif
 #ifdef RSOD_INFINITE_LOOP
   halt_device();
 #else
+  systick_delay_ms(10 * 1000);
   reboot_device();
 #endif
 }
