@@ -25,12 +25,6 @@
 #include <sys/cpuid.h>
 #include <sys/mpu.h>
 
-#ifdef STM32U5
-#include "stm32u5xx_ll_utils.h"
-#else
-#include "stm32f4xx_ll_utils.h"
-#endif
-
 void cpuid_get(cpuid_t* cpuid) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
   cpuid->id[0] = LL_GetUID_Word0();
