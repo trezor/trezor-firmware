@@ -144,17 +144,10 @@ static secbool secret_ensure_initialized(void) {
 secbool secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_unlock_write(), "secret write");
-  for (int i = 0; i < len / 16; i++) {
-    if (sectrue != flash_area_write_quadword(&SECRET_AREA, offset + (i * 16),
-                                             (uint32_t *)&data[(i * 16)])) {
-      ensure(flash_lock_write(), "secret write");
-      mpu_restore(mpu_mode);
-      return secfalse;
-    }
-  }
+  secbool result = flash_area_write_data(&SECRET_AREA, offset, data, len);
   ensure(flash_lock_write(), "secret write");
   mpu_restore(mpu_mode);
-  return sectrue;
+  return result;
 }
 
 secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
@@ -435,16 +428,13 @@ void secret_bhk_regenerate(void) {
 
   ensure(flash_area_erase(&BHK_AREA, NULL), "Failed regenerating BHK");
   ensure(flash_unlock_write(), "Failed regenerating BHK");
-  for (int i = 0; i < 2; i++) {
-    uint32_t val[4] = {0};
-    for (int j = 0; j < 4; j++) {
-      val[j] = rng_get();
-    }
-    secbool res =
-        flash_area_write_quadword(&BHK_AREA, i * 4 * sizeof(uint32_t), val);
-    memzero(val, sizeof(val));
-    ensure(res, "Failed regenerating BHK");
+  uint32_t val[8] = {0};
+  for (int j = 0; j < ARRAY_LENGTH(val); j++) {
+    val[j] = rng_get();
   }
+  secbool res = flash_area_write_data(&BHK_AREA, 0, val, sizeof(val));
+  memzero(val, sizeof(val));
+  ensure(res, "Failed regenerating BHK");
 
   mpu_restore(mpu_mode);
 
