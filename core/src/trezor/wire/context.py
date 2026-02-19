@@ -112,7 +112,7 @@ if utils.USE_THP:
         return ctx.channel
 
 
-def with_context(ctx: Context, workflow: loop.Task) -> Generator:
+def with_context(ctx: Context, workflow: loop.Task[T]) -> Generator[Any, Any, T]:
     """Run a workflow in a particular context.
 
     Stores the context in a closure and installs it into the global variable every time

@@ -6,9 +6,10 @@ from trezor import log, loop, utils
 from trezor.enums import MessageType
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from typing import Callable, TypeVar
 
     IdleCallback = Callable[[], None]
+    T = TypeVar("T")
 
 if __debug__:
     # Used in `on_close` below for memory statistics.
@@ -81,7 +82,7 @@ def _on_close(workflow: loop.spawn) -> None:
             micropython.mem_info()
 
 
-def spawn(workflow: loop.Task) -> loop.spawn:
+def spawn(workflow: loop.Task[T]) -> loop.spawn[T]:
     """Spawn a workflow task.
 
     Creates an instance of loop.spawn for the workflow and registers it into the
