@@ -108,19 +108,7 @@ secbool flash_area_write_word(const flash_area_t *area, uint32_t offset,
   return flash_write_word(sector, sector_offset, data);
 }
 
-#else  // not defined FLASH_BIT_ACCESS
-
-secbool flash_area_write_quadword(const flash_area_t *area, uint32_t offset,
-                                  const uint32_t *data) {
-  uint16_t sector;
-  uint32_t sector_offset;
-  if (get_sector_and_offset(area, offset, &sector, &sector_offset) != sectrue) {
-    return secfalse;
-  }
-  return flash_write_quadword(sector, sector_offset, data);
-}
-
-#endif  // not defined FLASH_BIT_ACCESS
+#endif  // FLASH_BIT_ACCESS
 
 #ifdef USE_FLASH_BURST
 secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,

@@ -30,12 +30,6 @@
 //    1. Non-uniform sector number on STM32F4
 //    2. Uniform page number on STM32U5
 
-#define FLASH_QUADWORD_WORDS (4)
-#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
-
-#define FLASH_BURST_WORDS (8 * FLASH_QUADWORD_WORDS)
-#define FLASH_BURST_SIZE (FLASH_BURST_WORDS * sizeof(uint32_t))
-
 #define FLASH_BLOCK_SIZE (sizeof(uint32_t) * FLASH_BLOCK_WORDS)
 
 typedef uint32_t flash_block_t[FLASH_BLOCK_WORDS];
@@ -50,7 +44,7 @@ typedef uint32_t flash_block_t[FLASH_BLOCK_WORDS];
 #error Unsupported number of FLASH_BLOCK_WORDS.
 #endif
 
-// Returns the size of the a continuous area of sectors
+// Returns the size of a continuous area of sectors
 // Returns 0 if any of the sectors is out of range
 uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count);
 
@@ -79,10 +73,6 @@ secbool __wur flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data);
 secbool __wur flash_write_word(uint16_t sector, uint32_t offset, uint32_t data);
 
 #endif
-
-// Writes a 16-byte block to specified 'offset' inside a flash 'sector'
-secbool __wur flash_write_quadword(uint16_t sector, uint32_t offset,
-                                   const uint32_t *data);
 
 // Writes a 128-byte burst to specified 'offset' inside a flash 'sector'
 secbool __wur flash_write_burst(uint16_t sector, uint32_t offset,
