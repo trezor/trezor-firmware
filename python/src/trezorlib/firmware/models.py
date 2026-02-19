@@ -38,6 +38,7 @@ class Model(Enum):
     T3W1 = b"T3W1"
     D001 = b"D001"
     D002 = b"D002"
+    D003 = b"D003"
 
     # legacy aliases
     ONE = b"T1B1"
@@ -442,6 +443,12 @@ D002_HASH_PARAMS = FirmwareHashParameters(
     padding_byte=None,
 )
 
+D003_HASH_PARAMS = FirmwareHashParameters(
+    hash_function=hashlib.sha256,
+    chunk_size=1024 * 128,
+    padding_byte=None,
+)
+
 MODEL_MAP = {
     Model.T1B1: LEGACY_V3,
     Model.T2T1: T2T1,
@@ -451,6 +458,7 @@ MODEL_MAP = {
     Model.T3W1: T3W1,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
+    Model.D003: TREZOR_CORE_DEV,
 }
 
 MODEL_MAP_DEV = {
@@ -462,6 +470,7 @@ MODEL_MAP_DEV = {
     Model.T3W1: TREZOR_CORE_DEV,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
+    Model.D003: TREZOR_CORE_DEV,
 }
 
 MODEL_HASH_PARAMS_MAP = {
@@ -473,6 +482,7 @@ MODEL_HASH_PARAMS_MAP = {
     Model.T3W1: T3W1_HASH_PARAMS,
     Model.D001: T2T1_HASH_PARAMS,
     Model.D002: D002_HASH_PARAMS,
+    Model.D003: D003_HASH_PARAMS,
 }
 
 # deprecated aliases -- don't add more
