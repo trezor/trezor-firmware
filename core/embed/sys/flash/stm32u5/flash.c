@@ -25,6 +25,9 @@
 
 #ifdef KERNEL_MODE
 
+#define FLASH_QUADWORD_WORDS (4)
+#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
+
 #ifdef STM32U585xx
 #define FLASH_BANK_PAGES 128
 #define FLASH_SECTOR_COUNT (FLASH_BANK_PAGES * 2)
@@ -168,8 +171,8 @@ secbool flash_sector_erase(uint16_t sector) {
   return sectrue;
 }
 
-secbool flash_write_quadword(uint16_t sector, uint32_t offset,
-                             const uint32_t *data) {
+static secbool flash_write_quadword(uint16_t sector, uint32_t offset,
+                                    const uint32_t *data) {
   uint32_t address =
       (uint32_t)flash_get_address(sector, offset, FLASH_QUADWORD_SIZE);
   if (address == 0) {
