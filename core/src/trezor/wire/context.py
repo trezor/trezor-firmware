@@ -160,7 +160,6 @@ def try_get_ctx_ids() -> tuple[AnyBytes, AnyBytes] | None:
 # ACCESS TO CACHE
 
 if TYPE_CHECKING:
-    T = TypeVar("T")
 
     @overload
     def cache_get(key: int) -> bytes | None:  # noqa: F811
