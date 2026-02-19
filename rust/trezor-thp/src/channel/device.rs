@@ -48,6 +48,16 @@ enum MuxOutgoing {
     CodecV1Response,
 }
 
+impl MuxOutgoing {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            Self::Error(_, _) => "transport_error",
+            Self::Pong(_) => "pong",
+            Self::CodecV1Response => "codec_v1_response",
+        }
+    }
+}
+
 impl<C, B> Mux<C, B>
 where
     C: CredentialVerifier,
@@ -100,8 +110,11 @@ where
     }
 
     fn enqueue(&mut self, outgoing: MuxOutgoing) -> Result<(), Error> {
-        self.outgoing.push_back(outgoing).map_err(|_| {
-            log::warn!("Broadcast channel outgoing queue full.");
+        self.outgoing.push_back(outgoing).map_err(|o| {
+            log::warn!(
+                "Broadcast channel outgoing queue full, dropped {}.",
+                o.to_str()
+            );
             Error::not_ready()
         })?;
         Ok(())
