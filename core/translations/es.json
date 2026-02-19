@@ -130,8 +130,8 @@
     "backup__not_recommend": "No recomendamos omitir la creación de la c. seg. de la billetera.",
     "backup__recover_anytime": "La c. seg. te permite recuperar siempre la billetera.",
     "backup__title_backup_completed": {
-      "Bolt": "C. seg. de la billetera completada",
-      "Caesar": "C. seg. de la billetera completada",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "C. seg. de la billetera completada",
       "Eckhart": "Copia de seguridad de la billetera completada."
     },
@@ -360,8 +360,8 @@
     "buttons__show_words": "Mostrar palab.",
     "buttons__skip": "Omitir",
     "buttons__try_again": "Reintentar",
-    "buttons__turn_off": "Apagar",
-    "buttons__turn_on": "Encender",
+    "buttons__turn_off": "Desactivar",
+    "buttons__turn_on": "Activar",
     "buttons__view": "Ver",
     "buttons__view_all_data": "Ver todos los datos",
     "cardano__addr_base": "Base",
@@ -441,7 +441,7 @@
     "cardano__reference_input_index": "Índice de entrada de referencia",
     "cardano__reference_script": "Script de referencia",
     "cardano__required_signer": "Firmante requerido",
-    "cardano__reward": "Recompensa",
+    "cardano__reward": "recompensa",
     "cardano__reward_address": "La dirección es una dirección de recompensa.",
     "cardano__reward_eligibility_warning": "Advertencia: la dirección no es una dirección de pago, no admite recompensas.",
     "cardano__rewards_go_to": "Las recompensas van a",
@@ -468,7 +468,12 @@
     "cardano__stake_delegation": "Delegación de stake",
     "cardano__stake_deregistration": "Cancelar registro de clave de staking",
     "cardano__stake_pool_registration": "Registro de pool de staking",
-    "cardano__stake_pool_registration_pool_id": "Registro de stake pool\nID del pool",
+    "cardano__stake_pool_registration_pool_id": {
+      "Bolt": "Registro de stake pool\nID del pool",
+      "Caesar": "Registro de stake pool\nID del pool",
+      "Delizia": "Registro de stake pool\nID del pool",
+      "Eckhart": "Registro de pool de staking\nID del pool"
+    },
     "cardano__stake_registration": "Registro de la clave de stake",
     "cardano__staking_key_for_account": "Clave de staking para la cuenta",
     "cardano__to_pool": "Para el pool",
@@ -633,7 +638,7 @@
       "Eckhart": ""
     },
     "eos__net": {
-      "Bolt": "NET",
+      "Bolt": "NETO",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -974,13 +979,23 @@
     "instructions__learn_more": "Más información",
     "instructions__menu_to_continue": "Usa el menú para continuar",
     "instructions__shares_continue_with_x_template": {
-      "Bolt": "Continúa con el fragmento #{0}",
-      "Caesar": "Continúa con el fragmento #{0}",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Continúa con el frag. #{0}",
-      "Eckhart": "Continúa con el frag. #{0}"
+      "Eckhart": ""
     },
-    "instructions__shares_start_with_1": "Inicia con el fragmento #1",
-    "instructions__shares_start_with_x_template": "Inicia con el fragmento #{0}",
+    "instructions__shares_start_with_1": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Inicia con el fragmento #1",
+      "Eckhart": "Inicia con el fragmento #1"
+    },
+    "instructions__shares_start_with_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Inicia con el fragmento #{0}"
+    },
     "instructions__swipe_down": "Deslizar hacia abajo",
     "instructions__swipe_horizontally": "Deslizar en horizontal",
     "instructions__tap": "Toca",
@@ -1060,7 +1075,7 @@
     },
     "modify_fee__new_transaction_fee": {
       "Bolt": "Nueva comisión de transacción:",
-      "Caesar": "Nueva comisión de transacción:",
+      "Caesar": "",
       "Delizia": "Nueva comisión de transacción:",
       "Eckhart": "Nueva comisión de transacción"
     },
@@ -1373,7 +1388,7 @@
       "Eckhart": ""
     },
     "nem__transferable": {
-      "Bolt": "Es transferible",
+      "Bolt": "Transferible",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1427,11 +1442,21 @@
       "Eckhart": "¿Activar la protección por passphrase?"
     },
     "passphrase__wallet": "Billetera con passphrase",
-    "pin__cancel_description": "Continuar sin PIN",
-    "pin__cancel_info": "Sin un PIN, cualquiera puede acceder al dispositivo.",
+    "pin__cancel_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Continuar sin PIN",
+      "Eckhart": ""
+    },
+    "pin__cancel_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Sin un PIN, cualquiera puede acceder al dispositivo.",
+      "Eckhart": "Sin un PIN, cualquiera puede acceder al dispositivo."
+    },
     "pin__cancel_setup": {
-      "Bolt": "Cancelar config. de PIN",
-      "Caesar": "Cancelar config. de PIN",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Cancelar config. de PIN",
       "Eckhart": "¿Cancelar configuración de PIN?"
     },
@@ -1441,7 +1466,12 @@
     "pin__cursor_will_change": "La posición del cursor irá cambiando para mejorar la seguridad.",
     "pin__diff_from_wipe_code": "El nuevo PIN debe ser diferente al código de borrar.",
     "pin__disabled": "Protección con PIN\ndesactivada.",
-    "pin__enabled": "Protección con PIN\nactivada.",
+    "pin__enabled": {
+      "Bolt": "Protección con PIN\nactivada.",
+      "Caesar": "Protección con PIN\nactivada.",
+      "Delizia": "Protección con PIN\nactivada.",
+      "Eckhart": ""
+    },
     "pin__enter": "Ingr. el PIN",
     "pin__enter_new": "Intr. un nuevo PIN",
     "pin__entered_not_valid": "El PIN introducido no es válido.",
@@ -1460,7 +1490,12 @@
     "pin__reenter_new": "Reintroducir PIN.",
     "pin__reenter_to_confirm": "Reingresa el PIN para confirmar.",
     "pin__remove": "Eliminar PIN",
-    "pin__setup_completed": "Configuración del PIN completada.",
+    "pin__setup_completed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Configuración del PIN completada."
+    },
     "pin__should_be_long": "El PIN debe tener 4-50 dígitos.",
     "pin__title": "Código PIN",
     "pin__title_check_pin": "Verificar PIN",
@@ -1532,7 +1567,7 @@
       "Bolt": "Grupo {0}",
       "Caesar": "Grupo {0}",
       "Delizia": "Grupo {0}",
-      "Eckhart": "Grupo #{0}"
+      "Eckhart": ""
     },
     "recovery__group_threshold_reached": "Umbral de grupo alcanzado.",
     "recovery__info_about_disconnect": "Es seguro desconectar tu Trezor durante la recuperación de tu billetera y continuar después.",
@@ -1550,7 +1585,12 @@
     },
     "recovery__share_does_not_match": "El fragmento no coincide",
     "recovery__share_from_another_multi_share_backup": "Has introducido un fragmento de una c. seg. diferente.",
-    "recovery__share_from_group_entered_template": "Fragmento #{0} del grupo #{1} introducido.",
+    "recovery__share_from_group_entered_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Fragmento #{0} del grupo #{1} introducido."
+    },
     "recovery__share_num_template": {
       "Bolt": "Fragmento {0}",
       "Caesar": "Fragmento {0}",
@@ -1580,7 +1620,7 @@
     "recovery__word_x_of_y_template": "Palabra {0} de {1}",
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} {plural} más iniciando",
-      "Caesar": "{count} {plural} más iniciando",
+      "Caesar": "",
       "Delizia": "{count} {plural} más iniciando",
       "Eckhart": "Necesitas {count} adicionales {plural} para comenzar"
     },
@@ -1591,14 +1631,24 @@
       "Delizia": "{0} de {1} fragmentos introducidos",
       "Eckhart": "{0} de {1} fragmentos introducidos."
     },
-    "recovery__you_have_entered": "Has introducido",
+    "recovery__you_have_entered": {
+      "Bolt": "Has introducido",
+      "Caesar": "Has introducido",
+      "Delizia": "Has introducido",
+      "Eckhart": ""
+    },
     "regulatory__title": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Regulatorio"
     },
-    "reset__advanced_group_threshold_info": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera.",
+    "reset__advanced_group_threshold_info": {
+      "Bolt": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera.",
+      "Caesar": "",
+      "Delizia": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera.",
+      "Eckhart": "El umbral de grupo determina el núm. de grupos necesarios para recuperar la billetera."
+    },
     "reset__all_x_of_y_template": {
       "Bolt": "{0} de {1} fragmentos",
       "Caesar": "",
@@ -1617,12 +1667,27 @@
     "reset__cancel_create_wallet": "Cancelar crear billetera",
     "reset__check_backup_instructions": "Verifiquemos tu copia de seguridad.",
     "reset__check_backup_title": "Verificar c. seg.",
-    "reset__check_group_share_title_template": "Ver. g{0} - fra. {1}",
+    "reset__check_group_share_title_template": {
+      "Bolt": "Ver. g{0} - fra. {1}",
+      "Caesar": "",
+      "Delizia": "Ver. g{0} - fra. {1}",
+      "Eckhart": "Ver. g{0} - fra. {1}"
+    },
     "reset__check_share_backup_template": "Verifiquemos rápidamente el Fragmento #{0}.",
-    "reset__check_share_title_template": "Verif. fragmento #{0}",
+    "reset__check_share_title_template": {
+      "Bolt": "Verif. fragmento #{0}",
+      "Caesar": "",
+      "Delizia": "Verif. fragmento #{0}",
+      "Eckhart": ""
+    },
     "reset__check_wallet_backup_title": "Verificar c. seg.",
     "reset__continue_with_next_share": "Continúa con el próximo fragmento.",
-    "reset__continue_with_share_template": "Continúa con el frag. #{0}",
+    "reset__continue_with_share_template": {
+      "Bolt": "Continúa con el frag. #{0}",
+      "Caesar": "Continúa con el frag. #{0}",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__create_x_of_y_multi_share_backup_template": "¿Quieres crear {0} de {1} c. seg. de múltiples fragmentos?",
     "reset__finished_verifying_group_template": "Has verificado tus fragmentos de recuperación del grupo {0}.",
     "reset__finished_verifying_shares": "Has verificado tus fragmentos de recuperación.",
@@ -1632,8 +1697,18 @@
       "Delizia": "Has verificado la c. seg de tu billetera.",
       "Eckhart": "Has verificado la c. seg de tu billetera."
     },
-    "reset__group_description": "Un grupo consta de fragmentos de recuperación.",
-    "reset__group_info": "Cada grupo tiene un núm. de fragmentos y su propio umbral. En los siguientes pasos, ajustarás el núm. de fragmentos y los umbrales.",
+    "reset__group_description": {
+      "Bolt": "Un grupo consta de fragmentos de recuperación.",
+      "Caesar": "",
+      "Delizia": "Un grupo consta de fragmentos de recuperación.",
+      "Eckhart": "Un grupo consta de fragmentos de recuperación."
+    },
+    "reset__group_info": {
+      "Bolt": "Cada grupo tiene un núm. de fragmentos y su propio umbral. En los siguientes pasos, ajustarás el núm. de fragmentos y los umbrales.",
+      "Caesar": "",
+      "Delizia": "Cada grupo tiene un núm. de fragmentos y su propio umbral. En los siguientes pasos, ajustarás el núm. de fragmentos y los umbrales.",
+      "Eckhart": "Cada grupo tiene un núm. de fragmentos y su propio umbral. En los siguientes pasos, ajustarás el núm. de fragmentos y los umbrales."
+    },
     "reset__group_share_checked_successfully_template": "Grupo {0} - Frag. {1} verificado con éxito.",
     "reset__group_share_title_template": {
       "Bolt": "Grupo {0} - frag. {1}",
@@ -1670,7 +1745,12 @@
     },
     "reset__never_make_digital_copy": "Nunca guardes tu c. seg. de forma digital.",
     "reset__num_of_share_holders_template": "{0} personas o ubicaciones tendrán un fragmento cada una.",
-    "reset__num_of_shares_advanced_info_template": "Cada fragmento de recuperación es una lista de {0} palabras. Elige el umbral necesario para formar el Grupo {1}.",
+    "reset__num_of_shares_advanced_info_template": {
+      "Bolt": "Cada fragmento de recuperación es una lista de {0} palabras. Elige el umbral necesario para formar el Grupo {1}.",
+      "Caesar": "",
+      "Delizia": "Cada fragmento de recuperación es una lista de {0} palabras. Elige el umbral necesario para formar el Grupo {1}.",
+      "Eckhart": "Cada fragmento de recuperación es una lista de {0} palabras. Elige el umbral necesario para formar el Grupo {1}."
+    },
     "reset__num_of_shares_basic_info_template": {
       "Bolt": "Cada fragmento de recuperación es una lista de {0} palabras. Elige cuántos fragmento necesitarás para recuperar la billetera.",
       "Caesar": "",
@@ -1678,16 +1758,31 @@
       "Eckhart": ""
     },
     "reset__num_of_shares_how_many": "¿Cuántos fragmentos de la c. seg quieres crear?",
-    "reset__num_of_shares_long_info_template": "Cada fragmento de la c. seg. es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera.",
+    "reset__num_of_shares_long_info_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Cada fragmento de la c. seg. es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera.",
+      "Eckhart": "Cada fragmento de la c. seg. es una lista de {0} palabras.\nGuarda cada lista de palabras en un lugar seguro y separado o compártelas con personas de confianza. Reúnelas cuando sea necesario recuperar tu billetera."
+    },
     "reset__num_shares_for_group_template": "Nro.necesario de fragmentos para formar el grupo {0}.",
-    "reset__number_of_shares_info": "= total de listas de palabras únicas usadas para la c. seg.",
+    "reset__number_of_shares_info": {
+      "Bolt": "",
+      "Caesar": "= total de listas de palabras únicas usadas para la c. seg.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__one_share": {
       "Bolt": "1 fragmento",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__only_one_share_will_be_created": "Solo se creará un fragmento.",
+    "reset__only_one_share_will_be_created": {
+      "Bolt": "Solo se creará un fragmento.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__recovery_share_description": "Un fragmento de recuperación es la lista de palabras que anotaste al configurar tu Trezor.",
     "reset__recovery_share_number": "Tu c. seg. de la billetera consta de 1 a 16 fragmentos.",
     "reset__recovery_share_title_template": "Frag. recup. #{0}",
@@ -1697,15 +1792,15 @@
     "reset__select_correct_word": "Selecciona la palabra correcta para cada posición.",
     "reset__select_threshold": "Selecciona los frag. mínimos para recuperar la billetera.",
     "reset__select_word_from_share_template": {
-      "Bolt": "Seleccionar la palabra #{0} del\nFragmento #{1}",
-      "Caesar": "Seleccionar la palabra #{0} del\nFragmento #{1}",
-      "Delizia": "Seleccionar la palabra #{0} del\nFragmento #{1}",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "Seleccionar la palabra #{0} del Fragmento #{1}"
     },
     "reset__select_word_template": {
-      "Bolt": "Selecciona palabra {0}",
-      "Caesar": "Selecciona palabra {0}",
-      "Delizia": "Selecciona palabra {0}",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "Selecciona la palabra #{0} de la c. seg. de tu billetera."
     },
     "reset__select_word_x_of_y_template": "Palabra {0} de {1}:",
@@ -1715,10 +1810,15 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__share_checked_successfully_template": "Fragmento #{0} verificado con éxito.",
+    "reset__share_checked_successfully_template": {
+      "Bolt": "Fragmento #{0} verificado con éxito.",
+      "Caesar": "Fragmento #{0} verificado con éxito.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__share_completed_template": {
-      "Bolt": "Se ha completado el recurso #{0}",
-      "Caesar": "Se ha completado el fragmento #{0}",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Se ha completado el fragmento #{0}",
       "Eckhart": "Se ha completado el fragmento #{0}"
     },
@@ -1729,8 +1829,18 @@
       "Eckhart": "Escribe la primera palabra de la c. seg."
     },
     "reset__share_words_title": "C. seg. estándar",
-    "reset__slip39_checklist_more_info_threshold": "El umbral fija el número mínimo de fragmentos necesarios para recuperar tu billetera.",
-    "reset__slip39_checklist_more_info_threshold_example_template": "Si fijas {0} de {1} fragmentos, necesitarás {2} fragmentos de la c. seg. para recuperar tu billetera.",
+    "reset__slip39_checklist_more_info_threshold": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "El umbral fija el número mínimo de fragmentos necesarios para recuperar tu billetera.",
+      "Eckhart": "El umbral fija el número mínimo de fragmentos necesarios para recuperar tu billetera."
+    },
+    "reset__slip39_checklist_more_info_threshold_example_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Si fijas {0} de {1} fragmentos, necesitarás {2} fragmentos de la c. seg. para recuperar tu billetera.",
+      "Eckhart": "Si fijas {0} de {1} fragmentos, necesitarás {2} fragmentos de la c. seg. para recuperar tu billetera."
+    },
     "reset__slip39_checklist_num_groups": "Número de grupos",
     "reset__slip39_checklist_num_groups_x_template": "Número de grupos: {0}",
     "reset__slip39_checklist_num_shares": {
@@ -1740,13 +1850,23 @@
       "Eckhart": "Número de fragmentos"
     },
     "reset__slip39_checklist_num_shares_x_template": {
-      "Bolt": "Número de fragmentos: {0}",
-      "Caesar": "Número de fragmentos: {0}",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Número de frag. : {0}",
       "Eckhart": "Número de fragmentos: {0}"
     },
-    "reset__slip39_checklist_set_num_groups": "Ajustar nro.grupos",
-    "reset__slip39_checklist_set_num_shares": "Definir núm. fragmentos",
+    "reset__slip39_checklist_set_num_groups": {
+      "Bolt": "Ajustar nro.grupos",
+      "Caesar": "",
+      "Delizia": "Ajustar nro.grupos",
+      "Eckhart": "Ajustar nro.grupos"
+    },
+    "reset__slip39_checklist_set_num_shares": {
+      "Bolt": "Definir núm. fragmentos",
+      "Caesar": "",
+      "Delizia": "Definir núm. fragmentos",
+      "Eckhart": "Definir núm. fragmentos"
+    },
     "reset__slip39_checklist_set_sizes": "Definir tamaños y umbrales",
     "reset__slip39_checklist_set_sizes_longer": "Definir tamaño y umbral de cada grupo",
     "reset__slip39_checklist_set_threshold": {
@@ -1755,10 +1875,25 @@
       "Delizia": "Ajustar umbral",
       "Eckhart": "Definir umbral de recuperación"
     },
-    "reset__slip39_checklist_threshold_x_template": "Umbral de recuperación: {0}",
+    "reset__slip39_checklist_threshold_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Umbral de recuperación: {0}",
+      "Eckhart": "Umbral de recuperación: {0}"
+    },
     "reset__slip39_checklist_title": "Lista c. seg.",
-    "reset__slip39_checklist_write_down": "Escribe y verifica todos los fragmentos",
-    "reset__slip39_checklist_write_down_recovery": "Escribe y verifica los fragmentos de respaldo",
+    "reset__slip39_checklist_write_down": {
+      "Bolt": "Escribe y verifica todos los fragmentos",
+      "Caesar": "Escribe y verifica todos los fragmentos",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_write_down_recovery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Escribe y verifica los fragmentos de respaldo",
+      "Eckhart": "Escribe y verifica los fragmentos de respaldo"
+    },
     "reset__the_threshold_sets_the_number_of_shares": {
       "Bolt": "El umbral define el núm. de fragmentos. ",
       "Caesar": "",
@@ -1766,16 +1901,51 @@
       "Eckhart": ""
     },
     "reset__the_word_is_repeated": "La palabra se repite",
-    "reset__threshold_info": "= mínimo de listas de palabras únicas para la recuperación.",
+    "reset__threshold_info": {
+      "Bolt": "",
+      "Caesar": "= mínimo de listas de palabras únicas para la recuperación.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__title_backup_is_done": "C. seg. completa",
     "reset__title_create_wallet": "Crear billetera",
-    "reset__title_group_threshold": "Umbral de grupo",
+    "reset__title_group_threshold": {
+      "Bolt": "",
+      "Caesar": "Umbral de grupo",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__title_number_of_groups": "Número de grupos",
-    "reset__title_number_of_shares": "Número de fragmentos",
-    "reset__title_set_group_threshold": "Ajustar umbral g.",
-    "reset__title_set_number_of_groups": "Ajustar nro.grupos",
-    "reset__title_set_number_of_shares": "Definir núm. fragmentos",
-    "reset__title_set_threshold": "Ajustar umbral",
+    "reset__title_number_of_shares": {
+      "Bolt": "",
+      "Caesar": "Número de fragmentos",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__title_set_group_threshold": {
+      "Bolt": "Ajustar umbral g.",
+      "Caesar": "",
+      "Delizia": "Ajustar umbral g.",
+      "Eckhart": "Ajustar umbral g."
+    },
+    "reset__title_set_number_of_groups": {
+      "Bolt": "Ajustar nro.grupos",
+      "Caesar": "",
+      "Delizia": "Ajustar nro.grupos",
+      "Eckhart": "Ajustar nro.grupos"
+    },
+    "reset__title_set_number_of_shares": {
+      "Bolt": "Definir núm. fragmentos",
+      "Caesar": "",
+      "Delizia": "Definir núm. fragmentos",
+      "Eckhart": "Definir núm. fragmentos"
+    },
+    "reset__title_set_threshold": {
+      "Bolt": "Ajustar umbral",
+      "Caesar": "",
+      "Delizia": "Ajustar umbral",
+      "Eckhart": ""
+    },
     "reset__title_shamir_backup": "Respaldo con múltiples fragmentos",
     "reset__to_form_group_template": {
       "Bolt": "para formar el Grupo {0}.",
@@ -1789,8 +1959,18 @@
       "Delizia": "trezor.io/tos",
       "Eckhart": "Más en trezor.io/tos"
     },
-    "reset__total_number_of_shares_in_group_template": "Fija el total de fragmentos del grupo {0}.",
-    "reset__use_your_backup": "Usa la copia de seguridad para recuperar tu billetera.",
+    "reset__total_number_of_shares_in_group_template": {
+      "Bolt": "Fija el total de fragmentos del grupo {0}.",
+      "Caesar": "",
+      "Delizia": "Fija el total de fragmentos del grupo {0}.",
+      "Eckhart": "Fija el total de fragmentos del grupo {0}."
+    },
+    "reset__use_your_backup": {
+      "Bolt": "Usa la copia de seguridad para recuperar tu billetera.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__words_may_repeat": "Las palabras pueden repetirse.",
     "reset__words_written_down_template": "Escribí las {0} palabras en orden.",
     "reset__write_down_words_template": {
@@ -1982,8 +2162,18 @@
     "send__you_are_contributing": "Estás aportando:",
     "setting__adjust": "Ajustar",
     "setting__apply": "Aplicar",
-    "share_words__words_in_order": " palabras en orden.",
-    "share_words__wrote_down_all": "Escribí todas las ",
+    "share_words__words_in_order": {
+      "Bolt": "",
+      "Caesar": " palabras en orden.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "share_words__wrote_down_all": {
+      "Bolt": "",
+      "Caesar": "Escribí todas las ",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "sign_message__bytes_template": "{0} bytes",
     "sign_message__confirm_address": "Dirección firma",
     "sign_message__confirm_message": "Confirmar mensaje",
@@ -2058,10 +2248,10 @@
     "stellar__final_confirm": "Confirmación final",
     "stellar__hash": "Hash",
     "stellar__high": {
-      "Bolt": "Alto:",
-      "Caesar": "Alto:",
-      "Delizia": "Alto:",
-      "Eckhart": "Alta:"
+      "Bolt": "Alto",
+      "Caesar": "Alto",
+      "Delizia": "Alto",
+      "Eckhart": "Alta"
     },
     "stellar__home_domain": "Dominio de origen",
     "stellar__inflation": "Inflación",
@@ -2070,7 +2260,7 @@
     "stellar__limit": "Límite",
     "stellar__low": "Bajo",
     "stellar__master_weight": "Peso principal",
-    "stellar__medium": "Medio:",
+    "stellar__medium": "Medio",
     "stellar__new_offer": "Nueva oferta",
     "stellar__new_passive_offer": "Nueva oferta pasiva",
     "stellar__no_memo_set": "¡No hay nota definida!",
@@ -2393,6 +2583,7 @@
     "words__chain": "Cadena",
     "words__comm_trouble": "Tu Trezor está teniendo problemas para comunicarse con tu dispositivo conectado.",
     "words__confirm": "Confirmar",
+    "words__confirm_all": "",
     "words__confirm_fee": "Confirmar comisión",
     "words__connect": "Conectar",
     "words__connected": "Conectado",
@@ -2409,11 +2600,21 @@
     "words__fee": "Comisión",
     "words__fee_limit": "Límite de comisión",
     "words__forget": "Olvidar",
-    "words__from": "del",
+    "words__from": {
+      "Bolt": "del",
+      "Caesar": "del",
+      "Delizia": "del",
+      "Eckhart": ""
+    },
     "words__good_to_know": "Bueno saber",
     "words__important": "Importante",
     "words__instructions": "Instrucciones",
-    "words__keep_it_safe": "¡Guárdala en un lugar seguro!",
+    "words__keep_it_safe": {
+      "Bolt": "",
+      "Caesar": "¡Guárdala en un lugar seguro!",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__know_what_your_doing": "¡Continúa solo si sabes lo que estás haciendo!",
     "words__led": "LED",
     "words__manage": "Gestionar",
@@ -2422,14 +2623,14 @@
     "words__no": "No",
     "words__not_recommended": "¡No es recomendable!",
     "words__note": "Nota",
-    "words__off": "APAGAR",
-    "words__on": "ENCENDER",
+    "words__off": "DESACTIVADO",
+    "words__on": "ACTIVADO",
     "words__operation_cancelled": "Operación cancelada",
     "words__outputs": "salidas",
     "words__pay_attention": "Presta atención",
     "words__please_check_again": "Vuelve a comprobarlo",
     "words__please_try_again": "Inténtalo de nuevo",
-    "words__power": "Encendido",
+    "words__power": "Energía",
     "words__provider": "Proveedor",
     "words__really_wanna": "¿Seguro que quieres",
     "words__receive": "Recibir",
@@ -2440,19 +2641,47 @@
     "words__send": "Enviar",
     "words__set": "Ajustar",
     "words__settings": "Configuración",
+    "words__show_next": "",
     "words__sign": "Firmar",
     "words__signer": "Firmante",
+    "words__staking_for": "",
+    "words__staking_from": "",
     "words__swap": "Intercambio",
     "words__title_check": "Verificar",
     "words__title_done": "Listo",
-    "words__title_group": "Grupo",
+    "words__title_group": {
+      "Bolt": "",
+      "Caesar": "Grupo",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_information": "Información",
-    "words__title_remember": "Recordar",
-    "words__title_share": "Fragmento",
-    "words__title_shares": "Fragmentos",
+    "words__title_remember": {
+      "Bolt": "",
+      "Caesar": "Recordar",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_share": {
+      "Bolt": "",
+      "Caesar": "Fragmento",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_shares": {
+      "Bolt": "",
+      "Caesar": "Fragmentos",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_success": "Éxito",
     "words__title_summary": "Resumen",
-    "words__title_threshold": "Umbral",
+    "words__title_threshold": {
+      "Bolt": "",
+      "Caesar": "Umbral",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__token": "Token",
     "words__transaction_fee": {
       "Bolt": "Comisión",
