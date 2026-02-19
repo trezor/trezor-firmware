@@ -92,6 +92,9 @@ where
 
     /// Enqueue channel allocation request.
     pub fn request_channel(&mut self, try_to_unlock: bool) {
+        if !matches!(self.channel_allocation, AllocationState::None) {
+            log::warn!("Abandoned previous channel allocation request.");
+        }
         self.channel_allocation = AllocationState::SendingRequest { try_to_unlock };
     }
 
