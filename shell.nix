@@ -138,7 +138,7 @@ stdenvNoCC.mkDerivation ({
     nrfutil
     nrfconnect
   ];
-  LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
+  LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib:${nixpkgs.stdenv.cc.cc.lib}/lib";
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
 
