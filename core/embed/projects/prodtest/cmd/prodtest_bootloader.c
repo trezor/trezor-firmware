@@ -80,7 +80,7 @@ static void prodtest_bootloader_version(cli_t *cli) {
 #endif
 }
 
-#ifndef TREZOR_MODEL_T2T1
+#if !defined(TREZOR_MODEL_T2T1) && !defined(TREZOR_MODEL_D003)
 
 #if USE_BOOT_UCB
 // Writes boot header and bootloader code to the BOOTUPDATE_AREA
@@ -153,7 +153,7 @@ PRODTEST_CLI_CMD(
   .args = ""
 );
 
-#ifndef TREZOR_MODEL_T2T1
+#if !defined(TREZOR_MODEL_T2T1) && !defined(TREZOR_MODEL_D003)
 PRODTEST_CLI_CMD(
   .name = "bootloader-update",
   .func = prodtest_bootloader_update,
