@@ -121,6 +121,28 @@ void gfx_rgb565_copy_rgb565(const gfx_bitblt_t* bb) {
   }
 }
 
+void gfx_rgb565_blend_mono1p(const gfx_bitblt_t* bb) {
+  uint16_t* dst_ptr = (uint16_t*)bb->dst_row + bb->dst_x;
+  uint8_t* src = (uint8_t*)bb->src_row;
+  uint16_t src_ofs = bb->src_stride * bb->src_y + bb->src_x;
+  uint16_t height = bb->height;
+
+  uint8_t alpha = bb->src_alpha;
+
+  while (height-- > 0) {
+    for (int x = 0; x < bb->width; x++) {
+      uint8_t mask = 1 << (7 - ((src_ofs + x) & 7));
+      uint8_t data = src[(src_ofs + x) / 8];
+      if (data & mask) {
+        dst_ptr[x] = gfx_color16_blend_a8(
+            bb->src_fg, gfx_color16_to_color(dst_ptr[x]), alpha);
+      }
+    }
+    dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
+    src_ofs += bb->src_stride;
+  }
+}
+
 void gfx_rgb565_blend_mono4(const gfx_bitblt_t* bb) {
 #if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
   if (!dma2d_rgb565_blend_mono4(bb))

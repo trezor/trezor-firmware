@@ -335,6 +335,7 @@ impl<'a> BitBltCopy<'a> {
         unsafe {
             let bitblt = self.bitblt.with_dst(dst);
             match self.src.format() {
+                BitmapFormat::MONO1P => ffi::gfx_rgb565_blend_mono1p(&bitblt),
                 BitmapFormat::MONO4 => ffi::gfx_rgb565_blend_mono4(&bitblt),
                 BitmapFormat::MONO8 => ffi::gfx_rgb565_blend_mono8(&bitblt),
                 _ => unimplemented!(),
