@@ -23,8 +23,6 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <stm32u5xx_hal_cryp.h>
-
 #include <sec/secure_aes.h>
 #include <sys/systick.h>
 
