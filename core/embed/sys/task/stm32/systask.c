@@ -857,7 +857,7 @@ __attribute__((naked, no_stack_protector)) void GTZC_IRQHandler(void) {
 
 __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
-#ifdef STM32U5
+#if defined STM32U5 || defined STM32U3
   if ((RCC->CIFR & RCC_CIFR_CSSF) != 0) {
     RCC->CICR = RCC_CICR_CSSC;
 #else
@@ -868,6 +868,7 @@ __attribute__((no_stack_protector, used)) static void nmi_handler(void) {
     systask_exit_fault(true, __get_MSP());
   }
 #ifdef STM32U5
+  // todo U3 parity?
   else if (FLASH->ECCR & FLASH_ECCR_ECCD_Msk) {
     // FLASH ECC double error
     uint32_t addr = FLASH->ECCR & FLASH_ECCR_ADDR_ECC_Msk;

@@ -165,7 +165,7 @@ __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
 
 #endif  // KERNEL_MODE
 
-#ifdef STM32U5
+#if defined STM32U5 || defined STM32U3
 const char* system_fault_message(const system_fault_t* fault) {
   const char* fault_type = "FAULT";
   switch (fault->irqn) {

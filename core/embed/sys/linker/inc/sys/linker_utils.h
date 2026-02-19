@@ -94,6 +94,17 @@ typedef struct {
             },                                    \
     };                                            \
   })
+#elif defined(STM32U385xx)
+#define MEMREGION_ALL_STARTUP_RAM                \
+  ({                                             \
+    (memregion_t){                               \
+        .block =                                 \
+            {                                    \
+                MEMBLOCK(SRAM1_BASE, SIZE_192K), \
+                MEMBLOCK(SRAM2_BASE, SIZE_64K),  \
+            },                                   \
+    };                                           \
+  })
 #else
 #error "Unknown STM32 family"
 #endif

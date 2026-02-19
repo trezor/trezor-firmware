@@ -102,7 +102,7 @@ static void tz_configure_sau(void) {
 static void tz_enable_gtzc(void) {
   // Enable GTZC (Global Trust-Zone Controller) peripheral clock
   __HAL_RCC_GTZC1_CLK_ENABLE();
-  __HAL_RCC_GTZC2_CLK_ENABLE();
+  //__HAL_RCC_GTZC2_CLK_ENABLE();
 }
 
 static void tz_enable_illegal_access_interrupt(void) {
@@ -155,35 +155,28 @@ static void tz_configure_sram(void) {
   mpcbb.AttributeConfig.MPCBB_LockConfig_array[0] = 0x00000000U;
 
   // Set all blocks secured & privileged
-  for (int index = 0; index < GTZC_MPCBB_NB_VCTR_REG_MAX; index++) {
+  for (int index = 0; index < GTZC_MCPBB_NB_VCTR_REG_MAX; index++) {
     mpcbb.AttributeConfig.MPCBB_SecConfig_array[index] = 0xFFFFFFFFU;
     mpcbb.AttributeConfig.MPCBB_PrivConfig_array[index] = 0xFFFFFFFFU;
   }
 
   HAL_GTZC_MPCBB_ConfigMem(SRAM1_BASE, &mpcbb);
   HAL_GTZC_MPCBB_ConfigMem(SRAM2_BASE, &mpcbb);
-  HAL_GTZC_MPCBB_ConfigMem(SRAM3_BASE, &mpcbb);
-  HAL_GTZC_MPCBB_ConfigMem(SRAM4_BASE, &mpcbb);
-#if defined STM32U5A9xx || defined STM32U5G9xx
-  HAL_GTZC_MPCBB_ConfigMem(SRAM5_BASE, &mpcbb);
-#endif
-#if defined STM32U5G9xx
-  HAL_GTZC_MPCBB_ConfigMem(SRAM6_BASE, &mpcbb);
-#endif
+
 }
 
-static void tz_configure_fsmc(void) {
-  __HAL_RCC_FMC_CLK_ENABLE();
-  MPCWM_ConfigTypeDef mpcwm = {0};
-
-  mpcwm.AreaId = GTZC_TZSC_MPCWM_ID1;
-  mpcwm.AreaStatus = ENABLE;
-  mpcwm.Attribute = GTZC_TZSC_MPCWM_REGION_SEC | GTZC_TZSC_MPCWM_REGION_PRIV;
-  mpcwm.Length = 128 * 1024;
-  mpcwm.Offset = 0;
-  mpcwm.Lock = GTZC_TZSC_MPCWM_LOCK_OFF;
-  HAL_GTZC_TZSC_MPCWM_ConfigMemAttributes(FMC_BANK1, &mpcwm);
-}
+// static void tz_configure_fsmc(void) {
+//   __HAL_RCC_FMC_CLK_ENABLE();
+//   MPCWM_ConfigTypeDef mpcwm = {0};
+//
+//   mpcwm.AreaId = GTZC_TZSC_MPCWM_ID1;
+//   mpcwm.AreaStatus = ENABLE;
+//   mpcwm.Attribute = GTZC_TZSC_MPCWM_REGION_SEC | GTZC_TZSC_MPCWM_REGION_PRIV;
+//   mpcwm.Length = 128 * 1024;
+//   mpcwm.Offset = 0;
+//   mpcwm.Lock = GTZC_TZSC_MPCWM_LOCK_OFF;
+//   HAL_GTZC_TZSC_MPCWM_ConfigMemAttributes(FMC_BANK1, &mpcwm);
+// }
 
 // Configure FLASH security
 static void tz_configure_flash(void) {
@@ -214,7 +207,7 @@ void tz_init(void) {
   tz_enable_gtzc();
   tz_configure_sram();
   tz_configure_flash();
-  tz_configure_fsmc();
+  //tz_configure_fsmc();
 
   // Make all peripherals secure & privileged
   HAL_GTZC_TZSC_ConfigPeriphAttributes(

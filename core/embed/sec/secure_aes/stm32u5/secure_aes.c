@@ -220,6 +220,7 @@ secbool secure_aes_ecb_decrypt_hw(const uint8_t* input, size_t size,
 }
 
 secbool secure_aes_init(void) {
+#ifdef __HAL_RCC_SHSI_ENABLE
   // Enable SHSI clock
   __HAL_RCC_SHSI_ENABLE();
 
@@ -232,6 +233,8 @@ secbool secure_aes_init(void) {
     }
   }
 
+#endif
+
   // Enable SAES peripheral clock
   __HAL_RCC_SAES_FORCE_RESET();
   __HAL_RCC_SAES_RELEASE_RESET();
@@ -239,9 +242,11 @@ secbool secure_aes_init(void) {
 
   return sectrue;
 
+#ifdef __HAL_RCC_SHSI_ENABLE
 cleanup:
   secure_aes_deinit();
   return secfalse;
+#endif
 }
 
 void secure_aes_deinit(void) {
@@ -249,6 +254,7 @@ void secure_aes_deinit(void) {
   __HAL_RCC_SAES_FORCE_RESET();
   __HAL_RCC_SAES_RELEASE_RESET();
 
+#ifdef __HAL_RCC_SHSI_DISABLE
   // Disable the Secure Internal High Speed oscillator (SHSI)
   __HAL_RCC_SHSI_DISABLE();
 
@@ -260,6 +266,8 @@ void secure_aes_deinit(void) {
       return;
     }
   }
+
+#endif
 }
 
 #endif  // SECURE_MODE

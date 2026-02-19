@@ -23,6 +23,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/hdp.h>
 #include <sec/rsod_special.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
@@ -165,11 +166,6 @@ secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
   mpu_restore(mpu_mode);
 
   return sectrue;
-}
-
-static void secret_disable_access(void) {
-  FLASH->SECHDPCR |= FLASH_SECHDPCR_HDP1_ACCDIS_Msk;
-  FLASH->SECHDPCR |= FLASH_SECHDPCR_HDP2_ACCDIS_Msk;
 }
 
 // Locks the BHK register. Once locked, the BHK register can't be accessed by
@@ -549,7 +545,7 @@ secbool secret_lock(void) {
       secret_write(lock_data, SECRET_LOCK_SLOT_OFFSET, sizeof(lock_data));
 
   if (sectrue == result) {
-    secret_disable_access();
+    hdp_close();
   }
 
   return result;
@@ -639,7 +635,7 @@ void secret_prepare_fw(secbool allow_run_with_secret,
     secret_keys_cache_public();
   }
   // Disable access unconditionally.
-  secret_disable_access();
+  hdp_close();
 }
 
 void secret_init(void) { secret_ensure_initialized(); }
