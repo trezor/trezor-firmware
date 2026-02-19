@@ -851,7 +851,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or f"{TR.words__amount}:"  # def_arg
+    description = description or TR.words__amount  # def_arg
     return confirm_value(
         title,
         amount,
@@ -920,9 +920,7 @@ def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
 ) -> Awaitable[None]:
-    from ..properties import with_colon
-
-    items = with_colon(
+    items = list(
         (
             prop[0],
             (utils.hexlify_if_bytes(prop[1]) if prop[1] else None),
@@ -987,32 +985,30 @@ def _confirm_summary(
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
-    from ..properties import with_colon
-
     title = title or TR.words__title_summary  # def_arg
 
-    account_items_colon = with_colon(account_items)
-    extra_items_colon = with_colon(extra_items)
+    account_items_list = list(account_items) if account_items is not None else None
+    extra_items_list = list(extra_items) if extra_items is not None else None
     total_layout = trezorui_api.confirm_summary(
         amount=amount,
-        amount_label=with_colon(amount_label),
+        amount_label=amount_label,
         fee=fee,
-        fee_label=with_colon(fee_label),
+        fee_label=fee_label,
         title=title,
-        account_items=account_items_colon,
+        account_items=account_items_list,
         account_title=account_title,
-        extra_items=extra_items_colon,
+        extra_items=extra_items_list,
     )
 
     # TODO: use `_info` params directly in this^ layout instead of using `with_info`
-    info_props_colon: list[StrPropertyType] = []
-    if account_items_colon:
-        info_props_colon.extend(account_items_colon)
-    if extra_items_colon:
-        info_props_colon.extend(extra_items_colon)
+    info_props: list[StrPropertyType] = []
+    if account_items_list:
+        info_props.extend(account_items_list)
+    if extra_items_list:
+        info_props.extend(extra_items_list)
     info_layout = trezorui_api.show_info_with_cancel(
         title=extra_title if extra_title else TR.words__title_information,
-        items=info_props_colon,
+        items=info_props,
     )
     return with_info(total_layout, info_layout, br_name, br_code)
 
@@ -1073,12 +1069,11 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        from ..properties import with_colon
 
         if is_send:
-            description = f"{TR.words__recipient}:"
+            description = TR.words__recipient
         else:
-            description = f"{TR.ethereum__interaction_contract}:" if recipient else None
+            description = TR.ethereum__interaction_contract if recipient else None
 
         address_layout = trezorui_api.confirm_value(
             title=TR.words__address,
@@ -1090,7 +1085,7 @@ if not utils.BITCOIN_ONLY:
             chunkify=(chunkify if recipient else False),
         )
 
-        items = with_colon(
+        items: list[StrPropertyType] = list(
             (
                 (TR.words__account, account, None),
                 (TR.address_details__derivation_path, account_path, None),
@@ -1101,13 +1096,13 @@ if not utils.BITCOIN_ONLY:
             items=items,
         )
 
-        extra_items = with_colon(fee_info_items)
+        extra_items = list(fee_info_items)
 
         total_layout = trezorui_api.confirm_summary(
             amount=total_amount,
-            amount_label=f"{TR.words__amount}:",
+            amount_label=TR.words__amount,
             fee=maximum_fee,
-            fee_label=f"{TR.send__maximum_fee}:",
+            fee_label=TR.send__maximum_fee,
             title=TR.words__title_summary,
             extra_items=extra_items,  # used so that info button is shown
             extra_title=TR.confirm_total__title_fee,
@@ -1355,7 +1350,6 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        from ..properties import with_colon
 
         (amount_label, amount, _is_data) = amount_item or ("", "", None)
         (fee_label, fee, _is_data) = fee_item
@@ -1363,7 +1357,7 @@ if not utils.BITCOIN_ONLY:
         confirm_layout = trezorui_api.confirm_value(
             title=title,
             description=description,
-            extra=f"{TR.words__provider}:" if vote_account else None,
+            extra=TR.words__provider if vote_account else None,
             value=vote_account,
             verb=TR.buttons__continue,
             info=True,
@@ -1385,7 +1379,7 @@ if not utils.BITCOIN_ONLY:
 
         info_layout = trezorui_api.show_info_with_cancel(
             title=title,
-            items=with_colon(items),
+            items=list(items),
             horizontal=True,
         )
 
@@ -1675,7 +1669,7 @@ async def confirm_modify_output(
                 value=address,
                 verb=TR.buttons__continue,
                 verb_cancel=None,
-                description=TR.words__address + ":",
+                description=TR.words__address,
             ),
             "modify_output" if send_button_request else None,
             ButtonRequestType.ConfirmOutput,
@@ -1706,8 +1700,6 @@ def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> Awaitable[None]:
-    from ..properties import with_colon
-
     fee_layout = trezorui_api.confirm_modify_fee(
         title=title,
         sign=sign,
@@ -1720,7 +1712,7 @@ def confirm_modify_fee(
         items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, None))
     info_layout = trezorui_api.show_info_with_cancel(
         title=TR.confirm_total__title_fee,
-        items=with_colon(items),
+        items=list(items),
     )
     return with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)
 
@@ -1760,7 +1752,6 @@ async def confirm_signverify(
     account: str | None = None,
     chunkify: bool = False,
 ) -> None:
-    from ..properties import with_colon
 
     if verify:
         address_title = TR.sign_message__verify_address
@@ -1793,7 +1784,7 @@ async def confirm_signverify(
 
     info_layout = trezorui_api.show_info_with_cancel(
         title=TR.words__title_information,
-        items=with_colon(items),
+        items=list(items),
         horizontal=True,
     )
 
