@@ -46,7 +46,7 @@ static HAL_StatusTypeDef clk_init(uint32_t source) {
   bool pwrclkchanged = false;
 
   // Enable Power Clock
-  if (__HAL_RCC_PWR_IS_CLK_DISABLED()) {
+  if (!__HAL_RCC_PWR_IS_CLK_ENABLED()) {
     __HAL_RCC_PWR_CLK_ENABLE();
     pwrclkchanged = true;
   }
