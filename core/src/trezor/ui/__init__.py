@@ -157,7 +157,7 @@ class Layout(Generic[T]):
         self.timers: dict[int, loop.Task] = {}
         self.result_box: loop.mailbox[Any] = loop.mailbox()
         self.button_request_ack_pending: bool = False
-        self.button_request_box: loop.mailbox[ButtonRequestMsg] = loop.mailbox()
+        self.button_request_box: loop.mailbox[ButtonRequest | None] = loop.mailbox()
         self.button_request_task: loop.Task | None = None
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
@@ -275,9 +275,20 @@ class Layout(Generic[T]):
         # else we are (a) still running or (b) already finished
         is_done = None
         try:
-            if self.context is not None and self.result_box.is_empty():
+            if (ctx := self.context) is not None and self.result_box.is_empty():
                 is_done = loop.mailbox()  # (see below)
-                self.button_request_task = self._handle_button_requests(is_done)
+
+                def _button_request_task() -> Generator[Any, Any, None]:
+                    try:
+                        yield from button_request_handler(
+                            context=ctx,
+                            button_requests=self.button_request_box,
+                            ack_callback=self._button_request_acked,
+                        )
+                    finally:
+                        is_done.put(None)
+
+                self.button_request_task = _button_request_task()
                 self._start_task(self.button_request_task)
             elif __debug__ and not self.button_request_box.is_empty():
                 log.debug(
@@ -292,7 +303,7 @@ class Layout(Generic[T]):
             if is_done is not None:
                 # Make sure ButtonRequest is ACKed, before the result is returned.
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
-                self.button_request_box.put(None, replace=True)
+                self.put_button_request(None)
                 task = loop.spawn(_waiting_screen())
                 try:
                     await is_done
@@ -365,9 +376,15 @@ class Layout(Generic[T]):
                 "don't forget to yield your input flow from time to time ^_^"
             )
 
-        # in production, we don't want this to fail, hence replace=True
-        self.button_request_box.put(res, replace=True)
+        self.put_button_request(res)
         return True
+
+    def put_button_request(self, msg: ButtonRequestMsg | None) -> None:
+        br = msg and ButtonRequest(
+            code=msg[0], name=msg[1], pages=self.layout.page_count()
+        )
+        # in production, we don't want this to fail, hence replace=True
+        self.button_request_box.put(br, replace=True)
 
     def _paint(self) -> None:
         """Paint the layout and ensure that homescreen cache is properly invalidated."""
@@ -473,41 +490,12 @@ class Layout(Generic[T]):
             finally:
                 touch.close()
 
-    async def _handle_button_requests(self, is_done: loop.mailbox[None] | None) -> None:
-        try:
-            if self.context is None:
-                return
-            while True:
-                # The following task will raise `UnexpectedMessageException` on any message.
-                unexpected_read = self.context.read(())
-                result = await loop.race(unexpected_read, self.button_request_box)
-                if result is None:
-                    return  # exit the loop when the layout is done.
-                assert isinstance(result, tuple)
-                br_code, br_name = result
-
-                if __debug__:
-                    log.info(__name__, "ButtonRequest sent: %s", br_name)
-                await self.context.call(
-                    ButtonRequest(
-                        code=br_code, pages=self.layout.page_count(), name=br_name
-                    ),
-                    ButtonAck,
-                )
-                if __debug__:
-                    log.info(__name__, "ButtonRequest acked: %s", br_name)
-
-                if (
-                    self.button_request_ack_pending
-                    and self.state is LayoutState.TRANSITIONING
-                ):
-                    self.button_request_ack_pending = False
-                    self.state = LayoutState.ATTACHED
-                    if __debug__:
-                        self.notify_debuglink(self)
-        finally:
-            if is_done is not None:
-                is_done.put(None)
+    def _button_request_acked(self) -> None:
+        if self.button_request_ack_pending and self.state is LayoutState.TRANSITIONING:
+            self.button_request_ack_pending = False
+            self.state = LayoutState.ATTACHED
+            if __debug__:
+                self.notify_debuglink(self)
 
     if utils.USE_BLE:
 
@@ -579,6 +567,26 @@ class Layout(Generic[T]):
 
     def __del__(self) -> None:
         self.layout.__del__()
+
+
+async def button_request_handler(
+    context: Context,
+    button_requests: loop.mailbox[ButtonRequest | None],
+    ack_callback: Callable[[], None],
+) -> None:
+    while True:
+        # The following task will raise `UnexpectedMessageException` on any message.
+        unexpected_read = context.read(None)
+        br = await loop.race(unexpected_read, button_requests)
+        if br is None:
+            return  # exit the loop when the layout is done.
+
+        if __debug__:
+            log.info(__name__, "ButtonRequest sent: %s", br.name)
+        await context.call(br, ButtonAck)
+        if __debug__:
+            log.info(__name__, "ButtonRequest acked: %s", br.name)
+        ack_callback()
 
 
 class ProgressLayout:

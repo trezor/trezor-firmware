@@ -5,7 +5,7 @@ from trezor import protobuf
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from trezorio import WireInterface
-    from typing import Awaitable, Container, TypeVar, overload
+    from typing import Awaitable, Container, Literal, NoReturn, TypeVar, overload
 
     from storage.cache_common import DataCache
 
@@ -52,6 +52,10 @@ class Context:
 
     if TYPE_CHECKING:
 
+        # Will always raise `UnexpectedMessageException` after receiving a message.
+        @overload
+        async def read(self, expected_types: Literal[None]) -> NoReturn: ...
+
         @overload
         async def read(
             self, expected_types: Container[int]
@@ -64,7 +68,7 @@ class Context:
 
     async def read(
         self,
-        expected_types: Container[int],
+        expected_types: Container[int] | None,
         expected_type: type[protobuf.MessageType] | None = None,
     ) -> protobuf.MessageType:
         """Read a message from the wire.

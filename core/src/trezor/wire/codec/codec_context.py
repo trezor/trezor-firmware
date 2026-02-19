@@ -43,7 +43,7 @@ class CodecContext(Context):
 
     async def read(
         self,
-        expected_types: Container[int],
+        expected_types: Container[int] | None,
         expected_type: type[protobuf.MessageType] | None = None,
     ) -> protobuf.MessageType:
         if __debug__:
@@ -59,7 +59,7 @@ class CodecContext(Context):
 
         # If we got a message with unexpected type, raise the message via
         # `UnexpectedMessageError` and let the session handler deal with it.
-        if msg.type not in expected_types:
+        if not expected_types or msg.type not in expected_types:
             raise UnexpectedMessageException(msg)
 
         if expected_type is None:

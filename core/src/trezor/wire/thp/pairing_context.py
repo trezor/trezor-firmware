@@ -91,7 +91,7 @@ class PairingContext(Context):
 
     async def read(
         self,
-        expected_types: Container[int],
+        expected_types: Container[int] | None,
         expected_type: type[protobuf.MessageType] | None = None,
     ) -> protobuf.MessageType:
         if __debug__:
@@ -107,7 +107,7 @@ class PairingContext(Context):
             )
 
         _, message = await self.channel_ctx.decrypt_message()
-        if message.type not in expected_types:
+        if not expected_types or message.type not in expected_types:
             from trezor.messages import Cancel
 
             if message.type == Cancel.MESSAGE_WIRE_TYPE:
