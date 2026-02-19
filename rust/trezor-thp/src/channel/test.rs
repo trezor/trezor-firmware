@@ -763,11 +763,7 @@ fn damage_nth_fix_crc(
         if pi < wire.len() {
             // only way to damage continuations which are 1XXXXXXX (X = any)
             wire[pi][byte_index] ^= 0b1000_0000;
-            if dir == HostToDevice {
-                recompute_crc(wire);
-            } else {
-                recompute_crc(wire);
-            }
+            recompute_crc(wire);
             log::trace!("damaged+crc {}", hex::encode(&wire[pi]));
             index = None;
         } else {
