@@ -77,7 +77,7 @@ class GenericSessionContext(Context):
 
     async def read(
         self,
-        expected_types: Container[int],
+        expected_types: Container[int] | None,
         expected_type: type[protobuf.MessageType] | None = None,
     ) -> protobuf.MessageType:
         if __debug__:
@@ -93,7 +93,7 @@ class GenericSessionContext(Context):
             )
 
         message = await self._read_next_message()
-        if message.type not in expected_types:
+        if not expected_types or message.type not in expected_types:
             if __debug__:
                 log.debug(
                     __name__,

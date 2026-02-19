@@ -65,7 +65,7 @@ async def interact(
     layout.start()
     if br_name is not None:
         # store the first button request to be sent
-        layout.button_request_box.put((br_code, br_name))
+        layout.put_button_request((br_code, br_name))
     # wait for the layout result
     result = await layout.get_result()
 
