@@ -7,6 +7,9 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     defines += [
         ("STM32_HAL_H", "<stm32u5xx.h>"),
         ("FLASH_BLOCK_WORDS", "4"),
+        ("USE_FLASH_BURST", "1"),
+        ("FLASH_BURST_WORDS", "32"),
+        ("FLASH_BURST_SIZE", "128"),
         ("USE_TRUSTZONE", "1"),
     ]
 

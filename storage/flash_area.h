@@ -67,8 +67,6 @@ secbool __wur flash_area_write_byte(const flash_area_t *area, uint32_t offset,
 secbool __wur flash_area_write_word(const flash_area_t *area, uint32_t offset,
                                     uint32_t data);
 #endif
-secbool __wur flash_area_write_quadword(const flash_area_t *area,
-                                        uint32_t offset, const uint32_t *data);
 
 secbool __wur flash_area_write_burst(const flash_area_t *area, uint32_t offset,
                                      const uint32_t *data);
