@@ -288,19 +288,19 @@ typedef struct _USBD_HandleTypeDef
 /* In HS mode and when the DMA is used, all variables and data structures dealing
    with the DMA during the transaction process should be 4-bytes aligned */
 
-#if defined   (__GNUC__)        /* GNU Compiler */
-  #define __ALIGN_END    __attribute__ ((aligned (4)))
-  #define __ALIGN_BEGIN
-#else
-  #define __ALIGN_END
-  #if defined   (__CC_ARM)      /* ARM Compiler */
-    #define __ALIGN_BEGIN    __align(4)
-  #elif defined (__ICCARM__)    /* IAR Compiler */
-    #define __ALIGN_BEGIN
-  #elif defined  (__TASKING__)  /* TASKING Compiler */
-    #define __ALIGN_BEGIN    __align(4)
-  #endif /* __CC_ARM */
-#endif /* __GNUC__ */
+// #if defined   (__GNUC__)        /* GNU Compiler */
+//   #define __ALIGN_END    __attribute__ ((aligned (4)))
+//   #define __ALIGN_BEGIN
+// #else
+//   #define __ALIGN_END
+//   #if defined   (__CC_ARM)      /* ARM Compiler */
+//     #define __ALIGN_BEGIN    __align(4)
+//   #elif defined (__ICCARM__)    /* IAR Compiler */
+//     #define __ALIGN_BEGIN
+//   #elif defined  (__TASKING__)  /* TASKING Compiler */
+//     #define __ALIGN_BEGIN    __align(4)
+//   #endif /* __CC_ARM */
+// #endif /* __GNUC__ */
 
 
 /**

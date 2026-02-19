@@ -51,7 +51,7 @@ secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
 
 secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
                         uint8_t datalen) {
-  if (datalen % 16 != 0) {
+  if (datalen % (FLASH_BLOCK_WORDS * sizeof(uint32_t)) != 0) {
     return secfalse;
   }
   if (block >= FLASH_OTP_NUM_BLOCKS ||
@@ -62,11 +62,20 @@ secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
 
   ensure(flash_unlock_write(), NULL);
-  for (uint8_t i = 0; i < datalen; i += 16) {
+  for (uint8_t i = 0; i < datalen; i += FLASH_BLOCK_SIZE) {
     uint32_t address =
         FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE + offset + i;
-    ensure(sectrue * (HAL_OK == HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD_NS,
-                                                  address, (uint32_t)&data[i])),
+
+#if FLASH_BLOCK_WORDS == 2
+    uint32_t type_programm = FLASH_TYPEPROGRAM_DOUBLEWORD_NS;
+#elif FLASH_BLOCK_WORDS == 4
+    uint32_t type_programm = FLASH_TYPEPROGRAM_QUADWORD_NS;
+#else
+    return secfalse;
+#endif
+
+    ensure(sectrue * (HAL_OK == HAL_FLASH_Program(type_programm, address,
+                                                  (uint32_t)&data[i])),
            NULL);
   }
   ensure(flash_lock_write(), NULL);

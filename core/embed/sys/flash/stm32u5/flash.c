@@ -28,7 +28,16 @@
 #define FLASH_QUADWORD_WORDS (4)
 #define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
 
-#ifdef STM32U585xx
+#define FLASH_DOUBLEWORD_WORDS (2)
+#define FLASH_DOUBLEWORD_SIZE (FLASH_DOUBLEWORD_WORDS * sizeof(uint32_t))
+
+#define FLASH_QUADWORD_WORDS (4)
+#define FLASH_QUADWORD_SIZE (FLASH_QUADWORD_WORDS * sizeof(uint32_t))
+
+#ifdef STM32U385xx
+#define FLASH_BANK_PAGES 128
+#define FLASH_SECTOR_COUNT (FLASH_BANK_PAGES * 2)
+#elif defined(STM32U585xx)
 #define FLASH_BANK_PAGES 128
 #define FLASH_SECTOR_COUNT (FLASH_BANK_PAGES * 2)
 #else
@@ -37,7 +46,7 @@
 #endif
 
 #define FLASH_STATUS_ALL_FLAGS \
-  (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
+  (FLASH_SR_PGSERR | FLASH_SR_PGAERR | FLASH_SR_WRPERR | FLASH_SR_EOP)
 
 #ifdef SECMON
 extern uint32_t _codelen;
@@ -116,9 +125,9 @@ uint16_t flash_sector_find(uint16_t first_sector, uint32_t offset) {
 
 secbool flash_unlock_write(void) {
   HAL_FLASH_Unlock();
-  FLASH->NSSR |= FLASH_STATUS_ALL_FLAGS;  // clear all status flags
+  FLASH->SR |= FLASH_STATUS_ALL_FLAGS;  // clear all status flags
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
-  FLASH->SECSR |= FLASH_STATUS_ALL_FLAGS;  // clear all status flags
+  FLASH->SSR |= FLASH_STATUS_ALL_FLAGS;  // clear all status flags
 #endif
   return sectrue;
 }
@@ -171,6 +180,7 @@ secbool flash_sector_erase(uint16_t sector) {
   return sectrue;
 }
 
+#ifdef FLASH_TYPEPROGRAM_QUADWORD
 secbool flash_write_quadword(uint16_t sector, uint32_t offset,
                              const uint32_t *data) {
   uint32_t address =
@@ -211,6 +221,50 @@ secbool flash_write_quadword(uint16_t sector, uint32_t offset,
   }
   return sectrue;
 }
+#endif
+
+#ifdef FLASH_TYPEPROGRAM_DOUBLEWORD
+secbool flash_write_doubleword(uint16_t sector, uint32_t offset,
+                               const uint32_t *data) {
+  uint32_t address =
+      (uint32_t)flash_get_address(sector, offset, FLASH_DOUBLEWORD_SIZE);
+  if (address == 0) {
+    return secfalse;
+  }
+  if (offset % FLASH_DOUBLEWORD_SIZE) {  // we write only at 8-byte boundary
+    return secfalse;
+  }
+
+  for (int i = 0; i < FLASH_DOUBLEWORD_WORDS; i++) {
+    if (data[i] != (data[i] & *((const uint32_t *)address + i))) {
+      return secfalse;
+    }
+  }
+
+  secbool all_match = sectrue;
+  for (int i = 0; i < FLASH_DOUBLEWORD_WORDS; i++) {
+    if (data[i] != *((const uint32_t *)address + i)) {
+      all_match = secfalse;
+      break;
+    }
+  }
+  if (all_match == sectrue) {
+    return sectrue;
+  }
+
+  if (HAL_OK != HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, address,
+                                  (uint32_t)data)) {
+    return secfalse;
+  }
+
+  for (int i = 0; i < FLASH_DOUBLEWORD_WORDS; i++) {
+    if (data[i] != *((const uint32_t *)address + i)) {
+      return secfalse;
+    }
+  }
+  return sectrue;
+}
+#endif
 
 secbool flash_write_burst(uint16_t sector, uint32_t offset,
                           const uint32_t *data) {
@@ -255,7 +309,7 @@ secbool flash_write_burst(uint16_t sector, uint32_t offset,
 
 secbool flash_write_block(uint16_t sector, uint32_t offset,
                           const flash_block_t block) {
-  return flash_write_quadword(sector, offset, block);
+  return flash_write_doubleword(sector, offset, block);
 }
 
 #endif  // KERNEL_MODE

@@ -162,7 +162,7 @@ static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
   MEMREGION_DEL_SECTION(&region, _bootargs_ram);
   memregion_fill(&region, 0);
 
-#if defined STM32U5
+#if defined STM32U5 || defined STM32U3
   NVIC_SystemReset();
 #elif defined STM32F4
   boot_command_t command = arg1;
