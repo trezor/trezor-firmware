@@ -88,11 +88,7 @@ confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
   char ver_str[VERSION_STRING_LEN];
   get_image_fingerprint(hdr, fingerprint);
   format_ver(hdr->version, ver_str, sizeof(ver_str));
-  return screen_install_confirm(vhdr->vstr, vhdr->vstr_len, ver_str,
-                                fingerprint, should_keep_seed == sectrue,
-
-                                is_newvendor == sectrue,
-                                is_newinstall == sectrue, version_cmp);
+  return CONFIRM;
 }
 
 void ui_screen_install_start(bool wireless) {
