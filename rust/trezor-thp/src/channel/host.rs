@@ -481,7 +481,9 @@ where
         if res.got_message() {
             let handled = self.incoming_internal();
             if let Err(e) = handled {
-                if e != Error::InvalidChecksum {
+                if e == Error::InvalidChecksum {
+                    return PacketInResult::ignore(e);
+                } else {
                     self.state = HandshakeState::Failed;
                     return PacketInResult::fail(e);
                 }
