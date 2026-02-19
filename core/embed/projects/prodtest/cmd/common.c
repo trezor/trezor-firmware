@@ -672,8 +672,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 #define BINARY_MAXSIZE BOOTLOADER_MAXSIZE
 #endif
 
-__attribute__((section(".buf"),
-               aligned(4))) static uint8_t binary_buffer[BINARY_MAXSIZE];
+__attribute__((section(".buf"), aligned(4))) static uint8_t binary_buffer[2048];
 static size_t binary_len = 0;
 static bool binary_update_in_progress = false;
 
