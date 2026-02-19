@@ -44,6 +44,16 @@ enum AllocationState {
     },
 }
 
+#[derive(PartialEq, Eq)]
+enum PingState {
+    /// Ping not requested, pong not expected.
+    None,
+    /// Application requested ping to be sent.
+    SendingPing,
+    /// Ping was sent, awaiting pong.
+    AwaitingPong(Nonce),
+}
+
 /// Handles broadcast channel messages, notably channel allocation requests.
 /// Because host often only needs a single channel, you can throw away the Mux
 /// after allocating one, if you don't need the keep-alive functionality.
@@ -51,7 +61,7 @@ pub struct Mux<C, B> {
     cred_store: C,
     internal_buffer: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
     channel_allocation: AllocationState,
-    ping: Option<(bool, Nonce)>,
+    ping: PingState,
     _phantom: PhantomData<B>,
 }
 
@@ -67,17 +77,17 @@ where
             cred_store,
             internal_buffer,
             channel_allocation: AllocationState::None,
-            ping: None,
+            ping: PingState::None,
             _phantom: PhantomData,
         }
     }
 
     /// Enqueue a keep-alive message.
     pub fn ping(&mut self) {
-        if self.ping.is_some() {
+        if !matches!(self.ping, PingState::None) {
             log::warn!("Dropping previous ping attempt.");
         }
-        self.ping = Some((false, Nonce::random::<B>()));
+        self.ping = PingState::SendingPing;
     }
 
     /// Enqueue channel allocation request.
@@ -122,11 +132,11 @@ where
             Header::Pong => {
                 let (_header, payload) = Reassembler::<Host>::single_inplace(packet)?;
                 let (nonce, _rest) = Nonce::parse(payload)?;
-                if Some((true, nonce)) != self.ping {
+                if PingState::AwaitingPong(nonce) != self.ping {
                     log::warn!("Ignoring PONG with invalid nonce.");
                     return Err(Error::malformed_data());
                 }
-                self.ping = None;
+                self.ping = PingState::None;
                 Ok(PacketInResult::pong())
             }
             Header::ChannelAllocationResponse { .. } => {
@@ -245,7 +255,7 @@ where
                 try_to_unlock,
                 nonce,
             };
-        } else if let Some((false, _)) = self.ping {
+        } else if let PingState::SendingPing = self.ping {
             let nonce = Nonce::random::<B>();
             Fragmenter::<Host>::single(
                 Header::new_ping(),
@@ -253,7 +263,7 @@ where
                 nonce.as_slice(),
                 packet_buffer,
             )?;
-            self.ping = Some((true, nonce));
+            self.ping = PingState::AwaitingPong(nonce);
         } else {
             return Err(Error::not_ready());
         }
@@ -261,7 +271,7 @@ where
     }
 
     fn packet_out_ready(&self) -> bool {
-        let send_ping = matches!(self.ping, Some((false, _)));
+        let send_ping = matches!(self.ping, PingState::SendingPing);
         let send_channel_allocation = matches!(
             self.channel_allocation,
             AllocationState::SendingRequest { .. }
