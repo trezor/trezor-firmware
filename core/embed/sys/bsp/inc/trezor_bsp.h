@@ -39,6 +39,9 @@
 #ifdef STM32F4
 #include "stm32f4xx_ll_utils.h"
 #endif
+#ifdef STM32U3
+#include "stm32u3xx_ll_utils.h"
+#endif
 
 // HAL status code helpers
 static inline ts_t hal_status_to_ts(HAL_StatusTypeDef hal_status) {

@@ -31,7 +31,11 @@
 #include <sys/irq.h>
 #include <sys/mpu.h>
 
+#ifdef STM32U3
+#include "stm32u3xx_ll_cortex.h"
+#else
 #include "stm32u5xx_ll_cortex.h"
+#endif
 
 // region type
 #define MPUX_TYPE_FLASH_CODE 0
