@@ -2128,6 +2128,32 @@ START_TEST(test_bip32_cache_2) {
 }
 END_TEST
 
+START_TEST(test_bip32_cache_3) {
+  // Tests for a fixed memory corruption bug in the BIP32 cache.
+  HDNode node1 = {0};
+  HDNode node2 = {0};
+
+  const uint8_t *seed = fromhex(
+      "301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f1"
+      "74429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19");
+  hdnode_from_seed(seed, 64, SECP256K1_NAME, &node1);
+  hdnode_from_seed(seed, 64, SECP256K1_NAME, &node2);
+
+  uint32_t path[BIP32_CACHE_MAXDEPTH + 2] = {0};
+  size_t depth = sizeof(path) / sizeof(path[0]);
+  ck_assert_int_eq(hdnode_private_ckd_cached(&node1, path, depth, NULL), 1);
+
+  // In the presence of the memory corruption bug we cached the node under an
+  // incorrect path. Now we look up the corrupted path to make sure that the
+  // node we get is different.
+  path[BIP32_CACHE_MAXDEPTH] = BIP32_CACHE_MAXDEPTH + 1;
+  ck_assert_int_eq(hdnode_private_ckd_cached(&node2, path, depth, NULL), 1);
+
+  ck_assert_mem_ne(node1.private_key, node2.private_key,
+                   sizeof(node1.private_key));
+}
+END_TEST
+
 START_TEST(test_bip32_nist_seed) {
   HDNode node;
 
@@ -11686,6 +11712,7 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_bip32_compare);
   tcase_add_test(tc, test_bip32_cache_1);
   tcase_add_test(tc, test_bip32_cache_2);
+  tcase_add_test(tc, test_bip32_cache_3);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("bip32-nist");
