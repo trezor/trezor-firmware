@@ -14,10 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import itertools
+import typing as t
 
 import pytest
 import shamir_mnemonic as shamir
 
+from tests.common import BRGeneratorType
 from trezorlib import device, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
@@ -38,15 +41,52 @@ from ..input_flows import (
     InputFlowSlip39CustomBackup,
 )
 
+BACKUP_IN_PROGRESS = messages.Failure(
+    code=messages.FailureType.InProgress,
+    message="Backup in progress",
+)
+
+
+def _normal(
+    _session: Session, flow: t.Callable[[], BRGeneratorType]
+) -> BRGeneratorType:
+    return flow()
+
+
+def _try_to_cancel(
+    session: Session, flow: t.Callable[[], BRGeneratorType]
+) -> BRGeneratorType:
+    gen = flow()
+    next(gen)
+    while True:
+        br = yield
+        # Try to cancel the backup flow on Core
+        resp = session.call_raw(messages.Cancel())
+        # Following #6483, backup is not cancellable
+        assert resp == BACKUP_IN_PROGRESS
+        try:
+            gen.send(br)
+        except StopIteration:
+            return
+
+
+if t.TYPE_CHECKING:
+    FlowAdapter = t.Callable[
+        [Session, t.Callable[[], BRGeneratorType]], BRGeneratorType
+    ]
+
 
 @pytest.mark.models("core")  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
-def test_backup_bip39(session: Session):
+@pytest.mark.parametrize(
+    "adapt_flow", [_try_to_cancel, _normal], ids=lambda f: f.__name__
+)
+def test_backup_bip39(session: Session, adapt_flow: "FlowAdapter"):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
         IF = InputFlowBip39Backup(session)
-        client.set_input_flow(IF.get())
+        client.set_input_flow(adapt_flow(session, IF.get()))
         device.backup(session)
 
     assert IF.mnemonic == MNEMONIC12
@@ -60,12 +100,23 @@ def test_backup_bip39(session: Session):
     assert session.features.backup_type is messages.BackupType.Bip39
 
 
+SLIP39_BASIC_PARAMS = list(itertools.product([True, False], [_try_to_cancel, _normal]))
+SLIP39_BASIC_IDS = [
+    f"{['no_click_info', 'click_info'][click_info]}_{adapt_flow.__name__}"
+    for click_info, adapt_flow in SLIP39_BASIC_PARAMS
+]
+
+
 @pytest.mark.models("core")
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 @pytest.mark.parametrize(
-    "click_info", [True, False], ids=["click_info", "no_click_info"]
+    "click_info,adapt_flow",
+    SLIP39_BASIC_PARAMS,
+    ids=SLIP39_BASIC_IDS,
 )
-def test_backup_slip39_basic(session: Session, click_info: bool):
+def test_backup_slip39_basic(
+    session: Session, click_info: bool, adapt_flow: "FlowAdapter"
+):
     if click_info and session.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
 
@@ -73,7 +124,7 @@ def test_backup_slip39_basic(session: Session, click_info: bool):
 
     with session.test_ctx as client:
         IF = InputFlowSlip39BasicBackup(session, click_info)
-        client.set_input_flow(IF.get())
+        client.set_input_flow(adapt_flow(session, IF.get()))
         device.backup(session)
 
     session.refresh_features()
@@ -92,7 +143,10 @@ def test_backup_slip39_basic(session: Session, click_info: bool):
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
-def test_backup_slip39_single(session: Session):
+@pytest.mark.parametrize(
+    "adapt_flow", [_try_to_cancel, _normal], ids=lambda f: f.__name__
+)
+def test_backup_slip39_single(session: Session, adapt_flow: "FlowAdapter"):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
@@ -102,7 +156,7 @@ def test_backup_slip39_single(session: Session):
                 session.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart)
             ),
         )
-        client.set_input_flow(IF.get())
+        client.set_input_flow(adapt_flow(session, IF.get()))
         device.backup(session)
 
     assert session.features.initialized is True
@@ -118,12 +172,25 @@ def test_backup_slip39_single(session: Session):
     )
 
 
+SLIP39_ADVANCED_PARAMS = list(
+    itertools.product([True, False], [_try_to_cancel, _normal])
+)
+SLIP39_ADVANCED_IDS = [
+    f"{['no_click_info', 'click_info'][click_info]}_{adapt_flow.__name__}"
+    for click_info, adapt_flow in SLIP39_ADVANCED_PARAMS
+]
+
+
 @pytest.mark.models("core")
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 @pytest.mark.parametrize(
-    "click_info", [True, False], ids=["click_info", "no_click_info"]
+    "click_info,adapt_flow",
+    SLIP39_ADVANCED_PARAMS,
+    ids=SLIP39_ADVANCED_IDS,
 )
-def test_backup_slip39_advanced(session: Session, click_info: bool):
+def test_backup_slip39_advanced(
+    session: Session, click_info: bool, adapt_flow: "FlowAdapter"
+):
     if click_info and session.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
 
@@ -131,7 +198,7 @@ def test_backup_slip39_advanced(session: Session, click_info: bool):
 
     with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedBackup(session, click_info)
-        client.set_input_flow(IF.get())
+        client.set_input_flow(adapt_flow(session, IF.get()))
         device.backup(session)
 
     session.refresh_features()
@@ -150,19 +217,32 @@ def test_backup_slip39_advanced(session: Session, click_info: bool):
     assert expected_ms == actual_ms
 
 
+SLIP39_CUSTOM_PARAMS = [
+    (threshold, count, adapt_flow)
+    for threshold, count in ((1, 1), (2, 2), (3, 5))
+    for adapt_flow in (_try_to_cancel, _normal)
+]
+SLIP39_CUSTOM_IDS = [
+    f"{threshold}_of_{count}_{adapt_flow.__name__}"
+    for threshold, count, adapt_flow in SLIP39_CUSTOM_PARAMS
+]
+
+
 @pytest.mark.models("core")
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_CUSTOM_1of1[0])
 @pytest.mark.parametrize(
-    "share_threshold,share_count",
-    [(1, 1), (2, 2), (3, 5)],
-    ids=["1_of_1", "2_of_2", "3_of_5"],
+    "share_threshold,share_count,adapt_flow",
+    SLIP39_CUSTOM_PARAMS,
+    ids=SLIP39_CUSTOM_IDS,
 )
-def test_backup_slip39_custom(session: Session, share_threshold, share_count):
+def test_backup_slip39_custom(
+    session: Session, share_threshold: int, share_count: int, adapt_flow: "FlowAdapter"
+):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.test_ctx as client:
         IF = InputFlowSlip39CustomBackup(session, share_count)
-        client.set_input_flow(IF.get())
+        client.set_input_flow(adapt_flow(session, IF.get()))
         device.backup(
             session, group_threshold=1, groups=[(share_threshold, share_count)]
         )
@@ -216,6 +296,12 @@ def test_interrupt_backup_fails(session: Session):
             # backup can be cancelled on legacy
             session.call(messages.Cancel())
     else:
+        # backup cancellation is ignored by Core models
+        resp = session.call_raw(messages.Cancel())
+        assert isinstance(resp, messages.Failure)
+        assert resp.code == messages.FailureType.InProgress
+        assert resp.message == "Backup in progress"
+
         # use debuglink to fail the backup
         session.test_ctx.restart_event_loop()
 

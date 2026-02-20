@@ -103,6 +103,8 @@ async def backup_device(msg: BackupDevice) -> Success:
     elif len(groups) > 0:
         raise wire.DataError("group_threshold is missing")
 
-    await perform_backup(is_repeated_backup, group_threshold, groups)
+    # avoid failing backup process due to I/O-related errors
+    with wire.context.continue_on_errors("Backup in progress"):
+        await perform_backup(is_repeated_backup, group_threshold, groups)
 
     return Success(message="Seed successfully backed up")

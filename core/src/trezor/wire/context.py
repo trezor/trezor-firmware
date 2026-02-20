@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 
     from storage.cache_common import DataCache
 
+    from .protocol_common import ContinueOnErrors
+
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]
     Handler = Callable[["Context", Msg], HandlerTask]
@@ -220,3 +222,10 @@ def _get_cache_for_key(key: int) -> DataCache:
     if CURRENT_CONTEXT is None:
         raise NoWireContext
     return CURRENT_CONTEXT.cache
+
+
+def continue_on_errors(msg: str) -> ContinueOnErrors:
+    """Return a context manager that ignores I/O-related errors."""
+    from .protocol_common import ContinueOnErrors
+
+    return ContinueOnErrors(get_context(), msg)
