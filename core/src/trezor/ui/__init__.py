@@ -156,13 +156,14 @@ class Layout(Generic[T]):
         self.tasks: set[loop.Task] = set()
         self.timers: dict[int, loop.Task] = {}
         self.result_box: loop.mailbox[Any] = loop.mailbox()
-        self.button_request_ack_pending: bool = False
         self.button_request_box: loop.mailbox[ButtonRequest | None] = loop.mailbox()
         self.button_request_task: loop.Task | None = None
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
         self.context: Context | None = None
-        self.state: LayoutState = LayoutState.INITIAL
+        if __debug__:
+            self.button_request_ack_pending: bool = False
+            self.layout_state: LayoutState = LayoutState.INITIAL
 
         # Indicates whether we should use Resume attach style when launching.
         # Homescreen layouts can override this.
@@ -180,8 +181,24 @@ class Layout(Generic[T]):
         """True if the layout is in FINISHED state."""
         return CURRENT_LAYOUT is not self and not self.result_box.is_empty()
 
-    def is_layout_attached(self) -> bool:
-        return self.state is LayoutState.ATTACHED
+    if __debug__:
+
+        def is_layout_attached(self) -> bool:
+            """
+            Wait for ButtonAck to report the layout as attached.
+
+            Used by DebugLink for layout interaction.
+            """
+            return (
+                not self.button_request_ack_pending
+                and self.layout_state is LayoutState.ATTACHED
+            )
+
+        def button_ack_callback(self) -> None:
+            if self.button_request_ack_pending:
+                self.button_request_ack_pending = False
+                self.layout_state = LayoutState.ATTACHED
+                self.notify_debuglink(self)
 
     def start(self) -> None:
         """Start the layout, stopping any other RUNNING layout.
@@ -277,13 +294,16 @@ class Layout(Generic[T]):
         try:
             if (ctx := self.context) is not None and self.result_box.is_empty():
                 is_done = loop.mailbox()  # (see below)
+                ack_callback = None
+                if __debug__:
+                    ack_callback = self.button_ack_callback
 
                 def _button_request_task() -> Generator[Any, Any, None]:
                     try:
                         yield from button_request_handler(
                             context=ctx,
                             button_requests=self.button_request_box,
-                            ack_callback=self._button_request_acked,
+                            ack_callback=ack_callback,
                         )
                     finally:
                         is_done.put(None)
@@ -345,14 +365,13 @@ class Layout(Generic[T]):
 
         elif state is LayoutState.ATTACHED:
             first_paint = True
-            self.button_request_ack_pending = self._button_request()
-            if self.button_request_ack_pending:
-                state = LayoutState.TRANSITIONING
-            elif __debug__:
-                self.notify_debuglink(self)
+            if __debug__:
+                self.button_request_ack_pending = self._button_request()
+                if not self.button_request_ack_pending:
+                    self.notify_debuglink(self)
 
-        if state is not None:
-            self.state = state
+        if __debug__ and state is not None:
+            self.layout_state = state
 
         if first_paint:
             self._first_paint()
@@ -490,13 +509,6 @@ class Layout(Generic[T]):
             finally:
                 touch.close()
 
-    def _button_request_acked(self) -> None:
-        if self.button_request_ack_pending and self.state is LayoutState.TRANSITIONING:
-            self.button_request_ack_pending = False
-            self.state = LayoutState.ATTACHED
-            if __debug__:
-                self.notify_debuglink(self)
-
     if utils.USE_BLE:
 
         async def _handle_ble_events(self) -> None:
@@ -572,7 +584,7 @@ class Layout(Generic[T]):
 async def button_request_handler(
     context: Context,
     button_requests: loop.mailbox[ButtonRequest | None],
-    ack_callback: Callable[[], None],
+    ack_callback: Callable[[], None] | None,
 ) -> None:
     while True:
         # The following task will raise `UnexpectedMessageException` on any message.
@@ -586,7 +598,9 @@ async def button_request_handler(
         await context.call(br, ButtonAck)
         if __debug__:
             log.info(__name__, "ButtonRequest acked: %s", br.name)
-        ack_callback()
+
+        if ack_callback is not None:
+            ack_callback()
 
 
 class ProgressLayout:
@@ -606,8 +620,10 @@ class ProgressLayout:
         self.value = 0
         self.progress_step = 20
 
-    def is_layout_attached(self) -> bool:
-        return True
+    if __debug__:
+
+        def is_layout_attached(self) -> bool:
+            return True
 
     def report(self, value: int, description: str | None = None) -> None:
         """Report a progress step.
