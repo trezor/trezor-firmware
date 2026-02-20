@@ -1,4 +1,4 @@
-all: messages.pb.c
+all: messages.pb.c messages-debug.pb.c
 
 %.pb.c: %.pb %.options
 	nanopb_generator $< -T -D . -s "mangle_names:M_FLATTEN"

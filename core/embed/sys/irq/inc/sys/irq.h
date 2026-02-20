@@ -55,7 +55,7 @@ static inline irq_key_t query_irq(void) { return __get_PRIMASK(); }
 // Important:
 // - The `"memory"` clobber is included to prevent the compiler from reordering
 //   memory operations across this function, ensuring that all memory accesses
-//   efore `irq_lock()` are completed before interrupts are disabled.
+//   before `irq_lock()` are completed before interrupts are disabled.
 // - The order of operations on non-volatile variables relative to this
 //   function is not guaranteed without memory barriers or other
 //   synchronization mechanisms.
@@ -100,6 +100,12 @@ static inline void irq_unlock(irq_key_t key) {
 
 // Lowest priority in the system used by SVC and PENDSV exception handlers
 #define IRQ_PRI_LOWEST NVIC_EncodePriority(NVIC_PRIORITYGROUP_4, 15, 0)
+
+#else
+
+static inline irq_key_t irq_lock(void) { return 0; }
+
+static inline void irq_unlock(irq_key_t key) {}
 
 #endif
 

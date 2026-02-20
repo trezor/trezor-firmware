@@ -30,7 +30,7 @@
 
 _Static_assert(USB_PACKET_SIZE <= MAX_PACKET_SIZE, "USB_PACKET_SIZE too large");
 
-static wire_iface_t g_usb_iface = {0};
+static wire_iface_t g_usb_debug_iface = {0};
 
 static bool usb_write(uint8_t* data, size_t size) {
   if (size != USB_PACKET_SIZE) {
@@ -38,7 +38,7 @@ static bool usb_write(uint8_t* data, size_t size) {
   }
 
   ssize_t r =
-      syshandle_write_blocking(SYSHANDLE_USB_WIRE, data, size, USB_TIMEOUT);
+      syshandle_write_blocking(SYSHANDLE_USB_DEBUG, data, size, USB_TIMEOUT);
 
   return r == size;
 }
@@ -48,7 +48,7 @@ static int usb_read(uint8_t* buffer, size_t buffer_size) {
     return -1;
   }
 
-  ssize_t r = syshandle_read_blocking(SYSHANDLE_USB_WIRE, buffer, buffer_size,
+  ssize_t r = syshandle_read_blocking(SYSHANDLE_USB_DEBUG, buffer, buffer_size,
                                       USB_TIMEOUT);
 
   return r;
@@ -59,25 +59,23 @@ static void usb_error(void) {
                     "Error reading from USB. Try different USB cable.", NULL);
 }
 
-wire_iface_t* usb_iface_init(secbool usb21_landing) {
-  wire_iface_t* iface = &g_usb_iface;
+wire_iface_t* usb_debug_iface_init(void) {
+  wire_iface_t* iface = &g_usb_debug_iface;
 
   if (iface->initialized) {
     return iface;
   }
 
-#ifndef DEBUGLINK
   usb_start_params_t params = {
       .serial_number = "000000000000000000000000",
-      .usb21_landing = usb21_landing,
+      .usb21_landing = false,
   };
 
   usb_start(&params);
-#endif
 
   memset(iface, 0, sizeof(wire_iface_t));
 
-  iface->poll_iface_id = SYSHANDLE_USB_WIRE;
+  iface->poll_iface_id = SYSHANDLE_USB_DEBUG;
   iface->tx_packet_size = USB_PACKET_SIZE;
   iface->rx_packet_size = USB_PACKET_SIZE;
   iface->write = &usb_write;
@@ -89,23 +87,15 @@ wire_iface_t* usb_iface_init(secbool usb21_landing) {
   return iface;
 }
 
-void usb_iface_deinit(void) {
-  wire_iface_t* iface = &g_usb_iface;
+void usb_debug_iface_deinit(void) {
+  wire_iface_t* iface = &g_usb_debug_iface;
 
   if (!iface->initialized) {
     return;
   }
 
   memset(iface, 0, sizeof(wire_iface_t));
-
-#ifndef DEBUGLINK
   usb_stop();
-#endif
 }
 
-wire_iface_t* usb_iface_get(void) {
-  if (!g_usb_iface.initialized) {
-    return NULL;
-  }
-  return &g_usb_iface;
-}
+wire_iface_t* usb_debug_iface_get(void) { return &g_usb_debug_iface; }
