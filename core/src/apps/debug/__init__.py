@@ -18,7 +18,7 @@ if __debug__:
     from trezor.ui import display
 
     if TYPE_CHECKING:
-        from typing import Any, Awaitable, Callable
+        from typing import Any, Awaitable, Callable, NoReturn
 
         from trezor.enums import DebugButton, DebugPhysicalButton, DebugSwipeDirection
         from trezor.messages import (
@@ -34,6 +34,7 @@ if __debug__:
             DebugLinkReseedRandom,
             DebugLinkSetLogFilter,
             DebugLinkState,
+            DebugLinkStop,
             WipeDevice,
         )
         from trezor.ui import Layout
@@ -430,6 +431,10 @@ if __debug__:
         else:
             raise wire.UnexpectedMessage("Debug console not supported")
 
+    async def dispatch_DebugLinkStop(msg: DebugLinkStop) -> NoReturn:
+        """Restart the event loop"""
+        raise RestartEventLoop
+
     async def dispatch_WipeDevice(msg: WipeDevice) -> None:
         """Wipe the device and restart the event loop."""
         from storage import wipe
@@ -556,6 +561,7 @@ if __debug__:
         MessageType.DebugLinkResetDebugEvents: _no_op,
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
         MessageType.DebugLinkSetLogFilter: dispatch_DebugLinkSetLogFilter,
+        MessageType.DebugLinkStop: dispatch_DebugLinkStop,
         MessageType.WipeDevice: dispatch_WipeDevice,
     }
 
