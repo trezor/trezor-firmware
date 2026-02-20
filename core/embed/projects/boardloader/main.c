@@ -303,7 +303,7 @@ int main(void) {
 
   reset_flags_reset();
 
-  if (sectrue != flash_configure_option_bytes()) {
+  if (sectrue != option_bytes_configure()) {
     // Option bytes were not configured correctly at startup.
     // This may indicate a first boot after manufacturing,
     // or a potential hardware fault or exploit attempt.

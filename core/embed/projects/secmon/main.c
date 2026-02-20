@@ -90,7 +90,7 @@ static void drivers_init(void) {
 #endif
 
 #ifdef USE_OEM_KEYS_CHECK
-  check_oem_keys();
+  option_bytes_check_oem_keys();
 #endif
 
 #ifdef USE_OPTIGA

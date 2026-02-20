@@ -121,7 +121,7 @@ static uint32_t flash_wait_and_clear_status_flags(void) {
   return result;
 }
 
-secbool flash_check_option_bytes(void) {
+static secbool flash_check_option_bytes(void) {
   flash_wait_and_clear_status_flags();
   // check values stored in flash interface registers
   if (FLASH->OPTR !=
@@ -169,11 +169,11 @@ secbool flash_check_option_bytes(void) {
   return sectrue;
 }
 
-void flash_lock_option_bytes(void) {
+static void flash_lock_option_bytes(void) {
   FLASH->NSCR |= FLASH_NSCR_OPTLOCK;  // lock the option bytes
 }
 
-void flash_unlock_option_bytes(void) {
+static void flash_unlock_option_bytes(void) {
   if ((FLASH->NSCR & FLASH_NSCR_OPTLOCK) == 0) {
     return;  // already unlocked
   }
@@ -185,7 +185,7 @@ void flash_unlock_option_bytes(void) {
     ;  // wait until the flash option control register is unlocked
 }
 
-uint32_t flash_set_option_bytes(void) {
+static uint32_t flash_set_option_bytes(void) {
   if (flash_unlock_write() != sectrue) {
     return 0;
   }
@@ -244,12 +244,12 @@ uint32_t flash_set_option_bytes(void) {
   return result;
 }
 
-void check_oem_keys(void) {
+void option_bytes_check_oem_keys(void) {
   ensure(((FLASH->NSSR & FLASH_NSSR_OEM1LOCK) == 0) * sectrue, "OEM1 KEY SET");
   ensure(((FLASH->NSSR & FLASH_NSSR_OEM2LOCK) == 0) * sectrue, "OEM2 KEY SET");
 }
 
-secbool flash_configure_option_bytes(void) {
+secbool option_bytes_configure(void) {
   if (sectrue == flash_check_option_bytes()) {
     return sectrue;  // we DID NOT have to change the option bytes
   }
@@ -258,7 +258,7 @@ secbool flash_configure_option_bytes(void) {
     flash_set_option_bytes();
   } while (sectrue != flash_check_option_bytes());
 
-  check_oem_keys();
+  option_bytes_check_oem_keys();
 
   return secfalse;  // notify that we DID have to change the option bytes
 }
