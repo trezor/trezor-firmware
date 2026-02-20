@@ -85,6 +85,8 @@ extern "C" {
 // Checks if the given timer is expired
 #define platformTimerIsExpired(timer) ticks_expired(timer)
 
+#define platformTimerGetRemaining(timer) ((timer)-systick_ms())
+
 // Performs a delay for the given time (ms)
 #define platformDelay(t) HAL_Delay(t)
 

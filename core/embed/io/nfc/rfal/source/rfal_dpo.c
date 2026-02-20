@@ -15,7 +15,7 @@
 ******************************************************************************/
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      $Revision: $
  *      LANGUAGE:  ISO C99
  */
@@ -79,8 +79,11 @@ typedef struct{
     rfalDpoEntry        table[RFAL_DPO_TABLE_MAX_ENTRIES];
     uint8_t             tableEntry;
     rfalDpoMeasureFunc  measureCallback;
+    rfalDpoAdjustFunc   adjustCallback;
+    uint8_t             refMeasurement;
     rfalMode            curMode;
     rfalBitRate         curBR;
+    bool                forceAdj;
 }rfalDpo;
 
 
@@ -105,10 +108,14 @@ void rfalDpoInitialize( void )
     
     /* Set default measurement */
     #if defined(ST25R3911) || defined(ST25R3916) || defined(ST25R3916B)
-        gRfalDpo.measureCallback = rfalChipMeasureAmplitude;
+        gRfalDpo.measureCallback = &rfalChipMeasureAmplitude;
     #else
-        gRfalDpo.measureCallback = rfalChipMeasureCombinedIQ;
+        gRfalDpo.measureCallback = &rfalChipMeasureCombinedIQ;
     #endif /* ST25R */
+    
+    
+    /* Set default adjustment */
+    gRfalDpo.adjustCallback = &rfalChipSetRFO;
     
     
     /* Use the default Dynamic Power values */
@@ -123,6 +130,13 @@ void rfalDpoInitialize( void )
 void rfalDpoSetMeasureCallback( rfalDpoMeasureFunc pFunc )
 {
     gRfalDpo.measureCallback = pFunc;
+}
+
+
+/*******************************************************************************/
+void rfalDpoSetAdjustCallback( rfalDpoAdjustFunc pFunc )
+{
+    gRfalDpo.adjustCallback = pFunc;
 }
 
 
@@ -203,7 +217,7 @@ ReturnCode rfalDpoAdjust( void )
     
     /* Initialize local vars */
     tableEntry = gRfalDpo.tableEntry;
-    dpoTable   = (const rfalDpoEntry*) gRfalDpo.currentDpo;
+    dpoTable   = gRfalDpo.currentDpo;
     refValue   = 0;
     mode       = RFAL_MODE_NONE;
     br         = RFAL_BR_KEEP;
@@ -215,7 +229,7 @@ ReturnCode rfalDpoAdjust( void )
     
     /* Check if the Power Adjustment is disabled and                  *
      * if the callback to the measurement method is properly set      */
-    if( (!gRfalDpo.enabled) || (gRfalDpo.measureCallback == NULL) )
+    if( (!gRfalDpo.enabled) || (gRfalDpo.measureCallback == NULL) || (gRfalDpo.adjustCallback == NULL) )
     {
         return RFAL_ERR_PARAM;
     }
@@ -231,6 +245,10 @@ ReturnCode rfalDpoAdjust( void )
     {
         return RFAL_ERR_IO;
     }
+    
+    /* Store last measurement */
+    gRfalDpo.refMeasurement = refValue;
+    
 
     if( refValue >= dpoTable[gRfalDpo.tableEntry].inc )
     {   /* Increase the output power */
@@ -265,15 +283,16 @@ ReturnCode rfalDpoAdjust( void )
     
     /* Apply new configs if there was a change on DPO level or RFAL mode|bitrate  */
     /* Also adjust power in case mode is not yet set and a different table entry|setting is applicbale */
-    if( (mode != gRfalDpo.curMode) || (br != gRfalDpo.curBR) || (tableEntry != gRfalDpo.tableEntry) || ((mode == RFAL_MODE_NONE) && (tableEntry != gRfalDpo.tableEntry)) )
+    if( (mode != gRfalDpo.curMode) || (br != gRfalDpo.curBR) || (tableEntry != gRfalDpo.tableEntry) || ((mode == RFAL_MODE_NONE) && (tableEntry != gRfalDpo.tableEntry)) || (gRfalDpo.forceAdj) )
     {
         /* Update local context */
         gRfalDpo.curMode    = mode;
         gRfalDpo.curBR      = br;
         gRfalDpo.tableEntry = tableEntry;
+        gRfalDpo.forceAdj   = false;
         
-        /* Get the new value for RFO resistance form the table and apply the new RFO resistance setting */ 
-        rfalChipSetRFO( dpoTable[gRfalDpo.tableEntry].rfoRes );
+        /* Get the new value from the table (e.g. RFO resistance) and apply the new setting */
+        gRfalDpo.adjustCallback( dpoTable[gRfalDpo.tableEntry].rfoRes );
         
         /* Apply the DPO Analog Config according to this threshold */
         /* Technology field is being extended for DPO: 2msb are used for threshold step (only 4 allowed) */
@@ -287,27 +306,14 @@ ReturnCode rfalDpoAdjust( void )
 
 
 /*******************************************************************************/
-const rfalDpoEntry* rfalDpoGetCurrentTableEntry( void )
-{
-
-    return &gRfalDpo.currentDpo[gRfalDpo.tableEntry];
-}
-
-
-/*******************************************************************************/
-uint8_t rfalDpoGetCurrentTableIndex( void )
-{
-    return gRfalDpo.tableEntry;
-}
-
-
-/*******************************************************************************/
 void rfalDpoSetEnabled( bool enable )
 {
-    gRfalDpo.enabled    = enable;
-    gRfalDpo.curMode    = RFAL_MODE_NONE;
-    gRfalDpo.curBR      = RFAL_BR_KEEP;
-    gRfalDpo.tableEntry = 0;
+    gRfalDpo.enabled        = enable;
+    gRfalDpo.forceAdj       = enable;
+    gRfalDpo.curMode        = RFAL_MODE_NONE;
+    gRfalDpo.curBR          = RFAL_BR_KEEP;
+    gRfalDpo.tableEntry     = 0;
+    gRfalDpo.refMeasurement = 0;
 }
 
 
@@ -316,5 +322,35 @@ bool rfalDpoIsEnabled( void )
 {
     return gRfalDpo.enabled;
 }
+
+
+/*******************************************************************************/
+void rfalDpoReqAdj( void )
+{
+    gRfalDpo.forceAdj = true;
+}
+
+
+/*******************************************************************************/
+ReturnCode rfalDpoGetInfo( rfalDpoInfo* info )
+{
+    if( info == NULL )
+    {
+        return RFAL_ERR_PARAM;
+    }
+
+    /* Clear info structure */
+    RFAL_MEMSET( info, 0, sizeof(rfalDpoInfo) );
+    
+    info->enabled         = gRfalDpo.enabled;
+    info->tableEntries    = gRfalDpo.tableEntries;
+    info->tableEntry      = gRfalDpo.tableEntry;
+    info->adjustCallback  = gRfalDpo.adjustCallback;
+    info->measureCallback = gRfalDpo.measureCallback;
+    info->refMeasurement  = gRfalDpo.refMeasurement;
+
+    return RFAL_ERR_NONE;
+}
+    
 
 #endif /* RFAL_FEATURE_DPO */

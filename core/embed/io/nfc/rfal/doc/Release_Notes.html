@@ -89,7 +89,7 @@ div.Section1
             <h1 style="margin-bottom: 18pt; text-align: center;" align="center"><span style="font-size: 20pt; font-family: Verdana; color:#3CB4E6;">Release
 Notes for RFAL software Library</span><span style="font-size: 20pt; font-family: Verdana;"><o:p></o:p></span></h1>
             <p class="MsoNormal" style="text-align: center;" align="center"><span style="font-size: 10pt; font-family: Arial; color: black;">Copyright
-2019 STMicroelectronics</span><span style="color: black;"><u1:p></u1:p><o:p></o:p></span></p>
+2017-2025 STMicroelectronics</span><span style="color: black;"><u1:p></u1:p><o:p></o:p></span></p>
             <p class="MsoNormal" style="text-align: center;" align="center"><span style="font-size: 10pt; font-family: Arial; color: black;"><img style="border: 0px solid ; width: 104px; height: 77px;" alt="" id="_x0000_i1025" src="_htmresc/st_logo.png"></span><span style="font-size: 10pt;"><o:p></o:p></span></p>
             </td>
           </tr>
@@ -102,7 +102,7 @@ Notes for RFAL software Library</span><span style="font-size: 20pt; font-family:
             <td class="MsoNormal" style="padding: 0cm;" valign="top"><br>
             <div style="margin-left: 40px;"><span style="font-size: 10pt; font-family: Verdana;">The <span style="font-weight: bold; font-style: italic;">RFAL Library</span>
 (RF Abstraction Layer) provides several functionalities required to perform RF/NFC communications.</span><span style="font-size: 10pt; font-family: Verdana;">
-The RFAL encapsulates the different RF ICs (ST25R3911, ST25R3916, ST25R200, ST25R95 and future ST25R devices) into a common and easy to use interface.</span><br>
+The RFAL encapsulates the different RF ICs (ST25R3911, ST25R3916, ST25R200, ST25R500, ST25R95 and future ST25R devices) into a common and easy to use interface.</span><br>
             <span style="font-size: 10pt; font-family: Verdana;"> </span><br>
             <span style="font-size: 10pt; font-family: Verdana;"> </span><span style="font-size: 10pt; font-family: Verdana;">The technologies currently supported by RFAL are: 
                 <ul>
@@ -129,12 +129,41 @@ The RFAL encapsulates the different RF ICs (ST25R3911, ST25R3916, ST25R200, ST25
             <span style="font-family: &quot;Times New Roman&quot;;"> </span>
             <h2 style="background:#3CB4E6 none repeat scroll 0% 50%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;"><a name="History"></a><span style="font-size: 12pt; color: white;">Update History</span></h2>
             <br>
-            
-            <h3 style="background:#3CB4E6 none repeat scroll 0% 50%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial; margin-right: 500pt; width: 186px;"><span style="font-size: 10pt; font-family: Arial; color: white;">V3.0.1 / 12-Sep-2024</span></h3>
+			
+			<h3 style="background:#3CB4E6 none repeat scroll 0% 50%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial; margin-right: 500pt; width: 186px;"><span style="font-size: 10pt; font-family: Arial; color: white;">V4.0.2 / 02-Apr-2025</span></h3>
              <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;"></span></u></b></p>
             <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;">Main Changes<o:p></o:p></span></u></b></p>
             <ul style="margin-top: 0cm;" type="square">
-              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Hotfix to address condition that prevents usage of WU default parameters on ST25R3916 (not ST25R3916B) if AAT enabled  <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Fixed vulnerability during EMD handling on fast systems, introduced at v4.0.0 targeted for high latency systems     <span style="font-weight: bold; font-style: italic;"></span></span></li>
+            </ul>
+            <br>
+			
+			<h3 style="background:#3CB4E6 none repeat scroll 0% 50%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial; margin-right: 500pt; width: 186px;"><span style="font-size: 10pt; font-family: Arial; color: white;">V4.0.0 / 17-Mar-2025</span></h3>
+             <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;"></span></u></b></p>
+            <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;">Main Changes<o:p></o:p></span></u></b></p>
+            <ul style="margin-top: 0cm;" type="square">
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  ST25R500/ST25R300 support added                                                                                     <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  ISO-DEP improved. Fixed SFGI usage in Listen mode, ISO-DEP FSD check in Reader mode                                 <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Improved robustness for EMD handling on high latency systems                                                        <span style="font-weight: bold; font-style: italic;"></span></span></li>
+			  <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Improve portability using uintptr_t (C99)                                                                           <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Added support for Direct Command chaining                                                                           <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Several improvements on Card Detection and Heartbeat                                                                <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  DPO module extended. Configurable measurement and adjust methods, interfaces and new adjustment flag added.         <span style="font-weight: bold; font-style: italic;"></span></span></li>              
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  DPO CR (Current Regulation) added (ST25R500 only)                                                                   <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Added Dynamic LMA module. Optional LMA adjustments can be used in Listen/CE mode                                    <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Several new APIs added in rfalChip section for more measurments and adjustments                                     <span style="font-weight: bold; font-style: italic;"></span></span></li>
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  New RFAL_CMATH switch added to enable the usage of C mathematical operations - previously RFAL_ACCURATE_RSSI        <span style="font-weight: bold; font-style: italic;"></span></span></li>
+			  <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Removed obsolete compile switches                                                                                   <span style="font-weight: bold; font-style: italic;"></span></span></li>
+			  <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  New timer API to retrieve remaining time                                                                            <span style="font-weight: bold; font-style: italic;"></span></span></li>
+			  <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Several driver improvements and fixes                                                                               <span style="font-weight: bold; font-style: italic;"></span></span></li>
+            </ul>
+            <br>
+			
+			<h3 style="background:#3CB4E6 none repeat scroll 0% 50%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial; margin-right: 500pt; width: 186px;"><span style="font-size: 10pt; font-family: Arial; color: white;">V3.0.1 / 12-Sep-2024</span></h3>
+             <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;"></span></u></b></p>
+            <p class="MsoNormal" style="margin: 4.5pt 0cm 4.5pt 18pt;"><b style=""><u><span style="font-size: 10pt; font-family: Verdana; color: black;">Main Changes<o:p></o:p></span></u></b></p>
+            <ul style="margin-top: 0cm;" type="square">
+              <li class="MsoNormal"><span style="font-size: 10pt; font-family: Verdana;">  Fixed condition that prevents usage of WU default parameters on ST25R3916 (not ST25R3916B) if AAT enabled           <span style="font-weight: bold; font-style: italic;"></span></span></li>
             </ul>
             <br>
             

@@ -147,6 +147,18 @@ void st25r3916ledEvtWrMultiReg( uint8_t reg, const uint8_t* vals, uint8_t len )
 
 
 /*******************************************************************************/
+void st25r3916ledEvtCmds( const uint8_t* cmds, uint8_t len )
+{
+    uint8_t i;
+    
+    for(i=0; i<(len); i++)
+    {
+        st25r3916ledEvtCmd( cmds[i] );
+    }
+}
+
+
+/*******************************************************************************/
 void st25r3916ledEvtCmd( uint8_t cmd )
 {
     if( (cmd >= ST25R3916_CMD_TRANSMIT_WITH_CRC) && (cmd <= ST25R3916_CMD_RESPONSE_RF_COLLISION_N) )

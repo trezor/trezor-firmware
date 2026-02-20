@@ -642,7 +642,7 @@ ReturnCode rfalNfcDataExchangeStart( uint8_t *txData, uint16_t txDataLen, uint8_
     {
         
         /*******************************************************************************/
-        /* In Listen mode is the Poller that initiates the communicatation             */
+        /* In Listen mode it is the Poller that initiates the communication            */
         /* Assign output parameters and rfalNfcDataExchangeGetStatus will return       */
         /* incoming data from Poller/Initiator                                         */
         if( (gNfcDev.state == RFAL_NFC_STATE_ACTIVATED) && rfalNfcIsRemDevPoller( gNfcDev.activeDev->type ) )
@@ -2127,6 +2127,7 @@ static ReturnCode rfalNfcNfcDepActivate( rfalNfcDevice *device, rfalNfcDepCommMo
         rfalNfcDepListenActvParam   actvParams;
         rfalNfcDepTargetParam       targetParam;
         
+        RFAL_MEMSET(&targetParam, 0x00, sizeof(rfalNfcDepTargetParam));
         RFAL_MEMCPY(targetParam.nfcid3, (uint8_t*)gNfcDev.disc.nfcid3, RFAL_NFCDEP_NFCID3_LEN);
         targetParam.bst       = RFAL_NFCDEP_Bx_NO_HIGH_BR;
         targetParam.brt       = RFAL_NFCDEP_Bx_NO_HIGH_BR;
@@ -2284,8 +2285,8 @@ static ReturnCode rfalNfcDeactivation( void )
          
             if( (gNfcDev.isFieldOn) && rfalNfcHasPollerTechs() )                                 /* Check if configured to Poll modes and the Field is On */
             {
-                aux = platformTimerIsExpired(gNfcDev.discTmr);                                   /* Check total duration timer is already expired */
-                if( ((platformGetSysTick() + RFAL_NFC_T_FIELD_OFF) > gNfcDev.discTmr) || (aux) ) /* In case Total Duration has expired or expring in less than tFIELD_OFF */
+                aux = platformTimerIsExpired(gNfcDev.discTmr);                                     /* Check total duration timer is already expired */
+                if( (platformTimerGetRemaining(gNfcDev.discTmr) < RFAL_NFC_T_FIELD_OFF) || (aux) ) /* In case Total Duration has expired or expring in less than tFIELD_OFF */
                 {
                     platformTimerDestroy( gNfcDev.discTmr );
                     gNfcDev.discTmr = (uint32_t)platformTimerCreate( RFAL_NFC_T_FIELD_OFF );     /* Ensure that Operating Field is in Off condition at least tFIELD_OFF */

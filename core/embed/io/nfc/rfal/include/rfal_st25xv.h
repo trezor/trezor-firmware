@@ -16,7 +16,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      Revision:
  *      LANGUAGE:  ISO C99
  */
@@ -735,6 +735,61 @@ ReturnCode rfalST25xVPollerWriteMessage( uint8_t flags, const uint8_t* uid, uint
  *****************************************************************************
  */
 ReturnCode rfalST25xVPollerFastWriteMessage( uint8_t flags, const uint8_t* uid, uint8_t msgLen, const uint8_t* msgData, uint8_t* txBuf, uint16_t txBufLen );
+
+/*! 
+ *****************************************************************************
+ * \brief  NFC-V Poller Read Configuration (ST25TV02KC ST25TV512C version)
+ *  
+ * Reads static configuration registers at the Pointer address
+ *
+ * \param[in]  flags          : Flags to be used: Sub-carrier; Data_rate; Option
+ *                              for NFC-Forum use: RFAL_NFCV_REQ_FLAG_DEFAULT
+ * \param[in]  uid            : UID of the device to be put to be read
+ *                               if not provided Select mode will be used 
+ * \param[in]  fid            : FID
+ * \param[in]  pid            : PID
+ * \param[out] rxBuf          : buffer to store response (also with RES_FLAGS)
+ * \param[in]  rxBufLen       : length of rxBuf
+ * \param[out] rcvLen         : number of bytes received
+ *  
+ * \return RFAL_ERR_WRONG_STATE    : RFAL not initialized or incorrect mode
+ * \return RFAL_ERR_PARAM          : Invalid parameters
+ * \return RFAL_ERR_IO             : Generic internal error 
+ * \return RFAL_ERR_CRC            : CRC error detected
+ * \return RFAL_ERR_FRAMING        : Framing error detected
+ * \return RFAL_ERR_PROTO          : Protocol error detected
+ * \return RFAL_ERR_TIMEOUT        : Timeout error
+ * \return RFAL_ERR_NONE           : No error
+ *****************************************************************************
+ */
+ReturnCode rfalST25TV512CPollerReadConfiguration(uint8_t flags, const uint8_t* uid, uint8_t fid, uint8_t pid, uint8_t* rxBuf, uint16_t rxBufLen, uint16_t *rcvLen );
+
+/*! 
+ *****************************************************************************
+ * \brief  NFC-V Poller Write Configuration (ST25TV02KC ST25TV512C version)
+ *  
+ * Writes static configuration registers at the Pointer address
+ *
+ * \param[in]  flags          : Flags to be used: Sub-carrier; Data_rate; Option
+ *                              for NFC-Forum use: RFAL_NFCV_REQ_FLAG_DEFAULT
+ * \param[in]  uid            : UID of the device to be put to be read
+ *                               if not provided Select mode will be used 
+ * \param[in]  fid            : FID
+ * \param[in]  pid            : PID
+ * \param[in]  data           : Register value
+ * \param[in]  dataLen        : size of register value 
+ *  
+ * \return RFAL_ERR_WRONG_STATE    : RFAL not initialized or incorrect mode
+ * \return RFAL_ERR_PARAM          : Invalid parameters
+ * \return RFAL_ERR_IO             : Generic internal error 
+ * \return RFAL_ERR_CRC            : CRC error detected
+ * \return RFAL_ERR_FRAMING        : Framing error detected
+ * \return RFAL_ERR_PROTO          : Protocol error detected
+ * \return RFAL_ERR_TIMEOUT        : Timeout error
+ * \return RFAL_ERR_NONE           : No error
+ *****************************************************************************
+ */
+ReturnCode rfalST25TV512CPollerWriteConfiguration(uint8_t flags, const uint8_t* uid, uint8_t fid, uint8_t pid, const uint8_t *data, uint8_t dataLen );
 
 #endif /* RFAL_ST25xV_H */
 

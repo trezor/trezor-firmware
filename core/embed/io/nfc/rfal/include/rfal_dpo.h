@@ -16,7 +16,7 @@
 
 
 /*
- *      PROJECT:   ST25R391x firmware
+ *      PROJECT:   ST25R firmware
  *      $Revision: $
  *      LANGUAGE:  ISO C99
  */
@@ -25,7 +25,7 @@
  *
  *  \author Martin Zechleitner
  *
- *  \brief Dynamic Power adjustment
+ *  \brief Dynamic Power Output
  *  
  *  This module provides an interface to perform the power adjustment dynamically 
  *  
@@ -71,15 +71,33 @@
 ******************************************************************************
 */
 
+/*! Function pointer to the reference Measurement method */
+typedef ReturnCode (*rfalDpoMeasureFunc)(uint8_t* res);
+
+/*! Function pointer to the Adjustment method */
+typedef ReturnCode (*rfalDpoAdjustFunc)(uint8_t res);
+
+
 /*! DPO table entry struct */
-typedef struct {
-    uint8_t rfoRes; /*!< Setting for the resistance level of the RFO */
-    uint8_t inc;    /*!< Threshold for incrementing the output power */ 
-    uint8_t dec;    /*!< Threshold for decrementing the output power */
+typedef struct 
+{
+    uint8_t rfoRes;                      /*!< Setting for the resistance level of the RFO */
+    uint8_t inc;                         /*!< Threshold for incrementing the output power */ 
+    uint8_t dec;                         /*!< Threshold for decrementing the output power */
 }rfalDpoEntry;
 
-/*! Function pointer to methode doing the reference measurement */
-typedef ReturnCode (*rfalDpoMeasureFunc)(uint8_t* res);
+
+/*! DPO information struct */
+typedef struct
+{
+    bool               enabled;           /*!< Enabled state                   */
+    uint8_t            tableEntries;      /*!< Number of entries used          */
+    uint8_t            tableEntry;        /*!< Current entry used              */
+    uint8_t            refMeasurement;    /*!< Last measurement used to adjust */
+    rfalDpoAdjustFunc  adjustCallback;    /*!< Pointer to the adjust callback  */
+    rfalDpoMeasureFunc measureCallback;   /*!< Pointer to the measure callback */
+} rfalDpoInfo;
+
 
 /*
 ******************************************************************************
@@ -102,7 +120,7 @@ void rfalDpoInitialize( void );
 
 /*! 
  *****************************************************************************
- * \brief  Set the measurement methode
+ * \brief  Set the Measurement method
  *  
  * This function sets the measurement method used for reference measurement.
  * Based on the measurement the power will then be adjusted
@@ -112,6 +130,19 @@ void rfalDpoInitialize( void );
  *****************************************************************************
  */
 void rfalDpoSetMeasureCallback( rfalDpoMeasureFunc pFunc );
+
+
+/*! 
+ *****************************************************************************
+ * \brief  Set the Adjust method
+ *  
+ * This function sets the Adjust method used during DPO adjust 
+ *  
+ * \param[in]  pFunc: callback of adjust function
+ *
+ *****************************************************************************
+ */
+void rfalDpoSetAdjustCallback( rfalDpoAdjustFunc pFunc );
 
 
 /*! 
@@ -166,30 +197,6 @@ ReturnCode rfalDpoAdjust( void );
 
 /*! 
  *****************************************************************************
- * \brief  Get Current Dynamic power table entry
- *  
- * Return current used DPO power table entry settings
- *
- * \return RFAL_ERR_NONE    : Current DpoEntry. This includes d_res, inc and dec
- * 
- *****************************************************************************
- */
-const rfalDpoEntry* rfalDpoGetCurrentTableEntry( void );
-
-
-/*! 
- *****************************************************************************
- * \brief  Get Current Dynamic power table index
- *
- * \return the index currently used DPO table entry 
- *
- *****************************************************************************
- */
-uint8_t rfalDpoGetCurrentTableIndex( void );
-
-
-/*! 
- *****************************************************************************
  * \brief  Dynamic power set enabled state
  *  
  * \param[in] enable : new active state
@@ -212,6 +219,33 @@ void rfalDpoSetEnabled( bool enable );
  *****************************************************************************
  */
 bool rfalDpoIsEnabled( void );
+
+
+/*! 
+ *****************************************************************************
+ * \brief  Request DPO adjust
+ *  
+ *  Flags the DPO module to perform the adjustment on the next round, even
+ *  if no change has been perceived from previous measurement|state
+ 
+ *****************************************************************************
+ */
+void rfalDpoReqAdj( void );
+
+
+/*!
+ *****************************************************************************
+ * \brief  Get DPO information
+ *  
+ * Get the DPO information|status
+ *
+ * \param[out] info       : pointer where DPO info is to be stored
+ * 
+ * \return RFAL_ERR_PARAM : Invalid parameters
+ * \return RFAL_ERR_NONE  : No Error
+ *****************************************************************************
+ */
+ReturnCode rfalDpoGetInfo( rfalDpoInfo* info );
 
 #endif /* RFAL_DPO_H */
 

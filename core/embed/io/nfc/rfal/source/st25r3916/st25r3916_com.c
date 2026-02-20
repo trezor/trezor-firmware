@@ -51,7 +51,7 @@
 #define ST25R3916_OPTIMIZE              true                           /*!< Optimization switch: false always write value to register      */
 #define ST25R3916_I2C_ADDR              (0xA0U >> 1)                   /*!< ST25R3916's default I2C address                                */
 #define ST25R3916_REG_LEN               1U                             /*!< Byte length of a ST25R3916 register                            */
-#define ST25R3916_MOSI_IDLE             (0x00)                         /*!< ST25R3916 MOSI IDLE state                                      */
+#define ST25R3916_MOSI_IDLE             (0x00)                         /*!< ST25R3916 MOSI IDLE state  ST25R3916 Errata #1.2.3             */
 
 #define ST25R3916_WRITE_MODE            (0U << 6)                      /*!< ST25R3916 Operation Mode: Write                                */
 #define ST25R3916_READ_MODE             (1U << 6)                      /*!< ST25R3916 Operation Mode: Read                                 */
@@ -453,7 +453,7 @@ ReturnCode st25r3916ReadPTMem( uint8_t* values, uint16_t length )
         st25r3916comStop();
         
         /* Copy PTMem content without prepended byte */
-        RFAL_MEMCPY( values, (tmp+ST25R3916_REG_LEN), length );
+        RFAL_MEMCPY( values, &tmp[ST25R3916_REG_LEN], length );
     }
 
     return RFAL_ERR_NONE;
@@ -508,7 +508,21 @@ ReturnCode st25r3916ExecuteCommand( uint8_t cmd )
     st25r3916comStop();
     
     /* Send a cmd event to LED handling */
-    st25r3916ledEvtCmd(cmd);
+    st25r3916ledEvtCmd( cmd );
+    
+    return RFAL_ERR_NONE;
+}
+
+
+/*******************************************************************************/
+ReturnCode st25r3916ExecuteCommands(const uint8_t *cmds, uint8_t length)
+{
+    st25r3916comStart();
+    st25r3916comTx( cmds, length, true, true );
+    st25r3916comStop();
+    
+    /* Send cmd event to LED handling */
+    st25r3916ledEvtCmds( cmds, length );
     
     return RFAL_ERR_NONE;
 }
