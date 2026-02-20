@@ -860,9 +860,6 @@ class DebugLink:
         x, y = click
         self._decision(messages.DebugLinkDecision(x=x, y=y, hold_ms=hold_ms), wait=wait)
 
-    def stop(self) -> None:
-        self._write(messages.DebugLinkStop())
-
     def reseed(self, value: int) -> None:
         self._call(messages.DebugLinkReseedRandom(value=value), expect=messages.Success)
 
@@ -1742,6 +1739,16 @@ class TrezorTestContext:
         else:
             self.debug._call(messages.WipeDevice(), expect=messages.Success)
         self.reset_instance()
+
+    def restart_event_loop(self) -> None:
+        assert self.model in models.CORE_MODELS
+        if self.is_thp():
+            # device should not be restarted while handling THP ACK from host
+            self.sync_responses()
+
+        self.debug._write(messages.DebugLinkStop())
+        # wait until MicroPython event loop is available after a restart
+        self.debug._call(messages.DebugLinkGetState(return_empty_state=True))
 
 
 def load_device(
