@@ -18,10 +18,10 @@
 import pytest
 import shamir_mnemonic as shamir
 
-from trezorlib import device, messages
+from trezorlib import device, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ..common import (
     MNEMONIC12,
@@ -210,10 +210,20 @@ def test_interrupt_backup_fails(session: Session):
     resp = session.call_raw(messages.BackupDevice())
     assert isinstance(resp, messages.ButtonRequest)
 
-    # interrupt backup by sending cancel
-    session.cancel()
-    resp = session.read()
-    assert isinstance(resp, messages.Failure)
+    # interrupt backup
+    if session.model in models.LEGACY_MODELS:
+        with pytest.raises(Cancelled):
+            # backup can be cancelled on legacy
+            session.call(messages.Cancel())
+    else:
+        # backup cancellation is ignored by Core models
+        resp = session.call_raw(messages.Cancel())
+        assert isinstance(resp, messages.Failure)
+        assert resp.code == messages.FailureType.InProgress
+        assert resp.message == "Backup in progress"
+
+        # use debuglink to fail the backup
+        session.test_ctx.restart_event_loop()
 
     # check that device state is as expected
     assert session.features.initialized is True

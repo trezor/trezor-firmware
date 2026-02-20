@@ -5,7 +5,7 @@ from trezorui import Display
 from typing import TYPE_CHECKING
 
 from trezor import io, log, loop, utils, wire, workflow
-from trezor.messages import ButtonAck, ButtonRequest
+from trezor.messages import ButtonRequest
 from trezor.wire import context
 from trezor.wire.protocol_common import Context
 from trezorui_api import (
@@ -280,8 +280,7 @@ class Layout(Generic[T]):
 
                 def _button_request_task() -> Generator[Any, Any, None]:
                     try:
-                        yield from button_request_handler(
-                            context=ctx,
+                        yield from ctx.button_request_handler.handle(
                             button_requests=self.button_request_box,
                             ack_callback=self._button_request_acked,
                         )
@@ -567,26 +566,6 @@ class Layout(Generic[T]):
 
     def __del__(self) -> None:
         self.layout.__del__()
-
-
-async def button_request_handler(
-    context: Context,
-    button_requests: loop.mailbox[ButtonRequest | None],
-    ack_callback: Callable[[], None],
-) -> None:
-    while True:
-        # The following task will raise `UnexpectedMessageException` on any message.
-        unexpected_read = context.read(None)
-        br = await loop.race(unexpected_read, button_requests)
-        if br is None:
-            return  # exit the loop when the layout is done.
-
-        if __debug__:
-            log.info(__name__, "ButtonRequest sent: %s", br.name)
-        await context.call(br, ButtonAck)
-        if __debug__:
-            log.info(__name__, "ButtonRequest acked: %s", br.name)
-        ack_callback()
 
 
 class ProgressLayout:
