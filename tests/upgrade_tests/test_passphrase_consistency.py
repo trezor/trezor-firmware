@@ -22,8 +22,7 @@ from trezorlib import btc, device, mapping, messages, models, protobuf
 from trezorlib._internal.emulator import Emulator
 from trezorlib.tools import parse_path
 
-from ..emulators import EmulatorWrapper
-from . import for_all
+from . import for_all, shared_profile_dir, upgrade_emulator
 
 SOURCE_ASK = 0
 SOURCE_DEVICE = 1
@@ -43,28 +42,32 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
-def emulator(gen: str, tag: str, model: str) -> Iterator[Emulator]:
-    with EmulatorWrapper(gen, tag, model) as emu:
-        # set up a passphrase-protected device
-        device.setup(
-            emu.client.get_seedless_session(),
-            pin_protection=False,
-            skip_backup=True,
-            entropy_check_count=0,
-            backup_type=messages.BackupType.Bip39,
-        )
-        emu.client.client._invalidate()
-        resp = emu.client.get_seedless_session().call(
-            ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)
-        )
-        assert isinstance(resp, messages.Success)
+def emulator(tag: str, model: str) -> Iterator[Emulator]:
+    with shared_profile_dir() as profile_dir:
+        with upgrade_emulator(tag, model, profile_dir=profile_dir) as emu:
+            # set up a passphrase-protected device
+            device.setup(
+                emu.client.get_seedless_session(),
+                pin_protection=False,
+                skip_backup=True,
+                entropy_check_count=0,
+                backup_type=messages.BackupType.Bip39,
+            )
+            emu.client.client._invalidate()
+            resp = emu.client.get_seedless_session().call(
+                ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)
+            )
+            assert isinstance(resp, messages.Success)
 
-        yield emu
+            yield emu
 
 
 @for_all(
-    core_minimum_version=models.TREZOR_T.minimum_version,
+    "T1B1",
+    "T2T1",
+    "T3W1",
     legacy_minimum_version=models.TREZOR_ONE.minimum_version,
+    core_minimum_version=models.TREZOR_T.minimum_version,
 )
 def test_passphrase_works(emulator: Emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
@@ -97,14 +100,18 @@ def test_passphrase_works(emulator: Emulator):
         messages.Address,
     ]
     with emulator.client as client:
-        client.set_expected_responses(expected_responses)
+        if not client.is_thp():
+            client.set_expected_responses(expected_responses)
         session = client.get_session(passphrase="TREZOR")
         btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
 
 
 @for_all(
-    core_minimum_version=models.TREZOR_T.minimum_version,
+    "T1B1",
+    "T2T1",
+    "T3W1",
     legacy_minimum_version=(1, 9, 0),
+    core_minimum_version=models.TREZOR_T.minimum_version,
 )
 def test_init_device(emulator: Emulator):
     """Check that passphrase caching and session_id retaining works correctly across
@@ -142,7 +149,8 @@ def test_init_device(emulator: Emulator):
     ]
 
     with emulator.client as client:
-        client.set_expected_responses(expected_responses)
+        if not client.is_thp():
+            client.set_expected_responses(expected_responses)
         session = client.get_session(passphrase="TREZOR")
         btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
 
