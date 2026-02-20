@@ -257,6 +257,9 @@ features = ['bootloader',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 
 if UI_PERFORMANCE_OVERLAY:
     features.append('ui_performance_overlay')
+if not PRODUCTION:
+    features.append('ui_dev_overlay')
+
 
 rust = tools.add_rust_lib(
     env=env,
