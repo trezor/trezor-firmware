@@ -361,11 +361,15 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count,
     // no way how to compute parent fingerprint
     return 1;
   }
-  if (i_count == 1) {
+  if (i_count == 1 || i_count - 1 > BIP32_CACHE_MAXDEPTH) {
+    // when parent is uncacheable just derive the node and return
+    for (size_t k = 0; k < i_count - 1; k++) {
+      if (hdnode_private_ckd(inout, i[k]) == 0) return 0;
+    }
     if (fingerprint) {
       *fingerprint = hdnode_fingerprint(inout);
     }
-    if (hdnode_private_ckd(inout, i[0]) == 0) return 0;
+    if (hdnode_private_ckd(inout, i[i_count - 1]) == 0) return 0;
     return 1;
   }
 
