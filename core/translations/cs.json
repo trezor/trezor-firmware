@@ -48,13 +48,13 @@
       "Delizia": "Pokud se adresa příjemce neshoduje, obraťte se na Trezor podporu na adrese trezor.io/support.",
       "Eckhart": "Pokud se adresa neshoduje, obraťte se na Trezor podporu na trezor.io/support."
     },
-    "address__cancel_receive": "Zrušit příjem",
-    "address__check_with_source": {
-      "Bolt": "Ověřit adresu podle zdroje.",
-      "Caesar": "Ověřte adresu podle zdroje.",
-      "Delizia": "Ověřte adresu podle zdroje.",
-      "Eckhart": "Ověřte adresu podle zdroje."
+    "address__cancel_receive": {
+      "Bolt": "Zrušit příjem",
+      "Caesar": "Zrušit příjem",
+      "Delizia": "Zrušit příjem",
+      "Eckhart": "Zrušit příjem?"
     },
+    "address__check_with_source": "Ověřte adresu podle zdroje.",
     "address__coin_address_template": "Adresa {0}",
     "address__confirmed": "Adresa příjemce potvrzena",
     "address__public_key": "Veřejný klíč",
@@ -115,8 +115,8 @@
     "backup__not_recommend": "Nedoporučujeme přeskočit vytvoření zálohy peněženky.",
     "backup__recover_anytime": "Pomocí zálohy můžete svou peněženku kdykoli obnovit.",
     "backup__title_backup_completed": {
-      "Bolt": "Záloha peněženky byla vytvořena",
-      "Caesar": "Záloha peněženky byla vytvořena",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Záloha peněženky byla vytvořena",
       "Eckhart": "Záloha peněženky byla vytvořena."
     },
@@ -149,7 +149,12 @@
     "bitcoin__title_payjoin": "Payjoin",
     "bitcoin__title_proof_of_ownership": "Důkaz vlastnictví",
     "bitcoin__title_purchase_ticket": "Koupit lístek",
-    "bitcoin__title_update_transaction": "Aktualiz. transakci",
+    "bitcoin__title_update_transaction": {
+      "Bolt": "Aktualizovat transakci",
+      "Caesar": "Aktualiz. transakci",
+      "Delizia": "Aktualizovat transakci",
+      "Eckhart": "Aktualizovat transakci"
+    },
     "bitcoin__unknown_path": "Neznámá cesta",
     "bitcoin__unknown_transaction": "Neznámá transakce",
     "bitcoin__unusually_high_fee": "Nezvykle vysoký poplatek.",
@@ -312,7 +317,12 @@
     "buttons__cancel": "Zrušit",
     "buttons__change": "Změnit",
     "buttons__check": "Zkontrolovat",
-    "buttons__check_again": "Znovu zkontrl.",
+    "buttons__check_again": {
+      "Bolt": "Znovu zkontrl.",
+      "Caesar": "Zkusit znovu",
+      "Delizia": "Znovu zkontrl.",
+      "Eckhart": "Znovu zkontrl."
+    },
     "buttons__close": "Zavřít",
     "buttons__confirm": "Potvrdit",
     "buttons__continue": "Pokračujte",
@@ -362,20 +372,20 @@
     "cardano__amount_sent_decimals_unknown": "Odeslaná částka (neznámý počet desetinných míst)",
     "cardano__anonymous_pool": "Pool nemá žádná metadata (anonymní pool)",
     "cardano__asset_fingerprint": "Otisk aktiva",
-    "cardano__auxiliary_data_hash": "Pomocný datový hash",
+    "cardano__auxiliary_data_hash": "Hash pomocných dat",
     "cardano__block": "Blok",
     "cardano__catalyst": "Katalyzátor",
     "cardano__certificate": "Certifikát",
     "cardano__change_output": "Výstup zpět na peněženku",
     "cardano__check_all_items": "Pozorně zkontrolujte všechny položky.",
     "cardano__choose_level_of_details": "Vyberte úroveň podrobností:",
-    "cardano__collateral_input_id": "ID vstupu zástavy",
-    "cardano__collateral_input_index": "Index vstupu zástavy",
+    "cardano__collateral_input_id": "Vstupní ID zástavy",
+    "cardano__collateral_input_index": "Vstupní index zástavy",
     "cardano__collateral_output_contains_tokens": "Výstup vrácení zástavy obsahuje tokeny.",
     "cardano__collateral_return": "Vrácení zástavy",
     "cardano__confirm_message": "Potvrdit zprávu",
     "cardano__confirm_signing_stake_pool": "Potvrďte podepsání registrace stake poolu coby vlastník.",
-    "cardano__confirm_transaction": "Potvrďte transakci",
+    "cardano__confirm_transaction": "Potvrdit transakci",
     "cardano__confirming_a_multisig_transaction": "Potvrzení transakce multisig.",
     "cardano__confirming_a_plutus_transaction": "Potvrzení transakce Plutus.",
     "cardano__confirming_pool_registration": "Potvrzení registrace poolu jako vlastník.",
@@ -383,7 +393,7 @@
     "cardano__cost": "Náklady",
     "cardano__credential_mismatch": "Údaje neodpovídají platebním údajům.",
     "cardano__datum_hash": "Hash dat",
-    "cardano__delegating_to": "Delegování",
+    "cardano__delegating_to": "Delegování na",
     "cardano__delegating_to_key_hash": "Delegování na hash klíče",
     "cardano__delegating_to_script": "Delegování na skript",
     "cardano__deposit": "Vklad",
@@ -392,18 +402,18 @@
     "cardano__for_account_template": "Pro účet {0}",
     "cardano__for_key_hash": "Pro hash klíče",
     "cardano__for_script": "Pro skript",
-    "cardano__inline_datum": "Data výstupu transakce",
-    "cardano__input_id": "ID vstupu",
-    "cardano__input_index": "Index vstupu",
-    "cardano__intro_text_change": "Následující adresa je adresu zpět na peněženku. Jeho",
-    "cardano__intro_text_owned_by_device": "Následující adresu vlastní toto zařízení. Jeho",
-    "cardano__intro_text_registration_payment": "Platební adresa pro registraci hlasovacího klíče je ve vlastnictví tohoto zařízení. Jeho",
+    "cardano__inline_datum": "Inline data",
+    "cardano__input_id": "Vstupní ID",
+    "cardano__input_index": "Vstupní index",
+    "cardano__intro_text_change": "Následující adresa je adresa na drobné. Její",
+    "cardano__intro_text_owned_by_device": "Následující adresu vlastní toto zařízení. Její",
+    "cardano__intro_text_registration_payment": "Platební adresu pro registraci hlasovacího klíče vlastní toto zařízení. Její",
     "cardano__key_hash": "hash klíče",
     "cardano__margin": "Marže",
     "cardano__message_hash": "Hash zprávy",
     "cardano__message_hex": "Hex zprávy",
     "cardano__message_text": "Text zprávy",
-    "cardano__multisig_path": "cesta multisig",
+    "cardano__multisig_path": "multisig cesta",
     "cardano__nested_scripts_template": "Obsahuje {0} vnořených skriptů.",
     "cardano__network": "Síť",
     "cardano__no_output_tx": "Transakce nemá žádné výstupy, síť nelze ověřit.",
@@ -414,32 +424,32 @@
     "cardano__pointer": "ukazatel",
     "cardano__policy_id": "ID zásady",
     "cardano__pool_metadata_hash": "Hash metadat poolu",
-    "cardano__pool_metadata_url": "Adresa URL metadat poolu",
+    "cardano__pool_metadata_url": "URL metadat poolu",
     "cardano__pool_owner": "Vlastník poolu",
-    "cardano__pool_reward_account": "Účet pro odměny v poolu",
-    "cardano__reference_input_id": "Referenční ID vstupu",
-    "cardano__reference_input_index": "Referenční index vstupu",
+    "cardano__pool_reward_account": "Účet pro odměny z poolu",
+    "cardano__reference_input_id": "Referenční vstupní ID",
+    "cardano__reference_input_index": "Referenční vstupní index",
     "cardano__reference_script": "Referenční skript",
-    "cardano__required_signer": "Povinná podepisující osoba",
-    "cardano__reward": "Odměna",
+    "cardano__required_signer": "Povinný podepisující",
+    "cardano__reward": "odměna",
     "cardano__reward_address": "Adresa je adresa pro odměny.",
-    "cardano__reward_eligibility_warning": "Varování: Adresa není platební, nelze použít pro odměny.",
-    "cardano__rewards_go_to": "Odměnu dostane",
+    "cardano__reward_eligibility_warning": "Varování: Adresa není platební, nelze ji použít pro odměny.",
+    "cardano__rewards_go_to": "Odměny dostane",
     "cardano__script": "skript",
     "cardano__script_all": "Vše",
     "cardano__script_any": "Libovolné",
-    "cardano__script_data_hash": "Datový hash skriptu",
+    "cardano__script_data_hash": "Hash dat skriptu",
     "cardano__script_hash": "Hash skriptu",
     "cardano__script_invalid_before": "Neplatné před",
-    "cardano__script_invalid_hereafter": "Neplatné dále",
+    "cardano__script_invalid_hereafter": "Neplatné po",
     "cardano__script_key": "Klíč",
     "cardano__script_n_of_k": "N z K",
-    "cardano__script_reward": "Odměna za skript",
+    "cardano__script_reward": "odměna za skript",
     "cardano__sending": "Odesílání",
     "cardano__show_simple": "Zjednodušeně",
     "cardano__sign_message_hash_path_template": "Podepsat hash zprávy s {0}",
     "cardano__sign_message_path_template": "Podepsat zprávu s {0}",
-    "cardano__sign_tx_path_template": "Podepsat transakci pomocí {0}",
+    "cardano__sign_tx_path_template": "Transakci podepíše {0}",
     "cardano__stake_delegation": "Delegace staku",
     "cardano__stake_deregistration": "Zrušení registrace stake klíče",
     "cardano__stake_pool_registration": "Registrace stakepoolu",
@@ -447,12 +457,12 @@
     "cardano__stake_registration": "Registrace stake klíče",
     "cardano__staking_key_for_account": "Klíč účtu pro staking",
     "cardano__to_pool": "Poolu",
-    "cardano__token_minting_path": "Cesta vytváření tokenů",
-    "cardano__total_collateral": "Celková zástava:",
+    "cardano__token_minting_path": "token minting cesta",
+    "cardano__total_collateral": "Celková zástava",
     "cardano__transaction": "Transakce",
     "cardano__transaction_contains_minting_or_burning": "Transakce obsahuje vytváření nebo pálení tokenů.",
     "cardano__transaction_contains_script_address_no_datum": "Následující výstup transakce obsahuje adresu skriptu, ale neobsahuje datum.",
-    "cardano__transaction_id": "ID transakce:",
+    "cardano__transaction_id": "ID transakce",
     "cardano__transaction_no_collateral_input": "Transakce neobsahuje žádné vstupy zástavy. Skript Plutus nebude možné spustit.",
     "cardano__transaction_no_script_data_hash": "Transakce neobsahuje žádný datový hash skriptu. Skript Plutus nebude možné spustit.",
     "cardano__transaction_output_contains_tokens": "Následující výstup transakce obsahuje tokeny.",
@@ -467,7 +477,7 @@
     "cardano__voting_purpose": "Účel hlasování",
     "cardano__warning": "Varování",
     "cardano__weight": "Váha",
-    "cardano__withdrawal_for_address_template": "Potvrďte výběr pro adresu {0}",
+    "cardano__withdrawal_for_address_template": "Potvrďte výběr pro adresu typu {0}",
     "cardano__x_of_y_signatures_template": "Vyžaduje {0} podpis ze {1}.",
     "coinjoin__access_account": "Získat přístup k účtu coinjoin?",
     "coinjoin__do_not_disconnect": "Neodpojujte Trezor!",
@@ -670,7 +680,7 @@
       "Eckhart": ""
     },
     "eos__threshold": {
-      "Bolt": "Práh:",
+      "Bolt": "Prahová hodnota",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -732,7 +742,7 @@
     "ethereum__amount_sent": "Odeslaná částka:",
     "ethereum__approve": "Povolit",
     "ethereum__approve_amount_allowance": "Limit částky",
-    "ethereum__approve_chain_id": "ID řetězce",
+    "ethereum__approve_chain_id": "ID sítě",
     "ethereum__approve_intro": "Zkontrolujte data a povolte útratu tokenu.",
     "ethereum__approve_intro_revoke": "Zkontrolujte a zrušte povolení tokenu.",
     "ethereum__approve_intro_title": "Schválení tokenu",
@@ -769,14 +779,14 @@
     "ethereum__title_all_input_data_template": "Všechna vstupní data ({0} bajtů)",
     "ethereum__title_confirm_domain": "Potvrdit doménu",
     "ethereum__title_confirm_message": "Potvrdit zprávu",
-    "ethereum__title_confirm_message_hash": {
-      "Bolt": "Potvrdit hash zprávy",
-      "Caesar": "Potvrďte hash zprávy",
-      "Delizia": "Potvrďte hash zprávy",
-      "Eckhart": "Potvrďte hash zprávy"
-    },
+    "ethereum__title_confirm_message_hash": "Potvrdit hash zprávy",
     "ethereum__title_confirm_struct": "Potvrdit strukturu",
-    "ethereum__title_confirm_typed_data": "Potvrdit typ. data",
+    "ethereum__title_confirm_typed_data": {
+      "Bolt": "Potvrdit typovaná data",
+      "Caesar": "Potvrdit typ. data",
+      "Delizia": "Potvrdit typovaná data",
+      "Eckhart": "Potvrdit typovaná data"
+    },
     "ethereum__title_input_data": "Vstupní data",
     "ethereum__title_signing_address": "Podepisování adresy",
     "ethereum__token_contract": "Kontrakt tokenu",
@@ -852,7 +862,7 @@
     "homescreen__title_backup_needed": "Je potřeba záloha",
     "homescreen__title_coinjoin_authorized": "Coinjoin schválen",
     "homescreen__title_experimental_mode": "Experiment. režim",
-    "homescreen__title_no_usb_connection": "Žádné připojení USB",
+    "homescreen__title_no_usb_connection": "Žádné USB připojení",
     "homescreen__title_pin_not_set": "Není nastaven PIN",
     "homescreen__title_seedless": "Bez seedu",
     "homescreen__title_set": "Změnit domov. obr.?",
@@ -918,9 +928,24 @@
     "instructions__hold_to_sign": "Podržením podepíšete",
     "instructions__learn_more": "Zjistit více",
     "instructions__menu_to_continue": "Pokračujte přes nabídku",
-    "instructions__shares_continue_with_x_template": "Pokračujte podílem č. {0}",
-    "instructions__shares_start_with_1": "Začněte podílem č. 1",
-    "instructions__shares_start_with_x_template": "Začněte podílem č. {0}",
+    "instructions__shares_continue_with_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pokračujte podílem č. {0}",
+      "Eckhart": ""
+    },
+    "instructions__shares_start_with_1": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Začněte podílem č. 1",
+      "Eckhart": "Začněte podílem č. 1"
+    },
+    "instructions__shares_start_with_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Začněte podílem č. {0}"
+    },
     "instructions__swipe_down": "Přejeďte prstem dolů",
     "instructions__swipe_horizontally": "Přejeďte prstem vodorovně",
     "instructions__tap": "Klepněte",
@@ -1000,8 +1025,8 @@
     },
     "modify_fee__new_transaction_fee": {
       "Bolt": "Nový trans. poplatek:",
-      "Caesar": "Nový trans. poplatek:",
-      "Delizia": "Nový trans. poplatek:",
+      "Caesar": "",
+      "Delizia": "Nový transakční poplatek:",
       "Eckhart": "Nový transakční poplatek"
     },
     "modify_fee__no_change": {
@@ -1138,7 +1163,7 @@
       "Eckhart": ""
     },
     "nem__create_namespace": {
-      "Bolt": "Vytvořit obor názvů",
+      "Bolt": "Vytvořit namespace",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1362,16 +1387,36 @@
     "passphrase__title_enter": "Zadejte passphrase",
     "passphrase__title_hide": "Skrýt passphrase",
     "passphrase__title_passphrase": "Passphrase",
-    "passphrase__title_settings": "Nastav. passphrase",
+    "passphrase__title_settings": {
+      "Bolt": "Nastavit passphrase",
+      "Caesar": "Nastav. passphrase",
+      "Delizia": "Nastav. passphrase",
+      "Eckhart": "Nastav. passphrase"
+    },
     "passphrase__title_source": "Zdroj passphrase",
     "passphrase__turn_off": "Vypnout ochranu s passphrase?",
     "passphrase__turn_on": "Zapnout ochranu s passphrase?",
-    "passphrase__wallet": "Passphrase pen.",
-    "pin__cancel_description": "Pokračovat bez PINu",
-    "pin__cancel_info": "Bez PINu má k tomuto zařízení přístup kdokoli.",
+    "passphrase__wallet": {
+      "Bolt": "Passphrase peněženka",
+      "Caesar": "Passphrase pen.",
+      "Delizia": "Passphrase pen.",
+      "Eckhart": "Passphrase pen."
+    },
+    "pin__cancel_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Pokračovat bez PINu",
+      "Eckhart": ""
+    },
+    "pin__cancel_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Bez PINu má k tomuto zařízení přístup kdokoli.",
+      "Eckhart": "Bez PINu má k tomuto zařízení přístup kdokoli."
+    },
     "pin__cancel_setup": {
-      "Bolt": "Zrušit nastavení PINu",
-      "Caesar": "Zrušit nastavení PINu",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Zrušit nastavení PINu",
       "Eckhart": "Zrušit nastavení PINu?"
     },
@@ -1380,8 +1425,13 @@
     "pin__changed": "PIN byl změněn.",
     "pin__cursor_will_change": "Poloha kurzoru se mezi jednotlivými položkami změní pro zvýšení bezpečnosti.",
     "pin__diff_from_wipe_code": "Nový PIN se musí lišit od kódu pro vymazání.",
-    "pin__disabled": "Ochrana PIN\nje vypnutá.",
-    "pin__enabled": "Ochrana PINem\nje zapnutá.",
+    "pin__disabled": "Ochrana PINem\nje vypnutá.",
+    "pin__enabled": {
+      "Bolt": "Ochrana PINem\nje zapnutá.",
+      "Caesar": "Ochrana PINem\nje zapnutá.",
+      "Delizia": "Ochrana PINem\nje zapnutá.",
+      "Eckhart": ""
+    },
     "pin__enter": "Zadejte PIN",
     "pin__enter_new": "Zadejte nový PIN",
     "pin__entered_not_valid": "Zadaný PIN není platný.",
@@ -1390,19 +1440,29 @@
     "pin__last_attempt": "Poslední pokus",
     "pin__mismatch": "Zadané PINy se neshodují!",
     "pin__pin_mismatch": "PIN se neshoduje",
-    "pin__please_check_again": "Zkontrolujte to znovu.",
+    "pin__please_check_again": "Prosím, zkuste to znovu.",
     "pin__reenter": "Znovu zadejte PIN",
     "pin__reenter_new": "Zopakujte PIN",
     "pin__reenter_to_confirm": "Znovu zadejte PIN pro potvrzení.",
     "pin__remove": "Odstranit PIN",
-    "pin__setup_completed": "Nastavení PINu dokončeno.",
+    "pin__setup_completed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Nastavení PINu dokončeno."
+    },
     "pin__should_be_long": "PIN musí mít 4-50 číslic.",
     "pin__title": "PIN kód",
     "pin__title_check_pin": "Zkontrolovat PIN",
     "pin__title_settings": "Nastavení PINu",
     "pin__title_wrong_pin": "Nesprávný PIN",
-    "pin__tries_left": "pok.",
-    "pin__turn_off": "Opravdu chcete vypnout ochranu PINem?",
+    "pin__tries_left": {
+      "Bolt": "pokusů",
+      "Caesar": "pokusů",
+      "Delizia": "pok.",
+      "Eckhart": "pokusů"
+    },
+    "pin__turn_off": "Opravdu chcete vypnout ochranu PIN kódem?",
     "pin__turn_on": "Zapnout ochranu PINem?",
     "pin__wipe_code_exists_description": "Před vypnutím PINu je nutné vypnout kód pro vymazání.",
     "pin__wipe_code_exists_title": {
@@ -1412,16 +1472,16 @@
       "Eckhart": "Kód pro vymazání nastaven"
     },
     "pin__wrong_pin": "Nesprávný PIN",
-    "plurals__contains_x_keys": "klíč|klíčů",
-    "plurals__lock_after_x_days": "den|dny",
-    "plurals__lock_after_x_hours": "hod.|hod.",
-    "plurals__lock_after_x_milliseconds": "ms|ms",
-    "plurals__lock_after_x_minutes": "min.|min.",
-    "plurals__lock_after_x_seconds": "s|s",
-    "plurals__sign_x_actions": "akce|akcí",
-    "plurals__transaction_of_x_operations": "operace|operací",
-    "plurals__x_groups_needed": "skupina|skupin",
-    "plurals__x_shares_needed": "podíl|podílů",
+    "plurals__contains_x_keys": "klíč|klíče|klíčů",
+    "plurals__lock_after_x_days": "den|dny|dní",
+    "plurals__lock_after_x_hours": "hodina|hodiny|hodin",
+    "plurals__lock_after_x_milliseconds": "milisekunda|milisekundy|milisekund",
+    "plurals__lock_after_x_minutes": "minuta|minuty|minut",
+    "plurals__lock_after_x_seconds": "sekunda|sekundy|sekund",
+    "plurals__sign_x_actions": "akce|akce|akcí",
+    "plurals__transaction_of_x_operations": "operace|operace|operací",
+    "plurals__x_groups_needed": "skupina|skupiny|skupin",
+    "plurals__x_shares_needed": "podíl|podíly|podílů",
     "progress__authenticity_check": "Kontrola pravosti...",
     "progress__done": "Hotovo",
     "progress__loading_transaction": "Načítání transakce...",
@@ -1472,7 +1532,7 @@
       "Bolt": "Skupiny {0}",
       "Caesar": "Skupiny {0}",
       "Delizia": "Skupiny {0}",
-      "Eckhart": "Skupiny č. {0}"
+      "Eckhart": ""
     },
     "recovery__group_threshold_reached": "Práh skupiny dosažen.",
     "recovery__info_about_disconnect": "Během obnovování peněženky můžete odpojit Trezor a pokračovat později.",
@@ -1491,11 +1551,16 @@
       "Bolt": "Podíl byl už zadán",
       "Caesar": "Podíl byl už zadán",
       "Delizia": "Podíl byl už zadán",
-      "Eckhart": "Podíl byl už zadán. Zadejte jiný podíl."
+      "Eckhart": "Tento podíl byl už zadán. Zadejte jiný podíl."
     },
     "recovery__share_does_not_match": "Podíl se neshoduje",
     "recovery__share_from_another_multi_share_backup": "Zadali jste podíl z jiné zálohy.",
-    "recovery__share_from_group_entered_template": "Zadán podíl č. {0} ze skupiny č. {1}.",
+    "recovery__share_from_group_entered_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zadán podíl č. {0} ze skupiny č. {1}."
+    },
     "recovery__share_num_template": {
       "Bolt": "Podíl {0}",
       "Caesar": "Podíl {0}",
@@ -1503,11 +1568,11 @@
       "Eckhart": "Podíl č. {0}"
     },
     "recovery__start_entering": "Začněte zadávat",
-    "recovery__title": "Obnovit peněženku",
+    "recovery__title": "Obnovení peněženky",
     "recovery__title_cancel_dry_run": "Zruš. kontr. zálohy",
     "recovery__title_cancel_recovery": "Zrušit obnovení",
     "recovery__title_dry_run": "Kontrola zálohy",
-    "recovery__title_recover": "Obnovit peněženku",
+    "recovery__title_recover": "Obnovení peněženky",
     "recovery__title_remaining_shares": "Zbývající podíly",
     "recovery__title_unlock_repeated_backup": "Vícedílná záloha",
     "recovery__type_word_x_of_y_template": "Zadejte slovo {0} z {1}",
@@ -1521,7 +1586,7 @@
     },
     "recovery__wanna_cancel_dry_run": "Opravdu chcete zrušit kontrolu zálohy?",
     "recovery__wanna_cancel_recovery": "Opravdu chcete proces obnovení zrušit?",
-    "recovery__word_count_template": "(slova: {0})",
+    "recovery__word_count_template": "({0} slov)",
     "recovery__word_x_of_y_template": {
       "Bolt": "Slovo {0} z {1}",
       "Caesar": "Slovo {0} z {1}",
@@ -1529,10 +1594,10 @@
       "Eckhart": "Slovo {0} \nz {1}"
     },
     "recovery__x_more_items_starting_template_plural": {
-      "Bolt": "Zahajuje se dalších {count} {plural}",
-      "Caesar": "Zahajuje se dalších {count} {plural}",
-      "Delizia": "Zahajuje se dalších {count} {plural}",
-      "Eckhart": "Potřebujete dalších {count} {plural} začínající(ch)"
+      "Bolt": "Ještě {count} {plural} začínající",
+      "Caesar": "",
+      "Delizia": "Ještě {count} {plural} začínající",
+      "Eckhart": "Je potřeba ještě {count} {plural} začínající"
     },
     "recovery__x_more_shares_needed_template_plural": {
       "Bolt": "Zadejte ještě {count} {plural}",
@@ -1540,15 +1605,30 @@
       "Delizia": "Zadejte ještě {count} {plural}",
       "Eckhart": "Zadejte ještě {count} {plural}."
     },
-    "recovery__x_of_y_entered_template": "Zadali jste {0} z {1} podílů",
-    "recovery__you_have_entered": "Byl zadán",
+    "recovery__x_of_y_entered_template": {
+      "Bolt": "Zadáno {0} ze {1} podílů",
+      "Caesar": "Zadáno {0} ze {1} podílů",
+      "Delizia": "Zadáno {0} ze {1} podílů",
+      "Eckhart": "Zadáno {0} ze {1} podílů."
+    },
+    "recovery__you_have_entered": {
+      "Bolt": "Byl zadán",
+      "Caesar": "Byl zadán",
+      "Delizia": "Byl zadán",
+      "Eckhart": ""
+    },
     "regulatory__title": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Právní informace"
     },
-    "reset__advanced_group_threshold_info": "Prahová hodnota skupiny určuje počet skupin potřebných k obnovení vaší peněženky.",
+    "reset__advanced_group_threshold_info": {
+      "Bolt": "Prahová hodnota skupiny určuje počet skupin potřebných k obnovení vaší peněženky.",
+      "Caesar": "",
+      "Delizia": "Prahová hodnota skupiny určuje počet skupin potřebných k obnovení vaší peněženky.",
+      "Eckhart": "Prahová hodnota skupiny určuje počet skupin potřebných k obnovení vaší peněženky."
+    },
     "reset__all_x_of_y_template": {
       "Bolt": "všech {0} z {1} podílů",
       "Caesar": "",
@@ -1566,20 +1646,60 @@
     "reset__by_continuing": "Pokračováním přijímáte smluvní podmínky společnosti Trezor.",
     "reset__cancel_create_wallet": "Zrušit vytvoření peněženky",
     "reset__check_backup_instructions": "Rychle zkontrolujeme vaši zálohu.",
-    "reset__check_backup_title": "Zkontr. zálohu",
-    "reset__check_group_share_title_template": "Zkont. sk. {0} - podíl {1}",
+    "reset__check_backup_title": "Kontrola zálohy",
+    "reset__check_group_share_title_template": {
+      "Bolt": "Kont. sk. {0} - podíl {1}",
+      "Caesar": "",
+      "Delizia": "Kont. sk. {0} - podíl {1}",
+      "Eckhart": "Kontrola skupiny {0} - podílu {1}"
+    },
     "reset__check_share_backup_template": "Zkontrolujeme v rychlosti podíl {0}.",
-    "reset__check_share_title_template": "Kontrola podílu č. {0}",
-    "reset__check_wallet_backup_title": "Zkontrolovat zálohu",
-    "reset__continue_with_next_share": "Pokračujte dalším podílem.",
-    "reset__continue_with_share_template": "Pokračujte podílem {0}.",
+    "reset__check_share_title_template": {
+      "Bolt": "Kontrola podílu č. {0}",
+      "Caesar": "",
+      "Delizia": "Kontrola podílu č. {0}",
+      "Eckhart": ""
+    },
+    "reset__check_wallet_backup_title": "Kontrola zálohy",
+    "reset__continue_with_next_share": {
+      "Bolt": "Pokračujte dalším podílem.",
+      "Caesar": "Následuje další podíl.",
+      "Delizia": "Pokračujte dalším podílem.",
+      "Eckhart": "Pokračujte dalším podílem"
+    },
+    "reset__continue_with_share_template": {
+      "Bolt": "Pokračujte podílem č. {0}.",
+      "Caesar": "Pokračujte podílem č. {0}.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__create_x_of_y_multi_share_backup_template": "Chcete vytvořit vícedílnou zálohu s {0} podíly z celkových {1}?",
-    "reset__finished_verifying_group_template": "Ověřili jste podíly zálohy skupiny {0}.",
+    "reset__finished_verifying_group_template": {
+      "Bolt": "Ověřování podílů vaší zálohy skupiny {0} dokončeno.",
+      "Caesar": "Ověřování podílů vaší zálohy skupiny {0} dokončeno.",
+      "Delizia": "Skupina {0} ověřena.",
+      "Eckhart": "Ověřili jste podíly zálohy skupiny {0}."
+    },
     "reset__finished_verifying_shares": "Dokončili jste ověření podílů zálohy.",
     "reset__finished_verifying_wallet_backup": "Dokončili jste ověření zálohy.",
-    "reset__group_description": "Skupina se skládá z podílů zálohy.",
-    "reset__group_info": "Každá skupina má stanovený počet podílů a vlastní prahovou hodnotu. V následujících krocích nastavíte počty podílů a prahové hodnoty.",
-    "reset__group_share_checked_successfully_template": "Skupina {0} - podíl {1} je v pořádku.",
+    "reset__group_description": {
+      "Bolt": "Skupina se skládá z podílů zálohy.",
+      "Caesar": "",
+      "Delizia": "Skupina se skládá z podílů zálohy.",
+      "Eckhart": "Skupina se skládá z podílů zálohy."
+    },
+    "reset__group_info": {
+      "Bolt": "Každá skupina má stanovený počet podílů a vlastní prahovou hodnotu. V následujících krocích nastavíte počty podílů a prahové hodnoty.",
+      "Caesar": "",
+      "Delizia": "Každá skupina má stanovený počet podílů a vlastní prahovou hodnotu. V následujících krocích nastavíte počty podílů a prahové hodnoty.",
+      "Eckhart": "Každá skupina má stanovený počet podílů a vlastní prahovou hodnotu. V následujících krocích nastavíte počty podílů a prahové hodnoty."
+    },
+    "reset__group_share_checked_successfully_template": {
+      "Bolt": "Podíl {1} ze skupiny {0} je v pořádku.",
+      "Caesar": "Podíl {1} ze skupiny {0} je v pořádku.",
+      "Delizia": "Podíl {1} ze sk. {0} je správně.",
+      "Eckhart": "Podíl {1} ze skupiny {0} byl úspěšně zkontrolován."
+    },
     "reset__group_share_title_template": {
       "Bolt": "Skupina {0} - Podíl {1}",
       "Caesar": "Skupina {0} - Podíl {1}",
@@ -1602,20 +1722,25 @@
       "Eckhart": ""
     },
     "reset__needed_to_form_a_group": {
-      "Bolt": "potřeba k vytvoření skupiny. ",
+      "Bolt": "potřebných k vytvoření skupiny. ",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "reset__needed_to_recover_your_wallet": {
-      "Bolt": "potřeba k obnovení peněženky. ",
+      "Bolt": "potřebných k obnovení peněženky. ",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "reset__never_make_digital_copy": "Nevytvářejte digitální kopii zálohy ani ji nenahrávejte na internet!",
     "reset__num_of_share_holders_template": "Každý z {0} lidí nebo míst bude mít jeden podíl.",
-    "reset__num_of_shares_advanced_info_template": "Každý podíl zálohy je sekvence {0} slov. Dále vyberete prahovou hodnotu počtu podílů potřebných k vytvoření skupiny {1}.",
+    "reset__num_of_shares_advanced_info_template": {
+      "Bolt": "Každý podíl zálohy je sekvence {0} slov. Dále vyberete prahovou hodnotu počtu podílů potřebných k vytvoření skupiny {1}.",
+      "Caesar": "",
+      "Delizia": "Každý podíl zálohy je sekvence {0} slov. Dále vyberete prahovou hodnotu počtu podílů potřebných k vytvoření skupiny {1}.",
+      "Eckhart": "Každý podíl zálohy je sekvence {0} slov. Dále vyberete prahovou hodnotu počtu podílů potřebných k vytvoření skupiny {1}."
+    },
     "reset__num_of_shares_basic_info_template": {
       "Bolt": "Každý podíl zálohy je sekvence {0} slov. Dále vyberete, kolik podílů bude potřeba k obnovení peněženky.",
       "Caesar": "",
@@ -1624,20 +1749,30 @@
     },
     "reset__num_of_shares_how_many": "Kolik podílů zálohy peněženky chcete vytvořit?",
     "reset__num_of_shares_long_info_template": {
-      "Bolt": "Každý podíl zálohy je sekvence {0} slov.\nUložte každý seznam slov na samostatné, bezpečné místo, nebo ho sdělte důvěryhodným osobám. Použijte podle potřeby pro obnovu vaší peněženky.",
-      "Caesar": "Každý podíl zálohy je sekvence {0} slov. Každý seznam slov si uložte na jiné, bezpečné místo nebo ho sdělte někomu, komu důvěřujete. Poté je použijte v případě potřeby obnovení peněženky.",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Každý podíl zálohy je sekvence {0} slov. Uložte každý seznam slov na samostatné, bezpečné místo, nebo ho sdělte důvěryhodným osobám. Použijte je podle potřeby pro obnovu vaší peněženky.",
       "Eckhart": "Každý podíl zálohy je sekvence {0} slov.\nUložte každý seznam slov na samostatné, bezpečné místo, nebo ho sdělte důvěryhodným osobám. Použijte je podle potřeby pro obnovu vaší peněženky."
     },
-    "reset__num_shares_for_group_template": "Potřebný počet podílů k vytvoření skupiny {0}.",
-    "reset__number_of_shares_info": "= počet seznamů jedinečných slov u zálohy peněženky.",
+    "reset__num_shares_for_group_template": "Počet podílů potřebný k vytvoření skupiny {0}.",
+    "reset__number_of_shares_info": {
+      "Bolt": "",
+      "Caesar": "= počet seznamů jedinečných slov u zálohy peněženky.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__one_share": {
       "Bolt": "1 podíl",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__only_one_share_will_be_created": "Bude vytvořen pouze jeden podíl.",
+    "reset__only_one_share_will_be_created": {
+      "Bolt": "Bude vytvořen pouze jeden podíl.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__recovery_share_description": "Podíl zálohy je seznam slov, která jste zapsali při nastavování Trezor.",
     "reset__recovery_share_number": "Vaše záloha peněženky se skládá z 1 až 16 podílů.",
     "reset__recovery_share_title_template": "Podíl zálohy č. {0}",
@@ -1647,48 +1782,103 @@
     "reset__select_correct_word": "Pro každou pozici vyberte správné slovo.",
     "reset__select_threshold": "Vyberte minimální počet podílů potřebných k obnovení peněženky.",
     "reset__select_word_from_share_template": {
-      "Bolt": "Vyberte slovo {0} z\npodílu {1}",
-      "Caesar": "Vyberte slovo {0} z\npodílu {1}",
-      "Delizia": "Vyberte slovo {0} z\npodílu {1}",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "Vyberte slovo č. {0} z \npodílu č. {1}"
     },
     "reset__select_word_template": {
-      "Bolt": "Vybrat slovo {0}",
-      "Caesar": "Vybrat slovo {0}",
-      "Delizia": "Vybrat slovo {0}",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "Vyberte slovo č. {0} z vaší zálohy peněženky"
     },
-    "reset__select_word_x_of_y_template": "Vyb. slovo {0} z {1}:",
+    "reset__select_word_x_of_y_template": {
+      "Bolt": "Vyb. slovo {0} z {1}:",
+      "Caesar": "Vyb. slovo {0} z {1}:",
+      "Delizia": "Vyberte slovo {0} z {1}:",
+      "Eckhart": "Vyb. slovo {0} z {1}:"
+    },
     "reset__set_it_to_count_template": {
       "Bolt": "Nastavte {0} a budete potřebovat ",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__share_checked_successfully_template": "Podíl č. {0} byl úspěšně zkontrolován.",
-    "reset__share_completed_template": "Podíl č. {0} dokončen",
+    "reset__share_checked_successfully_template": {
+      "Bolt": "Podíl č. {0} byl úspěšně zkontrolován.",
+      "Caesar": "Podíl č. {0} byl úspěšně zkontrolován.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__share_completed_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Podíl č. {0} dokončen",
+      "Eckhart": "Podíl č. {0} dokončen"
+    },
     "reset__share_words_first": "Zapište si první slovo zálohy.",
     "reset__share_words_title": "Standardní záloha",
-    "reset__slip39_checklist_more_info_threshold": "Prahová hodnota určuje minimální počet podílů potřebných k obnovení vaší peněženky.",
-    "reset__slip39_checklist_more_info_threshold_example_template": "Když nastavíte {0} z {1} podílů, budete k obnovení peněženky potřebovat {2} podíly.",
+    "reset__slip39_checklist_more_info_threshold": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Prahová hodnota určuje minimální počet podílů potřebných k obnovení vaší peněženky.",
+      "Eckhart": "Prahová hodnota určuje minimální počet podílů potřebných k obnovení vaší peněženky."
+    },
+    "reset__slip39_checklist_more_info_threshold_example_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Když nastavíte {0} z {1} podílů, budete k obnovení peněženky potřebovat {2} podíly.",
+      "Eckhart": "Když nastavíte {0} z {1} podílů, budete k obnovení peněženky potřebovat {2} podíly."
+    },
     "reset__slip39_checklist_num_groups": "Počet skupin",
     "reset__slip39_checklist_num_groups_x_template": "Počet skupin: {0}",
     "reset__slip39_checklist_num_shares": "Počet podílů",
-    "reset__slip39_checklist_num_shares_x_template": "Počet podílů: {0}",
-    "reset__slip39_checklist_set_num_groups": "Nastavte počet skupin",
-    "reset__slip39_checklist_set_num_shares": "Nastavte počet podílů",
+    "reset__slip39_checklist_num_shares_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Počet podílů: {0}",
+      "Eckhart": "Počet podílů: {0}"
+    },
+    "reset__slip39_checklist_set_num_groups": {
+      "Bolt": "Nastavte počet skupin",
+      "Caesar": "",
+      "Delizia": "Nastavte počet skupin",
+      "Eckhart": "Nastavte počet skupin"
+    },
+    "reset__slip39_checklist_set_num_shares": {
+      "Bolt": "Nastavte počet podílů",
+      "Caesar": "",
+      "Delizia": "Nastavte počet podílů",
+      "Eckhart": "Nastavte počet podílů"
+    },
     "reset__slip39_checklist_set_sizes": "Nastavte velikosti a prahy",
-    "reset__slip39_checklist_set_sizes_longer": "Nastavte velikost a práh pro každou skupinu.",
+    "reset__slip39_checklist_set_sizes_longer": "Nastavte velikost a práh pro každou skupinu",
     "reset__slip39_checklist_set_threshold": {
       "Bolt": "Nastavte práh",
       "Caesar": "Nastavte práh",
       "Delizia": "Nastavte práh",
       "Eckhart": "Nastavte práh obnovení"
     },
-    "reset__slip39_checklist_threshold_x_template": "Práh zálohy: {0}",
-    "reset__slip39_checklist_title": "Kont. seznam zálohy",
-    "reset__slip39_checklist_write_down": "Zapište si a zkontr. všechny podíly",
-    "reset__slip39_checklist_write_down_recovery": "Zapište si a zkontrolujte všechny podíly zálohy peněženky",
+    "reset__slip39_checklist_threshold_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Práh zálohy: {0}",
+      "Eckhart": "Práh zálohy: {0}"
+    },
+    "reset__slip39_checklist_title": "Následující kroky",
+    "reset__slip39_checklist_write_down": {
+      "Bolt": "Zapište si a zkontrolujte všechny podíly",
+      "Caesar": "Zapište si a zkontr. všechny podíly",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_write_down_recovery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Zapište si a zkontrolujte všechny podíly zálohy peněženky",
+      "Eckhart": "Zapište si a zkontrolujte všechny podíly zálohy peněženky"
+    },
     "reset__the_threshold_sets_the_number_of_shares": {
       "Bolt": "Prahová hodnota určuje počet podílů ",
       "Caesar": "",
@@ -1696,16 +1886,51 @@
       "Eckhart": ""
     },
     "reset__the_word_is_repeated": "Slovo se opakuje",
-    "reset__threshold_info": "= minimální počet seznamů jedinečných slov pro obnovení.",
+    "reset__threshold_info": {
+      "Bolt": "",
+      "Caesar": "= minimální počet seznamů jedinečných slov pro obnovení.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__title_backup_is_done": "Záloha je dokončena",
     "reset__title_create_wallet": "Vytv. peněženku",
-    "reset__title_group_threshold": "Práh skupiny",
+    "reset__title_group_threshold": {
+      "Bolt": "",
+      "Caesar": "Práh skupiny",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__title_number_of_groups": "Počet skupin",
-    "reset__title_number_of_shares": "Počet podílů",
-    "reset__title_set_group_threshold": "Nastavte práh skupiny",
-    "reset__title_set_number_of_groups": "Nastavte počet skupin",
-    "reset__title_set_number_of_shares": "Nastavte počet podílů",
-    "reset__title_set_threshold": "Nastavte práh",
+    "reset__title_number_of_shares": {
+      "Bolt": "",
+      "Caesar": "Počet podílů",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__title_set_group_threshold": {
+      "Bolt": "Nastavte práh skupiny",
+      "Caesar": "",
+      "Delizia": "Nastavte práh skupiny",
+      "Eckhart": "Nastavte práh skupiny"
+    },
+    "reset__title_set_number_of_groups": {
+      "Bolt": "Nastavte počet skupin",
+      "Caesar": "",
+      "Delizia": "Nastavte počet skupin",
+      "Eckhart": "Nastavte počet skupin"
+    },
+    "reset__title_set_number_of_shares": {
+      "Bolt": "Nastavte počet podílů",
+      "Caesar": "",
+      "Delizia": "Nastavte počet podílů",
+      "Eckhart": "Nastavte počet podílů"
+    },
+    "reset__title_set_threshold": {
+      "Bolt": "Nastavte práh",
+      "Caesar": "",
+      "Delizia": "Nastavte práh",
+      "Eckhart": ""
+    },
     "reset__title_shamir_backup": "Vícedílná záloha",
     "reset__to_form_group_template": {
       "Bolt": "k vytvoření skupiny {0}.",
@@ -1714,8 +1939,18 @@
       "Eckhart": ""
     },
     "reset__tos_link": "trezor.io/tos",
-    "reset__total_number_of_shares_in_group_template": "Nastavte celkový počet podílů ve skupině {0}.",
-    "reset__use_your_backup": "Zálohu použijte, když bude nutné obnovit peněženku.",
+    "reset__total_number_of_shares_in_group_template": {
+      "Bolt": "Nastavte celkový počet podílů ve skupině {0}.",
+      "Caesar": "",
+      "Delizia": "Nastavte celkový počet podílů ve skupině {0}.",
+      "Eckhart": "Nastavte celkový počet podílů ve skupině {0}."
+    },
+    "reset__use_your_backup": {
+      "Bolt": "Zálohu použijte, když bude nutné obnovit peněženku.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__words_may_repeat": "Slova se mohou opakovat.",
     "reset__words_written_down_template": "Mám zapsáno postupně všech {0} slov.",
     "reset__write_down_words_template": "Na kartu zálohy napište {0} slov v pořadí.",
@@ -1739,90 +1974,95 @@
     "safety_checks__approve_unsafe_always": "Trezor vám umožní schválit některé akce, které by mohly být nebezpečné.",
     "safety_checks__approve_unsafe_temporary": "Trezor vám dočasně umožní schválit některé akce, které by mohly být nebezpečné.",
     "safety_checks__enforce_strict": "Opravdu chcete zavést přísné bezpečnostní kontroly (doporučeno)?",
-    "safety_checks__title": "Bezpečn. kontroly",
+    "safety_checks__title": {
+      "Bolt": "Bezpečn. kontroly",
+      "Caesar": "Bezpečn. kontroly",
+      "Delizia": "Bezpečnostní kontroly",
+      "Eckhart": "Bezpečnostní kontroly"
+    },
     "safety_checks__title_safety_override": "Vyřazení zabezpeč.",
     "sd_card__all_data_will_be_lost": {
-      "Bolt": "Všechna data na kartě SD budou ztracena.",
+      "Bolt": "Všechna data na SD kartě budou ztracena.",
       "Caesar": "",
-      "Delizia": "Všechna data na kartě SD budou ztracena.",
+      "Delizia": "Všechna data na SD kartě budou ztracena.",
       "Eckhart": ""
     },
     "sd_card__card_required": {
-      "Bolt": "Vyžadována karta SD.",
+      "Bolt": "Vyžadována SD karta.",
       "Caesar": "",
-      "Delizia": "Vyžadována karta SD.",
+      "Delizia": "Vyžadována SD karta.",
       "Eckhart": ""
     },
     "sd_card__disable": {
-      "Bolt": "Opravdu chcete ze svého zařízení odstranit ochranu karty SD?",
+      "Bolt": "Opravdu chcete ze svého zařízení odstranit ochranu SD kartou?",
       "Caesar": "",
-      "Delizia": "Opravdu chcete ze svého zařízení odstranit ochranu karty SD?",
+      "Delizia": "Opravdu chcete ze svého zařízení odstranit ochranu SD kartou?",
       "Eckhart": ""
     },
     "sd_card__disabled": {
-      "Bolt": "Úspěšně jste zakázali ochranu SD.",
+      "Bolt": "Úspěšně jste vypnuli ochranu SD kartou.",
       "Caesar": "",
-      "Delizia": "Úspěšně jste zakázali ochranu SD.",
+      "Delizia": "Úspěšně jste vypnuli ochranu SD kartou.",
       "Eckhart": ""
     },
     "sd_card__enable": {
-      "Bolt": "Opravdu chcete zabezpečit své zařízení pomocí ochrany karty SD?",
+      "Bolt": "Opravdu chcete zabezpečit své zařízení ochranou pomocí SD karty?",
       "Caesar": "",
-      "Delizia": "Opravdu chcete zabezpečit své zařízení pomocí ochrany karty SD?",
+      "Delizia": "Opravdu chcete zabezpečit své zařízení ochranou pomocí SD karty?",
       "Eckhart": ""
     },
     "sd_card__enabled": {
-      "Bolt": "Úspěšně jste povolili ochranu SD.",
+      "Bolt": "Úspěšně jste zapnuli ochranu SD kartou.",
       "Caesar": "",
-      "Delizia": "Úspěšně jste povolili ochranu SD.",
+      "Delizia": "Úspěšně jste zapnuli ochranu SD kartou.",
       "Eckhart": ""
     },
     "sd_card__error": {
-      "Bolt": "Chyba karty SD",
+      "Bolt": "Chyba SD karty",
       "Caesar": "",
-      "Delizia": "Chyba karty SD",
+      "Delizia": "Chyba SD karty",
       "Eckhart": ""
     },
     "sd_card__format_card": {
-      "Bolt": "Naformátujte kartu SD",
+      "Bolt": "Naformátujte SD kartu",
       "Caesar": "",
-      "Delizia": "Naformátujte kartu SD",
+      "Delizia": "Naformátujte SD kartu",
       "Eckhart": ""
     },
     "sd_card__insert_correct_card": {
-      "Bolt": "Vložte správnou kartu SD pro toto zařízení.",
+      "Bolt": "Vložte správnou SD kartu pro toto zařízení.",
       "Caesar": "",
-      "Delizia": "Vložte správnou kartu SD pro toto zařízení.",
+      "Delizia": "Vložte správnou SD kartu pro toto zařízení.",
       "Eckhart": ""
     },
     "sd_card__please_insert": {
-      "Bolt": "Vložte kartu SD.",
+      "Bolt": "Vložte SD kartu.",
       "Caesar": "",
-      "Delizia": "Vložte kartu SD.",
+      "Delizia": "Vložte SD kartu.",
       "Eckhart": ""
     },
     "sd_card__please_unplug_and_insert": {
-      "Bolt": "Odpojte zařízení a vložte kartu SD.",
+      "Bolt": "Odpojte zařízení a vložte SD kartu.",
       "Caesar": "",
-      "Delizia": "Odpojte zařízení a vložte kartu SD.",
+      "Delizia": "Odpojte zařízení a vložte SD kartu.",
       "Eckhart": ""
     },
     "sd_card__problem_accessing": {
-      "Bolt": "Došlo k problému s přístupem ke kartě SD.",
+      "Bolt": "Došlo k problému s přístupem k SD kartě.",
       "Caesar": "",
-      "Delizia": "Došlo k problému s přístupem ke kartě SD.",
+      "Delizia": "Došlo k problému s přístupem k SD kartě.",
       "Eckhart": ""
     },
     "sd_card__refresh": {
-      "Bolt": "Opravdu chcete nahradit aktuální klíč karty SD nově vygenerovaným?",
+      "Bolt": "Opravdu chcete nahradit aktuální klíč na SD kartě nově vygenerovaným?",
       "Caesar": "",
-      "Delizia": "Opravdu chcete nahradit aktuální klíč karty SD nově vygenerovaným?",
+      "Delizia": "Opravdu chcete nahradit aktuální klíč na SD kartě nově vygenerovaným?",
       "Eckhart": ""
     },
     "sd_card__refreshed": {
-      "Bolt": "Úspěšně jste obnovili ochranu SD.",
+      "Bolt": "Úspěšně jste aktualizovali ochranu SD kartou.",
       "Caesar": "",
-      "Delizia": "Úspěšně jste obnovili ochranu SD.",
+      "Delizia": "Úspěšně jste aktualizovali ochranu SD kartou.",
       "Eckhart": ""
     },
     "sd_card__restart": {
@@ -1832,15 +2072,15 @@
       "Eckhart": ""
     },
     "sd_card__title": {
-      "Bolt": "Ochrana karty SD",
+      "Bolt": "Ochrana SD kartou",
       "Caesar": "",
-      "Delizia": "Ochrana karty SD",
+      "Delizia": "Ochrana SD kartou",
       "Eckhart": ""
     },
     "sd_card__title_problem": {
-      "Bolt": "Problém s kartou SD",
+      "Bolt": "Problém s SD kartou",
       "Caesar": "",
-      "Delizia": "Problém s kartou SD",
+      "Delizia": "Problém s SD kartou",
       "Eckhart": ""
     },
     "sd_card__unknown_filesystem": {
@@ -1850,27 +2090,27 @@
       "Eckhart": ""
     },
     "sd_card__unplug_and_insert_correct": {
-      "Bolt": "Odpojte zařízení a vložte správnou kartu SD.",
+      "Bolt": "Odpojte zařízení a vložte správnou SD kartu.",
       "Caesar": "",
-      "Delizia": "Odpojte zařízení a vložte správnou kartu SD.",
+      "Delizia": "Odpojte zařízení a vložte správnou SD kartu.",
       "Eckhart": ""
     },
     "sd_card__use_different_card": {
-      "Bolt": "Použijte jinou kartu nebo naformátujte kartu SD na systém souborů FAT32.",
+      "Bolt": "Použijte jinou kartu nebo naformátujte SD kartu na systém souborů FAT32.",
       "Caesar": "",
-      "Delizia": "Použijte jinou kartu nebo naformátujte kartu SD na systém souborů FAT32.",
+      "Delizia": "Použijte jinou kartu nebo naformátujte SD kartu na systém souborů FAT32.",
       "Eckhart": ""
     },
     "sd_card__wanna_format": {
-      "Bolt": "Opravdu chcete naformátovat kartu SD?",
+      "Bolt": "Opravdu chcete naformátovat SD kartu?",
       "Caesar": "",
-      "Delizia": "Opravdu chcete naformátovat kartu SD?",
+      "Delizia": "Opravdu chcete naformátovat SD kartu?",
       "Eckhart": ""
     },
     "sd_card__wrong_sd_card": {
-      "Bolt": "Nesprávná karta SD.",
+      "Bolt": "Nesprávná SD karta.",
       "Caesar": "",
-      "Delizia": "Nesprávná karta SD.",
+      "Delizia": "Nesprávná SD karta.",
       "Eckhart": ""
     },
     "secure_sync__delegated_identity_key_no_thp": "Povolit Trezor Suite používat Suite Sync s tímto Trezorem?",
@@ -1902,8 +2142,18 @@
     "send__you_are_contributing": "Přispíváte:",
     "setting__adjust": "Upravit",
     "setting__apply": "Použít",
-    "share_words__words_in_order": " slova v pořadí.",
-    "share_words__wrote_down_all": "Zapsal/a jsem si všechna ",
+    "share_words__words_in_order": {
+      "Bolt": "",
+      "Caesar": " slov v pořadí.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "share_words__wrote_down_all": {
+      "Bolt": "",
+      "Caesar": "Mám zapsáno všech ",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "sign_message__bytes_template": "{0} bajtů",
     "sign_message__confirm_address": "Podepisování adresy",
     "sign_message__confirm_message": "Potvrdit zprávu",
@@ -1933,7 +2183,7 @@
     "solana__instruction_accounts_template": "Pokyn obsahuje účty ({0}) a jeho data mají velikost {1} bajtů.",
     "solana__instruction_data": "Pokyny",
     "solana__instruction_is_multisig": "Následující pokyn představuje pokyn multisig.",
-    "solana__is_provided_via_lookup_table_template": "{0} se poskytuje prostřednictvím vyhledávací tabulky.",
+    "solana__is_provided_via_lookup_table_template": "{0} pochází z vyhledávací tabulky.",
     "solana__lookup_table_address": "Adresa vyhledávací tabulky",
     "solana__max_fees_rent": "Max. poplatky a nájemné",
     "solana__max_rent_fee": "Max. poplatek za nájem",
@@ -1946,21 +2196,21 @@
     "solana__stake_withdrawal_warning": "Tato peněženka nemůže být použita pro výběr z tohoto stakingu.",
     "solana__stake_withdrawal_warning_title": "Adresa autority oprávněné k výběru",
     "solana__transaction_contains_unknown_instructions": "Transakce obsahuje neznámý pokyn.",
-    "solana__transaction_requires_x_signers_template": "Transakce vyžaduje {0} podepisujících osob, což zvyšuje poplatek.",
+    "solana__transaction_requires_x_signers_template": "Počet osob podepisujících transakci je {0}, což zvyšuje poplatek.",
     "solana__unknown_token": "Neznámý token",
     "solana__unknown_token_address": "Neznámá adresa tokenu",
     "solana__unstake": "Zrušit staking",
-    "solana__unstake_question": "Zrušit staking SOL z stake účtu?",
+    "solana__unstake_question": "Zrušit staking SOL ze stake účtu?",
     "solana__vote_account": "Hlasovací účet",
     "stellar__account_merge": "Sloučení účtů",
     "stellar__account_thresholds": "Prahové hodnoty účtu",
-    "stellar__add_signer": "Přidat podepisující osobu",
+    "stellar__add_signer": "Přidat podepisujícího",
     "stellar__add_trust": "Přidat důvěru",
     "stellar__all_will_be_sent_to": "Všechny XLM budou odeslány:",
     "stellar__allow_trust": "Povolit důvěru",
     "stellar__balance_id": "ID zůstatku",
     "stellar__bump_sequence": "Sekvence urychlení",
-    "stellar__buying": "Nákup",
+    "stellar__buying": "Koupit",
     "stellar__claim_claimable_balance": "Získat nárokovatelný zůstatek",
     "stellar__clear_data": "Vymazat data",
     "stellar__clear_flags": "Vymazat příznaky",
@@ -1977,24 +2227,24 @@
     "stellar__exchanges_require_memo": "Memo není nastaveno.\nObvykle vyžadováno při odesílání na burzy.",
     "stellar__final_confirm": "Konečné potvrzení",
     "stellar__hash": "Hash",
-    "stellar__high": "Vysoký",
+    "stellar__high": "Vysoká",
     "stellar__home_domain": "Domácí doména",
     "stellar__inflation": "Inflace",
     "stellar__issuer_template": "Vydavatel {0}",
     "stellar__key": "Klíč",
     "stellar__limit": "Limit",
-    "stellar__low": "Nízký",
+    "stellar__low": "Nízká",
     "stellar__master_weight": "Váha hlavního klíče",
     "stellar__medium": "Střední",
     "stellar__new_offer": "Nová nabídka",
     "stellar__new_passive_offer": "Nová pasivní nabídka",
     "stellar__no_memo_set": "Není nastavena poznámka!",
     "stellar__no_restriction": "[bez omezení]",
-    "stellar__path_pay": "Směnná cesta",
-    "stellar__path_pay_at_least": "Směnná cest alespoň",
+    "stellar__path_pay": "Směnná platba",
+    "stellar__path_pay_at_least": "Směnná platba alespoň",
     "stellar__pay": "Platba",
     "stellar__pay_at_most": "Maximální platba",
-    "stellar__preauth_transaction": "Transakce před ověřením",
+    "stellar__preauth_transaction": "Předem ověřená transakce",
     "stellar__price_per_template": "Cena za {0}",
     "stellar__remove_signer": "Odstranit podepisující osobu",
     "stellar__revoke_trust": "Zrušit důvěru",
@@ -2032,7 +2282,7 @@
     "storage_msg__wrong_pin": "Špatný PIN",
     "tezos__baker_address": "Adresa bakera",
     "tezos__balance": "Zůstatek",
-    "tezos__ballot": "Hlasování",
+    "tezos__ballot": "Hlas",
     "tezos__confirm_delegation": "Potvrdit delegaci",
     "tezos__confirm_origination": "Potvrdit původ",
     "tezos__delegator": "Delegující osoba",
@@ -2189,7 +2439,7 @@
       "Delizia": "",
       "Eckhart": "TROPIC01 je nová generace open-source Secure Element čipu navrženého pro transparentní a auditovatelné hardwarové zabezpečení."
     },
-    "tutorial__use_trezor": "Trezor použijete\nstisknutím levého a pravého tlačítka.\n\rPokračujte vpravo.",
+    "tutorial__use_trezor": "Trezor se ovládá\nstisky levého a pravého tlačítka.\n\nPokračujte vpravo.",
     "tutorial__welcome_press_right": "Vítá vás Trezor. Pokračujte stisknutím pravého tlačítka.",
     "tutorial__welcome_safe5": {
       "Bolt": "",
@@ -2240,7 +2490,12 @@
     "wipe_code__title": "Kód pro vymazání",
     "wipe_code__title_check": "Zkont. kód vymazání",
     "wipe_code__title_invalid": "Nesprávný kód pro vymazání",
-    "wipe_code__title_settings": "Nast. kódu vymazání",
+    "wipe_code__title_settings": {
+      "Bolt": "Nastavení kódu pro vymazání",
+      "Caesar": "Nast. kódu vymazání",
+      "Delizia": "Nast. kódu vymazání",
+      "Eckhart": "Nast. kódu vymazání"
+    },
     "wipe_code__turn_off": "Vypnout ochranu kódem pro vymazání?",
     "wipe_code__turn_on": "Zapnout ochranu kódem pro vymazání?",
     "wipe_code__wipe_code_mismatch": "Neshoda kódu vymazání",
@@ -2257,12 +2512,13 @@
     "words__authenticate": "Ověřit",
     "words__blockhash": "Blockhash",
     "words__bluetooth": "Bluetooth",
-    "words__buying": "Nákup",
+    "words__buying": "Koupit",
     "words__cancel_and_exit": "Zrušit a ukončit",
     "words__cancel_question": "Zrušit?",
-    "words__chain": "Řetězec",
+    "words__chain": "Síť",
     "words__comm_trouble": "Váš Trezor má potíže s komunikací s připojeným zařízením.",
-    "words__confirm": "Potvrdit",
+    "words__confirm": "Potvrzení",
+    "words__confirm_all": "",
     "words__confirm_fee": "Potvrdit poplatek",
     "words__connect": "Připojit",
     "words__connected": "Připojeno",
@@ -2279,11 +2535,21 @@
     "words__fee": "Poplatek",
     "words__fee_limit": "Limit poplatků",
     "words__forget": "Zapomenout",
-    "words__from": "ze",
+    "words__from": {
+      "Bolt": "ze",
+      "Caesar": "ze",
+      "Delizia": "ze",
+      "Eckhart": ""
+    },
     "words__good_to_know": "Dobré vědět",
     "words__important": "Důležité",
     "words__instructions": "Pokyny",
-    "words__keep_it_safe": "Dávejte na ni pozor!",
+    "words__keep_it_safe": {
+      "Bolt": "",
+      "Caesar": "Dávejte na ni pozor!",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__know_what_your_doing": "Pokračujte, jen pokud víte, co děláte!",
     "words__led": "LED",
     "words__manage": "Spravovat",
@@ -2302,7 +2568,7 @@
     "words__power": "Napájení",
     "words__provider": "Poskytovatel",
     "words__really_wanna": "Opravdu chcete",
-    "words__receive": "Přijmout",
+    "words__receive": "Příjem",
     "words__recipient": "Příjemce",
     "words__recovery_share": "Podíl zálohy",
     "words__review": "Zkontrolovat",
@@ -2310,19 +2576,47 @@
     "words__send": "Odeslat",
     "words__set": "Nastavit",
     "words__settings": "Nastavení",
+    "words__show_next": "",
     "words__sign": "Podepsat",
     "words__signer": "Podepisující osoba",
+    "words__staking_for": "",
+    "words__staking_from": "",
     "words__swap": "Swapovat",
     "words__title_check": "Zkontrolovat",
     "words__title_done": "Hotovo",
-    "words__title_group": "Skupina",
+    "words__title_group": {
+      "Bolt": "",
+      "Caesar": "skupina",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_information": "Informace",
-    "words__title_remember": "Pamatujte",
-    "words__title_share": "Podíl",
-    "words__title_shares": "Podíly",
+    "words__title_remember": {
+      "Bolt": "",
+      "Caesar": "Pamatujte",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_share": {
+      "Bolt": "",
+      "Caesar": "Podíl",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_shares": {
+      "Bolt": "",
+      "Caesar": "podílů",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_success": "Hotovo",
     "words__title_summary": "Souhrn",
-    "words__title_threshold": "Práh",
+    "words__title_threshold": {
+      "Bolt": "",
+      "Caesar": "Práh",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__token": "Token",
     "words__transaction_fee": "Transakční poplatek",
     "words__try_again": "Zkuste to znovu.",
@@ -2332,7 +2626,7 @@
     "words__wallet": "Peněženka",
     "words__warning": "Varování",
     "words__wipe": "Vymazat",
-    "words__writable": "Zapisovatelné",
+    "words__writable": "Zapisovatelná",
     "words__yes": "Ano"
   }
 }

@@ -180,8 +180,8 @@
       "Eckhart": "Vous pouvez utiliser votre sauvegarde pour récupérer votre portefeuille à tout moment."
     },
     "backup__title_backup_completed": {
-      "Bolt": "Sauvegarde du portefeuille terminée",
-      "Caesar": "Sauvegarde du portefeuille terminée",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Sauvegarde du portefeuille terminée",
       "Eckhart": "Sauvegarde du portefeuille terminée."
     },
@@ -508,7 +508,7 @@
     "cardano__certificate": "Certificat",
     "cardano__change_output": "Modifier la sortie",
     "cardano__check_all_items": "Vérifiez soigneusement tous les éléments.",
-    "cardano__choose_level_of_details": "Choisissez le niveau de détails:",
+    "cardano__choose_level_of_details": "Choisissez le niveau de détails",
     "cardano__collateral_input_id": "ID d'entrée du collatéral",
     "cardano__collateral_input_index": "Index d'entrée du collatéral",
     "cardano__collateral_output_contains_tokens": "La sortie de retour du collatéral contient des jetons.",
@@ -576,7 +576,7 @@
     "cardano__reference_input_index": "Index d'entrée de référence",
     "cardano__reference_script": "Script de référence",
     "cardano__required_signer": "Signataire requis",
-    "cardano__reward": "Récompense",
+    "cardano__reward": "récompense",
     "cardano__reward_address": "L'adresse est une adresse de récompense.",
     "cardano__reward_eligibility_warning": {
       "Bolt": "Avertissement : l'adr. n'est pas une adr. de paiement, elle n'est pas éligible aux récompenses.",
@@ -617,8 +617,8 @@
     "cardano__stake_registration": "Enregistrement de la clé de staking",
     "cardano__staking_key_for_account": "Clé de staking pour le compte",
     "cardano__to_pool": "Vers le pool",
-    "cardano__token_minting_path": "Chemin d'émission de jetons",
-    "cardano__total_collateral": "Garantie totale",
+    "cardano__token_minting_path": "chemin d'émission de jetons",
+    "cardano__total_collateral": "Collatéral total",
     "cardano__transaction": "Transaction",
     "cardano__transaction_contains_minting_or_burning": "La transaction contient de l'émission ou de la destruction de jetons.",
     "cardano__transaction_contains_script_address_no_datum": "Cette sortie de transaction contient une adresse de script, mais ne contient pas de datum.",
@@ -717,7 +717,7 @@
       "Eckhart": ""
     },
     "eos__checksum": {
-      "Bolt": "Somme de contrôle",
+      "Bolt": "Checksum",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -813,13 +813,13 @@
       "Eckhart": ""
     },
     "eos__permission": {
-      "Bolt": "Autorisation",
+      "Bolt": "Permissions",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
     "eos__proxy": {
-      "Bolt": "Mandataire",
+      "Bolt": "Proxy",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1178,17 +1178,22 @@
     "instructions__hold_to_sign": "Maintenez pour signer",
     "instructions__learn_more": "En savoir plus",
     "instructions__menu_to_continue": "Utilisez le menu pour continuer",
-    "instructions__shares_continue_with_x_template": "Continuez avec le fragment #{0}",
+    "instructions__shares_continue_with_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Continuez avec le fragment #{0}",
+      "Eckhart": ""
+    },
     "instructions__shares_start_with_1": {
-      "Bolt": "Commencez avec le fragment #1",
-      "Caesar": "Commencez avec le fragment #1",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Commencez avec le fragm. #1",
       "Eckhart": "Commencez avec le fragment #1"
     },
     "instructions__shares_start_with_x_template": {
-      "Bolt": "Commencez avec le Fragment #{0}",
-      "Caesar": "Commencez avec le Fragment #{0}",
-      "Delizia": "Commencez avec le fragm. #{0}",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "Commencez avec le Fragment #{0}"
     },
     "instructions__swipe_down": "Glisser vers le bas",
@@ -1270,7 +1275,7 @@
     },
     "modify_fee__new_transaction_fee": {
       "Bolt": "Nouveau frais de transaction :",
-      "Caesar": "Nouveau frais de transaction :",
+      "Caesar": "",
       "Delizia": "Nouveau frais de transaction :",
       "Eckhart": "Nouveau frais de transaction"
     },
@@ -1485,7 +1490,7 @@
       "Eckhart": ""
     },
     "nem__levy_fee": {
-      "Bolt": "Frais de la commission",
+      "Bolt": "Commission",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
@@ -1652,11 +1657,21 @@
     "passphrase__turn_off": "Désactiver la protection par passphrase ?",
     "passphrase__turn_on": "Activer la protection par passphrase ?",
     "passphrase__wallet": "Portefeuille à passphrase",
-    "pin__cancel_description": "Continuer sans PIN",
-    "pin__cancel_info": "Sans code PIN, n'importe qui peut accéder à cet appareil.",
+    "pin__cancel_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Continuer sans PIN",
+      "Eckhart": ""
+    },
+    "pin__cancel_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Sans code PIN, n'importe qui peut accéder à cet appareil.",
+      "Eckhart": "Sans code PIN, n'importe qui peut accéder à cet appareil."
+    },
     "pin__cancel_setup": {
-      "Bolt": "Annuler la config. du PIN",
-      "Caesar": "Annuler la config. du PIN",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Annuler la config. du PIN",
       "Eckhart": "Annuler la configuration du PIN"
     },
@@ -1666,7 +1681,12 @@
     "pin__cursor_will_change": "La position du curseur changera entre les saisies pour une sécurité accrue.",
     "pin__diff_from_wipe_code": "Le nouveau code PIN doit être différent de votre code d'effacement.",
     "pin__disabled": "Protection par code PIN\ndésactivée.",
-    "pin__enabled": "Protection par code PIN\nactivée.",
+    "pin__enabled": {
+      "Bolt": "Protection par code PIN\nactivée.",
+      "Caesar": "Protection par code PIN\nactivée.",
+      "Delizia": "Protection par code PIN\nactivée.",
+      "Eckhart": ""
+    },
     "pin__enter": "Saisir le PIN",
     "pin__enter_new": "Entrez le nouveau PIN",
     "pin__entered_not_valid": "Le PIN que vous avez entré n'est pas valide.",
@@ -1680,7 +1700,12 @@
     "pin__reenter_new": "Ressaisir le nouveau PIN",
     "pin__reenter_to_confirm": "Veuillez ressaisir le code PIN pour confirmer.",
     "pin__remove": "Supprimer PIN",
-    "pin__setup_completed": "Configuration du code PIN terminée.",
+    "pin__setup_completed": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Configuration du code PIN terminée."
+    },
     "pin__should_be_long": "Le PIN doit être composé de 4 à 50 chiffres.",
     "pin__title": "Code PIN",
     "pin__title_check_pin": "Vérifier le PIN",
@@ -1757,7 +1782,7 @@
       "Bolt": "Groupe {0}",
       "Caesar": "Groupe {0}",
       "Delizia": "Groupe {0}",
-      "Eckhart": "Groupe #{0}"
+      "Eckhart": ""
     },
     "recovery__group_threshold_reached": "Seuil de groupe atteint.",
     "recovery__info_about_disconnect": "Vous pouvez déconnecter votre Trezor en toute sécurité pendant que vous récupérez votre portefeuille et continuer plus tard.",
@@ -1785,7 +1810,12 @@
     },
     "recovery__share_does_not_match": "Le fragment ne correspond pas",
     "recovery__share_from_another_multi_share_backup": "Vous avez saisi un fragment d'une autre sauvegarde.",
-    "recovery__share_from_group_entered_template": "Fragment #{0} du Groupe #{1} saisi.",
+    "recovery__share_from_group_entered_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Fragment #{0} du Groupe #{1} saisi."
+    },
     "recovery__share_num_template": {
       "Bolt": "Fragment {0}",
       "Caesar": "Fragment {0}",
@@ -1825,7 +1855,7 @@
     },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} {plural} supplémentaires commençant par",
-      "Caesar": "{count} {plural} supplémentaires commençant par",
+      "Caesar": "",
       "Delizia": "{count} {plural} supplémentaires commençant par",
       "Eckhart": "Il vous faut {count} {plural} supplémentaires commençant par"
     },
@@ -1836,14 +1866,24 @@
       "Eckhart": "{count} {plural} supplémentaires requis."
     },
     "recovery__x_of_y_entered_template": "{0} sur {1} fragments saisi(s)",
-    "recovery__you_have_entered": "Vous avez saisi",
+    "recovery__you_have_entered": {
+      "Bolt": "Vous avez saisi",
+      "Caesar": "Vous avez saisi",
+      "Delizia": "Vous avez saisi",
+      "Eckhart": ""
+    },
     "regulatory__title": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Réglementation"
     },
-    "reset__advanced_group_threshold_info": "Le seuil de groupe spécifie le nombre de groupes requis pour récupérer votre portefeuille.",
+    "reset__advanced_group_threshold_info": {
+      "Bolt": "Le seuil de groupe spécifie le nombre de groupes requis pour récupérer votre portefeuille.",
+      "Caesar": "",
+      "Delizia": "Le seuil de groupe spécifie le nombre de groupes requis pour récupérer votre portefeuille.",
+      "Eckhart": "Le seuil de groupe spécifie le nombre de groupes requis pour récupérer votre portefeuille."
+    },
     "reset__all_x_of_y_template": {
       "Bolt": "tous {0} fragm. sur {1}",
       "Caesar": "",
@@ -1869,16 +1909,16 @@
     "reset__check_backup_title": "Vérifier la sauvegarde",
     "reset__check_group_share_title_template": {
       "Bolt": "Verif. g{0} - f{1}",
-      "Caesar": "Vérifier g{0} - fragment {1}",
+      "Caesar": "",
       "Delizia": "Vérifier g{0} - fragm. {1}",
       "Eckhart": "Vérifier g{0} - fragment {1}"
     },
     "reset__check_share_backup_template": "Vérifions rapidement le Fragment #{0}.",
     "reset__check_share_title_template": {
       "Bolt": "Vérifier fragm. #{0}",
-      "Caesar": "Vérifier fragm. #{0}",
+      "Caesar": "",
       "Delizia": "Vérifier le fragm. #{0}",
-      "Eckhart": "Vérifier le fragment #{0}"
+      "Eckhart": ""
     },
     "reset__check_wallet_backup_title": {
       "Bolt": "Vérifiez la sauveg.",
@@ -1890,15 +1930,25 @@
     "reset__continue_with_share_template": {
       "Bolt": "Continuez avec le fragm. #{0}.",
       "Caesar": "Continuez avec le fragment #{0}.",
-      "Delizia": "Continuez avec le fragment #{0}.",
-      "Eckhart": "Continuez avec le fragment #{0}."
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__create_x_of_y_multi_share_backup_template": "Voulez-vous créer une sauvegarde multi-fragments de {0} sur {1} ?",
     "reset__finished_verifying_group_template": "Vous avez terminé la vérification de vos fragments de récupération du groupe {0}.",
     "reset__finished_verifying_shares": "Vous avez terminé la vérification de vos fragments de récupération.",
     "reset__finished_verifying_wallet_backup": "Vous avez terminé de vérifier la sauvegarde de votre portefeuille.",
-    "reset__group_description": "Un groupe est composé de fragments de récup.",
-    "reset__group_info": "Chaque groupe possède un nombre défini de fragments et son propre seuil. Dans les étapes suivantes, vous définirez le nombre de fragments et les seuils.",
+    "reset__group_description": {
+      "Bolt": "Un groupe est composé de fragments de récup.",
+      "Caesar": "",
+      "Delizia": "Un groupe est composé de fragments de récup.",
+      "Eckhart": "Un groupe est composé de fragments de récup."
+    },
+    "reset__group_info": {
+      "Bolt": "Chaque groupe possède un nombre défini de fragments et son propre seuil. Dans les étapes suivantes, vous définirez le nombre de fragments et les seuils.",
+      "Caesar": "",
+      "Delizia": "Chaque groupe possède un nombre défini de fragments et son propre seuil. Dans les étapes suivantes, vous définirez le nombre de fragments et les seuils.",
+      "Eckhart": "Chaque groupe possède un nombre défini de fragments et son propre seuil. Dans les étapes suivantes, vous définirez le nombre de fragments et les seuils."
+    },
     "reset__group_share_checked_successfully_template": "Groupe {0} - Fragment {1} vérifié avec succès.",
     "reset__group_share_title_template": {
       "Bolt": "Groupe {0} - fragment {1}",
@@ -1935,7 +1985,12 @@
     },
     "reset__never_make_digital_copy": "Ne conservez jamais votre sauvegarde sous forme numérique.",
     "reset__num_of_share_holders_template": "{0} personnes ou emplacements détiendront chacun un fragment.",
-    "reset__num_of_shares_advanced_info_template": "Chaque fragment de récupération se compose de {0} mots. Vous allez ensuite définir le seuil minimum de fragments nécessaires pour former le Groupe {1}.",
+    "reset__num_of_shares_advanced_info_template": {
+      "Bolt": "Chaque fragment de récupération se compose de {0} mots. Vous allez ensuite définir le seuil minimum de fragments nécessaires pour former le Groupe {1}.",
+      "Caesar": "",
+      "Delizia": "Chaque fragment de récupération se compose de {0} mots. Vous allez ensuite définir le seuil minimum de fragments nécessaires pour former le Groupe {1}.",
+      "Eckhart": "Chaque fragment de récupération se compose de {0} mots. Vous allez ensuite définir le seuil minimum de fragments nécessaires pour former le Groupe {1}."
+    },
     "reset__num_of_shares_basic_info_template": {
       "Bolt": "Chaque fragment de récupération se compose de {0} mots. Vous allez ensuite choisir le nombre de fragments nécessaires pour récupérer votre portefeuille.",
       "Caesar": "",
@@ -1943,16 +1998,31 @@
       "Eckhart": ""
     },
     "reset__num_of_shares_how_many": "Combien de fragments de sauvegarde voulez-vous créer ?",
-    "reset__num_of_shares_long_info_template": "Chaque fragment de sauvegarde se compose de {0} mots.\nConservez chaque liste de mots séparément dans un endroit sûr, ou partagez-les avec des personnes de confiance. Rassemblez-les au besoin pour récupérer votre portefeuille.",
+    "reset__num_of_shares_long_info_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Chaque fragment de sauvegarde se compose de {0} mots.\nConservez chaque liste de mots séparément dans un endroit sûr, ou partagez-les avec des personnes de confiance. Rassemblez-les au besoin pour récupérer votre portefeuille.",
+      "Eckhart": "Chaque fragment de sauvegarde se compose de {0} mots.\nConservez chaque liste de mots séparément dans un endroit sûr, ou partagez-les avec des personnes de confiance. Rassemblez-les au besoin pour récupérer votre portefeuille."
+    },
     "reset__num_shares_for_group_template": "Le nombre de parts requis pour former le Groupe {0}.",
-    "reset__number_of_shares_info": "= nombre total de listes de mots uniques pour la sauveg. du portefeuille",
+    "reset__number_of_shares_info": {
+      "Bolt": "",
+      "Caesar": "= nombre total de listes de mots uniques pour la sauveg. du portefeuille",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__one_share": {
       "Bolt": "1 fragment",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__only_one_share_will_be_created": "Un seul fragment sera créé.",
+    "reset__only_one_share_will_be_created": {
+      "Bolt": "Un seul fragment sera créé.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__recovery_share_description": "Un fragment de récupération est une liste de mots que vous avez écrit lors de la configuration de votre Trezor.",
     "reset__recovery_share_number": "Votre sauvegarde de portefeuille se compose de 1 à 16 fragments.",
     "reset__recovery_share_title_template": {
@@ -1977,15 +2047,15 @@
       "Eckhart": "Sélectionnez le nombre de fragments minimum requis pour récupérer votre portefeuille."
     },
     "reset__select_word_from_share_template": {
-      "Bolt": "Sélectionnez le mot #{0} du\nFragment #{1}",
-      "Caesar": "Sélectionnez le mot #{0} du\nFragment #{1}",
-      "Delizia": "Sélectionnez le mot #{0} du\nFragment #{1}",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "Sélectionnez le mot #{0} du Fragment #{1}"
     },
     "reset__select_word_template": {
-      "Bolt": "Sélectionnez {0} mot",
-      "Caesar": "Sélectionnez {0} mot",
-      "Delizia": "Sélectionnez {0} mot",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "Sélectionnez le mot #{0} de la sauvegarde"
     },
     "reset__select_word_x_of_y_template": "Sélect. mot {0} sur {1} :",
@@ -1995,23 +2065,53 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__share_checked_successfully_template": "Fragment #{0} vérifié avec succès.",
-    "reset__share_completed_template": "Fragment de récupération #{0} complété",
+    "reset__share_checked_successfully_template": {
+      "Bolt": "Fragment #{0} vérifié avec succès.",
+      "Caesar": "Fragment #{0} vérifié avec succès.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__share_completed_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Fragment de récupération #{0} complété",
+      "Eckhart": "Fragment de récupération #{0} complété"
+    },
     "reset__share_words_first": "Notez le premier mot de la sauvegarde.",
     "reset__share_words_title": "Sauvegarde standard",
-    "reset__slip39_checklist_more_info_threshold": "Le seuil définit le nombre minimum de parts nécessaires pour récupérer votre portefeuille.",
-    "reset__slip39_checklist_more_info_threshold_example_template": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {2} fragments de sauvegarde pour récupérer votre portefeuille.",
+    "reset__slip39_checklist_more_info_threshold": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Le seuil définit le nombre minimum de parts nécessaires pour récupérer votre portefeuille.",
+      "Eckhart": "Le seuil définit le nombre minimum de parts nécessaires pour récupérer votre portefeuille."
+    },
+    "reset__slip39_checklist_more_info_threshold_example_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {2} fragments de sauvegarde pour récupérer votre portefeuille.",
+      "Eckhart": "Si vous fixez le seuil à {0} fragments sur {1}, il vous faudra {2} fragments de sauvegarde pour récupérer votre portefeuille."
+    },
     "reset__slip39_checklist_num_groups": "Nombre de groupes",
     "reset__slip39_checklist_num_groups_x_template": "Nombre de groupes : {0}",
     "reset__slip39_checklist_num_shares": "Nombre de fragments",
     "reset__slip39_checklist_num_shares_x_template": {
-      "Bolt": "Nombre de fragments : {0}",
-      "Caesar": "Nombre de fragments : {0}",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Nombre de fragm. : {0}",
       "Eckhart": "Nombre de fragments : {0}"
     },
-    "reset__slip39_checklist_set_num_groups": "Définir le nombre de groupes",
-    "reset__slip39_checklist_set_num_shares": "Définir le nombre de fragments",
+    "reset__slip39_checklist_set_num_groups": {
+      "Bolt": "Définir le nombre de groupes",
+      "Caesar": "",
+      "Delizia": "Définir le nombre de groupes",
+      "Eckhart": "Définir le nombre de groupes"
+    },
+    "reset__slip39_checklist_set_num_shares": {
+      "Bolt": "Définir le nombre de fragments",
+      "Caesar": "",
+      "Delizia": "Définir le nombre de fragments",
+      "Eckhart": "Définir le nombre de fragments"
+    },
     "reset__slip39_checklist_set_sizes": "Définir les tailles et les seuils",
     "reset__slip39_checklist_set_sizes_longer": "Définir la taille et le seuil pour chaque groupe",
     "reset__slip39_checklist_set_threshold": {
@@ -2020,10 +2120,25 @@
       "Delizia": "Définir le seuil",
       "Eckhart": "Définir le seuil de récupération"
     },
-    "reset__slip39_checklist_threshold_x_template": "Seuil de récupération : {0}",
+    "reset__slip39_checklist_threshold_x_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Seuil de récupération : {0}",
+      "Eckhart": "Seuil de récupération : {0}"
+    },
     "reset__slip39_checklist_title": "Vérifications de la sauvegarde",
-    "reset__slip39_checklist_write_down": "Notez et vérifiez tous les fragments.",
-    "reset__slip39_checklist_write_down_recovery": "Notez et vérifiez tous les fragments de sauvegarde de portefeuille.",
+    "reset__slip39_checklist_write_down": {
+      "Bolt": "Notez et vérifiez tous les fragments.",
+      "Caesar": "Notez et vérifiez tous les fragments.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__slip39_checklist_write_down_recovery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Notez et vérifiez tous les fragments de sauvegarde de portefeuille.",
+      "Eckhart": "Notez et vérifiez tous les fragments de sauvegarde de portefeuille."
+    },
     "reset__the_threshold_sets_the_number_of_shares": {
       "Bolt": "Le seuil définit le nombre de fragments ",
       "Caesar": "",
@@ -2031,16 +2146,51 @@
       "Eckhart": ""
     },
     "reset__the_word_is_repeated": "Le mot est répété",
-    "reset__threshold_info": "= nombre min de listes de mots uniques utilisées pour la récup.",
+    "reset__threshold_info": {
+      "Bolt": "",
+      "Caesar": "= nombre min de listes de mots uniques utilisées pour la récup.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__title_backup_is_done": "Sauveg. terminée",
     "reset__title_create_wallet": "Créer un portefeuille",
-    "reset__title_group_threshold": "Seuil de groupe",
+    "reset__title_group_threshold": {
+      "Bolt": "",
+      "Caesar": "Seuil de groupe",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__title_number_of_groups": "Nombre de groupes",
-    "reset__title_number_of_shares": "Nombre de fragments",
-    "reset__title_set_group_threshold": "Définir le seuil de groupe",
-    "reset__title_set_number_of_groups": "Définir le nombre de groupes",
-    "reset__title_set_number_of_shares": "Définir le nombre de fragments",
-    "reset__title_set_threshold": "Définir le seuil",
+    "reset__title_number_of_shares": {
+      "Bolt": "",
+      "Caesar": "Nombre de fragments",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__title_set_group_threshold": {
+      "Bolt": "Définir le seuil de groupe",
+      "Caesar": "",
+      "Delizia": "Définir le seuil de groupe",
+      "Eckhart": "Définir le seuil de groupe"
+    },
+    "reset__title_set_number_of_groups": {
+      "Bolt": "Définir le nombre de groupes",
+      "Caesar": "",
+      "Delizia": "Définir le nombre de groupes",
+      "Eckhart": "Définir le nombre de groupes"
+    },
+    "reset__title_set_number_of_shares": {
+      "Bolt": "Définir le nombre de fragments",
+      "Caesar": "",
+      "Delizia": "Définir le nombre de fragments",
+      "Eckhart": "Définir le nombre de fragments"
+    },
+    "reset__title_set_threshold": {
+      "Bolt": "Définir le seuil",
+      "Caesar": "",
+      "Delizia": "Définir le seuil",
+      "Eckhart": ""
+    },
     "reset__title_shamir_backup": "Sauvegarde multi-fragments",
     "reset__to_form_group_template": {
       "Bolt": "pour former le Groupe {0}.",
@@ -2054,12 +2204,17 @@
       "Delizia": "trezor.io/tos",
       "Eckhart": "Plus d'infos sur trezor.io/tos"
     },
-    "reset__total_number_of_shares_in_group_template": "Définir le nombre total de fragments dans le Groupe {0}.",
+    "reset__total_number_of_shares_in_group_template": {
+      "Bolt": "Définir le nombre total de fragments dans le Groupe {0}.",
+      "Caesar": "",
+      "Delizia": "Définir le nombre total de fragments dans le Groupe {0}.",
+      "Eckhart": "Définir le nombre total de fragments dans le Groupe {0}."
+    },
     "reset__use_your_backup": {
       "Bolt": "Utilisez votre sauveg. lorsque vous avez besoin de récupérer votre portef.",
-      "Caesar": "Utilisez votre sauvegarde lorsque vous avez besoin de récupérer votre portefeuille.",
-      "Delizia": "Utilisez votre sauvegarde lorsque vous avez besoin de récupérer votre portefeuille.",
-      "Eckhart": "Utilisez votre sauvegarde lorsque vous avez besoin de récupérer votre portefeuille."
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "reset__words_may_repeat": "Les mots peuvent se répéter.",
     "reset__words_written_down_template": "J'ai noté les {0} mots dans l'ordre.",
@@ -2257,8 +2412,18 @@
     "send__you_are_contributing": "Vous contribuez :",
     "setting__adjust": "Ajuster",
     "setting__apply": "Appliquer",
-    "share_words__words_in_order": " mots dans l'ordre.",
-    "share_words__wrote_down_all": "J'ai noté tous les ",
+    "share_words__words_in_order": {
+      "Bolt": "",
+      "Caesar": " mots dans l'ordre.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "share_words__wrote_down_all": {
+      "Bolt": "",
+      "Caesar": "J'ai noté tous les ",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "sign_message__bytes_template": "{0} octets",
     "sign_message__confirm_address": "Adresse de signature",
     "sign_message__confirm_message": "Confirmer le message",
@@ -2653,6 +2818,7 @@
     "words__chain": "Chaîne",
     "words__comm_trouble": "Votre Trezor a des difficultés à communiquer avec l'appareil connecté.",
     "words__confirm": "Confirmer",
+    "words__confirm_all": "",
     "words__confirm_fee": "Confirmer les frais",
     "words__connect": "Connecter",
     "words__connected": "Connecté",
@@ -2669,11 +2835,21 @@
     "words__fee": "Frais",
     "words__fee_limit": "Limite de frais",
     "words__forget": "Oublier",
-    "words__from": "du",
+    "words__from": {
+      "Bolt": "du",
+      "Caesar": "du",
+      "Delizia": "du",
+      "Eckhart": ""
+    },
     "words__good_to_know": "Bon à savoir",
     "words__important": "Important",
     "words__instructions": "Instructions",
-    "words__keep_it_safe": "Conservez-la en lieu sûr !",
+    "words__keep_it_safe": {
+      "Bolt": "",
+      "Caesar": "Conservez-la en lieu sûr !",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__know_what_your_doing": "Continuez uniquement si vous savez ce que vous faites !",
     "words__led": "LED",
     "words__manage": "Gérer",
@@ -2700,19 +2876,47 @@
     "words__send": "Envoyer",
     "words__set": "Définir",
     "words__settings": "Paramètres",
+    "words__show_next": "",
     "words__sign": "Signer",
     "words__signer": "Signataire",
+    "words__staking_for": "",
+    "words__staking_from": "",
     "words__swap": "Swap",
     "words__title_check": "Vérifier",
     "words__title_done": "Terminé",
-    "words__title_group": "Groupe",
+    "words__title_group": {
+      "Bolt": "",
+      "Caesar": "Groupe",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_information": "Information",
-    "words__title_remember": "Mémoriser",
-    "words__title_share": "Fragment",
-    "words__title_shares": "Fragments",
+    "words__title_remember": {
+      "Bolt": "",
+      "Caesar": "Mémoriser",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_share": {
+      "Bolt": "",
+      "Caesar": "Fragment",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "words__title_shares": {
+      "Bolt": "",
+      "Caesar": "Fragments",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_success": "Succès",
     "words__title_summary": "Résumé",
-    "words__title_threshold": "Seuil",
+    "words__title_threshold": {
+      "Bolt": "",
+      "Caesar": "Seuil",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__token": "Jeton",
     "words__transaction_fee": "Frais de transaction",
     "words__try_again": {
