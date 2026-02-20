@@ -1753,6 +1753,7 @@ def load_device(
     skip_checksum: bool = False,
     needs_backup: bool = False,
     no_backup: bool = False,
+    unfinished_backup: bool | None = None,
 ) -> None:
     if isinstance(mnemonic, str):
         mnemonic = [mnemonic]
@@ -1773,6 +1774,7 @@ def load_device(
             skip_checksum=skip_checksum,
             needs_backup=needs_backup,
             no_backup=no_backup,
+            unfinished_backup=unfinished_backup,
         ),
         expect=messages.Success,
     )

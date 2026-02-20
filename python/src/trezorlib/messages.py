@@ -3716,6 +3716,7 @@ class LoadDevice(protobuf.MessageType):
         8: protobuf.Field("u2f_counter", "uint32", repeated=False, required=False, default=None),
         9: protobuf.Field("needs_backup", "bool", repeated=False, required=False, default=None),
         10: protobuf.Field("no_backup", "bool", repeated=False, required=False, default=None),
+        11: protobuf.Field("unfinished_backup", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3730,6 +3731,7 @@ class LoadDevice(protobuf.MessageType):
         u2f_counter: Optional["int"] = None,
         needs_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
+        unfinished_backup: Optional["bool"] = None,
     ) -> None:
         self.mnemonics: Sequence["str"] = mnemonics if mnemonics is not None else []
         self.pin = pin
@@ -3740,6 +3742,7 @@ class LoadDevice(protobuf.MessageType):
         self.u2f_counter = u2f_counter
         self.needs_backup = needs_backup
         self.no_backup = no_backup
+        self.unfinished_backup = unfinished_backup
 
 
 class ResetDevice(protobuf.MessageType):

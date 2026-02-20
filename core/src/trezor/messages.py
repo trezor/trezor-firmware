@@ -2456,6 +2456,7 @@ if TYPE_CHECKING:
         u2f_counter: "int | None"
         needs_backup: "bool | None"
         no_backup: "bool | None"
+        unfinished_backup: "bool | None"
 
         def __init__(
             self,
@@ -2468,6 +2469,7 @@ if TYPE_CHECKING:
             u2f_counter: "int | None" = None,
             needs_backup: "bool | None" = None,
             no_backup: "bool | None" = None,
+            unfinished_backup: "bool | None" = None,
         ) -> None:
             pass
 

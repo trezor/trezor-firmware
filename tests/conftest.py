@@ -256,6 +256,7 @@ class SetupParams:
     passphrase: bool | str = False
     needs_backup: bool = False
     no_backup: bool = False
+    unfinished_backup: bool | None = None
     experimental: bool = False
     label: str = "test"
 
@@ -290,6 +291,7 @@ class SetupParams:
                 label=self.label,
                 needs_backup=self.needs_backup,
                 no_backup=self.no_backup,
+                unfinished_backup=self.unfinished_backup,
             )
             if self.experimental:
                 apply_settings(session, experimental_features=True)

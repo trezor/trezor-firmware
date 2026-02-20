@@ -420,6 +420,7 @@ message LoadDevice {
     optional uint32 u2f_counter = 8;                        // U2F counter
     optional bool needs_backup = 9;                         // set "needs backup" flag
     optional bool no_backup = 10;                           // indicate that no backup is going to be made
+    optional bool unfinished_backup = 11;                   // indicate that backup process has failed
 }
 
 /**

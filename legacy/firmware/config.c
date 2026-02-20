@@ -529,6 +529,10 @@ void config_loadDevice(const LoadDevice *msg) {
   if (msg->has_no_backup && msg->no_backup) {
     config_setNoBackup();
   }
+
+  if (msg->has_unfinished_backup) {
+    config_setUnfinishedBackup(msg->unfinished_backup);
+  }
 }
 
 #endif
