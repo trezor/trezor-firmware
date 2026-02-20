@@ -202,10 +202,12 @@ async def process_known_trc20_contract(
         return False
 
     address_arg = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-    assert all(
+    if not all(
         byte == 0
         for byte in address_arg[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
-    )
+    ):
+        # invalid address padding in contract data
+        return False
 
     # TRON truncates the mandatory prefix \x41 from addresses in data
     recipient = b"\x41" + bytes(
