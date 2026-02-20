@@ -1753,7 +1753,6 @@ def load_device(
     skip_checksum: bool = False,
     needs_backup: bool = False,
     no_backup: bool = False,
-    _skip_init_device: bool = False,
 ) -> None:
     if isinstance(mnemonic, str):
         mnemonic = [mnemonic]
@@ -1777,8 +1776,7 @@ def load_device(
         ),
         expect=messages.Success,
     )
-    if not _skip_init_device:
-        session.refresh_features()
+    session.refresh_features()
 
 
 # keep the old name for compatibility
