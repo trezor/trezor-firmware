@@ -216,6 +216,12 @@ def test_interrupt_backup_fails(session: Session):
             # backup can be cancelled on legacy
             session.call(messages.Cancel())
     else:
+        # backup cancellation is ignored by Core models
+        resp = session.call_raw(messages.Cancel())
+        assert isinstance(resp, messages.Failure)
+        assert resp.code == messages.FailureType.InProgress
+        assert resp.message == "Backup in progress"
+
         # use debuglink to fail the backup
         session.test_ctx.restart_event_loop()
 
