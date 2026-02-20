@@ -504,6 +504,7 @@ pub const Font_PixelOperator_Bold_8_info: FontInfo = FontInfo {
     baseline: 1,
     glyph_data: &Font_PixelOperator_Bold_8,
     glyph_nonprintable: &Font_PixelOperator_Bold_8_glyph_nonprintable,
+    kernings: None,
 };
 
 /// FontInfo struct for forced uppercase usage
@@ -514,4 +515,5 @@ pub const Font_PixelOperator_Bold_8_upper_info: FontInfo = FontInfo {
     baseline: 1,
     glyph_data: &Font_PixelOperator_Bold_8_upper,
     glyph_nonprintable: &Font_PixelOperator_Bold_8_glyph_nonprintable,
+    kernings: None,
 };
