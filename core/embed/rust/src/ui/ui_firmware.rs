@@ -183,24 +183,6 @@ pub trait FirmwareUI {
 
     fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool;
 
-    #[allow(clippy::too_many_arguments)]
-    fn flow_confirm_output(
-        title: Option<TString<'static>>,
-        subtitle: Option<TString<'static>>,
-        description: Option<TString<'static>>,
-        extra: Option<TString<'static>>,
-        message: TString<'static>,
-        chunkify: bool,
-        text_mono: bool,
-        account_title: TString<'static>,
-        account: Option<TString<'static>>,
-        account_path: Option<TString<'static>>,
-        br_code: u16,
-        br_name: TString<'static>,
-        address_item: Option<Obj>,
-        cancel_text: Option<TString<'static>>,
-    ) -> Result<impl LayoutMaybeTrace, Error>;
-
     fn flow_confirm_set_new_code(is_wipe_code: bool) -> Result<impl LayoutMaybeTrace, Error>;
 
     #[allow(clippy::too_many_arguments)]

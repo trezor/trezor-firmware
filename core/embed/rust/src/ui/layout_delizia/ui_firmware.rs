@@ -538,61 +538,6 @@ impl FirmwareUI for UIDelizia {
         LayoutObj::new_root(flow)
     }
 
-    fn flow_confirm_output(
-        title: Option<TString<'static>>,
-        subtitle: Option<TString<'static>>,
-        description: Option<TString<'static>>,
-        extra: Option<TString<'static>>,
-        message: TString<'static>,
-        chunkify: bool,
-        text_mono: bool,
-        account_title: TString<'static>,
-        account: Option<TString<'static>>,
-        account_path: Option<TString<'static>>,
-        br_code: u16,
-        br_name: TString<'static>,
-        address_item: Option<Obj>,
-        cancel_text: Option<TString<'static>>,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
-        let confirm_main = ConfirmValue::new(
-            title.unwrap_or(TString::empty()),
-            message.into(),
-            description,
-        )
-        .with_description_font(&theme::TEXT_MAIN_GREY_LIGHT)
-        .with_subtitle(subtitle)
-        .with_extra(extra)
-        .with_extra_font(&theme::TEXT_SUB_GREY)
-        .with_menu_button()
-        .with_swipeup_footer(None)
-        .with_chunkify(chunkify)
-        .with_text_mono(text_mono);
-
-        let confirm_address = address_item.map(|address_item| {
-            let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(address_item));
-            ConfirmValue::new(
-                key.try_into().unwrap_or(TString::empty()),
-                value.try_into().unwrap_or(StrOrBytes::Str("".into())),
-                None,
-            )
-            .with_cancel_button()
-            .with_chunkify(true)
-            .with_text_mono(true)
-        });
-
-        let flow = flow::confirm_output::new_confirm_output(
-            confirm_main,
-            account_title,
-            account,
-            account_path,
-            br_name,
-            br_code,
-            confirm_address,
-            cancel_text,
-        )?;
-        Ok(flow)
-    }
-
     fn flow_confirm_set_new_code(is_wipe_code: bool) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::confirm_set_new_code::new_set_new_code(is_wipe_code)?;
         Ok(flow)

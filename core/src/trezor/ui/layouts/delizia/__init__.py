@@ -578,7 +578,7 @@ async def confirm_payment_request(
 
 async def confirm_output(
     address: str,
-    amount: str | None = None,
+    amount: str,
     title: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
@@ -599,74 +599,53 @@ async def confirm_output(
     else:
         title = TR.send__title_sending_to
 
-    if amount is not None:
-        account_properties: list[StrPropertyType] = []
-        if source_account:
-            account_properties.append((TR.words__account, source_account, None))
-        if source_account_path and source_account_path != source_account:
-            # the reason for this check is account_label in bitcoin/sign_tx/layout.py
-            # which can return the derivation path instead of the account
-            account_properties.append(
-                (
-                    TR.address_details__derivation_path,
-                    source_account_path,
-                    None,
-                )
+    account_properties: list[StrPropertyType] = []
+    if source_account:
+        account_properties.append((TR.words__account, source_account, None))
+    if source_account_path and source_account_path != source_account:
+        # the reason for this check is account_label in bitcoin/sign_tx/layout.py
+        # which can return the derivation path instead of the account
+        account_properties.append(
+            (
+                TR.address_details__derivation_path,
+                source_account_path,
+                None,
             )
-        if account_properties:
-            info_items = [
-                (
-                    TR.address_details__account_info,
-                    account_properties,
-                    TR.send__send_from,
-                )
-            ]
-        else:
-            info_items = []
-        await confirm_linear_flow(
-            lambda: confirm_value(
-                TR.words__address,
-                address,
-                description or "",
-                "confirm_output",
-                br_code,
-                subtitle=title,
-                chunkify=chunkify,
-                cancel_text=TR.send__cancel_sign,
-                info_items=info_items,
-            ),
-            lambda: confirm_value(
-                TR.words__amount,
-                amount,
-                description="",
-                br_name="confirm_output",
-                br_code=br_code,
-                subtitle=title,
-                cancel_text=TR.send__cancel_sign,
-                info_items=info_items,
-                can_go_back=True,
-            ),
         )
+    if account_properties:
+        info_items = [
+            (
+                TR.address_details__account_info,
+                account_properties,
+                TR.send__send_from,
+            )
+        ]
     else:
-        await raise_if_not_confirmed(
-            trezorui_api.flow_confirm_output(
-                title=TR.words__address,
-                subtitle=title,
-                message=address,
-                extra=None,
-                chunkify=chunkify,
-                text_mono=True,
-                account_title=TR.send__send_from,
-                account=source_account,
-                account_path=source_account_path,
-                address_item=None,
-                br_code=br_code,
-                br_name="confirm_output",
-                cancel_text=cancel_text,
-                description=description,
-            ),
-            br_name=None,
-        )
+        info_items = []
+    await confirm_linear_flow(
+        lambda: confirm_value(
+            TR.words__address,
+            address,
+            description or "",
+            "confirm_output",
+            br_code,
+            subtitle=title,
+            chunkify=chunkify,
+            cancel_text=TR.send__cancel_sign,
+            info_items=info_items,
+        ),
+        lambda: confirm_value(
+            TR.words__amount,
+            amount,
+            description="",
+            br_name="confirm_output",
+            br_code=br_code,
+            subtitle=title,
+            cancel_text=TR.send__cancel_sign,
+            info_items=info_items,
+            can_go_back=True,
+        ),
+    )
 
 
 async def should_show_more(
