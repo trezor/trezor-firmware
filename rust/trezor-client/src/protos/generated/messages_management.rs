@@ -6856,6 +6856,8 @@ pub struct LoadDevice {
     pub needs_backup: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.LoadDevice.no_backup)
     pub no_backup: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.LoadDevice.unfinished_backup)
+    pub unfinished_backup: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.LoadDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -7075,8 +7077,27 @@ impl LoadDevice {
         self.no_backup = ::std::option::Option::Some(v);
     }
 
+    // optional bool unfinished_backup = 11;
+
+    pub fn unfinished_backup(&self) -> bool {
+        self.unfinished_backup.unwrap_or(false)
+    }
+
+    pub fn clear_unfinished_backup(&mut self) {
+        self.unfinished_backup = ::std::option::Option::None;
+    }
+
+    pub fn has_unfinished_backup(&self) -> bool {
+        self.unfinished_backup.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_unfinished_backup(&mut self, v: bool) {
+        self.unfinished_backup = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(10);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "mnemonics",
@@ -7123,6 +7144,11 @@ impl LoadDevice {
             |m: &LoadDevice| { &m.no_backup },
             |m: &mut LoadDevice| { &mut m.no_backup },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "unfinished_backup",
+            |m: &LoadDevice| { &m.unfinished_backup },
+            |m: &mut LoadDevice| { &mut m.unfinished_backup },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<LoadDevice>(
             "LoadDevice",
             fields,
@@ -7168,6 +7194,9 @@ impl ::protobuf::Message for LoadDevice {
                 80 => {
                     self.no_backup = ::std::option::Option::Some(is.read_bool()?);
                 },
+                88 => {
+                    self.unfinished_backup = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -7207,6 +7236,9 @@ impl ::protobuf::Message for LoadDevice {
         if let Some(v) = self.no_backup {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.unfinished_backup {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -7240,6 +7272,9 @@ impl ::protobuf::Message for LoadDevice {
         if let Some(v) = self.no_backup {
             os.write_bool(10, v)?;
         }
+        if let Some(v) = self.unfinished_backup {
+            os.write_bool(11, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -7266,6 +7301,7 @@ impl ::protobuf::Message for LoadDevice {
         self.u2f_counter = ::std::option::Option::None;
         self.needs_backup = ::std::option::Option::None;
         self.no_backup = ::std::option::Option::None;
+        self.unfinished_backup = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -7280,6 +7316,7 @@ impl ::protobuf::Message for LoadDevice {
             u2f_counter: ::std::option::Option::None,
             needs_backup: ::std::option::Option::None,
             no_backup: ::std::option::Option::None,
+            unfinished_backup: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -12369,7 +12406,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     R\x12optigaCertificates\x12)\n\x10optiga_signature\x18\x02\x20\x02(\x0cR\
     \x0foptigaSignature\x12/\n\x13tropic_certificates\x18\x03\x20\x03(\x0cR\
     \x12tropicCertificates\x12)\n\x10tropic_signature\x18\x04\x20\x01(\x0cR\
-    \x0ftropicSignature\"\x0c\n\nWipeDevice\"\xad\x02\n\nLoadDevice\x12\x1c\
+    \x0ftropicSignature\"\x0c\n\nWipeDevice\"\xda\x02\n\nLoadDevice\x12\x1c\
     \n\tmnemonics\x18\x01\x20\x03(\tR\tmnemonics\x12\x10\n\x03pin\x18\x03\
     \x20\x01(\tR\x03pin\x123\n\x15passphrase_protection\x18\x04\x20\x01(\x08\
     R\x14passphraseProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08l\
@@ -12377,24 +12414,25 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     #\n\rskip_checksum\x18\x07\x20\x01(\x08R\x0cskipChecksum\x12\x1f\n\x0bu2\
     f_counter\x18\x08\x20\x01(\rR\nu2fCounter\x12!\n\x0cneeds_backup\x18\t\
     \x20\x01(\x08R\x0bneedsBackup\x12\x1b\n\tno_backup\x18\n\x20\x01(\x08R\
-    \x08noBackup\"\x9d\x03\n\x0bResetDevice\x12\x1f\n\x08strength\x18\x02\
-    \x20\x01(\r:\x03256R\x08strength\x123\n\x15passphrase_protection\x18\x03\
-    \x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\x18\x04\
-    \x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\
-    \x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05labe\
-    l\x12\x1f\n\x0bu2f_counter\x18\x07\x20\x01(\rR\nu2fCounter\x12\x1f\n\x0b\
-    skip_backup\x18\x08\x20\x01(\x08R\nskipBackup\x12\x1b\n\tno_backup\x18\t\
-    \x20\x01(\x08R\x08noBackup\x12Q\n\x0bbackup_type\x18\n\x20\x01(\x0e2).hw\
-    .trezor.messages.management.BackupType:\x05Bip39R\nbackupType\x12#\n\ren\
-    tropy_check\x18\x0b\x20\x01(\x08R\x0centropyCheckJ\x04\x08\x01\x10\x02\"\
-    \xe5\x01\n\x0cBackupDevice\x12'\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\
-    \x0egroupThreshold\x12O\n\x06groups\x18\x02\x20\x03(\x0b27.hw.trezor.mes\
-    sages.management.BackupDevice.Slip39GroupR\x06groups\x1a[\n\x0bSlip39Gro\
-    up\x12)\n\x10member_threshold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12\
-    !\n\x0cmember_count\x18\x02\x20\x02(\rR\x0bmemberCount\"b\n\x0eEntropyRe\
-    quest\x12-\n\x12entropy_commitment\x18\x01\x20\x01(\x0cR\x11entropyCommi\
-    tment\x12!\n\x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bprevEntropy\"&\n\n\
-    EntropyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\x13\n\
+    \x08noBackup\x12+\n\x11unfinished_backup\x18\x0b\x20\x01(\x08R\x10unfini\
+    shedBackup\"\x9d\x03\n\x0bResetDevice\x12\x1f\n\x08strength\x18\x02\x20\
+    \x01(\r:\x03256R\x08strength\x123\n\x15passphrase_protection\x18\x03\x20\
+    \x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\x18\x04\x20\
+    \x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08l\
+    anguageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12\
+    \x1f\n\x0bu2f_counter\x18\x07\x20\x01(\rR\nu2fCounter\x12\x1f\n\x0bskip_\
+    backup\x18\x08\x20\x01(\x08R\nskipBackup\x12\x1b\n\tno_backup\x18\t\x20\
+    \x01(\x08R\x08noBackup\x12Q\n\x0bbackup_type\x18\n\x20\x01(\x0e2).hw.tre\
+    zor.messages.management.BackupType:\x05Bip39R\nbackupType\x12#\n\rentrop\
+    y_check\x18\x0b\x20\x01(\x08R\x0centropyCheckJ\x04\x08\x01\x10\x02\"\xe5\
+    \x01\n\x0cBackupDevice\x12'\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\x0e\
+    groupThreshold\x12O\n\x06groups\x18\x02\x20\x03(\x0b27.hw.trezor.message\
+    s.management.BackupDevice.Slip39GroupR\x06groups\x1a[\n\x0bSlip39Group\
+    \x12)\n\x10member_threshold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12!\
+    \n\x0cmember_count\x18\x02\x20\x02(\rR\x0bmemberCount\"b\n\x0eEntropyReq\
+    uest\x12-\n\x12entropy_commitment\x18\x01\x20\x01(\x0cR\x11entropyCommit\
+    ment\x12!\n\x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bprevEntropy\"&\n\nE\
+    ntropyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\x13\n\
     \x11EntropyCheckReady\"5\n\x14EntropyCheckContinue\x12\x1d\n\x06finish\
     \x18\x01\x20\x01(\x08:\x05falseR\x06finish\"\x8d\x04\n\x0eRecoveryDevice\
     \x12\x1d\n\nword_count\x18\x01\x20\x01(\rR\twordCount\x123\n\x15passphra\
