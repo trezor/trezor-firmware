@@ -17,21 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_OPTION_BYTES_H
-#define TREZORHAL_OPTION_BYTES_H
+#pragma once
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
-secbool flash_check_option_bytes(void);
-void flash_lock_option_bytes(void);
-void flash_unlock_option_bytes(void);
-uint32_t flash_set_option_bytes(void);
-secbool flash_configure_option_bytes(void);
+/**
+ * @brief Configure MCU option bytes to the expected secure values if needed.
+ *
+ * @return sectrue if option bytes were already correctly configured and no
+ * changes were required; returns secfalse if the routine had to update the
+ * option bytes (a reset/relaunch may follow as part of the procedure).
+ */
+secbool option_bytes_configure(void);
 
-void check_oem_keys(void);
+/**
+ * @brief Perform a sanity check on OEM key lock status bits to ensure OEM keys
+ * are not programmed (should be 0xFFFFFFFF).
+ *
+ * Triggers a panic via ensure() if a key is detected as set.
+ */
+void option_bytes_check_oem_keys(void);
 
-#endif  // KERNEL_MODE
-
-#endif  // TREZORHAL_OPTION_BYTES_H
+#endif  // SECURE_MODE

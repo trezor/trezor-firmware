@@ -161,7 +161,7 @@ void drivers_init() {
 
 #ifdef SECURE_MODE
 #ifdef USE_OEM_KEYS_CHECK
-  check_oem_keys();
+  option_bytes_check_oem_keys();
 #endif
 
 #endif
