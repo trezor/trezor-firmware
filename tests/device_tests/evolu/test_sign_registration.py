@@ -1,5 +1,6 @@
 import pytest
-from ecdsa import NIST256p, SigningKey, VerifyingKey
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 
 from trezorlib import evolu
 from trezorlib.debuglink import TrezorTestContext as Client
@@ -13,10 +14,14 @@ pytestmark = pytest.mark.models("core")
 
 
 def signing_buffer(private_key: bytes, challenge: bytes, size: int) -> bytes:
-    public_key: VerifyingKey = SigningKey.from_string(private_key, curve=NIST256p).get_verifying_key()  # type: ignore
+    sk = ec.derive_private_key(int.from_bytes(private_key, "big"), ec.SECP256R1())
+    public_key_bytes = sk.public_key().public_bytes(
+        serialization.Encoding.X962,
+        serialization.PublicFormat.UncompressedPoint,
+    )
     components = [
         b"EvoluSignRegistrationRequestV1:",
-        public_key.to_string("uncompressed"),
+        public_key_bytes,
         challenge,
         size.to_bytes(4, "big"),
     ]

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from hashlib import sha256
 
-from ecdsa import NIST256p, SigningKey
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import Prehashed, decode_dss_signature
+from cryptography.hazmat.primitives import hashes
 
 from trezorlib import messages
 from trezorlib.client import Session
@@ -37,9 +39,12 @@ class CoinPurchaseMemo:
     address_resp: messages.Address | messages.EthereumAddress | None = None
 
 
-payment_req_signer = SigningKey.from_string(
-    b"\x05\x62\x35\xb0\x47\x6f\x05\x7f\x27\x65\x21\x97\x24\xf7\xf1\x80\x7d\x58\x80\x2b\x55\x0e\xd5\xbf\x6f\x73\x05\x0a\xf5\x45\x63\x00",
-    curve=NIST256p,
+payment_req_signer = ec.derive_private_key(
+    int.from_bytes(
+        b"\x05\x62\x35\xb0\x47\x6f\x05\x7f\x27\x65\x21\x97\x24\xf7\xf1\x80\x7d\x58\x80\x2b\x55\x0e\xd5\xbf\x6f\x73\x05\x0a\xf5\x45\x63\x00",
+        "big",
+    ),
+    ec.SECP256R1(),
 )
 
 
@@ -135,6 +140,13 @@ def make_payment_request(
         else None
     )
 
+    der_sig = payment_req_signer.sign(
+        h_pr.digest(),
+        ec.ECDSA(Prehashed(hashes.SHA256())),
+    )
+    r, s = decode_dss_signature(der_sig)
+    raw_sig = r.to_bytes(32, "big") + s.to_bytes(32, "big")
+
     return messages.PaymentRequest(
         recipient_name=recipient_name,
         amount=(
@@ -142,5 +154,5 @@ def make_payment_request(
         ),
         memos=msg_memos,
         nonce=nonce,
-        signature=payment_req_signer.sign_digest_deterministic(h_pr.digest()),
+        signature=raw_sig,
     )
