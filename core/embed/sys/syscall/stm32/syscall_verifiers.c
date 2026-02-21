@@ -581,6 +581,7 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_SECRET_KEYS
 #include <sec/secret_keys.h>
 
 secbool secret_key_delegated_identity__verified(
@@ -595,6 +596,7 @@ access_violation:
   apptask_access_violation();
   return secfalse;
 }
+#endif
 
 // ---------------------------------------------------------------------
 

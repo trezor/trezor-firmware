@@ -53,6 +53,15 @@ def configure(
         ("USE_SECMON_VERIFICATION", "1"),
     ]
 
+    paths += ["embed/sec/secret/inc"]
+    sources += ["embed/sec/secret/stm32u5/secret.c"]
+    defines += [("USE_SECRET", "1")]
+
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/stm32u5/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
+
     if "boot_ucb" in features_wanted:
         sources += ["embed/sec/image/boot_header.c"]
         sources += ["embed/sec/image/boot_ucb.c"]

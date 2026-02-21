@@ -19,10 +19,14 @@
 
 #ifdef SECURE_MODE
 
-#include <sec/secret.h>
-#include <sec/secret_keys.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
+
+#include <sec/secret_keys.h>
+
+#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
+#include <sec/secret.h>
+#endif
 
 #include "../storage/storage_salt.h"
 #include "hmac.h"

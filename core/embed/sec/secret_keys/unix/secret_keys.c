@@ -23,7 +23,6 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/secret.h>
 #include <sec/secret_keys.h>
 #include "../secret_keys_common.h"
 

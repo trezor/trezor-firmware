@@ -42,6 +42,15 @@ def configure(
         ("FLASH_BLOCK_WORDS", "1"),
     ]
 
+    paths += ["embed/sec/secret/inc"]
+    sources += ["embed/sec/secret/unix/secret.c"]
+    defines += [("USE_SECRET", "1")]
+
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/unix/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
+
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/unix/sbu.c"]
         paths += ["embed/io/sbu/inc"]

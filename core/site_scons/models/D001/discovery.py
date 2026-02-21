@@ -40,6 +40,11 @@ def configure(
         ("USE_HSE", "1"),
     ]
 
+    paths += ["embed/sec/secret_keys/inc"]
+    sources += ["embed/sec/secret_keys/stm32f4/secret_keys.c"]
+    sources += ["embed/sec/secret_keys/secret_keys_common.c"]
+    defines += [("USE_SECRET_KEYS", "1")]
+
     if "display" in features_wanted:
         sources += [
             "embed/io/display/stm32f429i-disc1/display_driver.c",

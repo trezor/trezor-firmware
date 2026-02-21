@@ -146,6 +146,7 @@ bool unit_properties_get_sn(uint8_t *device_sn, size_t max_device_sn_size,
 // secret.h
 // =============================================================================
 
+#ifdef USE_SECRET
 #ifdef LOCKABLE_BOOTLOADER
 
 #include <sec/secret.h>
@@ -155,6 +156,7 @@ secbool secret_bootloader_locked(void) {
 }
 
 #endif  // LOCKABLE_BOOTLOADER
+#endif
 
 // =============================================================================
 // random_delays.h
@@ -216,12 +218,15 @@ void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 // secret_keys.h
 // =============================================================================
 
+#ifdef USE_SECRET_KEYS
 #include <sec/secret_keys.h>
 
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return (secbool)smcall_invoke1((uint32_t)dest,
                                  SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
 }
+
+#endif
 
 // =============================================================================
 // storage.h

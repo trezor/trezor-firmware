@@ -22,7 +22,6 @@
 #include <io/display.h>
 #include <io/rsod.h>
 #include <io/usb_config.h>
-#include <sec/secret.h>
 #include <sec/unit_properties.h>
 #include <sys/applet.h>
 #include <sys/bootutils.h>
@@ -58,6 +57,10 @@
 #include "zkp_context.h"
 #endif
 
+#ifdef USE_SECRET
+#include <sec/secret.h>
+#endif
+
 #include <SDL.h>
 
 #ifdef USE_TROPIC
@@ -83,6 +86,10 @@ static void drivers_init(void) {
   flash_otp_init();
 
   unit_properties_init();
+
+#ifdef USE_SECRET
+  secret_init();
+#endif
 
   display_init(DISPLAY_RESET_CONTENT);
 
@@ -160,7 +167,7 @@ static void kernel_loop(applet_t *coreapp) {
 int main(int argc, char **argv) {
   system_init(&rsod_panic_handler);
 
-#ifdef LOCKABLE_BOOTLOADER
+#if defined(USE_SECRET) && defined(LOCKABLE_BOOTLOADER)
   secret_lock_bootloader();
 #endif
 
