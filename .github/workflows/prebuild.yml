@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - 'release/**'
+      - 'secfix/**'
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -86,7 +87,7 @@ jobs:
   # Checking the format of release commit messages.
   release_commit_msg_check:
     name: Release commit message check
-    if: ${{ startsWith(github.ref, 'refs/heads/release/') && github.repository == 'trezor/trezor-firmware' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
