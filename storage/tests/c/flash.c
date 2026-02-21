@@ -144,11 +144,6 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   return flash_write(sector, offset, (uint8_t *)&data, sizeof(uint32_t));
 }
 
-secbool flash_write_quadword(uint16_t sector, uint32_t offset,
-                             const uint32_t *data) {
-  return flash_write(sector, offset, (uint8_t *)data, 4 * sizeof(uint32_t));
-}
-
 secbool flash_write_burst(uint16_t sector, uint32_t offset,
                           const uint32_t *data) {
   return flash_write(sector, offset, (uint8_t *)data, 32 * sizeof(uint32_t));
