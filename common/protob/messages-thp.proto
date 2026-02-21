@@ -57,7 +57,7 @@ enum ThpMessageType {
  */
 enum ThpPairingMethod {
     SkipPairing = 1;          // Trust without MITM protection.
-    CodeEntry = 2;            // User types code diplayed on Trezor into the host application.
+    CodeEntry = 2;            // User types code displayed on Trezor into the host application.
     QrCode = 3;               // User scans code displayed on Trezor into host application.
     NFC = 4;                  // Trezor and host application exchange authentication secrets via NFC.
 }
@@ -117,7 +117,7 @@ message ThpPairingRequestApproved {
  * @next ThpCodeEntryCommitment
  */
 message ThpSelectMethod {
-    required ThpPairingMethod selected_pairing_method = 1;
+    required ThpPairingMethod selected_pairing_method = 1; // Pairing method selected by the host
 }
 
 /**
@@ -160,7 +160,6 @@ message ThpCodeEntryCpaceTrezor {
  message ThpCodeEntryCpaceHostTag {
     required bytes cpace_host_public_key = 1;    // Host's ephemeral CPace public key
     required bytes tag = 2;                      // SHA-256 of shared secret
-
 }
 
 /**
@@ -213,7 +212,7 @@ message ThpNfcTagTrezor {
  */
 message ThpCredentialRequest {
     required bytes host_static_public_key = 1;     // Host's static public key identifying the credential.
-    optional bool autoconnect = 2 [default=false]; // Whether host wants to autoconnect without user confirmation
+    optional bool autoconnect = 2 [default=false]; // Whether the host wants to autoconnect without user confirmation
     optional bytes credential = 3;                 // Host's previous credential
 }
 
