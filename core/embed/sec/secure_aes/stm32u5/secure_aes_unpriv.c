@@ -24,8 +24,6 @@
 
 #include <sec/secure_aes.h>
 
-#include <stm32u5xx_hal_cryp.h>
-
 #include "secure_aes_unpriv.h"
 
 #include "memzero.h"
