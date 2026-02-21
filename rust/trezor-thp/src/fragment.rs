@@ -17,7 +17,7 @@ pub struct Fragmenter<R: Role> {
 impl<R: Role> Fragmenter<R> {
     pub fn new(header: Header<R>, sync_bits: SyncBits, payload: &[u8]) -> Result<Self> {
         if payload.len() + CHECKSUM_LEN != header.payload_len().into() {
-            return Err(Error::UnexpectedInput);
+            return Err(Error::unexpected_input());
         }
         Ok(Self {
             header,
@@ -31,11 +31,11 @@ impl<R: Role> Fragmenter<R> {
     pub fn next(&mut self, payload: &[u8], dest: &mut [u8]) -> Result<bool> {
         const MIN_PACKET_SIZE: usize = Header::<crate::Device>::new_ping().header_len() + 1;
         if dest.len() < MIN_PACKET_SIZE {
-            return Err(Error::InsufficientBuffer);
+            return Err(Error::insufficient_buffer());
         }
         if payload.len() + CHECKSUM_LEN != self.header.payload_len().into() {
             // buffer changed since new
-            return Err(Error::UnexpectedInput);
+            return Err(Error::unexpected_input());
         }
         if self.is_done() {
             return Ok(false);
@@ -45,14 +45,14 @@ impl<R: Role> Fragmenter<R> {
             let header_len = self
                 .header
                 .to_bytes(self.sync_bits, dest)
-                .ok_or(Error::UnexpectedInput)?;
+                .ok_or_else(Error::unexpected_input)?;
             self.checksum.update(&dest[..header_len]);
             header_len
         } else {
             let cont_header = Header::<R>::new_continuation(self.header.channel_id())?;
             cont_header
                 .to_bytes(SyncBits::new(), dest)
-                .ok_or(Error::UnexpectedInput)?
+                .ok_or_else(Error::unexpected_input)?
         };
         let mut rest = &mut dest[header_len..];
 
@@ -67,7 +67,9 @@ impl<R: Role> Fragmenter<R> {
 
         if self.offset >= payload.len() && self.crc_offset < CHECKSUM_LEN {
             let crc = self.checksum.finalize();
-            let crc = crc.get(self.crc_offset..).ok_or(Error::UnexpectedInput)?;
+            let crc = crc
+                .get(self.crc_offset..)
+                .ok_or_else(Error::unexpected_input)?;
             let nbytes = crc.len().min(rest.len());
             rest[..nbytes].copy_from_slice(&crc[..nbytes]);
             self.crc_offset += nbytes;
@@ -95,9 +97,13 @@ impl<R: Role> Fragmenter<R> {
         let mut fragmenter = Self::new(header, sb, payload)?;
         fragmenter.next(payload, dest)?;
         if !fragmenter.is_done() {
-            return Err(Error::InsufficientBuffer);
+            return Err(Error::insufficient_buffer());
         }
         Ok(())
+    }
+
+    pub fn header(&self) -> &Header<R> {
+        &self.header
     }
 }
 
@@ -111,20 +117,25 @@ impl<R: Role> Reassembler<R> {
     pub fn new(input: &[u8], buffer: &mut [u8]) -> Result<Self> {
         let (header, after_header) = Header::parse(input)?;
         if header.is_continuation() {
-            return Err(Error::UnexpectedInput);
+            return Err(Error::malformed_data());
         }
 
+        let nbytes = after_header.len(); // Header::parse strips padding
         let payload_len = header.payload_len().into();
-        if buffer.len() < payload_len {
-            return Err(Error::InsufficientBuffer);
+        if buffer.len() < nbytes {
+            return Err(Error::insufficient_buffer());
         }
+        if buffer.len() < payload_len {
+            log::debug!(
+                "Message is larger ({}) than receive buffer ({}), requesting reallocation.",
+                payload_len,
+                buffer.len()
+            );
+        }
+        buffer[..nbytes].copy_from_slice(after_header);
 
         let mut checksum = Crc32::new();
         checksum.update(&input[..header.header_len()]);
-
-        let nbytes = after_header.len(); // Header::parse strips padding
-        buffer[..nbytes].copy_from_slice(after_header);
-
         let checksum_bytes = (payload_len - CHECKSUM_LEN).min(nbytes);
         checksum.update(&after_header[..checksum_bytes]);
 
@@ -142,7 +153,7 @@ impl<R: Role> Reassembler<R> {
                 "[{}] Unexpected initiation packet.",
                 self.header.channel_id()
             );
-            return Err(Error::UnexpectedInput);
+            return Err(Error::unexpected_input());
         }
 
         if header.channel_id() != self.header.channel_id() {
@@ -151,12 +162,12 @@ impl<R: Role> Reassembler<R> {
                 self.header.channel_id(),
                 header.channel_id()
             );
-            return Err(Error::OutOfBounds);
+            return Err(Error::malformed_data());
         }
 
         let payload_len = self.header.payload_len().into();
         if buffer.len() < payload_len {
-            return Err(Error::InsufficientBuffer); // buffer changed since new()
+            return Err(Error::insufficient_buffer()); // buffer changed since new()
         }
         let payload_remaining = payload_len.saturating_sub(self.offset);
 
@@ -176,24 +187,24 @@ impl<R: Role> Reassembler<R> {
 
     pub fn verify(&self, buffer: &[u8]) -> Result<usize> {
         if !self.is_done() {
-            return Err(Error::UnexpectedInput);
+            return Err(Error::unexpected_input());
         }
         let computed_checksum = self.checksum.finalize();
         let length_no_checksum =
             usize::from(self.header.payload_len()).saturating_sub(CHECKSUM_LEN);
         let received_checksum = *buffer
             .get(length_no_checksum..)
-            .ok_or(Error::InvalidChecksum)?
+            .ok_or_else(Error::invalid_checksum)?
             .first_chunk::<CHECKSUM_LEN>()
-            .ok_or(Error::InvalidChecksum)?;
+            .ok_or_else(Error::invalid_checksum)?;
         if computed_checksum != received_checksum {
-            return Err(Error::InvalidChecksum);
+            return Err(Error::invalid_checksum());
         }
         Ok(length_no_checksum)
     }
 
-    pub fn header(&self) -> Header<R> {
-        self.header.clone()
+    pub fn header(&self) -> &Header<R> {
+        &self.header
     }
 
     // Shortcut to deserialize single packet message.
@@ -201,11 +212,37 @@ impl<R: Role> Reassembler<R> {
         let reassembler = Self::new(buffer, dest)?;
         if !reassembler.is_done() {
             log::error!("Single packet message expected.");
-            return Err(Error::MalformedData);
+            return Err(Error::malformed_data());
         }
         let reply_len = reassembler.verify(dest)?;
         let header = reassembler.header;
         Ok((header, &dest[..reply_len]))
+    }
+
+    pub fn single_inplace(buffer: &[u8]) -> Result<(Header<R>, &[u8])> {
+        let (header, after_header) = Header::parse(buffer)?;
+        if header.is_continuation() {
+            return Err(Error::malformed_data());
+        }
+        let payload_len: usize = header.payload_len().into();
+        if payload_len != after_header.len() {
+            log::error!("Single packet message expected.");
+            return Err(Error::malformed_data());
+        }
+
+        let mut checksum = Crc32::new();
+        checksum.update(&buffer[..header.header_len()]);
+        let checksum_off = payload_len.saturating_sub(CHECKSUM_LEN);
+        checksum.update(&after_header[..checksum_off]);
+        let computed_checksum = checksum.finalize();
+
+        let received_checksum = *after_header
+            .last_chunk::<CHECKSUM_LEN>()
+            .ok_or_else(Error::invalid_checksum)?;
+        if computed_checksum != received_checksum {
+            return Err(Error::invalid_checksum());
+        }
+        Ok((header, &after_header[..checksum_off]))
     }
 }
 

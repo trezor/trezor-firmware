@@ -1,6 +1,6 @@
 #![doc = include_str!("../README.md")]
-#![no_std]
 #![forbid(unsafe_code)]
+#![cfg_attr(not(feature = "use_std"), no_std)]
 
 mod alternating_bit;
 pub mod channel;
@@ -8,8 +8,9 @@ mod control_byte;
 mod crc32;
 pub mod credential;
 pub mod error;
-pub mod fragment;
+mod fragment;
 pub mod header;
+mod util;
 
 pub use channel::{Backend, Channel, ChannelIO};
 pub use error::Error;

@@ -27,6 +27,12 @@ impl TransportError {
     }
 }
 
+impl From<TransportError> for u8 {
+    fn from(val: TransportError) -> u8 {
+        val as u8
+    }
+}
+
 impl TryFrom<u8> for TransportError {
     type Error = Error;
 
@@ -36,7 +42,7 @@ impl TryFrom<u8> for TransportError {
             2 => Self::UnallocatedChannel,
             3 => Self::DecryptionFailed,
             5 => Self::DeviceLocked,
-            _ => return Err(Error::OutOfBounds),
+            _ => return Err(Error::malformed_data()),
         })
     }
 }
@@ -46,16 +52,14 @@ impl TryFrom<&[u8]> for TransportError {
 
     fn try_from(val: &[u8]) -> Result<Self> {
         val.first()
-            .ok_or(Error::MalformedData)
+            .ok_or_else(Error::malformed_data)
             .and_then(|b| TransportError::try_from(*b))
     }
 }
 
 #[cfg_attr(any(test, debug_assertions), derive(Debug))]
-#[derive(PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Error {
-    /// Numeric field has forbidden value.
-    OutOfBounds,
     /// Invalid data/operation from crate user.
     UnexpectedInput,
     /// Channel is not ready to send another message, or there is no message ready to be passed
@@ -74,11 +78,36 @@ pub enum Error {
 impl From<NoiseError> for Error {
     fn from(val: NoiseError) -> Self {
         match val.kind() {
-            NoiseErrorKind::DH | NoiseErrorKind::Decryption => Self::CryptoError,
-            NoiseErrorKind::NeedPSK => panic!(),
-            NoiseErrorKind::TooShort => Self::MalformedData,
+            NoiseErrorKind::DH | NoiseErrorKind::Decryption => Self::crypto_error(),
+            NoiseErrorKind::TooShort => Self::malformed_data(),
         }
     }
 }
 
 pub type Result<T> = core::result::Result<T, Error>;
+
+impl Error {
+    pub const fn unexpected_input() -> Self {
+        Self::UnexpectedInput
+    }
+
+    pub const fn not_ready() -> Self {
+        Self::NotReady
+    }
+
+    pub const fn malformed_data() -> Self {
+        Self::MalformedData
+    }
+
+    pub const fn invalid_checksum() -> Self {
+        Self::InvalidChecksum
+    }
+
+    pub const fn insufficient_buffer() -> Self {
+        Self::InsufficientBuffer
+    }
+
+    pub const fn crypto_error() -> Self {
+        Self::CryptoError
+    }
+}
