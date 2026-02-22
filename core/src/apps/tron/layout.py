@@ -128,7 +128,7 @@ async def confirm_freeze_operations(
     )
 
     await confirm_properties(
-        br_name="confirm_tron_freeze_ops",
+        br_name="tron/freeze",
         title=TR.words__title_summary,
         props=(
             (TR.words__amount, format_trx_amount(balance), False),
