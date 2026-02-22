@@ -1,4 +1,4 @@
-# TRON [WIP]
+# TRON
 
 Tron is an EVM like network that allows for nearly free token transfers like `USDT` etc. It achieves this by using `Bandwidth` and `Energy` for transfers, instead of `Gas` in Ethereum. `Bandwidth` is used for native `TRX` transfer, while `Energy` is used for `TRC-20` tokens like `Tether - USDT` etc.
 
@@ -29,8 +29,10 @@ Therefore, we do not show any fees to the user on the device. The host applicati
 - [X] Generate addresses for Receiving `TRX` or other tokens.
 - [X] `TransferContract`: Sending `TRX`
 - [X] `TriggerSmartContract`: Send `USDT`, `USDD`, etc.
-- [ ] `FreezeBalanceV2`: Stake `TRX` to get more `Bandwidth` or `Energy`
-- [ ] `UnfreezeBalanceV2`: Unstake frozen `TRX`
+- [X] `FreezeBalanceV2`: Stake `TRX` to get more `Bandwidth` or `Energy`
+- [X] `UnfreezeBalanceV2`: Unstake frozen `TRX`
+- [X] `WithdrawExpireUnfreeze`: Claim Unstaked `TRX` past their lock-up period
+- [ ] `VoteWitnessAccount`: Vote using earned TRON Power. **Coming soon**
 
 ### Notes
 
