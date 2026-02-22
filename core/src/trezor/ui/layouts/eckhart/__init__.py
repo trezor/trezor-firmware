@@ -1569,7 +1569,7 @@ if not utils.BITCOIN_ONLY:
             fee or "",
             TR.words__fee_limit if fee else "",
             extra_items=None,
-            br_name="confirm_tron_send",
+            br_name="tron/send",
             br_code=ButtonRequestType.SignTx,
         )
 
@@ -1581,7 +1581,7 @@ if not utils.BITCOIN_ONLY:
         chunkify: bool = True,
     ) -> None:
 
-        br_name = "confirm_tron_transfer"
+        br_name = "tron/transfer"
         title = TR.words__send
 
         await confirm_value(
@@ -1631,7 +1631,7 @@ if not utils.BITCOIN_ONLY:
         chunkify: bool = True,
     ) -> None:
 
-        br_name = "confirm_tron_approve"
+        br_name = "tron/approve"
         if is_revoke:
             title = TR.ethereum__approve_intro_title_revoke
             action_subtitle = TR.ethereum__approve_intro_revoke
