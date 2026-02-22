@@ -212,7 +212,8 @@
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1"
+      "misc:tXRP": "2.6.1",
+      "misc:TRX": "2.10.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T2B1 (#2793)",
@@ -235,8 +236,7 @@
       "nem:PAC:CHS": "not for T2B1 (#2793)",
       "nem:PAC:HRT": "not for T2B1 (#2793)",
       "nem:XEM": "not for T2B1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet",
-      "misc:TRX": "WIP: Partial support in Debug build"
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T2T1": {
@@ -348,15 +348,15 @@
       "nem:DIMTOK": "2.0.7",
       "nem:PAC:CHS": "2.0.7",
       "nem:PAC:HRT": "2.0.7",
-      "nem:XEM": "2.0.7"
+      "nem:XEM": "2.0.7",
+      "misc:TRX": "2.10.1"
     },
     "unsupported": {
       "bitcoin:PART": "incompatible fork",
       "bitcoin:TRC": "address_type collides with Bitcoin",
       "bitcoin:tPART": "incompatible fork",
       "misc:LSK": "Incompatible mainnet hard-fork",
-      "eth:tHOL:17000": "Deprecated testnet",
-      "misc:TRX": "WIP: Partial support in Debug build"
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T3B1": {
@@ -452,7 +452,8 @@
       "misc:XRP": "2.8.1",
       "misc:XTZ": "2.8.1",
       "misc:tADA": "2.8.1",
-      "misc:tXRP": "2.8.1"
+      "misc:tXRP": "2.8.1",
+      "misc:TRX": "2.10.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3B1 (#2793)",
@@ -475,8 +476,7 @@
       "nem:PAC:CHS": "not for T3B1 (#2793)",
       "nem:PAC:HRT": "not for T3B1 (#2793)",
       "nem:XEM": "not for T3B1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet",
-      "misc:TRX": "WIP: Partial support in Debug build"
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T3T1": {
@@ -572,7 +572,8 @@
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1"
+      "misc:tXRP": "2.6.1",
+      "misc:TRX": "2.10.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3T1 (#2793)",
@@ -595,8 +596,7 @@
       "nem:PAC:CHS": "not for T3T1 (#2793)",
       "nem:PAC:HRT": "not for T3T1 (#2793)",
       "nem:XEM": "not for T3T1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet",
-      "misc:TRX": "WIP: Partial support in Debug build"
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T3W1": {
@@ -692,7 +692,8 @@
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1"
+      "misc:tXRP": "2.6.1",
+      "misc:TRX": "2.10.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3W1 (#2793)",
@@ -715,8 +716,7 @@
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
       "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet",
-      "misc:TRX": "WIP: Partial support in Debug build"
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
 
@@ -813,7 +813,8 @@
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1"
+      "misc:tXRP": "2.6.1",
+      "misc:TRX": "2.10.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3W1 (#2793)",
@@ -836,8 +837,7 @@
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
       "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet",
-      "misc:TRX": "WIP: Partial support in Debug build"
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
 
@@ -934,7 +934,8 @@
       "misc:XRP": "2.6.1",
       "misc:XTZ": "2.6.1",
       "misc:tADA": "2.6.1",
-      "misc:tXRP": "2.6.1"
+      "misc:tXRP": "2.6.1",
+      "misc:TRX": "2.10.1"
     },
     "unsupported": {
       "bitcoin:BTG": "not for T3W1 (#2793)",
@@ -957,8 +958,7 @@
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
       "nem:XEM": "not for T3W1 (#2793)",
-      "eth:tHOL:17000": "Deprecated testnet",
-      "misc:TRX": "WIP: Partial support in Debug build"
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   }
 }
