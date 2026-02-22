@@ -1617,7 +1617,7 @@ if not utils.BITCOIN_ONLY:
             None,
             None,
             maximum_fee,
-            TR.send__maximum_fee,
+            TR.words__fee_limit,
             title,
             None,
         )
@@ -1682,7 +1682,7 @@ if not utils.BITCOIN_ONLY:
             None,
             None,
             maximum_fee,
-            TR.send__maximum_fee,
+            TR.words__fee_limit,
             title,
             None,
         )

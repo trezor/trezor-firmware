@@ -1461,7 +1461,6 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-
     async def confirm_tron_send(amount: str | None, fee: str | None) -> None:
         await _confirm_summary(
             amount or "",
@@ -1517,7 +1516,7 @@ if not utils.BITCOIN_ONLY:
             None,
             None,
             maximum_fee,
-            TR.send__maximum_fee,
+            TR.words__fee_limit,
             title,
             None,
         )
@@ -1582,7 +1581,7 @@ if not utils.BITCOIN_ONLY:
             None,
             None,
             maximum_fee,
-            TR.send__maximum_fee,
+            TR.words__fee_limit,
             title,
             None,
         )
