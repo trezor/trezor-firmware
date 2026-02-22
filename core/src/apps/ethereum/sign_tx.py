@@ -11,15 +11,9 @@ from .helpers import address_from_bytes, bytes_from_address
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
-    from buffer_types import AnyBytes
     from typing import Any, Coroutine, Iterable
 
-    from trezor.messages import (
-        EthereumNetworkInfo,
-        EthereumSignTx,
-        EthereumTokenInfo,
-        EthereumTxAck,
-    )
+    from trezor.messages import EthereumNetworkInfo, EthereumSignTx, EthereumTxAck
     from trezor.ui.layouts import StrPropertyType
 
     from apps.common.keychain import Keychain
@@ -164,23 +158,13 @@ async def confirm_tx_data(
     payment_req_verifier: PaymentRequestVerifier | None,
 ) -> None:
     from trezor import TR
-    from trezor.ui.layouts import confirm_value, ethereum_address_title
+    from trezor.ui.layouts import confirm_value
 
-    from . import tokens
     from .layout import (
-        require_confirm_address,
-        require_confirm_approve,
         require_confirm_other_data,
         require_confirm_payment_request,
         require_confirm_tx,
-        require_confirm_unknown_token,
     )
-
-    # local_cache_attribute
-    payment_req = msg.payment_req
-    SC_FUNC_SIG_APPROVE = constants.SC_FUNC_SIG_APPROVE
-    REVOKE_AMOUNT = constants.SC_FUNC_APPROVE_REVOKE_AMOUNT
-    EIP_7702_TX_TYPE = constants.EIP_7702_TX_TYPE
 
     staking_approver = get_staking_approver(
         msg, defs.network, address_bytes, maximum_fee, fee_items
@@ -188,7 +172,7 @@ async def confirm_tx_data(
     if staking_approver is not None:
         return await staking_approver
 
-    if tx_type == EIP_7702_TX_TYPE:
+    if tx_type == constants.EIP_7702_TX_TYPE:
         # we have already made sure that the address is a known address
         # as part of the initial validation
         await confirm_value(
@@ -198,95 +182,61 @@ async def confirm_tx_data(
             "confirm_provider",
         )
 
-    token, token_address, func_sig, recipient, value = (
-        await _handle_known_contract_calls(msg, defs, address_bytes)
+    if await _handle_known_contract_calls(
+        msg,
+        defs,
+        address_bytes,
+        maximum_fee,
+        fee_items,
+        data_total_len,
+        payment_req_verifier,
+    ):
+        return
+
+    value = int.from_bytes(msg.value, "big")
+
+    recipient_str = (
+        address_from_bytes(address_bytes, defs.network) if address_bytes else None
     )
 
-    if token is tokens.UNKNOWN_TOKEN:
-        if func_sig == SC_FUNC_SIG_APPROVE:
-            if value == REVOKE_AMOUNT:
-                title = TR.ethereum__approve_intro_title_revoke
-            else:
-                title = TR.ethereum__approve_intro_title
-        else:
-            title = ethereum_address_title()
-        await require_confirm_unknown_token(title)
-        if func_sig != SC_FUNC_SIG_APPROVE:
-            # For unknown tokens we also show the token address immediately after the warning
-            # except in the case of the "approve" flow which shows the token address later on!
-            await require_confirm_address(
-                address_bytes,
-                ethereum_address_title(),
-                TR.ethereum__token_contract,
-                TR.buttons__continue,
-                "unknown_token",
-                TR.ethereum__unknown_contract_address,
-            )
+    if payment_req_verifier is not None:
+        if data_total_len > 0:
+            raise DataError("Payment Requests don't support contract interactions")
 
-    if func_sig == SC_FUNC_SIG_APPROVE:
-        assert token
-        assert token_address
-
-        if payment_req_verifier is not None:
-            raise DataError("Payment Requests not supported for the APPROVE call")
-
-        await require_confirm_approve(
-            recipient,
-            value,
+        # If a payment_req_verifier is provided, then msg.payment_req must have been set.
+        assert msg.payment_req is not None
+        assert recipient_str is not None
+        payment_req_verifier.add_output(value, recipient_str or "")
+        payment_req_verifier.verify()
+        await require_confirm_payment_request(
+            recipient_str,
+            msg.payment_req,
             msg.address_n,
             maximum_fee,
             fee_items,
             msg.chain_id,
             defs.network,
-            token,
-            token_address,
-            chunkify=bool(msg.chunkify),
+            # TODO: SLIP-24 cannot deal with tokens? So we should get rid of these?
+            None,
+            address_from_bytes(address_bytes, defs.network),
         )
     else:
-        assert value is not None
+        if data_total_len > 0:
+            # blind signing: we have data, but _handle_known_contract_calls did not recognize the function
+            await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
 
-        recipient_str = (
-            address_from_bytes(recipient, defs.network) if recipient else None
+        await require_confirm_tx(
+            recipient_str,
+            value,
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            defs.network,
+            None,  # value here is always in ETH, not other tokens
+            is_send=not data_total_len > 0
+            and not tx_type == constants.EIP_7702_TX_TYPE,
+            chunkify=bool(msg.chunkify),
         )
-        token_address_str = address_from_bytes(address_bytes, defs.network)
-
-        is_contract_interaction = token is None and data_total_len > 0
-
-        if payment_req_verifier is not None:
-            if is_contract_interaction:
-                raise DataError("Payment Requests don't support contract interactions")
-
-            # If a payment_req_verifier is provided, then msg.payment_req must have been set.
-            assert payment_req is not None
-            assert recipient_str is not None
-            payment_req_verifier.add_output(value, recipient_str or "")
-            payment_req_verifier.verify()
-            await require_confirm_payment_request(
-                recipient_str,
-                payment_req,
-                msg.address_n,
-                maximum_fee,
-                fee_items,
-                msg.chain_id,
-                defs.network,
-                token,
-                token_address_str,
-            )
-        else:
-            if is_contract_interaction:
-                await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
-
-            await require_confirm_tx(
-                recipient_str,
-                value,
-                msg.address_n,
-                maximum_fee,
-                fee_items,
-                defs.network,
-                token,
-                is_send=not is_contract_interaction and tx_type != EIP_7702_TX_TYPE,
-                chunkify=bool(msg.chunkify),
-            )
 
 
 def get_staking_approver(
@@ -337,63 +287,184 @@ async def _handle_known_contract_calls(
     msg: MsgInSignTx,
     definitions: Definitions,
     address_bytes: bytes,
-) -> tuple[
-    EthereumTokenInfo | None, AnyBytes | None, AnyBytes | None, AnyBytes, int | None
-]:
+    maximum_fee: str,
+    fee_items: Iterable[StrPropertyType],
+    data_total_len: int,  # TODO: can we get this somehow else?
+    payment_req_verifier: PaymentRequestVerifier | None,
+) -> bool:
+    from trezor import TR
+    from trezor.ui.layouts import (
+        confirm_action,
+        confirm_properties,
+        ethereum_address_title,
+    )
+
+    from . import tokens
+    from .layout import (
+        require_confirm_address,
+        require_confirm_approve,
+        require_confirm_other_data,
+        require_confirm_tx,
+        require_confirm_unknown_token,
+    )
+
     # local_cache_attribute
     data_initial_chunk = msg.data_initial_chunk
     SC_FUNC_SIG_BYTES = constants.SC_FUNC_SIG_BYTES
-    SC_ARGUMENT_BYTES = constants.SC_ARGUMENT_BYTES
-    SC_ARGUMENT_ADDRESS_BYTES = constants.SC_ARGUMENT_ADDRESS_BYTES
-    SC_FUNC_SIG_APPROVE = constants.SC_FUNC_SIG_APPROVE
-    SC_FUNC_SIG_TRANSFER = constants.SC_FUNC_SIG_TRANSFER
+    APPROVE = constants.APPROVE_DISPLAY_FORMAT
+    TRANSFER = constants.TRANSFER_DISPLAY_FORMAT
 
-    token = None
+    chain_id = msg.chain_id
     token_address = None
     recipient = address_bytes
-    value = int.from_bytes(msg.value, "big")
+
+    token_address = address_bytes
+    token = definitions.get_token(token_address)
 
     data_reader = BufferReader(data_initial_chunk)
     if data_reader.remaining_count() < SC_FUNC_SIG_BYTES:
-        return token, token_address, None, recipient, value
+        return False
     func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
 
-    if (
-        len(msg.to) in (40, 42)
-        and len(msg.value) == 0
-        and msg.data_length == 68
-        and len(data_initial_chunk) == 68
-        and func_sig in (SC_FUNC_SIG_TRANSFER, SC_FUNC_SIG_APPROVE)
-    ):
-        # The two functions happen to have the exact same parameters, so we treat them together.
-        # This will need to be made into a more generic solution eventually.
-        # arg0: address, Address, 20 bytes (left padded with zeroes)
-        # arg1: value, uint256, 32 bytes
-
-        if data_reader.remaining_count() < SC_ARGUMENT_BYTES * 2:
-            return token, token_address, None, recipient, value
-        arg0 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-        assert all(
-            byte == 0 for byte in arg0[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
-        )
-        recipient = bytes(arg0[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :])
-        arg1 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-        if func_sig == SC_FUNC_SIG_APPROVE and all(byte == 255 for byte in arg1):
-            # "Unlimited" approval (all bits set) is a special case
-            # which we encode as value=None internally.
-            value = None
-        else:
-            value = int.from_bytes(arg1, "big")
-
-        token = definitions.get_token(address_bytes)
-        token_address = address_bytes
+    for f in constants.ALL_DISPLAY_FORMATS:
+        if f.func_sig == func_sig:
+            # parse the parameters
+            try:
+                args = list(f.parse_fields(data_reader, definitions.network))
+                break
+            except constants.InvalidFunctionCall:
+                # If the function was known but parsing the parameters failed,
+                # pretend we did not recognize the function so we fall back to blind signing.
+                # See the approve_avantis test case and ERC-8021.
+                func_sig = None
+                args = None
     else:
-        # If the function was known but something else (data length) was unexpected,
-        # pretend we did not recognize the function so we fall back to blind signing.
-        # See the approve_avantis test case and ERC-8021.
-        func_sig = None
+        args = []
 
-    return token, token_address, func_sig, recipient, value
+    if func_sig == APPROVE.func_sig:  # custom treatment of "approve"
+        if payment_req_verifier is not None:
+            raise DataError("Payment Requests not supported for the APPROVE call")
+
+        assert len(args) == 2
+        (arg0_value, (arg0_name, _arg0_formatted, _arg0_is_data)) = args[0]
+        assert arg0_name == "Spender"
+        assert isinstance(arg0_value, bytes)
+        recipient = arg0_value
+        (arg1_value, (arg1_name, _arg1_formatted, _arg1_is_data)) = args[1]
+        assert arg1_name == "Amount"
+        assert arg1_value is None or isinstance(
+            arg1_value, int
+        )  # None is Unlimited, see DisplayFormat.threshold
+        value = arg1_value
+
+        is_revoke, title = (
+            (True, TR.ethereum__approve_intro_title_revoke)
+            if value == constants.SC_FUNC_APPROVE_REVOKE_AMOUNT
+            else (False, TR.ethereum__approve_intro_title)
+        )
+
+        if token is tokens.UNKNOWN_TOKEN:
+            await require_confirm_unknown_token(title)
+
+        recipient_str = None
+        for context in APPROVE.binding_contexts or []:
+            if context.matches(chain_id, recipient):
+                recipient_str = context.get_name()
+                break
+
+        await require_confirm_approve(
+            recipient_str,
+            recipient,
+            value,
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            chain_id,
+            definitions.network,
+            token,
+            token_address,
+            is_revoke=is_revoke,
+            chunkify=bool(msg.chunkify),
+        )
+        return True
+    elif func_sig == TRANSFER.func_sig:  # custom treatment of TRANSFER
+        if payment_req_verifier is not None:
+            raise DataError("Payment Requests not supported for the TRANSFER call")
+
+        assert len(args) == 2
+        (arg0_value, (arg0_name, _arg0_formatted, _arg0_is_data)) = args[0]
+        assert arg0_name == "To"
+        assert isinstance(arg0_value, bytes)
+        recipient = arg0_value
+        (arg1_value, (arg1_name, _arg1_formatted, _arg1_is_data)) = args[1]
+        assert arg1_name == "Amount"
+        assert isinstance(arg1_value, int)
+        value = arg1_value
+
+        if token is tokens.UNKNOWN_TOKEN:
+            await require_confirm_unknown_token(ethereum_address_title())
+            await require_confirm_address(
+                address_bytes,
+                ethereum_address_title(),
+                TR.ethereum__token_contract,
+                TR.buttons__continue,
+                "unknown_token",
+                TR.ethereum__unknown_contract_address,
+            )
+
+        is_contract_interaction = data_total_len > 0 and not (
+            len(msg.to) in (40, 42) and len(msg.value) == 0
+        )  # TODO
+
+        if is_contract_interaction:
+            await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
+
+        await require_confirm_tx(
+            address_from_bytes(recipient, definitions.network) if recipient else None,
+            value,
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            definitions.network,
+            token,
+            is_send=not is_contract_interaction,
+            chunkify=bool(msg.chunkify),
+        )
+
+        return True
+
+    for f in constants.ALL_DISPLAY_FORMATS:
+        if func_sig == f.func_sig:  # TODO: check binding context
+            if payment_req_verifier is not None:
+                raise DataError(
+                    "Payment Requests not supported for contract interactions"
+                )
+            if token is tokens.UNKNOWN_TOKEN:
+                await require_confirm_unknown_token(ethereum_address_title())
+                await require_confirm_address(
+                    address_bytes,
+                    ethereum_address_title(),
+                    TR.ethereum__token_contract,
+                    TR.buttons__continue,
+                    "unknown_token",
+                    TR.ethereum__unknown_contract_address,
+                )
+            await confirm_action("confirm_contract", "Intent", f.intent)
+            try:
+                await confirm_properties(
+                    "confirm_contract",
+                    "Confirm contract",
+                    (
+                        field_display
+                        for (_value, field_display) in f.parse_fields(
+                            data_reader, definitions.network
+                        )
+                    ),
+                )
+            except constants.InvalidFunctionCall:
+                return False
+            return True
+    return False
 
 
 def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
