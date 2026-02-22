@@ -1538,7 +1538,6 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-
     async def confirm_tron_send(amount: str | None, fee: str | None) -> None:
         await raise_if_not_confirmed(
             trezorui_api.confirm_summary(
@@ -1612,7 +1611,7 @@ if not utils.BITCOIN_ONLY:
                 amount=None,
                 amount_label=None,
                 fee=maximum_fee,
-                fee_label=with_colon(TR.send__maximum_fee),
+                fee_label=with_colon(TR.words__fee_limit),
                 title=title,
                 account_title=TR.address_details__account_info,
                 extra_title=TR.confirm_total__title_fee,
@@ -1665,7 +1664,7 @@ if not utils.BITCOIN_ONLY:
                 amount=None,
                 amount_label=None,
                 fee=maximum_fee,
-                fee_label=with_colon(TR.send__maximum_fee),
+                fee_label=with_colon(TR.words__fee_limit),
                 title=title,
                 account_title=TR.address_details__account_info,
                 extra_title=TR.confirm_total__title_fee,
