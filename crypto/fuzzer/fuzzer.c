@@ -49,7 +49,9 @@
 #include "hmac_drbg.h"
 #include "memzero.h"
 #include "monero/monero.h"
+#if USE_NEM
 #include "nem.h"
+#endif
 #include "nist256p1.h"
 #include "pbkdf2.h"
 #include "rand.h"
@@ -589,6 +591,7 @@ int fuzz_xmr_serialize_varint(void) {
   return 0;
 }
 
+#if USE_NEM
 // arbitrarily chosen maximum size
 #define NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN 128
 
@@ -633,6 +636,7 @@ int fuzz_nem_get_address(void) {
   check_msan(&address, sizeof(address));
   return 0;
 }
+#endif
 
 int fuzz_xmr_get_subaddress_secret_key(void) {
   bignum256modm m = {0};
