@@ -210,7 +210,8 @@ def _get_device_properties(iface: WireInterface) -> ThpDeviceProperties:
         internal_model=utils.INTERNAL_MODEL,
         model_variant=model_variant,
         protocol_version_major=2,
-        protocol_version_minor=1,
+        # TODO: re-enable THP ACK piggybacking after #6506 is fixed
+        protocol_version_minor=0,
     )
 
 
