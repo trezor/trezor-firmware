@@ -460,6 +460,11 @@ env = Environment(
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_UNIX, PATH_HAL)
 
+SDCARD = ('sd_card' in FEATURES_AVAILABLE)
+OPTIGA = ('optiga' in FEATURES_AVAILABLE)
+SERIAL_NUMBER = ('serial_number' in FEATURES_AVAILABLE)
+BACKLIGHT = ('backlight' in FEATURES_AVAILABLE)
+
 env.Tool('micropython')
 
 env.Replace(
@@ -663,7 +668,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/sdcard.py',
-        ] if 'sd_card' not in FEATURES_AVAILABLE else []
+        ] if not SDCARD else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
@@ -699,7 +704,7 @@ if FROZEN:
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
         exclude=(
-            ([SOURCE_PY_DIR + 'storage/sd_salt.py'] if 'sd_card' not in FEATURES_AVAILABLE else []) +
+            ([SOURCE_PY_DIR + 'storage/sd_salt.py'] if not SDCARD else []) +
             ([SOURCE_PY_DIR + 'storage/debug.py'] if PYOPT != '0' else []) +
             ([
                 SOURCE_PY_DIR + 'storage/cache_codec.py',
@@ -742,7 +747,7 @@ if FROZEN:
             SOURCE_PY_DIR + 'apps/common/definitions.py',
             SOURCE_PY_DIR + 'apps/common/definitions_constants.py',
         ] + (
-            [SOURCE_PY_DIR + 'apps/common/sdcard.py'] if "sd_card" not in FEATURES_AVAILABLE else []
+            [SOURCE_PY_DIR + 'apps/common/sdcard.py'] if not SDCARD else []
         )
     ))
     if PYOPT == '0':
@@ -754,14 +759,12 @@ if FROZEN:
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=(
-            [SOURCE_PY_DIR + 'apps/management/sd_protect.py'] if "sd_card" not in FEATURES_AVAILABLE else []
-        ) + (
-            [SOURCE_PY_DIR + 'apps/management/authenticate_device.py'] if "optiga" not in FEATURES_AVAILABLE else []
-        ) + (
-            [SOURCE_PY_DIR + 'apps/management/get_serial_number.py'] if "serial_number" not in FEATURES_AVAILABLE else []
+            ([SOURCE_PY_DIR + 'apps/management/sd_protect.py'] if not SDCARD else []) +
+            ([SOURCE_PY_DIR + 'apps/management/authenticate_device.py'] if not OPTIGA else []) +
+            ([SOURCE_PY_DIR + 'apps/management/get_serial_number.py'] if not SERIAL_NUMBER else []) +
+            ([SOURCE_PY_DIR + 'apps/management/set_brightness.py'] if not BACKLIGHT else [])
         )
-    )
-    )
+    ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py',
         exclude=(
             [SOURCE_PY_DIR + 'apps/management/ble/*.py'] if "ble" not in FEATURES_AVAILABLE else []
@@ -855,8 +858,8 @@ if FROZEN:
         source=SOURCE_PY,
         source_dir=SOURCE_PY_DIR,
         bitcoin_only=BITCOIN_ONLY,
-        backlight='backlight' in FEATURES_AVAILABLE,
-        optiga='optiga' in FEATURES_AVAILABLE,
+        backlight=BACKLIGHT,
+        optiga=OPTIGA,
         tropic='tropic' in FEATURES_AVAILABLE,
         use_ble='ble' in FEATURES_AVAILABLE,
         use_button='button' in FEATURES_AVAILABLE,
