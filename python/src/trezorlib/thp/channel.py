@@ -300,8 +300,9 @@ class Channel:
             if e.code == exceptions.ThpErrorCode.DEVICE_LOCKED:
                 raise DeviceLockedError from e
             raise
-        if not self.is_ack_piggybacking_allowed:
-            self._send_ack(message)
+        # Credential lookup may take a while - send an ACK to avoid the device-side USB write timeouts
+        # (see https://github.com/trezor/trezor-firmware/issues/6506#issuecomment-3943640543)
+        self._send_ack(message)
         if not message.is_handshake_init_response():
             raise ProtocolError(f"Not a valid handshake init response: {message}")
 
