@@ -728,6 +728,178 @@
       "result": {
         "signature": "7b69949daef46d44024f67d29fadafd61bbc5e8dfe61750df318232c587855c42315a5dc00562724c18e1ddc6f387a7e2fdc340a9ee0dae555eba39f045c589e1C"
       }
+    },
+    {
+      "name": "Vote_9_candidates",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "4cbf",
+          "ref_block_hash": "46d6116f36a802ef",
+          "expiration": 1772103447000,
+          "timestamp": 1772102187000
+        },
+        "contract": {
+          "_message_type": "TronVoteWitnessContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "votes": [
+            {
+              "address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+              "count": 3
+            },
+            {
+              "address": "41f279598aff304907ca03b0498c686d010d3d80bb",
+              "count": 1
+            },
+            {
+              "address": "41cf9e12e0f48573c84bc88d8ff7c50567485aaa24",
+              "count": 340419167
+            },
+            {
+              "address": "41e76da262ad1ca05274f74258ee18bc7fcc4987dc",
+              "count": 384804424
+            },
+            {
+              "address": "41e61626ef01662b320a8ba38372e9db9cca940a3b",
+              "count": 498400241
+            },
+            {
+              "address": "41290bf92b578a1c615ebb273aff6a285230c02f65",
+              "count": 934422650
+            },
+            {
+              "address": "41e71c365c9dbf284ca8c1eed2d7877638941b9011",
+              "count": 986878351
+            },
+            {
+              "address": "41977f82c69011cf4a7db6f7339edcded85c614d45",
+              "count": 522045096
+            },
+            {
+              "address": "41cd8d8ad1b4a5bd7afe46949421d2b411a3601717",
+              "count": 924051795
+            }
+          ]
+        },
+        "raw_data_hex": "0a024cbf220846d6116f36a802ef40d8e3e2ccc9335ae002080412db020a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412a6020a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812190a1541f16412b9a17ee9408646e2a21e16478f72ed1e95100312190a1541f279598aff304907ca03b0498c686d010d3d80bb1001121d0a1541cf9e12e0f48573c84bc88d8ff7c50567485aaa2410dfc4a9a201121d0a1541e76da262ad1ca05274f74258ee18bc7fcc4987dc10c8ccbeb701121d0a1541e61626ef01662b320a8ba38372e9db9cca940a3b10f1f7d3ed01121d0a1541290bf92b578a1c615ebb273aff6a285230c02f6510fad0c8bd03121d0a1541e71c365c9dbf284ca8c1eed2d7877638941b9011108fa3cad603121d0a1541977f82c69011cf4a7db6f7339edcded85c614d4510a88df7f801121d0a1541cd8d8ad1b4a5bd7afe46949421d2b411a360171710d3d2cfb80370f8ef95ccc933",
+        "raw": {
+          "txID": "f237ac366fbf48a1f6e5554db8f37d4320f7e3152a01806289df1d403d3aa47b",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "votes": [
+                      {
+                        "vote_address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+                        "vote_count": 3
+                      },
+                      {
+                        "vote_address": "41f279598aff304907ca03b0498c686d010d3d80bb",
+                        "vote_count": 1
+                      },
+                      {
+                        "vote_address": "41cf9e12e0f48573c84bc88d8ff7c50567485aaa24",
+                        "vote_count": 340419167
+                      },
+                      {
+                        "vote_address": "41e76da262ad1ca05274f74258ee18bc7fcc4987dc",
+                        "vote_count": 384804424
+                      },
+                      {
+                        "vote_address": "41e61626ef01662b320a8ba38372e9db9cca940a3b",
+                        "vote_count": 498400241
+                      },
+                      {
+                        "vote_address": "41290bf92b578a1c615ebb273aff6a285230c02f65",
+                        "vote_count": 934422650
+                      },
+                      {
+                        "vote_address": "41e71c365c9dbf284ca8c1eed2d7877638941b9011",
+                        "vote_count": 986878351
+                      },
+                      {
+                        "vote_address": "41977f82c69011cf4a7db6f7339edcded85c614d45",
+                        "vote_count": 522045096
+                      },
+                      {
+                        "vote_address": "41cd8d8ad1b4a5bd7afe46949421d2b411a3601717",
+                        "vote_count": 924051795
+                      }
+                    ]
+                  },
+                  "type_url": "type.googleapis.com/protocol.VoteWitnessContract"
+                },
+                "type": "VoteWitnessContract"
+              }
+            ],
+            "ref_block_bytes": "4cbf",
+            "ref_block_hash": "46d6116f36a802ef",
+            "expiration": 1772103447000,
+            "timestamp": 1772102187000
+          },
+          "raw_data_hex": "0a024cbf220846d6116f36a802ef40d8e3e2ccc9335ae002080412db020a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412a6020a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a5812190a1541f16412b9a17ee9408646e2a21e16478f72ed1e95100312190a1541f279598aff304907ca03b0498c686d010d3d80bb1001121d0a1541cf9e12e0f48573c84bc88d8ff7c50567485aaa2410dfc4a9a201121d0a1541e76da262ad1ca05274f74258ee18bc7fcc4987dc10c8ccbeb701121d0a1541e61626ef01662b320a8ba38372e9db9cca940a3b10f1f7d3ed01121d0a1541290bf92b578a1c615ebb273aff6a285230c02f6510fad0c8bd03121d0a1541e71c365c9dbf284ca8c1eed2d7877638941b9011108fa3cad603121d0a1541977f82c69011cf4a7db6f7339edcded85c614d4510a88df7f801121d0a1541cd8d8ad1b4a5bd7afe46949421d2b411a360171710d3d2cfb80370f8ef95ccc933",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "56dd74befa406b9f40552354f92e72ecf95857529b54dd06abff2543bb4a122d6fd0799b97909d0c0305e67ebf881608f7c4e867c5793c2d84cce9caee8041821B"
+      }
+    },
+    {
+      "name": "Vote_single_candidate",
+      "parameters": {
+        "address_n": "m/44'/195'/0'/0/0",
+        "tx": {
+          "ref_block_bytes": "4ea1",
+          "ref_block_hash": "dee739b870d6de54",
+          "expiration": 1772104911000,
+          "timestamp": 1772103651000
+        },
+        "contract": {
+          "_message_type": "TronVoteWitnessContract",
+          "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+          "votes": [
+            {
+              "address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+              "count": 1000
+            }
+          ]
+        },
+        "raw_data_hex": "0a024ea12208dee739b870d6de54409891bccdc9335a6b080412670a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121a0a1541f16412b9a17ee9408646e2a21e16478f72ed1e9510e80770b89defccc933",
+        "raw": {
+          "txID": "b680afc82000d1af6fb42bb34e1177134193cc738ac37eb0011c43f8edfecae0",
+          "raw_data": {
+            "contract": [
+              {
+                "parameter": {
+                  "value": {
+                    "owner_address": "41f2cd810c48c401d392ead3c6e1e1cb9f57750a58",
+                    "votes": [
+                      {
+                        "vote_address": "41f16412b9a17ee9408646e2a21e16478f72ed1e95",
+                        "vote_count": 1000
+                      }
+                    ]
+                  },
+                  "type_url": "type.googleapis.com/protocol.VoteWitnessContract"
+                },
+                "type": "VoteWitnessContract"
+              }
+            ],
+            "ref_block_bytes": "4ea1",
+            "ref_block_hash": "dee739b870d6de54",
+            "expiration": 1772104911000,
+            "timestamp": 1772103651000
+          },
+          "raw_data_hex": "0a024ea12208dee739b870d6de54409891bccdc9335a6b080412670a30747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e566f74655769746e657373436f6e747261637412330a1541f2cd810c48c401d392ead3c6e1e1cb9f57750a58121a0a1541f16412b9a17ee9408646e2a21e16478f72ed1e9510e80770b89defccc933",
+          "visible": false
+        }
+      },
+      "result": {
+        "signature": "460fe864e1367df5c5b35e1c4a71588af06fd20337d2323b5c69fc6f31f1f9961374e0fb942aede50bbcdfebedadcb8f542c4b3188563d1c56fba3d52d59286b1B"
+      }
     }
   ]
 }

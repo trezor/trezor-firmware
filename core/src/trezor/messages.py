@@ -6905,6 +6905,24 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TronTransferContract"]:
             return isinstance(msg, cls)
 
+    class TronVoteWitnessContract(protobuf.MessageType):
+        owner_address: "AnyBytes"
+        votes: "list[TronVote]"
+        support: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            owner_address: "AnyBytes",
+            votes: "list[TronVote] | None" = None,
+            support: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronVoteWitnessContract"]:
+            return isinstance(msg, cls)
+
     class TronTriggerSmartContract(protobuf.MessageType):
         owner_address: "AnyBytes"
         contract_address: "AnyBytes"
@@ -7011,6 +7029,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TronRawTransaction"]:
+            return isinstance(msg, cls)
+
+    class TronVote(protobuf.MessageType):
+        address: "AnyBytes"
+        count: "int"
+
+        def __init__(
+            self,
+            *,
+            address: "AnyBytes",
+            count: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronVote"]:
             return isinstance(msg, cls)
 
     class TronRawContract(protobuf.MessageType):
