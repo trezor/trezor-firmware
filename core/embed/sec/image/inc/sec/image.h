@@ -98,6 +98,8 @@ typedef enum {
   VENDOR_FW_TYPE_BTC_ONLY = 3,
   // Factory tester firmware
   VENDOR_FW_TYPE_PRODTEST = 4,
+  // Trezor CA firmware
+  VENDOR_FW_TYPE_CA = 5,
 } vendor_fw_type_t;
 
 typedef struct {
