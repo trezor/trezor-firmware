@@ -17,31 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_bsp.h>
 
-#define SECRET_NUM_KEY_SLOTS 1
+#include <sec/hdp.h>
 
-// first page: static
-#define SECRET_HEADER_OFFSET 0x00
-#define SECRET_HEADER_LEN 0x10
-
-#define SECRET_KEY_SLOT_0_OFFSET 0x10
-#define SECRET_KEY_SLOT_0_LEN 0x20
-
-#define SECRET_MONOTONIC_COUNTER_0_OFFSET 0x30
-#define SECRET_MONOTONIC_COUNTER_0_LEN 0x400
-
-#define SECRET_MONOTONIC_COUNTER_1_OFFSET (0x430)
-#define SECRET_MONOTONIC_COUNTER_1_LEN 0x400
-
-#define SECRET_MONOTONIC_COUNTER_2_OFFSET (0x830)
-#define SECRET_MONOTONIC_COUNTER_2_LEN 0x400
-
-#define SECRET_LOCK_SLOT_OFFSET 0x1FF0
-#define SECRET_LOCK_SLOT_LEN 0x10
-
-// second page: refreshed on wallet wipe
-#define SECRET_BHK_OFFSET 0x2000
-#define SECRET_BHK_LEN 0x20
-
-#define SECRET_OPTIGA_SLOT 0
+void hdp_close(void) {
+  FLASH->SECHDPCR |= FLASH_SECHDPCR_HDP1_ACCDIS_Msk;
+  FLASH->SECHDPCR |= FLASH_SECHDPCR_HDP2_ACCDIS_Msk;
+}

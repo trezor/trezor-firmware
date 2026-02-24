@@ -450,6 +450,11 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // clang-format off
   switch (mode) {
+#ifdef STM32U3
+    case MPU_MODE_HDP:
+      SET_REGION( 5, SYSTEM_FLASH_BASE_NS,       0x00020000UL,        FLASH_DATA,  NO,     NO );
+      break;
+#endif
     case MPU_MODE_APP_SAES:
     case MPU_MODE_APP:
       if (drv->active_fb.start != 0) {
@@ -508,6 +513,11 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_SECRET:
       SET_REGION( 6, SECRET_START,             SECRET_MAXSIZE,     FLASH_DATA,  YES,    NO );
       break;
+#ifdef STM32U3
+    case MPU_MODE_HDP:
+      SET_REGION( 6, HDP_START,                HDP_MAXSIZE,        FLASH_CODE,  NO,     NO );
+      break;
+#endif
 #ifndef BOARDLOADER
     case MPU_MODE_STORAGE:
       SET_REGION( 6, STORAGE_1_START,          STORAGE_SIZE,       FLASH_DATA,  YES,    NO );

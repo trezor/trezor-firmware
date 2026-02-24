@@ -58,7 +58,7 @@
 
 _Static_assert(SECRET_SECTOR_START == 0, "secret sector start must be 0");
 #define SEC_AREA_1_PAGE_START SECRET_SECTOR_START
-#define HDP_AREA_1_PAGE_END SECRET_SECTOR_END
+#define HDP_AREA_1_PAGE_END SECRET_SECTOR_START
 #define SEC_AREA_1_PAGE_END BOARDLOADER_SECTOR_END
 
 #define WRP_LOCKED_VALUE                                       \
@@ -77,7 +77,7 @@ _Static_assert(SECRET_SECTOR_START == 0, "secret sector start must be 0");
    (WANT_RDP_LEVEL << FLASH_OPTR_RDP_Pos))
 
 #define FALSH_SECBOOTADD0R_VALUE \
-  ((BOARDLOADER_START & 0xFFFFFF80) | FLASH_SBOOT0R_BOOT_LOCK | 0x7C)
+  ((BOARDLOADER_CODE_START & 0xFFFFFF80) | FLASH_SBOOT0R_BOOT_LOCK | 0x7C)
 
 #define FLASH_SECWM1R1_VALUE                                   \
   (SEC_AREA_1_PAGE_START << FLASH_SECWM1R1_SECWM1_STRT_Pos |   \

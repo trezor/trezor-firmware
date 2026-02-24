@@ -48,6 +48,7 @@ typedef enum {
   MPU_MODE_UNUSED_FLASH,  // + unused flash areas (privileged RW)
   MPU_MODE_APP,           // + unprivileged app + Assets (RO)
   MPU_MODE_APP_SAES,      // + unprivileged app + SAES/TAMPER
+  MPU_MODE_HDP,           // + HDP (privileged, code)
 } mpu_mode_t;
 
 // Initializes the MPU and sets it to MPU_MODE_DISABLED.
