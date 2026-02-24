@@ -3,6 +3,7 @@
 # isort:skip_file
 
 TransferContract = 1
+VoteWitnessContract = 4
 TriggerSmartContract = 31
 FreezeBalanceV2Contract = 54
 UnfreezeBalanceV2Contract = 55
