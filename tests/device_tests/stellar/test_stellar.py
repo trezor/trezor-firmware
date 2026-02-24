@@ -105,7 +105,7 @@ def parameters_to_proto(session, parameters):
             slip44=148,
             outputs=[
                 (
-                    o["amount"],
+                    o.get("amount", 0),
                     o["destination_account"],
                 )
                 for o in parameters["operations"]

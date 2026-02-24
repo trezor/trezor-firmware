@@ -128,9 +128,15 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
         progress_obj.report(int(i / num_operations * 900))
         op = await call_any(StellarTxOpRequest(), *consts.op_codes.keys())
 
-        # Note: in case of payment requests we don't confirm each operation individually
-        # but rather we confirm the whole payment request afterwards
-        await process_operation(w, op, current_output_index, confirm=not msg.payment_req)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+        await process_operation(w, op, current_output_index, verifier)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+
+        if msg.payment_req:
+            assert verifier is not None
+            if current_output_index != 0:
+                raise ProcessError(
+                    "Multiple operations not supported for payment requests"
+                )
+            assert output_address is None and output_asset is None
 
         if op.source_account is not None and op.source_account != address:  # type: ignore [Cannot access attribute "source_account" for class "MessageType"]
             # if the operation source account does not match the Trezor account
@@ -146,18 +152,9 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
                 StellarPathPaymentStrictReceiveOp,
             ]
         ):
-            if msg.payment_req:
-                assert verifier is not None
-                if current_output_index != 0:
-                    raise ProcessError(
-                        "Multiple operations not supported for payment requests"
-                    )
-                if StellarPaymentOp.is_type_of(op):
-                    verifier.add_output(op.amount, op.destination_account)
-                    output_address = op.destination_account
-                    output_asset = op.asset
-
             current_output_index += 1
+            if StellarPaymentOp.is_type_of(op):
+                output_address, output_asset = op.destination_account, op.asset
     progress_obj.stop()
 
     # ---------------------------------
