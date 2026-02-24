@@ -1,4 +1,20 @@
 
+## 0.3.6 [18th March 2026]
+
+### Added
+- Added support for CRC checksums in prodtest commands.  [#6038]
+- Add the `tropic-stress-test` command.  [#6254]
+- add pm-battery-test command to improve test coverage in production.  [#6333]
+- Add `optiga-metadata-read` command.  [#6334]
+
+### Changed
+- Updated libtropic to version 3.0.0.  [#6247]
+- Improve logging of Tropic commands.  [#6346]
+
+### Fixed
+- Fix the failing `tropic-keyfido-read` command.  [#6081]
+- Prevent deadlock between secrets-init and tropic-pair.  [#6337]
+
 ## 0.3.5 [19th November 2025]
 
 ### Fixed
@@ -185,3 +201,11 @@
 [#5900]: https://github.com/trezor/trezor-firmware/pull/5900
 [#5940]: https://github.com/trezor/trezor-firmware/pull/5940
 [#6010]: https://github.com/trezor/trezor-firmware/pull/6010
+[#6038]: https://github.com/trezor/trezor-firmware/pull/6038
+[#6081]: https://github.com/trezor/trezor-firmware/pull/6081
+[#6247]: https://github.com/trezor/trezor-firmware/pull/6247
+[#6254]: https://github.com/trezor/trezor-firmware/pull/6254
+[#6333]: https://github.com/trezor/trezor-firmware/pull/6333
+[#6334]: https://github.com/trezor/trezor-firmware/pull/6334
+[#6337]: https://github.com/trezor/trezor-firmware/pull/6337
+[#6346]: https://github.com/trezor/trezor-firmware/pull/6346
