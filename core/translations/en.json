@@ -35,8 +35,12 @@
       "Eckhart": "Public key (XPUB)"
     },
     "address_details__account_info": "Account info",
-    "address_details__derivation_path": "Derivation path",
-    "address_details__derivation_path_colon": "Derivation path:",
+    "address_details__derivation_path": {
+      "Bolt": "Derivation path:",
+      "Caesar": "Derivation path:",
+      "Delizia": "Derivation path",
+      "Eckhart": "Derivation path"
+    },
     "address_details__title_receive_address": "Receive address",
     "address_details__title_receiving_to": "Receiving to",
     "authenticate__confirm_template": "Allow connected app to check the authenticity of your {0}?",
@@ -714,8 +718,12 @@
       "Eckhart": "Coinjoin in progress..."
     },
     "coinjoin__waiting_for_others": "Waiting for others",
-    "confirm_total__fee_rate": "Fee rate",
-    "confirm_total__fee_rate_colon": "Fee rate:",
+    "confirm_total__fee_rate": {
+      "Bolt": "Fee rate:",
+      "Caesar": "Fee rate:",
+      "Delizia": "Fee rate",
+      "Eckhart": "Fee rate"
+    },
     "confirm_total__sending_from_account": "Sending from account:",
     "confirm_total__title_fee": "Fee info",
     "confirm_total__title_sending_from": "Sending from",
@@ -2869,8 +2877,12 @@
     "wipe_code__wipe_code_mismatch": "Wipe code mismatch",
     "word_count__title": "Number of words",
     "words__about": "About",
-    "words__account": "Account",
-    "words__account_colon": "Account:",
+    "words__account": {
+      "Bolt": "Account:",
+      "Caesar": "Account:",
+      "Delizia": "Account",
+      "Eckhart": "Account"
+    },
     "words__address": {
       "Bolt": "Address:",
       "Caesar": "Address:",
