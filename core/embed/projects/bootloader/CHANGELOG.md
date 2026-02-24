@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.16 [18th March 2026]
+
+### Added
+- Added version build number to Features message.  [#6225]
+- [T3W1] Introduced Secure Monitor downgrade protection.  [#6244]
+- Adjusted version strings to show build version number.  [#6245]
+
+### Fixed
+- [T3W1] Fixed text position on waiting for host screen in bootloader when no menu is shown.  [#6307]
+
 ## 2.1.15 [19th November 2025]
 
 ### Fixed
@@ -229,3 +239,7 @@ Internal only release for Model R prototypes.
 [#5993]: https://github.com/trezor/trezor-firmware/pull/5993
 [#6019]: https://github.com/trezor/trezor-firmware/pull/6019
 [#6023]: https://github.com/trezor/trezor-firmware/pull/6023
+[#6225]: https://github.com/trezor/trezor-firmware/pull/6225
+[#6244]: https://github.com/trezor/trezor-firmware/pull/6244
+[#6245]: https://github.com/trezor/trezor-firmware/pull/6245
+[#6307]: https://github.com/trezor/trezor-firmware/pull/6307
