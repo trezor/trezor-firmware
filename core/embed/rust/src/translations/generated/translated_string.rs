@@ -1568,6 +1568,8 @@ pub enum TranslatedString {
     words__confirm_all = 1178,  // "Confirm all"
     words__show_next = 1179,  // "Show next"
     words__resource = 1180,  // "Resource"
+    words__votes = 1181,  // "Votes"
+    words__voting = 1182,  // "Voting"
 }
 
 impl TranslatedString {
@@ -2756,6 +2758,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -3942,6 +3946,8 @@ impl TranslatedString {
                 21662,
                 21671,
                 21679,
+                21684,
+                21690,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5127,6 +5133,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6313,6 +6321,8 @@ impl TranslatedString {
                 21662,
                 21671,
                 21679,
+                21684,
+                21690,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7498,6 +7508,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8684,6 +8696,8 @@ impl TranslatedString {
                 21662,
                 21671,
                 21679,
+                21684,
+                21690,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -9869,6 +9883,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11055,6 +11071,8 @@ impl TranslatedString {
                 21662,
                 21671,
                 21679,
+                21684,
+                21690,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12241,6 +12259,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13427,6 +13447,8 @@ impl TranslatedString {
                 18775,
                 18784,
                 18792,
+                18797,
+                18803,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14612,6 +14634,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15798,6 +15822,8 @@ impl TranslatedString {
                 18775,
                 18784,
                 18792,
+                18797,
+                18803,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -16983,6 +17009,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18169,6 +18197,8 @@ impl TranslatedString {
                 18775,
                 18784,
                 18792,
+                18797,
+                18803,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19354,6 +19384,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20540,6 +20572,8 @@ impl TranslatedString {
                 18775,
                 18784,
                 18792,
+                18797,
+                18803,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -21726,6 +21760,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -22912,6 +22948,8 @@ impl TranslatedString {
                 20664,
                 20673,
                 20681,
+                20686,
+                20692,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24097,6 +24135,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25283,6 +25323,8 @@ impl TranslatedString {
                 20664,
                 20673,
                 20681,
+                20686,
+                20692,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -26468,6 +26510,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27654,6 +27698,8 @@ impl TranslatedString {
                 20664,
                 20673,
                 20681,
+                20686,
+                20692,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -28839,6 +28885,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30025,6 +30073,8 @@ impl TranslatedString {
                 20664,
                 20673,
                 20681,
+                20686,
+                20692,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -31211,6 +31261,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -32397,6 +32449,8 @@ impl TranslatedString {
                 21419,
                 21428,
                 21436,
+                21441,
+                21447,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -33582,6 +33636,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34768,6 +34824,8 @@ impl TranslatedString {
                 21419,
                 21428,
                 21436,
+                21441,
+                21447,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -35953,6 +36011,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37139,6 +37199,8 @@ impl TranslatedString {
                 21419,
                 21428,
                 21436,
+                21441,
+                21447,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -38324,6 +38386,8 @@ impl TranslatedString {
                 "Confirm all",
                 "Show next",
                 "Resource",
+                "Votes",
+                "Voting",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39510,6 +39574,8 @@ impl TranslatedString {
                 21419,
                 21428,
                 21436,
+                21441,
+                21447,
             ];
 
         }
@@ -41070,6 +41136,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__unknown, Self::words__unknown),
         (Qstr::MP_QSTR_words__unlimited, Self::words__unlimited),
         (Qstr::MP_QSTR_words__unlocked, Self::words__unlocked),
+        (Qstr::MP_QSTR_words__votes, Self::words__votes),
+        (Qstr::MP_QSTR_words__voting, Self::words__voting),
         (Qstr::MP_QSTR_words__wallet, Self::words__wallet),
         (Qstr::MP_QSTR_words__warning, Self::words__warning),
         (Qstr::MP_QSTR_words__wipe, Self::words__wipe),
