@@ -89,6 +89,7 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
     keysize = 64;
   }
 
+  int ret = 0;
   LOCAL_CONFIDENTIAL uint8_t data[1 + 64 + 4];
   LOCAL_CONFIDENTIAL uint8_t z[32 + 32];
   LOCAL_CONFIDENTIAL uint8_t priv_key[64];
@@ -105,7 +106,7 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
     memcpy(data + 1 + 32, inout->private_key_extension, 32);
   } else {  // public derivation
     if (hdnode_fill_public_key(inout) != 0) {
-      return 0;
+      goto cleanup;
     }
     data[0] = 2;
     memcpy(data + 1, inout->public_key + 1, 32);
@@ -144,13 +145,17 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
   inout->child_num = index;
   memzero(inout->public_key, sizeof(inout->public_key));
   inout->is_public_key_set = false;
+  ret = 1;
 
+cleanup:
   // making sure to wipe our memory
   memzero(z, sizeof(z));
   memzero(data, sizeof(data));
   memzero(priv_key, sizeof(priv_key));
   memzero(res_key, sizeof(res_key));
-  return 1;
+  memzero(zl8, sizeof(zl8));
+  memzero(&ctx, sizeof(ctx));
+  return ret;
 }
 
 int hdnode_from_secret_cardano(const uint8_t secret[CARDANO_SECRET_LENGTH],
