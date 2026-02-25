@@ -34,6 +34,12 @@ pytestmark = [
 
 def test_pin_passphrase(test_ctx: TrezorTestContext):
     session = test_ctx.get_seedless_session()
+
+    # `ScrambledWords` is disabled by default for shorter mnemonics.
+    device.apply_settings(
+        session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+    )
+
     debug = session.debug
     mnemonic = MNEMONIC12.split(" ")
     ret = session.call_raw(
@@ -108,6 +114,12 @@ def test_pin_passphrase(test_ctx: TrezorTestContext):
 
 def test_nopin_nopassphrase(test_ctx: TrezorTestContext):
     session = test_ctx.get_seedless_session()
+
+    # `ScrambledWords` is disabled by default for shorter mnemonics.
+    device.apply_settings(
+        session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+    )
+
     mnemonic = MNEMONIC12.split(" ")
     ret = session.call_raw(
         messages.RecoveryDevice(
@@ -162,7 +174,7 @@ def test_word_fail(session: Session):
     debug = session.debug
     ret = session.call_raw(
         messages.RecoveryDevice(
-            word_count=12,
+            word_count=24,
             passphrase_protection=False,
             pin_protection=False,
             label="label",
@@ -176,7 +188,7 @@ def test_word_fail(session: Session):
     ret = session.call_raw(messages.ButtonAck())
 
     assert isinstance(ret, messages.WordRequest)
-    for _ in range(int(12 * 2)):
+    for _ in range(int(24 * 2)):
         (word, pos) = debug.read_recovery_word()
         if pos != 0:
             ret = session.call_raw(messages.WordAck(word="kwyjibo"))
@@ -190,7 +202,7 @@ def test_pin_fail(session: Session):
     debug = session.debug
     ret = session.call_raw(
         messages.RecoveryDevice(
-            word_count=12,
+            word_count=24,
             passphrase_protection=True,
             pin_protection=True,
             label="label",
@@ -223,7 +235,7 @@ def test_already_initialized(session: Session):
     with pytest.raises(RuntimeError):
         device.recover(
             session,
-            word_count=12,
+            word_count=24,
             pin_protection=False,
             passphrase_protection=False,
             label="label",
@@ -232,7 +244,7 @@ def test_already_initialized(session: Session):
 
     ret = session.call_raw(
         messages.RecoveryDevice(
-            word_count=12,
+            word_count=24,
             input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
         )
     )

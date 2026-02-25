@@ -327,9 +327,17 @@ def test_recovery_device(session: Session):
     session.test_ctx.use_mnemonic(MNEMONIC12)
     with session.test_ctx as client:
         client.set_expected_responses(
-            [messages.Features, messages.ButtonRequest]
+            # for `apply_settings`
+            [messages.Features, messages.ButtonRequest, messages.Success]
+            # for `recover`
+            + [messages.Features, messages.ButtonRequest]
             + [messages.WordRequest] * 24
             + [messages.Success, messages.Features]
+        )
+
+        # `ScrambledWords` is disabled by default for shorter mnemonics.
+        device.apply_settings(
+            session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
         )
 
         device.recover(
