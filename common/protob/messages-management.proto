@@ -514,8 +514,8 @@ message RecoveryDevice {
      * `RecoveryDeviceInputMethod_ScrambledWords | RecoveryDeviceInputMethod_Matrix`
      * listing every method supported by the host computer.
      *
-     * Note that ScrambledWords must be supported by every implementation
-     * for backward compatibility; there is no way to not support it.
+     * Note that Matrix recovery is the recommended recovery method. ScrambledWords
+     * is allowed only for 24 word recovery, unless safety checks are disabled.
      */
     enum RecoveryDeviceInputMethod {
         // use powers of two when extending this field

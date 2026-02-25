@@ -478,6 +478,15 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
                    uint32_t u2f_counter, bool _dry_run) {
   if (_word_count != 12 && _word_count != 18 && _word_count != 24) return;
 
+  if (_word_count < 24 &&
+      input_method == RecoveryDeviceInputMethod_ScrambledWords &&
+      config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Advanced recovery must be used."));
+    layoutHome();
+    return;
+  }
+
   recovery_mode = RECOVERY_NONE;
   word_pincode = 0;
   word_index = 0;

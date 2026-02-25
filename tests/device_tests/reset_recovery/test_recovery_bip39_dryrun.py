@@ -38,10 +38,17 @@ def do_recover_legacy(session: Session, mnemonic: list[str]) -> None:
 
         return word
 
+    word_count = len(mnemonic)
+    if word_count < 24:
+        # `ScrambledWords` is disabled by default for shorter mnemonics.
+        device.apply_settings(
+            session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        )
+
     device.recover(
         session,
         type=messages.RecoveryType.DryRun,
-        word_count=len(mnemonic),
+        word_count=word_count,
         input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
         input_callback=input_callback,
     )
