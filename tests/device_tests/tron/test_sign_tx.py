@@ -79,6 +79,7 @@ def test_ui_cancel_flow(session: Session, fixture: str):
             session.debug.press_right()
         else:
             session.debug.press_yes()
+        yield
         session.debug.press_no()  # Wrong staking reason / wrong amount / wrong token
 
     with pytest.raises(Cancelled), session.test_ctx as client:
@@ -98,7 +99,9 @@ def test_ui_cancel_unknown_contract(session: Session, fixture: str):
     def ui_cancel_flow():
         yield
         session.debug.press_yes()  # Accept warning
+        yield
         session.debug.press_yes()  # Accept contract address
+        yield
         session.debug.press_no()  # Data feels wrong
 
     with pytest.raises(Cancelled), session.test_ctx as client:
