@@ -111,6 +111,10 @@ impl<R: Role> Header<R> {
             log::error!("Payload length exceeds {}.", MAX_PAYLOAD_LEN);
             return Err(Error::OutOfBounds);
         }
+        if payload_len < CHECKSUM_LEN {
+            log::error!("Payload length is less than {}.", CHECKSUM_LEN);
+            return Err(Error::OutOfBounds);
+        }
         // strip padding if there is any
         let without_padding = rest.len().min(payload_len.into());
         let rest = &rest[..without_padding];
@@ -673,6 +677,7 @@ mod test {
         "04fff00001", // bad channel id
         "041111ffee", // invalid length field
         "80fffe0000", // bad channel id
+        "0400010003", // payload_len < CHECKSUM_LEN
     ];
 
     #[test]

@@ -125,7 +125,7 @@ impl<R: Role> Reassembler<R> {
         let nbytes = after_header.len(); // Header::parse strips padding
         buffer[..nbytes].copy_from_slice(after_header);
 
-        let checksum_bytes = (payload_len - CHECKSUM_LEN).min(nbytes);
+        let checksum_bytes = payload_len.saturating_sub(CHECKSUM_LEN).min(nbytes);
         checksum.update(&after_header[..checksum_bytes]);
 
         Ok(Self {
@@ -366,5 +366,13 @@ mod test {
             .iter()
             .zip(EVEN_LONGER_PAYLOADS_EXPECTED)
             .for_each(|(got, expected)| assert_eq!(&hex::encode(got), expected));
+    }
+
+    #[test]
+    fn test_reassemble_shorter_than_checksum() {
+        let packet = &[0x04, 0x12, 0x34, 0x00, 0x03, 0x00, 0x00, 0x00];
+        let mut received = [0u8; MAX_MESSAGE];
+        let reassembler = Reassembler::<Device>::new(packet, &mut received);
+        assert!(matches!(reassembler, Err(Error::OutOfBounds)));
     }
 }
