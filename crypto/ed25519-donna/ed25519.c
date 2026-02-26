@@ -77,8 +77,11 @@ ED25519_FN(ed25519_cosi_sign) (const unsigned char *m, size_t mlen, const ed2551
 
 	/* r */
 	expand_raw256_modm(r, nonce);
-	if (!is_reduced256_modm(r))
+	if (!is_reduced256_modm(r)) {
+		memzero(&extsk, sizeof(extsk));
+		memzero(&r, sizeof(r));
 		return -1;
+	}
 
 	/* S = H(R,A,m).. */
 	ed25519_hram(hram, R, pk, m, mlen);
