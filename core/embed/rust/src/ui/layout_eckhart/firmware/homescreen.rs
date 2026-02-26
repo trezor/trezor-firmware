@@ -1,3 +1,5 @@
+use num_traits::clamp_max;
+
 use crate::{
     error::Error,
     io::BinaryData,
@@ -6,7 +8,7 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment2D, Direction, Insets, Offset, Rect},
+        geometry::{Alignment2D, Direction, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         notification::{Notification, NotificationLevel},
         shape::{self, Renderer},
@@ -188,9 +190,12 @@ struct HomescreenStatus {
     /// Whether a custom background image is used, which affects the layout and
     /// styling of the label
     background_image: bool,
+    /// Cached text width of the label when a custom background image is used
+    text_width: Option<i16>,
 }
 
 impl HomescreenStatus {
+    const MAX_LABEL_WIDTH: i16 = 220;
     const LABEL_TEXT_STYLE_DEFAULT: TextStyle = theme::firmware::TEXT_BIG;
     const LABEL_TEXT_STYLE_WITH_IMG: TextStyle = theme::firmware::TEXT_SMALL;
 
@@ -200,13 +205,33 @@ impl HomescreenStatus {
         } else {
             Self::LABEL_TEXT_STYLE_DEFAULT
         };
+
+        let text_width = if background_image {
+            let width =
+                label.map(|text| Self::LABEL_TEXT_STYLE_WITH_IMG.text_font.text_width(text));
+            let width = clamp_max(width, Self::MAX_LABEL_WIDTH);
+            Some(width)
+        } else {
+            None
+        };
+
         Self {
             area: Rect::zero(),
             label: Label::left_aligned(label, style).top_aligned(),
             fuel_gauge: FuelGauge::always_icon_only(),
             connection_indicator: ConnectionIndicator::new(),
             background_image,
+            text_width,
         }
+    }
+
+    fn render_pill_shaped_background<'s>(&'s self, area: Rect, target: &mut impl Renderer<'s>) {
+        shape::Bar::new(area)
+            .with_bg(theme::BG)
+            .with_fg(theme::BG)
+            .with_radius(27)
+            .with_alpha(230) // 90%
+            .render(target);
     }
 }
 
@@ -217,8 +242,7 @@ impl Component for HomescreenStatus {
         const LABEL_INSETS_DEFAULT: Insets = Insets::new(83, 24, 24, 0);
         const ICON_PERCENT_GAP: i16 = 16; // TODO: put to theme?
         let (header_area, _) = bounds.split_top(theme::HEADER_HEIGHT);
-        let (fuel_gauge_area, rest_header_area) =
-            header_area.split_left(self.fuel_gauge.content_width());
+        let (fuel_gauge_area, _) = header_area.split_left(self.fuel_gauge.content_width());
         let connection_indicator_area = Rect::snap(
             fuel_gauge_area.right_center(),
             Offset::uniform(ConnectionIndicator::AREA_SIZE_NEEDED),
@@ -229,9 +253,20 @@ impl Component for HomescreenStatus {
         let label_area = if !self.background_image {
             bounds.inset(LABEL_INSETS_DEFAULT)
         } else {
-            rest_header_area
-                .split_left(self.connection_indicator.content_width())
-                .1
+            let anchor = if self.connection_indicator.connected {
+                connection_indicator_area.right_center()
+            } else {
+                fuel_gauge_area.right_center()
+            };
+            Rect::snap(
+                anchor,
+                Offset::new(
+                    self.text_width.unwrap_or(0),
+                    Self::LABEL_TEXT_STYLE_WITH_IMG.text_font.max_height,
+                ),
+                Alignment2D::CENTER_LEFT,
+            )
+            .translate(Offset::x(ICON_PERCENT_GAP))
         };
 
         self.fuel_gauge.place(fuel_gauge_area);
@@ -253,13 +288,27 @@ impl Component for HomescreenStatus {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if self.background_image {
+            // render pill-shaped background for label to improve readability on
+            // top of custom image
+            let mut size_x = if self.connection_indicator.connected {
+                self.connection_indicator.area.right_center().x
+            } else {
+                self.fuel_gauge.area.right_center().x
+            };
+            size_x += self.text_width.unwrap_or(0) + 2 * 16; // text width + gap on both sides
+            let size = Offset::new(size_x, 54);
+            let area = Rect::from_top_left_and_size(
+                Point::new(0, 21) - Offset::x(27),
+                size + Offset::x(27),
+            );
+            self.render_pill_shaped_background(area, target);
+        }
         self.label.render(target);
         self.fuel_gauge.render(target);
         self.connection_indicator.render(target);
     }
 }
-
-struct HideLabelAnimation {}
 
 pub fn check_homescreen_format(image: BinaryData) -> bool {
     match ImageInfo::parse(image) {
