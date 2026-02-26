@@ -9,7 +9,11 @@ from .helpers import get_encoded_address
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
 
-    from trezor.messages import TronTransferContract, TronTriggerSmartContract
+    from trezor.messages import (
+        TronTransferContract,
+        TronTriggerSmartContract,
+        TronVoteWitnessContract,
+    )
 
 
 def format_trx_amount(amount: int) -> str:
@@ -154,3 +158,12 @@ async def confirm_withdraw_unfreeze(owner_address: AnyBytes) -> None:
         br_name="tron/claim",
         cancel=True,
     )
+
+
+async def confirm_votes(contract: TronVoteWitnessContract) -> None:
+    from trezor.ui.layouts import confirm_tron_voting
+
+    voting_list: list[tuple[int, str]] = [
+        (vote.count, get_encoded_address(vote.address)) for vote in contract.votes
+    ]
+    await confirm_tron_voting(voting_list)

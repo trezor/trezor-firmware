@@ -14,6 +14,7 @@ if TYPE_CHECKING:
         messages.TronFreezeBalanceV2Contract,
         messages.TronUnfreezeBalanceV2Contract,
         messages.TronWithdrawUnfreeze,
+        messages.TronVoteWitnessContract,
     ]
 
 DEFAULT_BIP32_PATH = "m/44h/195h/0h/0/0"
@@ -85,6 +86,14 @@ def from_raw_data(
         )
         contract = messages.TronWithdrawUnfreeze(
             owner_address=raw_contract.owner_address,
+        )
+    elif contract_type == messages.TronRawContractType.VoteWitnessContract:
+        raw_contract = load_message(
+            io.BytesIO(parameter_value),
+            messages.TronVoteWitnessContract,
+        )
+        contract = messages.TronVoteWitnessContract(
+            owner_address=raw_contract.owner_address, votes=raw_contract.votes
         )
     else:
         raise ValueError(f"Unsupported contract type: {contract_type}")
