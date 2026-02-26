@@ -89,11 +89,12 @@ async def process_contract(
     # But it causes type error in messages.TronRawContract.type.
     from trezor import TR
     from trezor.enums import TronRawContractType
-    from trezor.ui.layouts import confirm_tron_send
 
     _INT64_MAX = const(9_223_372_036_854_775_807)
 
     if messages.TronTransferContract.is_type_of(contract):
+        from trezor.ui.layouts import confirm_tron_send
+
         contract_type = TronRawContractType.TransferContract
         await layout.confirm_transfer_contract(contract)
         if contract.amount > _INT64_MAX:
@@ -148,6 +149,11 @@ async def process_contract(
         contract_type = TronRawContractType.WithdrawExpireUnfreezeContract
         await layout.confirm_withdraw_unfreeze(contract.owner_address)
 
+    elif messages.TronVoteWitnessContract.is_type_of(contract):
+        if len(contract.votes) > 9:
+            raise DataError("Tron: too many votes")
+        contract_type = TronRawContractType.VoteWitnessContract
+        await layout.confirm_votes(contract)
     else:
         raise DataError("Tron: contract type unknown")
 
