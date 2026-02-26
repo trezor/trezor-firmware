@@ -56,6 +56,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
     if fee_limit > _MAX_FEE_LIMIT:
         raise DataError("Tron: fees too high")
 
+    # TODO: CONTRACT_TYPES are all the Tron message types. Can we do better than manually writing them again in consts.py?
     contract = await call_any(messages.TronContractRequest(), *consts.CONTRACT_TYPES)
     raw_contract = await process_contract(contract, fee_limit)
 
@@ -89,11 +90,12 @@ async def process_contract(
     # But it causes type error in messages.TronRawContract.type.
     from trezor import TR
     from trezor.enums import TronRawContractType
-    from trezor.ui.layouts import confirm_tron_send
 
     _INT64_MAX = const(9_223_372_036_854_775_807)
 
     if messages.TronTransferContract.is_type_of(contract):
+        from trezor.ui.layouts import confirm_tron_send
+
         contract_type = TronRawContractType.TransferContract
         await layout.confirm_transfer_contract(contract)
         if contract.amount > _INT64_MAX:
@@ -148,6 +150,9 @@ async def process_contract(
         contract_type = TronRawContractType.WithdrawExpireUnfreezeContract
         await layout.confirm_withdraw_unfreeze(contract.owner_address)
 
+    elif messages.TronVoteWitnessContract.is_type_of(contract):
+        contract_type = TronRawContractType.VoteWitnessContract
+        await layout.confirm_votes(contract)
     else:
         raise DataError("Tron: contract type unknown")
 
