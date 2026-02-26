@@ -1,6 +1,7 @@
-extern crate alloc;
-
-use alloc::vec::{self, Vec};
+#[cfg(not(test))]
+use alloc::vec::Vec;
+#[cfg(test)]
+use std::vec::Vec;
 use trezor_app_sdk::{
     Error, Result,
     crypto::{ed25519_cosi_combine_publickeys, ed25519_sign_open},

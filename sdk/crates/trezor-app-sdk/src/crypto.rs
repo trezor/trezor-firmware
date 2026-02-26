@@ -9,11 +9,13 @@ use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 pub use trezor_structs::TrezorCryptoResult;
-use trezor_structs::{DerivationPath, LongString, TrezorCryptoEnum, TypedHash};
+use trezor_structs::{
+    DerivationPath, LongString, ShortBuffer, ShortString, TrezorCryptoEnum, TypedHash,
+};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
-pub use crate::low_level_api::ffi::SHA256_CTX;
+pub use crate::low_level_api::ffi::{HMAC_SHA256_CTX, SHA256_CTX, SHA512_CTX};
 use crate::low_level_api::get_crypto_or_die;
 pub use crate::low_level_api::{
     ed25519_cosi_combine_publickeys, ed25519_sign_open, keccak_256, sha3_256,
@@ -32,7 +34,7 @@ type CryptoResult = Result<TrezorCryptoResult>;
 
 fn ipc_crypto_call(value: &TrezorCryptoEnum) -> CryptoResult {
     let bytes = to_bytes::<Failure>(value).unwrap();
-    let message = IpcMessage::new(0, &bytes);
+    let message = IpcMessage::new(value.id() as _, &bytes);
     let result = services_or_die().call(
         CoreIpcService::Crypto,
         &message,
@@ -68,9 +70,15 @@ pub fn get_xpub(address_n: &[u32]) -> Result<LongString> {
     }
 }
 
-pub fn get_eth_pubkey_hash(address_n: &[u32]) -> Result<[u8; 20]> {
+pub fn get_eth_pubkey_hash(
+    address_n: &[u32],
+    encoded_network: Option<&[u8]>,
+    encoded_token: Option<&[u8]>,
+) -> Result<[u8; 20]> {
     let value = TrezorCryptoEnum::GetEthPubkeyHash {
         address_n: DerivationPath::from_slice(address_n).unwrap(),
+        encoded_network: encoded_network.map(|network| ShortBuffer::from_slice(network).unwrap()),
+        encoded_token: encoded_token.map(|token| ShortBuffer::from_slice(token).unwrap()),
     };
 
     let res = ipc_crypto_call(&value);
@@ -83,16 +91,44 @@ pub fn get_eth_pubkey_hash(address_n: &[u32]) -> Result<[u8; 20]> {
     }
 }
 
-pub fn sign_typed_hash(address_n: &[u32], hash: &[u8]) -> Result<[u8; 64]> {
+pub fn sign_typed_hash(
+    address_n: &[u32],
+    hash: &[u8],
+    encoded_network: Option<&[u8]>,
+    encoded_token: Option<&[u8]>,
+) -> Result<[u8; 64]> {
     let value = TrezorCryptoEnum::SignTypedHash {
         address_n: DerivationPath::from_slice(address_n).unwrap(),
         hash: TypedHash::from_slice(hash).unwrap(),
+        encoded_network: encoded_network.map(|network| ShortBuffer::from_slice(network).unwrap()),
+        encoded_token: encoded_token.map(|token| ShortBuffer::from_slice(token).unwrap()),
     };
 
     let res = ipc_crypto_call(&value);
 
     if let Ok(TrezorCryptoResult::Signature(signature)) = res {
         Ok(signature)
+    } else {
+        // TODO: use proper error type
+        Err(Error::Timeout)
+    }
+}
+
+pub fn get_address_mac(
+    address_n: &[u32],
+    key: &str,
+    encoded_network: Option<&[u8]>,
+) -> Result<[u8; 32]> {
+    let value = TrezorCryptoEnum::GetAddressMac {
+        address_n: DerivationPath::from_slice(address_n).unwrap(),
+        address: ShortString::from_str(key).unwrap(),
+        encoded_network: encoded_network.map(|network| ShortBuffer::from_slice(network).unwrap()),
+    };
+
+    let res = ipc_crypto_call(&value);
+
+    if let Ok(TrezorCryptoResult::AddressMac(mac)) = res {
+        Ok(mac)
     } else {
         // TODO: use proper error type
         Err(Error::Timeout)
@@ -125,5 +161,110 @@ impl Sha256 {
         let mut digest = [0u8; 32];
         unsafe { (get_crypto_or_die().sha256_Final)(&mut self.ctx, digest.as_mut_ptr()) };
         digest
+    }
+
+    pub fn digest_size() -> usize {
+        32
+    }
+}
+
+impl Drop for Sha256 {
+    fn drop(&mut self) {
+        unsafe {
+            core::ptr::write_volatile(&mut self.ctx, core::mem::zeroed());
+        }
+    }
+}
+
+pub struct Sha512 {
+    ctx: SHA512_CTX,
+}
+
+impl Sha512 {
+    pub fn new(data: Option<&[u8]>) -> Self {
+        let mut ctx = SHA512_CTX {
+            state: [0u64; 8],
+            bitcount: [0u64; 2],
+            buffer: [0u64; 16],
+        };
+        unsafe { (get_crypto_or_die().sha512_Init)(&mut ctx) };
+        if let Some(data) = data {
+            unsafe { (get_crypto_or_die().sha512_Update)(&mut ctx, data.as_ptr(), data.len()) };
+        }
+        Self { ctx }
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        unsafe { (get_crypto_or_die().sha512_Update)(&mut self.ctx, data.as_ptr(), data.len()) };
+    }
+
+    pub fn digest(mut self) -> [u8; 64] {
+        let mut digest = [0u8; 64];
+        unsafe { (get_crypto_or_die().sha512_Final)(&mut self.ctx, digest.as_mut_ptr()) };
+        digest
+    }
+
+    pub fn digest_size() -> usize {
+        64
+    }
+}
+
+impl Drop for Sha512 {
+    fn drop(&mut self) {
+        unsafe {
+            core::ptr::write_volatile(&mut self.ctx, core::mem::zeroed());
+        }
+    }
+}
+
+pub struct HmacSha256 {
+    ctx: HMAC_SHA256_CTX,
+}
+
+impl HmacSha256 {
+    pub fn new(key: &[u8], data: Option<&[u8]>) -> Self {
+        let mut ctx = HMAC_SHA256_CTX {
+            o_key_pad: [0u8; 64],
+            ctx: SHA256_CTX {
+                state: [0u32; 8],
+                bitcount: 0,
+                buffer: [0u32; 16],
+            },
+        };
+        unsafe { (get_crypto_or_die().hmac_sha256_Init)(&mut ctx, key.as_ptr(), key.len() as u32) };
+        if let Some(data) = data {
+            unsafe {
+                (get_crypto_or_die().hmac_sha256_Update)(&mut ctx, data.as_ptr(), data.len() as u32)
+            };
+        }
+        Self { ctx }
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        unsafe {
+            (get_crypto_or_die().hmac_sha256_Update)(
+                &mut self.ctx,
+                data.as_ptr(),
+                data.len() as u32,
+            )
+        };
+    }
+
+    pub fn digest(mut self) -> [u8; 32] {
+        let mut digest = [0u8; 32];
+        unsafe { (get_crypto_or_die().hmac_sha256_Final)(&mut self.ctx, digest.as_mut_ptr()) };
+        digest
+    }
+
+    pub fn digest_size() -> usize {
+        32
+    }
+}
+
+impl Drop for HmacSha256 {
+    fn drop(&mut self) {
+        unsafe {
+            core::ptr::write_volatile(&mut self.ctx, core::mem::zeroed());
+        }
     }
 }

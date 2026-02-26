@@ -2,19 +2,28 @@
 
 use rkyv::{Archive, Deserialize, Serialize};
 
-/// Fixed-capacity UTF-8 string for `no_std`, serialized as `[u8; N] + len`.
+/// Fixed-capacity byte buffer for `no_std`, serialized as `[u8; N] + len`.
 #[derive(Archive, Serialize, Deserialize, Copy, Clone)]
-pub struct String<const N: usize> {
+pub struct Buffer<const N: usize> {
     pub data: [u8; N],
     pub len: u8,
 }
 
+pub type String<const N: usize> = Buffer<N>;
+
 pub type ShortString = String<50>;
 pub type LongString = String<150>;
+
+pub type ShortBuffer = Buffer<100>;
+pub type LongBuffer = Buffer<200>;
 
 pub type ArchivedStringN<const N: usize> = rkyv::Archived<String<N>>;
 pub type ArchivedShortString = rkyv::Archived<String<50>>;
 pub type ArchivedLongString = rkyv::Archived<String<150>>;
+
+pub type ArchivedBufferN<const N: usize> = rkyv::Archived<Buffer<N>>;
+pub type ArchivedShortBuffer = rkyv::Archived<Buffer<100>>;
+pub type ArchivedLongBuffer = rkyv::Archived<Buffer<200>>;
 
 impl<const N: usize> String<N> {
     pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
@@ -215,6 +224,15 @@ pub enum TrezorUiEnum {
         items: StrExtList,
         button_text: ShortString,
     },
+    ShowAddress {
+        address: ShortString,
+        title: Option<ShortString>,
+        subtitle: Option<ShortString>,
+        account: Option<ShortString>,
+        path: Option<ShortString>,
+        xpubs: PropsList,
+        chunkify: Option<bool>,
+    },
 }
 
 /// Outgoing UI result message for IPC
@@ -236,11 +254,31 @@ pub enum TrezorCryptoEnum {
     },
     GetEthPubkeyHash {
         address_n: DerivationPath,
+        encoded_network: Option<ShortBuffer>,
+        encoded_token: Option<ShortBuffer>,
     },
     SignTypedHash {
         address_n: DerivationPath,
         hash: TypedHash,
+        encoded_network: Option<ShortBuffer>,
+        encoded_token: Option<ShortBuffer>,
     },
+    GetAddressMac {
+        address_n: DerivationPath,
+        address: ShortString,
+        encoded_network: Option<ShortBuffer>,
+    },
+}
+
+impl TrezorCryptoEnum {
+    pub fn id(&self) -> u8 {
+        match self {
+            Self::GetXpub { .. } => 0,
+            Self::GetEthPubkeyHash { .. } => 1,
+            Self::SignTypedHash { .. } => 2,
+            Self::GetAddressMac { .. } => 3,
+        }
+    }
 }
 
 /// Outgoing Crypto result message for IPC
@@ -252,6 +290,7 @@ pub enum TrezorCryptoResult {
     Xpub(LongString),
     Signature([u8; 64]),
     EthPubkeyHash([u8; 20]),
+    AddressMac([u8; 32]),
 }
 
 /// Outgoing Crypto result message for IPC

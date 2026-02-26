@@ -133,6 +133,7 @@ name = "ethereum_rust"
 version = "0.1.0"
 dependencies = [
  "emballoc",
+ "ethereum_rust",
  "num_enum",
  "prost",
  "prost-build",

@@ -250,3 +250,24 @@ pub fn should_show_more(title: &str, para: &[(&str, bool)], button_text: &str) -
     };
     ipc_ui_call_confirm(&value)
 }
+
+pub fn show_address(
+    address: &str,
+    title: Option<&str>,
+    subtitle: Option<&str>,
+    account: Option<&str>,
+    path: Option<&str>,
+    xpubs: &[(&str, &str)],
+    chunkify: Option<bool>,
+) -> UiResult {
+    let value = TrezorUiEnum::ShowAddress {
+        address: ShortString::from_str(address).unwrap(),
+        title: title.map(|s| ShortString::from_str(s).unwrap()),
+        subtitle: subtitle.map(|s| ShortString::from_str(s).unwrap()),
+        account: account.map(|s| ShortString::from_str(s).unwrap()),
+        path: path.map(|s| ShortString::from_str(s).unwrap()),
+        xpubs: PropsList::from_prop_slice(xpubs).unwrap(),
+        chunkify,
+    };
+    ipc_ui_call_confirm(&value)
+}

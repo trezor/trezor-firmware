@@ -141,7 +141,7 @@ pub unsafe extern "C" fn applet_main(
     }
 }
 
-#[cfg(not(test))]
+#[cfg(not(feature = "test"))]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
     low_level_api::system_exit_fatal(
@@ -151,17 +151,19 @@ fn panic_handler(info: &core::panic::PanicInfo<'_>) -> ! {
     );
 }
 
-#[cfg(not(test))]
+#[cfg(not(feature = "test"))]
 #[lang = "eh_personality"]
 fn eh_personality() -> ! {
     loop {}
 }
 
+#[cfg(not(feature = "test"))]
 #[unsafe(no_mangle)]
 unsafe extern "C" fn _Unwind_Resume() {
     unsafe { core::intrinsics::unreachable() };
 }
 
+#[cfg(not(feature = "test"))]
 #[cfg(not(target_os = "none"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn main() {}

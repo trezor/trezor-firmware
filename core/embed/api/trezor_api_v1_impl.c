@@ -34,6 +34,12 @@ const trezor_crypto_v1_t trezor_crypto_v1 = {
     .sha256_Init = sha256_Init,
     .sha256_Update = sha256_Update,
     .sha256_Final = sha256_Final,
+    .sha512_Init = sha512_Init,
+    .sha512_Update = sha512_Update,
+    .sha512_Final = sha512_Final,
+    .hmac_sha256_Init = hmac_sha256_Init,
+    .hmac_sha256_Update = hmac_sha256_Update,
+    .hmac_sha256_Final = hmac_sha256_Final,
 };
 
 const trezor_api_v1_t trezor_api_v1 = {

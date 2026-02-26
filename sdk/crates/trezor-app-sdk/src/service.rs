@@ -1,5 +1,4 @@
 use core::marker::PhantomData;
-extern crate alloc;
 use ufmt::derive::uDebug;
 
 use crate::ipc::{IpcInbox, IpcMessage, RemoteSysTask};

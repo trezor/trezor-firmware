@@ -1,9 +1,8 @@
-extern crate alloc;
-
-use alloc::string::String;
-use alloc::vec::Vec;
-use core::convert::Infallible;
-use core::result::Result;
+#[cfg(not(test))]
+use alloc::{string::String, vec::Vec};
+use core::{convert::Infallible, result::Result};
+#[cfg(test)]
+use std::{string::String, vec::Vec};
 use trezor_app_sdk::unwrap;
 use ufmt::uWrite;
 pub struct StringWriter(String);
@@ -48,18 +47,6 @@ macro_rules! uformat {
     };
 }
 
-// pub fn hex_encode(bytes: &[u8]) -> String {
-//     let mut result = String::new();
-//     for byte in bytes {
-//         // Manually append hex digits
-//         let high = (byte >> 4) & 0x0F;
-//         let low = byte & 0x0F;
-//         result.push(char::from_digit(high as u32, 16).unwrap());
-//         result.push(char::from_digit(low as u32, 16).unwrap());
-//     }
-//     result
-// }
-
 pub fn hex_encode(bytes: &[u8]) -> String {
     let mut s = StringWriter::new();
     for byte in bytes {
@@ -83,4 +70,115 @@ pub fn hex_decode(hex: &str) -> Result<Vec<u8>, ()> {
     }
 
     Ok(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hex_encode_empty() {
+        let result = hex_encode(&[]);
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn test_hex_encode_single_byte() {
+        let result = hex_encode(&[0xAB]);
+        assert_eq!(result, "ab");
+    }
+
+    #[test]
+    fn test_hex_encode_multiple_bytes() {
+        let result = hex_encode(&[0x00, 0xFF, 0xAB, 0xCD]);
+        assert_eq!(result, "00ffabcd");
+    }
+
+    #[test]
+    fn test_hex_encode_all_zeros() {
+        let result = hex_encode(&[0x00, 0x00, 0x00]);
+        assert_eq!(result, "000000");
+    }
+
+    #[test]
+    fn test_hex_decode_empty() {
+        let result = hex_decode("");
+        assert_eq!(result, Ok(vec![]));
+    }
+
+    #[test]
+    fn test_hex_decode_single_byte() {
+        let result = hex_decode("ab");
+        assert_eq!(result, Ok(vec![0xAB]));
+    }
+
+    #[test]
+    fn test_hex_decode_multiple_bytes() {
+        let result = hex_decode("00ffabcd");
+        assert_eq!(result, Ok(vec![0x00, 0xFF, 0xAB, 0xCD]));
+    }
+
+    #[test]
+    fn test_hex_decode_uppercase() {
+        let result = hex_decode("ABCD");
+        assert_eq!(result, Ok(vec![0xAB, 0xCD]));
+    }
+
+    #[test]
+    fn test_hex_decode_mixed_case() {
+        let result = hex_decode("AaBbCc");
+        assert_eq!(result, Ok(vec![0xAA, 0xBB, 0xCC]));
+    }
+
+    #[test]
+    fn test_hex_decode_invalid_characters() {
+        // Test various invalid characters
+        assert_eq!(hex_decode("GH"), Err(()));
+        assert_eq!(hex_decode("zz"), Err(()));
+        assert_eq!(hex_decode("!!"), Err(()));
+        assert_eq!(hex_decode("@#"), Err(()));
+        assert_eq!(hex_decode("--"), Err(()));
+    }
+
+    #[test]
+    fn test_hex_decode_with_spaces() {
+        assert_eq!(hex_decode("ab cd"), Err(()));
+        assert_eq!(hex_decode(" abcd"), Err(()));
+        assert_eq!(hex_decode("abcd "), Err(()));
+    }
+
+    #[test]
+    fn test_hex_decode_with_prefix() {
+        // Common prefixes that should fail
+        assert_eq!(hex_decode("0xabcd"), Err(()));
+        assert_eq!(hex_decode("0X1234"), Err(()));
+    }
+
+    #[test]
+    fn test_hex_decode_odd_length() {
+        assert_eq!(hex_decode("a"), Err(()));
+        assert_eq!(hex_decode("abc"), Err(()));
+        assert_eq!(hex_decode("abcdf"), Err(()));
+    }
+
+    #[test]
+    fn test_hex_decode_special_characters() {
+        assert_eq!(hex_decode("\n\n"), Err(()));
+        assert_eq!(hex_decode("\t\t"), Err(()));
+        assert_eq!(hex_decode("ab\ncd"), Err(()));
+    }
+
+    #[test]
+    fn test_hex_decode_unicode() {
+        assert_eq!(hex_decode("äb"), Err(()));
+        assert_eq!(hex_decode("αβ"), Err(()));
+    }
+
+    #[test]
+    fn test_hex_encode_decode_roundtrip() {
+        let original = vec![0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0];
+        let encoded = hex_encode(&original);
+        let decoded = hex_decode(&encoded).expect("decode failed");
+        assert_eq!(decoded, original);
+    }
 }

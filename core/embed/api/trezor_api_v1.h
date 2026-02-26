@@ -33,6 +33,7 @@
 
 #include "bip32.h"
 #include "ed25519-donna/ed25519.h"
+#include "hmac.h"
 #include "sha2.h"
 #include "sha3.h"
 
@@ -55,6 +56,15 @@ typedef struct {
   void (*sha256_Init)(SHA256_CTX* ctx);
   void (*sha256_Update)(SHA256_CTX* ctx, const unsigned char* data, size_t len);
   void (*sha256_Final)(SHA256_CTX* ctx, unsigned char* digest);
+  void (*sha512_Init)(SHA512_CTX* ctx);
+  void (*sha512_Update)(SHA512_CTX* ctx, const unsigned char* data, size_t len);
+  void (*sha512_Final)(SHA512_CTX* ctx, unsigned char* digest);
+  void (*hmac_sha256_Init)(HMAC_SHA256_CTX* hctx, const uint8_t* key,
+                           const uint32_t keylen);
+  ;
+  void (*hmac_sha256_Update)(HMAC_SHA256_CTX* hctx, const uint8_t* msg,
+                             const uint32_t msglen);
+  void (*hmac_sha256_Final)(HMAC_SHA256_CTX* hctx, uint8_t* hmac);
 } trezor_crypto_v1_t;
 
 typedef struct {

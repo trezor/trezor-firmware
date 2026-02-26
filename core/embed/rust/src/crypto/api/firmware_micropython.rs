@@ -21,8 +21,8 @@ use rkyv::{
     util::Align,
 };
 use trezor_structs::{
-    ArchivedDerivationPath, ArchivedShortString, ArchivedTrezorCryptoEnum, ArchivedTypedHash,
-    DerivationPath, LongString, TrezorCryptoResult,
+    ArchivedBufferN, ArchivedDerivationPath, ArchivedShortString, ArchivedStringN,
+    ArchivedTrezorCryptoEnum, ArchivedTypedHash, DerivationPath, LongString, TrezorCryptoResult,
 };
 
 // TODO preparation for the complete Rust implementation of TrezorCrypto API
@@ -151,6 +151,29 @@ extern "C" fn new_deserialize_crypto_message(
             List::alloc(&tuple_objs).unwrap().into()
         }
 
+        fn slice_from_archived<'a, const N: usize>(s: &'a ArchivedBufferN<N>) -> &'a [u8] {
+            let buf = unsafe { core::slice::from_raw_parts::<u8>(s.data.as_ptr(), s.len as usize) };
+            buf
+        }
+
+        fn str_from_archived<'a, const N: usize>(s: &'a ArchivedStringN<N>) -> &'a str {
+            let str = unsafe { core::str::from_raw_parts(s.data.as_ptr(), s.len as usize) };
+            str
+        }
+
+        fn buffer_from_archived<const N: usize>(s: &ArchivedBufferN<N>) -> Obj {
+            let slice = slice_from_archived(s);
+            let mut tuple_objs = heapless::Vec::<Obj, N>::new();
+            for i in 0..(slice.len() as usize) {
+                slice
+                    .get(i)
+                    .map(|&x| unwrap!(tuple_objs.push(unwrap!(x.try_into()))))
+                    .ok_or(Error::TypeError)
+                    .unwrap();
+            }
+            Obj::from(List::alloc(&tuple_objs).unwrap())
+        }
+
         fn obj_from_archived_hash(s: &ArchivedTypedHash) -> Obj {
             let bytes =
                 unsafe { core::slice::from_raw_parts(s.data.as_ptr(), s.data.len() as usize) };
@@ -165,16 +188,49 @@ extern "C" fn new_deserialize_crypto_message(
         let result: Obj = match archived {
             ArchivedTrezorCryptoEnum::GetXpub { address_n } => {
                 let dp = dp_from_archived(address_n);
-                (Obj::try_from(0i32)?, obj_from_dp(&dp)).try_into()?
+                obj_from_dp(&dp)
             }
-            ArchivedTrezorCryptoEnum::GetEthPubkeyHash { address_n } => {
+            ArchivedTrezorCryptoEnum::GetEthPubkeyHash {
+                address_n,
+                encoded_network,
+                encoded_token,
+            } => {
                 let dp = dp_from_archived(address_n);
-                (Obj::try_from(1i32)?, obj_from_dp(&dp)).try_into()?
+                let network_obj = match encoded_network.as_ref() {
+                    Some(network) => buffer_from_archived(network),
+                    None => Obj::const_none(),
+                };
+                let token_obj = match encoded_token.as_ref() {
+                    Some(token) => buffer_from_archived(token),
+                    None => Obj::const_none(),
+                };
+                (obj_from_dp(&dp), network_obj, token_obj).try_into()?
             }
-            ArchivedTrezorCryptoEnum::SignTypedHash { address_n, hash } => {
+            ArchivedTrezorCryptoEnum::SignTypedHash { address_n, hash, encoded_network, encoded_token } => {
                 let dp = dp_from_archived(address_n);
                 let hash_obj = obj_from_archived_hash(hash);
-                (Obj::try_from(2i32)?, obj_from_dp(&dp), hash_obj).try_into()?
+                let network_obj = match encoded_network.as_ref() {
+                    Some(network) => buffer_from_archived(network),
+                    None => Obj::const_none(),
+                };
+                let token_obj = match encoded_token.as_ref() {
+                    Some(token) => buffer_from_archived(token),
+                    None => Obj::const_none(),
+                };
+                (obj_from_dp(&dp), hash_obj, network_obj, token_obj).try_into()?
+            }
+            ArchivedTrezorCryptoEnum::GetAddressMac {
+                address_n,
+                address,
+                encoded_network,
+            } => {
+                let dp = dp_from_archived(address_n);
+                let address_str = str_from_archived(address);
+                let buffer_obj = match encoded_network.as_ref() {
+                    Some(network) => buffer_from_archived(network),
+                    None => Obj::const_none(),
+                };
+                (obj_from_dp(&dp), address_str.try_into()?, buffer_obj).try_into()?
             }
         };
 

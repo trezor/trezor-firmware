@@ -1,5 +1,3 @@
-extern crate alloc;
-
 use ufmt::derive::uDebug;
 
 use crate::low_level_api;

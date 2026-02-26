@@ -119,7 +119,7 @@ pub struct trezor_api_v1_t {
     pub trezor_crypto_v1_t: *const trezor_crypto_v1_t,
 }
 
-pub type ed25519_signature = [core::ffi::c_uchar; 64usize];
+// pub type ed25519_signature = [core::ffi::c_uchar; 64usize];
 pub type ed25519_public_key = [core::ffi::c_uchar; 32usize];
 
 #[repr(C)]
@@ -130,6 +130,23 @@ pub struct _SHA256_CTX {
     pub buffer: [u32; 16usize],
 }
 pub type SHA256_CTX = _SHA256_CTX;
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _SHA512_CTX {
+    pub state: [u64; 8usize],
+    pub bitcount: [u64; 2usize],
+    pub buffer: [u64; 16usize],
+}
+pub type SHA512_CTX = _SHA512_CTX;
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct _HMAC_SHA256_CTX {
+    pub o_key_pad: [u8; 64usize],
+    pub ctx: SHA256_CTX,
+}
+pub type HMAC_SHA256_CTX = _HMAC_SHA256_CTX;
 
 /// Trezor crypto v1 function pointers
 #[repr(C)]
@@ -150,6 +167,14 @@ pub struct trezor_crypto_v1_t {
     pub sha256_Init: unsafe extern "C" fn(arg1: *mut SHA256_CTX),
     pub sha256_Update: unsafe extern "C" fn(arg1: *mut SHA256_CTX, arg2: *const u8, arg3: usize),
     pub sha256_Final: unsafe extern "C" fn(arg1: *mut SHA256_CTX, arg2: *mut u8),
+    pub sha512_Init: unsafe extern "C" fn(arg1: *mut SHA512_CTX),
+    pub sha512_Update: unsafe extern "C" fn(arg1: *mut SHA512_CTX, arg2: *const u8, arg3: usize),
+    pub sha512_Final: unsafe extern "C" fn(arg1: *mut SHA512_CTX, arg2: *mut u8),
+    pub hmac_sha256_Init:
+        unsafe extern "C" fn(hctx: *mut HMAC_SHA256_CTX, key: *const u8, keylen: u32),
+    pub hmac_sha256_Update:
+        unsafe extern "C" fn(hctx: *mut HMAC_SHA256_CTX, msg: *const u8, msglen: u32),
+    pub hmac_sha256_Final: unsafe extern "C" fn(hctx: *mut HMAC_SHA256_CTX, hmac: *mut u8),
 }
 
 unsafe impl Sync for trezor_api_v1_t {}

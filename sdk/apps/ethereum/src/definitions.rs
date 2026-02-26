@@ -1,11 +1,12 @@
-extern crate alloc;
-
-use crate::ed25519::verify;
-use crate::proto::definitions::{DefinitionType, EthereumNetworkInfo, EthereumTokenInfo};
-use alloc::collections::BTreeMap;
-use alloc::vec;
-use alloc::vec::Vec;
+use crate::{
+    ed25519::verify,
+    proto::definitions::{DefinitionType, EthereumNetworkInfo, EthereumTokenInfo},
+};
+#[cfg(not(test))]
+use alloc::{collections::BTreeMap, vec::Vec};
 use prost::Message;
+#[cfg(test)]
+use std::{collections::BTreeMap, vec::Vec};
 use trezor_app_sdk::crypto::Sha256;
 
 const THRESHOLD: usize = 2;
@@ -79,6 +80,10 @@ impl Definitions {
         }
 
         Ok(Self::new(network, tokens))
+    }
+
+    pub fn network(&self) -> &EthereumNetworkInfo {
+        &self.network
     }
 
     pub fn chain_id(&self) -> u64 {

@@ -35,7 +35,8 @@ use crate::{
     util::interpolate,
 };
 
-use trezor_structs::{ArchivedStringN, ArchivedTrezorUiEnum};
+use rkyv::option::ArchivedOption;
+use trezor_structs::{ArchivedPropsList, ArchivedStringN, ArchivedTrezorUiEnum};
 
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
@@ -1616,6 +1617,37 @@ impl FirmwareUI for UIEckhart {
             unsafe { StrBuffer::from_ptr_and_len(s.data.as_ptr(), s.len as usize) }.into()
         }
 
+        fn tstr_from_archived_option<const N: usize>(
+            s: &ArchivedOption<ArchivedStringN<N>>,
+        ) -> Option<TString<'static>> {
+            s.as_ref().map(tstr_from_archived)
+        }
+
+        fn obj_from_proplist(props: &ArchivedPropsList) -> Result<Obj, Error> {
+            let mut vec = heapless::Vec::<Obj, 5>::new();
+            for i in 0..(props.len as usize) {
+                let key = unsafe {
+                    core::str::from_raw_parts(
+                        props.data[i].0.data.as_ptr(),
+                        props.data[i].0.len as usize,
+                    )
+                };
+                let value = unsafe {
+                    core::str::from_raw_parts(
+                        props.data[i].1.data.as_ptr(),
+                        props.data[i].1.len as usize,
+                    )
+                };
+                let prop: Obj =
+                    unwrap!(
+                        (unwrap!(Obj::try_from(key)), unwrap!(Obj::try_from(value)),).try_into()
+                    );
+                unwrap!(vec.push(prop));
+            }
+            let list = List::alloc(&vec)?;
+            Ok(Obj::from(list))
+        }
+
         // Deserialize the rkyv archived data directly from the static buffer
         let archived = unsafe { rkyv::access_unchecked::<ArchivedTrezorUiEnum>(data) };
 
@@ -1709,36 +1741,10 @@ impl FirmwareUI for UIEckhart {
                 Ok(layout)
             }
             ArchivedTrezorUiEnum::ConfirmProperties { title, props } => {
-                let mut tuple_objs = heapless::Vec::<Obj, 5>::new();
-                for i in 0..(props.len as usize) {
-                    let str1 = unsafe {
-                        core::str::from_raw_parts(
-                            props.data[i].0.data.as_ptr(),
-                            props.data[i].0.len as usize,
-                        )
-                    };
-                    let str2 = unsafe {
-                        core::str::from_raw_parts(
-                            props.data[i].1.data.as_ptr(),
-                            props.data[i].1.len as usize,
-                        )
-                    };
-                    let prop: Obj = unwrap!((
-                        unwrap!(Obj::try_from(str1)),
-                        unwrap!(Obj::try_from(str2)),
-                        Obj::from(false),
-                    )
-                        .try_into());
-
-                    unwrap!(tuple_objs.push(prop));
-                }
-
-                let items = List::alloc(&tuple_objs)?;
-
                 let layout = Self::confirm_properties(
                     tstr_from_archived(title),
                     None,
-                    items.into(),
+                    obj_from_proplist(props)?,
                     true,
                     None,
                     false,
@@ -1784,6 +1790,33 @@ impl FirmwareUI for UIEckhart {
                     None,
                     1,
                     "br_name".into(),
+                )?;
+
+                LayoutObj::new_root(layout)
+            }
+            ArchivedTrezorUiEnum::ShowAddress {
+                address,
+                title,
+                subtitle,
+                account,
+                path,
+                xpubs,
+                chunkify,
+            } => {
+                let layout = Self::flow_get_address(
+                    tstr_from_archived(address),
+                    tstr_from_archived_option(title).unwrap_or("Receive".into()),
+                    tstr_from_archived_option(subtitle),
+                    None,
+                    None,
+                    chunkify.unwrap_or(false),
+                    tstr_from_archived(address),
+                    false,
+                    tstr_from_archived_option(account),
+                    tstr_from_archived_option(path),
+                    obj_from_proplist(xpubs)?,
+                    10, //ButtonRequestType.Addresss
+                    "show_address".into(),
                 )?;
 
                 LayoutObj::new_root(layout)

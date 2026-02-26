@@ -1,9 +1,14 @@
-use crate::proto::{
-    common::HdNodeType,
-    ethereum::{EthereumGetPublicKey, EthereumPublicKey},
+use crate::{
+    proto::{
+        common::HdNodeType,
+        ethereum::{EthereumGetPublicKey, EthereumPublicKey},
+    },
+    strutil::hex_encode,
 };
-use crate::strutil::hex_encode;
+#[cfg(not(test))]
 use alloc::string::ToString;
+#[cfg(test)]
+use std::string::ToString;
 use trezor_app_sdk::{Error, Result, crypto, log, ui, util::HdNodeData};
 
 const VERSION: u32 = 0x0488B21E;

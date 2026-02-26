@@ -1,16 +1,20 @@
-extern crate alloc;
-use crate::definitions::unknown_network;
-use crate::strutil::hex_encode;
-use alloc::string::{String, ToString};
-use alloc::vec;
-use alloc::vec::Vec;
+#[cfg(not(test))]
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use core::convert::AsRef;
+#[cfg(test)]
+use std::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use trezor_app_sdk::{Error, Result, ui};
 
 const HARDENED: u32 = 0x8000_0000;
 
 pub(crate) struct Bip32Path {
-    path: alloc::vec::Vec<u32>,
+    path: Vec<u32>,
 }
 
 impl Bip32Path {
@@ -24,7 +28,11 @@ impl Bip32Path {
         self.path.len()
     }
 
-    pub fn to_string(&self) -> alloc::string::String {
+    pub fn as_slice(&self) -> &[u32] {
+        &self.path
+    }
+
+    pub fn to_string(&self) -> String {
         if self.path.is_empty() {
             return String::from("m");
         }
@@ -110,6 +118,10 @@ impl AsRef<[u32]> for Bip32Path {
     fn as_ref(&self) -> &[u32] {
         &self.path
     }
+}
+
+pub fn unharden(item: u32) -> u32 {
+    item ^ (item & HARDENED)
 }
 
 pub trait KeychainValidator {

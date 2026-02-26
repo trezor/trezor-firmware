@@ -1,27 +1,37 @@
-extern crate alloc;
-
-use crate::common::require_confirm_address;
-use crate::definitions::{Definitions, unknown_network};
-use crate::helpers::address_from_bytes;
-use crate::helpers::decode_typed_data;
-use crate::keychain::Keychain;
-use crate::keychain::PATTERNS_ADDRESS;
-use crate::paths::{Bip32Path, PathSchema};
-use crate::proto::definitions::EthereumNetworkInfo;
-use crate::proto::ethereum::EthereumTypedDataSignature;
-use crate::proto::ethereum_eip712::{
-    EthereumSignTypedData, EthereumTypedDataStructAck, EthereumTypedDataStructRequest,
-    EthereumTypedDataValueAck, EthereumTypedDataValueRequest,
-    ethereum_typed_data_struct_ack::{EthereumDataType, EthereumFieldType, EthereumStructMember},
+use crate::{
+    common::require_confirm_address,
+    definitions::Definitions,
+    helpers::{address_from_bytes, decode_typed_data},
+    keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
+    paths::Bip32Path,
+    proto::{
+        ethereum::EthereumTypedDataSignature,
+        ethereum_eip712::{
+            EthereumSignTypedData, EthereumTypedDataStructAck, EthereumTypedDataStructRequest,
+            EthereumTypedDataValueAck, EthereumTypedDataValueRequest,
+            ethereum_typed_data_struct_ack::{
+                EthereumDataType, EthereumFieldType, EthereumStructMember,
+            },
+        },
+    },
+    strutil::hex_encode,
 };
-use crate::strutil::hex_encode;
 use crate::{uformat, wire_request};
-use alloc::string::ToString;
-use alloc::vec::Vec;
+#[cfg(not(test))]
 use alloc::{
     collections::{BTreeMap, BTreeSet},
     string::String,
+    string::ToString,
     vec,
+    vec::Vec,
+};
+#[cfg(test)]
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    string::String,
+    string::ToString,
+    vec,
+    vec::Vec,
 };
 use trezor_app_sdk::{
     crypto::{self, keccak_256},
@@ -33,14 +43,32 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
     let dp = Bip32Path::from_slice(&msg.address_n);
 
     let slip44 = dp.slip44();
-    let definitions = Definitions::from_encoded(None, None, None, slip44).unwrap();
+    let definitions = Definitions::from_encoded(
+        msg.definitions
+            .as_ref()
+            .and_then(|d| d.encoded_network.as_ref().map(|v| v.as_slice())),
+        msg.definitions
+            .as_ref()
+            .and_then(|d| d.encoded_token.as_ref().map(|v| v.as_slice())),
+        None,
+        slip44,
+    )
+    .unwrap();
 
     let schemas = schemas_from_network(&PATTERNS_ADDRESS, definitions.slip44())?;
     let keychain = Keychain::new(schemas);
 
     dp.validate(&keychain)?;
 
-    let address_bytes = crypto::get_eth_pubkey_hash(dp.as_ref())?;
+    let (encoded_network, encoded_token) = match &msg.definitions {
+        Some(def) => (
+            def.encoded_network.as_ref().map(|d| d.as_ref()),
+            def.encoded_token.as_ref().map(|d| d.as_ref()),
+        ),
+        None => (None, None),
+    };
+
+    let address_bytes = crypto::get_eth_pubkey_hash(dp.as_ref(), encoded_network, encoded_token)?;
 
     // Display address so user can validate it
     require_confirm_address(&address_bytes, None, None, None, None, None)?;
@@ -58,10 +86,10 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
         show_message_hash
     ));
 
-    let signature = crypto::sign_typed_hash(dp.as_ref(), &data_hash)?;
+    let signature = crypto::sign_typed_hash(dp.as_ref(), &data_hash, encoded_network, encoded_token)?;
 
     let mut sig = EthereumTypedDataSignature::default();
-    sig.address = address_from_bytes(&address_bytes, Some(definitions.chain_id()));
+    sig.address = address_from_bytes(&address_bytes, Some(definitions.network()));
     sig.signature.extend_from_slice(&signature[1..]);
     sig.signature.push(signature[0]);
 
@@ -188,10 +216,10 @@ impl TypedDataEnvelope {
     /// Generate a hash representation of the whole struct.
     fn hash_struct(
         &self,
-        primary_type: &str,
-        member_value_path: &[u32],
-        show_data: bool,
-        parent_objects: &[&str],
+        _primary_type: &str,
+        _member_value_path: &[u32],
+        _show_data: bool,
+        _parent_objects: &[&str],
     ) -> Result<[u8; 32]> {
         // TODO: implement actual hashing logic
         Ok([0u8; 32])
@@ -201,7 +229,7 @@ impl TypedDataEnvelope {
     /// where each member is written as type ‖ " " ‖ name
     /// If the struct type references other struct types (and these in turn reference even more struct types),
     /// then the set of referenced struct types is collected, sorted by name and appended to the encoding.
-    fn encode_type(&self, primary_type: &str) -> Result<Vec<String>> {
+    fn encode_type(&self, _primary_type: &str) -> Result<Vec<String>> {
         return Ok(vec![]); // TODO: implement actual encoding logic
     }
 
@@ -379,8 +407,8 @@ fn validate_value(field: &EthereumFieldType, value: &[u8]) -> Result<()> {
 }
 
 fn should_show_domain(name: &[u8], version: &[u8]) -> Result<bool> {
-    let domain_name = decode_typed_data(name, "string")?;
-    let domain_version = decode_typed_data(version, "string")?;
+    let _domain_name = decode_typed_data(name, "string")?;
+    let _domain_version = decode_typed_data(version, "string")?;
 
     // TODO: implement actual logic to decide whether to show the domain or not. For now, we just show it if it's not "unknown".
     Ok(true)
@@ -392,10 +420,10 @@ fn confirm_empty_typed_message() -> Result<()> {
 }
 
 fn should_show_struct(
-    description: &str,
-    data_members: &[EthereumStructMember],
-    title: Option<&str>,
-    button_text: Option<&str>,
+    _description: &str,
+    _data_members: &[EthereumStructMember],
+    _title: Option<&str>,
+    _button_text: Option<&str>,
 ) -> Result<bool> {
     // TODO
     Ok(true)
@@ -412,24 +440,4 @@ fn confirm_typed_data_final() -> Result<()> {
         ui::TrezorUiResult::Confirmed => Ok(()),
         _ => Err(Error::Cancelled),
     }
-}
-
-pub fn schemas_from_network(patterns: &[&str], slip44: u32) -> Result<Vec<PathSchema>> {
-    let slip44_id: Vec<u32> = if slip44 == unknown_network().slip44 {
-        // allow Ethereum or testnet paths for unknown networks
-        vec![60, 1]
-    } else if slip44 != 60 {
-        // allow cross-signing with Ethereum for all non-mainnet networks
-        vec![slip44, 60]
-    } else {
-        // legacy testnet slip44 = 1
-        vec![slip44, 1]
-    };
-
-    let schemas = patterns
-        .iter()
-        .map(|p| PathSchema::parse(p, &slip44_id))
-        .collect::<Result<Vec<_>>>()?;
-
-    Ok(schemas)
 }

@@ -1,8 +1,13 @@
-extern crate alloc;
-
-use crate::paths::KeychainValidator;
-use crate::paths::{Bip32Path, PathSchemaTrait};
-use alloc::vec::Vec;
+use crate::{
+    definitions::unknown_network,
+    paths::KeychainValidator,
+    paths::PathSchema,
+    paths::{Bip32Path, PathSchemaTrait},
+};
+#[cfg(not(test))]
+use alloc::{vec, vec::Vec};
+#[cfg(test)]
+use std::{vec, vec::Vec};
 use trezor_app_sdk::{Error, Result};
 
 // https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
@@ -40,7 +45,7 @@ pub struct Keychain<A: PathSchemaTrait> {
 
 impl<A: PathSchemaTrait> Keychain<A> {
     pub fn new(schemas: Vec<A>) -> Self {
-        let mut instance = Self {
+        let instance = Self {
             schemas: schemas,
             curve: CURVE,
         };
@@ -69,4 +74,24 @@ impl<A: PathSchemaTrait> KeychainValidator for Keychain<A> {
         }
         Ok(())
     }
+}
+
+pub fn schemas_from_network(patterns: &[&str], slip44: u32) -> Result<Vec<PathSchema>> {
+    let slip44_id: Vec<u32> = if slip44 == unknown_network().slip44 {
+        // allow Ethereum or testnet paths for unknown networks
+        vec![60, 1]
+    } else if slip44 != 60 {
+        // allow cross-signing with Ethereum for all non-mainnet networks
+        vec![slip44, 60]
+    } else {
+        // legacy testnet slip44 = 1
+        vec![slip44, 1]
+    };
+
+    let schemas = patterns
+        .iter()
+        .map(|p| PathSchema::parse(p, &slip44_id))
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(schemas)
 }

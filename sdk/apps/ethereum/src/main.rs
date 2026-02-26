@@ -1,12 +1,19 @@
-#![no_std]
-#![no_main]
+#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(test), no_main)]
+// #![reexport_test_harness_main = "test_main"]
 
+#[cfg(not(test))]
 extern crate alloc;
 
+// #[cfg(test)]
+// extern crate std;
+
 use prost::Message;
-use trezor_app_sdk::service::{self, CoreIpcService, NoUtilHandler};
-use trezor_app_sdk::util::Timeout;
-use trezor_app_sdk::{CORE_SERVICE, Error, IpcMessage, Result, error};
+use trezor_app_sdk::{
+    CORE_SERVICE, Error, IpcMessage, Result, error,
+    service::{self, CoreIpcService, NoUtilHandler},
+    util::Timeout,
+};
 // Include generated protobuf code
 pub(crate) mod proto;
 
@@ -18,6 +25,7 @@ mod get_public_key;
 mod helpers;
 mod keychain;
 mod paths;
+mod rlp;
 mod sign_message;
 mod sign_tx;
 mod sign_typed_data;
@@ -46,6 +54,7 @@ enum EthereumMessages {
     Unknown(u16),
 }
 
+#[cfg(not(test))]
 #[global_allocator]
 static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
 
@@ -133,6 +142,7 @@ wire_handler!(
 );
 
 // Application entry point - receives raw bytes, returns raw bytes
+#[cfg(not(test))]
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
     let message = CORE_SERVICE.receive(Timeout::max())?;

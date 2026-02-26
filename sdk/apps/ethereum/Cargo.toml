@@ -25,6 +25,14 @@ uluru = "3.1.0"
 [build-dependencies]
 prost-build = "0.14.1"
 
+[dev-dependencies]
+ethereum_rust = { path = ".", features = ["test"] }
+trezor-app-sdk = { path = "../../crates/trezor-app-sdk", features = ["test"] }
+
 [package.metadata.rust-analyzer]
 # Tell rust-analyzer where to find generated code
 rustc-env = { OUT_DIR = "target/debug/build/ethereum/out" }
+
+[features]
+default = []
+test = []
