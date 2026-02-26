@@ -566,23 +566,27 @@ int hdnode_nem_encrypt(const HDNode *node, const ed25519_public_key public_key,
 
   aes_encrypt_ctx ctx = {0};
 
+  int succ = 0;
   int ret = aes_encrypt_key256(shared_key, &ctx);
   memzero(shared_key, sizeof(shared_key));
 
   if (ret != EXIT_SUCCESS) {
-    return 0;
+    goto cleanup;
   }
 
   if (aes_cbc_encrypt(payload, buffer, size, iv, &ctx) != EXIT_SUCCESS) {
-    return 0;
+    goto cleanup;
   }
 
   if (aes_cbc_encrypt(last_block, &buffer[size], sizeof(last_block), iv,
                       &ctx) != EXIT_SUCCESS) {
-    return 0;
+    goto cleanup;
   }
 
-  return 1;
+  succ = 1;
+cleanup:
+  memzero(&ctx, sizeof(ctx));
+  return succ;
 }
 
 int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key,
@@ -596,18 +600,22 @@ int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key,
 
   aes_decrypt_ctx ctx = {0};
 
+  int succ = 0;
   int ret = aes_decrypt_key256(shared_key, &ctx);
   memzero(shared_key, sizeof(shared_key));
 
   if (ret != EXIT_SUCCESS) {
-    return 0;
+    goto cleanup;
   }
 
   if (aes_cbc_decrypt(payload, buffer, size, iv, &ctx) != EXIT_SUCCESS) {
-    return 0;
+    goto cleanup;
   }
 
-  return 1;
+  succ = 1;
+cleanup:
+  memzero(&ctx, sizeof(ctx));
+  return succ;
 }
 #endif
 
