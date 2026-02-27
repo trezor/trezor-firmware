@@ -31,15 +31,16 @@
 #ifdef KERNEL
 
 // Checks if bitblt destination is accessible
-#define CHECK_BB_DST(_bb)                                       \
-  if (!probe_write_access((_bb)->dst_row,                       \
-                          (_bb)->dst_stride * (_bb)->height)) { \
-    goto access_violation;                                      \
+#define CHECK_BB_DST(_bb)                                               \
+  if (!probe_write_access((_bb)->dst_row, (size_t)(_bb)->dst_stride *   \
+                                              (size_t)(_bb)->height)) { \
+    goto access_violation;                                              \
   }
 
 // Checks if bitblt source is accessible
 #define CHECK_BB_SRC(_bb)                                                      \
-  if (!probe_read_access((_bb)->src_row, (_bb)->src_stride * (_bb)->height)) { \
+  if (!probe_read_access((_bb)->src_row,                                       \
+                         (size_t)(_bb)->src_stride * (size_t)(_bb)->height)) { \
     goto access_violation;                                                     \
   }
 
