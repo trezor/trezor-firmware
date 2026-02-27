@@ -169,7 +169,7 @@ def load(
     "-t",
     "--type",
     type=ChoiceType(RECOVERY_DEVICE_INPUT_METHOD),
-    default="scrambled",
+    default=None,
 )
 @click.option("-d", "--dry-run", is_flag=True)
 @click.option("-b", "--unlock-repeated-backup", is_flag=True)
@@ -182,11 +182,18 @@ def recover(
     passphrase_protection: bool,
     label: str | None,
     u2f_counter: int,
-    input_method: messages.RecoveryDeviceInputMethod,
+    input_method: messages.RecoveryDeviceInputMethod | None,
     dry_run: bool,
     unlock_repeated_backup: bool,
 ) -> None:
     """Start safe recovery workflow."""
+    word_count = int(words)
+    if input_method is None:
+        input_method = messages.RecoveryDeviceInputMethod.ScrambledWords
+        if word_count < 24:
+            # `ScrambledWords` is disabled by default for shorter mnemonics.
+            input_method = messages.RecoveryDeviceInputMethod.Matrix
+
     if input_method == messages.RecoveryDeviceInputMethod.ScrambledWords:
         input_callback = ui.mnemonic_words(expand)
     else:
@@ -204,7 +211,7 @@ def recover(
 
     device.recover(
         session,
-        word_count=int(words),
+        word_count=word_count,
         passphrase_protection=passphrase_protection,
         pin_protection=pin_protection,
         label=label,
