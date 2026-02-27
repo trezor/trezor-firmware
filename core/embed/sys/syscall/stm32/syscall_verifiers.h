@@ -67,7 +67,7 @@ bool syslog_start_record__verified(const log_source_t *source,
 ssize_t syslog_write_chunk__verified(const char *text, size_t text_len,
                                      bool end_record);
 
-bool syslog_set_filter__verified(const char *module_name, log_level_t level);
+bool syslog_set_filter__verified(const char *filter, size_t filter_len);
 
 #endif  // USE_DBG_CONSOLE
 

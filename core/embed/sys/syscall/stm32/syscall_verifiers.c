@@ -148,12 +148,12 @@ access_violation:
   return -1;
 }
 
-bool syslog_set_filter__verified(const char *module_name, log_level_t level) {
-  if (!probe_read_access(module_name, strlen(module_name))) {
+bool syslog_set_filter__verified(const char *filter, size_t filter_len) {
+  if (!probe_read_access(filter, filter_len)) {
     goto access_violation;
   }
 
-  return syslog_set_filter(module_name, level);
+  return syslog_set_filter(filter, filter_len);
 
 access_violation:
   apptask_access_violation();
