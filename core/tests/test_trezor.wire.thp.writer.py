@@ -73,11 +73,6 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
             while True:
                 task.send(None)
 
-    def __init__(self):
-        if __debug__ and utils.USE_THP:
-            thp_common.suppress_debug_log()
-        super().__init__()
-
     def setUp(self):
         self.interface = MockHID()
         thp_ctx = ThpContext(self.interface)

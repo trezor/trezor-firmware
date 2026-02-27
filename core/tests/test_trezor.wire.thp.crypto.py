@@ -77,11 +77,6 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
             (0xFFFFFFFFFFFFFFFF, b"\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff"),
         ]
 
-    def __init__(self):
-        if __debug__ and utils.USE_THP:
-            thp_common.suppress_debug_log()
-        super().__init__()
-
     def test_encryption(self):
         for v in self.vectors_enc:
             buffer = bytearray(v[3])

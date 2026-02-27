@@ -37,11 +37,6 @@ class TestStorageCache(unittest.TestCase):
 
     if utils.USE_THP:
 
-        def setUpClass(self):
-            if __debug__:
-                thp_common.suppress_debug_log()
-            super().__init__()
-
         def setUp(self):
             self.interface = MockHID()
             cache.clear_all()
