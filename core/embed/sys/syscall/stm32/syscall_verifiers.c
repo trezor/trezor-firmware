@@ -1055,6 +1055,14 @@ jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {
     goto access_violation;
   }
 
+  if (input->offset > input->size) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(input->data, input->size - input->offset)) {
+    goto access_violation;
+  }
+
   return jpegdec_process(input);
 
 access_violation:

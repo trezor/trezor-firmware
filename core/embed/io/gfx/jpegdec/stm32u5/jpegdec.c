@@ -245,7 +245,7 @@ static bool jpegdec_start_dma_transfer(jpegdec_t *dec) {
 // Returns `true` if at least one word was written to the FIFO.
 static inline bool jpegdec_feed_fifo(jpegdec_t *dec, jpegdec_input_t *inp) {
   // Input FIFO needs data
-  uint32_t *ptr = (uint32_t *)&inp->data[inp->offset];
+  const uint32_t *ptr = (const uint32_t *)&inp->data[inp->offset];
   if (inp->offset + 16 <= inp->size) {
     // Feed the FIFO with 16 bytes
     JPEG->DIR = ptr[0];
