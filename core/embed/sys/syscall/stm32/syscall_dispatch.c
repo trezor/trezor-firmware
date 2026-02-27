@@ -618,13 +618,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *data = (const uint8_t *)args[0];
       uint32_t offset = args[1];
       uint32_t len = args[2];
-      args[0] = translations_write(data, offset, len);
+      args[0] = translations_write__verified(data, offset, len);
     } break;
 
     case SYSCALL_TRANSLATIONS_READ: {
       uint32_t *len = (uint32_t *)args[0];
       uint32_t offset = args[1];
-      args[0] = (uint32_t)translations_read(len, offset);
+      args[0] = (uint32_t)translations_read__verified(len, offset);
     } break;
 
     case SYSCALL_TRANSLATIONS_ERASE: {
