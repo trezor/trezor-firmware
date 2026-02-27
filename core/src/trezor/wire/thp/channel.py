@@ -31,7 +31,7 @@ from . import ACK_MESSAGE, ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionE
 from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, memory_manager
 from .checksum import CHECKSUM_LENGTH, is_valid
-from .writer import MESSAGE_TYPE_LENGTH
+from .writer import MAX_PAYLOAD_LEN, MESSAGE_TYPE_LENGTH
 
 if __debug__:
     from trezor import log
@@ -90,6 +90,9 @@ class Reassembler:
                 return False
 
             buffer = self.thp_read_buf.get(self.buffer_len)
+            if buffer is None:
+                # Failed to get the buffer
+                return False
             self._buffer_packet_data(buffer, packet, PacketHeader.CONT_LENGTH)
         else:
             self.reset()
@@ -97,6 +100,9 @@ class Reassembler:
             self.buffer_len = payload_length + PacketHeader.INIT_LENGTH
 
             buffer = self.thp_read_buf.get(self.buffer_len)
+            if buffer is None:
+                # Failed to get the buffer
+                return False
             self._buffer_packet_data(buffer, packet, 0)
 
         assert len(buffer) == self.buffer_len
@@ -414,7 +420,39 @@ class Channel:
         payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
         length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + PacketHeader.INIT_LENGTH
 
+        if length > MAX_PAYLOAD_LEN:
+            if __debug__:
+                log.warning(__name__, "Failed to write, message is too big.")
+            from trezor.enums import FailureType
+            from trezor.messages import Failure
+
+            return await self.write(
+                Failure(code=FailureType.FirmwareError),
+                session_id,
+            )
+
         buffer = self.write_buf.get(length)
+        if buffer is None:
+            try:
+                buffer = memoryview(bytearray(length))
+            except MemoryError as e:
+                if __debug__:
+                    log.warning(
+                        __name__,
+                        "Failed to allocate a sufficiently large write buffer.",
+                    )
+                from trezor.enums import FailureType
+                from trezor.messages import Failure
+
+                if Failure.is_type_of(msg):
+                    # prevent infinite recursion
+                    raise MemoryError from e
+
+                return await self.write(
+                    Failure(code=FailureType.FirmwareError),
+                    session_id,
+                )
+
         noise_payload_len = memory_manager.encode_into_buffer(buffer, msg, session_id)
 
         self._encrypt(buffer, noise_payload_len)

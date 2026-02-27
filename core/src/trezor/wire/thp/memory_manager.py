@@ -11,13 +11,23 @@ if TYPE_CHECKING:
 
 _PROTOBUF_BUFFER_SIZE = const(8192)
 
+if __debug__:
+    from trezor import log
+
 
 class ThpBuffer:
     def __init__(self) -> None:
         self.buf = memoryview(bytearray(_PROTOBUF_BUFFER_SIZE))
 
-    def get(self, length: int) -> memoryview:
-        assert length <= len(self.buf)
+    def get(self, length: int) -> memoryview | None:
+        if length > len(self.buf):
+            if __debug__:
+                log.warning(
+                    __name__,
+                    "Failed to get a buffer - requested length (%d) is too big.",
+                    length,
+                )
+            return None
         return self.buf[:length]
 
 
