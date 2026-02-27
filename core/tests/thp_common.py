@@ -4,6 +4,7 @@ from common import *  # isort:skip
 if utils.USE_THP:
     from typing import TYPE_CHECKING
 
+    from mock import patch
     from mock_wire_interface import MockHID
     from storage import cache_thp
     from trezor.wire import context
@@ -14,6 +15,9 @@ if utils.USE_THP:
     from trezor.wire.thp.session_context import SessionContext
 
     if TYPE_CHECKING:
+        from typing import Any, Type
+
+        from trezor import protobuf
         from trezor.wire import WireInterface
 
     def prepare_context() -> None:
@@ -29,3 +33,51 @@ if utils.USE_THP:
         thp_ctx = ThpContext(iface)
         (iface_ctx,) = thp_ctx._iface_ctxs
         return Channel(channel_cache, iface_ctx, (ThpBuffer(), ThpBuffer()))
+
+    def _encrypt_patch() -> patch:
+        return patch(Channel, "_encrypt", lambda self, buffer, noise_payload_len: None)
+
+    class TrackedChannel:
+
+        def __init__(self) -> None:
+            self.messages_to_write = []
+            self.expected_messages_to_write = []
+            self.inner_channel = context.get_channel_context()
+            self.original_write = self.inner_channel.write
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self.inner_channel, name)
+
+        def set_expected_messages_to_write(
+            self, messages: list[Type[protobuf.MessageType]]
+        ) -> None:
+            self.expected_messages_to_write = messages
+
+        def __enter__(self) -> None:
+            self.messages_to_write: list[protobuf.MessageType] = []
+            # To track recursive calls in channel.write
+            self.inner_channel.write = self.write
+
+        def __exit__(self, exc_type, exc_value, tb) -> None:
+            self.inner_channel.write = self.original_write
+            if not self.expected_messages_to_write:
+                return
+            actual = self.messages_to_write
+            expected = self.expected_messages_to_write
+            if len(actual) != len(expected):
+                raise AssertionError("Count mismatch for expected and actual messages")
+            for act, exp in zip(actual, expected):
+                if not exp.is_type_of(act):
+                    raise AssertionError(
+                        f"Expected {exp.MESSAGE_NAME}, got {act.MESSAGE_NAME}"
+                    )
+
+        async def write(
+            self,
+            msg: protobuf.MessageType,
+            session_id: int = 0,
+        ) -> None:
+            self.messages_to_write.append(msg)
+            with _encrypt_patch():
+                # encryption is disabled
+                return await self.original_write(msg, session_id)
