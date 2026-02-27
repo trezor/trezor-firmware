@@ -273,13 +273,13 @@ static const struct lt_config_t g_irreversible_configuration = {
 static const struct lt_config_t g_reversible_configuration = {
     .obj = {
         // # CFG_START_UP (0x00)
-        // | Setting                 | Value                   |
-        // |-------------------------|-------------------------|
-        // | RFU_1 (bit 0)           | 1                       |
-        // | MBIST_DIS (bit 1)       | 0 (TEST_ON)             |
-        // | RNGTEST_DIS (bit 2)     | 0 (TEST_ON)             |
-        // | MAINTENANCE_ENA (bit 3) | 1 (MAINTENANCE_ALLOWED) |
-        BIT(0) | BIT(3),
+        // | Setting                 | Value                     |
+        // |-------------------------|---------------------------|
+        // | RFU_1 (bit 0)           | 1                         |
+        // | MBIST_DIS (bit 1)       | 0 (TEST_ON)               |
+        // | RNGTEST_DIS (bit 2)     | 0 (TEST_ON)               |
+        // | MAINTENANCE_ENA (bit 3) | 0 (MAINTENANCE_FORBIDDEN) |
+        BIT(0),
         // # CFG_SENSORS (0x08)
         // | Setting                         | Value                |
         // |---------------------------------|----------------------|
