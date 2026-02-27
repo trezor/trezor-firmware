@@ -20,8 +20,6 @@ class TestBitcoinKeychain(unittest.TestCase):
     if utils.USE_THP:
 
         def setUpClass(self):
-            if __debug__:
-                thp_common.suppress_debug_log()
             thp_common.prepare_context()
 
         def setUp(self):
@@ -119,8 +117,6 @@ class TestAltcoinKeychains(unittest.TestCase):
     if utils.USE_THP:
 
         def setUpClass(self):
-            if __debug__:
-                thp_common.suppress_debug_log()
             thp_common.prepare_context()
 
         def setUp(self):

@@ -7,6 +7,8 @@ ERROR_COLOR = "\033[31m"
 OK_COLOR = "\033[32m"
 SKIPPED_COLOR = "\033[33m"
 
+DISABLE_LOG = True
+
 
 class SkipTest(Exception):
     pass
@@ -227,6 +229,16 @@ class TestSuite:
 
 
 class TestRunner:
+
+    def __init__(self):
+        if __debug__ and DISABLE_LOG:
+            from trezor.utils import USE_DBG_CONSOLE
+
+            if USE_DBG_CONSOLE:
+                from trezor.utils import set_log_filter
+
+                set_log_filter("-*")
+
     def run(self, suite):
         res = TestResult()
         for c in suite.tests:

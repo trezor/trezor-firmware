@@ -29,11 +29,3 @@ if utils.USE_THP:
         thp_ctx = ThpContext(iface)
         (iface_ctx,) = thp_ctx._iface_ctxs
         return Channel(channel_cache, iface_ctx, (ThpBuffer(), ThpBuffer()))
-
-
-if __debug__:
-    # Disable log.debug
-    def suppress_debug_log() -> None:
-        from trezor import log
-
-        log._min_level = 1
