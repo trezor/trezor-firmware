@@ -50,7 +50,13 @@ const uint8_t* translations_read(uint32_t* len, uint32_t offset) {
   // TODO: _Static_assert was not happy with ASSETS_AREA.num_subareas == 1
   // error: expression in static assertion is not constant
   assert(ASSETS_AREA.num_subareas == 1);
-  *len = flash_area_get_size(&ASSETS_AREA) - offset;
+
+  uint32_t size = translations_area_bytesize();
+  if (offset >= size) {
+    return NULL;
+  }
+  *len = size - offset;
+
   return flash_area_get_address(&ASSETS_AREA, offset, 0);
 }
 
