@@ -10,3 +10,11 @@ IncludeBlocks: Preserve
 InsertNewlineAtEOF: true
 #Set EOL to LF unconditionally
 LineEnding: LF
+
+---
+Language: Proto
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 1
+ColumnLimit: 120
+IndentWidth: 4

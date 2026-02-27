@@ -7,11 +7,11 @@ help: ## show this help
 
 PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude ) common/protob/pb2py
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
+PROTO_FILES = $(shell find common core -type f -name '*.proto')
 
+style_check: pystyle_check ruststyle_check cstyle_check protostyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
 
-style_check: pystyle_check ruststyle_check cstyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
-
-style: pystyle ruststyle cstyle changelog_style translations_style ## apply all code styles (C+Rust+Py+Changelog+translation JSON)
+style: pystyle ruststyle cstyle protostyle changelog_style translations_style ## apply all code styles (Python+Rust+C+protobuf+changelog+translation JSON)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -56,9 +56,11 @@ pystyle: ## apply code style on application sources and tests
 	make -C python style
 
 changelog_check: ## check changelog format
+	@echo [CHANGELOG-CHECK]
 	./tools/changelog.py check
 
 changelog_style: ## fix changelog format
+	@echo [CHANGELOG-STYLE]
 	./tools/changelog.py style
 
 translations_style: ## Format translation files
@@ -70,9 +72,11 @@ translations_style_check: ## Check that translation files are properly formatted
 	@./core/tools/translations/sort_keys.py check
 
 yaml_check: ## check yaml formatting
+	@echo [YAML-STYLE-CHECK]
 	yamllint .
 
 editor_check: ## check editorconfig formatting
+	@echo [EDITORCONFIG-STYLE-CHECK]
 	editorconfig-checker -exclude '.*\.(so|dat|toif|der)|^crypto/aes/'
 
 cstyle_check: ## run code style check on low-level C code
@@ -83,6 +87,15 @@ cstyle_check: ## run code style check on low-level C code
 cstyle: ## apply code style on low-level C code
 	@echo [CLANG-FORMAT]
 	@clang-format -i $(C_FILES)
+
+protostyle: ## Format protobuf definitions
+	@echo [PROTOBUF-STYLE]
+	@clang-format -i $(PROTO_FILES)
+
+protostyle_check: ## Check that protobuf definitions are properly formatted
+	@echo [PROTOBUF-STYLE-CHECK]
+	clang-format --version
+	@./tools/clang-format-check $(PROTO_FILES)
 
 defs_check: ## check validity of coin definitions and protobuf files
 	jsonlint common/defs/*.json common/defs/*/*.json

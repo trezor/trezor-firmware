@@ -2,8 +2,8 @@ syntax = "proto2";
 package hw.trezor.messages.tron;
 
 // Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageTron";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
 // All uint64 are actually int64 in TRON. int64 is not supported on our firmware.
 
@@ -16,9 +16,9 @@ option java_outer_classname = "TrezorMessageTron";
  * @next Failure
  */
 message TronGetAddress {
-    repeated uint32 address_n = 1;          // BIP-32 path to derive the key from master node
-    optional bool show_display = 2;         // Optionally show on display before sending the result
-    optional bool chunkify = 3;             // Display the address in chunks of 4 characters
+    repeated uint32 address_n = 1;   // BIP-32 path to derive the key from master node
+    optional bool show_display = 2;  // Optionally show on display before sending the result
+    optional bool chunkify = 3;      // Display the address in chunks of 4 characters
 }
 
 /**
@@ -26,8 +26,8 @@ message TronGetAddress {
  * @end
  */
 message TronAddress {
-    required string address = 1;            // Tron address in Base58Check encoding
-    optional bytes mac = 2;                 // Address authentication code
+    required string address = 1;  // Tron address in Base58Check encoding
+    optional bytes mac = 2;       // Address authentication code
 }
 
 /**
@@ -36,13 +36,16 @@ message TronAddress {
  * @next TronContractRequest
  */
 message TronSignTx {
-    repeated uint32 address_n = 1;          // BIP-32 path to derive the key from master node
-    required bytes ref_block_bytes = 2;     // The height of the transaction reference block, using the 6th to 8th (exclusive) bytes of the reference block height, a total of 2 bytes
-    required bytes ref_block_hash = 3;      // The hash of the transaction reference block
-    required uint64 expiration = 4;         // Transaction expiration time, beyond which the transaction will no longer be packed
-    optional bytes data = 5;                // Transaction memo. (256 bytes maximum, this is a Trezor limitation, not a Tron protocol limitation)
-    required uint64 timestamp = 6;          // Transaction timestamp, set as the transaction creation time
-    optional uint64 fee_limit = 7;          // Not TRX. Maximum Energy cost. Only for deploying or triggering smart contracts.
+    repeated uint32 address_n = 1;       // BIP-32 path to derive the key from master node
+    required bytes ref_block_bytes = 2;  // The height of the transaction reference block, using the 6th to 8th
+                                         // (exclusive) bytes of the reference block height, a total of 2 bytes
+    required bytes ref_block_hash = 3;   // The hash of the transaction reference block
+    required uint64 expiration = 4;      // Transaction expiration time, beyond which the transaction
+                                         // will no longer be packed
+    optional bytes data = 5;             // Transaction memo. (256 bytes maximum, this is a Trezor limitation,
+                                         // not a Tron protocol limitation)
+    required uint64 timestamp = 6;       // Transaction timestamp, set as the transaction creation time
+    optional uint64 fee_limit = 7;  // Not TRX. Maximum Energy cost. Only for deploying or triggering smart contracts.
 }
 
 /**
@@ -53,8 +56,7 @@ message TronSignTx {
  * @next TronUnfreezeBalanceV2Contract
  * @next TronWithdrawUnfreeze
  */
-message TronContractRequest {
-}
+message TronContractRequest {}
 
 /**
  * Request: Fill in TransferContract details
@@ -63,11 +65,10 @@ message TronContractRequest {
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L32-L36
 message TronTransferContract {
     // https://developers.tron.network/docs/tron-contracttype#2-transfercontract
-    required bytes owner_address = 1;       // Sender's address, Base58Check encoding
-    required bytes to_address = 2;          // Recipient's address, Base58Check encoding
-    required uint64 amount = 3;             // Transfer amount (in SUN)
+    required bytes owner_address = 1;  // Sender's address, Base58Check encoding
+    required bytes to_address = 2;     // Recipient's address, Base58Check encoding
+    required uint64 amount = 3;        // Transfer amount (in SUN)
 }
-
 
 /**
  * Request: Fill in TriggerSmartContract details. TRC-10 not supported.
@@ -75,9 +76,9 @@ message TronTransferContract {
  */
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/smart_contract.proto#L74
 message TronTriggerSmartContract {
-    required bytes owner_address = 1;       // Sender account, signs transaction
-    required bytes contract_address = 2;    // Target smart contract address
-    required bytes data = 4;                // ABI-encoded function call data
+    required bytes owner_address = 1;     // Sender account, signs transaction
+    required bytes contract_address = 2;  // Target smart contract address
+    required bytes data = 4;              // ABI-encoded function call data
 }
 
 /**
@@ -86,9 +87,10 @@ message TronTriggerSmartContract {
  */
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L84-L88
 message TronFreezeBalanceV2Contract {
-    required bytes owner_address = 1;                                 // Account whose TRX has to be frozen
-    required uint64 balance = 2;                                      // Amount to be frozen (in SUN)
-    optional TronResourceCode resource = 3 [default = BANDWIDTH];     // Resource obtained against freezing. Optional with default required in proto2
+    required bytes owner_address = 1;                              // Account whose TRX has to be frozen
+    required uint64 balance = 2;                                   // Amount to be frozen (in SUN)
+    optional TronResourceCode resource = 3 [default = BANDWIDTH];  // Resource obtained against freezing.
+                                                                   // Optional with default required in proto2
 }
 
 /**
@@ -97,9 +99,9 @@ message TronFreezeBalanceV2Contract {
  */
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L90-L94
 message TronUnfreezeBalanceV2Contract {
-    required bytes owner_address = 1;                                 // Account whose TRX has to be unfrozen
-    required uint64 balance = 2;                                      // Amount to be unfrozen (in SUN)
-    optional TronResourceCode resource = 3 [default = BANDWIDTH];     // Resource being forfeited.
+    required bytes owner_address = 1;                              // Account whose TRX has to be unfrozen
+    required uint64 balance = 2;                                   // Amount to be unfrozen (in SUN)
+    optional TronResourceCode resource = 3 [default = BANDWIDTH];  // Resource being forfeited.
 }
 
 /**
@@ -108,7 +110,7 @@ message TronUnfreezeBalanceV2Contract {
  */
 // https://github.com/tronprotocol/protocol/blob/4c726956542b8dff5a4bd5c54aa07cd9da257d08/core/contract/balance_contract.proto#L96
 message TronWithdrawUnfreeze {
-    required bytes owner_address = 1;                                 // Address to claim all unfrozen TRX.
+    required bytes owner_address = 1;  // Address to claim all unfrozen TRX.
 }
 
 // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/common.proto#L9C1-L13C2
@@ -124,9 +126,8 @@ enum TronResourceCode {
  * @end
  */
 message TronSignature {
-    required bytes signature = 1;           // Signature of the transaction
+    required bytes signature = 1;  // Signature of the transaction
 }
-
 
 /**
  * TronRawTransaction and embedded messages are used to encode the Tron transaction, not for communication.
@@ -145,10 +146,9 @@ message TronRawTransaction {
 
     // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L337-L385
     message TronRawContract {
-
         message TronRawParameter {
-            required string type_url = 1;   // e.g., "type.googleapis.com/protocol.TransferContract"
-            required bytes value = 2;       // The serialized value of the contract parameter, e.g., TronTransferContract
+            required string type_url = 1;  // e.g., "type.googleapis.com/protocol.TransferContract"
+            required bytes value = 2;      // The serialized value of the contract parameter, e.g., TronTransferContract
         }
 
         enum TronRawContractType {
@@ -161,6 +161,5 @@ message TronRawTransaction {
 
         required TronRawContractType type = 1;
         required TronRawParameter parameter = 2;
-
     }
 }

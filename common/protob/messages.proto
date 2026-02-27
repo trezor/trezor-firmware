@@ -1,16 +1,17 @@
 syntax = "proto2";
 package hw.trezor.messages;
 
+import "options.proto";
+
 /**
  * Messages for Trezor communication
  */
 
 // Sugar for easier handling in Java
-option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessage";
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
 
-import "options.proto";
-
+// Include in BTC-only firmware
 option (include_in_bitcoin_only) = true;
 
 /**
@@ -124,7 +125,8 @@ enum MessageType {
     reserved 71 to 74;
 
     // Debug
-    MessageType_DebugLinkDecision = 100 [(bitcoin_only) = true, (wire_debug_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
+    MessageType_DebugLinkDecision = 100
+        [(bitcoin_only) = true, (wire_debug_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
     MessageType_DebugLinkGetState = 101 [(bitcoin_only) = true, (wire_debug_in) = true, (wire_tiny) = true];
     MessageType_DebugLinkState = 102 [(bitcoin_only) = true, (wire_debug_out) = true];
     MessageType_DebugLinkStop = 103 [(bitcoin_only) = true, (wire_debug_in) = true];
