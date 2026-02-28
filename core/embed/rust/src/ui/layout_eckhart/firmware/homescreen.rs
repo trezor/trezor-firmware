@@ -1,17 +1,19 @@
-use num_traits::clamp_max;
-
 use crate::{
     error::Error,
     io::BinaryData,
     strutil::TString,
+    time::{Duration, Instant, Stopwatch},
     translations::TR,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
+        component::{Component, Event, EventCtx, Label, Never, Swipe, Timer},
         display::{image::ImageInfo, Color},
+        event::TouchEvent,
         geometry::{Alignment2D, Direction, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
+        lerp::Lerp,
         notification::{Notification, NotificationLevel},
         shape::{self, Renderer},
+        util::animation_disabled,
     },
 };
 
@@ -192,25 +194,27 @@ struct HomescreenStatus {
     background_image: bool,
     /// Cached text width of the label when a custom background image is used
     text_width: Option<i16>,
+    label_anim: Option<HideLabelAnimation>,
 }
 
 impl HomescreenStatus {
-    const MAX_LABEL_WIDTH: i16 = 220;
-    const LABEL_TEXT_STYLE_DEFAULT: TextStyle = theme::firmware::TEXT_BIG;
-    const LABEL_TEXT_STYLE_WITH_IMG: TextStyle = theme::firmware::TEXT_SMALL;
-
     pub fn new(label: TString<'static>, background_image: bool) -> Self {
         let style = if background_image {
-            Self::LABEL_TEXT_STYLE_WITH_IMG
+            theme::firmware::TEXT_SMALL
         } else {
-            Self::LABEL_TEXT_STYLE_DEFAULT
+            theme::firmware::TEXT_BIG
         };
 
         let text_width = if background_image {
-            let width =
-                label.map(|text| Self::LABEL_TEXT_STYLE_WITH_IMG.text_font.text_width(text));
-            let width = clamp_max(width, Self::MAX_LABEL_WIDTH);
+            let width = label.map(|text| style.text_font.text_width(text));
             Some(width)
+        } else {
+            None
+        };
+
+        let label_animation = if background_image {
+            let width = text_width.unwrap_or(0);
+            Some(HideLabelAnimation::new(width))
         } else {
             None
         };
@@ -222,6 +226,7 @@ impl HomescreenStatus {
             connection_indicator: ConnectionIndicator::new(),
             background_image,
             text_width,
+            label_anim: label_animation,
         }
     }
 
@@ -260,10 +265,7 @@ impl Component for HomescreenStatus {
             };
             Rect::snap(
                 anchor,
-                Offset::new(
-                    self.text_width.unwrap_or(0),
-                    Self::LABEL_TEXT_STYLE_WITH_IMG.text_font.max_height,
-                ),
+                Offset::new(self.text_width.unwrap_or(0), self.label.font().max_height),
                 Alignment2D::CENTER_LEFT,
             )
             .translate(Offset::x(ICON_PERCENT_GAP))
@@ -284,29 +286,188 @@ impl Component for HomescreenStatus {
             self.place(self.area);
             ctx.request_paint();
         }
+
+        if let Some(label_anim) = &mut self.label_anim {
+            label_anim.process_event(ctx, event);
+        }
+
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.background_image {
-            // render pill-shaped background for label to improve readability on
-            // top of custom image
-            let mut size_x = if self.connection_indicator.connected {
-                self.connection_indicator.area.right_center().x
-            } else {
-                self.fuel_gauge.area.right_center().x
-            };
-            size_x += self.text_width.unwrap_or(0) + 2 * 16; // text width + gap on both sides
-            let size = Offset::new(size_x, 54);
-            let area = Rect::from_top_left_and_size(
-                Point::new(0, 21) - Offset::x(27),
-                size + Offset::x(27),
-            );
-            self.render_pill_shaped_background(area, target);
+            if let Some(animation) = &self.label_anim {
+                let anchor = if self.connection_indicator.connected {
+                    self.connection_indicator.area.right_center()
+                } else {
+                    self.fuel_gauge.area.right_center()
+                };
+                let size_x = anchor.x + self.text_width.unwrap_or(0) + 2 * 16; // text width + gap on both sides
+                let size = Offset::new(size_x, 54);
+                let area_shadow = Rect::from_top_left_and_size(
+                    Point::new(0, 21) - Offset::x(27),
+                    size + Offset::x(27),
+                );
+                let label_window = Rect::snap(
+                    anchor,
+                    Offset::new(self.text_width.unwrap_or(0), self.label.font().max_height),
+                    Alignment2D::CENTER_LEFT,
+                )
+                .translate(Offset::x(16));
+
+                let x_offset = animation.eval_offset();
+                target.with_origin(x_offset, &|target| {
+                    // render pill-shaped background for label to improve readability on
+                    // top of custom image
+                    self.render_pill_shaped_background(area_shadow, target);
+                });
+                target.in_clip(label_window, &|target| {
+                    target.with_origin(x_offset, &|target| {
+                        self.label.render(target);
+                    });
+                });
+            }
+        } else {
+            self.label.render(target);
         }
-        self.label.render(target);
         self.fuel_gauge.render(target);
         self.connection_indicator.render(target);
+    }
+}
+
+struct HideLabelAnimation {
+    pub stopwatch: Stopwatch,
+    pub timer: Timer,
+    pub duration: Duration,
+    label_width: i16,
+    animating: bool,
+    hidden: bool,
+}
+
+impl HideLabelAnimation {
+    const HIDE_AFTER: Duration = Duration::from_millis(3000);
+    const MOVE_DURATION: Duration = Duration::from_millis(500);
+
+    pub fn new(label_width: i16) -> Self {
+        Self {
+            stopwatch: Stopwatch::default(),
+            timer: Timer::new(),
+            duration: Duration::from_millis((label_width as u32 * 300) / 120),
+            label_width,
+            animating: false,
+            hidden: false,
+        }
+    }
+
+    fn is_active(&self) -> bool {
+        self.stopwatch.is_running_within(self.duration)
+    }
+
+    fn reset(&mut self) {
+        self.stopwatch = Stopwatch::default();
+    }
+
+    fn change_dir(&mut self) {
+        let elapsed = self.stopwatch.elapsed();
+
+        let start = self
+            .duration
+            .checked_sub(elapsed)
+            .and_then(|e| Instant::now().checked_sub(e));
+
+        if let Some(start) = start {
+            self.stopwatch = Stopwatch::Running(start);
+        } else {
+            self.stopwatch = Stopwatch::new_started();
+        }
+    }
+
+    fn eval(&self) -> f32 {
+        if animation_disabled() {
+            return 1.0;
+        }
+
+        let t = self.stopwatch.elapsed().to_millis() as f32 / 1000.0;
+
+        if self.hidden {
+            pareen::constant(0.0)
+                .seq_ease_out(
+                    0.0,
+                    easer::functions::Cubic,
+                    self.duration.to_millis() as f32 / 1000.0,
+                    pareen::constant(1.0),
+                )
+                .eval(t)
+        } else {
+            pareen::constant(1.0)
+                .seq_ease_in(
+                    0.0,
+                    easer::functions::Cubic,
+                    self.duration.to_millis() as f32 / 1000.0,
+                    pareen::constant(0.0),
+                )
+                .eval(t)
+        }
+    }
+
+    pub fn eval_offset(&self) -> Offset {
+        if animation_disabled() {
+            return Offset::zero();
+        }
+
+        let pos = self.eval();
+        Offset::x(i16::lerp(-self.label_width, 0, pos))
+    }
+
+    pub fn process_event(&mut self, ctx: &mut EventCtx, event: Event) {
+        match event {
+            Event::Attach(_) => {
+                self.timer.start(ctx, Self::HIDE_AFTER);
+                ctx.request_anim_frame();
+            }
+            Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {
+                if self.is_active() {
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                } else if self.animating {
+                    self.animating = false;
+                    self.hidden = !self.hidden;
+                    self.reset();
+                    ctx.request_paint();
+
+                    if !self.hidden {
+                        self.timer.start(ctx, Self::HIDE_AFTER);
+                    }
+                }
+            }
+            Event::Timer(_) if self.timer.expire(event) && !animation_disabled() => {
+                self.stopwatch.start();
+                ctx.request_anim_frame();
+                self.animating = true;
+                self.hidden = false;
+            }
+            Event::Touch(TouchEvent::TouchStart(point)) => {
+                // Only trigger animation at the top of the screen
+                if point.y <= SCREEN.height() / 2 {
+                    if !self.animating {
+                        if self.hidden {
+                            self.stopwatch.start();
+                            self.animating = true;
+                            ctx.request_anim_frame();
+                            ctx.request_paint();
+                        } else {
+                            self.timer.start(ctx, Self::HIDE_AFTER);
+                        }
+                    } else if !self.hidden {
+                        self.change_dir();
+                        self.hidden = true;
+                        ctx.request_anim_frame();
+                        ctx.request_paint();
+                    }
+                }
+            }
+            _ => {}
+        }
     }
 }
 
