@@ -15,6 +15,8 @@ permissions: read-all
 
 jobs:
   PR:
+    # run only in public repositories - fuzzer will fail in private forks (missing auth)
+    if: github.event.repository.private == false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
