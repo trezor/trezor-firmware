@@ -6908,14 +6908,12 @@ if TYPE_CHECKING:
     class TronVoteWitnessContract(protobuf.MessageType):
         owner_address: "AnyBytes"
         votes: "list[TronVote]"
-        support: "bool | None"
 
         def __init__(
             self,
             *,
             owner_address: "AnyBytes",
             votes: "list[TronVote] | None" = None,
-            support: "bool | None" = None,
         ) -> None:
             pass
 

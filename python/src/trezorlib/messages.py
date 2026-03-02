@@ -8727,7 +8727,6 @@ class TronVoteWitnessContract(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
         2: protobuf.Field("votes", "TronVote", repeated=True, required=False, default=None),
-        3: protobuf.Field("support", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8735,11 +8734,9 @@ class TronVoteWitnessContract(protobuf.MessageType):
         *,
         owner_address: "bytes",
         votes: Optional[Sequence["TronVote"]] = None,
-        support: Optional["bool"] = None,
     ) -> None:
         self.votes: Sequence["TronVote"] = votes if votes is not None else []
         self.owner_address = owner_address
-        self.support = support
 
 
 class TronTriggerSmartContract(protobuf.MessageType):

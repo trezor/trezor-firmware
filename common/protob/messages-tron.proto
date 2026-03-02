@@ -75,7 +75,7 @@ message TronTransferContract {
  * Request: Fill in VoteWitnessContract details
  * @next TronSignature
  */
-// https://github.com/tronprotocol/protocol/blob/4c726956542b8dff5a4bd5c54aa07cd9da257d08/core/contract/witness_contract.proto#L19-L27
+// https://developers.tron.network/docs/tron-contracttype#4-votewitnesscontract
 message TronVoteWitnessContract {
     message TronVote {
         required bytes address = 1;    // SR address to vote for
@@ -84,7 +84,6 @@ message TronVoteWitnessContract {
 
     required bytes owner_address = 1;       // Voter address
     repeated TronVote votes = 2;            // Votes split among SR addresses
-    optional bool support = 3;              // TRON protocol field, currently unused
 }
 
 
