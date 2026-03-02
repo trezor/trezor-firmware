@@ -435,7 +435,7 @@ class Channel:
         if buffer is None:
             try:
                 buffer = memoryview(bytearray(length))
-            except MemoryError as e:
+            except MemoryError:
                 if __debug__:
                     log.warning(
                         __name__,
@@ -446,7 +446,7 @@ class Channel:
 
                 if Failure.is_type_of(msg):
                     # prevent infinite recursion
-                    raise MemoryError from e
+                    raise
 
                 return await self.write(
                     Failure(code=FailureType.FirmwareError),
