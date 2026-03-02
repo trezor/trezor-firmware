@@ -239,62 +239,83 @@ impl<'a> Instruction<'a> {
 /// as: '1 / 20'.
 #[derive(Clone)]
 struct PageCounter {
+    area: Rect,
     pager: Pager,
+    string_curr: ShortString,
+    string_max: ShortString,
+    base_num_curr: Point,
+    base_foreslash: Point,
+    base_num_max: Point,
+    color_num: Color,
+    color_icon: Color,
 }
 
 impl PageCounter {
     /// margins from the edges of the screen [px]
     const INSETS: Insets = Insets::new(16, 24, 14, 12);
+    const FONT: Font = fonts::FONT_SATOSHI_REGULAR_22;
 
     fn new() -> Self {
-        Self {
+        let mut s = Self {
             pager: Pager::single_page(),
-        }
+            area: Rect::zero(),
+            string_curr: ShortString::new(),
+            string_max: ShortString::new(),
+            base_num_curr: Point::zero(),
+            base_foreslash: Point::zero(),
+            base_num_max: Point::zero(),
+            color_num: theme::GREY,
+            color_icon: theme::GREY_DARK,
+        };
+        s.recompute();
+        s
     }
 
     fn update(&mut self, pager: Pager) {
-        self.pager = pager
+        self.pager = pager;
+        self.recompute();
     }
-}
 
-impl PageCounter {
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
-        let font = fonts::FONT_SATOSHI_REGULAR_22;
-        let (color_num, color_icon) = if self.pager.is_last() {
+    fn recompute(&mut self) {
+        (self.color_num, self.color_icon) = if self.pager.is_last() {
             (theme::GREEN_LIGHT, theme::GREEN)
         } else {
             (theme::GREY, theme::GREY_DARK)
         };
 
-        let string_curr = uformat!("{}", self.pager.current() + 1);
-        let string_max = uformat!("{}", self.pager.total());
+        self.string_curr = uformat!("{}", self.pager.current() + 1);
+        self.string_max = uformat!("{}", self.pager.total());
 
-        // the counter is left aligned
-        let offset_x = Offset::x(4); // spacing between foreslash and numbers
-        let width_num_curr = font.text_width(&string_curr);
+        let offset_x = 4; // spacing between foreslash and numbers
+        let width_num_curr = Self::FONT.text_width(&self.string_curr);
         let width_foreslash = theme::ICON_FORESLASH.toif.width();
-        let width_num_max = font.text_width(&string_max);
-        let width_total = width_num_curr + width_foreslash + width_num_max + 2 * offset_x.x;
+        let width_num_max = Self::FONT.text_width(&self.string_max);
+        let width_total = width_num_curr + width_foreslash + width_num_max + 2 * offset_x;
 
-        let counter_area = area.inset(Self::INSETS);
+        let counter_area = self.area.inset(Self::INSETS);
         let counter_start_x = counter_area.bottom_left().x;
-        let counter_y = font.vert_center(counter_area.y0, counter_area.y1, "0");
+        let counter_y = Self::FONT.vert_center(counter_area.y0, counter_area.y1, "0");
         let counter_end_x = counter_start_x + width_total;
-        let base_num_curr = Point::new(counter_start_x, counter_y);
-        let base_foreslash = Point::new(counter_start_x + width_num_curr + offset_x.x, counter_y);
-        let base_num_max = Point::new(counter_end_x, counter_y);
 
-        Text::new(base_num_curr, &string_curr, font)
+        self.base_num_curr = Point::new(counter_start_x, counter_y);
+        self.base_foreslash = Point::new(counter_start_x + width_num_curr + offset_x, counter_y);
+        self.base_num_max = Point::new(counter_end_x, counter_y);
+    }
+}
+
+impl PageCounter {
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
+        Text::new(self.base_num_curr, &self.string_curr, Self::FONT)
             .with_align(Alignment::Start)
-            .with_fg(color_num)
+            .with_fg(self.color_num)
             .render(target);
-        shape::ToifImage::new(base_foreslash, theme::ICON_FORESLASH.toif)
+        shape::ToifImage::new(self.base_foreslash, theme::ICON_FORESLASH.toif)
             .with_align(Alignment2D::BOTTOM_LEFT)
-            .with_fg(color_icon)
+            .with_fg(self.color_icon)
             .render(target);
-        Text::new(base_num_max, &string_max, font)
+        Text::new(self.base_num_max, &self.string_max, Self::FONT)
             .with_align(Alignment::End)
-            .with_fg(color_num)
+            .with_fg(self.color_num)
             .render(target);
     }
 }
