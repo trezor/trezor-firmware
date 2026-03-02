@@ -32,7 +32,7 @@ Therefore, we do not show any fees to the user on the device. The host applicati
 - [X] `FreezeBalanceV2`: Stake `TRX` to get more `Bandwidth` or `Energy`
 - [X] `UnfreezeBalanceV2`: Unstake frozen `TRX`
 - [X] `WithdrawExpireUnfreeze`: Claim Unstaked `TRX` past their lock-up period
-- [X] `VoteWitnessAccount`: Vote using earned TRON Power.
+- [X] `VoteWitnessContract`: Vote using earned TRON Power.
 
 ### Notes
 

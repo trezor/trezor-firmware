@@ -152,6 +152,8 @@ async def process_contract(
 
     elif messages.TronVoteWitnessContract.is_type_of(contract):
         contract_type = TronRawContractType.VoteWitnessContract
+        if len(contract.votes) > 9:
+            raise DataError("Tron: too many votes")
         await layout.confirm_votes(contract)
     else:
         raise DataError("Tron: contract type unknown")
