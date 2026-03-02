@@ -18,7 +18,7 @@ use crate::{
 
 use super::super::{cshape, fonts, theme};
 
-const BOTTOM_DESCRIPTION_MARGIN: i16 = 10;
+const BOTTOM_DESCRIPTION_MARGIN: i16 = 11;
 const LOADER_Y_OFFSET_TITLE: i16 = -10;
 const LOADER_Y_OFFSET_NO_TITLE: i16 = -20;
 
