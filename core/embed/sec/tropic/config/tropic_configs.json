@@ -1,0 +1,3196 @@
+{
+  "irreversible_configuration": {
+    "cfg_start_up": {
+      "address": "0x00",
+      "setting": {
+        "rfu_1": {
+          "value": true,
+          "bit": 0
+        },
+        "mbist_dis": {
+          "value": false,
+          "bit": 1,
+          "comment": "test_on"
+        },
+        "rngtest_dis": {
+          "value": false,
+          "bit": 2,
+          "comment": "test_on"
+        },
+        "maintenance_ena": {
+          "value": true,
+          "bit": 3,
+          "comment": "maintenance_allowed"
+        }
+      }
+    },
+    "cfg_sensors": {
+      "address": "0x08",
+      "setting": {
+        "ptrng0_test_dis": {
+          "value": true,
+          "bit": 0,
+          "comment": "no_action"
+        },
+        "ptrng1_test_dis": {
+          "value": true,
+          "bit": 1,
+          "comment": "no_action"
+        },
+        "oscillator_mon_dis": {
+          "value": true,
+          "bit": 2,
+          "comment": "no_action"
+        },
+        "shield_dis": {
+          "value": true,
+          "bit": 3,
+          "comment": "no_action"
+        },
+        "voltage_mon_dis": {
+          "value": true,
+          "bit": 4,
+          "comment": "no_action"
+        },
+        "glitch_det_dis": {
+          "value": true,
+          "bit": 5,
+          "comment": "no_action"
+        },
+        "temp_sens_dis": {
+          "value": true,
+          "bit": 6,
+          "comment": "no_action"
+        },
+        "laser_det_dis": {
+          "value": true,
+          "bit": 7,
+          "comment": "no_action"
+        },
+        "em_pulse_det_dis": {
+          "value": true,
+          "bit": 8,
+          "comment": "no_action"
+        },
+        "cpu_alert_dis": {
+          "value": true,
+          "bit": 9,
+          "comment": "no_action"
+        },
+        "pin_verif_bit_flip_dis": {
+          "value": true,
+          "bit": 10,
+          "comment": "no_action"
+        },
+        "scb_bit_flip_dis": {
+          "value": true,
+          "bit": 11,
+          "comment": "no_action"
+        },
+        "cpb_bit_flip_dis": {
+          "value": true,
+          "bit": 12,
+          "comment": "no_action"
+        },
+        "ecc_bit_flip_dis": {
+          "value": true,
+          "bit": 13,
+          "comment": "no_action"
+        },
+        "r_mem_bit_flip_dis": {
+          "value": true,
+          "bit": 14,
+          "comment": "no_action"
+        },
+        "ekdb_bit_flip_dis": {
+          "value": true,
+          "bit": 15,
+          "comment": "no_action"
+        },
+        "i_mem_bit_flip_dis": {
+          "value": true,
+          "bit": 16,
+          "comment": "no_action"
+        },
+        "platform_bit_flip_dis": {
+          "value": true,
+          "bit": 17,
+          "comment": "no_action"
+        }
+      }
+    },
+    "cfg_debug": {
+      "address": "0x10",
+      "setting": {
+        "fw_log_en": {
+          "value": false,
+          "bit": 0
+        }
+      }
+    },
+    "cfg_gpo": {
+      "address": "0x14",
+      "setting": {}
+    },
+    "cfg_sleep_mode": {
+      "address": "0x18",
+      "setting": {
+        "sleep_mode_en": {
+          "value": true,
+          "bit": 0
+        }
+      }
+    },
+    "cfg_uap_pairing_key_write": {
+      "address": "0x20",
+      "setting": {
+        "pairing_key_0": {
+          "write_pkey_slot_0": {
+            "value": false,
+            "bit": 0
+          },
+          "write_pkey_slot_1": {
+            "value": false,
+            "bit": 8
+          },
+          "write_pkey_slot_2": {
+            "value": false,
+            "bit": 16
+          },
+          "write_pkey_slot_3": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "write_pkey_slot_0": {
+            "value": false,
+            "bit": 1
+          },
+          "write_pkey_slot_1": {
+            "value": false,
+            "bit": 9
+          },
+          "write_pkey_slot_2": {
+            "value": false,
+            "bit": 17
+          },
+          "write_pkey_slot_3": {
+            "value": false,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "write_pkey_slot_0": {
+            "value": true,
+            "bit": 2
+          },
+          "write_pkey_slot_1": {
+            "value": true,
+            "bit": 10
+          },
+          "write_pkey_slot_2": {
+            "value": true,
+            "bit": 18
+          },
+          "write_pkey_slot_3": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "write_pkey_slot_0": {
+            "value": true,
+            "bit": 3
+          },
+          "write_pkey_slot_1": {
+            "value": true,
+            "bit": 11
+          },
+          "write_pkey_slot_2": {
+            "value": true,
+            "bit": 19
+          },
+          "write_pkey_slot_3": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_pairing_key_read": {
+      "address": "0x24",
+      "setting": {
+        "pairing_key_0": {
+          "read_pkey_slot_0": {
+            "value": false,
+            "bit": 0
+          },
+          "read_pkey_slot_1": {
+            "value": false,
+            "bit": 8
+          },
+          "read_pkey_slot_2": {
+            "value": false,
+            "bit": 16
+          },
+          "read_pkey_slot_3": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "read_pkey_slot_0": {
+            "value": true,
+            "bit": 1
+          },
+          "read_pkey_slot_1": {
+            "value": true,
+            "bit": 9
+          },
+          "read_pkey_slot_2": {
+            "value": true,
+            "bit": 17
+          },
+          "read_pkey_slot_3": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "read_pkey_slot_0": {
+            "value": true,
+            "bit": 2
+          },
+          "read_pkey_slot_1": {
+            "value": true,
+            "bit": 10
+          },
+          "read_pkey_slot_2": {
+            "value": true,
+            "bit": 18
+          },
+          "read_pkey_slot_3": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "read_pkey_slot_0": {
+            "value": true,
+            "bit": 3
+          },
+          "read_pkey_slot_1": {
+            "value": true,
+            "bit": 11
+          },
+          "read_pkey_slot_2": {
+            "value": true,
+            "bit": 19
+          },
+          "read_pkey_slot_3": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_pairing_key_invalidate": {
+      "address": "0x28",
+      "setting": {
+        "pairing_key_0": {
+          "invalidate_pkey_slot_0": {
+            "value": false,
+            "bit": 0
+          },
+          "invalidate_pkey_slot_1": {
+            "value": false,
+            "bit": 8
+          },
+          "invalidate_pkey_slot_2": {
+            "value": false,
+            "bit": 16
+          },
+          "invalidate_pkey_slot_3": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "invalidate_pkey_slot_0": {
+            "value": true,
+            "bit": 1
+          },
+          "invalidate_pkey_slot_1": {
+            "value": true,
+            "bit": 9
+          },
+          "invalidate_pkey_slot_2": {
+            "value": true,
+            "bit": 17
+          },
+          "invalidate_pkey_slot_3": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "invalidate_pkey_slot_0": {
+            "value": true,
+            "bit": 2
+          },
+          "invalidate_pkey_slot_1": {
+            "value": true,
+            "bit": 10
+          },
+          "invalidate_pkey_slot_2": {
+            "value": true,
+            "bit": 18
+          },
+          "invalidate_pkey_slot_3": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "invalidate_pkey_slot_0": {
+            "value": true,
+            "bit": 3
+          },
+          "invalidate_pkey_slot_1": {
+            "value": true,
+            "bit": 11
+          },
+          "invalidate_pkey_slot_2": {
+            "value": true,
+            "bit": 19
+          },
+          "invalidate_pkey_slot_3": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_r_config_write_erase": {
+      "address": "0x30",
+      "setting": {
+        "pairing_key_0": {
+          "r_config_write_erase": {
+            "value": false,
+            "bit": 0
+          }
+        },
+        "pairing_key_1": {
+          "r_config_write_erase": {
+            "value": false,
+            "bit": 1
+          }
+        },
+        "pairing_key_2": {
+          "r_config_write_erase": {
+            "value": true,
+            "bit": 2
+          }
+        },
+        "pairing_key_3": {
+          "r_config_write_erase": {
+            "value": true,
+            "bit": 3
+          }
+        }
+      }
+    },
+    "cfg_uap_r_config_read": {
+      "address": "0x34",
+      "setting": {
+        "pairing_key_0": {
+          "r_config_read_cfg": {
+            "value": false,
+            "bit": 0
+          },
+          "r_config_read_func": {
+            "value": false,
+            "bit": 8
+          }
+        },
+        "pairing_key_1": {
+          "r_config_read_cfg": {
+            "value": true,
+            "bit": 1
+          },
+          "r_config_read_func": {
+            "value": true,
+            "bit": 9
+          }
+        },
+        "pairing_key_2": {
+          "r_config_read_cfg": {
+            "value": true,
+            "bit": 2
+          },
+          "r_config_read_func": {
+            "value": true,
+            "bit": 10
+          }
+        },
+        "pairing_key_3": {
+          "r_config_read_cfg": {
+            "value": true,
+            "bit": 3
+          },
+          "r_config_read_func": {
+            "value": true,
+            "bit": 11
+          }
+        }
+      }
+    },
+    "cfg_uap_i_config_write": {
+      "address": "0x40",
+      "setting": {
+        "pairing_key_0": {
+          "i_config_write_cfg": {
+            "value": false,
+            "bit": 0
+          },
+          "i_config_write_func": {
+            "value": false,
+            "bit": 8
+          }
+        },
+        "pairing_key_1": {
+          "i_config_write_cfg": {
+            "value": true,
+            "bit": 1
+          },
+          "i_config_write_func": {
+            "value": true,
+            "bit": 9
+          }
+        },
+        "pairing_key_2": {
+          "i_config_write_cfg": {
+            "value": true,
+            "bit": 2
+          },
+          "i_config_write_func": {
+            "value": true,
+            "bit": 10
+          }
+        },
+        "pairing_key_3": {
+          "i_config_write_cfg": {
+            "value": true,
+            "bit": 3
+          },
+          "i_config_write_func": {
+            "value": true,
+            "bit": 11
+          }
+        }
+      }
+    },
+    "cfg_uap_i_config_read": {
+      "address": "0x44",
+      "setting": {
+        "pairing_key_0": {
+          "i_config_read_cfg": {
+            "value": false,
+            "bit": 0
+          },
+          "i_config_read_func": {
+            "value": false,
+            "bit": 8
+          }
+        },
+        "pairing_key_1": {
+          "i_config_read_cfg": {
+            "value": true,
+            "bit": 1
+          },
+          "i_config_read_func": {
+            "value": true,
+            "bit": 9
+          }
+        },
+        "pairing_key_2": {
+          "i_config_read_cfg": {
+            "value": true,
+            "bit": 2
+          },
+          "i_config_read_func": {
+            "value": true,
+            "bit": 10
+          }
+        },
+        "pairing_key_3": {
+          "i_config_read_cfg": {
+            "value": true,
+            "bit": 3
+          },
+          "i_config_read_func": {
+            "value": true,
+            "bit": 11
+          }
+        }
+      }
+    },
+    "cfg_uap_ping": {
+      "address": "0x100",
+      "setting": {
+        "pairing_key_0": {
+          "ping": {
+            "value": false,
+            "bit": 0
+          }
+        },
+        "pairing_key_1": {
+          "ping": {
+            "value": true,
+            "bit": 1
+          }
+        },
+        "pairing_key_2": {
+          "ping": {
+            "value": true,
+            "bit": 2
+          }
+        },
+        "pairing_key_3": {
+          "ping": {
+            "value": true,
+            "bit": 3
+          }
+        }
+      }
+    },
+    "cfg_uap_r_mem_data_write": {
+      "address": "0x110",
+      "setting": {
+        "pairing_key_0": {
+          "write_udata_slot_0_127": {
+            "value": false,
+            "bit": 0
+          },
+          "write_udata_slot_128_255": {
+            "value": false,
+            "bit": 8
+          },
+          "write_udata_slot_256_383": {
+            "value": false,
+            "bit": 16
+          },
+          "write_udata_slot_384_511": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "write_udata_slot_0_127": {
+            "value": false,
+            "bit": 1
+          },
+          "write_udata_slot_128_255": {
+            "value": false,
+            "bit": 9
+          },
+          "write_udata_slot_256_383": {
+            "value": true,
+            "bit": 17
+          },
+          "write_udata_slot_384_511": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "write_udata_slot_0_127": {
+            "value": true,
+            "bit": 2
+          },
+          "write_udata_slot_128_255": {
+            "value": true,
+            "bit": 10
+          },
+          "write_udata_slot_256_383": {
+            "value": true,
+            "bit": 18
+          },
+          "write_udata_slot_384_511": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "write_udata_slot_0_127": {
+            "value": true,
+            "bit": 3
+          },
+          "write_udata_slot_128_255": {
+            "value": true,
+            "bit": 11
+          },
+          "write_udata_slot_256_383": {
+            "value": true,
+            "bit": 19
+          },
+          "write_udata_slot_384_511": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_r_mem_data_read": {
+      "address": "0x114",
+      "setting": {
+        "pairing_key_0": {
+          "read_udata_slot_0_127": {
+            "value": false,
+            "bit": 0
+          },
+          "read_udata_slot_128_255": {
+            "value": false,
+            "bit": 8
+          },
+          "read_udata_slot_256_383": {
+            "value": false,
+            "bit": 16
+          },
+          "read_udata_slot_384_511": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "read_udata_slot_0_127": {
+            "value": true,
+            "bit": 1
+          },
+          "read_udata_slot_128_255": {
+            "value": false,
+            "bit": 9
+          },
+          "read_udata_slot_256_383": {
+            "value": true,
+            "bit": 17
+          },
+          "read_udata_slot_384_511": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "read_udata_slot_0_127": {
+            "value": true,
+            "bit": 2
+          },
+          "read_udata_slot_128_255": {
+            "value": true,
+            "bit": 10
+          },
+          "read_udata_slot_256_383": {
+            "value": true,
+            "bit": 18
+          },
+          "read_udata_slot_384_511": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "read_udata_slot_0_127": {
+            "value": true,
+            "bit": 3
+          },
+          "read_udata_slot_128_255": {
+            "value": true,
+            "bit": 11
+          },
+          "read_udata_slot_256_383": {
+            "value": true,
+            "bit": 19
+          },
+          "read_udata_slot_384_511": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_r_mem_data_erase": {
+      "address": "0x118",
+      "setting": {
+        "pairing_key_0": {
+          "erase_udata_slot_0_127": {
+            "value": false,
+            "bit": 0
+          },
+          "erase_udata_slot_128_255": {
+            "value": false,
+            "bit": 8
+          },
+          "erase_udata_slot_256_383": {
+            "value": false,
+            "bit": 16
+          },
+          "erase_udata_slot_384_511": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "erase_udata_slot_0_127": {
+            "value": true,
+            "bit": 1
+          },
+          "erase_udata_slot_128_255": {
+            "value": false,
+            "bit": 9
+          },
+          "erase_udata_slot_256_383": {
+            "value": true,
+            "bit": 17
+          },
+          "erase_udata_slot_384_511": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "erase_udata_slot_0_127": {
+            "value": true,
+            "bit": 2
+          },
+          "erase_udata_slot_128_255": {
+            "value": true,
+            "bit": 10
+          },
+          "erase_udata_slot_256_383": {
+            "value": true,
+            "bit": 18
+          },
+          "erase_udata_slot_384_511": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "erase_udata_slot_0_127": {
+            "value": true,
+            "bit": 3
+          },
+          "erase_udata_slot_128_255": {
+            "value": true,
+            "bit": 11
+          },
+          "erase_udata_slot_256_383": {
+            "value": true,
+            "bit": 19
+          },
+          "erase_udata_slot_384_511": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_random_value_get": {
+      "address": "0x120",
+      "setting": {
+        "pairing_key_0": {
+          "random_value_get": {
+            "value": false,
+            "bit": 0
+          }
+        },
+        "pairing_key_1": {
+          "random_value_get": {
+            "value": true,
+            "bit": 1
+          }
+        },
+        "pairing_key_2": {
+          "random_value_get": {
+            "value": true,
+            "bit": 2
+          }
+        },
+        "pairing_key_3": {
+          "random_value_get": {
+            "value": true,
+            "bit": 3
+          }
+        }
+      }
+    },
+    "cfg_uap_ecc_key_generate": {
+      "address": "0x130",
+      "setting": {
+        "pairing_key_0": {
+          "gen_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "gen_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "gen_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "gen_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "gen_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 1
+          },
+          "gen_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "gen_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "gen_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "gen_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "gen_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "gen_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "gen_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "gen_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 3
+          },
+          "gen_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 11
+          },
+          "gen_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 19
+          },
+          "gen_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_ecc_key_store": {
+      "address": "0x134",
+      "setting": {
+        "pairing_key_0": {
+          "store_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "store_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "store_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "store_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "store_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 1
+          },
+          "store_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "store_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "store_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "store_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "store_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "store_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "store_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "store_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 3
+          },
+          "store_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 11
+          },
+          "store_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 19
+          },
+          "store_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_ecc_key_read": {
+      "address": "0x138",
+      "setting": {
+        "pairing_key_0": {
+          "read_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "read_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "read_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "read_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "read_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 1
+          },
+          "read_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "read_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "read_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "read_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "read_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "read_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "read_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "read_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 3
+          },
+          "read_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 11
+          },
+          "read_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 19
+          },
+          "read_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_ecc_key_erase": {
+      "address": "0x13c",
+      "setting": {
+        "pairing_key_0": {
+          "erase_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "erase_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "erase_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "erase_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "erase_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 1
+          },
+          "erase_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "erase_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "erase_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "erase_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "erase_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "erase_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "erase_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "erase_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 3
+          },
+          "erase_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 11
+          },
+          "erase_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 19
+          },
+          "erase_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_ecdsa_sign": {
+      "address": "0x140",
+      "setting": {
+        "pairing_key_0": {
+          "ecdsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "ecdsa_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "ecdsa_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "ecdsa_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "ecdsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 1
+          },
+          "ecdsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "ecdsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "ecdsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "ecdsa_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "ecdsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "ecdsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "ecdsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "ecdsa_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 3
+          },
+          "ecdsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 11
+          },
+          "ecdsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 19
+          },
+          "ecdsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_eddsa_sign": {
+      "address": "0x144",
+      "setting": {
+        "pairing_key_0": {
+          "eddsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "eddsa_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "eddsa_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "eddsa_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "eddsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 1
+          },
+          "eddsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "eddsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "eddsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "eddsa_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "eddsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "eddsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "eddsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "eddsa_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 3
+          },
+          "eddsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 11
+          },
+          "eddsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 19
+          },
+          "eddsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_mcounter_init": {
+      "address": "0x150",
+      "setting": {
+        "pairing_key_0": {
+          "mcounter_init_0_3": {
+            "value": false,
+            "bit": 0
+          },
+          "mcounter_init_4_7": {
+            "value": false,
+            "bit": 8
+          },
+          "mcounter_init_8_11": {
+            "value": false,
+            "bit": 16
+          },
+          "mcounter_init_12_15": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "mcounter_init_0_3": {
+            "value": false,
+            "bit": 1
+          },
+          "mcounter_init_4_7": {
+            "value": true,
+            "bit": 9
+          },
+          "mcounter_init_8_11": {
+            "value": true,
+            "bit": 17
+          },
+          "mcounter_init_12_15": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "mcounter_init_0_3": {
+            "value": true,
+            "bit": 2
+          },
+          "mcounter_init_4_7": {
+            "value": true,
+            "bit": 10
+          },
+          "mcounter_init_8_11": {
+            "value": true,
+            "bit": 18
+          },
+          "mcounter_init_12_15": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "mcounter_init_0_3": {
+            "value": true,
+            "bit": 3
+          },
+          "mcounter_init_4_7": {
+            "value": true,
+            "bit": 11
+          },
+          "mcounter_init_8_11": {
+            "value": true,
+            "bit": 19
+          },
+          "mcounter_init_12_15": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_mcounter_get": {
+      "address": "0x154",
+      "setting": {
+        "pairing_key_0": {
+          "mcounter_get_0_3": {
+            "value": false,
+            "bit": 0
+          },
+          "mcounter_get_4_7": {
+            "value": false,
+            "bit": 8
+          },
+          "mcounter_get_8_11": {
+            "value": false,
+            "bit": 16
+          },
+          "mcounter_get_12_15": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "mcounter_get_0_3": {
+            "value": true,
+            "bit": 1
+          },
+          "mcounter_get_4_7": {
+            "value": true,
+            "bit": 9
+          },
+          "mcounter_get_8_11": {
+            "value": true,
+            "bit": 17
+          },
+          "mcounter_get_12_15": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "mcounter_get_0_3": {
+            "value": true,
+            "bit": 2
+          },
+          "mcounter_get_4_7": {
+            "value": true,
+            "bit": 10
+          },
+          "mcounter_get_8_11": {
+            "value": true,
+            "bit": 18
+          },
+          "mcounter_get_12_15": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "mcounter_get_0_3": {
+            "value": true,
+            "bit": 3
+          },
+          "mcounter_get_4_7": {
+            "value": true,
+            "bit": 11
+          },
+          "mcounter_get_8_11": {
+            "value": true,
+            "bit": 19
+          },
+          "mcounter_get_12_15": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_mcounter_update": {
+      "address": "0x158",
+      "setting": {
+        "pairing_key_0": {
+          "mcounter_update_0_3": {
+            "value": false,
+            "bit": 0
+          },
+          "mcounter_update_4_7": {
+            "value": false,
+            "bit": 8
+          },
+          "mcounter_update_8_11": {
+            "value": false,
+            "bit": 16
+          },
+          "mcounter_update_12_15": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "mcounter_update_0_3": {
+            "value": true,
+            "bit": 1
+          },
+          "mcounter_update_4_7": {
+            "value": true,
+            "bit": 9
+          },
+          "mcounter_update_8_11": {
+            "value": true,
+            "bit": 17
+          },
+          "mcounter_update_12_15": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "mcounter_update_0_3": {
+            "value": true,
+            "bit": 2
+          },
+          "mcounter_update_4_7": {
+            "value": true,
+            "bit": 10
+          },
+          "mcounter_update_8_11": {
+            "value": true,
+            "bit": 18
+          },
+          "mcounter_update_12_15": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "mcounter_update_0_3": {
+            "value": true,
+            "bit": 3
+          },
+          "mcounter_update_4_7": {
+            "value": true,
+            "bit": 11
+          },
+          "mcounter_update_8_11": {
+            "value": true,
+            "bit": 19
+          },
+          "mcounter_update_12_15": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_mac_and_destroy": {
+      "address": "0x160",
+      "setting": {
+        "pairing_key_0": {
+          "macandd_0_31": {
+            "value": false,
+            "bit": 0
+          },
+          "macandd_32_63": {
+            "value": false,
+            "bit": 8
+          },
+          "macandd_64_95": {
+            "value": false,
+            "bit": 16
+          },
+          "macandd_96_127": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "macandd_0_31": {
+            "value": false,
+            "bit": 1
+          },
+          "macandd_32_63": {
+            "value": false,
+            "bit": 9
+          },
+          "macandd_64_95": {
+            "value": true,
+            "bit": 17
+          },
+          "macandd_96_127": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "macandd_0_31": {
+            "value": true,
+            "bit": 2
+          },
+          "macandd_32_63": {
+            "value": true,
+            "bit": 10
+          },
+          "macandd_64_95": {
+            "value": true,
+            "bit": 18
+          },
+          "macandd_96_127": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "macandd_0_31": {
+            "value": true,
+            "bit": 3
+          },
+          "macandd_32_63": {
+            "value": true,
+            "bit": 11
+          },
+          "macandd_64_95": {
+            "value": true,
+            "bit": 19
+          },
+          "macandd_96_127": {
+            "value": true,
+            "bit": 27
+          }
+        }
+      }
+    }
+  },
+  "reversible_configuration": {
+    "cfg_start_up": {
+      "address": "0x00",
+      "setting": {
+        "rfu_1": {
+          "value": true,
+          "bit": 0
+        },
+        "mbist_dis": {
+          "value": false,
+          "bit": 1,
+          "comment": "test_on"
+        },
+        "rngtest_dis": {
+          "value": false,
+          "bit": 2,
+          "comment": "test_on"
+        },
+        "maintenance_ena": {
+          "value": true,
+          "bit": 3,
+          "comment": "maintenance_allowed"
+        }
+      }
+    },
+    "cfg_sensors": {
+      "address": "0x08",
+      "setting": {
+        "ptrng0_test_dis": {
+          "value": false,
+          "bit": 0,
+          "comment": "enter_alarm_mode"
+        },
+        "ptrng1_test_dis": {
+          "value": false,
+          "bit": 1,
+          "comment": "enter_alarm_mode"
+        },
+        "oscillator_mon_dis": {
+          "value": false,
+          "bit": 2,
+          "comment": "enter_alarm_mode"
+        },
+        "shield_dis": {
+          "value": false,
+          "bit": 3,
+          "comment": "enter_alarm_mode"
+        },
+        "voltage_mon_dis": {
+          "value": false,
+          "bit": 4,
+          "comment": "enter_alarm_mode"
+        },
+        "glitch_det_dis": {
+          "value": false,
+          "bit": 5,
+          "comment": "enter_alarm_mode"
+        },
+        "temp_sens_dis": {
+          "value": false,
+          "bit": 6,
+          "comment": "enter_alarm_mode"
+        },
+        "laser_det_dis": {
+          "value": false,
+          "bit": 7,
+          "comment": "enter_alarm_mode"
+        },
+        "em_pulse_det_dis": {
+          "value": false,
+          "bit": 8,
+          "comment": "enter_alarm_mode"
+        },
+        "cpu_alert_dis": {
+          "value": false,
+          "bit": 9,
+          "comment": "enter_alarm_mode"
+        },
+        "pin_verif_bit_flip_dis": {
+          "value": false,
+          "bit": 10,
+          "comment": "enter_alarm_mode"
+        },
+        "scb_bit_flip_dis": {
+          "value": false,
+          "bit": 11,
+          "comment": "enter_alarm_mode"
+        },
+        "cpb_bit_flip_dis": {
+          "value": false,
+          "bit": 12,
+          "comment": "enter_alarm_mode"
+        },
+        "ecc_bit_flip_dis": {
+          "value": false,
+          "bit": 13,
+          "comment": "enter_alarm_mode"
+        },
+        "r_mem_bit_flip_dis": {
+          "value": false,
+          "bit": 14,
+          "comment": "enter_alarm_mode"
+        },
+        "ekdb_bit_flip_dis": {
+          "value": false,
+          "bit": 15,
+          "comment": "enter_alarm_mode"
+        },
+        "i_mem_bit_flip_dis": {
+          "value": false,
+          "bit": 16,
+          "comment": "enter_alarm_mode"
+        },
+        "platform_bit_flip_dis": {
+          "value": false,
+          "bit": 17,
+          "comment": "enter_alarm_mode"
+        }
+      }
+    },
+    "cfg_debug": {
+      "address": "0x10",
+      "setting": {
+        "fw_log_en": {
+          "value": false,
+          "bit": 0
+        }
+      }
+    },
+    "cfg_gpo": {
+      "address": "0x14",
+      "setting": {}
+    },
+    "cfg_sleep_mode": {
+      "address": "0x18",
+      "setting": {
+        "sleep_mode_en": {
+          "value": true,
+          "bit": 0
+        }
+      }
+    },
+    "cfg_uap_pairing_key_write": {
+      "address": "0x20",
+      "setting": {
+        "pairing_key_0": {
+          "write_pkey_slot_0": {
+            "value": false,
+            "bit": 0
+          },
+          "write_pkey_slot_1": {
+            "value": false,
+            "bit": 8
+          },
+          "write_pkey_slot_2": {
+            "value": false,
+            "bit": 16
+          },
+          "write_pkey_slot_3": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "write_pkey_slot_0": {
+            "value": false,
+            "bit": 1
+          },
+          "write_pkey_slot_1": {
+            "value": false,
+            "bit": 9
+          },
+          "write_pkey_slot_2": {
+            "value": false,
+            "bit": 17
+          },
+          "write_pkey_slot_3": {
+            "value": false,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "write_pkey_slot_0": {
+            "value": true,
+            "bit": 2
+          },
+          "write_pkey_slot_1": {
+            "value": true,
+            "bit": 10
+          },
+          "write_pkey_slot_2": {
+            "value": true,
+            "bit": 18
+          },
+          "write_pkey_slot_3": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "write_pkey_slot_0": {
+            "value": false,
+            "bit": 3
+          },
+          "write_pkey_slot_1": {
+            "value": false,
+            "bit": 11
+          },
+          "write_pkey_slot_2": {
+            "value": false,
+            "bit": 19
+          },
+          "write_pkey_slot_3": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_pairing_key_read": {
+      "address": "0x24",
+      "setting": {
+        "pairing_key_0": {
+          "read_pkey_slot_0": {
+            "value": false,
+            "bit": 0
+          },
+          "read_pkey_slot_1": {
+            "value": false,
+            "bit": 8
+          },
+          "read_pkey_slot_2": {
+            "value": false,
+            "bit": 16
+          },
+          "read_pkey_slot_3": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "read_pkey_slot_0": {
+            "value": true,
+            "bit": 1
+          },
+          "read_pkey_slot_1": {
+            "value": true,
+            "bit": 9
+          },
+          "read_pkey_slot_2": {
+            "value": true,
+            "bit": 17
+          },
+          "read_pkey_slot_3": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "read_pkey_slot_0": {
+            "value": true,
+            "bit": 2
+          },
+          "read_pkey_slot_1": {
+            "value": true,
+            "bit": 10
+          },
+          "read_pkey_slot_2": {
+            "value": true,
+            "bit": 18
+          },
+          "read_pkey_slot_3": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "read_pkey_slot_0": {
+            "value": false,
+            "bit": 3
+          },
+          "read_pkey_slot_1": {
+            "value": false,
+            "bit": 11
+          },
+          "read_pkey_slot_2": {
+            "value": false,
+            "bit": 19
+          },
+          "read_pkey_slot_3": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_pairing_key_invalidate": {
+      "address": "0x28",
+      "setting": {
+        "pairing_key_0": {
+          "invalidate_pkey_slot_0": {
+            "value": false,
+            "bit": 0
+          },
+          "invalidate_pkey_slot_1": {
+            "value": false,
+            "bit": 8
+          },
+          "invalidate_pkey_slot_2": {
+            "value": false,
+            "bit": 16
+          },
+          "invalidate_pkey_slot_3": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "invalidate_pkey_slot_0": {
+            "value": true,
+            "bit": 1
+          },
+          "invalidate_pkey_slot_1": {
+            "value": true,
+            "bit": 9
+          },
+          "invalidate_pkey_slot_2": {
+            "value": true,
+            "bit": 17
+          },
+          "invalidate_pkey_slot_3": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "invalidate_pkey_slot_0": {
+            "value": true,
+            "bit": 2
+          },
+          "invalidate_pkey_slot_1": {
+            "value": true,
+            "bit": 10
+          },
+          "invalidate_pkey_slot_2": {
+            "value": true,
+            "bit": 18
+          },
+          "invalidate_pkey_slot_3": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "invalidate_pkey_slot_0": {
+            "value": false,
+            "bit": 3
+          },
+          "invalidate_pkey_slot_1": {
+            "value": false,
+            "bit": 11
+          },
+          "invalidate_pkey_slot_2": {
+            "value": false,
+            "bit": 19
+          },
+          "invalidate_pkey_slot_3": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_r_config_write_erase": {
+      "address": "0x30",
+      "setting": {
+        "pairing_key_0": {
+          "r_config_write_erase": {
+            "value": false,
+            "bit": 0
+          }
+        },
+        "pairing_key_1": {
+          "r_config_write_erase": {
+            "value": false,
+            "bit": 1
+          }
+        },
+        "pairing_key_2": {
+          "r_config_write_erase": {
+            "value": true,
+            "bit": 2
+          }
+        },
+        "pairing_key_3": {
+          "r_config_write_erase": {
+            "value": false,
+            "bit": 3
+          }
+        }
+      }
+    },
+    "cfg_uap_r_config_read": {
+      "address": "0x34",
+      "setting": {
+        "pairing_key_0": {
+          "r_config_read_cfg": {
+            "value": false,
+            "bit": 0
+          },
+          "r_config_read_func": {
+            "value": false,
+            "bit": 8
+          }
+        },
+        "pairing_key_1": {
+          "r_config_read_cfg": {
+            "value": true,
+            "bit": 1
+          },
+          "r_config_read_func": {
+            "value": true,
+            "bit": 9
+          }
+        },
+        "pairing_key_2": {
+          "r_config_read_cfg": {
+            "value": true,
+            "bit": 2
+          },
+          "r_config_read_func": {
+            "value": true,
+            "bit": 10
+          }
+        },
+        "pairing_key_3": {
+          "r_config_read_cfg": {
+            "value": false,
+            "bit": 3
+          },
+          "r_config_read_func": {
+            "value": false,
+            "bit": 11
+          }
+        }
+      }
+    },
+    "cfg_uap_i_config_write": {
+      "address": "0x40",
+      "setting": {
+        "pairing_key_0": {
+          "i_config_write_cfg": {
+            "value": false,
+            "bit": 0
+          },
+          "i_config_write_func": {
+            "value": false,
+            "bit": 8
+          }
+        },
+        "pairing_key_1": {
+          "i_config_write_cfg": {
+            "value": true,
+            "bit": 1
+          },
+          "i_config_write_func": {
+            "value": true,
+            "bit": 9
+          }
+        },
+        "pairing_key_2": {
+          "i_config_write_cfg": {
+            "value": true,
+            "bit": 2
+          },
+          "i_config_write_func": {
+            "value": true,
+            "bit": 10
+          }
+        },
+        "pairing_key_3": {
+          "i_config_write_cfg": {
+            "value": false,
+            "bit": 3
+          },
+          "i_config_write_func": {
+            "value": false,
+            "bit": 11
+          }
+        }
+      }
+    },
+    "cfg_uap_i_config_read": {
+      "address": "0x44",
+      "setting": {
+        "pairing_key_0": {
+          "i_config_read_cfg": {
+            "value": false,
+            "bit": 0
+          },
+          "i_config_read_func": {
+            "value": false,
+            "bit": 8
+          }
+        },
+        "pairing_key_1": {
+          "i_config_read_cfg": {
+            "value": true,
+            "bit": 1
+          },
+          "i_config_read_func": {
+            "value": true,
+            "bit": 9
+          }
+        },
+        "pairing_key_2": {
+          "i_config_read_cfg": {
+            "value": true,
+            "bit": 2
+          },
+          "i_config_read_func": {
+            "value": true,
+            "bit": 10
+          }
+        },
+        "pairing_key_3": {
+          "i_config_read_cfg": {
+            "value": false,
+            "bit": 3
+          },
+          "i_config_read_func": {
+            "value": false,
+            "bit": 11
+          }
+        }
+      }
+    },
+    "cfg_uap_ping": {
+      "address": "0x100",
+      "setting": {
+        "pairing_key_0": {
+          "ping": {
+            "value": false,
+            "bit": 0
+          }
+        },
+        "pairing_key_1": {
+          "ping": {
+            "value": true,
+            "bit": 1
+          }
+        },
+        "pairing_key_2": {
+          "ping": {
+            "value": true,
+            "bit": 2
+          }
+        },
+        "pairing_key_3": {
+          "ping": {
+            "value": false,
+            "bit": 3
+          }
+        }
+      }
+    },
+    "cfg_uap_r_mem_data_write": {
+      "address": "0x110",
+      "setting": {
+        "pairing_key_0": {
+          "write_udata_slot_0_127": {
+            "value": false,
+            "bit": 0
+          },
+          "write_udata_slot_128_255": {
+            "value": false,
+            "bit": 8
+          },
+          "write_udata_slot_256_383": {
+            "value": false,
+            "bit": 16
+          },
+          "write_udata_slot_384_511": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "write_udata_slot_0_127": {
+            "value": false,
+            "bit": 1
+          },
+          "write_udata_slot_128_255": {
+            "value": false,
+            "bit": 9
+          },
+          "write_udata_slot_256_383": {
+            "value": true,
+            "bit": 17
+          },
+          "write_udata_slot_384_511": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "write_udata_slot_0_127": {
+            "value": true,
+            "bit": 2
+          },
+          "write_udata_slot_128_255": {
+            "value": true,
+            "bit": 10
+          },
+          "write_udata_slot_256_383": {
+            "value": true,
+            "bit": 18
+          },
+          "write_udata_slot_384_511": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "write_udata_slot_0_127": {
+            "value": false,
+            "bit": 3
+          },
+          "write_udata_slot_128_255": {
+            "value": false,
+            "bit": 11
+          },
+          "write_udata_slot_256_383": {
+            "value": false,
+            "bit": 19
+          },
+          "write_udata_slot_384_511": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_r_mem_data_read": {
+      "address": "0x114",
+      "setting": {
+        "pairing_key_0": {
+          "read_udata_slot_0_127": {
+            "value": false,
+            "bit": 0
+          },
+          "read_udata_slot_128_255": {
+            "value": false,
+            "bit": 8
+          },
+          "read_udata_slot_256_383": {
+            "value": false,
+            "bit": 16
+          },
+          "read_udata_slot_384_511": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "read_udata_slot_0_127": {
+            "value": true,
+            "bit": 1
+          },
+          "read_udata_slot_128_255": {
+            "value": false,
+            "bit": 9
+          },
+          "read_udata_slot_256_383": {
+            "value": true,
+            "bit": 17
+          },
+          "read_udata_slot_384_511": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "read_udata_slot_0_127": {
+            "value": true,
+            "bit": 2
+          },
+          "read_udata_slot_128_255": {
+            "value": true,
+            "bit": 10
+          },
+          "read_udata_slot_256_383": {
+            "value": true,
+            "bit": 18
+          },
+          "read_udata_slot_384_511": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "read_udata_slot_0_127": {
+            "value": false,
+            "bit": 3
+          },
+          "read_udata_slot_128_255": {
+            "value": false,
+            "bit": 11
+          },
+          "read_udata_slot_256_383": {
+            "value": false,
+            "bit": 19
+          },
+          "read_udata_slot_384_511": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_r_mem_data_erase": {
+      "address": "0x118",
+      "setting": {
+        "pairing_key_0": {
+          "erase_udata_slot_0_127": {
+            "value": false,
+            "bit": 0
+          },
+          "erase_udata_slot_128_255": {
+            "value": false,
+            "bit": 8
+          },
+          "erase_udata_slot_256_383": {
+            "value": false,
+            "bit": 16
+          },
+          "erase_udata_slot_384_511": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "erase_udata_slot_0_127": {
+            "value": true,
+            "bit": 1
+          },
+          "erase_udata_slot_128_255": {
+            "value": false,
+            "bit": 9
+          },
+          "erase_udata_slot_256_383": {
+            "value": true,
+            "bit": 17
+          },
+          "erase_udata_slot_384_511": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "erase_udata_slot_0_127": {
+            "value": true,
+            "bit": 2
+          },
+          "erase_udata_slot_128_255": {
+            "value": true,
+            "bit": 10
+          },
+          "erase_udata_slot_256_383": {
+            "value": true,
+            "bit": 18
+          },
+          "erase_udata_slot_384_511": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "erase_udata_slot_0_127": {
+            "value": false,
+            "bit": 3
+          },
+          "erase_udata_slot_128_255": {
+            "value": false,
+            "bit": 11
+          },
+          "erase_udata_slot_256_383": {
+            "value": false,
+            "bit": 19
+          },
+          "erase_udata_slot_384_511": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_random_value_get": {
+      "address": "0x120",
+      "setting": {
+        "pairing_key_0": {
+          "random_value_get": {
+            "value": false,
+            "bit": 0
+          }
+        },
+        "pairing_key_1": {
+          "random_value_get": {
+            "value": true,
+            "bit": 1
+          }
+        },
+        "pairing_key_2": {
+          "random_value_get": {
+            "value": true,
+            "bit": 2
+          }
+        },
+        "pairing_key_3": {
+          "random_value_get": {
+            "value": false,
+            "bit": 3
+          }
+        }
+      }
+    },
+    "cfg_uap_ecc_key_generate": {
+      "address": "0x130",
+      "setting": {
+        "pairing_key_0": {
+          "gen_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "gen_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "gen_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "gen_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "gen_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 1
+          },
+          "gen_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "gen_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "gen_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "gen_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "gen_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "gen_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "gen_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "gen_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 3
+          },
+          "gen_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 11
+          },
+          "gen_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 19
+          },
+          "gen_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_ecc_key_store": {
+      "address": "0x134",
+      "setting": {
+        "pairing_key_0": {
+          "store_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "store_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "store_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "store_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "store_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 1
+          },
+          "store_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "store_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "store_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "store_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "store_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "store_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "store_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "store_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 3
+          },
+          "store_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 11
+          },
+          "store_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 19
+          },
+          "store_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_ecc_key_read": {
+      "address": "0x138",
+      "setting": {
+        "pairing_key_0": {
+          "read_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "read_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "read_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "read_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "read_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 1
+          },
+          "read_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "read_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "read_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "read_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "read_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "read_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "read_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "read_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 3
+          },
+          "read_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 11
+          },
+          "read_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 19
+          },
+          "read_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_ecc_key_erase": {
+      "address": "0x13c",
+      "setting": {
+        "pairing_key_0": {
+          "erase_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "erase_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "erase_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "erase_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "erase_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 1
+          },
+          "erase_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "erase_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "erase_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "erase_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "erase_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "erase_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "erase_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "erase_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 3
+          },
+          "erase_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 11
+          },
+          "erase_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 19
+          },
+          "erase_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_ecdsa_sign": {
+      "address": "0x140",
+      "setting": {
+        "pairing_key_0": {
+          "ecdsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "ecdsa_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "ecdsa_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "ecdsa_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "ecdsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 1
+          },
+          "ecdsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "ecdsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "ecdsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "ecdsa_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "ecdsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "ecdsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "ecdsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "ecdsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 3
+          },
+          "ecdsa_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 11
+          },
+          "ecdsa_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 19
+          },
+          "ecdsa_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_eddsa_sign": {
+      "address": "0x144",
+      "setting": {
+        "pairing_key_0": {
+          "eddsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 0
+          },
+          "eddsa_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 8
+          },
+          "eddsa_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 16
+          },
+          "eddsa_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "eddsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 1
+          },
+          "eddsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 9
+          },
+          "eddsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 17
+          },
+          "eddsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "eddsa_ecckey_slot_0_7": {
+            "value": true,
+            "bit": 2
+          },
+          "eddsa_ecckey_slot_8_15": {
+            "value": true,
+            "bit": 10
+          },
+          "eddsa_ecckey_slot_16_23": {
+            "value": true,
+            "bit": 18
+          },
+          "eddsa_ecckey_slot_24_31": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "eddsa_ecckey_slot_0_7": {
+            "value": false,
+            "bit": 3
+          },
+          "eddsa_ecckey_slot_8_15": {
+            "value": false,
+            "bit": 11
+          },
+          "eddsa_ecckey_slot_16_23": {
+            "value": false,
+            "bit": 19
+          },
+          "eddsa_ecckey_slot_24_31": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_mcounter_init": {
+      "address": "0x150",
+      "setting": {
+        "pairing_key_0": {
+          "mcounter_init_0_3": {
+            "value": false,
+            "bit": 0
+          },
+          "mcounter_init_4_7": {
+            "value": false,
+            "bit": 8
+          },
+          "mcounter_init_8_11": {
+            "value": false,
+            "bit": 16
+          },
+          "mcounter_init_12_15": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "mcounter_init_0_3": {
+            "value": false,
+            "bit": 1
+          },
+          "mcounter_init_4_7": {
+            "value": true,
+            "bit": 9
+          },
+          "mcounter_init_8_11": {
+            "value": true,
+            "bit": 17
+          },
+          "mcounter_init_12_15": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "mcounter_init_0_3": {
+            "value": true,
+            "bit": 2
+          },
+          "mcounter_init_4_7": {
+            "value": true,
+            "bit": 10
+          },
+          "mcounter_init_8_11": {
+            "value": true,
+            "bit": 18
+          },
+          "mcounter_init_12_15": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "mcounter_init_0_3": {
+            "value": false,
+            "bit": 3
+          },
+          "mcounter_init_4_7": {
+            "value": false,
+            "bit": 11
+          },
+          "mcounter_init_8_11": {
+            "value": false,
+            "bit": 19
+          },
+          "mcounter_init_12_15": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_mcounter_get": {
+      "address": "0x154",
+      "setting": {
+        "pairing_key_0": {
+          "mcounter_get_0_3": {
+            "value": false,
+            "bit": 0
+          },
+          "mcounter_get_4_7": {
+            "value": false,
+            "bit": 8
+          },
+          "mcounter_get_8_11": {
+            "value": false,
+            "bit": 16
+          },
+          "mcounter_get_12_15": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "mcounter_get_0_3": {
+            "value": true,
+            "bit": 1
+          },
+          "mcounter_get_4_7": {
+            "value": true,
+            "bit": 9
+          },
+          "mcounter_get_8_11": {
+            "value": true,
+            "bit": 17
+          },
+          "mcounter_get_12_15": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "mcounter_get_0_3": {
+            "value": true,
+            "bit": 2
+          },
+          "mcounter_get_4_7": {
+            "value": true,
+            "bit": 10
+          },
+          "mcounter_get_8_11": {
+            "value": true,
+            "bit": 18
+          },
+          "mcounter_get_12_15": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "mcounter_get_0_3": {
+            "value": false,
+            "bit": 3
+          },
+          "mcounter_get_4_7": {
+            "value": false,
+            "bit": 11
+          },
+          "mcounter_get_8_11": {
+            "value": false,
+            "bit": 19
+          },
+          "mcounter_get_12_15": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_mcounter_update": {
+      "address": "0x158",
+      "setting": {
+        "pairing_key_0": {
+          "mcounter_update_0_3": {
+            "value": false,
+            "bit": 0
+          },
+          "mcounter_update_4_7": {
+            "value": false,
+            "bit": 8
+          },
+          "mcounter_update_8_11": {
+            "value": false,
+            "bit": 16
+          },
+          "mcounter_update_12_15": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "mcounter_update_0_3": {
+            "value": true,
+            "bit": 1
+          },
+          "mcounter_update_4_7": {
+            "value": true,
+            "bit": 9
+          },
+          "mcounter_update_8_11": {
+            "value": true,
+            "bit": 17
+          },
+          "mcounter_update_12_15": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "mcounter_update_0_3": {
+            "value": true,
+            "bit": 2
+          },
+          "mcounter_update_4_7": {
+            "value": true,
+            "bit": 10
+          },
+          "mcounter_update_8_11": {
+            "value": true,
+            "bit": 18
+          },
+          "mcounter_update_12_15": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "mcounter_update_0_3": {
+            "value": false,
+            "bit": 3
+          },
+          "mcounter_update_4_7": {
+            "value": false,
+            "bit": 11
+          },
+          "mcounter_update_8_11": {
+            "value": false,
+            "bit": 19
+          },
+          "mcounter_update_12_15": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    },
+    "cfg_uap_mac_and_destroy": {
+      "address": "0x160",
+      "setting": {
+        "pairing_key_0": {
+          "macandd_0_31": {
+            "value": false,
+            "bit": 0
+          },
+          "macandd_32_63": {
+            "value": false,
+            "bit": 8
+          },
+          "macandd_64_95": {
+            "value": false,
+            "bit": 16
+          },
+          "macandd_96_127": {
+            "value": false,
+            "bit": 24
+          }
+        },
+        "pairing_key_1": {
+          "macandd_0_31": {
+            "value": false,
+            "bit": 1
+          },
+          "macandd_32_63": {
+            "value": false,
+            "bit": 9
+          },
+          "macandd_64_95": {
+            "value": true,
+            "bit": 17
+          },
+          "macandd_96_127": {
+            "value": true,
+            "bit": 25
+          }
+        },
+        "pairing_key_2": {
+          "macandd_0_31": {
+            "value": true,
+            "bit": 2
+          },
+          "macandd_32_63": {
+            "value": true,
+            "bit": 10
+          },
+          "macandd_64_95": {
+            "value": true,
+            "bit": 18
+          },
+          "macandd_96_127": {
+            "value": true,
+            "bit": 26
+          }
+        },
+        "pairing_key_3": {
+          "macandd_0_31": {
+            "value": false,
+            "bit": 3
+          },
+          "macandd_32_63": {
+            "value": false,
+            "bit": 11
+          },
+          "macandd_64_95": {
+            "value": false,
+            "bit": 19
+          },
+          "macandd_96_127": {
+            "value": false,
+            "bit": 27
+          }
+        }
+      }
+    }
+  }
+}
