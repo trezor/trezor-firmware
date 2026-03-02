@@ -31,7 +31,7 @@ from pathlib import Path
 
 from mnemonic import Mnemonic
 
-from . import client, mapping, messages, models, protobuf, protocol_v1
+from . import client, mapping, messages, models, protobuf, protocol_v1, extapp
 from .exceptions import DeviceLockedError, TrezorFailure
 from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
@@ -1786,6 +1786,11 @@ def load_device(
         expect=messages.Success,
     )
     session.refresh_features()
+
+
+def load_extapp(session: client.Session, binary: Path) -> int | None:
+    instance_id = extapp.load(session, binary.read_bytes())
+    return instance_id
 
 
 # keep the old name for compatibility

@@ -259,6 +259,7 @@ class SetupParams:
     unfinished_backup: bool | None = None
     experimental: bool = False
     label: str = "test"
+    extapp: bool = False
 
     @classmethod
     def from_request(cls, request: pytest.FixtureRequest) -> SetupParams:
@@ -268,6 +269,8 @@ class SetupParams:
             default_params.update(marker.kwargs)
         if request.node.get_closest_marker("experimental"):
             default_params["experimental"] = True
+        if request.node.get_closest_marker("extapp"):
+            default_params["extapp"] = True
         return cls(**default_params)
 
     @property
@@ -303,6 +306,34 @@ def setup_params(request: pytest.FixtureRequest) -> SetupParams:
 
 
 @pytest.fixture(scope="function")
+def instance_id(
+    request: pytest.FixtureRequest,
+    _raw_test_ctx: TrezorTestContext,
+    setup_params: SetupParams,
+) -> int:
+    """Fixture that loads external app and returns instance_id."""
+    if not setup_params.extapp:
+        pytest.skip("This test requires @pytest.mark.extapp")
+
+    extapp_path = request.config.getoption("extapp")
+    if not extapp_path:
+        raise ValueError(
+            "--extapp option must be provided when using @pytest.mark.extapp"
+        )
+
+    path = Path(extapp_path)
+    if not path.exists():
+        raise FileNotFoundError(f"External app not found: {path}")
+
+    # Load the external app and get instance_id
+    session = _raw_test_ctx.get_session(passphrase=None)
+    instance_id = debuglink.load_extapp(session, path)
+    session.close()
+
+    return instance_id
+
+
+@pytest.fixture(scope="function")
 def _prepared_test_ctx(
     request: pytest.FixtureRequest,
     _raw_test_ctx: TrezorTestContext,
@@ -330,6 +361,10 @@ def _prepared_test_ctx(
     To enable experimental features:
 
     @pytest.mark.experimental
+
+    To enable external applications:
+
+    @pytest.mark.extapp
     """
     models_filter = ModelsFilter(request.node)
     if _raw_test_ctx.model not in models_filter:
@@ -539,6 +574,11 @@ def pytest_addoption(parser: "Parser") -> None:
         default=False,
         help="Issue a warning when GC leak detected (otherwise, fail the test)",
     )
+    parser.addoption(
+        "--extapp",
+        action="store",
+        help="Path to the external application to load",
+    )
 
 
 def pytest_configure(config: "Config") -> None:
@@ -553,6 +593,9 @@ def pytest_configure(config: "Config") -> None:
     )
     config.addinivalue_line(
         "markers", "experimental: enable experimental features on Trezor"
+    )
+    config.addinivalue_line(
+        "markers", "extapp: enable external application features on Trezor"
     )
     config.addinivalue_line(
         "markers",
