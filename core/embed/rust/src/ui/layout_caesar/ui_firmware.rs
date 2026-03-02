@@ -1091,7 +1091,7 @@ impl FirmwareUI for UICaesar {
         notification: Option<Notification>,
         lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let loader_description = lockable.then_some("Locking the device...".into());
+        let loader_description = lockable.then_some(TR::progress__locking_device.into());
         let layout = RootComponent::new(Homescreen::new(label, notification, loader_description));
         Ok(layout)
     }
