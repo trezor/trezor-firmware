@@ -38,8 +38,13 @@ pub struct FuelGauge {
     charging_state: ChargingState,
     /// State of charge (0-100) [%]
     soc: Option<u8>,
+    /// Cached formatted SOC text
+    soc_text: ShortString,
     /// Font used for the soc percentage
     font: Font,
+    /// Cached indication (icon, icon color, text color) based on the last known
+    /// charging state and soc.
+    battery_indication: (Icon, Color, Color),
 }
 
 #[derive(Clone)]
@@ -76,6 +81,9 @@ impl FuelGauge {
     pub fn update_pm_state(&mut self) {
         self.soc = Some(power_manager::soc());
         self.charging_state = power_manager::charging_state();
+        self.soc_text = uformat!("{} %", self.soc.unwrap_or(0));
+        self.battery_indication =
+            self.battery_indication(self.charging_state, self.soc.unwrap_or(0));
     }
 
     pub fn should_be_shown(&self) -> bool {
@@ -91,40 +99,16 @@ impl FuelGauge {
 
     /// Returns the total rendered width of the fuel gauge content.
     pub fn content_width(&self) -> i16 {
-        let icon_w = self.icon_width();
+        let icon_width = self.battery_indication.0.toif.width();
         match self.mode {
-            FuelGaugeMode::AlwaysIconOnly | FuelGaugeMode::ChargingIconOnly => icon_w,
-            _ => {
-                let soc_fmt = self.soc_text();
-                icon_w + ICON_PERCENT_GAP + self.font.text_width(&soc_fmt)
-            }
+            FuelGaugeMode::AlwaysIconOnly | FuelGaugeMode::ChargingIconOnly => icon_width,
+            _ => icon_width + ICON_PERCENT_GAP + self.font.text_width(&self.soc_text),
         }
     }
 
-    const fn icon_width(&self) -> i16 {
-        match self.charging_state {
-            ChargingState::Charging => ICON_BATTERY_ZAP.toif.width(),
-            ChargingState::Discharging | ChargingState::Idle => ICON_BATTERY_FULL.toif.width(),
-        }
-    }
-
-    fn soc_text(&self) -> ShortString {
-        if self.soc.is_none() {
-            uformat!("?")
-        } else {
-            uformat!("{} %", self.soc.unwrap_or(0))
-        }
-    }
-
-    fn render_icon<'s>(
-        &self,
-        area: Rect,
-        icon: Icon,
-        color: Color,
-        target: &mut impl Renderer<'s>,
-    ) {
-        shape::ToifImage::new(area.left_center(), icon.toif)
-            .with_fg(color)
+    fn render_icon<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+        shape::ToifImage::new(area.left_center(), self.battery_indication.0.toif)
+            .with_fg(self.battery_indication.1)
             .with_align(Alignment2D::CENTER_LEFT)
             .render(target);
     }
@@ -139,7 +123,9 @@ impl FuelGauge {
             mode,
             charging_state: ChargingState::Idle,
             soc: None,
+            soc_text: ShortString::new(),
             font,
+            battery_indication: (ICON_BATTERY_EMPTY, GREY_LIGHT, GREY_LIGHT),
         }
     }
 
@@ -208,14 +194,13 @@ impl Component for FuelGauge {
                 }
             }
             #[cfg(feature = "micropython")]
-            Event::Timer(_) => match &mut self.mode {
-                FuelGaugeMode::OnChargingChange(timer) => {
+            Event::Timer(_) => {
+                if let FuelGaugeMode::OnChargingChange(timer) = &mut self.mode {
                     if timer.expire(event) {
                         ctx.request_paint();
                     }
                 }
-                _ => {}
-            },
+            }
             _ => {}
         }
 
@@ -223,10 +208,8 @@ impl Component for FuelGauge {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let soc = self.soc.unwrap_or(0);
-        let (icon, color_icon, color_text) = self.battery_indication(self.charging_state, soc);
-        let soc_percent_fmt = self.soc_text();
-        let text_width = self.font.text_width(&soc_percent_fmt);
+        let (icon, color_icon, color_text) = self.battery_indication;
+        let text_width = self.font.text_width(&self.soc_text);
         let text_height = self.font.text_height();
         let icon_width = icon.toif.width();
         let icon_height = icon.toif.height();
@@ -243,25 +226,21 @@ impl Component for FuelGauge {
 
         match self.mode {
             FuelGaugeMode::AlwaysIconOnly => {
-                self.render_icon(area, icon, color_icon, target);
+                self.render_icon(area, target);
             }
             FuelGaugeMode::ChargingIconOnly => {
                 if matches!(self.charging_state, ChargingState::Charging) {
-                    self.render_icon(area, icon, color_icon, target);
+                    self.render_icon(area, target);
                 }
             }
-            _ => {
+            FuelGaugeMode::AlwaysFull | FuelGaugeMode::OnChargingChange(..) => {
                 // both icon and percentage
-                self.render_icon(area, icon, color_icon, target);
-                let text_y_coord = self.font.vert_center(area.y0, area.y1, &soc_percent_fmt);
-                shape::Text::new(
-                    Point::new(area.x1, text_y_coord),
-                    &soc_percent_fmt,
-                    self.font,
-                )
-                .with_fg(color_text)
-                .with_align(Alignment::End)
-                .render(target);
+                self.render_icon(area, target);
+                let text_y_coord = self.font.vert_center(area.y0, area.y1, &self.soc_text);
+                shape::Text::new(Point::new(area.x1, text_y_coord), &self.soc_text, self.font)
+                    .with_fg(color_text)
+                    .with_align(Alignment::End)
+                    .render(target);
             }
         }
     }
