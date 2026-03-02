@@ -226,7 +226,7 @@ where
         bounds
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if matches!(event, Event::Attach(AttachType::Initial)) {
             debug_assert!(self.state == ContentState::Uninit);
             self.request_page(0);

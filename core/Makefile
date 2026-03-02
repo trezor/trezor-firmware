@@ -200,7 +200,7 @@ test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) --lang=$(TEST_LANG)
 
 test_emu_extapp: ## run selected device tests from python-trezor
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests/ethereum $(TESTOPTS) --extapp=../sdk/apps/ethereum/target/release/ethereum_rust --ui=test
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests/ethereum/test_getaddress.py $(TESTOPTS) --extapp=../sdk/apps/ethereum/target/release/ethereum_rust --ui=test
 
 test_emu_multicore: ## run device tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \

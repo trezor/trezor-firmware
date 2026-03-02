@@ -1,7 +1,6 @@
 use crate::{
     error::Error,
     micropython::{
-        buffer::StrBuffer,
         list::List,
         macros::{obj_fn_kw, obj_module},
         map::Map,
@@ -10,7 +9,6 @@ use crate::{
         qstr::Qstr,
         util,
     },
-    strutil::TString,
 };
 
 use core::mem::MaybeUninit;
@@ -21,7 +19,8 @@ use rkyv::{
     util::Align,
 };
 use trezor_structs::{
-    ArchivedBufferN, ArchivedDerivationPath, ArchivedShortString, ArchivedStringN, ArchivedTrezorCryptoEnum, ArchivedTypedHash, DerivationPath, LongString, ShortString, TrezorCryptoResult
+    ArchivedBufferN, ArchivedDerivationPath, ArchivedStringN, ArchivedTrezorCryptoEnum,
+    ArchivedTypedHash, DerivationPath, LongString, ShortString, TrezorCryptoResult,
 };
 
 extern "C" fn new_deserialize_crypto_message(
@@ -60,7 +59,7 @@ extern "C" fn new_deserialize_crypto_message(
         }
 
         fn str_from_archived<'a, const N: usize>(s: &'a ArchivedStringN<N>) -> &'a str {
-            let str = unsafe { unwrap!(core::str::from_utf8(slice_from_archived(s))) };
+            let str = unwrap!(core::str::from_utf8(slice_from_archived(s)));
             str
         }
 
@@ -168,7 +167,9 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
                 core::str::from_utf8(data)
             ))))
         } else if let Ok(false) = bool::try_from(obj) {
-            TrezorCryptoResult::Failed(ShortString::from_str("Crypto function failed").unwrap_or_default())
+            TrezorCryptoResult::Failed(
+                ShortString::from_str("Crypto function failed").unwrap_or_default(),
+            )
         } else {
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
             dbg_println!("Data with length: {}", data.len());

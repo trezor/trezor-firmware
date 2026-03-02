@@ -1665,6 +1665,7 @@ impl FirmwareUI for UIEckhart {
                     None,  // description
                     None,  // subtitle
                     None,  // verb
+                    false, // cancel
                     None,  // verb_cancel
                     *hold, // hold
                     false, // hold_danger

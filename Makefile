@@ -197,5 +197,5 @@ funnycoin_get_public_key:
 ethereum_build:
 	@cd sdk/apps/ethereum ; cargo build --release
 
-ethereum_get_public_key:
-	@cd sdk/apps/ethereum/scripts ; ./test_get_public_key.py
+ethereum_unit_tests:
+	@cd sdk/apps/ethereum ; cargo test --release
