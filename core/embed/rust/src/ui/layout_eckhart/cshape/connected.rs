@@ -19,13 +19,13 @@ pub fn render_connected_indicator<'s>(point: Point, target: &mut impl Renderer<'
         .with_fg(INDICATOR_OUTER_COLOR)
         .with_bg(INDICATOR_OUTER_COLOR)
         .render(target);
-    shape::Bar::new(Rect::snap(
-        point,
+
+    const HALF: i16 = INDICATOR_INNER_SIZE / 2;
+    let inner_top_left = Point::new(point.x - HALF, point.y - HALF);
+    shape::Bar::new(Rect::from_top_left_and_size(
+        inner_top_left,
         Offset::uniform(INDICATOR_INNER_SIZE),
-        Alignment2D::CENTER,
     ))
-    .with_fg(INDICATOR_INNER_COLOR)
     .with_bg(INDICATOR_INNER_COLOR)
-    .with_radius(1)
     .render(target);
 }
