@@ -942,7 +942,7 @@ env.Depends(rust, TRANSLATION_DATA)
 
 BOOTLOADER_SUFFIX = TREZOR_MODEL
 if BOOTLOADER_DEVEL:
-    BOOTLOADER_SUFFIX += '_qa'
+    BOOTLOADER_SUFFIX += '_devel'
 
 # select vendor header
 if BOOTLOADER_DEVEL:
