@@ -51,6 +51,13 @@ UI_PERFORMANCE_OVERLAY ?= 0
 DBG_CONSOLE ?=
 EXTAPP_SUPPORT ?= 0
 
+ifeq ($(PRODUCTION),1)
+ifeq ($(BOOTLOADER_DEVEL),1)
+$(error PRODUCTION and BOOTLOADER_DEVEL cannot be set at the same time)
+# remove this check if you know what you are doing and need to build this way
+endif
+endif
+
 # If set, VCP writes will be blocking, in order to allow reliable debug data transmission over VCP.
 # Disabled by default, to prevent debug firmware from getting stuck while writing log messages (if the host is not reading them).
 BLOCK_ON_VCP ?= 0
