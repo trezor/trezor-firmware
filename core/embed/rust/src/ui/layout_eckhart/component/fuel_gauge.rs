@@ -155,6 +155,15 @@ impl FuelGauge {
             }
         }
     }
+
+    fn render_icon_and_percentage<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+        self.render_icon(area, target);
+        let text_y_coord = self.font.vert_center(area.y0, area.y1, &self.soc_text);
+        shape::Text::new(Point::new(area.x1, text_y_coord), &self.soc_text, self.font)
+            .with_fg(self.battery_indication.2)
+            .with_align(Alignment::End)
+            .render(target);
+    }
 }
 
 impl Component for FuelGauge {
@@ -208,11 +217,11 @@ impl Component for FuelGauge {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let (icon, color_icon, color_text) = self.battery_indication;
         let text_width = self.font.text_width(&self.soc_text);
         let text_height = self.font.text_height();
-        let icon_width = icon.toif.width();
-        let icon_height = icon.toif.height();
+        let icon = self.battery_indication.0.toif;
+        let icon_width = icon.width();
+        let icon_height = icon.height();
 
         let (point, alignment) = (self.area.left_center(), Alignment2D::CENTER_LEFT);
         let area = Rect::snap(
@@ -233,14 +242,13 @@ impl Component for FuelGauge {
                     self.render_icon(area, target);
                 }
             }
+            #[cfg(not(feature = "micropython"))]
+            FuelGaugeMode::AlwaysFull => {
+                self.render_icon_and_percentage(area, target);
+            }
+            #[cfg(feature = "micropython")]
             FuelGaugeMode::AlwaysFull | FuelGaugeMode::OnChargingChange(..) => {
-                // both icon and percentage
-                self.render_icon(area, target);
-                let text_y_coord = self.font.vert_center(area.y0, area.y1, &self.soc_text);
-                shape::Text::new(Point::new(area.x1, text_y_coord), &self.soc_text, self.font)
-                    .with_fg(color_text)
-                    .with_align(Alignment::End)
-                    .render(target);
+                self.render_icon_and_percentage(area, target);
             }
         }
     }

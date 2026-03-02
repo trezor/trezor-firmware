@@ -75,7 +75,7 @@ impl<'a> BldHeader<'a> {
     }
 
     #[inline(never)]
-    pub const fn with_right_button(self, button: Button, msg: BldHeaderMsg) -> Self {
+    pub fn with_right_button(self, button: Button, msg: BldHeaderMsg) -> Self {
         debug_assert!(matches!(button.content(), ButtonContent::Icon(_)));
         let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
         Self {
@@ -86,7 +86,7 @@ impl<'a> BldHeader<'a> {
     }
 
     #[inline(never)]
-    pub const fn with_menu_button(self) -> Self {
+    pub fn with_menu_button(self) -> Self {
         self.with_right_button(
             Button::with_icon(theme::ICON_MENU).styled(theme::bootloader::button_header()),
             BldHeaderMsg::Menu,
@@ -94,7 +94,7 @@ impl<'a> BldHeader<'a> {
     }
 
     #[inline(never)]
-    pub const fn with_close_button(self) -> Self {
+    pub fn with_close_button(self) -> Self {
         self.with_right_button(
             Button::with_icon(theme::ICON_CLOSE).styled(theme::bootloader::button_header()),
             BldHeaderMsg::Cancelled,
