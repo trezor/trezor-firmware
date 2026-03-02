@@ -20,7 +20,7 @@ from itertools import product
 
 import pytest
 
-from trezorlib import device, ethereum, exceptions, messages, models
+from trezorlib import device, ethereum_ext, exceptions, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import message_filters
@@ -42,7 +42,7 @@ from ...input_flows import (
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
+pytestmark = [pytest.mark.extapp]
 
 
 def make_defs(parameters: dict) -> messages.EthereumDefinitions:
@@ -68,7 +68,9 @@ def make_defs(parameters: dict) -> messages.EthereumDefinitions:
     "ethereum/sign_tx_erc20.json",
 )
 @pytest.mark.parametrize("chunkify", (True, False))
-def test_signtx(session: Session, chunkify: bool, parameters: dict, result: dict):
+def test_signtx(
+    session: Session, instance_id: int, chunkify: bool, parameters: dict, result: dict
+):
     input_flow = (
         InputFlowConfirmAllWarnings(session).get()
         if not session.debug.legacy_debug
@@ -80,11 +82,14 @@ def test_signtx(session: Session, chunkify: bool, parameters: dict, result: dict
             session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
         )
 
-    _do_test_signtx(session, parameters, result, input_flow, chunkify=chunkify)
+    _do_test_signtx(
+        session, instance_id, parameters, result, input_flow, chunkify=chunkify
+    )
 
 
 def _do_test_signtx(
     session: Session,
+    instance_id: int,
     parameters: dict,
     result: dict,
     input_flow=None,
@@ -94,8 +99,9 @@ def _do_test_signtx(
         if input_flow:
             client.watch_layout()
             client.set_input_flow(input_flow)
-        sig_v, sig_r, sig_s = ethereum.sign_tx(
+        sig_v, sig_r, sig_s = ethereum_ext.sign_tx(
             session,
+            instance_id,
             n=parse_path(parameters["path"]),
             nonce=int(parameters["nonce"], 16),
             gas_price=int(parameters["gas_price"], 16),
@@ -177,22 +183,22 @@ example_input_data_too_long_value = {
 }
 
 
-@pytest.mark.models("core", reason="T1 does not support input flows")
-def test_signtx_fee_info(session: Session):
+def test_signtx_fee_info(session: Session, instance_id: int):
     input_flow = InputFlowEthereumSignTxShowFeeInfo(session).get()
     _do_test_signtx(
         session,
+        instance_id,
         example_input_data["parameters"],
         example_input_data["result"],
         input_flow,
     )
 
 
-@pytest.mark.models("core")
-def test_signtx_go_back_from_summary(session: Session):
+def test_signtx_go_back_from_summary(session: Session, instance_id: int):
     input_flow = InputFlowEthereumSignTxGoBackFromSummary(session).get()
     _do_test_signtx(
         session,
+        instance_id,
         example_input_data["parameters"],
         example_input_data["result"],
         input_flow,
@@ -202,13 +208,14 @@ def test_signtx_go_back_from_summary(session: Session):
 @parametrize_using_common_fixtures("ethereum/sign_tx_eip1559.json")
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx_eip1559(
-    session: Session, chunkify: bool, parameters: dict, result: dict
+    session: Session, instance_id: int, chunkify: bool, parameters: dict, result: dict
 ):
     with session.test_ctx as client:
         if not session.debug.legacy_debug:
             client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
-        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+        sig_v, sig_r, sig_s = ethereum_ext.sign_tx_eip1559(
             session,
+            instance_id,
             n=parse_path(parameters["path"]),
             nonce=int(parameters["nonce"], 16),
             gas_limit=int(parameters["gas_limit"], 16),
@@ -227,14 +234,15 @@ def test_signtx_eip1559(
     assert sig_v == result["sig_v"]
 
 
-def test_sanity_checks(session: Session):
+def test_sanity_checks(session: Session, instance_id: int):
     """Is not vectorized because these are internal-only tests that do not
     need to be exposed to the public.
     """
     # contract creation without data should fail.
     with pytest.raises(TrezorFailure, match=r"DataError"):
-        ethereum.sign_tx(
+        ethereum_ext.sign_tx(
             session,
+            instance_id,
             n=parse_path("m/44h/60h/0h/0/0"),
             nonce=123_456,
             gas_price=20_000,
@@ -246,8 +254,9 @@ def test_sanity_checks(session: Session):
 
     # gas overflow
     with pytest.raises(TrezorFailure, match=r"DataError"):
-        ethereum.sign_tx(
+        ethereum_ext.sign_tx(
             session,
+            instance_id,
             n=parse_path("m/44h/60h/0h/0/0"),
             nonce=123_456,
             gas_price=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
@@ -259,8 +268,9 @@ def test_sanity_checks(session: Session):
 
     # bad chain ID
     with pytest.raises(TrezorFailure, match=r"Chain ID out of bounds"):
-        ethereum.sign_tx(
+        ethereum_ext.sign_tx(
             session,
+            instance_id,
             n=parse_path("m/44h/60h/0h/0/0"),
             nonce=123_456,
             gas_price=20_000,
@@ -271,7 +281,7 @@ def test_sanity_checks(session: Session):
         )
 
 
-def test_data_streaming(session: Session):
+def test_data_streaming(session: Session, instance_id: int):
     """Only verifying the expected responses, the signatures are
     checked in vectorized function above.
     """
@@ -309,8 +319,9 @@ def test_data_streaming(session: Session):
             ]
         )
 
-        ethereum.sign_tx(
+        ethereum_ext.sign_tx(
             session,
+            instance_id,
             n=parse_path("m/44h/60h/0h/0/0"),
             nonce=0,
             gas_price=20_000,
@@ -401,12 +412,14 @@ def test_data_streaming(session: Session):
 )
 def test_signtx_eip1559_access_list(
     session: Session,
+    instance_id: int,
     access_list,
     expected_sig: tuple[int, str, str] | None,
 ):
     with session.test_ctx:
-        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+        sig_v, sig_r, sig_s = ethereum_ext.sign_tx_eip1559(
             session,
+            instance_id=instance_id,
             n=parse_path("m/44h/60h/0h/0/100"),
             nonce=0,
             gas_limit=20,
@@ -422,14 +435,15 @@ def test_signtx_eip1559_access_list(
         assert (sig_v, sig_r.hex(), sig_s.hex()) == expected_sig
 
 
-def test_sanity_checks_eip1559(session: Session):
+def test_sanity_checks_eip1559(session: Session, instance_id: int):
     """Is not vectorized because these are internal-only tests that do not
     need to be exposed to the public.
     """
     # contract creation without data should fail.
     with pytest.raises(TrezorFailure, match=r"DataError"):
-        ethereum.sign_tx_eip1559(
+        ethereum_ext.sign_tx_eip1559(
             session,
+            instance_id=instance_id,
             n=parse_path("m/44h/60h/0h/0/100"),
             nonce=0,
             gas_limit=20,
@@ -442,8 +456,9 @@ def test_sanity_checks_eip1559(session: Session):
 
     # max fee overflow
     with pytest.raises(TrezorFailure, match=r"DataError"):
-        ethereum.sign_tx_eip1559(
+        ethereum_ext.sign_tx_eip1559(
             session,
+            instance_id=instance_id,
             n=parse_path("m/44h/60h/0h/0/100"),
             nonce=0,
             gas_limit=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
@@ -456,8 +471,9 @@ def test_sanity_checks_eip1559(session: Session):
 
     # priority fee overflow
     with pytest.raises(TrezorFailure, match=r"DataError"):
-        ethereum.sign_tx_eip1559(
+        ethereum_ext.sign_tx_eip1559(
             session,
+            instance_id=instance_id,
             n=parse_path("m/44h/60h/0h/0/100"),
             nonce=0,
             gas_limit=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
@@ -470,8 +486,9 @@ def test_sanity_checks_eip1559(session: Session):
 
     # bad chain ID
     with pytest.raises(TrezorFailure, match=r"Chain ID out of bounds"):
-        ethereum.sign_tx_eip1559(
+        ethereum_ext.sign_tx_eip1559(
             session,
+            instance_id=instance_id,
             n=parse_path("m/44h/60h/0h/0/100"),
             nonce=0,
             gas_limit=20,
@@ -501,11 +518,11 @@ HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd0300000
 @pytest.mark.parametrize(
     "flow", (input_flow_data_skip, input_flow_data_scroll_down, input_flow_data_go_back)
 )
-@pytest.mark.models("core")
-def test_signtx_data_pagination(session: Session, flow):
+def test_signtx_data_pagination(session: Session, instance_id: int, flow):
     def _sign_tx_call():
-        ethereum.sign_tx(
+        ethereum_ext.sign_tx(
             session,
+            instance_id=instance_id,
             n=parse_path("m/44h/60h/0h/0/0"),
             nonce=0x0,
             gas_price=0x14,
@@ -532,13 +549,16 @@ def test_signtx_data_pagination(session: Session, flow):
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking.json")
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx_staking(
-    session: Session, chunkify: bool, parameters: dict, result: dict
+    session: Session, instance_id: int, chunkify: bool, parameters: dict, result: dict
 ):
-    input_flow = None
-    if session.model is not models.T1B1:
-        input_flow = InputFlowEthereumSignTxStaking(session).get()
+    input_flow = InputFlowEthereumSignTxStaking(session).get()
     _do_test_signtx(
-        session, parameters, result, input_flow=input_flow, chunkify=chunkify
+        session,
+        instance_id,
+        parameters,
+        result,
+        input_flow=input_flow,
+        chunkify=chunkify,
     )
 
 
@@ -546,7 +566,9 @@ def test_signtx_staking(
     "ethereum/sign_tx_staking_data_error.json",
     "ethereum/sign_tx_error.json",
 )
-def test_signtx_error(session: Session, parameters: dict, result: dict):
+def test_signtx_error(
+    session: Session, instance_id: int, parameters: dict, result: dict
+):
     if not parameters.get("safety_checks", True):
         device.apply_settings(
             session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
@@ -554,8 +576,9 @@ def test_signtx_error(session: Session, parameters: dict, result: dict):
 
     # result not needed
     with pytest.raises(TrezorFailure, match=r"DataError"):
-        ethereum.sign_tx(
+        ethereum_ext.sign_tx(
             session,
+            instance_id=instance_id,
             n=parse_path(parameters["path"]),
             nonce=int(parameters["nonce"], 16),
             gas_price=int(parameters["gas_price"], 16),
@@ -571,10 +594,13 @@ def test_signtx_error(session: Session, parameters: dict, result: dict):
 
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking_eip1559.json")
-def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict):
+def test_signtx_staking_eip1559(
+    session: Session, instance_id: int, parameters: dict, result: dict
+):
     with session.test_ctx:
-        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+        sig_v, sig_r, sig_s = ethereum_ext.sign_tx_eip1559(
             session,
+            instance_id=instance_id,
             n=parse_path(parameters["path"]),
             nonce=int(parameters["nonce"], 16),
             max_gas_fee=int(parameters["max_gas_fee"], 16),
@@ -592,15 +618,18 @@ def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict
     assert sig_v == result["sig_v"]
 
 
-@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "has_refund,has_text,has_multiple_purchases",
     list(product([True, False], repeat=3)),
 )
 def test_signtx_payment_req(
-    session: Session, has_refund: bool, has_text: bool, has_multiple_purchases: bool
+    session: Session,
+    instance_id: int,
+    has_refund: bool,
+    has_text: bool,
+    has_multiple_purchases: bool,
 ):
-    from trezorlib import btc, ethereum, misc
+    from trezorlib import btc, ethereum_ext, misc
 
     from ..payment_req import (
         CoinPurchaseMemo,
@@ -624,8 +653,8 @@ def test_signtx_payment_req(
 
     if has_refund:
         refund_memo = RefundMemo(address_n=parse_path("m/44h/60h/0h/0/0"))
-        refund_memo.address_resp = ethereum.get_authenticated_address(
-            session, refund_memo.address_n
+        refund_memo.address_resp = ethereum_ext.get_authenticated_address(
+            session, instance_id, refund_memo.address_n
         )
         memos.append(refund_memo)
 
@@ -661,14 +690,15 @@ def test_signtx_payment_req(
 
     _do_test_signtx(
         session,
+        instance_id,
         params,
         example_input_data["result"],
     )
 
 
-@pytest.mark.models("core")
 def test_signtx_payment_req_long_value(
     session: Session,
+    instance_id: int,
 ):
     from trezorlib import btc, misc
 
@@ -719,6 +749,7 @@ def test_signtx_payment_req_long_value(
     with pytest.raises(exceptions.TrezorFailure) as e:
         _do_test_signtx(
             session,
+            instance_id,
             params,
             example_input_data_long_value["result"],
         )

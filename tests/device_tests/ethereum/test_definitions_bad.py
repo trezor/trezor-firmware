@@ -4,7 +4,7 @@ from hashlib import sha256
 
 import pytest
 
-from trezorlib import ethereum
+from trezorlib import ethereum_ext
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import DefinitionType
@@ -19,104 +19,125 @@ from ...definitions import (
 )
 from .test_definitions import DEFAULT_ERC20_PARAMS, ERC20_FAKE_ADDRESS
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
+pytestmark = [pytest.mark.extapp]
 
 
-def fails(session: Session, network: bytes, match: str) -> None:
+def fails(session: Session, instance_id: int, network: bytes, match: str) -> None:
     with pytest.raises(TrezorFailure, match=match):
-        ethereum.get_address(
+        ethereum_ext.get_address(
             session,
+            instance_id,
             parse_path("m/44h/666666h/0h"),
             show_display=False,
             encoded_network=network,
         )
 
 
-def test_short_message(session: Session) -> None:
-    fails(session, b"\x00", "Invalid definition")
+def test_short_message(session: Session, instance_id: int) -> None:
+    fails(session, instance_id, b"\x00", "Invalid definition")
 
 
-def test_mangled_signature(session: Session) -> None:
+def test_mangled_signature(session: Session, instance_id: int) -> None:
     payload = make_payload()
     proof, signature = sign_payload(payload, [])
     bad_signature = signature[:-1] + b"\xff"
-    fails(session, payload + proof + bad_signature, "Invalid definition signature")
+    fails(
+        session,
+        instance_id,
+        payload + proof + bad_signature,
+        "Invalid definition signature",
+    )
 
 
-def test_not_enough_signatures(session: Session) -> None:
+def test_not_enough_signatures(session: Session, instance_id: int) -> None:
     payload = make_payload()
     proof, signature = sign_payload(payload, [], threshold=1)
-    fails(session, payload + proof + signature, "Invalid definition signature")
+    fails(
+        session,
+        instance_id,
+        payload + proof + signature,
+        "Invalid definition signature",
+    )
 
 
-def test_missing_signature(session: Session) -> None:
+def test_missing_signature(session: Session, instance_id: int) -> None:
     payload = make_payload()
     proof, _ = sign_payload(payload, [])
-    fails(session, payload + proof, "Invalid definition")
+    fails(session, instance_id, payload + proof, "Invalid definition")
 
 
-def test_mangled_payload(session: Session) -> None:
+def test_mangled_payload(session: Session, instance_id: int) -> None:
     payload = make_payload()
     proof, signature = sign_payload(payload, [])
     bad_payload = payload[:-1] + b"\xff"
-    fails(session, bad_payload + proof + signature, "Invalid definition signature")
+    fails(
+        session,
+        instance_id,
+        bad_payload + proof + signature,
+        "Invalid definition signature",
+    )
 
 
-def test_proof_length_mismatch(session: Session) -> None:
+def test_proof_length_mismatch(session: Session, instance_id: int) -> None:
     payload = make_payload()
     _, signature = sign_payload(payload, [])
     bad_proof = b"\x01"
-    fails(session, payload + bad_proof + signature, "Invalid definition")
+    fails(session, instance_id, payload + bad_proof + signature, "Invalid definition")
 
 
-def test_bad_proof(session: Session) -> None:
+def test_bad_proof(session: Session, instance_id: int) -> None:
     payload = make_payload()
     proof, signature = sign_payload(payload, [sha256(b"x").digest()])
     bad_proof = proof[:-1] + b"\xff"
-    fails(session, payload + bad_proof + signature, "Invalid definition signature")
+    fails(
+        session,
+        instance_id,
+        payload + bad_proof + signature,
+        "Invalid definition signature",
+    )
 
 
-def test_trimmed_proof(session: Session) -> None:
+def test_trimmed_proof(session: Session, instance_id: int) -> None:
     payload = make_payload()
     proof, signature = sign_payload(payload, [])
     bad_proof = proof[:-1]
-    fails(session, payload + bad_proof + signature, "Invalid definition")
+    fails(session, instance_id, payload + bad_proof + signature, "Invalid definition")
 
 
-def test_bad_prefix(session: Session) -> None:
+def test_bad_prefix(session: Session, instance_id: int) -> None:
     payload = make_payload()
     payload = b"trzd2" + payload[5:]
     proof, signature = sign_payload(payload, [])
-    fails(session, payload + proof + signature, "Invalid definition")
+    fails(session, instance_id, payload + proof + signature, "Invalid definition")
 
 
-def test_bad_type(session: Session) -> None:
+def test_bad_type(session: Session, instance_id: int) -> None:
     # assuming we expect a network definition
     payload = make_payload(
         data_type=DefinitionType.ETHEREUM_TOKEN, message=make_eth_token()
     )
     proof, signature = sign_payload(payload, [])
-    fails(session, payload + proof + signature, "Definition type mismatch")
+    fails(session, instance_id, payload + proof + signature, "Definition type mismatch")
 
 
-def test_outdated(session: Session) -> None:
+def test_outdated(session: Session, instance_id: int) -> None:
     payload = make_payload(timestamp=0)
     proof, signature = sign_payload(payload, [])
-    fails(session, payload + proof + signature, "Definition is outdated")
+    fails(session, instance_id, payload + proof + signature, "Definition is outdated")
 
 
-def test_malformed_protobuf(session: Session) -> None:
+def test_malformed_protobuf(session: Session, instance_id: int) -> None:
     payload = make_payload(message=b"\x00")
     proof, signature = sign_payload(payload, [])
-    fails(session, payload + proof + signature, "Invalid definition")
+    fails(session, instance_id, payload + proof + signature, "Invalid definition")
 
 
-def test_protobuf_mismatch(session: Session) -> None:
+def test_protobuf_mismatch(session: Session, instance_id: int) -> None:
     payload = make_payload(
         data_type=DefinitionType.ETHEREUM_NETWORK, message=make_eth_token()
     )
     proof, signature = sign_payload(payload, [])
-    fails(session, payload + proof + signature, "Invalid definition")
+    fails(session, instance_id, payload + proof + signature, "Invalid definition")
 
     payload = make_payload(
         data_type=DefinitionType.ETHEREUM_TOKEN, message=make_eth_network()
@@ -126,14 +147,20 @@ def test_protobuf_mismatch(session: Session) -> None:
     with pytest.raises(TrezorFailure, match="Invalid definition"):
         params = DEFAULT_ERC20_PARAMS.copy()
         params.update(to=ERC20_FAKE_ADDRESS)
-        ethereum.sign_tx(
+        ethereum_ext.sign_tx(
             session,
+            instance_id,
             **params,
             definitions=make_eth_defs(None, payload + proof + signature),
         )
 
 
-def test_trailing_garbage(session: Session) -> None:
+def test_trailing_garbage(session: Session, instance_id: int) -> None:
     payload = make_payload()
     proof, signature = sign_payload(payload, [])
-    fails(session, payload + proof + signature + b"\x00", "Invalid definition")
+    fails(
+        session,
+        instance_id,
+        payload + proof + signature + b"\x00",
+        "Invalid definition",
+    )
