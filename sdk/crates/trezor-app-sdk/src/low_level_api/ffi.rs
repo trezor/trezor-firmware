@@ -148,6 +148,44 @@ pub struct _HMAC_SHA256_CTX {
 }
 pub type HMAC_SHA256_CTX = _HMAC_SHA256_CTX;
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bignum256 {
+    pub val: [u32; 9usize],
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct curve_point {
+    pub x: bignum256,
+    pub y: bignum256,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ecdsa_curve {
+    pub prime: bignum256,
+    pub G: curve_point,
+    pub order: bignum256,
+    pub order_half: bignum256,
+    pub a: cty::c_int,
+    pub b: bignum256,
+}
+
+unsafe extern "C" {
+    pub fn ecdsa_recover_pub_from_sig(
+        curve: *const ecdsa_curve,
+        pub_key: *mut u8,
+        sig: *const u8,
+        digest: *const u8,
+        recid: cty::c_int,
+    ) -> cty::c_int;
+}
+unsafe extern "C" {
+    pub static secp256k1: ecdsa_curve;
+}
+
+
+
 /// Trezor crypto v1 function pointers
 #[repr(C)]
 pub struct trezor_crypto_v1_t {
@@ -175,6 +213,14 @@ pub struct trezor_crypto_v1_t {
     pub hmac_sha256_Update:
         unsafe extern "C" fn(hctx: *mut HMAC_SHA256_CTX, msg: *const u8, msglen: u32),
     pub hmac_sha256_Final: unsafe extern "C" fn(hctx: *mut HMAC_SHA256_CTX, hmac: *mut u8),
+    pub ecdsa_recover_pub_from_sig: unsafe extern "C" fn(
+        curve: *const ecdsa_curve,
+        pub_key: *mut u8,
+        sig: *const u8,
+        digest: *const u8,
+        recid: cty::c_int,
+    ) -> cty::c_int,
+    pub secp256k1: *const ecdsa_curve,
 }
 
 unsafe impl Sync for trezor_api_v1_t {}

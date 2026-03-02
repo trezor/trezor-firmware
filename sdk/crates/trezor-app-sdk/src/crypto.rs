@@ -21,8 +21,8 @@ pub use crate::low_level_api::{
     ed25519_cosi_combine_publickeys, ed25519_sign_open, keccak_256, sha3_256,
 };
 use crate::service::{CoreIpcService, Error, NoUtilHandler};
+use crate::unwrap;
 use crate::util::Timeout;
-use crate::{info, unwrap};
 pub type ArchivedTrezorCryptoResult = Archived<TrezorCryptoResult>;
 pub type ArchivedTrezorCryptoEnum = Archived<TrezorCryptoEnum>;
 
@@ -136,6 +136,45 @@ pub fn get_address_mac(
         // TODO: use proper error type
         Err(Error::Timeout)
     }
+}
+
+/// def verify_recover(signature: AnyBytes, digest: AnyBytes) -> bytes:
+///     """
+///     Uses signature of the digest to verify the digest and recover the public
+///     key. Returns public key on success, None if the signature is invalid.
+///     """
+pub fn secp256k1_verify_recover(
+    signature: &[u8; 65],
+    digest: &[u8; 32],
+) -> Option<([u8; 65], usize)> {
+    let recid = i32::from(signature[0]) - 27;
+
+    if recid >= 8 {
+        return None; // Invalid recovery id
+    }
+
+    let compressed = recid >= 4;
+    let mut pub_key = [0u8; 65];
+    let secp256k1 = unsafe { &*get_crypto_or_die().secp256k1 };
+
+    if unsafe {
+        (get_crypto_or_die().ecdsa_recover_pub_from_sig)(
+            secp256k1,
+            &mut pub_key as *mut u8,
+            &signature[1],
+            digest.as_ptr(),
+            recid,
+        )
+    } != 0
+    {
+        return None; // Recovery failed
+    }
+
+    if compressed {
+        pub_key[0] = 0x02 | (pub_key[64] & 1);
+    };
+
+    Some((pub_key, if compressed { 33 } else { 65 }))
 }
 
 pub struct Sha256 {

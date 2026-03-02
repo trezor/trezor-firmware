@@ -36,6 +36,8 @@
 #include "hmac.h"
 #include "sha2.h"
 #include "sha3.h"
+#include "ecdsa.h"
+#include "secp256k1.h"
 
 #ifndef USE_DBG_CONSOLE
 // temporary hack to allow compilation when DBG console is disabled
@@ -65,6 +67,10 @@ typedef struct {
   void (*hmac_sha256_Update)(HMAC_SHA256_CTX* hctx, const uint8_t* msg,
                              const uint32_t msglen);
   void (*hmac_sha256_Final)(HMAC_SHA256_CTX* hctx, uint8_t* hmac);
+  int (*ecdsa_recover_pub_from_sig)(const ecdsa_curve* curve, uint8_t* pub_key,
+                               const uint8_t* sig, const uint8_t* digest,
+                               int recid);
+  const ecdsa_curve *secp256k1;
 } trezor_crypto_v1_t;
 
 typedef struct {

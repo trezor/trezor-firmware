@@ -31,9 +31,11 @@ mod sign_message;
 mod sign_tx;
 mod sign_typed_data;
 mod strutil;
+mod verify_message;
 
 use proto::ethereum::{
     EthereumGetAddress, EthereumGetPublicKey, EthereumSignMessage, EthereumSignTx,
+    EthereumVerifyMessage,
 };
 use proto::ethereum_eip712::EthereumSignTypedData;
 use ufmt::derive::uDebug;
@@ -132,6 +134,12 @@ wire_handler!(
     EthereumMessages::SignTypedData,
     sign_typed_data::sign_typed_data
 );
+wire_handler!(
+    handle_verify_message,
+    EthereumVerifyMessage,
+    EthereumMessages::Success,
+    verify_message::verify_message
+);
 
 // Application entry point - receives raw bytes, returns raw bytes
 #[cfg(not(test))]
@@ -164,6 +172,7 @@ pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
         EthereumMessages::SignMessage => handle_sign_message(message.data()),
         EthereumMessages::SignTx => handle_sign_tx(message.data()),
         EthereumMessages::SignTypedData => handle_sign_typed_data(message.data()),
+        EthereumMessages::VerifyMessage => handle_verify_message(message.data()),
         _ => {
             error!("Invalid function: {:?}", message.id());
             Err(Error::InvalidFunction)
