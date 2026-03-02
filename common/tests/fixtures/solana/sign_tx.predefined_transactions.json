@@ -8,6 +8,7 @@
       "description": "Transfer Token - predefined",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
+        "chunkify": false,
         "construct": {
           "version": null,
           "header": {
@@ -61,6 +62,7 @@
       "description": "Transfer Token - predefined - with definitions",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
+        "chunkify": true,
         "construct": {
           "version": null,
           "header": {
@@ -119,6 +121,7 @@
       "description": "Create Token Account and Transfer Token - predefined",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
+        "chunkify": true,
         "construct": {
           "version": null,
           "header": {

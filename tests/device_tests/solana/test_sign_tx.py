@@ -127,6 +127,7 @@ def test_solana_sign_tx(session: Session, parameters, result):
                 serialized_tx=serialized_tx,
                 additional_info=additional_info,
                 payment_req=payment_request,
+                chunkify=parameters.get("chunkify", False),
             )
 
             assert actual_result == bytes.fromhex(result["expected_signature"])
@@ -138,64 +139,7 @@ def test_solana_sign_tx(session: Session, parameters, result):
                     serialized_tx=serialized_tx,
                     additional_info=additional_info,
                     payment_req=payment_request,
-                )
-        else:
-            assert False, "Invalid expected result"
-
-
-@parametrize_using_common_fixtures(
-    "solana/sign_tx.predefined_transactions.json",
-)
-def test_solana_sign_tx_chunkify(session: Session, parameters, result):
-    serialized_tx = _serialize_tx(parameters["construct"])
-
-    with session.test_ctx as client:
-        IF = InputFlowConfirmAllWarnings(session)
-        client.set_input_flow(IF.get())
-        additional_info = None
-        if "additional_info" in parameters:
-            token = parameters["additional_info"].get("token")
-            if token:
-                encoded_token = encode_solana_token(
-                    symbol=token["symbol"],
-                    mint=b58decode(token["mint"]),
-                    name=token["name"],
-                )
-            else:
-                encoded_token = None
-            additional_info = messages.SolanaTxAdditionalInfo(
-                token_accounts_infos=[
-                    messages.SolanaTxTokenAccountInfo(
-                        base_address=token_account["base_address"],
-                        token_program=token_account["token_program"],
-                        token_mint=token_account["token_mint"],
-                        token_account=token_account["token_account"],
-                    )
-                    for token_account in parameters["additional_info"].get(
-                        "token_accounts_infos", []
-                    )
-                ],
-                encoded_token=encoded_token,
-            )
-
-        if "expected_signature" in result:
-            actual_result = sign_tx(
-                session,
-                address_n=parse_path(parameters["address"]),
-                serialized_tx=serialized_tx,
-                additional_info=additional_info,
-                chunkify=True,
-            )
-
-            assert actual_result == bytes.fromhex(result["expected_signature"])
-        elif "error_message" in result:
-            with pytest.raises(TrezorFailure, match=result["error_message"]):
-                sign_tx(
-                    session,
-                    address_n=parse_path(parameters["address"]),
-                    serialized_tx=serialized_tx,
-                    additional_info=additional_info,
-                    chunkify=True,
+                    chunkify=parameters.get("chunkify", False),
                 )
         else:
             assert False, "Invalid expected result"
