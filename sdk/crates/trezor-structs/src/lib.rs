@@ -217,7 +217,12 @@ pub enum TrezorUiEnum {
         props: PropsList,
     },
     ShowPublicKey {
-        key: LongString,
+        pubkey: LongString,
+        title: Option<ShortString>,
+        account: Option<ShortString>,
+        path: Option<ShortString>,
+        warning: Option<ShortString>,
+        br_name: Option<ShortString>,
     },
     ShouldShowMore {
         title: ShortString,
@@ -284,13 +289,11 @@ impl TrezorCryptoEnum {
 /// Outgoing Crypto result message for IPC
 #[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorCryptoResult {
-    None,
-    Confirmed,
-    Cancelled,
     Xpub(LongString),
     Signature([u8; 64]),
     EthPubkeyHash([u8; 20]),
     AddressMac([u8; 32]),
+    Failed(ShortString),
 }
 
 /// Outgoing Crypto result message for IPC

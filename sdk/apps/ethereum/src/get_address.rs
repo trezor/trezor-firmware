@@ -6,32 +6,28 @@ use crate::{
     proto::ethereum::{EthereumAddress, EthereumGetAddress},
     uformat,
 };
-use trezor_app_sdk::{Result, crypto};
+use trezor_app_sdk::{Result, crypto, info, trace};
 
 /// Ethereum uses Bitcoin xpub format
 pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
-    let dp = Bip32Path::from_slice(&msg.address_n);
+    let dp: Bip32Path = Bip32Path::from_slice(&msg.address_n);
 
     let slip44 = dp.slip44();
-    let definitions = Definitions::from_encoded(None, None, None, slip44).unwrap();
-
+    let encoded_network = msg.encoded_network.as_ref().map(|buf| buf.as_ref());
+    let definitions = Definitions::from_encoded(encoded_network, None, None, slip44).unwrap();
     let schemas = schemas_from_network(&PATTERNS_ADDRESS, definitions.slip44())?;
     let keychain = Keychain::new(schemas);
 
     dp.validate(&keychain)?;
 
-    let encoded_network = msg.encoded_network.as_ref().map(|buf| buf.as_ref());
     let pubkey_hash = crypto::get_eth_pubkey_hash(dp.as_ref(), encoded_network, None)?;
-
     let address = address_from_bytes(&pubkey_hash, Some(definitions.network()));
-
     let slip44_id = &msg.address_n[1]; // it depends on the network (ETH vs ETC...)
-
     let mac = crypto::get_address_mac(dp.as_ref(), &address, encoded_network)?;
 
     if let Some(true) = msg.show_display {
         let coin = "ETH";
-        let subtitle = uformat!("{} Address", coin);
+        let subtitle = uformat!("{} address", coin);
         let account_name = dp
             .get_account_name(coin, &PATTERNS_ADDRESS, *slip44_id)
             .unwrap();

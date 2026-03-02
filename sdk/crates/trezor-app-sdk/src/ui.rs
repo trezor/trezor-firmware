@@ -28,12 +28,12 @@ use trezor_structs::{
 };
 
 use crate::core_services::services_or_die;
-use crate::error;
 use crate::ipc::IpcMessage;
 use crate::service::{
     CoreIpcService, Error, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler,
 };
 use crate::util::Timeout;
+use crate::{error, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
@@ -93,14 +93,16 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
 }
 
 fn ipc_ui_call_ext(value: &TrezorUiEnum, util_handler: &dyn UtilHandler) -> UiResult {
-    let bytes = to_bytes::<Failure>(value).unwrap();
+    let bytes = unwrap!(to_bytes::<Failure>(value));
     let message = IpcMessage::new(0, &bytes);
 
     let result =
         services_or_die().call(CoreIpcService::Ui, &message, Timeout::max(), util_handler)?;
     // Safe validation using bytecheck before accessing archived data
-    let archived = rkyv::access::<ArchivedTrezorUiResult, Failure>(result.data()).unwrap();
-    let deserialized = deserialize::<TrezorUiResult, Failure>(archived).unwrap();
+    let archived = unwrap!(rkyv::access::<ArchivedTrezorUiResult, Failure>(
+        result.data()
+    ));
+    let deserialized = unwrap!(deserialize::<TrezorUiResult, Failure>(archived));
     Ok(deserialized)
 }
 
@@ -130,12 +132,9 @@ fn ipc_ui_call_void(value: &TrezorUiEnum) -> Result<()> {
 ///
 /// Returns `Ok(true)` if user confirms, `Ok(false)` if user cancels
 pub fn confirm_value(title: &str, content: &str) -> UiResult {
-    debug_assert!(title.len() <= 50, "title too long");
-    debug_assert!(content.len() <= 50, "content too long");
-
     let value = TrezorUiEnum::ConfirmValue {
-        title: ShortString::from_str(title).unwrap(),
-        value: ShortString::from_str(content).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
+        value: unwrap!(ShortString::from_str(content)),
     };
     ipc_ui_call_confirm(&value)
 }
@@ -145,8 +144,8 @@ pub fn confirm_action(title: &str, action: &str, hold: bool) -> UiResult {
     debug_assert!(action.len() <= 50, "action too long");
 
     let value = TrezorUiEnum::ConfirmAction {
-        title: ShortString::from_str(title).unwrap(),
-        action: ShortString::from_str(action).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
+        action: unwrap!(ShortString::from_str(action)),
         hold,
     };
     ipc_ui_call_confirm(&value)
@@ -154,7 +153,7 @@ pub fn confirm_action(title: &str, action: &str, hold: bool) -> UiResult {
 
 pub fn confirm_long_value(title: &str, content: &str) -> UiResult {
     let value = TrezorUiEnum::ConfirmLong {
-        title: ShortString::from_str(title).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
         pages: (content.chars().count() as usize + CHARS_PER_PAGE - 1) / CHARS_PER_PAGE,
     };
 
@@ -173,8 +172,8 @@ pub fn confirm_long_value(title: &str, content: &str) -> UiResult {
 /// Returns `Ok(true)` if user confirms, `Ok(false)` if user cancels
 pub fn confirm_properties(title: &str, props: &[(&str, &str)]) -> UiResult {
     let value = TrezorUiEnum::ConfirmProperties {
-        title: ShortString::from_str(title).unwrap(),
-        props: PropsList::from_prop_slice(props).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
+        props: unwrap!(PropsList::from_prop_slice(props)),
     };
     ipc_ui_call_confirm(&value)
 }
@@ -182,8 +181,8 @@ pub fn confirm_properties(title: &str, props: &[(&str, &str)]) -> UiResult {
 /// Show a warning message
 pub fn show_warning(title: &str, content: &str) -> Result<()> {
     let value = TrezorUiEnum::Warning {
-        title: ShortString::from_str(title).unwrap(),
-        content: ShortString::from_str(content).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
+        content: unwrap!(ShortString::from_str(content)),
     };
     ipc_ui_call_void(&value)
 }
@@ -191,8 +190,8 @@ pub fn show_warning(title: &str, content: &str) -> Result<()> {
 /// Show a danger message
 pub fn show_danger(title: &str, content: &str) -> UiResult {
     let value = TrezorUiEnum::Danger {
-        title: ShortString::from_str(title).unwrap(),
-        content: ShortString::from_str(content).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
+        content: unwrap!(ShortString::from_str(content)),
     };
     ipc_ui_call_confirm(&value)
 }
@@ -200,29 +199,17 @@ pub fn show_danger(title: &str, content: &str) -> UiResult {
 /// Show a success message
 pub fn show_success(title: &str, content: &str) -> Result<()> {
     let value = TrezorUiEnum::Success {
-        title: ShortString::from_str(title).unwrap(),
-        content: ShortString::from_str(content).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
+        content: unwrap!(ShortString::from_str(content)),
     };
     ipc_ui_call_void(&value)
-}
-
-/// Request string input from the user
-pub fn request_string(prompt: &str) -> UiResult {
-    let value = TrezorUiEnum::RequestString {
-        prompt: ShortString::from_str(prompt).unwrap(),
-    };
-    let result = ipc_ui_call(&value)?;
-    match result {
-        TrezorUiResult::String(_) => Ok(result),
-        _ => Ok(TrezorUiResult::Cancelled),
-    }
 }
 
 /// Request a number from the user within a range
 pub fn request_number(title: &str, content: &str, initial: u32, min: u32, max: u32) -> UiResult {
     let value = TrezorUiEnum::RequestNumber {
-        title: ShortString::from_str(title).unwrap(),
-        content: ShortString::from_str(content).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
+        content: unwrap!(ShortString::from_str(content)),
         initial,
         min,
         max,
@@ -235,18 +222,30 @@ pub fn request_number(title: &str, content: &str, initial: u32, min: u32, max: u
     }
 }
 
-pub fn show_public_key(key: &str) -> UiResult {
+pub fn show_public_key(
+    key: &str,
+    title: Option<&str>,
+    account: Option<&str>,
+    path: Option<&str>,
+    warning: Option<&str>,
+    br_name: Option<&str>,
+) -> UiResult {
     let value = TrezorUiEnum::ShowPublicKey {
-        key: LongString::from_str(key).unwrap(),
+        pubkey: unwrap!(LongString::from_str(key)),
+        title: title.map(|s| unwrap!(ShortString::from_str(s))),
+        account: account.map(|s| unwrap!(ShortString::from_str(s))),
+        path: path.map(|s| unwrap!(ShortString::from_str(s))),
+        warning: warning.map(|s| unwrap!(ShortString::from_str(s))),
+        br_name: br_name.map(|s| unwrap!(ShortString::from_str(s))),
     };
     ipc_ui_call_confirm(&value)
 }
 
 pub fn should_show_more(title: &str, para: &[(&str, bool)], button_text: &str) -> UiResult {
     let value = TrezorUiEnum::ShouldShowMore {
-        title: ShortString::from_str(title).unwrap(),
-        items: StrExtList::from_str_slice(para).unwrap(),
-        button_text: ShortString::from_str(button_text).unwrap(),
+        title: unwrap!(ShortString::from_str(title)),
+        items: unwrap!(StrExtList::from_str_slice(para)),
+        button_text: unwrap!(ShortString::from_str(button_text)),
     };
     ipc_ui_call_confirm(&value)
 }
@@ -261,12 +260,12 @@ pub fn show_address(
     chunkify: Option<bool>,
 ) -> UiResult {
     let value = TrezorUiEnum::ShowAddress {
-        address: ShortString::from_str(address).unwrap(),
-        title: title.map(|s| ShortString::from_str(s).unwrap()),
-        subtitle: subtitle.map(|s| ShortString::from_str(s).unwrap()),
-        account: account.map(|s| ShortString::from_str(s).unwrap()),
-        path: path.map(|s| ShortString::from_str(s).unwrap()),
-        xpubs: PropsList::from_prop_slice(xpubs).unwrap(),
+        address: unwrap!(ShortString::from_str(address)),
+        title: title.map(|s| unwrap!(ShortString::from_str(s))),
+        subtitle: subtitle.map(|s| unwrap!(ShortString::from_str(s))),
+        account: account.map(|s| unwrap!(ShortString::from_str(s))),
+        path: path.map(|s| unwrap!(ShortString::from_str(s))),
+        xpubs: unwrap!(PropsList::from_prop_slice(xpubs)),
         chunkify,
     };
     ipc_ui_call_confirm(&value)

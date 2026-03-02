@@ -1779,17 +1779,26 @@ impl FirmwareUI for UIEckhart {
 
                 LayoutObj::new_root(layout)
             }
-            ArchivedTrezorUiEnum::ShowPublicKey { key } => {
+            ArchivedTrezorUiEnum::ShowPublicKey {
+                pubkey,
+                title,
+                account,
+                path,
+                warning,
+                br_name,
+            } => {
+                let pubkey = tstr_from_archived(pubkey);
+                let account = tstr_from_archived_option(account);
                 let layout = Self::flow_get_pubkey(
-                    tstr_from_archived(key),
-                    "title".into(),
-                    None,
-                    None,
-                    "account".into(),
-                    None,
-                    None,
-                    1,
-                    "br_name".into(),
+                    pubkey,
+                    tstr_from_archived_option(title).unwrap_or("Public key".into()),
+                    account,
+                    tstr_from_archived_option(warning),
+                    pubkey,
+                    account,
+                    tstr_from_archived_option(path),
+                    11,
+                    tstr_from_archived_option(br_name).unwrap_or("show_pubkey".into()),
                 )?;
 
                 LayoutObj::new_root(layout)

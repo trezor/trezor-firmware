@@ -12,6 +12,7 @@ use prost::Message;
 use trezor_app_sdk::{
     CORE_SERVICE, Error, IpcMessage, Result, error,
     service::{self, CoreIpcService, NoUtilHandler},
+    trace,
     util::Timeout,
 };
 // Include generated protobuf code
@@ -48,7 +49,15 @@ enum EthereumMessages {
     MessageSignature = 5,
     SignTx = 6,
     TxRequest = 7,
-    SignTypedData = 8,
+    TxAck = 8,
+    SignTypedData = 9,
+    TypedDataSignature = 10,
+    TypedDataStructRequest = 11,
+    TypedDataStructAck = 12,
+    TypedDataValueRequest = 13,
+    TypedDataValueAck = 14,
+    VerifyMessage = 15,
+    Success = 16,
 
     #[num_enum(catch_all)]
     Unknown(u16),
@@ -56,7 +65,7 @@ enum EthereumMessages {
 
 #[cfg(not(test))]
 #[global_allocator]
-static ALLOCATOR: emballoc::Allocator<4096> = emballoc::Allocator::new();
+static ALLOCATOR: emballoc::Allocator<8192> = emballoc::Allocator::new();
 
 /// Macro to generate handler functions
 macro_rules! wire_handler {
@@ -91,23 +100,6 @@ where
     )?;
     Resp::decode(result.data()).map_err(|_| Error::InvalidMessage)
 }
-
-// #[macro_export]
-// macro_rules! wire_request {
-//     ($req:expr, $resp_ty:ty) => {{
-//         let req_bytes = req.encode_to_vec();
-//         let message = IpcMessage::new(0, &req_bytes);
-
-//         let result = CORE_SERVICE.call(
-//             CoreIpcService::WireCall,
-//             &message,
-//             Timeout::max(),
-//             &NoUtilHandler,
-//         )?;
-
-//         <$resp_ty>::decode(result.data()).map_err(|_| Error::InvalidMessage)
-//     }};
-// }
 
 // Generate all handler functions
 wire_handler!(
@@ -165,12 +157,16 @@ pub fn app() -> Result<()> {
 /// data: serialized protobuf request
 /// Returns: serialized protobuf response
 pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
+    trace!("handling wire message");
     match message.id().into() {
         EthereumMessages::GetPublicKey => handle_get_public_key(message.data()),
         EthereumMessages::GetAddress => handle_get_address(message.data()),
         EthereumMessages::SignMessage => handle_sign_message(message.data()),
         EthereumMessages::SignTx => handle_sign_tx(message.data()),
         EthereumMessages::SignTypedData => handle_sign_typed_data(message.data()),
-        _ => Err(Error::InvalidFunction),
+        _ => {
+            error!("Invalid function: {:?}", message.id());
+            Err(Error::InvalidFunction)
+        }
     }
 }
