@@ -15,10 +15,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
     - uses: ./.github/actions/environment
 
     - run: nix-shell --run "uv run legacy/script/cibuild"
