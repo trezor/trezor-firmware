@@ -195,6 +195,11 @@ struct HomescreenStatus {
     /// Cached text width of the label when a custom background image is used
     text_width: Option<i16>,
     label_anim: Option<HideLabelAnimation>,
+    /// Cached pill-shaped background area (only used when background_image is
+    /// true)
+    area_shadow: Rect,
+    /// Cached label clipping window (only used when background_image is true)
+    label_window: Rect,
 }
 
 impl HomescreenStatus {
@@ -227,6 +232,8 @@ impl HomescreenStatus {
             background_image,
             text_width,
             label_anim: label_animation,
+            area_shadow: Rect::zero(),
+            label_window: Rect::zero(),
         }
     }
 
@@ -255,6 +262,9 @@ impl Component for HomescreenStatus {
         )
         .translate(Offset::x(ICON_PERCENT_GAP));
 
+        self.fuel_gauge.place(fuel_gauge_area);
+        self.connection_indicator.place(connection_indicator_area);
+
         let label_area = if !self.background_image {
             bounds.inset(LABEL_INSETS_DEFAULT)
         } else {
@@ -270,10 +280,20 @@ impl Component for HomescreenStatus {
             )
             .translate(Offset::x(ICON_PERCENT_GAP))
         };
-
-        self.fuel_gauge.place(fuel_gauge_area);
-        self.connection_indicator.place(connection_indicator_area);
         self.label.place(label_area);
+
+        if self.background_image {
+            // label_window is exactly the label area
+            self.label_window = label_area;
+            // pill background spans from off-screen left to cover the full status row
+            let size_x = label_area.x1;
+            let size = Offset::new(size_x, 54);
+            self.area_shadow = Rect::from_top_left_and_size(
+                Point::new(0, 21) - Offset::x(27),
+                size + Offset::x(27) * 2.0,
+            );
+        }
+
         self.area = bounds;
         self.area
     }
@@ -283,6 +303,8 @@ impl Component for HomescreenStatus {
         let connection_event = self.connection_indicator.event(ctx, event);
         if matches!(event, Event::PM(_)) || connection_event.is_some() {
             // TODO: could FuelGauge also return Some(()) on update?
+            // TODO: change from charging to "discharging" places the label wrong when it's
+            // hidden?
             self.place(self.area);
             ctx.request_paint();
         }
@@ -297,31 +319,11 @@ impl Component for HomescreenStatus {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         if self.background_image {
             if let Some(animation) = &self.label_anim {
-                let anchor = if self.connection_indicator.connected {
-                    self.connection_indicator.area.right_center()
-                } else {
-                    self.fuel_gauge.area.right_center()
-                };
-                let size_x = anchor.x + self.text_width.unwrap_or(0) + 2 * 16; // text width + gap on both sides
-                let size = Offset::new(size_x, 54);
-                let area_shadow = Rect::from_top_left_and_size(
-                    Point::new(0, 21) - Offset::x(27),
-                    size + Offset::x(27),
-                );
-                let label_window = Rect::snap(
-                    anchor,
-                    Offset::new(self.text_width.unwrap_or(0), self.label.font().max_height),
-                    Alignment2D::CENTER_LEFT,
-                )
-                .translate(Offset::x(16));
-
                 let x_offset = animation.eval_offset();
                 target.with_origin(x_offset, &|target| {
-                    // render pill-shaped background for label to improve readability on
-                    // top of custom image
-                    self.render_pill_shaped_background(area_shadow, target);
+                    self.render_pill_shaped_background(self.area_shadow, target);
                 });
-                target.in_clip(label_window, &|target| {
+                target.in_clip(self.label_window, &|target| {
                     target.with_origin(x_offset, &|target| {
                         self.label.render(target);
                     });
@@ -416,7 +418,7 @@ impl HideLabelAnimation {
         }
 
         let pos = self.eval();
-        Offset::x(i16::lerp(-self.label_width, 0, pos))
+        Offset::x(i16::lerp(-(self.label_width + 16), 0, pos))
     }
 
     pub fn process_event(&mut self, ctx: &mut EventCtx, event: Event) {
