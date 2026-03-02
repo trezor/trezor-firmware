@@ -76,6 +76,7 @@ message SolanaSignTx {
     required bytes serialized_tx = 2;                // serialized tx to be signed
     optional SolanaTxAdditionalInfo additional_info = 3;
     optional common.PaymentRequest payment_req = 4;  // SLIP-24 payment request
+    optional bool chunkify = 5;                      // display the address in chunks of 4 characters
 }
 
 /**

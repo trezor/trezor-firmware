@@ -309,11 +309,13 @@ async def confirm_system_transfer(
     transfer_instruction: SystemProgramTransferInstruction,
     fee: Fee,
     blockhash: bytes,
+    chunkify: bool | None = None,
 ) -> None:
     await confirm_solana_recipient(
         recipient=base58.encode(transfer_instruction.recipient_account[0]),
         title=TR.words__recipient,
         items=[(TR.words__blockhash, base58.encode(blockhash), True)],
+        chunkify=bool(chunkify),
     )
 
     await confirm_custom_transaction(transfer_instruction.lamports, 9, "SOL", fee)
@@ -328,6 +330,7 @@ async def confirm_token_transfer(
     decimals: int,
     fee: Fee,
     blockhash: bytes,
+    chunkify: bool | None = None,
 ) -> None:
     items: list[StrPropertyType] = []
     if token_account != destination_account:
@@ -340,6 +343,7 @@ async def confirm_token_transfer(
         recipient=base58.encode(destination_account),
         title=TR.words__recipient,
         items=items,
+        chunkify=bool(chunkify),
     )
 
     if is_unknown:
