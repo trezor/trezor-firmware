@@ -1,0 +1,44 @@
+name: 'Build legacy emulator'
+description: 'Build legacy emulator and upload it to S3'
+inputs:
+  version:
+    description: 'Version string'
+    required: true
+  binary-suffix:
+    description: 'Binary suffix appended to version, e.g. -arm'
+    required: false
+    default: ''
+  s3-model:
+    description: 'Legacy model directory used in S3 path'
+    required: false
+    default: 'T1B1'
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - uses: ./.github/actions/environment
+
+    - run: nix-shell --run "uv run legacy/script/cibuild"
+      shell: sh
+
+    - id: prepare_binary
+      run: |
+        TARGET="legacy/firmware/trezor-emu-legacy-T1B1-v${{ inputs.version }}${{ inputs.binary-suffix }}"
+        mv legacy/firmware/trezor.elf "$TARGET"
+        echo "binary_path=$TARGET" >> "$GITHUB_OUTPUT"
+      shell: sh
+
+    - name: Configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+        aws-region: eu-west-1
+      continue-on-error: true
+
+    - name: Upload emulator binaries
+      run: |
+        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.s3-model }}/"
+      shell: sh
