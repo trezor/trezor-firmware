@@ -156,3 +156,4 @@ jobs:
           path: |
             _artifacts/
           retention-days: 7
+        if: always()
