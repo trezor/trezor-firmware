@@ -28,7 +28,7 @@ jobs:
       - name: Add new pull request to the Firmware project
         # run only for pull requests
         if: github.event_name == 'pull_request'
-        uses: actions/add-to-project@158aad9ed186a4842abf69d0f8071a0ff95312d0 # main@2026-01-06
+        uses: actions/add-to-project@158aad9ed186a4842abf69d0f8071a0ff95312d0  # main@2026-01-06
         with:
           project-url: https://github.com/orgs/trezor/projects/60
           github-token: ${{ steps.trezor-bot-token.outputs.token }}
@@ -36,7 +36,7 @@ jobs:
       - name: Add new issue to the Firmware project
         # run only for issues
         if: github.event_name == 'issues'
-        uses: actions/add-to-project@158aad9ed186a4842abf69d0f8071a0ff95312d0 # main@2026-01-06
+        uses: actions/add-to-project@158aad9ed186a4842abf69d0f8071a0ff95312d0  # main@2026-01-06
         with:
           project-url: https://github.com/orgs/trezor/projects/60
           github-token: ${{ steps.trezor-bot-token.outputs.token }}

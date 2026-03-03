@@ -1543,7 +1543,6 @@ if not utils.BITCOIN_ONLY:
         maximum_fee: str,
         chunkify: bool = True,
     ) -> None:
-        from ..properties import with_colon
 
         br_name = "tron/approve"
         if is_revoke:
@@ -1596,7 +1595,7 @@ if not utils.BITCOIN_ONLY:
                 amount=None,
                 amount_label=None,
                 fee=maximum_fee,
-                fee_label=with_colon(TR.words__fee_limit),
+                fee_label=TR.words__fee_limit,
                 title=title,
                 account_title=TR.address_details__account_info,
                 extra_title=TR.confirm_total__title_fee,
@@ -1611,7 +1610,6 @@ if not utils.BITCOIN_ONLY:
         maximum_fee: str,
         chunkify: bool = True,
     ) -> None:
-        from ..properties import with_colon
 
         br_name = "tron/transfer"
         title = TR.words__send
@@ -1649,7 +1647,7 @@ if not utils.BITCOIN_ONLY:
                 amount=None,
                 amount_label=None,
                 fee=maximum_fee,
-                fee_label=with_colon(TR.words__fee_limit),
+                fee_label=TR.words__fee_limit,
                 title=title,
                 account_title=TR.address_details__account_info,
                 extra_title=TR.confirm_total__title_fee,
