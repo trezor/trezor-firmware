@@ -6,7 +6,7 @@ use crate::{
     ui::shape::render::ScopedRenderer,
 };
 
-#[cfg(feature = "ui_debug_overlay")]
+#[cfg(any(feature = "ui_debug_overlay", feature = "ui_dev_overlay"))]
 use crate::ui::{CommonUI, ModelUI};
 
 use crate::ui::{
@@ -60,6 +60,14 @@ where
             // In debug mode, render the debug overlay.
             if !display::is_recording() {
                 ModelUI::render_debug_overlay(&mut target);
+            }
+        }
+
+        #[cfg(feature = "ui_dev_overlay")]
+        {
+            // Render an additional overlay for recognizing development devices.
+            if !display::is_recording() {
+                ModelUI::render_dev_overlay(&mut target);
             }
         }
 
