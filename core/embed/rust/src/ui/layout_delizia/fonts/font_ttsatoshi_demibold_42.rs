@@ -201,4 +201,5 @@ pub const Font_TTSatoshi_DemiBold_42_info: FontInfo = FontInfo {
     baseline: 9,
     glyph_data: &Font_TTSatoshi_DemiBold_42,
     glyph_nonprintable: &Font_TTSatoshi_DemiBold_42_glyph_nonprintable,
+    kernings: None,
 };
