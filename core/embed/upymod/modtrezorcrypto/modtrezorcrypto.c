@@ -75,7 +75,9 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #if !BITCOIN_ONLY
 #include "modtrezorcrypto-cardano.h"
 #include "modtrezorcrypto-monero.h"
+#if USE_NEM
 #include "modtrezorcrypto-nem.h"
+#endif
 #endif
 
 STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
@@ -114,7 +116,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_groestl512),
      MP_ROM_PTR(&mod_trezorcrypto_Groestl512_type)},
     {MP_ROM_QSTR(MP_QSTR_hmac), MP_ROM_PTR(&mod_trezorcrypto_Hmac_type)},
-#if !BITCOIN_ONLY
+#if USE_NEM
     {MP_ROM_QSTR(MP_QSTR_nem), MP_ROM_PTR(&mod_trezorcrypto_nem_module)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_pbkdf2), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_type)},
