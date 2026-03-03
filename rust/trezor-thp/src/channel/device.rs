@@ -27,7 +27,7 @@ const MESSAGE_TYPE_END_RESPONSE: u16 = 1019; // ThpMessageType_ThpEndResponse
 // responding to PING at the same time the application requests sending an error.
 const BROADCAST_OUTGOING_QUEUE_LEN: usize = 8;
 // "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
-const CODEC_V1_RESPONSE: &[u8] = b"?##\x00\x03\x00\x00\x00\x14\x08\x11";
+const CODEC_V1_RESPONSE: &[u8] = b"?##\x00\x03\x00\x00\x00\x02\x08\x11";
 
 /// Maps packets to channels. Handles broadcast channel messages, notably channel allocation.
 /// Every packet interface on the device needs to have one Mux. Event loop should pass every
