@@ -16,8 +16,8 @@ use crate::{
 };
 
 use super::{
-    constant::SCREEN, theme, Header, HeaderMsg, MenuItems, ShortMenuVec, VerticalMenu,
-    VerticalMenuMsg,
+    super::component::HapticMode, constant::SCREEN, theme, Header, HeaderMsg, MenuItems,
+    ShortMenuVec, VerticalMenu, VerticalMenuMsg,
 };
 
 pub struct VerticalMenuScreen<T> {
@@ -95,13 +95,15 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
         }
 
         // Switch swiping on/off based on the menu fit
-        self.swipe = if !self.menu.fits_area() {
+        if !self.menu.fits_area() {
             ctx.enable_swipe();
-            Some(SwipeDetect::new())
+            self.swipe = Some(SwipeDetect::new());
+            // Delay haptic feedback to click for scrollable menus
+            self.menu.set_haptic_mode(HapticMode::OnClick);
         } else {
             ctx.disable_swipe();
-            None
-        };
+            self.swipe = None;
+        }
 
         // Set default position for the sliding window
         self.menu.set_offset(0);
