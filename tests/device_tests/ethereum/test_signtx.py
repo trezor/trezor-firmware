@@ -20,7 +20,7 @@ from itertools import product
 
 import pytest
 
-from trezorlib import device, ethereum_ext, exceptions, messages, models
+from trezorlib import device, ethereum_ext, exceptions, messages
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import message_filters

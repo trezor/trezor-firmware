@@ -1,7 +1,6 @@
 import ustruct
 from micropython import const
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 import trezorcrypto_api
 import trezorui_api
@@ -11,9 +10,10 @@ from trezor import app, io, loop
 from trezor.messages import ExtAppMessage, ExtAppResponse
 from trezor.ui import ProgressLayout
 from trezor.ui.layouts import interact
+from trezor.ui.layouts.progress import progress
 from trezor.wire import context
 from trezor.wire.errors import DataError
-from apps.common import coininfo, paths
+from apps.common import paths
 from apps.common.keychain import get_keychain
 from apps.ethereum.definitions import Definitions
 
@@ -88,6 +88,9 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
     def crypto_resp_cb(data: bytes) -> None:
         io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_CRYPTO, 0), data)
 
+    def ui_resp_cb(data: bytes) -> None:
+        io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UI, 0), data)
+
     while True:
         if not task.is_running():
             raise DataError(f"Task stopped: {request.instance_id}")
@@ -102,15 +105,12 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 
         if service == _SERVICE_UI:
             result = await interact(
-                trezorui_api.process_ipc_message(
-                    data=bytes(msg.data), request_cb=request_callback
-                ),
+                trezorui_api.p(data=bytes(msg.data), request_cb=request_callback),
                 None,
                 raise_on_cancel=None,
             )
-            # Serialize the result into a compact binary response
-            resp = trezorui_api.serialize_ui_result(result=result)
-            io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UI, 0), resp)
+            # Serialize and send the result back
+            trezorui_api.send_ui_result(result=result, ipc_cb=ui_resp_cb)
 
         elif service == _SERVICE_CRYPTO:
             print("Received crypto message with ID:", message_id)
@@ -175,7 +175,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 print("Invalid crypto message format")
                 result = False
 
-            # Serialize the result into a compact binary response
+            # Serialize and send the result back
             try:
                 result = trezorcrypto_api.send_crypto_result(
                     result=result, ipc_cb=crypto_resp_cb
@@ -262,11 +262,11 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 async def _get_public_key(address_n: list[int]) -> str:
     from apps.common import coininfo, paths
     from apps.common.keychain import ForbiddenKeyPath, get_keychain
-    from trezor.messages import HDNodeType
-    from trezor.enums import InputScriptType
+    # from trezor.messages import HDNodeType
+    # from trezor.enums import InputScriptType
 
     coin = coininfo.by_name("Bitcoin")
-    script_type = InputScriptType.SPENDADDRESS
+    # script_type = InputScriptType.SPENDADDRESS
 
     if address_n and address_n[0] == paths.SLIP25_PURPOSE:
         # UnlockPath is required to access SLIP25 paths.
@@ -277,14 +277,14 @@ async def _get_public_key(address_n: list[int]) -> str:
     node = keychain.derive(address_n)
     assert coin.xpub_magic is not None
     node_xpub = node.serialize_public(coin.xpub_magic)
-    pubkey = node.public_key()
-    node_type = HDNodeType(
-        depth=node.depth(),
-        child_num=node.child_num(),
-        fingerprint=node.fingerprint(),
-        chain_code=node.chain_code(),
-        public_key=pubkey,
-    )
+    # pubkey = node.public_key()
+    # node_type = HDNodeType(
+    #     depth=node.depth(),
+    #     child_num=node.child_num(),
+    #     fingerprint=node.fingerprint(),
+    #     chain_code=node.chain_code(),
+    #     public_key=pubkey,
+    # )
     return node_xpub
 
 
@@ -317,7 +317,6 @@ async def _get_address_mac(
         _slip44_from_address_n,
         _schemas_from_network,
     )
-    from apps.common.address_mac import get_address_mac
 
     slip44 = _slip44_from_address_n(address_n)
     defs = Definitions.from_encoded(

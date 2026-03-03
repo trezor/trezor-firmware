@@ -202,9 +202,6 @@ pub enum TrezorUiEnum {
         title: ShortString,
         content: ShortString,
     },
-    RequestString {
-        prompt: ShortString,
-    },
     RequestNumber {
         title: ShortString,
         content: ShortString,
