@@ -67,15 +67,20 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
     if not task.is_running():
         raise DataError(f"Task not running: {request.instance_id}")
 
-    io.ipc_send(
-        _SYSTASK_ID_EXTAPP, fn_id(_SERVICE_WIRE_START, request.message_id), request.data
-    )
-
-    progress_obj: ProgressLayout | None = None
-
     def die(exception: Exception) -> NoReturn:
         task.unload()
         raise exception
+
+    try:
+        io.ipc_send(
+            _SYSTASK_ID_EXTAPP,
+            fn_id(_SERVICE_WIRE_START, request.message_id),
+            request.data,
+        )
+    except Exception as e:
+        die(DataError(f"Failed to send IPC message: {e}"))
+
+    progress_obj: ProgressLayout | None = None
 
     def request_callback(data: bytes, id: int = 0) -> None:
         io.ipc_send(_SYSTASK_ID_EXTAPP, fn_id(_SERVICE_UTIL, id), data)

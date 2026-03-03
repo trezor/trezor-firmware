@@ -2,8 +2,8 @@ use core::marker::PhantomData;
 
 use ufmt::derive::uDebug;
 
-use crate::{low_level_api::{self, ApiError, ffi}};
 use crate::log::debug;
+use crate::low_level_api::{self, ApiError, ffi};
 
 /// Helper struct to convert between `ipc_message_t.fn_` and a tuple of service, message_id.
 struct Fn {
@@ -157,7 +157,7 @@ impl<'a> IpcInbox<'a> {
         Self {
             remote,
             buffer: buffer.as_ptr() as *mut _,
-            buf_len: buffer.len(),
+            buf_len: buffer.len() * core::mem::size_of::<usize>(),
             _borrow: PhantomData,
         }
     }

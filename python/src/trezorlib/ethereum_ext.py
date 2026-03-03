@@ -88,12 +88,16 @@ def message_id(message: type[MessageType]) -> int:
         return EthereumMessages.TypedDataValueAck
     elif message == messages.EthereumVerifyMessage:
         return EthereumMessages.VerifyMessage
+    elif message == messages.Success:
+        return EthereumMessages.Success
+    elif message == messages.EthereumSignTxEIP1559:
+        return EthereumMessages.SignTxEIP1559
     elif message == messages.PaymentRequest:
         # Payment request can be sent with any message ID (as it's only relevant for the app)
         # but we need to know that it is being sent in order to properly encode it in the protobuf message.
         raise ValueError("PaymentRequest message does not have a fixed message ID")
     else:
-        raise ValueError(f"Unsupported message type: {type(message)}")
+        raise ValueError(f"Unsupported message type: {message}")
 
 
 def message_type(msg_id: int) -> type[MessageType]:
