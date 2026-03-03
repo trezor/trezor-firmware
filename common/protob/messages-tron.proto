@@ -51,6 +51,7 @@ message TronSignTx {
 /**
  * Response: Device ready to receive contract details
  * @next TronTransferContract
+ * @next TronVoteWitnessContract
  * @next TronTriggerSmartContract
  * @next TronFreezeBalanceV2Contract
  * @next TronUnfreezeBalanceV2Contract
@@ -69,6 +70,22 @@ message TronTransferContract {
     required bytes to_address = 2;     // Recipient's address, Base58Check encoding
     required uint64 amount = 3;        // Transfer amount (in SUN)
 }
+
+/**
+ * Request: Fill in VoteWitnessContract details
+ * @next TronSignature
+ */
+// https://developers.tron.network/docs/tron-contracttype#4-votewitnesscontract
+message TronVoteWitnessContract {
+    message TronVote {
+        required bytes address = 1;    // SR address to vote for
+        required uint64 count = 2;     // Number of votes assigned to SR
+    }
+
+    required bytes owner_address = 1;       // Voter address
+    repeated TronVote votes = 2;            // Votes split among SR addresses
+}
+
 
 /**
  * Request: Fill in TriggerSmartContract details. TRC-10 not supported.
@@ -153,6 +170,7 @@ message TronRawTransaction {
 
         enum TronRawContractType {
             TransferContract = 1;
+            VoteWitnessContract = 4;
             TriggerSmartContract = 31;
             FreezeBalanceV2Contract = 54;
             UnfreezeBalanceV2Contract = 55;

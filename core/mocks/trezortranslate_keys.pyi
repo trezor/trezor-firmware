@@ -1133,6 +1133,8 @@ class TR:
     words__unknown: str = "Unknown"
     words__unlimited: str = "Unlimited"
     words__unlocked: str = "Unlocked"
+    words__votes: str = "Votes"
+    words__voting: str = "Voting"
     words__wallet: str = "Wallet"
     words__warning: str = "Warning"
     words__wipe: str = "Wipe"

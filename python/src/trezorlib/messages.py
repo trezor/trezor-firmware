@@ -431,6 +431,7 @@ class TronResourceCode(IntEnum):
 
 class TronRawContractType(IntEnum):
     TransferContract = 1
+    VoteWitnessContract = 4
     TriggerSmartContract = 31
     FreezeBalanceV2Contract = 54
     UnfreezeBalanceV2Contract = 55
@@ -707,6 +708,7 @@ class MessageType(IntEnum):
     TronFreezeBalanceV2Contract = 2207
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
+    TronVoteWitnessContract = 2210
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -8720,6 +8722,23 @@ class TronTransferContract(protobuf.MessageType):
         self.amount = amount
 
 
+class TronVoteWitnessContract(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2210
+    FIELDS = {
+        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("votes", "TronVote", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        owner_address: "bytes",
+        votes: Optional[Sequence["TronVote"]] = None,
+    ) -> None:
+        self.votes: Sequence["TronVote"] = votes if votes is not None else []
+        self.owner_address = owner_address
+
+
 class TronTriggerSmartContract(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2206
     FIELDS = {
@@ -8838,6 +8857,23 @@ class TronRawTransaction(protobuf.MessageType):
         self.timestamp = timestamp
         self.data = data
         self.fee_limit = fee_limit
+
+
+class TronVote(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("count", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "bytes",
+        count: "int",
+    ) -> None:
+        self.address = address
+        self.count = count
 
 
 class TronRawContract(protobuf.MessageType):

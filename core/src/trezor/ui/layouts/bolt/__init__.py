@@ -1609,6 +1609,20 @@ if not utils.BITCOIN_ONLY:
             None,
         )
 
+    async def confirm_tron_voting(voting_list: list[tuple[int, str]]) -> None:
+        await raise_if_not_confirmed(
+            trezorui_api.confirm_properties(
+                title=TR.words__review,
+                items=[
+                    (f"{TR.words__votes}: {vote[0]}", f"{vote[1]}\n", True)
+                    for vote in voting_list
+                ],
+                hold=True,
+            ),
+            br_name="tron/vote",
+            br_code=ButtonRequestType.SignTx,
+        )
+
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:
     return raise_if_not_confirmed(

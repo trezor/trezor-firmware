@@ -6,15 +6,11 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Iterator, Tuple
 
-    from trezor.messages import TronTransferContract
-
-    TronMessageType = TronTransferContract
-
 TYPE_URL_TEMPLATE = "type.googleapis.com/protocol."
 
-# TODO: Use TypeVar like ethereum/keychain.py:MsgInSignTx
 CONTRACT_TYPES = (
     MessageType.TronTransferContract,
+    MessageType.TronVoteWitnessContract,
     MessageType.TronTriggerSmartContract,
     MessageType.TronFreezeBalanceV2Contract,
     MessageType.TronUnfreezeBalanceV2Contract,
@@ -24,6 +20,7 @@ CONTRACT_TYPES = (
 # https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L339-L379
 CONTRACT_TYPE_NAMES = {
     1: "TransferContract",
+    4: "VoteWitnessContract",
     31: "TriggerSmartContract",
     54: "FreezeBalanceV2Contract",
     55: "UnfreezeBalanceV2Contract",

@@ -1050,6 +1050,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__unknown;
   MP_QSTR_words__unlimited;
   MP_QSTR_words__unlocked;
+  MP_QSTR_words__votes;
+  MP_QSTR_words__voting;
   MP_QSTR_words__wallet;
   MP_QSTR_words__warning;
   MP_QSTR_words__wipe;
