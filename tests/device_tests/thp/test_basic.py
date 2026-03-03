@@ -24,8 +24,11 @@ def test_v1(client: Client):
     # There should be a failure response to received init packet (starts with "?##")
     write_padded(client.transport, b"?## Init packet")
     res_id, res_data = protocol_v1.read(client.transport)
+    expected = messages.Failure(code=messages.FailureType.InvalidProtocol)
     res = DEFAULT_MAPPING.decode(res_id, res_data)
-    assert res == messages.Failure(code=messages.FailureType.InvalidProtocol)
+    assert res == expected
+    # make sure the constant "InvalidProtocol" response doesn't have trailing bytes (#6549)
+    assert (res_id, res_data) == DEFAULT_MAPPING.encode(expected)
 
     # There should be no response for continuation packet (starts with "?" only)
     write_padded(client.transport, b"? Cont packet")

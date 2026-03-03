@@ -172,7 +172,7 @@ class InterfaceContext:
             response = bytearray(self._iface.TX_PACKET_LEN)
             # Codec_v1 magic constant:
             # "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
-            utils.memcpy(response, 0, b"?##\x00\x03\x00\x00\x00\x14\x08\x11", 0)
+            utils.memcpy(response, 0, b"?##\x00\x03\x00\x00\x00\x02\x08\x11", 0)
             await self._write_packets([response])
 
     async def _handle_broadcast(self, packet: AnyBytes) -> None:
