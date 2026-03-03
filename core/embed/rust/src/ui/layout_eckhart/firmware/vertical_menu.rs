@@ -12,7 +12,7 @@ use crate::{
 };
 
 use super::{
-    super::component::{Button, ButtonMsg},
+    super::component::{Button, ButtonMsg, HapticMode},
     theme,
 };
 use heapless::Vec;
@@ -137,6 +137,13 @@ impl<T: MenuItems> VerticalMenu<T> {
     pub fn with_item(mut self, button: Button) -> Self {
         self.buttons.push(button);
         self
+    }
+
+    /// Set haptic mode for all buttons in the menu.
+    pub fn set_haptic_mode(&mut self, mode: HapticMode) {
+        for button in self.buttons.iter_mut() {
+            button.set_haptic_mode(mode);
+        }
     }
 
     pub fn item(&mut self, button: Button) -> &mut Self {
