@@ -8,7 +8,7 @@ dependencies = [
     "trezor",
     "tvl",
     "scons",
-    "protobuf",
+    "protobuf==6.32",  # minor needs to be >= than version in shell.nix
     "nanopb>=0.4.3,<0.5",
     "pytest>=8,<9",
     "coverage==5.5",
