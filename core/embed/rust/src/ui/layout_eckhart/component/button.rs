@@ -32,6 +32,16 @@ enum RadiusOrGradient {
     None,
 }
 
+#[derive(Clone, Copy)]
+pub enum HapticMode {
+    /// Vibrate on TouchStart (default)
+    OnPress,
+    /// Vibrate only on confirmed click
+    OnClick,
+    /// No haptic feedback
+    Off,
+}
+
 pub struct Button {
     area: Rect,
     touch_expand: Insets,
@@ -44,7 +54,7 @@ pub struct Button {
     long_press: ShortDuration, // long press requires non-zero duration
     long_press_danger: bool,
     long_timer: Timer,
-    haptic: bool,
+    haptic: HapticMode,
     subtext_marquee: Option<Marquee>,
     #[cfg(feature = "ui_debug")]
     skip_test_visit: bool, // used by debuglink
@@ -87,7 +97,7 @@ impl Button {
             long_press: ShortDuration::ZERO,
             long_press_danger: false,
             long_timer: Timer::new(),
-            haptic: true,
+            haptic: HapticMode::OnPress,
             subtext_marquee,
             #[cfg(feature = "ui_debug")]
             skip_test_visit: false,
@@ -261,11 +271,6 @@ impl Button {
 
     pub fn with_radius(mut self, radius: u8) -> Self {
         self.radius_or_gradient = RadiusOrGradient::Radius(radius);
-        self
-    }
-
-    pub fn without_haptics(mut self) -> Self {
-        self.haptic = false;
         self
     }
 
@@ -452,6 +457,10 @@ impl Button {
             self.state = state;
             ctx.request_paint();
         }
+    }
+
+    pub fn set_haptic_mode(&mut self, mode: HapticMode) {
+        self.haptic = mode;
     }
 
     pub fn render_background<'s>(
@@ -714,7 +723,7 @@ impl Component for Button {
                         // Touch started in our area, transform to `Pressed` state.
                         if touch_area.contains(pos) {
                             #[cfg(feature = "haptic")]
-                            if self.haptic {
+                            if matches!(self.haptic, HapticMode::OnPress) {
                                 play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
@@ -745,6 +754,10 @@ impl Component for Button {
                     }
                     State::Pressed if touch_area.contains(pos) => {
                         // Touch finished in our area, we got clicked.
+                        #[cfg(feature = "haptic")]
+                        if matches!(self.haptic, HapticMode::OnClick) {
+                            play(HapticEffect::ButtonPress);
+                        }
                         self.set(ctx, State::Initial);
                         return Some(ButtonMsg::Clicked);
                     }
@@ -784,7 +797,7 @@ impl Component for Button {
             Event::Timer(_) if self.long_timer.expire(event) => {
                 if matches!(self.state, State::Pressed) {
                     #[cfg(feature = "haptic")]
-                    if self.haptic {
+                    if !matches!(self.haptic, HapticMode::Off) {
                         play(HapticEffect::ButtonPress);
                     }
                     self.set(ctx, State::Initial);
