@@ -996,13 +996,23 @@ def confirm_value(
 
     from trezor.ui.layouts.menu import Details, Menu, confirm_with_menu
 
-    main = trezorui_api.confirm_with_info(
-        title=title,
-        items=((value, False),),
-        verb=verb or TR.buttons__confirm,
-        verb_info=INFO_ICON,
-        external_menu=True,
-    )
+    if chunkify:
+        main = trezorui_api.confirm_address(
+            title=title,
+            address=value,
+            address_label=None,
+            verb=verb or TR.buttons__confirm,
+            info_button=True,
+            chunkify=chunkify,
+        )
+    else:
+        main = trezorui_api.confirm_with_info(
+            title=title,
+            items=((value, False),),
+            verb=verb or TR.buttons__confirm,
+            verb_info=INFO_ICON,
+            external_menu=True,
+        )
 
     def item_factory(
         info_title: str, info_value: str
