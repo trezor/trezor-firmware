@@ -3,7 +3,7 @@ name = "trezor-firmware"
 version = "0.0.0"
 description = ""
 authors = [{ name = "SatoshiLabs", email = "info@satoshilabs.com" }]
-requires-python = ">=3.9,<4"
+requires-python = ">=3.10,<4"
 dependencies = [
     "trezor",
     "tvl",
