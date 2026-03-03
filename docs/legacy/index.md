@@ -38,7 +38,7 @@ For firmwares older than 1.8.1, please clone the archived [trezor-mcu](https://g
 
 ## Local development build
 
-Make sure you have Python 3.9 or later and [uv](https://docs.astral.sh/uv/)
+Make sure you have Python 3.10 or later and [uv](https://docs.astral.sh/uv/)
 installed.
 
 If you want to build device firmware, also make sure that you have the [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.
