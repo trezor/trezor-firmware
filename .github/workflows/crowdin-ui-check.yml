@@ -37,12 +37,12 @@ jobs:
       QUIET_MODE: 1
       DISABLE_TROPIC: 0
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: |

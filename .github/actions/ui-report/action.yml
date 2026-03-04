@@ -15,7 +15,7 @@ runs:
   using: composite
   steps:
     - name: Set AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
       with:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-west-1

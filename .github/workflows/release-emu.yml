@@ -42,7 +42,7 @@ jobs:
       tropic_models: ${{ steps.get_models.outputs.tropic_models }}
       version: ${{ steps.get_models.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       - name: Get models from releases.json
         id: get_models
         run: |
@@ -88,7 +88,7 @@ jobs:
       ADDRESS_SANITIZER: "0"
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -98,7 +98,7 @@ jobs:
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
@@ -108,7 +108,7 @@ jobs:
         run: |
             aws s3 mv core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }} s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model}}/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -138,7 +138,7 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -148,7 +148,7 @@ jobs:
       - run: mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
@@ -158,7 +158,7 @@ jobs:
         run: |
             aws s3 cp core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model}}/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-emu-arm-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -189,7 +189,7 @@ jobs:
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       DISABLE_TROPIC: "0"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -199,7 +199,7 @@ jobs:
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
@@ -209,7 +209,7 @@ jobs:
         run: |
             aws s3 mv core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }} s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model}}/${{ matrix.model }}_tropic_on/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-emu-tropic-capable-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -240,7 +240,7 @@ jobs:
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       DISABLE_TROPIC: "0"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -250,7 +250,7 @@ jobs:
       - run: mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
@@ -260,7 +260,7 @@ jobs:
         run: |
             aws s3 cp core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model}}/${{ matrix.model }}_tropic_on/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-emu-arm-tropic-capable-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -285,7 +285,7 @@ jobs:
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -293,7 +293,7 @@ jobs:
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-v${{ needs.get_models.outputs.version }}
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
@@ -320,7 +320,7 @@ jobs:
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -328,7 +328,7 @@ jobs:
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-v${{ needs.get_models.outputs.version }}-arm
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
