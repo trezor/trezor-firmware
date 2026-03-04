@@ -34,10 +34,10 @@ jobs:
       TESTOPTS: "@../tests/context_tests.txt --ui=test"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
           path: core/build/unix
@@ -58,13 +58,13 @@ jobs:
     name: Comment with UI flows
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
       - run: sleep 1m  # to avoid GitHub API rate limit
       - run: |
           python ci/make_crowdin_comment.py "${{ github.run_id }}" '${{ inputs.languages }}' > ${{ env.CROWDIN_COMMENT_PATH }}
           cat ${{ env.CROWDIN_COMMENT_PATH }} >> $GITHUB_STEP_SUMMARY
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1

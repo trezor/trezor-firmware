@@ -24,7 +24,7 @@ jobs:
       CC: gcc
       ADDRESS_SANITIZER: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -32,7 +32,7 @@ jobs:
       - run: nix-shell --run "uv run make -C crypto"
       - run: nix-shell --run "export ADDRESS_SANITIZER=0; uv run make -C crypto_noasan"
       - run: mv crypto_noasan/tests/test_check crypto/tests/test_check_noasan
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: crypto-build
           path: |
@@ -51,11 +51,11 @@ jobs:
       ASAN_OPTIONS: "verify_asan_link_order=0"
       CK_TIMEOUT_MULTIPLIER: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: crypto-build
           path: crypto/tests
@@ -73,7 +73,7 @@ jobs:
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -84,7 +84,7 @@ jobs:
     name: Rust crates test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -95,7 +95,7 @@ jobs:
     # TODO: only for changes in storage/
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -115,7 +115,7 @@ jobs:
     env:
       REF: ${{ github.head_ref || github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
@@ -150,7 +150,7 @@ jobs:
           cat $GITHUB_STEP_SUMMARY
         if: always()
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: reproducible-${{ matrix.model }}
           path: |

@@ -46,7 +46,7 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -55,7 +55,7 @@ jobs:
       - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
       - run: nix-shell --run "uv run make -C legacy/demo"
         if: matrix.coins == 'universal' && matrix.type == 'normal'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-firmware-${{ matrix.coins }}-${{ matrix.type }}
           path: legacy/firmware/firmware-*.bin
@@ -77,13 +77,13 @@ jobs:
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: cp legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-${{ matrix.coins }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-emu-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -106,13 +106,13 @@ jobs:
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-arm-legacy-T1B1-${{ matrix.coins }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-emu-arm-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           path: |
@@ -132,10 +132,10 @@ jobs:
       EMULATOR: 1
       PYTEST_TIMEOUT: 120
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
           path: legacy/firmware
@@ -167,10 +167,10 @@ jobs:
       TREZOR_UPGRADE_TEST: legacy
       PYTEST_TIMEOUT: 120
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-universal-debuglink-${{ matrix.asan }}
           path: legacy/firmware
@@ -188,10 +188,10 @@ jobs:
     env:
       EMULATOR: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: legacy-emu-universal-debuglink-noasan
           path: legacy/firmware
@@ -208,12 +208,12 @@ jobs:
       - legacy_emu
       - legacy_emu_arm
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           pattern: legacy-emu*debuglink-noasan
           merge-multiple: true
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # aws-actions/configure-aws-credentials@v6.0.0
         with:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1

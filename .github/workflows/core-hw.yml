@@ -52,7 +52,7 @@ jobs:
       QUIET_MODE: 1
     timeout-minutes: 360  # 6h CI job timeout
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -66,7 +66,7 @@ jobs:
           nix-shell --run "uv run pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS"
       - run: tail -n50 trezor.log || true
         if: failure()
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-hardware-${{ matrix.model }}-${{ matrix.coins }}
           path: |
@@ -95,7 +95,7 @@ jobs:
       TT_UHUB_PORT: 1
       QUIET_MODE: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -109,7 +109,7 @@ jobs:
           nix-shell --arg fullDeps true --run "./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:"
       - run: tail -n50 trezor.log || true
         if: failure()
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-hardware-monero-${{ matrix.model }}
           path: trezor.log
@@ -134,7 +134,7 @@ jobs:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
@@ -142,7 +142,7 @@ jobs:
       - run: nix-shell --run "uv run legacy/script/setup"
       - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
       - run: nix-shell --arg hardwareTest true --run "ci/hardware_tests/t1_hw_test.sh"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: legacy-hardware-${{ matrix.coins }}
           path: ci/hardware_tests/*.mp4
