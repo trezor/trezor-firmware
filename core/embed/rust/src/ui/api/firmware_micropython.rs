@@ -1305,9 +1305,17 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
             }
         });
 
-        // Pass the slice directly to the trait function
-        let layout = ModelUI::process_ipc_message(data, request_cb.unwrap())?;
-        Ok(layout.into())
+        let (layout, br_code, br_name) = ModelUI::process_ipc_message(data, request_cb.unwrap())?;
+        let code_obj = match br_code {
+            Some(code) => Obj::try_from(code)?,
+            None => Obj::const_none(),
+        };
+
+        let name_obj = match br_name {
+            Some(name) => Obj::try_from(name)?,
+            None => Obj::const_none(),
+        };
+        Ok((layout.into(), code_obj, name_obj).try_into()?)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -2279,7 +2287,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     data: bytes,
     ///     request_cb: Callable[[bytes, int], None] | None = None,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> tuple[LayoutObj[UiResult], int | None, str | None]:
     ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
 

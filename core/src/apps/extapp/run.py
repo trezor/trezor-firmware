@@ -16,6 +16,7 @@ from trezor.wire.errors import DataError
 from apps.common import paths
 from apps.common.keychain import get_keychain
 from apps.ethereum.definitions import Definitions
+from trezor.enums import ButtonRequestType
 
 if TYPE_CHECKING:
     from trezorio import IpcMessage
@@ -104,10 +105,17 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         service, message_id = from_fn_id(msg.fn)
 
         if service == _SERVICE_UI:
+            (layout_obj, br_code, br_name) = trezorui_api.process_ipc_message(
+                data=bytes(msg.data), request_cb=request_callback
+            )
+            br_code_value = (
+                ButtonRequestType(br_code)
+                if br_code is not None
+                else ButtonRequestType.Other
+            )
+
             result = await interact(
-                trezorui_api.p(data=bytes(msg.data), request_cb=request_callback),
-                None,
-                raise_on_cancel=None,
+                layout_obj, br_name, br_code_value, raise_on_cancel=None
             )
             # Serialize and send the result back
             trezorui_api.send_ui_result(result=result, ipc_cb=ui_resp_cb)
