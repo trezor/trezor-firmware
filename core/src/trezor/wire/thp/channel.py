@@ -41,7 +41,7 @@ if __debug__:
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
-    from typing import Any, Awaitable, Callable
+    from typing import Any, Awaitable, Callable, Generator
 
     from trezor.messages import ThpPairingCredential
     from trezor.wire import WireInterface
@@ -436,49 +436,56 @@ class Channel:
 
         header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
 
-        async def _write_loop() -> None:
-            """Send the payload and wait for an ACK with retransmissions."""
+        ack_latency_ms = self.channel_cache.get_int(CHANNEL_ACK_LATENCY_MS) or 0
 
-            ack_latency_ms = self.channel_cache.get_int(CHANNEL_ACK_LATENCY_MS) or 0
+        # ACK is needed before sending more data
+        ABP.set_sending_allowed(self.channel_cache, False)
+
+        # allows preempting this channel, if another channel becomes active
+        self.last_write_ms = utime.ticks_ms()
+
+        def _write_loop() -> Generator[Any, Any, None]:
+            """
+            Retransmit the payload (with increasing delay), raising `Timeout` in the end.
+
+            This task is spawned concurrently with `_wait_for_ack()` using `loop.race()`,
+            so it will be cancelled when the expected ACK is received.
+            """
             if __debug__:
                 self._log(f"Sending {len(payload)} bytes, latency: {ack_latency_ms} ms")
 
-            # ACK is needed before sending more data
-            ABP.set_sending_allowed(self.channel_cache, False)
-
-            # allows preempting this channel, if another channel becomes active
-            self.last_write_ms = utime.ticks_ms()
-
             for i in range(_MAX_RETRANSMISSION_COUNT):
-                await self._write_payload_once(header, payload)
-
+                # Try to send the payload (split into packets), or raise if transport is blocked
+                yield from self._write_payload_once(header, payload)
                 # Channel's estimated latency + a variable delay (from 200ms till ~3.52s)
-                timeout_ms = ack_latency_ms + round(10300 - 1010000 / (100 + i))
-                try:
-                    # wait and return after receiving an ACK, or raise in case of an unexpected message.
-                    await self.recv_payload(
-                        expected_ctrl_byte=None, timeout_ms=timeout_ms
-                    )
-                except Timeout:
-                    if __debug__:
-                        log.warning(__name__, "Retransmit after %d ms", timeout_ms)
-                    continue
-
-                ack_latency_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
-                # Limit estimated latency to avoid integer overflows and too long delays
-                ack_latency_ms = max(0, min(800, ack_latency_ms))
-                self.channel_cache.set_int(CHANNEL_ACK_LATENCY_MS, ack_latency_ms)
-
-                # `ABP.set_sending_allowed()` will be called after a valid ACK
-                if ABP.is_sending_allowed(self.channel_cache):
-                    return
+                delay_ms = ack_latency_ms + round(10300 - 1010000 / (100 + i))
+                yield from sleep(delay_ms)
+                if __debug__:
+                    log.warning(__name__, "Retransmit after %d ms", delay_ms)
 
             # restart event loop due to unresponsive channel
             raise Timeout("THP retransmission timeout")
 
+        def _wait_for_ack() -> Generator[Any, Any, None]:
+            """
+            Wait for the expected ACK to be received.
+
+            This task is spawned concurrently with `_write_loop()` using `loop.race()`,
+            so it will be cancelled when retransmission loop is over.
+            """
+            while not ABP.is_sending_allowed(self.channel_cache):
+                # `ABP.set_sending_allowed()` will be called after a valid ACK
+                yield from self.recv_payload(expected_ctrl_byte=None)
+
         try:
-            return await _write_loop()
+            # wait and return after receiving an ACK, or raise in case of an unexpected message / retransmission timeout.
+            await race(_wait_for_ack(), _write_loop())
         finally:
+            ack_latency_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
+            # Limit estimated latency to avoid integer overflows and too long delays
+            ack_latency_ms = max(0, min(800, ack_latency_ms))
+            self.channel_cache.set_int(CHANNEL_ACK_LATENCY_MS, ack_latency_ms)
+
             # Make sure to use the next `seq_bit` for the next payload
             ABP.set_send_seq_bit_to_opposite(self.channel_cache)
 
