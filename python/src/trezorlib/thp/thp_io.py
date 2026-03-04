@@ -37,11 +37,11 @@ DEFAULT_MAX_RETRIES = 10
 LOG = logging.getLogger(__name__)
 
 
-class FirstPacket(t.NamedTuple):
+class ReceivedMessage(t.NamedTuple):
     ctrl_byte: int
     cid: int
     data_length: int
-    data: bytes
+    data: bytearray
 
 
 def write_payload_to_wire(transport: Transport, message: Message) -> None:
@@ -86,41 +86,51 @@ def read_and_assemble(transport: Transport, timeout: float | None = None) -> Mes
         3. `checksum` (`bytes`): crc32 checksum of the header + data.
 
     """
-    buffer = bytearray()
+    while True:
+        # Process header with first part of message data
+        chunk = transport.read_chunk(timeout=timeout)
+        while True:
+            try:
+                ctrl_byte, cid, data_length = struct.unpack(
+                    FORMAT_STR_INIT, chunk[:INIT_HEADER_LENGTH]
+                )
+            except struct.error:
+                raise exceptions.ProtocolError("Invalid header")
 
-    # Read header with first part of message data
-    head = read_first(transport, timeout)
-    buffer.extend(head.data)
+            if ctrl_byte == CONTINUATION_PACKET:
+                LOG.warning("Skipping unexpected continuation packet")
+                break
 
-    # Read the rest of the message
-    while len(buffer) < head.data_length:
-        buffer.extend(read_next(transport, head.cid, timeout))
+            received = ReceivedMessage(
+                ctrl_byte, cid, data_length, bytearray(chunk[INIT_HEADER_LENGTH:])
+            )
 
-    msg = Message.parse(head.ctrl_byte, head.cid, bytes(buffer[: head.data_length]))
-    return msg
+            # Process the rest of the message
+            while True:
+                if len(received.data) >= received.data_length:
+                    # Enough data has been received
+                    return Message.parse(
+                        received.ctrl_byte,
+                        received.cid,
+                        bytes(received.data[: received.data_length]),
+                    )
 
+                chunk = transport.read_chunk(timeout=timeout)
+                ctrl_byte, cid = struct.unpack(
+                    FORMAT_STR_CONT, chunk[:CONT_HEADER_LENGTH]
+                )
+                if ctrl_byte != CONTINUATION_PACKET:
+                    LOG.warning(
+                        "Expected continuation, got: %s",
+                        control_byte.to_string(ctrl_byte),
+                    )
+                    # Keep the unexpected chunk for to be re-processed by the outer loop
+                    break
 
-def read_first(transport: Transport, timeout: float | None = None) -> FirstPacket:
-    chunk = transport.read_chunk(timeout=timeout)
-    try:
-        ctrl_byte, cid, data_length = struct.unpack(
-            FORMAT_STR_INIT, chunk[:INIT_HEADER_LENGTH]
-        )
-    except struct.error:
-        raise exceptions.ProtocolError("Invalid header")
+                if received.cid != cid:
+                    LOG.warning(
+                        "Ignoring packet for channel %s (wanted %s)", cid, received.cid
+                    )
+                    continue
 
-    data = chunk[INIT_HEADER_LENGTH:]
-    return FirstPacket(ctrl_byte, cid, data_length, data)
-
-
-def read_next(transport: Transport, cid: int, timeout: float | None = None) -> bytes:
-    chunk = transport.read_chunk(timeout=timeout)
-    ctrl_byte, read_cid = struct.unpack(FORMAT_STR_CONT, chunk[:CONT_HEADER_LENGTH])
-    if read_cid != cid:
-        LOG.warning("Ignoring packet for channel %s (wanted %s)", read_cid, cid)
-        return b""
-    if ctrl_byte != CONTINUATION_PACKET:
-        raise exceptions.ProtocolError(
-            f"Expected continuation, got: {control_byte.to_string(ctrl_byte)}"
-        )
-    return chunk[CONT_HEADER_LENGTH:]
+                received.data.extend(chunk[CONT_HEADER_LENGTH:])
