@@ -6,14 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 1.14.1 [18th March 2026]
 
-### Security
-- Enforce advanced recovery for mnemonics shorter than 24 words.
-
 ### Changed
 - Allow using Ethereum mainnet addresses on all non-Ethereum networks. This enables access to networks like Hyperliquid that use conflicting chain IDs and cannot obtain official SLIP-44 registration.  [#5134]
 - Allow ETH staking operations regardless of source.  [#6358]
 
 ### Security
+- Enforce advanced recovery for mnemonics shorter than 24 words.
 - Warn if Ethereum data is too long.
 
 ## 1.14.0 [21st January 2026]
