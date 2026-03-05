@@ -61,9 +61,10 @@ def _try_to_cancel(
     while True:
         br = yield
         # Try to cancel the backup flow on Core
-        resp = session.call_raw(messages.Cancel())
+        with pytest.raises(TrezorFailure) as exc_info:
+            session.call(messages.Cancel())
         # Following #6483, backup is not cancellable
-        assert resp == BACKUP_IN_PROGRESS
+        assert exc_info.value.failure == BACKUP_IN_PROGRESS
         try:
             gen.send(br)
         except StopIteration:
