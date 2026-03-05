@@ -409,16 +409,18 @@ class Channel:
                     continue
                 raise
 
-    def _send_ack(self, acked_message: Message | None) -> None:
+    def _send_ack(self, acked_message: Message) -> None:
         if self.is_ack_piggybacking_allowed and self._active_workflow is not None:
+            # Skip this ACK, since we are in an active workflow:
+            # The host is expected to send a response soon, so the ACK
+            # will be piggybacked.
             return
 
-        if acked_message is not None:
-            ack = control_byte.make_ack_for(acked_message.ctrl_byte)
-            ack_message = Message(ack, acked_message.cid, b"")
-        else:
-            ack = control_byte.make_ack(not self.sync_bit_receive)
-            ack_message = Message(ack, self.channel_id, b"")
+        ack = control_byte.make_ack_for(acked_message.ctrl_byte)
+        self._send_ack_internal(ctrl_byte=ack, cid=acked_message.cid)
+
+    def _send_ack_internal(self, ctrl_byte: int, cid: int) -> None:
+        ack_message = Message(ctrl_byte, cid, b"")
 
         thp_io.write_payload_to_wire(self.transport, ack_message)
 
@@ -443,20 +445,22 @@ class Channel:
 
     @contextmanager
     def piggyback_acks(self, marker: object) -> t.Generator[None, None, None]:
-        # Make sure the previous workflow is over.
-        assert self._active_workflow is None
+        assert marker is not self._active_workflow
+        previous = self._active_workflow
         self._active_workflow = marker
         # Skip explicit ACKs during this workflow
         try:
             yield
         finally:
             active = self._active_workflow
-            self._active_workflow = None
+            self._active_workflow = previous
+            # Verify proper nesting of workflows
             assert active is marker
             if self.is_ack_piggybacking_allowed:
-                # Explicitly ACK the latest received message.  The device may restart
-                # the event loop, so the next request will be sent in a separate message.
-                self._send_ack(None)
+                # Explicitly ACK the last message received.
+                # Otherwise, the next message sent may be lost due to an event loop restart.
+                ack = control_byte.make_ack(not self.sync_bit_receive)
+                self._send_ack_internal(ctrl_byte=ack, cid=self.channel_id)
 
     def write_chunk(self, data: bytes, /) -> None:
         self._assert_handshake_done()
