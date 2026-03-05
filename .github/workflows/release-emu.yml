@@ -96,8 +96,6 @@ jobs:
           model: ${{ matrix.model }}
           version: ${{ needs.get_models.outputs.version }}
           artifact-name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
-          rename-command: cp
-          s3-command: mv
           build-bootloader: ${{ matrix.coins == 'universal' }}
 
   core_emu_arm:
@@ -131,8 +129,6 @@ jobs:
           version: ${{ needs.get_models.outputs.version }}
           artifact-name: core-emu-arm-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           binary-suffix: -arm
-          rename-command: mv
-          s3-command: cp
           build-bootloader: ${{ matrix.coins == 'universal' }}
 
   core_emu_tropic_capable:
@@ -166,8 +162,6 @@ jobs:
           model: ${{ matrix.model }}
           version: ${{ needs.get_models.outputs.version }}
           artifact-name: core-emu-tropic-capable-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
-          rename-command: cp
-          s3-command: mv
           s3-subpath: ${{ matrix.model}}_tropic_on/
           build-bootloader: ${{ matrix.coins == 'universal' }}
 
@@ -203,8 +197,6 @@ jobs:
           version: ${{ needs.get_models.outputs.version }}
           artifact-name: core-emu-arm-tropic-capable-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
           binary-suffix: -arm
-          rename-command: mv
-          s3-command: cp
           s3-subpath: ${{ matrix.model}}_tropic_on/
           build-bootloader: ${{ matrix.coins == 'universal' }}
 
@@ -231,7 +223,6 @@ jobs:
       - uses: ./.github/actions/build-legacy-emu
         with:
           version: ${{ needs.get_models.outputs.version }}
-          s3-model: T1B1
 
 
   legacy_emu_arm:
@@ -257,4 +248,3 @@ jobs:
         with:
           version: ${{ needs.get_models.outputs.version }}
           binary-suffix: -arm
-          s3-model: T1B1

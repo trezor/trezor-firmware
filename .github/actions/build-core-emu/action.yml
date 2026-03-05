@@ -14,14 +14,6 @@ inputs:
     description: 'Binary suffix appended to version, e.g. -arm'
     required: false
     default: ''
-  rename-command:
-    description: 'Command used to rename trezor-emu-core (cp or mv)'
-    required: false
-    default: 'cp'
-  s3-command:
-    description: 'AWS S3 command used for upload (cp or mv)'
-    required: false
-    default: 'mv'
   s3-subpath:
     description: 'Optional extra S3 subpath under model path, e.g. T3W1_tropic_on/'
     required: false
@@ -45,7 +37,11 @@ runs:
     - id: prepare_binary
       run: |
         TARGET="core/build/unix/trezor-emu-core-${{ inputs.model }}-v${{ inputs.version }}${{ inputs.binary-suffix }}"
-        ${{ inputs.rename-command }} core/build/unix/trezor-emu-core "$TARGET"
+        if [ "${{ inputs.binary-suffix }}" = "-arm" ]; then
+          mv core/build/unix/trezor-emu-core "$TARGET"
+        else
+          cp core/build/unix/trezor-emu-core "$TARGET"
+        fi
         echo "binary_path=$TARGET" >> "$GITHUB_OUTPUT"
       shell: sh
 
@@ -54,11 +50,15 @@ runs:
       with:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-west-1
-      continue-on-error: true
 
     - name: Upload emulator binaries
       run: |
-        aws s3 ${{ inputs.s3-command }} "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.model}}/${{ inputs.s3-subpath }}"
+        if [ "${{ inputs.binary-suffix }}" = "-arm" ]; then
+          S3_COMMAND="cp"
+        else
+          S3_COMMAND="mv"
+        fi
+        aws s3 "$S3_COMMAND" "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.model }}/${{ inputs.s3-subpath }}"
       shell: sh
 
     - uses: actions/upload-artifact@v4

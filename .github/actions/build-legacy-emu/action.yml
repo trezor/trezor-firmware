@@ -8,10 +8,6 @@ inputs:
     description: 'Binary suffix appended to version, e.g. -arm'
     required: false
     default: ''
-  s3-model:
-    description: 'Legacy model directory used in S3 path'
-    required: false
-    default: 'T1B1'
 runs:
   using: 'composite'
   steps:
@@ -32,9 +28,8 @@ runs:
       with:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-west-1
-      continue-on-error: true
 
     - name: Upload emulator binaries
       run: |
-        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.s3-model }}/"
+        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/T1B1/"
       shell: sh
