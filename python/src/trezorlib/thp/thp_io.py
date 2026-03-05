@@ -95,7 +95,7 @@ def read_and_assemble(transport: Transport, timeout: float | None = None) -> Mes
                     FORMAT_STR_INIT, chunk[:INIT_HEADER_LENGTH]
                 )
             except struct.error:
-                raise exceptions.ProtocolError("Invalid header")
+                raise exceptions.ProtocolError("Invalid message header")
 
             if ctrl_byte == CONTINUATION_PACKET:
                 LOG.warning("Skipping unexpected continuation packet")
@@ -116,9 +116,12 @@ def read_and_assemble(transport: Transport, timeout: float | None = None) -> Mes
                     )
 
                 chunk = transport.read_chunk(timeout=timeout)
-                ctrl_byte, cid = struct.unpack(
-                    FORMAT_STR_CONT, chunk[:CONT_HEADER_LENGTH]
-                )
+                try:
+                    ctrl_byte, cid = struct.unpack(
+                        FORMAT_STR_CONT, chunk[:CONT_HEADER_LENGTH]
+                    )
+                except struct.error:
+                    raise exceptions.ProtocolError("Invalid continuation header")
                 if ctrl_byte != CONTINUATION_PACKET:
                     LOG.warning(
                         "Expected continuation, got: %s",
