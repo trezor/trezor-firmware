@@ -9,7 +9,7 @@ use crate::{
 use alloc::string::ToString;
 #[cfg(test)]
 use std::string::ToString;
-use trezor_app_sdk::{Error, Result, crypto, info, log, ui, util::HdNodeData};
+use trezor_app_sdk::{Error, Result, crypto, ui, util::HdNodeData};
 
 const VERSION: u32 = 0x0488B21E;
 

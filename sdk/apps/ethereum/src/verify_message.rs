@@ -1,15 +1,14 @@
 use crate::{
     common::{confirm_signverify, decode_message},
     helpers::{address_from_bytes, bytes_from_address},
-    proto::{common::HdNodeType, common::Success, ethereum::EthereumVerifyMessage},
+    proto::{common::Success, ethereum::EthereumVerifyMessage},
     sign_message::message_digest,
-    strutil::hex_encode,
 };
 #[cfg(not(test))]
-use alloc::{string::ToString, vec::Vec};
+use alloc::vec::Vec;
 #[cfg(test)]
-use std::{string::ToString, vec::Vec};
-use trezor_app_sdk::{Error, Result, crypto, info, log, ui, util::HdNodeData};
+use std::vec::Vec;
+use trezor_app_sdk::{Error, Result, crypto};
 
 pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
     let digest = message_digest(msg.message.as_slice());

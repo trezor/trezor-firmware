@@ -1,4 +1,5 @@
 use core::marker::PhantomData;
+
 use ufmt::derive::uDebug;
 
 use crate::ipc::{IpcInbox, IpcMessage, RemoteSysTask};
@@ -154,5 +155,3 @@ macro_rules! static_service {
         };
     };
 }
-
-pub(crate) use static_service;

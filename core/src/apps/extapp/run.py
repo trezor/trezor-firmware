@@ -108,11 +108,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             (layout_obj, br_code, br_name) = trezorui_api.process_ipc_message(
                 data=bytes(msg.data), request_cb=request_callback
             )
-            br_code_value = (
-                ButtonRequestType(br_code)
-                if br_code is not None
-                else ButtonRequestType.Other
-            )
+            br_code_value = br_code if br_code is not None else ButtonRequestType.Other
 
             result = await interact(
                 layout_obj, br_name, br_code_value, raise_on_cancel=None
@@ -270,6 +266,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 async def _get_public_key(address_n: list[int]) -> str:
     from apps.common import coininfo, paths
     from apps.common.keychain import ForbiddenKeyPath, get_keychain
+
     # from trezor.messages import HDNodeType
     # from trezor.enums import InputScriptType
 

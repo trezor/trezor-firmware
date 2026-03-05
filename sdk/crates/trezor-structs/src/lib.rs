@@ -185,6 +185,18 @@ pub enum TrezorUiEnum {
     ConfirmValue {
         title: ShortString,
         value: ShortString,
+        description: Option<ShortString>,
+        is_data: bool,
+        subtitle: Option<ShortString>,
+        verb: Option<ShortString>,
+        info: bool,
+        hold: bool,
+        chunkify: bool,
+        page_counter: bool,
+        cancel: bool,
+        external_menu: bool,
+        br_name: ShortString,
+        br_code: u32,
     },
     ConfirmLong {
         title: ShortString,
@@ -234,6 +246,11 @@ pub enum TrezorUiEnum {
         path: Option<ShortString>,
         xpubs: PropsList,
         chunkify: Option<bool>,
+    },
+    ShowInfo {
+        title: ShortString,
+        items: PropsList,
+        chunkify: bool,
     },
 }
 

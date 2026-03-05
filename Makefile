@@ -194,8 +194,15 @@ funnycoin_build:
 funnycoin_get_public_key:
 	@cd sdk/apps/funnycoin-rust/scripts ; ./test_get_public_key.py
 
-ethereum_build:
+ethereum_build_emu:
 	@cd sdk/apps/ethereum ; cargo build --release
+
+ethereum_build_hw:
+	@cd sdk/apps/ethereum ; cargo build --release --target thumbv7em-none-eabihf
+	@echo "\n=== Binary Size ==="
+	@cd sdk/apps/ethereum ;arm-none-eabi-size -A target/thumbv7em-none-eabihf/release/ethereum_rust
+	@cd sdk/apps/ethereum ;arm-none-eabi-size -B target/thumbv7em-none-eabihf/release/ethereum_rust
+	@cd sdk/apps/ethereum/target/thumbv7em-none-eabihf/release ; arm-none-eabi-readelf -C -sW ethereum_rust | grep FUNC | awk '{printf "%d %s\n", strtonum("0x"$3), $0}' | sort -n | cut -d' ' -f2-
 
 ethereum_unit_tests:
 	@cd sdk/apps/ethereum ; cargo test --release

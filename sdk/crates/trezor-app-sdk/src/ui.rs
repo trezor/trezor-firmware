@@ -131,12 +131,132 @@ fn ipc_ui_call_void(value: &TrezorUiEnum) -> Result<()> {
 /// Show a confirmation dialog with title and content
 ///
 /// Returns `Ok(true)` if user confirms, `Ok(false)` if user cancels
-pub fn confirm_value(title: &str, content: &str) -> UiResult {
+pub fn confirm_value_simple(
+    title: &str,
+    content: &str,
+    description: Option<&str>,
+    br_name: &str,
+    br_code: Option<u32>,
+    is_data: bool,
+    verb: Option<&str>,
+    subtitle: Option<&str>,
+    hold: bool,
+    chunkify: bool,
+    page_counter: bool,
+    cancel: bool,
+) -> UiResult {
+    match confirm_value_inner(
+        title,
+        content,
+        description,
+        br_name,
+        br_code,
+        is_data,
+        verb,
+        subtitle,
+        false,
+        hold,
+        chunkify,
+        page_counter,
+        cancel,
+        false,
+    ) {
+        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
+        Ok(_) => Ok(TrezorUiResult::Cancelled),
+        Err(e) => {
+            error!("UI error: {:?}", e);
+            Err(e)
+        }
+    }
+}
+
+fn confirm_value_inner(
+    title: &str,
+    content: &str,
+    description: Option<&str>,
+    br_name: &str,
+    br_code: Option<u32>,
+    is_data: bool,
+    verb: Option<&str>,
+    subtitle: Option<&str>,
+    info: bool,
+    hold: bool,
+    chunkify: bool,
+    page_counter: bool,
+    cancel: bool,
+    external_menu: bool,
+) -> UiResult {
+    let br_code = br_code.unwrap_or(1); /* ButtonRequest_Other = 1 */
+
     let value = TrezorUiEnum::ConfirmValue {
         title: unwrap!(ShortString::from_str(title)),
         value: unwrap!(ShortString::from_str(content)),
+        description: description.map(|d| unwrap!(ShortString::from_str(d))),
+        is_data,
+        subtitle: subtitle.map(|s| unwrap!(ShortString::from_str(s))),
+        verb: verb.map(|v| unwrap!(ShortString::from_str(v))),
+        info,
+        hold,
+        chunkify,
+        page_counter,
+        cancel,
+        external_menu,
+        br_name: unwrap!(ShortString::from_str(br_name)),
+        br_code,
+    };
+    ipc_ui_call(&value)
+}
+
+fn show_info(title: &str, items: &[(&str, &str)], chunkify: bool) -> UiResult {
+    let value = TrezorUiEnum::ShowInfo {
+        title: unwrap!(ShortString::from_str(title)),
+        items: unwrap!(PropsList::from_prop_slice(items)),
+        chunkify,
     };
     ipc_ui_call_confirm(&value)
+}
+
+pub fn confirm_value_with_info(
+    title: &str,
+    content: &str,
+    description: Option<&str>,
+    br_name: &str,
+    br_code: Option<u32>,
+    is_data: bool,
+    verb: Option<&str>,
+    subtitle: Option<&str>,
+    hold: bool,
+    chunkify: bool,
+    page_counter: bool,
+    cancel: bool,
+    info_title: &str,
+    info_items: &[(&str, &str)],
+    info_chunkify: bool,
+) -> UiResult {
+    match confirm_value_inner(
+        title,
+        content,
+        description,
+        br_name,
+        br_code,
+        is_data,
+        verb,
+        subtitle,
+        true,
+        hold,
+        chunkify,
+        page_counter,
+        cancel,
+        true,
+    ) {
+        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
+        Ok(TrezorUiResult::Info) => show_info(info_title, info_items, info_chunkify),
+        Ok(_) => Ok(TrezorUiResult::Cancelled),
+        Err(e) => {
+            error!("UI error: {:?}", e);
+            Err(e)
+        }
+    }
 }
 
 pub fn confirm_action(title: &str, action: &str, hold: bool) -> UiResult {

@@ -71,7 +71,7 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
     let address_bytes = crypto::get_eth_pubkey_hash(dp.as_ref(), encoded_network, encoded_token)?;
 
     // Display address so user can validate it
-    require_confirm_address(&address_bytes, None, None, None, None, None)?;
+    require_confirm_address(&address_bytes, None, None, None, None, None, None)?;
 
     let metamask_v4_compat = msg.metamask_v4_compat.unwrap_or(true);
     let show_message_hash = if let Some(hash) = &msg.show_message_hash {
@@ -86,7 +86,8 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
         show_message_hash
     ));
 
-    let signature = crypto::sign_typed_hash(dp.as_ref(), &data_hash, encoded_network, encoded_token)?;
+    let signature =
+        crypto::sign_typed_hash(dp.as_ref(), &data_hash, encoded_network, encoded_token)?;
 
     let mut sig = EthereumTypedDataSignature::default();
     sig.address = address_from_bytes(&address_bytes, Some(definitions.network()));
@@ -431,7 +432,20 @@ fn should_show_struct(
 
 fn confirm_message_hash(hash: &[u8]) -> Result<()> {
     let message_hash_hex = uformat!("0x{}", hex_encode(hash).as_str());
-    ui::confirm_value("CConfirm message hash", &message_hash_hex)?;
+    ui::confirm_value_simple(
+        "Confirm message hash",
+        &message_hash_hex,
+        None,
+        "confirm_message_hash",
+        None,
+        true,
+        None,
+        None,
+        false,
+        false,
+        false,
+        true,
+    )?;
     Ok(())
 }
 

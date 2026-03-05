@@ -184,8 +184,6 @@ unsafe extern "C" {
     pub static secp256k1: ecdsa_curve;
 }
 
-
-
 /// Trezor crypto v1 function pointers
 #[repr(C)]
 pub struct trezor_crypto_v1_t {

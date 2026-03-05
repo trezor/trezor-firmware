@@ -6,7 +6,7 @@ use crate::{
     proto::ethereum::{EthereumAddress, EthereumGetAddress},
     uformat,
 };
-use trezor_app_sdk::{Result, crypto, info, trace};
+use trezor_app_sdk::{Result, crypto};
 
 /// Ethereum uses Bitcoin xpub format
 pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {

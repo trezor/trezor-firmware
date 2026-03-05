@@ -1306,16 +1306,7 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         });
 
         let (layout, br_code, br_name) = ModelUI::process_ipc_message(data, request_cb.unwrap())?;
-        let code_obj = match br_code {
-            Some(code) => Obj::try_from(code)?,
-            None => Obj::const_none(),
-        };
-
-        let name_obj = match br_name {
-            Some(name) => Obj::try_from(name)?,
-            None => Obj::const_none(),
-        };
-        Ok((layout.into(), code_obj, name_obj).try_into()?)
+        Ok((layout.into(), br_code, br_name).try_into()?)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1386,7 +1377,12 @@ extern "C" fn new_deserialize_progress_message(
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
         fn str_from_archived<'a, const N: usize>(s: &'a ArchivedStringN<N>) -> &'a str {
-            let str = unsafe { core::str::from_raw_parts(s.data.as_ptr(), s.len as usize) };
+            let str = unsafe {
+                unwrap!(core::str::from_utf8(core::slice::from_raw_parts(
+                    s.data.as_ptr(),
+                    s.len as usize
+                )))
+            };
             str
         }
 

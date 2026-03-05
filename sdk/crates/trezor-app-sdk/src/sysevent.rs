@@ -4,7 +4,7 @@ use crate::ipc::RemoteSysTask;
 use crate::low_level_api::{self, ffi};
 use crate::util::Timeout;
 
-trait HasSysHandle: Copy {
+pub(crate) trait HasSysHandle: Copy {
     fn syshandle(self) -> ffi::syshandle_t;
 }
 
