@@ -1293,6 +1293,8 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
 
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
+        dbg_println!("Received IPC message with data size: {:?}", data.len());
+
         let request_callback: Option<Obj> = kwargs
             .get(Qstr::MP_QSTR_request_cb)
             .unwrap_or_else(|_| Obj::const_none())
@@ -1304,9 +1306,23 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                     .unwrap();
             }
         });
+        let (main_layout, info_layout, br_code, br_name) =
+            ModelUI::process_ipc_message(data, request_cb.unwrap())?;
+        let info_obj = match info_layout {
+            Some(layout) => Obj::from(layout),
+            None => Obj::const_none(),
+        };
+        let br_code_obj = match br_code {
+            Some(code) => Obj::try_from(code)?,
+            None => Obj::const_none(),
+        };
 
-        let (layout, br_code, br_name) = ModelUI::process_ipc_message(data, request_cb.unwrap())?;
-        Ok((layout.into(), br_code, br_name).try_into()?)
+        Ok((
+            main_layout.into(),
+            info_obj,
+            (br_code_obj, br_name).try_into()?,
+        )
+            .try_into()?)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1380,7 +1396,7 @@ extern "C" fn new_deserialize_progress_message(
             let str = unsafe {
                 unwrap!(core::str::from_utf8(core::slice::from_raw_parts(
                     s.data.as_ptr(),
-                    s.len as usize
+                    s.len.to_native() as usize
                 )))
             };
             str
@@ -2283,7 +2299,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     data: bytes,
     ///     request_cb: Callable[[bytes, int], None] | None = None,
-    /// ) -> tuple[LayoutObj[UiResult], int | None, str | None]:
+    /// ) -> tuple[LayoutObj[UiResult], LayoutObj[UiResult] | None, tuple[ButtonRequestType | None, str | None]]:
     ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
 

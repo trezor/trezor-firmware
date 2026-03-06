@@ -24,7 +24,7 @@ use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 pub use trezor_structs::TrezorUiResult;
 use trezor_structs::{
-    ArchivedUtilEnum, LongString, PropsList, ShortString, StrExtList, TrezorUiEnum,
+    ArchivedUtilEnum, ExtraLongString, LongString, PropsList, ShortString, StrExtList, TrezorUiEnum,
 };
 
 use crate::core_services::services_or_die;
@@ -33,7 +33,7 @@ use crate::service::{
     CoreIpcService, Error, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler,
 };
 use crate::util::Timeout;
-use crate::{error, unwrap};
+use crate::{error, info, trace, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
@@ -159,7 +159,6 @@ pub fn confirm_value_simple(
         chunkify,
         page_counter,
         cancel,
-        false,
     ) {
         Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
         Ok(_) => Ok(TrezorUiResult::Cancelled),
@@ -184,13 +183,12 @@ fn confirm_value_inner(
     chunkify: bool,
     page_counter: bool,
     cancel: bool,
-    external_menu: bool,
 ) -> UiResult {
     let br_code = br_code.unwrap_or(1); /* ButtonRequest_Other = 1 */
 
     let value = TrezorUiEnum::ConfirmValue {
         title: unwrap!(ShortString::from_str(title)),
-        value: unwrap!(ShortString::from_str(content)),
+        value: unwrap!(ExtraLongString::from_str(content)),
         description: description.map(|d| unwrap!(ShortString::from_str(d))),
         is_data,
         subtitle: subtitle.map(|s| unwrap!(ShortString::from_str(s))),
@@ -200,11 +198,52 @@ fn confirm_value_inner(
         chunkify,
         page_counter,
         cancel,
-        external_menu,
         br_name: unwrap!(ShortString::from_str(br_name)),
         br_code,
     };
     ipc_ui_call(&value)
+}
+
+pub fn confirm_blob(
+    title: &str,
+    data: &str,
+    br_name: &str,
+    br_code: u32,
+    hold: bool,
+    verb: Option<&str>,
+    verb_cancel: Option<&str>,
+    chunkify: bool,
+) -> UiResult {
+    let value = TrezorUiEnum::ConfirmValueIntro {
+        title: unwrap!(ShortString::from_str(title)),
+        data: unwrap!(ExtraLongString::from_str(data)),
+        hold,
+        chunkify,
+        verb: verb.map(|v| unwrap!(ShortString::from_str(v))),
+        verb_cancel: verb_cancel.map(|v| unwrap!(ShortString::from_str(v))),
+    };
+    match ipc_ui_call(&value) {
+        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
+        Ok(TrezorUiResult::Info) => confirm_value_simple(
+            title,
+            data,
+            None,
+            br_name,
+            Some(br_code),
+            true,
+            None,
+            None,
+            hold,
+            true,
+            true,
+            false,
+        ),
+        Ok(_) => Ok(TrezorUiResult::Cancelled),
+        Err(e) => {
+            error!("UI error: {:?}", e);
+            Err(e)
+        }
+    }
 }
 
 fn show_info(title: &str, items: &[(&str, &str)], chunkify: bool) -> UiResult {
@@ -247,7 +286,6 @@ pub fn confirm_value_with_info(
         chunkify,
         page_counter,
         cancel,
-        true,
     ) {
         Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
         Ok(TrezorUiResult::Info) => show_info(info_title, info_items, info_chunkify),
@@ -305,6 +343,14 @@ pub fn show_warning(title: &str, content: &str) -> Result<()> {
         content: unwrap!(ShortString::from_str(content)),
     };
     ipc_ui_call_void(&value)
+}
+
+/// Show a mismatch message
+pub fn show_mismatch(title: &str) -> UiResult {
+    let value = TrezorUiEnum::Mismatch {
+        title: unwrap!(ShortString::from_str(title)),
+    };
+    ipc_ui_call_confirm(&value)
 }
 
 /// Show a danger message

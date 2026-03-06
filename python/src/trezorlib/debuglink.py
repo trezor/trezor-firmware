@@ -1788,7 +1788,7 @@ def load_device(
     session.refresh_features()
 
 
-def load_extapp(session: client.Session, binary: Path) -> int | None:
+def load_extapp(session: client.Session, binary: Path) -> int:
     instance_id = extapp.load(session, binary.read_bytes())
     return instance_id
 

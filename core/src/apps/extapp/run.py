@@ -9,14 +9,15 @@ from storage.cache import get_sessionless_cache
 from trezor import app, io, loop
 from trezor.messages import ExtAppMessage, ExtAppResponse
 from trezor.ui import ProgressLayout
-from trezor.ui.layouts import interact
 from trezor.ui.layouts.progress import progress
+from trezor.ui.layouts.common import with_info, interact
 from trezor.wire import context
 from trezor.wire.errors import DataError
 from apps.common import paths
 from apps.common.keychain import get_keychain
 from apps.ethereum.definitions import Definitions
 from trezor.enums import ButtonRequestType
+from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
     from trezorio import IpcMessage
@@ -105,14 +106,30 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         service, message_id = from_fn_id(msg.fn)
 
         if service == _SERVICE_UI:
-            (layout_obj, br_code, br_name) = trezorui_api.process_ipc_message(
-                data=bytes(msg.data), request_cb=request_callback
+            (main_layout_obj, info_layout_obj, (br_code, br_name)) = (
+                trezorui_api.process_ipc_message(
+                    data=bytes(msg.data), request_cb=request_callback
+                )
             )
-            br_code_value = br_code if br_code is not None else ButtonRequestType.Other
+            br_code_value: ButtonRequestType = (
+                br_code if br_code is not None else ButtonRequestType.Other
+            )
 
-            result = await interact(
-                layout_obj, br_name, br_code_value, raise_on_cancel=None
-            )
+            if info_layout_obj is not None:
+                assert (
+                    br_name is not None
+                ), "br_name must be provided if info_layout_obj is provided"
+
+                try:
+                    result = await with_info(
+                        main_layout_obj, info_layout_obj, br_name, br_code_value
+                    )
+                except ActionCancelled:
+                    result = trezorui_api.CANCELLED
+            else:
+                result = await interact(
+                    main_layout_obj, br_name, br_code_value, raise_on_cancel=None
+                )
             # Serialize and send the result back
             trezorui_api.send_ui_result(result=result, ipc_cb=ui_resp_cb)
 

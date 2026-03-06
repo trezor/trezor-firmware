@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.extapp]
 
 @parametrize_using_common_fixtures("ethereum/signmessage.json")
 def test_signmessage(session: Session, instance_id: int, parameters, result):
-    if not parameters["is_long"] or session.debug.layout_type is LayoutType.T1:
+    if not parameters["is_long"]:
         res = ethereum_ext.sign_message(
             session, instance_id, parse_path(parameters["path"]), parameters["msg"]
         )
@@ -48,7 +48,7 @@ def test_signmessage(session: Session, instance_id: int, parameters, result):
 
 @parametrize_using_common_fixtures("ethereum/verifymessage.json")
 def test_verify(session: Session, instance_id: int, parameters, result):
-    if not parameters["is_long"] or session.debug.layout_type is LayoutType.T1:
+    if not parameters["is_long"]:
         res = ethereum_ext.verify_message(
             session,
             instance_id,

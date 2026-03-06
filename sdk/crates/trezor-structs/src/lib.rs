@@ -6,13 +6,14 @@ use rkyv::{Archive, Deserialize, Serialize};
 #[derive(Archive, Serialize, Deserialize, Copy, Clone)]
 pub struct Buffer<const N: usize> {
     pub data: [u8; N],
-    pub len: u8,
+    pub len: usize,
 }
 
 pub type String<const N: usize> = Buffer<N>;
 
 pub type ShortString = String<50>;
 pub type LongString = String<150>;
+pub type ExtraLongString = String<1030>;
 
 pub type ShortBuffer = Buffer<100>;
 pub type LongBuffer = Buffer<200>;
@@ -32,26 +33,23 @@ impl<const N: usize> String<N> {
     }
 
     pub fn from_str(s: &str) -> core::result::Result<Self, ()> {
-        if N > (u8::MAX as usize) || s.len() > N {
+        if N > (usize::MAX as usize) || s.len() > N {
             return Err(());
         }
 
         let mut data = [0u8; N];
         data[..s.len()].copy_from_slice(s.as_bytes());
-        Ok(Self {
-            data,
-            len: s.len() as u8,
-        })
+        Ok(Self { data, len: s.len() })
     }
 
     pub fn as_str(&self) -> &str {
-        core::str::from_utf8(&self.data[..self.len as usize]).unwrap_or("#INVALID#")
+        core::str::from_utf8(&self.data[..self.len]).unwrap_or("#INVALID#")
     }
 }
 
 impl<const N: usize> AsRef<str> for String<N> {
     fn as_ref(&self) -> &str {
-        core::str::from_utf8(&self.data[..self.len as usize]).unwrap_or("#INVALID#")
+        core::str::from_utf8(&self.data[..self.len]).unwrap_or("#INVALID#")
     }
 }
 
@@ -184,7 +182,7 @@ pub enum TrezorUiEnum {
     },
     ConfirmValue {
         title: ShortString,
-        value: ShortString,
+        value: ExtraLongString,
         description: Option<ShortString>,
         is_data: bool,
         subtitle: Option<ShortString>,
@@ -194,7 +192,6 @@ pub enum TrezorUiEnum {
         chunkify: bool,
         page_counter: bool,
         cancel: bool,
-        external_menu: bool,
         br_name: ShortString,
         br_code: u32,
     },
@@ -205,6 +202,9 @@ pub enum TrezorUiEnum {
     Warning {
         title: ShortString,
         content: ShortString,
+    },
+    Mismatch {
+        title: ShortString,
     },
     Danger {
         title: ShortString,
@@ -251,6 +251,14 @@ pub enum TrezorUiEnum {
         title: ShortString,
         items: PropsList,
         chunkify: bool,
+    },
+    ConfirmValueIntro {
+        title: ShortString,
+        data: ExtraLongString,
+        hold: bool,
+        chunkify: bool,
+        verb: Option<ShortString>,
+        verb_cancel: Option<ShortString>,
     },
 }
 

@@ -54,7 +54,7 @@ extern "C" fn new_deserialize_crypto_message(
         }
 
         fn slice_from_archived<'a, const N: usize>(s: &'a ArchivedBufferN<N>) -> &'a [u8] {
-            let buf = unsafe { core::slice::from_raw_parts::<u8>(s.data.as_ptr(), s.len as usize) };
+            let buf = unsafe { core::slice::from_raw_parts::<u8>(s.data.as_ptr(), s.len.to_native() as usize) };
             buf
         }
 
