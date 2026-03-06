@@ -120,8 +120,9 @@ def sign_tx(
     address_n: "Address",
 ) -> messages.TronSignature:
     tx.address_n = address_n
-    resp = session.call(tx)
-    messages.TronContractRequest.ensure_isinstance(resp)
-    resp = session.call(contract)
-    resp = messages.TronSignature.ensure_isinstance(resp)
-    return resp
+    with session.interact() as ctx:
+        resp = ctx.call(tx)
+        messages.TronContractRequest.ensure_isinstance(resp)
+        resp = ctx.call(contract)
+        resp = messages.TronSignature.ensure_isinstance(resp)
+        return resp
