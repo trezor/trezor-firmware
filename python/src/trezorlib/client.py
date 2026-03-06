@@ -75,6 +75,33 @@ GET_ROOT_FINGERPRINT_MESSAGE = messages.GetPublicKey(
 )
 
 
+@dataclass
+class InteractionContext(t.Generic[ClientType, SessionType]):
+    client: ClientType
+    session: SessionType
+
+    def __enter__(self) -> tx.Self:
+        self.client.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        return self.client.__exit__(exc_type, exc_value, traceback)
+
+    def call(
+        self,
+        msg: MessageType,
+        *,
+        expect: type[MT] = MessageType,
+        timeout: float | None = None,
+    ) -> MT:
+        return self.client._call(self.session, msg, expect=expect, timeout=timeout)
+
+
 class Session(t.Generic[ClientType, SessionIdType]):
     def __init__(
         self,
@@ -107,11 +134,19 @@ class Session(t.Generic[ClientType, SessionIdType]):
         expect: type[MT] = MessageType,
         timeout: float | None = None,
     ) -> MT:
-        """Call a method on this session, process and return the response."""
+        """
+        Call a method on this session, process and return the response.
+
+        Use `self.interact()` for consecutive calls (to allow THP ACK piggybacking).
+        """
+        with self.interact() as ctx:
+            return ctx.call(msg, expect=expect, timeout=timeout)
+
+    def interact(self) -> InteractionContext:
+        """Use the returned context manager to call methods on this session."""
         if self.is_invalid:
             raise exceptions.InvalidSessionError(self.id)
-        with self:
-            return self.client._call(self, msg, expect=expect, timeout=timeout)
+        return self.client.interact(self)
 
     def call_raw(self, msg: MessageType, timeout: float | None = None) -> MessageType:
         """Invoke a single call-response round-trip to the device.
@@ -297,6 +332,10 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         traceback: t.Any,
     ) -> None:
         self.transport.__exit__(exc_type, exc_value, traceback)
+
+    def interact(self, session: SessionType) -> InteractionContext:
+        """Use the returned context manager to call methods on this session."""
+        return InteractionContext(self, session)
 
     def connect(self) -> None:
         """Establish a connection to the device.
