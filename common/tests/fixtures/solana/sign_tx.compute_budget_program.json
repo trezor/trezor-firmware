@@ -70,6 +70,7 @@
       "description": "Transfer With Compute Budget Without Heap Confirmation",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
+        "chunkify": true,
         "construct": {
           "version": null,
           "header": {
@@ -272,6 +273,7 @@
       "description": "Create Stake Account With Compute Budget",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
+        "chunkify": true,
         "construct": {
           "version": null,
           "header": {

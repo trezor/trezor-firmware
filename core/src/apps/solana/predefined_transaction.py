@@ -126,6 +126,7 @@ async def try_confirm_token_transfer_transaction(
     blockhash: bytes,
     additional_info: AdditionalTxInfo,
     verified_payment_request: PaymentRequest | None,
+    chunkify: bool | None = None,
 ) -> bool:
     from .definitions import unknown_token
     from .layout import confirm_payment_request, confirm_token_transfer
@@ -187,6 +188,7 @@ async def try_confirm_token_transfer_transaction(
             transfer_token_instructions[0].decimals,
             fee,
             blockhash,
+            chunkify,
         )
     return True
 
@@ -199,6 +201,7 @@ async def try_confirm_predefined_transaction(
     blockhash: bytes,
     additional_info: AdditionalTxInfo,
     verified_payment_request: PaymentRequest | None,
+    chunkify: bool | None = None,
 ) -> bool:
     from .layout import confirm_system_transfer
     from .transaction.instructions import SystemProgramTransferInstruction
@@ -216,7 +219,7 @@ async def try_confirm_predefined_transaction(
 
     if instructions_count == 1:
         if SystemProgramTransferInstruction.is_type_of(instructions[0]):
-            await confirm_system_transfer(instructions[0], fee, blockhash)
+            await confirm_system_transfer(instructions[0], fee, blockhash, chunkify)
             return True
 
     if await try_confirm_staking_transaction(
@@ -235,6 +238,7 @@ async def try_confirm_predefined_transaction(
         blockhash,
         additional_info,
         verified_payment_request,
+        chunkify,
     )
 
 
