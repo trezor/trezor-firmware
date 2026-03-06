@@ -33,11 +33,11 @@ from pathlib import Path
 import click
 from typing_extensions import Self
 
-from .. import exceptions, messages, protocol_v1, transport, ui
+from .. import exceptions, messages, protocol_v1, transport
 from ..client import AppManifest, PassphraseSetting, Session, TrezorClient, get_client
 from ..thp import client as thp_client
 from ..transport import Transport
-from . import credentials
+from . import credentials, ui
 
 LOG = logging.getLogger(__name__)
 
