@@ -337,8 +337,16 @@ build_secmon: ## build security monitor image
 build_kernel: ## build kernel image
 	$(SCONS) $(KERNEL_BUILD_DIR)/kernel.bin
 
+# build secmon locally if BOOTLOADER_DEVEL=1 and UNSAFE_FW=0
+BUILD_LOCAL_SECMON =
+ifeq ($(BOOTLOADER_DEVEL),1)
+ifeq ($(UNSAFE_FW),0)
+BUILD_LOCAL_SECMON = build_secmon
+endif
+endif
+
 build_firmware: MICROPY_ENABLE_SOURCE_LINE ?= 0
-build_firmware: templates build_cross $(if $(or $(filter 0,$(BOOTLOADER_DEVEL)),$(filter 1,$(UNSAFE_FW))),,build_secmon) build_kernel ## build firmware with frozen modules
+build_firmware: templates build_cross $(BUILD_LOCAL_SECMON) build_kernel  ## build firmware with frozen modules
 	$(SCONS) $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: MICROPY_ENABLE_SOURCE_LINE ?= 1
