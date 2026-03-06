@@ -21,6 +21,8 @@ import struct
 import typing as t
 from collections import defaultdict
 
+import typing_extensions as tx
+
 from .. import client, exceptions, messages, models, protobuf
 from ..log import DUMP_BYTES
 from .channel import Channel
@@ -34,6 +36,23 @@ LOG = logging.getLogger(__name__)
 
 HEADER_FMT = ">BH"
 HEADER_LEN = struct.calcsize(HEADER_FMT)
+
+
+class ThpInteractionContext(client.InteractionContext["TrezorClientThp", "ThpSession"]):
+    def __enter__(self) -> tx.Self:
+        super().__enter__()
+        self.piggyback_acks = self.client.channel.piggyback_acks(self)
+        self.piggyback_acks.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        self.piggyback_acks.__exit__(exc_type, exc_value, traceback)
+        return super().__exit__(exc_type, exc_value, traceback)
 
 
 class ThpSession(client.Session["TrezorClientThp", int]):
@@ -188,18 +207,13 @@ class TrezorClientThp(client.TrezorClient[ThpSession]):
             else:
                 self._session_message_queue[session_id].append(msg)
 
-    def _call(
-        self,
-        session: ThpSession,
-        msg: client.MessageType,
-        *,
-        expect: type[client.MT] = client.MessageType,
-        timeout: float | None = None,
-    ) -> client.MT:
-        with self.channel.piggyback_acks(msg):
-            return super()._call(
-                session=session, msg=msg, expect=expect, timeout=timeout
-            )
+    def interact(self, session: ThpSession) -> ThpInteractionContext:
+        """
+        Use the returned context manager to call methods on this session.
+
+        THP ACK piggybacking will be used (if supported by the device).
+        """
+        return ThpInteractionContext(self, session)
 
     @staticmethod
     def detect_model(props: messages.ThpDeviceProperties) -> models.TrezorModel:
