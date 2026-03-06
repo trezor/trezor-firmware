@@ -60,23 +60,29 @@ Documentation = "https://github.com/trezor/trezor-firmware/tree/main/python"
 trezorctl = "trezorlib.cli.trezorctl:cli"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["flit_core >= 3.11,<5"]
+build-backend = "flit_core.buildapi"
 
 [tool.uv]
 package = true
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/trezorlib"]
+[tool.flit.module]
+name = "trezorlib"
 
-[tool.hatch.build.targets.sdist]
+[tool.flit.sdist]
+include = [
+    "bash_completion.d",
+    "docs",
+    "stubs",
+    "tests",
+    "tools",
+    "AUTHORS",
+    "CHANGELOG.md",
+    "setup.cfg",
+    "pyrightconfig.json",
+    "tox.ini",
+]
 exclude = [
-    "/.*",
-    "/helper-scripts",
-    "/CHANGELOG.unreleased",
-    "/default.nix",
-    "/Makefile",
-    "/towncrier.toml",
     "tests/*.bin",
     "src/trezorlib/_proto_messages.mako",
 ]
