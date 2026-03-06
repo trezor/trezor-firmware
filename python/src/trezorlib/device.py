@@ -31,7 +31,7 @@ from .exceptions import Cancelled, TrezorException
 from .tools import Address, parse_path, workflow
 
 if TYPE_CHECKING:
-    from .client import Session
+    from .client import InteractionContext, Session
 
 
 RECOVERY_BACK = "\x08"  # backspace character, sent literally
@@ -77,8 +77,9 @@ def apply_settings(
 
     if homescreen and session.version >= HOMESCREEN_STREAMING_MIN_VERSION:
         settings.homescreen_length = len(homescreen)
-        response = session.call(settings, expect=messages.DataChunkRequest)
-        _send_chunked_data(session, response, homescreen)
+        with session.interact() as ctx:
+            response = ctx.call(settings, expect=messages.DataChunkRequest)
+            _send_chunked_data(ctx, response, homescreen)
     else:
         settings.homescreen = homescreen
         session.call(settings, expect=messages.Success)
@@ -86,7 +87,7 @@ def apply_settings(
 
 
 def _send_chunked_data(
-    session: "Session",
+    ctx: "InteractionContext",
     request: "messages.DataChunkRequest",
     language_data: bytes,
 ) -> None:
@@ -96,7 +97,7 @@ def _send_chunked_data(
         data_length = response.data_length
         data_offset = response.data_offset
         chunk = language_data[data_offset : data_offset + data_length]
-        response = session.call(messages.DataChunkAck(data_chunk=chunk))
+        response = ctx.call(messages.DataChunkAck(data_chunk=chunk))
 
 
 @workflow()
@@ -108,12 +109,13 @@ def change_language(
     data_length = len(language_data)
     msg = messages.ChangeLanguage(data_length=data_length, show_display=show_display)
 
-    response = session.call(msg)
-    if data_length > 0:
-        response = messages.DataChunkRequest.ensure_isinstance(response)
-        _send_chunked_data(session, response, language_data)
-    else:
-        messages.Success.ensure_isinstance(response)
+    with session.interact() as ctx:
+        response = ctx.call(msg)
+        if data_length > 0:
+            response = messages.DataChunkRequest.ensure_isinstance(response)
+            _send_chunked_data(ctx, response, language_data)
+        else:
+            messages.Success.ensure_isinstance(response)
     session.refresh_features()  # changing the language in features
 
 
