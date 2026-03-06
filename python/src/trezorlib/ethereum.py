@@ -219,14 +219,15 @@ def sign_tx(
     data, chunk = data[1024:], data[:1024]
     msg.data_initial_chunk = chunk
 
-    response = session.call(msg)
-    assert isinstance(response, messages.EthereumTxRequest)
-
-    while response.data_length is not None:
-        data_length = response.data_length
-        data, chunk = data[data_length:], data[:data_length]
-        response = session.call(messages.EthereumTxAck(data_chunk=chunk))
+    with session.interact() as ctx:
+        response = ctx.call(msg)
         assert isinstance(response, messages.EthereumTxRequest)
+
+        while response.data_length is not None:
+            data_length = response.data_length
+            data, chunk = data[data_length:], data[:data_length]
+            response = ctx.call(messages.EthereumTxAck(data_chunk=chunk))
+            assert isinstance(response, messages.EthereumTxRequest)
 
     assert response.signature_v is not None
     assert response.signature_r is not None
@@ -277,14 +278,15 @@ def sign_tx_eip1559(
         payment_req=payment_req,
     )
 
-    response = session.call(msg)
-    assert isinstance(response, messages.EthereumTxRequest)
-
-    while response.data_length is not None:
-        data_length = response.data_length
-        data, chunk = data[data_length:], data[:data_length]
-        response = session.call(messages.EthereumTxAck(data_chunk=chunk))
+    with session.interact() as ctx:
+        response = ctx.call(msg)
         assert isinstance(response, messages.EthereumTxRequest)
+
+        while response.data_length is not None:
+            data_length = response.data_length
+            data, chunk = data[data_length:], data[:data_length]
+            response = ctx.call(messages.EthereumTxAck(data_chunk=chunk))
+            assert isinstance(response, messages.EthereumTxRequest)
 
     assert response.signature_v is not None
     assert response.signature_r is not None
@@ -324,67 +326,68 @@ def sign_typed_data(
     data = sanitize_typed_data(data)
     types = data["types"]
 
-    request = messages.EthereumSignTypedData(
-        address_n=n,
-        primary_type=data["primaryType"],
-        metamask_v4_compat=metamask_v4_compat,
-        definitions=definitions,
-    )
-    if show_message_hash is not None:
-        request.show_message_hash = show_message_hash
-    response = session.call(request)
+    with session.interact() as ctx:
+        request = messages.EthereumSignTypedData(
+            address_n=n,
+            primary_type=data["primaryType"],
+            metamask_v4_compat=metamask_v4_compat,
+            definitions=definitions,
+        )
+        if show_message_hash is not None:
+            request.show_message_hash = show_message_hash
+        response = ctx.call(request)
 
-    # Sending all the types
-    while isinstance(response, messages.EthereumTypedDataStructRequest):
-        struct_name = response.name
+        # Sending all the types
+        while isinstance(response, messages.EthereumTypedDataStructRequest):
+            struct_name = response.name
 
-        members: List["messages.EthereumStructMember"] = []
-        for field in types[struct_name]:
-            field_type = get_field_type(field["type"], types)
-            struct_member = messages.EthereumStructMember(
-                type=field_type,
-                name=field["name"],
-            )
-            members.append(struct_member)
+            members: List["messages.EthereumStructMember"] = []
+            for field in types[struct_name]:
+                field_type = get_field_type(field["type"], types)
+                struct_member = messages.EthereumStructMember(
+                    type=field_type,
+                    name=field["name"],
+                )
+                members.append(struct_member)
 
-        request = messages.EthereumTypedDataStructAck(members=members)
-        response = session.call(request)
+            request = messages.EthereumTypedDataStructAck(members=members)
+            response = ctx.call(request)
 
-    # Sending the whole message that should be signed
-    while isinstance(response, messages.EthereumTypedDataValueRequest):
-        root_index = response.member_path[0]
-        # Index 0 is for the domain data, 1 is for the actual message
-        if root_index == 0:
-            member_typename = "EIP712Domain"
-            member_data = data["domain"]
-        elif root_index == 1:
-            member_typename = data["primaryType"]
-            member_data = data["message"]
-        else:
-            session.cancel()
-            raise exceptions.TrezorException("Root index can only be 0 or 1")
+        # Sending the whole message that should be signed
+        while isinstance(response, messages.EthereumTypedDataValueRequest):
+            root_index = response.member_path[0]
+            # Index 0 is for the domain data, 1 is for the actual message
+            if root_index == 0:
+                member_typename = "EIP712Domain"
+                member_data = data["domain"]
+            elif root_index == 1:
+                member_typename = data["primaryType"]
+                member_data = data["message"]
+            else:
+                session.cancel()
+                raise exceptions.TrezorException("Root index can only be 0 or 1")
 
-        # It can be asking for a nested structure (the member path being [X, Y, Z, ...])
-        # TODO: what to do when the value is missing (for example in recursive types)?
-        for index in response.member_path[1:]:
-            if isinstance(member_data, dict):
-                member_def = types[member_typename][index]
-                member_typename = member_def["type"]
-                member_data = member_data[member_def["name"]]
-            elif isinstance(member_data, list):
-                member_typename = typeof_array(member_typename)
-                member_data = member_data[index]
+            # It can be asking for a nested structure (the member path being [X, Y, Z, ...])
+            # TODO: what to do when the value is missing (for example in recursive types)?
+            for index in response.member_path[1:]:
+                if isinstance(member_data, dict):
+                    member_def = types[member_typename][index]
+                    member_typename = member_def["type"]
+                    member_data = member_data[member_def["name"]]
+                elif isinstance(member_data, list):
+                    member_typename = typeof_array(member_typename)
+                    member_data = member_data[index]
 
-        # If we were asked for a list, first sending its length and we will be receiving
-        # requests for individual elements later
-        if isinstance(member_data, list):
-            # Sending the length as uint16
-            encoded_data = len(member_data).to_bytes(2, "big")
-        else:
-            encoded_data = encode_data(member_data, member_typename)
+            # If we were asked for a list, first sending its length and we will be receiving
+            # requests for individual elements later
+            if isinstance(member_data, list):
+                # Sending the length as uint16
+                encoded_data = len(member_data).to_bytes(2, "big")
+            else:
+                encoded_data = encode_data(member_data, member_typename)
 
-        request = messages.EthereumTypedDataValueAck(value=encoded_data)
-        response = session.call(request)
+            request = messages.EthereumTypedDataValueAck(value=encoded_data)
+            response = ctx.call(request)
 
     return messages.EthereumTypedDataSignature.ensure_isinstance(response)
 
