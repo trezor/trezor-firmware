@@ -16,9 +16,11 @@ use crate::{
         geometry::{Alignment, Direction, Insets, Point, Rect},
         lerp::Lerp,
         shape::{self, Renderer},
-        util::Pager,
     },
 };
+
+#[cfg(feature = "micropython")]
+use crate::ui::util::Pager;
 
 use super::super::theme::TITLE_HEIGHT;
 
