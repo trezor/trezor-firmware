@@ -24,7 +24,7 @@ use crate::{
         geometry::{self, Direction, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ContentType, PropsList, RecoveryType, StrOrBytes},
+            util::{ContentType, PropsList, RecoveryType},
         },
         notification::Notification,
         ui_firmware::{
