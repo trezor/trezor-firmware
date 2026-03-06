@@ -24,8 +24,8 @@ import construct as c
 from construct_classes import Struct, subcon
 
 from .. import cosi
+from ..construct_helpers import EnumAdapter, TupleAdapter
 from ..toif import ToifStruct
-from ..tools import EnumAdapter, TupleAdapter
 from . import util
 from .models import Model
 

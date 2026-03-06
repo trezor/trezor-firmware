@@ -24,8 +24,8 @@ import requests
 from construct_classes import Struct, subcon
 
 from . import cosi, merkle_tree
+from .construct_helpers import EnumAdapter
 from .messages import DefinitionType
-from .tools import EnumAdapter
 
 LOG = logging.getLogger(__name__)
 

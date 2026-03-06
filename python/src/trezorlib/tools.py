@@ -23,9 +23,7 @@ import struct
 import typing as t
 import unicodedata
 from contextlib import AbstractContextManager
-from enum import Enum
 
-import construct
 import typing_extensions as tx
 
 from . import messages
@@ -322,34 +320,6 @@ def descriptor_checksum(desc: str) -> str:
     for j in range(0, 8):
         ret[j] = CHECKSUM_CHARSET[(c >> (5 * (7 - j))) & 31]
     return "".join(ret)
-
-
-class EnumAdapter(construct.Adapter):
-    def __init__(self, subcon: construct.Adapter, enum: type[Enum]) -> None:
-        self.enum = enum
-        super().__init__(subcon)
-
-    def _encode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
-        if isinstance(obj, self.enum):
-            return obj.value
-        return obj
-
-    def _decode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
-        try:
-            return self.enum(obj)
-        except ValueError:
-            return obj
-
-
-class TupleAdapter(construct.Adapter):
-    def __init__(self, *subcons: construct.Adapter) -> None:
-        super().__init__(construct.Sequence(*subcons))
-
-    def _encode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
-        return obj
-
-    def _decode(self, obj: t.Any, context: t.Any, path: t.Any) -> t.Any:
-        return tuple(obj)
 
 
 def enter_context(context_func: ContextFunc[CM, P, R]) -> ContextFunc[CM, P, R]:

@@ -27,10 +27,10 @@ import construct as c
 from construct_classes import Struct, subcon
 from typing_extensions import Self, TypedDict
 
+from ..construct_helpers import EnumAdapter, TupleAdapter
 from ..debuglink import LayoutType
 from ..firmware.models import Model
 from ..models import TrezorModel
-from ..tools import EnumAdapter, TupleAdapter
 
 # All sections need to be aligned to 2 bytes for the offset tables using u16 to work properly
 ALIGNMENT = 2
