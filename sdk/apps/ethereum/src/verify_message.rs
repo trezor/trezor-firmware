@@ -5,10 +5,10 @@ use crate::{
     sign_message::message_digest,
 };
 #[cfg(not(test))]
-use alloc::vec::Vec;
+use alloc::{string::ToString, vec::Vec};
 #[cfg(test)]
-use std::vec::Vec;
-use trezor_app_sdk::{Error, Result, crypto};
+use std::{string::ToString, vec::Vec};
+use trezor_app_sdk::{Error, Result, crypto, ui};
 
 pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
     let digest = message_digest(msg.message.as_slice());
@@ -54,5 +54,10 @@ pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
         false,
     )?;
 
-    Ok(Success::default())
+    ui::show_success("The signature is valid.", "verify_message")?;
+
+    let mut msg = Success::default();
+    msg.message = Some("Message verified".to_string());
+
+    Ok(msg)
 }

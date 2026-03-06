@@ -211,8 +211,8 @@ pub enum TrezorUiEnum {
         content: ShortString,
     },
     Success {
-        title: ShortString,
         content: ShortString,
+        br_name: ShortString,
     },
     RequestNumber {
         title: ShortString,
@@ -252,13 +252,16 @@ pub enum TrezorUiEnum {
         items: PropsList,
         chunkify: bool,
     },
-    ConfirmValueIntro {
+    ConfirmBlob {
         title: ShortString,
         data: ExtraLongString,
         hold: bool,
         chunkify: bool,
         verb: Option<ShortString>,
         verb_cancel: Option<ShortString>,
+        is_data: bool,
+        br_code: u32,
+        br_name: ShortString,
     },
 }
 
@@ -312,7 +315,7 @@ impl TrezorCryptoEnum {
 #[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorCryptoResult {
     Xpub(LongString),
-    Signature([u8; 64]),
+    Signature([u8; 65]),
     EthPubkeyHash([u8; 20]),
     AddressMac([u8; 32]),
     Failed(ShortString),

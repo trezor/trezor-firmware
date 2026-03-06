@@ -7,7 +7,7 @@ def send_crypto_result(
     *,
     result: CryptoResult,
     ipc_cb: Callable[[bytes], None],
-) -> bytes:
+) -> None:
     """Serialize a crypto result (e.g. CryptoResult) into bytes and send it back via the ipc_cb callback."""
 
 

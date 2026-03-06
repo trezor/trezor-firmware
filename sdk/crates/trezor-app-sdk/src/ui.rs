@@ -33,7 +33,7 @@ use crate::service::{
     CoreIpcService, Error, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler,
 };
 use crate::util::Timeout;
-use crate::{error, info, trace, unwrap};
+use crate::{error, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
@@ -214,36 +214,18 @@ pub fn confirm_blob(
     verb_cancel: Option<&str>,
     chunkify: bool,
 ) -> UiResult {
-    let value = TrezorUiEnum::ConfirmValueIntro {
+    let value = TrezorUiEnum::ConfirmBlob {
         title: unwrap!(ShortString::from_str(title)),
         data: unwrap!(ExtraLongString::from_str(data)),
         hold,
         chunkify,
         verb: verb.map(|v| unwrap!(ShortString::from_str(v))),
         verb_cancel: verb_cancel.map(|v| unwrap!(ShortString::from_str(v))),
+        is_data: true,
+        br_code: br_code,
+        br_name: unwrap!(ShortString::from_str(br_name)),
     };
-    match ipc_ui_call(&value) {
-        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
-        Ok(TrezorUiResult::Info) => confirm_value_simple(
-            title,
-            data,
-            None,
-            br_name,
-            Some(br_code),
-            true,
-            None,
-            None,
-            hold,
-            true,
-            true,
-            false,
-        ),
-        Ok(_) => Ok(TrezorUiResult::Cancelled),
-        Err(e) => {
-            error!("UI error: {:?}", e);
-            Err(e)
-        }
-    }
+    ipc_ui_call_confirm(&value)
 }
 
 fn show_info(title: &str, items: &[(&str, &str)], chunkify: bool) -> UiResult {
@@ -363,10 +345,10 @@ pub fn show_danger(title: &str, content: &str) -> UiResult {
 }
 
 /// Show a success message
-pub fn show_success(title: &str, content: &str) -> Result<()> {
+pub fn show_success(content: &str, br_name: &str) -> Result<()> {
     let value = TrezorUiEnum::Success {
-        title: unwrap!(ShortString::from_str(title)),
         content: unwrap!(ShortString::from_str(content)),
+        br_name: unwrap!(ShortString::from_str(br_name)),
     };
     ipc_ui_call_void(&value)
 }

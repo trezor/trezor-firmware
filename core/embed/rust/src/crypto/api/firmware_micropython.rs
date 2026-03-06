@@ -54,7 +54,9 @@ extern "C" fn new_deserialize_crypto_message(
         }
 
         fn slice_from_archived<'a, const N: usize>(s: &'a ArchivedBufferN<N>) -> &'a [u8] {
-            let buf = unsafe { core::slice::from_raw_parts::<u8>(s.data.as_ptr(), s.len.to_native() as usize) };
+            let buf = unsafe {
+                core::slice::from_raw_parts::<u8>(s.data.as_ptr(), s.len.to_native() as usize)
+            };
             buf
         }
 
@@ -174,10 +176,13 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
             dbg_println!("Data with length: {}", data.len());
             match data.len() {
-                64 => TrezorCryptoResult::Signature(unwrap!(data.try_into())),
+                65 => TrezorCryptoResult::Signature(unwrap!(data.try_into())),
                 32 => TrezorCryptoResult::AddressMac(unwrap!(data.try_into())),
                 20 => TrezorCryptoResult::EthPubkeyHash(unwrap!(data.try_into())),
-                _ => return Err(Error::TypeError),
+                _ => {
+                    dbg_println!("Unexpected data length for crypto result: {}", data.len());
+                    return Err(Error::TypeError);
+                }
             }
         };
 
@@ -204,7 +209,7 @@ pub static mp_module_trezorcrypto_api: Module = obj_module! {
     ///     *,
     ///     result: CryptoResult,
     ///     ipc_cb: Callable[[bytes], None],
-    /// ) -> bytes:
+    /// ) -> None:
     ///     """Serialize a crypto result (e.g. CryptoResult) into bytes and send it back via the ipc_cb callback."""
     Qstr::MP_QSTR_send_crypto_result => obj_fn_kw!(0, new_send_crypto_result).as_obj(),
 

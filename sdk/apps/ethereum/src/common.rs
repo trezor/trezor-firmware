@@ -9,7 +9,7 @@ use std::{
     string::{String, ToString},
     vec::Vec,
 };
-use trezor_app_sdk::{Error, Result, info, ui};
+use trezor_app_sdk::{Error, Result, ui};
 
 const LONG_MSG_PAGE_THRESHOLD: usize = 300;
 
@@ -47,7 +47,7 @@ pub(crate) fn confirm_signverify(
     let (address_title, br_name) = if verify {
         ("Verify address", "verify_message")
     } else {
-        ("Confirm address", "sign_message")
+        ("Signing address", "sign_message")
     };
 
     // TODO implement actual signing logic

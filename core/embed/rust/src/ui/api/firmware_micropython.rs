@@ -1306,23 +1306,23 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
                     .unwrap();
             }
         });
-        let (main_layout, info_layout, br_code, br_name) =
+        let (main_layout, info, br_code, br_name) =
             ModelUI::process_ipc_message(data, request_cb.unwrap())?;
-        let info_obj = match info_layout {
-            Some(layout) => Obj::from(layout),
+        let info_obj = match info {
+            Some((layout, repeat_button_request, info_layout_can_confirm)) => (
+                Obj::from(layout),
+                Obj::from(repeat_button_request),
+                Obj::from(info_layout_can_confirm),
+            )
+                .try_into()?,
             None => Obj::const_none(),
         };
-        let br_code_obj = match br_code {
-            Some(code) => Obj::try_from(code)?,
-            None => Obj::const_none(),
+        let br_obj = match br_code {
+            Some(code) => (Obj::try_from(code)?, br_name).try_into()?,
+            None => (Obj::const_none(), br_name).try_into()?,
         };
 
-        Ok((
-            main_layout.into(),
-            info_obj,
-            (br_code_obj, br_name).try_into()?,
-        )
-            .try_into()?)
+        Ok((main_layout.into(), info_obj, br_obj).try_into()?)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -2299,7 +2299,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     data: bytes,
     ///     request_cb: Callable[[bytes, int], None] | None = None,
-    /// ) -> tuple[LayoutObj[UiResult], LayoutObj[UiResult] | None, tuple[ButtonRequestType | None, str | None]]:
+    /// ) -> tuple[LayoutObj[UiResult], (LayoutObj[UiResult], bool, bool) | None, tuple[ButtonRequestType | None, str | None]]:
     ///     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
     Qstr::MP_QSTR_process_ipc_message => obj_fn_kw!(0, new_process_ipc_message).as_obj(),
 
@@ -2307,7 +2307,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     result: UiResult | int | str | None,
     ///     ipc_cb: Callable[[bytes], None] | None = None,
-    /// ) -> bytes:
+    /// ) -> None:
     ///     """Serialize a UI result into bytes and send it via the ipc_cb callback.."""
     Qstr::MP_QSTR_send_ui_result => obj_fn_kw!(0, new_send_ui_result).as_obj(),
 

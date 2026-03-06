@@ -40,7 +40,7 @@ pub fn sign_message(msg: EthereumSignMessage) -> Result<EthereumMessageSignature
 
     let message = crate::common::decode_message(&msg.message);
 
-    confirm_signverify(&message, &address, false, Some(&path), Some(account), true)?;
+    confirm_signverify(&message, &address, false, Some(&path), Some(account), false)?;
 
     let hash = message_digest(&msg.message);
 

@@ -99,7 +99,7 @@ pub fn sign_typed_hash(
     hash: &[u8],
     encoded_network: Option<&[u8]>,
     encoded_token: Option<&[u8]>,
-) -> Result<[u8; 64]> {
+) -> Result<[u8; 65]> {
     let value = TrezorCryptoEnum::SignTypedHash {
         address_n: unwrap!(DerivationPath::from_slice(address_n)),
         hash: unwrap!(TypedHash::from_slice(hash)),

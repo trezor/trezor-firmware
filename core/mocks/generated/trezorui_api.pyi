@@ -848,7 +848,7 @@ def process_ipc_message(
     *,
     data: bytes,
     request_cb: Callable[[bytes, int], None] | None = None,
-) -> tuple[LayoutObj[UiResult], LayoutObj[UiResult] | None, tuple[ButtonRequestType | None, str | None]]:
+) -> tuple[LayoutObj[UiResult], (LayoutObj[UiResult], bool, bool) | None, tuple[ButtonRequestType | None, str | None]]:
     """Process an IPC message by deserializing it and dispatching to the appropriate UI function."""
 
 

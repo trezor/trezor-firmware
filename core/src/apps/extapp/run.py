@@ -106,7 +106,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         service, message_id = from_fn_id(msg.fn)
 
         if service == _SERVICE_UI:
-            (main_layout_obj, info_layout_obj, (br_code, br_name)) = (
+            (main_layout_obj, info_obj, (br_code, br_name)) = (
                 trezorui_api.process_ipc_message(
                     data=bytes(msg.data), request_cb=request_callback
                 )
@@ -115,17 +115,28 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 br_code if br_code is not None else ButtonRequestType.Other
             )
 
-            if info_layout_obj is not None:
+            if info_obj is not None:
+                info_layout, repeat_button_request, info_layout_can_confirm = info_obj
                 assert (
                     br_name is not None
                 ), "br_name must be provided if info_layout_obj is provided"
 
                 try:
-                    result = await with_info(
-                        main_layout_obj, info_layout_obj, br_name, br_code_value
+                    await with_info(
+                        main_layout_obj,
+                        info_layout,
+                        br_name,
+                        br_code_value,
+                        repeat_button_request,
+                        info_layout_can_confirm,
                     )
+                    result = trezorui_api.CONFIRMED
                 except ActionCancelled:
+                    print("User cancelled the operation")
                     result = trezorui_api.CANCELLED
+                except Exception as e:
+                    print(f"Error during with_info interaction: {e}")
+                    die(DataError(f"UI interaction failed: {e}"))
             else:
                 result = await interact(
                     main_layout_obj, br_name, br_code_value, raise_on_cancel=None
@@ -198,11 +209,10 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 
             # Serialize and send the result back
             try:
-                result = trezorcrypto_api.send_crypto_result(
+                trezorcrypto_api.send_crypto_result(
                     result=result, ipc_cb=crypto_resp_cb
                 )
-            except:
-                print("Failed to send crypto result")
+            except Exception as e:
                 die(DataError("Failed to serialize or send crypto result"))
 
         elif service == _SERVICE_WIRE_CONTINUE:
@@ -373,13 +383,13 @@ async def _sign_typed_hash(
 
     node = keychain.derive(address_n)
 
-    progress_obj = progress(title=TR.progress__signing_transaction)
-    progress_obj.report(600)
+    # progress_obj = progress(title=TR.progress__signing_transaction)
+    # progress_obj.report(600)
     signature = secp256k1.sign(
         node.private_key(),
         data_hash,
         False,
         secp256k1.CANONICAL_SIG_ETHEREUM,
     )
-    progress_obj.stop()
+    # progress_obj.stop()
     return signature
