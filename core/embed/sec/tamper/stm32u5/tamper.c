@@ -22,7 +22,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <io/rsod.h>
+// #include <io/rsod.h> // !@#
 #include <sec/tamper.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
@@ -271,7 +271,7 @@ void TAMP_IRQHandler(void) {
 #if defined(USE_BOOTARGS_RSOD) && !defined(BOARDLOADER)
   reboot_with_rsod(&pminfo);
 #else
-  rsod_panic_handler(&pminfo);
+//  rsod_panic_handler(&pminfo); //!@#
 #endif
 }
 
