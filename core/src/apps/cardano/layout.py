@@ -108,9 +108,9 @@ async def show_native_script(
         script_type_name_suffix = ""
         if script_type == CNST.PUB_KEY:
             if key_path:
-                script_type_name_suffix = "path"
+                script_type_name_suffix = "path:"
             elif key_hash:
-                script_type_name_suffix = "hash"
+                script_type_name_suffix = "hash:"
 
         props: list[StrPropertyType] = [
             (
@@ -767,9 +767,9 @@ async def confirm_stake_pool_parameters(
             (TR.cardano__pool_reward_account, pool_parameters.reward_account, True),
             (
                 None,
-                f"{TR.cardano__pledge}: {format_coin_amount(pool_parameters.pledge, network_id)}\n"
-                + f"{TR.cardano__cost}: {format_coin_amount(pool_parameters.cost, network_id)}\n"
-                + f"{TR.cardano__margin}: {percentage_formatted}%",
+                f"{TR.cardano__pledge} {format_coin_amount(pool_parameters.pledge, network_id)}\n"
+                + f"{TR.cardano__cost} {format_coin_amount(pool_parameters.cost, network_id)}\n"
+                + f"{TR.cardano__margin} {percentage_formatted}%",
                 None,
             ),
         ),
