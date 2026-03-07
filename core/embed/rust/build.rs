@@ -1,6 +1,9 @@
 #[cfg(feature = "test")]
 use std::ffi::OsStr;
-use std::{env, path::PathBuf, process::Command};
+use std::{env, path::PathBuf};
+
+#[cfg(not(feature = "new_build_system"))]
+use std::process::Command;
 
 fn main() {
     println!("cargo:rustc-env=BUILD_DIR={}", build_dir());
@@ -25,6 +28,7 @@ fn build_dir() -> String {
         .to_string()
 }
 
+#[cfg(not(feature = "new_build_system"))]
 const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../projects/bootloader",
     "-I../projects/unix",
@@ -70,6 +74,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DBOOTLOADER",
 ];
 
+#[cfg(not(feature = "new_build_system"))]
 fn add_bindgen_macros<'a>(
     clang_args: &mut Vec<String>,
     envvar: Option<&'a str>,
@@ -143,6 +148,7 @@ fn generate_qstr_bindings() {
     std::fs::write(&dest_file, qstr_modified).unwrap();
 }
 
+#[cfg(not(feature = "new_build_system"))]
 fn prepare_bindings() -> bindgen::Builder {
     let mut bindings = bindgen::Builder::default();
 
@@ -197,6 +203,72 @@ fn prepare_bindings() -> bindgen::Builder {
     bindings = bindings.clang_args(&clang_args);
 
     bindings
+        // Customize the standard types.
+        .use_core()
+        .ctypes_prefix("cty")
+        .size_t_is_usize(true)
+        // Disable the layout tests. They spew out a lot of code-style bindings, and are not too
+        // relevant for our use-case.
+        .layout_tests(false)
+        // Tell cargo to invalidate the built crate whenever any of the
+        // included header files change.
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+}
+
+fn get_clang_args(crate_name: &str) -> Vec<String> {
+    let mut clang_args: Vec<String> = Vec::new();
+
+    let get_c_public = |crate_name: &str, kind: &str| -> String {
+        std::env::var(format!("DEP_{}_{}", crate_name.to_uppercase(), kind)).unwrap_or_default()
+    };
+
+    let includes = get_c_public(crate_name, "C_COMPILER_INCLUDES");
+    for dir in includes.split(';').filter(|path| !path.is_empty()) {
+        clang_args.push(format!("-I{}", dir));
+    }
+
+    let includes = get_c_public(crate_name, "PUBLIC_C_INCLUDES");
+
+    for dir in includes.split(';').filter(|path| !path.is_empty()) {
+        clang_args.push(format!("-I{}", dir));
+    }
+
+    let defines = get_c_public(crate_name, "PUBLIC_C_DEFINES");
+
+    for def in defines.split(';').filter(|def| !def.is_empty()) {
+        let parts: Vec<&str> = def.splitn(2, '=').collect();
+        let name = parts[0];
+        if parts.len() > 1 {
+            clang_args.push(format!("-D{}={}", name, parts[1]));
+        } else {
+            clang_args.push(format!("-D{}", name));
+        }
+    }
+
+    let flags = get_c_public(crate_name, "PUBLIC_C_FLAGS");
+
+    for flag in flags.split(';').filter(|flag| !flag.is_empty()) {
+        clang_args.push(flag.to_string());
+    }
+
+    clang_args
+}
+
+#[cfg(feature = "new_build_system")]
+fn prepare_bindings() -> bindgen::Builder {
+    let bindings = bindgen::Builder::default();
+
+    let mut clang_args = get_clang_args("io");
+
+    if cfg!(feature = "bootloader") {
+        //TODO!@# hack
+        clang_args.push("-I../projects/bootloader".to_string());
+    }
+
+    //TODO!@# check fno-short-enums
+
+    bindings
+        .clang_args(&clang_args)
         // Customize the standard types.
         .use_core()
         .ctypes_prefix("cty")
@@ -576,6 +648,7 @@ fn generate_crypto_bindings() {
         .unwrap();
 }
 
+#[cfg(not(feature = "new_build_system"))]
 fn is_firmware() -> bool {
     let target = env::var("TARGET").unwrap();
     target.starts_with("thumbv7") || target.starts_with("thumbv8")

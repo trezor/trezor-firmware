@@ -91,6 +91,7 @@ stdenvNoCC.mkDerivation ({
     crowdin-cli  # for translations
     curl  # for connect tests
     editorconfig-checker
+    bear
     gcc-arm-embedded-13
     gcc14
     git

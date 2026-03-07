@@ -1,0 +1,36 @@
+[workspace]
+members = [
+    "models",
+    "rtl",
+    "sys",
+    "sec",
+    "io",
+    "projects/boardloader",
+    "projects/bootloader",
+    "projects/secmon",
+    "projects/kernel",
+    "projects/prodtest",
+    "rust"
+]
+
+resolver = "3"
+
+[profile.dev]
+panic = "abort"
+split-debuginfo = "off"
+debug = 2
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true
+codegen-units = 1
+split-debuginfo = "off"
+debug = 2
+
+[profile.release.package.trezor-tjpgdec]
+opt-level = 3
+
+[profile.test]
+split-debuginfo = "off"
+debug = 2

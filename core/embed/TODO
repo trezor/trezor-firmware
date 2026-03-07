@@ -1,0 +1,13 @@
+- add upymod crate(build micropython code, qstring)
+- add "simple-firmware??" crate (in project/firmware)
+- add coreapp crate (in project/firmware folder)
+
+- add remaining c sources (tropic, ble, nrf, ..)
+- add/specify features for all models
+
+- post build steps (header update)
+- export/link secmon api object
+
+- resolve cyclic dependencies
+
+

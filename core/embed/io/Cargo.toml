@@ -1,0 +1,83 @@
+[package]
+name = "io"
+version = "0.0.0"
+edition = "2024"
+links = "io"
+
+[build-dependencies]
+cbuild = { path = "../cbuild" }
+
+[dependencies]
+sec = { path = "../sec" }
+sys = { path = "../sys" }
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = ["sec/model_d001"]
+model_d002 = ["sec/model_d002"]
+model_t2t1 = ["sec/model_t2t1", "backlight_tps61043", "touch_ft6x36_t2t1"]
+model_t2b1 = ["sec/model_t2b1"]
+model_t3b1 = ["sec/model_t3b1"]
+model_t3t1 = ["sec/model_t3t1", "backlight_tps61043", "touch_ft6x36_t3t1"]
+model_t3w1 = ["sec/model_t3w1", "backlight_tps61062", "touch_ft3168"]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f4 = ["sec/mcu_stm32f4", "mcu_stm32"]
+mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_emulator = ["sec/mcu_emulator"]
+
+# --------------------------------------------------------------------------
+# Privilege mode features
+# --------------------------------------------------------------------------
+
+kernel_mode = ["sec/kernel_mode"]
+secure_mode = ["sec/secure_mode"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+backlight = []
+button = []
+display = []
+fancy_fatal_error = []
+haptic = ["sys/i2c_bus"]
+sbu = []
+sd_card = []
+touch = ["sys/i2c_bus"]
+usb_iface_debug = ["usb"]
+usb_iface_vcp = ["usb"]
+usb_iface_webauthn = ["usb"]
+usb_iface_wire = ["usb"]
+pmic = ["sys/i2c_bus"]
+power_manager = ["pmic", "sys/i2c_bus"]
+suspend = ["sec/suspend"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32 = []
+usb = []
+
+# Features for selecting driver implementations
+
+backlight_tps61043 = []
+backlight_tps61062 = []
+
+touch_ft6x36_t2t1 = []
+touch_ft6x36_t3t1 = []
+touch_ft3168 = []
+
+
+
+

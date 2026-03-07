@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    echo "Usage: pb <package> <platform> <model> [release|--release]"
+    echo "  package:  kernel | secmon | prodtest | bootloader | boardloader | coreapp"
+    echo "  platform: hw | emu"
+    echo "  model:    t2t1 | t2b1 | t3b1 | t3t1 | t3w1 | d001 | d002"
+    echo "  release:  optional, build with cargo --release"
+}
+
+if [[ $# -lt 3 || $# -gt 4 ]]; then
+    usage
+    exit 1
+fi
+
+package="$1"
+platform="$2"
+model="$3"
+release_flag=""
+
+if [[ $# -eq 4 ]]; then
+    case "$4" in
+        release|--release)
+            release_flag="--release"
+            ;;
+        *)
+            echo "Invalid release flag: $4"
+            usage
+            exit 1
+            ;;
+    esac
+fi
+
+case "$package" in
+    kernel|secmon|prodtest|bootloader|boardloader|coreapp) ;;
+    *)
+        echo "Invalid package: $package"
+        usage
+        exit 1
+        ;;
+esac
+
+case "$platform" in
+    hw|emu) ;;
+    *)
+        echo "Invalid platform: $platform"
+        usage
+        exit 1
+        ;;
+esac
+
+case "$model" in
+    t2t1|t2b1|t3b1|t3t1|t3w1|d001|d002) ;;
+    *)
+        echo "Invalid model: $model"
+        usage
+        exit 1
+        ;;
+esac
+
+if [[ "$platform" == "emu" ]]; then
+    target=""
+    mcu_feature="mcu_emulator"
+else
+    case "$model" in
+        t2t1|t2b1|d001)
+            target="thumbv7em-none-eabihf"
+            mcu_feature="mcu_stm32f4"
+            ;;
+        t3b1|t3t1)
+            target="thumbv8m.main-none-eabihf"
+            mcu_feature="mcu_stm32u58"
+            ;;
+        t3w1|d002)
+            target="thumbv8m.main-none-eabihf"
+            mcu_feature="mcu_stm32u5g"
+            ;;
+    esac
+fi
+
+model_feature="model_${model}"
+features="${model_feature},${mcu_feature}"
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+workspace_dir="$(cd "${script_dir}" && pwd -P)"
+export BUILD_DIR="${workspace_dir}/target"
+
+cmd=(cargo build -p "$package" -Zbuild-std --features "$features")
+
+if [[ -n "$release_flag" ]]; then
+    cmd+=("$release_flag")
+fi
+
+if [[ -n "$target" ]]; then
+    cmd=(cargo build -p "$package" --target "$target" -Zbuild-std --features "$features")
+    if [[ -n "$release_flag" ]]; then
+        cmd+=("$release_flag")
+    fi
+fi
+
+echo "Running: ${cmd[*]}"
+exec "${cmd[@]}"

@@ -1,0 +1,178 @@
+[package]
+name = "bootloader"
+version = "0.0.0"
+edition = "2024"
+links = "bootloader"
+
+[build-dependencies]
+cbuild = { path = "../../cbuild" }
+
+[dependencies]
+trezor_lib = { path = "../../rust" }
+io = { path = "../../io" }
+sec = { path = "../../sec" }
+sys = { path = "../../sys" }
+models = { path = "../../models" }
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = []
+model_d002 = []
+
+
+#TODO !@# ble, rtc, pvd
+
+model_t2t1 = [
+    "io/model_t2t1",
+    "backlight",
+    "touch",
+]
+
+model_t2b1 = [
+    "io/model_t2b1",
+    "button",
+    "consumption_mask",
+    "lockable_bootloader",
+    "secret",
+]
+
+model_t3b1 = [
+    "io/model_t3b1",
+    "button",
+    "consumption_mask",
+    "hash_processor",
+    "lockable_bootloader",
+    "secret",
+    "secure_aes",
+    "tamper",
+]
+
+model_t3t1 = [
+    "io/model_t3t1",
+    "backlight",
+    "haptic",
+    "hash_processor",
+    "lockable_bootloader",
+    "secret",
+    "secure_aes",
+    "tamper",
+    "touch",
+]
+
+model_t3w1 = [
+    "io/model_t3w1",
+    "backlight",
+    "backup_ram",
+    "boot_ucb",
+    "button",
+    "haptic",
+    "hash_processor",
+    "iwdg",
+    "lockable_bootloader",
+    "power_manager",
+    "secret",
+    "suspend",
+    "tamper",
+    "telemetry",
+    "touch",
+]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f4 = ["io/mcu_stm32f4"]
+mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_emulator = ["io/mcu_emulator"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "io/display",
+    "io/fancy_fatal_error",
+    "io/kernel_mode",
+    "io/secure_mode",
+    "io/usb_iface_wire",
+    "models/bootloader",
+    "trezor_lib/new_build_system",
+
+    "trezor_lib/crypto",
+    "trezor_lib/layout_bolt",
+    #"trezor_lib/layout_caesar",
+    #"trezor_lib/layout_delizia",
+    #"trezor_lib/layout_eckhart",
+    #"trezor_lib/micropython",
+    #"trezor_lib/protobuf",
+    "trezor_lib/ui",
+    #"trezor_lib/dma2d",
+    #"trezor_lib/framebuffer",
+    #"trezor_lib/display_mono",
+    "trezor_lib/display_rgb565",
+    #"trezor_lib/display_rgba8888",
+    #"trezor_lib/ui_debug",
+    #"trezor_lib/ui_performance_overlay",
+    #"trezor_lib/ui_debug_overlay",
+    "trezor_lib/ui_blurring",
+    #"trezor_lib/ui_image_buffer",
+    #"trezor_lib/ui_color_32bit",
+    #"trezor_lib/ui_overlay",
+    "trezor_lib/ui_empty_lock",
+    "trezor_lib/ui_jpeg",
+    #"trezor_lib/hw_jpeg_decoder",
+    #"trezor_lib/boot_ucb",
+    "trezor_lib/bootloader",
+    #"trezor_lib/prodtest",
+    #"trezor_lib/button",
+    "trezor_lib/touch",
+    #"trezor_lib/clippy",
+    #"trezor_lib/debug",
+    #"trezor_lib/debuglink",
+    #"trezor_lib/dev_keys",
+    #"trezor_lib/sbu",
+    #"trezor_lib/haptic",
+    "trezor_lib/sd_card",
+    #"trezor_lib/rgb_led",
+    #"trezor_lib/power_manager",
+    #"trezor_lib/pmic",
+    "trezor_lib/backlight",
+    "trezor_lib/usb",
+    #"trezor_lib/optiga",
+    #"trezor_lib/ble",
+    #"trezor_lib/nrf",
+    #"trezor_lib/smp",
+    #"trezor_lib/tropic",
+    #"trezor_lib/serial_number",
+    #"trezor_lib/storage",
+    #"trezor_lib/telemetry",
+    "trezor_lib/translations",
+    #"trezor_lib/secmon_layout",
+    #"trezor_lib/dbg_console",
+    #"trezor_lib/app_loading",
+    "trezor_lib/universal_fw",
+    ]
+
+mcu_stm32u5 = ["sys/trustzone"]
+
+backlight = ["io/backlight"]
+backup_ram = ["sec/backup_ram"]
+boot_ucb = ["sec/boot_ucb"]
+button = ["io/button"]
+consumption_mask = ["sec/consumption_mask"]
+haptic = ["io/haptic"]
+hash_processor = ["sec/hash_processor"]
+iwdg = ["sec/iwdg"]
+lockable_bootloader = ["models/lockable_bootloader"]
+power_manager = ["io/power_manager"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+suspend = ["io/suspend"]
+tamper = ["sec/tamper"]
+telemetry = ["sec/telemetry"]
+touch = ["io/touch"]

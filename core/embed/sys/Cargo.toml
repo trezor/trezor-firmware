@@ -1,0 +1,60 @@
+[package]
+name = "sys"
+version = "0.0.0"
+edition = "2024"
+links = "sys"
+
+[build-dependencies]
+cbuild = { path = "../cbuild" }
+
+[dependencies]
+rtl = { path = "../rtl" }
+models = { path = "../models" }
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = ["models/model_d001"]
+model_d002 = ["models/model_d002"]
+model_t2t1 = ["models/model_t2t1"]
+model_t2b1 = ["models/model_t2b1"]
+model_t3b1 = ["models/model_t3b1"]
+model_t3t1 = ["models/model_t3t1"]
+model_t3w1 = ["models/model_t3w1"]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f4 = ["models/mcu_stm32f4", "mcu_stm32"]
+mcu_stm32u58 = ["models/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["models/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_emulator = ["models/mcu_emulator", "rtl/mcu_emulator"]
+
+# --------------------------------------------------------------------------
+# Privilege mode features
+# --------------------------------------------------------------------------
+
+kernel_mode = ["models/kernel_mode"]
+secure_mode = ["models/secure_mode"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+boot_ucb = []
+i2c_bus = []
+pvd = []
+rtc = [] # TODO!@# not used yet
+trustzone = []
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32 = []
+

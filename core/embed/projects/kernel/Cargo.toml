@@ -1,0 +1,123 @@
+[package]
+name = "kernel"
+version = "0.0.0"
+edition = "2024"
+
+[build-dependencies]
+cbuild = { path = "../../cbuild" }
+
+[dependencies]
+io = { path = "../../io" }
+sec = { path = "../../sec" }
+sys = { path = "../../sys" }
+models = { path = "../../models" }
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = []
+model_d002 = []
+
+model_t2t1 = [
+    "io/model_t2t1",
+    "backlight",
+    "sd_card",
+    "secure_mode",
+    "touch",
+    ]
+
+model_t2b1 = [
+    "io/model_t2b1",
+    "button",
+    "consumption_mask",
+    "secret",
+    "secure_mode",
+    ]
+
+model_t3b1 = [
+    "io/model_t3b1",
+    "button",
+    "consumption_mask",
+    "hash_processor",
+    "optiga",
+    "secret",
+    "secure_aes",
+    "secure_mode",
+    "tamper",
+    ]
+
+model_t3t1 = [
+    "io/model_t3t1",
+    "backlight",
+    "haptic",
+    "hash_processor",
+    "optiga",
+    "sd_card",
+    "secret",
+    "secure_aes",
+    "secure_mode",
+    "tamper",
+    "touch",
+    ]
+
+model_t3w1 = [
+    "io/model_t3w1",
+    "models/secmon-layout",
+    "backlight",
+    "backup_ram",
+    "boot_ucb",
+    "button",
+    "haptic",
+    "hash_processor",
+    "optiga",
+    "power_manager",
+    "secret",
+    "suspend",
+    "tamper",
+    "telemetry",
+    "touch",
+    ]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f4 = ["io/mcu_stm32f4"]
+mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_emulator = ["io/mcu_emulator"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "io/display",
+    "io/kernel_mode",
+    "io/usb_iface_wire",
+    "models/kernel",
+    "sec/storage",
+    ]
+
+mcu_stm32u5 = ["sys/trustzone"]
+secure_mode = ["io/secure_mode"]
+
+backlight = ["io/backlight"]
+backup_ram = ["sec/backup_ram"]
+boot_ucb = ["sec/boot_ucb"]
+button = ["io/button"]
+consumption_mask = ["sec/consumption_mask"]
+haptic = ["io/haptic"]
+hash_processor = ["sec/hash_processor"]
+optiga = ["sec/optiga"]
+power_manager = ["io/power_manager"]
+sd_card = ["io/sd_card"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+suspend = ["io/suspend"]
+tamper = ["sec/tamper"]
+touch = ["io/touch"]
+telemetry = ["sec/telemetry"]

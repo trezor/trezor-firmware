@@ -1,0 +1,21 @@
+[package]
+name = "rtl"
+version = "0.0.0"
+edition = "2024"
+links = "rtl"
+
+[build-dependencies]
+cbuild = { path = "../cbuild" }
+
+[dependencies]
+models = { path = "../models" }
+
+
+[features]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_emulator = []
+

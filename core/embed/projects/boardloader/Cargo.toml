@@ -1,0 +1,99 @@
+[package]
+name = "boardloader"
+version = "0.0.0"
+edition = "2024"
+links = "boardloader"
+
+[build-dependencies]
+cbuild = { path = "../../cbuild" }
+
+[dependencies]
+sys = { path = "../../sys" }
+io = { path = "../../io" }
+sec = { path = "../../sec" }
+models = { path = "../../models" }
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = []
+model_d002 = []
+
+model_t2t1 = [
+    "io/model_t2t1",
+    "backlight",
+    "pvd",
+    ]
+
+model_t2b1 = [
+    "io/model_t2b1",
+    "pvd",
+    "secret",
+    ]
+
+model_t3b1 = [
+    "io/model_t3b1",
+    "hash_processor",
+    "pvd",
+    "secret",
+    "secure_aes",
+    "tamper",
+    ]
+
+model_t3t1 = [
+    "io/model_t3t1",
+    "backlight",
+    "hash_processor",
+    "pvd",
+    "sd_card_update",
+    "secret",
+    "secure_aes",
+    "tamper",
+    ]
+
+model_t3w1 = [
+    "io/model_t3w1",
+    "backlight",
+    "boot_ucb",
+    "hash_processor",
+    "pmic",
+    "secret",
+    "secure_aes",
+    "tamper",
+    ]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f4 = ["io/mcu_stm32f4"]
+mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_emulator = ["io/mcu_emulator"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "io/display",
+    "io/kernel_mode",
+    "io/secure_mode",
+    "models/boardloader",
+    ]
+
+mcu_stm32u5 = ["sys/trustzone"]
+
+backlight = ["io/backlight"]
+boot_ucb = ["sec/boot_ucb"]
+hash_processor = ["sec/hash_processor"]
+pmic = ["io/pmic"]
+pvd = ["sys/pvd"]
+sd_card_update = ["io/sd_card"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+tamper = ["sec/tamper"]
+

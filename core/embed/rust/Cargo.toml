@@ -85,9 +85,10 @@ test = [
     "universal_fw",
 ]
 universal_fw = []
+new_build_system = ["dep:io"]
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["staticlib", "rlib"]
 
 [profile.dev]
 panic = "abort"
@@ -116,6 +117,7 @@ spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 ufmt = "0.2.0"
 zeroize = { version = "1.8.2", default-features = false, optional = true }
+io = { path = "../io", optional = true }
 
 # Runtime dependencies
 

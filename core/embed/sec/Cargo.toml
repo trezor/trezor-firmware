@@ -1,0 +1,70 @@
+[package]
+name = "sec"
+version = "0.0.0"
+edition = "2024"
+links = "sec"
+
+[build-dependencies]
+cbuild = { path = "../cbuild" }
+
+[dependencies]
+sys = { path = "../sys" }
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = ["sys/model_d001"]
+model_d002 = ["sys/model_d002"]
+model_t2t1 = ["sys/model_t2t1"]
+model_t2b1 = ["sys/model_t2b1"]
+model_t3b1 = ["sys/model_t3b1"]
+model_t3t1 = ["sys/model_t3t1"]
+model_t3w1 = ["sys/model_t3w1"]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f4 = ["sys/mcu_stm32f4", "mcu_stm32"]
+mcu_stm32u58 = ["sys/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["sys/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_emulator = ["sys/mcu_emulator"]
+
+# --------------------------------------------------------------------------
+# Privilege mode features
+# --------------------------------------------------------------------------
+
+kernel_mode = ["sys/kernel_mode"]
+secure_mode = ["sys/secure_mode"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+backup_ram = []
+boot_ucb = ["sys/boot_ucb"]
+consumption_mask = []
+hash_processor = []
+hw_revision = []
+iwdg = []
+optiga = ["sys/i2c_bus", "time_estimate"]
+random_delays = []
+secret = []
+secure_aes = []
+storage = ["time_estimate"]
+suspend = []
+tamper = []
+telemetry = [] # TODO!@# maybe add backup_ram here?
+time_estimate = []
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32 = []
+
+
