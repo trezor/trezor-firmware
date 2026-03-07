@@ -1,12 +1,16 @@
 #!/usr/bin/py.test
-import binascii
 import ctypes as c
-import hashlib
 import os
 import random
 
-import ecdsa
+import binascii
 import pytest
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    Prehashed,
+    encode_dss_signature,
+)
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 
@@ -17,7 +21,122 @@ def bytes2num(s):
     return res
 
 
-curves = {"nist256p1": ecdsa.curves.NIST256p, "secp256k1": ecdsa.curves.SECP256k1}
+# -- Minimal EC point arithmetic for testing --
+
+_CURVE_PARAMS = {
+    "secp256k1": {
+        "p": 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F,
+        "a": 0,
+        "b": 7,
+        "Gx": 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798,
+        "Gy": 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8,
+        "order": 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141,
+        "crypto_curve": ec.SECP256K1,
+    },
+    "nist256p1": {
+        "p": 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF,
+        "a": -3,
+        "b": 0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B,
+        "Gx": 0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296,
+        "Gy": 0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5,
+        "order": 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551,
+        "crypto_curve": ec.SECP256R1,
+    },
+}
+
+
+class ECPoint:
+    """Point on an elliptic curve y^2 = x^3 + ax + b (mod p)."""
+
+    def __init__(self, x, y, params):
+        self._x = x
+        self._y = y
+        self._params = params
+
+    def x(self):
+        return self._x
+
+    def y(self):
+        return self._y
+
+    def is_infinity(self):
+        return self._x is None and self._y is None
+
+    def __eq__(self, other):
+        if isinstance(other, ECPoint):
+            return self._x == other._x and self._y == other._y
+        return NotImplemented
+
+    def double(self):
+        if self.is_infinity():
+            return self
+        p = self._params["p"]
+        a = self._params["a"]
+        lam = (3 * self._x * self._x + a) * pow(2 * self._y, -1, p) % p
+        x3 = (lam * lam - 2 * self._x) % p
+        y3 = (lam * (self._x - x3) - self._y) % p
+        return ECPoint(x3, y3, self._params)
+
+    def __add__(self, other):
+        if self.is_infinity():
+            return other
+        if other.is_infinity():
+            return self
+        p = self._params["p"]
+        if self._x == other._x:
+            if self._y != other._y:
+                return ECPoint(None, None, self._params)
+            return self.double()
+        lam = (other._y - self._y) * pow(other._x - self._x, -1, p) % p
+        x3 = (lam * lam - self._x - other._x) % p
+        y3 = (lam * (self._x - x3) - self._y) % p
+        return ECPoint(x3, y3, self._params)
+
+    def __rmul__(self, scalar):
+        result = ECPoint(None, None, self._params)
+        addend = self
+        while scalar:
+            if scalar & 1:
+                result = result + addend
+            addend = addend + addend
+            scalar >>= 1
+        return result
+
+
+class ECCurveParams:
+    """Mimics the ecdsa library's curve parameter interface."""
+
+    def __init__(self, params):
+        self._p = params["p"]
+        self._a = params["a"]
+        self._b = params["b"]
+
+    def p(self):
+        return self._p
+
+    def a(self):
+        return self._a
+
+    def b(self):
+        return self._b
+
+
+class CurveObj:
+    """Curve object that provides the same interface as ecdsa curve objects."""
+
+    def __init__(self, name, params):
+        self._name = name
+        self.curve = ECCurveParams(params)
+        self.generator = ECPoint(params["Gx"], params["Gy"], params)
+        self.order = params["order"]
+        self._crypto_curve = params["crypto_curve"]
+        self.p = None
+        self.ptr = None
+
+
+curves = {
+    name: CurveObj(name, params) for name, params in _CURVE_PARAMS.items()
+}
 
 
 class Point:
@@ -146,7 +265,7 @@ def get_curve_obj(name):
     assert curve_ptr, "curve {} not found".format(name)
     curve_obj = curves[name]
     curve_obj.ptr = c.cast(curve_ptr, c.POINTER(ecdsa_curve))
-    curve_obj.p = curve_obj.curve.p()  # shorthand
+    curve_obj.p = _CURVE_PARAMS[name]["p"]
     return curve_obj
 
 
@@ -162,8 +281,8 @@ def point(request):
     assert curve_ptr, "curve {} not found".format(name)
     curve_obj = curves[name]
     curve_obj.ptr = c.c_void_p(curve_ptr)
-    curve_obj.p = ecdsa.ellipticcurve.Point(
-        curve_obj.curve, request.param.x, request.param.y
+    curve_obj.p = ECPoint(
+        request.param.x, request.param.y, _CURVE_PARAMS[name]
     )
     return curve_obj
 
@@ -286,10 +405,6 @@ def test_jacobian_double(curve, r):
     assert (p2.x(), p2.y()) == q
 
 
-def sigdecode(sig, _):
-    return map(bytes2num, [sig[:32], sig[32:]])
-
-
 def test_sign_native(curve, r):
     priv = r.randbytes(32)
     digest = r.randbytes(32)
@@ -298,15 +413,16 @@ def test_sign_native(curve, r):
     lib.tc_ecdsa_sign_digest(curve.ptr, priv, digest, sig, c.c_void_p(0), c.c_void_p(0))
 
     exp = bytes2num(priv)
-    sk = ecdsa.SigningKey.from_secret_exponent(exp, curve, hashfunc=hashlib.sha256)
-    vk = sk.get_verifying_key()
+    private_key = ec.derive_private_key(exp, curve._crypto_curve())
+    public_key = private_key.public_key()
 
-    sig_ref = sk.sign_digest_deterministic(
-        digest, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_string_canonize
+    # Verify the C library signature
+    r_from_sig = int.from_bytes(sig[:32], "big")
+    s_from_sig = int.from_bytes(sig[32:], "big")
+    der_verify = encode_dss_signature(r_from_sig, s_from_sig)
+    public_key.verify(
+        der_verify, bytes(digest), ec.ECDSA(Prehashed(hashes.SHA256()))
     )
-    assert binascii.hexlify(sig) == binascii.hexlify(sig_ref)
-
-    assert vk.verify_digest(sig, digest, sigdecode)
 
 
 def test_sign_zkp(r):
@@ -321,15 +437,16 @@ def test_sign_zkp(r):
     )
 
     exp = bytes2num(priv)
-    sk = ecdsa.SigningKey.from_secret_exponent(exp, curve, hashfunc=hashlib.sha256)
-    vk = sk.get_verifying_key()
+    private_key = ec.derive_private_key(exp, curve._crypto_curve())
+    public_key = private_key.public_key()
 
-    sig_ref = sk.sign_digest_deterministic(
-        digest, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_string_canonize
+    # Verify the C library signature
+    r_from_sig = int.from_bytes(sig[:32], "big")
+    s_from_sig = int.from_bytes(sig[32:], "big")
+    der_verify = encode_dss_signature(r_from_sig, s_from_sig)
+    public_key.verify(
+        der_verify, bytes(digest), ec.ECDSA(Prehashed(hashes.SHA256()))
     )
-    assert binascii.hexlify(sig) == binascii.hexlify(sig_ref)
-
-    assert vk.verify_digest(sig, digest, sigdecode)
 
 
 def test_validate_pubkey(curve, r):

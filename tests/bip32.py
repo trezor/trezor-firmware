@@ -20,45 +20,56 @@ import struct
 from copy import copy
 from typing import Any, List, Tuple
 
-import ecdsa
-from ecdsa.curves import SECP256k1
-from ecdsa.ellipticcurve import INFINITY, Point
-from ecdsa.util import number_to_string, string_to_number
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicNumbers
 
 from trezorlib import messages, tools
 
-
-def point_to_pubkey(point: Point) -> bytes:
-    order = SECP256k1.order
-    x_str = number_to_string(point.x(), order)
-    y_str = number_to_string(point.y(), order)
-    vk = x_str + y_str
-    return struct.pack("B", (vk[63] & 1) + 2) + vk[0:32]  # To compressed key
+# secp256k1 curve parameters
+_SECP256K1_P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+_SECP256K1_ORDER = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 
 
-def sec_to_public_pair(pubkey: bytes) -> Tuple[int, Any]:
+def _point_add(x1, y1, x2, y2):
+    """Add two points on secp256k1. Returns (None, None) for point at infinity."""
+    p = _SECP256K1_P
+    if x1 is None:
+        return (x2, y2)
+    if x2 is None:
+        return (x1, y1)
+    if x1 == x2:
+        if y1 != y2:
+            return (None, None)
+        lam = (3 * x1 * x1) * pow(2 * y1, -1, p) % p
+    else:
+        lam = (y2 - y1) * pow(x2 - x1, -1, p) % p
+    x3 = (lam * lam - x1 - x2) % p
+    y3 = (lam * (x1 - x3) - y1) % p
+    return (x3, y3)
+
+
+def point_to_pubkey(x: int, y: int) -> bytes:
+    nums = EllipticCurvePublicNumbers(x, y, ec.SECP256K1())
+    key = nums.public_key()
+    return key.public_bytes(
+        serialization.Encoding.X962, serialization.PublicFormat.CompressedPoint
+    )
+
+
+def sec_to_public_pair(pubkey: bytes) -> Tuple[int, int]:
     """Convert a public key in sec binary format to a public pair."""
-    x = string_to_number(pubkey[1:33])
     sec0 = pubkey[:1]
     if sec0 not in (b"\2", b"\3"):
         raise ValueError("Compressed pubkey expected")
 
-    def public_pair_for_x(generator, x: int, is_even: bool) -> Tuple[int, Any]:
-        curve = generator.curve()
-        p = curve.p()
-        alpha = (pow(x, 3, p) + curve.a() * x + curve.b()) % p
-        beta = ecdsa.numbertheory.square_root_mod_prime(alpha, p)
-        if is_even == bool(beta & 1):
-            return (x, p - beta)
-        return (x, beta)
-
-    return public_pair_for_x(
-        ecdsa.ecdsa.generator_secp256k1, x, is_even=(sec0 == b"\2")
-    )
+    key = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256K1(), pubkey)
+    nums = key.public_numbers()
+    return (nums.x, nums.y)
 
 
 def fingerprint(pubkey: bytes) -> int:
-    return string_to_number(tools.hash_160(pubkey)[:4])
+    return int.from_bytes(tools.hash_160(pubkey)[:4], "big")
 
 
 def get_address(public_node: messages.HDNodeType, address_type: int) -> str:
@@ -88,15 +99,19 @@ def get_subnode(node: messages.HDNodeType, i: int) -> messages.HDNodeType:
     data = node.public_key + i_as_bytes
 
     I64 = hmac.HMAC(key=node.chain_code, msg=data, digestmod=hashlib.sha512).digest()
-    I_left_as_exponent = string_to_number(I64[:32])
+    I_left_as_exponent = int.from_bytes(I64[:32], "big")
 
     # BIP32 magic converts old public key to new public point
     x, y = sec_to_public_pair(node.public_key)
-    point = I_left_as_exponent * SECP256k1.generator + Point(
-        SECP256k1.curve, x, y, SECP256k1.order
-    )
 
-    if point == INFINITY:
+    # Compute I_left * G using cryptography
+    il_key = ec.derive_private_key(I_left_as_exponent, ec.SECP256K1())
+    il_pub = il_key.public_key().public_numbers()
+
+    # Add I_left * G + parent public key point
+    rx, ry = _point_add(il_pub.x, il_pub.y, x, y)
+
+    if rx is None:
         raise ValueError("Point cannot be INFINITY")
 
     return messages.HDNodeType(
@@ -105,7 +120,7 @@ def get_subnode(node: messages.HDNodeType, i: int) -> messages.HDNodeType:
         chain_code=I64[32:],
         fingerprint=fingerprint(node.public_key),
         # Convert public point to compressed public key
-        public_key=point_to_pubkey(point),
+        public_key=point_to_pubkey(rx, ry),
     )
 
 

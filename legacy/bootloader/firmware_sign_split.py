@@ -4,7 +4,9 @@ import os
 import subprocess
 from binascii import hexlify, unhexlify
 
-import ecdsa
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 
 print("master secret:", end="")
 h = input()
@@ -20,16 +22,25 @@ print()
 for i in range(1, 6):
     se = hashlib.sha256(h + chr(i).encode("ascii")).hexdigest()
     print("seckey", i, ":", se)
-    sk = ecdsa.SigningKey.from_secret_exponent(
-        secexp=int(se, 16), curve=ecdsa.curves.SECP256k1, hashfunc=hashlib.sha256
+    sk = ec.derive_private_key(int(se, 16), ec.SECP256K1())
+    pk = sk.public_key()
+    pk_bytes = pk.public_bytes(
+        serialization.Encoding.X962,
+        serialization.PublicFormat.UncompressedPoint,
     )
     print(
         "pubkey",
         i,
         ":",
-        (b"04" + hexlify(sk.get_verifying_key().to_string())).decode("ascii"),
+        hexlify(pk_bytes).decode("ascii"),
     )
-    print(sk.to_pem().decode("ascii"))
+    print(
+        sk.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.TraditionalOpenSSL,
+            serialization.NoEncryption(),
+        ).decode("ascii")
+    )
 
 p = subprocess.Popen("ssss-split -t 3 -n 5 -x".split(" "), stdin=subprocess.PIPE)
 p.communicate(input=hexlify(h) + "\n")
