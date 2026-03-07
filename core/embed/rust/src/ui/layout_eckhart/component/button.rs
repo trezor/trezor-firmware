@@ -472,7 +472,7 @@ impl Button {
             }
             // Gradient bar is rendered only in `normal` state, not `active` or `disabled`
             RadiusOrGradient::Gradient(gradient) if self.state.is_normal() => {
-                gradient.render(target, self.area, 1);
+                gradient.render(target, self.area, 2);
             }
             _ => {
                 shape::Bar::new(self.area)

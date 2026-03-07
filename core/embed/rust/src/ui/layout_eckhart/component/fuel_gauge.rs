@@ -1,4 +1,5 @@
 use crate::{
+    strutil::ShortString,
     trezorhal::power_manager::{self, ChargingState},
     ui::{
         component::{Component, Event, EventCtx, Never},
@@ -9,7 +10,7 @@ use crate::{
 };
 
 #[cfg(feature = "micropython")]
-use crate::ui::{component::Timer, util::animation_disabled};
+use crate::ui::component::Timer;
 
 use super::super::{
     fonts,
@@ -22,42 +23,50 @@ use super::super::{
 #[cfg(feature = "micropython")]
 use super::super::theme::firmware::FUEL_GAUGE_DURATION;
 
+const ICON_PERCENT_GAP: i16 = 16;
+
 /// Component for showing a small fuel gauge (battery status) consisting of:
 /// - icon indicating charging or discharging state
 /// - percentage
 #[derive(Clone)]
 pub struct FuelGauge {
     /// Area where the fuel gauge is rendered
-    area: Rect,
-    /// Alignment of the fuel gauge within its area
-    alignment: Alignment,
+    pub area: Rect,
     /// Mode of the fuel gauge (Always or OnChrgStatusChange)
     mode: FuelGaugeMode,
     /// State of battery charging
     charging_state: ChargingState,
     /// State of charge (0-100) [%]
     soc: Option<u8>,
+    /// Cached formatted SOC text
+    soc_text: ShortString,
     /// Font used for the soc percentage
     font: Font,
+    /// Cached indication (icon, icon color, text color) based on the last known
+    /// charging state and soc.
+    battery_indication: (Icon, Color, Color),
 }
 
 #[derive(Clone)]
 pub enum FuelGaugeMode {
-    /// Always show the fuel gauge
-    Always,
-    /// Show only charging icon if the device is charging
+    /// Always show the fuel gauge, both icon and percentage
+    AlwaysFull,
+    /// Always show the fuel gauge, but only icon
+    AlwaysIconOnly,
+    /// Show only charging icon when the device is charging
     ChargingIconOnly,
     /// Show the fuel gauge only when charging state changes
     #[cfg(feature = "micropython")]
     OnChargingChange(Timer),
-    /// Show only icon when charging state changes or when attached
-    #[cfg(feature = "micropython")]
-    HomescreenBar(Timer),
 }
 
 impl FuelGauge {
     pub const fn always() -> Self {
-        Self::new(FuelGaugeMode::Always)
+        Self::new(FuelGaugeMode::AlwaysFull)
+    }
+
+    pub const fn always_icon_only() -> Self {
+        Self::new(FuelGaugeMode::AlwaysIconOnly)
     }
 
     pub const fn charging_icon_only() -> Self {
@@ -69,35 +78,55 @@ impl FuelGauge {
         Self::new(FuelGaugeMode::OnChargingChange(Timer::new()))
     }
 
-    #[cfg(feature = "micropython")]
-    pub const fn homescreen_bar() -> Self {
-        Self::new(FuelGaugeMode::HomescreenBar(Timer::new()))
-    }
-
-    pub const fn with_alignment(mut self, alignment: Alignment) -> Self {
-        self.alignment = alignment;
-        self
-    }
-
-    pub const fn with_font(mut self, font: Font) -> Self {
-        self.font = font;
-        self
-    }
-
     pub fn update_pm_state(&mut self) {
         self.soc = Some(power_manager::soc());
         self.charging_state = power_manager::charging_state();
+        self.soc_text = match self.soc {
+            Some(soc) => uformat!("{} %", soc),
+            None => uformat!("?"),
+        };
+        self.battery_indication =
+            self.battery_indication(self.charging_state, self.soc.unwrap_or(0));
     }
 
     pub fn should_be_shown(&self) -> bool {
         match &self.mode {
-            FuelGaugeMode::Always => true,
-            FuelGaugeMode::ChargingIconOnly => self.charging_state == ChargingState::Charging,
-            #[cfg(feature = "micropython")]
-            FuelGaugeMode::OnChargingChange(timer) | FuelGaugeMode::HomescreenBar(timer) => {
-                timer.is_running()
+            FuelGaugeMode::AlwaysFull | FuelGaugeMode::AlwaysIconOnly => true,
+            FuelGaugeMode::ChargingIconOnly => {
+                matches!(self.charging_state, ChargingState::Charging)
             }
+            #[cfg(feature = "micropython")]
+            FuelGaugeMode::OnChargingChange(timer) => timer.is_running(),
         }
+    }
+
+    /// Returns the total rendered width of the fuel gauge content.
+    pub fn content_width(&self) -> i16 {
+        let icon_w = self.icon_width();
+        match self.mode {
+            FuelGaugeMode::AlwaysIconOnly | FuelGaugeMode::ChargingIconOnly => icon_w,
+            _ => icon_w + ICON_PERCENT_GAP + self.font.text_width(&self.soc_text),
+        }
+    }
+
+    const fn icon_width(&self) -> i16 {
+        match self.charging_state {
+            ChargingState::Charging => ICON_BATTERY_ZAP.toif.width(),
+            ChargingState::Discharging | ChargingState::Idle => ICON_BATTERY_FULL.toif.width(),
+        }
+    }
+
+    fn render_icon<'s>(
+        &self,
+        area: Rect,
+        icon: Icon,
+        color: Color,
+        target: &mut impl Renderer<'s>,
+    ) {
+        shape::ToifImage::new(area.left_center(), icon.toif)
+            .with_fg(color)
+            .with_align(Alignment2D::CENTER_LEFT)
+            .render(target);
     }
 
     const fn new(mode: FuelGaugeMode) -> Self {
@@ -107,11 +136,12 @@ impl FuelGauge {
         let font = fonts::FONT_SATOSHI_MEDIUM_26;
         Self {
             area: Rect::zero(),
-            alignment: Alignment::Start,
             mode,
             charging_state: ChargingState::Idle,
             soc: None,
+            soc_text: ShortString::new(),
             font,
+            battery_indication: (ICON_BATTERY_EMPTY, GREY_LIGHT, GREY_LIGHT),
         }
     }
 
@@ -157,18 +187,12 @@ impl Component for FuelGauge {
                 if self.soc.is_none() {
                     self.update_pm_state();
                 }
-                #[cfg(feature = "micropython")]
-                if let FuelGaugeMode::HomescreenBar(timer) = &mut self.mode {
-                    if !animation_disabled() {
-                        timer.start(ctx, FUEL_GAUGE_DURATION.into());
-                    }
-                }
                 ctx.request_paint();
             }
             Event::PM(_e) => {
                 self.update_pm_state();
                 match &mut self.mode {
-                    FuelGaugeMode::Always => {
+                    FuelGaugeMode::AlwaysFull | FuelGaugeMode::AlwaysIconOnly => {
                         ctx.request_paint();
                     }
                     FuelGaugeMode::ChargingIconOnly => {
@@ -177,8 +201,7 @@ impl Component for FuelGauge {
                         }
                     }
                     #[cfg(feature = "micropython")]
-                    FuelGaugeMode::OnChargingChange(timer)
-                    | FuelGaugeMode::HomescreenBar(timer) => {
+                    FuelGaugeMode::OnChargingChange(timer) => {
                         if _e.charging_status_changed {
                             timer.start(ctx, FUEL_GAUGE_DURATION.into());
                             ctx.request_paint();
@@ -188,7 +211,7 @@ impl Component for FuelGauge {
             }
             #[cfg(feature = "micropython")]
             Event::Timer(_) => match &mut self.mode {
-                FuelGaugeMode::OnChargingChange(timer) | FuelGaugeMode::HomescreenBar(timer) => {
+                FuelGaugeMode::OnChargingChange(timer) => {
                     if timer.expire(event) {
                         ctx.request_paint();
                     }
@@ -202,26 +225,13 @@ impl Component for FuelGauge {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        const ICON_PERCENT_GAP: i16 = 16;
-
-        let soc = self.soc.unwrap_or(0);
-        let (icon, color_icon, color_text) = self.battery_indication(self.charging_state, soc);
-        let soc_percent_fmt = if self.soc.is_none() {
-            uformat!("?")
-        } else {
-            uformat!("{} %", soc)
-        };
-        let text_width = self.font.text_width(&soc_percent_fmt);
+        let (icon, color_icon, color_text) = self.battery_indication;
+        let text_width = self.font.text_width(&self.soc_text);
         let text_height = self.font.text_height();
         let icon_width = icon.toif.width();
         let icon_height = icon.toif.height();
 
-        let (point, alignment) = match self.alignment {
-            Alignment::Start => (self.area.left_center(), Alignment2D::CENTER_LEFT),
-            Alignment::End => (self.area.right_center(), Alignment2D::CENTER_RIGHT),
-            Alignment::Center => (self.area.center(), Alignment2D::CENTER),
-        };
-
+        let (point, alignment) = (self.area.left_center(), Alignment2D::CENTER_LEFT);
         let area = Rect::snap(
             point,
             Offset::new(
@@ -230,38 +240,24 @@ impl Component for FuelGauge {
             ),
             alignment,
         );
-        let text_y_coord = self.font.vert_center(area.y0, area.y1, &soc_percent_fmt);
 
         match self.mode {
+            FuelGaugeMode::AlwaysIconOnly => {
+                self.render_icon(area, icon, color_icon, target);
+            }
             FuelGaugeMode::ChargingIconOnly => {
-                if self.charging_state == ChargingState::Charging {
-                    shape::ToifImage::new(area.left_center(), icon.toif)
-                        .with_fg(color_icon)
-                        .with_align(Alignment2D::CENTER_LEFT)
-                        .render(target);
+                if matches!(self.charging_state, ChargingState::Charging) {
+                    self.render_icon(area, icon, color_icon, target);
                 }
             }
-            #[cfg(feature = "micropython")]
-            FuelGaugeMode::HomescreenBar(_) => {
-                shape::ToifImage::new(area.center(), icon.toif)
-                    .with_fg(color_icon)
-                    .with_align(Alignment2D::CENTER)
-                    .render(target);
-            }
             _ => {
-                shape::ToifImage::new(area.left_center(), icon.toif)
-                    .with_fg(color_icon)
-                    .with_align(Alignment2D::CENTER_LEFT)
+                // both icon and percentage
+                self.render_icon(area, icon, color_icon, target);
+                let text_y_coord = self.font.vert_center(area.y0, area.y1, &self.soc_text);
+                shape::Text::new(Point::new(area.x1, text_y_coord), &self.soc_text, self.font)
+                    .with_fg(color_text)
+                    .with_align(Alignment::End)
                     .render(target);
-
-                shape::Text::new(
-                    Point::new(area.x1, text_y_coord),
-                    &soc_percent_fmt,
-                    self.font,
-                )
-                .with_fg(color_text)
-                .with_align(Alignment::End)
-                .render(target);
             }
         }
     }
