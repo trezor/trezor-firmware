@@ -184,9 +184,7 @@ else:
 
                 do_not_restart = False
                 try:
-                    do_not_restart = await message_handler.handle_single_message(
-                        ctx, msg
-                    )
+                    await message_handler.handle_single_message(ctx, msg)
                 except UnexpectedMessageException as unexpected:
                     # The workflow was interrupted by an unexpected message. We need to
                     # process it as if it was a new message...

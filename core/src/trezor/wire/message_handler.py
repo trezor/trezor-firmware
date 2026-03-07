@@ -11,7 +11,7 @@ from .protocol_common import Context, Message
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Callable, Container
+    from typing import Any, Callable
 
     from trezor.wire import Handler, LoadedMessageType, WireInterface
 
@@ -48,7 +48,7 @@ def wrap_protobuf_load(
             raise DataError("Failed to decode message")
 
 
-async def handle_single_message(ctx: Context, msg: Message) -> bool:
+async def handle_single_message(ctx: Context, msg: Message) -> None:
     """Handle a message that was loaded from a WireInterface by the caller.
 
     Find the appropriate handler, run it and write its result on the wire. In case
@@ -95,7 +95,7 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # Handlers are allowed to exception out. In that case, we can skip decoding
         # and return the error.
         await ctx.write(failure(exc))
-        return True
+        return
 
     if msg.type in workflow.ALLOW_WHILE_LOCKED:
         workflow.autolock_interrupts_workflow = False
@@ -174,12 +174,6 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # perform the write outside the big try-except block, so that usb write
         # problem bubbles up
         await ctx.write(res_msg)
-
-    # Look into `AVOID_RESTARTING_FOR` to see if this message should avoid restarting.
-    return msg.type in AVOID_RESTARTING_FOR
-
-
-AVOID_RESTARTING_FOR: Container[int] = ()
 
 
 def failure(exc: BaseException) -> Failure:

@@ -3,10 +3,9 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
-from trezor import TR, utils, wire
+from trezor import TR, wire
 from trezor.messages import Success
 from trezor.ui.layouts.recovery import show_invalid_mnemonic
-from trezor.wire import message_handler
 
 from apps.common import backup_types
 from apps.management.recovery_device.recover import RecoveryAborted
@@ -35,23 +34,12 @@ async def recovery_homescreen() -> None:
 
 async def recovery_process() -> Success:
     import storage
-    from trezor.enums import MessageType, RecoveryType
+    from trezor.enums import RecoveryType
 
     from apps.common import backup
 
     recovery_type = storage_recovery.get_type()
 
-    if utils.USE_THP:
-        message_handler.AVOID_RESTARTING_FOR = (
-            MessageType.GetFeatures,
-            MessageType.EndSession,
-        )
-    else:
-        message_handler.AVOID_RESTARTING_FOR = (
-            MessageType.Initialize,
-            MessageType.GetFeatures,
-            MessageType.EndSession,
-        )
     try:
         return await _continue_recovery_process()
     except recover.RecoveryAborted:
@@ -66,22 +54,8 @@ async def recovery_process() -> Success:
 
 
 async def _continue_repeated_backup() -> None:
-    from trezor.enums import MessageType
-
     from apps.common import backup
     from apps.management.backup_device import perform_backup
-
-    if utils.USE_THP:
-        message_handler.AVOID_RESTARTING_FOR = (
-            MessageType.GetFeatures,
-            MessageType.EndSession,
-        )
-    else:
-        message_handler.AVOID_RESTARTING_FOR = (
-            MessageType.Initialize,
-            MessageType.GetFeatures,
-            MessageType.EndSession,
-        )
 
     try:
         await perform_backup(is_repeated_backup=True)
