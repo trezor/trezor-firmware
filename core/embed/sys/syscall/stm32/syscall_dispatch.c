@@ -19,7 +19,6 @@
 
 #ifdef KERNEL
 #include <stdint.h>
-#include "embed/io/ble/inc/io/ble.h"
 
 #include <trezor_rtl.h>
 

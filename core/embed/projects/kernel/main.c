@@ -27,7 +27,6 @@
 #include <sec/boot_image.h>
 #include <sec/option_bytes.h>
 #include <sec/random_delays.h>
-#include <sec/secure_aes.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include <sys/coreapp.h>
@@ -58,23 +57,27 @@
 #include <io/haptic.h>
 #endif
 
-#ifdef USE_HASH_PROCESSOR
+#if SECURE_MODE && USE_HASH_PROCESSOR
 #include <sec/hash_processor.h>
+#endif
+
+#if SECURE_MODE && USE_STORAGE_HWKEY
+#include <sec/secure_aes.h>
 #endif
 
 #ifdef USE_SECRET
 #include <sec/secret.h>
 #endif
 
-#ifdef USE_OPTIGA
+#if SECURE_MODE && USE_OPTIGA
 #include <sec/optiga_init.h>
 #endif
 
-#ifdef USE_BACKUP_RAM
+#if SECURE_MODE && USE_BACKUP_RAM
 #include <sec/backup_ram.h>
 #endif
 
-#ifdef USE_TROPIC
+#if SECURE_MODE && USE_TROPIC
 #include <sec/tropic.h>
 #endif
 
