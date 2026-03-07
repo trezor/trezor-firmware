@@ -194,8 +194,15 @@ def enter_share(
         debug.swipe_up()
         layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Eckhart:
-        debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
+        if "MnemonicKeyboard" not in layout.all_components():
+            debug.click(debug.screen_buttons.ok())
+            layout = debug.read_layout()
+        attempts = 0
+        while "MnemonicKeyboard" not in layout.all_components() and attempts < 10:
+            debug.click(debug.screen_buttons.ok())
+            layout = debug.read_layout()
+            attempts += 1
     else:
         raise ValueError("Unknown model")
 
