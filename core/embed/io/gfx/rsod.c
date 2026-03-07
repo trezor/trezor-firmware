@@ -124,7 +124,9 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
 
 #ifdef FANCY_FATAL_ERROR
 
-#include "rust_ui_common.h"
+// #include "rust_ui_common.h" !@#
+void display_rsod_rust(const char* title, const char* message,
+                       const char* footer);
 
 void rsod_gui(const systask_postmortem_t* pminfo) {
   const char* title = RSOD_DEFAULT_TITLE;
