@@ -23,7 +23,7 @@ from typing import Sequence, Tuple
 import construct as c
 from typing_extensions import Literal
 
-from .tools import EnumAdapter
+from .construct_helpers import EnumAdapter
 
 try:
     # Explanation of having to use "Image.Image" in typing:

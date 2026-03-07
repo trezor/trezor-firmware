@@ -25,8 +25,8 @@ from typing import TYPE_CHECKING, Iterable, Tuple
 import construct as c
 from construct_classes import Struct
 
+from ..construct_helpers import EnumAdapter
 from ..log import DUMP_PACKETS
-from ..tools import EnumAdapter
 from ..transport import Timeout, Transport, TransportException
 from ..transport.udp import UdpTransport
 
