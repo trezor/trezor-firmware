@@ -1,11 +1,11 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = FIRMWARE_START_S, LENGTH = FIRMWARE_MAXSIZE
-  RAM (wal) : ORIGIN = SECMON_RAM_START, LENGTH = SECMON_RAM_SIZE
-  BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
-  FB1_RAM (wal) : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
-  FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
+  FLASH (rx)     : ORIGIN = FIRMWARE_START_S, LENGTH = FIRMWARE_MAXSIZE
+  RAM (rw)       : ORIGIN = SECMON_RAM_START, LENGTH = SECMON_RAM_SIZE
+  BOOT_ARGS (rw) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
+  FB1_RAM (rw)   : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
+  FB2_RAM (rw)   : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
 }
 
 _sgstubs_section_start = ADDR(.gnu.sgstubs);
@@ -33,7 +33,7 @@ SECTIONS {
   } >FLASH
 
   .header : ALIGN(4) {
-    . = 1K;
+    . += 1K;
     . = ALIGN(CODE_ALIGNMENT);
   } >FLASH
 
@@ -65,7 +65,7 @@ SECTIONS {
   } >FLASH
 
   .stack : ALIGN(8) {
-    . = 12K; /* Overflow causes UsageFault */
+    . += 12K; /* Overflow causes UsageFault */
   } >RAM
 
   .data : ALIGN(4) {

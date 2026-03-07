@@ -1,10 +1,10 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)     : ORIGIN = FIRMWARE_P1_START, LENGTH = FIRMWARE_P1_MAXSIZE
-  FLASH2 (r)      : ORIGIN = FIRMWARE_P2_START, LENGTH = FIRMWARE_P2_MAXSIZE
-  AUX1_RAM (wal)  : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
-  AUX2_RAM (wal)  : ORIGIN = AUX2_RAM_START, LENGTH = AUX2_RAM_SIZE
+  FLASH  (rx)   : ORIGIN = FIRMWARE_P1_START, LENGTH = FIRMWARE_P1_MAXSIZE
+  FLASH2 (rx)   : ORIGIN = FIRMWARE_P2_START, LENGTH = FIRMWARE_P2_MAXSIZE
+  AUX1_RAM (rw) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  AUX2_RAM (rw) : ORIGIN = AUX2_RAM_START, LENGTH = AUX2_RAM_SIZE
 }
 
 _stack_section_start = ADDR(.stack);
@@ -55,7 +55,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
+    . += 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
   } >AUX1_RAM
 
   .data : ALIGN(4) {
@@ -74,7 +74,7 @@ SECTIONS {
   } >AUX1_RAM
 
   .heap : ALIGN(4) {
-    . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
+    . += 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
     . = ABSOLUTE(ORIGIN(AUX1_RAM) + LENGTH(AUX1_RAM)); /* this explicitly sets the end of the heap */
   } >AUX1_RAM
 
