@@ -20,6 +20,7 @@ class ThpBuffer:
         self.buf = memoryview(bytearray(_PROTOBUF_BUFFER_SIZE))
 
     def get(self, length: int) -> memoryview | None:
+        assert length >= 0
         if length > len(self.buf):
             if __debug__:
                 log.warning(
