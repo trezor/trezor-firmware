@@ -44,7 +44,7 @@ Example:
 log-filter +1*+session
 ```
 
-See `syslog_set_filter()` in `sys/syslog.h` for more details about the filter grammar.
+See `syslog_set_filter()` in [`sys/syslog.h`](https://github.com/trezor/trezor-firmware/blob/main/core/embed/sys/dbg/inc/sys/syslog.h) for more details about the filter grammar.
 
 ## Logging from C code
 
