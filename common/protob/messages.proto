@@ -147,6 +147,10 @@ enum MessageType {
     MessageType_DebugLinkGetPairingInfo = 9011 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkPairingInfo = 9012 [(bitcoin_only) = true, (wire_debug_out) = true];
     MessageType_DebugLinkSetLogFilter = 9013 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkNfcConnected = 9014 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkNfcWrite = 9015 [(bitcoin_only) = true, (wire_debug_out) = true];
+    MessageType_DebugLinkNfcRead = 9016 [(bitcoin_only) = true, (wire_debug_out) = true];
+    MessageType_DebugLinkNfcResponse = 9017 [(bitcoin_only) = true, (wire_debug_in) = true];
 
     // Ethereum
     MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];

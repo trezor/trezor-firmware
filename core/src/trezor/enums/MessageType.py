@@ -120,6 +120,10 @@ if __debug__:
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
     DebugLinkSetLogFilter = 9013
+    DebugLinkNfcConnected = 9014
+    DebugLinkNfcWrite = 9015
+    DebugLinkNfcRead = 9016
+    DebugLinkNfcResponse = 9017
 if utils.USE_THP:
     ThpCreateNewSession = 1000
     ThpCredentialRequest = 1016

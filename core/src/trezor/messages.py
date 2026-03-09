@@ -3101,6 +3101,56 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetLogFilter"]:
             return isinstance(msg, cls)
 
+    class DebugLinkNfcConnected(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkNfcConnected"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkNfcWrite(protobuf.MessageType):
+        key: "str | None"
+        value: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            key: "str | None" = None,
+            value: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkNfcWrite"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkNfcRead(protobuf.MessageType):
+        key: "str | None"
+
+        def __init__(
+            self,
+            *,
+            key: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkNfcRead"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkNfcResponse(protobuf.MessageType):
+        value: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            value: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkNfcResponse"]:
+            return isinstance(msg, cls)
+
     class DebugLinkGcInfoItem(protobuf.MessageType):
         name: "str"
         value: "int"

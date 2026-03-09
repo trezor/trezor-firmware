@@ -491,6 +491,10 @@ if TYPE_CHECKING:
         DebugLinkGetPairingInfo = 9011
         DebugLinkPairingInfo = 9012
         DebugLinkSetLogFilter = 9013
+        DebugLinkNfcConnected = 9014
+        DebugLinkNfcWrite = 9015
+        DebugLinkNfcRead = 9016
+        DebugLinkNfcResponse = 9017
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56

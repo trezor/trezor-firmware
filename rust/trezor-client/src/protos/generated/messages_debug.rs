@@ -4989,6 +4989,637 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkSetLogFilter {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkNfcConnected)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkNfcConnected {
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkNfcConnected.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkNfcConnected {
+    fn default() -> &'a DebugLinkNfcConnected {
+        <DebugLinkNfcConnected as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkNfcConnected {
+    pub fn new() -> DebugLinkNfcConnected {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkNfcConnected>(
+            "DebugLinkNfcConnected",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkNfcConnected {
+    const NAME: &'static str = "DebugLinkNfcConnected";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkNfcConnected {
+        DebugLinkNfcConnected::new()
+    }
+
+    fn clear(&mut self) {
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkNfcConnected {
+        static instance: DebugLinkNfcConnected = DebugLinkNfcConnected {
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkNfcConnected {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkNfcConnected").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkNfcConnected {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkNfcConnected {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkNfcWrite)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkNfcWrite {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkNfcWrite.key)
+    pub key: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkNfcWrite.value)
+    pub value: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkNfcWrite.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkNfcWrite {
+    fn default() -> &'a DebugLinkNfcWrite {
+        <DebugLinkNfcWrite as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkNfcWrite {
+    pub fn new() -> DebugLinkNfcWrite {
+        ::std::default::Default::default()
+    }
+
+    // optional string key = 1;
+
+    pub fn key(&self) -> &str {
+        match self.key.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_key(&mut self) {
+        self.key = ::std::option::Option::None;
+    }
+
+    pub fn has_key(&self) -> bool {
+        self.key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_key(&mut self, v: ::std::string::String) {
+        self.key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_key(&mut self) -> &mut ::std::string::String {
+        if self.key.is_none() {
+            self.key = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_key(&mut self) -> ::std::string::String {
+        self.key.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional bytes value = 2;
+
+    pub fn value(&self) -> &[u8] {
+        match self.value.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_value(&mut self) {
+        self.value = ::std::option::Option::None;
+    }
+
+    pub fn has_value(&self) -> bool {
+        self.value.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_value(&mut self, v: ::std::vec::Vec<u8>) {
+        self.value = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_value(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.value.is_none() {
+            self.value = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.value.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_value(&mut self) -> ::std::vec::Vec<u8> {
+        self.value.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "key",
+            |m: &DebugLinkNfcWrite| { &m.key },
+            |m: &mut DebugLinkNfcWrite| { &mut m.key },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "value",
+            |m: &DebugLinkNfcWrite| { &m.value },
+            |m: &mut DebugLinkNfcWrite| { &mut m.value },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkNfcWrite>(
+            "DebugLinkNfcWrite",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkNfcWrite {
+    const NAME: &'static str = "DebugLinkNfcWrite";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.key = ::std::option::Option::Some(is.read_string()?);
+                },
+                18 => {
+                    self.value = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.key.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        if let Some(v) = self.value.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.key.as_ref() {
+            os.write_string(1, v)?;
+        }
+        if let Some(v) = self.value.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkNfcWrite {
+        DebugLinkNfcWrite::new()
+    }
+
+    fn clear(&mut self) {
+        self.key = ::std::option::Option::None;
+        self.value = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkNfcWrite {
+        static instance: DebugLinkNfcWrite = DebugLinkNfcWrite {
+            key: ::std::option::Option::None,
+            value: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkNfcWrite {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkNfcWrite").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkNfcWrite {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkNfcWrite {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkNfcRead)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkNfcRead {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkNfcRead.key)
+    pub key: ::std::option::Option<::std::string::String>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkNfcRead.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkNfcRead {
+    fn default() -> &'a DebugLinkNfcRead {
+        <DebugLinkNfcRead as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkNfcRead {
+    pub fn new() -> DebugLinkNfcRead {
+        ::std::default::Default::default()
+    }
+
+    // optional string key = 1;
+
+    pub fn key(&self) -> &str {
+        match self.key.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_key(&mut self) {
+        self.key = ::std::option::Option::None;
+    }
+
+    pub fn has_key(&self) -> bool {
+        self.key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_key(&mut self, v: ::std::string::String) {
+        self.key = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_key(&mut self) -> &mut ::std::string::String {
+        if self.key.is_none() {
+            self.key = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_key(&mut self) -> ::std::string::String {
+        self.key.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "key",
+            |m: &DebugLinkNfcRead| { &m.key },
+            |m: &mut DebugLinkNfcRead| { &mut m.key },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkNfcRead>(
+            "DebugLinkNfcRead",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkNfcRead {
+    const NAME: &'static str = "DebugLinkNfcRead";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.key = ::std::option::Option::Some(is.read_string()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.key.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.key.as_ref() {
+            os.write_string(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkNfcRead {
+        DebugLinkNfcRead::new()
+    }
+
+    fn clear(&mut self) {
+        self.key = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkNfcRead {
+        static instance: DebugLinkNfcRead = DebugLinkNfcRead {
+            key: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkNfcRead {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkNfcRead").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkNfcRead {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkNfcRead {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkNfcResponse)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkNfcResponse {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkNfcResponse.value)
+    pub value: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkNfcResponse.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkNfcResponse {
+    fn default() -> &'a DebugLinkNfcResponse {
+        <DebugLinkNfcResponse as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkNfcResponse {
+    pub fn new() -> DebugLinkNfcResponse {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes value = 1;
+
+    pub fn value(&self) -> &[u8] {
+        match self.value.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_value(&mut self) {
+        self.value = ::std::option::Option::None;
+    }
+
+    pub fn has_value(&self) -> bool {
+        self.value.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_value(&mut self, v: ::std::vec::Vec<u8>) {
+        self.value = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_value(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.value.is_none() {
+            self.value = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.value.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_value(&mut self) -> ::std::vec::Vec<u8> {
+        self.value.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "value",
+            |m: &DebugLinkNfcResponse| { &m.value },
+            |m: &mut DebugLinkNfcResponse| { &mut m.value },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkNfcResponse>(
+            "DebugLinkNfcResponse",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkNfcResponse {
+    const NAME: &'static str = "DebugLinkNfcResponse";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.value = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.value.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.value.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkNfcResponse {
+        DebugLinkNfcResponse::new()
+    }
+
+    fn clear(&mut self) {
+        self.value = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkNfcResponse {
+        static instance: DebugLinkNfcResponse = DebugLinkNfcResponse {
+            value: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkNfcResponse {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkNfcResponse").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkNfcResponse {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkNfcResponse {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x14messages-debug.proto\x12\x18hw.trezor.messages.debug\x1a\x15messag\
     es-common.proto\x1a\x19messages-management.proto\x1a\roptions.proto\"\
@@ -5058,8 +5689,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     sages.debug.DebugLinkGcInfo.DebugLinkGcInfoItemR\x05items\x1a?\n\x13Debu\
     gLinkGcInfoItem\x12\x12\n\x04name\x18\x01\x20\x02(\tR\x04name\x12\x14\n\
     \x05value\x18\x02\x20\x02(\x04R\x05value\"/\n\x15DebugLinkSetLogFilter\
-    \x12\x16\n\x06filter\x18\x01\x20\x01(\tR\x06filterB=\n#com.satoshilabs.t\
-    rezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
+    \x12\x16\n\x06filter\x18\x01\x20\x01(\tR\x06filter\"\x17\n\x15DebugLinkN\
+    fcConnected\";\n\x11DebugLinkNfcWrite\x12\x10\n\x03key\x18\x01\x20\x01(\
+    \tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\x0cR\x05value\"$\n\x10Deb\
+    ugLinkNfcRead\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\",\n\x14DebugL\
+    inkNfcResponse\x12\x14\n\x05value\x18\x01\x20\x01(\x0cR\x05valueB=\n#com\
+    .satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -5080,7 +5715,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(22);
+            let mut messages = ::std::vec::Vec::with_capacity(26);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());
             messages.push(DebugLinkReseedRandom::generated_message_descriptor_data());
@@ -5102,6 +5737,10 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkGetGcInfo::generated_message_descriptor_data());
             messages.push(DebugLinkGcInfo::generated_message_descriptor_data());
             messages.push(DebugLinkSetLogFilter::generated_message_descriptor_data());
+            messages.push(DebugLinkNfcConnected::generated_message_descriptor_data());
+            messages.push(DebugLinkNfcWrite::generated_message_descriptor_data());
+            messages.push(DebugLinkNfcRead::generated_message_descriptor_data());
+            messages.push(DebugLinkNfcResponse::generated_message_descriptor_data());
             messages.push(debug_link_gc_info::DebugLinkGcInfoItem::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(5);
             enums.push(debug_link_decision::DebugSwipeDirection::generated_enum_descriptor_data());

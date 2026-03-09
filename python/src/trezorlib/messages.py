@@ -546,6 +546,10 @@ class MessageType(IntEnum):
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
     DebugLinkSetLogFilter = 9013
+    DebugLinkNfcConnected = 9014
+    DebugLinkNfcWrite = 9015
+    DebugLinkNfcRead = 9016
+    DebugLinkNfcResponse = 9017
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4442,6 +4446,55 @@ class DebugLinkSetLogFilter(protobuf.MessageType):
         filter: Optional["str"] = None,
     ) -> None:
         self.filter = filter
+
+
+class DebugLinkNfcConnected(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9014
+
+
+class DebugLinkNfcWrite(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9015
+    FIELDS = {
+        1: protobuf.Field("key", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: Optional["str"] = None,
+        value: Optional["bytes"] = None,
+    ) -> None:
+        self.key = key
+        self.value = value
+
+
+class DebugLinkNfcRead(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9016
+    FIELDS = {
+        1: protobuf.Field("key", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: Optional["str"] = None,
+    ) -> None:
+        self.key = key
+
+
+class DebugLinkNfcResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9017
+    FIELDS = {
+        1: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        value: Optional["bytes"] = None,
+    ) -> None:
+        self.value = value
 
 
 class DebugLinkGcInfoItem(protobuf.MessageType):
