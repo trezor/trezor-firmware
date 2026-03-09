@@ -15,8 +15,13 @@ if utils.USE_BLE:
     import trezorble as ble
 
 if TYPE_CHECKING:
+    from typing import Awaitable, Callable, ParamSpec, TypeVar
+
     from trezor import protobuf
     from trezor.wire import Handler, Msg
+
+    P = ParamSpec("P")
+    R = TypeVar("R")
 
 _SCREENSAVER_IS_ON = False
 
@@ -27,6 +32,8 @@ if not utils.USE_POWER_MANAGER:
         pass
 
 else:
+    from micropython import const
+
     from trezor import loop
 
     _SHOULD_SUSPEND = False
@@ -101,12 +108,35 @@ else:
             lock_device_if_unlocked()
 
     def configure_autodim() -> None:
-        """Configure the autodim setting via idle timer."""
+        """Configure the autodim setting via idle timer (battery-specific)."""
         workflow.idle_timer.set(storage_device.AUTODIM_DELAY_MS, autodim_display)
+
+    def configure_autolock(min_delay_ms: int = 0) -> None:
+        """Configure the autolock setting via idle timer (battery-specific)."""
+        delay_ms = max(min_delay_ms, storage_device.get_autolock_delay_battery_ms())
         workflow.idle_timer.set(
-            storage_device.get_autolock_delay_battery_ms(),
+            delay_ms,
             lock_device_if_unlocked_on_battery,
         )
+
+
+def with_prolonged_suspend_time(
+    func: Callable[P, Awaitable[R]],
+) -> Callable[P, Awaitable[R]]:
+    """Decorator to prolong the suspend time to at least 2 minutes while executing the decorated function."""
+    if utils.USE_POWER_MANAGER:
+
+        async def wrapper(*args: "P.args", **kwargs: "P.kwargs") -> R:
+            _PROLONGED_SUSPEND_TIME_MS = const(2 * 60 * 1000)
+            configure_autolock(min_delay_ms=_PROLONGED_SUSPEND_TIME_MS)
+            try:
+                return await func(*args, **kwargs)
+            finally:
+                configure_autolock(min_delay_ms=0)
+
+        return wrapper
+    else:
+        return func
 
 
 def set_homescreen() -> None:
@@ -224,6 +254,7 @@ def reload_settings_from_storage() -> None:
 
     if utils.USE_POWER_MANAGER:
         configure_autodim()
+        configure_autolock()
 
     if utils.USE_HAPTIC:
         io.haptic.haptic_set_enabled(storage_device.get_haptic_feedback())

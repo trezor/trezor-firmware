@@ -7,6 +7,7 @@ from trezor.messages import Success
 from trezor.wire import message_handler
 
 from apps.common import backup_types
+from apps.common.lock_manager import with_prolonged_suspend_time
 
 from . import layout, recover
 
@@ -29,6 +30,7 @@ async def recovery_homescreen() -> None:
         await recovery_process(None)
 
 
+@with_prolonged_suspend_time
 async def recovery_process(method: BackupMethod | None) -> Success:
     import storage
     from trezor.enums import MessageType, RecoveryType
