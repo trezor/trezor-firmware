@@ -423,13 +423,9 @@ class Channel:
         if length > MAX_PAYLOAD_LEN:
             if __debug__:
                 log.warning(__name__, "Failed to write, message is too big.")
-            from trezor.enums import FailureType
-            from trezor.messages import Failure
+            from trezor import wire
 
-            return await self.write(
-                Failure(code=FailureType.FirmwareError),
-                session_id,
-            )
+            raise wire.FirmwareError("Failed to write, message is too big.")
 
         buffer = self.write_buf.get(length)
         if buffer is None:
@@ -441,16 +437,11 @@ class Channel:
                         __name__,
                         "Failed to allocate a sufficiently large write buffer.",
                     )
-                from trezor.enums import FailureType
-                from trezor.messages import Failure
 
-                if Failure.is_type_of(msg):
-                    # prevent infinite recursion
-                    raise
+                from trezor import wire
 
-                return await self.write(
-                    Failure(code=FailureType.FirmwareError),
-                    session_id,
+                raise wire.FirmwareError(
+                    "Failed to allocate a sufficiently large write buffer."
                 )
 
         noise_payload_len = memory_manager.encode_into_buffer(buffer, msg, session_id)
