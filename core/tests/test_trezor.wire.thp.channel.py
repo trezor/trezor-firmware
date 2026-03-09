@@ -10,6 +10,7 @@ if utils.USE_THP:
     from trezor import protobuf, wire
     from trezor.messages import Ping
     from trezor.wire.thp import channel as channel_module
+    from trezor.wire.thp.memory_manager import _PROTOBUF_BUFFER_SIZE
     from trezor.wire.thp.writer import MAX_PAYLOAD_LEN
 
     def _encoded_len_patch(first_len: int) -> patch:
@@ -36,6 +37,37 @@ if utils.USE_THP:
 class TestTrezorHostProtocolChannel(unittest.TestCase):
     def setUp(self):
         thp_common.prepare_context()
+
+    def test_reassembler_get_buffer(self):
+        """
+        Test request of a reassembly buffer (various sizes).
+        """
+        channel = thp_common.TrackedChannel()
+        reassembler: channel_module.Reassembler = channel.reassembler
+        read_buffer = reassembler.thp_read_buf
+        # Check constant has not been modified
+        self.assertEqual(_PROTOBUF_BUFFER_SIZE, 8192)
+
+        # Should pass
+        for buffer_len in (0, 5, 100, 4096, _PROTOBUF_BUFFER_SIZE):
+            buffer = read_buffer.get(buffer_len)
+            assert buffer is not None  # to make typechecker happy
+            self.assertEqual(len(buffer), buffer_len)
+
+        # Should fail
+        for buffer_len in (-1, -5, -100):
+            with self.assertRaises(AssertionError):
+                buffer = read_buffer.get(buffer_len)
+
+        # Should return None
+        for buffer_len in (
+            _PROTOBUF_BUFFER_SIZE + 1,
+            2 * _PROTOBUF_BUFFER_SIZE,
+            2 * _PROTOBUF_BUFFER_SIZE + 1,
+            MAX_PAYLOAD_LEN,  # Currently holds that: _PROTOBUF_BUFFER_SIZE < MAX_PAYLOAD_LEN
+        ):
+            buffer = read_buffer.get(buffer_len)
+            self.assertIsNone(buffer)
 
     def test_write_too_big_message_mocked_size(self):
         """
