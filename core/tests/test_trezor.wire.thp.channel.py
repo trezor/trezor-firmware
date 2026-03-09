@@ -7,9 +7,8 @@ from mock import patch
 if utils.USE_THP:
     import fixtures
     import thp_common
-    from trezor import protobuf
-    from trezor.enums import FailureType
-    from trezor.messages import Failure, Ping
+    from trezor import protobuf, wire
+    from trezor.messages import Ping
     from trezor.wire.thp import channel as channel_module
     from trezor.wire.thp.writer import MAX_PAYLOAD_LEN
 
@@ -38,27 +37,23 @@ class TestTrezorHostProtocolChannel(unittest.TestCase):
     def setUp(self):
         thp_common.prepare_context()
 
-    def test_too_big_message_mocked_size(self):
+    def test_write_too_big_message_mocked_size(self):
         """
         Action: Try to send a message with size greater than `MAX_PAYLOAD_LEN`. The size of the message is mocked.
 
-        Expected: Instead of the original message, a Failure message is sent.
+        Expected: FirmwareError is raised.
         """
         channel = thp_common.TrackedChannel()
         gen = channel.write(Ping(message="Test"), 0)
         with _encoded_len_patch(first_len=MAX_PAYLOAD_LEN):
-            with channel:
-                channel.set_expected_messages_to_write([Ping, Failure])
+            with self.assertRaises(wire.FirmwareError) as e:
                 gen.send(None)
-                gen.send(None)
-
-            # Check expected FailureType
-            assert Failure.is_type_of(channel.messages_to_write[-1])
             self.assertEqual(
-                channel.messages_to_write[-1].code, FailureType.FirmwareError
+                e.value.message,
+                "Failed to write, message is too big.",
             )
 
-    def test_big_message_mocked_size_pass(self):
+    def test_write_big_message_mocked_size_pass(self):
         """
         Action: Try to send a message with size greater than `_PROTOBUF_BUFFER_SIZE`,
                 but smaller than `MAX_PAYLOAD_LEN`. The size of the message is mocked.
@@ -78,13 +73,13 @@ class TestTrezorHostProtocolChannel(unittest.TestCase):
             assert Ping.is_type_of(channel.messages_to_write[-1])
             self.assertEqual(channel.messages_to_write[-1].message, ping_message)
 
-    def test_big_message_mocked_size_fail(self):
+    def test_write_big_message_mocked_size_fail(self):
         """
         Action: Try to send a message with size greater than `_PROTOBUF_BUFFER_SIZE`,
                 but smaller than `MAX_PAYLOAD_LEN`. The size of the message is mocked
                 and the `MAX_PAYLOAD_LEN` is increased to ensure that the allocation fails.
 
-        Expected: Instead of the original message, a Failure message is sent.
+        Expected: FirmwareError is raised.
         """
         channel = thp_common.TrackedChannel()
         ping_message = "This message should fail to be sent"
@@ -92,18 +87,14 @@ class TestTrezorHostProtocolChannel(unittest.TestCase):
         mock_max_payload_len = 999999999
         with patch(channel_module, "MAX_PAYLOAD_LEN", mock_max_payload_len):
             with _encoded_len_patch(first_len=mock_max_payload_len - 1000):
-                with channel:
-                    channel.set_expected_messages_to_write([Ping, Failure])
+                with self.assertRaises(wire.FirmwareError) as e:
                     gen.send(None)
-                    gen.send(None)
-
-                # Check expected FailureType
-                assert Failure.is_type_of(channel.messages_to_write[-1])
                 self.assertEqual(
-                    channel.messages_to_write[-1].code, FailureType.FirmwareError
+                    e.value.message,
+                    "Failed to allocate a sufficiently large write buffer.",
                 )
 
-    def test_big_message(self):
+    def test_write_big_message(self):
         """
         Action: Try to send a message with size greater than `_PROTOBUF_BUFFER_SIZE`,
                 but smaller than `MAX_PAYLOAD_LEN`. The size of the message is real.

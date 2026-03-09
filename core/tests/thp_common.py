@@ -65,7 +65,9 @@ if utils.USE_THP:
             actual = self.messages_to_write
             expected = self.expected_messages_to_write
             if len(actual) != len(expected):
-                raise AssertionError("Count mismatch for expected and actual messages")
+                raise AssertionError(
+                    f"Count mismatch for actual and expected messages {len(actual)}/{len(expected)}"
+                )
             for act, exp in zip(actual, expected):
                 if not exp.is_type_of(act):
                     raise AssertionError(
