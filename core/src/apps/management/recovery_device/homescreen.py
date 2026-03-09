@@ -9,6 +9,7 @@ from trezor.ui.layouts.recovery import show_invalid_mnemonic
 from trezor.wire import message_handler
 
 from apps.common import backup_types
+from apps.common.lock_manager import with_prolonged_suspend_time
 from apps.management.recovery_device.recover import RecoveryAborted
 
 from . import layout, recover
@@ -33,6 +34,7 @@ async def recovery_homescreen() -> None:
         await recovery_process()
 
 
+@with_prolonged_suspend_time
 async def recovery_process() -> Success:
     import storage
     from trezor.enums import MessageType, RecoveryType
@@ -65,6 +67,7 @@ async def recovery_process() -> Success:
         raise wire.ActionCancelled
 
 
+@with_prolonged_suspend_time
 async def _continue_repeated_backup() -> None:
     from trezor.enums import MessageType
 
