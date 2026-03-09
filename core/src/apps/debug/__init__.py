@@ -28,6 +28,7 @@ if __debug__:
             DebugLinkGetGcInfo,
             DebugLinkGetPairingInfo,
             DebugLinkGetState,
+            DebugLinkN4W1Connected,
             DebugLinkOptigaSetSecMax,
             DebugLinkPairingInfo,
             DebugLinkRecordScreen,
@@ -446,6 +447,16 @@ if __debug__:
         finally:
             raise RestartEventLoop
 
+    if utils.INTERNAL_MODEL == "T3W1":  # TODO utils.USE_N4W1
+
+        async def dispatch_DebugLinkConnected(msg: DebugLinkN4W1Connected) -> Success:
+            """Exchange a sequence of N4W1 messages."""
+            from .n4w1_mock import ctx
+
+            assert DEBUG_CONTEXT is not None
+            await ctx.handle(DEBUG_CONTEXT)
+            return Success()
+
     async def _no_op(_msg: Any) -> Success:
         return Success()
 
@@ -564,6 +575,11 @@ if __debug__:
         MessageType.DebugLinkStop: dispatch_DebugLinkStop,
         MessageType.WipeDevice: dispatch_WipeDevice,
     }
+
+    if utils.INTERNAL_MODEL == "T3W1":  # TODO utils.USE_N4W1
+        WORKFLOW_HANDLERS[MessageType.DebugLinkN4W1Connected] = (
+            dispatch_DebugLinkConnected
+        )
 
     def boot() -> None:
         import usb

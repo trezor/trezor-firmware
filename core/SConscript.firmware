@@ -741,7 +741,8 @@ if FROZEN:
         )
     ))
     if PYOPT == '0':
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
+        exclude_n4w1 = [SOURCE_PY_DIR + 'apps/debug/n4w1_mock.py'] if TREZOR_MODEL != "T3W1" else []
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py', exclude=exclude_n4w1))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/homescreen/device_menu.py',
