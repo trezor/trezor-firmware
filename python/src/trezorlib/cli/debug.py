@@ -118,7 +118,7 @@ def prodtest_t1(session: "Session") -> None:
 @with_session(seedless=True)
 def optiga_set_sec_max(session: "Session") -> None:
     """Set Optiga's security event counter to maximum."""
-    debug_transport = session.client.protocol.transport.find_debug()
+    debug_transport = session.client.transport.find_debug()
     debug_transport.open()
     debug = DebugLink(transport=debug_transport)
     debuglink_optiga_set_sec_max(debug)
@@ -130,7 +130,7 @@ def optiga_set_sec_max(session: "Session") -> None:
 @with_session(seedless=True)
 def set_log_filter(session: "Session", filter: str) -> None:
     """Set logging filter string."""
-    debug_transport = session.client.protocol.transport.find_debug()
+    debug_transport = session.client.transport.find_debug()
     debug_transport.open()
     debug = DebugLink(transport=debug_transport)
     debuglink_set_log_filter(debug, filter)
