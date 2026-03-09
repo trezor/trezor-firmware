@@ -28,6 +28,7 @@ if __debug__:
             DebugLinkGetGcInfo,
             DebugLinkGetPairingInfo,
             DebugLinkGetState,
+            DebugLinkN4W1Connected,
             DebugLinkOptigaSetSecMax,
             DebugLinkPairingInfo,
             DebugLinkRecordScreen,
@@ -446,6 +447,14 @@ if __debug__:
         finally:
             raise RestartEventLoop
 
+    async def dispatch_DebugLinkConnected(msg: DebugLinkN4W1Connected) -> Success:
+        """Exchange a sequence of N4W1 messages."""
+        from .n4w1_mock import ctx
+
+        assert DEBUG_CONTEXT is not None
+        await ctx.handle(DEBUG_CONTEXT)
+        return Success()
+
     async def _no_op(_msg: Any) -> Success:
         return Success()
 
@@ -562,6 +571,7 @@ if __debug__:
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
         MessageType.DebugLinkSetLogFilter: dispatch_DebugLinkSetLogFilter,
         MessageType.DebugLinkStop: dispatch_DebugLinkStop,
+        MessageType.DebugLinkN4W1Connected: dispatch_DebugLinkConnected,
         MessageType.WipeDevice: dispatch_WipeDevice,
     }
 
