@@ -547,6 +547,10 @@ class MessageType(IntEnum):
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
     DebugLinkSetLogFilter = 9013
+    DebugLinkN4W1Connected = 9014
+    DebugLinkN4W1Write = 9015
+    DebugLinkN4W1Read = 9016
+    DebugLinkN4W1Response = 9017
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4444,6 +4448,55 @@ class DebugLinkSetLogFilter(protobuf.MessageType):
         filter: Optional["str"] = None,
     ) -> None:
         self.filter = filter
+
+
+class DebugLinkN4W1Connected(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9014
+
+
+class DebugLinkN4W1Write(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9015
+    FIELDS = {
+        1: protobuf.Field("key", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: Optional["str"] = None,
+        value: Optional["bytes"] = None,
+    ) -> None:
+        self.key = key
+        self.value = value
+
+
+class DebugLinkN4W1Read(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9016
+    FIELDS = {
+        1: protobuf.Field("key", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: Optional["str"] = None,
+    ) -> None:
+        self.key = key
+
+
+class DebugLinkN4W1Response(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9017
+    FIELDS = {
+        1: protobuf.Field("value", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        value: Optional["bytes"] = None,
+    ) -> None:
+        self.value = value
 
 
 class DebugLinkGcInfoItem(protobuf.MessageType):
