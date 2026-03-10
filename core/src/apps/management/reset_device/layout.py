@@ -160,6 +160,31 @@ class DisplayMnemonic(BackupMethod):
                 break  # this share is confirmed, go to next one
 
 
+class N4W1Storage(BackupMethod):
+
+    async def handle_share(
+        self, *, share: Share, share_index: int, num_of_shares: int, group_index: int
+    ) -> None:
+        import trezorui_api
+        from trezor.ui.layouts.common import draw_simple
+
+        from apps.debug import n4w1_mock
+
+        if not isinstance(share, str):
+            share = " ".join(share)
+        # TODO: use protobuf?
+        blob = share.encode()
+
+        with n4w1_mock.ctx as ctx:
+            draw_simple(
+                trezorui_api.show_simple(
+                    title="Backup",
+                    text=f"Tap your N4W1 to backup {len(blob)} bytes",
+                )
+            )
+            await ctx.write(key="mnemonic", value=blob)
+
+
 async def show_backup_warning() -> None:
     from trezor.ui.layouts.reset import show_warning_backup
 
