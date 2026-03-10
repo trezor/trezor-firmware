@@ -1,6 +1,7 @@
 from micropython import const
-from typing import TYPE_CHECKING, Iterable, Protocol, Sequence
+from typing import TYPE_CHECKING, Iterable, Iterator, Protocol, Sequence
 
+from trezor import utils
 from trezor.ui.layouts.reset import (  # noqa: F401
     show_share_words,
     slip39_advanced_prompt_group_threshold,
@@ -11,6 +12,7 @@ from trezor.ui.layouts.reset import (  # noqa: F401
 )
 
 if TYPE_CHECKING:
+    from trezor.loop import Task
     from trezor.messages import BackupMethod
 
 _NUM_OF_CHOICES = const(3)
@@ -178,27 +180,164 @@ class _DisplayBackup:
 
         # backup all shares
         for share in iter_shares:
-            while True:
-                # display paginated share on the screen
-                await show_share_words(
-                    share_words=share.words,
-                    share_index=share.index,
-                    group_index=share.group_index,
-                )
+            await self._backup_share(share)
 
-                # make the user confirm words from the share
-                if await _share_words_confirmed(share):
-                    break  # this share is confirmed, go to next one
+    async def _backup_share(self, share: ShareInfo) -> None:
+        while True:
+            # display paginated share on the screen
+            await show_share_words(
+                share_words=share.words,
+                share_index=share.index,
+                group_index=share.group_index,
+            )
+
+            # make the user confirm words from the share
+            if await _share_words_confirmed(share):
+                break  # this share is confirmed, go to next one
+
+
+if utils.USE_N4W1:
+
+    from trezor import TR
+    from trezor.ui import Layout
+    from trezor.ui.layouts.common import interact
+
+    if TYPE_CHECKING:
+        from apps.debug.n4w1_mock import N4W1Context
+
+    class Retry(Exception):
+        def __init__(self, msg: str) -> None:
+            self.msg = msg
+
+    class _N4W1Backup:
+
+        async def intro(self, num_of_words: int | None = None) -> None:
+            # TODO: design/copy
+            pass
+
+        async def backup(self, iter_shares: Iterable[ShareInfo]) -> None:
+            # TODO: warn user about safety
+
+            # backup all shares
+            for share in iter_shares:
+                await self._backup_share(share)
+
+        async def _backup_share(self, share: ShareInfo) -> None:
+            import trezorui_api
+            from trezor import TR
+            from trezor.ui.layouts.common import raise_if_not_confirmed
+
+            from apps.debug import n4w1_mock
+
+            # TODO: use protobuf?
+            blob = " ".join(share.words).encode()
+
+            if share.index == 0 or share.num_of_shares is None:
+                description, button = TR.n4w1__hold_first, TR.n4w1__footer_first
+            elif share.index == share.num_of_shares - 1:
+                description, button = TR.n4w1__hold_last, TR.n4w1__footer_last
+            else:
+                description, button = TR.n4w1__hold_next, TR.n4w1__footer_next
+
+            while True:
+                try:
+                    with n4w1_mock.ctx as ctx:
+                        # may raise a retriable error
+                        return await _backup_share(ctx, description, button, blob)
+                except Retry as exc:
+                    await raise_if_not_confirmed(
+                        trezorui_api.show_warning(
+                            title=TR.words__important,
+                            button=TR.buttons__continue,
+                            description=exc.msg,
+                            danger=True,
+                        ),
+                        br_name="backup_retry",
+                    )
+                    # wait for a new N4W1 tag
+                    continue
+
+    async def _backup_share(
+        ctx: N4W1Context, description: str, button: str, blob: bytes
+    ) -> None:
+        from trezor.ui import Shutdown
+        from trezor.ui.layouts.progress import progress
+        from trezorui_api import CONFIRMED, confirm_action
+
+        class _LayoutWrite(Layout):
+            def create_tasks(self) -> Iterator[Task]:
+                """Run N4W1 write operation in the backgroud of this layout."""
+
+                async def _write_task() -> None:
+                    existing = await ctx.read(key="mnemonic")
+                    if existing is not None:
+                        raise Retry("Non-empty N4W1 tag.")
+                    try:
+                        # emitting a message raises Shutdown exception
+                        self._emit_message(CONFIRMED)
+                    except Shutdown:
+                        pass
+
+                yield from super().create_tasks()
+                yield _write_task()
+
+        # will raise in case of an error
+        await interact(
+            # TODO: disable button & add cancellation
+            confirm_action(
+                title=TR.backup__title_create_wallet_backup,
+                action=description,
+                description=None,
+                verb=button,
+                cancel=False,
+                external_menu=True,
+            ),
+            br_name="backup_write",
+            confirm_only=False,
+            layout_type=_LayoutWrite,
+        )
+
+        # continue N4W1 communication (the tag is ready)
+        progress_obj = progress(description=TR.n4w1__writing)
+        progress_obj.start()
+        progress_obj.report(100)
+        try:
+            await ctx.write(key="mnemonic", value=blob)
+            # TODO: animate during I/O?
+            progress_obj.report(1000)
+        finally:
+            progress_obj.stop()
+            progress_obj = None
+
+    async def _choose_method() -> BackupMethod:
+        import trezorui_api
+
+        index = await interact(
+            trezorui_api.select_word(
+                title=TR.backup__title_create_wallet_backup,
+                description="Select the type of wallet backup you want to create.",
+                words=("N4W1 backup", "Wordlist backup", ""),
+            ),
+            br_name="backup_retry",
+        )
+        return (BackupMethod.N4W1, BackupMethod.Display)[index]
 
 
 async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
-    # TODO: prompt the user if method is `None`.
-    if __debug__:
+    if utils.USE_N4W1:
         from trezor.enums import BackupMethod
+
+        if utils.USE_N4W1:
+            if method is None:
+                method = await _choose_method()
+
+            if method is BackupMethod.N4W1:
+                return _N4W1Backup()
 
         if method not in (None, BackupMethod.Display):
             from trezor import log
 
-            log.warning(__name__, "Unsupported backup method: %s", method)
+            if __debug__:
+                log.warning(__name__, "Unsupported backup method: %s", method)
 
     return _DisplayBackup()

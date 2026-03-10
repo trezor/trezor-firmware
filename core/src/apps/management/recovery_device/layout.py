@@ -16,15 +16,19 @@ from apps.common import backup_types
 from .recover import RecoveryAborted
 
 if TYPE_CHECKING:
-    from typing import Awaitable
+    from typing import Awaitable, Iterator
 
     from trezor.enums import BackupType
+    from trezor.loop import Task
 
     # RemainingSharesInfo represents the data structure for remaining shares in SLIP-39 recovery:
     # - Set of tuples, each containing 2 or 3 words identifying a group
     # - List of remaining share counts for each group
     # - Group threshold (minimum number of groups required)
     RemainingSharesInfo = tuple[set[tuple[str, ...]], list[int], int]
+
+if __debug__:
+    from trezor import utils
 
 
 async def request_mnemonic(
@@ -142,3 +146,66 @@ async def homescreen_dialog(
         remaining_shares_info,
     ):
         raise RecoveryAborted
+
+
+if utils.USE_N4W1:
+    from trezor.enums import BackupMethod
+    from trezor.ui import Layout
+
+    if TYPE_CHECKING:
+        from apps.debug.n4w1_mock import N4W1Context
+
+    async def _n4w1_read(
+        ctx: N4W1Context, description: str, button: str
+    ) -> bytes | None:
+        from trezor import log
+        from trezor.ui import Shutdown
+        from trezor.ui.layouts.common import interact
+        from trezorui_api import show_info
+
+        class _LayoutRead(Layout):
+            def create_tasks(self) -> Iterator[Task]:
+                """Run N4W1 write operation in the backgroud of this layout."""
+
+                async def _read_task() -> None:
+                    res = await ctx.read(key="mnemonic")
+                    try:
+                        # emitting a message raises Shutdown exception
+                        self._emit_message(res)
+                    except Shutdown:
+                        pass
+
+                yield from super().create_tasks()
+                yield _read_task()
+
+        result = await interact(
+            # TODO: disable button & add cancellation
+            show_info(
+                title=TR.recovery__title, description=description, button=button
+            ),
+            br_name="backup_read",
+            confirm_only=False,
+            layout_type=_LayoutRead,
+        )
+
+        # TODO: animate during read?
+        # TODO: show empty tag warning
+        if result is not None:
+            if not isinstance(result, bytes):
+                raise RuntimeError
+
+        return result
+
+    async def _choose_method() -> BackupMethod:
+        import trezorui_api
+        from trezor.ui.layouts import interact
+
+        index = await interact(
+            trezorui_api.select_word(
+                title=TR.recovery__title,
+                description="Which type of wallet backup do you have?",
+                words=("N4W1 backup", "Wordlist backup", ""),
+            ),
+            br_name="backup_retry",
+        )
+        return (BackupMethod.N4W1, BackupMethod.Display)[index]
