@@ -828,7 +828,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[ui.UiResult]:
-    description = description or f"{TR.words__amount}:"  # def_arg
+    description = description or TR.words__amount  # def_arg
     return confirm_value(
         title,
         amount,
@@ -1298,7 +1298,7 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> Awaitable[None]:
         amount_title = (
-            amount_title if amount_title is not None else f"{TR.words__amount}:"
+            amount_title if amount_title is not None else TR.words__amount
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
         return _confirm_summary(
@@ -1623,7 +1623,7 @@ async def confirm_modify_output(
         value=address,
         verb=TR.buttons__continue,
         verb_cancel=None,
-        description=f"{TR.words__address}:",
+        description=TR.words__address,
     )
     modify_layout = trezorui_api.confirm_modify_output(
         sign=sign,
