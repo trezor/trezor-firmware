@@ -114,7 +114,8 @@ impl Obj {
         // micropython/py/obj.h
         // #define MP_OBJ_NEW_SMALL_INT(small_int) \
         //     ((mp_obj_t)((((mp_uint_t)(small_int)) << 1) | 1))
-        unsafe { Self::from_bits(((val << 1) | 1) as usize) }
+        let val = val as usize;
+        unsafe { Self::from_bits((val << 1) | 1) }
     }
 }
 
@@ -471,5 +472,26 @@ impl Obj {
         } else {
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_small_int() {
+        assert_eq!(
+            Obj::small_int(0x0000).as_bits(),
+            0b00000000000000000000000000000001
+        );
+        assert_eq!(
+            Obj::small_int(0x00f0).as_bits(),
+            0b00000000000000000000000111100001
+        );
+        assert_eq!(
+            Obj::small_int(0xffff).as_bits(),
+            0b00000000000000011111111111111111
+        );
     }
 }
