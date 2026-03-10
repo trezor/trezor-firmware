@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Awaitable
+from typing import TYPE_CHECKING, Awaitable, Protocol
 
 import storage.device as storage_device
 import storage.recovery as storage_recovery
@@ -13,7 +13,7 @@ from apps.management.recovery_device.recover import RecoveryAborted
 from . import layout, recover
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType, RecoveryType
+    from trezor.enums import BackupMethod, BackupType, RecoveryType
 
     from .layout import RemainingSharesInfo
 
@@ -29,10 +29,11 @@ async def recovery_homescreen() -> None:
     elif not storage_recovery.is_in_progress():
         workflow.set_default(homescreen)
     else:
-        await recovery_process()
+        # backup method will be chosen by the user
+        await recovery_process(None)
 
 
-async def recovery_process() -> Success:
+async def recovery_process(method: BackupMethod | None) -> Success:
     import storage
     from trezor.enums import MessageType, RecoveryType
 
@@ -52,7 +53,7 @@ async def recovery_process() -> Success:
             MessageType.EndSession,
         )
     try:
-        return await _continue_recovery_process()
+        return await _continue_recovery_process(method)
     except recover.RecoveryAborted:
         storage_recovery.end_progress()
         backup.deactivate_repeated_backup()
@@ -89,6 +90,17 @@ async def _continue_repeated_backup() -> None:
         backup.deactivate_repeated_backup()
 
 
+if TYPE_CHECKING:
+
+    class RecoveryHandler(Protocol):
+        @classmethod
+        async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler": ...
+
+        async def show_state(self, is_retry: bool) -> None: ...
+        async def request_mnemonic(self) -> str | None: ...
+        def show_invalid_mnemonic(self) -> Awaitable[None]: ...
+
+
 class _DisplayHandler:
     def __init__(
         self,
@@ -101,7 +113,7 @@ class _DisplayHandler:
         self.backup_type = backup_type
 
     @classmethod
-    async def load(cls, recovery_type: RecoveryType) -> "_DisplayHandler":
+    async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
         # `slip39_state is None` indicates that we are (re)starting the first recovery step,
         # which includes word count selection.
         if (slip39_state := recover.load_slip39_state()) is None:
@@ -143,15 +155,25 @@ class _DisplayHandler:
         return show_invalid_mnemonic(self.word_count)
 
 
-async def _recover_secret(recovery_type: RecoveryType) -> tuple[bytes, BackupType]:
+async def _recover_secret(
+    recovery_type: RecoveryType, method: BackupMethod | None
+) -> tuple[bytes, BackupType]:
+    from trezor.enums import BackupMethod
     from trezor.errors import MnemonicError
+
+    if method not in (None, BackupMethod.Display):
+        from trezor import log
+
+        log.warning(__name__, "Unsupported backup method: %s", method)
+
+    handler_type = _DisplayHandler
 
     # Show recovery state in the beginning, on some failures, and after a successful share entry.
     is_retry = False
 
     while True:
         # Load existing recovery state (persisted by _process_words below).
-        handler = await _DisplayHandler.load(recovery_type)
+        handler = await handler_type.load(recovery_type)
         await handler.show_state(is_retry)
         is_retry = False
 
@@ -168,14 +190,14 @@ async def _recover_secret(recovery_type: RecoveryType) -> tuple[bytes, BackupTyp
             is_retry = True  # Retry share entry (without showing recovery state)
 
 
-async def _continue_recovery_process() -> Success:
+async def _continue_recovery_process(method: BackupMethod | None) -> Success:
     from trezor.enums import RecoveryType
 
     # gather the current recovery state from storage
     recovery_type = storage_recovery.get_type()
 
     # run recovery process - may raise RecoveryAborted
-    secret, backup_type = await _recover_secret(recovery_type)
+    secret, backup_type = await _recover_secret(recovery_type, method)
 
     # finish recovery
     if recovery_type == RecoveryType.DryRun:

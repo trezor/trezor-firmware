@@ -150,6 +150,7 @@ def recover(
     language: Optional[str] = None,
     input_callback: Optional[Callable] = None,
     input_method: messages.RecoveryDeviceInputMethod = messages.RecoveryDeviceInputMethod.ScrambledWords,
+    backup_method: Optional[messages.BackupMethod] = None,
     dry_run: Optional[bool] = None,
     u2f_counter: Optional[int] = None,
     *,
@@ -181,6 +182,9 @@ def recover(
     if session.features.model == "1" and input_callback is None:
         raise RuntimeError("Input callback required for Trezor One")
 
+    if session.features.model == "1" and backup_method is not None:
+        raise RuntimeError("Backup method cannot be set for Trezor One")
+
     if word_count not in (12, 18, 24):
         raise ValueError("Invalid word count. Use 12/18/24")
 
@@ -196,6 +200,7 @@ def recover(
         word_count=word_count,
         enforce_wordlist=True,
         input_method=input_method,
+        backup_method=backup_method,
         type=type,
     )
 
