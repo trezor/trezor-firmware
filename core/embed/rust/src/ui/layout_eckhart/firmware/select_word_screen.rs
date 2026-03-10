@@ -100,6 +100,9 @@ impl SelectWordButtons {
     fn new(share_words_vec: [TString<'static>; MAX_WORD_QUIZ_ITEMS]) -> Self {
         let mut buttons = Vec::new();
         for word in share_words_vec {
+            if word.is_empty() {
+                continue;
+            }
             unwrap!(buttons.push(
                 Button::with_text(word)
                     .styled(theme::button_select_word())

@@ -20,6 +20,16 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
+    await interact(
+        trezorui_api.select_word(
+            title="Check backup method",
+            description="Which type of wallet backup do you have?",
+            words=("N4W1 backup", "Wordlist backup", ""),
+        ),
+        "recovert_word_count",
+        ButtonRequestType.MnemonicWordCount,
+    )
+
     count = await interact(
         trezorui_api.select_word_count(recovery_type=recovery_type),
         "recovery_word_count",

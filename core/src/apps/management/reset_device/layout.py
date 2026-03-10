@@ -1,6 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING, Iterable, Protocol, Sequence
 
+from trezor import utils
 from trezor.ui.layouts.reset import (  # noqa: F401
     show_share_words,
     slip39_advanced_prompt_group_threshold,
@@ -191,10 +192,62 @@ class _DisplayBackup:
                     break  # this share is confirmed, go to next one
 
 
+if __debug__:
+
+    class _N4W1Backup:
+
+        async def intro(self, num_of_words: int | None = None) -> None:
+            pass
+
+        async def backup(self, iter_shares: Iterable[ShareInfo]) -> None:
+            from trezor.ui.layouts.common import draw_simple
+            from trezorui_api import show_simple
+
+            from apps.debug import n4w1_mock
+
+            for share in iter_shares:
+                # TODO: use protobuf?
+                blob = " ".join(share.words).encode()
+
+                with n4w1_mock.ctx as ctx:
+                    draw_simple(
+                        show_simple(
+                            title="Backup",
+                            text=f"Tap your N4W1 to backup {len(blob)} bytes",
+                        )
+                    )
+                    await ctx.write(key="mnemonic", value=blob)
+
+
+if utils.UI_LAYOUT == "ECKHART":
+
+    async def _choose_method() -> BackupMethod:
+        import trezorui_api
+        from trezor.ui.layouts import interact
+
+        index = await interact(
+            trezorui_api.select_word(
+                title="Create wallet backup",
+                description="Select the type of wallet backup you want to create.",
+                words=("N4W1 backup", "Wordlist backup", ""),
+            ),
+            br_name=None,
+        )
+        return (BackupMethod.N4W1, BackupMethod.Display)[index]
+
+
 async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
     # TODO: prompt the user if method is `None`.
     if __debug__:
+        from trezor import utils
         from trezor.enums import BackupMethod
+
+        if utils.UI_LAYOUT == "ECKHART":
+            if method is None:
+                method = await _choose_method()
+
+            if method is BackupMethod.N4W1:
+                return _N4W1Backup()
 
         if method not in (None, BackupMethod.Display):
             from trezor import log
