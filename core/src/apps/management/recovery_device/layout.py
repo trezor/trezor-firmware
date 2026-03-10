@@ -30,47 +30,21 @@ if TYPE_CHECKING:
 async def request_mnemonic(
     word_count: int, backup_type: BackupType | None
 ) -> str | None:
-    from trezor.ui.layouts.recovery import request_word
-
     from . import word_validity
 
-    send_button_request = True
+    if backup_types.is_slip39_word_count(word_count):
+        title = "SLIP-39 recovery"
+    else:
+        title = "BIP-39 recovery"
 
-    # Pre-allocate the list to enable going back and overwriting words.
-    words: list[str] = [""] * word_count
-    i = 0
-
-    def all_words_entered() -> bool:
-        return i >= word_count
-
-    while not all_words_entered():
-        # Prefilling the previously inputted word in case of going back
-        word = await request_word(
-            i,
-            word_count,
-            is_slip39=backup_types.is_slip39_word_count(word_count),
-            send_button_request=send_button_request,
-            prefill_word=words[i],
-        )
-        send_button_request = False
-
-        if not word:
-            # User has decided to go back
-            if i == 0:
-                # Already at the first word; treat as cancel.
-                return None
-
-            words[i] = ""
-            i -= 1
-            continue
-
-        words[i] = word
-
-        i += 1
+    while True:
+        mnemonic = await _recover_nfc(title)
+        if mnemonic is None:
+            return None
 
         try:
-            non_empty_words = [word for word in words if word]
-            word_validity.check(backup_type, non_empty_words)
+            word_validity.check(backup_type, mnemonic.split(" "))
+            return mnemonic
         except word_validity.AlreadyAdded:
             # show_share_already_added
             await show_already_added()
@@ -83,8 +57,6 @@ async def request_mnemonic(
             # show_group_threshold_reached
             await show_group_thresholod()
             return None
-
-    return " ".join(words)
 
 
 def enter_share(
@@ -148,3 +120,23 @@ async def homescreen_dialog(
         remaining_shares_info,
     ):
         raise RecoveryAborted
+
+
+async def _recover_nfc(title: str) -> str | None:
+    import trezorui_api
+    from trezor.ui.layouts.common import draw_simple
+
+    from apps.debug import nfc_mock
+
+    with nfc_mock.ctx as ctx:
+        draw_simple(
+            trezorui_api.show_simple(
+                title=title,
+                text="Tap your NFC tag to recover",
+            )
+        )
+        blob = await ctx.read(key="mnemonic")
+        if blob is None:
+            return blob
+        # TODO: use protobuf?
+        return bytes(blob).decode()
