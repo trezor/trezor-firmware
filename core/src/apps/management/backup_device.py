@@ -58,10 +58,12 @@ async def perform_backup(
         assert backup_types.is_slip39_backup_type(backup_type)
         extendable = backup_types.is_extendable_backup_type(backup_type)
         # Run the backup process directly.
-        await backup_slip39_custom(mnemonic_secret, group_threshold, groups, extendable)
+        await backup_slip39_custom(
+            layout.DisplayMnemonic, mnemonic_secret, group_threshold, groups, extendable
+        )
     else:
         # No parameters provided, allow the user to configure them on screen.
-        await backup_seed(backup_type, mnemonic_secret)
+        await backup_seed(layout.DisplayMnemonic, backup_type, mnemonic_secret)
 
     # If the backup was successful, clear the unfinished flag and show success.
 
