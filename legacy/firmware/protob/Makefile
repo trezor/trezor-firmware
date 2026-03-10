@@ -13,6 +13,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	Solana StellarClaimClaimableBalanceOp \
 	ChangeLanguage DataChunkRequest DataChunkAck Thp \
 	SetBrightness DebugLinkOptigaSetSecMax DebugLinkSetLogFilter \
+	DebugLinkN4W1Connected DebugLinkN4W1Read DebugLinkN4W1Write DebugLinkN4W1Response \
 	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult \
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
 	BleUnpair PaymentNotification Evolu \
