@@ -77,7 +77,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     # --------------------------------------------------------
 
     if storage_recovery.is_in_progress():
-        return await recovery_process()
+        return await recovery_process(method=msg.backup_method)
 
     if recovery_type == RecoveryType.NormalRecovery:
         await confirm_reset_device(recovery=True)
@@ -112,4 +112,4 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
 
     workflow.set_default(recovery_homescreen)
 
-    return await recovery_process()
+    return await recovery_process(method=msg.backup_method)

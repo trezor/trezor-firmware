@@ -176,6 +176,7 @@ def load(
     type=ChoiceType(RECOVERY_DEVICE_INPUT_METHOD),
     default=None,
 )
+@click.option("-m", "--backup-method", type=ChoiceType(BACKUP_METHOD))
 @click.option("-d", "--dry-run", is_flag=True)
 @click.option("-b", "--unlock-repeated-backup", is_flag=True)
 @with_session(seedless=True)
@@ -188,6 +189,7 @@ def recover(
     label: str | None,
     u2f_counter: int,
     input_method: messages.RecoveryDeviceInputMethod | None,
+    backup_method: messages.BackupMethod | None,
     dry_run: bool,
     unlock_repeated_backup: bool,
 ) -> None:
@@ -223,6 +225,7 @@ def recover(
         u2f_counter=u2f_counter,
         input_callback=input_callback,
         input_method=input_method,
+        backup_method=backup_method,
         type=type,
     )
 
