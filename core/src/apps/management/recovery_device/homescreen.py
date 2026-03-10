@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Awaitable
+from typing import TYPE_CHECKING, Awaitable, Protocol
 
 import storage.device as storage_device
 import storage.recovery as storage_recovery
@@ -89,19 +89,34 @@ async def _continue_repeated_backup() -> None:
         backup.deactivate_repeated_backup()
 
 
-class _DisplayHandler:
+if TYPE_CHECKING:
+
+    class RecoveryHandler(Protocol):
+        @classmethod
+        async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler": ...
+
+        async def show_state(self, is_retry: bool) -> None: ...
+        async def request_mnemonic(self) -> str | None: ...
+        def show_invalid_mnemonic(self) -> Awaitable[None]: ...
+
+else:
+    RecoveryHandler = object
+
+
+class _DisplayHandler(RecoveryHandler):
     def __init__(
         self,
         recovery_type: RecoveryType,
         word_count: int,
         backup_type: BackupType | None,
     ) -> None:
+        super().__init__()
         self.recovery_type = recovery_type
         self.word_count = word_count
         self.backup_type = backup_type
 
     @classmethod
-    async def load(cls, recovery_type: RecoveryType) -> "_DisplayHandler":
+    async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
         # `slip39_state is None` indicates that we are (re)starting the first recovery step,
         # which includes word count selection.
         if (slip39_state := recover.load_slip39_state()) is None:
@@ -121,7 +136,7 @@ class _DisplayHandler:
 
     async def show_state(self, is_retry: bool) -> None:
         if is_retry and self.backup_type is not None:
-            # skip showing recovery state on retries (if first share was entered)
+            # don't show recovery state on retries (if first share was entered)
             return
         await _request_share_first_screen(self.word_count, self.recovery_type)
 
@@ -143,15 +158,79 @@ class _DisplayHandler:
         return show_invalid_mnemonic(self.word_count)
 
 
+class _N4W1Handler(RecoveryHandler):
+    def __init__(
+        self,
+        recovery_type: RecoveryType,
+        slip39_state: recover.Slip39State | None,
+    ) -> None:
+        super().__init__()
+        self.recovery_type = recovery_type
+        # `slip39_state is None` indicates that we are (re)starting the first recovery step.
+        self.backup_type = slip39_state and slip39_state[1]
+        self.word_count = 20  # TODO: improve
+
+    @classmethod
+    async def load(cls, recovery_type: RecoveryType) -> "RecoveryHandler":
+        return cls(recovery_type, recover.load_slip39_state())
+
+    async def show_state(self, is_retry: bool) -> None:
+        if is_retry or self.backup_type is None:
+            # don't show recovery state on retries and before the first share is entered
+            return
+        await _request_share_first_screen(self.word_count, self.recovery_type)
+
+    async def request_mnemonic(self) -> str | None:
+        """Return the mnemonic or `None` on cancellation/validation error."""
+        from apps.debug import n4w1_mock
+
+        from .word_validity import WordValidityResult, check
+
+        with n4w1_mock.ctx as ctx:
+            # returns `None` on cancellation or retriable error.
+            blob = await layout._n4w1_read(
+                ctx, description=TR.n4w1__hold_next, button=TR.n4w1__footer_next
+            )
+
+        if blob is None:
+            return None
+
+        # TODO: use protobuf?
+        share = blob.decode()
+        share_words = share.split(" ")
+        try:
+            # Re-verify relevant prefixes
+            # TODO: can it be encapsulated too?
+            for prefix_len in range(1, 5):
+                check(self.backup_type, share_words[:prefix_len])
+            return share
+        except WordValidityResult as exc:
+            # if they were invalid or some checks failed we continue and request them again
+            await exc.show_error()
+            return None
+
+    def show_invalid_mnemonic(self) -> Awaitable[None]:
+        from trezor.ui.layouts.recovery import show_invalid_mnemonic
+
+        return show_invalid_mnemonic(self.word_count)
+
+
 async def _recover_secret(recovery_type: RecoveryType) -> tuple[bytes, BackupType]:
+    from trezor.enums import BackupMethod
     from trezor.errors import MnemonicError
+
+    _HANDLER_TYPES: dict[BackupMethod, type[RecoveryHandler]] = {
+        BackupMethod.Display: _DisplayHandler,
+        BackupMethod.N4W1: _N4W1Handler,
+    }
+    handler_type = _HANDLER_TYPES[await layout._choose_method()]
 
     # Show recovery state in the beginning, on some failures, and after a successful share entry.
     is_retry = False
 
     while True:
         # Load existing recovery state (persisted by _process_words below).
-        handler = await _DisplayHandler.load(recovery_type)
+        handler = await handler_type.load(recovery_type)
         await handler.show_state(is_retry)
         is_retry = False
 
