@@ -178,7 +178,7 @@ async def _entropy_check(secret: bytes) -> bool:
 async def _backup_bip39(mnemonic: str) -> None:
     words = mnemonic.split()
     await layout.show_backup_intro(single_share=True, num_of_words=len(words))
-    await layout.show_and_confirm_single_share(words)
+    await layout._backup_n4w1("BIP-39 backup", words=words)
 
 
 async def _backup_slip39_single(
@@ -189,7 +189,7 @@ async def _backup_slip39_single(
 
     # for a single 1-of-1 group, we use the same layouts as for BIP39
     await layout.show_backup_intro(single_share=True, num_of_words=len(words))
-    await layout.show_and_confirm_single_share(words)
+    await layout._backup_n4w1("SLIP-39 backup", words=words)
 
 
 async def _backup_slip39_basic(
