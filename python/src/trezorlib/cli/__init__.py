@@ -450,6 +450,11 @@ class TrezorConnection:
                 client.pairing, code_entry_callback=get_code_entry_code
             )
             if credential is not None:
+                trezor_public_keys = client.pairing.channel.trezor_public_keys
+                if trezor_public_keys is not None:
+                    # replace old credentials on successful pairing
+                    self.credentials.delete(trezor_public_keys)
+
                 self.credentials.add(credential)
 
         return client
