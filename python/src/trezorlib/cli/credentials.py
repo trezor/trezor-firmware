@@ -149,8 +149,10 @@ class CredentialStore:
 
     def list(self) -> t.Collection[Credential]:
         with self._with_app() as app_data:
+            # Use recent credentials first (in case older credentials were invalidated)
             return [
-                KeyringCredential(self.app_name, id).as_credential() for id in app_data
+                KeyringCredential(self.app_name, id).as_credential()
+                for id in reversed(app_data)
             ]
 
     def add(self, credential: Credential) -> None:
