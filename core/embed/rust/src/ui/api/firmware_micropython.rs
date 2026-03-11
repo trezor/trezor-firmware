@@ -1358,6 +1358,8 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             TrezorUiResult::String(unwrap!(ShortString::from_str(unwrap!(
                 core::str::from_utf8(data)
             ))))
+        } else if let Ok(val) = bool::try_from(obj) {
+            TrezorUiResult::Boolean(val)
         } else if let Ok(val) = u32::try_from(obj) {
             TrezorUiResult::Integer(val)
         } else {

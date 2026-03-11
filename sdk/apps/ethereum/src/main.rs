@@ -10,7 +10,7 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    CORE_SERVICE, Error, IpcMessage, Result, error,
+    CORE_SERVICE, Error, IpcMessage, Result, error, info,
     service::{self, CoreIpcService, NoUtilHandler},
     trace,
     util::Timeout,
@@ -31,6 +31,7 @@ mod sign_message;
 mod sign_tx;
 mod sign_typed_data;
 mod strutil;
+mod tokens;
 mod verify_message;
 
 use proto::ethereum::{
@@ -42,7 +43,7 @@ use ufmt::derive::uDebug;
 
 #[derive(uDebug, Copy, Clone, PartialEq, Eq, num_enum::FromPrimitive, num_enum::IntoPrimitive)]
 #[repr(u16)]
-enum EthereumMessages {
+pub(crate) enum EthereumMessages {
     GetPublicKey = 0,
     PublicKey = 1,
     GetAddress = 2,
@@ -86,14 +87,13 @@ macro_rules! wire_handler {
     };
 }
 
-pub fn wire_request<Req, Resp>(req: &Req) -> Result<Resp>
+pub(crate) fn wire_request<Req, Resp>(req: &Req, id: EthereumMessages) -> Result<Resp>
 where
     Req: Message,
     Resp: Message + Default,
 {
     let req_bytes = req.encode_to_vec();
-    let message = IpcMessage::new(0, &req_bytes);
-
+    let message = IpcMessage::new(id.into(), &req_bytes);
     let result = CORE_SERVICE.call(
         CoreIpcService::WireContinue,
         &message,
@@ -131,7 +131,7 @@ wire_handler!(
 wire_handler!(
     handle_sign_typed_data,
     EthereumSignTypedData,
-    EthereumMessages::SignTypedData,
+    EthereumMessages::TypedDataSignature,
     sign_typed_data::sign_typed_data
 );
 wire_handler!(

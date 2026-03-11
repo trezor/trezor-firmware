@@ -1,7 +1,7 @@
 use crate::{
     definitions::unknown_network,
     proto::definitions::{EthereumNetworkInfo, EthereumTokenInfo},
-    proto::ethereum_eip712::ethereum_typed_data_struct_ack::EthereumDataType,
+    proto::ethereum_eip712::ethereum_typed_data_struct_ack::{EthereumDataType, EthereumFieldType},
     strutil::{hex_decode, hex_encode},
     uformat,
 };
@@ -20,12 +20,6 @@ use std::{
 use trezor_app_sdk::{Error, Result, crypto::keccak_256};
 
 const RSKIP60_NETWORKS: [u64; 2] = [30, 31];
-
-pub struct Property {
-    pub name: Option<String>,
-    pub value: Option<String>,
-    pub is_mono: Option<bool>,
-}
 
 /// Converts address in bytes to a checksummed string as defined
 /// in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md
@@ -84,9 +78,42 @@ pub fn bytes_from_address(address: &str) -> Result<Vec<u8>> {
 }
 
 /// Create a string from type definition (like uint256 or bytes16).
-pub fn get_type_name(_field: EthereumDataType) -> String {
-    // TODO implement
-    String::new()
+pub fn get_type_name(field: &EthereumFieldType) -> Result<String> {
+    let data_type = field.data_type;
+    let size = field.size;
+
+    if data_type == EthereumDataType::Struct as i32 {
+        return Ok(field.struct_name.clone().ok_or(Error::DataError)?);
+    } else if data_type == EthereumDataType::Array as i32 {
+        let entry_type = field
+            .entry_type
+            .as_ref()
+            .expect("validate_field_type must ensure entry_type for array");
+        let inner = get_type_name(entry_type.as_ref())?;
+        return match size {
+            Some(n) => Ok(uformat!("{}[{}]", inner.as_str(), n)),
+            None => Ok(uformat!("{}[]", inner.as_str())),
+        };
+    } else if data_type == EthereumDataType::Uint as i32 {
+        let n = size.expect("validate_field_type must ensure size for uint");
+        return Ok(uformat!("uint{}", n * 8));
+    } else if data_type == EthereumDataType::Int as i32 {
+        let n = size.expect("validate_field_type must ensure size for int");
+        return Ok(uformat!("int{}", n * 8));
+    } else if data_type == EthereumDataType::Bytes as i32 {
+        return match size {
+            Some(n) if n != 0 => Ok(uformat!("bytes{}", n)),
+            _ => Ok("bytes".to_string()),
+        };
+    } else if data_type == EthereumDataType::String as i32 {
+        return Ok("string".to_string());
+    } else if data_type == EthereumDataType::Bool as i32 {
+        return Ok("bool".to_string());
+    } else if data_type == EthereumDataType::Address as i32 {
+        return Ok("address".to_string());
+    }
+
+    panic!("Unsupported EthereumDataType: {}", data_type);
 }
 
 /// Used by sign_typed_data module to show data to user.
@@ -127,29 +154,21 @@ pub fn get_fee_items_regular(
     gas_price: u128,
     gas_limit: u128,
     network: &EthereumNetworkInfo,
-) -> Vec<Property> {
+) -> [(String, String, bool); 2] {
     let gas_limit_str = uformat!("{} units", gas_limit);
     let gas_price_str = format_ethereum_amount(gas_price, None, network, true);
 
-    vec![
-        Property {
-            name: Some("Gas Limit".into()),
-            value: Some(gas_limit_str),
-            is_mono: Some(false),
-        },
-        Property {
-            name: Some("Gas Price".into()),
-            value: Some(gas_price_str),
-            is_mono: Some(false),
-        },
+    [
+        ("Gas Limit".into(), gas_limit_str, false),
+        ("Gas Price".into(), gas_price_str, false),
     ]
 }
 
 pub fn format_ethereum_amount(
-    _value: u128,
-    _token: Option<&EthereumTokenInfo>,
-    _network: &EthereumNetworkInfo,
-    _force_unit_gwei: bool,
+    value: u128,
+    token: Option<&EthereumTokenInfo>,
+    network: &EthereumNetworkInfo,
+    force_unit_gwei: bool,
 ) -> String {
     // TODO implement
     String::new()

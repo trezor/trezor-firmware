@@ -62,7 +62,7 @@ impl<const N: usize> Default for String<N> {
     }
 }
 
-type Prop = (ShortString, ShortString);
+type Prop = (ShortString, ShortString, bool);
 
 #[derive(Archive, Serialize)]
 pub struct PropsList {
@@ -80,16 +80,16 @@ impl Default for PropsList {
 }
 
 impl PropsList {
-    pub fn from_prop_slice(slice: &[(&str, &str)]) -> core::result::Result<Self, ()> {
+    pub fn from_prop_slice(slice: &[(&str, &str, bool)]) -> core::result::Result<Self, ()> {
         if slice.len() > 5 {
             return Err(());
         }
 
         let mut props = Self::default();
-        for (key, value) in slice {
+        for (key, value, is_mono) in slice {
             let key = ShortString::from_str(key)?;
             let value = ShortString::from_str(value)?;
-            props.data[props.len as usize] = (key, value);
+            props.data[props.len as usize] = (key, value, *is_mono);
             props.len += 1;
         }
         Ok(props)
@@ -180,6 +180,20 @@ pub enum TrezorUiEnum {
         action: ShortString,
         hold: bool,
     },
+    ConfirmSummary {
+        title: ShortString,
+        amount: Option<ShortString>,
+        amount_label: Option<ShortString>,
+        fee: ShortString,
+        fee_label: ShortString,
+        account_title: Option<ShortString>,
+        account_items: Option<PropsList>,
+        extra_title: Option<ShortString>,
+        extra_items: Option<PropsList>,
+        back_button: bool,
+        br_name: ShortString,
+        br_code: u32,
+    },
     ConfirmValue {
         title: ShortString,
         value: ExtraLongString,
@@ -202,6 +216,8 @@ pub enum TrezorUiEnum {
     Warning {
         title: ShortString,
         content: ShortString,
+        br_name: ShortString,
+        br_code: u32,
     },
     Mismatch {
         title: ShortString,
@@ -209,6 +225,8 @@ pub enum TrezorUiEnum {
     Danger {
         title: ShortString,
         content: ShortString,
+        br_name: ShortString,
+        br_code: u32,
     },
     Success {
         content: ShortString,
@@ -224,6 +242,11 @@ pub enum TrezorUiEnum {
     ConfirmProperties {
         title: ShortString,
         props: PropsList,
+        subtitle: Option<ShortString>,
+        verb: Option<ShortString>,
+        hold: bool,
+        br_name: ShortString,
+        br_code: u32,
     },
     ShowPublicKey {
         pubkey: LongString,
@@ -237,6 +260,7 @@ pub enum TrezorUiEnum {
         title: ShortString,
         items: StrExtList,
         button_text: ShortString,
+        br_name: ShortString,
     },
     ShowAddress {
         address: ShortString,
@@ -255,6 +279,8 @@ pub enum TrezorUiEnum {
     ConfirmBlob {
         title: ShortString,
         data: ExtraLongString,
+        description: Option<ShortString>,
+        subtitle: Option<ShortString>,
         hold: bool,
         chunkify: bool,
         verb: Option<ShortString>,
@@ -262,6 +288,7 @@ pub enum TrezorUiEnum {
         is_data: bool,
         br_code: u32,
         br_name: ShortString,
+        ask_pagination: bool,
     },
 }
 
@@ -275,6 +302,7 @@ pub enum TrezorUiResult {
     Info,
     Integer(u32),
     String(ShortString),
+    Boolean(bool),
 }
 
 #[derive(Archive, Serialize)]

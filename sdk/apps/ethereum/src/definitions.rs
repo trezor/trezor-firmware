@@ -20,8 +20,8 @@ const MIN_DATA_VERSION: u32 = 1764611524;
 const FORMAT_VERSION: &[u8] = b"trzd1";
 
 pub struct Definitions {
-    network: EthereumNetworkInfo,
-    tokens: BTreeMap<Vec<u8>, EthereumTokenInfo>,
+    pub network: EthereumNetworkInfo,
+    pub tokens: BTreeMap<Vec<u8>, EthereumTokenInfo>,
 }
 
 impl Definitions {

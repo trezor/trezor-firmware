@@ -1639,6 +1639,12 @@ impl FirmwareUI for UIEckhart {
             str
         }
 
+        fn obj_from_proplist_option(
+            props: &ArchivedOption<ArchivedPropsList>,
+        ) -> Result<Option<Obj>, Error> {
+            props.as_ref().map(obj_from_proplist).transpose()
+        }
+
         fn obj_from_proplist(props: &ArchivedPropsList) -> Result<Obj, Error> {
             let mut vec = heapless::Vec::<Obj, 5>::new();
             for i in 0..(props.len as usize) {
@@ -1655,10 +1661,13 @@ impl FirmwareUI for UIEckhart {
                         props.data[i].1.len.to_native() as usize,
                     )
                 }));
-                let prop: Obj =
-                    unwrap!(
-                        (unwrap!(Obj::try_from(key)), unwrap!(Obj::try_from(value)),).try_into()
-                    );
+                let is_data = props.data[i].2;
+                let prop: Obj = unwrap!((
+                    unwrap!(Obj::try_from(key)),
+                    unwrap!(Obj::try_from(value)),
+                    unwrap!(Obj::try_from(is_data))
+                )
+                    .try_into());
                 unwrap!(vec.push(prop));
             }
             let list = List::alloc(&vec)?;
@@ -1682,7 +1691,7 @@ impl FirmwareUI for UIEckhart {
                     None,  // description
                     None,  // subtitle
                     None,  // verb
-                    false, // cancel
+                    true,  // cancel
                     None,  // verb_cancel
                     *hold, // hold
                     false, // hold_danger
@@ -1693,6 +1702,42 @@ impl FirmwareUI for UIEckhart {
                 )?;
                 Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
             }
+            ArchivedTrezorUiEnum::ConfirmSummary {
+                title,
+                amount,
+                amount_label,
+                fee,
+                fee_label,
+                account_title,
+                account_items,
+                extra_title,
+                extra_items,
+                back_button,
+                br_name,
+                br_code,
+            } => {
+                let layout = Self::confirm_summary(
+                    tstr_from_archived_option(amount),
+                    tstr_from_archived_option(amount_label),
+                    tstr_from_archived(fee),
+                    tstr_from_archived(fee_label),
+                    Some(tstr_from_archived(title)),
+                    obj_from_proplist_option(account_items)?,
+                    tstr_from_archived_option(account_title),
+                    obj_from_proplist_option(extra_items)?,
+                    tstr_from_archived_option(extra_title),
+                    None,
+                    *back_button,
+                    false,
+                )?;
+                let br_str = str_from_archived(br_name);
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    None,
+                    Some(br_code.to_native()),
+                    Obj::try_from(br_str)?,
+                ))
+            }
             ArchivedTrezorUiEnum::Mismatch { title } => {
                 let layout = Self::show_mismatch(tstr_from_archived(title))?;
                 Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
@@ -1700,6 +1745,8 @@ impl FirmwareUI for UIEckhart {
             ArchivedTrezorUiEnum::ConfirmBlob {
                 title,
                 data,
+                description,
+                subtitle,
                 hold,
                 verb,
                 verb_cancel,
@@ -1707,42 +1754,72 @@ impl FirmwareUI for UIEckhart {
                 is_data,
                 br_code,
                 br_name,
+                ask_pagination,
             } => {
                 let value = str_from_archived(data);
-                let main_layout = Self::confirm_value_intro(
-                    tstr_from_archived(title),
-                    Obj::try_from(value)?,
-                    None,
-                    tstr_from_archived_option(verb),
-                    tstr_from_archived_option(verb_cancel),
-                    *hold,
-                    *chunkify,
-                )?;
-                let info_layout = Self::confirm_value(
-                    tstr_from_archived(title),
-                    Obj::try_from(value)?,
-                    None,
-                    *is_data,
-                    None,
-                    None,
-                    None,
-                    None,
-                    false,
-                    *hold,
-                    *chunkify,
-                    true,
-                    false,
-                    true,
-                    false,
-                    None,
-                    false,
-                )?;
-                Ok((
-                    main_layout,
-                    Some((LayoutObj::new_root(info_layout)?, true, true)),
-                    Some(br_code.to_native()),
-                    unwrap!(str_from_archived(br_name).try_into()),
-                ))
+                let br_name_obj = unwrap!(Obj::try_from(str_from_archived(br_name)));
+                if *ask_pagination {
+                    let main_layout = Self::confirm_value_intro(
+                        tstr_from_archived(title),
+                        Obj::try_from(value)?,
+                        tstr_from_archived_option(description),
+                        tstr_from_archived_option(verb),
+                        tstr_from_archived_option(verb_cancel),
+                        *hold,
+                        *chunkify,
+                    )?;
+                    let info_layout = Self::confirm_value(
+                        tstr_from_archived(title),
+                        Obj::try_from(value)?,
+                        None,
+                        *is_data,
+                        None,
+                        None,
+                        None,
+                        None,
+                        false,
+                        *hold,
+                        *chunkify,
+                        true,
+                        false,
+                        true,
+                        false,
+                        None,
+                        false,
+                    )?;
+                    Ok((
+                        main_layout,
+                        Some((LayoutObj::new_root(info_layout)?, true, true)),
+                        Some(br_code.to_native()),
+                        br_name_obj,
+                    ))
+                } else {
+                    let layout = Self::confirm_value(
+                        tstr_from_archived(title),
+                        Obj::try_from(value)?,
+                        tstr_from_archived_option(description),
+                        *is_data,
+                        None,
+                        tstr_from_archived_option(subtitle),
+                        tstr_from_archived_option(verb),
+                        None,
+                        false,
+                        *hold,
+                        *chunkify,
+                        false,
+                        false,
+                        true,
+                        false,
+                        None,
+                        false,
+                    )?;
+                    Ok((
+                        LayoutObj::new_root(layout)?,
+                        None,
+                        Some(br_code.to_native()),
+                        br_name_obj,
+                    ))
+                }
             }
             ArchivedTrezorUiEnum::ConfirmValue {
                 title,
@@ -1814,6 +1891,7 @@ impl FirmwareUI for UIEckhart {
                 title,
                 items,
                 button_text,
+                br_name,
             } => {
                 let mut tuple_objs = heapless::Vec::<Obj, 5>::new();
                 for i in 0..(items.len as usize) {
@@ -1836,25 +1914,45 @@ impl FirmwareUI for UIEckhart {
                     tstr_from_archived(title),
                     None,
                     list.into(),
-                    TString::empty(),
+                    "Confirm".into(),
                     tstr_from_archived(button_text),
                     None,
                     false,
                 )?;
-                Ok((layout, None, None, Obj::const_none()))
+                let br_str = str_from_archived(br_name);
+                Ok((layout, None, None, br_str.try_into()?))
             }
-            ArchivedTrezorUiEnum::ConfirmProperties { title, props } => {
+            ArchivedTrezorUiEnum::ConfirmProperties {
+                title,
+                props,
+                subtitle,
+                verb,
+                hold,
+                br_name,
+                br_code,
+            } => {
                 let layout = Self::confirm_properties(
                     tstr_from_archived(title),
-                    None,
+                    tstr_from_archived_option(subtitle),
                     obj_from_proplist(props)?,
-                    true,
-                    None,
+                    *hold,
+                    tstr_from_archived_option(verb),
                     false,
                 )?;
-                Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
+                let br_str = str_from_archived(br_name);
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    None,
+                    Some(br_code.to_native()),
+                    br_str.try_into()?,
+                ))
             }
-            ArchivedTrezorUiEnum::Warning { title, content } => Ok((
+            ArchivedTrezorUiEnum::Warning {
+                title,
+                content,
+                br_name,
+                br_code,
+            } => Ok((
                 Self::show_warning(
                     tstr_from_archived(title),
                     TR::buttons__continue.into(),
@@ -1864,10 +1962,15 @@ impl FirmwareUI for UIEckhart {
                     false,
                 )?,
                 None,
-                None,
-                Obj::const_none(),
+                Some(br_code.to_native()),
+                Obj::try_from(str_from_archived(br_name))?,
             )),
-            ArchivedTrezorUiEnum::Danger { title, content } => Ok((
+            ArchivedTrezorUiEnum::Danger {
+                title,
+                content,
+                br_name,
+                br_code,
+            } => Ok((
                 Self::show_warning(
                     tstr_from_archived(title),
                     TR::buttons__continue.into(),
@@ -1877,8 +1980,8 @@ impl FirmwareUI for UIEckhart {
                     true,
                 )?,
                 None,
-                None,
-                Obj::const_none(),
+                Some(br_code.to_native()),
+                Obj::try_from(str_from_archived(br_name))?,
             )),
             ArchivedTrezorUiEnum::Success { content, br_name } => {
                 let br_str = str_from_archived(br_name);

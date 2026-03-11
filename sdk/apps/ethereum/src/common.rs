@@ -50,13 +50,11 @@ pub(crate) fn confirm_signverify(
         ("Signing address", "sign_message")
     };
 
-    // TODO implement actual signing logic
-
     let mut items = Vec::with_capacity(3);
-    account.map(|a| items.push(("Account", a)));
-    path.map(|p| items.push(("Derivation path", p)));
+    account.map(|a| items.push(("Account", a, true)));
+    path.map(|p| items.push(("Derivation path", p, true)));
     let size = uformat!("{} bytes", message.len());
-    items.push(("Message size", &size));
+    items.push(("Message size", &size, true));
 
     loop {
         let res = ui::confirm_value_with_info(
@@ -105,12 +103,15 @@ pub(crate) fn confirm_signverify(
         ui::confirm_blob(
             title,
             message,
+            None,
+            None,
             br_name,
             br_code,
             hold,
             Some("Confirm"),
             None,
             chunkify,
+            true,
         )?
     } else {
         ui::confirm_value_simple(
@@ -169,7 +170,7 @@ pub(crate) fn confirm_address(
             false,
             chunkify.unwrap_or(true),
             false,
-            false,
+            true,
         ),
         Ok(ui::TrezorUiResult::Confirmed)
     ) {

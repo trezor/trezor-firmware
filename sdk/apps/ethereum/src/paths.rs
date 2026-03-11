@@ -1,3 +1,4 @@
+use crate::keychain::PATTERNS_ADDRESS;
 #[cfg(not(test))]
 use alloc::{
     string::{String, ToString},
@@ -68,6 +69,8 @@ impl Bip32Path {
             ui::show_danger(
                 "Wrong derivation path for selected account.",
                 &self.to_string(),
+                "path_warning",
+                Some(15), /* ButtonRequestType.UnknownDerivationPath */
             )?;
         }
         Ok(())
@@ -111,6 +114,18 @@ impl Bip32Path {
             return Some(self.path[1]);
         }
         return Some(self.path[1] & !HARDENED);
+    }
+
+    pub fn account_and_path(&self) -> (Option<String>, Option<String>) {
+        if self.path.len() < 2 {
+            return (None, None);
+        }
+
+        let slip44_id = self.path[1]; //it depends on the network (ETH vs ETC...)
+        let account = self.get_account_name("ETH", &PATTERNS_ADDRESS, slip44_id);
+        let path = self.to_string();
+
+        (account, Some(path))
     }
 }
 

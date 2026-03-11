@@ -1,3 +1,4 @@
+use crate::{EthereumMessages, helpers::get_type_name, uformat, wire_request};
 use crate::{
     common::require_confirm_address,
     definitions::Definitions,
@@ -16,7 +17,6 @@ use crate::{
     },
     strutil::hex_encode,
 };
-use crate::{uformat, wire_request};
 #[cfg(not(test))]
 use alloc::{
     collections::{BTreeMap, BTreeSet},
@@ -34,12 +34,14 @@ use std::{
     vec::Vec,
 };
 use trezor_app_sdk::{
+    Error, Result,
     crypto::{self, keccak_256},
-    ui, unwrap, {Error, Result},
+    info, ui, unwrap,
 };
 
 /// Ethereum uses Bitcoin xpub format
 pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSignature> {
+    info!("Signing typed data");
     let dp = Bip32Path::from_slice(&msg.address_n);
 
     let slip44 = dp.slip44();
@@ -68,17 +70,21 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
         None => (None, None),
     };
 
+    info!("Getting pubkey hash");
     let address_bytes = crypto::get_eth_pubkey_hash(dp.as_ref(), encoded_network, encoded_token)?;
 
     // Display address so user can validate it
+    info!("require Confirm address");
     require_confirm_address(&address_bytes, None, None, None, None, None, None)?;
 
+    info!("Address confirmed, proceeding with signing");
     let metamask_v4_compat = msg.metamask_v4_compat.unwrap_or(true);
     let show_message_hash = if let Some(hash) = &msg.show_message_hash {
         Some(hash.as_slice())
     } else {
         None
     };
+    info!("Generating typed data hash");
 
     let data_hash = unwrap!(generate_typed_data_hash(
         &msg.primary_type,
@@ -94,7 +100,7 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
     sig.signature.extend_from_slice(&signature[1..]);
     sig.signature.push(signature[0]);
 
-    // TODO implement actual signing logic
+    info!("Typed data signed successfully");
     Ok(sig)
 }
 
@@ -105,18 +111,21 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
 /// * `primary_type` - The primary type from the EIP-712 message
 /// * `metamask_v4_compat` - A flag that enables compatibility with MetaMask's signTypedData_v4 method
 /// * `show_message_hash` - Optional message hash to display
-
 fn generate_typed_data_hash(
     primary_type: &str,
     metamask_v4_compat: bool,
     show_message_hash: Option<&[u8]>,
 ) -> Result<[u8; 32]> {
+    info!("Collecting type information from client");
     let mut data_envelope = TypedDataEnvelope::new(primary_type, metamask_v4_compat);
 
+    info!("Collecting types");
     data_envelope.collect_types()?;
 
+    info!("getting name and version");
     let (name, version) = get_name_and_version_for_domain(&data_envelope)?;
 
+    info!("Determining whether to show domain information");
     let show_domain = should_show_domain(&name, &version)?;
 
     let domain_separator =
@@ -126,9 +135,11 @@ fn generate_typed_data_hash(
     // In this case, we ignore the "message" part and only use the "domain" part
     // https://ethereum-magicians.org/t/eip-712-standards-clarification-primarytype-as-domaintype/3286
     let message_hash = if primary_type == "EIP712Domain" {
+        info!("empty typed message");
         confirm_empty_typed_message()?;
         [0u8; 32]
     } else {
+        info!("Determining whether to show struct");
         let show_message = should_show_struct(
             primary_type,
             unwrap!(data_envelope.types.get(primary_type))
@@ -146,9 +157,11 @@ fn generate_typed_data_hash(
             return Err(Error::InvalidMessage);
         }
 
+        info!("Confirming message hash with user");
         confirm_message_hash(&message_hash)?;
     }
 
+    info!("Confirming final signing action with user");
     confirm_typed_data_final()?;
 
     let mut data = Vec::new();
@@ -176,6 +189,7 @@ impl TypedDataEnvelope {
 
     pub fn collect_types(&mut self) -> Result<()> {
         let primary_type = self.primary_type.clone();
+        info!("primary type {}", primary_type.as_str());
         self._collect_types("EIP712Domain")?;
         self._collect_types(&primary_type)?;
         Ok(())
@@ -187,7 +201,9 @@ impl TypedDataEnvelope {
             name: type_name.to_string(),
         };
 
-        let current_type: EthereumTypedDataStructAck = unwrap!(wire_request(&req));
+        info!("Requesting type information for {}", type_name);
+        let current_type: EthereumTypedDataStructAck =
+            unwrap!(wire_request(&req, EthereumMessages::TypedDataStructRequest));
         let members = current_type.members.clone();
         self.types.insert(type_name.to_string(), current_type);
 
@@ -217,21 +233,65 @@ impl TypedDataEnvelope {
     /// Generate a hash representation of the whole struct.
     fn hash_struct(
         &self,
-        _primary_type: &str,
-        _member_value_path: &[u32],
-        _show_data: bool,
-        _parent_objects: &[&str],
+        primary_type: &str,
+        member_value_path: &[u32],
+        show_data: bool,
+        parent_objects: &[&str],
     ) -> Result<[u8; 32]> {
+        let data = Vec::new(); // TODO: implement actual data encoding logic
         // TODO: implement actual hashing logic
-        Ok([0u8; 32])
+
+        let hashed_type = self.hash_type(primary_type)?;
+
+        info!("Hashing struct {}", primary_type);
+
+        Ok(crypto::keccak_256(&data))
+    }
+
+    // TODO implement function logic
+    fn get_and_encode_data() -> Result<()> {
+        Ok(())
+    }
+
+    fn hash_type(&self, primary_type: &str) -> Result<[u8; 32]> {
+        Ok(crypto::keccak_256(&self.encode_type(primary_type)?))
     }
 
     /// The type of a struct is encoded as name ‖ "(" ‖ member₁ ‖ "," ‖ member₂ ‖ "," ‖ … ‖ memberₙ ")"
     /// where each member is written as type ‖ " " ‖ name
     /// If the struct type references other struct types (and these in turn reference even more struct types),
     /// then the set of referenced struct types is collected, sorted by name and appended to the encoding.
-    fn encode_type(&self, _primary_type: &str) -> Result<Vec<String>> {
-        return Ok(vec![]); // TODO: implement actual encoding logic
+    fn encode_type(&self, primary_type: &str) -> Result<Vec<u8>> {
+        info!("Encoding type {}", primary_type);
+
+        let mut result = Vec::new();
+
+        let mut deps = BTreeSet::new();
+        self.find_typed_dependencies(primary_type, &mut deps)?;
+        deps.remove(primary_type);
+
+        // Start with primary_type, then add sorted deps
+        let mut types_to_process = vec![primary_type];
+        types_to_process.extend(deps.iter().map(|s| s.as_str()));
+
+        for type_name in types_to_process {
+            let type_def = self.types.get(type_name).ok_or(Error::DataError)?;
+            let members = &type_def.members;
+
+            let fields = members
+                .iter()
+                .map(|m| {
+                    let type_name = get_type_name(&m.r#type)?;
+                    Ok(uformat!("{} {}", type_name.as_str(), m.name.as_str()))
+                })
+                .collect::<Result<Vec<_>>>()?
+                .join(",");
+
+            result.push(uformat!("{}({})", type_name, fields.as_str()));
+        }
+
+        let data = result.join("").into_bytes();
+        Ok(data)
     }
 
     fn find_typed_dependencies(
@@ -363,7 +423,8 @@ fn get_value(field: &EthereumFieldType, member_value_path: &[u32]) -> Result<Vec
         member_path: member_value_path.iter().map(|&v| v).collect(),
     };
 
-    let res: EthereumTypedDataValueAck = unwrap!(wire_request(&req));
+    let res: EthereumTypedDataValueAck =
+        unwrap!(wire_request(&req, EthereumMessages::TypedDataValueRequest));
     let value = res.value;
 
     validate_value(field, &value)?;
@@ -408,26 +469,83 @@ fn validate_value(field: &EthereumFieldType, value: &[u8]) -> Result<()> {
 }
 
 fn should_show_domain(name: &[u8], version: &[u8]) -> Result<bool> {
-    let _domain_name = decode_typed_data(name, "string")?;
-    let _domain_version = decode_typed_data(version, "string")?;
+    let domain_name = decode_typed_data(name, "string")?;
+    let domain_version = decode_typed_data(version, "string")?;
 
-    // TODO: implement actual logic to decide whether to show the domain or not. For now, we just show it if it's not "unknown".
-    Ok(true)
+    let para = [
+        ("Name and version", false),
+        (&domain_name, false),
+        (&domain_version, false),
+    ];
+
+    ui::should_show_more(
+        "Confirm domain",
+        &para,
+        "Show full domain",
+        Some("should_show_domain"),
+    )
+    .map_err(|_| Error::Cancelled)
 }
 
 fn confirm_empty_typed_message() -> Result<()> {
-    // TODO: implement actual confirmation logic
+    confirm_text(
+        "confirm_empty_typed_message",
+        "Confirm message",
+        "",
+        Some("No message field"),
+        None,
+    )
+}
+
+fn confirm_text(
+    br_name: &str,
+    title: &str,
+    data: &str,
+    description: Option<&str>,
+    br_code: Option<u32>,
+) -> Result<()> {
+    ui::confirm_value_simple(
+        title,
+        data,
+        description,
+        br_name,
+        br_code,
+        false,
+        Some("Confirm"),
+        None,
+        false,
+        false,
+        false,
+        false,
+    )?;
     Ok(())
 }
 
 fn should_show_struct(
-    _description: &str,
-    _data_members: &[EthereumStructMember],
-    _title: Option<&str>,
-    _button_text: Option<&str>,
+    description: &str,
+    data_members: &[EthereumStructMember],
+    title: Option<&str>,
+    button_text: Option<&str>,
 ) -> Result<bool> {
-    // TODO
-    Ok(true)
+    let title = title.unwrap_or("Confirm struct");
+    let button_text = button_text.unwrap_or("Show full struct");
+
+    let contains = uformat!("Contains {} keys", data_members.len());
+
+    let field_names = data_members
+        .iter()
+        .map(|field| field.name.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    let para = [
+        (description, false),
+        (&contains, false),
+        (&field_names, false),
+    ];
+
+    ui::should_show_more(title, &para, button_text, Some("should_show_struct"))
+        .map_err(|_| Error::Cancelled)
 }
 
 fn confirm_message_hash(hash: &[u8]) -> Result<()> {
@@ -450,7 +568,11 @@ fn confirm_message_hash(hash: &[u8]) -> Result<()> {
 }
 
 fn confirm_typed_data_final() -> Result<()> {
-    match ui::confirm_action("confirm typed ", "Really sign EIP-712 typed data?", true)? {
+    match ui::confirm_action(
+        "Confirm typed data",
+        "Really sign EIP-712 typed data?",
+        true,
+    )? {
         ui::TrezorUiResult::Confirmed => Ok(()),
         _ => Err(Error::Cancelled),
     }
