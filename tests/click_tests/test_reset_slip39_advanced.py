@@ -36,6 +36,7 @@ pytestmark = pytest.mark.models("core")
     "group_count, group_threshold, share_count, share_threshold",
     [
         pytest.param(2, 2, 2, 2, id="2of2"),
+        pytest.param(2, 2, 16, 16, id="small-16of16"),
         pytest.param(16, 16, 16, 16, id="16of16", marks=pytest.mark.slow),
     ],
 )
