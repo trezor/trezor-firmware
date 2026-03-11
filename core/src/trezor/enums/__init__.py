@@ -179,6 +179,10 @@ if TYPE_CHECKING:
         Slip39_Basic_Extendable = 4
         Slip39_Advanced_Extendable = 5
 
+    class BackupMethod(IntEnum):
+        Display = 0
+        N4W1 = 1
+
     class SafetyCheckLevel(IntEnum):
         Strict = 0
         PromptAlways = 1

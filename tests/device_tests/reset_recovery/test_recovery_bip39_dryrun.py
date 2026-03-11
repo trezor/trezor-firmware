@@ -117,6 +117,7 @@ DRY_RUN_ALLOWED_FIELDS = (
     "enforce_wordlist",
     "input_method",
     "show_tutorial",
+    "method",
 )
 
 

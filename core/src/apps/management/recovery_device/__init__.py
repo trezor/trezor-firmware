@@ -8,7 +8,14 @@ if TYPE_CHECKING:
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
 # All except `type` are allowed for T1 compatibility, but their values are ignored.
 # If set, `enforce_wordlist` must be True, because we do not support non-enforcing.
-DRY_RUN_ALLOWED_FIELDS = ("type", "word_count", "enforce_wordlist", "input_method")
+# `method` allows choosing between different ways to input the shares (on Core devices).
+DRY_RUN_ALLOWED_FIELDS = (
+    "type",
+    "word_count",
+    "enforce_wordlist",
+    "input_method",
+    "method",
+)
 
 
 async def recovery_device(msg: RecoveryDevice) -> Success:

@@ -23,6 +23,14 @@ enum BackupType {
 }
 
 /**
+ * Backup method of the mnemonic shares.
+ */
+enum BackupMethod {
+    Display = 0;  // the share words are displayed on the device screen
+    N4W1 = 1;
+}
+
+/**
  * Level of safety checks for unsafe actions like spending from invalid path namespace or setting high transaction fee.
  */
 enum SafetyCheckLevel {
@@ -450,6 +458,7 @@ message ResetDevice {
     optional bool no_backup = 9;                             // indicate that no backup is going to be made
     optional BackupType backup_type = 10 [default = Bip39];  // type of the mnemonic backup
     optional bool entropy_check = 11;                        // run with entropy check protocol
+    optional BackupMethod method = 12 [default = Display];   // how the mnemonic shares should be backed up
 }
 
 /**
@@ -464,6 +473,7 @@ message BackupDevice {
         required uint32 member_count = 2;
     }
     repeated Slip39Group groups = 2;
+    optional BackupMethod method = 3 [default = Display];  // how the mnemonic shares should be backed up
 }
 
 /**
@@ -518,6 +528,7 @@ message RecoveryDevice {
     optional RecoveryDeviceInputMethod input_method = 8;         // supported recovery input method (T1 only)
     optional uint32 u2f_counter = 9;                             // U2F counter
     optional RecoveryType type = 10 [default = NormalRecovery];  // the type of recovery to perform
+    optional BackupMethod method = 11 [default = Display];       // how the shares should be recovered from backup
     /**
      * Type of recovery procedure. These should be used as bitmask, e.g.,
      * `RecoveryDeviceInputMethod_ScrambledWords | RecoveryDeviceInputMethod_Matrix`
