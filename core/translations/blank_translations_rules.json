@@ -74,7 +74,8 @@
       "reset__the_threshold_sets_the_number_of_shares",
       "reset__to_form_group_template",
       "reset__use_your_backup",
-      "reset__you_need_one_share"
+      "reset__you_need_one_share",
+      "send__title_receiving_to"
     ],
     "allowedLayouts": [ "Bolt" ],
     "description": "These are specific to Bolt layout"
@@ -82,12 +83,14 @@
   {
     "exact": [
       "backup__title_backup_wallet",
+      "pin__please_check_again",
       "reset__number_of_shares_info",
       "reset__threshold_info",
       "reset__title_group_threshold",
       "reset__title_number_of_shares",
       "share_words__words_in_order",
       "share_words__wrote_down_all",
+      "tutorial__use_trezor",
       "words__keep_it_safe",
       "words__title_group",
       "words__title_remember",
@@ -100,8 +103,11 @@
   },
   {
     "exact": [
+      "homescreen__settings_title",
+      "instructions__hold_to_confirm",
       "instructions__shares_continue_with_x_template",
       "pin__cancel_description",
+      "recovery__cancel_dry_run",
       "tutorial__welcome_safe5"
     ],
     "allowedLayouts": [ "Delizia" ],
@@ -116,16 +122,23 @@
       "reset__select_word_template",
       "tutorial__navigation_ts7",
       "tutorial__power",
-      "tutorial__welcome_safe7"
+      "tutorial__welcome_safe7",
+      "words__disabled",
+      "words__enabled",
+      "words__off",
+      "words__on",
+      "words__receive"
     ],
     "allowedLayouts": [ "Eckhart" ],
     "description": "These are specific to Eckhart layout"
   },
   {
     "exact": [
+      "buttons__check_again",
       "reset__continue_with_share_template",
       "reset__share_checked_successfully_template",
-      "reset__slip39_checklist_write_down"
+      "reset__slip39_checklist_write_down",
+      "words__please_check_again"
     ],
     "allowedLayouts": [ "Bolt", "Caesar" ],
     "description": "These are specific to Bolt and Caesar layouts"
@@ -141,8 +154,10 @@
   {
     "exact": [
       "pin__enabled",
+      "progress__locking_device",
       "recovery__group_num_template",
       "recovery__you_have_entered",
+      "reset__select_word_x_of_y_template",
       "words__from"
     ],
     "allowedLayouts": [ "Bolt", "Caesar", "Delizia" ],
@@ -162,13 +177,29 @@
       "reset__num_of_shares_advanced_info_template",
       "reset__title_set_group_threshold",
       "reset__title_set_number_of_groups",
-      "reset__total_number_of_shares_in_group_template"
+      "reset__total_number_of_shares_in_group_template",
+      "sign_message__message_size"
     ],
     "allowedLayouts": [ "Bolt", "Delizia", "Eckhart" ],
     "description": "These are specific to Bolt, Delizia, and Eckhart layouts"
   },
   {
     "exact": [
+      "reset__check_backup_title"
+    ],
+    "allowedLayouts": [ "Caesar", "Eckhart" ],
+    "description": "These are specific to Caesar and Eckhart layouts"
+  },
+  {
+    "exact": [
+      "reset__write_down_words_template"
+    ],
+    "allowedLayouts": [ "Caesar", "Delizia", "Eckhart" ],
+    "description": "These are specific to Caesar, Delizia, and Eckhart layouts"
+  },
+  {
+    "exact": [
+      "address__cancel_receive",
       "backup__title_backup_completed",
       "instructions__shares_start_with_1",
       "pin__cancel_info",
