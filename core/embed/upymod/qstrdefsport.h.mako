@@ -60,7 +60,8 @@ def make_import_qstrs(import_names):
     return sorted(import_qstrs)
 %>\
 
-#error This header should not be part of the build, its purpose is only to add missed Qstrings
+// This header should not be part of the build, its purpose is only to add
+// missed Qstrings to MicroPython frozen Qstr pool.
 
 // explanation:
 // uPy collects string literals and symbol names from all frozen modules, and
