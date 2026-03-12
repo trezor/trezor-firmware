@@ -25,7 +25,7 @@ import warnings
 
 import typing_extensions as tx
 
-from . import client, exceptions, mapping, messages, models
+from . import client, exceptions, mapping, messages
 from .log import DUMP_BYTES
 from .thp import pairing
 from .tools import enter_context
@@ -198,16 +198,12 @@ class SessionV1(client.Session["TrezorClientV1", t.Optional[bytes]]):
             # Looks like the session is already initialized. Bail out.
             raise exceptions.PassphraseError("Failed to activate passphrase session")
 
-        # after processing any PassphraseRequest, we should have an Address response
+        # after processing any PassphraseRequest, we should have an PublicKey response
         resp = messages.PublicKey.ensure_isinstance(resp)
 
-        # `root_fingerprint` is not available on older models.
-        min_version = (1, 9, 4) if self.model is models.T1B1 else (2, 3, 5)
-        if self.version >= min_version:
-            assert resp.root_fingerprint is not None
-            self._root_fingerprint = resp.root_fingerprint.to_bytes(4, "big")
-        else:
-            warnings.warn("Your Trezor firmware does not support root fingerprint.")
+        # resp.root_fingerprint is not available on <1.9.4 & <2.3.5
+        assert resp.node.fingerprint is not None
+        self._root_fingerprint = resp.node.fingerprint.to_bytes(4, "big")
 
         self.client.refresh_features()
 

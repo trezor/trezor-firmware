@@ -181,8 +181,9 @@ class Session(t.Generic[ClientType, SessionIdType]):
         choice of a correct session for this operation.
         """
         resp = self.call(GET_ROOT_FINGERPRINT_MESSAGE, expect=messages.PublicKey)
-        assert resp.root_fingerprint is not None
-        root_fingerprint = resp.root_fingerprint.to_bytes(4, "big")
+        # resp.root_fingerprint is not available on <1.9.4 & <2.3.5
+        assert resp.node.fingerprint is not None
+        root_fingerprint = resp.node.fingerprint.to_bytes(4, "big")
         if self._root_fingerprint is None:
             self._root_fingerprint = root_fingerprint
         assert self._root_fingerprint == root_fingerprint
