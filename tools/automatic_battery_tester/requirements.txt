@@ -4,7 +4,6 @@ charset-normalizer==3.4.2
 click==8.2.1
 contourpy==1.3.2
 cycler==0.12.1
-fonttools==4.58.4
 idna==3.10
 ifaddr==0.2.0
 inquirerpy==0.3.4
