@@ -127,6 +127,7 @@ def test_solana_sign_tx(session: Session, parameters, result):
                 serialized_tx=serialized_tx,
                 additional_info=additional_info,
                 payment_req=payment_request,
+                chunkify=parameters.get("chunkify", False),
             )
 
             assert actual_result == bytes.fromhex(result["expected_signature"])
@@ -138,6 +139,7 @@ def test_solana_sign_tx(session: Session, parameters, result):
                     serialized_tx=serialized_tx,
                     additional_info=additional_info,
                     payment_req=payment_request,
+                    chunkify=parameters.get("chunkify", False),
                 )
         else:
             assert False, "Invalid expected result"
