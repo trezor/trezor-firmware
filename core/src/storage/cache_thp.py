@@ -9,7 +9,7 @@ from storage.cache_common import (
     CHANNEL_SYNC,
     SESSION_ID,
     SESSION_STATE,
-    DataCache,
+    EncryptableDataCache,
 )
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ _MAX_CHANNEL_ID = const(0xFFEF)
 BROADCAST_CHANNEL_ID = const(0xFFFF)
 
 
-class ThpDataCache(DataCache):
+class ThpDataCache(EncryptableDataCache):
 
     def __init__(self) -> None:
         self.last_usage = 0
@@ -88,6 +88,15 @@ class ChannelCache(ThpDataCache):
             raise ValueError  # Host static public key is not set in the channel cache.
         return key
 
+    def fields_to_encrypt(self) -> Sequence[int]:
+        from storage.cache_thp_keys import CACHE_ENCRYPTED_KEYS_CHANNEL
+
+        return CACHE_ENCRYPTED_KEYS_CHANNEL
+
+    def is_preauthorized(self) -> bool:
+        # Channels themselves cannot be preauthorized.
+        return False
+
 
 class SessionThpCache(ThpDataCache):
     def __init__(self) -> None:
@@ -122,6 +131,16 @@ class SessionThpCache(ThpDataCache):
     @property
     def session_id(self) -> bytes:
         return self.get(SESSION_ID) or b""
+
+    def fields_to_encrypt(self) -> Sequence[int]:
+        from storage.cache_thp_keys import CACHE_ENCRYPTED_KEYS_SESSION_THP
+
+        return CACHE_ENCRYPTED_KEYS_SESSION_THP
+
+    def is_preauthorized(self) -> bool:
+        from storage.cache_thp_keys import APP_COMMON_AUTHORIZATION_TYPE
+
+        return self.is_set(APP_COMMON_AUTHORIZATION_TYPE)
 
     def clear(self) -> None:
         super().clear()
