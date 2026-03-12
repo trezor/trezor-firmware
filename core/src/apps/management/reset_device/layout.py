@@ -1,5 +1,5 @@
 from micropython import const
-from typing import Sequence
+from typing import Any, Callable, Coroutine, Sequence
 
 from trezor.ui.layouts.reset import (  # noqa: F401
     show_share_words,
@@ -43,12 +43,22 @@ async def _confirm_word(
     return selected_word == checked_word
 
 
-async def _share_words_confirmed(
-    share_index: int | None,
-    share_words: Sequence[str],
-    num_of_shares: int | None = None,
-    group_index: int | None = None,
-) -> bool:
+class ShareInfo:
+    def __init__(
+        self,
+        *,
+        words: Sequence[str],
+        index: int | None,
+        num_of_shares: int | None = None,
+        group_index: int | None = None,
+    ) -> None:
+        self.words = words
+        self.index = index
+        self.num_of_shares = num_of_shares
+        self.group_index = group_index
+
+
+async def _share_words_confirmed(share: ShareInfo) -> bool:
     """Shows initial dialog asking the user to select words, then presents
     word selectors. Shows success popup if the user is done, failure if the confirmation
     went wrong.
@@ -60,11 +70,11 @@ async def _share_words_confirmed(
         show_share_confirmation_success,
     )
 
-    if await _do_confirm_share_words(share_index, share_words, group_index):
+    if await _do_confirm_share_words(share.index, share.words, share.group_index):
         await show_share_confirmation_success(
-            share_index,
-            num_of_shares,
-            group_index,
+            share.index,
+            share.num_of_shares,
+            share.group_index,
         )
         return True
     else:
@@ -102,12 +112,6 @@ async def show_backup_intro(
     await show_intro_backup(single_share, num_of_words)
 
 
-async def show_backup_warning() -> None:
-    from trezor.ui.layouts.reset import show_warning_backup
-
-    await show_warning_backup()
-
-
 async def show_backup_success() -> None:
     from trezor.ui.layouts.reset import show_success_backup
 
@@ -119,16 +123,8 @@ async def show_backup_success() -> None:
 
 
 async def show_and_confirm_single_share(words: Sequence[str]) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning()
-
-    while True:
-        # display paginated mnemonic on the screen
-        await show_share_words(words)
-
-        # make the user confirm some words from the mnemonic
-        if await _share_words_confirmed(None, words):
-            break  # mnemonic is confirmed, go next
+    handler = await display_mnemonics()
+    await handler(ShareInfo(words=words, index=None))
 
 
 # Complex setups: SLIP39, except 1-of-1
@@ -136,35 +132,45 @@ async def show_and_confirm_single_share(words: Sequence[str]) -> None:
 
 
 async def slip39_basic_show_and_confirm_shares(shares: Sequence[str]) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning()
-
+    handler = await display_mnemonics()
     for index, share in enumerate(shares):
-        share_words = share.split(" ")
-        while True:
-            # display paginated share on the screen
-            await show_share_words(share_words, index)
-
-            # make the user confirm words from the share
-            if await _share_words_confirmed(index, share_words, len(shares)):
-                break  # this share is confirmed, go to next one
+        info = ShareInfo(words=share.split(" "), index=index, num_of_shares=len(shares))
+        await handler(info)
 
 
 async def slip39_advanced_show_and_confirm_shares(
     shares: Sequence[Sequence[str]],
 ) -> None:
-    # warn user about mnemonic safety
-    await show_backup_warning()
-
+    handler = await display_mnemonics()
     for group_index, group in enumerate(shares):
         for share_index, share in enumerate(group):
-            share_words = share.split(" ")
-            while True:
-                # display paginated share on the screen
-                await show_share_words(share_words, share_index, group_index)
+            info = ShareInfo(
+                words=share.split(" "),
+                index=share_index,
+                num_of_shares=len(group),
+                group_index=group_index,
+            )
+            await handler(info)
 
-                # make the user confirm words from the share
-                if await _share_words_confirmed(
-                    share_index, share_words, len(group), group_index
-                ):
-                    break  # this share is confirmed, go to next one
+
+async def display_mnemonics() -> Callable[[ShareInfo], Coroutine[Any, Any, None]]:
+    from trezor.ui.layouts.reset import show_warning_backup
+
+    # warn user about mnemonic safety
+    await show_warning_backup()
+
+    return _display_share
+
+
+async def _display_share(share: ShareInfo) -> None:
+    while True:
+        # display paginated share on the screen
+        await show_share_words(
+            share_words=share.words,
+            share_index=share.index,
+            group_index=share.group_index,
+        )
+
+        # make the user confirm words from the share
+        if await _share_words_confirmed(share):
+            break  # this share is confirmed, go to next one
