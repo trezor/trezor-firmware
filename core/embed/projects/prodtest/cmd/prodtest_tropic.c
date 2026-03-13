@@ -1633,17 +1633,23 @@ cleanup:
 }
 
 static void prodtest_tropic_stress_test(cli_t* cli) {
-  if (cli_arg_count(cli) > 4) {
+  if (cli_arg_count(cli) > 6) {
     cli_error_arg_count(cli);
     return;
   }
 
+  uint32_t init_iterations = 5;
   uint32_t start_session_iterations = 10;
   uint32_t mac_and_destroy_slot_count = TROPIC_MAC_AND_DESTROY_SLOT_COUNT;
   uint32_t mac_and_destroy_per_slot_iterations = 3;
   uint32_t signing_iterations = 10;
+  uint32_t rng_iterations = 10;
 
   if (cli_arg_count(cli) != 0) {
+    if (!cli_arg_uint32(cli, "init-iterations", &init_iterations)) {
+      cli_error_arg(cli, "Expecting number of initialization iterations.");
+      return;
+    }
     if (!cli_arg_uint32(cli, "start-session-iterations",
                         &start_session_iterations)) {
       cli_error_arg(cli, "Expecting number of start-session iterations.");
@@ -1667,15 +1673,35 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
       cli_error_arg(cli, "Expecting number of signing iterations.");
       return;
     }
+    if (!cli_arg_uint32(cli, "rng-iterations", &rng_iterations)) {
+      cli_error_arg(cli, "Expecting number of RNG iterations.");
+      return;
+    }
   }
 
+  cli_trace(cli, "Initialization iterations: %d", init_iterations);
   cli_trace(cli, "Start-session iterations: %d", start_session_iterations);
   cli_trace(cli, "MAC-and-destroy slot count: %d", mac_and_destroy_slot_count);
   cli_trace(cli, "MAC-and-destroy iterations per slot: %d",
             mac_and_destroy_per_slot_iterations);
   cli_trace(cli, "Signing iterations: %d", signing_iterations);
+  cli_trace(cli, "RNG iterations: %d", rng_iterations);
 
   g_tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
+
+  // test Tropic gets initialized
+  for (int i = 0; i < init_iterations; i++) {
+    tropic_deinit();
+    if (!tropic_init()) {
+      cli_error(cli, CLI_ERROR, "Call #%d of `tropic_init()` failed", i + 1);
+      return;
+    }
+    if (!tropic_wait_for_ready(cli)) {
+      cli_error(cli, CLI_ERROR, "Call #%d of `tropic_wait_for_ready()` failed",
+                i + 1);
+      return;
+    }
+  }
 
   lt_ret_t res = LT_FAIL;
   lt_pkey_index_t pairing_key_index = -1;
@@ -1770,6 +1796,19 @@ static void prodtest_tropic_stress_test(cli_t* cli) {
     cli_error(cli, CLI_ERROR, "`lt_ecc_key_erase()` failed with error '%s'",
               lt_ret_verbose(res));
     return;
+  }
+
+  // Test lt_random_value_get()
+  for (int i = 0; i < rng_iterations; i++) {
+    uint8_t random_value[32] = {0};
+    res = lt_random_value_get(tropic_get_handle(), random_value,
+                              sizeof(random_value));
+    if (res != LT_OK) {
+      cli_error(cli, CLI_ERROR,
+                "Call #%d of `lt_random_value_get()` failed with error '%s'",
+                i + 1, lt_ret_verbose(res));
+      return;
+    }
   }
 
   cli_ok(cli, "");
@@ -2132,7 +2171,7 @@ PRODTEST_CLI_CMD(
   .name = "tropic-stress-test",
   .func = prodtest_tropic_stress_test,
   .info = "Run stress test for Tropic",
-  .args = "[<start-session-iterations> <mac-and-destroy-slot-count> <mac-and-destroy-per-slot-iterations> <signing-iterations>]"
+  .args = "[<init-iterations> <start-session-iterations> <mac-and-destroy-slot-count> <mac-and-destroy-per-slot-iterations> <signing-iterations> <rng-iterations>]"
 );
 
 PRODTEST_CLI_CMD(

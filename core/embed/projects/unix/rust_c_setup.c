@@ -59,7 +59,7 @@ void rust_tests_c_setup(void) {
 #endif
 
 #ifdef USE_TROPIC
-  tropic_init(28992);
+  tropic_init();
 #endif
 
   usb_configure(NULL);

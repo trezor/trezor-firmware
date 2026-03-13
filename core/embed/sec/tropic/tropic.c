@@ -421,10 +421,22 @@ lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t *tropic_handle,
 }
 
 #ifdef TREZOR_EMULATOR
-bool tropic_init(uint16_t port) {
-#else
-bool tropic_init(void) {
+static uint16_t get_tropic_model_port(void) {
+  char *port_str = getenv("TROPIC_MODEL_PORT");
+  if (port_str != NULL) {
+    char *endptr;
+    long port_long = strtol(port_str, &endptr, 10);
+    if (*endptr != '\0' || port_long < 0 || port_long > 65535) {
+      printf("FATAL: invalid TROPIC_MODEL_PORT\n");
+      exit(1);
+    }
+    return (uint16_t)port_long;
+  }
+  return 28992;
+}
 #endif
+
+bool tropic_init(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (drv->initialized) {
@@ -433,7 +445,7 @@ bool tropic_init(void) {
 
 #ifdef TREZOR_EMULATOR
   drv->device.addr = inet_addr("127.0.0.1");
-  drv->device.port = port;
+  drv->device.port = get_tropic_model_port();
   drv->handle.l2.device = &drv->device;
 #endif
 
