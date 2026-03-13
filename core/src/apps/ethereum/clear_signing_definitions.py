@@ -85,6 +85,135 @@ ONEINCH_CHAINS = [
 ]
 ONEINCH_OWNER = "1inch Aggregation Router V6"
 
+# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV5.json
+
+ONEINCH_CONTEXT = BindingContext(
+    [(chain, ONEINCH_ADDRESS) for chain in ONEINCH_CHAINS],
+)
+
+ALL_DISPLAY_FORMATS.extend(
+    [
+        DisplayFormat(
+            binding_context=ONEINCH_CONTEXT,
+            func_sig=unhexlify(
+                "07ed2379"
+            ),  # swap(address executor, (address srcToken, address dstToken, address srcReceiver, address dstReceiver, uint256 amount, uint256 minReturnAmount, uint256 flags) desc, bytes permit, bytes data)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_address),  # executor
+                Struct(
+                    (
+                        parse_address,  # srcToken
+                        parse_address,  # dstToken
+                        parse_address,  # srcReceiver
+                        parse_address,  # dstReceiver
+                        parse_uint256,  # amount
+                        parse_uint256,  # minReturnAmount
+                        parse_uint256,  # flags
+                    ),
+                    is_dynamic=False,
+                ),  # desc
+                Dynamic(parse_bytes),  # permit
+                Dynamic(parse_bytes),  # data
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1, 4),  # desc.amount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(1, 0),  # desc.srcToken
+                    ),
+                ),
+                FieldDefinition(
+                    (1, 5),  # desc.minReturnAmount
+                    "Minimum to Receive",
+                    TokenAmountFormatter(
+                        token_path=(1, 1),  # desc.dstToken
+                    ),
+                ),
+                FieldDefinition(
+                    (1, 3), "Beneficiary", AddressNameFormatter  # desc.dstReceiver
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=ONEINCH_CONTEXT,
+            func_sig=unhexlify(
+                "83800a8e"
+            ),  # unoswap(address srcToken, uint256 amount, uint256 minReturn, uint256[] pools)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_address),  # srcToken
+                Atomic(parse_uint256),  # amount
+                Atomic(parse_uint256),  # minReturn
+                Dynamic(parse_uint256_array),  # pools
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (1,),  # amount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(0,),  # srcToken
+                    ),
+                ),
+                FieldDefinition(
+                    (2,),  # minReturn
+                    "Minimum to Receive",
+                    TokenAmountFormatter,
+                ),
+                FieldDefinition(
+                    ContainerPath.From,  # @.from
+                    "Beneficiary",
+                    AddressNameFormatter,
+                ),
+                FieldDefinition(
+                    (3, -1),  # pools.[-1]
+                    "Last pool",
+                    UnitFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=ONEINCH_CONTEXT,
+            func_sig=unhexlify(
+                "e2c95c82"
+            ),  # unoswapTo(address recipient, address srcToken, uint256 amount, uint256 minReturn, uint256[] pools)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_address),  # recipient
+                Atomic(parse_address),  # srcToken
+                Atomic(parse_uint256),  # amount
+                Atomic(parse_uint256),  # minReturn
+                Dynamic(parse_uint256_array),  # pools
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (2,),  # amount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(1,),  # srcToken
+                    ),
+                ),
+                FieldDefinition(
+                    (3,),  # minReturn
+                    "Minimum to Receive",
+                    TokenAmountFormatter,
+                ),
+                FieldDefinition(
+                    (0,),  # recipient
+                    "Beneficiary",
+                    AddressNameFormatter,
+                ),
+                FieldDefinition(
+                    (4, -1),  # pools.[-1]
+                    "Last pool",
+                    UnitFormatter,
+                ),
+            ],
+        ),
+    ]
+)
+
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/lifi/calldata-LIFIDiamond.json
 LIFI_ADDRESS = unhexlify("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE")
 LIFI_CHAINS = [
@@ -121,14 +250,533 @@ LIFI_CHAINS = [
 ]
 LIFI_OWNER = "LiFI Diamond"
 
+LIFI_CONTEXT = BindingContext(
+    [(chain, LIFI_ADDRESS) for chain in LIFI_CHAINS],
+)
+
+ALL_DISPLAY_FORMATS.extend(
+    [
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "5fd9ae2e"
+            ),  # swapTokensMultipleV3ERC20ToERC20(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple[] _swapData)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_bytes),  # _transactionId
+                Dynamic(parse_string),  # _integrator
+                Dynamic(parse_string),  # _referrer
+                Atomic(parse_address),  # _receiver
+                Atomic(parse_uint256),  # _minAmountOut
+                Array(
+                    Struct(
+                        (
+                            parse_address,  # callTo
+                            parse_address,  # approveTo
+                            parse_address,  # sendingAssetId
+                            parse_address,  # receivingAssetId
+                            parse_uint256,  # fromAmount
+                            parse_bytes,  # callData
+                            parse_bool,  # requiresDeposit
+                        ),
+                        is_dynamic=False,
+                    )
+                ),  # _swapData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (5, 0, 4),  # _swapData.[0].fromAmount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(5, 0, 2),  # _swapData.[0].sendingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (4,),  # _minAmountOut
+                    "Minimum to Receive",
+                    TokenAmountFormatter(
+                        token_path=(5, -1, 3),  # _swapData.[-1].receivingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (3,),  # _receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "2c57e884"
+            ),  # swapTokensMultipleV3ERC20ToNative(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple[] _swapData)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_bytes),  # _transactionId
+                Dynamic(parse_string),  # _integrator
+                Dynamic(parse_string),  # _referrer
+                Atomic(parse_address),  # _receiver
+                Atomic(parse_uint256),  # _minAmountOut
+                Array(
+                    Struct(
+                        (
+                            parse_address,  # callTo
+                            parse_address,  # approveTo
+                            parse_address,  # sendingAssetId
+                            parse_address,  # receivingAssetId
+                            parse_uint256,  # fromAmount
+                            parse_bytes,  # callData
+                            parse_bool,  # requiresDeposit
+                        ),
+                        is_dynamic=False,
+                    )
+                ),  # _swapData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (5, 0, 4),  # _swapData.[0].fromAmount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(5, 0, 2),  # _swapData.[0].sendingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (4,),  # _minAmountOut
+                    "Minimum Amount to receive",
+                    AmountFormatter,
+                ),
+                FieldDefinition(
+                    (3,),  # _receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "736eac0b"
+            ),  # swapTokensMultipleV3NativeToERC20(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple[] _swapData)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_bytes),  # _transactionId
+                Dynamic(parse_string),  # _integrator
+                Dynamic(parse_string),  # _referrer
+                Atomic(parse_address),  # _receiver
+                Atomic(parse_uint256),  # _minAmountOut
+                Array(
+                    Struct(
+                        (
+                            parse_address,  # callTo
+                            parse_address,  # approveTo
+                            parse_address,  # sendingAssetId
+                            parse_address,  # receivingAssetId
+                            parse_uint256,  # fromAmount
+                            parse_bytes,  # callData
+                            parse_bool,  # requiresDeposit
+                        ),
+                        is_dynamic=False,
+                    )
+                ),  # _swapData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    ContainerPath.Value,  # @.value
+                    "Amount to Send",
+                    AmountFormatter,
+                ),
+                FieldDefinition(
+                    (4,),  # _minAmountOut
+                    "Minimum to Receive",
+                    TokenAmountFormatter(
+                        token_path=(5, -1, 3),  # _swapData.[-1].receivingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (3,),  # _receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "4666fc80"
+            ),  # swapTokensSingleV3ERC20ToERC20(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple _swapData)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_bytes),  # _transactionId
+                Dynamic(parse_string),  # _integrator
+                Dynamic(parse_string),  # _referrer
+                Atomic(parse_address),  # _receiver
+                Atomic(parse_uint256),  # _minAmountOut
+                Struct(
+                    (
+                        parse_address,  # callTo
+                        parse_address,  # approveTo
+                        parse_address,  # sendingAssetId
+                        parse_address,  # receivingAssetId
+                        parse_uint256,  # fromAmount
+                        parse_bytes,  # callData
+                        parse_bool,  # requiresDeposit
+                    ),
+                    is_dynamic=True,
+                ),  # _swapData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (5, 4),  # _swapData.fromAmount
+                    "Amount to Send",
+                    TokenAmountFormatter(token_path=(5, 2)),  # _swapData.sendingAssetId
+                ),
+                FieldDefinition(
+                    (4,),  # _minAmountOut
+                    "Minimum to receive",
+                    TokenAmountFormatter(
+                        token_path=(5, 3)  # _swapData.receivingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (3,),  # _receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "733214a3"
+            ),  # swapTokensSingleV3ERC20ToNative(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple _swapData)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_bytes),  # _transactionId
+                Dynamic(parse_string),  # _integrator
+                Dynamic(parse_string),  # _referrer
+                Atomic(parse_address),  # _receiver
+                Atomic(parse_uint256),  # _minAmountOut
+                Struct(
+                    (
+                        parse_address,  # callTo
+                        parse_address,  # approveTo
+                        parse_address,  # sendingAssetId
+                        parse_address,  # receivingAssetId
+                        parse_uint256,  # fromAmount
+                        parse_bytes,  # callData
+                        parse_bool,  # requiresDeposit
+                    ),
+                    is_dynamic=True,
+                ),  # _swapData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (5, 4),  # _swapData.fromAmount
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(5, 2),  # _swapData.sendingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (4,),  # _minAmountOut
+                    "Minimum Amount to receive",
+                    AmountFormatter,
+                ),
+                FieldDefinition(
+                    (3,),  # _receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "af7060fd"
+            ),  # swapTokensSingleV3NativeToERC20(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmountOut,tuple _swapData)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_bytes),  # _transactionId
+                Dynamic(parse_string),  # _integrator
+                Dynamic(parse_string),  # _referrer
+                Atomic(parse_address),  # _receiver
+                Atomic(parse_uint256),  # _minAmountOut
+                Struct(
+                    (
+                        parse_address,  # callTo
+                        parse_address,  # approveTo
+                        parse_address,  # sendingAssetId
+                        parse_address,  # receivingAssetId
+                        parse_uint256,  # fromAmount
+                        parse_bytes,  # callData
+                        parse_bool,  # requiresDeposit
+                    ),
+                    is_dynamic=True,
+                ),  # _swapData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    ContainerPath.Value,  # @.value
+                    "Amount to send",
+                    AmountFormatter,
+                ),
+                FieldDefinition(
+                    (4,),  # _minAmountOut
+                    "Minimum to Receive",
+                    TokenAmountFormatter(
+                        token_path=(5, 3),  # _swapData.receivingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (3,),  # _receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=LIFI_CONTEXT,
+            func_sig=unhexlify(
+                "4630a0d8"
+            ),  # swapTokensGeneric(bytes32 _transactionId,string _integrator,string _referrer,address _receiver,uint256 _minAmount,tuple[] _swapData)
+            intent="Swap",
+            parameter_definitions=[
+                Atomic(parse_bytes),  # _transactionId
+                Dynamic(parse_string),  # _integrator
+                Dynamic(parse_string),  # _referrer
+                Atomic(parse_address),  # _receiver
+                Atomic(parse_uint256),  # _minAmount
+                Array(
+                    Struct(
+                        (
+                            parse_address,  # callTo
+                            parse_address,  # approveTo
+                            parse_address,  # sendingAssetId
+                            parse_address,  # receivingAssetId
+                            parse_uint256,  # fromAmount
+                            parse_bytes,  # callData
+                            parse_bool,  # requiresDeposit
+                        ),
+                        is_dynamic=False,
+                    )
+                ),  # _swapData
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (
+                        5,
+                        0,
+                        4,
+                    ),  # _swapData.[0].fromAmount
+                    "Amount info",
+                    TokenAmountFormatter(
+                        token_path=(5, 0, 2),  # _swapData.[0].sendingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (4,),  # _minAmount,
+                    "Minimum Amount to receive",
+                    TokenAmountFormatter(
+                        token_path=(5, -1, 3),  # # _swapData.[-1].receivingAssetId
+                    ),
+                ),
+                FieldDefinition(
+                    (3,),  # receiver
+                    "Recipient",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+    ]
+)
+
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json#L6
 UNISWAP_V3_ROUTER_ADDRESS = unhexlify("68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
 UNISWAP_V3_ROUTER_CHAINS = [1]
 UNISWAP_OWNER = "Uniswap V3 Router"
 
+UNISWAP_V3_OLD_DEPLOYER = unhexlify(
+    "e592427a0aece92de3edee1f18e0157c05861564"
+)  # https://etherscan.io/address/0xe592427a0aece92de3edee1f18e0157c05861564
+
+# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json
+
+UNISWAP_CONTEXT = BindingContext(
+    [(chain, UNISWAP_V3_ROUTER_ADDRESS) for chain in UNISWAP_V3_ROUTER_CHAINS],
+)
+
+ALL_DISPLAY_FORMATS.extend(
+    [
+        DisplayFormat(
+            binding_context=UNISWAP_CONTEXT,
+            func_sig=unhexlify("b858183f"),  # exactInput(tuple params)
+            intent="Swap",
+            parameter_definitions=[
+                Struct(
+                    (
+                        parse_bytes,  # path
+                        parse_address,  # recipient
+                        parse_uint256,  # amountIn
+                        parse_uint256,  # amountOutMinimum
+                    ),
+                    is_dynamic=True,
+                ),  # params
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (0, 2),  # params.amountIn
+                    "Amount to Send",
+                    TokenAmountFormatter(
+                        token_path=(0, 0, (0, 20)),  # params.path.[0:20]
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 3),  # params.amountOutMinimum
+                    "Minimum to Receive",
+                    TokenAmountFormatter(
+                        token_path=(0, 0, (-20,)),  # params.path.[-20:]
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 1),  # params.recipient
+                    "Beneficiary",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=UNISWAP_CONTEXT,
+            func_sig=unhexlify("04e45aaf"),  # exactInputSingle(tuple params)
+            intent="Swap",
+            parameter_definitions=[
+                Struct(
+                    (
+                        parse_address,  # tokenIn
+                        parse_address,  # tokenOut
+                        parse_uint24,  # fee
+                        parse_address,  # recipient
+                        parse_uint256,  # amountIn
+                        parse_uint256,  # amountOutMinimum
+                        parse_uint160,  # sqrtPriceLimitX96
+                    ),
+                    is_dynamic=False,
+                ),  # params
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (0, 4),  # amountIn
+                    "Send",
+                    TokenAmountFormatter(
+                        token_path=(0, 0),  # params.tokenIn
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 5),  # amountOutMinimum
+                    "Minimum to Receive",
+                    TokenAmountFormatter(
+                        token_path=(0, 1),  # params.tokenOut
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 2),  # fee
+                    "Uniswap fee",
+                    UnitFormatter(decimals=4, base="%", prefix=False),
+                ),
+                FieldDefinition(
+                    (0, 3),  # recipient
+                    "Beneficiary",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=UNISWAP_CONTEXT,
+            func_sig=unhexlify("09b81346"),  # exactOutput(tuple params)
+            intent="Swap",
+            parameter_definitions=[
+                Struct(
+                    (
+                        parse_bytes,  # path
+                        parse_address,  # recipient
+                        parse_uint256,  # amountOut
+                        parse_uint256,  # amountInMaximum
+                    ),
+                    is_dynamic=True,
+                ),  # params
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (0, 3),  # params.amountInMaximum
+                    "Maximum Amount In",
+                    TokenAmountFormatter(
+                        token_path=(0, 0, (-20,)),  # params.path.[-20:]
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 2),  # params.amountOut
+                    "Amount to Receive",
+                    TokenAmountFormatter(
+                        token_path=(0, 0, (0, 20)),  # params.path.[0:20]
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 1),  # params.recipient
+                    "Beneficiary",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+        DisplayFormat(
+            binding_context=UNISWAP_CONTEXT,
+            func_sig=unhexlify("5023b4df"),  # exactOutputSingle(tuple params)
+            intent="Swap",
+            parameter_definitions=[
+                Struct(
+                    (
+                        parse_address,  # tokenIn
+                        parse_address,  # tokenOut
+                        parse_uint24,  # fee
+                        parse_address,  # recipient
+                        parse_uint256,  # amountOut
+                        parse_uint256,  # amountInMaximum
+                        parse_uint160,  # sqrtPriceLimitX96
+                    ),
+                    is_dynamic=False,
+                ),  # params
+            ],
+            field_definitions=[
+                FieldDefinition(
+                    (0, 5),  # amountInMaximum
+                    "Maximum Amount In",
+                    TokenAmountFormatter(
+                        token_path=(0, 0),  # params.tokenIn
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 4),  # amountOut
+                    "Amount to Receive",
+                    TokenAmountFormatter(
+                        token_path=(0, 1),  # params.tokenOut
+                    ),
+                ),
+                FieldDefinition(
+                    (0, 2),  # fee
+                    "Uniswap fee",
+                    UnitFormatter(decimals=4, base="%", prefix=False),
+                ),
+                FieldDefinition(
+                    (0, 3),  # recipient
+                    "Beneficiary",
+                    AddressNameFormatter,
+                ),
+            ],
+        ),
+    ]
+)
 
 KNOWN_ADDRESSES = {
     ONEINCH_ADDRESS: ONEINCH_OWNER,
     LIFI_ADDRESS: LIFI_OWNER,
     UNISWAP_V3_ROUTER_ADDRESS: UNISWAP_OWNER,
+    UNISWAP_V3_OLD_DEPLOYER: UNISWAP_OWNER,
 }
