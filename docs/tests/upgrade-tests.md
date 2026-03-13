@@ -13,6 +13,8 @@ source .venv/bin/activate
 tests/download_emulators.sh {model}
 ```
 
+For tropic-capable models, this also downloads tropic-enabled emulator variants into the same subfolder layout as on S3.
+
 3. And run the tests using pytest:
 
 ```sh

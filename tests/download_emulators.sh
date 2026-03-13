@@ -14,4 +14,4 @@ uv run python download_emulators.py "$MODEL"
 
 cd ..
 # are we in Nix(OS)?
-command -v nix-shell >/dev/null && nix-shell --run 'NIX_BINTOOLS=$NIX_BINTOOLS_FOR_TARGET autoPatchelf tests/emulators/$MODEL'
+command -v nix-shell >/dev/null && nix-shell --run "NIX_BINTOOLS=\$NIX_BINTOOLS_FOR_TARGET autoPatchelf tests/emulators/$MODEL"
