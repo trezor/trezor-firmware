@@ -7,12 +7,16 @@ from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
 from trezor.wire import DataError
 
-from .helpers import address_from_bytes, bytes_from_address
+from .helpers import (
+    address_from_bytes,
+    bytes_from_address,
+    get_data_confirmer,
+    get_progress_indicator,
+)
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
-    from buffer_types import AnyBytes
-    from typing import Any, Awaitable, Callable, Coroutine, Iterable
+    from typing import Any, Coroutine, Iterable
 
     from trezor.messages import EthereumSignTx, EthereumTxAck
     from trezor.ui.layouts import StrPropertyType
@@ -21,9 +25,8 @@ if TYPE_CHECKING:
     from apps.common.payment_request import PaymentRequestVerifier
 
     from .definitions import Definitions
+    from .helpers import ConfirmDataFn
     from .keychain import MsgInSignTx
-
-    ConfirmDataFn = Callable[[AnyBytes], Awaitable[None]]
 
 
 # Maximum chain_id which returns the full signature_v (which must fit into an uint32).
@@ -112,7 +115,6 @@ async def sign_tx(
         address_bytes,
         maximum_fee,
         fee_items,
-        data_total,
         payment_req_verifier,
     )
 
@@ -156,78 +158,6 @@ async def sign_tx(
     return result
 
 
-def make_progress(total_len: int, progress_len: int = 0) -> ConfirmDataFn:
-    from trezor.ui.layouts.progress import progress
-
-    if __debug__:
-        from trezor import log
-
-    def _progress_value() -> int:
-        assert 0 <= progress_len <= total_len
-        if total_len == 0:
-            return 1000
-        return (1000 * progress_len) // total_len
-
-    layout = progress(title=TR.progress__loading_transaction)
-    layout.value = _progress_value()
-
-    async def confirm_fn(chunk: AnyBytes) -> None:
-        nonlocal progress_len
-
-        if __debug__:
-            log.debug(
-                __name__,
-                "chunk=%d [%d/%d]",
-                len(chunk),
-                progress_len,
-                total_len,
-            )
-        progress_len += len(chunk)
-        layout.report(_progress_value())
-
-    return confirm_fn
-
-
-def make_confirm_data(total_len: int) -> ConfirmDataFn:
-    from trezor.enums import ButtonRequestType
-    from trezor.ui.layouts import confirm_blob_prefix
-
-    confirmed_len = 0
-    progress_bar: ConfirmDataFn | None = None
-
-    async def confirm_fn(chunk: AnyBytes) -> None:
-        nonlocal confirmed_len
-        nonlocal progress_bar
-
-        if progress_bar is not None:
-            return await progress_bar(chunk)
-
-        # for efficient chunk slicing (see below)
-        chunk = memoryview(chunk)
-        while True:
-            assert 0 <= confirmed_len <= total_len
-            prefix_len = await confirm_blob_prefix(
-                title=TR.ethereum__title_input_data,
-                data=chunk,
-                total_len=total_len,
-                confirmed_len=confirmed_len,
-                br_name="confirm_data",
-                br_code=ButtonRequestType.SignTx,
-            )
-            if prefix_len is None:
-                # skip this and following chunks confirmation - use a progress bar instead
-                assert progress_bar is None
-                progress_bar = make_progress(total_len, confirmed_len)
-                return await progress_bar(chunk)
-            else:
-                confirmed_len += prefix_len
-                chunk = chunk[prefix_len:]
-                if not chunk:
-                    return
-
-    return confirm_fn
-
-
 async def confirm_tx_data(
     msg: MsgInSignTx,
     defs: Definitions,
@@ -235,7 +165,6 @@ async def confirm_tx_data(
     address_bytes: bytes,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-    data_total_len: int,
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]]:
     """Returns data chunk callback and transaction summary layout to be awaited."""
@@ -246,6 +175,7 @@ async def confirm_tx_data(
     from .layout import require_confirm_payment_request, require_confirm_tx
 
     # local_cache_attribute
+    data_length = msg.data_length
     network = defs.network
 
     staking_approver = staking.get_approver(
@@ -254,7 +184,7 @@ async def confirm_tx_data(
     if staking_approver is not None:
         if payment_request_verifier is not None:
             raise DataError("Payment Requests don't support staking")
-        return make_progress(data_total_len), staking_approver
+        return staking_approver
 
     if tx_type == EIP_7702_TX_TYPE:
         # we have already made sure that the address is a known address
@@ -274,14 +204,14 @@ async def confirm_tx_data(
     if clear_signing_approver is not None:
         if payment_request_verifier is not None:
             raise DataError("Payment Requests don't support contract interactions")
-        return make_progress(data_total_len), clear_signing_approver
+        return clear_signing_approver
 
     recipient_str = (
         address_from_bytes(address_bytes, network) if address_bytes else None
     )
 
     if payment_request_verifier is not None:
-        if data_total_len > 0:
+        if data_length > 0:
             raise DataError("Payment Requests don't support contract interactions")
 
         # If a payment_request_verifier is provided, then msg.payment_req must have been set.
@@ -290,7 +220,7 @@ async def confirm_tx_data(
 
         payment_request_verifier.add_output(value, recipient_str or "")
         payment_request_verifier.verify()
-        return make_progress(data_total_len), require_confirm_payment_request(
+        return get_progress_indicator(data_length), require_confirm_payment_request(
             recipient_str,
             msg.payment_req,
             msg.address_n,
@@ -303,11 +233,11 @@ async def confirm_tx_data(
             None,
         )
     else:
-        if data_total_len > 0:
+        if data_length > 0:
             # blind signing: we have data but `clear_signing` did not recognize the function
-            confirm_data_chunk = make_confirm_data(data_total_len)
+            confirm_data_chunk = get_data_confirmer(data_length)
         else:
-            confirm_data_chunk = make_progress(data_total_len)
+            confirm_data_chunk = get_progress_indicator(data_length)
 
         token = (
             None  # what we want to confirm here is the ETH amount being sent on-chain
@@ -320,7 +250,7 @@ async def confirm_tx_data(
             maximum_fee,
             fee_items,
             token,
-            is_send=(data_total_len == 0 and tx_type != EIP_7702_TX_TYPE),
+            is_send=(data_length == 0 and tx_type != EIP_7702_TX_TYPE),
             chunkify=bool(msg.chunkify),
         )
 

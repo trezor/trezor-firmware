@@ -2,71 +2,185 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import TR
-from trezor.crypto import base58
 from trezor.utils import BufferReader
 
-from apps.ethereum import clear_signing_constants as constants
-
-from .helpers import address_from_bytes, format_ethereum_amount
+from .helpers import address_from_bytes, format_ethereum_amount, get_account_and_path
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Callable, Coroutine, Iterable
 
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
 
     from .definitions import Definitions
+    from .helpers import ConfirmDataFn
     from .keychain import MsgInSignTx
 
-    Value = int | bytes | None
-    FieldParser = Callable[[memoryview], Value]
-    FieldFormatter = Callable[
-        [Value, EthereumNetworkInfo, EthereumTokenInfo], str | None
-    ]
+    # Represents values that have been parsed from the calldata
+    # into our internal representation.
+    Value = int | bytes | bool | str | None | list["Value"]
+    StructValue = tuple[Value, ...]
+    ListValue = list[StructValue]
+    AnyValue = Value | StructValue | ListValue | list[Value | StructValue | ListValue]
+
+    # Parses a Value from a slice of the calldata.
+    # Assumes that the memoryview contains just that value.
+    Parser = Callable[[memoryview], AnyValue]
+
+
+SC_FUNC_SIG_BYTES = const(4)
 
 
 class InvalidFunctionCall(Exception):
+    """Raised when the calldata encoding of a function call,
+    including its parameters, is invalid."""
+
     pass
 
 
-# field types - can be any Solidity type - currently just address and uint256
+class ValueOverflow(InvalidFunctionCall):
+    """Raised when a value that should be encoded on less than 32 bytes
+    actually uses more bytes than it should."""
+
+    pass
 
 
-def parse_address(arg: memoryview) -> Value:
-    from .sc_constants import SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES
-
-    if any(byte != 0 for byte in arg[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]):
-        raise InvalidFunctionCall
-
-    return bytes(arg[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :])
+class DirtyAddress(ValueOverflow):
+    pass
 
 
-def parse_uint256(arg: memoryview) -> Value:
-    return int.from_bytes(arg, "big")
+class OutOfBounds(InvalidFunctionCall):
+    """Raised when we try to read outside the bounds of the raw data."""
+
+    pass
 
 
-# field formatters: https://eips.ethereum.org/EIPS/eip-7730#field-formats
+class InvalidFormatDefinition(Exception):
+    """Raised when we fail to format data according to the definitions,
+    if for example the parsed calldata has other types than what
+    the format definition expects."""
+
+    pass
 
 
-def format_address_name(
-    address: Value, network: EthereumNetworkInfo, _token: EthereumTokenInfo
-) -> str | None:
-    if address is None:
-        return None
-    else:
-        assert isinstance(address, bytes)
-        return address_from_bytes(address, network)
+# Value Parsers
 
 
-def get_token_amount_formatter(threshold: int | None = None) -> FieldFormatter:
-    def format_token_amount(
-        amount: Value, network: EthereumNetworkInfo, token: EthereumTokenInfo
+def _check_padding_zero(
+    raw_data: memoryview, used_bytes: int, exc: type[ValueOverflow] = ValueOverflow
+) -> None:
+    """Sanity check to make sure unused data is zeroed out."""
+    if any(raw_data[: 32 - used_bytes]):
+        raise exc
+
+
+def parse_uint256(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    return int.from_bytes(raw_data, "big")
+
+
+def parse_uint160(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, 160 // 8)
+    return parse_uint256(raw_data)
+
+
+def parse_uint24(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, 24 // 8)
+    return parse_uint256(raw_data)
+
+
+def parse_bool(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    uint_value = parse_uint256(raw_data)
+    if uint_value not in (0, 1):
+        raise ValueOverflow
+    return uint_value == 1
+
+
+def parse_address(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, 20, DirtyAddress)
+    return bytes(raw_data[32 - 20 :])
+
+
+def parse_bytes(raw_data: memoryview) -> Value:
+    return bytes(raw_data)
+
+
+def parse_string(raw_data: memoryview) -> Value:
+    return bytes(raw_data).decode("utf-8")
+
+
+def parse_uint256_array(raw_data: memoryview) -> list[Value]:
+    return [
+        parse_uint256(raw_data[i * 32 : (i + 1) * 32])
+        for i in range(len(raw_data) // 32)
+    ]
+
+
+DYNAMIC_DATA_PARSERS = [parse_bytes, parse_string, parse_uint256_array]
+
+# Field formatters: https://eips.ethereum.org/EIPS/eip-7730#field-formats
+
+
+class FieldFormatter:
+    def format(
+        self, value: AnyValue, network: EthereumNetworkInfo, token: EthereumTokenInfo
+    ) -> str | None:
+        raise NotImplementedError
+
+
+class AddressNameFormatter(FieldFormatter):
+    def format(
+        self, address: AnyValue, network: EthereumNetworkInfo, _token: EthereumTokenInfo
+    ) -> str | None:
+        if address is None:
+            return "(None)"
+        elif isinstance(address, str):
+            return address
+        else:
+            if not isinstance(address, bytes):
+                raise InvalidFormatDefinition
+            return address_from_bytes(address, network)
+
+
+class AmountFormatter(FieldFormatter):
+    def format(
+        self, amount: AnyValue, network: EthereumNetworkInfo, _token: EthereumTokenInfo
     ) -> str | None:
         if amount is None:
             return None
         else:
-            assert isinstance(amount, int)
-            if threshold is not None and amount > threshold:
+            if not isinstance(amount, int):
+                raise InvalidFormatDefinition
+
+            # Note: we are passing None rather than `_token`
+            # to `format_ethereum_amount` because this formatter
+            # is meant to be used with native ETH amounts
+            return format_ethereum_amount(amount, None, network)
+
+
+class TokenAmountFormatter(FieldFormatter):
+    def __init__(self, threshold: int | None = None) -> None:
+        self.threshold = threshold
+
+    def format(
+        self, amount: AnyValue, network: EthereumNetworkInfo, token: EthereumTokenInfo
+    ) -> str | None:
+        if amount is None:
+            return None
+        else:
+            if not isinstance(amount, int):
+                raise InvalidFormatDefinition
+            if self.threshold is not None and amount > self.threshold:
                 # TODO: figure out a way for the formatter to signal that the amount was above the threshold.
                 # For now we return None and `confirm_ethereum_approve` shows the "Unlimited amount" warning,
                 # but the `tokenAmount` spec allows this message to be customized in which case
@@ -74,7 +188,44 @@ def get_token_amount_formatter(threshold: int | None = None) -> FieldFormatter:
                 return None
             return format_ethereum_amount(amount, token, network)
 
-    return format_token_amount
+
+class UnitFormatter(FieldFormatter):
+    def __init__(self, decimals: int = 0, base: str = "", prefix: bool = False) -> None:
+        self.decimals = decimals
+        self.base = base
+        self.prefix = prefix
+
+    def format(
+        self, value: AnyValue, network: EthereumNetworkInfo, token: EthereumTokenInfo
+    ) -> str | None:
+        if value is None:
+            return None
+        else:
+            if not isinstance(value, int):
+                raise InvalidFormatDefinition
+
+            scaled_value = value / (10**self.decimals)
+
+            if not self.prefix or scaled_value == 0:
+                return f"{scaled_value:g}{self.base}"
+
+            si_prefixes = {12: "T", 9: "G", 6: "M", 3: "k", 0: "", -3: "m"}
+
+            temp_val = abs(scaled_value)
+            exponent = 0
+            if temp_val >= 1:
+                while temp_val >= 1000 and exponent < 12:
+                    temp_val /= 1000
+                    exponent += 3
+            else:
+                while temp_val < 1 and exponent > -3:
+                    temp_val *= 1000
+                    exponent -= 3
+
+            significand = scaled_value / (10**exponent)
+            prefix_symbol = si_prefixes.get(exponent, "")
+
+            return f"{significand:g}{prefix_symbol}{self.base}"
 
 
 # https://eips.ethereum.org/EIPS/eip-7730#context-section
@@ -94,16 +245,167 @@ class BindingContext:
 # https://eips.ethereum.org/EIPS/eip-7730#structured-data-format-specification
 
 
-class Field:
+class ABIValue:
+    def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
+        raise NotImplementedError
+
+
+class Atomic(ABIValue):
+    """Atomic values, such as integers or addresses, are always stored on 32 bytes."""
+
+    def __init__(self, parser: Parser) -> None:
+        self.parser = parser
+
+    def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
+        if offset > len(raw_data):
+            raise OutOfBounds
+        return self.parser(raw_data[offset : offset + 32]), 32
+
+
+class Dynamic(ABIValue):
+    """Dynamic values, such as strings or `bytes` are stored later in the calldata,
+    the inline value being just a pointer to the actual location.
+    Also they have an arbitrary length, which is encoded on the first 32 bytes,
+    after which the actual value follows."""
+
+    def __init__(self, parser: Parser) -> None:
+        self.parser = parser
+
+    def parse(self, raw_data: memoryview, offset: int) -> tuple[AnyValue, int]:
+        if offset + 32 > len(raw_data):
+            raise OutOfBounds
+        pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
+        if pointer + 32 > len(raw_data):
+            raise OutOfBounds
+        length = int.from_bytes(raw_data[pointer : pointer + 32], "big")
+        if pointer + 32 + length > len(raw_data):
+            raise OutOfBounds
+        data = raw_data[pointer + 32 : pointer + 32 + length]
+        return self.parser(data), 32
+
+
+class Struct(ABIValue):
+    """Structs (or Tuples, which are essentially the same thing as far as ABI is concerned)
+    contain multiple values of different types.
+    A Struct is "dynamic" if at least one of the values is dynamic.
+    However, dynamic structs inside arrays behave as static structs,
+    hence we cannot guess if the Struct is dynamic by looking at just its fields."""
+
+    def __init__(self, fields: tuple[Parser, ...], is_dynamic: bool) -> None:
+        self.fields = fields
+        self.is_dynamic = is_dynamic
+        self.static_size = len(fields) * 32
+
+    def parse(self, raw_data: memoryview, offset: int) -> tuple[StructValue, int]:
+        if not self.is_dynamic:
+            base_offset = offset
+            consumed = self.static_size
+        else:
+            if offset + 32 > len(raw_data):
+                raise OutOfBounds
+            pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
+            base_offset = pointer
+            consumed = 32  # dynamic structs just consume the pointer
+
+        if base_offset + self.static_size > len(raw_data):
+            raise OutOfBounds
+
+        value: list[Value] = [None] * len(self.fields)
+
+        for i, parser in enumerate(self.fields):
+            field_head_pos = base_offset + (i * 32)
+            raw_field = raw_data[field_head_pos : field_head_pos + 32]
+            if parser not in DYNAMIC_DATA_PARSERS:
+                v = parser(raw_field)
+                if isinstance(v, (tuple, list)):
+                    # Struct or Array inside a Struct
+                    raise NotImplementedError
+                value[i] = v
+            else:
+                field_pointer = base_offset + int.from_bytes(raw_field, "big")
+
+                if field_pointer + 32 > len(raw_data):
+                    raise OutOfBounds
+                length = int.from_bytes(
+                    raw_data[field_pointer : field_pointer + 32], "big"
+                )
+                if field_pointer + 32 + length > len(raw_data):
+                    raise OutOfBounds
+                raw_field = raw_data[field_pointer + 32 : field_pointer + 32 + length]
+                v = parser(raw_field)
+                if isinstance(v, (tuple, list)):
+                    # Struct or Array inside a Struct
+                    raise NotImplementedError
+                value[i] = v
+        return tuple(value), consumed
+
+
+class Array(ABIValue):
+    """Arrays are sequences of value of the same type."""
+
+    def __init__(self, element_definition: ABIValue) -> None:
+        self.element_definition = element_definition
+
+    def parse(self, raw_data: memoryview, offset: int) -> tuple[ListValue, int]:
+        if offset + 32 > len(raw_data):
+            raise OutOfBounds
+        array_pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
+        if array_pointer + 32 > len(raw_data):
+            raise OutOfBounds
+        array_length = int.from_bytes(
+            raw_data[array_pointer : array_pointer + 32], "big"
+        )
+        array_heads_end = array_pointer + 32 + (array_length * 32)
+        if array_heads_end > len(raw_data):
+            raise OutOfBounds
+
+        value = []
+
+        for i in range(array_length):
+            p = array_pointer + 32 + (i * 32)
+            if p + 32 > len(raw_data):
+                raise OutOfBounds
+            if isinstance(self.element_definition, Atomic):
+                # atomic types are encoded in place
+                data, _ = self.element_definition.parse(raw_data, p)
+            else:
+                element_pointer = int.from_bytes(raw_data[p : p + 32], "big")
+                element_absolute_pointer = array_pointer + 32 + element_pointer
+                data, _ = self.element_definition.parse(
+                    raw_data, element_absolute_pointer
+                )
+            value.append(data)
+
+        return value, 32  # arrays just consume the pointer
+
+
+# https://eips.ethereum.org/EIPS/eip-7730#evm-transaction-container
+
+
+class ContainerPath:
+    From = 1
+    Value = 2
+    To = 3
+    ChainID = 4
+
+
+class FieldDefinition:
     def __init__(
         self,
-        label: str | None,
-        parser: FieldParser,
-        formatter: FieldFormatter,
+        path: tuple[int, ...] | int,
+        label: str,
+        formatter: FieldFormatter | type[FieldFormatter],
     ) -> None:
+        self.path = path
         self.label = label
-        self.parser = parser
         self.formatter = formatter
+
+    def get_formatter(self) -> FieldFormatter:
+        # instantiate formatters only if needed
+        formatter = self.formatter
+        if isinstance(formatter, type):
+            formatter = formatter()
+        return formatter
 
 
 class DisplayFormat:
@@ -112,44 +414,100 @@ class DisplayFormat:
         binding_context: BindingContext | None,
         func_sig: bytes,
         intent: str,
-        interpolated_intent: str | None,
-        fields: list[Field],
+        parameter_definitions: list[ABIValue],
+        field_definitions: list[FieldDefinition],
     ) -> None:
         self.binding_context = binding_context
         self.func_sig = func_sig
         self.intent = intent
-        self.interpolated_intent = interpolated_intent
-        self.fields = fields
+        self.parameter_definitions = parameter_definitions
+        self.field_definitions = field_definitions
 
-    def parse_fields(
-        self,
-        data_reader: BufferReader,
-        network: EthereumNetworkInfo,
-        token: EthereumTokenInfo,
-    ) -> Iterable[tuple[Value, StrPropertyType]]:
-        from .sc_constants import SC_ARGUMENT_BYTES
-
-        for field in self.fields:
-            if data_reader.remaining_count() < SC_ARGUMENT_BYTES:
-                raise InvalidFunctionCall
-            arg = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-            value = field.parser(arg)
-            yield (
-                value,
-                (
-                    field.label,
-                    field.formatter(value, network, token),
-                    None,
-                ),
-            )
-        if data_reader.remaining_count() > 0:
-            raise InvalidFunctionCall
+        self.parameters = []
 
     def matches_context(self, chain_id: int, address: bytes) -> bool:
         if self.binding_context is None:
+            # applies to anything without context verification
+            # (for approve and transfer)
             return True
 
         return self.binding_context.matches(chain_id, address)
+
+
+class ParsingContext:
+    def __init__(self, display_format: DisplayFormat) -> None:
+        self.data = bytes()
+        self.display_format = display_format
+
+    def process_data_chunk(self, offset: int, chunk: memoryview) -> None:
+        if offset == 0:
+            # skip function signature
+            chunk = chunk[SC_FUNC_SIG_BYTES:]
+        self.data += bytes(chunk)
+        # TODO: don't keep more than 4 chunks!
+
+    def get_parameters_and_fields(
+        self,
+        address_n: list[int],
+        tx_value: AnyBytes,
+        network: EthereumNetworkInfo,
+        token: EthereumTokenInfo,
+    ) -> tuple[list[AnyValue], list[StrPropertyType]]:
+
+        parameters: list[AnyValue] = []
+
+        data = memoryview(self.data)
+        offset = 0
+        for parameter_definition in self.display_format.parameter_definitions:
+            value, consumed = parameter_definition.parse(data, offset)
+            parameters.append(value)
+            offset += consumed
+
+        fields = []
+        for field_definition in self.display_format.field_definitions:
+            path = field_definition.path
+            if isinstance(path, int):  # ContainerPath
+                # standard container paths like @.from, @.value...
+                if path == ContainerPath.From:
+                    account, _ = get_account_and_path(address_n)
+                    p = account
+                elif path == ContainerPath.Value:
+                    p = int.from_bytes(tx_value, "big")
+                else:
+                    raise NotImplementedError  # TODO
+            else:
+                if len(path) == 0:
+                    # can't get anywhere by walking an inexisting path!
+                    raise InvalidFormatDefinition
+
+                # walk the path
+                p = parameters
+                for step in path:
+                    if p is None:
+                        p = None
+                        break
+                    if isinstance(p, (list, tuple)):
+                        # walk inside Arrays or Structs
+                        try:
+                            p = p[step]
+                        except (IndexError, TypeError):
+                            raise InvalidFormatDefinition
+                    else:
+                        # can't walk inside basic types
+                        raise InvalidFormatDefinition
+                if isinstance(p, (list, tuple)):
+                    # at the end of the path, we must have arrived somewhere
+                    # ie. not on an Array or Struct
+                    raise InvalidFormatDefinition
+            fields.append(
+                (
+                    field_definition.label,
+                    field_definition.get_formatter().format(p, network, token),
+                    None,
+                )
+            )
+
+        return parameters, fields
 
 
 def get_approver(
@@ -159,14 +517,14 @@ def get_approver(
     value: int,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-) -> Coroutine[Any, Any, None] | None:
-    from .sc_constants import SC_FUNC_SIG_BYTES
+) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
+    from .clear_signing_definitions import ALL_DISPLAY_FORMATS
 
     # local_cache_attribute
-    network = definitions.network
     chain_id = msg.chain_id
+    network = definitions.network
 
-    if not address_bytes or value != 0:
+    if not address_bytes:
         return None
 
     # only parse the initial chunk for now
@@ -191,31 +549,46 @@ def get_approver(
 
     if not display_format.matches_context(chain_id, address_bytes):
         return None
+    parser, parsing_context = _get_data_chunk_parser(display_format)
 
-    try:
-        args = list(display_format.parse_fields(data_reader, network, token))
-    except InvalidFunctionCall:
-        return None
+    return parser, _get_summary_handler(
+        parsing_context, address_bytes, msg, network, token, maximum_fee, fee_items
+    )
+
+
+def _get_data_chunk_parser(
+    display_format: DisplayFormat,
+) -> tuple[ConfirmDataFn, ParsingContext]:
+    offset = 0
+    context = ParsingContext(display_format)
+
+    async def confirm_fn(chunk: AnyBytes) -> None:
+        nonlocal offset
+        context.process_data_chunk(offset, memoryview(chunk))
+        offset += len(chunk)
+
+    return confirm_fn, context
+
+
+def _get_summary_handler(
+    context: ParsingContext,
+    address_bytes: bytes,
+    msg: MsgInSignTx,
+    network: EthereumNetworkInfo,
+    token: EthereumTokenInfo,
+    maximum_fee: str,
+    fee_items: Iterable[StrPropertyType],
+) -> Coroutine[Any, Any, None]:
+    from .clear_signing_definitions import (
+        APPROVE_DISPLAY_FORMAT,
+        TRANSFER_DISPLAY_FORMAT,
+    )
 
     # custom treatment of certain functions (APPROVE, TRANSFER)
 
-    if func_sig == APPROVE_DISPLAY_FORMAT.func_sig:
-        assert len(args) == 2
-
-        (arg0_raw_value, (arg0_name, arg0_formatted_value, _)) = args[0]
-        assert arg0_name == "Spender"
-        assert isinstance(arg0_raw_value, bytes)
-        assert isinstance(arg0_formatted_value, str)
-
-        (arg1_raw_value, (arg1_name, arg1_formatted_value, _)) = args[1]
-        assert arg1_name == "Amount"
-        assert isinstance(arg1_raw_value, int)
-
-        return _get_approve_handler(
-            arg0_formatted_value,
-            constants.KNOWN_ADDRESSES.get(arg0_raw_value),
-            arg1_formatted_value,
-            arg1_raw_value == SC_FUNC_APPROVE_REVOKE_AMOUNT,
+    if context.display_format.func_sig == APPROVE_DISPLAY_FORMAT.func_sig:
+        return _handle_approve(
+            context,
             address_bytes,
             msg,
             network,
@@ -223,21 +596,12 @@ def get_approver(
             maximum_fee,
             fee_items,
         )
-    elif func_sig == TRANSFER_DISPLAY_FORMAT.func_sig:
-        assert len(args) == 2
-        (_, (arg0_name, arg0_formatted_value, _)) = args[0]
-        assert arg0_name == "To"
-        assert isinstance(arg0_formatted_value, str)
-
-        (_, (arg1_name, arg1_formatted_value, _)) = args[1]
-        assert arg1_name == "Amount"
-        assert isinstance(arg1_formatted_value, str)
-
-        return _get_transfer_handler(
-            arg0_formatted_value,
-            arg1_formatted_value,
+    elif context.display_format.func_sig == TRANSFER_DISPLAY_FORMAT.func_sig:
+        return _handle_transfer(
+            context,
             address_bytes,
             msg,
+            network,
             token,
             maximum_fee,
             fee_items,
@@ -245,24 +609,47 @@ def get_approver(
 
     # generic UI for any function that has a `DisplayFormat`
 
-    return _handle_generic_ui(display_format, args, address_bytes, token)
+    return _handle_generic_ui(context, msg, network, address_bytes, token)
 
 
-def _get_approve_handler(
-    recipient_addr: str,
-    recipient_str: str | None,
-    value: str | None,
-    is_revoke: bool,
+async def _handle_approve(
+    context: ParsingContext,
     address_bytes: bytes,
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-) -> Coroutine[Any, Any, None] | None:
+) -> None:
+    from .clear_signing_definitions import (
+        KNOWN_ADDRESSES,
+        SC_FUNC_APPROVE_REVOKE_AMOUNT,
+    )
     from .layout import require_confirm_approve
 
-    return require_confirm_approve(
+    args, fields = context.get_parameters_and_fields(
+        msg.address_n, msg.value, network, token
+    )
+
+    assert len(args) == 2
+    assert len(fields) == 2
+
+    arg0_raw_value = args[0]
+    (field0_name, recipient_addr, _) = fields[0]
+    assert field0_name == "Spender"
+    assert isinstance(arg0_raw_value, bytes)
+    assert isinstance(recipient_addr, str)
+
+    arg1_raw_value = args[1]
+    (field1_name, value, _) = fields[1]
+    assert field1_name == "Amount"
+    assert isinstance(arg1_raw_value, int)
+
+    recipient_str = KNOWN_ADDRESSES.get(arg0_raw_value)
+
+    is_revoke = arg1_raw_value == SC_FUNC_APPROVE_REVOKE_AMOUNT
+
+    await require_confirm_approve(
         recipient_addr,
         value,
         recipient_str,
@@ -278,18 +665,33 @@ def _get_approve_handler(
     )
 
 
-def _get_transfer_handler(
-    recipient_addr: str,
-    value: str,
+async def _handle_transfer(
+    context: ParsingContext,
     address_bytes: bytes,
     msg: MsgInSignTx,
+    network: EthereumNetworkInfo,
     token: EthereumTokenInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-) -> Coroutine[Any, Any, None] | None:
+) -> None:
     from .layout import require_confirm_tx
 
-    return require_confirm_tx(
+    args, fields = context.get_parameters_and_fields(
+        msg.address_n, msg.value, network, token
+    )
+
+    assert len(args) == 2
+    assert len(fields) == 2
+
+    (arg0_name, recipient_addr, _) = fields[0]
+    assert arg0_name == "To"
+    assert isinstance(recipient_addr, str)
+
+    (arg1_name, value, _) = fields[1]
+    assert arg1_name == "Amount"
+    assert isinstance(value, str)
+
+    await require_confirm_tx(
         recipient_addr,
         value,
         address_bytes,
@@ -303,8 +705,9 @@ def _get_transfer_handler(
 
 
 async def _handle_generic_ui(
-    f: DisplayFormat,
-    args: list[tuple[Value, StrPropertyType]],
+    context: ParsingContext,
+    msg: MsgInSignTx,
+    network: EthereumNetworkInfo,
     address_bytes: bytes,
     token: EthereumTokenInfo,
 ) -> None:
@@ -315,8 +718,13 @@ async def _handle_generic_ui(
     )
 
     from . import tokens
+    from .clear_signing_definitions import KNOWN_ADDRESSES
+    from .helpers import bytes_from_address
     from .layout import require_confirm_address, require_confirm_unknown_token
 
+    _, fields = context.get_parameters_and_fields(
+        msg.address_n, msg.value, network, token
+    )
     if token is tokens.UNKNOWN_TOKEN:
         title = ethereum_address_title()
         await require_confirm_unknown_token(title)
@@ -329,43 +737,13 @@ async def _handle_generic_ui(
             TR.ethereum__unknown_contract_address,
         )
 
-    await confirm_action("confirm_contract", "Intent", f.intent)
+    # TODO ??
+    recipient_str = KNOWN_ADDRESSES.get(bytes_from_address(msg.to))
+
+    await confirm_action("confirm_contract", "Provider", recipient_str)
+    await confirm_action("confirm_contract", "Intent", context.display_format.intent)
     await confirm_properties(
         "confirm_contract",
         "Confirm contract",
-        (field_display for (_, field_display) in args),
+        fields,
     )
-
-
-# https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
-
-APPROVE_DISPLAY_FORMAT = DisplayFormat(
-    binding_context=None,
-    func_sig=base58.keccak_32(b"approve(address,uint256)"),
-    intent="Approve",
-    interpolated_intent=None,
-    fields=[
-        Field("Spender", parse_address, format_address_name),  # _spender
-        Field(
-            "Amount",
-            parse_uint256,
-            get_token_amount_formatter(
-                threshold=0x8000000000000000000000000000000000000000000000000000000000000000
-            ),  # _value
-        ),
-    ],
-)
-SC_FUNC_APPROVE_REVOKE_AMOUNT = const(0)
-
-TRANSFER_DISPLAY_FORMAT = DisplayFormat(
-    binding_context=None,
-    func_sig=base58.keccak_32(b"transfer(address,uint256)"),
-    intent="Send",
-    interpolated_intent=None,
-    fields=[
-        Field("To", parse_address, format_address_name),  # _to
-        Field("Amount", parse_uint256, get_token_amount_formatter()),  # _value
-    ],
-)
-
-ALL_DISPLAY_FORMATS = [APPROVE_DISPLAY_FORMAT, TRANSFER_DISPLAY_FORMAT]

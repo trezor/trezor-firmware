@@ -89,7 +89,6 @@ async def sign_tx_eip1559(
         address_bytes,
         maximum_fee,
         fee_items,
-        data_total,
         payment_req_verifier,
     )
 
