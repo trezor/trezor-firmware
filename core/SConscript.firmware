@@ -7,7 +7,7 @@ import random
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
-BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
+FORCE_BOOTLOADER_UPGRADE = ARGUMENTS.get('FORCE_BOOTLOADER_UPGRADE', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 UNSAFE_FW = ARGUMENTS.get('UNSAFE_FW', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
@@ -465,7 +465,7 @@ env = Environment(
     ENV=os.environ,
     CFLAGS=(
         f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} "
-        f"-DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} {DEBUG_FLAGS}"
+        f"-DFORCE_BOOTLOADER_UPGRADE={int(FORCE_BOOTLOADER_UPGRADE)} -DBOOTLOADER_DEVEL={int(BOOTLOADER_DEVEL)} -DBITCOIN_ONLY={BITCOIN_ONLY} {DEBUG_FLAGS}"
     ),
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
@@ -883,7 +883,7 @@ random.Random(SCM_REVISION).shuffle(obj_program)
 
 env.Replace(
     ALLSOURCES=source_files,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"FORCE_BOOTLOADER_UPGRADE={int(FORCE_BOOTLOADER_UPGRADE)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
 
 
 cmake_gen = env.Command(
@@ -941,11 +941,11 @@ env.Depends(rust, protobuf_blobs)
 env.Depends(rust, TRANSLATION_DATA)
 
 BOOTLOADER_SUFFIX = TREZOR_MODEL
-if BOOTLOADER_QA or BOOTLOADER_DEVEL:
-    BOOTLOADER_SUFFIX += '_qa'
+if BOOTLOADER_DEVEL:
+    BOOTLOADER_SUFFIX += '_devel'
 
 # select vendor header
-if BOOTLOADER_QA or BOOTLOADER_DEVEL:
+if BOOTLOADER_DEVEL:
     if UNSAFE_FW:
         vendor = "unsafe_signed_dev"
     else:
@@ -1043,14 +1043,14 @@ if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not (BOOTLOADER_DEVEL or not PRODUCTION) else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
         '$CP $TARGET ' + BINARY_NAME,
     ]
 else:
     action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE ${TARGET}',
-        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not (BOOTLOADER_DEVEL or not PRODUCTION) else ''),
         '$CP $TARGET ' + BINARY_NAME,
         ]
 

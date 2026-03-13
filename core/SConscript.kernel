@@ -6,7 +6,6 @@ import tools, models
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
-BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 UNSAFE_FW = ARGUMENTS.get('UNSAFE_FW', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
@@ -265,7 +264,7 @@ if STORAGE_INSECURE_TESTING_MODE:
 
 env = Environment(
     ENV=os.environ,
-    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} -USCM_REVISION_INIT",
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_DEVEL={int(BOOTLOADER_DEVEL)} -DBITCOIN_ONLY={BITCOIN_ONLY} -USCM_REVISION_INIT",
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
@@ -371,7 +370,7 @@ obj_program.extend(env.Object(source=SOURCE_HAL))
 
 env.Replace(
     ALLSOURCES=source_files,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
 
 
 cmake_gen = env.Command(
@@ -380,12 +379,8 @@ cmake_gen = env.Command(
     action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
 )
 
-BOOTLOADER_SUFFIX = TREZOR_MODEL
-if BOOTLOADER_QA:
-    BOOTLOADER_SUFFIX += '_qa'
-
 # select vendor header
-if BOOTLOADER_QA or BOOTLOADER_DEVEL:
+if BOOTLOADER_DEVEL:
     vendor = "dev_DO_NOT_SIGN_signed_dev"
 elif not PRODUCTION:
     vendor = "unsafe_signed_prod"
