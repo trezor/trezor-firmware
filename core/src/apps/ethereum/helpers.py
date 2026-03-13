@@ -7,12 +7,15 @@ from . import networks
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Iterable
+    from typing import Awaitable, Callable, Iterable
 
     from trezor.messages import EthereumFieldType, EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
 
     from .networks import EthereumNetworkInfo
+
+    ConfirmDataFn = Callable[[AnyBytes], Awaitable[None]]
+
 
 RSKIP60_NETWORKS = (30, 31)
 
@@ -223,3 +226,63 @@ def _from_bytes_bigendian_signed(b: AnyBytes) -> int:
         return -result - 1
     else:
         return int.from_bytes(b, "big")
+
+
+def get_progress_indicator(total_len: int, progress_len: int = 0) -> ConfirmDataFn:
+    from trezor.ui.layouts.progress import progress
+
+    def _progress_value() -> int:
+        assert 0 <= progress_len <= total_len
+        if total_len == 0:
+            return 1000
+        return (1000 * progress_len) // total_len
+
+    layout = progress(title=TR.progress__loading_transaction)
+    layout.value = _progress_value()
+
+    async def confirm_fn(chunk: AnyBytes) -> None:
+        nonlocal progress_len
+        progress_len += len(chunk)
+        layout.report(_progress_value())
+
+    return confirm_fn
+
+
+def get_data_confirmer(total_len: int) -> ConfirmDataFn:
+    from trezor.enums import ButtonRequestType
+    from trezor.ui.layouts import confirm_blob_prefix
+
+    confirmed_len = 0
+    progress_bar: ConfirmDataFn | None = None
+
+    async def confirm_fn(chunk: AnyBytes) -> None:
+        nonlocal confirmed_len
+        nonlocal progress_bar
+
+        if progress_bar is not None:
+            return await progress_bar(chunk)
+
+        # for efficient chunk slicing (see below)
+        chunk = memoryview(chunk)
+        while True:
+            assert 0 <= confirmed_len <= total_len
+            prefix_len = await confirm_blob_prefix(
+                title=TR.ethereum__title_input_data,
+                data=chunk,
+                total_len=total_len,
+                confirmed_len=confirmed_len,
+                br_name="confirm_data",
+                br_code=ButtonRequestType.SignTx,
+            )
+            if prefix_len is None:
+                # skip this and following chunks confirmation - use a progress bar instead
+                assert progress_bar is None
+                progress_bar = get_progress_indicator(total_len, confirmed_len)
+                return await progress_bar(chunk)
+            else:
+                confirmed_len += prefix_len
+                chunk = chunk[prefix_len:]
+                if not chunk:
+                    return
+
+    return confirm_fn
