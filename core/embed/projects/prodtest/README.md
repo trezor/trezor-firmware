@@ -1464,7 +1464,7 @@ OK
 
 ### tropic-stress-test
 
-Runs a Tropic stress test that repeatedly calls `lt_session_start()`, `lt_mac_and_destroy()` and `lt_ecc_key_generate()` to test that Tropic doesn't enter alarm mode.
+Runs a Tropic stress test that repeatedly calls `lt_init()`, `lt_session_start()`, `lt_mac_and_destroy()`, `lt_ecc_key_generate()` and `lt_random_value_get()` to test that Tropic doesn't enter alarm mode.
 
 ### wpc-info
 Retrieves detailed information from the wireless power receiver, including chip identification, firmware version, configuration settings, and error status.

@@ -61,11 +61,7 @@
 
 #ifdef KERNEL_MODE
 
-#ifdef TREZOR_EMULATOR
-bool tropic_init(uint16_t port);
-#else
 bool tropic_init(void);
-#endif
 
 void tropic01_reset(void);
 
