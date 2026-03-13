@@ -164,14 +164,14 @@ async def handle_device_menu() -> None:
             raise RuntimeError(f"Unknown menu {menu_result}")
 
         action, arg, parent_submenu_idx = menu_result
-        handler = _MENU_HANDLERS.get(action)
-        if not handler:
-            raise RuntimeError(f"Unknown menu {menu_result}")
-
         # special handling
         if action == DeviceMenuResult.RefreshMenu:
             init_submenu_idx = arg
             continue
+
+        handler = _MENU_HANDLERS.get(action)
+        if not handler:
+            raise RuntimeError(f"Unknown menu {menu_result}")
 
         try:
             if arg is None:
