@@ -67,6 +67,7 @@ def make_defs(parameters: dict) -> messages.EthereumDefinitions:
     "ethereum/sign_tx.json",
     "ethereum/sign_tx_eip155.json",
     "ethereum/sign_tx_erc20.json",
+    "ethereum/sign_tx_clear_signing.json",
 )
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx(session: Session, chunkify: bool, parameters: dict, result: dict):
