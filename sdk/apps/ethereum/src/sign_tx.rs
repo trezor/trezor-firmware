@@ -160,14 +160,14 @@ pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         // raise DataError("EIP-7702 not allowed in strict checks")
 
         if !get_eip_7702_known_addresses().contains_key(&address_bytes) {
-            // TODO DataError("Unknown EIP-7702 address")
+            // TODO: proper error type: DataError("Unknown EIP-7702 address")
             info!("Unknown EIP-7702 address");
             return Err(Error::DataError);
         }
     }
 
     if msg.gas_price.len() + msg.gas_limit.len() > 30 {
-        // TODO DataError("Fee overflow")
+        // TODO: proper error type: DataError("Fee overflow")
         info!("Fee overflow");
         return Err(Error::DataError);
     }
@@ -194,7 +194,7 @@ pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         .collect();
 
     let payment_req_verifier: Option<u32> = if let Some(req) = &msg.payment_req {
-        // TODO implement
+        // TODO: implement
         // slip44_id = paths.unharden(msg.address_n[1])
         // payment_req_verifier = PaymentRequestVerifier(
         //     msg.payment_req,
@@ -220,7 +220,7 @@ pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         payment_req_verifier,
     )?;
 
-    // TODO progress
+    // TODO: progress
 
     // sign
     let mut data = Vec::new();
@@ -298,7 +298,7 @@ pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 
     let res = sign_digest(&msg, &digest)?;
 
-    // TODO progress stop, show continue in the app
+    // TODO: progress stop, show continue in the app
 
     Ok(res)
 }
@@ -355,7 +355,7 @@ fn confirm_tx_data(
     maximum_fee: &str,
     fee_items: &[(&str, &str, bool)],
     data_total_len: u32,
-    // TODO: impl type for payment_req_verifier
+    // TODO: implement type for payment_req_verifier
     payment_req_verifier: Option<u32>,
 ) -> Result<()> {
     let staking_approver = get_staking_approver();
@@ -451,7 +451,7 @@ fn confirm_tx_data(
         let is_contract_interaction = token.is_none() && data_total_len > 0;
 
         if let Some(payment_req_verifier) = payment_req_verifier {
-            // TODO implement payment_req_verifier
+            // TODO: implement payment_req_verifier
             return Err(Error::InvalidFunction);
         } else {
             if is_contract_interaction {
@@ -625,7 +625,7 @@ fn require_confirm_other_data(data: &[u8], data_total: u32) -> Result<()> {
     Ok(())
 }
 
-// TODO implement
+// TODO: implement
 fn require_confirm_approve(
     to_bytes: &[u8],
     value: Option<u128>,
@@ -892,7 +892,7 @@ fn handle_known_contract_calls(
 /// Returns a awaitable confirmation for ETH staking approval.
 /// `None` is returned for non-staking related transactions.
 fn get_staking_approver() -> Option<()> {
-    // TODO implement
+    // TODO: implement
     None
 }
 
@@ -935,11 +935,6 @@ fn send_request_chunk(data_left: u32) -> Result<EthereumTxAck> {
     req.data_length = Some(core::cmp::min(data_left, 1024) as u32);
 
     let resp: EthereumTxAck = wire_request(&req, EthereumMessages::TxRequest)?;
-
-    // send_message(req)?;
-    // let resp: EthereumTxAck = receive_message().await?;
-
-    // let resp = EthereumTxAck::default(); // TODO Placeholder for actual implementation
 
     Ok(resp)
 }

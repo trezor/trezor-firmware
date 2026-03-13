@@ -13,7 +13,7 @@ use trezor_app_sdk::{Error, Result, crypto, ui};
 pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
     let digest = message_digest(msg.message.as_slice());
     if msg.signature.len() != 65 {
-        // TODO: DataError("Invalid signature")
+        // TODO: proper error type: DataError("Invalid signature")
         return Err(Error::DataError);
     }
 
@@ -39,7 +39,7 @@ pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
     let address_bytes = bytes_from_address(&msg.address)?;
 
     if address_bytes != pkh {
-        // TODO DataError("Invalid signature")
+        // TODO: proper error type: DataError("Invalid signature")
         return Err(Error::DataError);
     }
 

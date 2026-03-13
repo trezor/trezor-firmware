@@ -99,7 +99,7 @@ impl HdNodeData {
             .onto(&mut node_data)
             .map_err(|_| ())?;
         if decoded_len != Self::TOTAL {
-            // TODO: decode failed or invalid length
+            // TODO: proper error type: decode failed or invalid length
             return Err(());
         }
 
@@ -110,7 +110,7 @@ impl HdNodeData {
                 .map_err(|_| ())?,
         );
         if ver != version {
-            // TODO: invalid version
+            // TODO: proper error type: invalid version
             return Err(());
         }
 

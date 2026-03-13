@@ -269,7 +269,7 @@ pub fn ed25519_cosi_combine_publickeys(
     if result == 0 {
         Ok(res)
     } else {
-        // TODO: better error handling
+        // TODO: proper error type
         Err(ApiError::Failed)
     }
 }

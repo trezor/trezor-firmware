@@ -154,7 +154,7 @@ fn generate_typed_data_hash(
 
     if let Some(show_message_hash) = show_message_hash {
         if show_message_hash != &message_hash {
-            // TODO Message hash mismatch
+            // TODO: proper error type: Message hash mismatch
             return Err(Error::InvalidMessage);
         }
 
@@ -239,8 +239,8 @@ impl TypedDataEnvelope {
         show_data: bool,
         parent_objects: &[&str],
     ) -> Result<[u8; 32]> {
-        let data = Vec::new(); // TODO: implement actual data encoding logic
-        // TODO: implement actual hashing logic
+        let data = Vec::new();
+        // TODO: implement
 
         let hashed_type = self.hash_type(primary_type)?;
 
@@ -249,7 +249,7 @@ impl TypedDataEnvelope {
         Ok(crypto::keccak_256(&data))
     }
 
-    // TODO implement function logic
+    // TODO: implement
     fn get_and_encode_data() -> Result<()> {
         Ok(())
     }
@@ -447,19 +447,19 @@ fn validate_value(field: &EthereumFieldType, value: &[u8]) -> Result<()> {
     match field.data_type {
         x if x == EthereumDataType::Bool as i32 => {
             if value != [0x00] && value != [0x01] {
-                // TODO Invalid boolean value
+                // TODO: proper error type: Invalid boolean value
                 return Err(Error::InvalidMessage);
             }
         }
         x if x == EthereumDataType::Address as i32 => {
             if value.len() != 20 {
-                // TODO Invalid address length
+                // TODO: proper error type: Invalid address length
                 return Err(Error::InvalidMessage);
             }
         }
         x if x == EthereumDataType::String as i32 => {
             if core::str::from_utf8(value).is_err() {
-                // TODO Invalid UTF-8 string
+                // TODO: proper error type: Invalid UTF-8 string
                 return Err(Error::InvalidMessage);
             }
         }

@@ -60,16 +60,16 @@ impl<A: PathSchemaTrait> KeychainValidator for Keychain<A> {
 
     fn verify_path(&self, path: &Bip32Path) -> Result<()> {
         if self.curve.contains("ed25519") && !path.is_hardened() {
-            // TODO:  DataError("Non-hardened paths unsupported on Ed25519")
+            // TODO: proper error type:  DataError("Non-hardened paths unsupported on Ed25519")
             return Err(Error::DataError);
         }
 
-        // TODO
+        // TODO: handle safety_checks
         // if not safety_checks.is_strict():
         //     return
 
         if !self.is_in_keychain(path) {
-            // TODO: raise ForbiddenKeyPath()
+            // TODO: proper error type: raise ForbiddenKeyPath()
             return Err(Error::DataError);
         }
         Ok(())

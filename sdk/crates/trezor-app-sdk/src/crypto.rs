@@ -68,7 +68,7 @@ pub fn get_xpub(address_n: &[u32]) -> Result<LongString> {
     if let Ok(TrezorCryptoResult::Xpub(xpub)) = res {
         Ok(xpub)
     } else {
-        // TODO: use proper error type
+        // TODO: proper error type
         Err(Error::Timeout)
     }
 }
@@ -89,7 +89,7 @@ pub fn get_eth_pubkey_hash(
     if let Ok(TrezorCryptoResult::EthPubkeyHash(hash)) = res {
         Ok(hash)
     } else {
-        // TODO: use proper error type
+        // TODO: proper error type
         Err(Error::Timeout)
     }
 }
@@ -112,7 +112,7 @@ pub fn sign_typed_hash(
     if let Ok(TrezorCryptoResult::Signature(signature)) = res {
         Ok(signature)
     } else {
-        // TODO: use proper error type
+        // TODO: proper error type
         Err(Error::Timeout)
     }
 }
@@ -133,7 +133,7 @@ pub fn get_address_mac(
     if let Ok(TrezorCryptoResult::AddressMac(mac)) = res {
         Ok(mac)
     } else {
-        // TODO: use proper error type
+        // TODO: proper error type
         Err(Error::Timeout)
     }
 }

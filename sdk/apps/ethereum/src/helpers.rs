@@ -64,7 +64,7 @@ pub fn bytes_from_address(address: &str) -> Result<Vec<u8>> {
         hex_decode(address).map_err(|_| Error::DataError)
     } else if address.len() == 42 {
         if !address.starts_with("0x") && !address.starts_with("0X") {
-            // TODO Ethereum: invalid beginning of an address
+            // TODO: proper error type: Ethereum: invalid beginning of an address
             Err(Error::DataError)
         } else {
             hex_decode(&address[2..]).map_err(|_| Error::DataError)
@@ -72,7 +72,7 @@ pub fn bytes_from_address(address: &str) -> Result<Vec<u8>> {
     } else if address.is_empty() {
         Ok(vec![])
     } else {
-        // TODO Ethereum: Invalid address length
+        // TODO: proper error type: Invalid address length
         Err(Error::DataError)
     }
 }
@@ -146,7 +146,7 @@ pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
         return Ok(s.to_string());
     }
 
-    // TODO: ValueError  # Unsupported data type for direct field decoding
+    // TODO: proper error type: ValueError  # Unsupported data type for direct field decoding
     Err(Error::InvalidMessage)
 }
 
@@ -170,6 +170,6 @@ pub fn format_ethereum_amount(
     network: &EthereumNetworkInfo,
     force_unit_gwei: bool,
 ) -> String {
-    // TODO implement
+    // TODO: implement
     String::new()
 }

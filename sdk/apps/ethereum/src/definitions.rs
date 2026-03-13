@@ -191,7 +191,7 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
     // verify signature
     let result = verify(signature, &hash, THRESHOLD, &PUBLIC_KEYS, sigmask).map_err(|_| ())?;
     if !result {
-        // TODO Invalid definition signature
+        // TODO: proper error type: Invalid definition signature
         return Err(());
     }
 

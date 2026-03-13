@@ -141,7 +141,7 @@ pub fn confirm_linear_flow(confirm_factories: &[&dyn Fn() -> UiResult]) -> UiRes
                 return Ok(TrezorUiResult::Cancelled);
             }
             _ => {
-                // TODO: update to cancel error handling
+                // TODO: proper error type
                 return Err(Error::Timeout);
             }
         }
@@ -202,7 +202,7 @@ pub fn confirm_with_info_flow(
                 return Ok(TrezorUiResult::Cancelled);
             }
             _ => {
-                // TODO: update to cancel error handling
+                // TODO: proper error type
                 return Err(Error::Timeout);
             }
         }
@@ -587,7 +587,7 @@ pub fn should_show_more(
         Ok(TrezorUiResult::Confirmed) => Ok(false),
         Ok(TrezorUiResult::Info) => Ok(true),
         _ => {
-            // TODO: error handling
+            // TODO: proper error type
             Err(Error::Timeout)
         }
     }

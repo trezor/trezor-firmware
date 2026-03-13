@@ -204,7 +204,7 @@ impl PathSchema {
     }
 
     pub fn parse(pattern: &str, slip44: &[u32]) -> Result<Self> {
-        // TODO
+        // TODO: implement
         if !pattern.starts_with("m/") {
             return Err(Error::DataError);
         }
