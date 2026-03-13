@@ -22,6 +22,8 @@ OLDEST_AVAILABLE = {
 }
 
 EMULATORS_URL_PREFIX = "https://data.trezor.io/dev/firmware/releases/emulators-new"
+TROPIC_CAPABLE_MODELS = {"T3W1"}
+TROPIC_REMOTE_SUBPATH_SUFFIX = "_tropic_on"
 
 TESTS_DIR = Path(__file__).resolve().parent
 SAVE_DIR = TESTS_DIR / "emulators"
@@ -47,10 +49,17 @@ class Emulator:
     model: str
     url: str
     save_path: Path | None = None
+    subpath: str | None
 
-    def __init__(self, version: str, model: str) -> None:
+    def __init__(
+        self,
+        version: str,
+        model: str,
+        subpath: str | None = None,
+    ) -> None:
         self.version = version
         self.model = model
+        self.subpath = subpath
         self.url = self._get_download_url()
 
     def download(
@@ -84,9 +93,11 @@ class Emulator:
         path.chmod(path.stat().st_mode | stat.S_IXUSR)
 
     def check_download_availability(self) -> None:
-
-        version_tuple = tuple(int(part) for part in self.version.split("."))
-        if version_tuple < OLDEST_AVAILABLE[gen_from_model(self.model)]:
+        version_tuple = self._parse_version_tuple()
+        if (
+            version_tuple is not None
+            and version_tuple < OLDEST_AVAILABLE[gen_from_model(self.model)]
+        ):
             # Is old known-to-be-unavailable version
             raise KnownMissingArtifactError(self.model, self.version)
 
@@ -98,10 +109,29 @@ class Emulator:
     def _get_filename(self) -> str:
         return f"trezor-emu-{gen_from_model(self.model)}-{self.model}-v{self.version}"
 
+    def _parse_version_tuple(self) -> tuple[int, int, int] | None:
+        version = self.version.split("-", maxsplit=1)[0]
+        parts = version.split(".")
+        if len(parts) != 3:
+            return None
+
+        try:
+            major, minor, patch = (int(part) for part in parts)
+            return major, minor, patch
+        except ValueError:
+            return None
+
     def _get_default_save_path(self) -> Path:
+        if self.subpath is not None:
+            return SAVE_DIR / self.model / self.subpath / self._get_filename()
         return SAVE_DIR / self.model / self._get_filename()
 
     def _get_download_url(self) -> str:
+        if self.subpath is not None:
+            return (
+                f"{EMULATORS_URL_PREFIX}/{self.model}/"
+                f"{self.subpath}/{self._get_filename()}"
+            )
         return f"{EMULATORS_URL_PREFIX}/{self.model}/{self._get_filename()}"
 
 
@@ -113,6 +143,7 @@ def get_all_releases() -> EmulatorDict:
 
 def get_emulators_for_model(model: str, firmwares: EmulatorDict) -> list[Emulator]:
     emulators: list[Emulator] = []
+    is_tropic_capable = model in TROPIC_CAPABLE_MODELS
     for version, models in firmwares.items():
         if model in models:
             try:
@@ -126,6 +157,23 @@ def get_emulators_for_model(model: str, firmwares: EmulatorDict) -> list[Emulato
                 click.echo(
                     f"Artifact for model {e.model}, version: {e.version} is unavailable!"
                 )
+
+            if is_tropic_capable:
+                try:
+                    tropic_emu = Emulator(
+                        version=version,
+                        model=model,
+                        subpath=f"{model}{TROPIC_REMOTE_SUBPATH_SUFFIX}",
+                    )
+                    tropic_emu.check_download_availability()
+                    emulators.append(tropic_emu)
+                except KnownMissingArtifactError:
+                    # Old artifacts that are known to be unavailable
+                    pass
+                except MissingArtifactError as e:
+                    click.echo(
+                        f"Tropic artifact for model {e.model}, version: {e.version} is unavailable!"
+                    )
     return emulators
 
 
