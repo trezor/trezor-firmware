@@ -85,7 +85,14 @@ def load_sd_salt() -> bytearray | None:
 
     # Normal salt file does not exist, but new salt file exists. That means that
     # SD salt regeneration was interrupted earlier. Bring into consistent state.
-    # TODO Possibly overwrite salt file with random data.
+    # Overwrite salt file with random data before unlinking to prevent recovery.
+    try:
+        from trezor.crypto import random
+
+        with fatfs.open(salt_path, "w") as f:
+            f.write(random.bytes(SD_SALT_LEN_BYTES + _SD_SALT_AUTH_TAG_LEN_BYTES))
+    except fatfs.FatFSError:
+        pass
     try:
         fatfs.unlink(salt_path)
     except fatfs.FatFSError:
@@ -122,5 +129,12 @@ def commit_sd_salt() -> None:
 @with_filesystem
 def remove_sd_salt() -> None:
     salt_path = _get_salt_path()
-    # TODO Possibly overwrite salt file with random data.
+    # Overwrite salt file with random data before unlinking to prevent recovery.
+    try:
+        from trezor.crypto import random
+
+        with fatfs.open(salt_path, "w") as f:
+            f.write(random.bytes(SD_SALT_LEN_BYTES + _SD_SALT_AUTH_TAG_LEN_BYTES))
+    except fatfs.FatFSError:
+        pass
     fatfs.unlink(salt_path)
