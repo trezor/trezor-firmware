@@ -87,7 +87,7 @@ def slip39_show_checklist(
         if not advanced
         else (
             TR.reset__slip39_checklist_set_num_groups,
-            TR.reset__slip39_checklist_set_num_shares,
+            TR.reset__slip39_checklist_set_threshold,
             TR.reset__slip39_checklist_set_sizes_longer,
         )
     )
