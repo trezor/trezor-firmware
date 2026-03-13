@@ -22,6 +22,23 @@ class WrongSdCard(Exception):
     pass
 
 
+def _secure_overwrite(path: str) -> None:
+    """Overwrite a salt file with random data before deletion.
+
+    Best-effort: if the overwrite fails (e.g. card removed),
+    we still proceed with the unlink.
+    """
+    from trezor.crypto import random
+
+    try:
+        with fatfs.open(path, "w") as f:
+            f.write(
+                random.bytes(SD_SALT_LEN_BYTES + _SD_SALT_AUTH_TAG_LEN_BYTES, strong=True)
+            )
+    except fatfs.FatFSError:
+        pass
+
+
 def is_enabled() -> bool:
     return storage.device.get_sd_salt_auth_key() is not None
 
@@ -86,13 +103,7 @@ def load_sd_salt() -> bytearray | None:
     # Normal salt file does not exist, but new salt file exists. That means that
     # SD salt regeneration was interrupted earlier. Bring into consistent state.
     # Overwrite salt file with random data before unlinking to prevent recovery.
-    try:
-        from trezor.crypto import random
-
-        with fatfs.open(salt_path, "w") as f:
-            f.write(random.bytes(SD_SALT_LEN_BYTES + _SD_SALT_AUTH_TAG_LEN_BYTES))
-    except fatfs.FatFSError:
-        pass
+    _secure_overwrite(salt_path)
     try:
         fatfs.unlink(salt_path)
     except fatfs.FatFSError:
@@ -130,11 +141,5 @@ def commit_sd_salt() -> None:
 def remove_sd_salt() -> None:
     salt_path = _get_salt_path()
     # Overwrite salt file with random data before unlinking to prevent recovery.
-    try:
-        from trezor.crypto import random
-
-        with fatfs.open(salt_path, "w") as f:
-            f.write(random.bytes(SD_SALT_LEN_BYTES + _SD_SALT_AUTH_TAG_LEN_BYTES))
-    except fatfs.FatFSError:
-        pass
+    _secure_overwrite(salt_path)
     fatfs.unlink(salt_path)
