@@ -1611,15 +1611,7 @@ impl FirmwareUI for UIEckhart {
     fn process_ipc_message(
         data: &[u8],
         request_cb: impl Fn(&[u8], u16) + 'static,
-    ) -> Result<
-        (
-            Gc<LayoutObj>,
-            Option<(Gc<LayoutObj>, bool, bool)>,
-            Option<u32>,
-            Obj,
-        ),
-        Error,
-    > {
+    ) -> Result<(Gc<LayoutObj>, u32, Obj), Error> {
         // Safe helper to convert archived string to TString using Deref
         fn tstr_from_archived<const N: usize>(s: &ArchivedStringN<N>) -> TString<'static> {
             unsafe { StrBuffer::from_ptr_and_len(s.data.as_ptr(), s.len.to_native() as usize) }
@@ -1637,6 +1629,15 @@ impl FirmwareUI for UIEckhart {
                 core::slice::from_raw_parts(s.data.as_ptr(), s.len.to_native() as usize)
             }));
             str
+        }
+
+        fn obj_from_archived_option<const N: usize>(
+            s: &ArchivedOption<ArchivedStringN<N>>,
+        ) -> Result<Obj, Error> {
+            match s.as_ref() {
+                Some(archived_str) => Ok(Obj::try_from(str_from_archived(archived_str))?),
+                None => Ok(Obj::const_none()),
+            }
         }
 
         fn obj_from_proplist_option(
@@ -1700,7 +1701,54 @@ impl FirmwareUI for UIEckhart {
                     None,  // prompt_title
                     false, // external_menu
                 )?;
-                Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
+                Ok((LayoutObj::new_root(layout)?, 1 /* TODO */, Obj::const_none()))
+            }
+            ArchivedTrezorUiEnum::ShowInfoWithCancel {
+                title,
+                items,
+                chunkify,
+                br_name,
+                br_code,
+            } => {
+                let layout = Self::show_info_with_cancel(
+                    tstr_from_archived(title),
+                    obj_from_proplist(items)?,
+                    false, // horizontal
+                    *chunkify,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ConfirmValueIntro {
+                title,
+                value,
+                subtitle,
+                verb,
+                verb_cancel,
+                hold,
+                chunkify,
+                br_name,
+                br_code,
+            } => {
+                // Use safe Deref trait instead of raw pointers
+                let value_str = str_from_archived(value);
+                let layout = Self::confirm_value_intro(
+                    tstr_from_archived(title),
+                    value_str.try_into()?,
+                    tstr_from_archived_option(subtitle),
+                    tstr_from_archived_option(verb),
+                    tstr_from_archived_option(verb_cancel),
+                    *hold,
+                    *chunkify,
+                )?;
+                Ok((
+                    layout,
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
+                ))
             }
             ArchivedTrezorUiEnum::ConfirmSummary {
                 title,
@@ -1730,96 +1778,19 @@ impl FirmwareUI for UIEckhart {
                     *back_button,
                     false,
                 )?;
-                let br_str = str_from_archived(br_name);
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    None,
-                    Some(br_code.to_native()),
-                    Obj::try_from(br_str)?,
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
                 ))
             }
             ArchivedTrezorUiEnum::Mismatch { title } => {
                 let layout = Self::show_mismatch(tstr_from_archived(title))?;
-                Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
-            }
-            ArchivedTrezorUiEnum::ConfirmBlob {
-                title,
-                data,
-                description,
-                subtitle,
-                hold,
-                verb,
-                verb_cancel,
-                chunkify,
-                is_data,
-                br_code,
-                br_name,
-                ask_pagination,
-            } => {
-                let value = str_from_archived(data);
-                let br_name_obj = unwrap!(Obj::try_from(str_from_archived(br_name)));
-                if *ask_pagination {
-                    let main_layout = Self::confirm_value_intro(
-                        tstr_from_archived(title),
-                        Obj::try_from(value)?,
-                        tstr_from_archived_option(description),
-                        tstr_from_archived_option(verb),
-                        tstr_from_archived_option(verb_cancel),
-                        *hold,
-                        *chunkify,
-                    )?;
-                    let info_layout = Self::confirm_value(
-                        tstr_from_archived(title),
-                        Obj::try_from(value)?,
-                        None,
-                        *is_data,
-                        None,
-                        None,
-                        None,
-                        None,
-                        false,
-                        *hold,
-                        *chunkify,
-                        true,
-                        false,
-                        true,
-                        false,
-                        None,
-                        false,
-                    )?;
-                    Ok((
-                        main_layout,
-                        Some((LayoutObj::new_root(info_layout)?, true, true)),
-                        Some(br_code.to_native()),
-                        br_name_obj,
-                    ))
-                } else {
-                    let layout = Self::confirm_value(
-                        tstr_from_archived(title),
-                        Obj::try_from(value)?,
-                        tstr_from_archived_option(description),
-                        *is_data,
-                        None,
-                        tstr_from_archived_option(subtitle),
-                        tstr_from_archived_option(verb),
-                        None,
-                        false,
-                        *hold,
-                        *chunkify,
-                        false,
-                        false,
-                        true,
-                        false,
-                        None,
-                        false,
-                    )?;
-                    Ok((
-                        LayoutObj::new_root(layout)?,
-                        None,
-                        Some(br_code.to_native()),
-                        br_name_obj,
-                    ))
-                }
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    1, /* TODO */
+                    Obj::const_none(),
+                ))
             }
             ArchivedTrezorUiEnum::ConfirmValue {
                 title,
@@ -1856,27 +1827,11 @@ impl FirmwareUI for UIEckhart {
                     None,
                     false,
                 )?;
-                let name = str_from_archived(br_name);
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    None,
-                    Some(br_code.to_native()),
-                    unwrap!(name.try_into()),
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
                 ))
-            }
-            ArchivedTrezorUiEnum::ShowInfo {
-                title,
-                items,
-                chunkify,
-            } => {
-                let layout = Self::show_info_with_cancel(
-                    tstr_from_archived(title),
-                    obj_from_proplist(items)?,
-                    false, // unused horizontal parameter
-                    *chunkify,
-                )?;
-
-                Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
             }
             ArchivedTrezorUiEnum::ConfirmLong { title, pages } => {
                 // Use safe Deref trait instead of raw pointers
@@ -1885,7 +1840,11 @@ impl FirmwareUI for UIEckhart {
                     unwrap!(usize::try_from(pages.to_native())),
                     request_cb,
                 )?;
-                Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    1, /* TODO */
+                    Obj::const_none(),
+                ))
             }
             ArchivedTrezorUiEnum::ShouldShowMore {
                 title,
@@ -1919,8 +1878,11 @@ impl FirmwareUI for UIEckhart {
                     None,
                     false,
                 )?;
-                let br_str = str_from_archived(br_name);
-                Ok((layout, None, None, br_str.try_into()?))
+                Ok((
+                    layout,
+                    1, /* TODO */
+                    obj_from_archived_option(br_name)?,
+                ))
             }
             ArchivedTrezorUiEnum::ConfirmProperties {
                 title,
@@ -1939,12 +1901,10 @@ impl FirmwareUI for UIEckhart {
                     tstr_from_archived_option(verb),
                     false,
                 )?;
-                let br_str = str_from_archived(br_name);
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    None,
-                    Some(br_code.to_native()),
-                    br_str.try_into()?,
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
                 ))
             }
             ArchivedTrezorUiEnum::Warning {
@@ -1961,9 +1921,8 @@ impl FirmwareUI for UIEckhart {
                     false,
                     false,
                 )?,
-                None,
-                Some(br_code.to_native()),
-                Obj::try_from(str_from_archived(br_name))?,
+                br_code.to_native().try_into()?,
+                obj_from_archived_option(br_name)?,
             )),
             ArchivedTrezorUiEnum::Danger {
                 title,
@@ -1979,25 +1938,20 @@ impl FirmwareUI for UIEckhart {
                     true,
                     true,
                 )?,
-                None,
-                Some(br_code.to_native()),
-                Obj::try_from(str_from_archived(br_name))?,
+                br_code.to_native().try_into()?,
+                obj_from_archived_option(br_name)?,
             )),
-            ArchivedTrezorUiEnum::Success { content, br_name } => {
-                let br_str = str_from_archived(br_name);
-                Ok((
-                    Self::show_success(
-                        TR::progress__done.into(),
-                        TR::buttons__continue.into(),
-                        tstr_from_archived(content),
-                        false,
-                        0,
-                    )?,
-                    None,
-                    None,
-                    br_str.try_into()?,
-                ))
-            }
+            ArchivedTrezorUiEnum::Success { content, br_name } => Ok((
+                Self::show_success(
+                    TR::progress__done.into(),
+                    TR::buttons__continue.into(),
+                    tstr_from_archived(content),
+                    false,
+                    0,
+                )?,
+                1, /* TODO */
+                obj_from_archived_option(br_name)?,
+            )),
             ArchivedTrezorUiEnum::ShowPublicKey {
                 pubkey,
                 title,
@@ -2020,7 +1974,11 @@ impl FirmwareUI for UIEckhart {
                     tstr_from_archived_option(br_name).unwrap_or("show_pubkey".into()),
                 )?;
 
-                Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    1, /* TODO */
+                    Obj::const_none(),
+                ))
             }
             ArchivedTrezorUiEnum::ShowAddress {
                 address,
@@ -2047,7 +2005,11 @@ impl FirmwareUI for UIEckhart {
                     "show_address".into(),
                 )?;
 
-                Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    1, /* TODO */
+                    Obj::const_none(),
+                ))
             }
             ArchivedTrezorUiEnum::RequestNumber {
                 title,
@@ -2065,7 +2027,11 @@ impl FirmwareUI for UIEckhart {
                     Some(|_| TString::empty()),
                 )?;
 
-                Ok((LayoutObj::new_root(layout)?, None, None, Obj::const_none()))
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    1, /* TODO */
+                    Obj::const_none(),
+                ))
             }
         }
     }

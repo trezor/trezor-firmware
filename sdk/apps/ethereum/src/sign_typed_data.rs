@@ -6,6 +6,7 @@ use crate::{
     keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
     paths::Bip32Path,
     proto::{
+        common::button_request::ButtonRequestType,
         ethereum::EthereumTypedDataSignature,
         ethereum_eip712::{
             EthereumSignTypedData, EthereumTypedDataStructAck, EthereumTypedDataStructRequest,
@@ -502,17 +503,18 @@ fn confirm_text(
     title: &str,
     data: &str,
     description: Option<&str>,
-    br_code: Option<u32>,
+    br_code: Option<i32>,
 ) -> Result<()> {
-    ui::confirm_value_simple(
+    ui::confirm_value(
         title,
         data,
         description,
-        br_name,
-        br_code,
+        Some(br_name),
+        br_code.unwrap_or(ButtonRequestType::ButtonRequestOther.into()),
         false,
         Some("Confirm"),
         None,
+        false,
         false,
         false,
         false,
@@ -550,15 +552,16 @@ fn should_show_struct(
 
 fn confirm_message_hash(hash: &[u8]) -> Result<()> {
     let message_hash_hex = uformat!("0x{}", hex_encode(hash).as_str());
-    ui::confirm_value_simple(
+    ui::confirm_value(
         "Confirm message hash",
         &message_hash_hex,
         None,
-        "confirm_message_hash",
-        None,
+        Some("confirm_message_hash"),
+        ButtonRequestType::ButtonRequestOther.into(),
         true,
         None,
         None,
+        false,
         false,
         false,
         false,

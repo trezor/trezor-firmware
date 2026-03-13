@@ -106,41 +106,13 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
         service, message_id = from_fn_id(msg.fn)
 
         if service == _SERVICE_UI:
-            (main_layout_obj, info_obj, (br_code, br_name)) = (
-                trezorui_api.process_ipc_message(
-                    data=bytes(msg.data), request_cb=request_callback
-                )
-            )
-            br_code_value: ButtonRequestType = (
-                br_code if br_code is not None else ButtonRequestType.Other
+            (main_layout_obj, br_code, br_name) = trezorui_api.process_ipc_message(
+                data=bytes(msg.data), request_cb=request_callback
             )
 
-            if info_obj is not None:
-                info_layout, repeat_button_request, info_layout_can_confirm = info_obj
-                assert (
-                    br_name is not None
-                ), "br_name must be provided if info_layout_obj is provided"
-
-                try:
-                    await with_info(
-                        main_layout_obj,
-                        info_layout,
-                        br_name,
-                        br_code_value,
-                        repeat_button_request,
-                        info_layout_can_confirm,
-                    )
-                    result = trezorui_api.CONFIRMED
-                except ActionCancelled:
-                    print("User cancelled the operation")
-                    result = trezorui_api.CANCELLED
-                except Exception as e:
-                    print(f"Error during with_info interaction: {e}")
-                    die(DataError(f"UI interaction failed: {e}"))
-            else:
-                result = await interact(
-                    main_layout_obj, br_name, br_code_value, raise_on_cancel=None
-                )
+            result = await interact(
+                main_layout_obj, br_name, br_code, raise_on_cancel=None
+            )
             # Serialize and send the result back
             trezorui_api.send_ui_result(result=result, ipc_cb=ui_resp_cb)
 
@@ -216,13 +188,16 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                 die(DataError("Failed to serialize or send crypto result"))
 
         elif service == _SERVICE_WIRE_CONTINUE:
+            print("Received wire continue message with ID:", message_id)
             # usb request/ack
             response = ExtAppResponse(
                 message_id=message_id, data=msg.data, finished=False
             )
+            print("Calling context with response data")
             ack = await context.call(response, ExtAppMessage)
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
+            print("Received context response, sending IPC message back to extapp")
             io.ipc_send(
                 _SYSTASK_ID_EXTAPP,
                 fn_id(_SERVICE_WIRE_CONTINUE, ack.message_id),

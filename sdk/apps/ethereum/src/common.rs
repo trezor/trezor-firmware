@@ -1,4 +1,4 @@
-use crate::{strutil::hex_encode, uformat};
+use crate::{proto::common::button_request::ButtonRequestType, strutil::hex_encode, uformat};
 #[cfg(not(test))]
 use alloc::{
     string::{String, ToString},
@@ -32,7 +32,7 @@ pub(crate) fn require_confirm_address(
         warning_footer,
         None,
         br_name,
-        Some(8), /* ButtonRequest_SignTx = 8 */
+        ButtonRequestType::ButtonRequestSignTx.into(),
     );
 }
 
@@ -57,28 +57,43 @@ pub(crate) fn confirm_signverify(
     items.push(("Message size", &size, true));
 
     loop {
-        let res = ui::confirm_value_with_info(
-            address_title,
-            address,
-            None,
+        let res = ui::confirm_with_info_flow(
+            |name| {
+                ui::confirm_value(
+                    address_title,
+                    address,
+                    None,
+                    name,
+                    ButtonRequestType::ButtonRequestOther.into(),
+                    true,
+                    Some("Continue"),
+                    None,
+                    true,
+                    false,
+                    chunkify,
+                    false,
+                    true,
+                )
+            },
+            |name| {
+                ui::show_info_with_cancel(
+                    "Information",
+                    &items,
+                    chunkify,
+                    name,
+                    ButtonRequestType::ButtonRequestOther.into(),
+                )
+            },
             br_name,
             None,
-            true,
-            Some("Continue"),
             None,
-            false,
-            chunkify,
-            false,
-            true,
-            "Information",
-            &items,
-            true,
         );
+
         match res {
-            Ok(ui::TrezorUiResult::Confirmed) => {
+            Ok(_) => {
                 break;
             }
-            Ok(ui::TrezorUiResult::Cancelled) => {
+            Err(_) => {
                 // Right button aborts action, left goes back to showing address.
                 if matches!(
                     ui::show_mismatch("Address mismatch?"),
@@ -97,9 +112,9 @@ pub(crate) fn confirm_signverify(
     }
 
     let title = "Confirm message";
-    let br_code = 1; /* ButtonRequest_Other = 1 */
+    let br_code = ButtonRequestType::ButtonRequestOther.into();
     let hold = !verify;
-    let result = if message.chars().count() > LONG_MSG_PAGE_THRESHOLD {
+    if message.chars().count() > LONG_MSG_PAGE_THRESHOLD {
         ui::confirm_blob(
             title,
             message,
@@ -112,28 +127,25 @@ pub(crate) fn confirm_signverify(
             None,
             chunkify,
             true,
-        )?
+        )?;
     } else {
-        ui::confirm_value_simple(
+        ui::error_if_not_confirmed(ui::confirm_value(
             title,
             message,
             None,
-            br_name,
-            Some(br_code),
+            Some(br_name),
+            br_code,
             true,
             None,
             None,
+            false,
             hold,
             false,
             false,
             true,
-        )?
+        )?)?;
     };
-    if matches!(result, ui::TrezorUiResult::Confirmed) {
-        Ok(())
-    } else {
-        Err(Error::Cancelled)
-    }
+    Ok(())
 }
 
 pub(crate) fn decode_message(message: &[u8]) -> String {
@@ -155,18 +167,19 @@ pub(crate) fn confirm_address(
     warning_footer: Option<&str>,
     chunkify: Option<bool>,
     br_name: Option<&str>,
-    br_code: Option<u32>,
+    br_code: i32,
 ) -> Result<()> {
     if matches!(
-        ui::confirm_value_simple(
+        ui::confirm_value(
             title,
             address,
             description,
-            br_name.unwrap_or("confirm_address"),
-            Some(br_code.unwrap_or(1)), /* ButtonRequest_Other = 1 */
+            Some(br_name.unwrap_or("confirm_address")),
+            br_code,
             true,
             verb,
             subtitle,
+            false,
             false,
             chunkify.unwrap_or(true),
             false,

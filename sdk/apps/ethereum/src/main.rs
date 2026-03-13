@@ -10,7 +10,7 @@ extern crate alloc;
 
 use prost::Message;
 use trezor_app_sdk::{
-    CORE_SERVICE, Error, IpcMessage, Result, error, info,
+    CORE_SERVICE, Error, IpcMessage, Result, error,
     service::{self, CoreIpcService, NoUtilHandler},
     trace,
     util::Timeout,

@@ -503,8 +503,7 @@ pub trait FirmwareUI {
     ) -> Result<
         (
             Gc<LayoutObj>,
-            Option<(Gc<LayoutObj>, bool, bool)>,
-            Option<u32>,
+            u32,
             Obj,
         ),
         Error,

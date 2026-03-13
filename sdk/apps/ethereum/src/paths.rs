@@ -1,4 +1,5 @@
-use crate::keychain::PATTERNS_ADDRESS;
+use crate::{keychain::PATTERNS_ADDRESS, proto::common::button_request::ButtonRequestType};
+
 #[cfg(not(test))]
 use alloc::{
     string::{String, ToString},
@@ -69,8 +70,8 @@ impl Bip32Path {
             ui::show_danger(
                 "Wrong derivation path for selected account.",
                 &self.to_string(),
-                "path_warning",
-                Some(15), /* ButtonRequestType.UnknownDerivationPath */
+                Some("path_warning"),
+                ButtonRequestType::ButtonRequestUnknownDerivationPath.into(),
             )?;
         }
         Ok(())

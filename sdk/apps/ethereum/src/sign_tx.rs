@@ -7,6 +7,7 @@ use crate::{
     keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
     paths::Bip32Path,
     proto::{
+        common::button_request::ButtonRequestType,
         definitions::{EthereumNetworkInfo, EthereumTokenInfo},
         ethereum::{EthereumSignTx, EthereumTxAck, EthereumTxRequest},
     },
@@ -18,11 +19,7 @@ use crate::{
 use alloc::{collections::BTreeMap, string::String, vec, vec::Vec};
 #[cfg(test)]
 use std::{collections::BTreeMap, string::String, vec, vec::Vecs};
-use trezor_app_sdk::{
-    Error, Result, crypto, info,
-    ui::{self, TrezorUiResult, UiResult},
-    unwrap,
-};
+use trezor_app_sdk::{Error, Result, crypto, info, ui, unwrap};
 
 // Smart contract 'data' field lengths in bytes
 const SC_FUNC_SIG_BYTES: usize = 4;
@@ -375,15 +372,16 @@ fn confirm_tx_data(
         // we have already made sure that the address is a known address
         // as part of the initial validation
 
-        error_if_not_confirmed(ui::confirm_value_simple(
+        ui::error_if_not_confirmed(ui::confirm_value(
             "Smart accounts",
             unwrap!(get_eip_7702_known_addresses().get(address_bytes)),
             None,
-            "confirm_provider",
-            None,
+            Some("confirm_provider"),
+            ButtonRequestType::ButtonRequestOther.into(),
             true,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -521,11 +519,11 @@ fn confirm_ethereum_tx(
     fee_info_items: &[(&str, &str, bool)],
     is_send: bool,
     br_name: Option<&str>,
-    br_code: Option<u32>,
+    br_code: Option<i32>,
     chunkify: bool,
 ) -> Result<()> {
     let br_name = br_name.unwrap_or("confirm_total");
-    let br_code = br_code.unwrap_or(8); /* ButtonRequest_SignTx = 8 */
+    let br_code = br_code.unwrap_or(ButtonRequestType::ButtonRequestSignTx.into());
 
     let subtitle = if !is_send && recipient.is_none() {
         None
@@ -541,22 +539,36 @@ fn confirm_ethereum_tx(
 
     let steps: [&dyn Fn() -> ui::UiResult; 2] = [
         &|| {
-            ui::confirm_value_with_info(
-                title,
-                recipient.unwrap_or("New contract will be deployed"),
-                None,
+            ui::confirm_with_info_flow(
+                |name| {
+                    ui::confirm_value(
+                        title,
+                        recipient.unwrap_or("New contract will be deployed"),
+                        None,
+                        name,
+                        ButtonRequestType::ButtonRequestOther.into(),
+                        recipient.is_some(),
+                        Some("Continue"),
+                        subtitle,
+                        true,
+                        false,
+                        if recipient.is_some() { chunkify } else { false },
+                        false,
+                        false,
+                    )
+                },
+                |name| {
+                    ui::show_info_with_cancel(
+                        "Cancel sign",
+                        &[],
+                        false,
+                        name,
+                        ButtonRequestType::ButtonRequestOther.into(),
+                    )
+                },
                 "confirm_output",
                 None,
-                recipient.is_some(),
-                Some("Continue"),
-                subtitle,
-                false,
-                if recipient.is_some() { chunkify } else { false },
-                false,
-                false,
-                "Cancel sign",
-                &[],
-                false,
+                None,
             )
         },
         &|| {
@@ -572,12 +584,12 @@ fn confirm_ethereum_tx(
                 Some(fee_info_items),
                 true,
                 Some(br_name),
-                Some(br_code),
+                br_code,
             )
         },
     ];
 
-    error_if_not_confirmed(ui::confirm_linear_flow(&steps)?)?;
+    ui::error_if_not_confirmed(ui::confirm_linear_flow(&steps)?)?;
 
     Ok(())
 }
@@ -597,26 +609,20 @@ fn require_confirm_other_data(data: &[u8], data_total: u32) -> Result<()> {
     let description = uformat!("Size: {} bytes", data_total);
     let subtitle = uformat!("All input data ({} bytes)", data_total);
     let data_str = hex_encode(data);
-    if matches!(
-        ui::confirm_blob(
-            "Input data",
-            &data_str,
-            Some(&description),
-            Some(&subtitle),
-            "confirm_data",
-            8, /* ButtonRequestType.SignTx*/
-            false,
-            Some("Confirm"),
-            Some("Cancel sign"),
-            true,
-            true,
-        )?,
-        ui::TrezorUiResult::Confirmed
-    ) {
-        Ok(())
-    } else {
-        Err(Error::Cancelled)
-    }
+    ui::error_if_not_confirmed(ui::confirm_blob(
+        "Input data",
+        &data_str,
+        Some(&description),
+        Some(&subtitle),
+        "confirm_data",
+        ButtonRequestType::ButtonRequestSignTx.into(),
+        false,
+        Some("Confirm"),
+        Some("Cancel sign"),
+        true,
+        true,
+    )?)?;
+    Ok(())
 }
 
 // TODO implement
@@ -684,7 +690,7 @@ fn confirm_ethereum_approve(
     chunkify: bool,
 ) -> Result<()> {
     let br_name = "confirm_ethereum_approve";
-    let br_code = 1; /* ButtonRequestType.Other */
+    let br_code = ButtonRequestType::ButtonRequestOther.into();
     let (title, action) = if is_revoke {
         (
             "Token revocation",
@@ -697,7 +703,7 @@ fn confirm_ethereum_approve(
         )
     };
 
-    error_if_not_confirmed(ui::confirm_action(title, action, false)?)?;
+    ui::error_if_not_confirmed(ui::confirm_action(title, action, false)?)?;
 
     let subtitle = if is_revoke {
         "Revoke from"
@@ -705,33 +711,48 @@ fn confirm_ethereum_approve(
         "Approve to"
     };
     if let Some(recipient_str) = recipient_str {
-        error_if_not_confirmed(ui::confirm_value_with_info(
-            title,
-            recipient_str,
-            None,
+        ui::confirm_with_info_flow(
+            |name| {
+                ui::confirm_value(
+                    title,
+                    recipient_str,
+                    None,
+                    Some(br_name),
+                    br_code,
+                    true,
+                    Some("Continue"),
+                    Some(subtitle),
+                    true,
+                    false,
+                    false,
+                    false,
+                    false,
+                )
+            },
+            |name| {
+                ui::show_info_with_cancel(
+                    title,
+                    &[("", recipient_addr, true)],
+                    chunkify,
+                    name,
+                    br_code,
+                )
+            },
             br_name,
-            Some(br_code),
-            true,
-            Some("Continue"),
-            Some(subtitle),
-            false,
-            false,
-            false,
-            false,
-            title,
-            &[("", recipient_addr, true)],
-            chunkify,
-        )?)?;
+            None,
+            None,
+        )?;
     } else {
-        error_if_not_confirmed(ui::confirm_value_simple(
+        ui::error_if_not_confirmed(ui::confirm_value(
             title,
             recipient_addr,
             None,
-            br_name,
-            Some(br_code),
+            Some(br_name),
+            br_code,
             true,
             Some("Continue"),
             Some(subtitle),
+            false,
             false,
             chunkify,
             false,
@@ -741,19 +762,25 @@ fn confirm_ethereum_approve(
 
     if total_amount.is_none() {
         let content = uformat!("Approving unlimited amount of {}", token_symbol);
-        ui::show_warning(title, &content, br_name, None)?;
+        ui::show_warning(
+            title,
+            &content,
+            Some(br_name),
+            ButtonRequestType::ButtonRequestWarning.into(),
+        )?;
     }
 
     if is_unknown_token {
-        error_if_not_confirmed(ui::confirm_value_simple(
+        ui::error_if_not_confirmed(ui::confirm_value(
             "Send",
             token_address,
             None,
-            br_name,
-            None,
+            Some(br_name),
+            ButtonRequestType::ButtonRequestOther.into(),
             true,
             None,
             None,
+            false,
             false,
             chunkify,
             false,
@@ -762,15 +789,16 @@ fn confirm_ethereum_approve(
     }
 
     if is_unknown_network {
-        error_if_not_confirmed(ui::confirm_value_simple(
+        ui::error_if_not_confirmed(ui::confirm_value(
             title,
             chain_id,
             Some("Chain ID"),
-            br_name,
-            None,
+            Some(br_name),
+            ButtonRequestType::ButtonRequestOther.into(),
             true,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -792,19 +820,19 @@ fn confirm_ethereum_approve(
         props.push(("Chain", network_name, false));
     }
 
-    error_if_not_confirmed(ui::confirm_properties(
+    ui::error_if_not_confirmed(ui::confirm_properties(
         title,
         &props,
         None,
         Some("Continue"),
         false,
-        br_name,
-        None,
+        Some(br_name),
+        ButtonRequestType::ButtonRequestOther.into(),
     )?)?;
 
     let account_item = account_path.map(|p| [("Derivation path", p, true)]);
 
-    error_if_not_confirmed(ui::confirm_summary(
+    ui::error_if_not_confirmed(ui::confirm_summary(
         Some(title),
         None,
         None,
@@ -816,18 +844,10 @@ fn confirm_ethereum_approve(
         None,
         false,
         None,
-        None,
+        ButtonRequestType::ButtonRequestOther.into(),
     )?)?;
 
     Ok(())
-}
-
-fn error_if_not_confirmed(result: ui::TrezorUiResult) -> Result<()> {
-    if matches!(result, ui::TrezorUiResult::Confirmed) {
-        Ok(())
-    } else {
-        Err(Error::Cancelled)
-    }
 }
 
 fn handle_known_contract_calls(

@@ -191,8 +191,8 @@ pub enum TrezorUiEnum {
         extra_title: Option<ShortString>,
         extra_items: Option<PropsList>,
         back_button: bool,
-        br_name: ShortString,
-        br_code: u32,
+        br_name: Option<ShortString>,
+        br_code: i32,
     },
     ConfirmValue {
         title: ShortString,
@@ -206,8 +206,19 @@ pub enum TrezorUiEnum {
         chunkify: bool,
         page_counter: bool,
         cancel: bool,
-        br_name: ShortString,
-        br_code: u32,
+        br_name: Option<ShortString>,
+        br_code: i32,
+    },
+    ConfirmValueIntro {
+        title: ShortString,
+        value: ExtraLongString,
+        subtitle: Option<ShortString>,
+        verb: Option<ShortString>,
+        verb_cancel: Option<ShortString>,
+        hold: bool,
+        chunkify: bool,
+        br_name: Option<ShortString>,
+        br_code: i32,
     },
     ConfirmLong {
         title: ShortString,
@@ -216,8 +227,8 @@ pub enum TrezorUiEnum {
     Warning {
         title: ShortString,
         content: ShortString,
-        br_name: ShortString,
-        br_code: u32,
+        br_name: Option<ShortString>,
+        br_code: i32,
     },
     Mismatch {
         title: ShortString,
@@ -225,12 +236,12 @@ pub enum TrezorUiEnum {
     Danger {
         title: ShortString,
         content: ShortString,
-        br_name: ShortString,
-        br_code: u32,
+        br_name: Option<ShortString>,
+        br_code: i32,
     },
     Success {
         content: ShortString,
-        br_name: ShortString,
+        br_name: Option<ShortString>,
     },
     RequestNumber {
         title: ShortString,
@@ -245,8 +256,8 @@ pub enum TrezorUiEnum {
         subtitle: Option<ShortString>,
         verb: Option<ShortString>,
         hold: bool,
-        br_name: ShortString,
-        br_code: u32,
+        br_name: Option<ShortString>,
+        br_code: i32,
     },
     ShowPublicKey {
         pubkey: LongString,
@@ -256,11 +267,18 @@ pub enum TrezorUiEnum {
         warning: Option<ShortString>,
         br_name: Option<ShortString>,
     },
+    ShowInfoWithCancel {
+        title: ShortString,
+        items: PropsList,
+        chunkify: bool,
+        br_name: Option<ShortString>,
+        br_code: i32,
+    },
     ShouldShowMore {
         title: ShortString,
         items: StrExtList,
         button_text: ShortString,
-        br_name: ShortString,
+        br_name: Option<ShortString>,
     },
     ShowAddress {
         address: ShortString,
@@ -270,25 +288,6 @@ pub enum TrezorUiEnum {
         path: Option<ShortString>,
         xpubs: PropsList,
         chunkify: Option<bool>,
-    },
-    ShowInfo {
-        title: ShortString,
-        items: PropsList,
-        chunkify: bool,
-    },
-    ConfirmBlob {
-        title: ShortString,
-        data: ExtraLongString,
-        description: Option<ShortString>,
-        subtitle: Option<ShortString>,
-        hold: bool,
-        chunkify: bool,
-        verb: Option<ShortString>,
-        verb_cancel: Option<ShortString>,
-        is_data: bool,
-        br_code: u32,
-        br_name: ShortString,
-        ask_pagination: bool,
     },
 }
 
