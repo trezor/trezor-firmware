@@ -59,3 +59,20 @@ def is_wireless_connected() -> bool:
     Returns True if Wireless power source is connected, False otherwise.
     Raises RuntimeError on failure.
     """
+
+
+# upymod/modtrezorio/modtrezorio-pm.h
+def set_emu_battery_state(
+    soc: int | None = None,
+    usb_connected: bool | None = None,
+    wireless_connected: bool | None = None,
+    ntc_connected: bool | None = None,
+    charging_limited: bool | None = None,
+    temp_control_active: bool | None = None,
+    battery_connected: bool | None = None,
+) -> None:
+    """
+    Set emulated battery/power state with fine-grained control.
+    Only available on emulator. Pass None to leave a field unchanged.
+    Charging status and power status are derived from connection states.
+    """

@@ -46,6 +46,10 @@
 #include <io/ble.h>
 #endif
 
+#ifdef USE_POWER_MANAGER
+#include <io/power_manager.h>
+#endif
+
 #ifdef USE_TOUCH
 #include <io/touch.h>
 #endif
@@ -90,6 +94,10 @@ static void drivers_init(void) {
 
 #ifdef USE_BLE
   ble_init();
+#endif
+
+#ifdef USE_POWER_MANAGER
+  pm_init(true);
 #endif
 
 #ifdef USE_APP_LOADING

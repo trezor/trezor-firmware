@@ -263,3 +263,14 @@ bool pm_driver_resume(void);
  * @return true if the power manager is suspended, false otherwise
  */
 bool pm_driver_is_suspended(void);
+
+#ifdef TREZOR_EMULATOR
+/**
+ * @brief Set emulated battery state with fine-grained control (emulator only).
+ * Pass -1 for any parameter to leave it unchanged.
+ */
+void pm_set_emu_battery_state(int soc, int usb_connected,
+                              int wireless_connected, int ntc_connected,
+                              int charging_limited, int temp_control_active,
+                              int battery_connected);
+#endif

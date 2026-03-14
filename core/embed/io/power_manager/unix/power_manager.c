@@ -26,9 +26,45 @@
 #include <SDL.h>
 #include <SDL2/SDL_events.h>
 
-pm_status_t pm_init(bool inherit_state) { return PM_OK; }
+#include "../power_manager_poll.h"
 
-void pm_deinit(void) {}
+typedef struct {
+  uint8_t soc;
+  pm_charging_status_t charging_status;
+  pm_power_status_t power_status;
+  bool usb_connected;
+  bool wireless_connected;
+  bool ntc_connected;
+  bool charging_limited;
+  bool temp_control_active;
+  bool battery_connected;
+} emu_battery_state_t;
+
+static const emu_battery_state_t emu_battery_default = {
+    .soc = 100,
+    .charging_status = PM_BATTERY_DISCHARGING,
+    .power_status = PM_STATE_ACTIVE,
+    .usb_connected = false,
+    .wireless_connected = false,
+    .ntc_connected = true,
+    .charging_limited = false,
+    .temp_control_active = false,
+    .battery_connected = true,
+};
+
+static emu_battery_state_t emu_battery = emu_battery_default;
+
+pm_status_t pm_init(bool inherit_state) {
+  if (!inherit_state) {
+    emu_battery = emu_battery_default;
+  }
+  if (!pm_poll_init()) {
+    return PM_ERROR;
+  }
+  return PM_OK;
+}
+
+void pm_deinit(void) { pm_poll_deinit(); }
 
 pm_status_t pm_hibernate(void) {
   exit(1);
@@ -58,24 +94,86 @@ pm_status_t pm_turn_on(void) { return PM_OK; }
 pm_status_t pm_charging_enable(void) { return PM_OK; }
 pm_status_t pm_charging_disable(void) { return PM_OK; }
 
-bool pm_get_events(pm_event_t* event_flags) {
-  memset(event_flags, 0, sizeof(pm_event_t));
-  return false;
-}
-
 pm_status_t pm_get_state(pm_state_t* state) {
-  state->usb_connected = true;
-  state->wireless_connected = false;
-  state->charging_status = PM_BATTERY_IDLE;
-  state->power_status = PM_STATE_ACTIVE;
-  state->soc = 100;
-  state->ntc_connected = true;
-  state->battery_connected = true;
+  state->usb_connected = emu_battery.usb_connected;
+  state->wireless_connected = emu_battery.wireless_connected;
+  state->ntc_connected = emu_battery.ntc_connected;
+  state->charging_limited = emu_battery.charging_limited;
+  state->temp_control_active = emu_battery.temp_control_active;
+  state->battery_connected = emu_battery.battery_connected;
+  state->charging_status = emu_battery.charging_status;
+  state->power_status = emu_battery.power_status;
+  state->soc = emu_battery.soc;
+  // unused fields in emulator so we mock them to 3.7V and 20˚C
+  state->battery_ocv = 3.7f;
+  state->battery_temp = 20.0f;
   return PM_OK;
 }
 
-bool pm_is_charging(void) { return false; }
+bool pm_is_charging(void) {
+  return emu_battery.charging_status == PM_BATTERY_CHARGING;
+}
 
-bool pm_usb_connected(void) { return true; }
+bool pm_usb_is_connected(void) { return emu_battery.usb_connected; }
 
 pm_status_t pm_set_soc_target(uint8_t target) { return PM_OK; }
+
+// Derive charging status from connection state
+static pm_charging_status_t emu_derive_charging_status(void) {
+  if (!emu_battery.battery_connected) {
+    return PM_BATTERY_IDLE;
+  }
+  if (emu_battery.usb_connected || emu_battery.wireless_connected) {
+    return PM_BATTERY_CHARGING;
+  }
+  return PM_BATTERY_DISCHARGING;
+}
+
+// Derive power status from connection state
+static pm_power_status_t emu_derive_power_status(void) {
+  if (emu_battery.usb_connected || emu_battery.wireless_connected) {
+    return PM_STATE_ACTIVE;
+  }
+  if (emu_battery.battery_connected) {
+    return PM_STATE_ACTIVE;
+  }
+  return PM_STATE_HIBERNATE;
+}
+
+void pm_set_emu_battery_state(int soc, int usb_connected,
+                              int wireless_connected, int ntc_connected,
+                              int charging_limited, int temp_control_active,
+                              int battery_connected) {
+  // Apply only fields that are set (>= 0 means set, -1 means unset/None)
+  if (soc >= 0) {
+    emu_battery.soc = (uint8_t)(soc > 100 ? 100 : soc);
+  }
+
+  if (usb_connected >= 0) {
+    emu_battery.usb_connected = (bool)usb_connected;
+  }
+
+  if (wireless_connected >= 0) {
+    emu_battery.wireless_connected = (bool)wireless_connected;
+  }
+
+  if (ntc_connected >= 0) {
+    emu_battery.ntc_connected = (bool)ntc_connected;
+  }
+
+  if (charging_limited >= 0) {
+    emu_battery.charging_limited = (bool)charging_limited;
+  }
+
+  if (temp_control_active >= 0) {
+    emu_battery.temp_control_active = (bool)temp_control_active;
+  }
+
+  if (battery_connected >= 0) {
+    emu_battery.battery_connected = (bool)battery_connected;
+  }
+
+  // Always derive charging and power status from connection state
+  emu_battery.charging_status = emu_derive_charging_status();
+  emu_battery.power_status = emu_derive_power_status();
+}

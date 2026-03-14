@@ -870,6 +870,7 @@ if FROZEN:
         telemetry=TELEMETRY,
         n4w1=N4W1,
         include_source_lines=MICROPY_ENABLE_SOURCE_LINE,
+        emulator=False,
     )
 
     source_mpyc = env.FrozenCFile(
