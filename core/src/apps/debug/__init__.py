@@ -32,6 +32,7 @@ if __debug__:
             DebugLinkPairingInfo,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
+            DebugLinkSetBatteryState,
             DebugLinkSetLogFilter,
             DebugLinkState,
             DebugLinkStop,
@@ -397,6 +398,25 @@ if __debug__:
             sdcard.power_off()
         return Success()
 
+    async def dispatch_DebugLinkSetBatteryState(
+        msg: DebugLinkSetBatteryState,
+    ) -> Success:
+        if not utils.USE_POWER_MANAGER:
+            raise wire.UnexpectedMessage("Battery state not supported")
+        if not utils.EMULATOR:
+            raise wire.UnexpectedMessage("Battery state can only be set on emulator")
+        else:
+            from trezor import io
+
+            log.debug(
+                __name__,
+                "setting battery state: soc=%d, charging=%s",
+                msg.soc,
+                msg.charging_state,
+            )
+            io.pm.set_emu_battery_state(msg.soc, msg.charging_state)
+        return Success()
+
     async def dispatch_DebugLinkOptigaSetSecMax(
         msg: DebugLinkOptigaSetSecMax,
     ) -> Success:
@@ -556,6 +576,7 @@ if __debug__:
         MessageType.DebugLinkReseedRandom: dispatch_DebugLinkReseedRandom,
         MessageType.DebugLinkRecordScreen: dispatch_DebugLinkRecordScreen,
         MessageType.DebugLinkEraseSdCard: dispatch_DebugLinkEraseSdCard,
+        MessageType.DebugLinkSetBatteryState: dispatch_DebugLinkSetBatteryState,
         MessageType.DebugLinkOptigaSetSecMax: dispatch_DebugLinkOptigaSetSecMax,
         MessageType.DebugLinkWatchLayout: _no_op,
         MessageType.DebugLinkResetDebugEvents: _no_op,

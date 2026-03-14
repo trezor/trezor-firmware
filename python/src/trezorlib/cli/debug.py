@@ -135,3 +135,13 @@ def set_log_filter(session: "Session", filter: str) -> None:
     debug = DebugLink(transport=debug_transport)
     debuglink_set_log_filter(debug, filter)
     debug_transport.close()
+
+@cli.command()
+@with_session(seedless=True)
+def set_battery_state(session: "Session") -> None:
+    debug_transport = session.client.transport.find_debug()
+    debug_transport.open()
+    debug = DebugLink(transport=debug_transport)
+    debug.set_battery_state()
+    debug_transport.close()
+
