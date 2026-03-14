@@ -33,6 +33,7 @@ if __debug__:
             DebugLinkPairingInfo,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
+            DebugLinkSetBatteryState,
             DebugLinkSetLogFilter,
             DebugLinkState,
             DebugLinkStop,
@@ -398,6 +399,43 @@ if __debug__:
             sdcard.power_off()
         return Success()
 
+    async def dispatch_DebugLinkSetBatteryState(
+        msg: DebugLinkSetBatteryState,
+    ) -> Success:
+        if not utils.USE_POWER_MANAGER:
+            raise wire.UnexpectedMessage("Battery state not supported")
+        if not utils.EMULATOR:
+            raise wire.UnexpectedMessage("Battery state can only be set on emulator")
+
+        from trezor import io
+
+        log.debug(
+            __name__,
+            "setting battery state: soc=%s, usb=%s, wireless=%s, ntc=%s, "
+            "limited=%s, temp_ctrl=%s, bat_conn=%s, chg_status=%s, pwr_status=%s",
+            msg.soc,
+            msg.usb_connected,
+            msg.wireless_connected,
+            msg.ntc_connected,
+            msg.charging_limited,
+            msg.temp_control_active,
+            msg.battery_connected,
+            msg.charging_status,
+            msg.power_status,
+        )
+        io.pm.set_emu_battery_state(
+            soc=msg.soc,
+            usb_connected=msg.usb_connected,
+            wireless_connected=msg.wireless_connected,
+            ntc_connected=msg.ntc_connected,
+            charging_limited=msg.charging_limited,
+            temp_control_active=msg.temp_control_active,
+            battery_connected=msg.battery_connected,
+            charging_status=msg.charging_status,
+            power_status=msg.power_status,
+        )
+        return Success()
+
     async def dispatch_DebugLinkOptigaSetSecMax(
         msg: DebugLinkOptigaSetSecMax,
     ) -> Success:
@@ -567,6 +605,7 @@ if __debug__:
         MessageType.DebugLinkReseedRandom: dispatch_DebugLinkReseedRandom,
         MessageType.DebugLinkRecordScreen: dispatch_DebugLinkRecordScreen,
         MessageType.DebugLinkEraseSdCard: dispatch_DebugLinkEraseSdCard,
+        MessageType.DebugLinkSetBatteryState: dispatch_DebugLinkSetBatteryState,
         MessageType.DebugLinkOptigaSetSecMax: dispatch_DebugLinkOptigaSetSecMax,
         MessageType.DebugLinkWatchLayout: _no_op,
         MessageType.DebugLinkResetDebugEvents: _no_op,
