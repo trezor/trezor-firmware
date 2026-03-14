@@ -32,6 +32,7 @@ if __debug__:
             DebugLinkPairingInfo,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
+            DebugLinkSetBatteryState,
             DebugLinkSetLogFilter,
             DebugLinkState,
             DebugLinkStop,
@@ -399,6 +400,36 @@ if __debug__:
             sdcard.power_off()
         return Success()
 
+    if utils.USE_POWER_MANAGER and utils.EMULATOR:
+
+        async def dispatch_DebugLinkSetBatteryState(
+            msg: DebugLinkSetBatteryState,
+        ) -> Success:
+            from trezor import io
+
+            log.debug(
+                __name__,
+                "setting battery state: soc=%s, usb=%s, wireless=%s, ntc=%s, "
+                "limited=%s, temp_ctrl=%s, bat_conn=%s",
+                msg.soc,
+                msg.usb_connected,
+                msg.wireless_connected,
+                msg.ntc_connected,
+                msg.charging_limited,
+                msg.temp_control_active,
+                msg.battery_connected,
+            )
+            io.pm.set_emu_battery_state(
+                soc=msg.soc,
+                usb_connected=msg.usb_connected,
+                wireless_connected=msg.wireless_connected,
+                ntc_connected=msg.ntc_connected,
+                charging_limited=msg.charging_limited,
+                temp_control_active=msg.temp_control_active,
+                battery_connected=msg.battery_connected,
+            )
+            return Success()
+
     async def dispatch_DebugLinkOptigaSetSecMax(
         msg: DebugLinkOptigaSetSecMax,
     ) -> Success:
@@ -580,6 +611,11 @@ if __debug__:
     if utils.USE_N4W1:
         WORKFLOW_HANDLERS[MessageType.DebugLinkN4W1Connected] = (
             dispatch_DebugLinkConnected
+        )
+
+    if utils.USE_POWER_MANAGER and utils.EMULATOR:
+        WORKFLOW_HANDLERS[MessageType.DebugLinkSetBatteryState] = (
+            dispatch_DebugLinkSetBatteryState
         )
 
     def boot() -> None:
