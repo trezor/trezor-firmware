@@ -500,6 +500,7 @@ if TYPE_CHECKING:
         DebugLinkN4W1Write = 9015
         DebugLinkN4W1Read = 9016
         DebugLinkN4W1Response = 9017
+        DebugLinkSetBatteryState = 9018
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56

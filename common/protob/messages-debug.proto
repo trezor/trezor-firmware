@@ -241,6 +241,21 @@ message DebugLinkEraseSdCard {
 }
 
 /**
+ * Request: Set battery/power state on the emulator.
+ * @start
+ * @next Success
+ */
+message DebugLinkSetBatteryState {
+    optional uint32 soc = 1;                // state of charge percentage (0-100)
+    optional bool usb_connected = 2;        // USB cable connected
+    optional bool wireless_connected = 3;   // wireless charging pad connected
+    optional bool ntc_connected = 4;        // temperature sensor connected
+    optional bool charging_limited = 5;     // charging current is limited
+    optional bool temp_control_active = 6;  // temperature control is limiting charging
+    optional bool battery_connected = 7;    // battery is physically connected
+}
+
+/**
  * Request: Start or stop tracking layout changes
  * @start
  * @next Success
