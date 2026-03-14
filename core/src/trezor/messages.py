@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxOutputSerializationFormat  # noqa: F401
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
+    from trezor.enums import ChargingStatus  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
     from trezor.enums import DebugPhysicalButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
@@ -57,6 +58,7 @@ if TYPE_CHECKING:
     from trezor.enums import NEMSupplyChangeType  # noqa: F401
     from trezor.enums import OutputScriptType  # noqa: F401
     from trezor.enums import PinMatrixRequestType  # noqa: F401
+    from trezor.enums import PowerStatus  # noqa: F401
     from trezor.enums import RecoveryDeviceInputMethod  # noqa: F401
     from trezor.enums import RecoveryStatus  # noqa: F401
     from trezor.enums import RecoveryType  # noqa: F401
@@ -3066,6 +3068,36 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkEraseSdCard"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkSetBatteryState(protobuf.MessageType):
+        soc: "int | None"
+        usb_connected: "bool | None"
+        wireless_connected: "bool | None"
+        ntc_connected: "bool | None"
+        charging_limited: "bool | None"
+        temp_control_active: "bool | None"
+        battery_connected: "bool | None"
+        charging_status: "ChargingStatus | None"
+        power_status: "PowerStatus | None"
+
+        def __init__(
+            self,
+            *,
+            soc: "int | None" = None,
+            usb_connected: "bool | None" = None,
+            wireless_connected: "bool | None" = None,
+            ntc_connected: "bool | None" = None,
+            charging_limited: "bool | None" = None,
+            temp_control_active: "bool | None" = None,
+            battery_connected: "bool | None" = None,
+            charging_status: "ChargingStatus | None" = None,
+            power_status: "PowerStatus | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetBatteryState"]:
             return isinstance(msg, cls)
 
     class DebugLinkOptigaSetSecMax(protobuf.MessageType):

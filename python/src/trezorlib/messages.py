@@ -324,6 +324,21 @@ class DebugWaitType(IntEnum):
     CURRENT_LAYOUT = 2
 
 
+class ChargingStatus(IntEnum):
+    IDLE = 0
+    DISCHARGING = 1
+    CHARGING = 2
+
+
+class PowerStatus(IntEnum):
+    HIBERNATE = 0
+    CHARGING_STATE = 1
+    SUSPEND = 2
+    SHUTTING_DOWN = 3
+    POWER_SAVE = 4
+    ACTIVE = 5
+
+
 class DefinitionType(IntEnum):
     ETHEREUM_NETWORK = 0
     ETHEREUM_TOKEN = 1
@@ -556,6 +571,7 @@ class MessageType(IntEnum):
     DebugLinkN4W1Write = 9015
     DebugLinkN4W1Read = 9016
     DebugLinkN4W1Response = 9017
+    DebugLinkSetBatteryState = 9018
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4411,6 +4427,44 @@ class DebugLinkEraseSdCard(protobuf.MessageType):
         format: Optional["bool"] = None,
     ) -> None:
         self.format = format
+
+
+class DebugLinkSetBatteryState(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9018
+    FIELDS = {
+        1: protobuf.Field("soc", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("usb_connected", "bool", repeated=False, required=False, default=None),
+        3: protobuf.Field("wireless_connected", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("ntc_connected", "bool", repeated=False, required=False, default=None),
+        5: protobuf.Field("charging_limited", "bool", repeated=False, required=False, default=None),
+        6: protobuf.Field("temp_control_active", "bool", repeated=False, required=False, default=None),
+        7: protobuf.Field("battery_connected", "bool", repeated=False, required=False, default=None),
+        8: protobuf.Field("charging_status", "ChargingStatus", repeated=False, required=False, default=None),
+        9: protobuf.Field("power_status", "PowerStatus", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        soc: Optional["int"] = None,
+        usb_connected: Optional["bool"] = None,
+        wireless_connected: Optional["bool"] = None,
+        ntc_connected: Optional["bool"] = None,
+        charging_limited: Optional["bool"] = None,
+        temp_control_active: Optional["bool"] = None,
+        battery_connected: Optional["bool"] = None,
+        charging_status: Optional["ChargingStatus"] = None,
+        power_status: Optional["PowerStatus"] = None,
+    ) -> None:
+        self.soc = soc
+        self.usb_connected = usb_connected
+        self.wireless_connected = wireless_connected
+        self.ntc_connected = ntc_connected
+        self.charging_limited = charging_limited
+        self.temp_control_active = temp_control_active
+        self.battery_connected = battery_connected
+        self.charging_status = charging_status
+        self.power_status = power_status
 
 
 class DebugLinkWatchLayout(protobuf.MessageType):

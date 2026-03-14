@@ -284,6 +284,19 @@ if TYPE_CHECKING:
         NEXT_LAYOUT = 1
         CURRENT_LAYOUT = 2
 
+    class ChargingStatus(IntEnum):
+        IDLE = 0
+        DISCHARGING = 1
+        CHARGING = 2
+
+    class PowerStatus(IntEnum):
+        HIBERNATE = 0
+        CHARGING_STATE = 1
+        SUSPEND = 2
+        SHUTTING_DOWN = 3
+        POWER_SAVE = 4
+        ACTIVE = 5
+
     class DefinitionType(IntEnum):
         ETHEREUM_NETWORK = 0
         ETHEREUM_TOKEN = 1
@@ -500,6 +513,7 @@ if TYPE_CHECKING:
         DebugLinkN4W1Write = 9015
         DebugLinkN4W1Read = 9016
         DebugLinkN4W1Response = 9017
+        DebugLinkSetBatteryState = 9018
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56
