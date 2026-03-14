@@ -891,6 +891,14 @@ class DebugLink:
             messages.DebugLinkEraseSdCard(format=format), expect=messages.Success
         )
 
+    def set_battery_state(self) -> None:
+        self._call(
+            messages.DebugLinkSetBatteryState(
+                soc=50, charging_state=messages.ChargingState.CHARGING_CABLE
+            ),
+            expect=messages.Success,
+        )
+
     def snapshot_legacy(self) -> None:
         """Snapshot the current state of the device."""
         if self.model is not models.T1B1:

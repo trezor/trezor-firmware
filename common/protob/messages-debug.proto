@@ -241,6 +241,21 @@ message DebugLinkEraseSdCard {
 }
 
 /**
+ * Request: Set battery state on the emulator.
+ * @start
+ * @next Success
+ */
+message DebugLinkSetBatteryState {
+    required uint32 soc = 1;                    // state of charge in percentage (0-100)
+    required ChargingState charging_state = 2;  // charging state of the battery
+    enum ChargingState {
+        DISCHARGING = 0;
+        CHARGING_CABLE = 1;
+        CHARGING_WIRELESS = 2;
+    }
+}
+
+/**
  * Request: Start or stop tracking layout changes
  * @start
  * @next Success

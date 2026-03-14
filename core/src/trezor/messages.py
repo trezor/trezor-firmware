@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxOutputSerializationFormat  # noqa: F401
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
+    from trezor.enums import ChargingState  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
     from trezor.enums import DebugPhysicalButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
@@ -3059,6 +3060,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkEraseSdCard"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkSetBatteryState(protobuf.MessageType):
+        soc: "int"
+        charging_state: "ChargingState"
+
+        def __init__(
+            self,
+            *,
+            soc: "int",
+            charging_state: "ChargingState",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetBatteryState"]:
             return isinstance(msg, cls)
 
     class DebugLinkOptigaSetSecMax(protobuf.MessageType):

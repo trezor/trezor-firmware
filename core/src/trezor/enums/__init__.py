@@ -280,6 +280,11 @@ if TYPE_CHECKING:
         NEXT_LAYOUT = 1
         CURRENT_LAYOUT = 2
 
+    class ChargingState(IntEnum):
+        DISCHARGING = 0
+        CHARGING_CABLE = 1
+        CHARGING_WIRELESS = 2
+
     class DefinitionType(IntEnum):
         ETHEREUM_NETWORK = 0
         ETHEREUM_TOKEN = 1
@@ -492,6 +497,7 @@ if TYPE_CHECKING:
         DebugLinkGetPairingInfo = 9011
         DebugLinkPairingInfo = 9012
         DebugLinkSetLogFilter = 9013
+        DebugLinkSetBatteryState = 9014
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56

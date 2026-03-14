@@ -319,6 +319,12 @@ class DebugWaitType(IntEnum):
     CURRENT_LAYOUT = 2
 
 
+class ChargingState(IntEnum):
+    DISCHARGING = 0
+    CHARGING_CABLE = 1
+    CHARGING_WIRELESS = 2
+
+
 class DefinitionType(IntEnum):
     ETHEREUM_NETWORK = 0
     ETHEREUM_TOKEN = 1
@@ -547,6 +553,7 @@ class MessageType(IntEnum):
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
     DebugLinkSetLogFilter = 9013
+    DebugLinkSetBatteryState = 9014
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4390,6 +4397,23 @@ class DebugLinkEraseSdCard(protobuf.MessageType):
         format: Optional["bool"] = None,
     ) -> None:
         self.format = format
+
+
+class DebugLinkSetBatteryState(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9014
+    FIELDS = {
+        1: protobuf.Field("soc", "uint32", repeated=False, required=True),
+        2: protobuf.Field("charging_state", "ChargingState", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        soc: "int",
+        charging_state: "ChargingState",
+    ) -> None:
+        self.soc = soc
+        self.charging_state = charging_state
 
 
 class DebugLinkWatchLayout(protobuf.MessageType):
