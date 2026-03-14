@@ -121,6 +121,24 @@ STATIC mp_obj_t mod_trezorio_pm_is_wireless_connected() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_wireless_connected_obj,
                                  mod_trezorio_pm_is_wireless_connected);
 
+#ifdef TREZOR_EMULATOR
+/// def set_emu_battery_state(soc: int, charging_state: int) -> None:
+///     """
+///     Set emulated battery state. Only available on emulator.
+///     soc: state of charge percentage (0-100)
+///     charging_state: 0=discharging, 1=charging_cable, 2=charging_wireless
+///     """
+STATIC mp_obj_t mod_trezorio_pm_set_emu_battery_state(mp_obj_t soc_obj,
+                                                      mp_obj_t charging_obj) {
+  uint8_t soc = (uint8_t)mp_obj_get_int(soc_obj);
+  uint8_t charging_state = (uint8_t)mp_obj_get_int(charging_obj);
+  pm_set_emu_battery_state(soc, charging_state);
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_pm_set_emu_battery_state_obj,
+                                 mod_trezorio_pm_set_emu_battery_state);
+#endif
+
 STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_pm)},
     {MP_ROM_QSTR(MP_QSTR_soc), MP_ROM_PTR(&mod_trezorio_pm_soc_obj)},
@@ -131,6 +149,10 @@ STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
      MP_ROM_PTR(&mod_trezorio_pm_is_usb_connected_obj)},
     {MP_ROM_QSTR(MP_QSTR_is_wireless_connected),
      MP_ROM_PTR(&mod_trezorio_pm_is_wireless_connected_obj)},
+#ifdef TREZOR_EMULATOR
+    {MP_ROM_QSTR(MP_QSTR_set_emu_battery_state),
+     MP_ROM_PTR(&mod_trezorio_pm_set_emu_battery_state_obj)},
+#endif
 
     // Wakeup flag constants
     {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_BUTTON), MP_ROM_INT(WAKEUP_FLAG_BUTTON)},
@@ -159,5 +181,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorio_pm_globals,
 
 STATIC const mp_obj_module_t mod_trezorio_pm_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorio_pm_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorio_pm_globals,
 };

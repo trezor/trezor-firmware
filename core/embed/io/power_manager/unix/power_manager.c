@@ -26,6 +26,18 @@
 #include <SDL.h>
 #include "SDL_events.h"
 
+static struct {
+  uint8_t soc;
+  pm_charging_status_t charging_status;
+  bool usb_connected;
+  bool wireless_connected;
+} emu_battery = {
+    .soc = 100,
+    .charging_status = PM_BATTERY_IDLE,
+    .usb_connected = true,
+    .wireless_connected = false,
+};
+
 pm_status_t pm_init(bool inherit_state) { return PM_OK; }
 
 void pm_deinit(void) {}
@@ -64,18 +76,42 @@ bool pm_get_events(pm_event_t* event_flags) {
 }
 
 pm_status_t pm_get_state(pm_state_t* state) {
-  state->usb_connected = true;
-  state->wireless_connected = false;
-  state->charging_status = PM_BATTERY_IDLE;
+  state->usb_connected = emu_battery.usb_connected;
+  state->wireless_connected = emu_battery.wireless_connected;
+  state->charging_status = emu_battery.charging_status;
   state->power_status = PM_STATE_ACTIVE;
-  state->soc = 100;
+  state->soc = emu_battery.soc;
   state->ntc_connected = true;
   state->battery_connected = true;
   return PM_OK;
 }
 
-bool pm_is_charging(void) { return false; }
+bool pm_is_charging(void) {
+  return emu_battery.charging_status == PM_BATTERY_CHARGING;
+}
 
-bool pm_usb_connected(void) { return true; }
+bool pm_usb_connected(void) { return emu_battery.usb_connected; }
 
 pm_status_t pm_set_soc_target(uint8_t target) { return PM_OK; }
+
+void pm_set_emu_battery_state(uint8_t soc, uint8_t charging_state) {
+  emu_battery.soc = soc > 100 ? 100 : soc;
+
+  switch (charging_state) {
+    case 1:  // CHARGING_CABLE
+      emu_battery.charging_status = PM_BATTERY_CHARGING;
+      emu_battery.usb_connected = true;
+      emu_battery.wireless_connected = false;
+      break;
+    case 2:  // CHARGING_WIRELESS
+      emu_battery.charging_status = PM_BATTERY_CHARGING;
+      emu_battery.usb_connected = false;
+      emu_battery.wireless_connected = true;
+      break;
+    default:  // DISCHARGING (0) or unknown
+      emu_battery.charging_status = PM_BATTERY_DISCHARGING;
+      emu_battery.usb_connected = false;
+      emu_battery.wireless_connected = false;
+      break;
+  }
+}
