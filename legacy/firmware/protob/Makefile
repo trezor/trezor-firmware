@@ -5,15 +5,15 @@ endif
 SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos Tron WebAuthn \
 	DebugLinkGetPairingInfo DebugLinkPairingInfo DebugLinkGetGcInfo DebugLinkGcInfoItem \
 	DebugLinkGcInfo DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
-	DebugLinkLayout DebugLinkResetDebugEvents GetNonce \
-	TxAckInput TxAckOutput TxAckPrev PaymentRequest \
+	DebugLinkLayout DebugLinkResetDebugEvents  DebugLinkSetBatteryState \
+	DebugLinkN4W1Connected DebugLinkN4W1Read DebugLinkN4W1Write DebugLinkN4W1Response \
+	DebugLinkOptigaSetSecMax DebugLinkSetLogFilter \
+	GetNonce TxAckInput TxAckOutput TxAckPrev PaymentRequest \
 	EthereumSignTypedData EthereumTypedDataStructRequest EthereumTypedDataStructAck \
 	EthereumTypedDataValueRequest EthereumTypedDataValueAck ShowDeviceTutorial \
 	UnlockBootloader AuthenticateDevice AuthenticityProof \
-	Solana StellarClaimClaimableBalanceOp \
+	Solana StellarClaimClaimableBalanceOp SetBrightness \
 	ChangeLanguage DataChunkRequest DataChunkAck Thp \
-	SetBrightness DebugLinkOptigaSetSecMax DebugLinkSetLogFilter \
-	DebugLinkN4W1Connected DebugLinkN4W1Read DebugLinkN4W1Write DebugLinkN4W1Response \
 	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult \
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
 	BleUnpair PaymentNotification Evolu \

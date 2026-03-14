@@ -3068,6 +3068,32 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkEraseSdCard"]:
             return isinstance(msg, cls)
 
+    class DebugLinkSetBatteryState(protobuf.MessageType):
+        soc: "int | None"
+        usb_connected: "bool | None"
+        wireless_connected: "bool | None"
+        ntc_connected: "bool | None"
+        charging_limited: "bool | None"
+        temp_control_active: "bool | None"
+        battery_connected: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            soc: "int | None" = None,
+            usb_connected: "bool | None" = None,
+            wireless_connected: "bool | None" = None,
+            ntc_connected: "bool | None" = None,
+            charging_limited: "bool | None" = None,
+            temp_control_active: "bool | None" = None,
+            battery_connected: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkSetBatteryState"]:
+            return isinstance(msg, cls)
+
     class DebugLinkOptigaSetSecMax(protobuf.MessageType):
 
         @classmethod

@@ -4049,6 +4049,369 @@ impl ::protobuf::reflect::ProtobufValue for DebugLinkEraseSdCard {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkSetBatteryState)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkSetBatteryState {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkSetBatteryState.soc)
+    pub soc: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkSetBatteryState.usb_connected)
+    pub usb_connected: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkSetBatteryState.wireless_connected)
+    pub wireless_connected: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkSetBatteryState.ntc_connected)
+    pub ntc_connected: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkSetBatteryState.charging_limited)
+    pub charging_limited: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkSetBatteryState.temp_control_active)
+    pub temp_control_active: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkSetBatteryState.battery_connected)
+    pub battery_connected: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkSetBatteryState.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkSetBatteryState {
+    fn default() -> &'a DebugLinkSetBatteryState {
+        <DebugLinkSetBatteryState as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkSetBatteryState {
+    pub fn new() -> DebugLinkSetBatteryState {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 soc = 1;
+
+    pub fn soc(&self) -> u32 {
+        self.soc.unwrap_or(0)
+    }
+
+    pub fn clear_soc(&mut self) {
+        self.soc = ::std::option::Option::None;
+    }
+
+    pub fn has_soc(&self) -> bool {
+        self.soc.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_soc(&mut self, v: u32) {
+        self.soc = ::std::option::Option::Some(v);
+    }
+
+    // optional bool usb_connected = 2;
+
+    pub fn usb_connected(&self) -> bool {
+        self.usb_connected.unwrap_or(false)
+    }
+
+    pub fn clear_usb_connected(&mut self) {
+        self.usb_connected = ::std::option::Option::None;
+    }
+
+    pub fn has_usb_connected(&self) -> bool {
+        self.usb_connected.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_usb_connected(&mut self, v: bool) {
+        self.usb_connected = ::std::option::Option::Some(v);
+    }
+
+    // optional bool wireless_connected = 3;
+
+    pub fn wireless_connected(&self) -> bool {
+        self.wireless_connected.unwrap_or(false)
+    }
+
+    pub fn clear_wireless_connected(&mut self) {
+        self.wireless_connected = ::std::option::Option::None;
+    }
+
+    pub fn has_wireless_connected(&self) -> bool {
+        self.wireless_connected.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_wireless_connected(&mut self, v: bool) {
+        self.wireless_connected = ::std::option::Option::Some(v);
+    }
+
+    // optional bool ntc_connected = 4;
+
+    pub fn ntc_connected(&self) -> bool {
+        self.ntc_connected.unwrap_or(false)
+    }
+
+    pub fn clear_ntc_connected(&mut self) {
+        self.ntc_connected = ::std::option::Option::None;
+    }
+
+    pub fn has_ntc_connected(&self) -> bool {
+        self.ntc_connected.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_ntc_connected(&mut self, v: bool) {
+        self.ntc_connected = ::std::option::Option::Some(v);
+    }
+
+    // optional bool charging_limited = 5;
+
+    pub fn charging_limited(&self) -> bool {
+        self.charging_limited.unwrap_or(false)
+    }
+
+    pub fn clear_charging_limited(&mut self) {
+        self.charging_limited = ::std::option::Option::None;
+    }
+
+    pub fn has_charging_limited(&self) -> bool {
+        self.charging_limited.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_charging_limited(&mut self, v: bool) {
+        self.charging_limited = ::std::option::Option::Some(v);
+    }
+
+    // optional bool temp_control_active = 6;
+
+    pub fn temp_control_active(&self) -> bool {
+        self.temp_control_active.unwrap_or(false)
+    }
+
+    pub fn clear_temp_control_active(&mut self) {
+        self.temp_control_active = ::std::option::Option::None;
+    }
+
+    pub fn has_temp_control_active(&self) -> bool {
+        self.temp_control_active.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_temp_control_active(&mut self, v: bool) {
+        self.temp_control_active = ::std::option::Option::Some(v);
+    }
+
+    // optional bool battery_connected = 7;
+
+    pub fn battery_connected(&self) -> bool {
+        self.battery_connected.unwrap_or(false)
+    }
+
+    pub fn clear_battery_connected(&mut self) {
+        self.battery_connected = ::std::option::Option::None;
+    }
+
+    pub fn has_battery_connected(&self) -> bool {
+        self.battery_connected.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_battery_connected(&mut self, v: bool) {
+        self.battery_connected = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "soc",
+            |m: &DebugLinkSetBatteryState| { &m.soc },
+            |m: &mut DebugLinkSetBatteryState| { &mut m.soc },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "usb_connected",
+            |m: &DebugLinkSetBatteryState| { &m.usb_connected },
+            |m: &mut DebugLinkSetBatteryState| { &mut m.usb_connected },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "wireless_connected",
+            |m: &DebugLinkSetBatteryState| { &m.wireless_connected },
+            |m: &mut DebugLinkSetBatteryState| { &mut m.wireless_connected },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "ntc_connected",
+            |m: &DebugLinkSetBatteryState| { &m.ntc_connected },
+            |m: &mut DebugLinkSetBatteryState| { &mut m.ntc_connected },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "charging_limited",
+            |m: &DebugLinkSetBatteryState| { &m.charging_limited },
+            |m: &mut DebugLinkSetBatteryState| { &mut m.charging_limited },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "temp_control_active",
+            |m: &DebugLinkSetBatteryState| { &m.temp_control_active },
+            |m: &mut DebugLinkSetBatteryState| { &mut m.temp_control_active },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "battery_connected",
+            |m: &DebugLinkSetBatteryState| { &m.battery_connected },
+            |m: &mut DebugLinkSetBatteryState| { &mut m.battery_connected },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkSetBatteryState>(
+            "DebugLinkSetBatteryState",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkSetBatteryState {
+    const NAME: &'static str = "DebugLinkSetBatteryState";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.soc = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                16 => {
+                    self.usb_connected = ::std::option::Option::Some(is.read_bool()?);
+                },
+                24 => {
+                    self.wireless_connected = ::std::option::Option::Some(is.read_bool()?);
+                },
+                32 => {
+                    self.ntc_connected = ::std::option::Option::Some(is.read_bool()?);
+                },
+                40 => {
+                    self.charging_limited = ::std::option::Option::Some(is.read_bool()?);
+                },
+                48 => {
+                    self.temp_control_active = ::std::option::Option::Some(is.read_bool()?);
+                },
+                56 => {
+                    self.battery_connected = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.soc {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        if let Some(v) = self.usb_connected {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.wireless_connected {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.ntc_connected {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.charging_limited {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.temp_control_active {
+            my_size += 1 + 1;
+        }
+        if let Some(v) = self.battery_connected {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.soc {
+            os.write_uint32(1, v)?;
+        }
+        if let Some(v) = self.usb_connected {
+            os.write_bool(2, v)?;
+        }
+        if let Some(v) = self.wireless_connected {
+            os.write_bool(3, v)?;
+        }
+        if let Some(v) = self.ntc_connected {
+            os.write_bool(4, v)?;
+        }
+        if let Some(v) = self.charging_limited {
+            os.write_bool(5, v)?;
+        }
+        if let Some(v) = self.temp_control_active {
+            os.write_bool(6, v)?;
+        }
+        if let Some(v) = self.battery_connected {
+            os.write_bool(7, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkSetBatteryState {
+        DebugLinkSetBatteryState::new()
+    }
+
+    fn clear(&mut self) {
+        self.soc = ::std::option::Option::None;
+        self.usb_connected = ::std::option::Option::None;
+        self.wireless_connected = ::std::option::Option::None;
+        self.ntc_connected = ::std::option::Option::None;
+        self.charging_limited = ::std::option::Option::None;
+        self.temp_control_active = ::std::option::Option::None;
+        self.battery_connected = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkSetBatteryState {
+        static instance: DebugLinkSetBatteryState = DebugLinkSetBatteryState {
+            soc: ::std::option::Option::None,
+            usb_connected: ::std::option::Option::None,
+            wireless_connected: ::std::option::Option::None,
+            ntc_connected: ::std::option::Option::None,
+            charging_limited: ::std::option::Option::None,
+            temp_control_active: ::std::option::Option::None,
+            battery_connected: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkSetBatteryState {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkSetBatteryState").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkSetBatteryState {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkSetBatteryState {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkWatchLayout)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct DebugLinkWatchLayout {
@@ -5681,21 +6044,27 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0cR\x06memory\
     \x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13DebugLinkFlas\
     hErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\x14DebugLi\
-    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\"0\n\
-    \x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05wat\
-    ch:\x02\x18\x01\"\x1f\n\x19DebugLinkResetDebugEvents:\x02\x18\x01\"\x1a\
-    \n\x18DebugLinkOptigaSetSecMax\"\x14\n\x12DebugLinkGetGcInfo\"\xa7\x01\n\
-    \x0fDebugLinkGcInfo\x12S\n\x05items\x18\x01\x20\x03(\x0b2=.hw.trezor.mes\
-    sages.debug.DebugLinkGcInfo.DebugLinkGcInfoItemR\x05items\x1a?\n\x13Debu\
-    gLinkGcInfoItem\x12\x12\n\x04name\x18\x01\x20\x02(\tR\x04name\x12\x14\n\
-    \x05value\x18\x02\x20\x02(\x04R\x05value\"/\n\x15DebugLinkSetLogFilter\
-    \x12\x16\n\x06filter\x18\x01\x20\x01(\tR\x06filter\"\x18\n\x16DebugLinkN\
-    4W1Connected\"<\n\x12DebugLinkN4W1Write\x12\x10\n\x03key\x18\x01\x20\x01\
-    (\tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\x0cR\x05value\"%\n\x11De\
-    bugLinkN4W1Read\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\"-\n\x15Debu\
-    gLinkN4W1Response\x12\x14\n\x05value\x18\x01\x20\x01(\x0cR\x05valueB=\n#\
-    com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\
-    \x01\
+    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\"\xad\
+    \x02\n\x18DebugLinkSetBatteryState\x12\x10\n\x03soc\x18\x01\x20\x01(\rR\
+    \x03soc\x12#\n\rusb_connected\x18\x02\x20\x01(\x08R\x0cusbConnected\x12-\
+    \n\x12wireless_connected\x18\x03\x20\x01(\x08R\x11wirelessConnected\x12#\
+    \n\rntc_connected\x18\x04\x20\x01(\x08R\x0cntcConnected\x12)\n\x10chargi\
+    ng_limited\x18\x05\x20\x01(\x08R\x0fchargingLimited\x12.\n\x13temp_contr\
+    ol_active\x18\x06\x20\x01(\x08R\x11tempControlActive\x12+\n\x11battery_c\
+    onnected\x18\x07\x20\x01(\x08R\x10batteryConnected\"0\n\x14DebugLinkWatc\
+    hLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05watch:\x02\x18\x01\"\
+    \x1f\n\x19DebugLinkResetDebugEvents:\x02\x18\x01\"\x1a\n\x18DebugLinkOpt\
+    igaSetSecMax\"\x14\n\x12DebugLinkGetGcInfo\"\xa7\x01\n\x0fDebugLinkGcInf\
+    o\x12S\n\x05items\x18\x01\x20\x03(\x0b2=.hw.trezor.messages.debug.DebugL\
+    inkGcInfo.DebugLinkGcInfoItemR\x05items\x1a?\n\x13DebugLinkGcInfoItem\
+    \x12\x12\n\x04name\x18\x01\x20\x02(\tR\x04name\x12\x14\n\x05value\x18\
+    \x02\x20\x02(\x04R\x05value\"/\n\x15DebugLinkSetLogFilter\x12\x16\n\x06f\
+    ilter\x18\x01\x20\x01(\tR\x06filter\"\x18\n\x16DebugLinkN4W1Connected\"<\
+    \n\x12DebugLinkN4W1Write\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\
+    \x14\n\x05value\x18\x02\x20\x01(\x0cR\x05value\"%\n\x11DebugLinkN4W1Read\
+    \x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\"-\n\x15DebugLinkN4W1Respon\
+    se\x12\x14\n\x05value\x18\x01\x20\x01(\x0cR\x05valueB=\n#com.satoshilabs\
+    .trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -5716,7 +6085,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(26);
+            let mut messages = ::std::vec::Vec::with_capacity(27);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());
             messages.push(DebugLinkReseedRandom::generated_message_descriptor_data());
@@ -5732,6 +6101,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkMemoryWrite::generated_message_descriptor_data());
             messages.push(DebugLinkFlashErase::generated_message_descriptor_data());
             messages.push(DebugLinkEraseSdCard::generated_message_descriptor_data());
+            messages.push(DebugLinkSetBatteryState::generated_message_descriptor_data());
             messages.push(DebugLinkWatchLayout::generated_message_descriptor_data());
             messages.push(DebugLinkResetDebugEvents::generated_message_descriptor_data());
             messages.push(DebugLinkOptigaSetSecMax::generated_message_descriptor_data());
