@@ -53,6 +53,7 @@ def generate(env):
         ble = env["use_ble"]
         btc_only = env["bitcoin_only"] == "1"
         button = env["use_button"]
+        emulator = env["emulator"]
         haptic = env["use_haptic"]
         layout_bolt = env["ui_layout"] == "UI_LAYOUT_BOLT"
         layout_caesar = env["ui_layout"] == "UI_LAYOUT_CAESAR"
@@ -74,6 +75,7 @@ def generate(env):
             rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
             rf"-e 's/utils\.USE_BUTTON/{button}/g'",
             rf"-e 's/utils\.USE_HAPTIC/{haptic}/g'",
+            rf"-e 's/utils\.EMULATOR/{emulator}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"BOLT\"/{layout_bolt}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"CAESAR\"/{layout_caesar}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"DELIZIA\"/{layout_delizia}/g'",

@@ -132,6 +132,7 @@ def configure(
 
     sources += [
         "embed/io/power_manager/unix/power_manager.c",
+        "embed/io/power_manager/power_manager_poll.c",
     ]
     defines += [("USE_POWER_MANAGER", "1")]
     paths += ["embed/io/power_manager/inc"]

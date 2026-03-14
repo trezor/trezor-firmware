@@ -34,4 +34,8 @@ void telemetry_reset(void) {
   // No-op for emulator
 }
 
+void telemetry_update_battery_errors(telemetry_batt_errors_t errors) {
+  // No-op for emulator
+}
+
 #endif
