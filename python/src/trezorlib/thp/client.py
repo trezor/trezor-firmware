@@ -21,6 +21,8 @@ import struct
 import typing as t
 from collections import defaultdict
 
+import typing_extensions as tx
+
 from .. import client, exceptions, messages, models, protobuf
 from ..log import DUMP_BYTES
 from .channel import Channel
@@ -199,3 +201,20 @@ class TrezorClientThp(client.TrezorClient[ThpSession]):
     @property
     def device_properties(self) -> messages.ThpDeviceProperties:
         return self.channel.device_properties
+
+    def __enter__(self) -> tx.Self:
+        """(Re)Open a connection to the device."""
+        self.transport.__enter__()
+        self.channel.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        try:
+            self.channel.__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.transport.__exit__(exc_type, exc_value, traceback)

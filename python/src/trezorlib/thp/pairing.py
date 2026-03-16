@@ -129,7 +129,11 @@ class PairingController:
 
     def _call(self, message: MessageType, *, expect: type[MT]) -> MT:
         self.start()
-        return self.session.call(message, expect=expect)
+        try:
+            return self.session.call(message, expect=expect)
+        finally:
+            # The next pairing-related message may be delayed (e.g. after code entry) - send an explicit THP ACK.
+            self.session.channel._send_ack(None)
 
     @property
     def channel(self) -> Channel:

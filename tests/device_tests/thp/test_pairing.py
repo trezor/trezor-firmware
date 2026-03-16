@@ -17,16 +17,11 @@ from trezorlib.messages import (
     Cancel,
     Failure,
     FailureType,
-    ThpCodeEntryChallenge,
-    ThpCodeEntryCommitment,
-    ThpCodeEntryCpaceTrezor,
     ThpCredentialRequest,
     ThpCredentialResponse,
     ThpEndRequest,
     ThpEndResponse,
-    ThpPairingMethod,
     ThpPairingRequest,
-    ThpSelectMethod,
 )
 from trezorlib.models import T2T1
 from trezorlib.thp import channel, curve25519, pairing
@@ -158,22 +153,12 @@ def test_pairing_code_entry_invalid_cpace_key_length(client: Client) -> None:
 @deterministic_secrets()
 def test_pairing_code_entry_cancel(client: Client) -> None:
     prepare_channel_for_pairing(client, fixed_entropy=True)
-    client.pairing.start()
-    session = client.pairing.session
-    session.call(
-        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry),
-        expect=ThpCodeEntryCommitment,
-    )
-    session.call(
-        ThpCodeEntryChallenge(challenge=secrets.token_bytes(16)),
-        expect=ThpCodeEntryCpaceTrezor,
-    )
-
+    pairing.CodeEntry(client.pairing)
     # Code Entry code shown
 
     # Press Cancel button
     client.debug.press_yes()
-    failure = Failure.ensure_isinstance(session.read())
+    failure = Failure.ensure_isinstance(client.pairing.session.read())
     assert failure.code is FailureType.ActionCancelled
 
 

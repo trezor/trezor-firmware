@@ -22,7 +22,6 @@ import logging
 import secrets
 import time
 import typing as t
-from contextlib import contextmanager
 from enum import Enum, IntEnum, auto
 
 import typing_extensions as tx
@@ -141,7 +140,7 @@ class Channel:
         self._noise: NoiseConnection | None = None
         self.state = channel_state
         self.trezor_public_keys: TrezorPublicKeys | None = None
-        self._active_workflow: object | None = None
+        self._workflow_count = 0
 
     @functools.cached_property
     def is_ack_piggybacking_allowed(self) -> bool:
@@ -410,8 +409,15 @@ class Channel:
                 raise
 
     def _send_ack(self, acked_message: Message | None) -> None:
-        if self.is_ack_piggybacking_allowed and self._active_workflow is not None:
-            return
+        if self.is_ack_piggybacking_allowed:
+            # Skip explicit THP ACK during workflow - the next request will piggyback the correct ACK bit
+            # If acked_message is None, we should always send an ACK (in order to prevent avoid retransmissions).
+            if self._workflow_count and acked_message is not None:
+                return
+        else:
+            # No need to send an extra ACK when THP ACK piggybacking is disabled
+            if acked_message is None:
+                return
 
         if acked_message is not None:
             ack = control_byte.make_ack_for(acked_message.ctrl_byte)
@@ -441,22 +447,21 @@ class Channel:
             f"Failed to read ACK in {retries} retries for message: {message}"
         )
 
-    @contextmanager
-    def piggyback_acks(self, marker: object) -> t.Generator[None, None, None]:
-        # Make sure the previous workflow is over.
-        assert self._active_workflow is None
-        self._active_workflow = marker
-        # Skip explicit ACKs during this workflow
-        try:
-            yield
-        finally:
-            active = self._active_workflow
-            self._active_workflow = None
-            assert active is marker
-            if self.is_ack_piggybacking_allowed:
-                # Explicitly ACK the latest received message.  The device may restart
-                # the event loop, so the next request will be sent in a separate message.
-                self._send_ack(None)
+    def __enter__(self) -> tx.Self:
+        assert self._workflow_count >= 0
+        self._workflow_count += 1
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        assert self._workflow_count >= 1
+        self._workflow_count -= 1
+        # Explicitly ACK the latest received message (if needed).
+        self._send_ack(None)
 
     def write_chunk(self, data: bytes, /) -> None:
         self._assert_handshake_done()

@@ -60,10 +60,13 @@ def _try_to_cancel(
     next(gen)
     while True:
         br = yield
-        # Try to cancel the backup flow on Core
-        resp = session.call_raw(messages.Cancel())
-        # Following #6483, backup is not cancellable
-        assert resp == BACKUP_IN_PROGRESS
+
+        # Entering session's context will send an explicit THP ACK after `BACKUP_IN_PROGRESS` is received.
+        with session:
+            # Try to cancel the backup flow on Core
+            session.cancel()
+            # Following #6483, backup is not cancellable
+            assert session.read() == BACKUP_IN_PROGRESS
         try:
             gen.send(br)
         except StopIteration:
