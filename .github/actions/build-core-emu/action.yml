@@ -55,7 +55,12 @@ runs:
     - name: Upload emulator binaries
       if: github.repository == 'trezor/trezor-firmware'
       run: |
-        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.model }}/${{ inputs.s3-subpath }}"
+        SUBPATH="${{ inputs.s3-subpath }}"
+        SUBPATH="${SUBPATH#/}"
+        if [ -n "$SUBPATH" ] && [ "${SUBPATH%/}" = "$SUBPATH" ]; then
+          SUBPATH="${SUBPATH}/"
+        fi
+        aws s3 cp "${{ steps.prepare_binary.outputs.binary_path }}" "s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ inputs.model }}/${SUBPATH}"
       shell: sh
 
     - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0

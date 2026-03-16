@@ -55,22 +55,41 @@ def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
             raise RuntimeError(f"Version mismatch: tag {tag} reports version {version}")
 
 
-def get_emulator_path(gen: str, model: str, tag: str) -> Path:
-    return BINDIR / model / f"trezor-emu-{gen}-{model}-{tag}"
+def get_emulator_path(
+    gen: str,
+    model: str,
+    tag: str,
+    subpath: str | None = None,
+) -> Path:
+    filename = f"trezor-emu-{gen}-{model}-{tag}"
+    base = BINDIR / model
+
+    if subpath is not None:
+        return base / subpath / filename
+
+    direct_path = base / filename
+    if direct_path.exists():
+        return direct_path
+
+    matches = [p for p in base.rglob(filename) if p.is_file()]
+    if matches:
+        return sorted(matches)[0]
+
+    return direct_path
 
 
 def get_tags() -> dict[str, list[str]]:
-    files = [p for p in BINDIR.glob("*/trezor-emu-*") if p.is_file()]
+    files = [p for p in BINDIR.rglob("trezor-emu-*") if p.is_file()]
 
-    result = defaultdict(list)
+    result: dict[str, set[str]] = defaultdict(set)
     for f in sorted(files):
         try:
             # example: "trezor-emu-core-T2T1-v2.0.8" or "trezor-emu-core-T2T1-v2.0.8-46ab42fw"
             _, _, _, model, tag = f.name.split("-", maxsplit=4)
-            result[model].append(tag)
+            result[model].add(tag)
         except ValueError:
             pass
-    return result
+    return {model: sorted(tags) for model, tags in result.items()}
 
 
 ALL_TAGS = get_tags()

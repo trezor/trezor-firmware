@@ -144,36 +144,36 @@ def get_all_releases() -> EmulatorDict:
 def get_emulators_for_model(model: str, firmwares: EmulatorDict) -> list[Emulator]:
     emulators: list[Emulator] = []
     is_tropic_capable = model in TROPIC_CAPABLE_MODELS
+
+    def create_and_check_emulator(
+        version: str, subpath_suffix: str = "", artifact_label: str = "Artifact"
+    ) -> None:
+        subpath = None
+        if subpath_suffix:
+            subpath = f"{model}{subpath_suffix}"
+
+        try:
+            emulator = Emulator(version=version, model=model, subpath=subpath)
+            emulator.check_download_availability()
+            emulators.append(emulator)
+        except KnownMissingArtifactError:
+            # Old artifacts that are known to be unavailable
+            pass
+        except MissingArtifactError as e:
+            click.echo(
+                f"{artifact_label} for model {e.model}, version: {e.version} is unavailable!"
+            )
+
     for version, models in firmwares.items():
         if model in models:
-            try:
-                emu = Emulator(version, model)
-                emu.check_download_availability()
-                emulators.append(emu)
-            except KnownMissingArtifactError:
-                # Old artifacts that are known to be unavailable
-                pass
-            except MissingArtifactError as e:
-                click.echo(
-                    f"Artifact for model {e.model}, version: {e.version} is unavailable!"
-                )
+            create_and_check_emulator(version=version)
 
             if is_tropic_capable:
-                try:
-                    tropic_emu = Emulator(
-                        version=version,
-                        model=model,
-                        subpath=f"{model}{TROPIC_REMOTE_SUBPATH_SUFFIX}",
-                    )
-                    tropic_emu.check_download_availability()
-                    emulators.append(tropic_emu)
-                except KnownMissingArtifactError:
-                    # Old artifacts that are known to be unavailable
-                    pass
-                except MissingArtifactError as e:
-                    click.echo(
-                        f"Tropic artifact for model {e.model}, version: {e.version} is unavailable!"
-                    )
+                create_and_check_emulator(
+                    version=version,
+                    subpath_suffix=TROPIC_REMOTE_SUBPATH_SUFFIX,
+                    artifact_label="Tropic artifact",
+                )
     return emulators
 
 
