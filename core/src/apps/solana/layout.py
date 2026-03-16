@@ -13,6 +13,7 @@ from trezor.ui.layouts import (
     show_danger,
     show_warning,
 )
+from trezor.ui.layouts.properties import maybe_with_colon
 
 from apps.common.paths import address_n_to_str
 
@@ -119,7 +120,7 @@ async def confirm_instruction(
                 f"{instruction_index}/{instructions_count}",
                 (
                     (
-                        ui_property.display_name,
+                        maybe_with_colon(ui_property.display_name),
                         property_template.format(value, *args),
                         True,
                     ),
@@ -164,7 +165,7 @@ async def confirm_instruction(
             await confirm_properties(
                 "confirm_instruction",
                 f"{instruction_index}/{instructions_count}",
-                account_data,
+                maybe_with_colon(account_data),
                 instruction.ui_name,
             )
         else:
@@ -190,7 +191,7 @@ async def confirm_instruction(
         await confirm_properties(
             "confirm_instruction",
             f"{instruction_index}/{instructions_count}",
-            signers,
+            maybe_with_colon(signers),
             instruction.ui_name,
         )
 
@@ -235,7 +236,7 @@ async def confirm_unsupported_instruction_details(
             title,
             (
                 (
-                    f"{TR.solana__instruction_data}",
+                    maybe_with_colon(TR.solana__instruction_data),
                     bytes(instruction.instruction_data),
                     True,
                 ),
@@ -270,7 +271,7 @@ async def confirm_unsupported_instruction_details(
             await confirm_properties(
                 "accounts",
                 title,
-                accounts,
+                maybe_with_colon(accounts),
             )
 
 
