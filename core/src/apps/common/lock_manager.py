@@ -169,7 +169,7 @@ def lock_device_if_unlocked() -> None:
     elif config.is_unlocked():
         lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
 
-    if utils.USE_POWER_MANAGER and not utils.EMULATOR:
+    if utils.USE_POWER_MANAGER:
         if workflow.autolock_interrupts_workflow:
             if not config.is_unlocked():
                 # locking during PIN entering should restart the workflow, otherwise the keyboard input field is not cleared
