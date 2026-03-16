@@ -64,8 +64,8 @@
     "addr_mismatch__xpub_mismatch": "XPUB incorrecte ?",
     "address__cancel_contact_support": "Si l'adresse ne correspond pas, contactez le support à trezor.io/support.",
     "address__cancel_receive": {
-      "Bolt": "Annuler réception",
-      "Caesar": "Annuler la réception",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Annuler la réception",
       "Eckhart": "Annuler la réception ?"
     },
@@ -109,12 +109,6 @@
       "Caesar": "Adresse de réception",
       "Delizia": "Adresse de réception",
       "Eckhart": "Adresse de réception"
-    },
-    "address_details__title_receiving_to": {
-      "Bolt": "Récep. sur",
-      "Caesar": "Réception sur",
-      "Delizia": "Réception sur",
-      "Eckhart": "Réception sur"
     },
     "authenticate__confirm_template": "Autoriser l'app connectée à vérifier l'authenticité de votre {0} ?",
     "authenticate__header": "Authentifier l'appareil",
@@ -205,7 +199,7 @@
       "Delizia": "Données d'engagement",
       "Eckhart": "Données d'engagement"
     },
-    "bitcoin__confirm_locktime": "Confirmer le délai de verrouillage",
+    "bitcoin__confirm_locktime": "Conf. délai de verrouillage",
     "bitcoin__create_proof_of_ownership": "Voulez-vous créer une preuve de propriété ?",
     "bitcoin__high_mining_fee_template": {
       "Bolt": "Les frais de minage de {0}\nsont trop élevés.",
@@ -437,7 +431,12 @@
     "buttons__cancel": "Annuler",
     "buttons__change": "Changer",
     "buttons__check": "Vérifier",
-    "buttons__check_again": "Revérifier",
+    "buttons__check_again": {
+      "Bolt": "Revérifier",
+      "Caesar": "Revérifier",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "buttons__close": "Fermer",
     "buttons__confirm": {
       "Bolt": "Conf.",
@@ -958,8 +957,13 @@
     "ethereum__approve_unlimited_template": "Autoriser un montant illimité de {0}",
     "ethereum__contract_address": "Adresse de contrat du fournisseur",
     "ethereum__data_size_template": "Taille : {0} octets",
-    "ethereum__eip_7702": "",
-    "ethereum__eip_7702_title": "",
+    "ethereum__eip_7702": {
+      "Bolt": "Autoriser le contrat suivant en tant qu'EIP-7702 sur votre compte",
+      "Caesar": "Autoriser le contrat suivant en tant qu'EIP-7702 sur votre compte",
+      "Delizia": "Autoriser le contrat suivant en tant qu'EIP-7702 sur votre compte ?",
+      "Eckhart": "Autoriser le contrat suivant en tant qu'EIP-7702 sur votre compte ?"
+    },
+    "ethereum__eip_7702_title": "Compte intelligent",
     "ethereum__gas_limit": "Limite de gas",
     "ethereum__gas_price": "Prix du gas",
     "ethereum__interaction_contract": "Contrat d'interaction",
@@ -1107,7 +1111,12 @@
     "homescreen__firmware_version": "Version du firmware",
     "homescreen__set_default": "Remplacer le fond d'écran par l'image par défaut ?",
     "homescreen__settings_subtitle": "Paramètres",
-    "homescreen__settings_title": "Écran d'accueil",
+    "homescreen__settings_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Écran d'accueil",
+      "Eckhart": ""
+    },
     "homescreen__title_backup_failed": "La sauveg. a échoué",
     "homescreen__title_backup_needed": "Sauveg. nécessaire",
     "homescreen__title_coinjoin_authorized": "Coinjoin autorisé",
@@ -1172,7 +1181,12 @@
     },
     "instructions__continue_in_app": "Continuer dans l'app",
     "instructions__enter_next_share": "Saisissez le fragment suivant",
-    "instructions__hold_to_confirm": "Maintenez pour confirmer",
+    "instructions__hold_to_confirm": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Maintenez pour confirmer",
+      "Eckhart": ""
+    },
     "instructions__hold_to_continue": "Maintenez pour continuer",
     "instructions__hold_to_exit_tutorial": "Maintenez pour quitter le tutoriel",
     "instructions__hold_to_sign": "Maintenez pour signer",
@@ -1695,7 +1709,12 @@
     "pin__last_attempt": "Dernière tentative",
     "pin__mismatch": "Les codes PIN saisis ne correspondent pas !",
     "pin__pin_mismatch": "Erreur de code PIN",
-    "pin__please_check_again": "Veuillez revérifier.",
+    "pin__please_check_again": {
+      "Bolt": "",
+      "Caesar": "Veuillez revérifier.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "pin__reenter": "Ressaisir le code PIN",
     "pin__reenter_new": "Ressaisir le nouveau PIN",
     "pin__reenter_to_confirm": "Veuillez ressaisir le code PIN pour confirmer.",
@@ -1735,7 +1754,12 @@
     "progress__authenticity_check": "Vérification de l'authenticité...",
     "progress__done": "Terminé",
     "progress__loading_transaction": "Chargement de la transaction...",
-    "progress__locking_device": "Verrouillage de l'appareil...",
+    "progress__locking_device": {
+      "Bolt": "Verrouillage de l'appareil...",
+      "Caesar": "Verrouillage de l'appareil...",
+      "Delizia": "Verrouillage de l'appareil...",
+      "Eckhart": ""
+    },
     "progress__one_second_left": "1 seconde restante",
     "progress__please_wait": {
       "Bolt": "Veuillez patienter",
@@ -1751,7 +1775,12 @@
     "reboot_to_bootloader__restart": "Trezor va redémarrer en mode bootloader.",
     "reboot_to_bootloader__title": "Accéder au bootloader",
     "reboot_to_bootloader__version_by_template": "Version du firmware {0}\npar {1}",
-    "recovery__cancel_dry_run": "Annuler la vérif. de la sauveg.",
+    "recovery__cancel_dry_run": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Annuler la vérif. de la sauveg.",
+      "Eckhart": ""
+    },
     "recovery__check_dry_run": {
       "Bolt": "Vérifier votre sauvegarde ?",
       "Caesar": "Vérifier votre sauvegarde ?",
@@ -1806,7 +1835,7 @@
       "Bolt": "Fragment déjà saisi",
       "Caesar": "Fragment déjà saisi",
       "Delizia": "Fragment déjà saisi",
-      "Eckhart": "Fragment déjà saisi."
+      "Eckhart": "Fragment déjà saisi. Veuillez en saisir un autre."
     },
     "recovery__share_does_not_match": "Le fragment ne correspond pas",
     "recovery__share_from_another_multi_share_backup": "Vous avez saisi un fragment d'une autre sauvegarde.",
@@ -1906,7 +1935,12 @@
     "reset__by_continuing": "En continuant, vous acceptez les conditions générales de Trezor.",
     "reset__cancel_create_wallet": "Annuler la création du portefeuille",
     "reset__check_backup_instructions": "Vérifions rapidement votre sauvegarde.",
-    "reset__check_backup_title": "Vérifier la sauvegarde",
+    "reset__check_backup_title": {
+      "Bolt": "",
+      "Caesar": "Vérifier la sauvegarde",
+      "Delizia": "",
+      "Eckhart": "Vérifier la sauvegarde"
+    },
     "reset__check_group_share_title_template": {
       "Bolt": "Verif. g{0} - f{1}",
       "Caesar": "",
@@ -1926,7 +1960,12 @@
       "Delizia": "Vérifiez la sauveg.",
       "Eckhart": "Vérifier la sauvegarde du portefeuille"
     },
-    "reset__continue_with_next_share": "Continuez avec le fragment suivant.",
+    "reset__continue_with_next_share": {
+      "Bolt": "Continuez avec le fragment suivant.",
+      "Caesar": "Continuez avec le fragment suivant.",
+      "Delizia": "Continuez avec le fragment suivant.",
+      "Eckhart": "Continuez au fragment suivant"
+    },
     "reset__continue_with_share_template": {
       "Bolt": "Continuez avec le fragm. #{0}.",
       "Caesar": "Continuez avec le fragment #{0}.",
@@ -2058,7 +2097,12 @@
       "Delizia": "",
       "Eckhart": "Sélectionnez le mot #{0} de la sauvegarde"
     },
-    "reset__select_word_x_of_y_template": "Sélect. mot {0} sur {1} :",
+    "reset__select_word_x_of_y_template": {
+      "Bolt": "Sélect. mot {0} sur {1} :",
+      "Caesar": "Sélect. mot {0} sur {1} :",
+      "Delizia": "Sélect. mot {0} sur {1} :",
+      "Eckhart": ""
+    },
     "reset__set_it_to_count_template": {
       "Bolt": "Définissez-le sur {0} et vous aurez besoin ",
       "Caesar": "",
@@ -2219,7 +2263,7 @@
     "reset__words_may_repeat": "Les mots peuvent se répéter.",
     "reset__words_written_down_template": "J'ai noté les {0} mots dans l'ordre.",
     "reset__write_down_words_template": {
-      "Bolt": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille.",
+      "Bolt": "",
       "Caesar": "Écrivez les {0} mots suivants dans l'ordre.",
       "Delizia": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille.",
       "Eckhart": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille."
@@ -2401,14 +2445,24 @@
     "send__sign_transaction": "Signer la transaction",
     "send__title_confirm_sending": "Confirmer l'envoi",
     "send__title_joint_transaction": "Transaction conjointe",
-    "send__title_receiving_to": "Réception sur",
+    "send__title_receiving_to": {
+      "Bolt": "Réception sur",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "send__title_sending": "Envoi",
     "send__title_sending_amount": "Montant de l'envoi",
     "send__title_sending_to": "Envoi à",
     "send__to_the_total_amount": "Pour un total de :",
     "send__total_amount": "Montant total",
     "send__transaction_id": "ID de transaction",
-    "send__transaction_signed": "Transaction signée",
+    "send__transaction_signed": {
+      "Bolt": "Transaction signée",
+      "Caesar": "Transaction signée",
+      "Delizia": "Transaction signée",
+      "Eckhart": "Transaction signée."
+    },
     "send__you_are_contributing": "Vous contribuez :",
     "setting__adjust": "Ajuster",
     "setting__apply": "Appliquer",
@@ -2428,7 +2482,12 @@
     "sign_message__confirm_address": "Adresse de signature",
     "sign_message__confirm_message": "Confirmer le message",
     "sign_message__confirm_without_review": "Confirmer sans vérifier",
-    "sign_message__message_size": "Taille du message",
+    "sign_message__message_size": {
+      "Bolt": "Taille du message",
+      "Caesar": "",
+      "Delizia": "Taille du message",
+      "Eckhart": "Taille du message"
+    },
     "sign_message__verify_address": "Vérifier l'adresse",
     "sn__action": {
       "Bolt": "",
@@ -2730,10 +2789,10 @@
       "Eckhart": "TROPIC01 est une nouvelle génération de puce Secure Element open-source conçue pour une sécurité matérielle transparente et vérifiable."
     },
     "tutorial__use_trezor": {
-      "Bolt": "Utilisez votre Trezor avec\nles boutons de gauche et de droite.\n\nContinuez avec le bouton de droite.",
-      "Caesar": "Utilisez votre Trezor avec les boutons de gauche et de droite.\nContinuez avec droite.",
-      "Delizia": "Utilisez votre Trezor avec\nles boutons de gauche et de droite.\n\nContinuez avec le bouton de droite.",
-      "Eckhart": "Utilisez votre Trezor avec\nles boutons de gauche et de droite.\n\nContinuez avec le bouton de droite."
+      "Bolt": "",
+      "Caesar": "Utilisez votre Trezor\navec les boutons de gauche et de droite.\n\rContinuez avec droite.",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "tutorial__welcome_press_right": "Bienvenue sur votre Trezor. Appuyez sur le bouton de droite pour continuer.",
     "tutorial__welcome_safe5": {
@@ -2818,7 +2877,7 @@
     "words__chain": "Chaîne",
     "words__comm_trouble": "Votre Trezor a des difficultés à communiquer avec l'appareil connecté.",
     "words__confirm": "Confirmer",
-    "words__confirm_all": "",
+    "words__confirm_all": "Tout confirmer",
     "words__confirm_fee": "Confirmer les frais",
     "words__connect": "Connecter",
     "words__connected": "Connecté",
@@ -2827,10 +2886,20 @@
     "words__continue_anyway_question": "Continuer quand même ?",
     "words__continue_with": "Continuer avec",
     "words__device": "Appareil",
-    "words__disabled": "Désactivé",
+    "words__disabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Désactivé"
+    },
     "words__disconnect": "Déconnecter",
     "words__disconnected": "Déconnecté",
-    "words__enabled": "Activé",
+    "words__enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Activé"
+    },
     "words__error": "Erreur",
     "words__fee": "Frais",
     "words__fee_limit": "Limite de frais",
@@ -2858,29 +2927,48 @@
     "words__no": "Non",
     "words__not_recommended": "Non recommandé !",
     "words__note": "Remarque",
-    "words__off": "DÉSACTIVÉ",
-    "words__on": "ACTIVÉ",
+    "words__off": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "DÉSACTIVÉ"
+    },
+    "words__on": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "ACTIVÉ"
+    },
     "words__operation_cancelled": "Opération annulée",
     "words__outputs": "sorties",
     "words__pay_attention": "Faites attention",
-    "words__please_check_again": "Veuillez revérifier",
+    "words__please_check_again": {
+      "Bolt": "Veuillez revérifier",
+      "Caesar": "Veuillez revérifier",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__please_try_again": "Veuillez réessayer",
     "words__power": "Alimentation",
     "words__provider": "Fournisseur",
     "words__really_wanna": "Voulez-vous vraiment",
-    "words__receive": "Recevoir",
+    "words__receive": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Recevoir"
+    },
     "words__recipient": "Destinataire",
     "words__recovery_share": "Fragment de récupération",
+    "words__resource": "",
     "words__review": "Vérifier",
     "words__security": "Sécurité",
     "words__send": "Envoyer",
     "words__set": "Définir",
     "words__settings": "Paramètres",
-    "words__show_next": "",
+    "words__show_next": "Afficher la suite",
     "words__sign": "Signer",
     "words__signer": "Signataire",
-    "words__staking_for": "",
-    "words__staking_from": "",
     "words__swap": "Swap",
     "words__title_check": "Vérifier",
     "words__title_done": "Terminé",
@@ -2933,6 +3021,8 @@
       "Delizia": "Déverrouillé",
       "Eckhart": "Déverrouillé(e)(s)"
     },
+    "words__votes": "",
+    "words__voting": "",
     "words__wallet": "Portefeuille",
     "words__warning": "Avertissement",
     "words__wipe": "Effacer",
