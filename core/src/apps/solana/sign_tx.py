@@ -32,6 +32,7 @@ async def sign_tx(
 
     from .layout import confirm_transaction
     from .predefined_transaction import (
+        get_native_transfer_instructions,
         get_token_transfer_instructions,
         try_confirm_predefined_transaction,
     )
@@ -75,15 +76,26 @@ async def sign_tx(
     if msg.payment_req:
         from apps.common.payment_request import PaymentRequestVerifier
 
-        transfer_token_instructions = get_token_transfer_instructions(
-            transaction.get_visible_instructions()
-        )
         verifier = PaymentRequestVerifier(msg.payment_req, SLIP44_ID, keychain)
-        for transfer_token_instruction in transfer_token_instructions:
-            verifier.add_output(
-                transfer_token_instruction.amount,
-                base58.encode(transfer_token_instruction.destination_account[0]),
+
+        visible_instructions = transaction.get_visible_instructions()
+        transfer_instructions = get_native_transfer_instructions(visible_instructions)
+        if transfer_instructions:
+            for transfer_instruction in transfer_instructions:
+                verifier.add_output(
+                    transfer_instruction.lamports,
+                    base58.encode(transfer_instruction.recipient_account[0]),
+                )
+        else:
+            token_transfer_instructions = get_token_transfer_instructions(
+                visible_instructions
             )
+            for transfer_token_instruction in token_transfer_instructions:
+                verifier.add_output(
+                    transfer_token_instruction.amount,
+                    base58.encode(transfer_token_instruction.destination_account[0]),
+                )
+
         verifier.verify()
 
     if not await try_confirm_predefined_transaction(
