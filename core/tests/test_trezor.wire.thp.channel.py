@@ -14,6 +14,13 @@ if utils.USE_THP:
     from trezor.wire.thp.writer import MAX_PAYLOAD_LEN
 
     def _encoded_len_patch(first_len: int) -> patch:
+        """
+        Patches `protobuf.encoded_length`:
+
+        - the first call of `protobuf.encoded_length(msg)` returns `first_len`,
+        - subsequent calls of `protobuf.encoded_length(msg)` return `trezorproto.encoded_length(msg)` (correct value).
+        """
+
         def _patch_first_encoded_len(
             first_len: int,
         ) -> Callable[[protobuf.MessageType], int]:
