@@ -93,6 +93,10 @@ def test_add_remove(session: Session):
         for cred in CREDS[: RK_CAPACITY - 2]:
             fido.add_credential(session, cred)
 
+        # Check that the all credentials can be retrieved
+        creds = fido.list_credentials(session)
+        assert len(creds) == RK_CAPACITY
+
         # Adding one more valid credential to full storage should fail.
         with pytest.raises(TrezorFailure):
             fido.add_credential(session, CREDS[-1])
