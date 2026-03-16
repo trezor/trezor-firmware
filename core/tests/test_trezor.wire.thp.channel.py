@@ -10,7 +10,8 @@ if utils.USE_THP:
     from trezor import protobuf, wire
     from trezor.messages import Ping
     from trezor.wire.thp import channel as channel_module
-    from trezor.wire.thp.memory_manager import _PROTOBUF_BUFFER_SIZE
+    from trezor.wire.thp.channel import Reassembler
+    from trezor.wire.thp.memory_manager import _PROTOBUF_BUFFER_SIZE, ThpBuffer
     from trezor.wire.thp.writer import MAX_PAYLOAD_LEN
 
     def _encoded_len_patch(first_len: int) -> patch:
@@ -49,8 +50,7 @@ class TestTrezorHostProtocolChannel(unittest.TestCase):
         """
         Test request of a reassembly buffer (various sizes).
         """
-        channel = thp_common.TrackedChannel()
-        reassembler: channel_module.Reassembler = channel.reassembler
+        reassembler = Reassembler(ThpBuffer())
         read_buffer = reassembler.thp_read_buf
         # Check constant has not been modified
         self.assertEqual(_PROTOBUF_BUFFER_SIZE, 8192)
