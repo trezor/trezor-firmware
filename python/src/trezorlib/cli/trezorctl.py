@@ -43,6 +43,7 @@ from . import (
     ble,
     btc,
     cardano,
+    ckb,
     crypto,
     debug,
     device,
@@ -91,6 +92,7 @@ COMMAND_ALIASES = {
     "xlm": stellar.cli,
     "xtz": tezos.cli,
     "trx": tron.cli,
+    "ckb": ckb.cli,
     # firmware aliases:
     "fw": firmware.cli,
     "update-firmware": firmware.update,
@@ -431,6 +433,7 @@ def wait_for_emulator(obj: TrezorConnection, timeout: float) -> None:
 
 cli.add_command(btc.cli)
 cli.add_command(cardano.cli)
+cli.add_command(ckb.cli)
 cli.add_command(crypto.cli)
 cli.add_command(device.cli)
 cli.add_command(eos.cli)
