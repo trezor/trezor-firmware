@@ -271,6 +271,7 @@ class Capability(IntEnum):
     Tron = 24
     N4W1 = 25
     TouchWakeup = 26
+    CKB = 28
 
 
 class SdProtectOperationType(IntEnum):
@@ -772,6 +773,8 @@ class MessageType(IntEnum):
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    CKBGetAddress = 5500
+    CKBAddress = 5501
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -9360,6 +9363,46 @@ class TronRawParameter(protobuf.MessageType):
     ) -> None:
         self.type_url = type_url
         self.value = value
+
+
+class CKBGetAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5500
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+        3: protobuf.Field("network", "string", repeated=False, required=False, default='Mainnet'),
+        4: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+        show_display: Optional["bool"] = None,
+        network: Optional["str"] = 'Mainnet',
+        chunkify: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.show_display = show_display
+        self.network = network
+        self.chunkify = chunkify
+
+
+class CKBAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5501
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.address = address
+        self.mac = mac
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

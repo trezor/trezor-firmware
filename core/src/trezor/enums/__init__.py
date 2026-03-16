@@ -241,6 +241,7 @@ if TYPE_CHECKING:
         Tron = 24
         N4W1 = 25
         TouchWakeup = 26
+        CKB = 28
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0
@@ -712,6 +713,8 @@ if TYPE_CHECKING:
         TronUnfreezeBalanceV2Contract = 2208
         TronWithdrawUnfreeze = 2209
         TronVoteWitnessContract = 2210
+        CKBGetAddress = 5500
+        CKBAddress = 5501
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

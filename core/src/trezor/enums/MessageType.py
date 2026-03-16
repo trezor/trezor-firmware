@@ -294,3 +294,5 @@ if not utils.BITCOIN_ONLY:
     TronUnfreezeBalanceV2Contract = 2208
     TronWithdrawUnfreeze = 2209
     TronVoteWitnessContract = 2210
+    CKBGetAddress = 5500
+    CKBAddress = 5501
