@@ -170,7 +170,7 @@ def decrypt(
     r = encrypted_master_secret[len(encrypted_master_secret) // 2 :]
     salt = _get_salt(identifier, extendable)
     for i in reversed(range(_ROUND_COUNT)):
-        (l, r) = (
+        l, r = (
             r,
             _xor(l, _round_function(i, passphrase, iteration_exponent, salt, r)),
         )

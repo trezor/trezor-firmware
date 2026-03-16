@@ -72,7 +72,7 @@ class ThpContext:
         else:
             race_task = race(*children, _timeout_after(timeout_ms))
 
-        (iface_ctx, packet_len) = await race_task  # will raise on timeout
+        iface_ctx, packet_len = await race_task  # will raise on timeout
         assert packet_len == iface_ctx._iface.RX_PACKET_LEN
 
         # read and handle the packet using its `InterfaceContext`

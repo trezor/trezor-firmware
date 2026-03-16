@@ -1,7 +1,7 @@
 import json
 import sys
 
-(SUFFIX, LANGS_JSON, TARGET) = sys.argv[1:]
+SUFFIX, LANGS_JSON, TARGET = sys.argv[1:]
 
 LANGS = json.loads(LANGS_JSON)
 for lang in LANGS:

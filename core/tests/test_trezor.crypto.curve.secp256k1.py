@@ -258,7 +258,7 @@ class TestCryptoSecp256k1(unittest.TestCase):
             pk2 = secp256k1.publickey(sk2, True)
             self.assertEqual(secp256k1.multiply(sk1, pk2), secp256k1.multiply(sk2, pk1))
 
-        (sk, pk) = self.vectors[0]
+        sk, pk = self.vectors[0]
         sk = hex(sk)[2:]
         if len(sk) < 64:
             sk = "0" * (64 - len(sk)) + sk

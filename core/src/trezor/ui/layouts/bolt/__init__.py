@@ -1384,8 +1384,8 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from ..properties import with_colon
 
-        (amount_label, amount, _is_data) = amount_item or ("", "", None)
-        (fee_label, fee, _is_data) = fee_item
+        amount_label, amount, _is_data = amount_item or ("", "", None)
+        fee_label, fee, _is_data = fee_item
 
         confirm_layout = trezorui_api.confirm_value(
             title=title,
