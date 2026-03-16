@@ -71,7 +71,7 @@ def test_pin_passphrase(test_ctx: TrezorTestContext):
     fakes = 0
     for _ in range(int(12 * 2)):
         assert isinstance(ret, messages.WordRequest)
-        (word, pos) = debug.read_recovery_word()
+        word, pos = debug.read_recovery_word()
 
         if pos != 0:
             ret = session.call_raw(messages.WordAck(word=mnemonic[pos - 1]))
@@ -140,7 +140,7 @@ def test_nopin_nopassphrase(test_ctx: TrezorTestContext):
     fakes = 0
     for _ in range(int(12 * 2)):
         assert isinstance(ret, messages.WordRequest)
-        (word, pos) = debug.read_recovery_word()
+        word, pos = debug.read_recovery_word()
 
         if pos != 0:
             ret = session.call_raw(messages.WordAck(word=mnemonic[pos - 1]))
@@ -189,7 +189,7 @@ def test_word_fail(session: Session):
 
     assert isinstance(ret, messages.WordRequest)
     for _ in range(int(24 * 2)):
-        (word, pos) = debug.read_recovery_word()
+        word, pos = debug.read_recovery_word()
         if pos != 0:
             ret = session.call_raw(messages.WordAck(word="kwyjibo"))
             assert isinstance(ret, messages.Failure)

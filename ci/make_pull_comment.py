@@ -1,7 +1,7 @@
 import json
 import sys
 
-(RUN_ID, LANGS_JSON) = sys.argv[1:]
+RUN_ID, LANGS_JSON = sys.argv[1:]
 MAIN, *EXTRA = json.loads(LANGS_JSON)
 
 REPORT_URL = f"https://data.trezor.io/dev/firmware/ui_report/{RUN_ID}"

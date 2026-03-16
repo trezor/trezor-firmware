@@ -466,7 +466,7 @@ async def confirm_payment_request(
 
     from ..slip24 import is_swap
 
-    (title, summary_title) = (
+    title, summary_title = (
         (TR.words__swap, TR.words__swap)
         if is_swap(trades)
         else (TR.words__confirm, TR.words__title_summary)

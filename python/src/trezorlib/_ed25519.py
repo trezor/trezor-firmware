@@ -103,8 +103,8 @@ ident = Point((0, 1, 1, 0))
 def edwards_add(P: Point, Q: Point) -> Point:
     # This is formula sequence 'addition-add-2008-hwcd-3' from
     # http://www.hyperelliptic.org/EFD/g1p/auto-twisted-extended-1.html
-    (x1, y1, z1, t1) = P
-    (x2, y2, z2, t2) = Q
+    x1, y1, z1, t1 = P
+    x2, y2, z2, t2 = Q
 
     a = (y1 - x1) * (y2 - x2) % q
     b = (y1 + x1) * (y2 + x2) % q
@@ -125,7 +125,7 @@ def edwards_add(P: Point, Q: Point) -> Point:
 def edwards_double(P: Point) -> Point:
     # This is formula sequence 'dbl-2008-hwcd' from
     # http://www.hyperelliptic.org/EFD/g1p/auto-twisted-extended-1.html
-    (x1, y1, z1, _) = P
+    x1, y1, z1, _ = P
 
     a = x1 * x1 % q
     b = y1 * y1 % q
@@ -187,7 +187,7 @@ def encodeint(y: int) -> bytes:
 
 
 def encodepoint(P: Point) -> bytes:
-    (x, y, z, _) = P
+    x, y, z, _ = P
     zi = inv(z)
     x = (x * zi) % q
     y = (y * zi) % q
@@ -257,7 +257,7 @@ def signature_unsafe(m: bytes, sk: bytes, pk: bytes) -> bytes:
 
 
 def isoncurve(P: Point) -> bool:
-    (x, y, z, t) = P
+    x, y, z, t = P
     return (
         z % q != 0
         and x * y % q == z * t % q
@@ -287,8 +287,8 @@ def checkvalid(s: bytes, m: bytes, pk: bytes) -> None:
     S = decodeint(s[b // 8 : b // 4])
     h = Hint(encodepoint(R) + pk + m)
 
-    (x1, y1, z1, _) = P = scalarmult_B(S)
-    (x2, y2, z2, _) = Q = edwards_add(R, scalarmult(A, h))
+    x1, y1, z1, _ = P = scalarmult_B(S)
+    x2, y2, z2, _ = Q = edwards_add(R, scalarmult(A, h))
 
     if (
         not isoncurve(P)
