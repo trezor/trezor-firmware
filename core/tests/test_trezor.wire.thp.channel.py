@@ -106,7 +106,6 @@ class TestTrezorHostProtocolChannel(unittest.TestCase):
             with channel:
                 channel.set_expected_messages_to_write([Ping])
                 gen.send(None)
-                gen.send(None)
 
             # Check expected Ping
             assert Ping.is_type_of(channel.messages_to_write[-1])
@@ -145,7 +144,6 @@ class TestTrezorHostProtocolChannel(unittest.TestCase):
         gen = channel.write(Ping(message=ping_message), 0)
         with channel:
             channel.set_expected_messages_to_write([Ping])
-            gen.send(None)
             gen.send(None)
 
         # Check expected Ping
