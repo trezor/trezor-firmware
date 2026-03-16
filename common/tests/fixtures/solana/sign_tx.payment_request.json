@@ -120,7 +120,45 @@
       "result": {
         "error_message": "Multiple transfers not supported"
       }
+    },
+    {
+      "experimental": true,
+      "description": "Native SOL Payment request",
+      "parameters": {
+        "payment_req": true,
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "11111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 2,
+              "accounts": {
+                "funding_account": 0,
+                "recipient_account": 1
+              },
+              "data": {
+                "instruction_id": 2,
+                "lamports": 200000
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "7d9b551808a878b6dd6255c7b775b7afcd2edb011a1918611d9b72c3fd2f5fe89d8bf30ea41fa6dc91f33e20e9eb07527aadf1e082eb746880167d102a76270c"
+      }
     }
-
   ]
 }

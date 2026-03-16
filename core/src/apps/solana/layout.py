@@ -308,15 +308,28 @@ async def confirm_unsupported_program_confirm(
 async def confirm_system_transfer(
     transfer_instruction: SystemProgramTransferInstruction,
     fee: Fee,
+    signer_path: list[int],
     blockhash: bytes,
+    verified_payment_request: PaymentRequest | None,
 ) -> None:
-    await confirm_solana_recipient(
-        recipient=base58.encode(transfer_instruction.recipient_account[0]),
-        title=TR.words__recipient,
-        items=[(TR.words__blockhash, base58.encode(blockhash), True)],
-    )
+    if verified_payment_request:
+        await confirm_payment_request(
+            provider_address=base58.encode(transfer_instruction.recipient_account[0]),
+            address_n=signer_path,
+            amount=transfer_instruction.lamports,
+            decimals=9,
+            unit="SOL",
+            fee=fee,
+            verified_payment_request=verified_payment_request,
+        )
+    else:
+        await confirm_solana_recipient(
+            recipient=base58.encode(transfer_instruction.recipient_account[0]),
+            title=TR.words__recipient,
+            items=[(TR.words__blockhash, base58.encode(blockhash), True)],
+        )
 
-    await confirm_custom_transaction(transfer_instruction.lamports, 9, "SOL", fee)
+        await confirm_custom_transaction(transfer_instruction.lamports, 9, "SOL", fee)
 
 
 async def confirm_token_transfer(
@@ -535,14 +548,14 @@ async def confirm_payment_request(
     address_n: list[int],
     amount: int,
     decimals: int,
-    token: SolanaTokenInfo,
+    unit: str,
     fee: Fee,
     verified_payment_request: PaymentRequest,
 ) -> None:
     from trezor.ui.layouts import confirm_payment_request
     from trezor.ui.layouts.slip24 import Refund, Trade
 
-    total_amount = format_amount_unit(format_amount(amount, decimals), token.symbol)
+    total_amount = format_amount_unit(format_amount(amount, decimals), unit)
 
     texts: list[tuple[str | None, str]] = []
     refunds = []

@@ -8,6 +8,7 @@ from .transaction.instructions import (
     _SYSTEM_PROGRAM_ID,
     AssociatedTokenAccountProgramCreateInstruction,
     Instruction,
+    SystemProgramTransferInstruction,
     Token2022ProgramTransferCheckedInstruction,
     TokenProgramTransferCheckedInstruction,
 )
@@ -24,6 +25,16 @@ if TYPE_CHECKING:
         TokenProgramTransferCheckedInstruction
         | Token2022ProgramTransferCheckedInstruction
     )
+
+
+def get_native_transfer_instructions(
+    instructions: list[Instruction],
+) -> list[SystemProgramTransferInstruction]:
+    return [
+        instruction
+        for instruction in instructions
+        if SystemProgramTransferInstruction.is_type_of(instruction)
+    ]
 
 
 def get_token_transfer_instructions(
@@ -173,7 +184,7 @@ async def try_confirm_token_transfer_transaction(
             signer_path,
             total_token_amount,
             transfer_token_instructions[0].decimals,
-            token,
+            token.symbol,
             fee,
             verified_payment_request,
         )
@@ -216,7 +227,9 @@ async def try_confirm_predefined_transaction(
 
     if instructions_count == 1:
         if SystemProgramTransferInstruction.is_type_of(instructions[0]):
-            await confirm_system_transfer(instructions[0], fee, blockhash)
+            await confirm_system_transfer(
+                instructions[0], fee, signer_path, blockhash, verified_payment_request
+            )
             return True
 
     if await try_confirm_staking_transaction(

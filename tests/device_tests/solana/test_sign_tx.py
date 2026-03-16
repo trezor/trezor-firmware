@@ -37,6 +37,19 @@ from .construct.transaction import Message, RawInstruction
 pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core")]
 
 
+def get_amount_and_destination(parameters, instruction):
+    if "lamports" in instruction["data"]:
+        # native SOL transfer
+        amount = instruction["data"]["lamports"]
+        destination = instruction["accounts"]["recipient_account"]
+    else:
+        # token transfer
+        amount = instruction["data"]["amount"]
+        destination = instruction["accounts"]["destination_account"]
+
+    return amount, parameters["construct"]["accounts"][destination]
+
+
 @parametrize_using_common_fixtures(
     "solana/sign_tx.system_program.json",
     "solana/sign_tx.stake_program.json",
@@ -106,12 +119,7 @@ def test_solana_sign_tx(session: Session, parameters, result):
                 recipient_name="trezor.io",
                 slip44=501,
                 outputs=[
-                    (
-                        i["data"]["amount"],
-                        parameters["construct"]["accounts"][
-                            i["accounts"]["destination_account"]
-                        ],
-                    )
+                    get_amount_and_destination(parameters, i)
                     for i in parameters["construct"]["instructions"]
                 ],
                 memos=memos,
