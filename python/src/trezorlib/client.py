@@ -24,6 +24,7 @@ import typing as t
 import unicodedata
 import warnings
 from abc import ABCMeta, abstractmethod
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
 
 import typing_extensions as tx
@@ -245,6 +246,7 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         self._mapping = mapping
         self._features = None
         self.pairing = pairing
+        self._interact_ctx = self._interact()
 
     # ===== Internal methods for overriding in subclasses =====
 
@@ -284,11 +286,15 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         """
         raise NotImplementedError
 
+    def _interact(self, *, force_flush: bool = False) -> AbstractContextManager:
+        return nullcontext()
+
     # ===== Common implementations =====
 
     def __enter__(self) -> tx.Self:
         """(Re)Open a connection to the device."""
         self.transport.__enter__()
+        self._interact_ctx.__enter__()
         return self
 
     def __exit__(
@@ -297,7 +303,10 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         exc_value: BaseException | None,
         traceback: t.Any,
     ) -> None:
-        self.transport.__exit__(exc_type, exc_value, traceback)
+        try:
+            self._interact_ctx.__exit__(exc_type, exc_value, traceback)
+        finally:
+            self.transport.__exit__(exc_type, exc_value, traceback)
 
     def connect(self) -> None:
         """Establish a connection to the device.

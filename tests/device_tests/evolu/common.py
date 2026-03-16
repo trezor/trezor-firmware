@@ -47,17 +47,16 @@ class ThpPairingResult:
         self.credential: ThpCredentialResponse = credential
 
 
-def pair_and_get_credential(client: Client) -> ThpPairingResult:
-    from ..thp.connect import nfc_pairing, prepare_channel_for_pairing
+def pair_and_get_credential(test_ctx: Client) -> ThpPairingResult:
+    from ..thp.connect import prepare_channel_for_pairing
 
-    prepare_channel_for_pairing(
-        client, host_static_privkey=TEST_host_static_private_key
+    pairing = prepare_channel_for_pairing(
+        test_ctx, host_static_privkey=TEST_host_static_private_key, nfc_pairing=True
     )
-    nfc_pairing(client)
-    credential = client.pairing.request_credential(autoconnect=False)
-    client.pairing.finish()
+    credential = pairing.request_credential(autoconnect=False)
+    pairing.finish()
 
-    return ThpPairingResult(client.get_session(), credential)
+    return ThpPairingResult(test_ctx.get_session(), credential)
 
 
 def pair_and_get_invalid_credential(client: Client) -> ThpPairingResult:
@@ -78,7 +77,7 @@ def get_delegated_identity_key(client: Client) -> bytes:
     if client.is_thp():
         pairing_data = pair_and_get_credential(client)
         return evolu.get_delegated_identity_key(
-            client.get_session(),
+            session=pairing_data.session,
             thp_credential=pairing_data.credential.credential,
         )
     elif client.is_protocol_v1():

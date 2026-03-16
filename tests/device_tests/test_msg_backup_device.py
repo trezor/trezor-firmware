@@ -60,10 +60,13 @@ def _try_to_cancel(
     next(gen)
     while True:
         br = yield
-        # Try to cancel the backup flow on Core
-        resp = session.call_raw(messages.Cancel())
-        # Following #6483, backup is not cancellable
-        assert resp == BACKUP_IN_PROGRESS
+        # Entering session's context will send an explicit THP ACK after `BACKUP_IN_PROGRESS` is received.
+        with session.client._interact(force_flush=True):
+            # Try to cancel the backup flow on Core
+            with pytest.raises(TrezorFailure) as exc_info:
+                session.call(messages.Cancel(), expect=messages.Failure)
+            # Following #6483, backup is not cancellable
+            assert exc_info.value.failure == BACKUP_IN_PROGRESS
         try:
             gen.send(br)
         except StopIteration:
