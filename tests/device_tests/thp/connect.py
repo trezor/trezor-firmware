@@ -41,15 +41,16 @@ def prepare_channel_for_handshake(test_ctx: TrezorTestContext) -> None:
 
 def prepare_channel_for_pairing(
     test_ctx: TrezorTestContext,
+    *,
     credential: Credential | None = None,
     host_static_privkey: bytes | None = None,
     fixed_entropy: bool = False,
-) -> None:
-    """Create a fresh channel, perform the handshake using the provided fixed entropy
-    and credentials, and leave it in the pairing phase.
-    """
+    nfc_pairing: bool = False,
+) -> PairingController:
     # set up a fresh channel
-    prepare_channel_for_handshake(test_ctx)
+    assert isinstance(test_ctx.client, TrezorClientThp)
+    test_ctx.channel = Channel.allocate(test_ctx.transport)
+
     assert host_static_privkey is None or not fixed_entropy, "don't use both"
     if host_static_privkey is not None:
         test_ctx.channel._init_noise(static_privkey=host_static_privkey)
@@ -57,45 +58,43 @@ def prepare_channel_for_pairing(
         test_ctx.channel._init_noise(
             static_privkey=b"\x12" * 32, ephemeral_privkey=b"\x24" * 32
         )
+    else:
+        test_ctx.channel._init_noise()
+
     credentials = []
     if credential is not None:
         credentials.append(credential)
 
     # run the handshake
     test_ctx.channel.open(credentials)
-    assert isinstance(test_ctx.client, TrezorClientThp)
-    test_ctx.client.pairing = test_ctx.pairing = PairingController(test_ctx.client)
+
+    test_ctx.client._interact_ctx = test_ctx.client._interact()
+    test_ctx.client.pairing = PairingController(test_ctx.client)
+
+    if nfc_pairing:
+        method = Nfc(test_ctx.client.pairing)
+        # NFC screen shown
+
+        # Read `nfc_secret` and `handshake_hash` from Trezor using debuglink
+        pairing_info = test_ctx.debug.pairing_info(
+            thp_channel_id=test_ctx.channel.channel_id.to_bytes(2, "big"),
+            handshake_hash=test_ctx.channel.handshake_hash,
+            nfc_secret_host=method.nfc_host_secret,
+        )
+        assert pairing_info.handshake_hash is not None
+        assert pairing_info.nfc_secret_trezor is not None
+        assert pairing_info.handshake_hash[:16] == test_ctx.channel.handshake_hash[:16]
+
+        method.send_nfc_tag(pairing_info.nfc_secret_trezor)
+
+    return test_ctx.client.pairing
 
 
-def get_encrypted_transport_protocol(test_ctx: TrezorTestContext) -> None:
-    prepare_channel_for_pairing(test_ctx)
-    test_ctx.pairing.skip()
-
-
-def break_channel(test_ctx: TrezorTestContext) -> None:
-    cse = test_ctx.channel._noise.noise_protocol.cipher_state_encrypt
+def break_channel(client: TrezorClientThp) -> None:
+    cse = client.channel._noise.noise_protocol.cipher_state_encrypt
     cse.n = cse.n + 1
 
-    session = test_ctx.client._get_any_session()
+    session = client._get_any_session()
     session.write(messages.ButtonAck())
     with pytest.raises(ThpError):
-        session.read(1)
-
-
-def nfc_pairing(test_ctx: TrezorTestContext) -> None:
-    assert isinstance(test_ctx.client, TrezorClientThp)
-    method = Nfc(test_ctx.client.pairing)
-
-    # NFC screen shown
-
-    # Read `nfc_secret` and `handshake_hash` from Trezor using debuglink
-    pairing_info = test_ctx.debug.pairing_info(
-        thp_channel_id=test_ctx.channel.channel_id.to_bytes(2, "big"),
-        handshake_hash=test_ctx.channel.handshake_hash,
-        nfc_secret_host=method.nfc_host_secret,
-    )
-    assert pairing_info.handshake_hash is not None
-    assert pairing_info.nfc_secret_trezor is not None
-    assert pairing_info.handshake_hash[:16] == test_ctx.channel.handshake_hash[:16]
-
-    method.send_nfc_tag(pairing_info.nfc_secret_trezor)
+        session.read(timeout=1)

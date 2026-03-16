@@ -262,6 +262,7 @@ class CodeEntry(PairingMethod):
             messages.ThpCodeEntryChallenge(challenge=challenge),
             expect=messages.ThpCodeEntryCpaceTrezor,
         )
+        self.controller.channel._flush_ack()
         self.code_entry_state = CodeEntryState(
             challenge=challenge,
             commitment=commitment_msg.commitment,

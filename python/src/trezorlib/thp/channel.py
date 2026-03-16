@@ -22,7 +22,6 @@ import logging
 import secrets
 import time
 import typing as t
-from contextlib import contextmanager
 from enum import Enum, IntEnum, auto
 
 import typing_extensions as tx
@@ -40,6 +39,8 @@ from .credentials import TrezorPublicKeys, find_credential
 from .message import Message
 
 if t.TYPE_CHECKING:
+    from contextlib import AbstractContextManager
+
     from noise.functions.keypair import KeyPair
     from noise.noise_protocol import NoiseProtocol
 
@@ -111,6 +112,35 @@ class ChannelClosedError(TrezorException):
         super().__init__(self.__doc__)
 
 
+class _ThpInteractiveContext:
+    """
+    Used to create THP ACK piggybacking context per THP channel.
+
+    Allows nesting via multiple sessions/clients.
+    """
+
+    def __init__(self, channel: Channel, force_flush: bool = False) -> None:
+        self.channel = channel
+        self.force_flush = force_flush
+
+    def __enter__(self) -> tx.Self:
+        self.channel._active_contexts.append(self)
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        assert self.channel._active_contexts.pop() is self
+        if not self.channel.is_ack_piggybacking_allowed:
+            return
+
+        if not self.channel._active_contexts or self.force_flush:
+            self.channel._flush_ack()
+
+
 class Channel:
     CHUNK_SIZE: t.ClassVar[int | None] = None
 
@@ -141,7 +171,7 @@ class Channel:
         self._noise: NoiseConnection | None = None
         self.state = channel_state
         self.trezor_public_keys: TrezorPublicKeys | None = None
-        self._active_workflow: object | None = None
+        self._active_contexts: list[AbstractContextManager] = []
 
     @functools.cached_property
     def is_ack_piggybacking_allowed(self) -> bool:
@@ -300,8 +330,7 @@ class Channel:
             if e.code == exceptions.ThpErrorCode.DEVICE_LOCKED:
                 raise DeviceLockedError from e
             raise
-        if not self.is_ack_piggybacking_allowed:
-            self._send_ack(message)
+        self._send_ack(message)
         if not message.is_handshake_init_response():
             raise ProtocolError(f"Not a valid handshake init response: {message}")
 
@@ -409,16 +438,19 @@ class Channel:
                     continue
                 raise
 
-    def _send_ack(self, acked_message: Message | None) -> None:
-        if self.is_ack_piggybacking_allowed and self._active_workflow is not None:
+    def _send_ack(self, acked_message: Message) -> None:
+        if self.is_ack_piggybacking_allowed and self._active_contexts:
+            # Skip explicit THP ACK during workflow - the next request will piggyback the correct ACK bit
             return
 
-        if acked_message is not None:
-            ack = control_byte.make_ack_for(acked_message.ctrl_byte)
-            ack_message = Message(ack, acked_message.cid, b"")
-        else:
-            ack = control_byte.make_ack(not self.sync_bit_receive)
-            ack_message = Message(ack, self.channel_id, b"")
+        ack = control_byte.make_ack_for(acked_message.ctrl_byte)
+        ack_message = Message(ack, acked_message.cid, b"")
+
+        thp_io.write_payload_to_wire(self.transport, ack_message)
+
+    def _flush_ack(self) -> None:
+        ack = control_byte.make_ack(not self.sync_bit_receive)
+        ack_message = Message(ack, self.channel_id, b"")
 
         thp_io.write_payload_to_wire(self.transport, ack_message)
 
@@ -440,23 +472,6 @@ class Channel:
         raise transport.Timeout(
             f"Failed to read ACK in {retries} retries for message: {message}"
         )
-
-    @contextmanager
-    def piggyback_acks(self, marker: object) -> t.Generator[None, None, None]:
-        # Make sure the previous workflow is over.
-        assert self._active_workflow is None
-        self._active_workflow = marker
-        # Skip explicit ACKs during this workflow
-        try:
-            yield
-        finally:
-            active = self._active_workflow
-            self._active_workflow = None
-            assert active is marker
-            if self.is_ack_piggybacking_allowed:
-                # Explicitly ACK the latest received message.  The device may restart
-                # the event loop, so the next request will be sent in a separate message.
-                self._send_ack(None)
 
     def write_chunk(self, data: bytes, /) -> None:
         self._assert_handshake_done()
