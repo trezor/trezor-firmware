@@ -41,7 +41,7 @@ ENTROPY_CHECK_MIN_VERSION = (2, 8, 7)
 HOMESCREEN_STREAMING_MIN_VERSION = (2, 8, 11)
 
 
-@workflow()
+@workflow(refresh_features=True)
 def apply_settings(
     session: "Session",
     label: Optional[str] = None,
@@ -82,7 +82,6 @@ def apply_settings(
     else:
         settings.homescreen = homescreen
         session.call(settings, expect=messages.Success)
-    session.refresh_features()
 
 
 def _send_chunked_data(
@@ -99,7 +98,7 @@ def _send_chunked_data(
         response = session.call(messages.DataChunkAck(data_chunk=chunk))
 
 
-@workflow()
+@workflow(refresh_features=True)
 def change_language(
     session: "Session",
     language_data: bytes,
@@ -114,40 +113,34 @@ def change_language(
         _send_chunked_data(session, response, language_data)
     else:
         messages.Success.ensure_isinstance(response)
-    session.refresh_features()  # changing the language in features
 
 
-@workflow()
+@workflow(refresh_features=True)
 def apply_flags(session: "Session", flags: int) -> None:
     session.call(messages.ApplyFlags(flags=flags), expect=messages.Success)
-    session.refresh_features()
 
 
-@workflow()
+@workflow(refresh_features=True)
 def change_pin(session: "Session", remove: bool = False) -> None:
     session.call(messages.ChangePin(remove=remove), expect=messages.Success)
-    session.refresh_features()
 
 
-@workflow()
+@workflow(refresh_features=True)
 def change_wipe_code(session: "Session", remove: bool = False) -> None:
     session.call(messages.ChangeWipeCode(remove=remove), expect=messages.Success)
-    session.refresh_features()
 
 
-@workflow()
+@workflow(refresh_features=True)
 def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -> None:
     session.call(messages.SdProtect(operation=operation), expect=messages.Success)
-    session.refresh_features()
 
 
-@workflow()
+@workflow(invalidate_client=True)
 def wipe(session: "Session") -> None:
     session.call(messages.WipeDevice(), expect=messages.Success)
-    session.client._invalidate()
 
 
-@workflow()
+@workflow(refresh_features=True)
 def recover(
     session: "Session",
     word_count: int = 24,
@@ -224,9 +217,7 @@ def recover(
             res = session.call(messages.Cancel())
 
     # check that the result is a Success
-    res = messages.Success.ensure_isinstance(res)
-    # reinitialize the device
-    session.refresh_features()
+    messages.Success.ensure_isinstance(res)
 
 
 def is_slip39_backup_type(backup_type: messages.BackupType) -> bool:
@@ -319,7 +310,7 @@ def _get_external_entropy() -> bytes:
     return secrets.token_bytes(32)
 
 
-@workflow()
+@workflow(refresh_features=True)
 def setup(
     session: "Session",
     *,
@@ -425,7 +416,6 @@ def setup(
         _reset_no_entropycheck(session, msg, _get_entropy)
         xpubs = []
 
-    session.refresh_features()
     return xpubs
 
 
@@ -558,7 +548,7 @@ def _reset_with_entropycheck(
     return xpubs
 
 
-@workflow()
+@workflow(refresh_features=True)
 def backup(
     session: "Session",
     group_threshold: Optional[int] = None,
@@ -574,7 +564,6 @@ def backup(
         ),
         expect=messages.Success,
     )
-    session.refresh_features()
 
 
 @workflow()
@@ -622,7 +611,7 @@ def unlock_bootloader(session: "Session") -> None:
     session.call(messages.UnlockBootloader(), expect=messages.Success)
 
 
-@workflow()
+@workflow(refresh_features=True)
 def set_busy(session: "Session", expiry_ms: Optional[int]) -> None:
     """Sets or clears the busy state of the device.
 
@@ -630,7 +619,6 @@ def set_busy(session: "Session", expiry_ms: Optional[int]) -> None:
     Setting `expiry_ms=None` clears the busy state.
     """
     session.call(messages.SetBusy(expiry_ms=expiry_ms), expect=messages.Success)
-    session.refresh_features()
 
 
 @workflow()
