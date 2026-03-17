@@ -24,7 +24,8 @@ use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 pub use trezor_structs::TrezorUiResult;
 use trezor_structs::{
-    ArchivedUtilEnum, ExtraLongString, LongString, PropsList, ShortString, StrExtList, TrezorUiEnum,
+    ArchivedUtilEnum, ExtraLongString, LongString, PropsList, ShortString, StrExtList, StrList,
+    TrezorUiEnum,
 };
 
 use crate::core_services::services_or_die;
@@ -163,7 +164,7 @@ pub fn error_if_not_confirmed(result: TrezorUiResult) -> core::result::Result<()
 /// - if a main step returns Info, run the info flow
 /// - after info flow, always return to the same main step
 /// - if `info_layout_can_confirm` and the info flow ends with Confirmed => finish
-pub fn confirm_with_info_flow(
+pub fn interact_with_info_flow(
     main_layout: impl for<'a> Fn(Option<&'a str>) -> UiResult,
     info_layout: impl for<'a> Fn(Option<&'a str>) -> UiResult,
     br_name: &str,
@@ -209,6 +210,136 @@ pub fn confirm_with_info_flow(
     }
 }
 
+pub struct Details<'a> {
+    pub name: &'a str,
+    pub title: &'a str,
+    pub props: &'a [(&'a str, &'a str, bool)],
+    pub subtitle: Option<&'a str>,
+    pub br_code: i32,
+}
+
+impl<'a> Details<'a> {
+    pub fn new(
+        name: &'a str,
+        props: &'a [(&'a str, &'a str, bool)],
+        title: &'a str,
+        subtitle: Option<&'a str>,
+        br_code: i32,
+    ) -> Self {
+        Self {
+            name,
+            title,
+            props,
+            subtitle,
+            br_code,
+        }
+    }
+
+    fn interact(&self) -> Result<()> {
+        show_properties(self.title, self.props, self.subtitle, None, self.br_code)
+    }
+}
+
+pub struct Cancel<'a> {
+    pub title: &'a str,
+}
+
+impl<'a> Cancel<'a> {
+    pub fn new(title: &'a str) -> Self {
+        Self { title }
+    }
+
+    fn interact(&self) -> UiResult {
+        confirm_action(self.title, "", false)
+    }
+}
+
+pub struct Menu<'a> {
+    children: &'a [Details<'a>],
+    cancel: Option<Cancel<'a>>,
+}
+
+impl<'a> Menu<'a> {
+    const MAX_MENU_ITEMS: usize = 5;
+
+    pub fn new(children: &'a [Details<'a>], cancel: Option<Cancel<'a>>) -> Self {
+        Self { children, cancel }
+    }
+
+    pub fn interact(&self) -> UiResult {
+        if self.children.is_empty() && self.cancel.is_none() {
+            // TODO: maybe raise error instead
+            return Ok(TrezorUiResult::Confirmed);
+        }
+
+        if self.children.len() > Self::MAX_MENU_ITEMS {
+            // TODO: proper error type
+            return Err(Error::Timeout);
+        }
+
+        let mut items = [""; Self::MAX_MENU_ITEMS];
+        let mut i = 0usize;
+        while i < self.children.len() {
+            items[i] = self.children[i].name;
+            i += 1;
+        }
+
+        loop {
+            let choice = select_menu(
+                &items[..self.children.len()],
+                self.cancel.as_ref().map(|c| c.title),
+            )?;
+
+            match choice {
+                TrezorUiResult::Integer(idx) if (idx as usize) < self.children.len() => {
+                    // Same behavior as Python: open details, ignore its result, return to menu.
+                    let _ = self.children[idx as usize].interact()?;
+                    continue;
+                }
+                TrezorUiResult::Confirmed => {
+                    return Ok(TrezorUiResult::Confirmed);
+                }
+                TrezorUiResult::Cancelled => {
+                    if let Some(cancel) = self.cancel.as_ref() {
+                        let r = cancel.interact()?;
+                        match r {
+                            TrezorUiResult::Confirmed => return Ok(TrezorUiResult::Cancelled),
+                            TrezorUiResult::Cancelled => continue,
+                            // TODO: proper error type
+                            _ => return Err(Error::Timeout),
+                        }
+                    }
+                }
+                // TODO: proper error type
+                _ => return Err(Error::Timeout),
+            }
+        }
+    }
+}
+
+pub fn interact_with_menu_flow<'a>(
+    main_layout: impl for<'b> Fn(Option<&'b str>) -> UiResult,
+    menu: &Menu<'a>,
+    br_name: Option<&str>,
+) -> UiResult {
+    let mut first_br = br_name;
+
+    loop {
+        let result = main_layout(first_br)?;
+        first_br = None; // ButtonRequest should be sent once (for the main layout)
+
+        if matches!(result, TrezorUiResult::Info) {
+            let menu_res = menu.interact()?;
+            if matches!(menu_res, TrezorUiResult::Cancelled) {
+                return Ok(TrezorUiResult::Cancelled);
+            }
+            continue;
+        }
+
+        return Ok(result);
+    }
+}
+
 // ============================================================================
 // Public API Functions
 // ============================================================================
@@ -230,6 +361,7 @@ pub fn confirm_value(
     chunkify: bool,
     page_counter: bool,
     cancel: bool,
+    external_menu: bool,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmValue {
         title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
@@ -253,6 +385,7 @@ pub fn confirm_value(
             .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
             .transpose()?,
         br_code,
+        external_menu,
     };
     ipc_ui_call(&value)
 }
@@ -304,7 +437,7 @@ pub fn confirm_blob(
     ask_pagination: bool,
 ) -> UiResult {
     if ask_pagination {
-        confirm_with_info_flow(
+        interact_with_info_flow(
             |name| {
                 confirm_value_intro(
                     title,
@@ -333,6 +466,7 @@ pub fn confirm_blob(
                     chunkify,
                     true,
                     true,
+                    false,
                 )
             },
             br_name,
@@ -354,6 +488,7 @@ pub fn confirm_blob(
             chunkify,
             false,
             true,
+            false,
         )
     }
 }
@@ -428,6 +563,26 @@ pub fn confirm_long_value(title: &str, content: &str) -> UiResult {
     }
 }
 
+fn select_menu(items: &[&str], cancel: Option<&str>) -> UiResult {
+    let value = TrezorUiEnum::SelectMenu {
+        items: StrList::from_str_slice(items).map_err(|_| Error::FailedToSend)?,
+        cancel: cancel
+            .map(|c| ShortString::from_str(c).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+    };
+    match ipc_ui_call(&value) {
+        Ok(TrezorUiResult::Integer(idx)) if (idx as usize) < items.len() => {
+            Ok(TrezorUiResult::Integer(idx))
+        }
+        Ok(TrezorUiResult::Confirmed) => Ok(TrezorUiResult::Confirmed),
+        Ok(_) => Ok(TrezorUiResult::Cancelled),
+        Err(e) => {
+            error!("UI error: {:?}", e);
+            Err(e)
+        }
+    }
+}
+
 /// Show a confirmation dialog with a list of key-value properties
 ///
 /// Returns `Ok(true)` if user confirms, `Ok(false)` if user cancels
@@ -456,6 +611,27 @@ pub fn confirm_properties(
         br_code,
     };
     ipc_ui_call_confirm(&value)
+}
+
+pub fn show_properties(
+    title: &str,
+    props: &[(&str, &str, bool)],
+    subtitle: Option<&str>,
+    br_name: Option<&str>,
+    br_code: i32,
+) -> Result<()> {
+    let value = TrezorUiEnum::ShowProperties {
+        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
+        props: PropsList::from_prop_slice(props).map_err(|_| Error::FailedToSend)?,
+        subtitle: subtitle
+            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        br_name: br_name
+            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        br_code,
+    };
+    ipc_ui_call_void(&value)
 }
 
 /// Show a warning message

@@ -519,6 +519,7 @@ fn confirm_text(
         false,
         false,
         false,
+        false,
     )?;
     Ok(())
 }
@@ -566,6 +567,7 @@ fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         false,
         false,
         true,
+        false,
     )?;
     Ok(())
 }

@@ -1,6 +1,7 @@
 use crate::{
     ed25519::verify,
     proto::definitions::{DefinitionType, EthereumNetworkInfo, EthereumTokenInfo},
+    tokens::{token_by_chain_address, unknown_token},
 };
 #[cfg(not(test))]
 use alloc::{collections::BTreeMap, vec::Vec};
@@ -92,6 +93,20 @@ impl Definitions {
 
     pub fn slip44(&self) -> u32 {
         self.network.slip44
+    }
+
+    pub fn get_token(&self, address: &[u8]) -> EthereumTokenInfo {
+        // if we have a built-in definition, use it
+        let token = token_by_chain_address(self.network.chain_id, address);
+
+        if let Some(token) = token {
+            return token;
+        }
+        if self.tokens.contains_key(address) {
+            self.tokens.get(address).unwrap().clone()
+        } else {
+            unknown_token()
+        }
     }
 }
 

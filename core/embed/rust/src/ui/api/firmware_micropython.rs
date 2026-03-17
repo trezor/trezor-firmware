@@ -1293,8 +1293,6 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
 
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
-        dbg_println!("Received IPC message with data size: {:?}", data.len());
-
         let request_callback: Option<Obj> = kwargs
             .get(Qstr::MP_QSTR_request_cb)
             .unwrap_or_else(|_| Obj::const_none())
@@ -1337,15 +1335,11 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             TrezorUiResult::Back
         } else if obj == INFO.as_obj() {
             TrezorUiResult::Info
-        } else if obj == Obj::const_none() {
-            TrezorUiResult::None
         } else if obj.is_str() {
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
             TrezorUiResult::String(unwrap!(ShortString::from_str(unwrap!(
                 core::str::from_utf8(data)
             ))))
-        } else if let Ok(val) = bool::try_from(obj) {
-            TrezorUiResult::Boolean(val)
         } else if let Ok(val) = u32::try_from(obj) {
             TrezorUiResult::Integer(val)
         } else {

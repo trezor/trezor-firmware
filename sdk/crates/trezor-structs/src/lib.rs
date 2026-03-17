@@ -9,6 +9,24 @@ pub struct Buffer<const N: usize> {
     pub len: usize,
 }
 
+impl<const N: usize> Buffer<N> {
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data[..self.len]
+    }
+
+    pub fn buf_from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
+        if slice.len() > N {
+            return Err(());
+        }
+        let mut data = [0u8; N];
+        data[..slice.len()].copy_from_slice(slice);
+        Ok(Self {
+            data,
+            len: slice.len(),
+        })
+    }
+}
+
 pub type String<const N: usize> = Buffer<N>;
 
 pub type ShortString = String<50>;
@@ -27,11 +45,6 @@ pub type ArchivedShortBuffer = rkyv::Archived<Buffer<100>>;
 pub type ArchivedLongBuffer = rkyv::Archived<Buffer<200>>;
 
 impl<const N: usize> String<N> {
-    pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
-        let s = core::str::from_utf8(slice).map_err(|_| ())?;
-        Self::from_str(s)
-    }
-
     pub fn from_str(s: &str) -> core::result::Result<Self, ()> {
         if N > (usize::MAX as usize) || s.len() > N {
             return Err(());
@@ -44,6 +57,11 @@ impl<const N: usize> String<N> {
 
     pub fn as_str(&self) -> &str {
         core::str::from_utf8(&self.data[..self.len]).unwrap_or("#INVALID#")
+    }
+
+    pub fn str_from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
+        let s = core::str::from_utf8(slice).map_err(|_| ())?;
+        Self::from_str(s)
     }
 }
 
@@ -93,6 +111,37 @@ impl PropsList {
             props.len += 1;
         }
         Ok(props)
+    }
+}
+
+#[derive(Archive, Serialize)]
+pub struct StrList {
+    pub data: [ShortString; 5],
+    pub len: u8,
+}
+
+impl Default for StrList {
+    fn default() -> Self {
+        Self {
+            data: [ShortString::default(); 5],
+            len: 0,
+        }
+    }
+}
+
+impl StrList {
+    pub fn from_str_slice(slice: &[&str]) -> core::result::Result<Self, ()> {
+        if slice.len() > 5 {
+            return Err(());
+        }
+
+        let mut list = Self::default();
+        for s in slice {
+            let s = ShortString::from_str(s)?;
+            list.data[list.len as usize] = s;
+            list.len += 1;
+        }
+        Ok(list)
     }
 }
 
@@ -175,6 +224,10 @@ impl TypedHash {
 
 #[derive(Archive, Serialize)]
 pub enum TrezorUiEnum {
+    SelectMenu {
+        items: StrList,
+        cancel: Option<ShortString>,
+    },
     ConfirmAction {
         title: ShortString,
         action: ShortString,
@@ -208,6 +261,7 @@ pub enum TrezorUiEnum {
         cancel: bool,
         br_name: Option<ShortString>,
         br_code: i32,
+        external_menu: bool,
     },
     ConfirmValueIntro {
         title: ShortString,
@@ -259,6 +313,13 @@ pub enum TrezorUiEnum {
         br_name: Option<ShortString>,
         br_code: i32,
     },
+    ShowProperties {
+        title: ShortString,
+        props: PropsList,
+        subtitle: Option<ShortString>,
+        br_name: Option<ShortString>,
+        br_code: i32,
+    },
     ShowPublicKey {
         pubkey: LongString,
         title: Option<ShortString>,
@@ -294,14 +355,12 @@ pub enum TrezorUiEnum {
 /// Outgoing UI result message for IPC
 #[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorUiResult {
-    None,
     Confirmed,
     Back,
     Cancelled,
     Info,
     Integer(u32),
     String(ShortString),
-    Boolean(bool),
 }
 
 #[derive(Archive, Serialize)]
@@ -317,8 +376,8 @@ pub enum TrezorCryptoEnum {
     SignTypedHash {
         address_n: DerivationPath,
         hash: TypedHash,
-        encoded_network: Option<ShortBuffer>,
-        encoded_token: Option<ShortBuffer>,
+        encoded_network: Option<LongBuffer>,
+        encoded_token: Option<LongBuffer>,
     },
     GetAddressMac {
         address_n: DerivationPath,

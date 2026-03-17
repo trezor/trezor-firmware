@@ -108,7 +108,19 @@ pub fn get_approve_known_addresses() -> BTreeMap<Vec<u8>, &'static str> {
     map
 }
 
-pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
+pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
+    msg.nonce.get_or_insert_default();
+    msg.to.get_or_insert_default();
+    msg.value.get_or_insert_default();
+    msg.data_initial_chunk.get_or_insert_default();
+    msg.data_length.get_or_insert_default();
+
+    assert!(msg.nonce.is_some());
+    assert!(msg.to.is_some());
+    assert!(msg.value.is_some());
+    assert!(msg.data_initial_chunk.is_some());
+    assert!(msg.data_length.is_some());
+
     info!("Signing transaction");
     let dp = Bip32Path::from_slice(&msg.address_n);
 
@@ -176,10 +188,12 @@ pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     // have the user confirm signing
     dp.validate(&keychain)?;
 
+    // TODO: better implement parsing int value from bytes
     let mut buf = [0u8; 16];
     buf[16 - msg.gas_price.len()..].copy_from_slice(&msg.gas_price);
     let gas_price = u128::from_be_bytes(buf);
 
+    // TODO: better implement parsing int value from bytes
     let mut buf = [0u8; 16];
     buf[16 - msg.gas_limit.len()..].copy_from_slice(&msg.gas_limit);
     let gas_limit = u128::from_be_bytes(buf);
@@ -230,13 +244,15 @@ pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     let mut data_left = data_total - data.len() as u32;
 
     // Calculate total RLP length
-    let total_length = get_total_length(&msg, data_total);
+    let total_length = get_total_length(&msg, data_total)?;
     info!("total RLP length: {}", total_length);
 
     let mut rlp_buffer = Vec::new();
 
     info!("writing RLP header");
     rlp::write_header(&mut rlp_buffer, total_length, rlp::LIST_HEADER_BYTE, None);
+
+    info!("current len of RLP buffer: {}", rlp_buffer.len());
 
     if let Some(tx_type) = msg.tx_type {
         rlp::write(&mut rlp_buffer, &RLPItem::Int(tx_type as u64));
@@ -260,8 +276,10 @@ pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 
     // Write data field
     if data_left == 0 {
+        info!("writing RLP data field");
         rlp::write(&mut rlp_buffer, &RLPItem::Bytes(&data));
     } else {
+        info!("writing RLP data header");
         rlp::write_header(
             &mut rlp_buffer,
             data_total,
@@ -293,10 +311,23 @@ pub fn sign_tx(msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     rlp::write(&mut rlp_buffer, &RLPItem::Int(0));
     rlp::write(&mut rlp_buffer, &RLPItem::Int(0));
 
-    let digest = crypto::keccak_256(&data);
+    let mut helper = String::new();
+
+    for byte in &rlp_buffer {
+        helper.push_str(&uformat!("{} ", *byte));
+    }
+    info!(
+        "RLP encoded transaction: {} with len {}",
+        helper.as_str(),
+        rlp_buffer.len()
+    );
+
+    let digest = crypto::keccak_256(&rlp_buffer);
     info!("transaction digest: {:?}", digest);
 
     let res = sign_digest(&msg, &digest)?;
+
+    info!("transaction signed");
 
     // TODO: progress stop, show continue in the app
 
@@ -381,6 +412,7 @@ fn confirm_tx_data(
             true,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -535,11 +567,19 @@ fn confirm_ethereum_tx(
     let title = "Send";
 
     let account_properties = get_account_info_items(account, account_path);
-    if account_properties.is_empty() {}
+    let menu_items = &[ui::Details::new(
+        "Account info",
+        &account_properties,
+        "Account info",
+        Some("Send from"),
+        ButtonRequestType::ButtonRequestOther.into(),
+    )];
+
+    let menu = ui::Menu::new(menu_items, Some(ui::Cancel::new("Cancel sign")));
 
     let steps: [&dyn Fn() -> ui::UiResult; 2] = [
         &|| {
-            ui::confirm_with_info_flow(
+            ui::interact_with_menu_flow(
                 |name| {
                     ui::confirm_value(
                         title,
@@ -550,25 +590,16 @@ fn confirm_ethereum_tx(
                         recipient.is_some(),
                         Some("Continue"),
                         subtitle,
-                        true,
+                        false,
                         false,
                         if recipient.is_some() { chunkify } else { false },
                         false,
                         false,
+                        true,
                     )
                 },
-                |name| {
-                    ui::show_info_with_cancel(
-                        "Cancel sign",
-                        &[],
-                        false,
-                        name,
-                        ButtonRequestType::ButtonRequestOther.into(),
-                    )
-                },
-                "confirm_output",
-                None,
-                None,
+                &menu,
+                Some("confirm_output"),
             )
         },
         &|| {
@@ -711,7 +742,7 @@ fn confirm_ethereum_approve(
         "Approve to"
     };
     if let Some(recipient_str) = recipient_str {
-        ui::confirm_with_info_flow(
+        ui::interact_with_info_flow(
             |name| {
                 ui::confirm_value(
                     title,
@@ -723,6 +754,7 @@ fn confirm_ethereum_approve(
                     Some("Continue"),
                     Some(subtitle),
                     true,
+                    false,
                     false,
                     false,
                     false,
@@ -757,6 +789,7 @@ fn confirm_ethereum_approve(
             chunkify,
             false,
             true,
+            false,
         )?)?;
     };
 
@@ -785,6 +818,7 @@ fn confirm_ethereum_approve(
             chunkify,
             false,
             true,
+            false,
         )?)?;
     }
 
@@ -803,6 +837,7 @@ fn confirm_ethereum_approve(
             false,
             false,
             true,
+            false,
         )?)?;
     }
 
@@ -861,32 +896,85 @@ fn handle_known_contract_calls(
     Vec<u8>,
     Option<u128>,
 )> {
-    // let initial_data_chunk = &msg.data_initial_chunk.unwrap_or_default();
-    // let data_length = &msg.data_length.unwrap_or_default();
-    // let value_bytes = &msg.value.unwrap_or_default();
-    // let to = &msg.to.unwrap_or_default();
+    let initial_data_chunk = msg.data_initial_chunk.as_deref().unwrap_or_default();
+    let data_length = msg.data_length.unwrap_or_default();
+    let value_bytes = msg.value.as_deref().unwrap_or_default();
+    let to = msg.to.as_deref().unwrap_or_default();
 
-    // let mut buf = [0u8; 16];
-    // assert!(value_bytes.len() <= 16);
-    // buf[16 - value_bytes.len()..].copy_from_slice(value_bytes);
-    // let value = u128::from_be_bytes(buf);
+    let mut token = None;
+    let mut token_address = None;
 
-    // if initial_data_chunk.len() < SC_FUNC_SIG_BYTES {
-    //     return Ok((None, None, None, Vec::from(address_bytes), None));
-    // }
+    // TODO: better implement parsing int value from bytes
+    let mut buf = [0u8; 16];
+    assert!(value_bytes.len() <= 16);
+    buf[16 - value_bytes.len()..].copy_from_slice(value_bytes);
+    let mut value = Some(u128::from_be_bytes(buf));
 
-    // let func_sig = &initial_data_chunk[..SC_FUNC_SIG_BYTES];
+    let mut offset = 0;
+    let mut remaining = initial_data_chunk.len();
 
-    // if matches!(to.len(), 40 | 42)
-    //     && value_bytes.len() == 0
-    //     && *data_length == 68
-    //     && initial_data_chunk.len() == 68
-    //     && (func_sig == &sc_func_sig_transfer() || func_sig == &sc_func_sig_approve())
-    // {}
+    if remaining < SC_FUNC_SIG_BYTES {
+        return Ok((token, token_address, None, Vec::from(address_bytes), value));
+    }
 
-    // TODO: implement
+    let mut func_sig = Some(Vec::from(
+        &initial_data_chunk[offset..(offset + SC_FUNC_SIG_BYTES)],
+    ));
+    offset += SC_FUNC_SIG_BYTES;
+    remaining -= SC_FUNC_SIG_BYTES;
 
-    Ok((None, None, None, Vec::new(), None))
+    if matches!(to.len(), 40 | 42)
+        && value_bytes.len() == 0
+        && data_length == 68
+        && initial_data_chunk.len() == 68
+        && (matches!(func_sig.as_deref(), Some(sig) if sig == sc_func_sig_transfer())
+            || matches!( func_sig.as_deref(), Some(sig) if sig == &sc_func_sig_approve()))
+    {
+        // The two functions happen to have the exact same parameters, so we treat them together.
+        // This will need to be made into a more generic solution eventually.
+        // arg0: address, Address, 20 bytes (left padded with zeroes)
+        // arg1: value, uint256, 32 bytes
+
+        if remaining < SC_ARGUMENT_BYTES * 2 {
+            return Ok((token, token_address, None, Vec::from(address_bytes), value));
+        }
+
+        let arg0 = &initial_data_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
+        offset += SC_ARGUMENT_BYTES;
+        remaining -= SC_ARGUMENT_BYTES;
+
+        let pad_len = SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES;
+        assert!(arg0[..pad_len].iter().all(|&byte| byte == 0));
+
+        let arg1: &_ = &initial_data_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
+        offset += SC_ARGUMENT_BYTES;
+        remaining -= SC_ARGUMENT_BYTES;
+
+        if matches!(func_sig.as_deref(), Some(sig) if sig == &sc_func_sig_approve())
+            && arg1.iter().all(|&byte| byte == 255)
+        {
+            // "Unlimited" approval (all bits set) is a special case
+            // which we encode as value=None internally.
+            func_sig = None;
+        } else {
+            // TODO: better implement parsing int value from bytes
+            let mut buf = [0u8; 16];
+            assert!(value_bytes.len() <= 16);
+            buf.copy_from_slice(&arg1[16..]);
+            value = Some(u128::from_be_bytes(buf));
+        }
+
+        token = Some(definitions.get_token(address_bytes));
+        token_address = Some(Vec::from(address_bytes));
+    } else {
+        // If the function was known but something else (data length) was unexpected,
+        // pretend we did not recognize the function so we fall back to blind signing.
+        // See the approve_avantis test case and ERC-8021.
+
+        func_sig = None;
+    };
+
+    Ok((token, token_address, func_sig, Vec::new(), None))
 }
 
 /// Returns a awaitable confirmation for ETH staking approval.
@@ -896,7 +984,7 @@ fn get_staking_approver() -> Option<()> {
     None
 }
 
-fn sign_digest(msg: &EthereumSignTx, digest: &[u8]) -> Result<EthereumTxRequest> {
+fn sign_digest(msg: &EthereumSignTx, digest: &[u8; 32]) -> Result<EthereumTxRequest> {
     let (encoded_network, encoded_token) = match &msg.definitions {
         Some(def) => (
             def.encoded_network.as_ref().map(|d| d.as_ref()),
@@ -904,10 +992,12 @@ fn sign_digest(msg: &EthereumSignTx, digest: &[u8]) -> Result<EthereumTxRequest>
         ),
         None => (None, None),
     };
+    info!("signing typed hash");
 
     let signature =
         crypto::sign_typed_hash(&msg.address_n, digest, encoded_network, encoded_token)?;
 
+    info!("signing typed hash completed, processing signature");
     let mut req = EthereumTxRequest::default();
     let mut signature_v: u32 = signature[0].into();
 
@@ -939,22 +1029,30 @@ fn send_request_chunk(data_left: u32) -> Result<EthereumTxAck> {
     Ok(resp)
 }
 
-pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> u32 {
+pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> Result<u32> {
     let mut length = 0;
 
     if let Some(tx_type) = msg.tx_type {
         length += rlp::length(&RLPItem::Int(tx_type as u64));
+        info!(
+            "tx_type length: {}",
+            rlp::length(&RLPItem::Int(tx_type as u64))
+        );
     }
 
     let nonce = msg.nonce.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
     let value = msg.value.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-    let to_bytes = msg.to.as_ref().map(|s| s.as_bytes()).unwrap_or(&[]);
+    let to_str = msg.to.as_ref().map(|s| s.as_str()).unwrap_or("");
+
+    let to_bytes = bytes_from_address(to_str)?;
+
+    info!("to bytes length: {}", to_bytes.len());
 
     let fields: Vec<RLPItem> = vec![
         RLPItem::Bytes(nonce),
         RLPItem::Bytes(&msg.gas_price),
         RLPItem::Bytes(&msg.gas_limit),
-        RLPItem::Bytes(to_bytes),
+        RLPItem::Bytes(&to_bytes),
         RLPItem::Bytes(value),
         RLPItem::Int(msg.chain_id),
         RLPItem::Int(0),
@@ -963,13 +1061,23 @@ pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> u32 {
 
     for field in &fields {
         length += rlp::length(field);
+        info!("field length: {}", rlp::length(field));
     }
 
     length += rlp::header_length(
         data_total,
         msg.data_initial_chunk.as_ref().map(|v| v.as_slice()),
     );
+    info!(
+        "header length {}",
+        rlp::header_length(
+            data_total,
+            msg.data_initial_chunk.as_ref().map(|v| v.as_slice()),
+        )
+    );
     length += data_total;
 
-    length
+    info!("data toal length: {}", data_total);
+
+    Ok(length)
 }

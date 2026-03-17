@@ -132,6 +132,7 @@ pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
         if data.len() > 16 {
             return Err(Error::InvalidMessage);
         }
+        // TODO: better implement parsing int value from bytes
         let mut buf = [0u8; 16];
         buf[16 - data.len()..].copy_from_slice(data);
         let v = u128::from_be_bytes(buf);
@@ -159,8 +160,8 @@ pub fn get_fee_items_regular(
     let gas_price_str = format_ethereum_amount(gas_price, None, network, true);
 
     [
-        ("Gas Limit".into(), gas_limit_str, false),
-        ("Gas Price".into(), gas_price_str, false),
+        ("Gas limit".into(), gas_limit_str, false),
+        ("Gas price".into(), gas_price_str, false),
     ]
 }
 
@@ -170,6 +171,84 @@ pub fn format_ethereum_amount(
     network: &EthereumNetworkInfo,
     force_unit_gwei: bool,
 ) -> String {
-    // TODO: implement
-    String::new()
+    let (mut suffix, mut decimals) = if let Some(token) = token {
+        (token.symbol.as_str().to_string(), token.decimals as usize)
+    } else {
+        (network.symbol.as_str().to_string(), 18usize)
+    };
+
+    if force_unit_gwei {
+        debug_assert!(token.is_none());
+        debug_assert!(decimals >= 9);
+        decimals -= 9;
+        suffix = "Gwei".to_string();
+    } else if decimals > 9 {
+        let mut threshold = 1u128;
+        let mut i = 0usize;
+        while i < (decimals - 9) {
+            threshold *= 10;
+            i += 1;
+        }
+
+        if value < threshold {
+            suffix = uformat!("Wei {}", suffix.as_str());
+            decimals = 0;
+        }
+    }
+
+    let amount = format_amount(value, decimals);
+    uformat!("{} {}", amount.as_str(), suffix.as_str())
+}
+
+// TODO: this is a very naive implementation, we should consider using a library for this
+fn format_amount(amount: u128, decimals: usize) -> String {
+    let mut divisor = 1u128;
+    let mut i = 0usize;
+    while i < decimals {
+        divisor *= 10;
+        i += 1;
+    }
+
+    let integer = if decimals == 0 {
+        amount
+    } else {
+        amount / divisor
+    };
+    let decimal = if decimals == 0 { 0 } else { amount % divisor };
+
+    let integer_str = integer.to_string();
+    let mut grouped_integer = String::new();
+
+    for (i, ch) in integer_str.chars().enumerate() {
+        if i != 0 && (integer_str.len() - i) % 3 == 0 {
+            grouped_integer.push(',');
+        }
+        grouped_integer.push(ch);
+    }
+
+    if decimals == 0 {
+        return grouped_integer;
+    }
+
+    let decimal_str = decimal.to_string();
+    let zero_pad = decimals.saturating_sub(decimal_str.len());
+
+    let mut out = grouped_integer;
+    out.push('.');
+
+    let mut i = 0usize;
+    while i < zero_pad {
+        out.push('0');
+        i += 1;
+    }
+    out.push_str(&decimal_str);
+
+    while out.ends_with('0') {
+        out.pop();
+    }
+    if out.ends_with('.') {
+        out.pop();
+    }
+
+    out
 }

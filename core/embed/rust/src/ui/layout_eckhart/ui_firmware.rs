@@ -1680,6 +1680,22 @@ impl FirmwareUI for UIEckhart {
 
         // Access the archived data zero-copy using safe Deref access
         match archived {
+            ArchivedTrezorUiEnum::SelectMenu { items, cancel } => {
+                let mut vec = heapless::Vec::<TString<'static>, 5>::new();
+                for i in 0..(items.len as usize) {
+                    unwrap!(vec.push(tstr_from_archived(&items.data[i])));
+                }
+                let layout = Self::select_menu(
+                    vec,
+                    0, // current selection (not used in this context)
+                    cancel.as_ref().map(|s| tstr_from_archived(s)),
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    1, /* TODO */
+                    Obj::const_none(),
+                ))
+            }
             ArchivedTrezorUiEnum::ConfirmAction {
                 title,
                 action,
@@ -1701,7 +1717,11 @@ impl FirmwareUI for UIEckhart {
                     None,  // prompt_title
                     false, // external_menu
                 )?;
-                Ok((LayoutObj::new_root(layout)?, 1 /* TODO */, Obj::const_none()))
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    1, /* TODO */
+                    Obj::const_none(),
+                ))
             }
             ArchivedTrezorUiEnum::ShowInfoWithCancel {
                 title,
@@ -1806,6 +1826,7 @@ impl FirmwareUI for UIEckhart {
                 cancel,
                 br_name,
                 br_code,
+                external_menu,
             } => {
                 // Use safe Deref trait instead of raw pointers
                 let layout = Self::confirm_value(
@@ -1825,7 +1846,7 @@ impl FirmwareUI for UIEckhart {
                     *cancel,
                     false,
                     None,
-                    false,
+                    *external_menu,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
@@ -1900,6 +1921,24 @@ impl FirmwareUI for UIEckhart {
                     *hold,
                     tstr_from_archived_option(verb),
                     false,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
+                ))
+            }
+            ArchivedTrezorUiEnum::ShowProperties {
+                title,
+                props,
+                subtitle,
+                br_name,
+                br_code,
+            } => {
+                let layout = Self::show_properties(
+                    tstr_from_archived(title),
+                    tstr_from_archived_option(subtitle),
+                    obj_from_proplist(props)?,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,

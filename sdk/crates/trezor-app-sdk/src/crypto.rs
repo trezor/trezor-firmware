@@ -10,7 +10,7 @@ use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 pub use trezor_structs::TrezorCryptoResult;
 use trezor_structs::{
-    DerivationPath, LongString, ShortBuffer, ShortString, TrezorCryptoEnum, TypedHash,
+    DerivationPath, LongBuffer, LongString, ShortBuffer, ShortString, TrezorCryptoEnum, TypedHash,
 };
 
 use crate::core_services::services_or_die;
@@ -21,8 +21,8 @@ pub use crate::low_level_api::{
     ed25519_cosi_combine_publickeys, ed25519_sign_open, keccak_256, sha3_256,
 };
 use crate::service::{CoreIpcService, Error, NoUtilHandler};
-use crate::unwrap;
 use crate::util::Timeout;
+use crate::{info, unwrap};
 pub type ArchivedTrezorCryptoResult = Archived<TrezorCryptoResult>;
 pub type ArchivedTrezorCryptoEnum = Archived<TrezorCryptoEnum>;
 
@@ -80,8 +80,9 @@ pub fn get_eth_pubkey_hash(
 ) -> Result<[u8; 20]> {
     let value = TrezorCryptoEnum::GetEthPubkeyHash {
         address_n: unwrap!(DerivationPath::from_slice(address_n)),
-        encoded_network: encoded_network.map(|network| unwrap!(ShortBuffer::from_slice(network))),
-        encoded_token: encoded_token.map(|token| unwrap!(ShortBuffer::from_slice(token))),
+        encoded_network: encoded_network
+            .map(|network| unwrap!(ShortBuffer::buf_from_slice(network))),
+        encoded_token: encoded_token.map(|token| unwrap!(ShortBuffer::buf_from_slice(token))),
     };
 
     let res = ipc_crypto_call(&value);
@@ -96,15 +97,16 @@ pub fn get_eth_pubkey_hash(
 
 pub fn sign_typed_hash(
     address_n: &[u32],
-    hash: &[u8],
+    hash: &[u8; 32],
     encoded_network: Option<&[u8]>,
     encoded_token: Option<&[u8]>,
 ) -> Result<[u8; 65]> {
     let value = TrezorCryptoEnum::SignTypedHash {
         address_n: unwrap!(DerivationPath::from_slice(address_n)),
         hash: unwrap!(TypedHash::from_slice(hash)),
-        encoded_network: encoded_network.map(|network| unwrap!(ShortBuffer::from_slice(network))),
-        encoded_token: encoded_token.map(|token| unwrap!(ShortBuffer::from_slice(token))),
+        encoded_network: encoded_network
+            .map(|network| unwrap!(LongBuffer::buf_from_slice(network))),
+        encoded_token: encoded_token.map(|token| unwrap!(LongBuffer::buf_from_slice(token))),
     };
 
     let res = ipc_crypto_call(&value);
@@ -125,7 +127,8 @@ pub fn get_address_mac(
     let value = TrezorCryptoEnum::GetAddressMac {
         address_n: unwrap!(DerivationPath::from_slice(address_n)),
         address: unwrap!(ShortString::from_str(key)),
-        encoded_network: encoded_network.map(|network| unwrap!(ShortBuffer::from_slice(network))),
+        encoded_network: encoded_network
+            .map(|network| unwrap!(ShortBuffer::buf_from_slice(network))),
     };
 
     let res = ipc_crypto_call(&value);

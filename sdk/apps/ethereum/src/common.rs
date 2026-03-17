@@ -57,7 +57,7 @@ pub(crate) fn confirm_signverify(
     items.push(("Message size", &size, true));
 
     loop {
-        let res = ui::confirm_with_info_flow(
+        let res = ui::interact_with_info_flow(
             |name| {
                 ui::confirm_value(
                     address_title,
@@ -73,6 +73,7 @@ pub(crate) fn confirm_signverify(
                     chunkify,
                     false,
                     true,
+                    false,
                 )
             },
             |name| {
@@ -143,6 +144,7 @@ pub(crate) fn confirm_signverify(
             false,
             false,
             true,
+            false,
         )?)?;
     };
     Ok(())
@@ -184,6 +186,7 @@ pub(crate) fn confirm_address(
             chunkify.unwrap_or(true),
             false,
             true,
+            false,
         ),
         Ok(ui::TrezorUiResult::Confirmed)
     ) {
