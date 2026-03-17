@@ -1181,5 +1181,7 @@
   "1179": "words__show_next",
   "1180": "words__resource",
   "1181": "words__votes",
-  "1182": "words__voting"
+  "1182": "words__voting",
+  "1183": "ethereum__confirm_contract",
+  "1184": "words__intent"
 }
