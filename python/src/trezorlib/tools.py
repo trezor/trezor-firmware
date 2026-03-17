@@ -381,6 +381,8 @@ class workflow(t.Generic[P, R]):
         from_version: tuple[int, int, int] | None = None,
         capability: messages.Capability | None = None,
         capabilities: set[messages.Capability] | None = None,
+        refresh_features: bool = False,
+        invalidate_client: bool = False,
     ) -> None:
         self.from_version = from_version
         if capability is not None and capabilities is not None:
@@ -390,6 +392,8 @@ class workflow(t.Generic[P, R]):
         elif capabilities is None:
             capabilities = set()
         self.capabilities = capabilities
+        self.refresh_features = refresh_features
+        self.invalidate_client = invalidate_client
         self.func: SessionFunc[P, R] | None = None
 
     def __call__(self, func: SessionFunc[P, R]) -> SessionFunc[P, R]:
@@ -400,5 +404,16 @@ class workflow(t.Generic[P, R]):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         if self.func is None:
             raise RuntimeError("workflow decorator must be used with a function")
+
         with session:
-            return self.func(session, *args, **kwargs)
+            result = self.func(session, *args, **kwargs)
+
+        if self.invalidate_client:
+            session.client._invalidate()
+
+        if self.refresh_features:
+            # MicroPython event loop may get restarted after running the workflow above,
+            # so `GetFeatures` will be sent in a separate interaction (to avoid THP retransmissions).
+            session.refresh_features()
+
+        return result

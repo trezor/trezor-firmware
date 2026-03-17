@@ -562,7 +562,7 @@ class TrezorClient(t.Generic[SessionType], metaclass=ABCMeta):
         session = _use_session or self._get_any_session()
         with session:
             session.call_raw(messages.LockDevice())
-            self.refresh_features()
+        self.refresh_features()
 
     def ensure_unlocked(self) -> None:
         """Ensure the device is unlocked."""
