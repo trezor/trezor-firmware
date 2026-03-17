@@ -28,6 +28,10 @@
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
 
+#ifdef USE_POWER_MANAGER
+#include <io/power_manager.h>
+#endif
+
 #include "usb_internal.h"
 
 #define USB_MAX_CONFIG_DESC_SIZE 256
@@ -89,6 +93,8 @@ typedef struct {
   uint32_t ready_time;
   // Set to `sectrue` if the USB stack was ready sinced the last start
   secbool was_ready;
+  // Old state configured
+  bool was_configured;
 
   // Task local storage for USB driver
   usb_driver_tls_t tls[SYSTASK_MAX_TASKS];
@@ -274,22 +280,36 @@ static secbool usb_configured(void) {
     return secfalse;
   }
 
-  secbool powered_from_usb = sectrue;  // TODO
+#ifdef USE_POWER_MANAGER
+  secbool powered_from_usb = secfalse;
+#else
+  secbool powered_from_usb = sectrue;
+#endif
 
   secbool ready = secfalse;
 
   if (pdev->dev_state == USBD_STATE_CONFIGURED) {
     // USB is configured, ready to transfer data
     ready = sectrue;
-  } else if (pdev->dev_state == USBD_STATE_SUSPENDED &&
-             pdev->dev_old_state == USBD_STATE_CONFIGURED) {
+    drv->was_configured = true;
+  } else if (pdev->dev_state == USBD_STATE_SUSPENDED && drv->was_configured) {
     // USB is suspended, but was configured before
     //
     // Linux has autosuspend device after 2 seconds by default.
     // So a suspended device that was seen as configured is reported as
     // configured.
-    //
+
+#ifdef USE_POWER_MANAGER
+    pm_state_t state = {0};
+    pm_status_t status = pm_get_state(&state);
+
+    if (status == PM_OK && state.usb_connected) {
+      ready = sectrue;
+    }
+#else
     ready = sectrue;
+#endif
+
   } else if ((drv->was_ready == secfalse) && (powered_from_usb == sectrue)) {
     // First run after the startup with USB power
     drv->was_ready = sectrue;
@@ -298,23 +318,27 @@ static secbool usb_configured(void) {
 
   uint32_t now = hal_ticks_ms();
 
-  if (ready == sectrue) {
-    irq_key_t irq_key = irq_lock();
-    drv->ready_time = now;
-    irq_unlock(irq_key);
-  } else {
-    // This is a workaround to handle the glitches in the USB connection,
-    // especially for USB-powered-only devices. This should be
-    // revisited and probably fixed elsewhere.
+  if (sectrue == powered_from_usb) {
+    if (ready == sectrue) {
+      irq_key_t irq_key = irq_lock();
+      drv->ready_time = now;
+      irq_unlock(irq_key);
+    } else {
+      // This is a workaround to handle the glitches in the USB connection,
+      // especially for USB-powered-only devices. This should be
+      // revisited and probably fixed elsewhere.
 
-    irq_key_t irq_key = irq_lock();
-    bool ready_recently = (int32_t)(now - drv->ready_time) < 2000;
-    irq_unlock(irq_key);
+      irq_key_t irq_key = irq_lock();
+      bool ready_recently = (int32_t)(now - drv->ready_time) < 2000;
+      irq_unlock(irq_key);
 
-    if ((drv->was_ready == sectrue) && ready_recently) {
-      ready = sectrue;
+      if ((drv->was_ready == sectrue) && ready_recently) {
+        ready = sectrue;
+      }
     }
   }
+
+  drv->was_configured = sectrue == ready;
 
   return ready;
 }
