@@ -79,6 +79,9 @@ toiftool = { path = "./python/tools/toiftool", editable = true }
 trezor-pylint-plugin = { path = "./tools/trezor-pylint-plugin", editable = true }
 trezor-core-tools = { path = "./core/tools", editable = true }
 
+[tool.black]
+target-version = ["py313"]
+
 [tool.isort]
 profile = "black"
 extra_standard_library = [
