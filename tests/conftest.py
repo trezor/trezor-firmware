@@ -260,6 +260,8 @@ class SetupParams:
     experimental: bool = False
     label: str = "test"
     extapp: bool = False
+    extapp_path: str | None = None
+    extapp_instance_id: int | None = None
 
     @classmethod
     def from_request(cls, request: pytest.FixtureRequest) -> SetupParams:
@@ -299,38 +301,35 @@ class SetupParams:
             if self.experimental:
                 apply_settings(session, experimental_features=True)
 
+        if self.extapp:
+            if not self.extapp_path:
+                raise ValueError(
+                    "--extapp option must be provided when using @pytest.mark.extapp"
+                )
+            path = Path(self.extapp_path)
+            if not path.exists():
+                raise FileNotFoundError(f"External app not found: {path}")
+            self.extapp_instance_id = debuglink.load_extapp(session, path)
+
 
 @pytest.fixture(scope="function")
 def setup_params(request: pytest.FixtureRequest) -> SetupParams:
-    return SetupParams.from_request(request)
+    params = SetupParams.from_request(request)
+    if params.extapp:
+        params.extapp_path = request.config.getoption("extapp")
+    return params
 
 
 @pytest.fixture(scope="function")
 def instance_id(
-    request: pytest.FixtureRequest,
-    _raw_test_ctx: TrezorTestContext,
-    setup_params: SetupParams,
+    setup_params: SetupParams, _prepared_test_ctx: TrezorTestContext
 ) -> int:
-    """Fixture that loads external app and returns instance_id."""
+    """Returns instance_id of the loaded external app."""
     if not setup_params.extapp:
         pytest.skip("This test requires @pytest.mark.extapp")
-
-    extapp_path = request.config.getoption("extapp")
-    if not extapp_path:
-        raise ValueError(
-            "--extapp option must be provided when using @pytest.mark.extapp"
-        )
-
-    path = Path(extapp_path)
-    if not path.exists():
-        raise FileNotFoundError(f"External app not found: {path}")
-
-    # Load the external app and get instance_id
-    session = _raw_test_ctx.get_session(passphrase=None)
-    instance_id = debuglink.load_extapp(session, path)
-    session.close()
-
-    return instance_id
+    if setup_params.extapp_instance_id is None:
+        raise RuntimeError("External app was not loaded during test setup")
+    return setup_params.extapp_instance_id
 
 
 @pytest.fixture(scope="function")
