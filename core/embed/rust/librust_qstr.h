@@ -1001,6 +1001,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__good_to_know;
   MP_QSTR_words__important;
   MP_QSTR_words__instructions;
+  MP_QSTR_words__intent;
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
   MP_QSTR_words__led;
@@ -1231,6 +1232,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__approve_revoke_from;
   MP_QSTR_ethereum__approve_to;
   MP_QSTR_ethereum__approve_unlimited_template;
+  MP_QSTR_ethereum__confirm_contract;
   MP_QSTR_ethereum__contract_address;
   MP_QSTR_ethereum__data_size_template;
   MP_QSTR_ethereum__eip_7702;
