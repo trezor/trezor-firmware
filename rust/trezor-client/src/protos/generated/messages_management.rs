@@ -6492,6 +6492,10 @@ pub struct AuthenticityProof {
     pub tropic_certificates: ::std::vec::Vec<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.tropic_signature)
     pub tropic_signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.mcu_certificates)
+    pub mcu_certificates: ::std::vec::Vec<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.AuthenticityProof.mcu_signature)
+    pub mcu_signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.AuthenticityProof.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -6580,8 +6584,44 @@ impl AuthenticityProof {
         self.tropic_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes mcu_signature = 6;
+
+    pub fn mcu_signature(&self) -> &[u8] {
+        match self.mcu_signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mcu_signature(&mut self) {
+        self.mcu_signature = ::std::option::Option::None;
+    }
+
+    pub fn has_mcu_signature(&self) -> bool {
+        self.mcu_signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mcu_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mcu_signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mcu_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mcu_signature.is_none() {
+            self.mcu_signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mcu_signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mcu_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.mcu_signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(6);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "optiga_certificates",
@@ -6602,6 +6642,16 @@ impl AuthenticityProof {
             "tropic_signature",
             |m: &AuthenticityProof| { &m.tropic_signature },
             |m: &mut AuthenticityProof| { &mut m.tropic_signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "mcu_certificates",
+            |m: &AuthenticityProof| { &m.mcu_certificates },
+            |m: &mut AuthenticityProof| { &mut m.mcu_certificates },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mcu_signature",
+            |m: &AuthenticityProof| { &m.mcu_signature },
+            |m: &mut AuthenticityProof| { &mut m.mcu_signature },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<AuthenticityProof>(
             "AuthenticityProof",
@@ -6636,6 +6686,12 @@ impl ::protobuf::Message for AuthenticityProof {
                 34 => {
                     self.tropic_signature = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                42 => {
+                    self.mcu_certificates.push(is.read_bytes()?);
+                },
+                50 => {
+                    self.mcu_signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -6660,6 +6716,12 @@ impl ::protobuf::Message for AuthenticityProof {
         if let Some(v) = self.tropic_signature.as_ref() {
             my_size += ::protobuf::rt::bytes_size(4, &v);
         }
+        for value in &self.mcu_certificates {
+            my_size += ::protobuf::rt::bytes_size(5, &value);
+        };
+        if let Some(v) = self.mcu_signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(6, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -6677,6 +6739,12 @@ impl ::protobuf::Message for AuthenticityProof {
         };
         if let Some(v) = self.tropic_signature.as_ref() {
             os.write_bytes(4, v)?;
+        }
+        for v in &self.mcu_certificates {
+            os.write_bytes(5, &v)?;
+        };
+        if let Some(v) = self.mcu_signature.as_ref() {
+            os.write_bytes(6, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -6699,6 +6767,8 @@ impl ::protobuf::Message for AuthenticityProof {
         self.optiga_signature = ::std::option::Option::None;
         self.tropic_certificates.clear();
         self.tropic_signature = ::std::option::Option::None;
+        self.mcu_certificates.clear();
+        self.mcu_signature = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -6708,6 +6778,8 @@ impl ::protobuf::Message for AuthenticityProof {
             optiga_signature: ::std::option::Option::None,
             tropic_certificates: ::std::vec::Vec::new(),
             tropic_signature: ::std::option::Option::None,
+            mcu_certificates: ::std::vec::Vec::new(),
+            mcu_signature: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -12401,84 +12473,85 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"/\n\x0fGetFirmwareHash\x12\
     \x1c\n\tchallenge\x18\x01\x20\x01(\x0cR\tchallenge\"\"\n\x0cFirmwareHash\
     \x12\x12\n\x04hash\x18\x01\x20\x02(\x0cR\x04hash\"2\n\x12AuthenticateDev\
-    ice\x12\x1c\n\tchallenge\x18\x01\x20\x02(\x0cR\tchallenge\"\xcb\x01\n\
+    ice\x12\x1c\n\tchallenge\x18\x01\x20\x02(\x0cR\tchallenge\"\x9b\x02\n\
     \x11AuthenticityProof\x12/\n\x13optiga_certificates\x18\x01\x20\x03(\x0c\
     R\x12optigaCertificates\x12)\n\x10optiga_signature\x18\x02\x20\x02(\x0cR\
     \x0foptigaSignature\x12/\n\x13tropic_certificates\x18\x03\x20\x03(\x0cR\
     \x12tropicCertificates\x12)\n\x10tropic_signature\x18\x04\x20\x01(\x0cR\
-    \x0ftropicSignature\"\x0c\n\nWipeDevice\"\xda\x02\n\nLoadDevice\x12\x1c\
-    \n\tmnemonics\x18\x01\x20\x03(\tR\tmnemonics\x12\x10\n\x03pin\x18\x03\
-    \x20\x01(\tR\x03pin\x123\n\x15passphrase_protection\x18\x04\x20\x01(\x08\
-    R\x14passphraseProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08l\
-    anguageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12\
-    #\n\rskip_checksum\x18\x07\x20\x01(\x08R\x0cskipChecksum\x12\x1f\n\x0bu2\
-    f_counter\x18\x08\x20\x01(\rR\nu2fCounter\x12!\n\x0cneeds_backup\x18\t\
-    \x20\x01(\x08R\x0bneedsBackup\x12\x1b\n\tno_backup\x18\n\x20\x01(\x08R\
-    \x08noBackup\x12+\n\x11unfinished_backup\x18\x0b\x20\x01(\x08R\x10unfini\
-    shedBackup\"\x9d\x03\n\x0bResetDevice\x12\x1f\n\x08strength\x18\x02\x20\
-    \x01(\r:\x03256R\x08strength\x123\n\x15passphrase_protection\x18\x03\x20\
-    \x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\x18\x04\x20\
-    \x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08l\
-    anguageB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12\
-    \x1f\n\x0bu2f_counter\x18\x07\x20\x01(\rR\nu2fCounter\x12\x1f\n\x0bskip_\
-    backup\x18\x08\x20\x01(\x08R\nskipBackup\x12\x1b\n\tno_backup\x18\t\x20\
-    \x01(\x08R\x08noBackup\x12Q\n\x0bbackup_type\x18\n\x20\x01(\x0e2).hw.tre\
-    zor.messages.management.BackupType:\x05Bip39R\nbackupType\x12#\n\rentrop\
-    y_check\x18\x0b\x20\x01(\x08R\x0centropyCheckJ\x04\x08\x01\x10\x02\"\xe5\
-    \x01\n\x0cBackupDevice\x12'\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\x0e\
-    groupThreshold\x12O\n\x06groups\x18\x02\x20\x03(\x0b27.hw.trezor.message\
-    s.management.BackupDevice.Slip39GroupR\x06groups\x1a[\n\x0bSlip39Group\
-    \x12)\n\x10member_threshold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12!\
-    \n\x0cmember_count\x18\x02\x20\x02(\rR\x0bmemberCount\"b\n\x0eEntropyReq\
-    uest\x12-\n\x12entropy_commitment\x18\x01\x20\x01(\x0cR\x11entropyCommit\
-    ment\x12!\n\x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bprevEntropy\"&\n\nE\
-    ntropyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\x13\n\
-    \x11EntropyCheckReady\"5\n\x14EntropyCheckContinue\x12\x1d\n\x06finish\
-    \x18\x01\x20\x01(\x08:\x05falseR\x06finish\"\x8d\x04\n\x0eRecoveryDevice\
-    \x12\x1d\n\nword_count\x18\x01\x20\x01(\rR\twordCount\x123\n\x15passphra\
-    se_protection\x18\x02\x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epi\
-    n_protection\x18\x03\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\
-    \x18\x04\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x05\
-    \x20\x01(\tR\x05label\x12)\n\x10enforce_wordlist\x18\x06\x20\x01(\x08R\
-    \x0fenforceWordlist\x12j\n\x0cinput_method\x18\x08\x20\x01(\x0e2G.hw.tre\
-    zor.messages.management.RecoveryDevice.RecoveryDeviceInputMethodR\x0binp\
-    utMethod\x12\x1f\n\x0bu2f_counter\x18\t\x20\x01(\rR\nu2fCounter\x12O\n\
-    \x04type\x18\n\x20\x01(\x0e2+.hw.trezor.messages.management.RecoveryType\
-    :\x0eNormalRecoveryR\x04type\";\n\x19RecoveryDeviceInputMethod\x12\x12\n\
-    \x0eScrambledWords\x10\0\x12\n\n\x06Matrix\x10\x01J\x04\x08\x07\x10\x08\
-    \"\xc5\x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.tre\
-    zor.messages.management.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWor\
-    dRequestType\x12\x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordR\
-    equestType_Matrix9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\
-    \"\x1d\n\x07WordAck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\r\
-    SetU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\
-    \x13\n\x11GetNextU2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_coun\
-    ter\x18\x01\x20\x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\
-    \x14PreauthorizedRequest\"\x15\n\x13CancelAuthorization\"\xeb\x01\n\x12R\
-    ebootToBootloader\x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezo\
-    r.messages.management.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\
-    \x0bbootCommand\x12'\n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmw\
-    areHeader\"5\n\x0bBootCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\
-    \x0fINSTALL_UPGRADE\x10\x01J\x04\x08\x03\x10\x04\"\n\n\x08GetNonce\"\x1d\
-    \n\x05Nonce\x12\x14\n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce\";\n\nUnlo\
-    ckPath\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\
-    \x03mac\x18\x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\
-    \n\x03mac\x18\x01\x20\x02(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\
-    \x12\n\x10UnlockBootloader\"%\n\rSetBrightness\x12\x14\n\x05value\x18\
-    \x01\x20\x01(\rR\x05value\"\x11\n\x0fGetSerialNumber\"3\n\x0cSerialNumbe\
-    r\x12#\n\rserial_number\x18\x01\x20\x02(\tR\x0cserialNumber*\x99\x01\n\n\
-    BackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\
-    \x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\
-    \x10\x03\x12\x1b\n\x17Slip39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip3\
-    9_Advanced_Extendable\x10\x05*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\
-    \x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\x15\n\x11PromptTemporarily\
-    \x10\x02*=\n\x0fDisplayRotation\x12\t\n\x05North\x10\0\x12\x08\n\x04East\
-    \x10Z\x12\n\n\x05South\x10\xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10Ho\
-    mescreenFormat\x12\x08\n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\
-    \x08\n\x04ToiG\x10\x03*H\n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\
-    \x10\0\x12\n\n\x06DryRun\x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\
-    \x02BB\n#com.satoshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\
-    \x80\xa6\x1d\x01\
+    \x0ftropicSignature\x12)\n\x10mcu_certificates\x18\x05\x20\x03(\x0cR\x0f\
+    mcuCertificates\x12#\n\rmcu_signature\x18\x06\x20\x01(\x0cR\x0cmcuSignat\
+    ure\"\x0c\n\nWipeDevice\"\xda\x02\n\nLoadDevice\x12\x1c\n\tmnemonics\x18\
+    \x01\x20\x03(\tR\tmnemonics\x12\x10\n\x03pin\x18\x03\x20\x01(\tR\x03pin\
+    \x123\n\x15passphrase_protection\x18\x04\x20\x01(\x08R\x14passphraseProt\
+    ection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08languageB\x02\x18\
+    \x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12#\n\rskip_checks\
+    um\x18\x07\x20\x01(\x08R\x0cskipChecksum\x12\x1f\n\x0bu2f_counter\x18\
+    \x08\x20\x01(\rR\nu2fCounter\x12!\n\x0cneeds_backup\x18\t\x20\x01(\x08R\
+    \x0bneedsBackup\x12\x1b\n\tno_backup\x18\n\x20\x01(\x08R\x08noBackup\x12\
+    +\n\x11unfinished_backup\x18\x0b\x20\x01(\x08R\x10unfinishedBackup\"\x9d\
+    \x03\n\x0bResetDevice\x12\x1f\n\x08strength\x18\x02\x20\x01(\r:\x03256R\
+    \x08strength\x123\n\x15passphrase_protection\x18\x03\x20\x01(\x08R\x14pa\
+    ssphraseProtection\x12%\n\x0epin_protection\x18\x04\x20\x01(\x08R\rpinPr\
+    otection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08languageB\x02\x18\
+    \x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12\x1f\n\x0bu2f_co\
+    unter\x18\x07\x20\x01(\rR\nu2fCounter\x12\x1f\n\x0bskip_backup\x18\x08\
+    \x20\x01(\x08R\nskipBackup\x12\x1b\n\tno_backup\x18\t\x20\x01(\x08R\x08n\
+    oBackup\x12Q\n\x0bbackup_type\x18\n\x20\x01(\x0e2).hw.trezor.messages.ma\
+    nagement.BackupType:\x05Bip39R\nbackupType\x12#\n\rentropy_check\x18\x0b\
+    \x20\x01(\x08R\x0centropyCheckJ\x04\x08\x01\x10\x02\"\xe5\x01\n\x0cBacku\
+    pDevice\x12'\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\x0egroupThreshold\
+    \x12O\n\x06groups\x18\x02\x20\x03(\x0b27.hw.trezor.messages.management.B\
+    ackupDevice.Slip39GroupR\x06groups\x1a[\n\x0bSlip39Group\x12)\n\x10membe\
+    r_threshold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12!\n\x0cmember_coun\
+    t\x18\x02\x20\x02(\rR\x0bmemberCount\"b\n\x0eEntropyRequest\x12-\n\x12en\
+    tropy_commitment\x18\x01\x20\x01(\x0cR\x11entropyCommitment\x12!\n\x0cpr\
+    ev_entropy\x18\x02\x20\x01(\x0cR\x0bprevEntropy\"&\n\nEntropyAck\x12\x18\
+    \n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\x13\n\x11EntropyCheckRe\
+    ady\"5\n\x14EntropyCheckContinue\x12\x1d\n\x06finish\x18\x01\x20\x01(\
+    \x08:\x05falseR\x06finish\"\x8d\x04\n\x0eRecoveryDevice\x12\x1d\n\nword_\
+    count\x18\x01\x20\x01(\rR\twordCount\x123\n\x15passphrase_protection\x18\
+    \x02\x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\x18\
+    \x03\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x04\x20\x01(\
+    \tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x05\x20\x01(\tR\x05l\
+    abel\x12)\n\x10enforce_wordlist\x18\x06\x20\x01(\x08R\x0fenforceWordlist\
+    \x12j\n\x0cinput_method\x18\x08\x20\x01(\x0e2G.hw.trezor.messages.manage\
+    ment.RecoveryDevice.RecoveryDeviceInputMethodR\x0binputMethod\x12\x1f\n\
+    \x0bu2f_counter\x18\t\x20\x01(\rR\nu2fCounter\x12O\n\x04type\x18\n\x20\
+    \x01(\x0e2+.hw.trezor.messages.management.RecoveryType:\x0eNormalRecover\
+    yR\x04type\";\n\x19RecoveryDeviceInputMethod\x12\x12\n\x0eScrambledWords\
+    \x10\0\x12\n\n\x06Matrix\x10\x01J\x04\x08\x07\x10\x08\"\xc5\x01\n\x0bWor\
+    dRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.messages.manage\
+    ment.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWordRequestType\x12\
+    \x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequestType_Matri\
+    x9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\n\x07WordA\
+    ck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2FCounter\x12\
+    \x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNext\
+    U2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\
+    \x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14Preauthorized\
+    Request\"\x15\n\x13CancelAuthorization\"\xeb\x01\n\x12RebootToBootloader\
+    \x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.manage\
+    ment.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\
+    \n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBo\
+    otCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\
+    \x10\x01J\x04\x08\x03\x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\
+    \n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\ta\
+    ddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\
+    \x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\
+    \x20\x02(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBoo\
+    tloader\"%\n\rSetBrightness\x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05va\
+    lue\"\x11\n\x0fGetSerialNumber\"3\n\x0cSerialNumber\x12#\n\rserial_numbe\
+    r\x18\x01\x20\x02(\tR\x0cserialNumber*\x99\x01\n\nBackupType\x12\t\n\x05\
+    Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanc\
+    ed\x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Sl\
+    ip39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\
+    \x10\x05*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPr\
+    omptAlways\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDisplay\
+    Rotation\x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\
+    \x10\xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\
+    \n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\
+    \n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\
+    \x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.satoshilabs.t\
+    rezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

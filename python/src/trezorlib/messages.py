@@ -3686,6 +3686,8 @@ class AuthenticityProof(protobuf.MessageType):
         2: protobuf.Field("optiga_signature", "bytes", repeated=False, required=True),
         3: protobuf.Field("tropic_certificates", "bytes", repeated=True, required=False, default=None),
         4: protobuf.Field("tropic_signature", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("mcu_certificates", "bytes", repeated=True, required=False, default=None),
+        6: protobuf.Field("mcu_signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3694,12 +3696,16 @@ class AuthenticityProof(protobuf.MessageType):
         optiga_signature: "bytes",
         optiga_certificates: Optional[Sequence["bytes"]] = None,
         tropic_certificates: Optional[Sequence["bytes"]] = None,
+        mcu_certificates: Optional[Sequence["bytes"]] = None,
         tropic_signature: Optional["bytes"] = None,
+        mcu_signature: Optional["bytes"] = None,
     ) -> None:
         self.optiga_certificates: Sequence["bytes"] = optiga_certificates if optiga_certificates is not None else []
         self.tropic_certificates: Sequence["bytes"] = tropic_certificates if tropic_certificates is not None else []
+        self.mcu_certificates: Sequence["bytes"] = mcu_certificates if mcu_certificates is not None else []
         self.optiga_signature = optiga_signature
         self.tropic_signature = tropic_signature
+        self.mcu_signature = mcu_signature
 
 
 class WipeDevice(protobuf.MessageType):

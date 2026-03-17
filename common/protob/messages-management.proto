@@ -403,6 +403,9 @@ message AuthenticityProof {
                                              // Trezor company's root CA.
     optional bytes tropic_signature = 4;     // A DER-encoded signature of "\x13AuthenticateDevice:" + length-prefixed
                                              // challenge that should be verified using the Tropic device certificate.
+    repeated bytes mcu_certificates = 5;     // An MCU device certificate signed by Trezor company's root CA.
+    optional bytes mcu_signature = 6;        // A DER-encoded signature of "\x13AuthenticateDevice:" + length-prefixed
+                                             // challenge that should be verified using the MCU device certificate.
 }
 
 /**
