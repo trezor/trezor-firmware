@@ -42,7 +42,7 @@ jobs:
           git submodule update --init --recursive vendor/ts-tvl
       - uses: ./.github/actions/environment
       - name: "Run style check"
-        run: nix-shell --run "uv run make style_check"
+        run: nix-shell --run "uv run make style_check BLACK_FAST=0"
       - name: "Run .editorconfig check"
         run: nix-shell --run "uv run make editor_check"
 
