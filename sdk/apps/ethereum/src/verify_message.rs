@@ -54,7 +54,13 @@ pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
         false,
     )?;
 
-    ui::show_success("The signature is valid.", Some("verify_message"))?;
+    ui::show_success(
+        "Done",
+        "The signature is valid.",
+        "Continue",
+        None,
+        Some("verify_message"),
+    )?;
 
     let mut msg = Success::default();
     msg.message = Some("Message verified".to_string());

@@ -688,9 +688,18 @@ pub fn show_danger(title: &str, content: &str, br_name: Option<&str>, br_code: i
 }
 
 /// Show a success message
-pub fn show_success(content: &str, br_name: Option<&str>) -> Result<()> {
+pub fn show_success(
+    title: &str,
+    content: &str,
+    button: &str,
+    duration_ms: Option<u32>,
+    br_name: Option<&str>,
+) -> Result<()> {
     let value = TrezorUiEnum::Success {
+        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
         content: ShortString::from_str(content).map_err(|_| Error::FailedToSend)?,
+        button: ShortString::from_str(button).map_err(|_| Error::FailedToSend)?,
+        duration_ms,
         br_name: br_name
             .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
             .transpose()?,

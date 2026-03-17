@@ -32,6 +32,14 @@ pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
     if matches!(msg.show_display, Some(true)) {
         let xpub = hex_encode(&node.public_key);
         ui::show_public_key(xpub.as_str(), None, None, None, None, None)?;
+
+        ui::show_success(
+            "Done",
+            "Public key confirmed",
+            "Continue in the app",
+            Some(3200),
+            None,
+        )?;
     }
 
     public_key.node = node;

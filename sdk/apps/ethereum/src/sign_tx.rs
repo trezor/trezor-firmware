@@ -331,6 +331,14 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 
     // TODO: progress stop, show continue in the app
 
+    ui::show_success(
+        "Done",
+        "Transaction signed",
+        "Continue in the app",
+        Some(3200),
+        None,
+    )?;
+
     Ok(res)
 }
 

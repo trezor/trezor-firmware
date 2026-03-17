@@ -294,7 +294,10 @@ pub enum TrezorUiEnum {
         br_code: i32,
     },
     Success {
+        title: ShortString,
         content: ShortString,
+        button: ShortString,
+        duration_ms: Option<u32>,
         br_name: Option<ShortString>,
     },
     RequestNumber {

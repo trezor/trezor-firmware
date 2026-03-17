@@ -6,7 +6,7 @@ use crate::{
     proto::ethereum::{EthereumAddress, EthereumGetAddress},
     uformat,
 };
-use trezor_app_sdk::{Result, crypto};
+use trezor_app_sdk::{Result, crypto, ui};
 
 /// Ethereum uses Bitcoin xpub format
 pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
@@ -31,7 +31,7 @@ pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
         let account_name = dp
             .get_account_name(coin, &PATTERNS_ADDRESS, *slip44_id)
             .unwrap();
-        trezor_app_sdk::ui::show_address(
+        ui::show_address(
             &address,
             None,
             Some(subtitle.as_str()),
@@ -39,6 +39,14 @@ pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
             Some(&dp.to_string()),
             &[],
             msg.chunkify,
+        )?;
+
+        ui::show_success(
+            "Done",
+            "Receive address confirmed",
+            "Continue in the app",
+            Some(3200),
+            None,
         )?;
     }
 

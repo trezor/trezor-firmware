@@ -1980,13 +1980,19 @@ impl FirmwareUI for UIEckhart {
                 br_code.to_native().try_into()?,
                 obj_from_archived_option(br_name)?,
             )),
-            ArchivedTrezorUiEnum::Success { content, br_name } => Ok((
+            ArchivedTrezorUiEnum::Success {
+                title,
+                content,
+                button,
+                br_name,
+                duration_ms,
+            } => Ok((
                 Self::show_success(
-                    TR::progress__done.into(),
-                    TR::buttons__continue.into(),
+                    tstr_from_archived(title),
+                    tstr_from_archived(button),
                     tstr_from_archived(content),
                     false,
-                    0,
+                    duration_ms.as_ref().map(|d| d.to_native()).unwrap_or(0),
                 )?,
                 1, /* TODO */
                 obj_from_archived_option(br_name)?,
