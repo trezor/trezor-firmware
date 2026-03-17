@@ -2,7 +2,6 @@ use core::marker::PhantomData;
 
 use ufmt::derive::uDebug;
 
-use crate::log::debug;
 use crate::low_level_api::{self, ApiError, ffi};
 
 /// Helper struct to convert between `ipc_message_t.fn_` and a tuple of service, message_id.
@@ -96,7 +95,6 @@ impl<'a> IpcMessage<'a> {
     /// lifetime, which must be constrained to the lifetime of the respective
     /// IPC inbox.
     unsafe fn from_lowlevel(lowlevel_message: ffi::ipc_message_t) -> Option<Self> {
-        debug!("Received ipc_message_t: {:?}", lowlevel_message);
         let remote = RemoteSysTask::try_from(lowlevel_message.remote).ok()?;
         let fn_ = Fn::from_fn(lowlevel_message.fn_);
         // SAFETY:
@@ -113,7 +111,6 @@ impl<'a> IpcMessage<'a> {
             data,
             data_ownership: DataOwnership::IpcBuffer,
         };
-        debug!("Constructed IpcMessage: {:?}", new);
         Some(new)
     }
 

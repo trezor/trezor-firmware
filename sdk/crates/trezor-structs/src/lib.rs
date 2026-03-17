@@ -419,14 +419,24 @@ pub enum UtilEnum {
 #[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorProgressEnum {
     Init {
-        description: ShortString,
-        title: ShortString,
+        description: Option<ShortString>,
+        title: Option<ShortString>,
         indeterminate: bool,
         danger: bool,
     },
     Update {
-        description: ShortString,
+        description: Option<ShortString>,
         value: u32,
     },
     End,
+}
+
+impl TrezorProgressEnum {
+    pub fn id(&self) -> u16 {
+        match self {
+            TrezorProgressEnum::Init { .. } => 0,
+            TrezorProgressEnum::Update { .. } => 1,
+            TrezorProgressEnum::End => 2,
+        }
+    }
 }

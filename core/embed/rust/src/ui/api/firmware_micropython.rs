@@ -38,6 +38,7 @@ use heapless::Vec;
 use core::mem::MaybeUninit;
 use rkyv::{
     api::low::to_bytes_in_with_alloc,
+    option::ArchivedOption,
     rancor::Failure,
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
@@ -1375,13 +1376,19 @@ extern "C" fn new_deserialize_progress_message(
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
         fn str_from_archived<'a, const N: usize>(s: &'a ArchivedStringN<N>) -> &'a str {
-            let str = unsafe {
-                unwrap!(core::str::from_utf8(core::slice::from_raw_parts(
-                    s.data.as_ptr(),
-                    s.len.to_native() as usize
-                )))
-            };
+            let str = unwrap!(core::str::from_utf8(unsafe {
+                core::slice::from_raw_parts(s.data.as_ptr(), s.len.to_native() as usize)
+            }));
             str
+        }
+
+        fn obj_from_archived_option<const N: usize>(
+            s: &ArchivedOption<ArchivedStringN<N>>,
+        ) -> Result<Obj, Error> {
+            match s.as_ref() {
+                Some(archived_str) => Ok(Obj::try_from(str_from_archived(archived_str))?),
+                None => Ok(Obj::const_none()),
+            }
         }
 
         // Deserialize the rkyv archived data directly from the static buffer
@@ -1395,21 +1402,21 @@ extern "C" fn new_deserialize_progress_message(
                 indeterminate,
                 danger,
             } => {
-                let description = str_from_archived(description);
-                let title = str_from_archived(title);
+                let description = obj_from_archived_option(description)?;
+                let title = obj_from_archived_option(title)?;
 
                 (
-                    Obj::try_from(description)?,
-                    Obj::try_from(title)?,
+                    description,
+                    title,
                     Obj::try_from(*indeterminate)?,
                     Obj::try_from(*danger)?,
                 )
                     .try_into()?
             }
             ArchivedTrezorProgressEnum::Update { description, value } => {
-                let description = str_from_archived(description);
-                let value = value.to_native();
-                (Obj::try_from(description)?, Obj::try_from(value)?).try_into()?
+                let description = obj_from_archived_option(description)?;
+                let value = Obj::try_from(value.to_native())?;
+                (description, value).try_into()?
             }
             ArchivedTrezorProgressEnum::End => Obj::const_none(),
         };

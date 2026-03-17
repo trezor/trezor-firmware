@@ -234,7 +234,7 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         payment_req_verifier,
     )?;
 
-    // TODO: progress
+    ui::init_progress(None, Some("Signing transaction..."), false, false)?;
 
     // sign
     let mut data = Vec::new();
@@ -289,8 +289,7 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         rlp_buffer.extend_from_slice(&data);
     }
 
-    // TODO: Report progress (500)
-    // progress_obj.report(500);
+    ui::update_progress(None, 500)?;
 
     // Request remaining data chunks
     let initial_data_left = data_left;
@@ -301,9 +300,10 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         data_left -= resp.data_chunk.len() as u32;
         rlp_buffer.extend_from_slice(&resp.data_chunk);
 
-        // TODO: Report progress
-        // let progress = 500 + ((initial_data_left - data_left) * 400 / initial_data_left);
-        // progress_obj.report(progress);
+        ui::update_progress(
+            None,
+            500 + ((initial_data_left - data_left) / initial_data_left * 400),
+        )?;
     }
 
     // EIP-155 replay protection
@@ -329,7 +329,7 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 
     info!("transaction signed");
 
-    // TODO: progress stop, show continue in the app
+    ui::end_progress()?;
 
     ui::show_success(
         "Done",

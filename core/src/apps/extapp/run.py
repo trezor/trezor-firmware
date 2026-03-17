@@ -45,8 +45,6 @@ _SERVICE_CRYPTO_GET_ADDRESS_MAC = const(3)
 
 
 def fn_id(service: int, message_id: int) -> int:
-    print("service:", service, "message_id:", message_id)
-    print("fn_id:", (service << 16) | (message_id & 0xFFFF))
     return (service << 16) | (message_id & 0xFFFF)
 
 
@@ -213,12 +211,14 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             return response
 
         elif service == _SERVICE_PROGRESS:
+            print("Received progress message with ID:", message_id)
             obj = trezorui_api.deserialize_progress_message(data=bytes(msg.data))
             if message_id == _SERVICE_PROGRESS_INIT:
+                print("Progress init")
                 # Initialize a progress context
                 assert isinstance(obj, tuple)
                 assert len(obj) == 4
-                description: str = obj[0]
+                description: str | None = obj[0]
                 title: str | None = obj[1]
                 indeterminate: bool = obj[2]
                 danger: bool = obj[3]
@@ -228,38 +228,35 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                     indeterminate=indeterminate,
                     danger=danger,
                 )
-                io.ipc_send(
-                    _SYSTASK_ID_EXTAPP,
-                    fn_id(_SERVICE_PROGRESS_INIT, message_id),
-                    b"",
-                )
             elif message_id == _SERVICE_PROGRESS_REPORT:
+                print("Progress report")
                 if progress_obj is None:
                     die(DataError("Progress not initialized"))
                 # Report progress update
                 assert isinstance(obj, tuple)
                 assert len(obj) == 2
-                description: str = obj[0]
+                description: str | None = obj[0]
                 value: int = obj[1]
                 progress_obj.report(value, description=description)
-                io.ipc_send(
-                    _SYSTASK_ID_EXTAPP,
-                    fn_id(_SERVICE_PROGRESS_REPORT, message_id),
-                    b"",
-                )
             elif message_id == _SERVICE_PROGRESS_STOP:
+                print("Progress stop")
                 if progress_obj is None:
                     die(DataError("Progress not initialized"))
                 # Stop the progress context
                 progress_obj.stop()
-                io.ipc_send(
-                    _SYSTASK_ID_EXTAPP,
-                    fn_id(_SERVICE_PROGRESS_STOP, message_id),
-                    b"",
-                )
                 progress_obj = None
             else:
                 die(DataError("Unknown progress message ID"))
+
+            # Serialize and send the result back
+            try:
+                io.ipc_send(
+                    _SYSTASK_ID_EXTAPP,
+                    fn_id(_SERVICE_PROGRESS, message_id),
+                    b"",
+                )
+            except Exception as e:
+                die(DataError("Failed to send progress result"))
 
         else:
             die(RuntimeError("Unknown IPC function"))

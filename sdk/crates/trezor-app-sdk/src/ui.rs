@@ -22,11 +22,11 @@ pub use rkyv::Archived;
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
-pub use trezor_structs::TrezorUiResult;
 use trezor_structs::{
     ArchivedUtilEnum, ExtraLongString, LongString, PropsList, ShortString, StrExtList, StrList,
     TrezorUiEnum,
 };
+pub use trezor_structs::{TrezorProgressEnum, TrezorUiResult};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
@@ -34,7 +34,7 @@ use crate::service::{
     CoreIpcService, Error, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler,
 };
 use crate::util::Timeout;
-use crate::{error, unwrap};
+use crate::{error, info, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
@@ -123,6 +123,52 @@ fn ipc_ui_call_confirm(value: &TrezorUiEnum) -> UiResult {
 fn ipc_ui_call_void(value: &TrezorUiEnum) -> Result<()> {
     ipc_ui_call(value)?;
     Ok(())
+}
+
+fn ipc_progress_call(value: &TrezorProgressEnum) -> Result<()> {
+    let bytes = to_bytes::<Failure>(value).map_err(|_| Error::FailedToSend)?;
+    let message = IpcMessage::new(value.id(), &bytes);
+    let _ = services_or_die().call(
+        CoreIpcService::Progress,
+        &message,
+        Timeout::max(),
+        &NoUtilHandler {},
+    )?;
+    Ok(())
+}
+
+pub fn init_progress(
+    description: Option<&str>,
+    title: Option<&str>,
+    indeterminate: bool,
+    danger: bool,
+) -> Result<()> {
+    let value = TrezorProgressEnum::Init {
+        description: description
+            .map(|d| ShortString::from_str(d).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        title: title
+            .map(|t| ShortString::from_str(t).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        indeterminate,
+        danger,
+    };
+    ipc_progress_call(&value)
+}
+
+pub fn update_progress(description: Option<&str>, value: u32) -> Result<()> {
+    let value = TrezorProgressEnum::Update {
+        description: description
+            .map(|d| ShortString::from_str(d).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        value,
+    };
+    ipc_progress_call(&value)
+}
+
+pub fn end_progress() -> Result<()> {
+    let value = TrezorProgressEnum::End;
+    ipc_progress_call(&value)
 }
 
 pub fn confirm_linear_flow(confirm_factories: &[&dyn Fn() -> UiResult]) -> UiResult {
