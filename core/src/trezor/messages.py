@@ -2427,6 +2427,8 @@ if TYPE_CHECKING:
         optiga_signature: "AnyBytes"
         tropic_certificates: "list[AnyBytes]"
         tropic_signature: "AnyBytes | None"
+        mcu_certificates: "list[AnyBytes]"
+        mcu_signature: "AnyBytes | None"
 
         def __init__(
             self,
@@ -2434,7 +2436,9 @@ if TYPE_CHECKING:
             optiga_signature: "AnyBytes",
             optiga_certificates: "list[AnyBytes] | None" = None,
             tropic_certificates: "list[AnyBytes] | None" = None,
+            mcu_certificates: "list[AnyBytes] | None" = None,
             tropic_signature: "AnyBytes | None" = None,
+            mcu_signature: "AnyBytes | None" = None,
         ) -> None:
             pass
 
