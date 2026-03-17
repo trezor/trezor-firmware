@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
 
 SC_FUNC_SIG_BYTES = const(4)
+MAX_CALLDATA_STORED = const(4096)
 
 
 class InvalidFunctionCall(Exception):
@@ -436,13 +437,29 @@ class ParsingContext:
     def __init__(self, display_format: DisplayFormat) -> None:
         self.data = bytes()
         self.display_format = display_format
+        self.truncated = False
 
     def process_data_chunk(self, offset: int, chunk: memoryview) -> None:
         if offset == 0:
             # skip function signature
             chunk = chunk[SC_FUNC_SIG_BYTES:]
-        self.data += bytes(chunk)
-        # TODO: don't keep more than 4 chunks!
+
+        if not chunk:
+            # nothing to process after skipping function signature
+            return
+
+        current_len = len(self.data)
+        if current_len >= MAX_CALLDATA_STORED:
+            self.truncated = True
+            # reached the storage limit. ignore further chunks.
+            return
+
+        remaining = MAX_CALLDATA_STORED - current_len
+        if len(chunk) > remaining:
+            self.truncated = True
+            chunk = chunk[:remaining]
+        if chunk:
+            self.data += bytes(chunk)
 
     def get_parameters_and_fields(
         self,
@@ -451,6 +468,8 @@ class ParsingContext:
         network: EthereumNetworkInfo,
         token: EthereumTokenInfo,
     ) -> tuple[list[AnyValue], list[StrPropertyType]]:
+        if self.truncated:
+            raise OutOfBounds
 
         parameters: list[AnyValue] = []
 
@@ -523,10 +542,6 @@ def get_approver(
     network = definitions.network
 
     if not address_bytes:
-        return None
-
-    # only parse the initial chunk for now
-    if msg.data_length != len(msg.data_initial_chunk):
         return None
 
     data_reader = BufferReader(msg.data_initial_chunk)
