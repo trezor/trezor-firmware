@@ -136,6 +136,41 @@ secbool secret_lock(void);
  */
 secbool secret_is_locked(void);
 
+#ifdef USE_MCU_ATTESTATION
+
+/**
+ * @brief Writes the MCU device certificate to secret storage.
+ *
+ * Encodes the certificate with a 2-byte big-endian length prefix before
+ * writing.
+ *
+ * @param cert      Pointer to the certificate data.
+ * @param cert_size Length of the certificate in bytes.
+ * @return secbool sectrue on success, secfalse otherwise.
+ */
+secbool secret_mcu_device_cert_write(const uint8_t* cert, size_t cert_size);
+
+/**
+ * @brief Returns the size of the stored MCU device certificate.
+ *
+ * @param cert_size Pointer to receive the certificate size in bytes.
+ * @return secbool sectrue on success, secfalse otherwise.
+ */
+secbool secret_mcu_device_cert_size(size_t* cert_size);
+
+/**
+ * @brief Reads the MCU device certificate from secret storage.
+ *
+ * @param cert          Buffer to receive the certificate data.
+ * @param max_cert_size Size of the buffer.
+ * @param cert_size     Pointer to receive the actual certificate size.
+ * @return secbool sectrue on success, secfalse otherwise.
+ */
+secbool secret_mcu_device_cert_read(uint8_t* cert, size_t max_cert_size,
+                                    size_t* cert_size);
+
+#endif  // USE_MCU_ATTESTATION
+
 #ifdef LOCKABLE_BOOTLOADER
 
 /**
