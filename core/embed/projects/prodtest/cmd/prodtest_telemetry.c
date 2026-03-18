@@ -53,7 +53,9 @@ static void prodtest_telemetry_reset(cli_t* cli) {
   }
 
 #if PRODUCTION
-  if (unit_properties()->locked) {
+  unit_properties_t props = {0};
+  unit_properties_get(&props);
+  if (props.locked) {
     cli_error(cli, CLI_ERROR, "Device is not in manufacturing mode.");
     return;
   }

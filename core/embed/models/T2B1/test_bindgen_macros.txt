@@ -6,3 +6,5 @@
 -DDISPLAY_RESY=64,
 -DTREZOR_BOARD="T2B1/boards/t2b1-unix.h",
 -DMODEL_HEADER="T2B1/model_T2B1.h",
+-DOTP_LAYOUT_HEADER="T2B1/otp_layout.h",
+-DUNIT_PROPERTIES_CONTENT_HEADER="T2B1/unit_properties_content.h",

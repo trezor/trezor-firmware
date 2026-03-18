@@ -6,3 +6,5 @@
 -DDISPLAY_RESY=320,
 -DTREZOR_BOARD="D001/boards/stm32f429i-disc1.h",
 -DMODEL_HEADER="D001/model_D001.h",
+-DOTP_LAYOUT_HEADER="D001/otp_layout.h",
+-DUNIT_PROPERTIES_CONTENT_HEADER="D001/unit_properties_content.h",

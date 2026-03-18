@@ -16,6 +16,8 @@ def configure_board(
 ):
     defines += (("MODEL_HEADER", '"T2B1/model_T2B1.h"'),)
     defines += (("VERSIONS_HEADER", '"T2B1/versions.h"'),)
+    defines += (("OTP_LAYOUT_HEADER", '"T2B1/otp_layout.h"'),)
+    defines += (("UNIT_PROPERTIES_CONTENT_HEADER", '"T2B1/unit_properties_content.h"'),)
 
     # Set default revision if None
     revision = revision or "10"

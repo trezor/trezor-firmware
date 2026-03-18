@@ -16,6 +16,8 @@ def configure_board(
 ):
     defines += (("MODEL_HEADER", '"T2T1/model_T2T1.h"'),)
     defines += (("VERSIONS_HEADER", '"T2T1/versions.h"'),)
+    defines += (("OTP_LAYOUT_HEADER", '"T2T1/otp_layout.h"'),)
+    defines += (("UNIT_PROPERTIES_CONTENT_HEADER", '"T2T1/unit_properties_content.h"'),)
 
     if revision == "emulator":
         return emul(env, features_wanted, defines, sources, paths)

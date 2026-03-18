@@ -19,4 +19,4 @@
 
 #pragma once
 
-#include OTP_LAYOUT_HEADER
+#include UNIT_PROPERTIES_CONTENT_HEADER

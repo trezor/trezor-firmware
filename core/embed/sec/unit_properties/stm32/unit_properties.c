@@ -90,9 +90,6 @@ static bool get_production_date(int* year, int* month, int* day) {
 static bool detect_properties(unit_properties_t* props) {
   uint8_t otp_data[FLASH_OTP_BLOCK_SIZE];
 
-  props->locked =
-      sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT);
-
   if (sectrue != flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, otp_data,
                                 FLASH_OTP_BLOCK_SIZE)) {
     return false;
@@ -109,6 +106,10 @@ static bool detect_properties(unit_properties_t* props) {
     }
   }
 
+#ifdef UNIT_PROPERTIES_MANUFACTURING_LOCK_PRESENT
+  bool manufacturing_lock_present = false;
+#endif
+
   switch (otp_data[0]) {
     case 0xFF:
       // OTP block was not written yet, keep the defaults
@@ -117,14 +118,18 @@ static bool detect_properties(unit_properties_t* props) {
     case 0x01:
       // The fields were gradually added to the OTP block over time.
       // Unused trailing bytes were always set to 0x00.
-      props->color = otp_data[1];
+      props->color = otp_data[UNIT_PROPERTIES_BYTE_COLOR];
       props->color_is_valid = true;
-      props->btconly = otp_data[2] == 1;
+      props->btconly = otp_data[UNIT_PROPERTIES_BYTE_BTCONLY] == 1;
       props->btconly_is_valid = true;
-      props->packaging = otp_data[3];
+      props->packaging = otp_data[UNIT_PROPERTIES_BYTE_PACKAGING];
       props->packaging_is_valid = true;
-      props->battery_type = otp_data[4];
+      props->battery_type = otp_data[UNIT_PROPERTIES_BYTE_BATTERY_TYPE];
       props->battery_type_is_valid = true;
+#ifdef UNIT_PROPERTIES_MANUFACTURING_LOCK_PRESENT
+      manufacturing_lock_present =
+          otp_data[UNIT_PROPERTIES_MANUFACTURING_LOCK_PRESENT] == 1;
+#endif
       break;
 
     default:
@@ -132,20 +137,41 @@ static bool detect_properties(unit_properties_t* props) {
       break;
   }
 
+#ifdef FLASH_OTP_BLOCK_MANUFACTURING_LOCK
+#ifdef UNIT_PROPERTIES_MANUFACTURING_LOCK_PRESENT
+  // workaround for T3W1, where manufacturing lock was introduced during
+  // production
+  if (manufacturing_lock_present) {
+    props->locked =
+        sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_MANUFACTURING_LOCK);
+  } else {
+    props->locked =
+        sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT);
+  }
+#else
+  props->locked =
+      sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_MANUFACTURING_LOCK);
+#endif
+#else
+  props->locked =
+      sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT);
+#endif
+
   int production_year = 0, production_month = 0, production_day = 0;
   get_production_date(&production_year, &production_month, &production_day);
   props->production_date.year = 2000 + production_year;
   props->production_date.month = production_month;
   props->production_date.day = production_day;
 
-  props->sd_hotswap_enabled = true;
-#ifdef TREZOR_MODEL_T2T1
-  // Early produced TTs have a HW bug that prevents hotswapping of the SD card,
-  // lets check the build data and decide based on that.
-
-  if (production_year <= 18) {
+#ifdef UNIT_PROPERTIES_SD_HOTSWAP_ENABLED
+  props->sd_hotswap_enabled = UNIT_PROPERTIES_SD_HOTSWAP_ENABLED;
+#ifdef UNIT_PROPERTIES_SD_HOTSWAP_EARLY_PRODUCTION_YEAR
+  // Early produced units have a HW bug that prevents hotswapping of the SD
+  // card, lets check the build data and decide based on that.
+  if (production_year <= UNIT_PROPERTIES_SD_HOTSWAP_EARLY_PRODUCTION_YEAR) {
     props->sd_hotswap_enabled = false;
   }
+#endif
 #endif
 
   return true;
@@ -167,6 +193,11 @@ bool unit_properties_init(void) {
   drv->initialized = true;
 
   return true;
+}
+
+void unit_properties_deinit(void) {
+  unit_properties_driver_t* drv = &g_unit_properties_driver;
+  memset(drv, 0, sizeof(unit_properties_driver_t));
 }
 
 void unit_properties_get(unit_properties_t* props) {

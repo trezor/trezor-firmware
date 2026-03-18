@@ -6,3 +6,5 @@
 -DDISPLAY_RESY=520,
 -DTREZOR_BOARD="D002/boards/stm32u5g9j-dk.h",
 -DMODEL_HEADER="D002/model_D002.h",
+-DOTP_LAYOUT_HEADER="D002/otp_layout.h",
+-DUNIT_PROPERTIES_CONTENT_HEADER="D002/unit_properties_content.h",

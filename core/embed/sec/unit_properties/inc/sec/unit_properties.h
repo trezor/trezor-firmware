@@ -33,6 +33,11 @@
  */
 bool unit_properties_init(void);
 
+/**
+ * @brief Deinitializes module
+ */
+void unit_properties_deinit(void);
+
 #endif  // SECURE_MODE
 
 typedef struct {
