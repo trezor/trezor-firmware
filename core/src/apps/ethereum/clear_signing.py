@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Any, Callable, Coroutine, Iterable
 
-    from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
+    from trezor.messages import EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
 
     from .definitions import Definitions
@@ -23,6 +23,9 @@ if TYPE_CHECKING:
     StructValue = tuple[Value, ...]
     ListValue = list[StructValue]
     AnyValue = Value | StructValue | ListValue | list[Value | StructValue | ListValue]
+
+    Path = tuple[int, ...] | int
+    PathWalker = Callable[[Path], Value]
 
     # Parses a Value from a slice of the calldata.
     # Assumes that the memoryview contains just that value.
@@ -134,31 +137,49 @@ DYNAMIC_DATA_PARSERS = [parse_bytes, parse_string, parse_uint256_array]
 
 class FieldFormatter:
     def format(
-        self, value: AnyValue, network: EthereumNetworkInfo, token: EthereumTokenInfo
-    ) -> str | None:
+        self,
+        value: AnyValue,
+        definitions: Definitions,
+        token: EthereumTokenInfo,
+        path_walker: PathWalker,
+    ) -> tuple[str | None, EthereumTokenInfo | None, bytes | None]:
+        """
+        Format a field using the current formatter.
+        Return the formatted value and optionally a token and a token address,
+        if formatting this value implied dealing with a new token
+        (like getting a token from parameters using `token_path`).
+        """
         raise NotImplementedError
 
 
 class AddressNameFormatter(FieldFormatter):
     def format(
-        self, address: AnyValue, network: EthereumNetworkInfo, _token: EthereumTokenInfo
-    ) -> str | None:
+        self,
+        address: AnyValue,
+        definitions: Definitions,
+        _token: EthereumTokenInfo,
+        _path_walker: PathWalker,
+    ) -> tuple[str | None, EthereumTokenInfo | None, bytes | None]:
         if address is None:
-            return "(None)"
+            return None, None, None
         elif isinstance(address, str):
-            return address
+            return address, None, None
         else:
             if not isinstance(address, bytes):
                 raise InvalidFormatDefinition
-            return address_from_bytes(address, network)
+            return address_from_bytes(address, definitions.network), None, None
 
 
 class AmountFormatter(FieldFormatter):
     def format(
-        self, amount: AnyValue, network: EthereumNetworkInfo, _token: EthereumTokenInfo
-    ) -> str | None:
+        self,
+        amount: AnyValue,
+        definitions: Definitions,
+        _token: EthereumTokenInfo,
+        _path_Walker: PathWalker,
+    ) -> tuple[str | None, EthereumTokenInfo | None, bytes | None]:
         if amount is None:
-            return None
+            return None, None, None
         else:
             if not isinstance(amount, int):
                 raise InvalidFormatDefinition
@@ -166,18 +187,25 @@ class AmountFormatter(FieldFormatter):
             # Note: we are passing None rather than `_token`
             # to `format_ethereum_amount` because this formatter
             # is meant to be used with native ETH amounts
-            return format_ethereum_amount(amount, None, network)
+            return format_ethereum_amount(amount, None, definitions.network), None, None
 
 
 class TokenAmountFormatter(FieldFormatter):
-    def __init__(self, threshold: int | None = None) -> None:
+    def __init__(
+        self, token_path: Path | None = None, threshold: int | None = None
+    ) -> None:
+        self.token_path = token_path
         self.threshold = threshold
 
     def format(
-        self, amount: AnyValue, network: EthereumNetworkInfo, token: EthereumTokenInfo
-    ) -> str | None:
+        self,
+        amount: AnyValue,
+        definitions: Definitions,
+        token: EthereumTokenInfo | None,
+        path_walker: PathWalker,
+    ) -> tuple[str | None, EthereumTokenInfo | None, bytes | None]:
         if amount is None:
-            return None
+            return None, None, None
         else:
             if not isinstance(amount, int):
                 raise InvalidFormatDefinition
@@ -186,8 +214,22 @@ class TokenAmountFormatter(FieldFormatter):
                 # For now we return None and `confirm_ethereum_approve` shows the "Unlimited amount" warning,
                 # but the `tokenAmount` spec allows this message to be customized in which case
                 # being above the threshold could mean something else, not just "Unlimited".
-                return None
-            return format_ethereum_amount(amount, token, network)
+                return None, None, None
+            if self.token_path is not None:
+                token_address = path_walker(self.token_path)
+                if not isinstance(token_address, bytes):
+                    raise InvalidFormatDefinition
+                token = definitions.get_token(token_address)
+                return (
+                    format_ethereum_amount(amount, token, definitions.network),
+                    token,
+                    token_address,
+                )
+            return (
+                format_ethereum_amount(amount, token, definitions.network),
+                None,
+                None,
+            )
 
 
 class UnitFormatter(FieldFormatter):
@@ -197,10 +239,14 @@ class UnitFormatter(FieldFormatter):
         self.prefix = prefix
 
     def format(
-        self, value: AnyValue, network: EthereumNetworkInfo, token: EthereumTokenInfo
-    ) -> str | None:
+        self,
+        value: AnyValue,
+        _definitions: Definitions,
+        _token: EthereumTokenInfo,
+        _path_walker: PathWalker,
+    ) -> tuple[str | None, EthereumTokenInfo | None, bytes | None]:
         if value is None:
-            return None
+            return None, None, None
         else:
             if not isinstance(value, int):
                 raise InvalidFormatDefinition
@@ -208,7 +254,7 @@ class UnitFormatter(FieldFormatter):
             scaled_value = value / (10**self.decimals)
 
             if not self.prefix or scaled_value == 0:
-                return f"{scaled_value:g}{self.base}"
+                return f"{scaled_value:g}{self.base}", None, None
 
             si_prefixes = {12: "T", 9: "G", 6: "M", 3: "k", 0: "", -3: "m"}
 
@@ -226,7 +272,7 @@ class UnitFormatter(FieldFormatter):
             significand = scaled_value / (10**exponent)
             prefix_symbol = si_prefixes.get(exponent, "")
 
-            return f"{significand:g}{prefix_symbol}{self.base}"
+            return f"{significand:g}{prefix_symbol}{self.base}", None, None
 
 
 # https://eips.ethereum.org/EIPS/eip-7730#context-section
@@ -393,7 +439,7 @@ class ContainerPath:
 class FieldDefinition:
     def __init__(
         self,
-        path: tuple[int, ...] | int,
+        path: Path,
         label: str,
         formatter: FieldFormatter | type[FieldFormatter],
     ) -> None:
@@ -465,9 +511,12 @@ class ParsingContext:
         self,
         address_n: list[int],
         tx_value: AnyBytes,
-        network: EthereumNetworkInfo,
+        definitions: Definitions,
         token: EthereumTokenInfo,
-    ) -> tuple[list[AnyValue], list[StrPropertyType]]:
+    ) -> tuple[
+        list[AnyValue],
+        list[tuple[StrPropertyType, EthereumTokenInfo | None, bytes | None]],
+    ]:
         if self.truncated:
             raise OutOfBounds
 
@@ -480,16 +529,14 @@ class ParsingContext:
             parameters.append(value)
             offset += consumed
 
-        fields = []
-        for field_definition in self.display_format.field_definitions:
-            path = field_definition.path
+        def get_value_for_path(path: Path) -> Value:
             if isinstance(path, int):  # ContainerPath
                 # standard container paths like @.from, @.value...
                 if path == ContainerPath.From:
                     account, _ = get_account_and_path(address_n)
-                    p = account
+                    return account
                 elif path == ContainerPath.Value:
-                    p = int.from_bytes(tx_value, "big")
+                    return int.from_bytes(tx_value, "big")
                 else:
                     raise NotImplementedError  # TODO
             else:
@@ -516,11 +563,31 @@ class ParsingContext:
                     # at the end of the path, we must have arrived somewhere
                     # ie. not on an Array or Struct
                     raise InvalidFormatDefinition
+                return p
+
+        fields: list[tuple[StrPropertyType, EthereumTokenInfo | None, bytes | None]] = (
+            []
+        )
+        for field_definition in self.display_format.field_definitions:
+            (
+                formatted_value,
+                actual_token,
+                actual_token_address,
+            ) = field_definition.get_formatter().format(
+                get_value_for_path(field_definition.path),
+                definitions,
+                token,
+                get_value_for_path,
+            )
             fields.append(
                 (
-                    field_definition.label,
-                    field_definition.get_formatter().format(p, network, token),
-                    None,
+                    (
+                        field_definition.label,
+                        formatted_value,
+                        None,
+                    ),
+                    actual_token,
+                    actual_token_address,
                 )
             )
 
@@ -539,7 +606,6 @@ def get_approver(
 
     # local_cache_attribute
     chain_id = msg.chain_id
-    network = definitions.network
 
     if not address_bytes:
         return None
@@ -565,7 +631,13 @@ def get_approver(
     parser, parsing_context = _get_data_chunk_parser(display_format)
 
     return parser, _get_summary_handler(
-        parsing_context, address_bytes, msg, network, token, maximum_fee, fee_items
+        parsing_context,
+        address_bytes,
+        msg,
+        definitions,
+        token,
+        maximum_fee,
+        fee_items,
     )
 
 
@@ -587,7 +659,7 @@ def _get_summary_handler(
     context: ParsingContext,
     address_bytes: bytes,
     msg: MsgInSignTx,
-    network: EthereumNetworkInfo,
+    definitions: Definitions,
     token: EthereumTokenInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
@@ -604,7 +676,7 @@ def _get_summary_handler(
             context,
             address_bytes,
             msg,
-            network,
+            definitions,
             token,
             maximum_fee,
             fee_items,
@@ -614,7 +686,7 @@ def _get_summary_handler(
             context,
             address_bytes,
             msg,
-            network,
+            definitions,
             token,
             maximum_fee,
             fee_items,
@@ -622,14 +694,14 @@ def _get_summary_handler(
 
     # generic UI for any function that has a `DisplayFormat`
 
-    return _handle_generic_ui(context, msg, network, address_bytes, token)
+    return _handle_generic_ui(context, msg, definitions, address_bytes, token)
 
 
 async def _handle_approve(
     context: ParsingContext,
     address_bytes: bytes,
     msg: MsgInSignTx,
-    network: EthereumNetworkInfo,
+    definitions: Definitions,
     token: EthereumTokenInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
@@ -641,20 +713,20 @@ async def _handle_approve(
     from .layout import require_confirm_approve
 
     args, fields = context.get_parameters_and_fields(
-        msg.address_n, msg.value, network, token
+        msg.address_n, msg.value, definitions, token
     )
 
     assert len(args) == 2
     assert len(fields) == 2
 
     arg0_raw_value = args[0]
-    (field0_name, recipient_addr, _) = fields[0]
+    ((field0_name, recipient_addr, _), _, _) = fields[0]
     assert field0_name == "Spender"
     assert isinstance(arg0_raw_value, bytes)
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
-    (field1_name, value, _) = fields[1]
+    ((field1_name, value, _), _, _) = fields[1]
     assert field1_name == "Amount"
     assert isinstance(arg1_raw_value, int)
 
@@ -670,7 +742,7 @@ async def _handle_approve(
         maximum_fee,
         fee_items,
         msg.chain_id,
-        network,
+        definitions.network,
         token,
         address_bytes,
         is_revoke,
@@ -682,7 +754,7 @@ async def _handle_transfer(
     context: ParsingContext,
     address_bytes: bytes,
     msg: MsgInSignTx,
-    network: EthereumNetworkInfo,
+    definitions: Definitions,
     token: EthereumTokenInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
@@ -690,17 +762,17 @@ async def _handle_transfer(
     from .layout import require_confirm_tx
 
     args, fields = context.get_parameters_and_fields(
-        msg.address_n, msg.value, network, token
+        msg.address_n, msg.value, definitions, token
     )
 
     assert len(args) == 2
     assert len(fields) == 2
 
-    (arg0_name, recipient_addr, _) = fields[0]
+    ((arg0_name, recipient_addr, _), _, _) = fields[0]
     assert arg0_name == "To"
     assert isinstance(recipient_addr, str)
 
-    (arg1_name, value, _) = fields[1]
+    ((arg1_name, value, _), _, _) = fields[1]
     assert arg1_name == "Amount"
     assert isinstance(value, str)
 
@@ -720,35 +792,32 @@ async def _handle_transfer(
 async def _handle_generic_ui(
     context: ParsingContext,
     msg: MsgInSignTx,
-    network: EthereumNetworkInfo,
+    definitions: Definitions,
     address_bytes: bytes,
     token: EthereumTokenInfo,
 ) -> None:
     from trezor.ui.layouts import (
         confirm_action,
         confirm_properties,
-        ethereum_address_title,
     )
 
     from . import tokens
     from .clear_signing_definitions import KNOWN_ADDRESSES
     from .helpers import bytes_from_address
-    from .layout import require_confirm_address, require_confirm_unknown_token
 
     _, fields = context.get_parameters_and_fields(
-        msg.address_n, msg.value, network, token
+        msg.address_n, msg.value, definitions, token
     )
-    if token is tokens.UNKNOWN_TOKEN:
-        title = ethereum_address_title()
-        await require_confirm_unknown_token(title)
-        await require_confirm_address(
-            address_bytes,
-            title,
-            TR.ethereum__token_contract,
-            TR.buttons__continue,
-            "unknown_token",
-            TR.ethereum__unknown_contract_address,
-        )
+
+    properties_to_confirm = []
+
+    for field, actual_token, actual_token_address in fields:
+        properties_to_confirm.append(field)
+        if actual_token is tokens.UNKNOWN_TOKEN:
+            assert actual_token_address is not None
+            token_address_str = address_from_bytes(actual_token_address, definitions.network)
+            token_address_property: StrPropertyType = (TR.ethereum__token_contract, token_address_str, None)
+            properties_to_confirm.append(token_address_property)
 
     # TODO ??
     recipient_str = KNOWN_ADDRESSES.get(bytes_from_address(msg.to))
@@ -758,5 +827,5 @@ async def _handle_generic_ui(
     await confirm_properties(
         "confirm_contract",
         "Confirm contract",
-        fields,
+        properties_to_confirm,
     )
