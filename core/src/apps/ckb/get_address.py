@@ -25,7 +25,7 @@ async def get_address(msg: CKBGetAddress, keychain: Keychain) -> CKBAddress:
     from apps.common import paths
     from apps.common.address_mac import get_address_mac
 
-    from .helpers import pubkey_to_blake160, script_to_address
+    from .helpers import encode_address, get_lock_script_arg
 
     address_n = msg.address_n  # local_cache_attribute
 
@@ -36,8 +36,8 @@ async def get_address(msg: CKBGetAddress, keychain: Keychain) -> CKBAddress:
     node = keychain.derive(address_n)
     public_key = node.public_key()  # 33 bytes compressed
 
-    # Calculate blake160 (args)
-    blake160 = pubkey_to_blake160(public_key)
+    # Derive lock script argument
+    arg = get_lock_script_arg(public_key)
 
     # Encode to Bech32m address
     network = msg.network if msg.network else "Mainnet"
@@ -46,7 +46,7 @@ async def get_address(msg: CKBGetAddress, keychain: Keychain) -> CKBAddress:
     if network not in ("Mainnet", "Testnet"):
         raise DataError(f"Invalid network: {network}")
 
-    address = script_to_address(blake160, network)
+    address = encode_address(arg, network)
     mac = get_address_mac(address, SLIP44_ID, address_n, keychain)
 
     # Show on display if requested

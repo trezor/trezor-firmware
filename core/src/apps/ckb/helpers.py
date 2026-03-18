@@ -6,7 +6,7 @@ from trezor.crypto.hashlib import blake2b
 from trezor.crypto.bech32 import bech32_encode, Encoding, convertbits
 
 # System script code_hash for secp256k1_blake160_sighash_all
-# Same on both Mainnet (Lina) and Testnet (Aggron)
+# Same on both Meepo Mainnet and Meepo Testnet
 CODE_HASH_SECP256K1_BLAKE160 = unhexlify(
     "9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8"
 )
@@ -19,8 +19,8 @@ HRP_MAINNET = "ckb"
 HRP_TESTNET = "ckt"
 
 
-def pubkey_to_blake160(public_key: bytes) -> bytes:
-    """Hash public key with Blake2b and take first 20 bytes (blake160)."""
+def get_lock_script_arg(public_key: bytes) -> bytes:
+    """Hash public key with Blake2b and return first 20 bytes (lock script argument)."""
     h = blake2b(
         data=public_key,
         outlen=32,
@@ -29,7 +29,7 @@ def pubkey_to_blake160(public_key: bytes) -> bytes:
     return h.digest()[:20]
 
 
-def script_to_address(args: bytes, network: str) -> str:
+def encode_address(args: bytes, network: str) -> str:
     """
     Encode lock script to Bech32m address using CKB2021 Full format.
 
@@ -45,7 +45,7 @@ def script_to_address(args: bytes, network: str) -> str:
         bytes([0x00]) + CODE_HASH_SECP256K1_BLAKE160 + bytes([HASH_TYPE]) + args
     )
 
-    # Convert from 8-bit to 5-bit for bech32
+    # Convert bits from 8-bit groups to 5-bit groups for Bech32 encoding
     payload_5bit = convertbits(payload_bytes, 8, 5)
 
     # Select HRP based on network
