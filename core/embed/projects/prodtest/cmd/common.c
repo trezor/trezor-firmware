@@ -33,7 +33,7 @@
 #include "sha2.h"
 #include "string.h"
 
-#include <../vendor/mldsa-native/mldsa/sign.h>
+#include <mldsa_native.h>
 
 // HSM root certification authority public keys.
 const uint8_t ROOT_KEYS_P256[][ECDSA_PUBLIC_KEY_SIZE] = {
@@ -72,20 +72,21 @@ const ed25519_public_key ROOT_KEYS_ED25519[] = {
 #endif
 };
 
-const uint8_t ROOT_KEYS_MLDSA44[][CRYPTO_PUBLICKEYBYTES] = {
+const uint8_t
+    ROOT_KEYS_MLDSA44[][MLDSA_PUBLICKEYBYTES(MLD_CONFIG_API_PARAMETER_SET)] = {
 #if PRODUCTION
 #ifdef DEV_AUTH_ROOT_PROD_MLDSA44
-    DEV_AUTH_ROOT_PROD_MLDSA44,
+        DEV_AUTH_ROOT_PROD_MLDSA44,
 #endif
 #ifdef DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44
-    DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44,
+        DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44,
 #endif
 #else
 #ifdef DEV_AUTH_ROOT_DEBUG_MLDSA44
-    DEV_AUTH_ROOT_DEBUG_MLDSA44,
+        DEV_AUTH_ROOT_DEBUG_MLDSA44,
 #endif
 #ifdef DEV_AUTH_ROOT_STAGING_MLDSA44
-    DEV_AUTH_ROOT_STAGING_MLDSA44,
+        DEV_AUTH_ROOT_STAGING_MLDSA44,
 #endif
 #endif
 };
@@ -346,12 +347,12 @@ static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
   }
 
   if (alg_id == ALG_ID_MLDSA44) {
-    if (pub_key_size != CRYPTO_PUBLICKEYBYTES) {
+    if (pub_key_size != MLDSA_PUBLICKEYBYTES(MLD_CONFIG_API_PARAMETER_SET)) {
       return false;
     }
 
-    if (crypto_sign_verify(sig, sig_size, msg, msg_size, (const uint8_t*)"", 0,
-                           pub_key) != 0) {
+    if (mldsa_verify(sig, sig_size, msg, msg_size, (const uint8_t*)"", 0,
+                     pub_key) != 0) {
       return false;
     }
 

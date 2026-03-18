@@ -70,6 +70,22 @@ def configure(
     sources += ["embed/sec/secret_keys/secret_keys_common.c"]
     defines += [("USE_SECRET_KEYS", "1")]
 
+    # MCU device attestation with ML-DSA-44
+    defines += [("USE_MCU_ATTESTATION", "1")]
+    defines += [("MLD_CONFIG_NAMESPACE_PREFIX", "mldsa")]
+    defines += [("MLD_CONFIG_NO_RANDOMIZED_API", "1")]
+    paths += ["embed/sec/mcu_attestation/inc"]
+    sources += ["embed/sec/mcu_attestation/mcu_attestation.c"]
+    paths += ["vendor/mldsa-native/mldsa"]
+    sources += ["vendor/mldsa-native/mldsa/src/sign.c"]
+    sources += ["vendor/mldsa-native/mldsa/src/poly.c"]
+    sources += ["vendor/mldsa-native/mldsa/src/poly_kl.c"]
+    sources += ["vendor/mldsa-native/mldsa/src/polyvec.c"]
+    sources += ["vendor/mldsa-native/mldsa/src/packing.c"]
+    sources += ["vendor/mldsa-native/mldsa/src/fips202/fips202.c"]
+    sources += ["vendor/mldsa-native/mldsa/src/fips202/fips202x4.c"]
+    sources += ["vendor/mldsa-native/mldsa/src/fips202/keccakf1600.c"]
+
     if "boot_ucb" in features_wanted:
         sources += ["embed/sec/image/boot_header.c"]
         sources += ["embed/sec/image/boot_ucb.c"]
