@@ -23,6 +23,7 @@
 #include <sec/rng_strong.h>
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
+#include <sec/tropic_configs.h>
 #include <sys/systick.h>
 
 #include "hmac.h"
@@ -340,11 +341,11 @@ bool tropic_session_start(void) {
     return true;
   }
 
-#ifndef TREZOR_EMULATOR
   if (tropic_custom_session_start(NULL, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
   }
+#ifndef TREZOR_EMULATOR
   if (tropic_custom_session_start(NULL, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT) ==
       LT_OK) {
     return true;
@@ -594,6 +595,10 @@ static uint16_t get_kek_masks_slot(tropic_driver_t *drv) {
              ? TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT
              : TROPIC_KEK_MASKS_PRIVILEGED_SLOT;
 }
+
+static void lt_r_config_read_time(uint32_t *time_ms) { *time_ms += 51; }
+
+static void lt_i_config_read_time(uint32_t *time_ms) { *time_ms += 51; }
 
 static void lt_mac_and_destroy_time(uint32_t *time_ms) { *time_ms += 51; }
 
@@ -983,6 +988,56 @@ cleanup:
 
 void tropic_pin_unmask_kek_time(uint32_t *time_ms) {
   lt_r_mem_data_read_time(time_ms);
+}
+
+void tropic_validate_sensors_time(uint32_t *time_ms) {
+  lt_r_config_read_time(time_ms);
+  lt_i_config_read_time(time_ms);
+}
+
+secbool tropic_validate_sensors(tropic_ui_progress_t ui_progress) {
+  tropic_set_ui_progress(ui_progress);
+
+  secbool ret = secfalse;
+  uint32_t sensors_config = 0;
+
+  if (!tropic_session_start()) {
+    goto cleanup;
+  }
+
+  lt_handle_t *tropic_handle = tropic_get_handle();
+  if (!tropic_handle) {
+    goto cleanup;
+  }
+
+  if (TROPIC_RETRY_COMMAND(lt_r_config_read(
+          tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config)) != LT_OK) {
+    goto cleanup;
+  }
+
+  uint32_t expected_sensors_config =
+      tropic_configs_reversible.obj[TR01_CFG_SENSORS_IDX];
+  if (sensors_config != expected_sensors_config) {
+    goto cleanup;
+  }
+
+  if (TROPIC_RETRY_COMMAND(lt_i_config_read(
+          tropic_handle, TR01_CFG_SENSORS_ADDR, &sensors_config)) != LT_OK) {
+    goto cleanup;
+  }
+
+  expected_sensors_config =
+      tropic_configs_irreversible.obj[TR01_CFG_SENSORS_IDX];
+  if (sensors_config != expected_sensors_config) {
+    goto cleanup;
+  }
+
+  ret = sectrue;
+
+cleanup:
+  memzero(&sensors_config, sizeof(sensors_config));
+  tropic_set_ui_progress(NULL);
+  return ret;
 }
 
 #endif  // USE_STORAGE
