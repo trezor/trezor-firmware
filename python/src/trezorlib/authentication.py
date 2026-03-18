@@ -26,7 +26,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, ed25519, types, utils
 from cryptography.x509.oid import NameOID, ObjectIdentifier, SignatureAlgorithmOID
 
-from . import device
+from . import _root_keys, device
 from .client import Session
 from .tools import workflow
 
@@ -39,6 +39,10 @@ def _pk_p256(pubkey_hex: str) -> PublicKey:
 
 def _pk_ed25519(pubkey_hex: str) -> PublicKey:
     return Ed25519PublicKey.from_bytes(bytes.fromhex(pubkey_hex))
+
+
+def _pk_mldsa44(pubkey_hex: str) -> PublicKey:
+    return Mldsa44PublicKey.from_bytes(bytes.fromhex(pubkey_hex))
 
 
 CHALLENGE_HEADER = b"AuthenticateDevice:"
@@ -87,6 +91,9 @@ class PublicKey:
             return EcdsaPublicKey.from_bytes(data, ec.SECP256R1())
         elif oid == SignatureAlgorithmOID.ED25519:
             return Ed25519PublicKey.from_bytes(data)
+        # TODO replace after cryptography 47.0.0 is released
+        elif oid == ObjectIdentifier("2.16.840.1.101.3.4.3.17"):
+            return Mldsa44PublicKey.from_bytes(data)
         else:
             raise ValueError("Unsupported key type.")
 
@@ -96,6 +103,7 @@ class PublicKey:
             return EcdsaPublicKey(pubkey)
         elif isinstance(pubkey, ed25519.Ed25519PublicKey):
             return Ed25519PublicKey(pubkey)
+        # TODO after cryptography 47.0.0 is released
         else:
             raise ValueError("Unsupported key type.")
 
@@ -214,12 +222,35 @@ class Ed25519PublicKey(PublicKey):
         )
 
 
+class Mldsa44PublicKey(PublicKey):
+    def __init__(self, pubkey: t.Any) -> None:
+        self.pubkey = pubkey
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> Mldsa44PublicKey:
+        # TODO after cryptography 47.0.0 is released
+        return cls(None)
+
+    def to_bytes(self) -> bytes:
+        # TODO after cryptography 47.0.0 is released
+        return bytes()
+
+    def verify_message(self, *, signature: bytes, message: bytes) -> None:
+        # TODO after cryptography 47.0.0 is released
+        pass
+
+    def verify_certificate(self, certificate: x509.Certificate) -> None:
+        # TODO after cryptography 47.0.0 is released
+        pass
+
+
 class RootCertificate(t.NamedTuple):
     name: str
     device: str
     devel: bool
     p256_pubkey: PublicKey
     ed25519_pubkey: PublicKey | None = None
+    mldsa44_pubkey: PublicKey | None = None
 
     def pubkey_for_oid(self, oid: ObjectIdentifier) -> PublicKey:
         if oid == SignatureAlgorithmOID.ECDSA_WITH_SHA256:
@@ -228,6 +259,11 @@ class RootCertificate(t.NamedTuple):
             if self.ed25519_pubkey is None:
                 raise ValueError("ED25519 public key not set.")
             return self.ed25519_pubkey
+        # TODO replace after cryptography 47.0.0 is released
+        elif oid == ObjectIdentifier("2.16.840.1.101.3.4.3.17"):
+            if self.mldsa44_pubkey is None:
+                raise ValueError("ML-DSA-44 public key not set.")
+            return self.mldsa44_pubkey
         else:
             raise ValueError("Unsupported key type.")
 
@@ -238,91 +274,69 @@ ROOT_PUBLIC_KEYS = [
         "Trezor Company",
         "Trezor Safe 3",
         False,
-        _pk_p256(
-            "04ca97480ac0d7b1e6efafe518cd433cec2bf8ab9822d76eafd34363b55d63e60"
-            "380bff20acc75cde03cffcb50ab6f8ce70c878e37ebc58ff7cca0a83b16b15fa5"
-        ),
+        _pk_p256(_root_keys.T2B1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
     RootCertificate(
         # Root production key for T3B1.
         "Trezor Company",
         "Trezor Safe 3",
         False,
-        _pk_p256(
-            "045b5c3fdd01f3602092834209b86df0ca86a9faf25cac35c73bf6237d66eb21e"
-            "afcec3706f1ccd5eb4cc7f2fa1751213eccb1c78389afba89a5788ff31ee46a5d"
-        ),
+        _pk_p256(_root_keys.T3B1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
     RootCertificate(
+        # Root production key for T3T1.
         "Trezor Company",
         "Trezor Safe 5",
         False,
-        _pk_p256(
-            "041854b27fb1d9f65abb66828e78c9dc0ca301e66081ab0c6a4d104f9df1cd0ad"
-            "5a7c75f77a8c092f55cf825d2abaf734f934c9394d5e75f75a5a06a5ee9be93ae"
-        ),
+        _pk_p256(_root_keys.T3T1_DEV_AUTH_ROOT_PROD_P256_HEX),
     ),
     RootCertificate(
         # Root production keys for T3W1.
         "Trezor Company",
         "Trezor Safe 7",
         False,
-        _pk_p256(
-            "040dde0d3e0d4da593fac6fd02a461d0e7eef238aca55c7c50b4e9ec37f387330"
-            "3b6429ef1c9b78b4411a7dcbbc5dde5225979c1c2da3b073e82b1ed3f5f9825bb"
-        ),
-        _pk_ed25519("59237acd17134061d655b3f8d624573ca06ce8d862f38ba4e05140ce1d3d609d"),
+        _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_P256_HEX),
+        _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_ED25519_HEX),
+        _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_MLDSA44_HEX),
     ),
     RootCertificate(
         # Root backup production keys for T3W1.
         "Trezor Company",
         "Trezor Safe 7",
         False,
-        _pk_p256(
-            "04c6a673af4ec44b10441b1d78676e15173ad0e36df9f7f2fa1cd819955f20fe3"
-            "2917b60da5fed3b3aa54a9ab8b3ed27d198b3768cad26eef5935cd87af0af065e"
-        ),
-        _pk_ed25519("5612606584ee7e0bc313b13f7ac94156bb4cb75bd77585ddbe579301306e85f1"),
+        _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_BACKUP_P256_HEX),
+        _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_BACKUP_ED25519_HEX),
+        _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44_HEX),
     ),
     RootCertificate(
         # Root debug key for T2B1 and T3B1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         "Trezor Safe 3",
         True,
-        _pk_p256(
-            "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c"
-            "4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
-        ),
+        _pk_p256(_root_keys.T2B1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
     ),
     RootCertificate(
+        # Root debug key for T3T1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         "Trezor Safe 5",
         True,
-        _pk_p256(
-            "04e48b69cd7962068d3cca3bcc6b1747ef496c1e28b5529e34ad7295215ea161d"
-            "be8fb08ae0479568f9d2cb07630cb3e52f4af0692102da5873559e45e9fa72959"
-        ),
+        _pk_p256(_root_keys.T3T1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
     ),
     RootCertificate(
         # Root debug keys for T3W1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         "Trezor Safe 7",
         True,
-        _pk_p256(
-            "04521192e173a9da4e3023f747d836563725372681eba3079c56ff11b2fc137ab"
-            "189eb4155f371127651b5594f8c332fc1e9c0f3b80d4212822668b63189706578"
-        ),
+        _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_DEBUG_P256_HEX),
     ),
     RootCertificate(
         # Root staging keys for T3W1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         "Trezor Safe 7",
-        False,
-        _pk_p256(
-            "0465e88f9b2cea67e8364f0cfcfacd500af24e9040b357beee629ccc4fce1704d"
-            "1a7ef7284f387708f92ef14600e2caad6894016fee819d623b95d66210c3e7519"
-        ),
-        _pk_ed25519("cd318dc8405ae4f4144e3284dcb7b0cb0f0c2195c2ca14a0f6fccd9104e32a4b"),
+        True,
+        _pk_p256(_root_keys.T3W1_DEV_AUTH_ROOT_STAGING_P256_HEX),
+        _pk_ed25519(_root_keys.T3W1_DEV_AUTH_ROOT_STAGING_ED25519_HEX),
+        _pk_mldsa44(_root_keys.T3W1_DEV_AUTH_ROOT_STAGING_MLDSA44_HEX),
     ),
 ]
 
@@ -550,6 +564,7 @@ def authenticate_device(
     allow_development_devices: bool = False,
     p256_root_pubkey: bytes | PublicKey | None = None,
     ed25519_root_pubkey: bytes | PublicKey | None = None,
+    mldsa44_root_pubkey: bytes | PublicKey | None = None,
 ) -> None:
     if challenge is None:
         challenge = secrets.token_bytes(16)
@@ -583,5 +598,26 @@ def authenticate_device(
         )
 
         if optiga_root is not tropic_root:
+            LOG.error("Certificates issued by different root authorities.")
+            raise DeviceNotAuthentic
+
+    if (
+        getattr(optiga_root, "mldsa44_pubkey", None) is not None
+        or mldsa44_root_pubkey is not None
+    ):
+        if not resp.mcu_signature:
+            LOG.error("Missing MCU signature.")
+            raise DeviceNotAuthentic
+
+        mcu_root = verify_authentication_response(
+            challenge,
+            resp.mcu_signature,
+            resp.mcu_certificates,
+            allowlist=allowlist,
+            allow_development_devices=allow_development_devices,
+            root_pubkey=mldsa44_root_pubkey,
+        )
+
+        if optiga_root is not mcu_root:
             LOG.error("Certificates issued by different root authorities.")
             raise DeviceNotAuthentic

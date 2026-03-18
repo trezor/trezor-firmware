@@ -402,6 +402,9 @@ def _print_auth_data(signature: bytes, certificates: t.Sequence[bytes]) -> None:
     "--ed25519-root", type=click.File("rb"), help="Custom root Ed25519 public key."
 )
 @click.option(
+    "--mldsa44-root", type=click.File("rb"), help="Custom root ML-DSA-44 public key."
+)
+@click.option(
     "-r", "--raw", is_flag=True, help="Print raw cryptographic data and exit."
 )
 @click.option(
@@ -410,14 +413,21 @@ def _print_auth_data(signature: bytes, certificates: t.Sequence[bytes]) -> None:
     is_flag=True,
     help="Do not check intermediate certificates against the online whitelist/CRL.",
 )
+@click.option(
+    "--dev",
+    is_flag=True,
+    help="Accept devices signed by development/debug root keys.",
+)
 @with_session(seedless=True)
 def authenticate(
     session: "Session",
     hex_challenge: str | None,
     p256_root: t.BinaryIO | None,
     ed25519_root: t.BinaryIO | None,
+    mldsa44_root: t.BinaryIO | None,
     raw: bool | None,
     offline: bool | None,
+    allow_development_devices: bool,
 ) -> None:
     """Verify the authenticity of the device.
 
@@ -440,6 +450,8 @@ def authenticate(
         _print_auth_data(msg.optiga_signature, msg.optiga_certificates)
         if msg.tropic_signature is not None:
             _print_auth_data(msg.tropic_signature, msg.tropic_certificates)
+        if msg.mcu_signature is not None:
+            _print_auth_data(msg.mcu_signature, msg.mcu_certificates)
         return
 
     if p256_root is not None:
@@ -451,6 +463,11 @@ def authenticate(
         ed25519_root_bytes = ed25519_root.read()
     else:
         ed25519_root_bytes = None
+
+    if mldsa44_root is not None:
+        mldsa44_root_bytes = mldsa44_root.read()
+    else:
+        mldsa44_root_bytes = None
 
     class ColoredFormatter(logging.Formatter):
         LEVELS = {
@@ -495,7 +512,9 @@ def authenticate(
             challenge,
             p256_root_pubkey=p256_root_bytes,
             ed25519_root_pubkey=ed25519_root_bytes,
+            mldsa44_root_pubkey=mldsa44_root_bytes,
             allowlist=allowlist,
+            allow_development_devices=allow_development_devices,
         )
     except authentication.DeviceNotAuthentic:
         click.echo("Device is not authentic.")
