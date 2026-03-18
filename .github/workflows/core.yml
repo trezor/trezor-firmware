@@ -697,10 +697,16 @@ jobs:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           pattern: core-firmware-*
-          path: core/build
-          merge-multiple: true
+          path: artifacts
       - run: |
-          (echo '```'; find core/build/ -name '*-*-*.bin' -printf "%-40f %10s\n" | sort; echo '```') >> $GITHUB_STEP_SUMMARY
+          for build_type in normal debuglink
+          do
+            (echo '##' ${build_type}; \
+             echo '```'; \
+             find artifacts/core-firmware-*-${build_type}/ -name '*-*-*.bin' -printf "%-40f %10s\n" | sort; \
+             echo '```') >> $GITHUB_STEP_SUMMARY
+          done
+
 
   core_ui_comment:
     name: Post comment with UI diff URLs
