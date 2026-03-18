@@ -373,12 +373,7 @@
     "cardano__addr_legacy": "Legado",
     "cardano__addr_pointer": "Puntero",
     "cardano__addr_reward": "Recompensa",
-    "cardano__address_no_staking": {
-      "Bolt": "dirección - sin recompensas de staking.",
-      "Caesar": "dirección - sin recompensas de staking.",
-      "Delizia": "dirección - sin recompensas de staking.",
-      "Eckhart": "dirección - sin recompensas de staking."
-    },
+    "cardano__address_no_staking": "dirección - sin recompensas de staking.",
     "cardano__always_abstain": "Abstenerse siempre",
     "cardano__always_no_confidence": "No Confianza siempre",
     "cardano__amount_burned_decimals_unknown": {
@@ -2730,7 +2725,6 @@
     },
     "words__recipient": "Destinatario",
     "words__recovery_share": "Fragmento de recuperación",
-    "words__resource": "",
     "words__review": "Revisar",
     "words__security": "Seguridad",
     "words__send": "Enviar",
@@ -2786,8 +2780,6 @@
     "words__unknown": "Desconocido",
     "words__unlimited": "Ilimitado",
     "words__unlocked": "Desbloqueado",
-    "words__votes": "",
-    "words__voting": "",
     "words__wallet": "Billetera",
     "words__warning": "Advertencia",
     "words__wipe": "Borrar",

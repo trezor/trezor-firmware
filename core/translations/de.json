@@ -3415,7 +3415,6 @@
     },
     "words__recipient": "Empfänger",
     "words__recovery_share": "Recovery-Share",
-    "words__resource": "",
     "words__review": "Prüfen",
     "words__security": "Sicherheit",
     "words__send": "Senden",
@@ -3476,8 +3475,6 @@
     "words__unknown": "Unbekannt",
     "words__unlimited": "Unbegrenzt",
     "words__unlocked": "Entsperrt",
-    "words__votes": "",
-    "words__voting": "",
     "words__wallet": "Wallet",
     "words__warning": "Warnung",
     "words__wipe": {
