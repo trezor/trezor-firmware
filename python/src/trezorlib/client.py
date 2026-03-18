@@ -110,8 +110,7 @@ class Session(t.Generic[ClientType, SessionIdType]):
         """Call a method on this session, process and return the response."""
         if self.is_invalid:
             raise exceptions.InvalidSessionError(self.id)
-        with self:
-            return self.client._call(self, msg, expect=expect, timeout=timeout)
+        return self.client._call(self, msg, expect=expect, timeout=timeout)
 
     def call_raw(self, msg: MessageType, timeout: float | None = None) -> MessageType:
         """Invoke a single call-response round-trip to the device.
