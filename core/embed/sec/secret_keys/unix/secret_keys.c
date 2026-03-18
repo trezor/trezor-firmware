@@ -26,6 +26,14 @@
 #include <sec/secret_keys.h>
 #include "../secret_keys_common.h"
 
+#ifdef USE_MCU_ATTESTATION
+secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
+  _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH);
+  memset(dest, 3, SHA256_DIGEST_LENGTH);
+  return sectrue;
+}
+#endif  // USE_MCU_ATTESTATION
+
 #ifdef USE_TROPIC
 
 static uint8_t SECRET_TROPIC_PAIRING_BYTES[] = {
@@ -43,12 +51,6 @@ _Static_assert(sizeof(SECRET_TROPIC_PAIRING_BYTES) == sizeof(curve25519_key),
 
 _Static_assert(sizeof(SECRET_TROPIC_PUBKEY_BYTES) == sizeof(curve25519_key),
                "Invalid size of Tropic public key");
-
-secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
-  _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH);
-  memset(dest, 3, SHA256_DIGEST_LENGTH);
-  return sectrue;
-}
 
 secbool secret_key_tropic_public(curve25519_key dest) {
   memcpy(dest, SECRET_TROPIC_PUBKEY_BYTES, sizeof(curve25519_key));
