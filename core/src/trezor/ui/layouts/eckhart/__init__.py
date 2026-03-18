@@ -1260,6 +1260,31 @@ if not utils.BITCOIN_ONLY:
             TR.confirm_total__title_fee,
         )
 
+    async def confirm_ethereum_clear_signing(
+        recipient_str: str,
+        intent: str,
+        properties: list[StrPropertyType],
+        maximum_fee: str,
+    ) -> None:
+        await confirm_action("confirm_contract", TR.words__provider, recipient_str)
+        await confirm_action("confirm_contract", TR.words__intent, intent)
+        await confirm_properties(
+            "confirm_contract",
+            TR.ethereum__confirm_contract,
+            properties,
+        )
+        await raise_if_not_confirmed(
+            trezorui_api.confirm_summary(
+                amount=None,
+                amount_label=None,
+                fee=maximum_fee,
+                fee_label=TR.send__maximum_fee,
+                extra_items=None,
+                extra_title=None,
+            ),
+            br_name="confirm_ethereum_tx",
+        )
+
     async def confirm_ethereum_staking_tx(
         title: str,
         intro_question: str,
