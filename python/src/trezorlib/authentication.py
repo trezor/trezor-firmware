@@ -42,6 +42,7 @@ def _pk_ed25519(pubkey_hex: str) -> PublicKey:
 
 
 CHALLENGE_HEADER = b"AuthenticateDevice:"
+MLDSA44_OID = ObjectIdentifier("2.16.840.1.101.3.4.3.17")
 
 OID_TO_NAME = {
     NameOID.COMMON_NAME: "CN",
@@ -87,6 +88,8 @@ class PublicKey:
             return EcdsaPublicKey.from_bytes(data, ec.SECP256R1())
         elif oid == SignatureAlgorithmOID.ED25519:
             return Ed25519PublicKey.from_bytes(data)
+        elif oid == MLDSA44_OID:
+            return Mldsa44PublicKey.from_bytes(data)
         else:
             raise ValueError("Unsupported key type.")
 
@@ -96,6 +99,7 @@ class PublicKey:
             return EcdsaPublicKey(pubkey)
         elif isinstance(pubkey, ed25519.Ed25519PublicKey):
             return Ed25519PublicKey(pubkey)
+        # TODO Mldsa44PublicKey
         else:
             raise ValueError("Unsupported key type.")
 
@@ -214,12 +218,31 @@ class Ed25519PublicKey(PublicKey):
         )
 
 
+class Mldsa44PublicKey(PublicKey):
+    def __init__(self, pubkey: t.Any) -> None:
+        self.pubkey = pubkey
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> Mldsa44PublicKey:
+        return cls(None)
+
+    def to_bytes(self) -> bytes:
+        return bytes()
+
+    def verify_message(self, *, signature: bytes, message: bytes) -> None:
+        pass
+
+    def verify_certificate(self, certificate: x509.Certificate) -> None:
+        pass
+
+
 class RootCertificate(t.NamedTuple):
     name: str
     device: str
     devel: bool
     p256_pubkey: PublicKey
     ed25519_pubkey: PublicKey | None = None
+    mldsa44_pubkey: PublicKey | None = None
 
     def pubkey_for_oid(self, oid: ObjectIdentifier) -> PublicKey:
         if oid == SignatureAlgorithmOID.ECDSA_WITH_SHA256:
@@ -228,6 +251,10 @@ class RootCertificate(t.NamedTuple):
             if self.ed25519_pubkey is None:
                 raise ValueError("ED25519 public key not set.")
             return self.ed25519_pubkey
+        elif oid == MLDSA44_OID:
+            if self.mldsa44_pubkey is None:
+                raise ValueError("ML-DSA-44 public key not set.")
+            return self.mldsa44_pubkey
         else:
             raise ValueError("Unsupported key type.")
 
@@ -550,6 +577,7 @@ def authenticate_device(
     allow_development_devices: bool = False,
     p256_root_pubkey: bytes | PublicKey | None = None,
     ed25519_root_pubkey: bytes | PublicKey | None = None,
+    mldsa44_root_pubkey: bytes | PublicKey | None = None,
 ) -> None:
     if challenge is None:
         challenge = secrets.token_bytes(16)
@@ -583,5 +611,22 @@ def authenticate_device(
         )
 
         if optiga_root is not tropic_root:
+            LOG.error("Certificates issued by different root authorities.")
+            raise DeviceNotAuthentic
+
+    if (
+        getattr(optiga_root, "mldsa44_pubkey", None) is not None
+        or mldsa44_root_pubkey is not None
+    ):
+        mcu_root = verify_authentication_response(
+            challenge,
+            resp.mcu_signature,
+            resp.mcu_certificates,
+            allowlist=allowlist,
+            allow_development_devices=allow_development_devices,
+            root_pubkey=mldsa44_root_pubkey,
+        )
+
+        if optiga_root is not mcu_root:
             LOG.error("Certificates issued by different root authorities.")
             raise DeviceNotAuthentic
