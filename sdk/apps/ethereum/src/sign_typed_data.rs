@@ -577,6 +577,9 @@ fn confirm_typed_data_final() -> Result<()> {
         "Confirm typed data",
         "Really sign EIP-712 typed data?",
         true,
+        None,
+        None,
+        ButtonRequestType::ButtonRequestOther.into(),
     )? {
         ui::TrezorUiResult::Confirmed => Ok(()),
         _ => Err(Error::Cancelled),

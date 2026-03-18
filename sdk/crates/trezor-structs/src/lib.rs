@@ -232,6 +232,9 @@ pub enum TrezorUiEnum {
         title: ShortString,
         action: ShortString,
         hold: bool,
+        verb: Option<ShortString>,
+        br_name: Option<ShortString>,
+        br_code: i32,
     },
     ConfirmSummary {
         title: ShortString,

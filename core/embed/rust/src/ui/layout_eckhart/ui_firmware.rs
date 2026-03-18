@@ -1700,27 +1700,30 @@ impl FirmwareUI for UIEckhart {
                 title,
                 action,
                 hold,
+                verb,
+                br_name,
+                br_code,
             } => {
                 // Use safe Deref trait instead of raw pointers
                 let layout = Self::confirm_action(
                     tstr_from_archived(title),
                     Some(tstr_from_archived(action)),
-                    None,  // description
-                    None,  // subtitle
-                    None,  // verb
-                    true,  // cancel
-                    None,  // verb_cancel
-                    *hold, // hold
-                    false, // hold_danger
-                    false, // reverse
-                    false, // prompt_screen
-                    None,  // prompt_title
-                    false, // external_menu
+                    None,
+                    None,
+                    tstr_from_archived_option(verb),
+                    true,
+                    None,
+                    *hold,
+                    false,
+                    false,
+                    false,
+                    None,
+                    false,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    1, /* TODO */
-                    Obj::const_none(),
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
                 ))
             }
             ArchivedTrezorUiEnum::ShowInfoWithCancel {

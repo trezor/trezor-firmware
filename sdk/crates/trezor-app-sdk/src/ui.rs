@@ -258,8 +258,8 @@ pub fn interact_with_info_flow(
 
 pub struct Details<'a> {
     pub name: &'a str,
-    pub title: &'a str,
     pub props: &'a [(&'a str, &'a str, bool)],
+    pub title: Option<&'a str>,
     pub subtitle: Option<&'a str>,
     pub br_code: i32,
 }
@@ -268,7 +268,7 @@ impl<'a> Details<'a> {
     pub fn new(
         name: &'a str,
         props: &'a [(&'a str, &'a str, bool)],
-        title: &'a str,
+        title: Option<&'a str>,
         subtitle: Option<&'a str>,
         br_code: i32,
     ) -> Self {
@@ -282,7 +282,13 @@ impl<'a> Details<'a> {
     }
 
     fn interact(&self) -> Result<()> {
-        show_properties(self.title, self.props, self.subtitle, None, self.br_code)
+        show_properties(
+            self.title.unwrap_or(self.name),
+            self.props,
+            self.subtitle,
+            None,
+            self.br_code,
+        )
     }
 }
 
@@ -296,7 +302,7 @@ impl<'a> Cancel<'a> {
     }
 
     fn interact(&self) -> UiResult {
-        confirm_action(self.title, "", false)
+        confirm_action(self.title, "", false, None, None, 1)
     }
 }
 
@@ -584,11 +590,25 @@ pub fn confirm_summary(
     ipc_ui_call_confirm(&value)
 }
 
-pub fn confirm_action(title: &str, action: &str, hold: bool) -> UiResult {
+pub fn confirm_action(
+    title: &str,
+    action: &str,
+    hold: bool,
+    verb: Option<&str>,
+    br_name: Option<&str>,
+    br_code: i32,
+) -> UiResult {
     let value = TrezorUiEnum::ConfirmAction {
         title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
         action: ShortString::from_str(action).map_err(|_| Error::FailedToSend)?,
         hold,
+        verb: verb
+            .map(|v| ShortString::from_str(v).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        br_name: br_name
+            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        br_code,
     };
     ipc_ui_call_confirm(&value)
 }

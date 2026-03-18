@@ -19,7 +19,7 @@ use crate::{
 use alloc::{collections::BTreeMap, string::String, vec, vec::Vec};
 #[cfg(test)]
 use std::{collections::BTreeMap, string::String, vec, vec::Vecs};
-use trezor_app_sdk::{Error, Result, crypto, info, ui, unwrap};
+use trezor_app_sdk::{Error, Result, crypto, info, print, ui, unwrap};
 
 // Smart contract 'data' field lengths in bytes
 const SC_FUNC_SIG_BYTES: usize = 4;
@@ -88,6 +88,23 @@ pub fn get_eip_7702_known_addresses() -> BTreeMap<Vec<u8>, &'static str> {
     map
 }
 
+// Everstake staking
+
+// addresses for pool (stake/unstake) and accounting (claim) operations
+pub fn addresses_pool() -> Vec<Vec<u8>> {
+    vec![
+        unwrap!(hex_decode("AFA848357154a6a624686b348303EF9a13F63264")), // Hoodi testnet
+        unwrap!(hex_decode("D523794C879D9eC028960a231F866758e405bE34")), // mainnet
+    ]
+}
+
+pub fn addresses_accounting() -> Vec<Vec<u8>> {
+    vec![
+        unwrap!(hex_decode("624087DD1904ab122A32878Ce9e933C7071F53B9")), // Hoodi testnet
+        unwrap!(hex_decode("7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e")), // mainnet
+    ]
+}
+
 // Approve known addresses
 // This should eventually grow into a more comprehensive database and stored in some other way,
 // but for now let's just keep a few known addresses here!
@@ -121,6 +138,12 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     assert!(msg.data_initial_chunk.is_some());
     assert!(msg.data_length.is_some());
 
+    let nonce = msg.nonce.as_deref().ok_or(Error::DataError)?;
+    let to = msg.to.as_deref().ok_or(Error::DataError)?;
+    let value = msg.value.as_deref().ok_or(Error::DataError)?;
+    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+    let data_total = msg.data_length.ok_or(Error::DataError)?;
+
     info!("Signing transaction");
     let dp = Bip32Path::from_slice(&msg.address_n);
 
@@ -144,16 +167,12 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     info!("setting up keychain");
     let keychain = Keychain::new(schemas);
 
-    let data_total = msg.data_length.unwrap_or(0);
     info!("checking common fields");
 
     check_common_fields(&msg)?;
 
-    // TODO: Implement Ethereum transaction signing
-
     info!("getting bytes from address");
 
-    let to = msg.to.as_ref().map(|s| s.as_str()).unwrap_or("");
     let address_bytes = bytes_from_address(to)?;
 
     info!("checking transaction type");
@@ -238,10 +257,8 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 
     // sign
     let mut data = Vec::new();
-    if let Some(initial_chunk) = &msg.data_initial_chunk {
-        data.extend_from_slice(initial_chunk);
-    }
-    let mut data_left = data_total - data.len() as u32;
+    data.extend_from_slice(data_initial_chunk);
+    let mut data_left = data_total - data_initial_chunk.len() as u32;
 
     // Calculate total RLP length
     let total_length = get_total_length(&msg, data_total)?;
@@ -259,9 +276,6 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     }
 
     // Write transaction fields
-    let nonce = msg.nonce.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-    let value = msg.value.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-
     let fields: Vec<RLPItem> = vec![
         RLPItem::Bytes(nonce),
         RLPItem::Bytes(&msg.gas_price),
@@ -343,43 +357,42 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
 }
 
 fn check_common_fields(msg: &EthereumSignTx) -> Result<()> {
-    let data_length = msg.data_length.unwrap_or(0);
+    let data_length = msg.data_length.ok_or(Error::DataError)?;
+    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+    let to = msg.to.as_deref().ok_or(Error::DataError)?;
 
     if data_length > 0 {
-        if msg.data_initial_chunk.is_none() {
-            // DataError("Data length provided, but no initial chunk")
+        // TODO: proper error type: DataError("Data length provided, but no initial chunk")
+        if data_initial_chunk.is_empty() {
             return Err(Error::DataError);
         }
-    }
 
-    // Our encoding only supports transactions up to 2^24 bytes. To
-    // prevent exceeding the limit we use a stricter limit on data length.
-    if data_length > 16_000_000 {
-        // DataError("Data length exceeds limit")
-        return Err(Error::DataError);
-    }
+        // Our encoding only supports transactions up to 2^24 bytes. To
+        // prevent exceeding the limit we use a stricter limit on data length.
+        if data_length > 16_000_000 {
+            // TODO: proper error type: DataError("Data length exceeds limit")
+            return Err(Error::DataError);
+        }
 
-    if let Some(data_initial_chunk) = &msg.data_initial_chunk {
         if data_initial_chunk.len() > data_length as usize {
-            // DataError("Invalid size of initial chunk")
+            // TODO: proper error type: DataError("Invalid size of initial chunk")
             return Err(Error::DataError);
         }
     }
 
-    let to_len = msg.to.as_ref().map(|s| s.len()).unwrap_or(0);
-    if !matches!(to_len, 0 | 40 | 42) {
-        // DataError("Invalid recipient address")
+    if !matches!(to.len(), 0 | 40 | 42) {
+        // TODO: proper error type: DataError("Invalid recipient address")
         return Err(Error::DataError);
     }
 
-    if msg.to.is_none() && matches!(msg.data_length, Some(0)) {
+    if to.is_empty() && data_length == 0 {
         // sending transaction to address 0 (contract creation) without a data field
-        // DataError("Contract creation without data")
+        // TODO: proper error type: DataError("Contract creation without data")
         return Err(Error::DataError);
     }
 
     if msg.chain_id == 0 {
-        // DataError("Chain ID out of bounds")
+        // TODO: proper error type: DataError("Chain ID out of bounds")
         return Err(Error::DataError);
     }
 
@@ -397,14 +410,16 @@ fn confirm_tx_data(
     // TODO: implement type for payment_req_verifier
     payment_req_verifier: Option<u32>,
 ) -> Result<()> {
-    let staking_approver = get_staking_approver();
     let dp = Bip32Path::from_slice(&msg.address_n);
+    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
 
-    if let Some(approver) = staking_approver {
-        // TODO: implement staking approval flow
-        info!("staking approval flow not implemented");
-        return Err(Error::InvalidFunction);
-    }
+    run_staking_approver(
+        &msg,
+        &definitions.network(),
+        address_bytes,
+        maximum_fee,
+        fee_items,
+    )?;
 
     info!("checking if transaction is a known contract call");
     if matches!(msg.tx_type, Some(EIP_7702_TX_TYPE)) {
@@ -467,6 +482,12 @@ fn confirm_tx_data(
         assert!(token.is_some());
         assert!(token_address.is_some());
 
+        // info!("token len is {:?}", token.map(|t| t.len()));
+        info!(
+            "token address len is {:?}",
+            token_address.as_deref().map(|a| a.len())
+        );
+
         // DataError("Payment Requests not supported for the APPROVE call")
         assert!(payment_req_verifier.is_none());
 
@@ -495,12 +516,6 @@ fn confirm_tx_data(
             return Err(Error::InvalidFunction);
         } else {
             if is_contract_interaction {
-                let data_initial_chunk = msg
-                    .data_initial_chunk
-                    .as_ref()
-                    .map(|v| v.as_slice())
-                    .unwrap_or(&[]);
-
                 require_confirm_other_data(data_initial_chunk, data_total_len)?;
             };
 
@@ -578,7 +593,7 @@ fn confirm_ethereum_tx(
     let menu_items = &[ui::Details::new(
         "Account info",
         &account_properties,
-        "Account info",
+        None,
         Some("Send from"),
         ButtonRequestType::ButtonRequestOther.into(),
     )];
@@ -664,7 +679,6 @@ fn require_confirm_other_data(data: &[u8], data_total: u32) -> Result<()> {
     Ok(())
 }
 
-// TODO: implement
 fn require_confirm_approve(
     to_bytes: &[u8],
     value: Option<u128>,
@@ -690,6 +704,10 @@ fn require_confirm_approve(
 
     let is_unknown_token = token == &tokens::unknown_token();
     let is_unknown_network = network == &definitions::unknown_network();
+
+    info!("value is {:?}", value);
+    info!("recipient address is {}", recipient_addr.as_str());
+    info!("to bytes len is {}", to_bytes.len());
 
     confirm_ethereum_approve(
         &recipient_addr,
@@ -742,14 +760,23 @@ fn confirm_ethereum_approve(
         )
     };
 
-    ui::error_if_not_confirmed(ui::confirm_action(title, action, false)?)?;
+    ui::error_if_not_confirmed(ui::confirm_action(
+        title,
+        action,
+        false,
+        Some("Continue"),
+        Some(br_name),
+        ButtonRequestType::ButtonRequestOther.into(),
+    )?)?;
 
     let subtitle = if is_revoke {
         "Revoke from"
     } else {
         "Approve to"
     };
+
     if let Some(recipient_str) = recipient_str {
+        info!("recipient str is {}", recipient_str);
         ui::interact_with_info_flow(
             |name| {
                 ui::confirm_value(
@@ -783,6 +810,7 @@ fn confirm_ethereum_approve(
             None,
         )?;
     } else {
+        info!("recipient str is None, showing address {}", recipient_addr);
         ui::error_if_not_confirmed(ui::confirm_value(
             title,
             recipient_addr,
@@ -851,13 +879,13 @@ fn confirm_ethereum_approve(
 
     let mut props = Vec::with_capacity(2);
     if is_revoke {
+        props.push(("Token", token_symbol, true));
+    } else {
         props.push((
             "Amount allowance",
             total_amount.unwrap_or("Unlimited"),
             false,
         ));
-    } else {
-        props.push(("Token", token_symbol, true));
     }
     if !is_unknown_network {
         props.push(("Chain", network_name, false));
@@ -883,10 +911,10 @@ fn confirm_ethereum_approve(
         "Maximum fee",
         None,
         account_item.as_ref().map(|a| a.as_slice()),
-        None,
-        None,
+        Some("Fee info"),
+        Some(fee_info_items),
         false,
-        None,
+        Some("confirm_total"),
         ButtonRequestType::ButtonRequestOther.into(),
     )?)?;
 
@@ -904,13 +932,14 @@ fn handle_known_contract_calls(
     Vec<u8>,
     Option<u128>,
 )> {
-    let initial_data_chunk = msg.data_initial_chunk.as_deref().unwrap_or_default();
-    let data_length = msg.data_length.unwrap_or_default();
-    let value_bytes = msg.value.as_deref().unwrap_or_default();
-    let to = msg.to.as_deref().unwrap_or_default();
+    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+    let data_length = msg.data_length.ok_or(Error::DataError)?;
+    let value_bytes = msg.value.as_deref().ok_or(Error::DataError)?;
+    let to = msg.to.as_deref().ok_or(Error::DataError)?;
 
     let mut token = None;
     let mut token_address = None;
+    let mut recipient = Vec::new();
 
     // TODO: better implement parsing int value from bytes
     let mut buf = [0u8; 16];
@@ -919,14 +948,14 @@ fn handle_known_contract_calls(
     let mut value = Some(u128::from_be_bytes(buf));
 
     let mut offset = 0;
-    let mut remaining = initial_data_chunk.len();
+    let mut remaining = data_initial_chunk.len();
 
     if remaining < SC_FUNC_SIG_BYTES {
         return Ok((token, token_address, None, Vec::from(address_bytes), value));
     }
 
     let mut func_sig = Some(Vec::from(
-        &initial_data_chunk[offset..(offset + SC_FUNC_SIG_BYTES)],
+        &data_initial_chunk[offset..(offset + SC_FUNC_SIG_BYTES)],
     ));
     offset += SC_FUNC_SIG_BYTES;
     remaining -= SC_FUNC_SIG_BYTES;
@@ -934,7 +963,7 @@ fn handle_known_contract_calls(
     if matches!(to.len(), 40 | 42)
         && value_bytes.len() == 0
         && data_length == 68
-        && initial_data_chunk.len() == 68
+        && data_initial_chunk.len() == 68
         && (matches!(func_sig.as_deref(), Some(sig) if sig == sc_func_sig_transfer())
             || matches!( func_sig.as_deref(), Some(sig) if sig == &sc_func_sig_approve()))
     {
@@ -947,14 +976,15 @@ fn handle_known_contract_calls(
             return Ok((token, token_address, None, Vec::from(address_bytes), value));
         }
 
-        let arg0 = &initial_data_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
+        let arg0 = &data_initial_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
         offset += SC_ARGUMENT_BYTES;
         remaining -= SC_ARGUMENT_BYTES;
 
         let pad_len = SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES;
         assert!(arg0[..pad_len].iter().all(|&byte| byte == 0));
+        recipient = Vec::from(&arg0[pad_len..]);
 
-        let arg1: &_ = &initial_data_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
+        let arg1: &_ = &data_initial_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
         offset += SC_ARGUMENT_BYTES;
         remaining -= SC_ARGUMENT_BYTES;
 
@@ -964,12 +994,14 @@ fn handle_known_contract_calls(
             // "Unlimited" approval (all bits set) is a special case
             // which we encode as value=None internally.
             func_sig = None;
+            info!("Detected unlimited approval, treating value as None");
         } else {
             // TODO: better implement parsing int value from bytes
             let mut buf = [0u8; 16];
             assert!(value_bytes.len() <= 16);
             buf.copy_from_slice(&arg1[16..]);
             value = Some(u128::from_be_bytes(buf));
+            info!("Parsed value from function arguments: {:?}", value);
         }
 
         token = Some(definitions.get_token(address_bytes));
@@ -980,16 +1012,350 @@ fn handle_known_contract_calls(
         // See the approve_avantis test case and ERC-8021.
 
         func_sig = None;
+        info!(
+            "Function signature not recognized or data length mismatch, treating as unknown function"
+        );
     };
 
-    Ok((token, token_address, func_sig, Vec::new(), None))
+    Ok((token, token_address, func_sig, recipient, value))
 }
 
-/// Returns a awaitable confirmation for ETH staking approval.
-/// `None` is returned for non-staking related transactions.
-fn get_staking_approver() -> Option<()> {
-    // TODO: implement
-    None
+/// Runs confirmation for ETH staking approval for staking related transactions.
+fn run_staking_approver<'a>(
+    msg: &'a EthereumSignTx,
+    network: &'a EthereumNetworkInfo,
+    address_bytes: &'a [u8],
+    maximum_fee: &'a str,
+    fee_items: &'a [(&'a str, &'a str, bool)],
+) -> Result<()> {
+    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+
+    if data_initial_chunk.len() < SC_FUNC_SIG_BYTES {
+        return Ok(());
+    }
+
+    let func_sig = &data_initial_chunk[..SC_FUNC_SIG_BYTES];
+    let data = &data_initial_chunk[SC_FUNC_SIG_BYTES..];
+    if addresses_pool()
+        .iter()
+        .any(|addr| addr.as_slice() == address_bytes)
+    {
+        if func_sig == sc_func_sig_stake().as_slice() {
+            handle_staking_tx_stake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
+        } else if func_sig == sc_func_sig_unstake().as_slice() {
+            handle_staking_tx_unstake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
+        }
+    }
+
+    if addresses_accounting()
+        .iter()
+        .any(|addr| addr.as_slice() == address_bytes)
+    {
+        if func_sig == sc_func_sig_claim().as_slice() {
+            handle_staking_tx_claim(
+                data,
+                msg,
+                address_bytes,
+                maximum_fee,
+                fee_items,
+                network,
+                msg.chunkify.unwrap_or(false),
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
+fn handle_staking_tx_claim(
+    data: &[u8],
+    msg: &EthereumSignTx,
+    staking_address: &[u8],
+    maximum_fee: &str,
+    fee_items: &[(&str, &str, bool)],
+    network: &EthereumNetworkInfo,
+    chunkify: bool,
+) -> Result<()> {
+    // claim has no args
+
+    if data.len() != 0 {
+        return Err(Error::DataError);
+    }
+
+    require_confirm_claim(
+        staking_address,
+        &Bip32Path::from_slice(&msg.address_n),
+        maximum_fee,
+        fee_items,
+        network,
+        chunkify,
+    )?;
+
+    Ok(())
+}
+
+fn require_confirm_claim(
+    address_bytes: &[u8],
+    dp: &Bip32Path,
+    maximum_fee: &str,
+    fee_info_items: &[(&str, &str, bool)],
+    network: &EthereumNetworkInfo,
+    chunkify: bool,
+) -> Result<()> {
+    let addr_str = address_from_bytes(address_bytes, Some(network));
+    let (account, account_path) = dp.account_and_path();
+
+    confirm_ethereum_staking_tx(
+        "Claim",
+        "Claim ETH from Everstake?",
+        "Claim",
+        "",
+        account.as_deref(),
+        account_path.as_deref(),
+        maximum_fee,
+        &addr_str,
+        "Claim address",
+        fee_info_items,
+        chunkify,
+        None,
+        None,
+    )?;
+
+    Ok(())
+}
+
+fn handle_staking_tx_unstake(
+    data: &[u8],
+    msg: &EthereumSignTx,
+    network: &EthereumNetworkInfo,
+    address_bytes: &[u8],
+    maximum_fee: &str,
+    fee_items: &[(&str, &str, bool)],
+) -> Result<()> {
+    // unstake args:
+    // - arg0: uint256, value
+    // - arg1: uint16, isAllowedInterchange (bool)
+    // - arg2: uint64, source (1 for Trezor)
+
+    if data.len() != 3 * SC_ARGUMENT_BYTES {
+        // TODO: proper error type: ValueError: wrong number of arguments for unstake (should be 3)
+        return Err(Error::DataError);
+    }
+
+    // parse arg0: uint256, value (only lower 16 bytes fit in u128)
+    let arg0 = &data[..SC_ARGUMENT_BYTES];
+    let mut buf = [0u8; 16];
+    buf.copy_from_slice(&arg0[SC_ARGUMENT_BYTES - 16..]);
+    let value = u128::from_be_bytes(buf);
+
+    // skip arg1 and arg2
+
+    require_confirm_unstake(
+        address_bytes,
+        value,
+        &Bip32Path::from_slice(&msg.address_n),
+        maximum_fee,
+        fee_items,
+        network,
+        msg.chunkify.unwrap_or(false),
+    )?;
+
+    Ok(())
+}
+
+fn require_confirm_unstake(
+    address_bytes: &[u8],
+    value: u128,
+    dp: &Bip32Path,
+    maximum_fee: &str,
+    fee_info_items: &[(&str, &str, bool)],
+    network: &EthereumNetworkInfo,
+    chunkify: bool,
+) -> Result<()> {
+    let address_str = address_from_bytes(address_bytes, Some(network));
+    let total_amount = format_ethereum_amount(value, None, network, false);
+    let (account, account_path) = dp.account_and_path();
+
+    confirm_ethereum_staking_tx(
+        "Unstake",
+        "Unstake ETH on Everstake?",
+        "Unstake",
+        &total_amount,
+        account.as_deref(),
+        account_path.as_deref(),
+        maximum_fee,
+        &address_str,
+        "Stake address",
+        fee_info_items,
+        chunkify,
+        None,
+        None,
+    )?;
+
+    Ok(())
+}
+
+fn handle_staking_tx_stake(
+    data: &[u8],
+    msg: &EthereumSignTx,
+    network: &EthereumNetworkInfo,
+    address_bytes: &[u8],
+    maximum_fee: &str,
+    fee_items: &[(&str, &str, bool)],
+) -> Result<()> {
+    // stake args:
+    // - arg0: uint64, source (1 for Trezor)
+
+    if data.len() != SC_ARGUMENT_BYTES {
+        // TODO: proper error type: ValueError: wrong number of arguments for stake (should be 1)
+        return Err(Error::DataError);
+    }
+
+    let value_bytes = msg.value.as_deref().ok_or(Error::DataError)?;
+    let mut buf = [0u8; 16];
+    assert!(value_bytes.len() <= 16);
+    buf[16 - value_bytes.len()..].copy_from_slice(value_bytes);
+    let value = u128::from_be_bytes(buf);
+
+    require_confirm_stake(
+        address_bytes,
+        value,
+        &Bip32Path::from_slice(&msg.address_n),
+        maximum_fee,
+        fee_items,
+        network,
+        msg.chunkify.unwrap_or(false),
+    )?;
+
+    Ok(())
+}
+
+fn require_confirm_stake(
+    address_bytes: &[u8],
+    value: u128,
+    dp: &Bip32Path,
+    maximum_fee: &str,
+    fee_info_items: &[(&str, &str, bool)],
+    network: &EthereumNetworkInfo,
+    chunkify: bool,
+) -> Result<()> {
+    let address_str = address_from_bytes(address_bytes, Some(network));
+    let total_amount = format_ethereum_amount(value, None, network, false);
+    let (account, account_path) = dp.account_and_path();
+
+    confirm_ethereum_staking_tx(
+        "Stake",
+        "Stake ETH on Everstake?",
+        "Stake",
+        &total_amount,
+        account.as_deref(),
+        account_path.as_deref(),
+        maximum_fee,
+        &address_str,
+        "Stake address",
+        fee_info_items,
+        chunkify,
+        None,
+        None,
+    )?;
+
+    Ok(())
+}
+
+fn confirm_ethereum_staking_tx(
+    title: &str,
+    intro_question: &str,
+    verb: &str,
+    total_amount: &str,
+    account: Option<&str>,
+    account_path: Option<&str>,
+    maximum_fee: &str,
+    address: &str,
+    address_title: &str,
+    info_items: &[(&str, &str, bool)],
+    chunkify: bool,
+    br_name: Option<&str>,
+    br_code: Option<i32>,
+) -> Result<()> {
+    assert!(verb == "Stake" || verb == "Unstake" || verb == "Claim");
+
+    let br_name = br_name.unwrap_or("confirm_ethereum_staking_tx");
+    let br_code = br_code.unwrap_or(ButtonRequestType::ButtonRequestSignTx.into());
+
+    let mut menu_items = Vec::with_capacity(2);
+    let props = [(address, "", false)];
+    menu_items.push(ui::Details::new(
+        address_title,
+        &props,
+        None,
+        None,
+        ButtonRequestType::ButtonRequestOther.into(),
+    ));
+
+    let account_properties = get_account_info_items(account, account_path);
+    if !account_properties.is_empty() {
+        menu_items.push(ui::Details::new(
+            "Account info",
+            &account_properties,
+            None,
+            Some("Send from"),
+            ButtonRequestType::ButtonRequestOther.into(),
+        ));
+    };
+
+    let amount_label = if verb == "Claim" {
+        None
+    } else {
+        Some("Amount")
+    };
+
+    let menu = ui::Menu::new(menu_items.as_slice(), Some(ui::Cancel::new("Cancel sign")));
+
+    let steps: [&dyn Fn() -> ui::UiResult; 2] = [
+        &|| {
+            ui::interact_with_menu_flow(
+                |name| {
+                    ui::confirm_value(
+                        verb,
+                        intro_question,
+                        None,
+                        name,
+                        ButtonRequestType::ButtonRequestSignTx.into(),
+                        false,
+                        None,
+                        None,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        true,
+                    )
+                },
+                &menu,
+                Some(br_name),
+            )
+        },
+        &|| {
+            ui::confirm_summary(
+                Some(title),
+                Some(total_amount),
+                amount_label,
+                maximum_fee,
+                "Maximum fee",
+                None,
+                None,
+                Some("Fee info"),
+                Some(info_items),
+                true,
+                Some("confirm_total"),
+                br_code,
+            )
+        },
+    ];
+    ui::error_if_not_confirmed(ui::confirm_linear_flow(&steps)?)?;
+
+    Ok(())
 }
 
 fn sign_digest(msg: &EthereumSignTx, digest: &[u8; 32]) -> Result<EthereumTxRequest> {
@@ -1048,9 +1414,10 @@ pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> Result<u32> {
         );
     }
 
-    let nonce = msg.nonce.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-    let value = msg.value.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-    let to_str = msg.to.as_ref().map(|s| s.as_str()).unwrap_or("");
+    let nonce = msg.nonce.as_deref().ok_or(Error::DataError)?;
+    let value = msg.value.as_deref().ok_or(Error::DataError)?;
+    let to_str = msg.to.as_deref().ok_or(Error::DataError)?;
+    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
 
     let to_bytes = bytes_from_address(to_str)?;
 
@@ -1072,20 +1439,8 @@ pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> Result<u32> {
         info!("field length: {}", rlp::length(field));
     }
 
-    length += rlp::header_length(
-        data_total,
-        msg.data_initial_chunk.as_ref().map(|v| v.as_slice()),
-    );
-    info!(
-        "header length {}",
-        rlp::header_length(
-            data_total,
-            msg.data_initial_chunk.as_ref().map(|v| v.as_slice()),
-        )
-    );
+    length += rlp::header_length(data_total, Some(data_initial_chunk));
     length += data_total;
-
-    info!("data toal length: {}", data_total);
 
     Ok(length)
 }
