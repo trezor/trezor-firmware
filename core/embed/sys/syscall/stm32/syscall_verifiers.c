@@ -599,6 +599,57 @@ access_violation:
 }
 #endif
 
+#ifdef USE_MCU_ATTESTATION
+#include <sec/mcu_attestation.h>
+
+secbool mcu_attestation_cert_size__verified(size_t *cert_size) {
+  if (!probe_write_access(cert_size, sizeof(*cert_size))) {
+    goto access_violation;
+  }
+
+  return mcu_attestation_cert_size(cert_size);
+
+access_violation:
+  apptask_access_violation();
+  return secfalse;
+}
+
+secbool mcu_attestation_cert_read__verified(uint8_t *cert, size_t max_cert_size,
+                                            size_t *cert_size) {
+  if (!probe_write_access(cert, max_cert_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(cert_size, sizeof(*cert_size))) {
+    goto access_violation;
+  }
+
+  return mcu_attestation_cert_read(cert, max_cert_size, cert_size);
+
+access_violation:
+  apptask_access_violation();
+  return secfalse;
+}
+
+secbool mcu_attestation_sign__verified(const uint8_t *challenge,
+                                       size_t challenge_size,
+                                       uint8_t *signature) {
+  if (!probe_read_access(challenge, challenge_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(signature, MCU_ATTESTATION_SIG_SIZE)) {
+    goto access_violation;
+  }
+
+  return mcu_attestation_sign(challenge, challenge_size, signature);
+
+access_violation:
+  apptask_access_violation();
+  return secfalse;
+}
+#endif  // USE_MCU_ATTESTATION
+
 // ---------------------------------------------------------------------
 
 #ifdef USE_TELEMETRY

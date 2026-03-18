@@ -9,7 +9,8 @@ from .writer import MESSAGE_TYPE_LENGTH
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer
 
-_PROTOBUF_BUFFER_SIZE = const(8192)
+# Reserve 8.5 kB. AuthenticityProof requires about 8500 bytes.
+_PROTOBUF_BUFFER_SIZE = const(8704)
 
 if __debug__:
     from trezor import log

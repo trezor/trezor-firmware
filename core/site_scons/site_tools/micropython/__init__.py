@@ -50,6 +50,7 @@ def generate(env):
         # replace "utils.BITCOIN_ONLY" or "utils.USE_<FEATURE>" with literal constant (True/False)
         # so the compiler can optimize out the things we don't want
         backlight = env["backlight"]
+        mcu_attestation = env["TREZOR_MODEL"] == "T3W1"
         ble = env["use_ble"]
         btc_only = env["bitcoin_only"] == "1"
         button = env["use_button"]
@@ -73,6 +74,7 @@ def generate(env):
             rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
             rf"-e 's/utils\.USE_BLE/{ble}/g'",
             rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
+            rf"-e 's/utils\.USE_MCU_ATTESTATION/{mcu_attestation}/g'",
             rf"-e 's/utils\.USE_BUTTON/{button}/g'",
             rf"-e 's/utils\.USE_HAPTIC/{haptic}/g'",
             rf"-e 's/utils\.EMULATOR/{emulator}/g'",
