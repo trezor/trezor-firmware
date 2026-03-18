@@ -141,13 +141,10 @@ async def slip39_basic_show_and_confirm_shares(shares: Sequence[str]) -> None:
 
     for index, share in enumerate(shares):
         share_words = share.split(" ")
-        while True:
-            # display paginated share on the screen
-            await show_share_words(share_words, index)
-
-            # make the user confirm words from the share
-            if await _share_words_confirmed(index, share_words, len(shares)):
-                break  # this share is confirmed, go to next one
+        await _backup_n4w1(
+            title=f"SLIP-39 backup:\nShare #{index + 1}/{len(shares)}",
+            words=share_words,
+        )
 
 
 async def slip39_advanced_show_and_confirm_shares(
@@ -159,12 +156,26 @@ async def slip39_advanced_show_and_confirm_shares(
     for group_index, group in enumerate(shares):
         for share_index, share in enumerate(group):
             share_words = share.split(" ")
-            while True:
-                # display paginated share on the screen
-                await show_share_words(share_words, share_index, group_index)
+            await _backup_n4w1(
+                title=f"SLIP-39 backup:\nGroup #{group_index}/{len(shares)}, Share #{share_index + 1}/{len(group)}",
+                words=share_words,
+            )
 
-                # make the user confirm words from the share
-                if await _share_words_confirmed(
-                    share_index, share_words, len(group), group_index
-                ):
-                    break  # this share is confirmed, go to next one
+
+async def _backup_n4w1(title: str, words: list[str]) -> None:
+    import trezorui_api
+    from trezor.ui.layouts.common import draw_simple
+
+    from apps.debug import n4w1_mock
+
+    # TODO: use protobuf?
+    blob = " ".join(words).encode()
+
+    with n4w1_mock.ctx as ctx:
+        draw_simple(
+            trezorui_api.show_simple(
+                title=title,
+                text=f"Tap your N4W1 to backup {len(blob)} bytes",
+            )
+        )
+        await ctx.write(key="mnemonic", value=blob)
