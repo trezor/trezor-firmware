@@ -200,6 +200,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_button.c',
     'embed/projects/prodtest/cmd/prodtest_crc.c',
     'embed/projects/prodtest/cmd/prodtest_display.c',
+    'embed/projects/prodtest/cmd/prodtest_manufacturing_lock.c',
     'embed/projects/prodtest/cmd/prodtest_prodtest.c',
     'embed/projects/prodtest/cmd/prodtest_backup_ram.c',
     'embed/projects/prodtest/cmd/prodtest_get_cpuid.c',

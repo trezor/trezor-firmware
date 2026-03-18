@@ -1,0 +1,11 @@
+#pragma once
+
+// OTP device variant block layout
+// byte 0: version (always 0x01)
+#define UNIT_PROPERTIES_BYTE_COLOR 1
+#define UNIT_PROPERTIES_BYTE_BTCONLY 2
+#define UNIT_PROPERTIES_BYTE_PACKAGING 3
+#define UNIT_PROPERTIES_BYTE_BATTERY_TYPE 4
+
+// SD hotswap configuration
+#define UNIT_PROPERTIES_SD_HOTSWAP_ENABLED true

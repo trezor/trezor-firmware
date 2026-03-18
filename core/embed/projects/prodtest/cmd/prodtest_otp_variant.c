@@ -23,7 +23,7 @@
 
 #include <rtl/cli.h>
 #include <rtl/printf.h>
-#include <sec/secret.h>
+#include <sec/unit_properties.h>
 #include <sys/flash_otp.h>
 
 #include <stdlib.h>
@@ -31,6 +31,10 @@
 
 #ifdef USE_TROPIC
 #include "prodtest_tropic.h"
+#endif
+
+#ifdef SECRET_LOCK_SLOT_OFFSET
+#include <sec/secret.h>
 #endif
 
 static void prodtest_otp_variant_read(cli_t* cli) {
@@ -231,6 +235,10 @@ static void prodtest_otp_variant_write(cli_t* cli) {
       return;
     }
   }
+
+  // reset cached properties
+  unit_properties_deinit();
+  unit_properties_init();
 
   // Respond with an OK message
   cli_ok(cli, "");

@@ -6,3 +6,5 @@
 -DDISPLAY_RESY=520,
 -DTREZOR_BOARD="T3W1/boards/t3w1-unix.h",
 -DMODEL_HEADER="T3W1/model_T3W1.h",
+-DOTP_LAYOUT_HEADER="T3W1/otp_layout.h",
+-DUNIT_PROPERTIES_CONTENT_HEADER="T3W1/unit_properties_content.h",

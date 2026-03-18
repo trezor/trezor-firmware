@@ -16,6 +16,8 @@ def configure_board(
 ):
     defines += (("MODEL_HEADER", '"T3W1/model_T3W1.h"'),)
     defines += (("VERSIONS_HEADER", '"T3W1/versions.h"'),)
+    defines += (("OTP_LAYOUT_HEADER", '"T3W1/otp_layout.h"'),)
+    defines += (("UNIT_PROPERTIES_CONTENT_HEADER", '"T3W1/unit_properties_content.h"'),)
 
     # Set default revision if None
     revision = revision or "C"
