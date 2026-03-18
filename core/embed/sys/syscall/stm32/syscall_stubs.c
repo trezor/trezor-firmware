@@ -368,6 +368,30 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 
 #endif
 
+#ifdef USE_MCU_ATTESTATION
+#include <sec/mcu_attestation.h>
+
+secbool mcu_attestation_cert_size(size_t *cert_size) {
+  return (secbool)syscall_invoke1((uint32_t)cert_size,
+                                  SYSCALL_MCU_ATTESTATION_CERT_SIZE);
+}
+
+secbool mcu_attestation_cert_read(uint8_t *cert, size_t max_cert_size,
+                                  size_t *cert_size) {
+  return (secbool)syscall_invoke3((uint32_t)cert, (uint32_t)max_cert_size,
+                                  (uint32_t)cert_size,
+                                  SYSCALL_MCU_ATTESTATION_CERT_READ);
+}
+
+secbool mcu_attestation_sign(const uint8_t *challenge, size_t challenge_size,
+                             uint8_t signature[MCU_ATTESTATION_SIG_SIZE]) {
+  return (secbool)syscall_invoke3((uint32_t)challenge, (uint32_t)challenge_size,
+                                  (uint32_t)signature,
+                                  SYSCALL_MCU_ATTESTATION_SIGN);
+}
+
+#endif  // USE_MCU_ATTESTATION
+
 // =============================================================================
 // button.h
 // =============================================================================

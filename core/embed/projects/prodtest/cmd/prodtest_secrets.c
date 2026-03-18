@@ -27,6 +27,9 @@
 #include <sec/rng_strong.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
+#ifdef USE_MCU_ATTESTATION
+#include <sec/mcu_attestation.h>
+#endif
 
 #include "common.h"
 #include "memzero.h"

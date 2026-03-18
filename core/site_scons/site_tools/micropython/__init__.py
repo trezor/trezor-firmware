@@ -53,6 +53,7 @@ def generate(env):
         backlight = env["backlight"]
         optiga = env["optiga"]
         tropic = env["tropic"]
+        mcu_attestation = env["TREZOR_MODEL"] == "T3W1"
         touch = env["use_touch"]
         button = env["use_button"]
         ble = env["use_ble"]
@@ -68,6 +69,7 @@ def generate(env):
             rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
             rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
             rf"-e 's/utils\.USE_TROPIC/{tropic}/g'",
+            rf"-e 's/utils\.USE_MCU_ATTESTATION/{mcu_attestation}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"BOLT\"/{layout_bolt}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"CAESAR\"/{layout_caesar}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"DELIZIA\"/{layout_delizia}/g'",

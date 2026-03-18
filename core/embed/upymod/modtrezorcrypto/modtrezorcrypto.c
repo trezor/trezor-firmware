@@ -72,6 +72,9 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #ifdef USE_TROPIC
 #include "modtrezorcrypto-tropic.h"
 #endif
+#ifdef USE_MCU_ATTESTATION
+#include "modtrezorcrypto-mcu.h"
+#endif
 #if !BITCOIN_ONLY
 #include "modtrezorcrypto-cardano.h"
 #include "modtrezorcrypto-monero.h"
@@ -140,6 +143,9 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
 #endif
 #if USE_TROPIC
     {MP_ROM_QSTR(MP_QSTR_tropic), MP_ROM_PTR(&mod_trezorcrypto_tropic_module)},
+#endif
+#ifdef USE_MCU_ATTESTATION
+    {MP_ROM_QSTR(MP_QSTR_mcu), MP_ROM_PTR(&mod_trezorcrypto_mcu_module)},
 #endif
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorcrypto_globals,
