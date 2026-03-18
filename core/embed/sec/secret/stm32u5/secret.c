@@ -649,4 +649,40 @@ void secret_safety_erase(void) {
   secret_bhk_regenerate();
 }
 
+#ifdef USE_MCU_ATTESTATION
+
+secbool secret_mcu_device_cert_write(const uint8_t *cert, size_t cert_size) {
+  if (cert_size > SECRET_MCU_DEVICE_CERT_SIZE - 2) {
+    return secfalse;
+  }
+  uint8_t prefixed[SECRET_MCU_DEVICE_CERT_SIZE] = {0};
+  prefixed[0] = (cert_size >> 8) & 0xFF;
+  prefixed[1] = cert_size & 0xFF;
+  memcpy(&prefixed[2], cert, cert_size);
+  return secret_write(prefixed, SECRET_MCU_DEVICE_CERT_OFFSET,
+                      sizeof(prefixed));
+}
+
+secbool secret_mcu_device_cert_size(size_t *cert_size) {
+  uint8_t prefix[2] = {0};
+  if (secret_read(prefix, SECRET_MCU_DEVICE_CERT_OFFSET, sizeof(prefix)) !=
+      sectrue) {
+    return secfalse;
+  }
+  *cert_size = prefix[0] << 8 | prefix[1];
+  return sectrue;
+}
+
+secbool secret_mcu_device_cert_read(uint8_t *cert, size_t max_cert_size,
+                                    size_t *cert_size) {
+  if (secret_mcu_device_cert_size(cert_size) != sectrue ||
+      *cert_size > max_cert_size ||
+      *cert_size > SECRET_MCU_DEVICE_CERT_SIZE - 2) {
+    return secfalse;
+  }
+  return secret_read(cert, SECRET_MCU_DEVICE_CERT_OFFSET + 2, *cert_size);
+}
+
+#endif  // USE_MCU_ATTESTATION
+
 #endif  // SECURE_MODE
