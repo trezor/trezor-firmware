@@ -694,7 +694,9 @@ def _get_summary_handler(
 
     # generic UI for any function that has a `DisplayFormat`
 
-    return _handle_generic_ui(context, msg, definitions, address_bytes, token)
+    return _handle_generic_ui(
+        context, msg, definitions, address_bytes, token, maximum_fee
+    )
 
 
 async def _handle_approve(
@@ -795,15 +797,12 @@ async def _handle_generic_ui(
     definitions: Definitions,
     address_bytes: bytes,
     token: EthereumTokenInfo,
+    maximum_fee: str,
 ) -> None:
-    from trezor.ui.layouts import (
-        confirm_action,
-        confirm_properties,
-    )
-
     from . import tokens
     from .clear_signing_definitions import KNOWN_ADDRESSES
     from .helpers import bytes_from_address
+    from .layout import require_confirm_clear_signing
 
     _, fields = context.get_parameters_and_fields(
         msg.address_n, msg.value, definitions, token
@@ -815,17 +814,18 @@ async def _handle_generic_ui(
         properties_to_confirm.append(field)
         if actual_token is tokens.UNKNOWN_TOKEN:
             assert actual_token_address is not None
-            token_address_str = address_from_bytes(actual_token_address, definitions.network)
-            token_address_property: StrPropertyType = (TR.ethereum__token_contract, token_address_str, None)
+            token_address_str = address_from_bytes(
+                actual_token_address, definitions.network
+            )
+            token_address_property: StrPropertyType = (
+                TR.ethereum__token_contract,
+                token_address_str,
+                None,
+            )
             properties_to_confirm.append(token_address_property)
 
-    # TODO ??
-    recipient_str = KNOWN_ADDRESSES.get(bytes_from_address(msg.to))
+    recipient_str = KNOWN_ADDRESSES.get(bytes_from_address(msg.to), msg.to)
 
-    await confirm_action("confirm_contract", "Provider", recipient_str)
-    await confirm_action("confirm_contract", "Intent", context.display_format.intent)
-    await confirm_properties(
-        "confirm_contract",
-        "Confirm contract",
-        properties_to_confirm,
+    await require_confirm_clear_signing(
+        recipient_str, context.display_format.intent, properties_to_confirm, maximum_fee
     )
