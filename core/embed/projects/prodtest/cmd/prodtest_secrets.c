@@ -48,7 +48,7 @@
 #include <trezor_model.h>
 #endif
 
-#include <../vendor/mldsa-native/mldsa/sign.h>
+#include <mldsa_native.h>
 
 secbool set_random_secret(uint8_t slot, size_t length) {
   uint8_t secret[length];
@@ -184,8 +184,8 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
 
   uint8_t mcu_public[CRYPTO_PUBLICKEYBYTES] = {0};
   uint8_t mcu_private[CRYPTO_SECRETKEYBYTES] = {0};
-  if (crypto_sign_keypair_internal(mcu_public, mcu_private, seed) != 0) {
-    cli_error(cli, CLI_ERROR, "`crypto_sign_keypair_internal()` failed.");
+  if (mldsa_keypair_internal(mcu_public, mcu_private, seed) != 0) {
+    cli_error(cli, CLI_ERROR, "`mldsa_keypair_internal()` failed.");
     goto cleanup;
   }
 
@@ -217,8 +217,8 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
 
   uint8_t mcu_public[CRYPTO_PUBLICKEYBYTES] = {0};
   uint8_t mcu_private[CRYPTO_SECRETKEYBYTES] = {0};
-  if (crypto_sign_keypair_internal(mcu_public, mcu_private, seed) != 0) {
-    cli_error(cli, CLI_ERROR, "`crypto_sign_keypair_internal()` failed.");
+  if (mldsa_keypair_internal(mcu_public, mcu_private, seed) != 0) {
+    cli_error(cli, CLI_ERROR, "`mldsa_keypair_internal()` failed.");
     goto cleanup;
   }
 
@@ -230,11 +230,11 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   uint8_t challenge[CHALLENGE_SIZE] = {0};
   uint8_t signature[CRYPTO_BYTES] = {0};
   size_t siglen = 0;
-  if (crypto_sign_signature_internal(
-          signature, &siglen, challenge, sizeof(challenge),
-          ENCODED_EMPTY_CONTEXT_STRING, sizeof(ENCODED_EMPTY_CONTEXT_STRING),
-          rnd, mcu_private, 0) != 0) {
-    cli_error(cli, CLI_ERROR, "`crypto_sign_signature()` failed.");
+  if (mldsa_signature_internal(signature, &siglen, challenge, sizeof(challenge),
+                               ENCODED_EMPTY_CONTEXT_STRING,
+                               sizeof(ENCODED_EMPTY_CONTEXT_STRING), rnd,
+                               mcu_private, 0) != 0) {
+    cli_error(cli, CLI_ERROR, "`mldsa_signature()` failed.");
     goto cleanup;
   }
 

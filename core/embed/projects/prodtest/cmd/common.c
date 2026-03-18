@@ -33,7 +33,7 @@
 #include "sha2.h"
 #include "string.h"
 
-#include <../vendor/mldsa-native/mldsa/sign.h>
+#include <mldsa_native.h>
 
 // HSM root certification authority public keys.
 const uint8_t ROOT_KEYS_P256[][ECDSA_PUBLIC_KEY_SIZE] = {
@@ -350,8 +350,8 @@ static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
       return false;
     }
 
-    if (crypto_sign_verify(sig, sig_size, msg, msg_size, (const uint8_t*)"", 0,
-                           pub_key) != 0) {
+    if (mldsa_verify(sig, sig_size, msg, msg_size, (const uint8_t*)"", 0,
+                     pub_key) != 0) {
       return false;
     }
 

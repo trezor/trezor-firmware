@@ -31,7 +31,7 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #define SECRET_KEY_MASKING
 
-#include <../vendor/mldsa-native/mldsa/params.h>
+#include <mldsa_native.h>
 
 secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]);
 
