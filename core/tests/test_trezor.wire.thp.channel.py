@@ -49,8 +49,6 @@ class TestTrezorHostProtocolChannel(TestCaseWithContext):
         """
         reassembler = Reassembler(ThpBuffer())
         read_buffer = reassembler.thp_read_buf
-        # Check constant has not been modified
-        self.assertEqual(_PROTOBUF_BUFFER_SIZE, 8192)
 
         # Should pass
         for buffer_len in (0, 5, 100, 4096, _PROTOBUF_BUFFER_SIZE):

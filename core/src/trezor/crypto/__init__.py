@@ -25,5 +25,8 @@ if utils.USE_OPTIGA:
 if utils.USE_TROPIC:
     from trezorcrypto import tropic  # noqa: F401
 
+if utils.USE_MCU_ATTESTATION:
+    from trezorcrypto import mcu  # noqa: F401
+
 if utils.USE_THP:
     from trezorcrypto import elligator2  # noqa: F401

@@ -32,11 +32,15 @@ secbool secret_key_delegated_identity(uint16_t rotation_index,
 
 #define SECRET_KEY_MASKING
 
+#endif  // SECRET_MASTER_KEY_SLOT_SIZE
+
+#ifdef USE_MCU_ATTESTATION
+
 #include <mldsa_native.h>
 
 secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]);
 
-#endif  // SECRET_MASTER_KEY_SLOT_SIZE
+#endif  // USE_MCU_ATTESTATION
 
 #ifdef USE_OPTIGA
 

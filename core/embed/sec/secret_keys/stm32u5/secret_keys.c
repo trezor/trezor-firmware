@@ -36,11 +36,13 @@
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
+#ifdef USE_MCU_ATTESTATION
 secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
   _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH);
   return secret_key_derive_sym(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
                                KEY_INDEX_MCU_DEVICE_AUTH, 0, 0, dest);
 }
+#endif  // USE_MCU_ATTESTATION
 
 #ifdef USE_OPTIGA
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {

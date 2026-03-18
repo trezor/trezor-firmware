@@ -169,6 +169,18 @@ secbool secret_key_delegated_identity__verified(
     uint16_t index, uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 #endif
 
+#ifdef USE_MCU_ATTESTATION
+#include <sec/mcu_attestation.h>
+secbool mcu_attestation_cert_size__verified(size_t *cert_size);
+
+secbool mcu_attestation_cert_read__verified(uint8_t *cert, size_t max_cert_size,
+                                            size_t *cert_size);
+
+secbool mcu_attestation_sign__verified(const uint8_t *challenge,
+                                       size_t challenge_size,
+                                       uint8_t *signature);
+#endif
+
 // ---------------------------------------------------------------------
 #ifdef USE_TELEMETRY
 

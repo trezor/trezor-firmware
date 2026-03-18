@@ -29,6 +29,7 @@
 #include <sys/coreapp.h>
 #include <sys/flash.h>
 #include <sys/flash_otp.h>
+#include <sys/startup_args.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
@@ -64,6 +65,10 @@
 
 #ifdef USE_SECRET
 #include <sec/secret.h>
+#endif
+
+#ifdef USE_MCU_ATTESTATION
+#include <sec/mcu_attestation.h>
 #endif
 
 #include <SDL.h>
@@ -168,6 +173,19 @@ static void kernel_loop(applet_t *coreapp) {
 int main(int argc, char **argv) {
   system_init(&rsod_panic_handler);
 
+#ifdef USE_MCU_ATTESTATION
+  {
+    uint8_t mcu_device_cert[MCU_ATTESTATION_MAX_CERT_SIZE];
+    size_t mcu_device_cert_size = 0;
+    if (sectrue == secret_mcu_device_cert_read(mcu_device_cert,
+                                               sizeof(mcu_device_cert),
+                                               &mcu_device_cert_size)) {
+      startup_args_add(STARTUP_ARGS_TYPE_MCU_DEVICE_CERT, mcu_device_cert,
+                       mcu_device_cert_size);
+    }
+  }
+#endif
+
 #if defined(USE_SECRET) && defined(LOCKABLE_BOOTLOADER)
   secret_lock_bootloader();
 #endif
@@ -175,6 +193,9 @@ int main(int argc, char **argv) {
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
+
+  // Simulate the bootloader passing startup_args to firmware.
+  startup_args_import(startup_args_export());
 
   drivers_init();
 
