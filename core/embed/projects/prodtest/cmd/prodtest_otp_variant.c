@@ -23,6 +23,7 @@
 
 #include <rtl/cli.h>
 #include <rtl/printf.h>
+#include <sec/unit_properties.h>
 #include <sys/flash_otp.h>
 
 #include <stdlib.h>
@@ -234,6 +235,10 @@ static void prodtest_otp_variant_write(cli_t* cli) {
       return;
     }
   }
+
+  // reset cached properties
+  unit_properties_deinit();
+  unit_properties_init();
 
   // Respond with an OK message
   cli_ok(cli, "");

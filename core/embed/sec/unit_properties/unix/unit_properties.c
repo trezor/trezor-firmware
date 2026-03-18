@@ -59,6 +59,11 @@ bool unit_properties_init(void) {
   return true;
 }
 
+void unit_properties_deinit(void) {
+  unit_properties_driver_t* drv = &g_unit_properties_driver;
+  memset(drv, 0, sizeof(unit_properties_driver_t));
+}
+
 void unit_properties_get(unit_properties_t* props) {
   unit_properties_driver_t* drv = &g_unit_properties_driver;
 

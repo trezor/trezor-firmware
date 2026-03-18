@@ -691,6 +691,31 @@ otp-device-sn-write 123456ABCD --dry-run
 # Locking OTP block...
 ```
 
+### manufacturing-lock-write
+Writes the manufacturing lock into OTP memory, transitioning the device from manufacturing mode to normal mode. Once written, this lock is permanent and cannot be reverted.
+
+In non-production firmware, you must include `--execute` as the last parameter to write the data to the OTP memory. Conversely, in production firmware, you can use `--dry-run` as the last parameter to simulate the command without actually writing to the OTP memory.
+
+Example:
+```
+manufacturing-lock-write --dry-run
+#
+# !!! It's a dry run, OTP will be left unchanged.
+# !!! Use '--execute' switch to write to OTP memory.
+#
+# Writing manufacturing lock into OTP memory...
+OK
+```
+
+### manufacturing-lock-read
+Reads the current manufacturing lock status from OTP memory. Returns `locked` if the device has exited manufacturing mode, or `unlocked` if it is still in manufacturing mode.
+
+Example:
+```
+manufacturing-lock-read
+OK locked
+```
+
 ### otp-variant-write
 Writes up to 31 decimal values, each representing device variant options, to device's OTP memory. Each value must range from 0 to 255.
 

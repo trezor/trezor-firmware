@@ -1,0 +1,9 @@
+#pragma once
+
+// OTP device variant block layout
+// byte 0: version (always 0x01)
+#define UNIT_PROPERTIES_BYTE_COLOR 1
+#define UNIT_PROPERTIES_BYTE_BTCONLY 2
+#define UNIT_PROPERTIES_BYTE_PACKAGING 3
+#define UNIT_PROPERTIES_BYTE_BATTERY_TYPE 4
+#define UNIT_PROPERTIES_MANUFACTURING_LOCK_PRESENT 5
