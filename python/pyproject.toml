@@ -29,7 +29,7 @@ dependencies = [
     "construct>=2.9,!=2.10.55",
     "typing_extensions>=4.7.1",
     "construct-classes>=0.1.2",
-    "cryptography>=41",
+    "cryptography>=47",
     "noiseprotocol>=0.3.1,<0.4.0",
     "platformdirs>=4.4.0",
     "keyring>=25.7.0",

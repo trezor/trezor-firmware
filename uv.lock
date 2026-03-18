@@ -8,7 +8,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-05-04T23:41:51.098266923Z"
+exclude-newer = "2026-05-09T13:36:00.892620957Z"
 exclude-newer-span = "P30D"
 
 [options.exclude-newer-package]
@@ -2146,7 +2146,7 @@ requires-dist = [
     { name = "click", specifier = ">=8,<9" },
     { name = "construct", specifier = ">=2.9,!=2.10.55" },
     { name = "construct-classes", specifier = ">=0.1.2" },
-    { name = "cryptography", specifier = ">=41" },
+    { name = "cryptography", specifier = ">=47" },
     { name = "hidapi", marker = "extra == 'full'", specifier = ">=0.7.99.post20" },
     { name = "hidapi", marker = "extra == 'hidapi'", specifier = ">=0.7.99.post20" },
     { name = "keyring", specifier = ">=25.7.0" },
