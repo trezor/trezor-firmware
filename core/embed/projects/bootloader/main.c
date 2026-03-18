@@ -89,6 +89,9 @@
 #ifdef USE_TRUSTZONE
 #include <sec/tz_init.h>
 #endif
+#ifdef USE_MCU_ATTESTATION
+#include <sec/mcu_attestation.h>
+#endif
 
 #ifdef USE_BLE
 #include "wire/wire_iface_ble.h"
@@ -439,6 +442,19 @@ void real_jump_to_firmware(void) {
   ensure_firmware_min_version(hdr->monotonic);
 #ifdef USE_SECMON_VERIFICATION
   ensure_secmon_min_version(secmon_hdr->monotonic);
+#endif
+
+#ifdef USE_MCU_ATTESTATION
+  {
+    uint8_t mcu_device_cert[MCU_ATTESTATION_MAX_CERT_SIZE];
+    size_t mcu_device_cert_size = 0;
+    if (sectrue == secret_mcu_device_cert_read(mcu_device_cert,
+                                               sizeof(mcu_device_cert),
+                                               &mcu_device_cert_size)) {
+      startup_args_add(STARTUP_ARGS_TYPE_MCU_DEVICE_CERT, mcu_device_cert,
+                       mcu_device_cert_size);
+    }
+  }
 #endif
 
 #ifdef USE_SECRET

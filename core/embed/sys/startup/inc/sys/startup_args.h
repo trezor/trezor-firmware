@@ -43,6 +43,8 @@ typedef struct {
 typedef enum {
   /** Invalid argument type */
   STARTUP_ARGS_TYPE_INVALID = 0,
+  /** MCU device attestation certificate */
+  STARTUP_ARGS_TYPE_MCU_DEVICE_CERT = 1,
 
 } startup_args_type_t;
 

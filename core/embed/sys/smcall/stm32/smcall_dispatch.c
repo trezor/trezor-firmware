@@ -228,6 +228,29 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 #endif
 
+#ifdef USE_MCU_ATTESTATION
+    case SMCALL_MCU_ATTESTATION_CERT_SIZE: {
+      size_t *cert_size = (size_t *)args[0];
+      args[0] = mcu_attestation_cert_size__verified(cert_size);
+    } break;
+
+    case SMCALL_MCU_ATTESTATION_CERT_READ: {
+      uint8_t *cert = (uint8_t *)args[0];
+      size_t max_cert_size = (size_t)args[1];
+      size_t *cert_size = (size_t *)args[2];
+      args[0] =
+          mcu_attestation_cert_read__verified(cert, max_cert_size, cert_size);
+    } break;
+
+    case SMCALL_MCU_ATTESTATION_SIGN: {
+      const uint8_t *challenge = (const uint8_t *)args[0];
+      size_t challenge_size = (size_t)args[1];
+      uint8_t *signature = (uint8_t *)args[2];
+      args[0] =
+          mcu_attestation_sign__verified(challenge, challenge_size, signature);
+    } break;
+#endif  // USE_MCU_ATTESTATION
+
     case SMCALL_STORAGE_SETUP: {
       PIN_UI_WAIT_CALLBACK callback = (PIN_UI_WAIT_CALLBACK)args[0];
       storage_setup__verified(callback);
