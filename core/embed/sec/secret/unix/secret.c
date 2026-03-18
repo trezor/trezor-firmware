@@ -192,3 +192,39 @@ secbool secret_lock(void) {
 #endif
 
 #endif  // KERNEL_MODE
+
+#ifdef USE_MCU_ATTESTATION
+
+#include <sec/mcu_attestation.h>
+
+#if defined(TREZOR_MODEL_T3W1)
+#include "certs/T3W1.h"
+#else
+#error "MCU attestation is only supported for T3W1 model."
+#endif
+
+secbool secret_mcu_device_cert_write(const uint8_t* cert, size_t cert_size) {
+  if (cert_size > MCU_ATTESTATION_MAX_CERT_SIZE) {
+    return secfalse;
+  }
+  memcpy(mcu_device_cert, cert, cert_size);
+  mcu_device_cert_size = cert_size;
+  return sectrue;
+}
+
+secbool secret_mcu_device_cert_size(size_t* cert_size) {
+  *cert_size = mcu_device_cert_size;
+  return sectrue;
+}
+
+secbool secret_mcu_device_cert_read(uint8_t* cert, size_t max_cert_size,
+                                    size_t* cert_size) {
+  if (mcu_device_cert_size > max_cert_size) {
+    return secfalse;
+  }
+  *cert_size = mcu_device_cert_size;
+  memcpy(cert, mcu_device_cert, *cert_size);
+  return sectrue;
+}
+
+#endif  // USE_MCU_ATTESTATION
