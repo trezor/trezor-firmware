@@ -169,9 +169,9 @@ optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
   uint8_t raw_signature[ECDSA_RAW_SIGNATURE_SIZE] = {0};
   if (is_masked) {
     if (max_der_signature_size < MAX_DER_SIGNATURE_SIZE ||
-        ecdsa_sig_from_der(der_signature, der_signature_size, raw_signature) !=
+        ecdsa_sig_from_der(der_signature, *der_signature_size, raw_signature) !=
             0 ||
-        ecdsa_unmask_scalar(curve, masking_key, &raw_signature[32],
+        ecdsa_unmask_scalar(&nist256p1, masking_key, &raw_signature[32],
                             &raw_signature[32]) != 0) {
       ret = OPTIGA_SIGN_ERROR;
       goto cleanup;
