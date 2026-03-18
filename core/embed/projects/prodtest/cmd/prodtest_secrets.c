@@ -262,34 +262,26 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
 #ifdef TREZOR_EMULATOR
   cli_error(cli, CLI_ERROR, "Not implemented");
 #else
-  const size_t prefix_length = 2;
   size_t certificate_length = 0;
-  uint8_t prefixed_certificate[SECRET_MCU_DEVICE_CERT_SIZE] = {0};
-  if (!cli_arg_hex(cli, "hex-data", prefixed_certificate + prefix_length,
-                   sizeof(prefixed_certificate) - prefix_length,
+  uint8_t certificate[MCU_ATTESTATION_MAX_CERT_SIZE] = {0};
+  if (!cli_arg_hex(cli, "hex-data", certificate, sizeof(certificate),
                    &certificate_length)) {
-    if (certificate_length == sizeof(prefixed_certificate) - prefix_length) {
+    if (certificate_length == sizeof(certificate)) {
       cli_error(cli, CLI_ERROR, "Certificate too long.");
     } else {
       cli_error(cli, CLI_ERROR, "Hexadecimal decoding error.");
     }
     return;
   }
-  prefixed_certificate[0] = (certificate_length >> 8) & 0xFF;
-  prefixed_certificate[1] = certificate_length & 0xFF;
 
-  if (!check_device_cert_chain(cli, &prefixed_certificate[prefix_length],
-                               certificate_length)) {
+  if (!check_device_cert_chain(cli, certificate, certificate_length)) {
     // Error returned by check_device_cert_chain().
     return;
   }
 
-  secbool result =
-      secret_write(prefixed_certificate, SECRET_MCU_DEVICE_CERT_OFFSET,
-                   sizeof(prefixed_certificate));
-
-  if (sectrue != result) {
-    cli_error(cli, CLI_ERROR, "secret_write() failed.");
+  if (secret_mcu_device_cert_write(certificate, certificate_length) !=
+      sectrue) {
+    cli_error(cli, CLI_ERROR, "secret_mcu_device_cert_write() failed.");
     return;
   }
 
@@ -306,23 +298,16 @@ static void prodtest_secrets_certdev_read(cli_t* cli) {
 #ifdef TREZOR_EMULATOR
   cli_error(cli, CLI_ERROR, "Not implemented");
 #else
-  const size_t prefix_length = 2;
-  uint8_t prefixed_certificate[SECRET_MCU_DEVICE_CERT_SIZE] = {0};
+  uint8_t certificate[MCU_ATTESTATION_MAX_CERT_SIZE] = {0};
+  size_t certificate_length = 0;
 
-  if (secret_read(prefixed_certificate, SECRET_MCU_DEVICE_CERT_OFFSET,
-                  sizeof(prefixed_certificate)) != sectrue) {
-    cli_error(cli, CLI_ERROR, "`secret_read()` failed.");
+  if (secret_mcu_device_cert_read(certificate, sizeof(certificate),
+                                  &certificate_length) != sectrue) {
+    cli_error(cli, CLI_ERROR, "secret_mcu_device_cert_read() failed.");
     return;
   }
 
-  size_t certificate_length =
-      prefixed_certificate[0] << 8 | prefixed_certificate[1];
-
-  if (certificate_length > sizeof(prefixed_certificate) - prefix_length) {
-    cli_error(cli, CLI_ERROR, "Invalid certificate data.");
-    return;
-  }
-  cli_ok_hexdata(cli, prefixed_certificate + prefix_length, certificate_length);
+  cli_ok_hexdata(cli, certificate, certificate_length);
 #endif
 }
 #endif
