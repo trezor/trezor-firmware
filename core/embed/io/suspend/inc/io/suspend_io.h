@@ -63,7 +63,7 @@ typedef struct {
  * @param wakeup_params Pointer to a structure that will be filled with
  *                      the state of the drivers before entering low-power mode.
  */
-void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params);
+void suspend_drivers_phase1(power_save_wakeup_params_t* wakeup_params);
 
 /**
  * @brief Suspends additional I/O drivers.
@@ -83,7 +83,7 @@ void suspend_drivers_phase2(void);
  * @param wakeup_params Pointer to a structure that contains the state of the
  *                      drivers before entering low-power mode.
  */
-void resume_drivers(const power_save_wakeup_params_t *wakeup_params);
+void resume_drivers(const power_save_wakeup_params_t* wakeup_params);
 
 /**
  * @brief Suspends secure peripherals.

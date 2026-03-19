@@ -24,13 +24,13 @@ LOG_DECLARE(emulator)
 
 #undef FIRMWARE_START
 
-uint8_t *FIRMWARE_START = 0;
+uint8_t* FIRMWARE_START = 0;
 
 int bootloader_main(void);
 
 // assuming storage is single subarea
-bool storage_empty(const flash_area_t *area) {
-  const uint8_t *storage = flash_area_get_address(area, 0, 0);
+bool storage_empty(const flash_area_t* area) {
+  const uint8_t* storage = flash_area_get_address(area, 0, 0);
   size_t storage_size = flash_area_get_size(area);
   for (size_t i = 0; i < storage_size; i++) {
     if (storage[i] != 0xFF) {
@@ -58,9 +58,9 @@ void usage(void) {
   printf("  -h  show this help\n");
 }
 
-bool load_firmware(const char *filename, uint8_t *hash) {
+bool load_firmware(const char* filename, uint8_t* hash) {
   // read the first 6 kB of firmware file into a buffer
-  FILE *file = fopen(filename, "rb");
+  FILE* file = fopen(filename, "rb");
   if (!file) {
     printf("Failed to open file '%s'\n", filename);
     return false;
@@ -79,9 +79,9 @@ bool load_firmware(const char *filename, uint8_t *hash) {
     printf("File '%s' does not contain a valid vendor header.\n", filename);
     return false;
   }
-  const image_header *hdr = read_image_header(
+  const image_header* hdr = read_image_header(
       buffer + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
-  if (hdr != (const image_header *)(buffer + vhdr.hdrlen)) {
+  if (hdr != (const image_header*)(buffer + vhdr.hdrlen)) {
     printf("File '%s' does not contain a valid firmware image.\n", filename);
     return false;
   }
@@ -95,10 +95,10 @@ bool load_firmware(const char *filename, uint8_t *hash) {
   return true;
 }
 
-bool preload_firmware_image(const char *filename) {
+bool preload_firmware_image(const char* filename) {
   static uint8_t fw_buffer[FIRMWARE_MAXSIZE];
 
-  FILE *file = fopen(filename, "rb");
+  FILE* file = fopen(filename, "rb");
   if (!file) {
     printf("Failed to open file '%s'\n", filename);
     return false;
@@ -112,7 +112,7 @@ bool preload_firmware_image(const char *filename) {
                                                  read, 0x0, FIRMWARE_MAXSIZE);
 }
 
-static int sdl_event_filter(void *userdata, SDL_Event *event) {
+static int sdl_event_filter(void* userdata, SDL_Event* event) {
   switch (event->type) {
     case SDL_QUIT:
       exit(3);
@@ -134,14 +134,14 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
   return 1;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   SDL_SetEventFilter(sdl_event_filter, NULL);
 
   display_init(DISPLAY_RESET_CONTENT);
   flash_init();
   flash_otp_init();
 
-  FIRMWARE_START = (uint8_t *)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
+  FIRMWARE_START = (uint8_t*)flash_area_get_address(&FIRMWARE_AREA, 0, 0);
 
   // simulate non-empty storage so that we know whether it was erased or not
   if (storage_empty(&STORAGE_AREAS[0])) {

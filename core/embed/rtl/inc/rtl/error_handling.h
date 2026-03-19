@@ -102,7 +102,7 @@ typedef struct {
  * @param status Status structure
  * @return String representation of the status code
  */
-const char *ts_string(ts_t status);
+const char* ts_string(ts_t status);
 
 /**
  * Ensures that status code is `TS_OK`. If not, it shows an error message
@@ -155,15 +155,16 @@ const char *ts_string(ts_t status);
  * @param footer Footer of the error message (defaults to
  *  "PLEASE VISIT TREZOR.IO/RSOD" if NULL)
  */
-void __attribute__((noreturn))
-error_shutdown_ex(const char *title, const char *message, const char *footer);
+void __attribute__((noreturn)) error_shutdown_ex(const char* title,
+                                                 const char* message,
+                                                 const char* footer);
 
 /**
  * Shows an error message and shuts down the device.
  *
  * @param message Main error message (defaults to no message if NULL)
  */
-void __attribute__((noreturn)) error_shutdown(const char *message);
+void __attribute__((noreturn)) error_shutdown(const char* message);
 
 /**
  * Shows a fatal error message with file and line information,
@@ -176,8 +177,8 @@ void __attribute__((noreturn)) error_shutdown(const char *message);
  * @param file Source file name where the error occurred
  * @param line Line number in the source file where the error occurred
  */
-void __attribute__((noreturn))
-__fatal_error(const char *msg, const char *file, int line);
+void __attribute__((noreturn)) __fatal_error(const char* msg, const char* file,
+                                             int line);
 
 /*
  * TSH_DECLARE, TSH_RETURN and TSH_CHECK_xxx() macros define
@@ -293,7 +294,7 @@ __fatal_error(const char *msg, const char *file, int line);
 #ifdef USE_DBG_CONSOLE
 
 // defined in /sys/dbg/syslog.c
-extern void syslog_tsh_error(ts_t status, const char *file, int line);
+extern void syslog_tsh_error(ts_t status, const char* file, int line);
 
 // Helper macro for logging within TSH_CHECK_xxx macros.
 // Do not use directly.

@@ -40,7 +40,7 @@ extern const void bootloader_size;
 extern const void bootloader_size;
 
 static const boot_image_t g_bootloader_image = {
-    .image_ptr = (const void *)&bootloader_start,
+    .image_ptr = (const void*)&bootloader_start,
     .image_size = (size_t)&bootloader_size,
 #ifndef USE_BOOT_UCB
     .hash_00 = BOOTLOADER_00,
@@ -48,4 +48,4 @@ static const boot_image_t g_bootloader_image = {
 #endif
 };
 
-const boot_image_t *boot_image_get_embdata(void) { return &g_bootloader_image; }
+const boot_image_t* boot_image_get_embdata(void) { return &g_bootloader_image; }

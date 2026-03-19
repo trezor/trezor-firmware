@@ -34,7 +34,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 static uint8_t g_passkey_str[BLE_PAIRING_CODE_LEN] = {0};
 
-static struct bt_conn *auth_conn;
+static struct bt_conn* auth_conn;
 
 void passkey_to_str(uint8_t buf[6], unsigned int passkey) {
   buf[5] = (passkey % 10) + '0';
@@ -45,9 +45,9 @@ void passkey_to_str(uint8_t buf[6], unsigned int passkey) {
   buf[0] = ((passkey / 100000) % 10) + '0';
 }
 
-void auth_passkey_display(struct bt_conn *conn, unsigned int passkey) {}
+void auth_passkey_display(struct bt_conn* conn, unsigned int passkey) {}
 
-void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey) {
+void auth_passkey_confirm(struct bt_conn* conn, unsigned int passkey) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   auth_conn = bt_conn_ref(conn);
@@ -60,7 +60,7 @@ void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey) {
   ble_management_send_status_event();
 }
 
-void pairing_auth_cancel(struct bt_conn *conn) {
+void pairing_auth_cancel(struct bt_conn* conn) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -80,7 +80,7 @@ static struct bt_conn_auth_cb conn_auth_callbacks = {
     .cancel = pairing_auth_cancel,
 };
 
-void pairing_complete(struct bt_conn *conn, bool bonded) {
+void pairing_complete(struct bt_conn* conn, bool bonded) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -90,7 +90,7 @@ void pairing_complete(struct bt_conn *conn, bool bonded) {
   LOG_INF("Pairing completed: %s, bonded: %d", addr, bonded);
 }
 
-void pairing_failed(struct bt_conn *conn, enum bt_security_err reason) {
+void pairing_failed(struct bt_conn* conn, enum bt_security_err reason) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -112,15 +112,15 @@ bool pairing_code_not_empty(void) {
   return false;
 }
 
-void pairing_num_comp_reply(bool accept, uint8_t *code) {
+void pairing_num_comp_reply(bool accept, uint8_t* code) {
   if (auth_conn != NULL) {
     if (accept && pairing_code_not_empty() && code != NULL &&
         memcmp(g_passkey_str, code, sizeof(g_passkey_str)) == 0) {
       bt_conn_auth_passkey_confirm(auth_conn);
-      LOG_INF("Numeric Match, conn %p", (void *)auth_conn);
+      LOG_INF("Numeric Match, conn %p", (void*)auth_conn);
     } else {
       bt_conn_auth_cancel(auth_conn);
-      LOG_INF("Numeric Reject, conn %p", (void *)auth_conn);
+      LOG_INF("Numeric Reject, conn %p", (void*)auth_conn);
       bt_conn_disconnect(auth_conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
     }
 

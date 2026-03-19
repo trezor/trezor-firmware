@@ -79,7 +79,7 @@ static uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 #endif
 };
 
-static uint8_t *FLASH_BUFFER = NULL;
+static uint8_t* FLASH_BUFFER = NULL;
 static uint32_t FLASH_SIZE;
 
 void flash_init(void) {
@@ -117,10 +117,10 @@ void flash_init(void) {
   int fd = open(FLASH_FILE, O_RDWR);
   ensure(sectrue * (fd >= 0), "open failed");
 
-  void *map = mmap(0, FLASH_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  void* map = mmap(0, FLASH_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   ensure(sectrue * (map != MAP_FAILED), "mmap failed");
 
-  FLASH_BUFFER = (uint8_t *)map;
+  FLASH_BUFFER = (uint8_t*)map;
 }
 
 void flash_deinit(void) {
@@ -132,7 +132,7 @@ secbool flash_unlock_write(void) { return sectrue; }
 
 secbool flash_lock_write(void) { return sectrue; }
 
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
+const void* flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   if (sector >= FLASH_SECTOR_COUNT) {
     return NULL;
   }
@@ -185,7 +185,7 @@ secbool flash_sector_erase(uint16_t sector) {
 }
 
 secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
-  uint8_t *flash = (uint8_t *)flash_get_address(sector, offset, 1);
+  uint8_t* flash = (uint8_t*)flash_get_address(sector, offset, 1);
   if (!flash) {
     return secfalse;
   }
@@ -200,7 +200,7 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   if (offset % sizeof(uint32_t)) {  // we write only at 4-byte boundary
     return secfalse;
   }
-  uint32_t *flash = (uint32_t *)flash_get_address(sector, offset, sizeof(data));
+  uint32_t* flash = (uint32_t*)flash_get_address(sector, offset, sizeof(data));
   if (!flash) {
     return secfalse;
   }

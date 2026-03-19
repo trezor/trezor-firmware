@@ -27,7 +27,7 @@ typedef struct {
   uint32_t timestamp;
   uint32_t id;
   rtc_wakeup_callback_t callback;
-  void *callback_context;
+  void* callback_context;
 } rtc_wakeup_event_t;
 
 typedef struct {
@@ -43,15 +43,15 @@ rtc_wakeup_schedule_t g_rtc_wakeup_schedule = {
     .tail = 0,
 };
 
-static bool rtc_scheduler_push(rtc_wakeup_event_t *event);
-static bool rtc_scheduler_pop(rtc_wakeup_event_t *event);
+static bool rtc_scheduler_push(rtc_wakeup_event_t* event);
+static bool rtc_scheduler_pop(rtc_wakeup_event_t* event);
 static bool rtc_scheduler_remove(uint32_t id);
-rtc_wakeup_event_t *rtc_scheduler_get_head(void);
+rtc_wakeup_event_t* rtc_scheduler_get_head(void);
 
-void rtc_scheduler_callback(void *context) {
+void rtc_scheduler_callback(void* context) {
   // Call events that exceeds the current timestamp
   while (true) {
-    rtc_wakeup_event_t *next_event = rtc_scheduler_get_head();
+    rtc_wakeup_event_t* next_event = rtc_scheduler_get_head();
     if (next_event == NULL) {
       break;
     }
@@ -72,7 +72,7 @@ void rtc_scheduler_callback(void *context) {
   }
 
   // Start the next event if any
-  rtc_wakeup_event_t *next_event = rtc_scheduler_get_head();
+  rtc_wakeup_event_t* next_event = rtc_scheduler_get_head();
   if (next_event != NULL) {
     rtc_wakeup_timer_start(next_event->timestamp, &rtc_scheduler_callback,
                            next_event);
@@ -80,8 +80,8 @@ void rtc_scheduler_callback(void *context) {
 }
 
 bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
-                               rtc_wakeup_callback_t callback, void *context,
-                               rtc_event_id_t *event_id) {
+                               rtc_wakeup_callback_t callback, void* context,
+                               rtc_event_id_t* event_id) {
   irq_key_t irq_key = irq_lock();
 
   // Increment event ID
@@ -105,7 +105,7 @@ bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
 
   rtc_wakeup_timer_stop();
 
-  rtc_wakeup_event_t *head = rtc_scheduler_get_head();
+  rtc_wakeup_event_t* head = rtc_scheduler_get_head();
   if (head == NULL) {
     irq_unlock(irq_key);
     return false;
@@ -130,7 +130,7 @@ bool rtc_cancel_wakeup_event(uint32_t event_id) {
 
   rtc_scheduler_remove(event_id);
 
-  rtc_wakeup_event_t *head = rtc_scheduler_get_head();
+  rtc_wakeup_event_t* head = rtc_scheduler_get_head();
   if (head == NULL) {
     irq_unlock(irq_key);
     return false;
@@ -142,8 +142,8 @@ bool rtc_cancel_wakeup_event(uint32_t event_id) {
   return true;
 }
 
-static bool rtc_scheduler_push(rtc_wakeup_event_t *event) {
-  rtc_wakeup_schedule_t *sch = &g_rtc_wakeup_schedule;
+static bool rtc_scheduler_push(rtc_wakeup_event_t* event) {
+  rtc_wakeup_schedule_t* sch = &g_rtc_wakeup_schedule;
 
   uint8_t new_tail = (sch->tail + 1) % MAX_SCHEDULE_LEN;
   if (new_tail == sch->head) {
@@ -173,8 +173,8 @@ static bool rtc_scheduler_push(rtc_wakeup_event_t *event) {
   return true;
 }
 
-static bool rtc_scheduler_pop(rtc_wakeup_event_t *event) {
-  rtc_wakeup_schedule_t *sch = &g_rtc_wakeup_schedule;
+static bool rtc_scheduler_pop(rtc_wakeup_event_t* event) {
+  rtc_wakeup_schedule_t* sch = &g_rtc_wakeup_schedule;
 
   if (sch->head == sch->tail) {
     // Queue is empty
@@ -188,7 +188,7 @@ static bool rtc_scheduler_pop(rtc_wakeup_event_t *event) {
 }
 
 static bool rtc_scheduler_remove(uint32_t id) {
-  rtc_wakeup_schedule_t *sch = &g_rtc_wakeup_schedule;
+  rtc_wakeup_schedule_t* sch = &g_rtc_wakeup_schedule;
 
   if (sch->head == sch->tail) {
     return false;
@@ -224,8 +224,8 @@ static bool rtc_scheduler_remove(uint32_t id) {
   return true;
 }
 
-rtc_wakeup_event_t *rtc_scheduler_get_head(void) {
-  rtc_wakeup_schedule_t *sch = &g_rtc_wakeup_schedule;
+rtc_wakeup_event_t* rtc_scheduler_get_head(void) {
+  rtc_wakeup_schedule_t* sch = &g_rtc_wakeup_schedule;
 
   if (sch->head == sch->tail) {
     // Queue is empty

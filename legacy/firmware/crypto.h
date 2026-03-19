@@ -56,58 +56,58 @@ typedef struct {
   uint8_t data[64];
 } Slip21Node;
 
-uint32_t ser_length(uint32_t len, uint8_t *out);
+uint32_t ser_length(uint32_t len, uint8_t* out);
 
-uint32_t ser_length_hash(Hasher *hasher, uint32_t len);
+uint32_t ser_length_hash(Hasher* hasher, uint32_t len);
 
-int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
-                   uint8_t *signature);
+int sshMessageSign(HDNode* node, const uint8_t* message, size_t message_len,
+                   uint8_t* signature);
 
-int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
-                   uint8_t *signature);
+int gpgMessageSign(HDNode* node, const uint8_t* message, size_t message_len,
+                   uint8_t* signature);
 
-int signifyMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
-                       uint8_t *signature);
+int signifyMessageSign(HDNode* node, const uint8_t* message, size_t message_len,
+                       uint8_t* signature);
 
-int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
+int cryptoMessageSign(const CoinInfo* coin, HDNode* node,
                       InputScriptType script_type, bool no_script_type,
-                      const uint8_t *message, size_t message_len,
-                      uint8_t *signature);
+                      const uint8_t* message, size_t message_len,
+                      uint8_t* signature);
 
-int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
-                        size_t message_len, const char *address,
-                        const uint8_t *signature);
+int cryptoMessageVerify(const CoinInfo* coin, const uint8_t* message,
+                        size_t message_len, const char* address,
+                        const uint8_t* signature);
 
-const HDNode *cryptoMultisigPubkey(const CoinInfo *coin,
-                                   const MultisigRedeemScriptType *multisig,
+const HDNode* cryptoMultisigPubkey(const CoinInfo* coin,
+                                   const MultisigRedeemScriptType* multisig,
                                    uint32_t index);
 
-uint32_t cryptoMultisigPubkeyCount(const MultisigRedeemScriptType *multisig);
+uint32_t cryptoMultisigPubkeyCount(const MultisigRedeemScriptType* multisig);
 
-int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
-                              const MultisigRedeemScriptType *multisig,
-                              const uint8_t *pubkey);
+int cryptoMultisigPubkeyIndex(const CoinInfo* coin,
+                              const MultisigRedeemScriptType* multisig,
+                              const uint8_t* pubkey);
 
-int cryptoMultisigXpubIndex(const CoinInfo *coin,
-                            const MultisigRedeemScriptType *multisig,
-                            const uint8_t *pubkey);
+int cryptoMultisigXpubIndex(const CoinInfo* coin,
+                            const MultisigRedeemScriptType* multisig,
+                            const uint8_t* pubkey);
 
-uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
-                               const MultisigRedeemScriptType *multisig,
-                               uint8_t *pubkeys);
+uint32_t cryptoMultisigPubkeys(const CoinInfo* coin,
+                               const MultisigRedeemScriptType* multisig,
+                               uint8_t* pubkeys);
 
-int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
-                              uint8_t *hash);
+int cryptoMultisigFingerprint(const MultisigRedeemScriptType* multisig,
+                              uint8_t* hash);
 
-int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash);
+int cryptoIdentityFingerprint(const IdentityType* identity, uint8_t* hash);
 
-bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t *message,
+bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t* message,
                       const size_t message_len, const int threshold,
-                      const ed25519_public_key *pubkeys,
+                      const ed25519_public_key* pubkeys,
                       const int pubkeys_count, const uint8_t sigmask);
 
-bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
-                     uint32_t address_n_count, const uint32_t *address_n,
+bool coin_path_check(const CoinInfo* coin, InputScriptType script_type,
+                     uint32_t address_n_count, const uint32_t* address_n,
                      bool has_multisig, PathSchema unlock, bool full_check);
 
 bool is_multisig_input_script_type(InputScriptType script_type);
@@ -117,16 +117,16 @@ bool is_change_output_script_type(OutputScriptType script_type);
 bool is_segwit_input_script_type(InputScriptType script_type);
 bool is_segwit_output_script_type(OutputScriptType script_type);
 bool change_output_to_input_script_type(OutputScriptType output_script_type,
-                                        InputScriptType *input_script_type);
+                                        InputScriptType* input_script_type);
 
-void slip21_from_seed(const uint8_t *seed, int seed_len, Slip21Node *out);
-void slip21_derive_path(Slip21Node *inout, const uint8_t *label,
+void slip21_from_seed(const uint8_t* seed, int seed_len, Slip21Node* out);
+void slip21_derive_path(Slip21Node* inout, const uint8_t* label,
                         size_t label_len);
-const uint8_t *slip21_key(const Slip21Node *node);
-bool multisig_uses_single_path(const MultisigRedeemScriptType *multisig);
+const uint8_t* slip21_key(const Slip21Node* node);
+bool multisig_uses_single_path(const MultisigRedeemScriptType* multisig);
 
 bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
                        const uint32_t address_n[], size_t address_n_count,
-                       const char *xpub, char *dest, size_t dest_size);
+                       const char* xpub, char* dest, size_t dest_size);
 
 #endif

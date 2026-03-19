@@ -37,7 +37,7 @@ static rgb_led_driver_t g_rgb_led_driver = {
 };
 
 void rgb_led_init(void) {
-  rgb_led_driver_t *driver = &g_rgb_led_driver;
+  rgb_led_driver_t* driver = &g_rgb_led_driver;
 
   // turn the LED off
   rgb_led_set_color(0);
@@ -47,7 +47,7 @@ void rgb_led_init(void) {
 }
 
 void rgb_led_deinit(void) {
-  rgb_led_driver_t *driver = &g_rgb_led_driver;
+  rgb_led_driver_t* driver = &g_rgb_led_driver;
 
   // turn the LED off
   rgb_led_set_color(0);
@@ -56,7 +56,7 @@ void rgb_led_deinit(void) {
 }
 
 void rgb_led_set_enabled(bool enabled) {
-  rgb_led_driver_t *driver = &g_rgb_led_driver;
+  rgb_led_driver_t* driver = &g_rgb_led_driver;
 
   if (!driver->initialized) {
     return;
@@ -71,7 +71,7 @@ void rgb_led_set_enabled(bool enabled) {
 }
 
 bool rgb_led_get_enabled(void) {
-  rgb_led_driver_t *driver = &g_rgb_led_driver;
+  rgb_led_driver_t* driver = &g_rgb_led_driver;
 
   if (!driver->initialized) {
     return false;
@@ -81,7 +81,7 @@ bool rgb_led_get_enabled(void) {
 }
 
 void rgb_led_set_color(uint32_t color) {
-  rgb_led_driver_t *driver = &g_rgb_led_driver;
+  rgb_led_driver_t* driver = &g_rgb_led_driver;
   if (!driver->initialized || !driver->enabled) {
     return;
   }

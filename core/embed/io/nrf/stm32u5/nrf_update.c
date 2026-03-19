@@ -51,12 +51,12 @@ struct image_header {
  * @param out_hash   Buffer of at least IMAGE_HASH_LEN bytes to receive the hash
  * @return "true" on success, "false" on failure
  */
-static bool read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
+static bool read_image_sha256(const uint8_t* binary_ptr, size_t binary_size,
                               uint8_t out_hash[IMAGE_HASH_LEN]) {
   bool ret;
 
   /* Read header to get image_size and hdr_size */
-  struct image_header *hdr = (struct image_header *)binary_ptr;
+  struct image_header* hdr = (struct image_header*)binary_ptr;
 
   uint32_t img_size = hdr->ih_img_size;
   uint32_t hdr_size = hdr->ih_hdr_size;
@@ -107,9 +107,9 @@ static bool read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
  * @param out_version   Pointer to nrf_app_version_t to receive the version
  * @return "true" on success, "false" on failure
  */
-static bool image_version_read(const uint8_t *image_ptr,
-                               nrf_app_version_t *out_version) {
-  struct image_header *hdr = (struct image_header *)image_ptr;
+static bool image_version_read(const uint8_t* image_ptr,
+                               nrf_app_version_t* out_version) {
+  struct image_header* hdr = (struct image_header*)image_ptr;
 
   if (image_ptr == NULL || out_version == NULL) {
     return false;
@@ -126,7 +126,7 @@ static bool image_version_read(const uint8_t *image_ptr,
  * @param out_version   Pointer to nrf_app_version_t to receive the version
  * @return "true" on success, "false" on failure
  */
-static bool nrf_smp_version_get(nrf_app_version_t *out_version) {
+static bool nrf_smp_version_get(nrf_app_version_t* out_version) {
   bool ret = false;
 
   nrf_reboot_to_bootloader();
@@ -151,8 +151,8 @@ static bool nrf_smp_version_get(nrf_app_version_t *out_version) {
  * @param v2 Pointer to second nrf_app_version_t
  * @return 0 when equal, 1 when v1 is greater, -1 when v2 is greater
  */
-static int version_cmp(const nrf_app_version_t *v1,
-                       const nrf_app_version_t *v2) {
+static int version_cmp(const nrf_app_version_t* v1,
+                       const nrf_app_version_t* v2) {
   if (v1->major != v2->major) {
     return (v1->major < v2->major) ? -1 : 1;
   }
@@ -168,7 +168,7 @@ static int version_cmp(const nrf_app_version_t *v1,
   return 0;
 }
 
-bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
+bool nrf_update_required(const uint8_t* image_ptr, size_t image_len) {
   for (int i = 0; i < 3; i++) {
     nrf_info_t info;
     uint8_t expected_hash[SHA256_DIGEST_LENGTH];
@@ -194,7 +194,7 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
   return true;
 }
 
-bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
+bool nrf_update(const uint8_t* image_ptr, size_t image_len) {
   nrf_reboot_to_bootloader();
   nrf_set_dfu_mode(true);
 

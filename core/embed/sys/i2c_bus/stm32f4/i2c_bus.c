@@ -657,8 +657,7 @@ static void i2c_bus_head_continue(i2c_bus_t* bus) {
         // Add 5us as a safety margin since the stop_time was set before the
         // STOP condition was issued
         uint16_t guard_time = bus->def->guard_time + 5;
-        while (systick_us() - bus->stop_time < guard_time)
-          ;
+        while (systick_us() - bus->stop_time < guard_time);
       }
     }
 

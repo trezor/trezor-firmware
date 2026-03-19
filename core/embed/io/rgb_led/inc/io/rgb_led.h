@@ -73,7 +73,7 @@ void rgb_led_deinit(void);
  *
  * @param params: Pointer to the wakeup parameters structure
  */
-void rgb_led_set_wakeup_params(rgb_led_wakeup_params_t *params);
+void rgb_led_set_wakeup_params(rgb_led_wakeup_params_t* params);
 
 /**
  * @brief Suspend RGB LED driver
@@ -85,7 +85,7 @@ void rgb_led_suspend(void);
  *
  * @param params: Pointer to the wakeup parameters structure
  */
-void rgb_led_resume(const rgb_led_wakeup_params_t *params);
+void rgb_led_resume(const rgb_led_wakeup_params_t* params);
 
 #endif  // KERNEL_MODE
 

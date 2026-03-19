@@ -21,15 +21,15 @@
 
 #include <SDL.h>
 
-static SDL_Renderer *renderer = NULL;
-static SDL_Texture *texture = NULL;
+static SDL_Renderer* renderer = NULL;
+static SDL_Texture* texture = NULL;
 static SDL_Rect dstrect;
 
 #define ENV_OLED_FULLSCREEN "TREZOR_OLED_FULLSCREEN"
 #define ENV_OLED_SCALE "TREZOR_OLED_SCALE"
 
 static int emulatorFullscreen(void) {
-  const char *variable = getenv(ENV_OLED_FULLSCREEN);
+  const char* variable = getenv(ENV_OLED_FULLSCREEN);
   if (!variable) {
     return 0;
   }
@@ -37,7 +37,7 @@ static int emulatorFullscreen(void) {
 }
 
 static int emulatorScale(void) {
-  const char *variable = getenv(ENV_OLED_SCALE);
+  const char* variable = getenv(ENV_OLED_SCALE);
   if (!variable) {
     return 1;
   }
@@ -58,7 +58,7 @@ void oledInit(void) {
   int scale = emulatorScale();
   int fullscreen = emulatorFullscreen();
 
-  SDL_Window *window = SDL_CreateWindow(
+  SDL_Window* window = SDL_CreateWindow(
       "Trezor^emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
       OLED_WIDTH * scale, OLED_HEIGHT * scale,
       fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
@@ -107,7 +107,7 @@ void oledRefresh(void) {
   /* Draw triangle in upper right corner */
   oledInvertDebugLink();
 
-  const uint8_t *buffer = oledGetBuffer();
+  const uint8_t* buffer = oledGetBuffer();
 
   static uint32_t data[OLED_HEIGHT][OLED_WIDTH];
 

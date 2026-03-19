@@ -37,7 +37,7 @@
 ///     Returns:
 ///         `int`: Computed CRC32 checksum.
 ///     """
-mp_obj_t mod_trezorcrypto_crc_crc32(size_t n_args, const mp_obj_t *args) {
+mp_obj_t mod_trezorcrypto_crc_crc32(size_t n_args, const mp_obj_t* args) {
   mp_buffer_info_t bufinfo = {0};
   mp_get_buffer_raise(args[0], &bufinfo, MP_BUFFER_READ);
   uint32_t crc = (n_args > 1) ? trezor_obj_get_uint(args[1]) : 0;
@@ -56,5 +56,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_crc_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_crc_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_crc_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_crc_globals,
 };

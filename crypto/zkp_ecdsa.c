@@ -37,12 +37,12 @@
 
 #include "zkp_ecdsa.h"
 
-static bool is_zero_digest(const uint8_t *digest) {
+static bool is_zero_digest(const uint8_t* digest) {
   const uint8_t zeroes[32] = {0};
   return memcmp(digest, zeroes, 32) == 0;
 }
 
-static size_t get_public_key_length(const uint8_t *public_key_bytes) {
+static size_t get_public_key_length(const uint8_t* public_key_bytes) {
   if (public_key_bytes[0] == 0x04) {
     return 65;
   } else if (public_key_bytes[0] == 0x02 || public_key_bytes[0] == 0x03) {
@@ -57,9 +57,9 @@ static size_t get_public_key_length(const uint8_t *public_key_bytes) {
 // private_key_bytes has 32 bytes
 // public_key_bytes has 33 bytes
 // returns 0 on success
-int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
-                               const uint8_t *private_key_bytes,
-                               uint8_t *public_key_bytes) {
+int zkp_ecdsa_get_public_key33(const ecdsa_curve* curve,
+                               const uint8_t* private_key_bytes,
+                               uint8_t* public_key_bytes) {
   assert(curve == &secp256k1);
   if (curve != &secp256k1) {
     return 1;
@@ -67,7 +67,7 @@ int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
 
   int result = 0;
 
-  secp256k1_context *context_writable = NULL;
+  secp256k1_context* context_writable = NULL;
   if (result == 0) {
     context_writable = zkp_context_acquire_writable();
     if (context_writable == NULL) {
@@ -95,7 +95,7 @@ int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
 
   if (result == 0) {
     size_t written = 33;
-    const secp256k1_context *context_read_only = zkp_context_get_read_only();
+    const secp256k1_context* context_read_only = zkp_context_get_read_only();
     int returned = secp256k1_ec_pubkey_serialize(
         context_read_only, public_key_bytes, &written, &public_key,
         SECP256K1_EC_COMPRESSED);
@@ -114,9 +114,9 @@ int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
 // private_key_bytes has 32 bytes
 // public_key_bytes has 65 bytes
 // returns 0 on success
-int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
-                               const uint8_t *private_key_bytes,
-                               uint8_t *public_key_bytes) {
+int zkp_ecdsa_get_public_key65(const ecdsa_curve* curve,
+                               const uint8_t* private_key_bytes,
+                               uint8_t* public_key_bytes) {
   assert(curve == &secp256k1);
   if (curve != &secp256k1) {
     return 1;
@@ -124,7 +124,7 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
 
   int result = 0;
 
-  secp256k1_context *context_writable = NULL;
+  secp256k1_context* context_writable = NULL;
   if (result == 0) {
     context_writable = zkp_context_acquire_writable();
     if (context_writable == NULL) {
@@ -152,7 +152,7 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
 
   if (result == 0) {
     size_t written = 65;
-    const secp256k1_context *context_read_only = zkp_context_get_read_only();
+    const secp256k1_context* context_read_only = zkp_context_get_read_only();
     int returned = secp256k1_ec_pubkey_serialize(
         context_read_only, public_key_bytes, &written, &public_key,
         SECP256K1_EC_UNCOMPRESSED);
@@ -174,8 +174,8 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
 // pby is one byte
 // returns 0 on success
 int zkp_ecdsa_sign_digest(
-    const ecdsa_curve *curve, const uint8_t *private_key_bytes,
-    const uint8_t *digest, uint8_t *signature_bytes, uint8_t *pby,
+    const ecdsa_curve* curve, const uint8_t* private_key_bytes,
+    const uint8_t* digest, uint8_t* signature_bytes, uint8_t* pby,
     int (*is_canonical)(uint8_t by, uint8_t signature_bytes[64])) {
   assert(curve == &secp256k1);
   if (curve != &secp256k1) {
@@ -194,7 +194,7 @@ int zkp_ecdsa_sign_digest(
     }
   }
 
-  secp256k1_context *context_writable = NULL;
+  secp256k1_context* context_writable = NULL;
   if (result == 0) {
     context_writable = zkp_context_acquire_writable();
     if (context_writable == NULL) {
@@ -218,7 +218,7 @@ int zkp_ecdsa_sign_digest(
     secp256k1_ecdsa_recoverable_signature recoverable_signature = {0};
     if (result == 0) {
       uint8_t rfc6979_nonce_data[32] = {0};
-      void *rfc6979_nonce = NULL;
+      void* rfc6979_nonce = NULL;
       if (retry_count != 0) {
         // If this is a retry attempt, then randomize rfc6979 with the counter.
         rfc6979_nonce_data[0] = retry_count & 0xff;
@@ -235,7 +235,7 @@ int zkp_ecdsa_sign_digest(
     }
 
     if (result == 0) {
-      const secp256k1_context *context_read_only = zkp_context_get_read_only();
+      const secp256k1_context* context_read_only = zkp_context_get_read_only();
       if (secp256k1_ecdsa_recoverable_signature_serialize_compact(
               context_read_only, signature_bytes, &recid,
               &recoverable_signature) != 1) {
@@ -268,10 +268,10 @@ int zkp_ecdsa_sign_digest(
 // digest has 32 bytes
 // recid is 0, 1, 2 or 3
 // returns 0 on success
-int zkp_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve,
-                                   uint8_t *public_key_bytes,
-                                   const uint8_t *signature_bytes,
-                                   const uint8_t *digest, int recid) {
+int zkp_ecdsa_recover_pub_from_sig(const ecdsa_curve* curve,
+                                   uint8_t* public_key_bytes,
+                                   const uint8_t* signature_bytes,
+                                   const uint8_t* digest, int recid) {
   assert(curve == &secp256k1);
   if (curve != &secp256k1) {
     return 1;
@@ -279,7 +279,7 @@ int zkp_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve,
 
   int result = 0;
 
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
   secp256k1_ecdsa_recoverable_signature recoverable_signature = {0};
 
   if (result == 0) {
@@ -322,10 +322,10 @@ int zkp_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve,
 // signature_bytes has 64 bytes
 // digest has 32 bytes
 // returns 0 if verification succeeded
-int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
-                            const uint8_t *public_key_bytes,
-                            const uint8_t *signature_bytes,
-                            const uint8_t *digest) {
+int zkp_ecdsa_verify_digest(const ecdsa_curve* curve,
+                            const uint8_t* public_key_bytes,
+                            const uint8_t* signature_bytes,
+                            const uint8_t* digest) {
   assert(curve == &secp256k1);
   if (curve != &secp256k1) {
     return 1;
@@ -350,7 +350,7 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
     }
   }
 
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
   secp256k1_pubkey public_key = {0};
 
   if (result == 0) {
@@ -392,9 +392,9 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
 // public_key_bytes has 33 or 65 bytes
 // signature_bytes has 64 bytes
 // returns 0 if verification succeeded
-int zkp_ecdsa_verify(const ecdsa_curve *curve, HasherType hasher_type,
-                     const uint8_t *public_key_bytes,
-                     const uint8_t *signature_bytes, const uint8_t *message,
+int zkp_ecdsa_verify(const ecdsa_curve* curve, HasherType hasher_type,
+                     const uint8_t* public_key_bytes,
+                     const uint8_t* signature_bytes, const uint8_t* message,
                      uint32_t message_length) {
   assert(curve == &secp256k1);
   if (curve != &secp256k1) {
@@ -409,8 +409,8 @@ int zkp_ecdsa_verify(const ecdsa_curve *curve, HasherType hasher_type,
   return result;
 }
 
-static int plain_hash_function(unsigned char *output, const unsigned char *x32,
-                               const unsigned char *y32, void *data) {
+static int plain_hash_function(unsigned char* output, const unsigned char* x32,
+                               const unsigned char* y32, void* data) {
   (void)data;
   output[0] = 0x04;
   memcpy(output + 1, x32, 32);
@@ -424,17 +424,17 @@ static int plain_hash_function(unsigned char *output, const unsigned char *x32,
 // public_key_bytes has 33 or 65 bytes
 // session key has 65 bytes
 // returns 0 on success
-int zkp_ecdh_multiply(const ecdsa_curve *curve,
-                      const uint8_t *private_key_bytes,
-                      const uint8_t *public_key_bytes, uint8_t *session_key) {
+int zkp_ecdh_multiply(const ecdsa_curve* curve,
+                      const uint8_t* private_key_bytes,
+                      const uint8_t* public_key_bytes, uint8_t* session_key) {
   assert(curve == &secp256k1);
   if (curve != &secp256k1) {
     return 1;
   }
 
   int result = 0;
-  secp256k1_context *context_writable = NULL;
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  secp256k1_context* context_writable = NULL;
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
   secp256k1_pubkey public_key = {0};
 
   size_t public_key_length = get_public_key_length(public_key_bytes);
@@ -482,16 +482,16 @@ end:
 // tweak_bytes has 32 bytes
 // tweaked_public_key_bytes has 33 bytes
 ecdsa_tweak_pubkey_result zkp_ecdsa_tweak_pubkey(
-    const ecdsa_curve *curve, const uint8_t *public_key_bytes,
-    const uint8_t *tweak_bytes, uint8_t *tweaked_public_key_bytes) {
+    const ecdsa_curve* curve, const uint8_t* public_key_bytes,
+    const uint8_t* tweak_bytes, uint8_t* tweaked_public_key_bytes) {
   assert(curve == &secp256k1);
   if (curve != &secp256k1) {
     return ECDSA_TWEAK_PUBKEY_INVALID_CURVE_ERR;
   }
 
   int result = ECDSA_TWEAK_PUBKEY_SUCCESS;
-  secp256k1_context *context_writable = NULL;
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  secp256k1_context* context_writable = NULL;
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
   secp256k1_pubkey public_key = {0};
 
   size_t public_key_length = get_public_key_length(public_key_bytes);

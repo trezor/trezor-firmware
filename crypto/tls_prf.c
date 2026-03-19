@@ -31,9 +31,9 @@
 #include "memzero.h"
 #include "sha2.h"
 
-void tls_prf_sha256(const uint8_t *secret, size_t secret_len,
-                    const uint8_t *label, size_t label_len, const uint8_t *seed,
-                    size_t seed_len, uint8_t *output, size_t out_len) {
+void tls_prf_sha256(const uint8_t* secret, size_t secret_len,
+                    const uint8_t* label, size_t label_len, const uint8_t* seed,
+                    size_t seed_len, uint8_t* output, size_t out_len) {
   uint32_t idig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
   uint32_t odig[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
   uint8_t a[SHA256_DIGEST_LENGTH] = {0};

@@ -28,13 +28,13 @@
  * (usb_stop is called). */
 typedef struct {
   syshandle_t handle;
-  uint8_t *tx_packet;  // Buffer for one packet, with length of at least
+  uint8_t* tx_packet;  // Buffer for one packet, with length of at least
                        // max_packet_len bytes
-  uint8_t *tx_buffer;  // Buffer for IN EP ring buffer, with length of at least
+  uint8_t* tx_buffer;  // Buffer for IN EP ring buffer, with length of at least
                        // tx_buffer_len bytes
-  uint8_t *rx_packet;  // Buffer for one packet, with length of at least
+  uint8_t* rx_packet;  // Buffer for one packet, with length of at least
                        // max_packet_len bytes
-  uint8_t *rx_buffer;  // Buffer for OUT EP ring buffer, with length of at least
+  uint8_t* rx_buffer;  // Buffer for OUT EP ring buffer, with length of at least
                        // rx_buffer_len bytes
   size_t tx_buffer_len;      // Length of tx_buffer, needs to be a power of 2
   size_t rx_buffer_len;      // Length of rx_buffer, needs to be a power of 2
@@ -56,4 +56,4 @@ typedef struct {
                              // and rx_packet
 } usb_vcp_info_t;
 
-secbool __wur usb_vcp_add(const usb_vcp_info_t *vcp_info);
+secbool __wur usb_vcp_add(const usb_vcp_info_t* vcp_info);

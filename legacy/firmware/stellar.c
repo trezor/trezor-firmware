@@ -54,7 +54,7 @@ static StellarTransaction stellar_activeTx;
 /*
  * Starts the signing process and parses the transaction header
  */
-bool stellar_signingInit(const StellarSignTx *msg) {
+bool stellar_signingInit(const StellarSignTx* msg) {
   memzero(&stellar_activeTx, sizeof(StellarTransaction));
   stellar_signing = true;
   // Initialize signing context
@@ -63,7 +63,7 @@ bool stellar_signingInit(const StellarSignTx *msg) {
   // Calculate sha256 for network passphrase
   // max length defined in messages.options
   uint8_t network_hash[32] = {0};
-  sha256_Raw((uint8_t *)msg->network_passphrase,
+  sha256_Raw((uint8_t*)msg->network_passphrase,
              strnlen(msg->network_passphrase, 1024), network_hash);
 
   uint8_t tx_type_bytes[4] = {0x00, 0x00, 0x00, 0x02};
@@ -80,7 +80,7 @@ bool stellar_signingInit(const StellarSignTx *msg) {
   stellar_hashupdate_bytes(tx_type_bytes, sizeof(tx_type_bytes));
 
   // Public key comes from deriving the specified account path
-  const HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
+  const HDNode* node = stellar_deriveNode(msg->address_n, msg->address_n_count);
   if (!node) {
     return false;
   }
@@ -124,7 +124,7 @@ bool stellar_signingInit(const StellarSignTx *msg) {
       break;
     // Text: 4 bytes (size) + up to 28 bytes
     case StellarMemoType_TEXT:
-      stellar_hashupdate_string((unsigned char *)&(msg->memo_text),
+      stellar_hashupdate_string((unsigned char*)&(msg->memo_text),
                                 strnlen(msg->memo_text, 28));
       break;
     // ID (8 bytes, uint64)
@@ -166,7 +166,7 @@ void stellar_signingAbort(void) {
   }
 }
 
-static void stellar_signingFail(const char *reason) {
+static void stellar_signingFail(const char* reason) {
   if (!reason) {
     reason = _("Unknown error");
   }
@@ -176,7 +176,7 @@ static void stellar_signingFail(const char *reason) {
 }
 
 bool stellar_confirmSourceAccount(bool has_source_account,
-                                  const char *str_account) {
+                                  const char* str_account) {
   stellar_hashupdate_bool(has_source_account);
   if (!has_source_account) {
     return true;
@@ -188,7 +188,7 @@ bool stellar_confirmSourceAccount(bool has_source_account,
     return false;
   }
 
-  const char **str_addr_rows = stellar_lineBreakAddress(bytes);
+  const char** str_addr_rows = stellar_lineBreakAddress(bytes);
 
   stellar_layoutTransactionDialog(_("Op src account OK?"), NULL,
                                   str_addr_rows[0], str_addr_rows[1],
@@ -204,7 +204,7 @@ bool stellar_confirmSourceAccount(bool has_source_account,
   return true;
 }
 
-bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg) {
+bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -223,7 +223,7 @@ bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg) {
     return false;
   }
 
-  const char **str_addr_rows = stellar_lineBreakAddress(new_account_bytes);
+  const char** str_addr_rows = stellar_lineBreakAddress(new_account_bytes);
 
   // Amount being funded
   char str_amount_line[32] = {0};
@@ -251,7 +251,7 @@ bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg) {
   return true;
 }
 
-bool stellar_confirmPaymentOp(const StellarPaymentOp *msg) {
+bool stellar_confirmPaymentOp(const StellarPaymentOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -271,7 +271,7 @@ bool stellar_confirmPaymentOp(const StellarPaymentOp *msg) {
     return false;
   }
 
-  const char **str_addr_rows =
+  const char** str_addr_rows =
       stellar_lineBreakAddress(destination_account_bytes);
 
   // To: G...
@@ -310,7 +310,7 @@ bool stellar_confirmPaymentOp(const StellarPaymentOp *msg) {
 }
 
 bool stellar_confirmPathPaymentStrictReceiveOp(
-    const StellarPathPaymentStrictReceiveOp *msg) {
+    const StellarPathPaymentStrictReceiveOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -329,7 +329,7 @@ bool stellar_confirmPathPaymentStrictReceiveOp(
     stellar_signingFail(_("Invalid destination account"));
     return false;
   }
-  const char **str_dest_rows =
+  const char** str_dest_rows =
       stellar_lineBreakAddress(destination_account_bytes);
 
   // To: G...
@@ -409,7 +409,7 @@ bool stellar_confirmPathPaymentStrictReceiveOp(
 }
 
 bool stellar_confirmPathPaymentStrictSendOp(
-    const StellarPathPaymentStrictSendOp *msg) {
+    const StellarPathPaymentStrictSendOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -428,7 +428,7 @@ bool stellar_confirmPathPaymentStrictSendOp(
     stellar_signingFail(_("Invalid destination account"));
     return false;
   }
-  const char **str_dest_rows =
+  const char** str_dest_rows =
       stellar_lineBreakAddress(destination_account_bytes);
 
   // To: G...
@@ -506,7 +506,7 @@ bool stellar_confirmPathPaymentStrictSendOp(
   return true;
 }
 
-bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
+bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -593,7 +593,7 @@ bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
   return true;
 }
 
-bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp *msg) {
+bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -680,7 +680,7 @@ bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp *msg) {
 }
 
 bool stellar_confirmCreatePassiveSellOfferOp(
-    const StellarCreatePassiveSellOfferOp *msg) {
+    const StellarCreatePassiveSellOfferOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -755,7 +755,7 @@ bool stellar_confirmCreatePassiveSellOfferOp(
   return true;
 }
 
-bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
+bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -785,7 +785,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
       stellar_signingFail(_("Invalid inflation destination account"));
       return false;
     }
-    const char **str_addr_rows =
+    const char** str_addr_rows =
         stellar_lineBreakAddress(inflation_destination_account_bytes);
 
     stellar_layoutTransactionDialog(str_title, NULL, str_addr_rows[0],
@@ -968,7 +968,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     memzero(rows, sizeof(rows));
     row_idx = 0;
 
-    stellar_hashupdate_string((unsigned char *)&(msg->home_domain),
+    stellar_hashupdate_string((unsigned char*)&(msg->home_domain),
                               strnlen(msg->home_domain, 32));
   }
 
@@ -989,13 +989,13 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     strlcat(str_weight_row, str_weight, sizeof(str_weight_row));
 
     // 0 = account, 1 = pre-auth, 2 = hash(x)
-    char *str_signer_type = NULL;
+    char* str_signer_type = NULL;
     bool needs_hash_confirm = false;
     switch (msg->signer_type) {
       case StellarSignerType_ACCOUNT:
         strlcat(str_title, _("account"), sizeof(str_title));
 
-        const char **str_addr_rows =
+        const char** str_addr_rows =
             stellar_lineBreakAddress(msg->signer_key.bytes);
         stellar_layoutTransactionDialog(str_title, str_weight_row,
                                         str_addr_rows[0], str_addr_rows[1],
@@ -1057,7 +1057,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
   return true;
 }
 
-bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp *msg) {
+bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -1100,7 +1100,7 @@ bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp *msg) {
   }
 
   // Display full issuer address
-  const char **str_addr_rows = stellar_lineBreakAddress(asset_issuer_bytes);
+  const char** str_addr_rows = stellar_lineBreakAddress(asset_issuer_bytes);
 
   stellar_layoutTransactionDialog(str_title, str_amount_row, str_addr_rows[0],
                                   str_addr_rows[1], str_addr_rows[2]);
@@ -1119,7 +1119,7 @@ bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp *msg) {
   return true;
 }
 
-bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg) {
+bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -1150,7 +1150,7 @@ bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg) {
     return false;
   }
 
-  const char **str_trustor_rows =
+  const char** str_trustor_rows =
       stellar_lineBreakAddress(trusted_account_bytes);
 
   // By: G...
@@ -1176,11 +1176,11 @@ bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg) {
       break;
     case StellarAssetType_ALPHANUM4:
       strlcpy(padded_code, msg->asset_code, 4 + 1);
-      stellar_hashupdate_bytes((uint8_t *)padded_code, 4);
+      stellar_hashupdate_bytes((uint8_t*)padded_code, 4);
       break;
     case StellarAssetType_ALPHANUM12:
       strlcpy(padded_code, msg->asset_code, 12 + 1);
-      stellar_hashupdate_bytes((uint8_t *)padded_code, 12);
+      stellar_hashupdate_bytes((uint8_t*)padded_code, 12);
       break;
     default:
       stellar_signingFail(_("Stellar: invalid asset type"));
@@ -1194,7 +1194,7 @@ bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg) {
   return true;
 }
 
-bool stellar_confirmAccountMergeOp(const StellarAccountMergeOp *msg) {
+bool stellar_confirmAccountMergeOp(const StellarAccountMergeOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -1214,7 +1214,7 @@ bool stellar_confirmAccountMergeOp(const StellarAccountMergeOp *msg) {
     return false;
   }
 
-  const char **str_destination_rows =
+  const char** str_destination_rows =
       stellar_lineBreakAddress(destination_account_bytes);
 
   stellar_layoutTransactionDialog(
@@ -1234,7 +1234,7 @@ bool stellar_confirmAccountMergeOp(const StellarAccountMergeOp *msg) {
   return true;
 }
 
-bool stellar_confirmManageDataOp(const StellarManageDataOp *msg) {
+bool stellar_confirmManageDataOp(const StellarManageDataOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -1254,8 +1254,8 @@ bool stellar_confirmManageDataOp(const StellarManageDataOp *msg) {
   }
 
   // Confirm key
-  const char **str_key_lines =
-      split_message((const uint8_t *)(msg->key), strnlen(msg->key, 64), 16);
+  const char** str_key_lines =
+      split_message((const uint8_t*)(msg->key), strnlen(msg->key, 64), 16);
 
   stellar_layoutTransactionDialog(str_title, str_key_lines[0], str_key_lines[1],
                                   str_key_lines[2], str_key_lines[3]);
@@ -1271,8 +1271,8 @@ bool stellar_confirmManageDataOp(const StellarManageDataOp *msg) {
 
     char str_hash_digest[SHA256_DIGEST_STRING_LENGTH] = {0};
     sha256_Data(msg->value.bytes, msg->value.size, str_hash_digest);
-    const char **str_hash_lines = split_message(
-        (const uint8_t *)str_hash_digest, sizeof(str_hash_digest), 16);
+    const char** str_hash_lines = split_message((const uint8_t*)str_hash_digest,
+                                                sizeof(str_hash_digest), 16);
 
     stellar_layoutTransactionDialog(str_title, str_hash_lines[0],
                                     str_hash_lines[1], str_hash_lines[2],
@@ -1284,8 +1284,7 @@ bool stellar_confirmManageDataOp(const StellarManageDataOp *msg) {
   }
 
   // Hash: key
-  stellar_hashupdate_string((unsigned char *)&(msg->key),
-                            strnlen(msg->key, 64));
+  stellar_hashupdate_string((unsigned char*)&(msg->key), strnlen(msg->key, 64));
   // value
   stellar_hashupdate_bool(msg->has_value);
   if (msg->has_value) {
@@ -1297,7 +1296,7 @@ bool stellar_confirmManageDataOp(const StellarManageDataOp *msg) {
   return true;
 }
 
-bool stellar_confirmBumpSequenceOp(const StellarBumpSequenceOp *msg) {
+bool stellar_confirmBumpSequenceOp(const StellarBumpSequenceOp* msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -1330,7 +1329,7 @@ bool stellar_confirmBumpSequenceOp(const StellarBumpSequenceOp *msg) {
 /**
  * Populates the fields of resp with the signature of the active transaction
  */
-void stellar_fillSignedTx(StellarSignedTx *resp) {
+void stellar_fillSignedTx(StellarSignedTx* resp) {
   // Finalize the transaction by hashing 4 null bytes representing a (currently
   // unused) empty union
   stellar_hashupdate_uint32(0);
@@ -1357,8 +1356,8 @@ bool stellar_allOperationsConfirmed(void) {
 /*
  * Calculates and sets the signature for the active transaction
  */
-void stellar_getSignatureForActiveTx(uint8_t *out_signature) {
-  const HDNode *node = stellar_deriveNode(stellar_activeTx.address_n,
+void stellar_getSignatureForActiveTx(uint8_t* out_signature) {
+  const HDNode* node = stellar_deriveNode(stellar_activeTx.address_n,
                                           stellar_activeTx.address_n_count);
   if (!node) {
     // return empty signature when we can't derive node
@@ -1382,7 +1381,7 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature) {
  * For example, if number has value 1000000000 then it will be returned as
  * "100.0"
  */
-void stellar_format_stroops(uint64_t number, char *out, size_t outlen) {
+void stellar_format_stroops(uint64_t number, char* out, size_t outlen) {
   bn_format_amount(number, NULL, NULL, 7, out, outlen);
 }
 
@@ -1398,7 +1397,7 @@ void stellar_format_stroops(uint64_t number, char *out, size_t outlen) {
  * largest possible price is:
  *  4294967296
  */
-void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out,
+void stellar_format_price(uint32_t numerator, uint32_t denominator, char* out,
                           size_t outlen) {
   memzero(out, outlen);
 
@@ -1433,7 +1432,7 @@ void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out,
 /*
  * Returns a uint32 formatted as a string
  */
-void stellar_format_uint32(uint32_t number, char *out, size_t outlen) {
+void stellar_format_uint32(uint32_t number, char* out, size_t outlen) {
   bignum256 bn_number = {0};
   bn_read_uint32(number, &bn_number);
   bn_format(&bn_number, NULL, NULL, 0, 0, false, ',', out, outlen);
@@ -1442,7 +1441,7 @@ void stellar_format_uint32(uint32_t number, char *out, size_t outlen) {
 /*
  * Returns a uint64 formatted as a string
  */
-void stellar_format_uint64(uint64_t number, char *out, size_t outlen) {
+void stellar_format_uint64(uint64_t number, char* out, size_t outlen) {
   bn_format_uint64(number, NULL, NULL, 0, 0, false, ',', out, outlen);
 }
 
@@ -1450,7 +1449,7 @@ void stellar_format_uint64(uint64_t number, char *out, size_t outlen) {
  * Breaks a 56 character address into 3 lines of lengths 16, 20, 20
  * This is to allow a small label to be prepended to the first line
  */
-const char **stellar_lineBreakAddress(const uint8_t *addrbytes) {
+const char** stellar_lineBreakAddress(const uint8_t* addrbytes) {
   char str_fulladdr[56 + 1] = {0};
   static char rows[3][20 + 1];
 
@@ -1464,7 +1463,7 @@ const char **stellar_lineBreakAddress(const uint8_t *addrbytes) {
   strlcpy(rows[1], str_fulladdr + 16, 21);
   strlcpy(rows[2], str_fulladdr + 16 + 20, 21);
 
-  static const char *ret[3] = {rows[0], rows[1], rows[2]};
+  static const char* ret[3] = {rows[0], rows[1], rows[2]};
   return ret;
 }
 
@@ -1476,7 +1475,7 @@ const char **stellar_lineBreakAddress(const uint8_t *addrbytes) {
  *  MOBI (G123456789000)
  *  ALPHA12EXAMP (G0987)
  */
-void stellar_format_asset(const StellarAsset *asset, char *str_formatted,
+void stellar_format_asset(const StellarAsset* asset, char* str_formatted,
                           size_t len) {
   char str_asset_code[12 + 1] = {0};
   // truncated asset issuer, final length depends on length of asset code
@@ -1522,7 +1521,7 @@ void stellar_format_asset(const StellarAsset *asset, char *str_formatted,
   }
 }
 
-size_t stellar_publicAddressAsStr(const uint8_t *bytes, char *out,
+size_t stellar_publicAddressAsStr(const uint8_t* bytes, char* out,
                                   size_t outlen) {
   // version + key bytes + checksum
   uint8_t keylen = 1 + 32 + 2;
@@ -1555,7 +1554,7 @@ size_t stellar_publicAddressAsStr(const uint8_t *bytes, char *out,
  * Note that the stellar "seed" (private key) also uses this format except the
  * version byte is 0xC0 which encodes to "S" in base32
  */
-bool stellar_validateAddress(const char *str_address) {
+bool stellar_validateAddress(const char* str_address) {
   bool valid = false;
   uint8_t decoded[STELLAR_ADDRESS_SIZE_RAW] = {0};
   memzero(decoded, sizeof(decoded));
@@ -1565,7 +1564,7 @@ bool stellar_validateAddress(const char *str_address) {
   }
 
   // Check that it decodes correctly
-  uint8_t *ret = base32_decode(str_address, STELLAR_ADDRESS_SIZE, decoded,
+  uint8_t* ret = base32_decode(str_address, STELLAR_ADDRESS_SIZE, decoded,
                                sizeof(decoded), BASE32_ALPHABET_RFC4648);
   valid = (ret != NULL);
 
@@ -1589,7 +1588,7 @@ bool stellar_validateAddress(const char *str_address) {
 /**
  * Converts a string address (G...) to the 32-byte raw address
  */
-bool stellar_getAddressBytes(const char *str_address, uint8_t *out_bytes) {
+bool stellar_getAddressBytes(const char* str_address, uint8_t* out_bytes) {
   uint8_t decoded[STELLAR_ADDRESS_SIZE_RAW] = {0};
   memzero(decoded, sizeof(decoded));
 
@@ -1612,7 +1611,7 @@ bool stellar_getAddressBytes(const char *str_address, uint8_t *out_bytes) {
  * http://introcs.cs.princeton.edu/java/61data/CRC16CCITT.java.html Initial
  * value changed to 0x0000 to match Stellar
  */
-uint16_t stellar_crc16(uint8_t *bytes, uint32_t length) {
+uint16_t stellar_crc16(uint8_t* bytes, uint32_t length) {
   // Calculate checksum for existing bytes
   uint16_t crc = 0x0000;
   uint16_t polynomial = 0x1021;
@@ -1642,10 +1641,10 @@ uint16_t stellar_crc16(uint8_t *bytes, uint32_t length) {
  *
  * All paths must be hardened
  */
-const HDNode *stellar_deriveNode(const uint32_t *address_n,
+const HDNode* stellar_deriveNode(const uint32_t* address_n,
                                  size_t address_n_count) {
   static CONFIDENTIAL HDNode node;
-  const char *curve = "ed25519";
+  const char* curve = "ed25519";
 
   // Device not initialized, passphrase request cancelled, or unsupported curve
   if (!config_getRootNode(&node, curve)) {
@@ -1707,7 +1706,7 @@ void stellar_hashupdate_bool(bool value) {
   }
 }
 
-void stellar_hashupdate_string(const uint8_t *data, size_t len) {
+void stellar_hashupdate_string(const uint8_t* data, size_t len) {
   // Hash the length of the string
   stellar_hashupdate_uint32((uint32_t)len);
 
@@ -1725,7 +1724,7 @@ void stellar_hashupdate_string(const uint8_t *data, size_t len) {
   }
 }
 
-void stellar_hashupdate_address(const uint8_t *address_bytes) {
+void stellar_hashupdate_address(const uint8_t* address_bytes) {
   // First 4 bytes of an address are the type. There's only one type (0)
   stellar_hashupdate_uint32(0);
 
@@ -1738,7 +1737,7 @@ void stellar_hashupdate_address(const uint8_t *address_bytes) {
  * a typical string, so if "TEST" is the asset code then the hashed value needs
  * to be 4 bytes and not include the null at the end of the string
  */
-void stellar_hashupdate_asset(const StellarAsset *asset) {
+void stellar_hashupdate_asset(const StellarAsset* asset) {
   stellar_hashupdate_uint32(asset->type);
 
   // For non-native assets, validate issuer account and convert to bytes
@@ -1755,7 +1754,7 @@ void stellar_hashupdate_asset(const StellarAsset *asset) {
     memzero(code4, sizeof(code4));
     strlcpy(code4, asset->code, sizeof(code4));
 
-    stellar_hashupdate_bytes((uint8_t *)code4, 4);
+    stellar_hashupdate_bytes((uint8_t*)code4, 4);
     stellar_hashupdate_address(issuer_bytes);
   }
 
@@ -1765,19 +1764,19 @@ void stellar_hashupdate_asset(const StellarAsset *asset) {
     memzero(code12, sizeof(code12));
     strlcpy(code12, asset->code, sizeof(code12));
 
-    stellar_hashupdate_bytes((uint8_t *)code12, 12);
+    stellar_hashupdate_bytes((uint8_t*)code12, 12);
     stellar_hashupdate_address(issuer_bytes);
   }
 }
 
-void stellar_hashupdate_bytes(const uint8_t *data, size_t len) {
+void stellar_hashupdate_bytes(const uint8_t* data, size_t len) {
   sha256_Update(&(stellar_activeTx.sha256_ctx), data, len);
 }
 
 /*
  * Displays a summary of the overall transaction
  */
-void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
+void stellar_layoutTransactionSummary(const StellarSignTx* msg) {
   char str_lines[5][32] = {0};
   memzero(str_lines, sizeof(str_lines));
 
@@ -1806,7 +1805,7 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
   }
 
   // Display full address being used to sign transaction
-  const char **str_addr_rows =
+  const char** str_addr_rows =
       stellar_lineBreakAddress(stellar_activeTx.signing_pubkey);
 
   stellar_layoutTransactionDialog(str_lines[0], _("Signing with:"),
@@ -1830,7 +1829,7 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
   // source account.
   if (memcmp(source_bytes, stellar_activeTx.signing_pubkey, STELLAR_KEY_SIZE) !=
       0) {
-    const char **str_source_rows = stellar_lineBreakAddress(source_bytes);
+    const char** str_source_rows = stellar_lineBreakAddress(source_bytes);
 
     stellar_layoutTransactionDialog(_("Tx source account OK?"), NULL,
                                     str_source_rows[0], str_source_rows[1],
@@ -1856,8 +1855,8 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
 
       // Split 28-character string into two lines of 19 / 9
       // todo: word wrap method?
-      strlcpy(str_lines[1], (const char *)msg->memo_text, 19 + 1);
-      strlcpy(str_lines[2], (const char *)(msg->memo_text + 19), 9 + 1);
+      strlcpy(str_lines[1], (const char*)msg->memo_text, 19 + 1);
+      strlcpy(str_lines[2], (const char*)(msg->memo_text + 19), 9 + 1);
       break;
     case StellarMemoType_ID:
       strlcpy(str_lines[0], _("Memo (ID)"), sizeof(str_lines[0]));
@@ -1896,7 +1895,7 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
   // Timebound: lower
   time_t timebound;
   char str_timebound[32] = {0};
-  const struct tm *tm = NULL;
+  const struct tm* tm = NULL;
 
   timebound = (time_t)msg->timebounds_start;
   strlcpy(str_lines[0], _("Valid from:"), sizeof(str_lines[0]));
@@ -1936,10 +1935,10 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
  *  - Cancel / Next buttons
  *  - Warning message can appear between cancel/next buttons
  */
-void stellar_layoutSigningDialog(const char *line1, const char *line2,
-                                 const char *line3, const char *line4,
-                                 const char *line5, uint32_t *address_n,
-                                 size_t address_n_count, const char *warning,
+void stellar_layoutSigningDialog(const char* line1, const char* line2,
+                                 const char* line3, const char* line4,
+                                 const char* line5, uint32_t* address_n,
+                                 size_t address_n_count, const char* warning,
                                  bool is_final_step) {
   // Start with some initial padding and use these to track position as
   // rendering moves down the screen
@@ -1947,7 +1946,7 @@ void stellar_layoutSigningDialog(const char *line1, const char *line2,
   int offset_y = 1;
   int line_height = 9;
 
-  const HDNode *node = stellar_deriveNode(address_n, address_n_count);
+  const HDNode* node = stellar_deriveNode(address_n, address_n_count);
   if (!node) {
     // abort on error
     return;
@@ -2027,9 +2026,9 @@ void stellar_layoutSigningDialog(const char *line1, const char *line2,
  * Main dialog helper method. Allows displaying 5 lines.
  * A title showing the account being used to sign is always displayed.
  */
-void stellar_layoutTransactionDialog(const char *line1, const char *line2,
-                                     const char *line3, const char *line4,
-                                     const char *line5) {
+void stellar_layoutTransactionDialog(const char* line1, const char* line2,
+                                     const char* line3, const char* line4,
+                                     const char* line5) {
   char str_warning[16] = {0};
   memzero(str_warning, sizeof(str_warning));
 
@@ -2047,7 +2046,7 @@ void stellar_layoutTransactionDialog(const char *line1, const char *line2,
       stellar_activeTx.address_n_count, str_warning, false);
 }
 
-bool stellar_path_check(uint32_t address_n_count, const uint32_t *address_n) {
+bool stellar_path_check(uint32_t address_n_count, const uint32_t* address_n) {
   // SEP-0005 for non-UTXO-based currencies, defined by Stellar:
   // https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
   // m/44'/coin_type'/account'

@@ -30,15 +30,15 @@
 #include "protob.h"
 
 typedef struct {
-  void (*cb)(size_t len, void *ctx);
-  void *ctx;
-  uint8_t *buffer;
+  void (*cb)(size_t len, void* ctx);
+  void* ctx;
+  uint8_t* buffer;
   size_t buffer_size;
 } payload_ctx_t;
 
-static bool read_payload(pb_istream_t *stream, const pb_field_t *field,
-                         void **arg) {
-  payload_ctx_t *payload_ctx = (payload_ctx_t *)*arg;
+static bool read_payload(pb_istream_t* stream, const pb_field_t* field,
+                         void** arg) {
+  payload_ctx_t* payload_ctx = (payload_ctx_t*)*arg;
 
   if (stream->bytes_left > payload_ctx->buffer_size) {
     return false;
@@ -53,7 +53,7 @@ static bool read_payload(pb_istream_t *stream, const pb_field_t *field,
         stream->bytes_left > BUFSIZE ? BUFSIZE : stream->bytes_left;
 
     // read data
-    if (!pb_read(stream, (pb_byte_t *)(payload_ctx->buffer + bytes_written),
+    if (!pb_read(stream, (pb_byte_t*)(payload_ctx->buffer + bytes_written),
                  (received))) {
       return false;
     }
@@ -63,25 +63,25 @@ static bool read_payload(pb_istream_t *stream, const pb_field_t *field,
   return true;
 }
 
-secbool recv_msg_debug_link_get_state(protob_io_t *iface,
-                                      DebugLinkGetState *msg) {
+secbool recv_msg_debug_link_get_state(protob_io_t* iface,
+                                      DebugLinkGetState* msg) {
   MSG_RECV_INIT(DebugLinkGetState);
   secbool result = MSG_RECV(DebugLinkGetState);
   memcpy(msg, &msg_recv, sizeof(DebugLinkGetState));
   return result;
 }
 
-secbool recv_msg_debug_link_decision(protob_io_t *iface,
-                                     DebugLinkDecision *msg) {
+secbool recv_msg_debug_link_decision(protob_io_t* iface,
+                                     DebugLinkDecision* msg) {
   MSG_RECV_INIT(DebugLinkDecision);
   secbool result = MSG_RECV(DebugLinkDecision);
   memcpy(msg, &msg_recv, sizeof(DebugLinkDecision));
   return result;
 }
 
-secbool recv_msg_debug_link_screen_record(protob_io_t *iface,
-                                          DebugLinkRecordScreen *msg,
-                                          uint8_t *buffer, size_t buffer_size) {
+secbool recv_msg_debug_link_screen_record(protob_io_t* iface,
+                                          DebugLinkRecordScreen* msg,
+                                          uint8_t* buffer, size_t buffer_size) {
   payload_ctx_t payload_ctx = {.buffer = buffer, .buffer_size = buffer_size};
 
   MSG_RECV_INIT(DebugLinkRecordScreen);
@@ -91,7 +91,7 @@ secbool recv_msg_debug_link_screen_record(protob_io_t *iface,
   return result;
 }
 
-secbool send_msg_debug_link_state(protob_io_t *iface) {
+secbool send_msg_debug_link_state(protob_io_t* iface) {
   MSG_SEND_INIT(DebugLinkState);
 
   return MSG_SEND(DebugLinkState);

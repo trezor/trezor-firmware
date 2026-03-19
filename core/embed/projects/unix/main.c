@@ -66,7 +66,7 @@ STATIC uint emit_opt = MP_EMIT_OPT_NONE;
 long heap_size = 1024 * 1024 * (sizeof(mp_uint_t) / 4);
 #endif
 
-STATIC void stderr_print_strn(void *env, const char *str, size_t len) {
+STATIC void stderr_print_strn(void* env, const char* str, size_t len) {
   (void)env;
 #ifdef USE_DBG_CONSOLE
   dbg_console_write(str, len);
@@ -80,7 +80,7 @@ const mp_print_t mp_stderr_print = {NULL, stderr_print_strn};
 // If exc is SystemExit, return value where FORCED_EXIT bit set,
 // and lower 8 bits are SystemExit value. For all other exceptions,
 // return 1.
-STATIC int handle_uncaught_exception(mp_obj_base_t *exc) {
+STATIC int handle_uncaught_exception(mp_obj_base_t* exc) {
   // check for SystemExit
   if (mp_obj_is_subclass_fast(MP_OBJ_FROM_PTR(exc->type),
                               MP_OBJ_FROM_PTR(&mp_type_SystemExit))) {
@@ -106,24 +106,24 @@ STATIC int handle_uncaught_exception(mp_obj_base_t *exc) {
 // Returns standard error codes: 0 for success, 1 for all other errors,
 // except if FORCED_EXIT bit is set then script raised SystemExit and the
 // value of the exit is in the lower 8 bits of the return value
-STATIC int execute_from_lexer(int source_kind, const void *source,
+STATIC int execute_from_lexer(int source_kind, const void* source,
                               mp_parse_input_kind_t input_kind, bool is_repl) {
   mp_hal_set_interrupt_char(CHAR_CTRL_C);
 
   nlr_buf_t nlr;
   if (nlr_push(&nlr) == 0) {
     // create lexer based on source kind
-    mp_lexer_t *lex;
+    mp_lexer_t* lex;
     if (source_kind == LEX_SRC_STR) {
-      const char *line = source;
+      const char* line = source;
       lex = mp_lexer_new_from_str_len(MP_QSTR__lt_stdin_gt_, line, strlen(line),
                                       false);
     } else if (source_kind == LEX_SRC_VSTR) {
-      const vstr_t *vstr = source;
+      const vstr_t* vstr = source;
       lex = mp_lexer_new_from_str_len(MP_QSTR__lt_stdin_gt_, vstr->buf,
                                       vstr->len, false);
     } else if (source_kind == LEX_SRC_FILENAME) {
-      lex = mp_lexer_new_from_file((const char *)source);
+      lex = mp_lexer_new_from_file((const char*)source);
     } else {  // LEX_SRC_STDIN
       lex = mp_lexer_new_from_fd(MP_QSTR__lt_stdin_gt_, 0, false);
     }
@@ -165,10 +165,10 @@ STATIC int execute_from_lexer(int source_kind, const void *source,
 #if MICROPY_USE_READLINE == 1
 #include "shared/readline/readline.h"
 #else
-STATIC char *strjoin(const char *s1, int sep_char, const char *s2) {
+STATIC char* strjoin(const char* s1, int sep_char, const char* s2) {
   int l1 = strlen(s1);
   int l2 = strlen(s2);
-  char *s = malloc(l1 + l2 + 2);
+  char* s = malloc(l1 + l2 + 2);
   memcpy(s, s1, l1);
   if (sep_char != 0) {
     s[l1] = sep_char;
@@ -269,17 +269,17 @@ STATIC int do_repl(void) {
   // use simple readline
 
   for (;;) {
-    char *line = prompt(">>> ");
+    char* line = prompt(">>> ");
     if (line == NULL) {
       // EOF
       return 0;
     }
     while (mp_repl_continue_with_input(line)) {
-      char *line2 = prompt("... ");
+      char* line2 = prompt("... ");
       if (line2 == NULL) {
         break;
       }
-      char *line3 = strjoin(line, '\n', line2);
+      char* line3 = strjoin(line, '\n', line2);
       free(line);
       free(line2);
       line = line3;
@@ -296,15 +296,15 @@ STATIC int do_repl(void) {
 #endif
 }
 
-STATIC int do_file(const char *file) {
+STATIC int do_file(const char* file) {
   return execute_from_lexer(LEX_SRC_FILENAME, file, MP_PARSE_FILE_INPUT, false);
 }
 
-STATIC int do_str(const char *str) {
+STATIC int do_str(const char* str) {
   return execute_from_lexer(LEX_SRC_STR, str, MP_PARSE_FILE_INPUT, false);
 }
 
-STATIC int usage(char **argv) {
+STATIC int usage(char** argv) {
   printf(
       "usage: %s [<opts>] [-X <implopt>] [-c <command>] [<filename>]\n"
       "Options:\n"
@@ -338,7 +338,7 @@ STATIC int usage(char **argv) {
 }
 
 // Process options which set interpreter init options
-STATIC void pre_process_options(int argc, char **argv) {
+STATIC void pre_process_options(int argc, char** argv) {
   for (int a = 1; a < argc; a++) {
     if (argv[a][0] == '-') {
       if (strcmp(argv[a], "-X") == 0) {
@@ -359,7 +359,7 @@ STATIC void pre_process_options(int argc, char **argv) {
 #if MICROPY_ENABLE_GC
         } else if (strncmp(argv[a + 1], "heapsize=", sizeof("heapsize=") - 1) ==
                    0) {
-          char *end;
+          char* end;
           heap_size = strtol(argv[a + 1] + sizeof("heapsize=") - 1, &end, 0);
           // Don't bring unneeded libc dependencies like tolower()
           // If there's 'w' immediately after number, adjust it for
@@ -402,7 +402,7 @@ STATIC void pre_process_options(int argc, char **argv) {
   }
 }
 
-STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
+STATIC void set_sys_argv(char* argv[], int argc, int start_arg) {
   for (int i = start_arg; i < argc; i++) {
     mp_obj_list_append(mp_sys_argv, MP_OBJ_NEW_QSTR(qstr_from_str(argv[i])));
   }
@@ -414,7 +414,7 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
 #define PATHLIST_SEP_CHAR ':'
 #endif
 
-static int do_import_module(const char *modname) {
+static int do_import_module(const char* modname) {
   mp_obj_t import_args[4];
   import_args[0] = mp_obj_new_str(modname, strlen(modname));
   import_args[1] = import_args[2] = mp_const_none;
@@ -464,7 +464,7 @@ void __attribute__((noreturn)) coreapp_throw_exit_exception(int code) {
   exit(code);
 }
 
-MP_NOINLINE int main_(int argc, char **argv) {
+MP_NOINLINE int main_(int argc, char** argv) {
 #ifdef SIGPIPE
   // Do not raise SIGPIPE, instead return EPIPE. Otherwise, e.g. writing
   // to peer-closed socket will lead to sudden termination of MicroPython
@@ -479,12 +479,12 @@ MP_NOINLINE int main_(int argc, char **argv) {
   signal(SIGPIPE, SIG_IGN);
 #endif
 
-  mp_stack_set_limit(600000 * (sizeof(void *) / 4));
+  mp_stack_set_limit(600000 * (sizeof(void*) / 4));
 
   pre_process_options(argc, argv);
 
 #if MICROPY_ENABLE_GC
-  char *heap = malloc(heap_size);
+  char* heap = malloc(heap_size);
   gc_init(heap, heap + heap_size);
 #endif
 
@@ -495,8 +495,8 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   mp_init();
 
-  char *home = getenv("HOME");
-  char *path = getenv("MICROPYPATH");
+  char* home = getenv("HOME");
+  char* path = getenv("MICROPYPATH");
   if (path == NULL) {
 #ifdef MICROPY_PY_SYS_PATH_DEFAULT
     path = MICROPY_PY_SYS_PATH_DEFAULT;
@@ -508,20 +508,20 @@ MP_NOINLINE int main_(int argc, char **argv) {
   if (*path == ':') {
     path_num++;
   }
-  for (char *p = path; p != NULL; p = strchr(p, PATHLIST_SEP_CHAR)) {
+  for (char* p = path; p != NULL; p = strchr(p, PATHLIST_SEP_CHAR)) {
     path_num++;
     if (p != NULL) {
       p++;
     }
   }
   mp_obj_list_init(MP_OBJ_TO_PTR(mp_sys_path), path_num);
-  mp_obj_t *path_items;
+  mp_obj_t* path_items;
   mp_obj_list_get(mp_sys_path, &path_num, &path_items);
   path_items[0] = MP_OBJ_NEW_QSTR(MP_QSTR_);
   {
-    char *p = path;
+    char* p = path;
     for (mp_uint_t i = 1; i < path_num; i++) {
-      char *p1 = strchr(p, PATHLIST_SEP_CHAR);
+      char* p1 = strchr(p, PATHLIST_SEP_CHAR);
       if (p1 == NULL) {
         p1 = p + strlen(p);
       }
@@ -601,16 +601,15 @@ MP_NOINLINE int main_(int argc, char **argv) {
           MP_STATE_VM(mp_optimise_value) = argv[a][2] & 0xf;
         } else {
           MP_STATE_VM(mp_optimise_value) = 0;
-          for (char *p = argv[a] + 1; *p && *p == 'O';
-               p++, MP_STATE_VM(mp_optimise_value)++)
-            ;
+          for (char* p = argv[a] + 1; *p && *p == 'O';
+               p++, MP_STATE_VM(mp_optimise_value)++);
         }
       } else {
         return usage(argv);
       }
     } else {
-      char *pathbuf = malloc(PATH_MAX);
-      char *basedir = realpath(argv[a], pathbuf);
+      char* pathbuf = malloc(PATH_MAX);
+      char* basedir = realpath(argv[a], pathbuf);
       if (basedir == NULL) {
         mp_printf(&mp_stderr_print, "%s: can't open file '%s': [Errno %d] %s\n",
                   argv[0], argv[a], errno, strerror(errno));
@@ -621,7 +620,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
       }
 
       // Set base dir of the script as first entry in sys.path
-      char *p = strrchr(basedir, '/');
+      char* p = strrchr(basedir, '/');
       path_items[0] = mp_obj_new_str_via_qstr(basedir, p - basedir);
       free(pathbuf);
 
@@ -658,7 +657,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
 #endif
 
 #if MICROPY_PY_MICROPYTHON_MEM_INFO
-  char *env_str_trezor_log_memory = getenv("TREZOR_LOG_MEMORY");
+  char* env_str_trezor_log_memory = getenv("TREZOR_LOG_MEMORY");
   if (!env_str_trezor_log_memory || atoi(env_str_trezor_log_memory) == 0) {
     env_str_trezor_log_memory = NULL;
   }
@@ -679,7 +678,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
   return ret & 0xff;
 }
 
-int coreapp_emu(int argc, char **argv) {
+int coreapp_emu(int argc, char** argv) {
 #if MICROPY_PY_THREAD
   mp_thread_init();
 #endif
@@ -695,11 +694,11 @@ int coreapp_emu(int argc, char **argv) {
 #if !MICROPY_VFS
 
 #ifdef TREZOR_EMULATOR_FROZEN
-mp_import_stat_t mp_import_stat(const char *path) {
+mp_import_stat_t mp_import_stat(const char* path) {
   return MP_IMPORT_STAT_NO_EXIST;
 }
 #else
-mp_import_stat_t mp_import_stat(const char *path) {
+mp_import_stat_t mp_import_stat(const char* path) {
   struct stat st;
   if (stat(path, &st) == 0) {
     if (S_ISDIR(st.st_mode)) {
@@ -715,8 +714,8 @@ mp_import_stat_t mp_import_stat(const char *path) {
 #if MICROPY_PY_IO
 // Factory function for I/O stream classes, only needed if generic VFS subsystem
 // isn't used. Note: buffering and encoding are currently ignored.
-mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *pos_args,
-                         mp_map_t *kwargs) {
+mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t* pos_args,
+                         mp_map_t* kwargs) {
   enum { ARG_file, ARG_mode };
   STATIC const mp_arg_t allowed_args[] = {
       {MP_QSTR_file, MP_ARG_OBJ | MP_ARG_REQUIRED, {.u_rom_obj = MP_ROM_NONE}},
@@ -735,7 +734,7 @@ MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
 
 #endif
 
-void nlr_jump_fail(void *val) {
+void nlr_jump_fail(void* val) {
   printf("FATAL: uncaught NLR %p\n", val);
   exit(1);
 }

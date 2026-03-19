@@ -30,12 +30,12 @@ clock_t start;
 //             segwit: "3NcXPfbDP4UHSbuHASALJEBtDeAcWYMMcS"
 // passphrase: "testing"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   if (argc != 2 && argc != 3) {
     fprintf(stderr, "Usage: bip39bruteforce address [mnemonic]\n");
     return 1;
   }
-  const char *address = argv[1];
+  const char* address = argv[1];
   const char *mnemonic, *item;
   if (argc == 3) {
     mnemonic = argv[2];

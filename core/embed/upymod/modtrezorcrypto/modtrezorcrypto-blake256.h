@@ -41,11 +41,11 @@ STATIC mp_obj_t mod_trezorcrypto_Blake256_update(mp_obj_t self, mp_obj_t data);
 ///     """
 ///     Creates a hash context object.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Blake256_make_new(const mp_obj_type_t *type,
+STATIC mp_obj_t mod_trezorcrypto_Blake256_make_new(const mp_obj_type_t* type,
                                                    size_t n_args, size_t n_kw,
-                                                   const mp_obj_t *args) {
+                                                   const mp_obj_t* args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_Blake256_t *o = m_new_obj_with_finaliser(mp_obj_Blake256_t);
+  mp_obj_Blake256_t* o = m_new_obj_with_finaliser(mp_obj_Blake256_t);
   o->base.type = type;
   blake256_Init(&(o->ctx));
   // constructor called with bytes/str as first parameter
@@ -60,7 +60,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake256_make_new(const mp_obj_type_t *type,
 ///     Update the hash context with hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake256_update(mp_obj_t self, mp_obj_t data) {
-  mp_obj_Blake256_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Blake256_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
@@ -76,12 +76,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Blake256_update_obj,
 ///     Returns the digest of hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake256_digest(mp_obj_t self) {
-  mp_obj_Blake256_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Blake256_t* o = MP_OBJ_TO_PTR(self);
   vstr_t hash = {0};
   vstr_init_len(&hash, BLAKE256_DIGEST_LENGTH);
   BLAKE256_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(BLAKE256_CTX));
-  blake256_Final(&ctx, (uint8_t *)hash.buf);
+  blake256_Final(&ctx, (uint8_t*)hash.buf);
   memzero(&ctx, sizeof(BLAKE256_CTX));
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
@@ -89,7 +89,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake256_digest_obj,
                                  mod_trezorcrypto_Blake256_digest);
 
 STATIC mp_obj_t mod_trezorcrypto_Blake256___del__(mp_obj_t self) {
-  mp_obj_Blake256_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Blake256_t* o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx), sizeof(BLAKE256_CTX));
   return mp_const_none;
 }
@@ -113,5 +113,5 @@ STATIC const mp_obj_type_t mod_trezorcrypto_Blake256_type = {
     {&mp_type_type},
     .name = MP_QSTR_Blake256,
     .make_new = mod_trezorcrypto_Blake256_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Blake256_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_Blake256_locals_dict,
 };

@@ -32,7 +32,7 @@
 /*
  * Initialize storage
  */
-void norcow_init(uint32_t *norcow_version);
+void norcow_init(uint32_t* norcow_version);
 
 /*
  * Wipe the storage
@@ -42,23 +42,23 @@ void norcow_wipe(void);
 /*
  * Looks for the given key, returns status of the operation
  */
-secbool norcow_get(uint16_t key, const void **val, uint16_t *len);
+secbool norcow_get(uint16_t key, const void** val, uint16_t* len);
 
 /*
  * Reads the next entry in the storage starting at offset. Returns secfalse if
  * there is none.
  */
-secbool norcow_get_next(uint32_t *offset, uint16_t *key, const void **val,
-                        uint16_t *len);
+secbool norcow_get_next(uint32_t* offset, uint16_t* key, const void** val,
+                        uint16_t* len);
 
 /*
  * Sets the given key, returns status of the operation. If NULL is passed
  * as val, then norcow_set allocates a new key of size len. The value should
  * then be written using norcow_update_bytes().
  */
-secbool norcow_set(uint16_t key, const void *val, uint16_t len);
-secbool norcow_set_ex(uint16_t key, const void *val, uint16_t len,
-                      secbool *found);
+secbool norcow_set(uint16_t key, const void* val, uint16_t len);
+secbool norcow_set_ex(uint16_t key, const void* val, uint16_t len,
+                      secbool* found);
 
 /*
  * Deletes the given key, returns status of the operation.
@@ -67,7 +67,7 @@ secbool norcow_delete(uint16_t key);
 
 secbool norcow_set_counter(uint16_t key, uint32_t count);
 
-secbool norcow_next_counter(uint16_t key, uint32_t *count);
+secbool norcow_next_counter(uint16_t key, uint32_t* count);
 
 /*
  * Update the value of the given key, data are written sequentially from start
@@ -76,7 +76,7 @@ secbool norcow_next_counter(uint16_t key, uint32_t *count);
  * It is only allowed to update bytes of pristine items, i.e. items that were
  * not yet set after allocating them with norcow_set(key, NULL, len).
  */
-secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
+secbool norcow_update_bytes(const uint16_t key, const uint8_t* data,
                             const uint16_t len);
 
 /*

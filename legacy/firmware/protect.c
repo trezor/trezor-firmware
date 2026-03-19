@@ -90,7 +90,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
     // check DebugLink
     if (msg_tiny_id == MessageType_MessageType_DebugLinkDecision) {
       msg_tiny_id = 0xFFFF;
-      DebugLinkDecision *dld = (DebugLinkDecision *)msg_tiny;
+      DebugLinkDecision* dld = (DebugLinkDecision*)msg_tiny;
       result = dld->button;
       debug_decided = true;
     }
@@ -101,7 +101,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
 
     if (msg_tiny_id == MessageType_MessageType_DebugLinkGetState) {
       msg_tiny_id = 0xFFFF;
-      fsm_msgDebugLinkGetState((DebugLinkGetState *)msg_tiny);
+      fsm_msgDebugLinkGetState((DebugLinkGetState*)msg_tiny);
     }
 #endif
   }
@@ -111,7 +111,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
   return result;
 }
 
-const char *requestPin(PinMatrixRequestType type, const char *text) {
+const char* requestPin(PinMatrixRequestType type, const char* text) {
   PinMatrixRequest resp = {0};
   memzero(&resp, sizeof(PinMatrixRequest));
   resp.has_type = true;
@@ -123,7 +123,7 @@ const char *requestPin(PinMatrixRequestType type, const char *text) {
     usbPoll();
     if (msg_tiny_id == MessageType_MessageType_PinMatrixAck) {
       msg_tiny_id = 0xFFFF;
-      PinMatrixAck *pma = (PinMatrixAck *)msg_tiny;
+      PinMatrixAck* pma = (PinMatrixAck*)msg_tiny;
       usbTiny(0);
       if (sectrue == pinmatrix_done(pma->pin))  // convert via pinmatrix
         return pma->pin;
@@ -143,7 +143,7 @@ const char *requestPin(PinMatrixRequestType type, const char *text) {
 #if DEBUG_LINK
     if (msg_tiny_id == MessageType_MessageType_DebugLinkGetState) {
       msg_tiny_id = 0xFFFF;
-      fsm_msgDebugLinkGetState((DebugLinkGetState *)msg_tiny);
+      fsm_msgDebugLinkGetState((DebugLinkGetState*)msg_tiny);
     }
 #endif
   }
@@ -153,7 +153,7 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
                              enum storage_ui_message_t message) {
   // Convert wait to secstr string.
   char secstrbuf[] = _("________0 seconds");
-  char *secstr = secstrbuf + 9;
+  char* secstr = secstrbuf + 9;
   uint32_t secs = wait;
   do {
     secstr--;
@@ -166,7 +166,7 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
   }
   oledClear();
 
-  const char *message_str = NULL;
+  const char* message_str = NULL;
   switch (message) {
     case VERIFYING_PIN_MSG:
       message_str = _("Verifying PIN");
@@ -218,7 +218,7 @@ bool protectPin(bool use_cached) {
     return true;
   }
 
-  const char *pin = "";
+  const char* pin = "";
   if (config_hasPin()) {
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
                      _("Please enter current PIN:"));
@@ -237,7 +237,7 @@ bool protectPin(bool use_cached) {
 
 bool protectChangePin(bool removal) {
   static CONFIDENTIAL char new_pin[MAX_PIN_LEN + 1] = "";
-  const char *pin = NULL;
+  const char* pin = NULL;
 
   if (config_hasPin()) {
     pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
@@ -292,7 +292,7 @@ bool protectChangePin(bool removal) {
 bool protectChangeWipeCode(bool removal) {
   static CONFIDENTIAL char pin[MAX_PIN_LEN + 1] = "";
   static CONFIDENTIAL char wipe_code[MAX_PIN_LEN + 1] = "";
-  const char *input = NULL;
+  const char* input = NULL;
 
   if (config_hasPin()) {
     input = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
@@ -358,7 +358,7 @@ bool protectChangeWipeCode(bool removal) {
   return ret;
 }
 
-bool protectPassphrase(char *passphrase) {
+bool protectPassphrase(char* passphrase) {
   memzero(passphrase, MAX_PASSPHRASE_LEN + 1);
   bool passphrase_protection = false;
   config_getPassphraseProtection(&passphrase_protection);
@@ -381,7 +381,7 @@ bool protectPassphrase(char *passphrase) {
     usbPoll();
     if (msg_tiny_id == MessageType_MessageType_PassphraseAck) {
       msg_tiny_id = 0xFFFF;
-      PassphraseAck *ppa = (PassphraseAck *)msg_tiny;
+      PassphraseAck* ppa = (PassphraseAck*)msg_tiny;
       if (ppa->has_on_device && ppa->on_device == true) {
         fsm_sendFailure(
             FailureType_Failure_DataError,
@@ -413,7 +413,7 @@ bool protectPassphrase(char *passphrase) {
 #if DEBUG_LINK
     if (msg_tiny_id == MessageType_MessageType_DebugLinkGetState) {
       msg_tiny_id = 0xFFFF;
-      fsm_msgDebugLinkGetState((DebugLinkGetState *)msg_tiny);
+      fsm_msgDebugLinkGetState((DebugLinkGetState*)msg_tiny);
     }
 #endif
   }

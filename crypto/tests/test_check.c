@@ -110,7 +110,7 @@
 #define DECRED_VERSION_PUBLIC 0x02fda926
 #define DECRED_VERSION_PRIVATE 0x02fda4e8
 
-const uint8_t *fromhex(const char *str) {
+const uint8_t* fromhex(const char* str) {
   static uint8_t buf[FROMHEX_MAXLEN];
   size_t len = strlen(str) / 2;
   if (len > FROMHEX_MAXLEN) len = FROMHEX_MAXLEN;
@@ -128,8 +128,8 @@ const uint8_t *fromhex(const char *str) {
   return buf;
 }
 
-void nem_private_key(const char *reversed_hex, ed25519_secret_key private_key) {
-  const uint8_t *reversed_key = fromhex(reversed_hex);
+void nem_private_key(const char* reversed_hex, ed25519_secret_key private_key) {
+  const uint8_t* reversed_key = fromhex(reversed_hex);
   for (size_t j = 0; j < sizeof(ed25519_secret_key); j++) {
     private_key[j] = reversed_key[sizeof(ed25519_secret_key) - j - 1];
   }
@@ -1037,9 +1037,9 @@ END_TEST
 // https://tools.ietf.org/html/rfc4648#section-10
 START_TEST(test_base32_rfc4648) {
   static const struct {
-    const char *decoded;
-    const char *encoded;
-    const char *encoded_lowercase;
+    const char* decoded;
+    const char* encoded;
+    const char* encoded_lowercase;
   } tests[] = {
       {"", "", ""},
       {"f", "MY", "my"},
@@ -1053,9 +1053,9 @@ START_TEST(test_base32_rfc4648) {
   char buffer[64];
 
   for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
-    const char *in = tests[i].decoded;
-    const char *out = tests[i].encoded;
-    const char *out_lowercase = tests[i].encoded_lowercase;
+    const char* in = tests[i].decoded;
+    const char* out = tests[i].encoded;
+    const char* out_lowercase = tests[i].encoded_lowercase;
 
     size_t inlen = strlen(in);
     size_t outlen = strlen(out);
@@ -1063,18 +1063,18 @@ START_TEST(test_base32_rfc4648) {
     ck_assert_uint_eq(outlen, base32_encoded_length(inlen));
     ck_assert_uint_eq(inlen, base32_decoded_length(outlen));
 
-    ck_assert(base32_encode((uint8_t *)in, inlen, buffer, sizeof(buffer),
+    ck_assert(base32_encode((uint8_t*)in, inlen, buffer, sizeof(buffer),
                             BASE32_ALPHABET_RFC4648) != NULL);
     ck_assert_str_eq(buffer, out);
 
-    char *ret = (char *)base32_decode(out, outlen, (uint8_t *)buffer,
-                                      sizeof(buffer), BASE32_ALPHABET_RFC4648);
+    char* ret = (char*)base32_decode(out, outlen, (uint8_t*)buffer,
+                                     sizeof(buffer), BASE32_ALPHABET_RFC4648);
     ck_assert(ret != NULL);
     *ret = '\0';
     ck_assert_str_eq(buffer, in);
 
-    ret = (char *)base32_decode(out_lowercase, outlen, (uint8_t *)buffer,
-                                sizeof(buffer), BASE32_ALPHABET_RFC4648);
+    ret = (char*)base32_decode(out_lowercase, outlen, (uint8_t*)buffer,
+                               sizeof(buffer), BASE32_ALPHABET_RFC4648);
     ck_assert(ret != NULL);
     *ret = '\0';
     ck_assert_str_eq(buffer, in);
@@ -1085,7 +1085,7 @@ END_TEST
 // from
 // https://github.com/bitcoin/bitcoin/blob/master/src/test/data/base58_keys_valid.json
 START_TEST(test_base58) {
-  static const char *base58_vector[] = {
+  static const char* base58_vector[] = {
       "0065a16059864a2fdbc7c99a4723a8395bc6f188eb",
       "1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i",
       "0574f209f6ea907e2ea48f74fae05782ae8a665257",
@@ -1189,8 +1189,8 @@ START_TEST(test_base58) {
       0,
       0,
   };
-  const char **raw = base58_vector;
-  const char **str = base58_vector + 1;
+  const char** raw = base58_vector;
+  const char** str = base58_vector + 1;
   uint8_t rawn[34];
   char strn[53];
   int r;
@@ -2133,7 +2133,7 @@ START_TEST(test_bip32_cache_3) {
   HDNode node1 = {0};
   HDNode node2 = {0};
 
-  const uint8_t *seed = fromhex(
+  const uint8_t* seed = fromhex(
       "301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788f9f1"
       "74429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19");
   hdnode_from_seed(seed, 64, SECP256K1_NAME, &node1);
@@ -3779,10 +3779,10 @@ START_TEST(test_bip32_decred_vector_2) {
 END_TEST
 
 static void test_ecdsa_get_public_key33_helper(int (*ecdsa_get_public_key33_fn)(
-    const ecdsa_curve *, const uint8_t *, uint8_t *)) {
+    const ecdsa_curve*, const uint8_t*, uint8_t*)) {
   uint8_t privkey[32] = {0};
   uint8_t pubkey[65] = {0};
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
   int res = 0;
 
   memcpy(
@@ -3823,10 +3823,10 @@ START_TEST(test_zkp_ecdsa_get_public_key33) {
 END_TEST
 
 static void test_ecdsa_get_public_key65_helper(int (*ecdsa_get_public_key65_fn)(
-    const ecdsa_curve *, const uint8_t *, uint8_t *)) {
+    const ecdsa_curve*, const uint8_t*, uint8_t*)) {
   uint8_t privkey[32] = {0};
   uint8_t pubkey[65] = {0};
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
   int res = 0;
 
   memcpy(
@@ -3854,13 +3854,13 @@ START_TEST(test_zkp_ecdsa_get_public_key65) {
 }
 END_TEST
 
-static void test_ecdsa_recover_pub_from_sig_helper(int (
-    *ecdsa_recover_pub_from_sig_fn)(const ecdsa_curve *, uint8_t *,
-                                    const uint8_t *, const uint8_t *, int)) {
+static void test_ecdsa_recover_pub_from_sig_helper(
+    int (*ecdsa_recover_pub_from_sig_fn)(const ecdsa_curve*, uint8_t*,
+                                         const uint8_t*, const uint8_t*, int)) {
   int res;
   uint8_t digest[32];
   uint8_t pubkey[65];
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
 
   // sha2(sha2("\x18Bitcoin Signed Message:\n\x0cHello World!"))
   memcpy(
@@ -4063,12 +4063,12 @@ START_TEST(test_zkp_ecdsa_recover_pub_from_sig) {
 END_TEST
 
 static void test_ecdsa_verify_digest_helper(int (*ecdsa_verify_digest_fn)(
-    const ecdsa_curve *, const uint8_t *, const uint8_t *, const uint8_t *)) {
+    const ecdsa_curve*, const uint8_t*, const uint8_t*, const uint8_t*)) {
   int res;
   uint8_t digest[32];
   uint8_t pubkey[65];
   uint8_t sig[64];
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
 
   // Signature verification for a digest which is equal to the group order.
   // https://github.com/trezor/trezor-firmware/pull/1374
@@ -4102,13 +4102,13 @@ START_TEST(test_zkp_ecdsa_verify_digest) {
 }
 END_TEST
 
-#define test_deterministic(KEY, MSG, K)           \
-  do {                                            \
-    sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
-    init_rfc6979(fromhex(KEY), buf, NULL, &rng);  \
-    generate_k_rfc6979(&k, &rng);                 \
-    bn_write_be(&k, buf);                         \
-    ck_assert_mem_eq(buf, fromhex(K), 32);        \
+#define test_deterministic(KEY, MSG, K)          \
+  do {                                           \
+    sha256_Raw((uint8_t*)MSG, strlen(MSG), buf); \
+    init_rfc6979(fromhex(KEY), buf, NULL, &rng); \
+    generate_k_rfc6979(&k, &rng);                \
+    bn_write_be(&k, buf);                        \
+    ck_assert_mem_eq(buf, fromhex(K), 32);       \
   } while (0)
 
 START_TEST(test_rfc6979) {
@@ -4151,13 +4151,13 @@ START_TEST(test_rfc6979) {
 END_TEST
 
 static void test_ecdsa_sign_digest_deterministic_helper(
-    int (*ecdsa_sign_digest_fn)(const ecdsa_curve *, const uint8_t *,
-                                const uint8_t *, uint8_t *, uint8_t *,
+    int (*ecdsa_sign_digest_fn)(const ecdsa_curve*, const uint8_t*,
+                                const uint8_t*, uint8_t*, uint8_t*,
                                 int (*)(uint8_t by, uint8_t sig[64]))) {
   static struct {
-    const char *priv_key;
-    const char *digest;
-    const char *sig;
+    const char* priv_key;
+    const char* digest;
+    const char* sig;
   } tests[] = {
       {"312155017c70a204106e034520e0cdf17b3e54516e2ece38e38e38e38e38e38e",
        "ffffffffffffffffffffffffffffffff20202020202020202020202020202020",
@@ -4169,7 +4169,7 @@ static void test_ecdsa_sign_digest_deterministic_helper(
        "75aa2ac9fd7e5a19402973e60e64382cdc29a09ebf6cb37e92f23be5b9251aee"},
   };
 
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
   uint8_t priv_key[32] = {0};
   uint8_t digest[32] = {0};
   uint8_t expected_sig[64] = {0};
@@ -4200,9 +4200,9 @@ END_TEST
 
 START_TEST(test_ecdsa_masking) {
   static struct {
-    const char *priv_key;
-    const char *masking_key;
-    const char *digest;
+    const char* priv_key;
+    const char* masking_key;
+    const char* digest;
   } tests[] = {
       {"e3d70248ea2fc771fc8d5e62d76b9cfd5402c96990333549eaadce1ae9f737eb",
        "5cfbdc7d1e0ec18cc9b57bbb18f0a57dc929ec3c4dfac9073c581705015f6a8a",
@@ -4212,7 +4212,7 @@ START_TEST(test_ecdsa_masking) {
        "1edc8d307254296264aebfc3dc76cd8b668373a072fd64665b50000e9fcce522"},
   };
 
-  const ecdsa_curve *curve = &nist256p1;
+  const ecdsa_curve* curve = &nist256p1;
   int res = 0;
   uint8_t priv_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
   uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
@@ -4270,7 +4270,7 @@ START_TEST(test_aes) {
   const char **ivp, **plainp, **cipherp;
 
   // ECB
-  static const char *ecb_vector[] = {
+  static const char* ecb_vector[] = {
       // plain                            cipher
       "6bc1bee22e409f96e93d7e117393172a",
       "f3eed1bdb5d2a03c064b5a7e3db181f8",
@@ -4307,7 +4307,7 @@ START_TEST(test_aes) {
   }
 
   // CBC
-  static const char *cbc_vector[] = {
+  static const char* cbc_vector[] = {
       // iv                               plain cipher
       "000102030405060708090A0B0C0D0E0F",
       "6bc1bee22e409f96e93d7e117393172a",
@@ -4353,7 +4353,7 @@ START_TEST(test_aes) {
   }
 
   // CFB
-  static const char *cfb_vector[] = {
+  static const char* cfb_vector[] = {
       "000102030405060708090A0B0C0D0E0F",
       "6bc1bee22e409f96e93d7e117393172a",
       "DC7E84BFDA79164B7ECD8486985D3860",
@@ -4398,7 +4398,7 @@ START_TEST(test_aes) {
   }
 
   // OFB
-  static const char *ofb_vector[] = {
+  static const char* ofb_vector[] = {
       "000102030405060708090A0B0C0D0E0F",
       "6bc1bee22e409f96e93d7e117393172a",
       "dc7e84bfda79164b7ecd8486985d3860",
@@ -4443,7 +4443,7 @@ START_TEST(test_aes) {
   }
 
   // CTR
-  static const char *ctr_vector[] = {
+  static const char* ctr_vector[] = {
       // plain                            cipher
       "6bc1bee22e409f96e93d7e117393172a",
       "601ec313775789a5b7a7f504bbf3d228",
@@ -4490,13 +4490,13 @@ START_TEST(test_aes) {
 END_TEST
 
 static void test_ecdh_multiply_helper(
-    int (*ecdh_multiply_fn)(const ecdsa_curve *curve, const uint8_t *priv_key,
-                            const uint8_t *pub_key, uint8_t *session_key)) {
+    int (*ecdh_multiply_fn)(const ecdsa_curve* curve, const uint8_t* priv_key,
+                            const uint8_t* pub_key, uint8_t* session_key)) {
   static struct {
-    const char *priv_key;
-    const char *pub_key;
+    const char* priv_key;
+    const char* pub_key;
     int res;
-    const char *session_key;
+    const char* session_key;
   } tests[] = {
       // Compressed public key
       {"1618cc490a4a5b38d9f877759a2c312026fe9f459edb9ba49e91b6de4a237cad",
@@ -4539,7 +4539,7 @@ static void test_ecdh_multiply_helper(
        ""},
   };
 
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
   uint8_t priv_key[32] = {0};
   uint8_t pub_key[65] = {0};
   uint8_t session_key[65] = {0};
@@ -4574,14 +4574,14 @@ START_TEST(test_zkp_ecdh_multiply) {
 END_TEST
 
 static void test_ecdsa_tweak_pubkey_helper(ecdsa_tweak_pubkey_result (
-    *ecdsa_tweak_pubkey_fn)(const ecdsa_curve *curve, const uint8_t *pub_key,
-                            const uint8_t *priv_tweak,
-                            uint8_t *tweaked_pub_key)) {
+    *ecdsa_tweak_pubkey_fn)(const ecdsa_curve* curve, const uint8_t* pub_key,
+                            const uint8_t* priv_tweak,
+                            uint8_t* tweaked_pub_key)) {
   static struct {
-    const char *pub_key;
-    const char *tweak;
+    const char* pub_key;
+    const char* tweak;
     ecdsa_tweak_pubkey_result res;
-    const char *tweaked_pub_key;
+    const char* tweaked_pub_key;
   } tests[] = {
       {"03062c585e0bf279a06f1741a481e1fc5d6f85fe98c66ba4535b80e72b8cff459e",
        "ca3f9fcb28ca7a6819ad4d233a26b2d4cda78dea15278b162428bbb88c36b7f9",
@@ -4614,7 +4614,7 @@ static void test_ecdsa_tweak_pubkey_helper(ecdsa_tweak_pubkey_result (
        "7b30f9ed2f8ec13ecbd77788815c53773ace8b2f6900f2b386c96e2c440bce02",
        ECDSA_TWEAK_PUBKEY_INVALID_TWEAK_OR_RESULT_ERR, ""}};
 
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
   uint8_t pub_key[33] = {0};
   uint8_t tweak[32] = {0};
   uint8_t tweaked_pub_key[33] = {0};
@@ -4653,12 +4653,12 @@ END_TEST
 // https://doi.org/10.6028/NIST.SP.800-38C
 START_TEST(test_aesccm) {
   struct {
-    char *key;
-    char *nonce;
-    char *aad;
-    char *plaintext;
+    char* key;
+    char* nonce;
+    char* aad;
+    char* plaintext;
     int mac_len;
-    char *ciphertext;
+    char* ciphertext;
   } vectors[] = {
       {
           // RFC 3610 Packet Vector #1
@@ -4945,12 +4945,12 @@ END_TEST
 // https://csrc.nist.rip/groups/ST/toolkit/BCM/documents/proposedmodes/gcm/gcm-spec.pdf
 START_TEST(test_aesgcm) {
   struct {
-    char *key;
-    char *iv;
-    char *aad;
-    char *plaintext;
-    char *ciphertext;
-    char *tag;
+    char* key;
+    char* iv;
+    char* aad;
+    char* plaintext;
+    char* ciphertext;
+    char* tag;
   } vectors[] = {
       // Test case 1
       {
@@ -5245,12 +5245,12 @@ END_TEST
 // test vectors from rfc-4634
 START_TEST(test_sha1) {
   struct {
-    const char *test;
+    const char* test;
     int length;
     int repeatcount;
     int extrabits;
     int numberExtrabits;
-    const char *result;
+    const char* result;
   } tests[] = {
       /* 1 */ {TEST1, length(TEST1), 1, 0, 0,
                "A9993E364706816ABA3E25717850C26C9CD0D89D"},
@@ -5285,7 +5285,7 @@ START_TEST(test_sha1) {
     /* extra bits are not supported */
     if (tests[i].numberExtrabits) continue;
     for (int j = 0; j < tests[i].repeatcount; j++) {
-      sha1_Update(&ctx, (const uint8_t *)tests[i].test, tests[i].length);
+      sha1_Update(&ctx, (const uint8_t*)tests[i].test, tests[i].length);
     }
     sha1_Final(&ctx, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].result), SHA1_DIGEST_LENGTH);
@@ -5318,12 +5318,12 @@ END_TEST
 // test vectors from rfc-4634
 START_TEST(test_sha256) {
   struct {
-    const char *test;
+    const char* test;
     int length;
     int repeatcount;
     int extrabits;
     int numberExtrabits;
-    const char *result;
+    const char* result;
   } tests[] = {
       /* 1 */ {TEST1, length(TEST1), 1, 0, 0,
                "BA7816BF8F01CFEA4141"
@@ -5373,7 +5373,7 @@ START_TEST(test_sha256) {
     /* extra bits are not supported */
     if (tests[i].numberExtrabits) continue;
     for (int j = 0; j < tests[i].repeatcount; j++) {
-      sha256_Update(&ctx, (const uint8_t *)tests[i].test, tests[i].length);
+      sha256_Update(&ctx, (const uint8_t*)tests[i].test, tests[i].length);
     }
     sha256_Final(&ctx, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].result), SHA256_DIGEST_LENGTH);
@@ -5414,12 +5414,12 @@ END_TEST
 // test vectors from rfc-4634
 START_TEST(test_sha384) {
   struct {
-    const char *test;
+    const char* test;
     int length;
     int repeatcount;
     int extrabits;
     int numberExtrabits;
-    const char *result;
+    const char* result;
   } tests[] = {/* 1 */ {TEST1, length(TEST1), 1, 0, 0,
                         "CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED163"
                         "1A8B605A43FF5BED8086072BA1E7CC2358BAECA134C825A7"},
@@ -5466,7 +5466,7 @@ START_TEST(test_sha384) {
     if (tests[i].numberExtrabits) continue;
     /* repeat count not supported */
     if (tests[i].repeatcount != 1) continue;
-    sha384_Raw((const uint8_t *)tests[i].test, tests[i].length, digest);
+    sha384_Raw((const uint8_t*)tests[i].test, tests[i].length, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].result), sizeof(digest));
   }
 }
@@ -5505,12 +5505,12 @@ END_TEST
 // test vectors from rfc-4634
 START_TEST(test_sha512) {
   struct {
-    const char *test;
+    const char* test;
     int length;
     int repeatcount;
     int extrabits;
     int numberExtrabits;
-    const char *result;
+    const char* result;
   } tests[] = {/* 1 */ {TEST1, length(TEST1), 1, 0, 0,
                         "DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA2"
                         "0A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD"
@@ -5568,7 +5568,7 @@ START_TEST(test_sha512) {
     /* extra bits are not supported */
     if (tests[i].numberExtrabits) continue;
     for (int j = 0; j < tests[i].repeatcount; j++) {
-      sha512_Update(&ctx, (const uint8_t *)tests[i].test, tests[i].length);
+      sha512_Update(&ctx, (const uint8_t*)tests[i].test, tests[i].length);
     }
     sha512_Final(&ctx, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].result), SHA512_DIGEST_LENGTH);
@@ -5579,8 +5579,8 @@ END_TEST
 // test vectors from http://www.di-mgt.com.au/sha_testvectors.html
 START_TEST(test_sha3_256) {
   static const struct {
-    const char *data;
-    const char *hash;
+    const char* data;
+    const char* hash;
   } tests[] = {
       {
           "",
@@ -5604,16 +5604,16 @@ START_TEST(test_sha3_256) {
   uint8_t digest[SHA3_256_DIGEST_LENGTH];
   for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
     size_t len = strlen(tests[i].data);
-    sha3_256((uint8_t *)tests[i].data, len, digest);
+    sha3_256((uint8_t*)tests[i].data, len, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].hash), SHA3_256_DIGEST_LENGTH);
 
     // Test progressive hashing.
     size_t part_len = len;
     SHA3_CTX ctx;
     sha3_256_Init(&ctx);
-    sha3_Update(&ctx, (uint8_t *)tests[i].data, part_len);
+    sha3_Update(&ctx, (uint8_t*)tests[i].data, part_len);
     sha3_Update(&ctx, NULL, 0);
-    sha3_Update(&ctx, (uint8_t *)tests[i].data + part_len, len - part_len);
+    sha3_Update(&ctx, (uint8_t*)tests[i].data + part_len, len - part_len);
     sha3_Final(&ctx, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].hash), SHA3_256_DIGEST_LENGTH);
   }
@@ -5623,8 +5623,8 @@ END_TEST
 // test vectors from http://www.di-mgt.com.au/sha_testvectors.html
 START_TEST(test_sha3_512) {
   static const struct {
-    const char *data;
-    const char *hash;
+    const char* data;
+    const char* hash;
   } tests[] = {
       {
           "",
@@ -5652,17 +5652,16 @@ START_TEST(test_sha3_512) {
   uint8_t digest[SHA3_512_DIGEST_LENGTH];
   for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
     size_t len = strlen(tests[i].data);
-    sha3_512((uint8_t *)tests[i].data, len, digest);
+    sha3_512((uint8_t*)tests[i].data, len, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].hash), SHA3_512_DIGEST_LENGTH);
 
     // Test progressive hashing.
     size_t part_len = len;
     SHA3_CTX ctx;
     sha3_512_Init(&ctx);
-    sha3_Update(&ctx, (const uint8_t *)tests[i].data, part_len);
+    sha3_Update(&ctx, (const uint8_t*)tests[i].data, part_len);
     sha3_Update(&ctx, NULL, 0);
-    sha3_Update(&ctx, (const uint8_t *)tests[i].data + part_len,
-                len - part_len);
+    sha3_Update(&ctx, (const uint8_t*)tests[i].data + part_len, len - part_len);
     sha3_Final(&ctx, digest);
     ck_assert_mem_eq(digest, fromhex(tests[i].hash), SHA3_512_DIGEST_LENGTH);
   }
@@ -5673,9 +5672,9 @@ END_TEST
 // https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/0.test-sha3-256.dat
 START_TEST(test_keccak_256) {
   static const struct {
-    const char *hash;
+    const char* hash;
     size_t length;
-    const char *data;
+    const char* data;
   } tests[] = {
       {
           "4e9e79ab7434f6c7401fb3305d55052ee829b9e46d5d05d43b59fefb32e9a619",
@@ -5933,8 +5932,8 @@ END_TEST
 // https://raw.githubusercontent.com/monero-project/monero/master/tests/hash/tests-extra-blake.txt
 START_TEST(test_blake256) {
   static const struct {
-    const char *hash;
-    const char *data;
+    const char* hash;
+    const char* data;
   } tests[] = {
       {
           "716f6e863f744b9ac22c97ec7b76ea5f5908bc5b2f67c61510bfc4751384ea7a",
@@ -6042,8 +6041,8 @@ END_TEST
 // https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2b-kat.txt
 START_TEST(test_blake2b) {
   static const struct {
-    const char *msg;
-    const char *hash;
+    const char* msg;
+    const char* hash;
   } tests[] = {
       {
           "",
@@ -6105,9 +6104,9 @@ END_TEST
 // Test vectors from https://zips.z.cash/zip-0243
 START_TEST(test_blake2bp) {
   static const struct {
-    const char *msg;
-    const char *personal;
-    const char *hash;
+    const char* msg;
+    const char* personal;
+    const char* hash;
   } tests[] = {
       {
           "",
@@ -6159,8 +6158,8 @@ END_TEST
 // https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2s-kat.txt
 START_TEST(test_blake2s) {
   static const struct {
-    const char *msg;
-    const char *hash;
+    const char* msg;
+    const char* hash;
   } tests[] = {
       {
           "",
@@ -6256,7 +6255,7 @@ START_TEST(test_pbkdf2_hmac_sha256) {
 
   // test vectors from
   // https://stackoverflow.com/questions/5130513/pbkdf2-hmac-sha2-test-vectors
-  pbkdf2_hmac_sha256((const uint8_t *)"password", 8, (const uint8_t *)"salt", 4,
+  pbkdf2_hmac_sha256((const uint8_t*)"password", 8, (const uint8_t*)"salt", 4,
                      1, k, 32);
   ck_assert_mem_eq(
       k,
@@ -6264,7 +6263,7 @@ START_TEST(test_pbkdf2_hmac_sha256) {
           "120fb6cffcf8b32c43e7225256c4f837a86548c92ccc35480805987cb70be17b"),
       32);
 
-  pbkdf2_hmac_sha256((const uint8_t *)"password", 8, (const uint8_t *)"salt", 4,
+  pbkdf2_hmac_sha256((const uint8_t*)"password", 8, (const uint8_t*)"salt", 4,
                      2, k, 32);
   ck_assert_mem_eq(
       k,
@@ -6272,7 +6271,7 @@ START_TEST(test_pbkdf2_hmac_sha256) {
           "ae4d0c95af6b46d32d0adff928f06dd02a303f8ef3c251dfd6e2d85a95474c43"),
       32);
 
-  pbkdf2_hmac_sha256((const uint8_t *)"password", 8, (const uint8_t *)"salt", 4,
+  pbkdf2_hmac_sha256((const uint8_t*)"password", 8, (const uint8_t*)"salt", 4,
                      4096, k, 32);
   ck_assert_mem_eq(
       k,
@@ -6280,21 +6279,21 @@ START_TEST(test_pbkdf2_hmac_sha256) {
           "c5e478d59288c841aa530db6845c4c8d962893a001ce4e11a4963873aa98134a"),
       32);
 
-  pbkdf2_hmac_sha256((const uint8_t *)"passwordPASSWORDpassword", 3 * 8,
-                     (const uint8_t *)"saltSALTsaltSALTsaltSALTsaltSALTsalt",
+  pbkdf2_hmac_sha256((const uint8_t*)"passwordPASSWORDpassword", 3 * 8,
+                     (const uint8_t*)"saltSALTsaltSALTsaltSALTsaltSALTsalt",
                      9 * 4, 4096, k, 40);
   ck_assert_mem_eq(k,
                    fromhex("348c89dbcbd32b2f32d814b8116e84cf2b17347ebc1800181c4"
                            "e2a1fb8dd53e1c635518c7dac47e9"),
                    40);
 
-  pbkdf2_hmac_sha256((const uint8_t *)"pass\x00word", 9,
-                     (const uint8_t *)"sa\x00lt", 5, 4096, k, 16);
+  pbkdf2_hmac_sha256((const uint8_t*)"pass\x00word", 9,
+                     (const uint8_t*)"sa\x00lt", 5, 4096, k, 16);
   ck_assert_mem_eq(k, fromhex("89b69d0516f829893c696226650a8687"), 16);
 
   // test vector from https://tools.ietf.org/html/rfc7914.html#section-11
-  pbkdf2_hmac_sha256((const uint8_t *)"passwd", 6, (const uint8_t *)"salt", 4,
-                     1, k, 64);
+  pbkdf2_hmac_sha256((const uint8_t*)"passwd", 6, (const uint8_t*)"salt", 4, 1,
+                     k, 64);
   ck_assert_mem_eq(
       k,
       fromhex(
@@ -6309,7 +6308,7 @@ END_TEST
 START_TEST(test_pbkdf2_hmac_sha512) {
   uint8_t k[64];
 
-  pbkdf2_hmac_sha512((uint8_t *)"password", 8, (const uint8_t *)"salt", 4, 1, k,
+  pbkdf2_hmac_sha512((uint8_t*)"password", 8, (const uint8_t*)"salt", 4, 1, k,
                      64);
   ck_assert_mem_eq(
       k,
@@ -6318,7 +6317,7 @@ START_TEST(test_pbkdf2_hmac_sha512) {
           "470a285a0501bad999bfe943c08f050235d7d68b1da55e63f73b60a57fce"),
       64);
 
-  pbkdf2_hmac_sha512((uint8_t *)"password", 8, (const uint8_t *)"salt", 4, 2, k,
+  pbkdf2_hmac_sha512((uint8_t*)"password", 8, (const uint8_t*)"salt", 4, 2, k,
                      64);
   ck_assert_mem_eq(
       k,
@@ -6327,7 +6326,7 @@ START_TEST(test_pbkdf2_hmac_sha512) {
           "ab2868a39b9f7840edce4fef5a82be67335c77a6068e04112754f27ccf4e"),
       64);
 
-  pbkdf2_hmac_sha512((uint8_t *)"password", 8, (const uint8_t *)"salt", 4, 4096,
+  pbkdf2_hmac_sha512((uint8_t*)"password", 8, (const uint8_t*)"salt", 4, 4096,
                      k, 64);
   ck_assert_mem_eq(
       k,
@@ -6336,8 +6335,8 @@ START_TEST(test_pbkdf2_hmac_sha512) {
           "30602641b3d55cd335988cb36b84376060ecd532e039b742a239434af2d5"),
       64);
 
-  pbkdf2_hmac_sha512((uint8_t *)"passwordPASSWORDpassword", 3 * 8,
-                     (const uint8_t *)"saltSALTsaltSALTsaltSALTsaltSALTsalt",
+  pbkdf2_hmac_sha512((uint8_t*)"passwordPASSWORDpassword", 3 * 8,
+                     (const uint8_t*)"saltSALTsaltSALTsaltSALTsaltSALTsalt",
                      9 * 4, 4096, k, 64);
   ck_assert_mem_eq(
       k,
@@ -6350,10 +6349,10 @@ END_TEST
 
 START_TEST(test_tls_prf_sha256) {
   static const struct {
-    const char *secret;
-    const char *label;
-    const char *seed;
-    const char *result;
+    const char* secret;
+    const char* label;
+    const char* seed;
+    const char* result;
   } tests[] = {
       {
           // Test vector from
@@ -6436,7 +6435,7 @@ START_TEST(test_hmac_drbg) {
 END_TEST
 
 START_TEST(test_mnemonic) {
-  static const char *vectors[] = {
+  static const char* vectors[] = {
       "00000000000000000000000000000000",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon about",
@@ -6592,8 +6591,8 @@ END_TEST
 
 START_TEST(test_groestl512) {
   static struct {
-    const char *msg;
-    const char *hash;
+    const char* msg;
+    const char* hash;
   } tests[] = {
       {"",
        "6d3ad29d279110eef3adbd66de2a0345a77baede1557f5d099fce0c03d6dc2ba8e6d4a6"
@@ -6622,7 +6621,7 @@ START_TEST(test_groestl512) {
 END_TEST
 
 START_TEST(test_mnemonic_check) {
-  static const char *vectors_ok[] = {
+  static const char* vectors_ok[] = {
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon about",
       "legal winner thank year wave sausage worth useful legal winner thank "
@@ -6678,7 +6677,7 @@ START_TEST(test_mnemonic_check) {
       "away coconut",
       0,
   };
-  static const char *vectors_fail[] = {
+  static const char* vectors_fail[] = {
       "above abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon about",
       "above winner thank year wave sausage worth useful legal winner thank "
@@ -6783,7 +6782,7 @@ START_TEST(test_mnemonic_check) {
       0,
   };
 
-  const char **m;
+  const char** m;
   int r;
   m = vectors_ok;
   while (*m) {
@@ -6801,7 +6800,7 @@ START_TEST(test_mnemonic_check) {
 END_TEST
 
 START_TEST(test_mnemonic_to_bits) {
-  static const char *vectors[] = {
+  static const char* vectors[] = {
       "00000000000000000000000000000000",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon about",
@@ -6913,7 +6912,7 @@ START_TEST(test_mnemonic_find_word) {
 
   char word_buf[BIP39_MAX_WORD_LEN + 1] = {0};
   for (int i = 0; i < BIP39_WORD_COUNT; i++) {
-    const char *word = mnemonic_get_word(i);
+    const char* word = mnemonic_get_word(i);
     memset(word_buf, 0, sizeof(word_buf));
     strncpy(word_buf, word, sizeof(word_buf) - 1);
     record = mnemonic_find_word(word_buf);
@@ -6926,14 +6925,14 @@ END_TEST
 START_TEST(test_slip39_get_word) {
   static const struct {
     const int index;
-    const char *expected_word;
+    const char* expected_word;
   } vectors[] = {{573, "member"},
                  {0, "academic"},
                  {1023, "zero"},
                  {245, "drove"},
                  {781, "satoshi"}};
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
-    const char *a = get_word(vectors[i].index);
+    const char* a = get_word(vectors[i].index);
     ck_assert_str_eq(a, vectors[i].expected_word);
   }
 }
@@ -6942,7 +6941,7 @@ END_TEST
 START_TEST(test_slip39_word_index) {
   uint16_t index;
   static const struct {
-    const char *word;
+    const char* word;
     bool expected_result;
     uint16_t expected_index;
   } vectors[] = {{"academic", true, 0},
@@ -6990,14 +6989,14 @@ END_TEST
 START_TEST(test_slip39_sequence_to_word) {
   static const struct {
     const uint16_t prefix;
-    const char *expected_word;
+    const char* expected_word;
   } vectors[] = {
       {7945, "swimming"}, {646, "pipeline"}, {5, "laden"},  {34, "fiber"},
       {62, "ocean"},      {0, "academic"},   {10, NULL},    {255, NULL},
       {203, NULL},        {9999, NULL},      {20000, NULL},
   };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
-    const char *word = button_sequence_to_word(vectors[i].prefix);
+    const char* word = button_sequence_to_word(vectors[i].prefix);
     if (vectors[i].expected_word != NULL) {
       ck_assert_str_eq(word, vectors[i].expected_word);
     } else {
@@ -7011,7 +7010,7 @@ START_TEST(test_slip39_word_completion) {
   const char t9[] = {1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5,
                      6, 6, 6, 6, 7, 7, 8, 8, 8, 9, 9, 9, 9};
   for (size_t i = 0; i < SLIP39_WORD_COUNT; ++i) {
-    const char *word = SLIP39_WORDLIST[i];
+    const char* word = SLIP39_WORDLIST[i];
     uint16_t prefix = t9[word[0] - 'a'];
     for (size_t j = 1; j < 4; ++j) {
       uint16_t mask = slip39_word_completion_mask(prefix);
@@ -7121,7 +7120,7 @@ START_TEST(test_shamir) {
 
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); ++i) {
     uint8_t result[SHAMIR_MAX_LEN];
-    const uint8_t *share_values[SHAMIR_MAX_COUNT];
+    const uint8_t* share_values[SHAMIR_MAX_COUNT];
     for (size_t j = 0; j < vectors[i].share_count; ++j) {
       share_values[j] = vectors[i].share_values[j];
     }
@@ -7308,7 +7307,7 @@ START_TEST(test_pubkey_validity) {
   uint8_t pub_key[65];
   curve_point pub;
   int res;
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
 
   memcpy(
       pub_key,
@@ -7397,7 +7396,7 @@ START_TEST(test_pubkey_uncompress) {
   uint8_t pub_key[65];
   uint8_t uncompressed[65];
   int res;
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
 
   memcpy(
       pub_key,
@@ -7555,9 +7554,9 @@ END_TEST
 
 START_TEST(test_ecdsa_der) {
   static const struct {
-    const char *r;
-    const char *s;
-    const char *der;
+    const char* r;
+    const char* s;
+    const char* der;
   } vectors[] = {
       {
           "9a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b70771",
@@ -7649,7 +7648,7 @@ START_TEST(test_ecdsa_der) {
 END_TEST
 
 #if USE_PRECOMPUTED_CP
-static void test_codepoints_curve(const ecdsa_curve *curve) {
+static void test_codepoints_curve(const ecdsa_curve* curve) {
   int i, j;
   bignum256 a;
   curve_point p, p1;
@@ -7688,7 +7687,7 @@ START_TEST(test_codepoints_nist256p1) { test_codepoints_curve(&nist256p1); }
 END_TEST
 #endif
 
-static void test_mult_border_cases_curve(const ecdsa_curve *curve) {
+static void test_mult_border_cases_curve(const ecdsa_curve* curve) {
   bignum256 a;
   curve_point p;
   curve_point expected;
@@ -7742,7 +7741,7 @@ START_TEST(test_mult_border_cases_nist256p1) {
 }
 END_TEST
 
-static void test_scalar_mult_curve(const ecdsa_curve *curve) {
+static void test_scalar_mult_curve(const ecdsa_curve* curve) {
   int i;
   // get two "random" numbers
   bignum256 a = curve->G.x;
@@ -7770,7 +7769,7 @@ END_TEST
 START_TEST(test_scalar_mult_nist256p1) { test_scalar_mult_curve(&nist256p1); }
 END_TEST
 
-static void test_point_mult_curve(const ecdsa_curve *curve) {
+static void test_point_mult_curve(const ecdsa_curve* curve) {
   int i;
   // get two "random" numbers and a "random" point
   bignum256 a = curve->G.x;
@@ -7800,7 +7799,7 @@ END_TEST
 START_TEST(test_point_mult_nist256p1) { test_point_mult_curve(&nist256p1); }
 END_TEST
 
-static void test_scalar_point_mult_curve(const ecdsa_curve *curve) {
+static void test_scalar_point_mult_curve(const ecdsa_curve* curve) {
   int i;
   // get two "random" numbers
   bignum256 a = curve->G.x;
@@ -7844,7 +7843,7 @@ END_TEST
 START_TEST(test_ed25519) {
   // test vectors from
   // https://github.com/torproject/tor/blob/master/src/test/ed25519_vectors.inc
-  static const char *vectors[] = {
+  static const char* vectors[] = {
       "26c76712d89d906e6672dafa614c42e5cb1caac8c6568e4d2493087db51f0d3"
       "6",  // secret
       "c2247870536a192d142d056abefca68d6193158e7c1a59c1654c954eccaff89"
@@ -7937,11 +7936,11 @@ END_TEST
 // https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/2.test-sign.dat
 START_TEST(test_ed25519_keccak) {
   static const struct {
-    const char *private_key;
-    const char *public_key;
-    const char *signature;
+    const char* private_key;
+    const char* public_key;
+    const char* signature;
     size_t length;
-    const char *data;
+    const char* data;
   } tests[] = {
       {
           "abf4cf55a2b3f742d7543d9cc17f50447b969e6e06f5ea9195d428ab12b7318d",
@@ -8275,7 +8274,7 @@ START_TEST(test_ed25519_modl_neg) {
   for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
     expand256_modm(a, fromhex(tests[i][0]), 32);
     neg256_modm(b, a);
-    contract256_modm((unsigned char *)buff, b);
+    contract256_modm((unsigned char*)buff, b);
     ck_assert_mem_eq(buff, fromhex(tests[i][1]), 32);
   }
 }
@@ -8495,9 +8494,9 @@ START_TEST(test_ge25519_double_scalarmult_vartime2) {
 }
 END_TEST
 
-static void test_bip32_ecdh_init_node(HDNode *node, const char *seed_str,
-                                      const char *curve_name) {
-  hdnode_from_seed((const uint8_t *)seed_str, strlen(seed_str), curve_name,
+static void test_bip32_ecdh_init_node(HDNode* node, const char* seed_str,
+                                      const char* curve_name) {
+  hdnode_from_seed((const uint8_t*)seed_str, strlen(seed_str), curve_name,
                    node);
   ck_assert_int_eq(hdnode_fill_public_key(node), 0);
   if (node->public_key[0] == 0) {
@@ -8505,8 +8504,8 @@ static void test_bip32_ecdh_init_node(HDNode *node, const char *seed_str,
   }
 }
 
-static void test_bip32_ecdh(const char *curve_name, int expected_key_size,
-                            const uint8_t *expected_key) {
+static void test_bip32_ecdh(const char* curve_name, int expected_key_size,
+                            const uint8_t* expected_key) {
   int res, key_size;
   HDNode alice, bob;
   uint8_t session_key1[expected_key_size], session_key2[expected_key_size];
@@ -8567,7 +8566,7 @@ START_TEST(test_bip32_ecdh_errors) {
 END_TEST
 
 START_TEST(test_output_script) {
-  static const char *vectors[] = {
+  static const char* vectors[] = {
       "76A914010966776006953D5567439E5E39F86A0D273BEE88AC",
       "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM",
       "A914010966776006953D5567439E5E39F86A0D273BEE87",
@@ -8695,7 +8694,7 @@ START_TEST(test_ethereum_pubkeyhash) {
 END_TEST
 
 START_TEST(test_ethereum_address) {
-  static const char *vectors[] = {"0x52908400098527886E0F7030069857D2E4169EE7",
+  static const char* vectors[] = {"0x52908400098527886E0F7030069857D2E4169EE7",
                                   "0x8617E340B3D01FA5F11F306F4090FD50E238070D",
                                   "0xde709f2102306220921060314715629080e2fb77",
                                   "0x27b1fdb04752bbc536007a920d24acb045561c26",
@@ -8711,7 +8710,7 @@ START_TEST(test_ethereum_address) {
                                   0};
   uint8_t addr[20];
   char address[43];
-  const char **vec = vectors;
+  const char** vec = vectors;
   while (*vec) {
     memcpy(addr, fromhex(*vec + 2), 20);
     ethereum_address_checksum(addr, address, false, 0);
@@ -8727,12 +8726,12 @@ START_TEST(test_rsk_address) {
   uint8_t addr[20];
   char address[43];
 
-  static const char *rskip60_chain30[] = {
+  static const char* rskip60_chain30[] = {
       "0x5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD",
       "0xFb6916095cA1Df60bb79ce92cE3EA74c37c5d359",
       "0xDBF03B407c01E7CD3cBea99509D93F8Dddc8C6FB",
       "0xD1220A0Cf47c7B9BE7a2e6ba89F429762E7B9adB", 0};
-  const char **vec = rskip60_chain30;
+  const char** vec = rskip60_chain30;
   while (*vec) {
     memcpy(addr, fromhex(*vec + 2), 20);
     ethereum_address_checksum(addr, address, true, 30);
@@ -8740,7 +8739,7 @@ START_TEST(test_rsk_address) {
     vec++;
   }
 
-  static const char *rskip60_chain31[] = {
+  static const char* rskip60_chain31[] = {
       "0x5aAeb6053F3e94c9b9A09F33669435E7EF1BEaEd",
       "0xFb6916095CA1dF60bb79CE92ce3Ea74C37c5D359",
       "0xdbF03B407C01E7cd3cbEa99509D93f8dDDc8C6fB",
@@ -8759,9 +8758,9 @@ END_TEST
 // https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/1.test-keys.dat
 START_TEST(test_nem_address) {
   static const struct {
-    const char *private_key;
-    const char *public_key;
-    const char *address;
+    const char* private_key;
+    const char* public_key;
+    const char* address;
   } tests[] = {
       {
           "575dbb3062267eff57c970a336ebbc8fbcfe12c5bd3ed7bc11eb0481d7704ced",
@@ -8888,11 +8887,11 @@ END_TEST
 // https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/3.test-derive.dat
 START_TEST(test_nem_derive) {
   static const struct {
-    const char *salt;
-    const char *private_key;
-    const char *public_key;
-    const char *mul;
-    const char *shared_key;
+    const char* salt;
+    const char* private_key;
+    const char* public_key;
+    const char* mul;
+    const char* shared_key;
   } tests[] = {
       {
           "ad63ac08f9afc85eb0bf4f8881ca6eaa0215924c87aa2f137d56109bb76c6f98",
@@ -9062,12 +9061,12 @@ END_TEST
 // https://raw.githubusercontent.com/NemProject/nem-test-vectors/master/4.test-cipher.dat
 START_TEST(test_nem_cipher) {
   static const struct {
-    const char *private_key;
-    const char *public_key;
-    const char *salt;
-    const char *iv;
-    const char *input;
-    const char *output;
+    const char* private_key;
+    const char* public_key;
+    const char* salt;
+    const char* iv;
+    const char* input;
+    const char* output;
   } tests[] = {
       {
           "3140f94c79f249787d1ec75a97a885980eb8f0a7d9b7aa03e7200296e422b2b6",
@@ -9370,7 +9369,7 @@ START_TEST(test_nem_transaction_transfer) {
   ck_assert(nem_transaction_create_transfer(
       &ctx, NEM_NETWORK_TESTNET, 14072100, NULL, 194000000, 14075700,
       "TBLOODPLWOWMZ2TARX4RFPOSOWLULHXMROBN2WXI", 3000000,
-      (uint8_t *)"sending you 3 pairs of paddles\n", 31, false, 2));
+      (uint8_t*)"sending you 3 pairs of paddles\n", 31, false, 2));
 
   ck_assert(
       nem_transaction_write_mosaic(&ctx, "gimre.games.pong", "paddles", 2));
@@ -9395,7 +9394,7 @@ START_TEST(test_nem_transaction_transfer) {
   ck_assert(nem_transaction_create_transfer(
       &ctx, NEM_NETWORK_MAINNET, 0, NULL, 0, 0,
       "NBT3WHA2YXG2IR4PWKFFMO772JWOITTD2V4PECSB", 5175000000000,
-      (uint8_t *)"Good luck!", 10, false, 0));
+      (uint8_t*)"Good luck!", 10, false, 0));
 
   keccak_256(ctx.buffer, ctx.offset, hash);
   ck_assert_mem_eq(
@@ -9439,7 +9438,7 @@ START_TEST(test_nem_transaction_transfer) {
   ck_assert(nem_transaction_create_transfer(
       &ctx, NEM_NETWORK_MAINNET, 26730750, NULL, 179500000, 26734350,
       "NBE223WPKEBHQPCYUC4U4CDUQCRRFMPZLOQLB5OP", 1000000,
-      (uint8_t *)"enjoy! :)", 9, false, 1));
+      (uint8_t*)"enjoy! :)", 9, false, 1));
 
   ck_assert(nem_transaction_write_mosaic(&ctx, "imre.g", "tokens", 1));
 
@@ -9456,7 +9455,7 @@ START_TEST(test_nem_transaction_multisig) {
   nem_transaction_ctx ctx, other_trans;
 
   uint8_t buffer[1024], inner[1024];
-  const uint8_t *signature;
+  const uint8_t* signature;
 
   // http://bob.nem.ninja:8765/#/multisig/7d3a7087023ee29005262016706818579a2b5499eb9ca76bad98c1e6f4c46642
 
@@ -10333,8 +10332,8 @@ START_TEST(test_rc4_rfc6229) {
 }
 END_TEST
 
-static void test_compress_coord(const char *k_raw) {
-  const ecdsa_curve *curve = &secp256k1;
+static void test_compress_coord(const char* k_raw) {
+  const ecdsa_curve* curve = &secp256k1;
   curve_point expected_coords;
 
   bignum256 k = {0};
@@ -10355,7 +10354,7 @@ static void test_compress_coord(const char *k_raw) {
 }
 
 START_TEST(test_compress_coords) {
-  static const char *k_raw[] = {
+  static const char* k_raw[] = {
       "dc05960ac673fd59554c98655e26722d007bb7ada0c8ff00883fdee70783d0be",
       "41e41e0a218c980411108a0a58cf88f528c828b4d6f0d2c86234bc2504bdc3cd",
       "1d963ddcb79f6028a32cadd2421ff7fff969bff5774f73063dab41519b3da175",
@@ -10375,11 +10374,11 @@ END_TEST
 
 START_TEST(test_zkp_bip340_sign) {
   static struct {
-    const char *priv_key;
-    const char *pub_key;
-    const char *aux_input;
-    const char *digest;
-    const char *sig;
+    const char* priv_key;
+    const char* pub_key;
+    const char* aux_input;
+    const char* digest;
+    const char* sig;
   } tests[] = {
       // Test vectors from
       // https://github.com/bitcoin/bips/blob/master/bip-0340/test-vectors.csv
@@ -10479,9 +10478,9 @@ END_TEST
 
 START_TEST(test_zkp_bip340_verify) {
   static struct {
-    const char *pub_key;
-    const char *digest;
-    const char *sig;
+    const char* pub_key;
+    const char* digest;
+    const char* sig;
     const int res;
   } tests[] = {
       // Test vectors from
@@ -10598,11 +10597,11 @@ END_TEST
 
 START_TEST(test_zkp_bip340_tweak) {
   static struct {
-    const char *root_hash;
-    const char *internal_priv;
-    const char *output_priv;
-    const char *internal_pub;
-    const char *output_pub;
+    const char* root_hash;
+    const char* internal_priv;
+    const char* output_priv;
+    const char* internal_pub;
+    const char* output_pub;
   } tests[] = {
       // https://github.com/bitcoin/bips/blob/master/bip-0086/
       {NULL, "41f41d69260df4cf277826a9b65a3717e4eeddbeedf637f212ca096576479361",
@@ -10672,7 +10671,7 @@ START_TEST(test_zkp_bip340_tweak) {
     memcpy(output_priv, fromhex(tests[i].output_priv), 32);
     memcpy(internal_pub, fromhex(tests[i].internal_pub), 32);
     memcpy(output_pub, fromhex(tests[i].output_pub), 32);
-    const uint8_t *root_hash = NULL;
+    const uint8_t* root_hash = NULL;
     if (tests[i].root_hash != NULL) {
       root_hash = fromhex(tests[i].root_hash);
     }
@@ -10698,7 +10697,7 @@ END_TEST
 
 START_TEST(test_zkp_bip340_verify_publickey) {
   static struct {
-    const char *public_key;
+    const char* public_key;
     const int result;
   } tests[] = {
       // Test vectors 0, 5 and 14 from
@@ -10720,9 +10719,9 @@ END_TEST
 
 START_TEST(test_expand_message_xmd_sha256) {
   static struct {
-    const char *msg;
-    const char *dst;
-    const char *expected_output;
+    const char* msg;
+    const char* dst;
+    const char* expected_output;
   } tests[] = {
       // https://www.rfc-editor.org/rfc/rfc9380.html#name-expand_message_xmdsha-256
       {"", "QUUX-V01-CS02-with-expander-SHA256-128",
@@ -10793,7 +10792,7 @@ START_TEST(test_expand_message_xmd_sha256) {
     memcpy(expected_output, fromhex(tests[i].expected_output), output_length);
 
     int res = expand_message_xmd_sha256(
-        (uint8_t *)tests[i].msg, strlen(tests[i].msg), (uint8_t *)tests[i].dst,
+        (uint8_t*)tests[i].msg, strlen(tests[i].msg), (uint8_t*)tests[i].dst,
         strlen(tests[i].dst), output, output_length);
     ck_assert_int_eq(res, true);
     ck_assert_mem_eq(output, expected_output, output_length);
@@ -10803,10 +10802,10 @@ END_TEST
 
 START_TEST(test_hash_to_curve_p256) {
   static struct {
-    const char *msg;
-    const char *dst;
-    const char *expected_x;
-    const char *expected_y;
+    const char* msg;
+    const char* dst;
+    const char* expected_x;
+    const char* expected_y;
   } tests[] = {
       // https://www.rfc-editor.org/rfc/rfc9380.html#name-p256_xmdsha-256_sswu_ro_
       {"", "QUUX-V01-CS02-with-P256_XMD:SHA-256_SSWU_RO_",
@@ -10847,8 +10846,8 @@ START_TEST(test_hash_to_curve_p256) {
     memcpy(expected_x, fromhex(tests[i].expected_x), 32);
     memcpy(expected_y, fromhex(tests[i].expected_y), 32);
 
-    int res = hash_to_curve_p256((uint8_t *)tests[i].msg, strlen(tests[i].msg),
-                                 (uint8_t *)tests[i].dst, strlen(tests[i].dst),
+    int res = hash_to_curve_p256((uint8_t*)tests[i].msg, strlen(tests[i].msg),
+                                 (uint8_t*)tests[i].dst, strlen(tests[i].dst),
                                  &point);
     bn_write_be(&point.x, x);
     bn_write_be(&point.y, y);
@@ -10861,8 +10860,8 @@ END_TEST
 
 START_TEST(test_hash_to_curve_optiga) {
   static struct {
-    const char *input;
-    const char *public_key;
+    const char* input;
+    const char* public_key;
   } tests[] = {
       {"0000000000000000000000000000000000000000000000000000000000000000",
        "043d2ce2e6ab3d75430c7ce3627d840fef7856bf6a1b4aa7579d583e5906bb3c897ee7a"
@@ -10885,7 +10884,7 @@ END_TEST
 
 START_TEST(test_der_length) {
   static struct {
-    const char *der;
+    const char* der;
     const size_t len;
   } tests[] = {
       {"00", 0},
@@ -10927,8 +10926,8 @@ END_TEST
 
 START_TEST(test_der_reencode_int) {
   static struct {
-    const char *input;
-    const char *output;
+    const char* input;
+    const char* output;
   } tests[] = {
       {"020f000000000000007f01020304050607", "02087f01020304050607"},
       {"020f000000000000008001020304050607", "0209008001020304050607"},
@@ -10968,8 +10967,8 @@ END_TEST
 
 START_TEST(test_elligator2) {
   static struct {
-    const char *input;
-    const char *output;
+    const char* input;
+    const char* output;
   } tests[] = {
       // https://elligator.org/vectors/curve25519_direct.vec
       {"0000000000000000000000000000000000000000000000000000000000000000",
@@ -11637,7 +11636,7 @@ START_TEST(test_noise) {
 }
 END_TEST
 
-static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
+static int my_strncasecmp(const char* s1, const char* s2, size_t n) {
   size_t i = 0;
   while (i < n) {
     char c1 = s1[i];
@@ -11664,9 +11663,9 @@ static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
 #endif
 
 // define test suite and cases
-Suite *test_suite(void) {
-  Suite *s = suite_create("trezor-crypto");
-  TCase *tc;
+Suite* test_suite(void) {
+  Suite* s = suite_create("trezor-crypto");
+  TCase* tc;
 
   tc = tcase_create("bignum");
   tcase_add_test(tc, test_bignum_read_be);
@@ -12066,8 +12065,8 @@ Suite *test_suite(void) {
 int main(void) {
   assert(zkp_context_init() == 0);
   int number_failed;
-  Suite *s = test_suite();
-  SRunner *sr = srunner_create(s);
+  Suite* s = test_suite();
+  SRunner* sr = srunner_create(s);
   srunner_run_all(sr, CK_VERBOSE);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);

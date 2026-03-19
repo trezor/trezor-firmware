@@ -74,5 +74,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_nem_globals,
 // module definition
 STATIC const mp_obj_module_t mod_trezorcrypto_nem_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_nem_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_nem_globals,
 };

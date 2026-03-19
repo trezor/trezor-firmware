@@ -34,13 +34,13 @@ void optiga_transport_close_channel(void);
 void optiga_transport_power_up(void);
 void optiga_transport_power_down(void);
 
-optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
+optiga_result optiga_sec_chan_handshake(const uint8_t* secret,
                                         size_t secret_size);
-optiga_result optiga_execute_command(const uint8_t *command_data,
+optiga_result optiga_execute_command(const uint8_t* command_data,
                                      size_t command_size,
-                                     uint8_t *response_data,
+                                     uint8_t* response_data,
                                      size_t max_response_size,
-                                     size_t *response_size);
+                                     size_t* response_size);
 
 optiga_result optiga_resync(void);
 optiga_result optiga_soft_reset(void);

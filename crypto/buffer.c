@@ -25,20 +25,20 @@
 
 #include "buffer.h"
 
-void buffer_reader_init(BUFFER_READER *reader, const uint8_t *data,
+void buffer_reader_init(BUFFER_READER* reader, const uint8_t* data,
                         size_t size) {
   reader->data = data;
   reader->size = size;
   reader->pos = 0;
 }
 
-void buffer_writer_init(BUFFER_WRITER *writer, uint8_t *data, size_t size) {
+void buffer_writer_init(BUFFER_WRITER* writer, uint8_t* data, size_t size) {
   writer->data = data;
   writer->size = size;
   writer->pos = 0;
 }
 
-size_t buffer_remaining(const BUFFER_READER *buf) {
+size_t buffer_remaining(const BUFFER_READER* buf) {
   if ((buf->data == NULL) || (buf->pos > buf->size)) {
     return 0;
   }
@@ -46,7 +46,7 @@ size_t buffer_remaining(const BUFFER_READER *buf) {
   return buf->size - buf->pos;
 }
 
-bool buffer_ptr(const BUFFER_READER *buf, const uint8_t **ptr) {
+bool buffer_ptr(const BUFFER_READER* buf, const uint8_t** ptr) {
   if ((buf->data == NULL) || (buf->pos > buf->size)) {
     return false;
   }
@@ -56,7 +56,7 @@ bool buffer_ptr(const BUFFER_READER *buf, const uint8_t **ptr) {
   return true;
 }
 
-bool buffer_peek(const BUFFER_READER *buf, uint8_t *byte) {
+bool buffer_peek(const BUFFER_READER* buf, uint8_t* byte) {
   if ((buf->data == NULL) || (buf->pos >= buf->size)) {
     return false;
   }
@@ -65,7 +65,7 @@ bool buffer_peek(const BUFFER_READER *buf, uint8_t *byte) {
   return true;
 }
 
-bool buffer_get(BUFFER_READER *buf, uint8_t *byte) {
+bool buffer_get(BUFFER_READER* buf, uint8_t* byte) {
   if (!buffer_peek(buf, byte)) {
     return false;
   }
@@ -74,7 +74,7 @@ bool buffer_get(BUFFER_READER *buf, uint8_t *byte) {
   return true;
 }
 
-bool buffer_seek(BUFFER_READER *buf, size_t pos) {
+bool buffer_seek(BUFFER_READER* buf, size_t pos) {
   if ((buf->data == NULL) || (pos > buf->size)) {
     return false;
   }
@@ -84,7 +84,7 @@ bool buffer_seek(BUFFER_READER *buf, size_t pos) {
   return true;
 }
 
-bool buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest, size_t size) {
+bool buffer_read_buffer(BUFFER_READER* src, BUFFER_READER* dest, size_t size) {
   if ((src->data == NULL) || (src->pos + size > src->size)) {
     return false;
   }
@@ -94,7 +94,7 @@ bool buffer_read_buffer(BUFFER_READER *src, BUFFER_READER *dest, size_t size) {
   return true;
 }
 
-void buffer_lstrip(BUFFER_READER *buf, uint8_t byte) {
+void buffer_lstrip(BUFFER_READER* buf, uint8_t byte) {
   if (buf->data == NULL) {
     return;
   }
@@ -105,7 +105,7 @@ void buffer_lstrip(BUFFER_READER *buf, uint8_t byte) {
   return;
 }
 
-bool buffer_put(BUFFER_WRITER *writer, uint8_t byte) {
+bool buffer_put(BUFFER_WRITER* writer, uint8_t byte) {
   if ((writer->data == NULL) || (writer->pos >= writer->size)) {
     return false;
   }
@@ -115,7 +115,7 @@ bool buffer_put(BUFFER_WRITER *writer, uint8_t byte) {
   return true;
 }
 
-bool buffer_write_array(BUFFER_WRITER *writer, const uint8_t *src,
+bool buffer_write_array(BUFFER_WRITER* writer, const uint8_t* src,
                         size_t size) {
   if ((writer->data == NULL) || (writer->pos + size > writer->size)) {
     return false;
@@ -126,7 +126,7 @@ bool buffer_write_array(BUFFER_WRITER *writer, const uint8_t *src,
   return true;
 }
 
-bool buffer_write_buffer(BUFFER_WRITER *dest, BUFFER_READER *src) {
+bool buffer_write_buffer(BUFFER_WRITER* dest, BUFFER_READER* src) {
   if ((src->data == NULL) || (src->pos > src->size)) {
     return false;
   }
@@ -139,4 +139,4 @@ bool buffer_write_buffer(BUFFER_WRITER *dest, BUFFER_READER *src) {
   return true;
 }
 
-size_t buffer_written_size(const BUFFER_WRITER *writer) { return writer->pos; }
+size_t buffer_written_size(const BUFFER_WRITER* writer) { return writer->pos; }

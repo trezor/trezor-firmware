@@ -26,8 +26,8 @@
 
 static char pinmatrix_perm[10] = "XXXXXXXXX";
 
-void pinmatrix_draw(const char *text) {
-  const BITMAP *bmp_digits[10] = {
+void pinmatrix_draw(const char* text) {
+  const BITMAP* bmp_digits[10] = {
       &bmp_digit0, &bmp_digit1, &bmp_digit2, &bmp_digit3, &bmp_digit4,
       &bmp_digit5, &bmp_digit6, &bmp_digit7, &bmp_digit8, &bmp_digit9,
   };
@@ -54,7 +54,7 @@ void pinmatrix_draw(const char *text) {
   oledRefresh();
 }
 
-void pinmatrix_start(const char *text) {
+void pinmatrix_start(const char* text) {
   for (int i = 0; i < 9; i++) {
     pinmatrix_perm[i] = '1' + i;
   }
@@ -63,7 +63,7 @@ void pinmatrix_start(const char *text) {
   pinmatrix_draw(text);
 }
 
-secbool pinmatrix_done(char *pin) {
+secbool pinmatrix_done(char* pin) {
   int i = 0, k = 0;
   secbool ret = sectrue;
   while (pin && pin[i]) {
@@ -82,6 +82,6 @@ secbool pinmatrix_done(char *pin) {
 
 #if DEBUG_LINK
 
-const char *pinmatrix_get(void) { return pinmatrix_perm; }
+const char* pinmatrix_get(void) { return pinmatrix_perm; }
 
 #endif

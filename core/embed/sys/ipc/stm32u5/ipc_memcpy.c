@@ -25,7 +25,7 @@
 
 #include "../ipc_memcpy.h"
 
-void ipc_memcpy(void *dst, const void *src, size_t size) {
+void ipc_memcpy(void* dst, const void* src, size_t size) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DISABLED);
   memcpy(dst, src, size);
   mpu_restore(mpu_mode);

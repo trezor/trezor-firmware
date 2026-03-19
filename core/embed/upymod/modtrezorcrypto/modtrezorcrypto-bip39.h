@@ -36,9 +36,9 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_from_data(mp_obj_t data) {
     mp_raise_ValueError(MP_ERROR_TEXT(
         "Invalid data length (only 16, 20, 24, 28 and 32 bytes are allowed)"));
   }
-  const char *mnemo = mnemonic_from_data(bin.buf, bin.len);
+  const char* mnemo = mnemonic_from_data(bin.buf, bin.len);
   mp_obj_t res =
-      mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)mnemo, strlen(mnemo));
+      mp_obj_new_str_copy(&mp_type_str, (const uint8_t*)mnemo, strlen(mnemo));
   mnemonic_clear();
   return res;
 }
@@ -67,24 +67,24 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_check_obj,
 ///     Generate seed from mnemonic and passphrase.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip39_seed(size_t n_args,
-                                            const mp_obj_t *args) {
+                                            const mp_obj_t* args) {
   mp_buffer_info_t mnemo = {0};
   mp_buffer_info_t phrase = {0};
   mp_get_buffer_raise(args[0], &mnemo, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &phrase, MP_BUFFER_READ);
   vstr_t seed = {0};
   vstr_init_len(&seed, SHA512_DIGEST_LENGTH);
-  const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
-  const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
+  const char* pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
+  const char* ppassphrase = phrase.len > 0 ? phrase.buf : "";
   if (n_args > 2) {
     // generate with a progress callback
     ui_wait_callback = args[2];
-    mnemonic_to_seed(pmnemonic, ppassphrase, (uint8_t *)seed.buf,
+    mnemonic_to_seed(pmnemonic, ppassphrase, (uint8_t*)seed.buf,
                      wrapped_ui_wait_callback);
     ui_wait_callback = mp_const_none;
   } else {
     // generate without callback
-    mnemonic_to_seed(pmnemonic, ppassphrase, (uint8_t *)seed.buf, NULL);
+    mnemonic_to_seed(pmnemonic, ppassphrase, (uint8_t*)seed.buf, NULL);
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &seed);
 }
@@ -101,7 +101,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_mnemonic_to_bits(mp_obj_t mnemonic) {
   mp_get_buffer_raise(mnemonic, &text, MP_BUFFER_READ);
 
   uint8_t bits[33] = {0};
-  int binary_mnemonics_len = mnemonic_to_bits((const char *)text.buf, bits);
+  int binary_mnemonics_len = mnemonic_to_bits((const char*)text.buf, bits);
   if (binary_mnemonics_len <= 0) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid mnemonic"));
   }
@@ -127,5 +127,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_bip39_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_bip39_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_bip39_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_bip39_globals,
 };

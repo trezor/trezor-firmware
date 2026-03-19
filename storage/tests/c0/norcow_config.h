@@ -24,7 +24,6 @@
 
 #define NORCOW_SECTOR_COUNT 2
 #define NORCOW_SECTOR_SIZE (64 * 1024)
-#define NORCOW_SECTORS \
-  { 4, 16 }
+#define NORCOW_SECTORS {4, 16}
 
 #endif

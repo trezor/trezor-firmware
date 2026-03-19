@@ -52,7 +52,7 @@ typedef struct {
 } memregion_t;
 
 #define MEMBLOCK(start, size) \
-  { (void*)(start), (void*)((uint8_t*)(start) + (size)) }
+  {(void*)(start), (void*)((uint8_t*)(start) + (size))}
 
 // -------------------------------------------------------------------
 // Standard memory regions used in boardloader / bootloader

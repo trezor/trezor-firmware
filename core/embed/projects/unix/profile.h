@@ -29,10 +29,10 @@
 #define PROFILE_DIR_DEFAULT "/var/tmp"
 #define PROFILE_NAME_DEFAULT "/var/tmp"
 
-const char *profile_name(void);
-const char *profile_dir(void);
-const char *profile_flash_path(void);
-const char *profile_sdcard_path(void);
-const char *profile_usb_disconnect_path(void);
+const char* profile_name(void);
+const char* profile_dir(void);
+const char* profile_flash_path(void);
+const char* profile_sdcard_path(void);
+const char* profile_usb_disconnect_path(void);
 
 #endif  // __TREZOR_PROFILE_H__

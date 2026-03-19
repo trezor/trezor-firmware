@@ -48,8 +48,8 @@ void tropic01_reset(void) {
   HAL_GPIO_WritePin(TROPIC01_SPI_NSS_PORT, TROPIC01_SPI_NSS_PIN, GPIO_PIN_SET);
 }
 
-lt_ret_t lt_port_init(lt_l2_state_t *s2) {
-  tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
+lt_ret_t lt_port_init(lt_l2_state_t* s2) {
+  tropic01_hal_driver_t* drv = &g_tropic01_hal_driver;
 
   if (drv->initialized) {
     return LT_OK;
@@ -128,8 +128,8 @@ lt_ret_t lt_port_init(lt_l2_state_t *s2) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_deinit(lt_l2_state_t *s2) {
-  tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
+lt_ret_t lt_port_deinit(lt_l2_state_t* s2) {
+  tropic01_hal_driver_t* drv = &g_tropic01_hal_driver;
 
   if (drv->spi.Instance != NULL) {
     HAL_SPI_DeInit(&drv->spi);
@@ -151,7 +151,7 @@ lt_ret_t lt_port_deinit(lt_l2_state_t *s2) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_spi_csn_low(lt_l2_state_t *s2) {
+lt_ret_t lt_port_spi_csn_low(lt_l2_state_t* s2) {
   UNUSED(s2);
 
   HAL_GPIO_WritePin(TROPIC01_SPI_NSS_PORT, TROPIC01_SPI_NSS_PIN,
@@ -160,7 +160,7 @@ lt_ret_t lt_port_spi_csn_low(lt_l2_state_t *s2) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_spi_csn_high(lt_l2_state_t *s2) {
+lt_ret_t lt_port_spi_csn_high(lt_l2_state_t* s2) {
   UNUSED(s2);
 
   HAL_GPIO_WritePin(TROPIC01_SPI_NSS_PORT, TROPIC01_SPI_NSS_PIN, GPIO_PIN_SET);
@@ -168,9 +168,9 @@ lt_ret_t lt_port_spi_csn_high(lt_l2_state_t *s2) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_spi_transfer(lt_l2_state_t *s2, uint8_t offset,
+lt_ret_t lt_port_spi_transfer(lt_l2_state_t* s2, uint8_t offset,
                               uint16_t tx_len, uint32_t timeout_ms) {
-  tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
+  tropic01_hal_driver_t* drv = &g_tropic01_hal_driver;
 
   if (offset + tx_len > TR01_L1_LEN_MAX) {
     return LT_L1_DATA_LEN_ERROR;
@@ -184,7 +184,7 @@ lt_ret_t lt_port_spi_transfer(lt_l2_state_t *s2, uint8_t offset,
   return LT_OK;
 }
 
-lt_ret_t lt_port_delay(lt_l2_state_t *s2, uint32_t ms) {
+lt_ret_t lt_port_delay(lt_l2_state_t* s2, uint32_t ms) {
   UNUSED(s2);
 
   systick_delay_ms(ms);
@@ -196,15 +196,15 @@ lt_ret_t lt_port_delay(lt_l2_state_t *s2, uint32_t ms) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_random_bytes(lt_l2_state_t *s2, void *buff, size_t count) {
+lt_ret_t lt_port_random_bytes(lt_l2_state_t* s2, void* buff, size_t count) {
   (void)s2;
 
-  rng_fill_buffer((uint8_t *)buff, count);
+  rng_fill_buffer((uint8_t*)buff, count);
 
   return LT_OK;
 }
 
-void lt_secure_memzero(void *const ptr, const size_t count) {
+void lt_secure_memzero(void* const ptr, const size_t count) {
   memzero(ptr, count);
 }
 

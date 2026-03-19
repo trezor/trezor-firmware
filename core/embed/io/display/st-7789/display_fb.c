@@ -58,21 +58,21 @@ _Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
 #endif
 
 // Size of the physical frame buffer in bytes
-#define PHYSICAL_FRAME_BUFFER_SIZE               \
-  ALIGN_UP_CONST(DISPLAY_RESX *DISPLAY_RESY * 2, \
+#define PHYSICAL_FRAME_BUFFER_SIZE                \
+  ALIGN_UP_CONST(DISPLAY_RESX * DISPLAY_RESY * 2, \
                  PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
 // Physical frame buffers in internal SRAM memory.
 // Both frame buffers layers in the fixed addresses that
 // are shared between bootloaders and the firmware.
-static
-    __attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-    uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
+static __attribute__((section(".fb1"),
+                      aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 
 #if (FRAME_BUFFER_COUNT > 1)
-static
-    __attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-    uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
+static __attribute__((section(".fb2"),
+                      aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
 
 #ifdef USE_TRUSTZONE
@@ -88,7 +88,7 @@ void display_set_unpriv_access(bool unpriv) {
 #endif  // USE_TRUSTZONE
 
 void display_fb_init(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (drv->initialized) {
     return;
@@ -104,7 +104,7 @@ void display_fb_init(void) {
 
 // Returns the pointer to the physical frame buffer (0.. FRAME_BUFFER_COUNT-1)
 // Returns NULL if the framebuffer index is out of range.
-static uint8_t *get_fb_ptr(uint32_t index) {
+static uint8_t* get_fb_ptr(uint32_t index) {
   if (index == 0) {
     return physical_frame_buffer_0;
 #if (FRAME_BUFFER_COUNT > 1)
@@ -129,7 +129,7 @@ void display_fb_clear(void) {
 // Callback called when the background copying is done
 // It's called from the IRQ context
 static void bg_copy_callback(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   drv->update_pending = 2;
 
@@ -138,7 +138,7 @@ static void bg_copy_callback(void) {
 
 // Interrupt routing handling TE signal
 static void display_te_interrupt_handler(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
 
@@ -152,7 +152,7 @@ static void display_te_interrupt_handler(void) {
     if (fb_idx >= 0) {
       display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
       bg_copy_start_const_out_8(get_fb_ptr(fb_idx),
-                                (uint8_t *)DISPLAY_DATA_ADDRESS,
+                                (uint8_t*)DISPLAY_DATA_ADDRESS,
                                 PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
     }
   }
@@ -167,8 +167,8 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
 }
 #endif
 
-bool display_get_frame_buffer(display_fb_info_t *fb) {
-  display_driver_t *drv = &g_display_driver;
+bool display_get_frame_buffer(display_fb_info_t* fb) {
+  display_driver_t* drv = &g_display_driver;
 
   memset(fb, 0, sizeof(display_fb_info_t));
 
@@ -191,7 +191,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
 #ifdef BOARDLOADER
 // Copies the frame buffer with the given index to the display
 static void copy_fb_to_display(uint8_t index) {
-  uint16_t *fb = (uint16_t *)get_fb_ptr(index);
+  uint16_t* fb = (uint16_t*)get_fb_ptr(index);
 
   if (fb != NULL) {
     mpu_set_active_fb(fb, PHYSICAL_FRAME_BUFFER_SIZE);
@@ -215,7 +215,7 @@ static void wait_for_te_signal(void) {
 #endif
 
 void display_refresh(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -246,7 +246,7 @@ void display_refresh(void) {
 
 void display_ensure_refreshed(void) {
 #ifndef BOARDLOADER
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -268,7 +268,7 @@ void display_ensure_refreshed(void) {
 #endif
 }
 
-void display_fill(const gfx_bitblt_t *bb) {
+void display_fill(const gfx_bitblt_t* bb) {
   display_fb_info_t fb;
 
   if (!display_get_frame_buffer(&fb)) {
@@ -276,7 +276,7 @@ void display_fill(const gfx_bitblt_t *bb) {
   }
 
   gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
+  bb_new.dst_row = (uint16_t*)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
 
   if (!gfx_bitblt_check_dst_x(&bb_new, 16) ||
@@ -287,7 +287,7 @@ void display_fill(const gfx_bitblt_t *bb) {
   gfx_rgb565_fill(&bb_new);
 }
 
-void display_copy_rgb565(const gfx_bitblt_t *bb) {
+void display_copy_rgb565(const gfx_bitblt_t* bb) {
   display_fb_info_t fb;
 
   if (!display_get_frame_buffer(&fb)) {
@@ -295,7 +295,7 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
   }
 
   gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
+  bb_new.dst_row = (uint16_t*)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
 
   if (!gfx_bitblt_check_dst_x(&bb_new, 16) ||
@@ -307,7 +307,7 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
   gfx_rgb565_copy_rgb565(&bb_new);
 }
 
-void display_copy_mono1p(const gfx_bitblt_t *bb) {
+void display_copy_mono1p(const gfx_bitblt_t* bb) {
   display_fb_info_t fb;
 
   if (!display_get_frame_buffer(&fb)) {
@@ -315,7 +315,7 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
   }
 
   gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = (uint16_t *)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
+  bb_new.dst_row = (uint16_t*)((uintptr_t)fb.ptr + fb.stride * bb_new.dst_y);
   bb_new.dst_stride = fb.stride;
 
   if (!gfx_bitblt_check_dst_x(&bb_new, 16) ||

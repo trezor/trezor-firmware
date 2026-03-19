@@ -31,8 +31,8 @@
  * @param message Main error message
  * @param footer Footer of the error message
  */
-void system_exit_error(const char *title, const char *message,
-                       const char *footer);
+void system_exit_error(const char* title, const char* message,
+                       const char* footer);
 
 /**
  * @brief Terminates the current task with a fatal error message.
@@ -46,4 +46,4 @@ void system_exit_error(const char *title, const char *message,
  * @param file Source file name where the fatal error occurred
  * @param line Line number in the source file where the fatal error occurred
  */
-void system_exit_fatal(const char *message, const char *file, int line);
+void system_exit_fatal(const char* message, const char* file, int line);

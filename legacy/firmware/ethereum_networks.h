@@ -27,8 +27,8 @@
 extern const EthereumNetworkInfo UNKNOWN_NETWORK;
 #define SLIP44_UNKNOWN UINT32_MAX
 
-const EthereumNetworkInfo *ethereum_get_network_by_chain_id(uint64_t chain_id);
-const EthereumNetworkInfo *ethereum_get_network_by_slip44(uint32_t slip44);
-bool is_unknown_network(const EthereumNetworkInfo *network);
+const EthereumNetworkInfo* ethereum_get_network_by_chain_id(uint64_t chain_id);
+const EthereumNetworkInfo* ethereum_get_network_by_slip44(uint32_t slip44);
+bool is_unknown_network(const EthereumNetworkInfo* network);
 
 #endif

@@ -130,7 +130,7 @@ static const uint8_t ndef_uri[] = {
     0x01,       /* NDEF URI abreviation field */
     0x74, 0x72, 0x65, 0x7A, 0x6F, 0x72, 0x2E, 0x69, 0x6F}; /* NDEF URI string */
 
-__WEAK const uint8_t *NdefFile = ndef_uri;
+__WEAK const uint8_t* NdefFile = ndef_uri;
 __WEAK uint32_t NdefFileLen = sizeof(ndef_uri);
 
 /**
@@ -177,7 +177,7 @@ static uint8_t InformationBlock[] = {
  * @retval False : Different command.
  *****************************************************************************
  */
-static bool cmd_compare(uint8_t *cmd, uint8_t *find, uint16_t len) {
+static bool cmd_compare(uint8_t* cmd, uint8_t* find, uint16_t len) {
   for (int i = 0; i < 20; i++) {
     if (!memcmp(&cmd[i], find, len)) {
       return true;
@@ -196,7 +196,7 @@ static bool cmd_compare(uint8_t *cmd, uint8_t *find, uint16_t len) {
  * @return Answer size.
  *****************************************************************************
  */
-static uint16_t card_emulation_t4t_select(uint8_t *cmdData, uint8_t *rspData) {
+static uint16_t card_emulation_t4t_select(uint8_t* cmdData, uint8_t* rspData) {
   bool success = false;
   /*
    * Cmd: CLA(1) | INS(1) | P1(1) | P2(1) | Lc(1) | Data(n) | [Le(1)]
@@ -249,7 +249,7 @@ static uint16_t card_emulation_t4t_select(uint8_t *cmdData, uint8_t *rspData) {
  * @return Answer size.
  *****************************************************************************
  */
-static uint16_t card_emulation_t4t_read(uint8_t *cmdData, uint8_t *rspData,
+static uint16_t card_emulation_t4t_read(uint8_t* cmdData, uint8_t* rspData,
                                         uint16_t rspDataLen) {
   /*
    * Cmd: CLA(1) | INS(1) | P1(1).. offset inside file high | P2(1).. offset
@@ -257,7 +257,7 @@ static uint16_t card_emulation_t4t_read(uint8_t *cmdData, uint8_t *rspData,
    */
   unsigned short offset = (cmdData[2] << 8) | cmdData[3];
   unsigned short toRead = cmdData[4];
-  uint8_t *ppbMemory;
+  uint8_t* ppbMemory;
 
   if (rspDataLen < 2) {
     // platformErrorHandle();  /* Must ensure appropriate buffer */
@@ -300,7 +300,7 @@ static uint16_t card_emulation_t4t_read(uint8_t *cmdData, uint8_t *rspData,
  * @return Answer size.
  *****************************************************************************
  */
-static uint16_t card_emulation_t4t_update(uint8_t *cmdData, uint8_t *rspData) {
+static uint16_t card_emulation_t4t_update(uint8_t* cmdData, uint8_t* rspData) {
   uint32_t offset = (cmdData[2] << 8) | cmdData[3];
   uint32_t length = cmdData[4];
 
@@ -334,13 +334,13 @@ static uint16_t card_emulation_t4t_update(uint8_t *cmdData, uint8_t *rspData) {
  * @return Answer size.
  *****************************************************************************
  */
-static uint16_t card_emulation_t3t_check(uint8_t *cmdData, uint8_t *rspData,
+static uint16_t card_emulation_t3t_check(uint8_t* cmdData, uint8_t* rspData,
                                          uint16_t rspDataLen) {
   /*
    * Cmd: cmd | NFCID2 | NoS | Service code list | NoB | Block list
    * Rsp: rsp | NFCID2 | Status Flag 1 | Status Flag 2 | NoB | Block Data
    */
-  uint8_t *block;
+  uint8_t* block;
   uint16_t blocknb[256];
   uint32_t idx = 0;
   uint32_t cnt = 0;
@@ -439,12 +439,12 @@ static uint16_t card_emulation_t3t_check(uint8_t *cmdData, uint8_t *rspData,
  * @return Answer size.
  *****************************************************************************
  */
-static uint16_t card_emulation_t3t_update(uint8_t *cmdData, uint8_t *rspData) {
+static uint16_t card_emulation_t3t_update(uint8_t* cmdData, uint8_t* rspData) {
   /*
    * Cmd: cmd | NFCID2 | NoS | Service code list | NoB | Block list | Block Data
    * Rsp: rsp | NFCID2 | Status Flag 1 | Status Flag 2
    */
-  uint8_t *block;
+  uint8_t* block;
   uint16_t blocknb[256];
   uint32_t idx = 0;
   uint32_t cnt = 0;
@@ -530,12 +530,12 @@ static uint16_t card_emulation_t3t_update(uint8_t *cmdData, uint8_t *rspData) {
  * @return None
  *****************************************************************************
  */
-void card_emulation_init(const uint8_t *nfcfNfcid) {
+void card_emulation_init(const uint8_t* nfcfNfcid) {
   if (nfcfNfcid != NULL) {
     memcpy(gNfcfNfcid, nfcfNfcid, RFAL_NFCF_NFCID2_LEN);
   }
 
-  memcpy(ndefFile, (uint8_t *)NdefFile, NdefFileLen);
+  memcpy(ndefFile, (uint8_t*)NdefFile, NdefFileLen);
 
   /* Update AIB Ln with actual NDEF length */
   InformationBlock[12] = NdefFile[0];
@@ -563,7 +563,7 @@ void card_emulation_init(const uint8_t *nfcfNfcid) {
  * @return Response size.
  *****************************************************************************
  */
-uint16_t card_emulation_t4t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
+uint16_t card_emulation_t4t(uint8_t* rxData, uint16_t rxDataLen, uint8_t* txBuf,
                             uint16_t txBufLen) {
   if ((txBuf == NULL) || (txBufLen < 2)) {
     // platformErrorHandle();  /* Must ensure appropriate buffer */
@@ -609,7 +609,7 @@ uint16_t card_emulation_t4t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
  * @return Response size.
  *****************************************************************************
  */
-uint16_t card_emulation_t3t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
+uint16_t card_emulation_t3t(uint8_t* rxData, uint16_t rxDataLen, uint8_t* txBuf,
                             uint16_t txBufLen) {
   if ((txBuf == NULL) || (txBufLen < 11)) {
     // platformErrorHandle();  /* Must ensure appropriate buffer */

@@ -31,7 +31,7 @@
 
 extern nrf_driver_t g_nrf_driver;
 
-static void nrf_uart_init_peripherals(nrf_driver_t *drv, uint32_t baudrate) {
+static void nrf_uart_init_peripherals(nrf_driver_t* drv, uint32_t baudrate) {
   __HAL_RCC_USART3_FORCE_RESET();
   __HAL_RCC_USART3_RELEASE_RESET();
   __HAL_RCC_USART3_CLK_ENABLE();
@@ -63,7 +63,7 @@ static void nrf_uart_init_peripherals(nrf_driver_t *drv, uint32_t baudrate) {
   HAL_UART_Init(&drv->urt);
 }
 
-void nrf_uart_init(nrf_driver_t *drv) {
+void nrf_uart_init(nrf_driver_t* drv) {
   nrf_uart_init_peripherals(drv, 1000000);
 }
 
@@ -77,7 +77,7 @@ void nrf_uart_deinit(void) {
 }
 
 void nrf_uart_send(uint8_t data) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return;
   }
@@ -88,14 +88,14 @@ void nrf_uart_send(uint8_t data) {
   drv->urt_tx_byte = data;
 
   drv->urt_tx_byte = data;
-  HAL_UART_Transmit(&drv->urt, (uint8_t *)&drv->urt_tx_byte, 1, 30);
+  HAL_UART_Transmit(&drv->urt, (uint8_t*)&drv->urt_tx_byte, 1, 30);
 
   // receive the rest of the message, or new message in any case.
   HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
 }
 
 uint8_t nrf_uart_get_received(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return 0;
   }
@@ -107,8 +107,8 @@ uint8_t nrf_uart_get_received(void) {
   return drv->urt_rx_byte;
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
-  nrf_driver_t *drv = &g_nrf_driver;
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef* urt) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
 #ifdef USE_SMP
     if (nrf_is_dfu_mode()) {
@@ -128,16 +128,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
   }
 }
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
-  nrf_driver_t *drv = &g_nrf_driver;
+void HAL_UART_ErrorCallback(UART_HandleTypeDef* urt) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
     drv->dfu_tx_pending = false;
     HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
   }
 }
 
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
-  nrf_driver_t *drv = &g_nrf_driver;
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef* urt) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
     drv->dfu_tx_pending = false;
     drv->urt_tx_complete = true;
@@ -149,7 +149,7 @@ void USART3_IRQHandler(void) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (drv->initialized) {
     HAL_UART_IRQHandler(&drv->urt);
   }
@@ -159,9 +159,9 @@ void USART3_IRQHandler(void) {
   IRQ_LOG_EXIT();
 }
 
-bool nrf_send_uart_data(const uint8_t *data, uint32_t len,
+bool nrf_send_uart_data(const uint8_t* data, uint32_t len,
                         uint32_t timeout_ms) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
 
   if (!drv->initialized) {
     return false;
@@ -208,7 +208,7 @@ cleanup:
 }
 
 void nrf_set_dtm_mode(bool set, void (*callback)(uint8_t byte)) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return;
   }
@@ -225,19 +225,19 @@ void nrf_set_dtm_mode(bool set, void (*callback)(uint8_t byte)) {
   drv->dtm_mode = set;
 }
 
-void nrf_dtm_send_data(const uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
+void nrf_dtm_send_data(const uint8_t* data, uint32_t len) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return;
   }
   if (!drv->dtm_mode) {
     return;
   }
-  HAL_UART_Transmit(&drv->urt, (uint8_t *)data, len, 30);
+  HAL_UART_Transmit(&drv->urt, (uint8_t*)data, len, 30);
 }
 
 void nrf_set_dfu_mode(bool set) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
 
   if (!drv->initialized) {
     return;
@@ -251,7 +251,7 @@ void nrf_set_dfu_mode(bool set) {
 }
 
 bool nrf_is_dfu_mode(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
 
   if (!drv->initialized) {
     return false;
@@ -260,17 +260,17 @@ bool nrf_is_dfu_mode(void) {
   return drv->dfu_mode;
 }
 
-void nrf_dfu_comm_send(const uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
+void nrf_dfu_comm_send(const uint8_t* data, uint32_t len) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return;
   }
 
-  HAL_UART_Transmit(&drv->urt, (uint8_t *)data, len, 30);
+  HAL_UART_Transmit(&drv->urt, (uint8_t*)data, len, 30);
 }
 
-uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
+uint32_t nrf_dfu_comm_receive(uint8_t* data, uint32_t len) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return 0;
   }

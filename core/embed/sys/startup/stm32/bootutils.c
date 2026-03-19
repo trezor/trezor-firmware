@@ -128,8 +128,7 @@ static void halt_device_phase_2(uint32_t arg1, uint32_t arg2) {
   clear_otg_hs_memory();
 #endif
 
-  while (true)
-    ;  // Infinite loop
+  while (true);  // Infinite loop
 }
 
 __attribute__((noreturn)) static void halt_device(void) {

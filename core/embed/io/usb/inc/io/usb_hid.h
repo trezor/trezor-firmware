@@ -28,8 +28,8 @@
  * (usb_stop is called). */
 typedef struct {
   syshandle_t handle;
-  const uint8_t *report_desc;  // With length of report_desc_len bytes
-  uint8_t *rx_buffer;          // With length of max_packet_len bytes
+  const uint8_t* report_desc;  // With length of report_desc_len bytes
+  uint8_t* rx_buffer;          // With length of max_packet_len bytes
   uint8_t iface_num;           // Address of this HID interface
 #ifdef TREZOR_EMULATOR
   uint16_t emu_port;  // UDP port of this interface in the emulator.
@@ -44,4 +44,4 @@ typedef struct {
   uint8_t report_desc_len;   // Length of report_desc
 } usb_hid_info_t;
 
-secbool __wur usb_hid_add(const usb_hid_info_t *hid_info);
+secbool __wur usb_hid_add(const usb_hid_info_t* hid_info);

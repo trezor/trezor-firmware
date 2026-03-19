@@ -159,7 +159,7 @@ void ble_deinit(void);
  *
  * @param wakeup_params Pointer to structure to store wakeup parameters
  */
-void ble_suspend(ble_wakeup_params_t *wakeup_params);
+void ble_suspend(ble_wakeup_params_t* wakeup_params);
 
 /**
  * @brief Resumes the BLE module
@@ -167,7 +167,7 @@ void ble_suspend(ble_wakeup_params_t *wakeup_params);
  * @param wakeup_params Pointer to wakeup parameters structure
  * @return true if resume was successful, false otherwise
  */
-bool ble_resume(const ble_wakeup_params_t *wakeup_params);
+bool ble_resume(const ble_wakeup_params_t* wakeup_params);
 
 /**
  * @brief Starts BLE operations
@@ -205,7 +205,7 @@ bool ble_switch_on(void);
  * @param name_len Length of the advertising name
  * @return true if the command was successfully executed, false otherwise
  */
-bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len);
+bool ble_enter_pairing_mode(const uint8_t* name, size_t name_len);
 
 /**
  * @brief Disconnects from the currently connected device
@@ -227,7 +227,7 @@ bool ble_erase_bonds(void);
  * @param pairing_code Pointer to pairing code array
  * @return true if the command was successfully executed, false otherwise
  */
-bool ble_allow_pairing(const uint8_t *pairing_code);
+bool ble_allow_pairing(const uint8_t* pairing_code);
 
 /**
  * @brief Rejects a pairing request
@@ -257,7 +257,7 @@ bool ble_set_static_mac(bool static_mac);
  * @param name Pointer to name string
  * @param len Length of the name
  */
-void ble_set_name(const uint8_t *name, size_t len);
+void ble_set_name(const uint8_t* name, size_t len);
 
 /**
  * @brief Reads an event from the BLE module
@@ -268,7 +268,7 @@ void ble_set_name(const uint8_t *name, size_t len);
  * @return true if an event was successfully read, false if no event is
  * available
  */
-bool ble_get_event(ble_event_t *event);
+bool ble_get_event(ble_event_t* event);
 
 /**
  * @brief Retrieves the current state of the BLE module
@@ -277,7 +277,7 @@ bool ble_get_event(ble_event_t *event);
  *
  * @param state Pointer to state structure to fill
  */
-void ble_get_state(ble_state_t *state);
+void ble_get_state(ble_state_t* state);
 
 /**
  * @brief Retrieves last set advertising name
@@ -285,7 +285,7 @@ void ble_get_state(ble_state_t *state);
  * @param name Pointer to buffer for the name
  * @param max_len Maximum length of the buffer
  */
-void ble_get_advertising_name(char *name, size_t max_len);
+void ble_get_advertising_name(char* name, size_t max_len);
 
 /**
  * @brief Check if write is possible
@@ -303,7 +303,7 @@ bool ble_can_write(void);
  * device
  * @return true if successful, false otherwise
  */
-bool ble_unpair(const bt_le_addr_t *addr);
+bool ble_unpair(const bt_le_addr_t* addr);
 
 /**
  * @brief Writes data to a connected BLE device
@@ -314,7 +314,7 @@ bool ble_unpair(const bt_le_addr_t *addr);
  * @param len Length of data to send
  * @return true if successful, false otherwise
  */
-bool ble_write(const uint8_t *data, uint16_t len);
+bool ble_write(const uint8_t* data, uint16_t len);
 
 /**
  * @brief Check if read is possible
@@ -330,7 +330,7 @@ bool ble_can_read(void);
  * @param count Maximum number of bonds to retrieve
  * @return Number of bonds actually retrieved
  */
-uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count);
+uint8_t ble_get_bond_list(bt_le_addr_t* bonds, size_t count);
 
 /**
  * @brief Reads data from a connected BLE device
@@ -342,7 +342,7 @@ uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count);
  * @param max_len Maximum number of bytes to read
  * @return Number of bytes actually read
  */
-uint32_t ble_read(uint8_t *data, uint16_t max_len);
+uint32_t ble_read(uint8_t* data, uint16_t max_len);
 
 /**
  * @brief Read MAC address of the device
@@ -353,7 +353,7 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len);
  * @param addr Pointer to address structure to fill
  * @return true if successful, false otherwise
  */
-bool ble_get_mac(bt_le_addr_t *addr);
+bool ble_get_mac(bt_le_addr_t* addr);
 
 /**
  * @brief Set high speed connection
@@ -382,7 +382,7 @@ void ble_set_tx_power(ble_tx_power_level_t level);
  * @param data Pointer to data to notify
  * @param len Length of data
  */
-void ble_notify(const uint8_t *data, size_t len);
+void ble_notify(const uint8_t* data, size_t len);
 
 /**
  * @brief Set BLE enabled state

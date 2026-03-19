@@ -54,23 +54,23 @@ static const uint8_t blake2b_sigma[12][16] = {
     {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
     {14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3}};
 
-static void blake2b_set_lastnode(blake2b_state *S) { S->f[1] = (uint64_t)-1; }
+static void blake2b_set_lastnode(blake2b_state* S) { S->f[1] = (uint64_t)-1; }
 
 /* Some helper functions, not necessarily useful */
-static int blake2b_is_lastblock(const blake2b_state *S) { return S->f[0] != 0; }
+static int blake2b_is_lastblock(const blake2b_state* S) { return S->f[0] != 0; }
 
-static void blake2b_set_lastblock(blake2b_state *S) {
+static void blake2b_set_lastblock(blake2b_state* S) {
   if (S->last_node) blake2b_set_lastnode(S);
 
   S->f[0] = (uint64_t)-1;
 }
 
-static void blake2b_increment_counter(blake2b_state *S, const uint64_t inc) {
+static void blake2b_increment_counter(blake2b_state* S, const uint64_t inc) {
   S->t[0] += inc;
   S->t[1] += (S->t[0] < inc);
 }
 
-static void blake2b_init0(blake2b_state *S) {
+static void blake2b_init0(blake2b_state* S) {
   size_t i = 0;
   memzero(S, sizeof(blake2b_state));
 
@@ -78,8 +78,8 @@ static void blake2b_init0(blake2b_state *S) {
 }
 
 /* init xors IV with input parameter block */
-int blake2b_init_param(blake2b_state *S, const blake2b_param *P) {
-  const uint8_t *p = (const uint8_t *)(P);
+int blake2b_init_param(blake2b_state* S, const blake2b_param* P) {
+  const uint8_t* p = (const uint8_t*)(P);
   size_t i = 0;
 
   blake2b_init0(S);
@@ -92,7 +92,7 @@ int blake2b_init_param(blake2b_state *S, const blake2b_param *P) {
 }
 
 /* Sequential blake2b initialization */
-int blake2b_Init(blake2b_state *S, size_t outlen) {
+int blake2b_Init(blake2b_state* S, size_t outlen) {
   blake2b_param P[1] = {0};
 
   if ((!outlen) || (outlen > BLAKE2B_OUTBYTES)) return -1;
@@ -112,7 +112,7 @@ int blake2b_Init(blake2b_state *S, size_t outlen) {
   return blake2b_init_param(S, P);
 }
 
-int blake2b_InitPersonal(blake2b_state *S, size_t outlen, const void *personal,
+int blake2b_InitPersonal(blake2b_state* S, size_t outlen, const void* personal,
                          size_t personal_len) {
   blake2b_param P[1] = {0};
 
@@ -134,7 +134,7 @@ int blake2b_InitPersonal(blake2b_state *S, size_t outlen, const void *personal,
   return blake2b_init_param(S, P);
 }
 
-int blake2b_InitKey(blake2b_state *S, size_t outlen, const void *key,
+int blake2b_InitKey(blake2b_state* S, size_t outlen, const void* key,
                     size_t keylen) {
   blake2b_param P[1] = {0};
 
@@ -180,8 +180,8 @@ int blake2b_InitKey(blake2b_state *S, size_t outlen, const void *key,
   } while (0)
 
 #if OPTIMIZE_SIZE_BLAKE2B
-static void g(uint64_t *m, int r, int i, uint64_t *a, uint64_t *b, uint64_t *c,
-              uint64_t *d) {
+static void g(uint64_t* m, int r, int i, uint64_t* a, uint64_t* b, uint64_t* c,
+              uint64_t* d) {
   G(m, r, i, a, b, c, d);
 }
 #else
@@ -200,7 +200,7 @@ static void g(uint64_t *m, int r, int i, uint64_t *a, uint64_t *b, uint64_t *c,
     g(m, r, 7, v + 3, v + 4, v + 9, v + 14);  \
   } while (0)
 
-static void blake2b_compress(blake2b_state *S,
+static void blake2b_compress(blake2b_state* S,
                              const uint8_t block[BLAKE2B_BLOCKBYTES]) {
   uint64_t m[16] = {0};
   uint64_t v[16] = {0};
@@ -250,8 +250,8 @@ static void blake2b_compress(blake2b_state *S,
 #undef G
 #undef ROUND
 
-int blake2b_Update(blake2b_state *S, const void *pin, size_t inlen) {
-  const unsigned char *in = (const unsigned char *)pin;
+int blake2b_Update(blake2b_state* S, const void* pin, size_t inlen) {
+  const unsigned char* in = (const unsigned char*)pin;
   if (inlen > 0) {
     size_t left = S->buflen;
     size_t fill = BLAKE2B_BLOCKBYTES - left;
@@ -275,7 +275,7 @@ int blake2b_Update(blake2b_state *S, const void *pin, size_t inlen) {
   return 0;
 }
 
-int blake2b_Final(blake2b_state *S, void *out, size_t outlen) {
+int blake2b_Final(blake2b_state* S, void* out, size_t outlen) {
   uint8_t buffer[BLAKE2B_OUTBYTES] = {0};
   size_t i = 0;
 
@@ -296,7 +296,7 @@ int blake2b_Final(blake2b_state *S, void *out, size_t outlen) {
   return 0;
 }
 
-int blake2b(const uint8_t *msg, uint32_t msg_len, void *out, size_t outlen) {
+int blake2b(const uint8_t* msg, uint32_t msg_len, void* out, size_t outlen) {
   BLAKE2B_CTX ctx;
   if (0 != blake2b_Init(&ctx, outlen)) return -1;
   if (0 != blake2b_Update(&ctx, msg, msg_len)) return -1;
@@ -304,8 +304,8 @@ int blake2b(const uint8_t *msg, uint32_t msg_len, void *out, size_t outlen) {
   return 0;
 }
 
-int blake2b_Key(const uint8_t *msg, uint32_t msg_len, const void *key,
-                size_t keylen, void *out, size_t outlen) {
+int blake2b_Key(const uint8_t* msg, uint32_t msg_len, const void* key,
+                size_t keylen, void* out, size_t outlen) {
   BLAKE2B_CTX ctx;
   if (0 != blake2b_InitKey(&ctx, outlen, key, keylen)) return -1;
   if (0 != blake2b_Update(&ctx, msg, msg_len)) return -1;

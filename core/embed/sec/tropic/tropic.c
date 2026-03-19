@@ -127,7 +127,7 @@ static size_t tropic_cert_chain_length = 0;
 static curve25519_key tropic_public_cached = {0};
 
 // If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
-static bool cache_tropic_cert_chain(cli_t *cli) {
+static bool cache_tropic_cert_chain(cli_t* cli) {
   if (tropic_cert_chain_length > 0) {
     return true;
   }
@@ -177,7 +177,7 @@ static bool cache_tropic_cert_chain(cli_t *cli) {
   return true;
 }
 
-bool tropic_get_pubkey(cli_t *cli, curve25519_key pubkey) {
+bool tropic_get_pubkey(cli_t* cli, curve25519_key pubkey) {
   if (!cache_tropic_cert_chain(cli)) {
     return false;
   }
@@ -185,8 +185,8 @@ bool tropic_get_pubkey(cli_t *cli, curve25519_key pubkey) {
   return true;
 }
 
-bool tropic_get_cert_chain_ptr(cli_t *cli, uint8_t const **cert_chain,
-                               size_t *cert_chain_length) {
+bool tropic_get_cert_chain_ptr(cli_t* cli, uint8_t const** cert_chain,
+                               size_t* cert_chain_length) {
   if (!cache_tropic_cert_chain(cli)) {
     return false;
   }
@@ -198,8 +198,8 @@ bool tropic_get_cert_chain_ptr(cli_t *cli, uint8_t const **cert_chain,
 #endif  // !PRODUCTION || defined(TREZOR_PRODTEST)
 
 // If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
-bool tropic_wait_for_ready(cli_t *cli) {
-  tropic_driver_t *drv = &g_tropic_driver;
+bool tropic_wait_for_ready(cli_t* cli) {
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!drv->initialized) {
 #if TREZOR_PRODTEST
@@ -242,9 +242,9 @@ lt_ret_t tropic_session_invalidate(void) {
 }
 
 // If `TREZOR_PRODTEST` is not defined, the `cli` argument is ignored.
-lt_ret_t tropic_custom_session_start(cli_t *cli,
+lt_ret_t tropic_custom_session_start(cli_t* cli,
                                      lt_pkey_index_t pairing_key_index) {
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!drv->initialized) {
     return LT_FAIL;
@@ -330,7 +330,7 @@ cleanup:
 }
 
 bool tropic_session_start(void) {
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!drv->initialized) {
     return false;
@@ -360,36 +360,36 @@ bool tropic_session_start(void) {
   return false;
 }
 
-void tropic_session_start_time(uint32_t *time_ms) {
+void tropic_session_start_time(uint32_t* time_ms) {
   if (!g_tropic_driver.session_started) {
     *time_ms += 210;
   }
 }
 
-lt_ret_t lt_ecc_key_erase_retry(lt_handle_t *tropic_handle,
+lt_ret_t lt_ecc_key_erase_retry(lt_handle_t* tropic_handle,
                                 const lt_ecc_slot_t ecc_slot) {
   return TROPIC_RETRY_COMMAND(lt_ecc_key_erase(tropic_handle, ecc_slot));
 }
 
-lt_ret_t lt_r_mem_data_erase_retry(lt_handle_t *tropic_handle,
+lt_ret_t lt_r_mem_data_erase_retry(lt_handle_t* tropic_handle,
                                    const uint16_t udata_slot) {
   return TROPIC_RETRY_COMMAND(lt_r_mem_data_erase(tropic_handle, udata_slot));
 }
 
-lt_ret_t lt_mac_and_destroy_retry(lt_handle_t *tropic_handle,
+lt_ret_t lt_mac_and_destroy_retry(lt_handle_t* tropic_handle,
                                   const lt_mac_and_destroy_slot_t slot,
-                                  const uint8_t *data_out, uint8_t *data_in) {
+                                  const uint8_t* data_out, uint8_t* data_in) {
   return TROPIC_RETRY_COMMAND(
       lt_mac_and_destroy(tropic_handle, slot, data_out, data_in));
 }
 
-lt_ret_t lt_read_whole_R_config_retry(lt_handle_t *tropic_handle,
-                                      struct lt_config_t *config) {
+lt_ret_t lt_read_whole_R_config_retry(lt_handle_t* tropic_handle,
+                                      struct lt_config_t* config) {
   return TROPIC_RETRY_COMMAND(lt_read_whole_R_config(tropic_handle, config));
 }
 
-static lt_ret_t lt_erase_and_write_R_config(lt_handle_t *tropic_handle,
-                                            const struct lt_config_t *config) {
+static lt_ret_t lt_erase_and_write_R_config(lt_handle_t* tropic_handle,
+                                            const struct lt_config_t* config) {
   lt_ret_t ret = lt_r_config_erase(tropic_handle);
   if (ret != LT_OK) {
     return ret;
@@ -414,8 +414,8 @@ static lt_ret_t lt_erase_and_write_R_config(lt_handle_t *tropic_handle,
   return LT_OK;
 }
 
-lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t *tropic_handle,
-                                           const struct lt_config_t *config) {
+lt_ret_t lt_erase_and_write_R_config_retry(lt_handle_t* tropic_handle,
+                                           const struct lt_config_t* config) {
   return TROPIC_RETRY_COMMAND(
       lt_erase_and_write_R_config(tropic_handle, config));
 }
@@ -425,7 +425,7 @@ bool tropic_init(uint16_t port) {
 #else
 bool tropic_init(void) {
 #endif
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (drv->initialized) {
     return true;
@@ -449,13 +449,13 @@ bool tropic_init(void) {
 }
 
 void tropic_deinit(void) {
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
   lt_deinit(&drv->handle);
   memset(drv, 0, sizeof(*drv));
 }
 
-lt_handle_t *tropic_get_handle(void) {
-  tropic_driver_t *drv = &g_tropic_driver;
+lt_handle_t* tropic_get_handle(void) {
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!drv->initialized) {
     return NULL;
@@ -464,8 +464,8 @@ lt_handle_t *tropic_get_handle(void) {
   return &drv->handle;
 }
 
-bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
-  tropic_driver_t *drv = &g_tropic_driver;
+bool tropic_ping(const uint8_t* msg_out, uint8_t* msg_in, uint16_t msg_len) {
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!tropic_session_start()) {
     return false;
@@ -476,7 +476,7 @@ bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
 }
 
 bool tropic_ecc_key_generate(uint16_t slot_index) {
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!tropic_session_start()) {
     return false;
@@ -491,9 +491,9 @@ bool tropic_ecc_key_generate(uint16_t slot_index) {
   return ret == LT_OK;
 }
 
-bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
-                     uint16_t dig_len, uint8_t *sig) {
-  tropic_driver_t *drv = &g_tropic_driver;
+bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
+                     uint16_t dig_len, uint8_t* sig) {
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!tropic_session_start()) {
     return false;
@@ -513,8 +513,8 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
   return true;
 }
 
-bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
-  tropic_driver_t *drv = &g_tropic_driver;
+bool tropic_data_read(uint16_t udata_slot, uint8_t* data, uint16_t* size) {
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!tropic_session_start()) {
     return false;
@@ -553,8 +553,8 @@ void tropic_get_factory_privkey(curve25519_key privkey) {
   memcpy(privkey, factory_private, sizeof(curve25519_key));
 }
 
-bool tropic_random_buffer(void *buffer, size_t length) {
-  tropic_driver_t *drv = &g_tropic_driver;
+bool tropic_random_buffer(void* buffer, size_t length) {
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (!tropic_session_start()) {
     return false;
@@ -567,7 +567,7 @@ bool tropic_random_buffer(void *buffer, size_t length) {
   return true;
 }
 
-void tropic_random_buffer_time(uint32_t *time_ms) {
+void tropic_random_buffer_time(uint32_t* time_ms) {
   // Assuming the data size is 32 bytes
   *time_ms += 50;
 }
@@ -589,32 +589,32 @@ static lt_mac_and_destroy_slot_t get_mac_and_destroy_slot(
              TROPIC_MAC_AND_DESTROY_SLOT_COUNT;
 }
 
-static uint16_t get_kek_masks_slot(tropic_driver_t *drv) {
+static uint16_t get_kek_masks_slot(tropic_driver_t* drv) {
   return drv->pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT
              ? TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT
              : TROPIC_KEK_MASKS_PRIVILEGED_SLOT;
 }
 
-static void lt_mac_and_destroy_time(uint32_t *time_ms) { *time_ms += 51; }
+static void lt_mac_and_destroy_time(uint32_t* time_ms) { *time_ms += 51; }
 
-static void lt_r_mem_data_read_time(uint32_t *time_ms) {
+static void lt_r_mem_data_read_time(uint32_t* time_ms) {
   // Assuming the data size is 320 bytes
   *time_ms += 100;
 }
 
-static void lt_r_mem_data_write_time(uint32_t *time_ms) {
+static void lt_r_mem_data_write_time(uint32_t* time_ms) {
   // Assuming the data size is 320 bytes
   *time_ms += 77;
 }
 
-static void lt_r_mem_data_erase_time(uint32_t *time_ms) { *time_ms += 55; }
+static void lt_r_mem_data_erase_time(uint32_t* time_ms) { *time_ms += 55; }
 
-static void lt_mcounter_get_time(uint32_t *time_ms) { *time_ms += 51; }
+static void lt_mcounter_get_time(uint32_t* time_ms) { *time_ms += 51; }
 
-static void lt_mcounter_update_time(uint32_t *time_ms) { *time_ms += 51; }
+static void lt_mcounter_update_time(uint32_t* time_ms) { *time_ms += 51; }
 
-lt_ret_t lt_r_mem_data_erase_write(lt_handle_t *h, const uint16_t udata_slot,
-                                   uint8_t *data, const uint16_t size) {
+lt_ret_t lt_r_mem_data_erase_write(lt_handle_t* h, const uint16_t udata_slot,
+                                   uint8_t* data, const uint16_t size) {
   lt_ret_t ret = lt_r_mem_data_erase(h, udata_slot);
   if (ret != LT_OK) {
     return ret;
@@ -623,7 +623,7 @@ lt_ret_t lt_r_mem_data_erase_write(lt_handle_t *h, const uint16_t udata_slot,
   return lt_r_mem_data_write(h, udata_slot, data, size);
 }
 
-lt_ret_t lt_r_mem_data_erase_write_time(uint32_t *time_ms) {
+lt_ret_t lt_r_mem_data_erase_write_time(uint32_t* time_ms) {
   lt_r_mem_data_erase_time(time_ms);
   lt_r_mem_data_write_time(time_ms);
   return LT_OK;
@@ -632,8 +632,8 @@ lt_ret_t lt_r_mem_data_erase_write_time(uint32_t *time_ms) {
 static uint32_t g_change_pin_counter_cached = 0;
 static bool g_is_change_pin_counter_cached = false;
 
-static bool get_change_pin_counter(uint32_t *change_pin_counter) {
-  tropic_driver_t *drv = &g_tropic_driver;
+static bool get_change_pin_counter(uint32_t* change_pin_counter) {
+  tropic_driver_t* drv = &g_tropic_driver;
 
   if (g_is_change_pin_counter_cached) {
     *change_pin_counter = g_change_pin_counter_cached;
@@ -658,7 +658,7 @@ static bool get_change_pin_counter(uint32_t *change_pin_counter) {
   return true;
 }
 
-static void get_change_pin_counter_time(uint32_t *time_ms,
+static void get_change_pin_counter_time(uint32_t* time_ms,
                                         bool is_change_pin_counter_cached) {
   if (!is_change_pin_counter_cached) {
     lt_mcounter_get_time(time_ms);
@@ -666,7 +666,7 @@ static void get_change_pin_counter_time(uint32_t *time_ms,
 }
 
 static bool update_change_pin_counter() {
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
   lt_ret_t ret = LT_FAIL;
 
   // The cache is invalidated because the counter may be updated more than once
@@ -693,7 +693,7 @@ static bool update_change_pin_counter() {
   return true;
 }
 
-static void update_change_pin_counter_time(uint32_t *time_ms) {
+static void update_change_pin_counter_time(uint32_t* time_ms) {
   lt_mcounter_update_time(time_ms);
   // Ignore the time of `lt_mcounter_init()` since we cannot easily determine
   // whether it will be executed.
@@ -705,7 +705,7 @@ bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
     return false;
   }
 
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
   bool ret = false;
 
   tropic_set_ui_progress(ui_progress);
@@ -746,7 +746,7 @@ cleanup:
   return ret;
 }
 
-void tropic_pin_stretch_time(uint32_t *time_ms) {
+void tropic_pin_stretch_time(uint32_t* time_ms) {
   get_change_pin_counter_time(time_ms, g_is_change_pin_counter_cached);
   lt_mac_and_destroy_time(time_ms);
 }
@@ -758,7 +758,7 @@ bool tropic_pin_reset_slots(
     return false;
   }
 
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
   bool ret = false;
 
   tropic_set_ui_progress(ui_progress);
@@ -791,7 +791,7 @@ cleanup:
   return ret;
 }
 
-void tropic_pin_reset_slots_time(uint32_t *time_ms, uint16_t pin_index) {
+void tropic_pin_reset_slots_time(uint32_t* time_ms, uint16_t pin_index) {
   // When get_change_pin_counter() is called in tropic_pin_reset_slots(), the
   // change pin counter will have already been cached by
   // get_change_pin_counter() in tropic_pin_stretch()
@@ -802,7 +802,7 @@ void tropic_pin_reset_slots_time(uint32_t *time_ms, uint16_t pin_index) {
 }
 
 static lt_ret_t generate_correct_mac_and_destroy_output(
-    lt_handle_t *handle, uint16_t slot_index,
+    lt_handle_t* handle, uint16_t slot_index,
     const uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE],
     const uint8_t input[TROPIC_MAC_AND_DESTROY_SIZE],
     uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE]) {
@@ -814,7 +814,7 @@ static lt_ret_t generate_correct_mac_and_destroy_output(
   return lt_mac_and_destroy(handle, slot_index, input, output);
 }
 
-static void generate_correct_mac_and_destroy_output_time(uint32_t *time_ms) {
+static void generate_correct_mac_and_destroy_output_time(uint32_t* time_ms) {
   lt_mac_and_destroy_time(time_ms);
   lt_mac_and_destroy_time(time_ms);
 }
@@ -823,7 +823,7 @@ bool tropic_pin_set(
     tropic_ui_progress_t ui_progress,
     uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE],
     uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]) {
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
   bool ret = false;
 
   tropic_set_ui_progress(ui_progress);
@@ -878,7 +878,7 @@ cleanup:
   return ret;
 }
 
-void tropic_pin_set_time(uint32_t *time_ms) {
+void tropic_pin_set_time(uint32_t* time_ms) {
   rng_fill_buffer_strong_time(time_ms);
   update_change_pin_counter_time(time_ms);
   // When get_change_pin_counter() is called in tropic_pin_set(), the
@@ -895,7 +895,7 @@ bool tropic_pin_set_kek_masks(
     tropic_ui_progress_t ui_progress,
     const uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE],
     const uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE]) {
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
   bool ret = false;
 
   tropic_set_ui_progress(ui_progress);
@@ -934,7 +934,7 @@ cleanup:
   return ret;
 }
 
-void tropic_pin_set_kek_masks_time(uint32_t *time_ms) {
+void tropic_pin_set_kek_masks_time(uint32_t* time_ms) {
   lt_r_mem_data_erase_write_time(time_ms);
 }
 
@@ -942,7 +942,7 @@ bool tropic_pin_unmask_kek(
     tropic_ui_progress_t ui_progress, uint16_t pin_index,
     const uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE],
     uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]) {
-  tropic_driver_t *drv = &g_tropic_driver;
+  tropic_driver_t* drv = &g_tropic_driver;
 
   tropic_set_ui_progress(ui_progress);
   bool ret = false;
@@ -981,7 +981,7 @@ cleanup:
   return ret;
 }
 
-void tropic_pin_unmask_kek_time(uint32_t *time_ms) {
+void tropic_pin_unmask_kek_time(uint32_t* time_ms) {
   lt_r_mem_data_read_time(time_ms);
 }
 
@@ -989,7 +989,7 @@ void tropic_pin_unmask_kek_time(uint32_t *time_ms) {
 
 #endif  // SECURE_MODE
 
-bool tropic_data_multi_size(uint16_t first_slot, size_t *data_length) {
+bool tropic_data_multi_size(uint16_t first_slot, size_t* data_length) {
   if (first_slot > TR01_R_MEM_DATA_SLOT_MAX) {
     return false;
   }
@@ -1012,8 +1012,8 @@ bool tropic_data_multi_size(uint16_t first_slot, size_t *data_length) {
 static size_t min(size_t x, size_t y) { return (x < y) ? x : y; }
 
 bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
-                            uint8_t *data, size_t max_data_length,
-                            size_t *data_length) {
+                            uint8_t* data, size_t max_data_length,
+                            size_t* data_length) {
   if (first_slot > TR01_R_MEM_DATA_SLOT_MAX || slot_count == 0 ||
       slot_count > TR01_R_MEM_DATA_SLOT_MAX + 1 - first_slot) {
     return false;

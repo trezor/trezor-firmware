@@ -49,12 +49,12 @@ typedef struct {
   BUFFER_READER buf;
 } DER_ITEM;
 
-bool __wur der_read_length(BUFFER_READER *buf, size_t *len);
-bool __wur der_write_length(BUFFER_WRITER *buf, size_t len);
-bool __wur der_read_item(BUFFER_READER *buf, DER_ITEM *item);
-bool __wur der_read_item_expected(BUFFER_READER *buf, const uint8_t expected_id,
-                                  DER_ITEM *item);
-bool __wur der_equal(const DER_ITEM *a, const DER_ITEM *b);
-bool __wur der_reencode_int(BUFFER_READER *reader, BUFFER_WRITER *writer);
+bool __wur der_read_length(BUFFER_READER* buf, size_t* len);
+bool __wur der_write_length(BUFFER_WRITER* buf, size_t len);
+bool __wur der_read_item(BUFFER_READER* buf, DER_ITEM* item);
+bool __wur der_read_item_expected(BUFFER_READER* buf, const uint8_t expected_id,
+                                  DER_ITEM* item);
+bool __wur der_equal(const DER_ITEM* a, const DER_ITEM* b);
+bool __wur der_reencode_int(BUFFER_READER* reader, BUFFER_WRITER* writer);
 
 #endif  // __DER_H

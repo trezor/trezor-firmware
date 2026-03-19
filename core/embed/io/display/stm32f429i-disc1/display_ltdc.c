@@ -285,5 +285,5 @@ void BSP_LCD_Init(void) {
   /* Initialize the LCD Layers */
   BSP_LCD_LayerDefaultInit(1, FRAME_BUFFER_ADDR);
 
-  memset((void *)FRAME_BUFFER_ADDR, 0, FRAME_BUFFER_SIZE);
+  memset((void*)FRAME_BUFFER_ADDR, 0, FRAME_BUFFER_SIZE);
 }
