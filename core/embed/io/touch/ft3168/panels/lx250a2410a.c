@@ -22,8 +22,8 @@
 
 #include "lx250a2410a.h"
 
-void lx250a2410a_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
-                                  uint16_t *y_new) {
+void lx250a2410a_touch_correction(uint16_t x, uint16_t y, uint16_t* x_new,
+                                  uint16_t* y_new) {
   // This panel may report coordinates outside the display area
   *x_new = MIN(x, DISPLAY_RESX - 1);
   *y_new = MIN(y, DISPLAY_RESY - 1);

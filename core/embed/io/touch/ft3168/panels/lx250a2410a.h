@@ -24,5 +24,5 @@
 // Performs touch coordinates correction needed for a specific panel.
 // Input parameters x, y represent the original touch coordinates.
 // Output parameters x_new, y_new represent the corrected touch coordinates.
-void lx250a2410a_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
-                                  uint16_t *y_new);
+void lx250a2410a_touch_correction(uint16_t x, uint16_t y, uint16_t* x_new,
+                                  uint16_t* y_new);

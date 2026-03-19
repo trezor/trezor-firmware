@@ -53,7 +53,7 @@ typedef struct {
 
 static nrf_test_t g_nrf_test;
 
-void nrf_test_cb(const uint8_t *data, uint32_t len) {
+void nrf_test_cb(const uint8_t* data, uint32_t len) {
   switch (data[0]) {
     case PRODTEST_RESP_SPI:
       g_nrf_test.answered_spi = true;

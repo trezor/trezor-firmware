@@ -28,7 +28,7 @@ const uint32_t sha256_initial_tapsighash_state[8] = {
     0x6eee945dUL, 0xbc7888ddUL, 0x02a6e2c3UL, 0x1873fe9fUL,
 };
 
-void hasher_InitParam(Hasher *hasher, HasherType type, const void *param,
+void hasher_InitParam(Hasher* hasher, HasherType type, const void* param,
                       uint32_t param_size) {
   hasher->type = type;
   hasher->param = param;
@@ -67,15 +67,15 @@ void hasher_InitParam(Hasher *hasher, HasherType type, const void *param,
   }
 }
 
-void hasher_Init(Hasher *hasher, HasherType type) {
+void hasher_Init(Hasher* hasher, HasherType type) {
   hasher_InitParam(hasher, type, NULL, 0);
 }
 
-void hasher_Reset(Hasher *hasher) {
+void hasher_Reset(Hasher* hasher) {
   hasher_InitParam(hasher, hasher->type, hasher->param, hasher->param_size);
 }
 
-void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {
+void hasher_Update(Hasher* hasher, const uint8_t* data, size_t length) {
   switch (hasher->type) {
     case HASHER_SHA2:
     case HASHER_SHA2D:
@@ -104,7 +104,7 @@ void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {
   }
 }
 
-void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
+void hasher_Final(Hasher* hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
   switch (hasher->type) {
     case HASHER_SHA2:
     case HASHER_SHA2_TAPSIGHASH:
@@ -147,7 +147,7 @@ void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
   }
 }
 
-void hasher_Raw(HasherType type, const uint8_t *data, size_t length,
+void hasher_Raw(HasherType type, const uint8_t* data, size_t length,
                 uint8_t hash[HASHER_DIGEST_LENGTH]) {
   Hasher hasher = {0};
 

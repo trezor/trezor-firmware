@@ -76,7 +76,7 @@ static const uint8_t * const SECMON_KEYS[] = {
 #endif
 
 static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n,
-                              const uint8_t *const *pub, uint8_t sigmask,
+                              const uint8_t* const* pub, uint8_t sigmask,
                               ed25519_public_key res) {
   if (0 == sig_m || 0 == sig_n) return secfalse;
   if (sig_m > sig_n) return secfalse;
@@ -99,10 +99,10 @@ static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n,
   return sectrue * (0 == ed25519_cosi_combine_publickeys(res, keys, sig_m));
 }
 
-const image_header *read_image_header(const uint8_t *const data,
+const image_header* read_image_header(const uint8_t* const data,
                                       const uint32_t magic,
                                       const uint32_t maxsize) {
-  const image_header *hdr = (const image_header *)data;
+  const image_header* hdr = (const image_header*)data;
 
   if (hdr->magic != magic) {
     return NULL;
@@ -126,7 +126,7 @@ const image_header *read_image_header(const uint8_t *const data,
   return hdr;
 }
 
-secbool check_image_model(const image_header *const hdr) {
+secbool check_image_model(const image_header* const hdr) {
   // abusing expiry field to break compatibility of non-TT images with existing
   // bootloaders/boardloaders
 #ifdef TREZOR_MODEL_T2T1
@@ -154,18 +154,18 @@ secbool check_image_model(const image_header *const hdr) {
   return sectrue;
 }
 
-void get_image_fingerprint(const image_header *const hdr, uint8_t *const out) {
+void get_image_fingerprint(const image_header* const hdr, uint8_t* const out) {
   IMAGE_HASH_CTX ctx;
   IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, (uint8_t *)hdr, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
+  IMAGE_HASH_UPDATE(&ctx, (uint8_t*)hdr, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
   for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
-    IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)"\x00", 1);
+    IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)"\x00", 1);
   }
   IMAGE_HASH_FINAL(&ctx, out);
 }
 
-secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
-                               uint8_t key_n, const uint8_t *const *keys) {
+secbool check_image_header_sig(const image_header* const hdr, uint8_t key_m,
+                               uint8_t key_n, const uint8_t* const* keys) {
   // check header signature
 
   uint8_t fingerprint[32];
@@ -177,13 +177,13 @@ secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
 
   return sectrue *
          (0 == ed25519_sign_open(fingerprint, IMAGE_HASH_DIGEST_LENGTH, pub,
-                                 *(const ed25519_signature *)hdr->sig));
+                                 *(const ed25519_signature*)hdr->sig));
 }
 
 #ifdef USE_SECMON_VERIFICATION
-const secmon_header_t *read_secmon_header(const uint8_t *const data,
+const secmon_header_t* read_secmon_header(const uint8_t* const data,
                                           const uint32_t maxsize) {
-  const secmon_header_t *hdr = (const secmon_header_t *)data;
+  const secmon_header_t* hdr = (const secmon_header_t*)data;
 
   if (hdr->magic != SECMON_IMAGE_MAGIC) {
     return NULL;
@@ -199,7 +199,7 @@ const secmon_header_t *read_secmon_header(const uint8_t *const data,
   return hdr;
 }
 
-secbool check_secmon_model(const secmon_header_t *const hdr) {
+secbool check_secmon_model(const secmon_header_t* const hdr) {
 #ifndef TREZOR_EMULATOR
   if (hdr->hw_model != HW_MODEL) {
     return secfalse;
@@ -212,18 +212,18 @@ secbool check_secmon_model(const secmon_header_t *const hdr) {
   return sectrue;
 }
 
-void get_secmon_fingerprint(const secmon_header_t *const hdr,
-                            uint8_t *const out) {
+void get_secmon_fingerprint(const secmon_header_t* const hdr,
+                            uint8_t* const out) {
   IMAGE_HASH_CTX ctx;
   IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, (uint8_t *)hdr, SECMON_HEADER_SIZE - IMAGE_SIG_SIZE);
+  IMAGE_HASH_UPDATE(&ctx, (uint8_t*)hdr, SECMON_HEADER_SIZE - IMAGE_SIG_SIZE);
   for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
-    IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)"\x00", 1);
+    IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)"\x00", 1);
   }
   IMAGE_HASH_FINAL(&ctx, out);
 }
 
-secbool check_secmon_header_sig(const secmon_header_t *const hdr) {
+secbool check_secmon_header_sig(const secmon_header_t* const hdr) {
   // check header signature
 
   uint8_t fingerprint[32];
@@ -236,18 +236,18 @@ secbool check_secmon_header_sig(const secmon_header_t *const hdr) {
 
   return sectrue *
          (0 == ed25519_sign_open(fingerprint, IMAGE_HASH_DIGEST_LENGTH, pub,
-                                 *(const ed25519_signature *)hdr->sig));
+                                 *(const ed25519_signature*)hdr->sig));
 }
 
 #ifdef SECURE_MODE
-secbool check_secmon_contents(const secmon_header_t *const hdr,
-                              size_t code_offset, const flash_area_t *area) {
+secbool check_secmon_contents(const secmon_header_t* const hdr,
+                              size_t code_offset, const flash_area_t* area) {
   if (0 == area) {
     return secfalse;
   }
 
   // Check the secmon integrity, calculate and compare hash
-  const void *data = flash_area_get_address(
+  const void* data = flash_area_get_address(
       area, code_offset + SECMON_HEADER_SIZE, hdr->codelen);
   if (!data) {
     return secfalse;
@@ -263,8 +263,8 @@ secbool check_secmon_contents(const secmon_header_t *const hdr,
 
 #endif  // USE_SECMON_VERIFICATION
 
-secbool __wur read_vendor_header(const uint8_t *const data,
-                                 vendor_header *const vhdr) {
+secbool __wur read_vendor_header(const uint8_t* const data,
+                                 vendor_header* const vhdr) {
   memcpy(&vhdr->magic, data, 4);
   if (vhdr->magic != 0x565A5254) return secfalse;  // TRZV
 
@@ -297,7 +297,7 @@ secbool __wur read_vendor_header(const uint8_t *const data,
 
   memcpy(&vhdr->vstr_len, data + 32 + vhdr->vsig_n * 32, 1);
 
-  vhdr->vstr = (const char *)(data + 32 + vhdr->vsig_n * 32 + 1);
+  vhdr->vstr = (const char*)(data + 32 + vhdr->vsig_n * 32 + 1);
 
   vhdr->vimg = data + 32 + vhdr->vsig_n * 32 + 1 + vhdr->vstr_len;
   // align to 4 bytes
@@ -311,7 +311,7 @@ secbool __wur read_vendor_header(const uint8_t *const data,
   return sectrue;
 }
 
-secbool check_vendor_header_model(const vendor_header *const vhdr) {
+secbool check_vendor_header_model(const vendor_header* const vhdr) {
 #ifdef TREZOR_MODEL_T2T1
   if (vhdr->hw_model == 0) {
     // vendor headers for model T have this field set to 0
@@ -325,8 +325,8 @@ secbool check_vendor_header_model(const vendor_header *const vhdr) {
   return secfalse;
 }
 
-secbool check_vendor_header_sig(const vendor_header *const vhdr, uint8_t key_m,
-                                uint8_t key_n, const uint8_t *const *keys) {
+secbool check_vendor_header_sig(const vendor_header* const vhdr, uint8_t key_m,
+                                uint8_t key_n, const uint8_t* const* keys) {
   if (vhdr == NULL) {
     return secfalse;
   }
@@ -338,7 +338,7 @@ secbool check_vendor_header_sig(const vendor_header *const vhdr, uint8_t key_m,
   IMAGE_HASH_INIT(&ctx);
   IMAGE_HASH_UPDATE(&ctx, vhdr->origin, vhdr->hdrlen - IMAGE_SIG_SIZE);
   for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
-    IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)"\x00", 1);
+    IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)"\x00", 1);
   }
   IMAGE_HASH_FINAL(&ctx, hash);
 
@@ -348,23 +348,23 @@ secbool check_vendor_header_sig(const vendor_header *const vhdr, uint8_t key_m,
 
   return sectrue *
          (0 == ed25519_sign_open(hash, IMAGE_HASH_DIGEST_LENGTH, pub,
-                                 *(const ed25519_signature *)vhdr->sig));
+                                 *(const ed25519_signature*)vhdr->sig));
 }
 
-secbool check_vendor_header_keys(const vendor_header *const vhdr) {
+secbool check_vendor_header_keys(const vendor_header* const vhdr) {
   return check_vendor_header_sig(vhdr, BOOTLOADER_KEY_M, BOOTLOADER_KEY_N,
                                  BOOTLOADER_KEYS);
 }
 
-void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash) {
+void vendor_header_hash(const vendor_header* const vhdr, uint8_t* hash) {
   IMAGE_HASH_CTX ctx;
   IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)vhdr->vstr, vhdr->vstr_len);
-  IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)"Trezor Vendor Header", 20);
+  IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)vhdr->vstr, vhdr->vstr_len);
+  IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)"Trezor Vendor Header", 20);
   IMAGE_HASH_FINAL(&ctx, hash);
 }
 
-secbool check_single_hash(const uint8_t *const hash, const uint8_t *const data,
+secbool check_single_hash(const uint8_t* const hash, const uint8_t* const data,
                           int len) {
   uint8_t s_c[IMAGE_HASH_DIGEST_LENGTH] = {0};
 
@@ -374,8 +374,8 @@ secbool check_single_hash(const uint8_t *const hash, const uint8_t *const data,
 }
 
 #ifdef KERNEL_MODE
-secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
-                             const flash_area_t *area) {
+secbool check_image_contents(const image_header* const hdr, uint32_t firstskip,
+                             const flash_area_t* area) {
   if (0 == area) {
     return secfalse;
   }
@@ -391,7 +391,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
     size_t bytes_to_check = MIN(IMAGE_CHUNK_SIZE - (offset % IMAGE_CHUNK_SIZE),
                                 end_offset - offset);
 
-    const void *data = flash_area_get_address(area, offset, bytes_to_check);
+    const void* data = flash_area_get_address(area, offset, bytes_to_check);
     if (!data) {
       return secfalse;
     }
@@ -413,7 +413,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
     // Firmware is always padded with 0xFF, while the bootloader might be
     // padded with 0x00 as well
     uint8_t expected_byte = *(
-        (const uint8_t *)flash_area_get_address(area, offset, sizeof(uint8_t)));
+        (const uint8_t*)flash_area_get_address(area, offset, sizeof(uint8_t)));
 
     if (expected_byte != 0x00 && expected_byte != 0xFF) {
       return secfalse;
@@ -428,7 +428,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
       size_t words_to_check = bytes_to_check / sizeof(uint32_t);
       size_t single_bytes_to_check = bytes_to_check % sizeof(uint32_t);
 
-      const uint8_t *bytes = (const uint8_t *)flash_area_get_address(
+      const uint8_t* bytes = (const uint8_t*)flash_area_get_address(
           area, offset, single_bytes_to_check);
       if (!bytes) {
         return secfalse;
@@ -442,7 +442,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 
       offset += single_bytes_to_check;
 
-      const uint32_t *data = (const uint32_t *)flash_area_get_address(
+      const uint32_t* data = (const uint32_t*)flash_area_get_address(
           area, offset, bytes_to_check - single_bytes_to_check);
       if (!data) {
         return secfalse;
@@ -462,8 +462,8 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 }
 #endif  // KERNEL_MODE
 
-secbool check_firmware_header(const uint8_t *header, size_t header_size,
-                              firmware_header_info_t *info) {
+secbool check_firmware_header(const uint8_t* header, size_t header_size,
+                              firmware_header_info_t* info) {
   // parse and check vendor header
   vendor_header vhdr;
   if (sectrue != read_vendor_header(header, &vhdr)) {
@@ -474,7 +474,7 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
   }
 
   // parse and check image header
-  const image_header *ihdr;
+  const image_header* ihdr;
   if ((ihdr = read_image_header(header + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC,
                                 FIRMWARE_MAXSIZE)) == NULL) {
     return secfalse;
@@ -505,7 +505,7 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
   return sectrue;
 }
 
-secbool check_bootloader_header_sig(const image_header *const hdr) {
+secbool check_bootloader_header_sig(const image_header* const hdr) {
   return check_image_header_sig(hdr, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N,
                                 BOARDLOADER_KEYS);
 }

@@ -45,7 +45,7 @@
 #define SIZE_512M (512 * 1024 * 1024)
 
 // Checks if a value 'x' is a power of two.
-#define IS_POWER_OF_TWO(x) (((x) != 0) && (((x) & ((x)-1)) == 0))
+#define IS_POWER_OF_TWO(x) (((x) != 0) && (((x) & ((x) - 1)) == 0))
 
 // Ensures at compile-time that 'x' is a power of two.
 #define ENSURE_POWER_OF_TWO(x) \
@@ -53,10 +53,10 @@
 
 // Checks if 'addr' is properly aligned to 'align', which must be a
 // power of two.
-#define IS_ALIGNED(addr, align)    \
-  ({                               \
-    ENSURE_POWER_OF_TWO(align);    \
-    (((addr) & ((align)-1)) == 0); \
+#define IS_ALIGNED(addr, align)      \
+  ({                                 \
+    ENSURE_POWER_OF_TWO(align);      \
+    (((addr) & ((align) - 1)) == 0); \
   })
 
 // Ensures that that 'addr' is properly aligned to 'align', which
@@ -66,10 +66,10 @@
 
 // Aligns 'addr' upwards to the next boundary of 'align', which must
 // be a power of two.
-#define ALIGN_UP(addr, align)              \
-  ({                                       \
-    ENSURE_POWER_OF_TWO(align);            \
-    (((addr) + (align)-1) & ~((align)-1)); \
+#define ALIGN_UP(addr, align)                  \
+  ({                                           \
+    ENSURE_POWER_OF_TWO(align);                \
+    (((addr) + (align) - 1) & ~((align) - 1)); \
   })
 
 // Aligns 'addr' upwards to the next boundary of 'align', which must
@@ -77,14 +77,14 @@
 //
 // This version is for use in constant expressions. Use only if `ALIGN_UP`
 // doesn't work in your case.
-#define ALIGN_UP_CONST(addr, align) (((addr) + (align)-1) & ~((align)-1))
+#define ALIGN_UP_CONST(addr, align) (((addr) + (align) - 1) & ~((align) - 1))
 
 // Aligns 'addr' downwards to the previous boundary of 'align', which
 // must be a power of two.
 #define ALIGN_DOWN(addr, align) \
   ({                            \
     ENSURE_POWER_OF_TWO(align); \
-    ((addr) & ~((align)-1));    \
+    ((addr) & ~((align) - 1));  \
   })
 
 // Aligns 'addr' downwards to the previous boundary of 'align', which
@@ -92,6 +92,6 @@
 //
 // This version is for use in constant expressions. Use only if `ALIGN_DOWN`
 // doesn't work in your case.
-#define ALIGN_DOWN_CONST(addr, align) ((addr) & ~((align)-1))
+#define ALIGN_DOWN_CONST(addr, align) ((addr) & ~((align) - 1))
 
 #endif  // LIB_SIZEDEFS_H

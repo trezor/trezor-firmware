@@ -113,10 +113,10 @@ static const optiga_metadata_item ACCESS_PIN_HMAC_CTR =
 // Size of the CMAC/HMAC prefix returned by Optiga.
 #define ENCRYPT_SYM_PREFIX_SIZE 3
 
-optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
-                               size_t digest_size, uint8_t *der_signature,
+optiga_sign_result optiga_sign(uint8_t index, const uint8_t* digest,
+                               size_t digest_size, uint8_t* der_signature,
                                size_t max_der_signature_size,
-                               size_t *der_signature_size) {
+                               size_t* der_signature_size) {
   optiga_sign_result ret = OPTIGA_SIGN_SUCCESS;
   if (index >= OPTIGA_ECC_KEY_COUNT) {
     ret = OPTIGA_SIGN_ERROR;
@@ -189,7 +189,7 @@ cleanup:
   return ret;
 }
 
-bool optiga_cert_size(uint8_t index, size_t *cert_size) {
+bool optiga_cert_size(uint8_t index, size_t* cert_size) {
   *cert_size = 0;
 
   if (index >= OPTIGA_CERT_COUNT) {
@@ -218,8 +218,8 @@ bool optiga_cert_size(uint8_t index, size_t *cert_size) {
   return true;
 }
 
-bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
-                      size_t *cert_size) {
+bool optiga_read_cert(uint8_t index, uint8_t* cert, size_t max_cert_size,
+                      size_t* cert_size) {
   if (index >= OPTIGA_CERT_COUNT) {
     return false;
   }
@@ -229,7 +229,7 @@ bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
   return OPTIGA_SUCCESS == ret;
 }
 
-bool optiga_read_sec(uint8_t *sec) {
+bool optiga_read_sec(uint8_t* sec) {
   size_t size = 0;
   optiga_result ret = optiga_get_data_object(OPTIGA_OID_SEC, false, sec,
                                              sizeof(uint8_t), &size);
@@ -250,7 +250,7 @@ void optiga_set_sec_max(void) {
                    sizeof(invalid_point), buffer, sizeof(buffer), &size);
 }
 
-bool optiga_random_buffer(uint8_t *dest, size_t size) {
+bool optiga_random_buffer(uint8_t* dest, size_t size) {
   while (size > OPTIGA_RANDOM_MAX_SIZE) {
     if (optiga_get_random(dest, OPTIGA_RANDOM_MAX_SIZE) != OPTIGA_SUCCESS) {
       return false;
@@ -269,12 +269,12 @@ bool optiga_random_buffer(uint8_t *dest, size_t size) {
   return optiga_get_random(dest, size) == OPTIGA_SUCCESS;
 }
 
-void optiga_random_buffer_time(uint32_t *time_ms) {
+void optiga_random_buffer_time(uint32_t* time_ms) {
   // Assuming the data size is 32 bytes
   return optiga_get_random_time(time_ms);
 }
 
-static bool read_metadata(uint16_t oid, optiga_metadata *metadata) {
+static bool read_metadata(uint16_t oid, optiga_metadata* metadata) {
   static uint8_t serialized[OPTIGA_MAX_METADATA_SIZE] = {0};
   size_t size = 0;
   if (optiga_get_data_object(oid, true, serialized, sizeof(serialized),
@@ -285,7 +285,7 @@ static bool read_metadata(uint16_t oid, optiga_metadata *metadata) {
   return optiga_parse_metadata(serialized, size, metadata) == OPTIGA_SUCCESS;
 }
 
-static bool write_metadata(uint16_t oid, const optiga_metadata *metadata) {
+static bool write_metadata(uint16_t oid, const optiga_metadata* metadata) {
   uint8_t serialized[OPTIGA_MAX_METADATA_SIZE] = {0};
   size_t size = 0;
 
@@ -297,7 +297,7 @@ static bool write_metadata(uint16_t oid, const optiga_metadata *metadata) {
   return optiga_set_data_object(oid, true, serialized, size) == OPTIGA_SUCCESS;
 }
 
-bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
+bool optiga_set_metadata(uint16_t oid, const optiga_metadata* metadata) {
   // Read the stored metadata.
   optiga_metadata metadata_stored = {0};
   if (!read_metadata(oid, &metadata_stored)) {
@@ -341,7 +341,7 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
   return true;
 }
 
-void optiga_set_metadata_time(bool is_configured, uint32_t *time_ms) {
+void optiga_set_metadata_time(bool is_configured, uint32_t* time_ms) {
   optiga_get_data_object_time(true, time_ms);
   if (!is_configured) {
     optiga_set_data_object_time(true, time_ms);
@@ -513,7 +513,7 @@ static bool optiga_pin_init_metadata() {
   return true;
 }
 
-static void optiga_pin_init_metadata_time(uint32_t *time_ms) {
+static void optiga_pin_init_metadata_time(uint32_t* time_ms) {
   bool is_configured = optiga_is_configured();
   optiga_set_metadata_time(is_configured, time_ms);  // OID_PIN_SECRET
 
@@ -557,13 +557,13 @@ static bool optiga_pin_init_stretch() {
   return res == OPTIGA_SUCCESS;
 }
 
-static void optiga_pin_init_stretch_time(uint32_t *time_ms) {
+static void optiga_pin_init_stretch_time(uint32_t* time_ms) {
   optiga_gen_sym_key_time(time_ms);
   optiga_gen_key_pair_time(time_ms);
 }
 
 static bool optiga_pin_stretch_common(
-    HMAC_SHA256_CTX *ctx, const uint8_t input[OPTIGA_PIN_SECRET_SIZE],
+    HMAC_SHA256_CTX* ctx, const uint8_t input[OPTIGA_PIN_SECRET_SIZE],
     bool version4) {
   // Implements the functionality that is common to
   // optiga_pin_stretch_cmac_ecdh() and the legacy function
@@ -696,8 +696,8 @@ end:
 }
 
 void optiga_pin_stretch_cmac_ecdh_time(
-    uint32_t *time_ms, uint8_t *optiga_sec,
-    uint32_t *optiga_last_time_decreased_ms) {
+    uint32_t* time_ms, uint8_t* optiga_sec,
+    uint32_t* optiga_last_time_decreased_ms) {
   for (int i = 0; i < PIN_STRETCH_ITERATIONS; ++i) {
     optiga_encrypt_sym_time(OPTIGA_SYM_MODE_CMAC, time_ms, optiga_sec,
                             optiga_last_time_decreased_ms);
@@ -713,7 +713,7 @@ bool optiga_pin_init(optiga_ui_progress_t ui_progress) {
   return ret;
 }
 
-void optiga_pin_init_time(uint32_t *time_ms) {
+void optiga_pin_init_time(uint32_t* time_ms) {
   optiga_pin_init_metadata_time(time_ms);
   optiga_pin_init_stretch_time(time_ms);
 }
@@ -857,8 +857,8 @@ end:
   return ret;
 }
 
-void optiga_pin_set_time(uint32_t *time_ms, uint8_t *optiga_sec,
-                         uint32_t *optiga_last_time_decreased_ms) {
+void optiga_pin_set_time(uint32_t* time_ms, uint8_t* optiga_sec,
+                         uint32_t* optiga_last_time_decreased_ms) {
   rng_fill_buffer_strong_time(time_ms);         // hmac_stretching_secret
   rng_fill_buffer_strong_time(time_ms);         // pin_secret
   optiga_set_data_object_time(false, time_ms);  // OID_PIN_SECRET
@@ -1002,8 +1002,8 @@ end:
 }
 
 static void optiga_pin_stretch_hmac_time(
-    uint32_t *time_ms, uint8_t *optiga_sec,
-    uint32_t *optiga_last_time_decreased_ms) {
+    uint32_t* time_ms, uint8_t* optiga_sec,
+    uint32_t* optiga_last_time_decreased_ms) {
   optiga_encrypt_sym_time(OPTIGA_SYM_MODE_HMAC_SHA256, time_ms, optiga_sec,
                           optiga_last_time_decreased_ms);
 }
@@ -1125,8 +1125,8 @@ end:
   return ret;
 }
 
-void optiga_pin_verify_time(uint8_t pin_index, uint32_t *time_ms,
-                            uint8_t *optiga_sec, uint32_t *optiga_last_time) {
+void optiga_pin_verify_time(uint8_t pin_index, uint32_t* time_ms,
+                            uint8_t* optiga_sec, uint32_t* optiga_last_time) {
   optiga_pin_stretch_hmac_time(time_ms, optiga_sec, optiga_last_time);
   // OID_STRETCHED_PINS[pin_index]
   optiga_set_auto_state_time(time_ms, optiga_sec, optiga_last_time);
@@ -1176,8 +1176,8 @@ cleanup:
 }
 
 void optiga_pin_reset_hmac_counter_time(
-    uint32_t *time_ms, uint8_t *optiga_sec,
-    uint32_t *optiga_last_time_decreased_ms) {
+    uint32_t* time_ms, uint8_t* optiga_sec,
+    uint32_t* optiga_last_time_decreased_ms) {
   optiga_set_auto_state_time(
       time_ms, optiga_sec,
       optiga_last_time_decreased_ms);     // OID_STRETCHED_PINS[0]
@@ -1193,7 +1193,7 @@ static uint32_t uint32_from_be(uint8_t buf[4]) {
   return i;
 }
 
-static bool optiga_get_counter_rem(uint16_t oid, uint32_t *ctr) {
+static bool optiga_get_counter_rem(uint16_t oid, uint32_t* ctr) {
   uint8_t counter[8] = {0};
   size_t counter_size = 0;
   if (optiga_get_data_object(oid, false, counter, sizeof(counter),
@@ -1206,11 +1206,11 @@ static bool optiga_get_counter_rem(uint16_t oid, uint32_t *ctr) {
   return true;
 }
 
-bool optiga_pin_get_rem_v4(uint32_t *ctr) {
+bool optiga_pin_get_rem_v4(uint32_t* ctr) {
   return optiga_get_counter_rem(OID_STRETCHED_PIN_CTR, ctr);
 }
 
-bool optiga_pin_get_rem(uint32_t *ctr) {
+bool optiga_pin_get_rem(uint32_t* ctr) {
   uint32_t ctr1 = 0;
   uint32_t ctr2 = 0;
   if (!optiga_get_counter_rem(OID_PIN_HMAC_CTR, &ctr1) ||

@@ -113,15 +113,13 @@ void oledInvertPixel(int x, int y) {
 /*
  * Send a block of data via the SPI bus.
  */
-static inline void SPISend(uint32_t base, const uint8_t *data, int len) {
+static inline void SPISend(uint32_t base, const uint8_t* data, int len) {
   delay(1);
   for (int i = 0; i < len; i++) {
     spi_send(base, data[i]);
   }
-  while (!(SPI_SR(base) & SPI_SR_TXE))
-    ;
-  while ((SPI_SR(base) & SPI_SR_BSY))
-    ;
+  while (!(SPI_SR(base) & SPI_SR_TXE));
+  while ((SPI_SR(base) & SPI_SR_BSY));
 }
 
 /*
@@ -229,9 +227,9 @@ void oledRefresh() {
 }
 #endif
 
-const uint8_t *oledGetBuffer(void) { return _oledbuffer; }
+const uint8_t* oledGetBuffer(void) { return _oledbuffer; }
 
-void oledSetBuffer(uint8_t *buf) {
+void oledSetBuffer(uint8_t* buf) {
   memcpy(_oledbuffer, buf, sizeof(_oledbuffer));
 }
 
@@ -242,7 +240,7 @@ void oledDrawChar(int x, int y, char c, uint8_t font) {
 
   int zoom = (font & FONT_DOUBLE) ? 2 : 1;
   int char_width = fontCharWidth(font & 0x7f, (uint8_t)c);
-  const uint8_t *char_data = fontCharData(font & 0x7f, (uint8_t)c);
+  const uint8_t* char_data = fontCharData(font & 0x7f, (uint8_t)c);
 
   if (x <= -char_width) {
     return;
@@ -298,7 +296,7 @@ static uint8_t convert_char(const char a) {
   return 0;
 }
 
-int oledStringWidth(const char *text, uint8_t font) {
+int oledStringWidth(const char* text, uint8_t font) {
   if (!text) return 0;
   int space = (font & FONT_DOUBLE) ? 2 : 1;
   int l = 0;
@@ -311,7 +309,7 @@ int oledStringWidth(const char *text, uint8_t font) {
   return l;
 }
 
-void oledDrawString(int x, int y, const char *text, uint8_t font) {
+void oledDrawString(int x, int y, const char* text, uint8_t font) {
   if (!text) return;
   int l = 0;
   int space = (font & FONT_DOUBLE) ? 2 : 1;
@@ -324,17 +322,17 @@ void oledDrawString(int x, int y, const char *text, uint8_t font) {
   }
 }
 
-void oledDrawStringCenter(int x, int y, const char *text, uint8_t font) {
+void oledDrawStringCenter(int x, int y, const char* text, uint8_t font) {
   x = x - oledStringWidth(text, font) / 2;
   oledDrawString(x, y, text, font);
 }
 
-void oledDrawStringRight(int x, int y, const char *text, uint8_t font) {
+void oledDrawStringRight(int x, int y, const char* text, uint8_t font) {
   x -= oledStringWidth(text, font);
   oledDrawString(x, y, text, font);
 }
 
-static void oled_draw_bitmap_flip(int x, int y, const BITMAP *bmp, bool flip) {
+static void oled_draw_bitmap_flip(int x, int y, const BITMAP* bmp, bool flip) {
   for (int i = 0; i < bmp->width; i++) {
     int ii = flip ? (bmp->width - 1 - i) : i;
     for (int j = 0; j < bmp->height; j++) {
@@ -347,11 +345,11 @@ static void oled_draw_bitmap_flip(int x, int y, const BITMAP *bmp, bool flip) {
   }
 }
 
-void oledDrawBitmap(int x, int y, const BITMAP *bmp) {
+void oledDrawBitmap(int x, int y, const BITMAP* bmp) {
   oled_draw_bitmap_flip(x, y, bmp, false);
 }
 
-void oledDrawBitmapFlip(int x, int y, const BITMAP *bmp) {
+void oledDrawBitmapFlip(int x, int y, const BITMAP* bmp) {
   oled_draw_bitmap_flip(x, y, bmp, true);
 }
 

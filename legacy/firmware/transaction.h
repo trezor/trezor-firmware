@@ -71,89 +71,89 @@ typedef struct {
   Hasher hasher;
 } TxStruct;
 
-bool compute_address(const CoinInfo *coin, InputScriptType script_type,
-                     const HDNode *node, bool has_multisig,
-                     const MultisigRedeemScriptType *multisig,
+bool compute_address(const CoinInfo* coin, InputScriptType script_type,
+                     const HDNode* node, bool has_multisig,
+                     const MultisigRedeemScriptType* multisig,
                      char address[MAX_ADDR_SIZE]);
-int address_to_script_pubkey(const CoinInfo *coin, const char *address,
-                             uint8_t *script_pubkey, pb_size_t *size);
-uint32_t compile_script_sig(uint32_t address_type, const uint8_t *pubkeyhash,
-                            uint8_t *out);
-uint32_t compile_script_multisig(const CoinInfo *coin,
-                                 const MultisigRedeemScriptType *multisig,
-                                 uint8_t *out);
-uint32_t compile_script_multisig_hash(const CoinInfo *coin,
-                                      const MultisigRedeemScriptType *multisig,
-                                      uint8_t *hash);
-uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len,
-                              const uint8_t *pubkey, uint32_t pubkey_len,
-                              uint8_t sighash, uint8_t *out);
-uint32_t serialize_script_multisig(const CoinInfo *coin,
-                                   const MultisigRedeemScriptType *multisig,
-                                   uint8_t sighash, uint8_t *out);
-uint32_t serialize_p2wpkh_witness(const uint8_t *signature,
+int address_to_script_pubkey(const CoinInfo* coin, const char* address,
+                             uint8_t* script_pubkey, pb_size_t* size);
+uint32_t compile_script_sig(uint32_t address_type, const uint8_t* pubkeyhash,
+                            uint8_t* out);
+uint32_t compile_script_multisig(const CoinInfo* coin,
+                                 const MultisigRedeemScriptType* multisig,
+                                 uint8_t* out);
+uint32_t compile_script_multisig_hash(const CoinInfo* coin,
+                                      const MultisigRedeemScriptType* multisig,
+                                      uint8_t* hash);
+uint32_t serialize_script_sig(const uint8_t* signature, uint32_t signature_len,
+                              const uint8_t* pubkey, uint32_t pubkey_len,
+                              uint8_t sighash, uint8_t* out);
+uint32_t serialize_script_multisig(const CoinInfo* coin,
+                                   const MultisigRedeemScriptType* multisig,
+                                   uint8_t sighash, uint8_t* out);
+uint32_t serialize_p2wpkh_witness(const uint8_t* signature,
                                   uint32_t signature_len,
-                                  const uint8_t *public_key,
+                                  const uint8_t* public_key,
                                   uint32_t public_key_len, uint8_t sighash,
-                                  uint8_t *out);
-uint32_t serialize_p2tr_witness(const uint8_t *signature,
+                                  uint8_t* out);
+uint32_t serialize_p2tr_witness(const uint8_t* signature,
                                 uint32_t signature_len, uint8_t sighash,
-                                uint8_t *out);
-bool tx_sign_ecdsa(const ecdsa_curve *curve, const uint8_t *private_key,
-                   const uint8_t *hash, uint8_t *out, pb_size_t *size);
-bool tx_sign_bip340(const uint8_t *private_key, const uint8_t *hash,
-                    uint8_t *out, pb_size_t *size);
-void op_return_to_script_pubkey(const uint8_t *op_return_data,
-                                size_t op_return_size, uint8_t *script_pubkey,
-                                pb_size_t *script_pubkey_size);
-bool get_script_pubkey(const CoinInfo *coin, HDNode *node, bool has_multisig,
-                       const MultisigRedeemScriptType *multisig,
-                       InputScriptType script_type, uint8_t *script_pubkey,
-                       pb_size_t *script_pubkey_size);
+                                uint8_t* out);
+bool tx_sign_ecdsa(const ecdsa_curve* curve, const uint8_t* private_key,
+                   const uint8_t* hash, uint8_t* out, pb_size_t* size);
+bool tx_sign_bip340(const uint8_t* private_key, const uint8_t* hash,
+                    uint8_t* out, pb_size_t* size);
+void op_return_to_script_pubkey(const uint8_t* op_return_data,
+                                size_t op_return_size, uint8_t* script_pubkey,
+                                pb_size_t* script_pubkey_size);
+bool get_script_pubkey(const CoinInfo* coin, HDNode* node, bool has_multisig,
+                       const MultisigRedeemScriptType* multisig,
+                       InputScriptType script_type, uint8_t* script_pubkey,
+                       pb_size_t* script_pubkey_size);
 
-bool tx_input_check_hash(Hasher *hasher, const TxInputType *input);
-uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input);
-uint32_t tx_amount_hash(Hasher *hasher, const TxInputType *input);
-uint32_t tx_script_hash(Hasher *hasher, uint32_t size, const uint8_t *data);
-uint32_t tx_sequence_hash(Hasher *hasher, const TxInputType *input);
-uint32_t tx_output_hash(Hasher *hasher, const TxOutputBinType *output,
+bool tx_input_check_hash(Hasher* hasher, const TxInputType* input);
+uint32_t tx_prevout_hash(Hasher* hasher, const TxInputType* input);
+uint32_t tx_amount_hash(Hasher* hasher, const TxInputType* input);
+uint32_t tx_script_hash(Hasher* hasher, uint32_t size, const uint8_t* data);
+uint32_t tx_sequence_hash(Hasher* hasher, const TxInputType* input);
+uint32_t tx_output_hash(Hasher* hasher, const TxOutputBinType* output,
                         bool decred);
-uint32_t tx_serialize_script(uint32_t size, const uint8_t *data, uint8_t *out);
+uint32_t tx_serialize_script(uint32_t size, const uint8_t* data, uint8_t* out);
 
-uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out);
-uint32_t tx_serialize_input(TxStruct *tx, const TxInputType *input,
-                            uint8_t *out);
-uint32_t tx_serialize_output(TxStruct *tx, const TxOutputBinType *output,
-                             uint8_t *out);
-uint32_t tx_serialize_decred_witness(TxStruct *tx, const TxInputType *input,
-                                     uint8_t *out);
+uint32_t tx_serialize_footer(TxStruct* tx, uint8_t* out);
+uint32_t tx_serialize_input(TxStruct* tx, const TxInputType* input,
+                            uint8_t* out);
+uint32_t tx_serialize_output(TxStruct* tx, const TxOutputBinType* output,
+                             uint8_t* out);
+uint32_t tx_serialize_decred_witness(TxStruct* tx, const TxInputType* input,
+                                     uint8_t* out);
 
-void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len,
+void tx_init(TxStruct* tx, uint32_t inputs_len, uint32_t outputs_len,
              uint32_t version, uint32_t lock_time, uint32_t expiry,
              uint32_t branch_id, uint32_t extra_data_len,
              HasherType hasher_sign, bool is_zcashlike,
              uint32_t version_group_id, uint32_t timestamp);
-uint32_t tx_serialize_header_hash(TxStruct *tx);
-uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input);
-uint32_t tx_serialize_output_hash(TxStruct *tx, const TxOutputBinType *output);
-uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data,
+uint32_t tx_serialize_header_hash(TxStruct* tx);
+uint32_t tx_serialize_input_hash(TxStruct* tx, const TxInputType* input);
+uint32_t tx_serialize_output_hash(TxStruct* tx, const TxOutputBinType* output);
+uint32_t tx_serialize_extra_data_hash(TxStruct* tx, const uint8_t* data,
                                       uint32_t datalen);
-uint32_t tx_serialize_decred_witness_hash(TxStruct *tx,
-                                          const TxInputType *input);
-void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse);
+uint32_t tx_serialize_decred_witness_hash(TxStruct* tx,
+                                          const TxInputType* input);
+void tx_hash_final(TxStruct* t, uint8_t* hash, bool reverse);
 
-uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput);
-uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput);
-uint32_t tx_decred_witness_weight(const TxInputType *txinput);
-bool get_ownership_proof(const CoinInfo *coin, InputScriptType script_type,
-                         const HDNode *node, uint8_t flags,
+uint32_t tx_input_weight(const CoinInfo* coin, const TxInputType* txinput);
+uint32_t tx_output_weight(const CoinInfo* coin, const TxOutputType* txoutput);
+uint32_t tx_decred_witness_weight(const TxInputType* txinput);
+bool get_ownership_proof(const CoinInfo* coin, InputScriptType script_type,
+                         const HDNode* node, uint8_t flags,
                          const uint8_t ownership_id[OWNERSHIP_ID_SIZE],
-                         const uint8_t *script_pubkey,
+                         const uint8_t* script_pubkey,
                          size_t script_pubkey_size,
-                         const uint8_t *commitment_data,
-                         size_t commitment_data_size, OwnershipProof *out);
+                         const uint8_t* commitment_data,
+                         size_t commitment_data_size, OwnershipProof* out);
 bool tx_input_verify_nonownership(
-    const CoinInfo *coin, const TxInputType *txinput,
+    const CoinInfo* coin, const TxInputType* txinput,
     const uint8_t ownership_id[OWNERSHIP_ID_SIZE]);
 
 #endif

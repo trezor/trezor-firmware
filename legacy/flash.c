@@ -77,7 +77,7 @@ secbool flash_unlock_write(void) {
 
 secbool flash_lock_write(void) { return flash_check_success(svc_flash_lock()); }
 
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
+const void* flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   if (sector >= FLASH_SECTOR_COUNT) {
     return NULL;
   }
@@ -86,7 +86,7 @@ const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   if (addr + size > next) {
     return NULL;
   }
-  return (const void *)FLASH_PTR(addr);
+  return (const void*)FLASH_PTR(addr);
 }
 
 uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count) {
@@ -115,7 +115,7 @@ uint16_t flash_sector_find(uint16_t first_sector, uint32_t offset) {
 }
 
 secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
-  uint8_t *address = (uint8_t *)flash_get_address(sector, offset, 1);
+  uint8_t* address = (uint8_t*)flash_get_address(sector, offset, 1);
   if (address == NULL) {
     return secfalse;
   }
@@ -125,7 +125,7 @@ secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
   }
 
   svc_flash_program(FLASH_CR_PROGRAM_X8);
-  *(volatile uint8_t *)address = data;
+  *(volatile uint8_t*)address = data;
 
   if (*address != data) {
     return secfalse;
@@ -135,7 +135,7 @@ secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
 }
 
 secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
-  uint32_t *address = (uint32_t *)flash_get_address(sector, offset, 4);
+  uint32_t* address = (uint32_t*)flash_get_address(sector, offset, 4);
   if (address == NULL) {
     return secfalse;
   }
@@ -149,7 +149,7 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   }
 
   svc_flash_program(FLASH_CR_PROGRAM_X32);
-  *(volatile uint32_t *)address = data;
+  *(volatile uint32_t*)address = data;
 
   if (*address != data) {
     return secfalse;

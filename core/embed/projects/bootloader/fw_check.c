@@ -32,7 +32,7 @@
 #include "emulator.h"
 #endif
 
-secbool check_vendor_header_lock(const vendor_header *vhdr) {
+secbool check_vendor_header_lock(const vendor_header* vhdr) {
   uint8_t lock[FLASH_OTP_BLOCK_SIZE];
   ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK, 0, lock,
                         FLASH_OTP_BLOCK_SIZE),
@@ -49,10 +49,10 @@ secbool check_vendor_header_lock(const vendor_header *vhdr) {
   return sectrue * (0 == memcmp(lock, hash, 32));
 }
 
-void fw_check(fw_info_t *fw_info) {
+void fw_check(fw_info_t* fw_info) {
   memset(fw_info, 0, sizeof(*fw_info));
 
-  const image_header *hdr = NULL;
+  const image_header* hdr = NULL;
 
   // detect whether the device contains a valid firmware
   volatile secbool vhdr_present = secfalse;
@@ -65,7 +65,7 @@ void fw_check(fw_info_t *fw_info) {
   volatile secbool secmon_valid = secfalse;
 
   vhdr_present =
-      read_vendor_header((const uint8_t *)FIRMWARE_START, &fw_info->vhdr);
+      read_vendor_header((const uint8_t*)FIRMWARE_START, &fw_info->vhdr);
 
   if (sectrue == vhdr_present) {
     vhdr_keys_ok = check_vendor_header_keys(&fw_info->vhdr);
@@ -77,10 +77,10 @@ void fw_check(fw_info_t *fw_info) {
 
   if (sectrue == vhdr_lock_ok) {
     hdr = read_image_header(
-        (const uint8_t *)(size_t)(FIRMWARE_START + fw_info->vhdr.hdrlen),
+        (const uint8_t*)(size_t)(FIRMWARE_START + fw_info->vhdr.hdrlen),
         FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
     if (hdr ==
-        (const image_header *)(size_t)(FIRMWARE_START + fw_info->vhdr.hdrlen)) {
+        (const image_header*)(size_t)(FIRMWARE_START + fw_info->vhdr.hdrlen)) {
       img_hdr_ok = sectrue;
     }
   }
@@ -105,8 +105,8 @@ void fw_check(fw_info_t *fw_info) {
   size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(
       FIRMWARE_START + fw_info->vhdr.hdrlen + IMAGE_HEADER_SIZE);
 
-  const secmon_header_t *secmon_hdr =
-      read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
+  const secmon_header_t* secmon_hdr =
+      read_secmon_header((const uint8_t*)secmon_start, FIRMWARE_MAXSIZE);
 
   volatile secbool secmon_header_present = secfalse;
   volatile secbool secmon_model_valid = secfalse;

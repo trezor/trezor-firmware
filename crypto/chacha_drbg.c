@@ -35,9 +35,9 @@
 
 #define MAX(a, b) (a) > (b) ? (a) : (b)
 
-static void derivation_function(const uint8_t *input1, size_t input1_length,
-                                const uint8_t *input2, size_t input2_length,
-                                uint8_t *output, size_t output_length) {
+static void derivation_function(const uint8_t* input1, size_t input1_length,
+                                const uint8_t* input2, size_t input2_length,
+                                uint8_t* output, size_t output_length) {
   // Implementation of Hash_df from NIST SP 800-90A
   uint32_t block_count = (output_length - 1) / SHA256_DIGEST_LENGTH + 1;
   size_t partial_block_length = output_length % SHA256_DIGEST_LENGTH;
@@ -53,7 +53,7 @@ static void derivation_function(const uint8_t *input1, size_t input1_length,
   for (uint8_t counter = 1; counter <= block_count; counter++) {
     sha256_Init(&ctx);
     sha256_Update(&ctx, &counter, sizeof(counter));
-    sha256_Update(&ctx, (uint8_t *)&output_length_bits,
+    sha256_Update(&ctx, (uint8_t*)&output_length_bits,
                   sizeof(output_length_bits));
     sha256_Update(&ctx, input1, input1_length);
     sha256_Update(&ctx, input2, input2_length);
@@ -72,8 +72,8 @@ static void derivation_function(const uint8_t *input1, size_t input1_length,
   memzero(&ctx, sizeof(ctx));
 }
 
-void chacha_drbg_init(CHACHA_DRBG_CTX *ctx, const uint8_t *entropy,
-                      size_t entropy_length, const uint8_t *nonce,
+void chacha_drbg_init(CHACHA_DRBG_CTX* ctx, const uint8_t* entropy,
+                      size_t entropy_length, const uint8_t* nonce,
                       size_t nonce_length) {
   uint8_t buffer[MAX(CHACHA_DRBG_KEY_LENGTH, CHACHA_DRBG_IV_LENGTH)] = {0};
   ECRYPT_keysetup(&ctx->chacha_ctx, buffer, CHACHA_DRBG_KEY_LENGTH * 8,
@@ -83,7 +83,7 @@ void chacha_drbg_init(CHACHA_DRBG_CTX *ctx, const uint8_t *entropy,
   chacha_drbg_reseed(ctx, entropy, entropy_length, nonce, nonce_length);
 }
 
-static void chacha_drbg_update(CHACHA_DRBG_CTX *ctx,
+static void chacha_drbg_update(CHACHA_DRBG_CTX* ctx,
                                const uint8_t data[CHACHA_DRBG_SEED_LENGTH]) {
   uint8_t seed[CHACHA_DRBG_SEED_LENGTH] = {0};
 
@@ -103,7 +103,7 @@ static void chacha_drbg_update(CHACHA_DRBG_CTX *ctx,
   memzero(seed, sizeof(seed));
 }
 
-void chacha_drbg_generate(CHACHA_DRBG_CTX *ctx, uint8_t *output,
+void chacha_drbg_generate(CHACHA_DRBG_CTX* ctx, uint8_t* output,
                           size_t output_length) {
   assert(output_length < 65536);
   assert(ctx->reseed_counter + 1 != 0);
@@ -113,8 +113,8 @@ void chacha_drbg_generate(CHACHA_DRBG_CTX *ctx, uint8_t *output,
   ctx->reseed_counter++;
 }
 
-void chacha_drbg_reseed(CHACHA_DRBG_CTX *ctx, const uint8_t *entropy,
-                        size_t entropy_length, const uint8_t *additional_input,
+void chacha_drbg_reseed(CHACHA_DRBG_CTX* ctx, const uint8_t* entropy,
+                        size_t entropy_length, const uint8_t* additional_input,
                         size_t additional_input_length) {
   uint8_t seed[CHACHA_DRBG_SEED_LENGTH] = {0};
   derivation_function(entropy, entropy_length, additional_input,

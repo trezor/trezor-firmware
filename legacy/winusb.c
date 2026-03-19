@@ -75,8 +75,8 @@ static const struct winusb_extended_properties_descriptor guid = {
     }};
 
 static enum usbd_request_return_codes winusb_descriptor_request(
-    usbd_device *usbd_dev, struct usb_setup_data *req, uint8_t **buf,
-    uint16_t *len, usbd_control_complete_callback *complete) {
+    usbd_device* usbd_dev, struct usb_setup_data* req, uint8_t** buf,
+    uint16_t* len, usbd_control_complete_callback* complete) {
   (void)complete;
   (void)usbd_dev;
 
@@ -89,7 +89,7 @@ static enum usbd_request_return_codes winusb_descriptor_request(
   if (req->bRequest == USB_REQ_GET_DESCRIPTOR &&
       usb_descriptor_type(req->wValue) == USB_DT_STRING) {
     if (usb_descriptor_index(req->wValue) == WINUSB_EXTRA_STRING_INDEX) {
-      *buf = (uint8_t *)(&winusb_string_descriptor);
+      *buf = (uint8_t*)(&winusb_string_descriptor);
       *len = MIN_8bits(*len, winusb_string_descriptor.bLength);
       return USBD_REQ_HANDLED;
     }
@@ -98,8 +98,8 @@ static enum usbd_request_return_codes winusb_descriptor_request(
 }
 
 static enum usbd_request_return_codes winusb_control_vendor_request(
-    usbd_device *usbd_dev, struct usb_setup_data *req, uint8_t **buf,
-    uint16_t *len, usbd_control_complete_callback *complete) {
+    usbd_device* usbd_dev, struct usb_setup_data* req, uint8_t** buf,
+    uint16_t* len, usbd_control_complete_callback* complete) {
   (void)complete;
   (void)usbd_dev;
 
@@ -112,7 +112,7 @@ static enum usbd_request_return_codes winusb_control_vendor_request(
   int status = USBD_REQ_NOTSUPP;
   if (((req->bmRequestType & USB_REQ_TYPE_RECIPIENT) == USB_REQ_TYPE_DEVICE) &&
       (req->wIndex == WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR)) {
-    *buf = (uint8_t *)(&winusb_wcid);
+    *buf = (uint8_t*)(&winusb_wcid);
     *len = MIN_8bits(*len, winusb_wcid.header.dwLength);
     status = USBD_REQ_HANDLED;
 
@@ -122,7 +122,7 @@ static enum usbd_request_return_codes winusb_control_vendor_request(
               WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR) &&
              (usb_descriptor_index(req->wValue) ==
               winusb_wcid.functions[0].bInterfaceNumber)) {
-    *buf = (uint8_t *)(&guid);
+    *buf = (uint8_t*)(&guid);
     *len = MIN_8bits(*len, guid.header.dwLength);
     status = USBD_REQ_HANDLED;
 
@@ -133,14 +133,14 @@ static enum usbd_request_return_codes winusb_control_vendor_request(
   return status;
 }
 
-static void winusb_set_config(usbd_device *usbd_dev, uint16_t wValue) {
+static void winusb_set_config(usbd_device* usbd_dev, uint16_t wValue) {
   (void)wValue;
   usbd_register_control_callback(usbd_dev, USB_REQ_TYPE_VENDOR,
                                  USB_REQ_TYPE_TYPE,
                                  winusb_control_vendor_request);
 }
 
-void winusb_setup(usbd_device *usbd_dev, uint8_t interface) {
+void winusb_setup(usbd_device* usbd_dev, uint8_t interface) {
   winusb_wcid.functions[0].bInterfaceNumber = interface;
 
   usbd_register_set_config_callback(usbd_dev, winusb_set_config);

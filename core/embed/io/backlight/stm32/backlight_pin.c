@@ -53,7 +53,7 @@ static void backlight_off(void) {
 }
 
 bool backlight_init(backlight_action_t action, float gamma_exp) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   UNUSED(gamma_exp);
 
@@ -73,7 +73,7 @@ bool backlight_init(backlight_action_t action, float gamma_exp) {
 }
 
 void backlight_deinit(backlight_action_t action) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
   if (!drv->initialized) {
     return;
   }
@@ -84,7 +84,7 @@ void backlight_deinit(backlight_action_t action) {
 }
 
 bool backlight_set(uint8_t val) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   if (!drv->initialized) {
     return false;
@@ -102,7 +102,7 @@ bool backlight_set(uint8_t val) {
 }
 
 uint8_t backlight_get(void) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
   if (!drv->initialized) {
     return 0;
   }

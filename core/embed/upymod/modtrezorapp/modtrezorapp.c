@@ -49,7 +49,7 @@ STATIC mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid app hash size"));
   }
 
-  const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
+  const app_hash_t* hash_ptr = (const app_hash_t*)hash.buf;
 
   systask_id_t task_id;
   ts_t status = app_task_spawn(hash_ptr, &task_id);
@@ -58,7 +58,7 @@ STATIC mp_obj_t mod_trezorapp_spawn_task(mp_obj_t app_hash_obj) {
                  MP_ERROR_TEXT("Failed to spawn app from app cache"));
   }
 
-  mp_obj_AppTask_t *o =
+  mp_obj_AppTask_t* o =
       mp_obj_malloc(mp_obj_AppTask_t, &mod_trezorapp_AppTask_type);
   o->task_id = task_id;
   return MP_OBJ_FROM_PTR(o);
@@ -79,7 +79,7 @@ STATIC mp_obj_t mod_trezorapp_create_image(mp_obj_t app_hash_obj,
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid app hash size"));
   }
 
-  const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
+  const app_hash_t* hash_ptr = (const app_hash_t*)hash.buf;
 
   size_t size = mp_obj_get_int(size_obj);
 
@@ -89,7 +89,7 @@ STATIC mp_obj_t mod_trezorapp_create_image(mp_obj_t app_hash_obj,
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to create app image in app cache"));
   }
-  mp_obj_AppImage_t *o =
+  mp_obj_AppImage_t* o =
       mp_obj_malloc(mp_obj_AppImage_t, &mod_trezorapp_AppImage_type);
   o->image = image;
   return MP_OBJ_FROM_PTR(o);
@@ -111,9 +111,9 @@ STATIC mp_obj_t mod_trezorapp_load_file(mp_obj_t app_hash_obj,
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid app hash size"));
   }
 
-  const app_hash_t *hash_ptr = (const app_hash_t *)hash.buf;
+  const app_hash_t* hash_ptr = (const app_hash_t*)hash.buf;
 
-  const char *filename = mp_obj_str_get_str(filename_obj);
+  const char* filename = mp_obj_str_get_str(filename_obj);
 
   ts_t status = app_cache_load_file(hash_ptr, filename);
   if (ts_error(status)) {
@@ -144,7 +144,7 @@ STATIC MP_DEFINE_CONST_DICT(mp_module_trezorapp_globals,
 
 const mp_obj_module_t mp_module_trezorapp = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mp_module_trezorapp_globals,
+    .globals = (mp_obj_dict_t*)&mp_module_trezorapp_globals,
 };
 
 MP_REGISTER_MODULE(MP_QSTR_trezorapp, mp_module_trezorapp);

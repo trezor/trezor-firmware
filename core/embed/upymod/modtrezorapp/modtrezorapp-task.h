@@ -37,7 +37,7 @@ typedef struct _mp_obj_AppTask_t {
 ///     Returns the task id.
 ///     """
 STATIC mp_obj_t mod_trezorapp_AppTask_id(mp_obj_t self) {
-  mp_obj_AppTask_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_AppTask_t* o = MP_OBJ_TO_PTR(self);
   return MP_OBJ_NEW_SMALL_INT(o->task_id);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppTask_id_obj,
@@ -48,7 +48,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppTask_id_obj,
 ///     Returns whether the application is still running.
 ///     """
 STATIC mp_obj_t mod_trezorapp_AppTask_is_running(mp_obj_t self) {
-  mp_obj_AppTask_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_AppTask_t* o = MP_OBJ_TO_PTR(self);
 
   if (app_task_is_running(o->task_id)) {
     return mp_const_true;
@@ -64,7 +64,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorapp_AppTask_is_running_obj,
 ///     Unloads the application associated with this task.
 ///     """
 STATIC mp_obj_t mod_trezorapp_AppTask_unload(mp_obj_t self) {
-  mp_obj_AppTask_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_AppTask_t* o = MP_OBJ_TO_PTR(self);
 
   app_task_unload(o->task_id);
   o->task_id = 0;
@@ -87,5 +87,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorapp_AppTask_locals_dict,
 STATIC const mp_obj_type_t mod_trezorapp_AppTask_type = {
     {&mp_type_type},
     .name = MP_QSTR_AppTask,
-    .locals_dict = (void *)&mod_trezorapp_AppTask_locals_dict,
+    .locals_dict = (void*)&mod_trezorapp_AppTask_locals_dict,
 };

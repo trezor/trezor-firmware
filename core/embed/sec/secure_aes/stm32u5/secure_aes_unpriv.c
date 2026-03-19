@@ -116,14 +116,14 @@ __attribute((no_stack_protector)) void saes_unpriv_callback(void) {
 #include <sys/trustzone.h>
 #endif
 
-static void *secure_aes_unpriv_applet = NULL;
+static void* secure_aes_unpriv_applet = NULL;
 
-void secure_aes_set_applet(applet_t *applet) {
+void secure_aes_set_applet(applet_t* applet) {
   secure_aes_unpriv_applet = applet;
 }
 
-secbool secure_aes_unpriv_encrypt(const uint8_t *input, size_t size,
-                                  uint8_t *output, secure_aes_keysel_t key) {
+secbool secure_aes_unpriv_encrypt(const uint8_t* input, size_t size,
+                                  uint8_t* output, secure_aes_keysel_t key) {
   if (secure_aes_unpriv_applet == NULL) {
     return secfalse;
   }
@@ -141,14 +141,14 @@ secbool secure_aes_unpriv_encrypt(const uint8_t *input, size_t size,
   tz_set_tamper_unpriv(true);
 #endif  // USE_TRUSTZONE
 
-  applet_t *applet = secure_aes_unpriv_applet;
+  applet_t* applet = secure_aes_unpriv_applet;
 
-  const coreapp_header_t *header =
-      (coreapp_header_t *)applet->layout.code1.start;
+  const coreapp_header_t* header =
+      (coreapp_header_t*)applet->layout.code1.start;
 
-  void *unpriv_input = header->saes_input;
-  void *unpriv_output = header->saes_output;
-  void *unpriv_callback = header->saes_callback;
+  void* unpriv_input = header->saes_input;
+  void* unpriv_output = header->saes_output;
+  void* unpriv_callback = header->saes_callback;
 
   memzero(unpriv_input, SAES_DATA_SIZE_WITH_UNPRIV_KEY);
   memzero(unpriv_output, SAES_DATA_SIZE_WITH_UNPRIV_KEY);

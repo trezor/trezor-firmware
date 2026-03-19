@@ -27,8 +27,8 @@ typedef struct {
 
 extern uint8_t sitronix_touching;
 
-int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init);
+int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t* TS_Init);
 
 int32_t BSP_TS_DeInit(uint32_t Instance);
 
-int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State);
+int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t* TS_State);

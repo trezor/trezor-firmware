@@ -52,7 +52,7 @@ void bip39_cache_clear(void) {
 
 static CONFIDENTIAL char mnemo[24 * 10];
 
-const char *mnemonic_from_data(const uint8_t *data, int len) {
+const char* mnemonic_from_data(const uint8_t* data, int len) {
   if (len % 4 || len < 16 || len > 32) {
     return 0;
   }
@@ -68,7 +68,7 @@ const char *mnemonic_from_data(const uint8_t *data, int len) {
   int mlen = len * 3 / 4;
 
   int i = 0, j = 0, idx = 0;
-  char *p = mnemo;
+  char* p = mnemo;
   for (i = 0; i < mlen; i++) {
     idx = 0;
     for (j = 0; j < 11; j++) {
@@ -87,7 +87,7 @@ const char *mnemonic_from_data(const uint8_t *data, int len) {
 
 void mnemonic_clear(void) { memzero(mnemo, sizeof(mnemo)); }
 
-int mnemonic_to_bits(const char *mnemonic_orig, uint8_t *bits) {
+int mnemonic_to_bits(const char* mnemonic_orig, uint8_t* bits) {
   if (!mnemonic_orig) {
     return 0;
   }
@@ -167,7 +167,7 @@ cleanup:
   return result_bits;
 }
 
-int mnemonic_check(const char *mnemonic) {
+int mnemonic_check(const char* mnemonic) {
   uint8_t bits[32 + 1] = {0};
   int mnemonic_bits_len = mnemonic_to_bits(mnemonic, bits);
   if (mnemonic_bits_len != (12 * BIP39_BITS_PER_WORD) &&
@@ -190,7 +190,7 @@ int mnemonic_check(const char *mnemonic) {
 }
 
 // passphrase must be at most 256 characters otherwise it would be truncated
-void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
+void mnemonic_to_seed(const char* mnemonic, const char* passphrase,
                       uint8_t seed[512 / 8],
                       void (*progress_callback)(uint32_t current,
                                                 uint32_t total)) {
@@ -213,7 +213,7 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
   memcpy(salt, "mnemonic", 8);
   memcpy(salt + 8, passphrase, passphraselen);
   LOCAL_CONFIDENTIAL PBKDF2_HMAC_SHA512_CTX pctx;
-  pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)mnemonic, mnemoniclen, salt,
+  pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t*)mnemonic, mnemoniclen, salt,
                           passphraselen + 8, 1);
   if (progress_callback) {
     progress_callback(0, BIP39_PBKDF2_ROUNDS);
@@ -245,9 +245,9 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
  * thus preventing timing attacks.
  * @return `true` if the memory areas are equal, `false` otherwise.
  */
-static bool constant_time_memeq(const void *s1, const void *s2, size_t n) {
-  const unsigned char *p1 = s1;
-  const unsigned char *p2 = s2;
+static bool constant_time_memeq(const void* s1, const void* s2, size_t n) {
+  const unsigned char* p1 = s1;
+  const unsigned char* p2 = s2;
   int diff = 0;
   for (size_t i = 0; i < n; i++) {
     // Accumulate differences using OR to prevent early termination
@@ -261,11 +261,11 @@ static bool constant_time_memeq(const void *s1, const void *s2, size_t n) {
  * argument is provided within at least 9 characters big buffer to avoid
  * out-of-bounds reads.
  */
-found_word mnemonic_find_word(const char *word) {
+found_word mnemonic_find_word(const char* word) {
   int result_index = -1;
   size_t result_length = 0;
   for (int i = 0; i < BIP39_WORD_COUNT; i++) {
-    const char *dict_word = BIP39_WORDLIST_ENGLISH[i];
+    const char* dict_word = BIP39_WORDLIST_ENGLISH[i];
     size_t dict_word_len = strlen(dict_word);
     bool is_match =  // 0 or 1 - 1 is match
         constant_time_memeq(word, dict_word, dict_word_len + 1);
@@ -278,7 +278,7 @@ found_word mnemonic_find_word(const char *word) {
   return (found_word){.index = result_index, .length = result_length};
 }
 
-const char *mnemonic_complete_word(const char *prefix, int len) {
+const char* mnemonic_complete_word(const char* prefix, int len) {
   // we need to perform linear search,
   // because we want to return the first match
   for (int i = 0; i < BIP39_WORD_COUNT; i++) {
@@ -289,7 +289,7 @@ const char *mnemonic_complete_word(const char *prefix, int len) {
   return NULL;
 }
 
-const char *mnemonic_get_word(int index) {
+const char* mnemonic_get_word(int index) {
   if (index >= 0 && index < BIP39_WORD_COUNT) {
     return BIP39_WORDLIST_ENGLISH[index];
   } else {
@@ -297,13 +297,13 @@ const char *mnemonic_get_word(int index) {
   }
 }
 
-uint32_t mnemonic_word_completion_mask(const char *prefix, int len) {
+uint32_t mnemonic_word_completion_mask(const char* prefix, int len) {
   if (len <= 0) {
     return 0x3ffffff;  // all letters (bits 1-26 set)
   }
   uint32_t res = 0;
   for (int i = 0; i < BIP39_WORD_COUNT; i++) {
-    const char *word = BIP39_WORDLIST_ENGLISH[i];
+    const char* word = BIP39_WORDLIST_ENGLISH[i];
     if (strncmp(word, prefix, len) == 0 && word[len] >= 'a' &&
         word[len] <= 'z') {
       res |= 1 << (word[len] - 'a');

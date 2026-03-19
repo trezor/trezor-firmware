@@ -26,16 +26,16 @@ typedef struct {
   socklen_t slen;
 } emu_sock_t;
 
-void sock_init(emu_sock_t *sock);
+void sock_init(emu_sock_t* sock);
 
-void sock_start(emu_sock_t *sock, const char *ip, uint16_t port);
+void sock_start(emu_sock_t* sock, const char* ip, uint16_t port);
 
-void sock_stop(emu_sock_t *sock);
+void sock_stop(emu_sock_t* sock);
 
-bool sock_can_send(emu_sock_t *sock);
+bool sock_can_send(emu_sock_t* sock);
 
-bool sock_can_recv(emu_sock_t *sock);
+bool sock_can_recv(emu_sock_t* sock);
 
-ssize_t sock_sendto(emu_sock_t *sock, const void *data, size_t len);
+ssize_t sock_sendto(emu_sock_t* sock, const void* data, size_t len);
 
-ssize_t sock_recvfrom(emu_sock_t *sock, uint8_t *data, size_t max_len);
+ssize_t sock_recvfrom(emu_sock_t* sock, uint8_t* data, size_t max_len);

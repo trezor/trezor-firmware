@@ -41,11 +41,11 @@ STATIC mp_obj_t mod_trezorcrypto_Ripemd160_update(mp_obj_t self, mp_obj_t data);
 ///     """
 ///     Creates a hash context object.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Ripemd160_make_new(const mp_obj_type_t *type,
+STATIC mp_obj_t mod_trezorcrypto_Ripemd160_make_new(const mp_obj_type_t* type,
                                                     size_t n_args, size_t n_kw,
-                                                    const mp_obj_t *args) {
+                                                    const mp_obj_t* args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_Ripemd160_t *o = m_new_obj_with_finaliser(mp_obj_Ripemd160_t);
+  mp_obj_Ripemd160_t* o = m_new_obj_with_finaliser(mp_obj_Ripemd160_t);
   o->base.type = type;
   ripemd160_init(&(o->ctx));
   // constructor called with bytes/str as first parameter
@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_trezorcrypto_Ripemd160_make_new(const mp_obj_type_t *type,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Ripemd160_update(mp_obj_t self,
                                                   mp_obj_t data) {
-  mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Ripemd160_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
@@ -77,12 +77,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Ripemd160_update_obj,
 ///     Returns the digest of hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Ripemd160_digest(mp_obj_t self) {
-  mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Ripemd160_t* o = MP_OBJ_TO_PTR(self);
   vstr_t hash = {0};
   vstr_init_len(&hash, RIPEMD160_DIGEST_LENGTH);
   ripemd160_state ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(ripemd160_state));
-  ripemd160_done(&ctx, (uint8_t *)hash.buf);
+  ripemd160_done(&ctx, (uint8_t*)hash.buf);
   memzero(&ctx, sizeof(ripemd160_state));
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
@@ -90,7 +90,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Ripemd160_digest_obj,
                                  mod_trezorcrypto_Ripemd160_digest);
 
 STATIC mp_obj_t mod_trezorcrypto_Ripemd160___del__(mp_obj_t self) {
-  mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Ripemd160_t* o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx), sizeof(ripemd160_state));
   return mp_const_none;
 }
@@ -115,5 +115,5 @@ STATIC const mp_obj_type_t mod_trezorcrypto_Ripemd160_type = {
     {&mp_type_type},
     .name = MP_QSTR_Ripemd160,
     .make_new = mod_trezorcrypto_Ripemd160_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Ripemd160_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_Ripemd160_locals_dict,
 };

@@ -39,7 +39,7 @@ mp_obj_t mod_trezorcrypto_elligator2_map_to_curve25519(mp_obj_t input) {
   vstr_t output_vstr = {0};
   vstr_init_len(&output_vstr, 32);
   int res = map_to_curve_elligator2_curve25519(input_buffer_info.buf,
-                                               (uint8_t *)output_vstr.buf);
+                                               (uint8_t*)output_vstr.buf);
   if (res != true) {
     mp_raise_ValueError(NULL);
   }
@@ -60,5 +60,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_elligator2_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_elligator2_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_elligator2_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_elligator2_globals,
 };

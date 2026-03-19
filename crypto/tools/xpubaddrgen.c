@@ -8,7 +8,7 @@
 
 #define VERSION_PUBLIC 0x0488b21e
 
-void process_job(uint32_t jobid, const char *xpub, uint32_t change,
+void process_job(uint32_t jobid, const char* xpub, uint32_t change,
                  uint32_t from, uint32_t to) {
   HDNode node, child;
   if (change > 1 || to <= from ||

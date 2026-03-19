@@ -54,50 +54,50 @@ typedef struct {
   uint8_t num_subareas;
 } flash_area_t;
 
-uint32_t flash_area_get_size(const flash_area_t *area);
+uint32_t flash_area_get_size(const flash_area_t* area);
 
-uint16_t flash_area_total_sectors(const flash_area_t *area);
+uint16_t flash_area_total_sectors(const flash_area_t* area);
 
-const void *flash_area_get_address(const flash_area_t *area, uint32_t offset,
+const void* flash_area_get_address(const flash_area_t* area, uint32_t offset,
                                    uint32_t size);
 
 #if defined FLASH_BIT_ACCESS
-secbool __wur flash_area_write_byte(const flash_area_t *area, uint32_t offset,
+secbool __wur flash_area_write_byte(const flash_area_t* area, uint32_t offset,
                                     uint8_t data);
-secbool __wur flash_area_write_word(const flash_area_t *area, uint32_t offset,
+secbool __wur flash_area_write_word(const flash_area_t* area, uint32_t offset,
                                     uint32_t data);
 #endif
 
-secbool __wur flash_area_write_burst(const flash_area_t *area, uint32_t offset,
-                                     const uint32_t *data);
+secbool __wur flash_area_write_burst(const flash_area_t* area, uint32_t offset,
+                                     const uint32_t* data);
 
-secbool __wur flash_area_write_block(const flash_area_t *area, uint32_t offset,
+secbool __wur flash_area_write_block(const flash_area_t* area, uint32_t offset,
                                      const flash_block_t block);
 
 // Writes data to specified 'offset' inside a flash area
 // Data is written in efficient way, using the smallest possible number of
 // flash operations on the given architecture.
 // Data and its size must be aligned to size of one flash block
-secbool __wur flash_area_write_data(const flash_area_t *area, uint32_t offset,
-                                    const void *data, uint32_t size);
+secbool __wur flash_area_write_data(const flash_area_t* area, uint32_t offset,
+                                    const void* data, uint32_t size);
 
 // Writes data to specified 'offset' inside a flash area
 // Data is written in efficient way, using the smallest possible number of
 // flash operations on the given architecture.
 // Data and total size must be aligned to size of one flash block
 // The difference between data_size and total_size is padded with 'padding'
-secbool __wur flash_area_write_data_padded(const flash_area_t *area,
-                                           uint32_t offset, const void *data,
+secbool __wur flash_area_write_data_padded(const flash_area_t* area,
+                                           uint32_t offset, const void* data,
                                            uint32_t data_size, uint8_t padding,
                                            uint32_t total_size);
 
 // Returns sectrue if the flash area is completely erased
 // (all words are 0xFFFFFFFF), otherwise returns secfalse
-secbool __wur flash_area_is_erased(const flash_area_t *area);
+secbool __wur flash_area_is_erased(const flash_area_t* area);
 
-secbool __wur flash_area_erase(const flash_area_t *area,
+secbool __wur flash_area_erase(const flash_area_t* area,
                                void (*progress)(int pos, int len));
-secbool __wur flash_area_erase_bulk(const flash_area_t *area, int count,
+secbool __wur flash_area_erase_bulk(const flash_area_t* area, int count,
                                     void (*progress)(int pos, int len));
 
 // Erases the single sector in the designated flash area
@@ -105,7 +105,7 @@ secbool __wur flash_area_erase_bulk(const flash_area_t *area, int count,
 // flash area If 'offset' is outside the bounds of the flash area,
 // 'bytes_erased' is set to 0 otherwise, 'bytes_erased' is set to the size of
 // the erased sector
-secbool __wur flash_area_erase_partial(const flash_area_t *area,
-                                       uint32_t offset, uint32_t *bytes_erased);
+secbool __wur flash_area_erase_partial(const flash_area_t* area,
+                                       uint32_t offset, uint32_t* bytes_erased);
 
 #endif  // FLASH_AREA_H

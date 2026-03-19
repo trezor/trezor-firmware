@@ -108,15 +108,15 @@
  */
 
 /* Fuzzer input data handling */
-const uint8_t *fuzzer_ptr;
+const uint8_t* fuzzer_ptr;
 size_t fuzzer_length;
 
-const uint8_t *fuzzer_input(size_t len) {
+const uint8_t* fuzzer_input(size_t len) {
   if (fuzzer_length < len) {
     fuzzer_length = 0;
     return NULL;
   }
-  const uint8_t *result = fuzzer_ptr;
+  const uint8_t* result = fuzzer_ptr;
   fuzzer_length -= len;
   fuzzer_ptr += len;
   return result;
@@ -148,7 +148,7 @@ __attribute__((noreturn)) void crash(void) {
 //
 // check the memory area for memory information leaks if MSAN is available,
 // crash if problems are detected
-void check_msan(void *pointer, size_t length) {
+void check_msan(void* pointer, size_t length) {
 #if defined(__has_feature)
 #if __has_feature(memory_sanitizer)
   // check `address` for memory info leakage
@@ -218,10 +218,10 @@ int fuzz_bn_format(void) {
   trailing = (fuzzer_input(1)[0] & 1);
 
   // IDEA allow prefix == NULL
-  char *prefix = malloc(prefixlen);
+  char* prefix = malloc(prefixlen);
   RETURN_IF_NULL(prefix);
   // IDEA allow suffix == NULL
-  char *suffix = malloc(suffixlen);
+  char* suffix = malloc(suffixlen);
   if (suffix == NULL) {
     free(prefix);
     return FUZZ_MARK_UNINTERESTING;
@@ -257,10 +257,10 @@ int fuzz_base32_decode(void) {
     return FUZZ_MARK_UNINTERESTING;
   }
 
-  char *in_buffer = malloc(fuzzer_length);
+  char* in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
   // basic heuristic: the decoded output will always fit in less or equal space
-  uint8_t *out_buffer = malloc(fuzzer_length);
+  uint8_t* out_buffer = malloc(fuzzer_length);
   if (out_buffer == NULL) {
     free(in_buffer);
     return FUZZ_MARK_UNINTERESTING;
@@ -273,7 +273,7 @@ int fuzz_base32_decode(void) {
   // null-terminate input buffer to prevent issues with strlen()
   in_buffer[raw_inlen - 1] = 0;
 
-  uint8_t *ret = base32_decode(in_buffer, raw_inlen, out_buffer, outlen,
+  uint8_t* ret = base32_decode(in_buffer, raw_inlen, out_buffer, outlen,
                                BASE32_ALPHABET_RFC4648);
 
   if (ret != NULL) {
@@ -292,11 +292,11 @@ int fuzz_base32_encode(void) {
     return FUZZ_MARK_UNINTERESTING;
   }
 
-  uint8_t *in_buffer = malloc(fuzzer_length);
+  uint8_t* in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
   // TODO: find a better heuristic for output buffer size
   size_t outlen = 2 * fuzzer_length;
-  char *out_buffer = malloc(outlen);
+  char* out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
     return FUZZ_MARK_UNINTERESTING;
@@ -307,7 +307,7 @@ int fuzz_base32_encode(void) {
   memcpy(in_buffer, fuzzer_ptr, raw_inlen);
   fuzzer_input(raw_inlen);
 
-  char *ret = base32_encode(in_buffer, raw_inlen, out_buffer, outlen,
+  char* ret = base32_encode(in_buffer, raw_inlen, out_buffer, outlen,
                             BASE32_ALPHABET_RFC4648);
 
   if (ret != NULL) {
@@ -328,11 +328,11 @@ int fuzz_base58_encode_check(void) {
     return FUZZ_MARK_UNINTERESTING;
   }
 
-  uint8_t *in_buffer = malloc(fuzzer_length);
+  uint8_t* in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
   // TODO: find a better heuristic for output buffer size
   size_t outlen = 2 * fuzzer_length;
-  char *out_buffer = malloc(outlen);
+  char* out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
     return FUZZ_MARK_UNINTERESTING;
@@ -370,7 +370,7 @@ int fuzz_base58_decode_check(void) {
     return FUZZ_MARK_UNINTERESTING;
   }
 
-  uint8_t *in_buffer = malloc(fuzzer_length + 1);
+  uint8_t* in_buffer = malloc(fuzzer_length + 1);
   RETURN_IF_NULL(in_buffer);
 
   size_t raw_inlen = fuzzer_length;
@@ -378,7 +378,7 @@ int fuzz_base58_decode_check(void) {
   uint8_t out_buffer[MAX_ADDR_RAW_SIZE] = {0};
   // force null-termination
   in_buffer[raw_inlen] = 0;
-  const char *in_char = (const char *)in_buffer;
+  const char* in_char = (const char*)in_buffer;
 
   // run multiple hasher variants for the same input
   base58_decode_check(in_char, HASHER_SHA2D, out_buffer, MAX_ADDR_RAW_SIZE);
@@ -405,9 +405,9 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   // TODO no null termination used !?
   // TODO use better size heuristic
   size_t outlen = fuzzer_length;
-  char *in_buffer = malloc(fuzzer_length);
+  char* in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
-  uint8_t *out_buffer = malloc(outlen);
+  uint8_t* out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
     return FUZZ_MARK_UNINTERESTING;
@@ -444,9 +444,9 @@ int fuzz_xmr_base58_decode(void) {
 
   // TODO better size heuristic
   size_t outlen = fuzzer_length;
-  char *in_buffer = malloc(fuzzer_length);
+  char* in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
-  uint8_t *out_buffer = malloc(outlen);
+  uint8_t* out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
     return FUZZ_MARK_UNINTERESTING;
@@ -483,9 +483,9 @@ int fuzz_xmr_base58_addr_encode_check(void) {
 
   // TODO better size heuristic
   size_t outlen = fuzzer_length * 2;
-  uint8_t *in_buffer = malloc(fuzzer_length);
+  uint8_t* in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
-  char *out_buffer = malloc(outlen);
+  char* out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
     return FUZZ_MARK_UNINTERESTING;
@@ -531,9 +531,9 @@ int fuzz_xmr_base58_encode(void) {
 
   // TODO better size heuristic
   size_t outlen = fuzzer_length * 2;
-  uint8_t *in_buffer = malloc(fuzzer_length);
+  uint8_t* in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
-  char *out_buffer = malloc(outlen);
+  char* out_buffer = malloc(outlen);
   if (out_buffer == NULL) {
     free(in_buffer);
     return FUZZ_MARK_UNINTERESTING;
@@ -572,7 +572,7 @@ int fuzz_xmr_serialize_varint(void) {
 
   // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
-  uint8_t *in_buffer = malloc(raw_inlen);
+  uint8_t* in_buffer = malloc(raw_inlen);
   RETURN_IF_NULL(in_buffer);
   memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
@@ -599,7 +599,7 @@ int fuzz_nem_validate_address(void) {
 
   uint8_t network = fuzzer_input(1)[0];
   size_t raw_inlen = fuzzer_length + 1;
-  char *in_buffer = malloc(raw_inlen);
+  char* in_buffer = malloc(raw_inlen);
   RETURN_IF_NULL(in_buffer);
 
   // mutate the buffer
@@ -707,7 +707,7 @@ int fuzz_shamir_interpolate(void) {
   uint8_t result_index = 0;
   uint8_t share_indices[SHAMIR_MAX_SHARE_COUNT] = {0};
   uint8_t share_values_content[SHAMIR_MAX_SHARE_COUNT][SHAMIR_MAX_LEN] = {0};
-  const uint8_t *share_values[SHAMIR_MAX_SHARE_COUNT] = {0};
+  const uint8_t* share_values[SHAMIR_MAX_SHARE_COUNT] = {0};
   uint8_t share_count = 0;
   size_t len = 0;
 
@@ -749,7 +749,7 @@ int fuzz_ecdsa_sign_digest_functions(void) {
   if (fuzzer_length < 1 + sizeof(priv_key) + sizeof(digest)) {
     return FUZZ_MARK_UNINTERESTING;
   }
-  const ecdsa_curve *curve;
+  const ecdsa_curve* curve;
 
   memcpy(&curve_decider, fuzzer_input(1), 1);
   memcpy(&priv_key, fuzzer_input(sizeof(priv_key)), sizeof(priv_key));
@@ -816,7 +816,7 @@ int fuzz_ecdsa_verify_digest_functions(void) {
   memcpy(&sig, fuzzer_input(sizeof(sig)), sizeof(sig));
   memcpy(&pub_key, fuzzer_input(sizeof(pub_key)), sizeof(pub_key));
 
-  const ecdsa_curve *curve;
+  const ecdsa_curve* curve;
   // pick one of the standard curves
   if ((curve_decider & 0x1) == 1) {
     curve = &secp256k1;
@@ -825,14 +825,14 @@ int fuzz_ecdsa_verify_digest_functions(void) {
   }
 
   int res1 =
-      tc_ecdsa_verify_digest(curve, (const uint8_t *)&pub_key,
-                             (const uint8_t *)&sig, (const uint8_t *)&hash);
+      tc_ecdsa_verify_digest(curve, (const uint8_t*)&pub_key,
+                             (const uint8_t*)&sig, (const uint8_t*)&hash);
 
   // the zkp_ecdsa* function only accepts the secp256k1 curve
   if (curve == &secp256k1) {
     int res2 =
-        zkp_ecdsa_verify_digest(curve, (const uint8_t *)&pub_key,
-                                (const uint8_t *)&sig, (const uint8_t *)&hash);
+        zkp_ecdsa_verify_digest(curve, (const uint8_t*)&pub_key,
+                                (const uint8_t*)&sig, (const uint8_t*)&hash);
 
     // the error code behavior is different between both functions, compare only
     // verification state
@@ -857,7 +857,7 @@ int fuzz_word_index(void) {
   size_t word_length = strlen(word);
   uint16_t index = 0;
 
-  word_index(&index, (const char *)&word, word_length);
+  word_index(&index, (const char*)&word, word_length);
 
   return 0;
 }
@@ -903,7 +903,7 @@ int fuzz_mnemonic_from_data(void) {
     return FUZZ_MARK_UNINTERESTING;
   }
 
-  const char *mnemo_result = mnemonic_from_data(fuzzer_ptr, fuzzer_length);
+  const char* mnemo_result = mnemonic_from_data(fuzzer_ptr, fuzzer_length);
   if (mnemo_result != NULL) {
     int res = mnemonic_check(mnemo_result);
     if (res == 0) {
@@ -975,7 +975,7 @@ int fuzz_aes(void) {
   uint8_t iv[16] = {0};
   uint8_t cbuf[16] = {0};
 
-  const uint8_t *keylength_decider = fuzzer_input(1);
+  const uint8_t* keylength_decider = fuzzer_input(1);
 
   // note: the unit test uses the fixed 32 byte key
   // 603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4
@@ -1002,8 +1002,8 @@ int fuzz_aes(void) {
       break;
   }
 
-  if (aes_encrypt_key((const unsigned char *)&keybuf, keylength, &ctxe) ||
-      aes_decrypt_key((const unsigned char *)&keybuf, keylength, &ctxd)) {
+  if (aes_encrypt_key((const unsigned char*)&keybuf, keylength, &ctxe) ||
+      aes_decrypt_key((const unsigned char*)&keybuf, keylength, &ctxd)) {
     // initialization problems, stop processing
     // we expect this to happen with the invalid key length
     return 0;
@@ -1011,8 +1011,8 @@ int fuzz_aes(void) {
 #else
   // use a 256 bit key length
   (void)keylength_decider;
-  aes_encrypt_key256((const unsigned char *)&keybuf, &ctxe);
-  aes_decrypt_key256((const unsigned char *)&keybuf, &ctxd);
+  aes_encrypt_key256((const unsigned char*)&keybuf, &ctxe);
+  aes_decrypt_key256((const unsigned char*)&keybuf, &ctxd);
 #endif
 
   memcpy(ibuf, fuzzer_input(16), 16);
@@ -1180,7 +1180,7 @@ int fuzz_ecdsa_get_public_key_functions(void) {
   uint8_t pubkey65_2[65] = {0};
 
   // note: the zkp_ecdsa_* variants require this specific curve
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
 
   if (fuzzer_length < sizeof(privkey)) {
     return FUZZ_MARK_UNINTERESTING;
@@ -1221,7 +1221,7 @@ int fuzz_ecdsa_get_public_key_functions(void) {
 int fuzz_ecdsa_recover_pub_from_sig_functions(void) {
   uint8_t digest[32] = {0};
   uint8_t sig[64] = {0};
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
   uint8_t recid = 0;
   uint8_t pubkey1[65] = {0};
   uint8_t pubkey2[65] = {0};
@@ -1264,7 +1264,7 @@ int fuzz_ecdsa_sig_from_der(void) {
   memcpy(der, fuzzer_input(sizeof(der)), sizeof(der));
   // null-terminate
   der[sizeof(der) - 1] = 0;
-  size_t der_len = strlen((const char *)der);
+  size_t der_len = strlen((const char*)der);
 
   // IDEA use different fuzzer-controlled der_len such as 1 to 73
   int ret = ecdsa_sig_from_der(der, der_len, out);
@@ -1283,7 +1283,7 @@ int fuzz_ecdsa_sig_to_der(void) {
   }
   memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
 
-  int ret = ecdsa_sig_to_der((const uint8_t *)&sig, der);
+  int ret = ecdsa_sig_to_der((const uint8_t*)&sig, der);
   (void)ret;
   // IDEA check if back conversion works
 
@@ -1347,7 +1347,7 @@ int fuzz_ecdh_multiply(void) {
 
   // TODO evaluate crash with &curve == NULL, documentation / convention issue?
 
-  const ecdsa_curve *curve2;
+  const ecdsa_curve* curve2;
   // ecdh_multiply() is only called with secp256k1 and nist256p1 curve from
   // modtrezorcrypto code theoretically other curve parameters are also possible
   if ((decider & 1) == 0) {
@@ -1356,8 +1356,8 @@ int fuzz_ecdh_multiply(void) {
     curve2 = &secp256k1;
   }
 
-  res1 = ecdh_multiply(curve2, (uint8_t *)&priv_key, (uint8_t *)&pub_key,
-                       (uint8_t *)&session_key);
+  res1 = ecdh_multiply(curve2, (uint8_t*)&priv_key, (uint8_t*)&pub_key,
+                       (uint8_t*)&session_key);
   check_msan(&session_key, sizeof(session_key));
 
   if (res1 != 0) {
@@ -1377,7 +1377,7 @@ int fuzz_segwit_addr_encode(void) {
   // in typical use, hrp is a bech32 prefix of 2 to 4 chars
   // TODO make this dynamic, investigate lowercase requirements
   // see also https://github.com/sipa/bech32/issues/38
-  char *hrp = "bc";
+  char* hrp = "bc";
 
   if (fuzzer_length < sizeof(chosen_witver) + sizeof(chosen_witprog_len)) {
     return FUZZ_MARK_UNINTERESTING;
@@ -1392,7 +1392,7 @@ int fuzz_segwit_addr_encode(void) {
   }
 
   char output_address[MAX_ADDR_SIZE] = {0};
-  uint8_t *witprog = malloc(chosen_witprog_len);
+  uint8_t* witprog = malloc(chosen_witprog_len);
   RETURN_IF_NULL(witprog);
   memcpy(witprog, fuzzer_input(chosen_witprog_len), chosen_witprog_len);
 
@@ -1424,14 +1424,14 @@ int fuzz_segwit_addr_decode(void) {
     return FUZZ_MARK_UNINTERESTING;
   }
 
-  char *addr = malloc(chosen_addr_len + 1);
+  char* addr = malloc(chosen_addr_len + 1);
   RETURN_IF_NULL(addr);
   memcpy(addr, fuzzer_input(chosen_addr_len), chosen_addr_len);
   // null termination
   addr[chosen_addr_len] = 0;
 
   // TODO see comments in fuzz_segwit_addr_encode()
-  char *hrp = "bc";
+  char* hrp = "bc";
 
   int ret = segwit_addr_decode(&decoded_witver, addr_raw, &decoded_witprog_len,
                                hrp, addr);
@@ -1446,7 +1446,7 @@ int fuzz_segwit_addr_decode(void) {
 
 #define META_HEADER_SIZE 3
 
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // reject input that is too short
   if (size < META_HEADER_SIZE) {
     return FUZZ_MARK_UNINTERESTING;

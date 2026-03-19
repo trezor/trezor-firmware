@@ -41,22 +41,22 @@
 #include "version.h"
 #include "wire/codec_v1.h"
 
-secbool send_user_abort(protob_io_t *iface, const char *msg) {
+secbool send_user_abort(protob_io_t* iface, const char* msg) {
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ActionCancelled);
   MSG_SEND_ASSIGN_STRING(message, msg);
   return MSG_SEND(Failure);
 }
 
-secbool send_msg_failure(protob_io_t *iface, FailureType type,
-                         const char *msg) {
+secbool send_msg_failure(protob_io_t* iface, FailureType type,
+                         const char* msg) {
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, type);
   MSG_SEND_ASSIGN_STRING(message, msg);
   return MSG_SEND(Failure);
 }
 
-secbool send_msg_success(protob_io_t *iface, const char *msg) {
+secbool send_msg_success(protob_io_t* iface, const char* msg) {
   MSG_SEND_INIT(Success);
   if (msg != NULL) {
     MSG_SEND_ASSIGN_STRING(message, msg);
@@ -64,7 +64,7 @@ secbool send_msg_success(protob_io_t *iface, const char *msg) {
   return MSG_SEND(Success);
 }
 
-secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw) {
+secbool send_msg_features(protob_io_t* iface, const fw_info_t* fw) {
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
   MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
@@ -113,42 +113,42 @@ secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw) {
   return MSG_SEND(Features);
 }
 
-secbool recv_msg_initialize(protob_io_t *iface, Initialize *msg) {
+secbool recv_msg_initialize(protob_io_t* iface, Initialize* msg) {
   MSG_RECV_INIT(Initialize);
   secbool result = MSG_RECV(Initialize);
   memcpy(msg, &msg_recv, sizeof(Initialize));
   return result;
 }
 
-secbool recv_msg_get_features(protob_io_t *iface, GetFeatures *msg) {
+secbool recv_msg_get_features(protob_io_t* iface, GetFeatures* msg) {
   MSG_RECV_INIT(GetFeatures);
   secbool result = MSG_RECV(GetFeatures);
   memcpy(msg, &msg_recv, sizeof(GetFeatures));
   return result;
 }
 
-secbool recv_msg_wipe_device(protob_io_t *iface, WipeDevice *msg) {
+secbool recv_msg_wipe_device(protob_io_t* iface, WipeDevice* msg) {
   MSG_RECV_INIT(WipeDevice);
   secbool result = MSG_RECV(WipeDevice);
   memcpy(msg, &msg_recv, sizeof(WipeDevice));
   return result;
 }
 
-secbool recv_msg_ping(protob_io_t *iface, Ping *msg) {
+secbool recv_msg_ping(protob_io_t* iface, Ping* msg) {
   MSG_RECV_INIT(Ping);
   secbool result = MSG_RECV(Ping);
   memcpy(msg, &msg_recv, sizeof(Ping));
   return result;
 }
 
-secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg) {
+secbool recv_msg_firmware_erase(protob_io_t* iface, FirmwareErase* msg) {
   MSG_RECV_INIT(FirmwareErase);
   secbool result = MSG_RECV(FirmwareErase);
   memcpy(msg, &msg_recv, sizeof(FirmwareErase));
   return result;
 }
 
-secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
+secbool send_msg_request_firmware(protob_io_t* iface, uint32_t offset,
                                   uint32_t length) {
   MSG_SEND_INIT(FirmwareRequest);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
@@ -157,16 +157,16 @@ secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
 }
 
 typedef struct {
-  void (*cb)(size_t len, void *ctx);
-  void *ctx;
-  uint8_t *buffer;
+  void (*cb)(size_t len, void* ctx);
+  void* ctx;
+  uint8_t* buffer;
   size_t buffer_size;
 } payload_ctx_t;
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
-static bool read_payload(pb_istream_t *stream, const pb_field_t *field,
-                         void **arg) {
-  payload_ctx_t *payload_ctx = (payload_ctx_t *)*arg;
+static bool read_payload(pb_istream_t* stream, const pb_field_t* field,
+                         void** arg) {
+  payload_ctx_t* payload_ctx = (payload_ctx_t*)*arg;
 #define BUFSIZE 32768
 
   if (stream->bytes_left > payload_ctx->buffer_size) {
@@ -183,7 +183,7 @@ static bool read_payload(pb_istream_t *stream, const pb_field_t *field,
     payload_ctx->cb(received, payload_ctx->ctx);
 
     // read data
-    if (!pb_read(stream, (pb_byte_t *)(payload_ctx->buffer + bytes_written),
+    if (!pb_read(stream, (pb_byte_t*)(payload_ctx->buffer + bytes_written),
                  (received))) {
       return false;
     }
@@ -193,10 +193,10 @@ static bool read_payload(pb_istream_t *stream, const pb_field_t *field,
   return true;
 }
 
-secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
-                                 void *ctx,
-                                 void (*data_cb)(size_t len, void *ctx),
-                                 uint8_t *buffer, size_t buffer_size) {
+secbool recv_msg_firmware_upload(protob_io_t* iface, FirmwareUpload* msg,
+                                 void* ctx,
+                                 void (*data_cb)(size_t len, void* ctx),
+                                 uint8_t* buffer, size_t buffer_size) {
   payload_ctx_t payload_ctx = {
       .cb = data_cb, .ctx = ctx, .buffer = buffer, .buffer_size = buffer_size};
 
@@ -207,22 +207,22 @@ secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
   return result;
 }
 
-void recv_msg_unknown(protob_io_t *iface) {
+void recv_msg_unknown(protob_io_t* iface) {
   codec_flush(iface->wire, iface->msg_size, iface->buf);
   send_msg_failure(iface, FailureType_Failure_UnexpectedMessage,
                    "Unexpected message");
 }
 
-void protob_init(protob_io_t *iface, wire_iface_t *wire) {
+void protob_init(protob_io_t* iface, wire_iface_t* wire) {
   memset(iface, 0, sizeof(protob_io_t));
   iface->wire = wire;
 }
 
-uint32_t protob_get_iface_flag(protob_io_t *iface) {
+uint32_t protob_get_iface_flag(protob_io_t* iface) {
   return iface->wire->poll_iface_id;
 }
 
-secbool protob_get_msg_header(protob_io_t *iface, uint16_t *msg_id) {
+secbool protob_get_msg_header(protob_io_t* iface, uint16_t* msg_id) {
   iface->wire->read(iface->buf, iface->wire->rx_packet_size);
   return codec_parse_header(iface->buf, msg_id, &iface->msg_size);
 }

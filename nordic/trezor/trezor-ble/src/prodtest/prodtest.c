@@ -53,8 +53,8 @@ void prodtest_init(void) { k_sem_give(&prodtest_ok); }
 
 static uint8_t pairing_secret[PAIRING_SECRET_SIZE] = {0};
 
-static int prodtest_set(const char *key, size_t len, settings_read_cb read_cb,
-                        void *cb_arg) {
+static int prodtest_set(const char* key, size_t len, settings_read_cb read_cb,
+                        void* cb_arg) {
   if (strcmp(key, "pairing_secret") == 0) {
     ssize_t rc = read_cb(cb_arg, pairing_secret, sizeof(pairing_secret));
     return rc < 0 ? (int)rc : 0;
@@ -65,9 +65,9 @@ static int prodtest_set(const char *key, size_t len, settings_read_cb read_cb,
 SETTINGS_STATIC_HANDLER_DEFINE(prodtest, "prodtest", NULL, prodtest_set, NULL,
                                NULL);
 
-const uint8_t *prodtest_get_pairing_key(void) { return pairing_secret; }
+const uint8_t* prodtest_get_pairing_key(void) { return pairing_secret; }
 
-bool prodtest_pair(uint8_t *data, uint16_t len) {
+bool prodtest_pair(uint8_t* data, uint16_t len) {
   if (len != PAIRING_SECRET_SIZE) {
     LOG_ERR("Invalid pairing data length: %d", len);
     return false;
@@ -88,7 +88,7 @@ bool prodtest_pair(uint8_t *data, uint16_t len) {
   return true;
 }
 
-static void process_command(uint8_t *data, uint16_t len) {
+static void process_command(uint8_t* data, uint16_t len) {
   uint8_t resp_data[244] = {0};
   uint8_t cmd = data[0];
   switch (cmd) {
@@ -130,7 +130,7 @@ void prodtest_thread(void) {
   k_sem_take(&prodtest_ok, K_FOREVER);
 
   for (;;) {
-    trz_packet_t *buf = trz_comm_poll_data(NRF_SERVICE_PRODTEST);
+    trz_packet_t* buf = trz_comm_poll_data(NRF_SERVICE_PRODTEST);
     process_command(buf->data, buf->len);
     k_free(buf);
   }

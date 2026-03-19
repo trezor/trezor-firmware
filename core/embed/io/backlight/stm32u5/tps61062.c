@@ -127,10 +127,10 @@ static backlight_driver_t g_backlight_driver = {
 static void backlight_shutdown(void);
 static void backlight_deinit_ll(void);
 
-static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
+static void DMA_XferCpltCallback(DMA_HandleTypeDef* hdma);
 
 static inline void buffer_clear(uint8_t buf_idx) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   // buf_idx is out of range. Safety check...
   if (buf_idx >= DMA_BUF_COUNT) return;
@@ -141,7 +141,7 @@ static inline void buffer_clear(uint8_t buf_idx) {
 
 static void buffer_steps_set(uint8_t buf_idx, int start_offset, int steps_cnt,
                              uint16_t tim_pulse) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
   int elements_cnt = start_offset + steps_cnt;
 
   // The requested buffer modification exceeds its boundaries OR buf_idx is out
@@ -160,7 +160,7 @@ static void buffer_steps_set(uint8_t buf_idx, int start_offset, int steps_cnt,
 }
 
 static inline void buffer_steps_duty_cycle_set(uint8_t buf_idx) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   // buf_idx is out of range OR requested_step_duty_cycle is 0. Safety check...
   if (buf_idx >= DMA_BUF_COUNT || drv->requested_step_duty_cycle == 0) return;
@@ -212,7 +212,7 @@ static inline uint32_t gamma_correction(uint8_t in, uint8_t in_offset,
 }
 
 bool backlight_init(backlight_action_t action, float gamma_exp) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   if (drv->initialized) {
     return true;
@@ -369,7 +369,7 @@ cleanup:
 }
 
 void backlight_deinit(backlight_action_t action) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   if (!drv->initialized) {
     return;
@@ -383,7 +383,7 @@ void backlight_deinit(backlight_action_t action) {
 }
 
 bool backlight_set(uint8_t val) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   if (!drv->initialized) {
     return false;
@@ -527,7 +527,7 @@ bool backlight_set(uint8_t val) {
 }
 
 uint8_t backlight_get(void) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -540,7 +540,7 @@ uint8_t backlight_get(void) {
 
 // Set maximal backlight level
 bool backlight_set_max_level(uint8_t max_level) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   if (!drv->initialized) {
     return false;
@@ -554,14 +554,14 @@ bool backlight_set_max_level(uint8_t max_level) {
 }
 
 static void backlight_shutdown(void) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   drv->tim.Instance->CCR1 = UINT16_MAX;
   HAL_GPIO_WritePin(TPS61062_EN_PORT, TPS61062_EN_PIN, GPIO_PIN_RESET);
 }
 
 static void backlight_deinit_ll(void) {
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   irq_key_t key = irq_lock();
 
@@ -597,8 +597,8 @@ static void backlight_deinit_ll(void) {
 }
 
 // Transfer complete callback
-static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
-  backlight_driver_t *drv = &g_backlight_driver;
+static void DMA_XferCpltCallback(DMA_HandleTypeDef* hdma) {
+  backlight_driver_t* drv = &g_backlight_driver;
   uint32_t dma_CSAR_tmp, dma_BNDT_tmp;
 
   // There is a possibility of entering the ISR late e.g. just before
@@ -694,7 +694,7 @@ void GPDMA1_Channel3_IRQHandler(void) {
   IRQ_LOG_ENTER();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  backlight_driver_t *drv = &g_backlight_driver;
+  backlight_driver_t* drv = &g_backlight_driver;
 
   HAL_DMA_IRQHandler(&drv->dma);
 

@@ -25,7 +25,7 @@ void usage(void) {
   printf("  -h  show this help\n");
 }
 
-static int sdl_event_filter(void *userdata, SDL_Event *event) {
+static int sdl_event_filter(void* userdata, SDL_Event* event) {
   switch (event->type) {
     case SDL_QUIT:
       exit(3);
@@ -47,7 +47,7 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
   return 1;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   SDL_SetEventFilter(sdl_event_filter, NULL);
 
   display_init(DISPLAY_RESET_CONTENT);

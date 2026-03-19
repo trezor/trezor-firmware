@@ -72,8 +72,8 @@ static void __attribute__((noreturn)) svhandler_reboot_to_bootloader(void) {
 
 extern volatile uint32_t system_millis;
 
-void svc_handler_main(uint32_t *stack) {
-  uint8_t svc_number = ((uint8_t *)stack[6])[-2];
+void svc_handler_main(uint32_t* stack) {
+  uint8_t svc_number = ((uint8_t*)stack[6])[-2];
   switch (svc_number) {
     case SVC_FLASH_UNLOCK:
       svhandler_flash_unlock();

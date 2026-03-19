@@ -65,17 +65,17 @@ static const struct bt_data scan_response_data[] = {
     BT_DATA(BT_DATA_MANUFACTURER_DATA, manufacturer_data, 8),
 };
 
-static void change_adv_work_handler(struct k_work *work);
-static void change_adv_interval_handler(struct k_timer *timer_id);
+static void change_adv_work_handler(struct k_work* work);
+static void change_adv_interval_handler(struct k_timer* timer_id);
 K_TIMER_DEFINE(change_adv_timer, change_adv_interval_handler, NULL);
 static K_WORK_DEFINE(change_adv_work, change_adv_work_handler);
 
-static void change_adv_interval_handler(struct k_timer *timer_id) {
+static void change_adv_interval_handler(struct k_timer* timer_id) {
   // This is safe to do in an ISR
   k_work_submit(&change_adv_work);
 }
 
-static void add_to_whitelist(const struct bt_bond_info *info, void *user_data) {
+static void add_to_whitelist(const struct bt_bond_info* info, void* user_data) {
   char addr[BT_ADDR_LE_STR_LEN];
   bt_addr_le_to_str(&info->addr, addr, sizeof(addr));
 
@@ -92,7 +92,7 @@ void advertising_setup_wl(void) {
   bt_foreach_bond(BT_ID_DEFAULT, add_to_whitelist, NULL);
 }
 
-static void change_adv_work_handler(struct k_work *work) {
+static void change_adv_work_handler(struct k_work* work) {
   k_mutex_lock(&adv_mutex, K_FOREVER);
 
   if (!advertising) {
@@ -128,7 +128,7 @@ static void change_adv_work_handler(struct k_work *work) {
 }
 
 void advertising_start(bool wl, bool user_disconnect, uint8_t color,
-                       uint8_t device_code, bool static_addr, char *name,
+                       uint8_t device_code, bool static_addr, char* name,
                        int name_len) {
   k_mutex_lock(&adv_mutex, K_FOREVER);
 
@@ -173,7 +173,7 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
   static char adv_name[BLE_ADV_NAME_LEN + 1] = {0};
   memset(adv_name, 0, BLE_ADV_NAME_LEN + 1);
   memcpy(adv_name, name, name_len);
-  advertising_data[1].data = (const uint8_t *)adv_name;
+  advertising_data[1].data = (const uint8_t*)adv_name;
 
   char gap_name[BLE_ADV_NAME_LEN + 1] = {0};
   memcpy(gap_name, name, name_len);
@@ -267,7 +267,7 @@ void advertising_init(void) {
   advertising_setup_wl();
 }
 
-void advertising_get_mac(uint8_t *mac, uint16_t max_len) {
+void advertising_get_mac(uint8_t* mac, uint16_t max_len) {
   bt_addr_le_t addr[CONFIG_BT_ID_MAX] = {0};
   size_t count = 0;
 

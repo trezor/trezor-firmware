@@ -33,7 +33,7 @@ void tropic_set_ui_progress(tropic_ui_progress_t ui_progress) {
   }
 }
 
-void lt_secure_memzero(void *const ptr, const size_t count) {
+void lt_secure_memzero(void* const ptr, const size_t count) {
   memzero(ptr, count);
 }
 

@@ -77,7 +77,7 @@ static MessageType authorization_type = 0;
 static uint32_t unlock_path = 0;
 
 #define RESP_INIT(TYPE)                                                    \
-  TYPE *resp = (TYPE *)(void *)msg_resp;                                   \
+  TYPE* resp = (TYPE*)(void*)msg_resp;                                     \
   _Static_assert(sizeof(msg_resp) >= sizeof(TYPE), #TYPE " is too large"); \
   memzero(resp, sizeof(TYPE));
 
@@ -120,7 +120,7 @@ static uint32_t unlock_path = 0;
     return;                                                     \
   }
 
-void fsm_sendSuccess(const char *text) {
+void fsm_sendSuccess(const char* text) {
   RESP_INIT(Success);
   if (text) {
     resp->has_message = true;
@@ -130,17 +130,17 @@ void fsm_sendSuccess(const char *text) {
 }
 
 #if DEBUG_LINK
-void fsm_sendFailureDebug(FailureType code, const char *text,
-                          const char *source)
+void fsm_sendFailureDebug(FailureType code, const char* text,
+                          const char* source)
 #else
-void fsm_sendFailure(FailureType code, const char *text)
+void fsm_sendFailure(FailureType code, const char* text)
 #endif
 {
   if (protectAbortedByCancel) {
     protectAbortedByCancel = false;
   }
   if (protectAbortedByInitialize) {
-    fsm_msgInitialize((Initialize *)0);
+    fsm_msgInitialize((Initialize*)0);
     protectAbortedByInitialize = false;
     return;
   }
@@ -223,8 +223,8 @@ void fsm_sendFailure(FailureType code, const char *text)
   msg_write(MessageType_MessageType_Failure, resp);
 }
 
-static const CoinInfo *fsm_getCoin(bool has_name, const char *name) {
-  const CoinInfo *coin = NULL;
+static const CoinInfo* fsm_getCoin(bool has_name, const char* name) {
+  const CoinInfo* coin = NULL;
   if (has_name) {
     coin = coinByName(name);
   } else {
@@ -238,10 +238,10 @@ static const CoinInfo *fsm_getCoin(bool has_name, const char *name) {
   return coin;
 }
 
-static HDNode *fsm_getDerivedNodeEx(const char *curve,
-                                    const uint32_t *address_n,
-                                    size_t address_n_count, const uint8_t *seed,
-                                    uint32_t *fingerprint) {
+static HDNode* fsm_getDerivedNodeEx(const char* curve,
+                                    const uint32_t* address_n,
+                                    size_t address_n_count, const uint8_t* seed,
+                                    uint32_t* fingerprint) {
   static CONFIDENTIAL HDNode node;
   if (fingerprint) {
     *fingerprint = 0;
@@ -275,16 +275,16 @@ static HDNode *fsm_getDerivedNodeEx(const char *curve,
   return &node;
 }
 
-static HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n,
+static HDNode* fsm_getDerivedNode(const char* curve, const uint32_t* address_n,
                                   size_t address_n_count,
-                                  uint32_t *fingerprint) {
+                                  uint32_t* fingerprint) {
   return fsm_getDerivedNodeEx(curve, address_n, address_n_count, NULL,
                               fingerprint);
 }
 
-static bool fsm_getSlip21Key(const char *path[], size_t path_count,
+static bool fsm_getSlip21Key(const char* path[], size_t path_count,
                              uint8_t key[32]) {
-  const uint8_t *seed = config_getSeed();
+  const uint8_t* seed = config_getSeed();
   if (seed == NULL) {
     return false;
   }
@@ -292,7 +292,7 @@ static bool fsm_getSlip21Key(const char *path[], size_t path_count,
   static CONFIDENTIAL Slip21Node node;
   slip21_from_seed(seed, 64, &node);
   for (size_t i = 0; i < path_count; ++i) {
-    slip21_derive_path(&node, (uint8_t *)path[i], strlen(path[i]));
+    slip21_derive_path(&node, (uint8_t*)path[i], strlen(path[i]));
   }
   memcpy(key, slip21_key(&node), 32);
   memzero(&node, sizeof(node));
@@ -300,13 +300,13 @@ static bool fsm_getSlip21Key(const char *path[], size_t path_count,
   return true;
 }
 
-static bool fsm_layoutAddress(const char *address, const char *desc,
+static bool fsm_layoutAddress(const char* address, const char* desc,
                               bool ignorecase, size_t prefixlen,
-                              const uint32_t *address_n, size_t address_n_count,
+                              const uint32_t* address_n, size_t address_n_count,
                               bool address_is_account,
-                              const MultisigRedeemScriptType *multisig,
+                              const MultisigRedeemScriptType* multisig,
                               int multisig_index, uint32_t multisig_xpub_magic,
-                              const CoinInfo *coin) {
+                              const CoinInfo* coin) {
   int screen = 0, screens = 2;
   if (multisig) {
     screens += 2 * cryptoMultisigPubkeyCount(multisig);
@@ -314,7 +314,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
   for (;;) {
     switch (screen) {
       case 0: {  // show address
-        const char *display_addr = address;
+        const char* display_addr = address;
         // strip cashaddr prefix
         if (prefixlen) {
           display_addr += prefixlen;
@@ -332,7 +332,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
         int index = (screen - 2) / 2;
         int page = (screen - 2) % 2;
         char xpub[XPUB_MAXLEN + 1] = {0};
-        const HDNodeType *node_ptr = NULL;
+        const HDNodeType* node_ptr = NULL;
         if (multisig->nodes_count) {  // use multisig->nodes
           node_ptr = &(multisig->nodes[index]);
         } else if (multisig->pubkeys_count) {  // use multisig->pubkeys
@@ -369,9 +369,9 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
   }
 }
 
-static bool fsm_layoutPaginated(const char *description, const uint8_t *msg,
+static bool fsm_layoutPaginated(const char* description, const uint8_t* msg,
                                 uint32_t len, bool is_ascii) {
-  const char **str = NULL;
+  const char** str = NULL;
   const uint32_t row_len = is_ascii ? 18 : 8;
   do {
     const uint32_t show_len = MIN(len, row_len * 4);
@@ -384,7 +384,7 @@ static bool fsm_layoutPaginated(const char *description, const uint8_t *msg,
     msg += show_len;
     len -= show_len;
 
-    const char *label = len > 0 ? _("Next") : _("Confirm");
+    const char* label = len > 0 ? _("Next") : _("Confirm");
     layoutDialogSwipeEx(&bmp_icon_question, _("Cancel"), label, description,
                         str[0], str[1], str[2], str[3], NULL, NULL, FONT_FIXED);
 
@@ -396,7 +396,7 @@ static bool fsm_layoutPaginated(const char *description, const uint8_t *msg,
   return true;
 }
 
-bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len) {
+bool fsm_layoutSignMessage(const uint8_t* msg, uint32_t len) {
   if (is_valid_ascii(msg, len)) {
     return fsm_layoutPaginated(_("Sign message?"), msg, len, true);
   } else {
@@ -404,7 +404,7 @@ bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len) {
   }
 }
 
-bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len) {
+bool fsm_layoutVerifyMessage(const uint8_t* msg, uint32_t len) {
   if (is_valid_ascii(msg, len)) {
     return fsm_layoutPaginated(_("Verified message?"), msg, len, true);
   } else {
@@ -412,7 +412,7 @@ bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len) {
   }
 }
 
-bool fsm_layoutCommitmentData(const uint8_t *msg, uint32_t len) {
+bool fsm_layoutCommitmentData(const uint8_t* msg, uint32_t len) {
   if (is_valid_ascii(msg, len)) {
     return fsm_layoutPaginated(_("Commitment data"), msg, len, true);
   } else {

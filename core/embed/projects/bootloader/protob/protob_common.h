@@ -21,7 +21,9 @@
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
 #define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
-  { msg_send.FIELD = VALUE; }
+  {                                                  \
+    msg_send.FIELD = VALUE;                          \
+  }
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) \
   {                                         \
     msg_send.has_##FIELD = true;            \
@@ -55,7 +57,7 @@
 #define MSG_RECV_CALLBACK(FIELD, CALLBACK, ARGUMENT) \
   {                                                  \
     msg_recv.FIELD.funcs.decode = &CALLBACK;         \
-    msg_recv.FIELD.arg = (void *)ARGUMENT;           \
+    msg_recv.FIELD.arg = (void*)ARGUMENT;            \
   }
 #define MSG_RECV(TYPE)                                                        \
   codec_recv_message(iface->wire, iface->msg_size, iface->buf, TYPE##_fields, \

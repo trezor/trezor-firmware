@@ -35,7 +35,7 @@ typedef enum {
 } nrf_service_id_t;
 
 typedef struct {
-  void *fifo_reserved;
+  void* fifo_reserved;
   uint8_t data[PACKET_DATA_SIZE];
   uint16_t len;
 } trz_packet_t;
@@ -44,11 +44,11 @@ typedef struct {
 void trz_comm_init(void);
 
 // Sends a message to the specified service over fitting communication channel
-bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t *data,
+bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t* data,
                        uint32_t len);
 
 // Polls for incoming data from the specified service
-trz_packet_t *trz_comm_poll_data(nrf_service_id_t service);
+trz_packet_t* trz_comm_poll_data(nrf_service_id_t service);
 
 void trz_comm_start_uart(void);
 void trz_comm_stop_uart(void);

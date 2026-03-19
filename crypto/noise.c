@@ -35,9 +35,9 @@ static uint8_t protocol_name[SHA256_DIGEST_LENGTH] = {
 
 static bool encrypt(const uint8_t key[NOISE_KEY_SIZE],
                     const uint8_t nonce[NOISE_NONCE_SIZE],
-                    const uint8_t *associated_data,
-                    size_t associated_data_length, const uint8_t *plaintext,
-                    size_t plaintext_length, uint8_t *ciphertext) {
+                    const uint8_t* associated_data,
+                    size_t associated_data_length, const uint8_t* plaintext,
+                    size_t plaintext_length, uint8_t* ciphertext) {
   // ciphertext = AES-GCM-Encrypt(key, nonce, associated_data, plaintext)
   gcm_ctx ctx = {0};
   if (gcm_init_and_key(key, NOISE_KEY_SIZE, &ctx) != RETURN_GOOD) {
@@ -61,9 +61,9 @@ static bool encrypt(const uint8_t key[NOISE_KEY_SIZE],
 
 static bool decrypt(const uint8_t key[NOISE_KEY_SIZE],
                     const uint8_t nonce[NOISE_NONCE_SIZE],
-                    const uint8_t *associated_data,
-                    size_t associated_data_length, const uint8_t *ciphertext,
-                    size_t ciphertext_length, uint8_t *plaintext) {
+                    const uint8_t* associated_data,
+                    size_t associated_data_length, const uint8_t* ciphertext,
+                    size_t ciphertext_length, uint8_t* plaintext) {
   // plaintext = AES-GCM-Decrypt(key, nonce, associated_data, ciphertext)
   if (ciphertext_length < NOISE_TAG_SIZE) {
     return false;
@@ -90,7 +90,7 @@ static bool decrypt(const uint8_t key[NOISE_KEY_SIZE],
   return true;
 }
 
-static void mix_hash(uint8_t hash[SHA256_DIGEST_LENGTH], const uint8_t *data,
+static void mix_hash(uint8_t hash[SHA256_DIGEST_LENGTH], const uint8_t* data,
                      size_t data_length) {
   // hash = SHA256(hash || data)
   SHA256_CTX sha256_ctx;
@@ -100,7 +100,7 @@ static void mix_hash(uint8_t hash[SHA256_DIGEST_LENGTH], const uint8_t *data,
   sha256_Final(&sha256_ctx, hash);
 }
 
-static void hkdf(const uint8_t *salt, size_t salt_length, const uint8_t *key,
+static void hkdf(const uint8_t* salt, size_t salt_length, const uint8_t* key,
                  size_t key_length, uint8_t output1[SHA256_DIGEST_LENGTH],
                  uint8_t output2[SHA256_DIGEST_LENGTH]) {
   // output1 || output2 = HKDF(salt, key, output_length=2*SHA256_DIGEST_LENGTH)
@@ -155,8 +155,8 @@ static bool increase_nonce(uint8_t nonce[NOISE_NONCE_SIZE]) {
   return false;
 }
 
-bool noise_create_handshake_request(noise_context_t *ctx,
-                                    noise_request_t *request) {
+bool noise_create_handshake_request(noise_context_t* ctx,
+                                    noise_request_t* request) {
   memzero(ctx, sizeof(*ctx));
   ctx->initialized = false;
 
@@ -167,11 +167,11 @@ bool noise_create_handshake_request(noise_context_t *ctx,
   return true;
 }
 
-bool noise_handle_handshake_request(noise_context_t *ctx,
+bool noise_handle_handshake_request(noise_context_t* ctx,
                                     const curve25519_key initiator_public_key,
                                     const curve25519_key responder_private_key,
-                                    const noise_request_t *request,
-                                    noise_response_t *response) {
+                                    const noise_request_t* request,
+                                    noise_response_t* response) {
   memzero(ctx, sizeof(*ctx));
 
   curve25519_key responder_public_key = {0};
@@ -232,10 +232,10 @@ bool noise_handle_handshake_request(noise_context_t *ctx,
   return true;
 }
 
-bool noise_handle_handshake_response(noise_context_t *ctx,
+bool noise_handle_handshake_response(noise_context_t* ctx,
                                      const curve25519_key initiator_private_key,
                                      const curve25519_key responder_public_key,
-                                     const noise_response_t *response) {
+                                     const noise_response_t* response) {
   curve25519_key initiator_public_key = {0};
   curve25519_scalarmult_basepoint(initiator_public_key, initiator_private_key);
 
@@ -293,9 +293,9 @@ bool noise_handle_handshake_response(noise_context_t *ctx,
   return true;
 }
 
-bool noise_send_message(noise_context_t *ctx, const uint8_t *associated_data,
-                        size_t associated_data_length, const uint8_t *plaintext,
-                        size_t plaintext_length, uint8_t *ciphertext) {
+bool noise_send_message(noise_context_t* ctx, const uint8_t* associated_data,
+                        size_t associated_data_length, const uint8_t* plaintext,
+                        size_t plaintext_length, uint8_t* ciphertext) {
   if (!ctx->initialized) {
     return false;
   }
@@ -314,10 +314,10 @@ bool noise_send_message(noise_context_t *ctx, const uint8_t *associated_data,
   return true;
 }
 
-bool noise_receive_message(noise_context_t *ctx, const uint8_t *associated_data,
+bool noise_receive_message(noise_context_t* ctx, const uint8_t* associated_data,
                            size_t associated_data_length,
-                           const uint8_t *ciphertext, size_t ciphertext_length,
-                           uint8_t *plaintext) {
+                           const uint8_t* ciphertext, size_t ciphertext_length,
+                           uint8_t* plaintext) {
   if (!ctx->initialized) {
     return false;
   }
@@ -337,9 +337,9 @@ bool noise_receive_message(noise_context_t *ctx, const uint8_t *associated_data,
 }
 
 bool noise_handle_handshake_response_multiple_keys(
-    noise_context_t *ctx, const curve25519_key initiator_private_key,
-    const curve25519_key *responder_public_keys,
-    size_t responder_public_keys_count, const noise_response_t *response) {
+    noise_context_t* ctx, const curve25519_key initiator_private_key,
+    const curve25519_key* responder_public_keys,
+    size_t responder_public_keys_count, const noise_response_t* response) {
   curve25519_key ephemeral_key_backup = {0};
   memcpy(ephemeral_key_backup, ctx->initiator_ephemeral_private_key,
          sizeof(ephemeral_key_backup));

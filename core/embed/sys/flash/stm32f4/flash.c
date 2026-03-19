@@ -78,7 +78,7 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 #endif
 };
 
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
+const void* flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   if (sector >= FLASH_SECTOR_COUNT) {
     return NULL;
   }
@@ -87,7 +87,7 @@ const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   if (addr + size > next) {
     return NULL;
   }
-  return (const void *)addr;
+  return (const void*)addr;
 }
 
 uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count) {
@@ -149,7 +149,7 @@ secbool flash_sector_erase(uint16_t sector) {
   uint32_t addr_end = FLASH_SECTOR_TABLE[sector + 1];
 
   for (uint32_t addr = addr_start; addr < addr_end; addr += 4) {
-    if (*((const uint32_t *)addr) != 0xFFFFFFFF) {
+    if (*((const uint32_t*)addr) != 0xFFFFFFFF) {
       return secfalse;
     }
   }
@@ -162,13 +162,13 @@ secbool flash_write_byte(uint16_t sector, uint32_t offset, uint8_t data) {
   if (address == 0) {
     return secfalse;
   }
-  if (data != (data & *((const uint8_t *)address))) {
+  if (data != (data & *((const uint8_t*)address))) {
     return secfalse;
   }
   if (HAL_OK != HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address, data)) {
     return secfalse;
   }
-  if (data != *((const uint8_t *)address)) {
+  if (data != *((const uint8_t*)address)) {
     return secfalse;
   }
   return sectrue;
@@ -182,13 +182,13 @@ secbool flash_write_word(uint16_t sector, uint32_t offset, uint32_t data) {
   if (offset % sizeof(uint32_t)) {  // we write only at 4-byte boundary
     return secfalse;
   }
-  if (data != (data & *((const uint32_t *)address))) {
+  if (data != (data & *((const uint32_t*)address))) {
     return secfalse;
   }
   if (HAL_OK != HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, data)) {
     return secfalse;
   }
-  if (data != *((const uint32_t *)address)) {
+  if (data != *((const uint32_t*)address)) {
     return secfalse;
   }
   return sectrue;

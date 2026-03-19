@@ -22,7 +22,7 @@ void prepare_msg(void) {
 void bench_sign_secp256k1(int iterations) {
   uint8_t sig[64], priv[32], pby;
 
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
 
   memcpy(priv,
          "\xc5\x5e\xce\x85\x8b\x0d\xdd\x52\x63\xf9\x68\x10\xfe\x14\x43\x7c\xd3"
@@ -37,7 +37,7 @@ void bench_sign_secp256k1(int iterations) {
 void bench_sign_nist256p1(int iterations) {
   uint8_t sig[64], priv[32], pby;
 
-  const ecdsa_curve *curve = &nist256p1;
+  const ecdsa_curve* curve = &nist256p1;
 
   memcpy(priv,
          "\xc5\x5e\xce\x85\x8b\x0d\xdd\x52\x63\xf9\x68\x10\xfe\x14\x43\x7c\xd3"
@@ -66,7 +66,7 @@ void bench_sign_ed25519(int iterations) {
 void bench_verify_secp256k1_33(int iterations) {
   uint8_t sig[64], pub[33], priv[32], pby;
 
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
 
   memcpy(priv,
          "\xc5\x5e\xce\x85\x8b\x0d\xdd\x52\x63\xf9\x68\x10\xfe\x14\x43\x7c\xd3"
@@ -83,7 +83,7 @@ void bench_verify_secp256k1_33(int iterations) {
 void bench_verify_secp256k1_65(int iterations) {
   uint8_t sig[64], pub[65], priv[32], pby;
 
-  const ecdsa_curve *curve = &secp256k1;
+  const ecdsa_curve* curve = &secp256k1;
 
   memcpy(priv,
          "\xc5\x5e\xce\x85\x8b\x0d\xdd\x52\x63\xf9\x68\x10\xfe\x14\x43\x7c\xd3"
@@ -100,7 +100,7 @@ void bench_verify_secp256k1_65(int iterations) {
 void bench_verify_nist256p1_33(int iterations) {
   uint8_t sig[64], pub[33], priv[32], pby;
 
-  const ecdsa_curve *curve = &nist256p1;
+  const ecdsa_curve* curve = &nist256p1;
 
   memcpy(priv,
          "\xc5\x5e\xce\x85\x8b\x0d\xdd\x52\x63\xf9\x68\x10\xfe\x14\x43\x7c\xd3"
@@ -117,7 +117,7 @@ void bench_verify_nist256p1_33(int iterations) {
 void bench_verify_nist256p1_65(int iterations) {
   uint8_t sig[64], pub[65], priv[32], pby;
 
-  const ecdsa_curve *curve = &nist256p1;
+  const ecdsa_curve* curve = &nist256p1;
 
   memcpy(priv,
          "\xc5\x5e\xce\x85\x8b\x0d\xdd\x52\x63\xf9\x68\x10\xfe\x14\x43\x7c\xd3"
@@ -170,7 +170,7 @@ void bench_multiply_curve25519(int iterations) {
 static HDNode root;
 
 void prepare_node(void) {
-  hdnode_from_seed((uint8_t *)"NothingToSeeHere", 16, SECP256K1_NAME, &root);
+  hdnode_from_seed((uint8_t*)"NothingToSeeHere", 16, SECP256K1_NAME, &root);
   hdnode_fill_public_key(&root);
 }
 
@@ -186,7 +186,7 @@ void bench_ckd(int iterations) {
   }
 }
 
-void bench(void (*func)(int), const char *name, int iterations) {
+void bench(void (*func)(int), const char* name, int iterations) {
   clock_t t = clock();
   func(iterations);
   float speed = iterations / ((float)(clock() - t) / CLOCKS_PER_SEC);

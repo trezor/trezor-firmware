@@ -123,13 +123,13 @@ static inline uint32_t is_mode_exception(void) {
 
 void display_ensure_refreshed(void);
 
-bool panel_init(display_driver_t *drv);
+bool panel_init(display_driver_t* drv);
 
 #ifdef DISPLAY_GFXMMU
-const uint32_t *panel_lut_get(void);
+const uint32_t* panel_lut_get(void);
 
-bool display_gfxmmu_init(display_driver_t *drv);
-void display_gfxmmu_deinit(display_driver_t *drv);
+bool display_gfxmmu_init(display_driver_t* drv);
+void display_gfxmmu_deinit(display_driver_t* drv);
 #endif
 
 #if REFRESH_RATE_SCALING_SUPPORTED

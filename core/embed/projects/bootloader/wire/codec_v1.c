@@ -31,7 +31,7 @@
 #define MSG_HEADER2_LEN 1
 
 typedef struct {
-  wire_iface_t *iface;
+  wire_iface_t* iface;
 
   uint8_t packet_pos;
   uint8_t buf[MAX_PACKET_SIZE];
@@ -39,13 +39,13 @@ typedef struct {
 } packet_write_state_t;
 
 typedef struct {
-  wire_iface_t *iface;
+  wire_iface_t* iface;
   uint8_t packet_pos;
-  uint8_t *buf;
+  uint8_t* buf;
 } packet_read_state_t;
 
-secbool codec_parse_header(const uint8_t *buf, uint16_t *msg_id,
-                           size_t *msg_size) {
+secbool codec_parse_header(const uint8_t* buf, uint16_t* msg_id,
+                           size_t* msg_size) {
   if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
     return secfalse;
   }
@@ -55,11 +55,11 @@ secbool codec_parse_header(const uint8_t *buf, uint16_t *msg_id,
 }
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
-static bool write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count) {
-  packet_write_state_t *state = (packet_write_state_t *)(stream->state);
+static bool write(pb_ostream_t* stream, const pb_byte_t* buf, size_t count) {
+  packet_write_state_t* state = (packet_write_state_t*)(stream->state);
 
   size_t tx_len = state->iface->tx_packet_size;
-  uint8_t *tx_buf = state->buf;
+  uint8_t* tx_buf = state->buf;
 
   size_t written = 0;
   // while we have data left
@@ -91,7 +91,7 @@ static bool write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count) {
   return true;
 }
 
-static secbool write_flush(packet_write_state_t *state) {
+static secbool write_flush(packet_write_state_t* state) {
   size_t packet_size = state->iface->tx_packet_size;
 
   // if packet is not filled up completely
@@ -104,8 +104,8 @@ static secbool write_flush(packet_write_state_t *state) {
   return sectrue * ok;
 }
 
-secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
-                       const pb_msgdesc_t *fields, const void *msg) {
+secbool codec_send_msg(wire_iface_t* iface, uint16_t msg_id,
+                       const pb_msgdesc_t* fields, const void* msg) {
   // determine message size by serializing it into a dummy stream
   pb_ostream_t sizestream = {.callback = NULL,
                              .state = NULL,
@@ -147,7 +147,7 @@ secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
   return write_flush(&state);
 }
 
-static void read_retry(wire_iface_t *iface, uint8_t *buf) {
+static void read_retry(wire_iface_t* iface, uint8_t* buf) {
   size_t packet_size = iface->rx_packet_size;
 
   for (int retry = 0;; retry++) {
@@ -165,8 +165,8 @@ static void read_retry(wire_iface_t *iface, uint8_t *buf) {
 }
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
-static bool read(pb_istream_t *stream, uint8_t *buf, size_t count) {
-  packet_read_state_t *state = (packet_read_state_t *)(stream->state);
+static bool read(pb_istream_t* stream, uint8_t* buf, size_t count) {
+  packet_read_state_t* state = (packet_read_state_t*)(stream->state);
 
   size_t packet_size = state->iface->rx_packet_size;
 
@@ -197,10 +197,10 @@ static bool read(pb_istream_t *stream, uint8_t *buf, size_t count) {
   return true;
 }
 
-static void read_flush(packet_read_state_t *state) { (void)state; }
+static void read_flush(packet_read_state_t* state) { (void)state; }
 
-secbool codec_recv_message(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf,
-                           const pb_msgdesc_t *fields, void *msg) {
+secbool codec_recv_message(wire_iface_t* iface, uint32_t msg_size, uint8_t* buf,
+                           const pb_msgdesc_t* fields, void* msg) {
   packet_read_state_t state = {
       .iface = iface, .packet_pos = MSG_HEADER1_LEN, .buf = buf};
 
@@ -218,7 +218,7 @@ secbool codec_recv_message(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf,
   return sectrue;
 }
 
-void codec_flush(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf) {
+void codec_flush(wire_iface_t* iface, uint32_t msg_size, uint8_t* buf) {
   // consume remaining message
   int remaining_chunks = 0;
 

@@ -33,7 +33,7 @@
 #include <io/rgb_led.h>
 #endif
 
-static bool encode_pairing_code(uint32_t code, uint8_t *outbuf) {
+static bool encode_pairing_code(uint32_t code, uint8_t* outbuf) {
   if (code > 999999) {
     return false;
   }
@@ -44,7 +44,7 @@ static bool encode_pairing_code(uint32_t code, uint8_t *outbuf) {
   return true;
 }
 
-workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw) {
+workflow_result_t workflow_ble_pairing_request(const fw_info_t* fw) {
   ble_set_enabled(true);
 
   if (!ble_iface_start_pairing()) {
@@ -118,12 +118,12 @@ workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw) {
     }
   }
 
-  ble_set_name((const uint8_t *)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
+  ble_set_name((const uint8_t*)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
   return WF_OK_PAIRING_COMPLETED;
 }
 
-workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
-                                          protob_ios_t *ios) {
+workflow_result_t workflow_wireless_setup(const fw_info_t* fw,
+                                          protob_ios_t* ios) {
   ble_set_enabled(true);
 
   if (!ble_iface_start_pairing()) {
@@ -196,7 +196,7 @@ workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
     }
   }
 
-  ble_set_name((const uint8_t *)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
+  ble_set_name((const uint8_t*)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
   return WF_OK_PAIRING_COMPLETED;
 }
 

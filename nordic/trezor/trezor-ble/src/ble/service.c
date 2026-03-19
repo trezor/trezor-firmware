@@ -29,16 +29,16 @@ LOG_MODULE_REGISTER(ble_service);
 
 static service_received_cb received_cb;
 
-static void service_ccc_cfg_changed(const struct bt_gatt_attr *attr,
+static void service_ccc_cfg_changed(const struct bt_gatt_attr* attr,
                                     uint16_t value) {
   LOG_DBG("Notification has been turned %s",
           value == BT_GATT_CCC_NOTIFY ? "on" : "off");
 }
 
-static ssize_t on_receive(struct bt_conn *conn, const struct bt_gatt_attr *attr,
-                          const void *buf, uint16_t len, uint16_t offset,
+static ssize_t on_receive(struct bt_conn* conn, const struct bt_gatt_attr* attr,
+                          const void* buf, uint16_t len, uint16_t offset,
                           uint8_t flags) {
-  LOG_DBG("Received data, handle %d, conn %p", attr->handle, (void *)conn);
+  LOG_DBG("Received data, handle %d, conn %p", attr->handle, (void*)conn);
 
   if (received_cb != NULL) {
     received_cb(conn, buf, len);
@@ -46,12 +46,12 @@ static ssize_t on_receive(struct bt_conn *conn, const struct bt_gatt_attr *attr,
   return len;
 }
 
-static void on_sent(struct bt_conn *conn, void *user_data) {
-  trz_packet_t *data = (trz_packet_t *)user_data;
+static void on_sent(struct bt_conn* conn, void* user_data) {
+  trz_packet_t* data = (trz_packet_t*)user_data;
 
   k_free(data);
 
-  LOG_DBG("Data send, conn %p", (void *)conn);
+  LOG_DBG("Data send, conn %p", (void*)conn);
 }
 
 /* Trezor Service Declaration */
@@ -77,15 +77,15 @@ int service_init(service_received_cb callback) {
   return 0;
 }
 
-int service_send(struct bt_conn *conn, trz_packet_t *data) {
+int service_send(struct bt_conn* conn, trz_packet_t* data) {
   struct bt_gatt_notify_params params = {0};
-  const struct bt_gatt_attr *attr = &trz_svc.attrs[2];
+  const struct bt_gatt_attr* attr = &trz_svc.attrs[2];
 
   params.attr = attr;
   params.data = data->data;
   params.len = data->len;
   params.func = on_sent;
-  params.user_data = (void *)data;
+  params.user_data = (void*)data;
 
   if (conn && bt_gatt_is_subscribed(conn, attr, BT_GATT_CCC_NOTIFY)) {
     return bt_gatt_notify_cb(conn, &params);
@@ -94,18 +94,18 @@ int service_send(struct bt_conn *conn, trz_packet_t *data) {
   }
 }
 
-int service_notify(struct bt_conn *conn, uint8_t *data, size_t len) {
+int service_notify(struct bt_conn* conn, uint8_t* data, size_t len) {
   struct bt_gatt_notify_params params = {0};
-  const struct bt_gatt_attr *attr = &trz_svc.attrs[4];
+  const struct bt_gatt_attr* attr = &trz_svc.attrs[4];
 
-  uint8_t *buf = k_malloc(len);
+  uint8_t* buf = k_malloc(len);
   memcpy(buf, data, len);
 
   params.attr = attr;
   params.data = buf;
   params.len = len;
   params.func = on_sent;
-  params.user_data = (void *)buf;
+  params.user_data = (void*)buf;
 
   int result = 0;
   if (conn && bt_gatt_is_subscribed(conn, attr, BT_GATT_CCC_NOTIFY)) {
@@ -122,9 +122,9 @@ int service_notify(struct bt_conn *conn, uint8_t *data, size_t len) {
 }
 
 void service_send_busy(void) {
-  struct bt_conn *conn = connection_get_current();
+  struct bt_conn* conn = connection_get_current();
 
-  trz_packet_t *buf = k_malloc(sizeof(*buf));
+  trz_packet_t* buf = k_malloc(sizeof(*buf));
 
   static const uint8_t busy_packet[] = {
       0x3f, 0x23, 0x23, 0x00, 0x03, 0x00, 0x00, 0x00, 0x19, 0x08, 0x0f, 0x12,

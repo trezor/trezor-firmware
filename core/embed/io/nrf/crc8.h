@@ -21,5 +21,5 @@
 
 #include <trezor_types.h>
 
-uint8_t crc8(const uint8_t *src, size_t len, uint8_t polynomial,
+uint8_t crc8(const uint8_t* src, size_t len, uint8_t polynomial,
              uint8_t initial_value, bool reversed);

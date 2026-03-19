@@ -21,8 +21,8 @@
 
 #include "codec_v1.h"
 
-wire_iface_t *usb_debug_iface_init(void);
+wire_iface_t* usb_debug_iface_init(void);
 
-wire_iface_t *usb_debug_iface_get(void);
+wire_iface_t* usb_debug_iface_get(void);
 
 void usb_debug_iface_deinit(void);

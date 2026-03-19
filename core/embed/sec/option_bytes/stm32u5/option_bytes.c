@@ -104,16 +104,17 @@ _Static_assert(SECRET_SECTOR_START == 0, "secret sector start must be 0");
   (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
 
 static uint32_t flash_wait_and_clear_status_flags(void) {
-  while (FLASH->NSSR & FLASH_NSSR_BSY)
-    ;  // wait for all previous flash operations to complete
+  while (FLASH->NSSR &
+         FLASH_NSSR_BSY);  // wait for all previous flash operations to complete
 
   uint32_t result =
       FLASH->NSSR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
   FLASH->NSSR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
 
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
-  while (FLASH->SECSR & FLASH_SECSR_BSY)
-    ;  // wait for all previous flash operations to complete
+  while (
+      FLASH->SECSR &
+      FLASH_SECSR_BSY);  // wait for all previous flash operations to complete
   result |=
       FLASH->SECSR & FLASH_STATUS_ALL_FLAGS;  // get the current status flags
   FLASH->SECSR |= FLASH_STATUS_ALL_FLAGS;     // clear all status flags
@@ -181,8 +182,8 @@ static void flash_unlock_option_bytes(void) {
   // write the special sequence to unlock
   FLASH->OPTKEYR = FLASH_OPTKEY1;
   FLASH->OPTKEYR = FLASH_OPTKEY2;
-  while (FLASH->NSCR & FLASH_NSCR_OPTLOCK)
-    ;  // wait until the flash option control register is unlocked
+  while (FLASH->NSCR & FLASH_NSCR_OPTLOCK);  // wait until the flash option
+                                             // control register is unlocked
 }
 
 static uint32_t flash_set_option_bytes(void) {

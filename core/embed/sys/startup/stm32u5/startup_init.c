@@ -107,8 +107,7 @@ void lsi_init(void) {
     SET_BIT(PWR->DBPR, PWR_DBPR_DBP);
 
     // Wait for Backup domain Write protection disable
-    while (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP))
-      ;
+    while (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP));
   }
 
   uint32_t bdcr_temp = RCC->BDCR;
@@ -135,8 +134,7 @@ void lsi_init(void) {
       __HAL_RCC_LSI_DISABLE();
 
       // Wait till LSI is disabled
-      while (READ_BIT(RCC->BDCR, RCC_BDCR_LSIRDY) != 0U)
-        ;
+      while (READ_BIT(RCC->BDCR, RCC_BDCR_LSIRDY) != 0U);
     }
 
     // Set LSI division factor
@@ -147,8 +145,7 @@ void lsi_init(void) {
   __HAL_RCC_LSI_ENABLE();
 
   // Wait till LSI is ready
-  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSIRDY) == 0U)
-    ;
+  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSIRDY) == 0U);
 }
 
 // This function replaces calls to universal, but flash-wasting
@@ -166,23 +163,20 @@ void lse_init(void) {
     // Enable write access to Backup domain
     SET_BIT(PWR->DBPR, PWR_DBPR_DBP);
 
-    while (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP))
-      ;
+    while (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP));
   }
 
   // LSE oscillator enable
   SET_BIT(RCC->BDCR, RCC_BDCR_LSEON);
 
   // Wait till LSE is ready
-  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSERDY) == 0U)
-    ;
+  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSERDY) == 0U);
 
   // Make sure LSESYSEN/LSESYSRDY are reset
   CLEAR_BIT(RCC->BDCR, RCC_BDCR_LSESYSEN);
 
   // Wait till LSESYSRDY is cleared
-  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSESYSRDY) != 0U)
-    ;
+  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSESYSRDY) != 0U);
 }
 
 void SystemInit(void) {
@@ -191,8 +185,7 @@ void SystemInit(void) {
   FLASH->ACR = FLASH_ACR_LATENCY_5WS;
   // wait until the new wait state config takes effect -- per section 3.5.1
   // guidance
-  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_5WS)
-    ;
+  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_5WS);
 
   // Reset the RCC clock configuration to the default reset state
   // Set MSION bit
@@ -220,20 +213,16 @@ void SystemInit(void) {
 
   MODIFY_REG(PWR->VOSR, (PWR_VOSR_VOS | PWR_VOSR_BOOSTEN),
              PWR_REGULATOR_VOLTAGE_SCALE1);
-  while (HAL_IS_BIT_CLR(PWR->VOSR, PWR_VOSR_VOSRDY))
-    ;
-  while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_ACTVOSRDY))
-    ;
+  while (HAL_IS_BIT_CLR(PWR->VOSR, PWR_VOSR_VOSRDY));
+  while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_ACTVOSRDY));
 
   RCC->CR |= RCC_CR_HSION;
   // wait until the HSI is on
-  while ((RCC->CR & RCC_CR_HSIRDY) != RCC_CR_HSIRDY)
-    ;
+  while ((RCC->CR & RCC_CR_HSIRDY) != RCC_CR_HSIRDY);
 
 #ifndef HSI_ONLY
   __HAL_RCC_HSE_CONFIG(RCC_HSE_ON);
-  while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == 0U)
-    ;
+  while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == 0U);
   __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSE, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
                        DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
 #else
@@ -249,19 +238,16 @@ void SystemInit(void) {
   __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVR);
 
   __HAL_RCC_PLL_ENABLE();
-  while (READ_BIT(RCC->CR, RCC_CR_PLL1RDY) == 0U)
-    ;
+  while (READ_BIT(RCC->CR, RCC_CR_PLL1RDY) == 0U);
 
   __HAL_RCC_HSI48_ENABLE();
-  while (READ_BIT(RCC->CR, RCC_CR_HSI48RDY) == 0U)
-    ;
+  while (READ_BIT(RCC->CR, RCC_CR_HSI48RDY) == 0U);
 
   // Initializes the CPU, AHB and APB buses clocks
   FLASH->ACR = FLASH_ACR_LATENCY_4WS;
   // wait until the new wait state config takes effect -- per section 3.5.1
   // guidance
-  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_4WS)
-    ;
+  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_4WS);
   MODIFY_REG(RCC->CFGR3, RCC_CFGR3_PPRE3, RCC_HCLK_DIV1);
   MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE2, ((RCC_HCLK_DIV1) << 4));
   MODIFY_REG(RCC->CFGR2, RCC_CFGR2_PPRE1, RCC_HCLK_DIV1);
@@ -283,8 +269,7 @@ void SystemInit(void) {
   // Switch to SMPS regulator instead of LDO
   SET_BIT(PWR->CR3, PWR_CR3_REGSEL);
   // Wait until system switch on new regulator
-  while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_REGS))
-    ;
+  while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_REGS));
 #endif
 
   // enable power supply for GPIOG 2 to 15

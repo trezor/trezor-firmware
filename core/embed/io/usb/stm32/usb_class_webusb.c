@@ -45,9 +45,9 @@ typedef struct __attribute__((packed)) {
  * configuration fields. */
 typedef struct {
   syshandle_t handle;
-  USBD_HandleTypeDef *dev_handle;
-  const usb_webusb_descriptor_block_t *desc_block;
-  uint8_t *rx_buffer;
+  USBD_HandleTypeDef* dev_handle;
+  const usb_webusb_descriptor_block_t* desc_block;
+  uint8_t* rx_buffer;
   uint8_t ep_in;
   uint8_t ep_out;
   uint8_t max_packet_len;
@@ -65,15 +65,15 @@ static const syshandle_vmt_t usb_webusb_handle_vmt;
 
 /* usb_webusb_add adds and configures new USB WebUSB interface according to
  * configuration options passed in `info`. */
-secbool usb_webusb_add(const usb_webusb_info_t *info) {
-  usb_webusb_state_t *state =
-      (usb_webusb_state_t *)usb_get_iface_state(info->iface_num, NULL);
+secbool usb_webusb_add(const usb_webusb_info_t* info) {
+  usb_webusb_state_t* state =
+      (usb_webusb_state_t*)usb_get_iface_state(info->iface_num, NULL);
 
   if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
 
-  usb_webusb_descriptor_block_t *d =
+  usb_webusb_descriptor_block_t* d =
       usb_alloc_class_descriptors(sizeof(usb_webusb_descriptor_block_t));
 
   if (d == NULL) {
@@ -133,7 +133,7 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   return sectrue;
 }
 
-bool usb_webusb_can_read(usb_webusb_state_t *state) {
+bool usb_webusb_can_read(usb_webusb_state_t* state) {
   if (state->dev_handle == NULL) {
     return false;  // Class driver not initialized
   }
@@ -146,7 +146,7 @@ bool usb_webusb_can_read(usb_webusb_state_t *state) {
   return true;
 }
 
-bool usb_webusb_can_write(usb_webusb_state_t *state) {
+bool usb_webusb_can_write(usb_webusb_state_t* state) {
   if (state->dev_handle == NULL) {
     return false;  // Class driver not initialized
   }
@@ -159,8 +159,8 @@ bool usb_webusb_can_write(usb_webusb_state_t *state) {
   return true;
 }
 
-static uint8_t usb_webusb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+static uint8_t usb_webusb_class_init(USBD_HandleTypeDef* dev, uint8_t cfg_idx) {
+  usb_webusb_state_t* state = (usb_webusb_state_t*)dev->pUserData;
 
   state->dev_handle = dev;
 
@@ -184,9 +184,9 @@ static uint8_t usb_webusb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   return USBD_OK;
 }
 
-static uint8_t usb_webusb_class_deinit(USBD_HandleTypeDef *dev,
+static uint8_t usb_webusb_class_deinit(USBD_HandleTypeDef* dev,
                                        uint8_t cfg_idx) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+  usb_webusb_state_t* state = (usb_webusb_state_t*)dev->pUserData;
 
   syshandle_unregister(state->handle);
 
@@ -202,9 +202,9 @@ static uint8_t usb_webusb_class_deinit(USBD_HandleTypeDef *dev,
   return USBD_OK;
 }
 
-static uint8_t usb_webusb_class_setup(USBD_HandleTypeDef *dev,
-                                      USBD_SetupReqTypedef *req) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+static uint8_t usb_webusb_class_setup(USBD_HandleTypeDef* dev,
+                                      USBD_SetupReqTypedef* req) {
+  usb_webusb_state_t* state = (usb_webusb_state_t*)dev->pUserData;
 
   wait_random();
 
@@ -232,9 +232,9 @@ static uint8_t usb_webusb_class_setup(USBD_HandleTypeDef *dev,
   return USBD_OK;
 }
 
-static uint8_t usb_webusb_class_data_in(USBD_HandleTypeDef *dev,
+static uint8_t usb_webusb_class_data_in(USBD_HandleTypeDef* dev,
                                         uint8_t ep_num) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+  usb_webusb_state_t* state = (usb_webusb_state_t*)dev->pUserData;
 
   if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
     wait_random();
@@ -244,9 +244,9 @@ static uint8_t usb_webusb_class_data_in(USBD_HandleTypeDef *dev,
   return USBD_OK;
 }
 
-static uint8_t usb_webusb_class_data_out(USBD_HandleTypeDef *dev,
+static uint8_t usb_webusb_class_data_out(USBD_HandleTypeDef* dev,
                                          uint8_t ep_num) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)dev->pUserData;
+  usb_webusb_state_t* state = (usb_webusb_state_t*)dev->pUserData;
 
   if (ep_num == state->ep_out) {
     wait_random();
@@ -279,9 +279,9 @@ static const USBD_ClassTypeDef usb_webusb_class = {
     .GetUsrStrDescriptor = NULL,
 };
 
-static void on_event_poll(void *context, bool read_awaited,
+static void on_event_poll(void* context, bool read_awaited,
                           bool write_awaited) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)context;
+  usb_webusb_state_t* state = (usb_webusb_state_t*)context;
 
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
@@ -296,9 +296,9 @@ static void on_event_poll(void *context, bool read_awaited,
   }
 }
 
-static bool on_check_read_ready(void *context, systask_id_t task_id,
-                                void *param) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)context;
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  usb_webusb_state_t* state = (usb_webusb_state_t*)context;
 
   UNUSED(task_id);
   UNUSED(param);
@@ -306,9 +306,9 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
   return usb_webusb_can_read(state);
 }
 
-static bool on_check_write_ready(void *context, systask_id_t task_id,
-                                 void *param) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)context;
+static bool on_check_write_ready(void* context, systask_id_t task_id,
+                                 void* param) {
+  usb_webusb_state_t* state = (usb_webusb_state_t*)context;
 
   UNUSED(task_id);
   UNUSED(param);
@@ -316,8 +316,8 @@ static bool on_check_write_ready(void *context, systask_id_t task_id,
   return usb_webusb_can_write(state);
 }
 
-static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)context;
+static ssize_t on_read(void* context, void* buffer, size_t buffer_size) {
+  usb_webusb_state_t* state = (usb_webusb_state_t*)context;
 
   if (state->dev_handle == NULL) {
     return -1;  // Class driver not initialized
@@ -340,8 +340,8 @@ static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
   return last_read_len;
 }
 
-static ssize_t on_write(void *context, const void *data, size_t data_size) {
-  usb_webusb_state_t *state = (usb_webusb_state_t *)context;
+static ssize_t on_write(void* context, const void* data, size_t data_size) {
+  usb_webusb_state_t* state = (usb_webusb_state_t*)context;
 
   if (state->dev_handle == NULL) {
     return -1;  // Class driver not initialized

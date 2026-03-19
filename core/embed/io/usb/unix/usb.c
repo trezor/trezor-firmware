@@ -61,10 +61,10 @@ static usb_iface_t usb_ifaces[USBD_MAX_NUM_INTERFACES];
 // forward declaration
 static const syshandle_vmt_t usb_iface_handle_vmt;
 
-secbool usb_init(const usb_dev_info_t *dev_info) {
+secbool usb_init(const usb_dev_info_t* dev_info) {
   UNUSED(dev_info);
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_iface_t *iface = &usb_ifaces[i];
+    usb_iface_t* iface = &usb_ifaces[i];
     iface->handle = 0;
     iface->type = USB_IFACE_TYPE_DISABLED;
     iface->port = 0;
@@ -77,12 +77,12 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
 
 void usb_deinit(void) { usb_stop(); }
 
-secbool usb_start(const usb_start_params_t *params) {
-  const char *ip = getenv("TREZOR_UDP_IP");
+secbool usb_start(const usb_start_params_t* params) {
+  const char* ip = getenv("TREZOR_UDP_IP");
 
   // iterate interfaces
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_iface_t *iface = &usb_ifaces[i];
+    usb_iface_t* iface = &usb_ifaces[i];
     // skip if not HID or WebUSB interface
     if (iface->type != USB_IFACE_TYPE_HID &&
         iface->type != USB_IFACE_TYPE_WEBUSB &&
@@ -102,15 +102,15 @@ secbool usb_start(const usb_start_params_t *params) {
 
 void usb_stop(void) {
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_iface_t *iface = &usb_ifaces[i];
+    usb_iface_t* iface = &usb_ifaces[i];
     sock_stop(&iface->sock);
     syshandle_unregister(iface->handle);
   }
 }
 
-secbool usb_hid_add(const usb_hid_info_t *info) {
+secbool usb_hid_add(const usb_hid_info_t* info) {
   if (info->iface_num < USBD_MAX_NUM_INTERFACES) {
-    usb_iface_t *iface = &usb_ifaces[info->iface_num];
+    usb_iface_t* iface = &usb_ifaces[info->iface_num];
     if (iface->type == USB_IFACE_TYPE_DISABLED) {
       iface->type = USB_IFACE_TYPE_HID;
       iface->port = info->emu_port;
@@ -121,9 +121,9 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
   return secfalse;
 }
 
-secbool usb_webusb_add(const usb_webusb_info_t *info) {
+secbool usb_webusb_add(const usb_webusb_info_t* info) {
   if (info->iface_num < USBD_MAX_NUM_INTERFACES) {
-    usb_iface_t *iface = &usb_ifaces[info->iface_num];
+    usb_iface_t* iface = &usb_ifaces[info->iface_num];
     if (iface->type == USB_IFACE_TYPE_DISABLED) {
       iface->type = USB_IFACE_TYPE_WEBUSB;
       iface->port = info->emu_port;
@@ -134,9 +134,9 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   return secfalse;
 }
 
-secbool usb_vcp_add(const usb_vcp_info_t *info) {
+secbool usb_vcp_add(const usb_vcp_info_t* info) {
   if (info->iface_num < USBD_MAX_NUM_INTERFACES) {
-    usb_iface_t *iface = &usb_ifaces[info->iface_num];
+    usb_iface_t* iface = &usb_ifaces[info->iface_num];
     if (iface->type == USB_IFACE_TYPE_DISABLED) {
       iface->type = USB_IFACE_TYPE_VCP;
       iface->port = info->emu_port;
@@ -147,7 +147,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   return secfalse;
 }
 
-static secbool usb_emulated_poll_read(usb_iface_t *iface) {
+static secbool usb_emulated_poll_read(usb_iface_t* iface) {
   if (iface->msg_len > 0) {
     return sectrue;
   }
@@ -161,11 +161,11 @@ static secbool usb_emulated_poll_read(usb_iface_t *iface) {
     return secfalse;
   }
 
-  static const char *ping_req = "PINGPING";
-  static const char *ping_resp = "PONGPONG";
+  static const char* ping_req = "PINGPING";
+  static const char* ping_resp = "PONGPONG";
   if (len == strlen(ping_req) &&
       0 == memcmp(ping_req, iface->msg, strlen(ping_req))) {
-    sock_sendto(&iface->sock, (const uint8_t *)ping_resp, strlen(ping_resp));
+    sock_sendto(&iface->sock, (const uint8_t*)ping_resp, strlen(ping_resp));
     memzero(iface->msg, sizeof(iface->msg));
     return secfalse;
   }
@@ -175,11 +175,11 @@ static secbool usb_emulated_poll_read(usb_iface_t *iface) {
   return sectrue;
 }
 
-static secbool usb_emulated_poll_write(usb_iface_t *iface) {
+static secbool usb_emulated_poll_write(usb_iface_t* iface) {
   return sectrue * sock_can_send(&iface->sock);
 }
 
-static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, uint32_t len) {
+static int usb_emulated_read(usb_iface_t* iface, uint8_t* buf, uint32_t len) {
   if (iface->msg_len > 0) {
     if (iface->msg_len < len) {
       len = iface->msg_len;
@@ -199,7 +199,7 @@ static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, uint32_t len) {
   return 0;
 }
 
-static ssize_t usb_emulated_write(usb_iface_t *iface, const uint8_t *buf,
+static ssize_t usb_emulated_write(usb_iface_t* iface, const uint8_t* buf,
                                   uint32_t len) {
   return sock_sendto(&iface->sock, buf, len);
 }
@@ -214,13 +214,13 @@ secbool usb_configured(void) {
 
 usb_event_t usb_get_event(void) { return USB_EVENT_NONE; }
 
-void usb_get_state(usb_state_t *state) {
+void usb_get_state(usb_state_t* state) {
   state->configured = usb_configured() == sectrue;
 }
 
-static void on_event_poll(void *context, bool read_awaited,
+static void on_event_poll(void* context, bool read_awaited,
                           bool write_awaited) {
-  usb_iface_t *iface = (usb_iface_t *)context;
+  usb_iface_t* iface = (usb_iface_t*)context;
 
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
@@ -239,9 +239,9 @@ static void on_event_poll(void *context, bool read_awaited,
   }
 }
 
-static bool on_check_read_ready(void *context, systask_id_t task_id,
-                                void *param) {
-  usb_iface_t *iface = (usb_iface_t *)context;
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  usb_iface_t* iface = (usb_iface_t*)context;
 
   UNUSED(task_id);
   UNUSED(param);
@@ -249,9 +249,9 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
   return (sectrue == usb_emulated_poll_read(iface));
 }
 
-static bool on_check_write_ready(void *context, systask_id_t task_id,
-                                 void *param) {
-  usb_iface_t *iface = (usb_iface_t *)context;
+static bool on_check_write_ready(void* context, systask_id_t task_id,
+                                 void* param) {
+  usb_iface_t* iface = (usb_iface_t*)context;
 
   UNUSED(task_id);
   UNUSED(param);
@@ -259,16 +259,16 @@ static bool on_check_write_ready(void *context, systask_id_t task_id,
   return usb_emulated_poll_write(iface);
 }
 
-static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
-  usb_iface_t *iface = (usb_iface_t *)context;
+static ssize_t on_read(void* context, void* buffer, size_t buffer_size) {
+  usb_iface_t* iface = (usb_iface_t*)context;
 
-  return usb_emulated_read(iface, (uint8_t *)buffer, buffer_size);
+  return usb_emulated_read(iface, (uint8_t*)buffer, buffer_size);
 }
 
-static ssize_t on_write(void *context, const void *data, size_t data_size) {
-  usb_iface_t *iface = (usb_iface_t *)context;
+static ssize_t on_write(void* context, const void* data, size_t data_size) {
+  usb_iface_t* iface = (usb_iface_t*)context;
 
-  return usb_emulated_write(iface, (const uint8_t *)data, data_size);
+  return usb_emulated_write(iface, (const uint8_t*)data, data_size);
 }
 
 static const syshandle_vmt_t usb_iface_handle_vmt = {

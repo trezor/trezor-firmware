@@ -43,14 +43,14 @@ static bool layout_ready = false;
 static bool query_pending = false;
 
 void debuglink_init(void) {
-  wire_iface_t *wire = usb_debug_iface_init();
+  wire_iface_t* wire = usb_debug_iface_init();
 
   protob_init(&g_debug_io, wire);
 }
 
 void debuglink_deinit(void) { usb_debug_iface_deinit(); }
 
-static void debuglink_process_get_state(protob_io_t *io) {
+static void debuglink_process_get_state(protob_io_t* io) {
   DebugLinkGetState msg_recv;
 
   recv_msg_debug_link_get_state(io, &msg_recv);
@@ -87,7 +87,7 @@ static void debuglink_process_get_state(protob_io_t *io) {
   }
 }
 
-static void debuglink_process_decision(protob_io_t *io) {
+static void debuglink_process_decision(protob_io_t* io) {
   DebugLinkDecision msg_recv;
   recv_msg_debug_link_decision(io, &msg_recv);
 
@@ -134,7 +134,7 @@ static void debuglink_process_decision(protob_io_t *io) {
 #endif
 }
 
-static debuglink_result_t debuglink_process_record_screen(protob_io_t *io) {
+static debuglink_result_t debuglink_process_record_screen(protob_io_t* io) {
   DebugLinkRecordScreen msg;
 
   debuglink_result_t res = DEBUGLINK_RESULT_NONE;
@@ -142,13 +142,12 @@ static debuglink_result_t debuglink_process_record_screen(protob_io_t *io) {
   char buffer[1024];
   memset(buffer, 0, sizeof(buffer));
 
-  recv_msg_debug_link_screen_record(io, &msg, (uint8_t *)buffer,
-                                    sizeof(buffer));
+  recv_msg_debug_link_screen_record(io, &msg, (uint8_t*)buffer, sizeof(buffer));
 
   size_t dir_len = strnlen(buffer, sizeof(buffer));
 
   if (dir_len > 0) {
-    display_record_start((uint8_t *)buffer, dir_len, 0);
+    display_record_start((uint8_t*)buffer, dir_len, 0);
     res = DEBUGLINK_RESULT_REPAINT;
   } else {
     display_record_stop();

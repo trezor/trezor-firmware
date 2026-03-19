@@ -121,7 +121,7 @@ static uint8_t word_matrix[9];
  * start with "##th".  The number is written in place.
  * Parameter number gives the number that we should format.
  */
-static void format_number(char *dest, int number) {
+static void format_number(char* dest, int number) {
   if (number < 10) {
     dest[0] = ' ';
   } else {
@@ -234,10 +234,10 @@ static void recovery_done(void) {
  *  memcmp(last, "last + 1", prefixlen) != 0
  *  first[prefixlen-2] == last[prefixlen-2]  except for range WI-Z.
  */
-static void add_choice(char choice[12], int prefixlen, const char *first,
-                       const char *last) {
+static void add_choice(char choice[12], int prefixlen, const char* first,
+                       const char* last) {
   // assert 1 <= prefixlen <= 4
-  char *dest = choice;
+  char* dest = choice;
   for (int i = 0; i < prefixlen; i++) {
     *dest++ = toupper((int)first[i]);
   }
@@ -279,7 +279,7 @@ static void display_choices(bool twoColumn, char choices[9][12], int num) {
     word_matrix[i] = i;
   }
   /* scramble matrix */
-  random_permute((char *)word_matrix, displayedChoices);
+  random_permute((char*)word_matrix, displayedChoices);
 
   if (word_index % 4 == 0) {
     char desc[] = "##th word";
@@ -297,7 +297,7 @@ static void display_choices(bool twoColumn, char choices[9][12], int num) {
     for (int col = 0; col < nColumns; col++) {
       int x = twoColumn ? 64 * col + 32 : 42 * col + 22;
       int choice = word_matrix[nColumns * row + col];
-      const char *text = choice < num ? choices[choice] : "-";
+      const char* text = choice < num ? choices[choice] : "-";
       oledDrawString(x - oledStringWidth(text, FONT_STANDARD) / 2, y, text,
                      FONT_STANDARD);
       if (twoColumn) {
@@ -473,7 +473,7 @@ void next_word(void) {
 }
 
 void recovery_init(uint32_t _word_count, bool passphrase_protection,
-                   bool pin_protection, const char *language, const char *label,
+                   bool pin_protection, const char* language, const char* label,
                    bool _enforce_wordlist, uint32_t input_method,
                    uint32_t u2f_counter, bool _dry_run) {
   if (_word_count != 12 && _word_count != 18 && _word_count != 24) return;
@@ -535,7 +535,7 @@ void recovery_init(uint32_t _word_count, bool passphrase_protection,
   }
 }
 
-static void recovery_scrambledword(const char *word) {
+static void recovery_scrambledword(const char* word) {
   int index = -1;
   if (enforce_wordlist) {  // check if word is valid
     // mnemonic_find_word requires a buffer of at least 9 bytes
@@ -572,7 +572,7 @@ static void recovery_scrambledword(const char *word) {
 /* Function called when a word was entered by user. Used
  * for scrambled recovery.
  */
-void recovery_word(const char *word) {
+void recovery_word(const char* word) {
   switch (recovery_mode) {
     case RECOVERY_MATRIX:
       recovery_digit(word[0]);
@@ -600,7 +600,7 @@ void recovery_abort(void) {
 
 #if DEBUG_LINK
 
-const char *recovery_get_fake_word(void) { return fake_word; }
+const char* recovery_get_fake_word(void) { return fake_word; }
 
 uint32_t recovery_get_word_pos(void) { return word_pos; }
 

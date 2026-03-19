@@ -140,12 +140,12 @@ typedef enum {
  * fields. */
 typedef struct {
   syshandle_t handle;
-  USBD_HandleTypeDef *dev_handle;
-  const usb_vcp_descriptor_block_t *desc_block;
+  USBD_HandleTypeDef* dev_handle;
+  const usb_vcp_descriptor_block_t* desc_block;
   usb_rbuf_t rx_ring;
   usb_rbuf_t tx_ring;
-  uint8_t *rx_packet;
-  uint8_t *tx_packet;
+  uint8_t* rx_packet;
+  uint8_t* tx_packet;
   void (*rx_intr_fn)(void);
   uint8_t rx_intr_byte;
   uint8_t ep_cmd;
@@ -167,14 +167,14 @@ static const syshandle_vmt_t usb_vcp_handle_vmt;
 
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
-secbool usb_vcp_add(const usb_vcp_info_t *info) {
-  usb_vcp_state_t *state = usb_get_iface_state(info->iface_num, NULL);
+secbool usb_vcp_add(const usb_vcp_info_t* info) {
+  usb_vcp_state_t* state = usb_get_iface_state(info->iface_num, NULL);
 
   if (state == NULL) {
     return secfalse;  // Invalid interface number
   }
 
-  usb_vcp_descriptor_block_t *d =
+  usb_vcp_descriptor_block_t* d =
       usb_alloc_class_descriptors(sizeof(usb_vcp_descriptor_block_t));
 
   if (d == NULL) {
@@ -328,8 +328,8 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   return sectrue;
 }
 
-static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+static uint8_t usb_vcp_class_init(USBD_HandleTypeDef* dev, uint8_t cfg_idx) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)dev->pUserData;
 
   state->dev_handle = dev;
 
@@ -357,8 +357,8 @@ static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   return USBD_OK;
 }
 
-static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef* dev, uint8_t cfg_idx) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)dev->pUserData;
 
   syshandle_unregister(state->handle);
 
@@ -376,9 +376,9 @@ static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   return USBD_OK;
 }
 
-static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef *dev,
-                                   USBD_SetupReqTypedef *req) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef* dev,
+                                   USBD_SetupReqTypedef* req) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)dev->pUserData;
 
   static const usb_cdc_line_coding_t line_coding = {
       .dwDTERate = 115200,
@@ -409,8 +409,8 @@ static uint8_t usb_vcp_class_setup(USBD_HandleTypeDef *dev,
   return USBD_OK;
 }
 
-static uint8_t usb_vcp_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+static uint8_t usb_vcp_class_data_in(USBD_HandleTypeDef* dev, uint8_t ep_num) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)dev->pUserData;
 
   if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
     state->ep_in_is_idle = 1;
@@ -419,8 +419,8 @@ static uint8_t usb_vcp_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   return USBD_OK;
 }
 
-static uint8_t usb_vcp_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+static uint8_t usb_vcp_class_data_out(USBD_HandleTypeDef* dev, uint8_t ep_num) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)dev->pUserData;
 
   if (ep_num == state->ep_out) {
     uint32_t len = USBD_LL_GetRxDataSize(dev, ep_num);
@@ -450,8 +450,8 @@ static uint8_t usb_vcp_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   return USBD_OK;
 }
 
-static uint8_t usb_vcp_class_sof(USBD_HandleTypeDef *dev) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
+static uint8_t usb_vcp_class_sof(USBD_HandleTypeDef* dev) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)dev->pUserData;
 
   if (!state->ep_in_is_idle) {
     return USBD_OK;
@@ -491,9 +491,9 @@ static const USBD_ClassTypeDef usb_vcp_class = {
 
 static const USBD_ClassTypeDef usb_vcp_data_class = {};
 
-static void on_event_poll(void *context, bool read_awaited,
+static void on_event_poll(void* context, bool read_awaited,
                           bool write_awaited) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+  usb_vcp_state_t* state = (usb_vcp_state_t*)context;
 
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
@@ -508,9 +508,9 @@ static void on_event_poll(void *context, bool read_awaited,
   }
 }
 
-static bool on_check_read_ready(void *context, systask_id_t task_id,
-                                void *param) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)context;
 
   UNUSED(task_id);
   UNUSED(param);
@@ -518,9 +518,9 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
   return !usb_rbuf_is_empty(&state->rx_ring);
 }
 
-static bool on_check_write_ready(void *context, systask_id_t task_id,
-                                 void *param) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+static bool on_check_write_ready(void* context, systask_id_t task_id,
+                                 void* param) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)context;
 
   UNUSED(task_id);
   UNUSED(param);
@@ -528,8 +528,8 @@ static bool on_check_write_ready(void *context, systask_id_t task_id,
   return !usb_rbuf_is_full(&state->tx_ring);
 }
 
-static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+static ssize_t on_read(void* context, void* buffer, size_t buffer_size) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)context;
 
   ssize_t recved_size = usb_rbuf_read(&state->rx_ring, buffer, buffer_size);
 
@@ -548,10 +548,10 @@ static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
   return recved_size;
 }
 
-static ssize_t on_write(void *context, const void *data, size_t data_size) {
-  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+static ssize_t on_write(void* context, const void* data, size_t data_size) {
+  usb_vcp_state_t* state = (usb_vcp_state_t*)context;
 
-  return usb_rbuf_write(&state->tx_ring, (const uint8_t *)data, data_size);
+  return usb_rbuf_write(&state->tx_ring, (const uint8_t*)data, data_size);
 }
 
 static const syshandle_vmt_t usb_vcp_handle_vmt = {

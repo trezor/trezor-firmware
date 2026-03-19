@@ -126,8 +126,7 @@ void SystemInit(void) {
   FLASH->ACR = FLASH_ACR_LATENCY_5WS;
   // wait until the new wait state config takes effect -- per section 3.5.1
   // guidance
-  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_5WS)
-    ;
+  while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_5WS);
   // configure main PLL
   // reference RM0090 section 6.3.2
   RCC->PLLCFGR =
@@ -148,22 +147,19 @@ void SystemInit(void) {
   RCC->CR |= RCC_CR_CSSON | RCC_CR_HSEON | RCC_CR_PLLON;
   // wait until PLL and HSE ready
   while ((RCC->CR & (RCC_CR_PLLRDY | RCC_CR_HSERDY)) !=
-         (RCC_CR_PLLRDY | RCC_CR_HSERDY))
-    ;
+         (RCC_CR_PLLRDY | RCC_CR_HSERDY));
   // APB2=2, APB1=4, AHB=1, system clock = main PLL
   const uint32_t cfgr = RCC_CFGR_PPRE2_DIV2 | RCC_CFGR_PPRE1_DIV4 |
                         RCC_CFGR_HPRE_DIV1 | RCC_CFGR_SW_PLL;
   RCC->CFGR = cfgr;
   // wait until PLL is system clock and also verify that the pre-scalers were
   // set
-  while (RCC->CFGR != (RCC_CFGR_SWS_PLL | cfgr))
-    ;
+  while (RCC->CFGR != (RCC_CFGR_SWS_PLL | cfgr));
   // turn off the HSI as it is now unused (it will be turned on again
   // automatically if a clock security failure occurs)
   RCC->CR &= ~RCC_CR_HSION;
   // wait until ths HSI is off
-  while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION)
-    ;
+  while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION);
   // init the TRNG peripheral
   rng_init();
   // set CP10 and CP11 to enable full access to the fpu coprocessor; ARMv7-M
@@ -195,8 +191,7 @@ void set_core_clock(clock_settings_t settings) {
   RCC->CR |= RCC_CR_HSION;
 
   // Wait till HSI is ready
-  while (!(RCC->CR & RCC_CR_HSIRDY))
-    ;
+  while (!(RCC->CR & RCC_CR_HSIRDY));
 
   // Select HSI clock as main clock
   RCC->CFGR = (RCC->CFGR & ~(RCC_CFGR_SW)) | RCC_CFGR_SW_HSI;
@@ -219,8 +214,7 @@ void set_core_clock(clock_settings_t settings) {
   RCC->CR |= RCC_CR_PLLON;
 
   // Wait till PLL is ready
-  while (!(RCC->CR & RCC_CR_PLLRDY))
-    ;
+  while (!(RCC->CR & RCC_CR_PLLRDY));
 
   // Enable PLL as main clock
   RCC->CFGR = (RCC->CFGR & ~(RCC_CFGR_SW)) | RCC_CFGR_SW_PLL;
@@ -231,8 +225,7 @@ void set_core_clock(clock_settings_t settings) {
   // automatically if a clock security failure occurs)
   RCC->CR &= ~RCC_CR_HSION;
   // wait until ths HSI is off
-  while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION)
-    ;
+  while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION);
 }
 #endif
 

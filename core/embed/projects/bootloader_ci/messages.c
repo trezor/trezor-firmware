@@ -40,8 +40,8 @@
 #define MSG_HEADER1_LEN 9
 #define MSG_HEADER2_LEN 1
 
-secbool msg_parse_header(const uint8_t *buf, uint16_t *msg_id,
-                         uint32_t *msg_size) {
+secbool msg_parse_header(const uint8_t* buf, uint16_t* msg_id,
+                         uint32_t* msg_size) {
   if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
     return secfalse;
   }
@@ -58,9 +58,9 @@ typedef struct {
 } usb_write_state;
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
-static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf,
+static bool _usb_write(pb_ostream_t* stream, const pb_byte_t* buf,
                        size_t count) {
-  usb_write_state *state = (usb_write_state *)(stream->state);
+  usb_write_state* state = (usb_write_state*)(stream->state);
 
   size_t written = 0;
   // while we have data left
@@ -94,7 +94,7 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf,
   return true;
 }
 
-static void _usb_write_flush(usb_write_state *state) {
+static void _usb_write_flush(usb_write_state* state) {
   // if packet is not filled up completely
   if (state->packet_pos < USB_PACKET_SIZE) {
     // pad it with zeroes
@@ -108,7 +108,7 @@ static void _usb_write_flush(usb_write_state *state) {
 }
 
 static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
-                         const pb_msgdesc_t *fields, const void *msg) {
+                         const pb_msgdesc_t* fields, const void* msg) {
   // determine message size by serializing it into a dummy stream
   pb_ostream_t sizestream = {.callback = NULL,
                              .state = NULL,
@@ -155,7 +155,9 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
 #define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
-  { msg_send.FIELD = VALUE; }
+  {                                                  \
+    msg_send.FIELD = VALUE;                          \
+  }
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) \
   {                                         \
     msg_send.has_##FIELD = true;            \
@@ -188,10 +190,10 @@ typedef struct {
   uint8_t iface_num;
   uint8_t packet_index;
   uint8_t packet_pos;
-  uint8_t *buf;
+  uint8_t* buf;
 } usb_read_state;
 
-static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
+static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t* buf) {
   for (int retry = 0;; retry++) {
     int r =
         syshandle_read_blocking(iface_num, buf, USB_PACKET_SIZE, USB_TIMEOUT);
@@ -210,8 +212,8 @@ static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
 }
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
-static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count) {
-  usb_read_state *state = (usb_read_state *)(stream->state);
+static bool _usb_read(pb_istream_t* stream, uint8_t* buf, size_t count) {
+  usb_read_state* state = (usb_read_state*)(stream->state);
 
   size_t read = 0;
   // while we have data left
@@ -241,10 +243,10 @@ static bool _usb_read(pb_istream_t *stream, uint8_t *buf, size_t count) {
   return true;
 }
 
-static void _usb_read_flush(usb_read_state *state) { (void)state; }
+static void _usb_read_flush(usb_read_state* state) { (void)state; }
 
-static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
-                         const pb_msgdesc_t *fields, void *msg) {
+static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t* buf,
+                         const pb_msgdesc_t* fields, void* msg) {
   usb_read_state state = {.iface_num = iface_num,
                           .packet_index = 0,
                           .packet_pos = MSG_HEADER1_LEN,
@@ -268,12 +270,12 @@ static secbool _recv_msg(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
 #define MSG_RECV_CALLBACK(FIELD, CALLBACK, ARGUMENT) \
   {                                                  \
     msg_recv.FIELD.funcs.decode = &CALLBACK;         \
-    msg_recv.FIELD.arg = (void *)ARGUMENT;           \
+    msg_recv.FIELD.arg = (void*)ARGUMENT;            \
   }
 #define MSG_RECV(TYPE) \
   _recv_msg(iface_num, msg_size, buf, TYPE##_fields, &msg_recv)
 
-void send_user_abort(uint8_t iface_num, const char *msg) {
+void send_user_abort(uint8_t iface_num, const char* msg) {
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ActionCancelled);
   MSG_SEND_ASSIGN_STRING(message, msg);
@@ -281,8 +283,8 @@ void send_user_abort(uint8_t iface_num, const char *msg) {
 }
 
 static void send_msg_features(uint8_t iface_num,
-                              const vendor_header *const vhdr,
-                              const image_header *const hdr) {
+                              const vendor_header* const vhdr,
+                              const image_header* const hdr) {
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
   MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
@@ -302,23 +304,23 @@ static void send_msg_features(uint8_t iface_num,
   MSG_SEND(Features);
 }
 
-void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
-                            const vendor_header *const vhdr,
-                            const image_header *const hdr) {
+void process_msg_Initialize(uint8_t iface_num, uint32_t msg_size, uint8_t* buf,
+                            const vendor_header* const vhdr,
+                            const image_header* const hdr) {
   MSG_RECV_INIT(Initialize);
   MSG_RECV(Initialize);
   send_msg_features(iface_num, vhdr, hdr);
 }
 
-void process_msg_GetFeatures(uint8_t iface_num, uint32_t msg_size, uint8_t *buf,
-                             const vendor_header *const vhdr,
-                             const image_header *const hdr) {
+void process_msg_GetFeatures(uint8_t iface_num, uint32_t msg_size, uint8_t* buf,
+                             const vendor_header* const vhdr,
+                             const image_header* const hdr) {
   MSG_RECV_INIT(GetFeatures);
   MSG_RECV(GetFeatures);
   send_msg_features(iface_num, vhdr, hdr);
 }
 
-void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
+void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t* buf) {
   MSG_RECV_INIT(Ping);
   MSG_RECV(Ping);
 
@@ -330,7 +332,7 @@ void process_msg_Ping(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
 static uint32_t firmware_remaining, firmware_block, chunk_requested;
 
 void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
-                               uint8_t *buf) {
+                               uint8_t* buf) {
   firmware_remaining = 0;
   firmware_block = 0;
   chunk_requested = 0;
@@ -364,8 +366,8 @@ static uint32_t chunk_size = 0;
 __attribute__((section(".buf"))) uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
-static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
-                          void **arg) {
+static bool _read_payload(pb_istream_t* stream, const pb_field_t* field,
+                          void** arg) {
 #define BUFSIZE 32768
 
   uint32_t offset = (uint32_t)(*arg);
@@ -392,7 +394,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
     }
     // read data
     if (!pb_read(
-            stream, (pb_byte_t *)((uint8_t *)chunk_buffer + chunk_written),
+            stream, (pb_byte_t*)((uint8_t*)chunk_buffer + chunk_written),
             (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
       chunk_size = 0;
       return false;
@@ -419,12 +421,12 @@ static int version_compare(uint32_t vera, uint32_t verb) {
   return a - b;
 }
 
-static void detect_installation(const vendor_header *current_vhdr,
-                                const image_header *current_hdr,
-                                const vendor_header *const new_vhdr,
-                                const image_header *const new_hdr,
-                                secbool *is_new, secbool *is_upgrade,
-                                secbool *is_downgrade_wipe) {
+static void detect_installation(const vendor_header* current_vhdr,
+                                const image_header* current_hdr,
+                                const vendor_header* const new_vhdr,
+                                const image_header* const new_hdr,
+                                secbool* is_new, secbool* is_upgrade,
+                                secbool* is_downgrade_wipe) {
   *is_new = secfalse;
   *is_upgrade = secfalse;
   *is_downgrade_wipe = secfalse;
@@ -460,7 +462,7 @@ static uint32_t headers_offset = 0;
 static uint32_t read_offset = 0;
 
 int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
-                               uint8_t *buf) {
+                               uint8_t* buf) {
   MSG_RECV_INIT(FirmwareUpload);
   MSG_RECV_CALLBACK(payload, _read_payload, read_offset);
   const secbool r = MSG_RECV(FirmwareUpload);
@@ -482,7 +484,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       // first block and headers are not yet parsed
       vendor_header vhdr;
 
-      if (sectrue != read_vendor_header((uint8_t *)chunk_buffer, &vhdr)) {
+      if (sectrue != read_vendor_header((uint8_t*)chunk_buffer, &vhdr)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid vendor header");
@@ -498,12 +500,12 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         return UPLOAD_ERR_INVALID_VENDOR_HEADER_SIG;
       }
 
-      const image_header *received_hdr =
-          read_image_header((uint8_t *)chunk_buffer + vhdr.hdrlen,
+      const image_header* received_hdr =
+          read_image_header((uint8_t*)chunk_buffer + vhdr.hdrlen,
                             FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
       if (received_hdr !=
-          (const image_header *)((uint8_t *)chunk_buffer + vhdr.hdrlen)) {
+          (const image_header*)((uint8_t*)chunk_buffer + vhdr.hdrlen)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid firmware header");
@@ -535,19 +537,19 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       secbool is_new = secfalse;
 
       if (sectrue !=
-          read_vendor_header((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
+          read_vendor_header((const uint8_t*)FIRMWARE_START, &current_vhdr)) {
         is_new = sectrue;
       }
 
-      const image_header *current_hdr = NULL;
+      const image_header* current_hdr = NULL;
 
       if (is_new == secfalse) {
         current_hdr = read_image_header(
-            (const uint8_t *)FIRMWARE_START + current_vhdr.hdrlen,
+            (const uint8_t*)FIRMWARE_START + current_vhdr.hdrlen,
             FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
         if (current_hdr !=
-            (const image_header *)(FIRMWARE_START + current_vhdr.hdrlen)) {
+            (const image_header*)(FIRMWARE_START + current_vhdr.hdrlen)) {
           is_new = sectrue;
         }
       }
@@ -595,7 +597,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   }
 
   if (sectrue != check_single_hash(hdr.hashes + firmware_block * 32,
-                                   (uint8_t *)chunk_buffer + headers_offset,
+                                   (uint8_t*)chunk_buffer + headers_offset,
                                    chunk_size - headers_offset)) {
     if (firmware_upload_chunk_retry > 0) {
       --firmware_upload_chunk_retry;
@@ -615,7 +617,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
   ensure(flash_unlock_write(), NULL);
 
-  const uint32_t *const src = (const uint32_t *const)chunk_buffer;
+  const uint32_t* const src = (const uint32_t* const)chunk_buffer;
 
   ensure((chunk_size % FLASH_BLOCK_SIZE == 0) * sectrue, NULL);
   for (int i = 0; i < chunk_size / FLASH_BLOCK_SIZE; i++) {
@@ -648,7 +650,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   return (int)firmware_remaining;
 }
 
-int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
+int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t* buf) {
   if (sectrue != erase_device(ui_screen_wipe_progress)) {
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
@@ -662,7 +664,7 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
   }
 }
 
-void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
+void process_msg_unknown(uint8_t iface_num, uint32_t msg_size, uint8_t* buf) {
   // consume remaining message
   int remaining_chunks = 0;
 

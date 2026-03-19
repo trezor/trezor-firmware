@@ -24,8 +24,8 @@ static uint16_t compress_counter(uint16_t c) {
   return c;
 }
 
-static secbool pin_get_fails(uint32_t *ctr) {
-  const void *logs = NULL;
+static secbool pin_get_fails(uint32_t* ctr) {
+  const void* logs = NULL;
   uint16_t len = 0;
 
   wait_random();
@@ -36,13 +36,13 @@ static secbool pin_get_fails(uint32_t *ctr) {
     return secfalse;
   }
 
-  uint16_t c = compress_counter(((uint16_t *)logs)[0]);
+  uint16_t c = compress_counter(((uint16_t*)logs)[0]);
 
   uint16_t correct_bytes_cnt = 0;
 
   for (uint8_t i = 0; i < PIN_LOG_HALFWORDS; i++) {
     wait_random();
-    correct_bytes_cnt += compress_counter(((uint16_t *)logs)[i]) == c;
+    correct_bytes_cnt += compress_counter(((uint16_t*)logs)[i]) == c;
     *ctr = c;
   }
 

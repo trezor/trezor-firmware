@@ -97,7 +97,7 @@ typedef struct {
  * @param dev_info Pointer to USB device information structure.
  * @return `sectrue` if the initialization is successful.
  */
-secbool usb_init(const usb_dev_info_t *dev_info);
+secbool usb_init(const usb_dev_info_t* dev_info);
 
 /**
  * Deinitializes the USB stack.
@@ -115,7 +115,7 @@ void usb_deinit(void);
  *
  * @return `sectrue` if the USB stack is started successfully.
  */
-secbool usb_start(const usb_start_params_t *params);
+secbool usb_start(const usb_start_params_t* params);
 
 /**
  * Stops the USB stack but leaves all configuration intact,
@@ -139,4 +139,4 @@ usb_event_t usb_get_event(void);
  * @param state Pointer to a @ref usb_state_t structure to receive the
  * current state.
  */
-void usb_get_state(usb_state_t *state);
+void usb_get_state(usb_state_t* state);

@@ -36,7 +36,7 @@
 static uint32_t strength;
 static uint8_t int_entropy[32];
 static uint8_t seed[64];
-static const char *reset_mnemonic;
+static const char* reset_mnemonic;
 static bool skip_backup = false;
 static bool no_backup = false;
 static bool entropy_check = false;
@@ -57,7 +57,7 @@ static void entropy_check_progress(uint32_t iter, uint32_t total) {
 }
 
 void reset_init(uint32_t _strength, bool passphrase_protection,
-                bool pin_protection, const char *language, const char *label,
+                bool pin_protection, const char* language, const char* label,
                 uint32_t u2f_counter, bool _skip_backup, bool _no_backup,
                 bool _entropy_check) {
   if (_strength != 128 && _strength != 192 && _strength != 256) return;
@@ -107,7 +107,7 @@ static void send_entropy_request(bool set_prev_entropy) {
   reset_state = RESET_ENTROPY_REQUEST;
 }
 
-void reset_entropy(const uint8_t *ext_entropy, uint32_t len) {
+void reset_entropy(const uint8_t* ext_entropy, uint32_t len) {
   if (reset_state != RESET_ENTROPY_REQUEST) {
     fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
                     _("Entropy not requested"));
@@ -170,7 +170,7 @@ static void reset_finish(void) {
   mnemonic_clear();
 }
 
-const uint8_t *reset_get_seed(void) {
+const uint8_t* reset_get_seed(void) {
   if (reset_state != RESET_ENTROPY_CHECK_READY) {
     return NULL;
   }
@@ -180,7 +180,7 @@ const uint8_t *reset_get_seed(void) {
 static char current_word[10];
 
 // separated == true if called as a separate workflow via BackupMessage
-void reset_backup(bool separated, const char *mnemonic) {
+void reset_backup(bool separated, const char* mnemonic) {
   if (separated) {
     bool needs_backup = false;
     config_getNeedsBackup(&needs_backup);
@@ -250,11 +250,11 @@ void reset_abort(void) {
 
 #if DEBUG_LINK
 
-uint32_t reset_get_int_entropy(uint8_t *entropy) {
+uint32_t reset_get_int_entropy(uint8_t* entropy) {
   memcpy(entropy, int_entropy, 32);
   return 32;
 }
 
-const char *reset_get_word(void) { return current_word; }
+const char* reset_get_word(void) { return current_word; }
 
 #endif

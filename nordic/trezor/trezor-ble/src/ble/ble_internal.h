@@ -157,7 +157,7 @@ void ble_management_init(void);
 // Send status event
 void ble_management_send_status_event(void);
 // Send Pairing Request event, data is the pairing code
-void ble_management_send_pairing_request_event(uint8_t *data, uint16_t len);
+void ble_management_send_pairing_request_event(uint8_t* data, uint16_t len);
 // Send Pairing Cancelled event
 void ble_management_send_pairing_cancelled_event(void);
 // Send Pairing Completed event
@@ -171,23 +171,23 @@ int bonds_get_count(void);
 // Erase current bond
 bool bonds_erase_current(void);
 // Erase bonds for a specific device
-bool bonds_erase_device(const bt_addr_le_t *addr);
+bool bonds_erase_device(const bt_addr_le_t* addr);
 // Get all bonded devices
-size_t bonds_get_all(bt_addr_le_t *addr, size_t max_count);
+size_t bonds_get_all(bt_addr_le_t* addr, size_t max_count);
 
 // Advertising functions
 // Initialization
 void advertising_init(void);
 // Start advertising, with or without whitelist
 void advertising_start(bool wl, bool user_disconnect, uint8_t color,
-                       uint8_t device_code, bool static_addr, char *name,
+                       uint8_t device_code, bool static_addr, char* name,
                        int name_len);
 // Check if advertising is active
 bool advertising_is_advertising(void);
 // Check if advertising is active with whitelist
 bool advertising_is_advertising_whitelist(void);
 // Get current MAC address
-void advertising_get_mac(uint8_t *mac, uint16_t max_len);
+void advertising_get_mac(uint8_t* mac, uint16_t max_len);
 
 // Connection functions
 // Initialization
@@ -197,7 +197,7 @@ void connection_disconnect(void);
 // Check if there is an active connection
 bool connection_is_connected(void);
 // Get current connection
-struct bt_conn *connection_get_current(void);
+struct bt_conn* connection_get_current(void);
 // Is current connection bonded
 bool connection_is_bonded(void);
 // Is current connection high speed
@@ -213,17 +213,17 @@ bool pairing_init(void);
 // Reset pairing process
 void pairing_reset(void);
 // Respond to pairing request
-void pairing_num_comp_reply(bool accept, uint8_t *code);
+void pairing_num_comp_reply(bool accept, uint8_t* code);
 
 // Service functions
 // Callback definition for received data
-typedef void (*service_received_cb)(struct bt_conn *conn,
-                                    const uint8_t *const data, uint16_t len);
+typedef void (*service_received_cb)(struct bt_conn* conn,
+                                    const uint8_t* const data, uint16_t len);
 // Initialize of the BLE service
 int service_init(service_received_cb callbacks);
 // Send data to the connected device
-int service_send(struct bt_conn *conn, trz_packet_t *data);
+int service_send(struct bt_conn* conn, trz_packet_t* data);
 // Notify listener of device state change
-int service_notify(struct bt_conn *conn, uint8_t *data, size_t len);
+int service_notify(struct bt_conn* conn, uint8_t* data, size_t len);
 // Send hard-coded error response
 void service_send_busy(void);

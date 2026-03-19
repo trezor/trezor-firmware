@@ -45,7 +45,7 @@
     if (!nem_write_tagged(ctx, (DATA), (LENGTH))) return false; \
   } while (0)
 
-const char *nem_network_name(uint8_t network) {
+const char* nem_network_name(uint8_t network) {
   switch (network) {
     case NEM_NETWORK_MAINNET:
       return "NEM Mainnet";
@@ -58,8 +58,8 @@ const char *nem_network_name(uint8_t network) {
   }
 }
 
-static inline bool nem_write_checked(nem_transaction_ctx *ctx,
-                                     const uint8_t *data, uint32_t length) {
+static inline bool nem_write_checked(nem_transaction_ctx* ctx,
+                                     const uint8_t* data, uint32_t length) {
   if (!CAN_WRITE(length)) {
     return false;
   }
@@ -69,7 +69,7 @@ static inline bool nem_write_checked(nem_transaction_ctx *ctx,
   return true;
 }
 
-static inline bool nem_write_u32(nem_transaction_ctx *ctx, uint32_t data) {
+static inline bool nem_write_u32(nem_transaction_ctx* ctx, uint32_t data) {
   if (!CAN_WRITE(4)) {
     return false;
   }
@@ -82,40 +82,40 @@ static inline bool nem_write_u32(nem_transaction_ctx *ctx, uint32_t data) {
   return true;
 }
 
-static inline bool nem_write_u64(nem_transaction_ctx *ctx, uint64_t data) {
+static inline bool nem_write_u64(nem_transaction_ctx* ctx, uint64_t data) {
   SERIALIZE_U32((data >> 0) & 0xffffffff);
   SERIALIZE_U32((data >> 32) & 0xffffffff);
 
   return true;
 }
 
-static inline bool nem_write_tagged(nem_transaction_ctx *ctx,
-                                    const uint8_t *data, uint32_t length) {
+static inline bool nem_write_tagged(nem_transaction_ctx* ctx,
+                                    const uint8_t* data, uint32_t length) {
   SERIALIZE_U32(length);
 
   return nem_write_checked(ctx, data, length);
 }
 
-static inline bool nem_write_mosaic_str(nem_transaction_ctx *ctx,
-                                        const char *name, const char *value) {
+static inline bool nem_write_mosaic_str(nem_transaction_ctx* ctx,
+                                        const char* name, const char* value) {
   uint32_t name_length = strlen(name);
   uint32_t value_length = strlen(value);
 
   SERIALIZE_U32(sizeof(uint32_t) + name_length + sizeof(uint32_t) +
                 value_length);
-  SERIALIZE_TAGGED((const uint8_t *)name, name_length);
-  SERIALIZE_TAGGED((const uint8_t *)value, value_length);
+  SERIALIZE_TAGGED((const uint8_t*)name, name_length);
+  SERIALIZE_TAGGED((const uint8_t*)value, value_length);
 
   return true;
 }
 
-static inline bool nem_write_mosaic_bool(nem_transaction_ctx *ctx,
-                                         const char *name, bool value) {
+static inline bool nem_write_mosaic_bool(nem_transaction_ctx* ctx,
+                                         const char* name, bool value) {
   return nem_write_mosaic_str(ctx, name, value ? "true" : "false");
 }
 
-static inline bool nem_write_mosaic_u64(nem_transaction_ctx *ctx,
-                                        const char *name, uint64_t value) {
+static inline bool nem_write_mosaic_u64(nem_transaction_ctx* ctx,
+                                        const char* name, uint64_t value) {
   char buffer[21] = {0};
 
   if (bn_format_uint64(value, NULL, NULL, 0, 0, false, 0, buffer,
@@ -127,7 +127,7 @@ static inline bool nem_write_mosaic_u64(nem_transaction_ctx *ctx,
 }
 
 void nem_get_address_raw(const ed25519_public_key public_key, uint8_t version,
-                         uint8_t *address) {
+                         uint8_t* address) {
   uint8_t hash[SHA3_256_DIGEST_LENGTH] = {0};
 
   /* 1.  Perform 256-bit Sha3 on the public key */
@@ -150,19 +150,19 @@ void nem_get_address_raw(const ed25519_public_key public_key, uint8_t version,
 }
 
 bool nem_get_address(const ed25519_public_key public_key, uint8_t version,
-                     char *address) {
+                     char* address) {
   uint8_t pubkeyhash[NEM_ADDRESS_SIZE_RAW] = {0};
 
   nem_get_address_raw(public_key, version, pubkeyhash);
 
-  char *ret = base32_encode(pubkeyhash, sizeof(pubkeyhash), address,
+  char* ret = base32_encode(pubkeyhash, sizeof(pubkeyhash), address,
                             NEM_ADDRESS_SIZE + 1, BASE32_ALPHABET_RFC4648);
 
   memzero(pubkeyhash, sizeof(pubkeyhash));
   return (ret != NULL);
 }
 
-bool nem_validate_address_raw(const uint8_t *address, uint8_t network) {
+bool nem_validate_address_raw(const uint8_t* address, uint8_t network) {
   if (!nem_network_name(network) || address[0] != network) {
     return false;
   }
@@ -176,14 +176,14 @@ bool nem_validate_address_raw(const uint8_t *address, uint8_t network) {
   return valid;
 }
 
-bool nem_validate_address(const char *address, uint8_t network) {
+bool nem_validate_address(const char* address, uint8_t network) {
   uint8_t pubkeyhash[NEM_ADDRESS_SIZE_RAW] = {0};
 
   if (strlen(address) != NEM_ADDRESS_SIZE) {
     return false;
   }
 
-  uint8_t *ret = base32_decode(address, NEM_ADDRESS_SIZE, pubkeyhash,
+  uint8_t* ret = base32_decode(address, NEM_ADDRESS_SIZE, pubkeyhash,
                                sizeof(pubkeyhash), BASE32_ALPHABET_RFC4648);
   bool valid = (ret != NULL) && nem_validate_address_raw(pubkeyhash, network);
 
@@ -191,8 +191,8 @@ bool nem_validate_address(const char *address, uint8_t network) {
   return valid;
 }
 
-void nem_transaction_start(nem_transaction_ctx *ctx,
-                           const ed25519_public_key public_key, uint8_t *buffer,
+void nem_transaction_start(nem_transaction_ctx* ctx,
+                           const ed25519_public_key public_key, uint8_t* buffer,
                            size_t size) {
   memcpy(ctx->public_key, public_key, sizeof(ctx->public_key));
 
@@ -201,7 +201,7 @@ void nem_transaction_start(nem_transaction_ctx *ctx,
   ctx->size = size;
 }
 
-size_t nem_transaction_end(nem_transaction_ctx *ctx,
+size_t nem_transaction_end(nem_transaction_ctx* ctx,
                            const ed25519_secret_key private_key,
                            ed25519_signature signature) {
   if (private_key != NULL && signature != NULL) {
@@ -211,7 +211,7 @@ size_t nem_transaction_end(nem_transaction_ctx *ctx,
   return ctx->offset;
 }
 
-bool nem_transaction_write_common(nem_transaction_ctx *ctx, uint32_t type,
+bool nem_transaction_write_common(nem_transaction_ctx* ctx, uint32_t type,
                                   uint32_t version, uint32_t timestamp,
                                   const ed25519_public_key signer, uint64_t fee,
                                   uint32_t deadline) {
@@ -225,12 +225,12 @@ bool nem_transaction_write_common(nem_transaction_ctx *ctx, uint32_t type,
   return true;
 }
 
-bool nem_transaction_create_transfer(nem_transaction_ctx *ctx, uint8_t network,
+bool nem_transaction_create_transfer(nem_transaction_ctx* ctx, uint8_t network,
                                      uint32_t timestamp,
                                      const ed25519_public_key signer,
                                      uint64_t fee, uint32_t deadline,
-                                     const char *recipient, uint64_t amount,
-                                     const uint8_t *payload, uint32_t length,
+                                     const char* recipient, uint64_t amount,
+                                     const uint8_t* payload, uint32_t length,
                                      bool encrypted, uint32_t mosaics) {
   if (!signer) {
     signer = ctx->public_key;
@@ -246,7 +246,7 @@ bool nem_transaction_create_transfer(nem_transaction_ctx *ctx, uint8_t network,
                                    timestamp, signer, fee, deadline);
   if (!ret) return false;
 
-  SERIALIZE_TAGGED((const uint8_t *)recipient, NEM_ADDRESS_SIZE);
+  SERIALIZE_TAGGED((const uint8_t*)recipient, NEM_ADDRESS_SIZE);
   SERIALIZE_U64(amount);
 
   if (length) {
@@ -264,8 +264,8 @@ bool nem_transaction_create_transfer(nem_transaction_ctx *ctx, uint8_t network,
   return true;
 }
 
-bool nem_transaction_write_mosaic(nem_transaction_ctx *ctx,
-                                  const char *namespace, const char *mosaic,
+bool nem_transaction_write_mosaic(nem_transaction_ctx* ctx,
+                                  const char* namespace, const char* mosaic,
                                   uint64_t quantity) {
   size_t namespace_length = strlen(namespace);
   size_t mosaic_length = strlen(mosaic);
@@ -274,18 +274,18 @@ bool nem_transaction_write_mosaic(nem_transaction_ctx *ctx,
 
   SERIALIZE_U32(sizeof(uint32_t) + sizeof(uint64_t) + identifier_length);
   SERIALIZE_U32(identifier_length);
-  SERIALIZE_TAGGED((const uint8_t *)namespace, namespace_length);
-  SERIALIZE_TAGGED((const uint8_t *)mosaic, mosaic_length);
+  SERIALIZE_TAGGED((const uint8_t*)namespace, namespace_length);
+  SERIALIZE_TAGGED((const uint8_t*)mosaic, mosaic_length);
   SERIALIZE_U64(quantity);
 
   return true;
 }
 
-bool nem_transaction_create_multisig(nem_transaction_ctx *ctx, uint8_t network,
+bool nem_transaction_create_multisig(nem_transaction_ctx* ctx, uint8_t network,
                                      uint32_t timestamp,
                                      const ed25519_public_key signer,
                                      uint64_t fee, uint32_t deadline,
-                                     const nem_transaction_ctx *inner) {
+                                     const nem_transaction_ctx* inner) {
   if (!signer) {
     signer = ctx->public_key;
   }
@@ -301,9 +301,9 @@ bool nem_transaction_create_multisig(nem_transaction_ctx *ctx, uint8_t network,
 }
 
 bool nem_transaction_create_multisig_signature(
-    nem_transaction_ctx *ctx, uint8_t network, uint32_t timestamp,
+    nem_transaction_ctx* ctx, uint8_t network, uint32_t timestamp,
     const ed25519_public_key signer, uint64_t fee, uint32_t deadline,
-    const nem_transaction_ctx *inner) {
+    const nem_transaction_ctx* inner) {
   if (!signer) {
     signer = ctx->public_key;
   }
@@ -321,15 +321,15 @@ bool nem_transaction_create_multisig_signature(
 
   SERIALIZE_U32(sizeof(uint32_t) + SHA3_256_DIGEST_LENGTH);
   SERIALIZE_TAGGED(hash, SHA3_256_DIGEST_LENGTH);
-  SERIALIZE_TAGGED((const uint8_t *)address, NEM_ADDRESS_SIZE);
+  SERIALIZE_TAGGED((const uint8_t*)address, NEM_ADDRESS_SIZE);
 
   return true;
 }
 
 bool nem_transaction_create_provision_namespace(
-    nem_transaction_ctx *ctx, uint8_t network, uint32_t timestamp,
+    nem_transaction_ctx* ctx, uint8_t network, uint32_t timestamp,
     const ed25519_public_key signer, uint64_t fee, uint32_t deadline,
-    const char *namespace, const char *parent, const char *rental_sink,
+    const char* namespace, const char* parent, const char* rental_sink,
     uint64_t rental_fee) {
   if (!signer) {
     signer = ctx->public_key;
@@ -341,14 +341,14 @@ bool nem_transaction_create_provision_namespace(
   if (!ret) return false;
 
   if (parent) {
-    SERIALIZE_TAGGED((const uint8_t *)rental_sink, NEM_ADDRESS_SIZE);
+    SERIALIZE_TAGGED((const uint8_t*)rental_sink, NEM_ADDRESS_SIZE);
     SERIALIZE_U64(rental_fee);
-    SERIALIZE_TAGGED((const uint8_t *)namespace, strlen(namespace));
-    SERIALIZE_TAGGED((const uint8_t *)parent, strlen(parent));
+    SERIALIZE_TAGGED((const uint8_t*)namespace, strlen(namespace));
+    SERIALIZE_TAGGED((const uint8_t*)parent, strlen(parent));
   } else {
-    SERIALIZE_TAGGED((const uint8_t *)rental_sink, NEM_ADDRESS_SIZE);
+    SERIALIZE_TAGGED((const uint8_t*)rental_sink, NEM_ADDRESS_SIZE);
     SERIALIZE_U64(rental_fee);
-    SERIALIZE_TAGGED((const uint8_t *)namespace, strlen(namespace));
+    SERIALIZE_TAGGED((const uint8_t*)namespace, strlen(namespace));
     SERIALIZE_U32(0xffffffff);
   }
 
@@ -356,13 +356,13 @@ bool nem_transaction_create_provision_namespace(
 }
 
 bool nem_transaction_create_mosaic_creation(
-    nem_transaction_ctx *ctx, uint8_t network, uint32_t timestamp,
+    nem_transaction_ctx* ctx, uint8_t network, uint32_t timestamp,
     const ed25519_public_key signer, uint64_t fee, uint32_t deadline,
-    const char *namespace, const char *mosaic, const char *description,
+    const char* namespace, const char* mosaic, const char* description,
     uint32_t divisibility, uint64_t supply, bool mutable_supply,
     bool transferable, uint32_t levy_type, uint64_t levy_fee,
-    const char *levy_address, const char *levy_namespace,
-    const char *levy_mosaic, const char *creation_sink, uint64_t creation_fee) {
+    const char* levy_address, const char* levy_namespace,
+    const char* levy_mosaic, const char* creation_sink, uint64_t creation_fee) {
   if (!signer) {
     signer = ctx->public_key;
   }
@@ -384,9 +384,9 @@ bool nem_transaction_create_mosaic_creation(
   SERIALIZE_U32(0);
   SERIALIZE_TAGGED(signer, sizeof(ed25519_public_key));
   SERIALIZE_U32(identifier_length);
-  SERIALIZE_TAGGED((const uint8_t *)namespace, namespace_length);
-  SERIALIZE_TAGGED((const uint8_t *)mosaic, mosaic_length);
-  SERIALIZE_TAGGED((const uint8_t *)description, strlen(description));
+  SERIALIZE_TAGGED((const uint8_t*)namespace, namespace_length);
+  SERIALIZE_TAGGED((const uint8_t*)mosaic, mosaic_length);
+  SERIALIZE_TAGGED((const uint8_t*)description, strlen(description));
   SERIALIZE_U32(4);  // Number of properties
 
   if (!nem_write_mosaic_u64(ctx, "divisibility", divisibility)) return false;
@@ -404,10 +404,10 @@ bool nem_transaction_create_mosaic_creation(
     SERIALIZE_U32(sizeof(uint32_t) + sizeof(uint32_t) + NEM_ADDRESS_SIZE +
                   sizeof(uint32_t) + levy_identifier_length + sizeof(uint64_t));
     SERIALIZE_U32(levy_type);
-    SERIALIZE_TAGGED((const uint8_t *)levy_address, NEM_ADDRESS_SIZE);
+    SERIALIZE_TAGGED((const uint8_t*)levy_address, NEM_ADDRESS_SIZE);
     SERIALIZE_U32(levy_identifier_length);
-    SERIALIZE_TAGGED((const uint8_t *)levy_namespace, levy_namespace_length);
-    SERIALIZE_TAGGED((const uint8_t *)levy_mosaic, levy_mosaic_length);
+    SERIALIZE_TAGGED((const uint8_t*)levy_namespace, levy_namespace_length);
+    SERIALIZE_TAGGED((const uint8_t*)levy_mosaic, levy_mosaic_length);
     SERIALIZE_U64(levy_fee);
   } else {
     SERIALIZE_U32(0);
@@ -416,16 +416,16 @@ bool nem_transaction_create_mosaic_creation(
   // Rewrite length
   nem_write_u32(&state, ctx->offset - state.offset - sizeof(uint32_t));
 
-  SERIALIZE_TAGGED((const uint8_t *)creation_sink, NEM_ADDRESS_SIZE);
+  SERIALIZE_TAGGED((const uint8_t*)creation_sink, NEM_ADDRESS_SIZE);
   SERIALIZE_U64(creation_fee);
 
   return true;
 }
 
 bool nem_transaction_create_mosaic_supply_change(
-    nem_transaction_ctx *ctx, uint8_t network, uint32_t timestamp,
+    nem_transaction_ctx* ctx, uint8_t network, uint32_t timestamp,
     const ed25519_public_key signer, uint64_t fee, uint32_t deadline,
-    const char *namespace, const char *mosaic, uint32_t type, uint64_t delta) {
+    const char* namespace, const char* mosaic, uint32_t type, uint64_t delta) {
   if (!signer) {
     signer = ctx->public_key;
   }
@@ -441,8 +441,8 @@ bool nem_transaction_create_mosaic_supply_change(
       sizeof(uint32_t) + namespace_length + sizeof(uint32_t) + mosaic_length;
 
   SERIALIZE_U32(identifier_length);
-  SERIALIZE_TAGGED((const uint8_t *)namespace, namespace_length);
-  SERIALIZE_TAGGED((const uint8_t *)mosaic, mosaic_length);
+  SERIALIZE_TAGGED((const uint8_t*)namespace, namespace_length);
+  SERIALIZE_TAGGED((const uint8_t*)mosaic, mosaic_length);
   SERIALIZE_U32(type);
   SERIALIZE_U64(delta);
 
@@ -450,7 +450,7 @@ bool nem_transaction_create_mosaic_supply_change(
 }
 
 bool nem_transaction_create_aggregate_modification(
-    nem_transaction_ctx *ctx, uint8_t network, uint32_t timestamp,
+    nem_transaction_ctx* ctx, uint8_t network, uint32_t timestamp,
     const ed25519_public_key signer, uint64_t fee, uint32_t deadline,
     uint32_t modifications, bool relative_change) {
   if (!signer) {
@@ -469,7 +469,7 @@ bool nem_transaction_create_aggregate_modification(
 }
 
 bool nem_transaction_write_cosignatory_modification(
-    nem_transaction_ctx *ctx, uint32_t type,
+    nem_transaction_ctx* ctx, uint32_t type,
     const ed25519_public_key cosignatory) {
   SERIALIZE_U32(sizeof(uint32_t) + sizeof(uint32_t) +
                 sizeof(ed25519_public_key));
@@ -479,7 +479,7 @@ bool nem_transaction_write_cosignatory_modification(
   return true;
 }
 
-bool nem_transaction_write_minimum_cosignatories(nem_transaction_ctx *ctx,
+bool nem_transaction_write_minimum_cosignatories(nem_transaction_ctx* ctx,
                                                  int32_t relative_change) {
   SERIALIZE_U32(sizeof(uint32_t));
   SERIALIZE_U32((uint32_t)relative_change);
@@ -488,7 +488,7 @@ bool nem_transaction_write_minimum_cosignatories(nem_transaction_ctx *ctx,
 }
 
 bool nem_transaction_create_importance_transfer(
-    nem_transaction_ctx *ctx, uint8_t network, uint32_t timestamp,
+    nem_transaction_ctx* ctx, uint8_t network, uint32_t timestamp,
     const ed25519_public_key signer, uint64_t fee, uint32_t deadline,
     uint32_t mode, const ed25519_public_key remote) {
   if (!signer) {

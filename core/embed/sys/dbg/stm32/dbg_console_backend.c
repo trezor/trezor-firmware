@@ -46,14 +46,14 @@ void dbg_console_init(void) {
 #endif
 }
 
-ssize_t dbg_console_read(void *buffer, size_t buffer_size) { return 0; }
+ssize_t dbg_console_read(void* buffer, size_t buffer_size) { return 0; }
 
 #ifdef USE_DBG_CONSOLE_SWO
-static ssize_t itm_swo_write(const void *data, size_t data_size) {
+static ssize_t itm_swo_write(const void* data, size_t data_size) {
   irq_key_t irq_key = irq_lock();
 
   for (size_t i = 0; i < data_size; i++) {
-    ITM_SendChar(((const char *)data)[i]);
+    ITM_SendChar(((const char*)data)[i]);
   }
 
   irq_unlock(irq_key);
@@ -62,10 +62,10 @@ static ssize_t itm_swo_write(const void *data, size_t data_size) {
 #endif
 
 #ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
-static ssize_t sysview_write(const void *data, size_t data_size) {
+static ssize_t sysview_write(const void* data, size_t data_size) {
 #if 1
   static char str[512];
-  strncpy(str, (const char *)data, sizeof(str) - 1);
+  strncpy(str, (const char*)data, sizeof(str) - 1);
   str[sizeof(str) - 1] = 0;
   SEGGER_SYSVIEW_Print(str);
 #endif
@@ -77,7 +77,7 @@ static ssize_t sysview_write(const void *data, size_t data_size) {
 #endif
 
 #ifdef USE_DBG_CONSOLE_VCP
-static ssize_t usb_vcp_write(const void *data, size_t data_size) {
+static ssize_t usb_vcp_write(const void* data, size_t data_size) {
 #ifdef BLOCK_ON_VCP
   // In thread mode, we can wait for the VCP to be ready.
   // In interrupt context, we must not block.
@@ -91,7 +91,7 @@ static ssize_t usb_vcp_write(const void *data, size_t data_size) {
 }
 #endif
 
-ssize_t dbg_console_write(const void *data, size_t data_size) {
+ssize_t dbg_console_write(const void* data, size_t data_size) {
 #ifdef USE_DBG_CONSOLE_SWO
   return itm_swo_write(data, data_size);
 #endif

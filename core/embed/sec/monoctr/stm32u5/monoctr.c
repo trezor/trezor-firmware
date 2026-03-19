@@ -83,7 +83,7 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
 
   for (int i = 0; i < value; i++) {
     uint32_t data[4] = {0};
-    if (sectrue != secret_write((uint8_t *)data, offset + i * 16, 16)) {
+    if (sectrue != secret_write((uint8_t*)data, offset + i * 16, 16)) {
       return secfalse;
     }
   }
@@ -91,7 +91,7 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
   return sectrue;
 }
 
-secbool monoctr_read(monoctr_type_t type, uint8_t *value) {
+secbool monoctr_read(monoctr_type_t type, uint8_t* value) {
   int32_t offset = get_offset(type);
   size_t length = get_length(type);
 
@@ -99,7 +99,7 @@ secbool monoctr_read(monoctr_type_t type, uint8_t *value) {
     return secfalse;
   }
 
-  const uint8_t *counter_addr =
+  const uint8_t* counter_addr =
       flash_area_get_address(&SECRET_AREA, offset, length);
 
   if (counter_addr == NULL) {

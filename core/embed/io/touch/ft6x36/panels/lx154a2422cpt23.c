@@ -19,8 +19,8 @@
 
 #include "lx154a2422cpt23.h"
 
-void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
-                                      uint16_t *y_new) {
+void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t* x_new,
+                                      uint16_t* y_new) {
 #define CENTER (DISPLAY_RESX / 2)
 #define CORRECTION 30
 

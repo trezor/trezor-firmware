@@ -36,7 +36,7 @@
 #define SDCARD_SIZE (64 * 1024 * 1024)
 #define SDCARD_BLOCKS (SDCARD_SIZE / SDCARD_BLOCK_SIZE)
 
-static uint8_t *sdcard_buffer = NULL;
+static uint8_t* sdcard_buffer = NULL;
 static secbool sdcard_powered = secfalse;
 
 void sdcard_init(void) {
@@ -65,10 +65,10 @@ void sdcard_init(void) {
   int fd = open(SDCARD_FILE, O_RDWR);
   ensure(sectrue * (fd >= 0), "open failed");
 
-  void *map = mmap(0, SDCARD_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  void* map = mmap(0, SDCARD_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   ensure(sectrue * (map != MAP_FAILED), "mmap failed");
 
-  sdcard_buffer = (uint8_t *)map;
+  sdcard_buffer = (uint8_t*)map;
 
   if (should_clear) {
     for (int i = 0; i < SDCARD_SIZE; ++i) sdcard_buffer[i] = 0xFF;
@@ -99,7 +99,7 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
   return sdcard_powered == sectrue ? SDCARD_SIZE : 0;
 }
 
-secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
+secbool sdcard_read_blocks(uint32_t* dest, uint32_t block_num,
                            uint32_t num_blocks) {
   if (sectrue != sdcard_powered) {
     return secfalse;
@@ -115,7 +115,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   return sectrue;
 }
 
-secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
+secbool sdcard_write_blocks(const uint32_t* src, uint32_t block_num,
                             uint32_t num_blocks) {
   if (sectrue != sdcard_powered) {
     return secfalse;

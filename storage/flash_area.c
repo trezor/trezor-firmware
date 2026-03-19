@@ -22,7 +22,7 @@
 #include <stddef.h>
 #include <string.h>
 
-uint32_t flash_area_get_size(const flash_area_t *area) {
+uint32_t flash_area_get_size(const flash_area_t* area) {
   uint32_t size = 0;
   for (int i = 0; i < area->num_subareas; i++) {
     size += flash_sector_size(area->subarea[i].first_sector,
@@ -31,7 +31,7 @@ uint32_t flash_area_get_size(const flash_area_t *area) {
   return size;
 }
 
-uint16_t flash_area_total_sectors(const flash_area_t *area) {
+uint16_t flash_area_total_sectors(const flash_area_t* area) {
   uint16_t total = 0;
   for (int i = 0; i < area->num_subareas; i++) {
     total += area->subarea[i].num_sectors;
@@ -39,9 +39,9 @@ uint16_t flash_area_total_sectors(const flash_area_t *area) {
   return total;
 }
 
-static secbool get_sector_and_offset(const flash_area_t *area, uint32_t offset,
-                                     uint16_t *sector_out,
-                                     uint32_t *offset_out) {
+static secbool get_sector_and_offset(const flash_area_t* area, uint32_t offset,
+                                     uint16_t* sector_out,
+                                     uint32_t* offset_out) {
   for (int i = 0; i < area->num_subareas; i++) {
     // Get the sub-area parameters
     uint16_t first_sector = area->subarea[i].first_sector;
@@ -61,7 +61,7 @@ static secbool get_sector_and_offset(const flash_area_t *area, uint32_t offset,
   return secfalse;
 }
 
-const void *flash_area_get_address(const flash_area_t *area, uint32_t offset,
+const void* flash_area_get_address(const flash_area_t* area, uint32_t offset,
                                    uint32_t size) {
   for (int i = 0; i < area->num_subareas; i++) {
     // Get sub-area parameters
@@ -72,8 +72,8 @@ const void *flash_area_get_address(const flash_area_t *area, uint32_t offset,
     if (offset < subarea_size) {
       // Does the requested block fit in the sub-area?
       if (offset + size <= subarea_size) {
-        const uint8_t *ptr =
-            (const uint8_t *)flash_get_address(first_sector, 0, 0);
+        const uint8_t* ptr =
+            (const uint8_t*)flash_get_address(first_sector, 0, 0);
         // We expect that all sectors/pages in the sub-area make
         // a continuous block of adresses with the same security atributes
         return ptr + offset;
@@ -88,7 +88,7 @@ const void *flash_area_get_address(const flash_area_t *area, uint32_t offset,
 
 #if defined FLASH_BIT_ACCESS
 
-secbool flash_area_write_byte(const flash_area_t *area, uint32_t offset,
+secbool flash_area_write_byte(const flash_area_t* area, uint32_t offset,
                               uint8_t data) {
   uint16_t sector;
   uint32_t sector_offset;
@@ -98,7 +98,7 @@ secbool flash_area_write_byte(const flash_area_t *area, uint32_t offset,
   return flash_write_byte(sector, sector_offset, data);
 }
 
-secbool flash_area_write_word(const flash_area_t *area, uint32_t offset,
+secbool flash_area_write_word(const flash_area_t* area, uint32_t offset,
                               uint32_t data) {
   uint16_t sector;
   uint32_t sector_offset;
@@ -111,8 +111,8 @@ secbool flash_area_write_word(const flash_area_t *area, uint32_t offset,
 #endif  // FLASH_BIT_ACCESS
 
 #ifdef USE_FLASH_BURST
-secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
-                               const uint32_t *data) {
+secbool flash_area_write_burst(const flash_area_t* area, uint32_t offset,
+                               const uint32_t* data) {
   uint16_t sector;
   uint32_t sector_offset;
   if (get_sector_and_offset(area, offset, &sector, &sector_offset) != sectrue) {
@@ -122,7 +122,7 @@ secbool flash_area_write_burst(const flash_area_t *area, uint32_t offset,
 }
 #endif
 
-secbool flash_area_write_block(const flash_area_t *area, uint32_t offset,
+secbool flash_area_write_block(const flash_area_t* area, uint32_t offset,
                                const flash_block_t block) {
   if (!FLASH_IS_ALIGNED(offset)) {
     return secfalse;
@@ -137,13 +137,13 @@ secbool flash_area_write_block(const flash_area_t *area, uint32_t offset,
   return flash_write_block(sector, sector_offset, block);
 }
 
-secbool __wur flash_area_write_data(const flash_area_t *area, uint32_t offset,
-                                    const void *data, uint32_t size) {
+secbool __wur flash_area_write_data(const flash_area_t* area, uint32_t offset,
+                                    const void* data, uint32_t size) {
   return flash_area_write_data_padded(area, offset, data, size, 0, size);
 }
 
-secbool __wur flash_area_write_data_padded(const flash_area_t *area,
-                                           uint32_t offset, const void *data,
+secbool __wur flash_area_write_data_padded(const flash_area_t* area,
+                                           uint32_t offset, const void* data,
                                            uint32_t data_size, uint8_t padding,
                                            uint32_t total_size) {
   if (offset % FLASH_BLOCK_SIZE) {
@@ -159,7 +159,7 @@ secbool __wur flash_area_write_data_padded(const flash_area_t *area,
     return secfalse;
   }
 
-  const uint32_t *data32 = (const uint32_t *)data;
+  const uint32_t* data32 = (const uint32_t*)data;
 
   while (total_size > 0) {
 #ifdef USE_FLASH_BURST
@@ -212,13 +212,13 @@ secbool __wur flash_area_write_data_padded(const flash_area_t *area,
   return sectrue;
 }
 
-secbool flash_area_is_erased(const flash_area_t *area) {
+secbool flash_area_is_erased(const flash_area_t* area) {
   for (int i = 0; i < area->num_subareas; i++) {
     uint16_t first_sector = area->subarea[i].first_sector;
     uint16_t num_sectors = area->subarea[i].num_sectors;
     uint32_t subarea_size = flash_sector_size(first_sector, num_sectors);
-    const uint32_t *ptr =
-        (const uint32_t *)flash_get_address(first_sector, 0, 0);
+    const uint32_t* ptr =
+        (const uint32_t*)flash_get_address(first_sector, 0, 0);
     for (uint32_t j = 0; j < subarea_size / sizeof(uint32_t); j++) {
       if (ptr[j] != 0xFFFFFFFF) {
         return secfalse;
@@ -228,7 +228,7 @@ secbool flash_area_is_erased(const flash_area_t *area) {
   return sectrue;
 }
 
-secbool flash_area_erase(const flash_area_t *area,
+secbool flash_area_erase(const flash_area_t* area,
                          void (*progress)(int pos, int len)) {
   return flash_area_erase_bulk(area, 1, progress);
 }
@@ -249,7 +249,7 @@ static secbool erase_sector(uint16_t sector) {
   return result;
 }
 
-secbool flash_area_erase_bulk(const flash_area_t *area, int count,
+secbool flash_area_erase_bulk(const flash_area_t* area, int count,
                               void (*progress)(int pos, int len)) {
   int total_sectors = 0;
   int done_sectors = 0;
@@ -282,8 +282,8 @@ secbool flash_area_erase_bulk(const flash_area_t *area, int count,
   return sectrue;
 }
 
-secbool flash_area_erase_partial(const flash_area_t *area, uint32_t offset,
-                                 uint32_t *bytes_erased) {
+secbool flash_area_erase_partial(const flash_area_t* area, uint32_t offset,
+                                 uint32_t* bytes_erased) {
   uint32_t sector_offset = 0;
   *bytes_erased = 0;
 

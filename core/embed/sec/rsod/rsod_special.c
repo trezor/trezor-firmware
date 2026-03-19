@@ -34,7 +34,7 @@
 void __attribute__((noreturn)) show_wipe_code_screen(void) {
   bootutils_wipe_info_t info = {0};
 
-  const char *title = "Wipe code entered";
+  const char* title = "Wipe code entered";
 
   strncpy(info.title, title, sizeof(info.title) - 1);
   strncpy(info.message, ALL_DATA_ERASED_MESSAGE, sizeof(info.message) - 1);
@@ -42,22 +42,20 @@ void __attribute__((noreturn)) show_wipe_code_screen(void) {
 
   reboot_and_wipe(&info);
 
-  while (1)
-    ;
+  while (1);
 }
 
 void __attribute__((noreturn)) show_pin_too_many_screen(void) {
   bootutils_wipe_info_t info = {0};
 
-  const char *title = "Pin attempts exceeded";
+  const char* title = "Pin attempts exceeded";
 
   strncpy(info.title, title, sizeof(info.title) - 1);
   strncpy(info.message, ALL_DATA_ERASED_MESSAGE, sizeof(info.message) - 1);
   strncpy(info.footer, RECONNECT_DEVICE_MESSAGE, sizeof(info.footer) - 1);
 
   reboot_and_wipe(&info);
-  while (1)
-    ;
+  while (1);
 }
 
 void __attribute__((noreturn)) show_install_restricted_screen(void) {
