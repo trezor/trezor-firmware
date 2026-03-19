@@ -168,7 +168,9 @@ def go_back_from_mnemonic(debug: "DebugLink") -> None:
     assert "MnemonicKeyboard" in layout.all_components()
 
     if debug.layout_type is LayoutType.Eckhart:
-        while "MnemonicKeyboard" in debug.read_layout().all_components():
+        for _ in range(100):  # max 100 erases to prevent infinite loop
+            if "MnemonicKeyboard" not in debug.read_layout().all_components():
+                break
             debug.click(debug.screen_buttons.mnemonic_erase())
     else:
         raise ValueError("Unknown model")
@@ -194,8 +196,15 @@ def enter_share(
         debug.swipe_up()
         layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Eckhart:
-        debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
+        if "MnemonicKeyboard" not in layout.all_components():
+            debug.click(debug.screen_buttons.ok())
+            layout = debug.read_layout()
+        attempts = 0
+        while "MnemonicKeyboard" not in layout.all_components() and attempts < 10:
+            debug.click(debug.screen_buttons.ok())
+            layout = debug.read_layout()
+            attempts += 1
     else:
         raise ValueError("Unknown model")
 
