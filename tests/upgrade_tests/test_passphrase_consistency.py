@@ -22,8 +22,8 @@ from trezorlib import btc, device, mapping, messages, models, protobuf
 from trezorlib._internal.emulator import Emulator
 from trezorlib.tools import parse_path
 
-from ..emulators import EmulatorWrapper, is_tropic_capable_model
-from . import for_all, shared_profile_dir
+from ..emulators import EmulatorWrapper
+from . import for_all
 
 SOURCE_ASK = 0
 SOURCE_DEVICE = 1
@@ -43,37 +43,35 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
-def emulator(tag: str, model: str) -> Iterator[Emulator]:
-    with shared_profile_dir() as profile_dir:
-        with EmulatorWrapper(
-            model,
-            tag=tag,
-            profile_dir=profile_dir,
-            prefer_nested=is_tropic_capable_model(model),
-        ) as emu:
-            # set up a passphrase-protected device
-            device.setup(
-                emu.client.get_seedless_session(),
-                pin_protection=False,
-                skip_backup=True,
-                entropy_check_count=0,
-                backup_type=messages.BackupType.Bip39,
-            )
-            emu.client.client._invalidate()
-            resp = emu.client.get_seedless_session().call(
-                ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)
-            )
-            assert isinstance(resp, messages.Success)
+def emulator(tag: str, model: str, shared_profile_dir) -> Iterator[Emulator]:
+    with EmulatorWrapper(
+        model,
+        tag=tag,
+        profile_dir=shared_profile_dir,
+    ) as emu:
+        # set up a passphrase-protected device
+        device.setup(
+            emu.client.get_seedless_session(),
+            pin_protection=False,
+            skip_backup=True,
+            entropy_check_count=0,
+            backup_type=messages.BackupType.Bip39,
+        )
+        emu.client.client._invalidate()
+        resp = emu.client.get_seedless_session().call(
+            ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)
+        )
+        assert isinstance(resp, messages.Success)
 
-            yield emu
+        yield emu
 
 
 @for_all(
     "T1B1",
     "T2T1",
     "T3W1",
-    legacy_minimum_version=models.TREZOR_ONE.minimum_version,
-    core_minimum_version=models.TREZOR_T.minimum_version,
+    t1b1_minimum_version=models.T1B1.minimum_version,
+    t2t1_minimum_version=models.T2T1.minimum_version,
 )
 def test_passphrase_works(emulator: Emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
@@ -116,8 +114,8 @@ def test_passphrase_works(emulator: Emulator):
     "T1B1",
     "T2T1",
     "T3W1",
-    legacy_minimum_version=(1, 9, 0),
-    core_minimum_version=models.TREZOR_T.minimum_version,
+    t1b1_minimum_version=(1, 9, 0),
+    t2t1_minimum_version=models.T2T1.minimum_version,
 )
 def test_init_device(emulator: Emulator):
     """Check that passphrase caching and session_id retaining works correctly across

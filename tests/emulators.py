@@ -52,6 +52,11 @@ def is_tropic_capable_model(model_internal_name: str | None) -> bool:
 
 
 def gen_from_model(model_internal_name: str) -> str:
+    # Accept "core" and "legacy" directly for backward compatibility
+    # with callers that don't know the specific model (e.g., local builds).
+    if model_internal_name in ("core", "legacy"):
+        return model_internal_name
+
     # Compare by internal_name string, not by object equality,
     # because the models module may be patched during tests
     legacy_names = {m.internal_name for m in LEGACY_MODELS}
@@ -104,8 +109,6 @@ def get_emulator_path(
     gen: str,
     model: str,
     tag: str,
-    *,
-    prefer_nested: bool = False,
 ) -> Path:
     expected_name = f"trezor-emu-{gen}-{model}-{tag}"
     top_level_path = BINDIR / model / expected_name
@@ -113,25 +116,21 @@ def get_emulator_path(
         p for p in (BINDIR / model).glob(f"*/{expected_name}") if p.is_file()
     )
 
-    if prefer_nested:
+    if is_tropic_capable_model(model):
         if nested_paths:
             return nested_paths[0]
         raise ValueError(
             f"tropic-capable emulator executable not found: {BINDIR / model / '*/' / expected_name}"
         )
     else:
-        if top_level_path.exists():
-            return top_level_path
-        if nested_paths:
-            return nested_paths[0]
-
-    return top_level_path
+        return top_level_path
 
 
-def get_tags(*, prefer_nested: bool = False) -> dict[str, list[str]]:
+def get_tags() -> dict[str, list[str]]:
     result = defaultdict(list)
     for model_dir in sorted(p for p in BINDIR.iterdir() if p.is_dir()):
         seen_tags = set()
+        model_name = model_dir.name
 
         top_level_files = sorted(
             p for p in model_dir.glob("trezor-emu-*") if p.is_file()
@@ -140,7 +139,7 @@ def get_tags(*, prefer_nested: bool = False) -> dict[str, list[str]]:
             p for p in model_dir.glob("*/trezor-emu-*") if p.is_file()
         )
 
-        if prefer_nested:
+        if is_tropic_capable_model(model_name):
             files = nested_files
         else:
             files = [*top_level_files, *nested_files]
@@ -186,9 +185,8 @@ class EmulatorWrapper:
 
     def __init__(
         self,
-        gen_or_model: str | None,
+        model: str | None,
         tag: str | None = None,
-        model: str | None = None,
         storage: bytes | None = None,
         profile_dir: tempfile.TemporaryDirectory | None = None,
         worker_id: int = 0,
@@ -196,25 +194,18 @@ class EmulatorWrapper:
         auto_interact: bool = True,
         main_args: Sequence[str] = ("-m", "main"),
         launch_tropic_model: bool | None = None,
-        prefer_nested: bool = False,
     ) -> None:
 
-        if gen_or_model is None:
-            raise ValueError("Either emulator gen or model must be provided")
+        if model is None:
+            raise ValueError("Model must be provided")
 
-        if gen_or_model in ("core", "legacy"):
-            gen = gen_or_model
-        else:
-            model = gen_or_model
-            gen = gen_from_model(model)
+        gen = gen_from_model(model)
 
         if launch_tropic_model is None:
             launch_tropic_model = is_tropic_capable_model(model)
 
-        if tag is not None and model is not None:
-            executable = get_emulator_path(
-                gen, model, tag, prefer_nested=prefer_nested
-            )
+        if tag is not None:
+            executable = get_emulator_path(gen, model, tag)
         else:
             executable = LOCAL_BUILD_PATHS[gen]
 
