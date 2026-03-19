@@ -5,7 +5,7 @@
 
 typedef struct {
   uint8_t width, height;
-  const uint8_t *data;
+  const uint8_t* data;
 } BITMAP;
 
 extern const BITMAP bmp_btn_cancel;

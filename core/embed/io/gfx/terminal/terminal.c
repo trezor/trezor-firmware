@@ -79,7 +79,7 @@ static term_glyph_bits_t term_glyph_bits(char ch) {
   term_glyph_bits_t result = {0};
 
   if (ch > 32 && (uint8_t)ch < 128) {
-    const uint8_t *b = &Font_Bitmap[(ch - ' ') * 5];
+    const uint8_t* b = &Font_Bitmap[(ch - ' ') * 5];
 
     for (int y = 0; y < 7; y++) {
       uint8_t mask = 1 << y;
@@ -97,7 +97,7 @@ static term_glyph_bits_t term_glyph_bits(char ch) {
   term_glyph_bits_t result = {0};
 
   if (ch > 32 && (uint8_t)ch < 128) {
-    const uint8_t *b = &Font_Bitmap[(ch - ' ') * 5];
+    const uint8_t* b = &Font_Bitmap[(ch - ' ') * 5];
 
     for (int y = 0; y < 7; y++) {
       uint8_t mask = 1 << y;
@@ -149,7 +149,7 @@ static void term_redraw_rows(int start_row, int row_count) {
 }
 
 // display text using bitmap font
-void term_nprint(const char *text, int textlen) {
+void term_nprint(const char* text, int textlen) {
   static uint8_t row = 0, col = 0;
 
   // print characters to internal buffer (terminal_fb)
@@ -206,7 +206,7 @@ void term_nprint(const char *text, int textlen) {
   display_refresh();
 }
 
-void term_print(const char *text) { term_nprint(text, strlen(text)); }
+void term_print(const char* text) { term_nprint(text, strlen(text)); }
 
 void term_print_int32(int32_t value) {
   char buf[12] = "";
@@ -214,7 +214,7 @@ void term_print_int32(int32_t value) {
   term_print(buf);
 }
 
-void term_printf(const char *fmt, ...) {
+void term_printf(const char* fmt, ...) {
   va_list va;
   va_start(va, fmt);
   char buf[256] = {0};

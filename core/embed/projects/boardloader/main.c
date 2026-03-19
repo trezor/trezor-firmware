@@ -272,17 +272,17 @@ static inline void ensure_signed_bootloader(
 
 #else
 static inline void ensure_signed_bootloader(
-    volatile uint32_t *next_stage_addr) {
+    volatile uint32_t* next_stage_addr) {
   *next_stage_addr = 0;
 
   // Start with some non-deterministic delay
   fih_delay(0);
 
-  const image_header *hdr = read_image_header(
-      (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
+  const image_header* hdr = read_image_header(
+      (const uint8_t*)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
       flash_area_get_size(&BOOTLOADER_AREA));
 
-  fih_ensure(hdr == (const image_header *)BOOTLOADER_START ? sectrue : secfalse,
+  fih_ensure(hdr == (const image_header*)BOOTLOADER_START ? sectrue : secfalse,
              "invalid bootloader header");
 
   fih_ensure(check_bootloader_header_sig(hdr), "invalid bootloader signature");

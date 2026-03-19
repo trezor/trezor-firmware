@@ -117,7 +117,7 @@ static secbool is_manufacturing_mode(void) {
 
   vendor_header vhdr;
   memset(&vhdr, 0, sizeof(vhdr));
-  (void)!read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr);
+  (void)!read_vendor_header((const uint8_t*)FIRMWARE_START, &vhdr);
 
   if ((vhdr.vtrust & VTRUST_ALLOW_PROVISIONING) != VTRUST_ALLOW_PROVISIONING) {
     return secfalse;
@@ -136,7 +136,7 @@ static secbool is_manufacturing_mode(void) {
 }
 
 static void display_touch_init(secbool manufacturing_mode,
-                               secbool *touch_initialized) {
+                               secbool* touch_initialized) {
   display_init(DISPLAY_RESET_CONTENT);
 
 #ifdef USE_TOUCH
@@ -309,7 +309,7 @@ static secbool boot_sequence(void) {
 }
 
 static void drivers_init(secbool manufacturing_mode,
-                         secbool *touch_initialized) {
+                         secbool* touch_initialized) {
   random_delays_init();
 #ifdef USE_PVD
   pvd_init();
@@ -374,10 +374,10 @@ static void drivers_deinit(void) {
 void failed_jump_to_firmware(void) { error_shutdown("(glitch)"); }
 
 void real_jump_to_firmware(void) {
-  const image_header *hdr = NULL;
+  const image_header* hdr = NULL;
   vendor_header vhdr = {0};
 
-  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr),
+  ensure(read_vendor_header((const uint8_t*)FIRMWARE_START, &vhdr),
          "Firmware is corrupted");
 
   ensure(check_vendor_header_keys(&vhdr), "Firmware is corrupted");
@@ -385,10 +385,10 @@ void real_jump_to_firmware(void) {
   ensure(check_vendor_header_lock(&vhdr), "Unauthorized vendor keys");
 
   hdr =
-      read_image_header((const uint8_t *)(size_t)(FIRMWARE_START + vhdr.hdrlen),
+      read_image_header((const uint8_t*)(size_t)(FIRMWARE_START + vhdr.hdrlen),
                         FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
-  ensure(hdr == (const image_header *)(size_t)(FIRMWARE_START + vhdr.hdrlen)
+  ensure(hdr == (const image_header*)(size_t)(FIRMWARE_START + vhdr.hdrlen)
              ? sectrue
              : secfalse,
          "Firmware is corrupted");
@@ -410,8 +410,8 @@ void real_jump_to_firmware(void) {
 #ifdef USE_SECMON_VERIFICATION
   size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
                                                  IMAGE_HEADER_SIZE);
-  const secmon_header_t *secmon_hdr =
-      read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
+  const secmon_header_t* secmon_hdr =
+      read_secmon_header((const uint8_t*)secmon_start, FIRMWARE_MAXSIZE);
 
   if (secmon_hdr != NULL) {
     secmon_code_offset = IMAGE_CODE_ALIGN(SECMON_HEADER_SIZE);

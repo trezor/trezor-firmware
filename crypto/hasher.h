@@ -66,25 +66,25 @@ typedef struct {
     BLAKE2B_CTX blake2b;     // for HASHER_BLAKE2B{,_PERSONAL}
   } ctx;
 
-  const void *param;
+  const void* param;
   uint32_t param_size;
 } Hasher;
 
-void hasher_InitParam(Hasher *hasher, HasherType type, const void *param,
+void hasher_InitParam(Hasher* hasher, HasherType type, const void* param,
                       uint32_t param_size);
-void hasher_Init(Hasher *hasher, HasherType type);
-void hasher_Reset(Hasher *hasher);
-void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length);
-void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]);
+void hasher_Init(Hasher* hasher, HasherType type);
+void hasher_Reset(Hasher* hasher);
+void hasher_Update(Hasher* hasher, const uint8_t* data, size_t length);
+void hasher_Final(Hasher* hasher, uint8_t hash[HASHER_DIGEST_LENGTH]);
 
-void hasher_Raw(HasherType type, const uint8_t *data, size_t length,
+void hasher_Raw(HasherType type, const uint8_t* data, size_t length,
                 uint8_t hash[HASHER_DIGEST_LENGTH]);
 
 // Update the hash with an integer and also (statically) check that it has the
 // expected size.
 #define HASHER_UPDATE_INT(ctx, val, expected_type)                            \
   do {                                                                        \
-    hasher_Update((ctx), (const uint8_t *)&(val), sizeof(val));               \
+    hasher_Update((ctx), (const uint8_t*)&(val), sizeof(val));                \
     _Static_assert(sizeof(val) == sizeof(expected_type), "invalid int size"); \
   } while (0)
 

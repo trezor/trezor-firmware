@@ -39,7 +39,7 @@
 
 typedef struct {
   // Waiting task
-  systask_t *task;
+  systask_t* task;
   // Deadline for the task to be woken up
   uint32_t deadline;
   // Bitmask of events the task is waiting for
@@ -47,13 +47,13 @@ typedef struct {
   // Bitmask of events that were signaled
   sysevents_t signalled;
 
-  sysevents_t *signalled_arg;
+  sysevents_t* signalled_arg;
 
 } sysevent_poller_t;
 
 typedef struct {
-  const syshandle_vmt_t *vmt;
-  void *context;
+  const syshandle_vmt_t* vmt;
+  void* context;
 } sysevent_source_t;
 
 typedef struct {
@@ -69,9 +69,9 @@ typedef struct {
 
 sysevent_dispatcher_t g_sysevent_dispatcher = {0};
 
-bool syshandle_register(syshandle_t handle, const syshandle_vmt_t *vmt,
-                        void *context) {
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+bool syshandle_register(syshandle_t handle, const syshandle_vmt_t* vmt,
+                        void* context) {
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
 
   if (handle >= SYSHANDLE_COUNT || dispatcher->sources[handle].vmt != NULL) {
     return false;
@@ -83,7 +83,7 @@ bool syshandle_register(syshandle_t handle, const syshandle_vmt_t *vmt,
 }
 
 void syshandle_unregister(syshandle_t handle) {
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
 
   if (handle < SYSHANDLE_COUNT) {
     dispatcher->sources[handle].vmt = NULL;
@@ -91,14 +91,14 @@ void syshandle_unregister(syshandle_t handle) {
   }
 }
 
-ssize_t syshandle_read(syshandle_t handle, void *buffer, size_t buffer_size) {
+ssize_t syshandle_read(syshandle_t handle, void* buffer, size_t buffer_size) {
   if (handle >= SYSHANDLE_COUNT) {
     return -1;
   }
 
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
 
-  const sysevent_source_t *source = &dispatcher->sources[handle];
+  const sysevent_source_t* source = &dispatcher->sources[handle];
 
   if (source->vmt == NULL || source->vmt->read == NULL) {
     return -1;
@@ -107,15 +107,15 @@ ssize_t syshandle_read(syshandle_t handle, void *buffer, size_t buffer_size) {
   return source->vmt->read(source->context, buffer, buffer_size);
 }
 
-ssize_t syshandle_write(syshandle_t handle, const void *data,
+ssize_t syshandle_write(syshandle_t handle, const void* data,
                         size_t data_size) {
   if (handle >= SYSHANDLE_COUNT) {
     return false;
   }
 
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
 
-  const sysevent_source_t *source = &dispatcher->sources[handle];
+  const sysevent_source_t* source = &dispatcher->sources[handle];
 
   if (source->vmt == NULL || source->vmt->write == NULL) {
     return -1;
@@ -124,17 +124,17 @@ ssize_t syshandle_write(syshandle_t handle, const void *data,
   return source->vmt->write(source->context, data, data_size);
 }
 
-void syshandle_signal_read_ready(syshandle_t handle, void *param) {
+void syshandle_signal_read_ready(syshandle_t handle, void* param) {
   if (handle >= SYSHANDLE_COUNT) {
     return;
   }
 
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
-  const sysevent_source_t *source = &dispatcher->sources[handle];
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
+  const sysevent_source_t* source = &dispatcher->sources[handle];
 
   // For each polling task, call `check_read_ready` callback
   for (size_t i = 0; i < dispatcher->pollers_count; i++) {
-    sysevent_poller_t *poller = &dispatcher->pollers[i];
+    sysevent_poller_t* poller = &dispatcher->pollers[i];
     syshandle_mask_t handle_mask = 1 << handle;
     if ((poller->awaited.read_ready & handle_mask) != 0) {
       if (source->vmt->check_read_ready != NULL) {
@@ -149,17 +149,17 @@ void syshandle_signal_read_ready(syshandle_t handle, void *param) {
   }
 }
 
-void syshandle_signal_write_ready(syshandle_t handle, void *param) {
+void syshandle_signal_write_ready(syshandle_t handle, void* param) {
   if (handle >= SYSHANDLE_COUNT) {
     return;
   }
 
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
-  const sysevent_source_t *source = &dispatcher->sources[handle];
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
+  const sysevent_source_t* source = &dispatcher->sources[handle];
 
   // For each polling task, call `check_write_ready` callback
   for (size_t i = 0; i < dispatcher->pollers_count; i++) {
-    sysevent_poller_t *poller = &dispatcher->pollers[i];
+    sysevent_poller_t* poller = &dispatcher->pollers[i];
     syshandle_mask_t handle_mask = 1 << handle;
     if ((poller->awaited.write_ready & handle_mask) != 0) {
       if (source->vmt->check_write_ready != NULL) {
@@ -174,7 +174,7 @@ void syshandle_signal_write_ready(syshandle_t handle, void *param) {
   }
 }
 
-static inline void remove_poller(sysevent_dispatcher_t *dispatcher,
+static inline void remove_poller(sysevent_dispatcher_t* dispatcher,
                                  size_t idx) {
   for (size_t j = idx; j < dispatcher->pollers_count - 1; j++) {
     dispatcher->pollers[j] = dispatcher->pollers[j + 1];
@@ -182,7 +182,7 @@ static inline void remove_poller(sysevent_dispatcher_t *dispatcher,
   --dispatcher->pollers_count;
 }
 
-static inline void insert_poller(sysevent_dispatcher_t *dispatcher,
+static inline void insert_poller(sysevent_dispatcher_t* dispatcher,
                                  size_t idx) {
   if (dispatcher->pollers_count >= SYSTASK_MAX_TASKS) {
     // This should never happen since the number of pollers
@@ -199,14 +199,14 @@ static inline void insert_poller(sysevent_dispatcher_t *dispatcher,
   }
 }
 
-void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
+void sysevents_poll(const sysevents_t* awaited, sysevents_t* signalled,
                     uint32_t deadline) {
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
 
   memset(signalled, 0, sizeof(*signalled));
 
-  systask_t *kernel_task = systask_kernel();
-  systask_t *active_task = systask_active();
+  systask_t* kernel_task = systask_kernel();
+  systask_t* active_task = systask_active();
 
   // Determine task priority
   // - Kernel task has the highest priority so it is always first in the list
@@ -239,14 +239,14 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
 
     // Gather sources to poll
     for (size_t i = 0; i < dispatcher->pollers_count; i++) {
-      sysevent_poller_t *poller = &dispatcher->pollers[i];
+      sysevent_poller_t* poller = &dispatcher->pollers[i];
       handles_to_read |= poller->awaited.read_ready;
       handles_to_write |= poller->awaited.write_ready;
     }
 
     // Poll sources we are waiting for
     for (size_t handle = 0; handle < SYSHANDLE_COUNT; handle++) {
-      const sysevent_source_t *source = &dispatcher->sources[handle];
+      const sysevent_source_t* source = &dispatcher->sources[handle];
       if (source->vmt != NULL) {
         bool read_awaited = (handles_to_read & (1 << handle)) != 0;
         bool write_awaited = (handles_to_write & (1 << handle)) != 0;
@@ -262,13 +262,13 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
 
     // Choose the next task to run
     for (size_t prio = 0; prio < dispatcher->pollers_count; prio++) {
-      sysevent_poller_t *poller = &dispatcher->pollers[prio];
+      sysevent_poller_t* poller = &dispatcher->pollers[prio];
       bool timed_out = ((int32_t)(poller->deadline - now)) <= 0;
       bool ready = (poller->signalled.read_ready != 0) ||
                    (poller->signalled.write_ready != 0);
       if (ready || timed_out) {
         events_processed = true;
-        systask_t *task = poller->task;
+        systask_t* task = poller->task;
 #if defined(KERNEL) && !defined(TREZOR_EMULATOR)
         systask_set_mpu(task);
 #endif
@@ -297,12 +297,12 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
   }
 }
 
-void sysevents_notify_task_created(systask_t *task) {
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+void sysevents_notify_task_created(systask_t* task) {
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
   // Notify sources about the task being created
   systask_id_t task_id = systask_id(task);
   for (size_t i = 0; i < SYSHANDLE_COUNT; i++) {
-    const sysevent_source_t *source = &dispatcher->sources[i];
+    const sysevent_source_t* source = &dispatcher->sources[i];
     if (source->vmt != NULL && source->vmt->task_created != NULL) {
       source->vmt->task_created(source->context, task_id);
     }
@@ -310,8 +310,8 @@ void sysevents_notify_task_created(systask_t *task) {
 }
 
 // This routine may be called from the fault handler!!!
-void sysevents_notify_task_killed(systask_t *task) {
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+void sysevents_notify_task_killed(systask_t* task) {
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
   // Remove task from poller list
   // (kernel task is not included)
   for (size_t i = 0; i < dispatcher->pollers_count; i++) {
@@ -324,7 +324,7 @@ void sysevents_notify_task_killed(systask_t *task) {
   // Notify sources about the task being killed
   systask_id_t task_id = systask_id(task);
   for (size_t i = 0; i < SYSHANDLE_COUNT; i++) {
-    const sysevent_source_t *source = &dispatcher->sources[i];
+    const sysevent_source_t* source = &dispatcher->sources[i];
     if (source->vmt != NULL && source->vmt->task_killed != NULL) {
       source->vmt->task_killed(source->context, task_id);
     }
@@ -336,10 +336,10 @@ void sysevents_notify_task_killed(systask_t *task) {
 // Adds the current active taqsk to the polling list without waiting for any
 // specific events and with an immediate timeout of 0. This effectively
 // schedules the task to resume as soon as possible when the
-void sysevents_yield_and_reschedule(systask_t *task) {
-  sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
+void sysevents_yield_and_reschedule(systask_t* task) {
+  sysevent_dispatcher_t* dispatcher = &g_sysevent_dispatcher;
 
-  systask_t *active_task = systask_active();
+  systask_t* active_task = systask_active();
 
   if (active_task != systask_kernel()) {
     uint32_t prio = dispatcher->pollers_count;
@@ -360,7 +360,7 @@ void sysevents_yield_and_reschedule(systask_t *task) {
 
 #endif  // KERNEL_MODE
 
-ssize_t syshandle_read_blocking(syshandle_t handle, void *buffer,
+ssize_t syshandle_read_blocking(syshandle_t handle, void* buffer,
                                 size_t buffer_size, uint32_t timeout) {
   if (timeout > 0) {
     sysevents_t awaited = {.read_ready = 1 << handle};
@@ -370,14 +370,14 @@ ssize_t syshandle_read_blocking(syshandle_t handle, void *buffer,
   return syshandle_read(handle, buffer, buffer_size);
 }
 
-ssize_t syshandle_write_blocking(syshandle_t handle, const void *data,
+ssize_t syshandle_write_blocking(syshandle_t handle, const void* data,
                                  size_t data_size, uint32_t timeout) {
   if (timeout == 0) {
     return syshandle_write(handle, data, data_size);
   } else {
     ticks_t deadline = ticks_timeout(timeout);
 
-    const uint8_t *ptr = (const uint8_t *)data;
+    const uint8_t* ptr = (const uint8_t*)data;
     size_t remaining = data_size;
 
     // Send data in a loop until all data is sent or timeout occurs

@@ -114,15 +114,15 @@ uint32_t next_cid(void) {
 #define U2F_MAXIMUM_PAYLOAD_LENGTH 7609
 typedef struct {
   uint8_t buf[U2F_MAXIMUM_PAYLOAD_LENGTH];
-  uint8_t *buf_ptr;
+  uint8_t* buf_ptr;
   uint32_t len;
   uint8_t seq;
   uint8_t cmd;
 } U2F_ReadBuffer;
 
-U2F_ReadBuffer *reader;
+U2F_ReadBuffer* reader;
 
-void u2fhid_read(char tiny, const U2FHID_FRAME *f) {
+void u2fhid_read(char tiny, const U2FHID_FRAME* f) {
   // Always handle init packets directly
   if (f->init.cmd == U2FHID_INIT) {
     u2fhid_init(f);
@@ -169,7 +169,7 @@ void u2fhid_read(char tiny, const U2FHID_FRAME *f) {
   u2fhid_read_start(f);
 }
 
-void u2fhid_init_cmd(const U2FHID_FRAME *f) {
+void u2fhid_init_cmd(const U2FHID_FRAME* f) {
   reader->seq = 0;
   reader->buf_ptr = reader->buf;
   reader->len = MSG_LEN(*f);
@@ -179,7 +179,7 @@ void u2fhid_init_cmd(const U2FHID_FRAME *f) {
   cid = f->cid;
 }
 
-void u2fhid_read_start(const U2FHID_FRAME *f) {
+void u2fhid_read_start(const U2FHID_FRAME* f) {
   U2F_ReadBuffer readbuffer = {0};
   memzero(&readbuffer, sizeof(readbuffer));
 
@@ -231,7 +231,7 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
         u2fhid_ping(reader->buf, reader->len);
         break;
       case U2FHID_MSG:
-        u2fhid_msg((APDU *)reader->buf, reader->len);
+        u2fhid_msg((APDU*)reader->buf, reader->len);
         break;
       case U2FHID_WINK:
         u2fhid_wink(reader->buf, reader->len);
@@ -266,12 +266,12 @@ void u2fhid_read_start(const U2FHID_FRAME *f) {
   }
 }
 
-void u2fhid_ping(const uint8_t *buf, uint32_t len) {
+void u2fhid_ping(const uint8_t* buf, uint32_t len) {
   debugLog(0, "", "u2fhid_ping");
   send_u2fhid_msg(U2FHID_PING, buf, len);
 }
 
-void u2fhid_wink(const uint8_t *buf, uint32_t len) {
+void u2fhid_wink(const uint8_t* buf, uint32_t len) {
   debugLog(0, "", "u2fhid_wink");
   (void)buf;
 
@@ -287,8 +287,8 @@ void u2fhid_wink(const uint8_t *buf, uint32_t len) {
   queue_u2f_pkt(&f);
 }
 
-void u2fhid_init(const U2FHID_FRAME *in) {
-  const U2FHID_INIT_REQ *init_req = (const U2FHID_INIT_REQ *)&in->init.data;
+void u2fhid_init(const U2FHID_FRAME* in) {
+  const U2FHID_INIT_REQ* init_req = (const U2FHID_INIT_REQ*)&in->init.data;
   U2FHID_FRAME f = {0};
   U2FHID_INIT_RESP resp = {0};
   memzero(&resp, sizeof(resp));
@@ -318,7 +318,7 @@ void u2fhid_init(const U2FHID_FRAME *in) {
   queue_u2f_pkt(&f);
 }
 
-void queue_u2f_pkt(const U2FHID_FRAME *u2f_pkt) {
+void queue_u2f_pkt(const U2FHID_FRAME* u2f_pkt) {
   // debugLog(0, "", "u2f_write_pkt");
   uint32_t next = (u2f_out_end + 1) % U2F_OUT_PKT_BUFFER_LEN;
   if (u2f_out_start == next) {
@@ -329,7 +329,7 @@ void queue_u2f_pkt(const U2FHID_FRAME *u2f_pkt) {
   u2f_out_end = next;
 }
 
-uint8_t *u2f_out_data(void) {
+uint8_t* u2f_out_data(void) {
   if (u2f_out_start == u2f_out_end) return NULL;  // No data
   // debugLog(0, "", "u2f_out_data");
   uint32_t t = u2f_out_start;
@@ -337,7 +337,7 @@ uint8_t *u2f_out_data(void) {
   return u2f_out_packets[t];
 }
 
-void u2fhid_msg(const APDU *a, uint32_t len) {
+void u2fhid_msg(const APDU* a, uint32_t len) {
   if ((APDU_LEN(*a) + sizeof(APDU)) > len) {
     debugLog(0, "", "BAD APDU LENGTH");
     debugInt(APDU_LEN(*a));
@@ -366,7 +366,7 @@ void u2fhid_msg(const APDU *a, uint32_t len) {
   }
 }
 
-void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data,
+void send_u2fhid_msg(const uint8_t cmd, const uint8_t* data,
                      const uint32_t len) {
   if (len > U2F_MAXIMUM_PAYLOAD_LENGTH) {
     debugLog(0, "", "send_u2fhid_msg failed");
@@ -374,7 +374,7 @@ void send_u2fhid_msg(const uint8_t cmd, const uint8_t *data,
   }
 
   U2FHID_FRAME f = {0};
-  uint8_t *p = (uint8_t *)data;
+  uint8_t* p = (uint8_t*)data;
   uint32_t l = len;
   uint32_t psz = 0;
   uint8_t seq = 0;
@@ -421,7 +421,7 @@ void send_u2fhid_error(uint32_t fcid, uint8_t err) {
   queue_u2f_pkt(&f);
 }
 
-void u2f_version(const APDU *a) {
+void u2f_version(const APDU* a) {
   if (APDU_LEN(*a) != 0) {
     debugLog(0, "", "u2f version - badlen");
     send_u2f_error(U2F_SW_WRONG_LENGTH);
@@ -436,7 +436,7 @@ void u2f_version(const APDU *a) {
 }
 
 static void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE],
-                             const char **appname) {
+                             const char** appname) {
   static char buf[8 + 2 + 8 + 1];
 
   for (unsigned int i = 0; i < sizeof(u2f_well_known) / sizeof(U2FWellKnown);
@@ -453,7 +453,7 @@ static void getReadableAppId(const uint8_t appid[U2F_APPID_SIZE],
   *appname = buf;
 }
 
-static const HDNode *getDerivedNode(uint32_t *address_n,
+static const HDNode* getDerivedNode(uint32_t* address_n,
                                     size_t address_n_count) {
   static CONFIDENTIAL HDNode node;
   if (!config_getU2FRoot(&node)) {
@@ -474,7 +474,7 @@ static const HDNode *getDerivedNode(uint32_t *address_n,
   return &node;
 }
 
-static const HDNode *generateKeyHandle(const uint8_t app_id[],
+static const HDNode* generateKeyHandle(const uint8_t app_id[],
                                        uint8_t key_handle[]) {
   uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN] = {0};
 
@@ -489,7 +489,7 @@ static const HDNode *generateKeyHandle(const uint8_t app_id[],
   memcpy(key_handle, key_path, KEY_PATH_LEN);
 
   // prepare keypair from /random data
-  const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
+  const HDNode* node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
   if (!node) return NULL;
 
   // For second half of keyhandle
@@ -503,7 +503,7 @@ static const HDNode *generateKeyHandle(const uint8_t app_id[],
   return node;
 }
 
-static const HDNode *validateKeyHandle(const uint8_t app_id[],
+static const HDNode* validateKeyHandle(const uint8_t app_id[],
                                        const uint8_t key_handle[]) {
   uint32_t key_path[KEY_PATH_ENTRIES] = {0};
   memcpy(key_path, key_handle, KEY_PATH_LEN);
@@ -514,7 +514,7 @@ static const HDNode *validateKeyHandle(const uint8_t app_id[],
     }
   }
 
-  const HDNode *node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
+  const HDNode* node = getDerivedNode(key_path, KEY_PATH_ENTRIES);
   if (!node) return NULL;
 
   uint8_t keybase[U2F_APPID_SIZE + KEY_PATH_LEN] = {0};
@@ -532,9 +532,9 @@ static const HDNode *validateKeyHandle(const uint8_t app_id[],
   return node;
 }
 
-void u2f_register(const APDU *a) {
+void u2f_register(const APDU* a) {
   static U2F_REGISTER_REQ last_req;
-  const U2F_REGISTER_REQ *req = (U2F_REGISTER_REQ *)a->data;
+  const U2F_REGISTER_REQ* req = (U2F_REGISTER_REQ*)a->data;
 
   if (!config_isInitialized()) {
     send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
@@ -572,7 +572,7 @@ void u2f_register(const APDU *a) {
                      NULL);
       }
     } else {
-      const char *appname = NULL;
+      const char* appname = NULL;
       getReadableAppId(req->appId, &appname);
       layoutU2FDialog(_("Register"), appname);
     }
@@ -590,14 +590,14 @@ void u2f_register(const APDU *a) {
   // Buttons said yes
   if (last_req_state == REG_PASS) {
     uint8_t data[sizeof(U2F_REGISTER_RESP) + 2] = {0};
-    U2F_REGISTER_RESP *resp = (U2F_REGISTER_RESP *)&data;
+    U2F_REGISTER_RESP* resp = (U2F_REGISTER_RESP*)&data;
     memzero(data, sizeof(data));
 
     resp->registerId = U2F_REGISTER_ID;
     resp->keyHandleLen = KEY_HANDLE_LEN;
     // Generate keypair for this appId
-    const HDNode *node =
-        generateKeyHandle(req->appId, (uint8_t *)&resp->keyHandleCertSig);
+    const HDNode* node =
+        generateKeyHandle(req->appId, (uint8_t*)&resp->keyHandleCertSig);
 
     if (!node) {
       debugLog(0, "", "getDerivedNode Fail");
@@ -606,7 +606,7 @@ void u2f_register(const APDU *a) {
     }
 
     if (ecdsa_get_public_key65(node->curve->params, node->private_key,
-                               (uint8_t *)&resp->pubKey) != 0) {
+                               (uint8_t*)&resp->pubKey) != 0) {
       send_u2f_error(U2F_SW_WRONG_DATA);
       return;
     }
@@ -622,14 +622,14 @@ void u2f_register(const APDU *a) {
     memcpy(sig_base.keyHandle, &resp->keyHandleCertSig, KEY_HANDLE_LEN);
     memcpy(sig_base.pubKey, &resp->pubKey, U2F_PUBKEY_LEN);
     if (ecdsa_sign(&nist256p1, HASHER_SHA2, U2F_ATT_PRIV_KEY,
-                   (uint8_t *)&sig_base, sizeof(sig_base), sig, NULL,
+                   (uint8_t*)&sig_base, sizeof(sig_base), sig, NULL,
                    NULL) != 0) {
       send_u2f_error(U2F_SW_WRONG_DATA);
       return;
     }
 
     // Where to write the signature in the response
-    uint8_t *resp_sig =
+    uint8_t* resp_sig =
         resp->keyHandleCertSig + resp->keyHandleLen + sizeof(U2F_ATT_CERT);
     // Convert to der for the response
     const uint8_t sig_len = ecdsa_sig_to_der(sig, resp_sig);
@@ -652,8 +652,8 @@ void u2f_register(const APDU *a) {
   dialog_timeout = 0;
 }
 
-void u2f_authenticate(const APDU *a) {
-  const U2F_AUTHENTICATE_REQ *req = (U2F_AUTHENTICATE_REQ *)a->data;
+void u2f_authenticate(const APDU* a) {
+  const U2F_AUTHENTICATE_REQ* req = (U2F_AUTHENTICATE_REQ*)a->data;
   static U2F_AUTHENTICATE_REQ last_req;
 
   if (!config_isInitialized()) {
@@ -673,7 +673,7 @@ void u2f_authenticate(const APDU *a) {
     return;
   }
 
-  const HDNode *node = validateKeyHandle(req->appId, req->keyHandle);
+  const HDNode* node = validateKeyHandle(req->appId, req->keyHandle);
 
   if (!node) {
     debugLog(0, "", "u2f auth - bad keyhandle len");
@@ -708,7 +708,7 @@ void u2f_authenticate(const APDU *a) {
   if (last_req_state == INIT) {
     // error: testof-user-presence is required
     buttonUpdate();  // Clear button state
-    const char *appname = NULL;
+    const char* appname = NULL;
     getReadableAppId(req->appId, &appname);
     layoutU2FDialog(_("Authenticate"), appname);
     last_req_state = AUTH;
@@ -725,7 +725,7 @@ void u2f_authenticate(const APDU *a) {
   // Buttons said yes
   if (last_req_state == AUTH_PASS) {
     uint8_t buf[(sizeof(U2F_AUTHENTICATE_RESP)) + 2] = {0};
-    U2F_AUTHENTICATE_RESP *resp = (U2F_AUTHENTICATE_RESP *)&buf;
+    U2F_AUTHENTICATE_RESP* resp = (U2F_AUTHENTICATE_RESP*)&buf;
 
     const uint32_t ctr = config_nextU2FCounter();
     resp->flags = U2F_AUTH_FLAG_TUP;
@@ -742,7 +742,7 @@ void u2f_authenticate(const APDU *a) {
     memcpy(sig_base.ctr, resp->ctr, 4);
     memcpy(sig_base.chal, req->chal, U2F_CHAL_SIZE);
     if (ecdsa_sign(&nist256p1, HASHER_SHA2, node->private_key,
-                   (uint8_t *)&sig_base, sizeof(sig_base), sig, NULL,
+                   (uint8_t*)&sig_base, sizeof(sig_base), sig, NULL,
                    NULL) != 0) {
       send_u2f_error(U2F_SW_WRONG_DATA);
       return;
@@ -768,6 +768,6 @@ void send_u2f_error(const uint16_t err) {
   send_u2f_msg(data, 2);
 }
 
-void send_u2f_msg(const uint8_t *data, const uint32_t len) {
+void send_u2f_msg(const uint8_t* data, const uint32_t len) {
   send_u2fhid_msg(U2FHID_MSG, data, len);
 }

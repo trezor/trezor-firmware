@@ -62,7 +62,7 @@ CONFIDENTIAL static int32_t norcow_write_buffer_key = -1;
  * Writes data to given sector, starting from offset
  */
 static secbool write_item(uint8_t sector, uint32_t offset, uint16_t key,
-                          const uint8_t *data, uint16_t len, uint32_t *pos) {
+                          const uint8_t* data, uint16_t len, uint32_t* pos) {
   if (sector >= NORCOW_SECTOR_COUNT) {
     return secfalse;
   }
@@ -108,7 +108,7 @@ static secbool write_item(uint8_t sector, uint32_t offset, uint16_t key,
       // write the last block
       memset(block, 0xFF, sizeof(block));
       memcpy(block, data, len);
-      ((uint8_t *)block)[len] = NORCOW_VALID_FLAG;
+      ((uint8_t*)block)[len] = NORCOW_VALID_FLAG;
       ensure(flash_area_write_block(&STORAGE_AREAS[sector], offset, block),
              NULL);
     }
@@ -121,17 +121,17 @@ static secbool write_item(uint8_t sector, uint32_t offset, uint16_t key,
 /*
  * Reads one item starting from offset
  */
-static secbool read_item(uint8_t sector, uint32_t offset, uint16_t *key,
-                         const void **val, uint16_t *len, uint32_t *pos) {
+static secbool read_item(uint8_t sector, uint32_t offset, uint16_t* key,
+                         const void** val, uint16_t* len, uint32_t* pos) {
   *pos = offset;
 
-  const void *k = norcow_ptr(sector, *pos, NORCOW_KEY_LEN);
+  const void* k = norcow_ptr(sector, *pos, NORCOW_KEY_LEN);
   if (k == NULL) {
     return secfalse;
   }
   *pos += NORCOW_KEY_LEN;
 
-  const void *l = norcow_ptr(sector, *pos, NORCOW_LEN_LEN);
+  const void* l = norcow_ptr(sector, *pos, NORCOW_LEN_LEN);
   if (l == NULL) return secfalse;
   memcpy(len, l, sizeof(uint16_t));
 
@@ -146,12 +146,12 @@ static secbool read_item(uint8_t sector, uint32_t offset, uint16_t *key,
 
     uint32_t flg_pos = *pos + *len;
 
-    const void *flg = norcow_ptr(sector, flg_pos, NORCOW_VALID_FLAG_LEN);
+    const void* flg = norcow_ptr(sector, flg_pos, NORCOW_VALID_FLAG_LEN);
     if (flg == NULL) {
       return secfalse;
     }
 
-    if (*((const uint8_t *)flg) != NORCOW_VALID_FLAG) {
+    if (*((const uint8_t*)flg) != NORCOW_VALID_FLAG) {
       // Deleted item.
       *key = NORCOW_KEY_DELETED;
     } else {
@@ -172,7 +172,7 @@ static secbool read_item(uint8_t sector, uint32_t offset, uint16_t *key,
   return sectrue;
 }
 
-void norcow_delete_item(const flash_area_t *area, uint32_t len,
+void norcow_delete_item(const flash_area_t* area, uint32_t len,
                         uint32_t val_offset) {
   uint32_t end;
 
@@ -196,10 +196,10 @@ void norcow_delete_item(const flash_area_t *area, uint32_t len,
   ensure(flash_lock_write(), NULL);
 }
 
-static secbool flash_area_write_bytes(const flash_area_t *area, uint32_t offset,
-                                      uint16_t dest_len, const void *val,
+static secbool flash_area_write_bytes(const flash_area_t* area, uint32_t offset,
+                                      uint16_t dest_len, const void* val,
                                       uint16_t len) {
-  uint8_t *ptr = (uint8_t *)flash_area_get_address(area, offset, dest_len);
+  uint8_t* ptr = (uint8_t*)flash_area_get_address(area, offset, dest_len);
 
   if (val == NULL || ptr == NULL || dest_len != len) {
     return secfalse;
@@ -208,10 +208,10 @@ static secbool flash_area_write_bytes(const flash_area_t *area, uint32_t offset,
   return memcmp(val, ptr, len) == 0 ? sectrue : secfalse;
 }
 
-secbool norcow_next_counter(uint16_t key, uint32_t *count) {
+secbool norcow_next_counter(uint16_t key, uint32_t* count) {
   uint16_t len = 0;
-  const uint32_t *val_stored = NULL;
-  if (sectrue != norcow_get(key, (const void **)&val_stored, &len)) {
+  const uint32_t* val_stored = NULL;
+  if (sectrue != norcow_get(key, (const void**)&val_stored, &len)) {
     *count = 0;
     return norcow_set_counter(key, 0);
   }
@@ -237,9 +237,9 @@ secbool norcow_next_counter(uint16_t key, uint32_t *count) {
  * The new value is flashed by blocks, if the data
  * passed here do not fill the block it is stored until next call in buffer.
  */
-secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
+secbool norcow_update_bytes(const uint16_t key, const uint8_t* data,
                             const uint16_t len) {
-  const void *ptr = NULL;
+  const void* ptr = NULL;
   uint16_t allocated_len = 0;
   if (sectrue != find_item(norcow_write_sector, key, &ptr, &allocated_len)) {
     return secfalse;
@@ -251,10 +251,10 @@ secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
   }
 
   uint32_t sector_offset =
-      (const uint8_t *)ptr -
-      (const uint8_t *)norcow_ptr(norcow_write_sector, 0, NORCOW_SECTOR_SIZE);
+      (const uint8_t*)ptr -
+      (const uint8_t*)norcow_ptr(norcow_write_sector, 0, NORCOW_SECTOR_SIZE);
 
-  const flash_area_t *area = &STORAGE_AREAS[norcow_write_sector];
+  const flash_area_t* area = &STORAGE_AREAS[norcow_write_sector];
 
   if (norcow_write_buffer_key != key && norcow_write_buffer_key != -1) {
     // some other update bytes is in process, abort
@@ -280,7 +280,7 @@ secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
   while (tmp_len > 0) {
     uint16_t buffer_space = FLASH_BLOCK_SIZE - norcow_write_buffer_filled;
     uint16_t data_to_copy = (tmp_len > buffer_space ? buffer_space : tmp_len);
-    memcpy(&((uint8_t *)norcow_write_buffer)[norcow_write_buffer_filled], data,
+    memcpy(&((uint8_t*)norcow_write_buffer)[norcow_write_buffer_filled], data,
            data_to_copy);
     data += data_to_copy;
     norcow_write_buffer_filled += data_to_copy;
@@ -293,7 +293,7 @@ secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
     if (block_full || all_data_received) {
       if (!block_full) {
         // all data has been received, add valid flag to last block
-        ((uint8_t *)norcow_write_buffer)[norcow_write_buffer_filled] =
+        ((uint8_t*)norcow_write_buffer)[norcow_write_buffer_filled] =
             NORCOW_VALID_FLAG;
       }
 
@@ -305,7 +305,7 @@ secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
         // last block of data couldn't fit the valid flag, write it in next
         // block
         memset(norcow_write_buffer, 0xFF, sizeof(norcow_write_buffer));
-        ((uint8_t *)norcow_write_buffer)[0] = NORCOW_VALID_FLAG;
+        ((uint8_t*)norcow_write_buffer)[0] = NORCOW_VALID_FLAG;
         ensure(flash_area_write_block(area, flash_offset, norcow_write_buffer),
                NULL);
         flash_offset += FLASH_BLOCK_SIZE;

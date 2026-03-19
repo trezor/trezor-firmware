@@ -107,7 +107,7 @@ int display_get_orientation(void);
 
 typedef struct {
   // Pointer to the top-left pixel
-  void *ptr;
+  void* ptr;
   // Framebuffer size in bytes
   size_t size;
   // Stride in bytes
@@ -120,7 +120,7 @@ typedef struct {
 // the function may block until the buffer is ready to write.
 //
 // Return `false` if the framebuffer is not available.
-bool display_get_frame_buffer(display_fb_info_t *fb);
+bool display_get_frame_buffer(display_fb_info_t* fb);
 
 #else  // FRAMEBUFFER
 
@@ -146,17 +146,17 @@ void display_refresh(void);
 
 // Fills a rectangle with a solid color.
 // This function is supported by all types of displays.
-void display_fill(const gfx_bitblt_t *bb);
+void display_fill(const gfx_bitblt_t* bb);
 // Copies an RGB565 bitmap.
 // This function is supported by RGB displays only.
-void display_copy_rgb565(const gfx_bitblt_t *bb);
+void display_copy_rgb565(const gfx_bitblt_t* bb);
 // Copies a MONO1P bitmap.
 // This function is supported by all types of displays.
-void display_copy_mono1p(const gfx_bitblt_t *bb);
+void display_copy_mono1p(const gfx_bitblt_t* bb);
 
 #ifdef TREZOR_EMULATOR
 // Save the screen content to a file.
 // The function is available only on the emulator.
-void display_save(const char *prefix);
+void display_save(const char* prefix);
 
 #endif

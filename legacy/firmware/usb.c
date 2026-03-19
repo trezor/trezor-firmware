@@ -82,7 +82,7 @@ enum {
 #undef X
 
 #define X(name, value) value,
-static const char *usb_strings[] = {USB_STRINGS};
+static const char* usb_strings[] = {USB_STRINGS};
 #undef X
 
 static const struct usb_device_descriptor dev_descr = {
@@ -129,19 +129,19 @@ static const struct {
     uint8_t bReportDescriptorType;
     uint16_t wDescriptorLength;
   } __attribute__((packed)) hid_report_u2f;
-} __attribute__((packed))
-hid_function_u2f = {.hid_descriptor_u2f =
-                        {
-                            .bLength = sizeof(hid_function_u2f),
-                            .bDescriptorType = USB_DT_HID,
-                            .bcdHID = 0x0111,
-                            .bCountryCode = 0,
-                            .bNumDescriptors = 1,
-                        },
-                    .hid_report_u2f = {
-                        .bReportDescriptorType = USB_DT_REPORT,
-                        .wDescriptorLength = sizeof(hid_report_descriptor_u2f),
-                    }};
+} __attribute__((packed)) hid_function_u2f = {
+    .hid_descriptor_u2f =
+        {
+            .bLength = sizeof(hid_function_u2f),
+            .bDescriptorType = USB_DT_HID,
+            .bcdHID = 0x0111,
+            .bCountryCode = 0,
+            .bNumDescriptors = 1,
+        },
+    .hid_report_u2f = {
+        .bReportDescriptorType = USB_DT_REPORT,
+        .wDescriptorLength = sizeof(hid_report_descriptor_u2f),
+    }};
 
 static const struct usb_endpoint_descriptor hid_endpoints_u2f[2] = {
     {
@@ -285,8 +285,8 @@ static volatile char tiny = 0;
 #if U2F_ENABLED
 
 static enum usbd_request_return_codes hid_control_request(
-    usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len,
-    usbd_control_complete_callback *complete) {
+    usbd_device* dev, struct usb_setup_data* req, uint8_t** buf, uint16_t* len,
+    usbd_control_complete_callback* complete) {
   (void)complete;
   (void)dev;
 
@@ -297,12 +297,12 @@ static enum usbd_request_return_codes hid_control_request(
     return 0;
 
   debugLog(0, "", "hid_control_request u2f");
-  *buf = (uint8_t *)hid_report_descriptor_u2f;
+  *buf = (uint8_t*)hid_report_descriptor_u2f;
   *len = MIN_8bits(*len, sizeof(hid_report_descriptor_u2f));
   return 1;
 }
 
-static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
+static void u2f_rx_callback(usbd_device* dev, uint8_t ep) {
   (void)ep;
   static CONFIDENTIAL uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
 
@@ -310,12 +310,12 @@ static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
   if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, sizeof(buf)) !=
       USB_PACKET_SIZE)
     return;
-  u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
+  u2fhid_read(tiny, (const U2FHID_FRAME*)(void*)buf);
 }
 
 #endif
 
-static void main_rx_callback(usbd_device *dev, uint8_t ep) {
+static void main_rx_callback(usbd_device* dev, uint8_t ep) {
   (void)ep;
   static CONFIDENTIAL uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
   if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, sizeof(buf)) !=
@@ -331,7 +331,7 @@ static void main_rx_callback(usbd_device *dev, uint8_t ep) {
 
 #if DEBUG_LINK
 
-static void debug_rx_callback(usbd_device *dev, uint8_t ep) {
+static void debug_rx_callback(usbd_device* dev, uint8_t ep) {
   (void)ep;
   static uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
   if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_DEBUG_OUT, buf, sizeof(buf)) !=
@@ -347,7 +347,7 @@ static void debug_rx_callback(usbd_device *dev, uint8_t ep) {
 
 #endif
 
-static void set_config(usbd_device *dev, uint16_t wValue) {
+static void set_config(usbd_device* dev, uint16_t wValue) {
   (void)wValue;
 
   usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_IN, USB_ENDPOINT_ATTR_INTERRUPT,
@@ -373,12 +373,12 @@ static void set_config(usbd_device *dev, uint16_t wValue) {
 #endif
 }
 
-static usbd_device *usbd_dev = NULL;
+static usbd_device* usbd_dev = NULL;
 static uint8_t usbd_control_buffer[256] __attribute__((aligned(2)));
 
-static const struct usb_device_capability_descriptor *capabilities[] = {
-    (const struct usb_device_capability_descriptor
-         *)&webusb_platform_capability_descriptor_no_landing,
+static const struct usb_device_capability_descriptor* capabilities[] = {
+    (const struct
+     usb_device_capability_descriptor*)&webusb_platform_capability_descriptor_no_landing,
 };
 
 static const struct usb_bos_descriptor bos_descriptor = {
@@ -393,7 +393,7 @@ void usbInit(void) {
                        usbd_control_buffer, sizeof(usbd_control_buffer));
   usbd_register_set_config_callback(usbd_dev, set_config);
   usb21_setup(usbd_dev, &bos_descriptor);
-  static const char *origin_url = "trezor.io/start";
+  static const char* origin_url = "trezor.io/start";
   webusb_setup(usbd_dev, origin_url);
   // Debug link interface does not have WinUSB set;
   // if you really need debug link on windows, edit the descriptor in winusb.c
@@ -405,7 +405,7 @@ void usbPoll(void) {
     return;
   }
 
-  static const uint8_t *data;
+  static const uint8_t* data;
   // poll read buffer
   usbd_poll(usbd_dev);
   // write pending data
@@ -463,7 +463,7 @@ void usbFlush(uint32_t millis) {
     return;
   }
 
-  static const uint8_t *data;
+  static const uint8_t* data;
   data = msg_out_data();
   if (data) {
     while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data,

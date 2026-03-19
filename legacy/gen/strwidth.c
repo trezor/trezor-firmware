@@ -15,8 +15,8 @@ static inline char convert(char c) {
   }
 }
 
-int main(int argc, char **argv) {
-  char *line = NULL;
+int main(int argc, char** argv) {
+  char* line = NULL;
   int font = FONT_STANDARD;
   while ((line = readline(NULL)) != NULL) {
     size_t length = strlen(line);

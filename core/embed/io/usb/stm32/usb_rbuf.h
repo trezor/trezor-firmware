@@ -23,11 +23,11 @@
 
 /** Ring buffer structure */
 typedef struct {
-  uint8_t *buf;
+  uint8_t* buf;
   size_t cap;
   size_t used;
-  uint8_t *rptr;
-  uint8_t *wptr;
+  uint8_t* rptr;
+  uint8_t* wptr;
 } usb_rbuf_t;
 
 /**
@@ -40,7 +40,7 @@ typedef struct {
  * @param buf Pointer to the buffer memory.
  * @param buf_size Size of the buffer memory in bytes.
  */
-void usb_rbuf_init(usb_rbuf_t *b, uint8_t *buf, size_t buf_size);
+void usb_rbuf_init(usb_rbuf_t* b, uint8_t* buf, size_t buf_size);
 
 /**
  * @brief Reset the ring buffer to an empty state.
@@ -50,7 +50,7 @@ void usb_rbuf_init(usb_rbuf_t *b, uint8_t *buf, size_t buf_size);
  *
  * @param b Pointer to the ring buffer structure to reset.
  */
-void usb_rbuf_reset(usb_rbuf_t *b);
+void usb_rbuf_reset(usb_rbuf_t* b);
 
 /**
  * @brief Get the number of bytes used in the ring buffer.
@@ -58,7 +58,7 @@ void usb_rbuf_reset(usb_rbuf_t *b);
  * @param b Pointer to the ring buffer structure.
  * @return Number of bytes used in the ring buffer.
  */
-size_t usb_rbuf_used_bytes(usb_rbuf_t *b);
+size_t usb_rbuf_used_bytes(usb_rbuf_t* b);
 
 /**
  * @brief Get the number of unused bytes in the ring buffer.
@@ -66,7 +66,7 @@ size_t usb_rbuf_used_bytes(usb_rbuf_t *b);
  * @param b Pointer to the ring buffer structure.
  * @return Number of unused bytes in the ring buffer.
  */
-size_t usb_rbuf_unused_bytes(usb_rbuf_t *b);
+size_t usb_rbuf_unused_bytes(usb_rbuf_t* b);
 
 /**
  * @brief Check if the ring buffer is empty.
@@ -74,7 +74,7 @@ size_t usb_rbuf_unused_bytes(usb_rbuf_t *b);
  * @param b Pointer to the ring buffer structure.
  * @return true if the ring buffer is empty, false otherwise.
  */
-bool usb_rbuf_is_empty(usb_rbuf_t *b);
+bool usb_rbuf_is_empty(usb_rbuf_t* b);
 
 /**
  * @brief Check if the ring buffer is full.
@@ -82,7 +82,7 @@ bool usb_rbuf_is_empty(usb_rbuf_t *b);
  * @param b Pointer to the ring buffer structure.
  * @return true if the ring buffer is full, false otherwise.
  */
-bool usb_rbuf_is_full(usb_rbuf_t *b);
+bool usb_rbuf_is_full(usb_rbuf_t* b);
 
 /**
  * @brief Read data from the ring buffer.
@@ -95,7 +95,7 @@ bool usb_rbuf_is_full(usb_rbuf_t *b);
  * @param buf_size Size of the buffer in bytes.
  * @return Number of bytes actually read from the ring buffer.
  */
-size_t usb_rbuf_read(usb_rbuf_t *b, uint8_t *buf, size_t buf_size);
+size_t usb_rbuf_read(usb_rbuf_t* b, uint8_t* buf, size_t buf_size);
 
 /**
  * @brief Write data to the ring buffer.
@@ -108,4 +108,4 @@ size_t usb_rbuf_read(usb_rbuf_t *b, uint8_t *buf, size_t buf_size);
  * @param data_size Size of the data in bytes.
  * @return Number of bytes actually written to the ring buffer.
  */
-size_t usb_rbuf_write(usb_rbuf_t *b, const uint8_t *data, size_t data_size);
+size_t usb_rbuf_write(usb_rbuf_t* b, const uint8_t* data, size_t data_size);

@@ -35,8 +35,8 @@ struct MessagesMap_t {
   char type;  // n = normal, d = debug
   char dir;   // i = in, o = out
   uint16_t msg_id;
-  const pb_msgdesc_t *fields;
-  void (*process_func)(const void *ptr);
+  const pb_msgdesc_t* fields;
+  void (*process_func)(const void* ptr);
 };
 
 static const struct MessagesMap_t MessagesMap[] = {
@@ -46,8 +46,8 @@ static const struct MessagesMap_t MessagesMap[] = {
 
 #include "messages_map_limits.h"
 
-const pb_msgdesc_t *MessageFields(char type, char dir, uint16_t msg_id) {
-  const struct MessagesMap_t *m = MessagesMap;
+const pb_msgdesc_t* MessageFields(char type, char dir, uint16_t msg_id) {
+  const struct MessagesMap_t* m = MessagesMap;
   while (m->type) {
     if (type == m->type && dir == m->dir && msg_id == m->msg_id) {
       return m->fields;
@@ -57,8 +57,8 @@ const pb_msgdesc_t *MessageFields(char type, char dir, uint16_t msg_id) {
   return 0;
 }
 
-void MessageProcessFunc(char type, char dir, uint16_t msg_id, void *ptr) {
-  const struct MessagesMap_t *m = MessagesMap;
+void MessageProcessFunc(char type, char dir, uint16_t msg_id, void* ptr) {
+  const struct MessagesMap_t* m = MessagesMap;
   while (m->type) {
     if (type == m->type && dir == m->dir && msg_id == m->msg_id) {
       m->process_func(ptr);
@@ -144,7 +144,7 @@ static inline void msg_debug_out_pad(void) {
 
 #endif
 
-static bool pb_callback_out(pb_ostream_t *stream, const uint8_t *buf,
+static bool pb_callback_out(pb_ostream_t* stream, const uint8_t* buf,
                             size_t count) {
   (void)stream;
   for (size_t i = 0; i < count; i++) {
@@ -155,7 +155,7 @@ static bool pb_callback_out(pb_ostream_t *stream, const uint8_t *buf,
 
 #if DEBUG_LINK
 
-static bool pb_debug_callback_out(pb_ostream_t *stream, const uint8_t *buf,
+static bool pb_debug_callback_out(pb_ostream_t* stream, const uint8_t* buf,
                                   size_t count) {
   (void)stream;
   for (size_t i = 0; i < count; i++) {
@@ -166,8 +166,8 @@ static bool pb_debug_callback_out(pb_ostream_t *stream, const uint8_t *buf,
 
 #endif
 
-bool msg_write_common(char type, uint16_t msg_id, const void *msg_ptr) {
-  const pb_msgdesc_t *fields = MessageFields(type, 'o', msg_id);
+bool msg_write_common(char type, uint16_t msg_id, const void* msg_ptr) {
+  const pb_msgdesc_t* fields = MessageFields(type, 'o', msg_id);
   if (!fields) {  // unknown message
     return false;
   }
@@ -178,7 +178,7 @@ bool msg_write_common(char type, uint16_t msg_id, const void *msg_ptr) {
   }
 
   void (*append)(uint8_t) = NULL;
-  bool (*pb_callback)(pb_ostream_t *, const uint8_t *, size_t);
+  bool (*pb_callback)(pb_ostream_t*, const uint8_t*, size_t);
 
   if (type == 'n') {
     append = msg_out_append;
@@ -220,8 +220,8 @@ enum {
   READSTATE_READING,
 };
 
-void msg_process(char type, uint16_t msg_id, const pb_msgdesc_t *fields,
-                 uint8_t *msg_encoded, uint32_t msg_encoded_size) {
+void msg_process(char type, uint16_t msg_id, const pb_msgdesc_t* fields,
+                 uint8_t* msg_encoded, uint32_t msg_encoded_size) {
   static uint8_t msg_decoded[MSG_IN_DECODED_SIZE] __attribute__((aligned(8)));
   memzero(msg_decoded, sizeof(msg_decoded));
   pb_istream_t stream = pb_istream_from_buffer(msg_encoded, msg_encoded_size);
@@ -233,13 +233,13 @@ void msg_process(char type, uint16_t msg_id, const pb_msgdesc_t *fields,
   }
 }
 
-void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
+void msg_read_common(char type, const uint8_t* buf, uint32_t len) {
   static char read_state = READSTATE_IDLE;
   static uint8_t msg_encoded[MSG_IN_ENCODED_SIZE];
   static uint16_t msg_id = 0xFFFF;
   static uint32_t msg_encoded_size = 0;
   static uint32_t msg_pos = 0;
-  static const pb_msgdesc_t *fields = 0;
+  static const pb_msgdesc_t* fields = 0;
 
   if (len != USB_PACKET_SIZE) return;
 
@@ -287,9 +287,9 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
   }
 }
 
-const uint8_t *msg_out_data(void) {
+const uint8_t* msg_out_data(void) {
   if (msg_out_start == msg_out_end) return 0;
-  uint8_t *data = msg_out + (msg_out_start * USB_PACKET_SIZE);
+  uint8_t* data = msg_out + (msg_out_start * USB_PACKET_SIZE);
   msg_out_start = (msg_out_start + 1) % (MSG_OUT_BUFFER_SIZE / USB_PACKET_SIZE);
   debugLog(0, "", "msg_out_data");
   return data;
@@ -297,9 +297,9 @@ const uint8_t *msg_out_data(void) {
 
 #if DEBUG_LINK
 
-const uint8_t *msg_debug_out_data(void) {
+const uint8_t* msg_debug_out_data(void) {
   if (msg_debug_out_start == msg_debug_out_end) return 0;
-  uint8_t *data = msg_debug_out + (msg_debug_out_start * USB_PACKET_SIZE);
+  uint8_t* data = msg_debug_out + (msg_debug_out_start * USB_PACKET_SIZE);
   msg_debug_out_start =
       (msg_debug_out_start + 1) % (MSG_DEBUG_OUT_BUFFER_SIZE / USB_PACKET_SIZE);
   debugLog(0, "", "msg_debug_out_data");
@@ -339,7 +339,7 @@ _Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + DebugLinkGetState_size,
 #endif
 uint16_t msg_tiny_id = 0xFFFF;
 
-void msg_read_tiny(const uint8_t *buf, int len) {
+void msg_read_tiny(const uint8_t* buf, int len) {
   if (len != USB_PACKET_SIZE || buf[0] != '?' || buf[1] != '#' ||
       buf[2] != '#') {
     // Ignore unexpected packets. This is helpful when two applications are
@@ -347,7 +347,7 @@ void msg_read_tiny(const uint8_t *buf, int len) {
     return;
   }
 
-  const pb_msgdesc_t *fields = NULL;
+  const pb_msgdesc_t* fields = NULL;
   uint16_t msg_id = (buf[3] << 8) + buf[4];
   switch (msg_id) {
     case MessageType_MessageType_PinMatrixAck:

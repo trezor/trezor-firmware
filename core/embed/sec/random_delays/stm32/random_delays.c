@@ -60,7 +60,7 @@ static void drbg_reseed() {
   memzero(entropy, sizeof(entropy));
 }
 
-static void drbg_generate(uint8_t *buffer, size_t length) {
+static void drbg_generate(uint8_t* buffer, size_t length) {
   ensure(drbg_initialized, NULL);
 
   if (drbg_ctx.reseed_counter > DRBG_RESEED_INTERVAL_CALLS) {
@@ -134,12 +134,12 @@ static void wait(uint32_t delay) {
 }
 
 // forward declaration
-static void rdi_handler(void *context);
+static void rdi_handler(void* context);
 
 void random_delays_init() {
   drbg_init();
 
-  systimer_t *timer = systimer_create(rdi_handler, NULL);
+  systimer_t* timer = systimer_create(rdi_handler, NULL);
   ensure(sectrue * (timer != NULL), "random_delays_init failed");
   systimer_set_periodic(timer, 1);
 }
@@ -165,7 +165,7 @@ void random_delays_refresh_rdi(void) {
     refresh_session_delay = true;
 }
 
-static void rdi_handler(void *context) {
+static void rdi_handler(void* context) {
   if (rdi_disabled == secfalse) {  // if rdi enabled
     if (refresh_session_delay) {
       session_delay = drbg_random8();

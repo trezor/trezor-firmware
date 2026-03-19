@@ -37,10 +37,10 @@
 #define EVAL(x) x
 
 // Defines flash_subarea_t structure
-#define SUBAREA(_first_sector, _end_sectors)             \
-  {                                                      \
-    .first_sector = (_first_sector),                     \
-    .num_sectors = (_end_sectors) - (_first_sector) + 1, \
+#define SUBAREA(_first_sector, _end_sectors)               \
+  {                                                        \
+      .first_sector = (_first_sector),                     \
+      .num_sectors = (_end_sectors) - (_first_sector) + 1, \
   }
 
 // Defines flash area containing 1 subarea

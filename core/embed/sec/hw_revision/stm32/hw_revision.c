@@ -104,7 +104,7 @@ void hw_revision_deinit(void) {
 }
 
 uint8_t hw_revision_get(void) {
-  hw_revision_t *hw_revision = &g_hw_revision;
+  hw_revision_t* hw_revision = &g_hw_revision;
   if (!hw_revision->initialized) {
     hw_revision_init();
   }

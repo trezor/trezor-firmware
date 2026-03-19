@@ -100,70 +100,70 @@ void session_clear(bool lock);
 void session_endCurrentSession(void);
 void config_lockDevice(void);
 
-void config_loadDevice(const LoadDevice *msg);
+void config_loadDevice(const LoadDevice* msg);
 
-const uint8_t *config_getSeed(void);
+const uint8_t* config_getSeed(void);
 
-bool config_setCoinJoinAuthorization(const AuthorizeCoinJoin *authorization);
+bool config_setCoinJoinAuthorization(const AuthorizeCoinJoin* authorization);
 MessageType config_getAuthorizationType(void);
-const AuthorizeCoinJoin *config_getCoinJoinAuthorization(void);
+const AuthorizeCoinJoin* config_getCoinJoinAuthorization(void);
 
-bool config_getU2FRoot(HDNode *node);
-bool config_getRootNode(HDNode *node, const char *curve);
+bool config_getU2FRoot(HDNode* node);
+bool config_getRootNode(HDNode* node, const char* curve);
 
-bool config_getLabel(char *dest, uint16_t dest_size);
-void config_setLabel(const char *label);
+bool config_getLabel(char* dest, uint16_t dest_size);
+void config_setLabel(const char* label);
 
-bool config_getLanguage(char *dest, uint16_t dest_size);
-void config_setLanguage(const char *lang);
+bool config_getLanguage(char* dest, uint16_t dest_size);
+void config_setLanguage(const char* lang);
 
 void config_setPassphraseProtection(bool passphrase_protection);
-bool config_getPassphraseProtection(bool *passphrase_protection);
+bool config_getPassphraseProtection(bool* passphrase_protection);
 
-bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
-void config_setHomescreen(const uint8_t *data, uint32_t size);
+bool config_getHomescreen(uint8_t* dest, uint16_t dest_size);
+void config_setHomescreen(const uint8_t* data, uint32_t size);
 
-uint8_t *session_startSession(const uint8_t *received_session_id);
+uint8_t* session_startSession(const uint8_t* received_session_id);
 
-bool config_setMnemonic(const char *mnemonic);
-bool config_containsMnemonic(const char *mnemonic);
+bool config_setMnemonic(const char* mnemonic);
+bool config_containsMnemonic(const char* mnemonic);
 bool config_hasMnemonic(void);
-bool config_getMnemonic(char *dest, uint16_t dest_size);
-bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size,
-                             uint16_t *real_size);
+bool config_getMnemonic(char* dest, uint16_t dest_size);
+bool config_getMnemonicBytes(uint8_t* dest, uint16_t dest_size,
+                             uint16_t* real_size);
 
 #if DEBUG_LINK
-bool config_dumpNode(HDNodeType *node);
-bool config_getPin(char *dest, uint16_t dest_size);
+bool config_dumpNode(HDNodeType* node);
+bool config_getPin(char* dest, uint16_t dest_size);
 #endif
 
-bool config_unlock(const char *pin);
+bool config_unlock(const char* pin);
 bool config_hasPin(void);
-bool config_changePin(const char *new_pin);
+bool config_changePin(const char* new_pin);
 bool session_isUnlocked(void);
 
 bool config_hasWipeCode(void);
-bool config_changeWipeCode(const char *pin, const char *wipe_code);
+bool config_changeWipeCode(const char* pin, const char* wipe_code);
 
 uint32_t config_nextU2FCounter(void);
 void config_setU2FCounter(uint32_t u2fcounter);
 
 bool config_isInitialized(void);
 
-bool config_getImported(bool *imported);
+bool config_getImported(bool* imported);
 void config_setImported(bool imported);
 
-bool config_getNeedsBackup(bool *needs_backup);
+bool config_getNeedsBackup(bool* needs_backup);
 void config_setNeedsBackup(bool needs_backup);
 
-bool config_getUnfinishedBackup(bool *unfinished_backup);
+bool config_getUnfinishedBackup(bool* unfinished_backup);
 void config_setUnfinishedBackup(bool unfinished_backup);
 
-bool config_getNoBackup(bool *no_backup);
+bool config_getNoBackup(bool* no_backup);
 void config_setNoBackup(void);
 
 void config_applyFlags(uint32_t flags);
-bool config_getFlags(uint32_t *flags);
+bool config_getFlags(uint32_t* flags);
 
 uint32_t config_getAutoLockDelayMs(void);
 void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms);

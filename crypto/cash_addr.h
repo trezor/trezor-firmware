@@ -35,7 +35,7 @@
  *      prog_size: Number of data bytes in prog.
  *  Returns 1 if successful.
  */
-int cash_addr_encode(char *output, const char *hrp, const uint8_t *prog,
+int cash_addr_encode(char* output, const char* hrp, const uint8_t* prog,
                      size_t prog_size);
 
 /** Decode a CashAddr address
@@ -49,8 +49,8 @@ int cash_addr_encode(char *output, const char *hrp, const uint8_t *prog,
  *      addr:       Pointer to the null-terminated address.
  *  Returns 1 if successful.
  */
-int cash_addr_decode(uint8_t *prog, size_t *prog_size, const char *hrp,
-                     const char *addr);
+int cash_addr_decode(uint8_t* prog, size_t* prog_size, const char* hrp,
+                     const char* addr);
 
 /** Encode a Cash string
  *
@@ -61,7 +61,7 @@ int cash_addr_decode(uint8_t *prog, size_t *prog_size, const char *hrp,
  *      data_size: Length of the data array.
  *  Returns 1 if successful.
  */
-int cash_encode(char *output, const char *hrp, const uint8_t *data,
+int cash_encode(char* output, const char* hrp, const uint8_t* data,
                 size_t data_size);
 
 /** Decode a Cash string
@@ -75,6 +75,6 @@ int cash_encode(char *output, const char *hrp, const uint8_t *data,
  *  In: input:      Pointer to a null-terminated Cash string.
  *  Returns 1 if succesful.
  */
-int cash_decode(char *hrp, uint8_t *data, size_t *data_size, const char *input);
+int cash_decode(char* hrp, uint8_t* data, size_t* data_size, const char* input);
 
 #endif

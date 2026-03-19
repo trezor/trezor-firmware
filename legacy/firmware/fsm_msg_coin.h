@@ -17,14 +17,14 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void fsm_msgGetPublicKey(const GetPublicKey *msg) {
+void fsm_msgGetPublicKey(const GetPublicKey* msg) {
   RESP_INIT(PublicKey);
 
   CHECK_PIN
 
   // Get temporary seed if running entropy check, otherwise ensure the device is
   // initialized.
-  const uint8_t *seed = reset_get_seed();
+  const uint8_t* seed = reset_get_seed();
   if (seed == NULL) {
     CHECK_INITIALIZED
   }
@@ -32,10 +32,10 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   InputScriptType script_type =
       msg->has_script_type ? msg->script_type : InputScriptType_SPENDADDRESS;
 
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  const CoinInfo* coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
 
-  const char *curve = coin->curve_name;
+  const char* curve = coin->curve_name;
   if (msg->has_ecdsa_curve_name) {
     curve = msg->ecdsa_curve_name;
   }
@@ -66,7 +66,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   // derive m/0' to obtain root_fingerprint
   uint32_t root_fingerprint;
   uint32_t path[1] = {PATH_HARDENED | 0};
-  HDNode *node = fsm_getDerivedNodeEx(curve, path, 1, seed, &root_fingerprint);
+  HDNode* node = fsm_getDerivedNodeEx(curve, path, 1, seed, &root_fingerprint);
   if (!node) return;
 
   uint32_t fingerprint;
@@ -141,7 +141,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     bool qrcode = false;
 
     while (page < 2) {
-      const char *show_xpub = resp->xpub;
+      const char* show_xpub = resp->xpub;
       if (script_type == InputScriptType_SPENDTAPROOT && resp->has_descriptor) {
         show_xpub = resp->descriptor;
       }
@@ -181,7 +181,7 @@ static PathSchema fsm_getUnlockedSchema(MessageType message_type) {
   }
 
   if (authorization_type == MessageType_MessageType_AuthorizeCoinJoin) {
-    const AuthorizeCoinJoin *authorization = config_getCoinJoinAuthorization();
+    const AuthorizeCoinJoin* authorization = config_getCoinJoinAuthorization();
     if (authorization == NULL ||
         authorization->address_n[0] != PATH_SLIP25_PURPOSE) {
       return SCHEMA_NONE;
@@ -204,7 +204,7 @@ static PathSchema fsm_getUnlockedSchema(MessageType message_type) {
   }
 }
 
-void fsm_msgSignTx(const SignTx *msg) {
+void fsm_msgSignTx(const SignTx* msg) {
   CHECK_INITIALIZED
 
   CHECK_PARAM(msg->inputs_count > 0,
@@ -214,7 +214,7 @@ void fsm_msgSignTx(const SignTx *msg) {
   CHECK_PARAM(msg->inputs_count + msg->outputs_count >= msg->inputs_count,
               _("Value overflow"));
 
-  const AuthorizeCoinJoin *authorization = NULL;
+  const AuthorizeCoinJoin* authorization = NULL;
   if (authorization_type == MessageType_MessageType_AuthorizeCoinJoin) {
     authorization = config_getCoinJoinAuthorization();
     if (authorization == NULL) {
@@ -226,7 +226,7 @@ void fsm_msgSignTx(const SignTx *msg) {
 
   PathSchema unlock = fsm_getUnlockedSchema(MessageType_MessageType_SignTx);
 
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  const CoinInfo* coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
 
   CHECK_PARAM((coin->decred || coin->overwintered) || !msg->has_expiry,
@@ -235,13 +235,13 @@ void fsm_msgSignTx(const SignTx *msg) {
               _("Timestamp not enabled on this coin."))
   CHECK_PARAM(!coin->timestamp || msg->timestamp, _("Timestamp must be set."))
 
-  const HDNode *node = fsm_getDerivedNode(coin->curve_name, NULL, 0, NULL);
+  const HDNode* node = fsm_getDerivedNode(coin->curve_name, NULL, 0, NULL);
   if (!node) return;
 
   signing_init(msg, coin, node, authorization, unlock);
 }
 
-void fsm_msgTxAck(TxAck *msg) {
+void fsm_msgTxAck(TxAck* msg) {
   if (!signing_is_preauthorized()) {
     CHECK_UNLOCKED
   }
@@ -251,8 +251,8 @@ void fsm_msgTxAck(TxAck *msg) {
   signing_txack(&(msg->tx));
 }
 
-bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
-                       uint32_t address_n_count, const uint32_t *address_n,
+bool fsm_checkCoinPath(const CoinInfo* coin, InputScriptType script_type,
+                       uint32_t address_n_count, const uint32_t* address_n,
                        bool has_multisig, MessageType message_type,
                        bool show_warning) {
   PathSchema unlock = fsm_getUnlockedSchema(message_type);
@@ -276,7 +276,7 @@ bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
   return true;
 }
 
-bool fsm_checkScriptType(const CoinInfo *coin, InputScriptType script_type) {
+bool fsm_checkScriptType(const CoinInfo* coin, InputScriptType script_type) {
   if (!is_internal_input_script_type(script_type)) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid script type"));
     return false;
@@ -297,14 +297,14 @@ bool fsm_checkScriptType(const CoinInfo *coin, InputScriptType script_type) {
   return true;
 }
 
-void fsm_msgGetAddress(const GetAddress *msg) {
+void fsm_msgGetAddress(const GetAddress* msg) {
   RESP_INIT(Address);
 
   CHECK_INITIALIZED
 
   CHECK_PIN
 
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  const CoinInfo* coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
 
   if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
@@ -315,7 +315,7 @@ void fsm_msgGetAddress(const GetAddress *msg) {
     return;
   }
 
-  HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
+  HDNode* node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
 
@@ -409,7 +409,7 @@ void fsm_msgGetAddress(const GetAddress *msg) {
   layoutHome();
 }
 
-void fsm_msgSignMessage(const SignMessage *msg) {
+void fsm_msgSignMessage(const SignMessage* msg) {
   // CHECK_PARAM(is_ascii_only(msg->message.bytes, msg->message.size), _("Cannot
   // sign non-ASCII strings"));
 
@@ -419,7 +419,7 @@ void fsm_msgSignMessage(const SignMessage *msg) {
 
   CHECK_PIN
 
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  const CoinInfo* coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
 
   if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
@@ -429,7 +429,7 @@ void fsm_msgSignMessage(const SignMessage *msg) {
     return;
   }
 
-  HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
+  HDNode* node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
 
@@ -474,8 +474,8 @@ void fsm_msgSignMessage(const SignMessage *msg) {
   layoutHome();
 }
 
-void fsm_msgVerifyMessage(const VerifyMessage *msg) {
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+void fsm_msgVerifyMessage(const VerifyMessage* msg) {
+  const CoinInfo* coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
   layoutProgressSwipe(_("Verifying"), 0);
   if (msg->signature.size != 65) {
@@ -517,9 +517,9 @@ void fsm_msgVerifyMessage(const VerifyMessage *msg) {
   layoutHome();
 }
 
-bool fsm_getOwnershipId(uint8_t *script_pubkey, size_t script_pubkey_size,
+bool fsm_getOwnershipId(uint8_t* script_pubkey, size_t script_pubkey_size,
                         uint8_t ownership_id[OWNERSHIP_ID_SIZE]) {
-  const char *OWNERSHIP_ID_KEY_PATH[] = {"SLIP-0019",
+  const char* OWNERSHIP_ID_KEY_PATH[] = {"SLIP-0019",
                                          "Ownership identification key"};
 
   uint8_t ownership_id_key[32] = {0};
@@ -533,14 +533,14 @@ bool fsm_getOwnershipId(uint8_t *script_pubkey, size_t script_pubkey_size,
   return true;
 }
 
-void fsm_msgGetOwnershipId(const GetOwnershipId *msg) {
+void fsm_msgGetOwnershipId(const GetOwnershipId* msg) {
   RESP_INIT(OwnershipId);
 
   CHECK_INITIALIZED
 
   CHECK_PIN
 
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  const CoinInfo* coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
 
   if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
@@ -555,7 +555,7 @@ void fsm_msgGetOwnershipId(const GetOwnershipId *msg) {
     return;
   }
 
-  HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
+  HDNode* node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
 
@@ -581,15 +581,15 @@ void fsm_msgGetOwnershipId(const GetOwnershipId *msg) {
   layoutHome();
 }
 
-void fsm_msgGetOwnershipProof(const GetOwnershipProof *msg) {
+void fsm_msgGetOwnershipProof(const GetOwnershipProof* msg) {
   RESP_INIT(OwnershipProof);
 
   CHECK_INITIALIZED
 
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  const CoinInfo* coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
 
-  const AuthorizeCoinJoin *authorization = NULL;
+  const AuthorizeCoinJoin* authorization = NULL;
   if (authorization_type == MessageType_MessageType_AuthorizeCoinJoin) {
     authorization = config_getCoinJoinAuthorization();
     if (authorization == NULL) {
@@ -637,7 +637,7 @@ void fsm_msgGetOwnershipProof(const GetOwnershipProof *msg) {
     return;
   }
 
-  HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
+  HDNode* node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
 
@@ -706,7 +706,7 @@ void fsm_msgGetOwnershipProof(const GetOwnershipProof *msg) {
   layoutHome();
 }
 
-void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg) {
+void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin* msg) {
   CHECK_INITIALIZED
 
   CHECK_PIN
@@ -715,7 +715,7 @@ void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg) {
   const uint64_t MAX_ROUNDS = 500;
   const uint64_t MAX_COORDINATOR_FEE_RATE = 5 * FEE_RATE_DECIMALS;  // 5 %
 
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  const CoinInfo* coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) {
     return;
   }
@@ -840,7 +840,7 @@ void fsm_msgAuthorizeCoinJoin(const AuthorizeCoinJoin *msg) {
   layoutHome();
 }
 
-void fsm_msgCancelAuthorization(const CancelAuthorization *msg) {
+void fsm_msgCancelAuthorization(const CancelAuthorization* msg) {
   (void)msg;
 
   if (!config_setCoinJoinAuthorization(NULL)) {
@@ -852,7 +852,7 @@ void fsm_msgCancelAuthorization(const CancelAuthorization *msg) {
   layoutHome();
 }
 
-void fsm_msgDoPreauthorized(const DoPreauthorized *msg) {
+void fsm_msgDoPreauthorized(const DoPreauthorized* msg) {
   (void)msg;
 
   RESP_INIT(PreauthorizedRequest);
@@ -871,7 +871,7 @@ void fsm_msgDoPreauthorized(const DoPreauthorized *msg) {
   layoutHome();
 }
 
-void fsm_msgUnlockPath(const UnlockPath *msg) {
+void fsm_msgUnlockPath(const UnlockPath* msg) {
   (void)msg;
 
   RESP_INIT(UnlockedPathRequest);
@@ -880,7 +880,7 @@ void fsm_msgUnlockPath(const UnlockPath *msg) {
 
   CHECK_PIN
 
-  const char *KEYCHAIN_MAC_KEY_PATH[] = {"TREZOR", "Keychain MAC key"};
+  const char* KEYCHAIN_MAC_KEY_PATH[] = {"TREZOR", "Keychain MAC key"};
 
   // UnlockPath is relevant only for SLIP-25 paths.
   // Note: Currently we only allow unlocking the entire SLIP-25 purpose subtree
@@ -900,7 +900,7 @@ void fsm_msgUnlockPath(const UnlockPath *msg) {
   HMAC_SHA256_CTX hctx;
   hmac_sha256_Init(&hctx, keychain_mac_key, sizeof(keychain_mac_key));
   for (size_t i = 0; i < msg->address_n_count; ++i) {
-    hmac_sha256_Update(&hctx, (const uint8_t *)&msg->address_n[i],
+    hmac_sha256_Update(&hctx, (const uint8_t*)&msg->address_n[i],
                        sizeof(uint32_t));
   }
   hmac_sha256_Final(&hctx, resp->mac.bytes);

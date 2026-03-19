@@ -21,6 +21,6 @@
 
 #include "../ipc_memcpy.h"
 
-void ipc_memcpy(void *dst, const void *src, size_t size) {
+void ipc_memcpy(void* dst, const void* src, size_t size) {
   memcpy(dst, src, size);
 }

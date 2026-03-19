@@ -100,7 +100,7 @@ static secbool secret_slot_public[SECRET_NUM_MAX_SLOTS] = {
 };
 
 static secbool secret_verify_header(void) {
-  uint8_t *addr = (uint8_t *)flash_area_get_address(
+  uint8_t* addr = (uint8_t*)flash_area_get_address(
       &SECRET_AREA, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
 
   if (addr == NULL) {
@@ -141,7 +141,7 @@ static secbool secret_ensure_initialized(void) {
   return sectrue;
 }
 
-secbool secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
+secbool secret_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_unlock_write(), "secret write");
   secbool result = flash_area_write_data(&SECRET_AREA, offset, data, len);
@@ -150,11 +150,11 @@ secbool secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
   return result;
 }
 
-secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
+secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len) {
   if (sectrue != secret_verify_header()) {
     return secfalse;
   }
-  uint8_t *addr = (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, len);
+  uint8_t* addr = (uint8_t*)flash_area_get_address(&SECRET_AREA, offset, len);
 
   if (addr == NULL) {
     return secfalse;
@@ -217,8 +217,7 @@ static size_t secret_get_reg_offset(uint8_t slot) {
 }
 
 static secbool secret_record_present(uint32_t offset, uint32_t len) {
-  uint8_t *secret =
-      (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, len);
+  uint8_t* secret = (uint8_t*)flash_area_get_address(&SECRET_AREA, offset, len);
 
   if (secret == NULL) {
     return secfalse;
@@ -260,8 +259,8 @@ secbool secret_key_writable(uint8_t slot) {
   uint32_t offset = secret_get_slot_offset(slot);
   uint32_t len = secret_get_slot_len(slot);
 
-  const uint8_t *const secret =
-      (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, len);
+  const uint8_t* const secret =
+      (uint8_t*)flash_area_get_address(&SECRET_AREA, offset, len);
 
   if (secret == NULL) {
     return secfalse;
@@ -291,9 +290,9 @@ static void secret_key_cache(uint8_t slot) {
 
   uint32_t secret[SECRET_KEY_MAX_LEN] = {0};
 
-  secbool ok = secret_read((uint8_t *)secret, offset, len);
+  secbool ok = secret_read((uint8_t*)secret, offset, len);
 
-  volatile uint32_t *reg = &TAMP->BKP0R;
+  volatile uint32_t* reg = &TAMP->BKP0R;
   reg += reg_offset;
   if (sectrue == ok) {
     for (int i = 0; i < (len / sizeof(uint32_t)); i++) {
@@ -309,7 +308,7 @@ static void secret_key_cache(uint8_t slot) {
   memzero(secret, sizeof(secret));
 }
 
-secbool secret_key_set(uint8_t slot, const uint8_t *key, size_t len) {
+secbool secret_key_set(uint8_t slot, const uint8_t* key, size_t len) {
   if (sectrue != secret_is_slot_valid(slot)) {
     return secfalse;
   }
@@ -335,7 +334,7 @@ secbool secret_key_set(uint8_t slot, const uint8_t *key, size_t len) {
   return sectrue;
 }
 
-secbool secret_key_get(uint8_t slot, uint8_t *dest, size_t len) {
+secbool secret_key_get(uint8_t slot, uint8_t* dest, size_t len) {
   if (sectrue != secret_is_slot_valid(slot)) {
     return secfalse;
   }
@@ -350,7 +349,7 @@ secbool secret_key_get(uint8_t slot, uint8_t *dest, size_t len) {
   uint32_t secret[SECRET_KEY_MAX_LEN] = {0};
 
   bool all_zero = true;
-  volatile uint32_t *reg = &TAMP->BKP0R;
+  volatile uint32_t* reg = &TAMP->BKP0R;
   for (int i = 0; i < (len / sizeof(uint32_t)); i++) {
     secret[i] = reg[i + reg_offset];
 
@@ -363,7 +362,7 @@ secbool secret_key_get(uint8_t slot, uint8_t *dest, size_t len) {
     return secfalse;
   }
 
-  secbool res = secure_aes_ecb_decrypt_hw((uint8_t *)secret, len, dest,
+  secbool res = secure_aes_ecb_decrypt_hw((uint8_t*)secret, len, dest,
                                           SECURE_AES_KEY_DHUK_SP);
 
   memzero(secret, sizeof(secret));
@@ -375,7 +374,7 @@ __attribute__((unused)) static void secret_key_uncache(uint8_t slot) {
   size_t reg_offset = secret_get_reg_offset(slot);
   uint32_t slot_len = secret_get_slot_len(slot);
 
-  volatile uint32_t *reg = &TAMP->BKP0R;
+  volatile uint32_t* reg = &TAMP->BKP0R;
   for (int i = 0; i < slot_len / sizeof(uint32_t); i++) {
     reg[i + reg_offset] = 0;
   }
@@ -404,13 +403,12 @@ static void secret_bhk_load(void) {
     secret_bhk_regenerate();
   }
 
-  secbool ok =
-      secret_read((uint8_t *)secret, SECRET_BHK_OFFSET, SECRET_BHK_LEN);
+  secbool ok = secret_read((uint8_t*)secret, SECRET_BHK_OFFSET, SECRET_BHK_LEN);
 
-  volatile uint32_t *reg1 = &TAMP->BKP0R;
+  volatile uint32_t* reg1 = &TAMP->BKP0R;
   if (sectrue == ok) {
     for (int i = 0; i < (SECRET_BHK_LEN / sizeof(uint32_t)); i++) {
-      *reg1 = ((uint32_t *)secret)[i];
+      *reg1 = ((uint32_t*)secret)[i];
       reg1++;
     }
   } else {
@@ -521,7 +519,7 @@ secbool secret_bootloader_locked(void) {
     uint32_t val[SECRET_KEY_MAX_LEN] = {0};
     size_t len = secret_get_slot_len(i);
     if (secfalse == secret_slot_public[i] &&
-        sectrue == secret_key_get(i, (uint8_t *)val, len)) {
+        sectrue == secret_key_get(i, (uint8_t*)val, len)) {
       memzero(val, sizeof(val));
       return sectrue;
     }
@@ -556,8 +554,8 @@ secbool secret_lock(void) {
 }
 
 secbool secret_is_locked(void) {
-  uint8_t *header_data =
-      (uint8_t *)flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN);
+  uint8_t* header_data =
+      (uint8_t*)flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN);
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   uint16_t zero_count = 0;

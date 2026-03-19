@@ -29,7 +29,7 @@
 #include "wire/wire_iface_usb.h"
 #include "workflow.h"
 
-workflow_result_t workflow_auto_update(const fw_info_t *fw) {
+workflow_result_t workflow_auto_update(const fw_info_t* fw) {
   ui_set_initial_setup(true);
 
   uint32_t ui_result = CONNECT_CANCEL;

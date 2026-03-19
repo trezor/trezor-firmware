@@ -27,7 +27,7 @@
 #include "memzero.h"
 #include "options.h"
 
-void hmac_sha256_Init(HMAC_SHA256_CTX *hctx, const uint8_t *key,
+void hmac_sha256_Init(HMAC_SHA256_CTX* hctx, const uint8_t* key,
                       const uint32_t keylen) {
   LOCAL_CONFIDENTIAL uint8_t i_key_pad[SHA256_BLOCK_LENGTH];
   memzero(i_key_pad, SHA256_BLOCK_LENGTH);
@@ -45,12 +45,12 @@ void hmac_sha256_Init(HMAC_SHA256_CTX *hctx, const uint8_t *key,
   memzero(i_key_pad, sizeof(i_key_pad));
 }
 
-void hmac_sha256_Update(HMAC_SHA256_CTX *hctx, const uint8_t *msg,
+void hmac_sha256_Update(HMAC_SHA256_CTX* hctx, const uint8_t* msg,
                         const uint32_t msglen) {
   sha256_Update(&(hctx->ctx), msg, msglen);
 }
 
-void hmac_sha256_Final(HMAC_SHA256_CTX *hctx, uint8_t *hmac) {
+void hmac_sha256_Final(HMAC_SHA256_CTX* hctx, uint8_t* hmac) {
   sha256_Final(&(hctx->ctx), hmac);
   sha256_Init(&(hctx->ctx));
   sha256_Update(&(hctx->ctx), hctx->o_key_pad, SHA256_BLOCK_LENGTH);
@@ -59,16 +59,16 @@ void hmac_sha256_Final(HMAC_SHA256_CTX *hctx, uint8_t *hmac) {
   memzero(hctx, sizeof(HMAC_SHA256_CTX));
 }
 
-void hmac_sha256(const uint8_t *key, const uint32_t keylen, const uint8_t *msg,
-                 const uint32_t msglen, uint8_t *hmac) {
+void hmac_sha256(const uint8_t* key, const uint32_t keylen, const uint8_t* msg,
+                 const uint32_t msglen, uint8_t* hmac) {
   LOCAL_CONFIDENTIAL HMAC_SHA256_CTX hctx;
   hmac_sha256_Init(&hctx, key, keylen);
   hmac_sha256_Update(&hctx, msg, msglen);
   hmac_sha256_Final(&hctx, hmac);
 }
 
-void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
-                         uint32_t *opad_digest, uint32_t *ipad_digest) {
+void hmac_sha256_prepare(const uint8_t* key, const uint32_t keylen,
+                         uint32_t* opad_digest, uint32_t* ipad_digest) {
   LOCAL_CONFIDENTIAL uint32_t key_pad[SHA256_BLOCK_LENGTH / sizeof(uint32_t)];
 
   memzero(key_pad, sizeof(key_pad));
@@ -76,7 +76,7 @@ void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
     LOCAL_CONFIDENTIAL SHA256_CTX context;
     sha256_Init(&context);
     sha256_Update(&context, key, keylen);
-    sha256_Final(&context, (uint8_t *)key_pad);
+    sha256_Final(&context, (uint8_t*)key_pad);
   } else {
     memcpy(key_pad, key, keylen);
   }
@@ -101,7 +101,7 @@ void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
   memzero(key_pad, sizeof(key_pad));
 }
 
-void hmac_sha512_Init(HMAC_SHA512_CTX *hctx, const uint8_t *key,
+void hmac_sha512_Init(HMAC_SHA512_CTX* hctx, const uint8_t* key,
                       const uint32_t keylen) {
   LOCAL_CONFIDENTIAL uint8_t i_key_pad[SHA512_BLOCK_LENGTH];
   memzero(i_key_pad, SHA512_BLOCK_LENGTH);
@@ -119,12 +119,12 @@ void hmac_sha512_Init(HMAC_SHA512_CTX *hctx, const uint8_t *key,
   memzero(i_key_pad, sizeof(i_key_pad));
 }
 
-void hmac_sha512_Update(HMAC_SHA512_CTX *hctx, const uint8_t *msg,
+void hmac_sha512_Update(HMAC_SHA512_CTX* hctx, const uint8_t* msg,
                         const uint32_t msglen) {
   sha512_Update(&(hctx->ctx), msg, msglen);
 }
 
-void hmac_sha512_Final(HMAC_SHA512_CTX *hctx, uint8_t *hmac) {
+void hmac_sha512_Final(HMAC_SHA512_CTX* hctx, uint8_t* hmac) {
   sha512_Final(&(hctx->ctx), hmac);
   sha512_Init(&(hctx->ctx));
   sha512_Update(&(hctx->ctx), hctx->o_key_pad, SHA512_BLOCK_LENGTH);
@@ -133,16 +133,16 @@ void hmac_sha512_Final(HMAC_SHA512_CTX *hctx, uint8_t *hmac) {
   memzero(hctx, sizeof(HMAC_SHA512_CTX));
 }
 
-void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg,
-                 const uint32_t msglen, uint8_t *hmac) {
+void hmac_sha512(const uint8_t* key, const uint32_t keylen, const uint8_t* msg,
+                 const uint32_t msglen, uint8_t* hmac) {
   HMAC_SHA512_CTX hctx = {0};
   hmac_sha512_Init(&hctx, key, keylen);
   hmac_sha512_Update(&hctx, msg, msglen);
   hmac_sha512_Final(&hctx, hmac);
 }
 
-void hmac_sha512_prepare(const uint8_t *key, const uint32_t keylen,
-                         uint64_t *opad_digest, uint64_t *ipad_digest) {
+void hmac_sha512_prepare(const uint8_t* key, const uint32_t keylen,
+                         uint64_t* opad_digest, uint64_t* ipad_digest) {
   LOCAL_CONFIDENTIAL uint64_t key_pad[SHA512_BLOCK_LENGTH / sizeof(uint64_t)];
 
   memzero(key_pad, sizeof(key_pad));
@@ -150,7 +150,7 @@ void hmac_sha512_prepare(const uint8_t *key, const uint32_t keylen,
     LOCAL_CONFIDENTIAL SHA512_CTX context;
     sha512_Init(&context);
     sha512_Update(&context, key, keylen);
-    sha512_Final(&context, (uint8_t *)key_pad);
+    sha512_Final(&context, (uint8_t*)key_pad);
   } else {
     memcpy(key_pad, key, keylen);
   }

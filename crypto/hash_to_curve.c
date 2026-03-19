@@ -30,13 +30,13 @@
 #include "hash_to_curve.h"
 
 // https://www.rfc-editor.org/rfc/rfc9380.html#name-hash_to_field-implementatio
-static bool hash_to_field(const uint8_t *msg, size_t msg_len,
-                          const uint8_t *dst,  // domain separation tag
+static bool hash_to_field(const uint8_t* msg, size_t msg_len,
+                          const uint8_t* dst,  // domain separation tag
                           const size_t dst_len, size_t expansion_len,
-                          const bignum256 *prime,
-                          bool expand(const uint8_t *, size_t, const uint8_t *,
-                                      size_t, uint8_t *, size_t),
-                          bignum256 *out, size_t out_len) {
+                          const bignum256* prime,
+                          bool expand(const uint8_t*, size_t, const uint8_t*,
+                                      size_t, uint8_t*, size_t),
+                          bignum256* out, size_t out_len) {
   const size_t max_expansion_len = 64;
   if (expansion_len > max_expansion_len) {
     // Not supported by this implementation
@@ -87,10 +87,10 @@ static bool hash_to_field(const uint8_t *msg, size_t msg_len,
 //   * p is a prime
 //   * 2**256 - 2**224 <= prime <= 2**256
 //   * p % 4 == 3
-static bool simple_swu(const bignum256 *u, const bignum256 *a,
-                       const bignum256 *b, const bignum256 *p,
-                       const bignum256 *z, int sign_function(const bignum256 *),
-                       curve_point *point) {
+static bool simple_swu(const bignum256* u, const bignum256* a,
+                       const bignum256* b, const bignum256* p,
+                       const bignum256* z, int sign_function(const bignum256*),
+                       curve_point* point) {
   if (bn_is_zero(a) || bn_is_zero(b) || (p->val[0] % 4 != 3)) {
     return false;
   }
@@ -224,8 +224,8 @@ static bool simple_swu(const bignum256 *u, const bignum256 *a,
   return true;
 }
 
-static void bn_read_int32(int32_t in_number, const bignum256 *prime,
-                          bignum256 *out_number) {
+static void bn_read_int32(int32_t in_number, const bignum256* prime,
+                          bignum256* out_number) {
   if (in_number < 0) {
     bn_read_uint32(-in_number, out_number);
     bn_subtract(prime, out_number, out_number);
@@ -235,14 +235,14 @@ static void bn_read_int32(int32_t in_number, const bignum256 *prime,
 }
 
 // https://www.rfc-editor.org/rfc/rfc9380.html#name-encoding-byte-strings-to-el
-static bool hash_to_curve(const uint8_t *msg, size_t msg_len,
-                          const ecdsa_curve *curve, const uint8_t *suite_id,
+static bool hash_to_curve(const uint8_t* msg, size_t msg_len,
+                          const ecdsa_curve* curve, const uint8_t* suite_id,
                           const uint8_t suite_id_len, int z, int cofactor,
-                          bool expand_function(const uint8_t *, size_t,
-                                               const uint8_t *, size_t,
-                                               uint8_t *, size_t),
-                          int sign_function(const bignum256 *),
-                          curve_point *point) {
+                          bool expand_function(const uint8_t*, size_t,
+                                               const uint8_t*, size_t, uint8_t*,
+                                               size_t),
+                          int sign_function(const bignum256*),
+                          curve_point* point) {
   if (cofactor != 1) {
     // Not supported by this implementation
     return false;
@@ -288,7 +288,7 @@ static bool hash_to_curve(const uint8_t *msg, size_t msg_len,
   return true;
 }
 
-static int sgn0(const bignum256 *a) {
+static int sgn0(const bignum256* a) {
   // https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-05#section-4.1.2
   if (bn_is_even(a)) {
     return 1;
@@ -298,9 +298,9 @@ static int sgn0(const bignum256 *a) {
 }
 
 // https://www.rfc-editor.org/rfc/rfc9380.html#hashtofield-expand-xmd
-bool expand_message_xmd_sha256(const uint8_t *msg, size_t msg_len,
-                               const uint8_t *dst,  // domain separation tag
-                               size_t dst_len, uint8_t *output,
+bool expand_message_xmd_sha256(const uint8_t* msg, size_t msg_len,
+                               const uint8_t* dst,  // domain separation tag
+                               size_t dst_len, uint8_t* output,
                                size_t output_len) {
   if (dst_len > 255) {
     return false;
@@ -383,8 +383,8 @@ bool expand_message_xmd_sha256(const uint8_t *msg, size_t msg_len,
   return true;
 }
 
-bool hash_to_curve_p256(const uint8_t *msg, size_t msg_len, const uint8_t *dst,
-                        size_t dst_len, curve_point *point) {
+bool hash_to_curve_p256(const uint8_t* msg, size_t msg_len, const uint8_t* dst,
+                        size_t dst_len, curve_point* point) {
   // https://www.rfc-editor.org/rfc/rfc9380.html#suites-p256
   // P256_XMD:SHA-256_SSWU_RO_
   if (!hash_to_curve(msg, msg_len, &nist256p1, dst, dst_len, -10, 1,
@@ -399,7 +399,7 @@ bool hash_to_curve_optiga(const uint8_t input[32], uint8_t public_key[65]) {
   char dst[] = "OPTIGA-SECRET-V0-P256_XMD:SHA-256_SSWU_RO_";
   curve_point point = {0};
 
-  if (!hash_to_curve_p256(input, 32, (uint8_t *)dst, sizeof(dst) - 1, &point)) {
+  if (!hash_to_curve_p256(input, 32, (uint8_t*)dst, sizeof(dst) - 1, &point)) {
     return false;
   }
 

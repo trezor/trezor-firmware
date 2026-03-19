@@ -2,7 +2,7 @@
 
 // this function is adapted from stm32f4xx_ll_sdmmc.c
 
-static uint32_t SDMMC_GetCmdResp1(SDIO_TypeDef *SDIOx, uint8_t SD_CMD,
+static uint32_t SDMMC_GetCmdResp1(SDIO_TypeDef* SDIOx, uint8_t SD_CMD,
                                   uint32_t Timeout) {
   /* 8 is the number of required instructions cycles for the below loop
   statement. The Timeout is expressed in ms */
@@ -43,7 +43,7 @@ static uint32_t SDMMC_GetCmdResp1(SDIO_TypeDef *SDIOx, uint8_t SD_CMD,
 
 // this function is inspired by functions in stm32f4xx_ll_sdmmc.c
 
-uint32_t SDMMC_CmdSetClrCardDetect(SDIO_TypeDef *SDIOx, uint32_t Argument) {
+uint32_t SDMMC_CmdSetClrCardDetect(SDIO_TypeDef* SDIOx, uint32_t Argument) {
   SDIO_CmdInitTypeDef sdmmc_cmdinit = {0};
   uint32_t errorstate = SDMMC_ERROR_NONE;
 

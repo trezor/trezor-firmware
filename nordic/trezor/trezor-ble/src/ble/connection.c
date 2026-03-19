@@ -38,15 +38,15 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 static K_MUTEX_DEFINE(conn_mutex);
 
-static struct bt_conn *current_conn = NULL;
-static struct bt_conn *next_conn = NULL;
+static struct bt_conn* current_conn = NULL;
+static struct bt_conn* next_conn = NULL;
 static bool bonded_connection = false;
 static bool high_speed_requested = false;
 
-static void show_params(struct bt_conn *conn) {
+static void show_params(struct bt_conn* conn) {
   struct bt_conn_info info;
   if (bt_conn_get_info(conn, &info) == 0 && info.type == BT_CONN_TYPE_LE) {
-    const struct bt_conn_le_info *le = &info.le;
+    const struct bt_conn_le_info* le = &info.le;
     /* Bluetooth units: interval = 1.25 ms, timeout = 10 ms */
     uint32_t interval_ms = le->interval * 125 / 100;  // 1.25 ms units → ms
     uint32_t timeout_ms = le->timeout * 10;           // 10 ms units  → ms
@@ -56,7 +56,7 @@ static void show_params(struct bt_conn *conn) {
 }
 
 /* Called when central updates params */
-static void le_param_updated(struct bt_conn *conn, uint16_t interval,
+static void le_param_updated(struct bt_conn* conn, uint16_t interval,
                              uint16_t latency, uint16_t timeout) {
   uint32_t interval_ms = interval * 125 / 100;
   uint32_t timeout_ms = timeout * 10;
@@ -65,15 +65,15 @@ static void le_param_updated(struct bt_conn *conn, uint16_t interval,
 }
 
 static void connection_update_params(void) {
-  struct bt_conn *conn = connection_get_current();
+  struct bt_conn* conn = connection_get_current();
   if (conn != NULL) {
-    const struct bt_le_conn_param *param =
+    const struct bt_le_conn_param* param =
         high_speed_requested ? PPCP_HIGH_SPEED : PPCP_LOW_SPEED;
     bt_conn_le_param_update(conn, param);
   }
 }
 
-void connected(struct bt_conn *conn, uint8_t err) {
+void connected(struct bt_conn* conn, uint8_t err) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   if (err) {
@@ -121,7 +121,7 @@ void connected(struct bt_conn *conn, uint8_t err) {
   ble_management_send_status_event();
 }
 
-void disconnected(struct bt_conn *conn, uint8_t reason) {
+void disconnected(struct bt_conn* conn, uint8_t reason) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bonded_connection = false;
@@ -148,7 +148,7 @@ void disconnected(struct bt_conn *conn, uint8_t reason) {
   ble_management_send_status_event();
 }
 
-static void security_changed(struct bt_conn *conn, bt_security_t level,
+static void security_changed(struct bt_conn* conn, bt_security_t level,
                              enum bt_security_err err) {
   char addr[BT_ADDR_LE_STR_LEN];
 
@@ -186,14 +186,14 @@ void connection_disconnect(void) {
   }
 }
 
-struct bt_conn *connection_get_current(void) { return current_conn; }
+struct bt_conn* connection_get_current(void) { return current_conn; }
 
 void connection_suspend(void) {
   k_mutex_lock(&conn_mutex, K_FOREVER);
-  struct bt_conn *conn = connection_get_current();
+  struct bt_conn* conn = connection_get_current();
 
   if (conn != NULL) {
-    const struct bt_le_conn_param *param = PPCP_SUSPEND;
+    const struct bt_le_conn_param* param = PPCP_SUSPEND;
     bt_conn_le_param_update(conn, param);
   }
 

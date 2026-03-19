@@ -37,10 +37,11 @@ stwlc38_driver_t g_stwlc38_driver = {
 };
 
 // I2C operation for writing 8-bit constant value to the STWLC38 register
-#define STWLC_WRITE_CONST8(reg, value)                                 \
-  {                                                                    \
-    .flags = I2C_FLAG_TX | I2C_FLAG_EMBED | I2C_FLAG_START, .size = 3, \
-    .data = {(reg) >> 8, (reg) & 0xFF, (value)},                       \
+#define STWLC_WRITE_CONST8(reg, value)                        \
+  {                                                           \
+      .flags = I2C_FLAG_TX | I2C_FLAG_EMBED | I2C_FLAG_START, \
+      .size = 3,                                              \
+      .data = {(reg) >> 8, (reg) & 0xFF, (value)},            \
   }
 
 // I2C operations for reading 16-bit STWLC38 register into the
@@ -68,12 +69,12 @@ stwlc38_driver_t g_stwlc38_driver = {
   }
 
 // forward declarations
-static void stwlc38_timer_callback(void *context);
-static void stwlc38_i2c_callback(void *context, i2c_packet_t *packet);
-static void stwlc38_fsm_continue(stwlc38_driver_t *drv);
+static void stwlc38_timer_callback(void* context);
+static void stwlc38_i2c_callback(void* context, i2c_packet_t* packet);
+static void stwlc38_fsm_continue(stwlc38_driver_t* drv);
 
 void stwlc38_deinit(void) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   NVIC_DisableIRQ(STWLC38_EXTI_INTERRUPT_NUM);
   HAL_EXTI_ClearConfigLine(&drv->EXTI_Handle);
@@ -87,7 +88,7 @@ void stwlc38_deinit(void) {
 }
 
 bool stwlc38_init(void) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   if (drv->initialized) {
     return true;
@@ -158,7 +159,7 @@ cleanup:
 }
 
 bool stwlc38_suspend(void) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   if (!drv->initialized) {
     return false;
@@ -173,7 +174,7 @@ bool stwlc38_suspend(void) {
 }
 
 bool stwlc38_resume(void) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   if (!drv->initialized) {
     return false;
@@ -189,7 +190,7 @@ bool stwlc38_resume(void) {
 }
 
 bool stwlc38_is_suspended(void) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   if (!drv->initialized) {
     return false;
@@ -205,7 +206,7 @@ bool stwlc38_is_suspended(void) {
 }
 
 bool stwlc38_enable(bool enable) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   if (!drv->initialized) {
     return false;
@@ -221,7 +222,7 @@ bool stwlc38_enable(bool enable) {
 }
 
 bool stwlc38_enable_vout(bool enable) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   if (!drv->initialized) {
     return false;
@@ -265,16 +266,16 @@ static const i2c_op_t stwlc38_ops_vout_disable[] = {
   _stwlc38_i2c_submit(drv, ops, ARRAY_LENGTH(ops))
 
 // helper function for submitting I2C operations
-static void _stwlc38_i2c_submit(stwlc38_driver_t *drv, const i2c_op_t *ops,
+static void _stwlc38_i2c_submit(stwlc38_driver_t* drv, const i2c_op_t* ops,
                                 size_t op_count) {
-  i2c_packet_t *pkt = &drv->pending_i2c_packet;
+  i2c_packet_t* pkt = &drv->pending_i2c_packet;
 
   memset(pkt, 0, sizeof(i2c_packet_t));
   pkt->address = STWLC38_I2C_ADDRESS;
   pkt->context = drv;
   pkt->callback = stwlc38_i2c_callback;
   pkt->timeout = 0;
-  pkt->ops = (i2c_op_t *)ops;
+  pkt->ops = (i2c_op_t*)ops;
   pkt->op_count = op_count;
 
   i2c_status_t status = i2c_bus_submit(drv->i2c_bus, pkt);
@@ -284,8 +285,8 @@ static void _stwlc38_i2c_submit(stwlc38_driver_t *drv, const i2c_op_t *ops,
   }
 }
 
-bool stwlc38_get_report(stwlc38_report_t *report) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+bool stwlc38_get_report(stwlc38_report_t* report) {
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   if (!drv->initialized) {
     return false;
@@ -298,16 +299,16 @@ bool stwlc38_get_report(stwlc38_report_t *report) {
   return true;
 }
 
-static void stwlc38_timer_callback(void *context) {
-  stwlc38_driver_t *drv = (stwlc38_driver_t *)context;
+static void stwlc38_timer_callback(void* context) {
+  stwlc38_driver_t* drv = (stwlc38_driver_t*)context;
 
   // Schedule the report readout
   drv->report_readout_requested = true;
   stwlc38_fsm_continue(drv);
 }
 
-static void stwlc38_i2c_callback(void *context, i2c_packet_t *packet) {
-  stwlc38_driver_t *drv = (stwlc38_driver_t *)context;
+static void stwlc38_i2c_callback(void* context, i2c_packet_t* packet) {
+  stwlc38_driver_t* drv = (stwlc38_driver_t*)context;
 
   if (packet->status != I2C_STATUS_OK) {
     memset(&drv->report, 0, sizeof(stwlc38_report_t));
@@ -370,7 +371,7 @@ void STWLC38_EXTI_INTERRUPT_HANDLER(void) {
   IRQ_LOG_ENTER();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   // Clear the EXTI line pending bit
   __HAL_GPIO_EXTI_CLEAR_FLAG(STWLC38_INT_PIN);
@@ -390,7 +391,7 @@ void STWLC38_EXTI_INTERRUPT_HANDLER(void) {
   IRQ_LOG_EXIT();
 }
 
-static void stwlc38_fsm_continue(stwlc38_driver_t *drv) {
+static void stwlc38_fsm_continue(stwlc38_driver_t* drv) {
   // The order of the following conditions defines the priority
 
   if (drv->suspended) {

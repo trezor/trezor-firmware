@@ -43,8 +43,8 @@ typedef struct {
   rgb_led_effect_type_t type;
   uint32_t start_time_ms;
   rgb_led_effect_data_t data;
-  void (*callback)(uint32_t elapsed_ms, rgb_led_effect_data_t *data,
-                   rgb_led_color_fs_t *ef_color);
+  void (*callback)(uint32_t elapsed_ms, rgb_led_effect_data_t* data,
+                   rgb_led_color_fs_t* ef_color);
 } rgb_led_effect_t;
 
 typedef struct {
@@ -54,7 +54,7 @@ typedef struct {
   bool enabled;
 
   bool ongoing_effect;
-  systimer_t *effect_timer;
+  systimer_t* effect_timer;
   rgb_led_effect_t effect;
 } rgb_led_t;
 
@@ -65,5 +65,5 @@ typedef struct {
  * @param effect_type the type of effect to assign
  * @return true on success, false on failure
  */
-bool rgb_led_assign_effect(rgb_led_effect_t *effect,
+bool rgb_led_assign_effect(rgb_led_effect_t* effect,
                            rgb_led_effect_type_t effect_type);

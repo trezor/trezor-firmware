@@ -56,7 +56,7 @@
 #define SITRONIX_OK (0)
 #define SITRONIX_ERROR (-1)
 
-static i2c_bus_t *i2c_bus = NULL;
+static i2c_bus_t* i2c_bus = NULL;
 
 /*******************************************************************************
  * Function Name : sitronix_read_reg
@@ -65,7 +65,7 @@ static i2c_bus_t *i2c_bus = NULL;
  * Input         : Register Address, length of buffer
  * Output        : pdata Read
  *******************************************************************************/
-int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
+int32_t sitronix_read_reg(uint8_t reg, uint8_t* pdata, uint16_t length) {
   i2c_op_t ops[] = {
       {
           .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
@@ -98,7 +98,7 @@ int32_t sitronix_read_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
  * Input         : Register Address, pdata to be written, length of buffer
  * Output        : None
  *******************************************************************************/
-int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
+int32_t sitronix_write_reg(uint8_t reg, uint8_t* pdata, uint16_t length) {
   i2c_op_t ops[] = {
       {
           .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
@@ -131,7 +131,7 @@ int32_t sitronix_write_reg(uint8_t reg, uint8_t *pdata, uint16_t length) {
  * Input         : Register Address, length of buffer
  * Output        : pdata Read
  *******************************************************************************/
-int32_t sitronix_read_data(uint8_t *pdata, uint16_t length) {
+int32_t sitronix_read_data(uint8_t* pdata, uint16_t length) {
   i2c_op_t ops[] = {
       {
           .flags = I2C_FLAG_RX,
@@ -229,36 +229,36 @@ typedef struct {
 } SITRONIX_Capabilities_t;
 
 typedef struct {
-  int32_t (*Init)(SITRONIX_Object_t *);
-  int32_t (*DeInit)(SITRONIX_Object_t *);
-  int32_t (*GestureConfig)(SITRONIX_Object_t *, SITRONIX_Gesture_Init_t *);
-  int32_t (*ReadID)(SITRONIX_Object_t *, uint32_t *);
-  int32_t (*GetState)(SITRONIX_Object_t *, SITRONIX_State_t *);
-  int32_t (*GetMultiTouchState)(SITRONIX_Object_t *,
-                                SITRONIX_MultiTouch_State_t *);
-  int32_t (*GetGesture)(SITRONIX_Object_t *, uint8_t *);
-  int32_t (*GetCapabilities)(SITRONIX_Object_t *, SITRONIX_Capabilities_t *);
-  int32_t (*EnableIT)(SITRONIX_Object_t *);
-  int32_t (*DisableIT)(SITRONIX_Object_t *);
-  int32_t (*ClearIT)(SITRONIX_Object_t *);
-  int32_t (*ITStatus)(SITRONIX_Object_t *);
+  int32_t (*Init)(SITRONIX_Object_t*);
+  int32_t (*DeInit)(SITRONIX_Object_t*);
+  int32_t (*GestureConfig)(SITRONIX_Object_t*, SITRONIX_Gesture_Init_t*);
+  int32_t (*ReadID)(SITRONIX_Object_t*, uint32_t*);
+  int32_t (*GetState)(SITRONIX_Object_t*, SITRONIX_State_t*);
+  int32_t (*GetMultiTouchState)(SITRONIX_Object_t*,
+                                SITRONIX_MultiTouch_State_t*);
+  int32_t (*GetGesture)(SITRONIX_Object_t*, uint8_t*);
+  int32_t (*GetCapabilities)(SITRONIX_Object_t*, SITRONIX_Capabilities_t*);
+  int32_t (*EnableIT)(SITRONIX_Object_t*);
+  int32_t (*DisableIT)(SITRONIX_Object_t*);
+  int32_t (*ClearIT)(SITRONIX_Object_t*);
+  int32_t (*ITStatus)(SITRONIX_Object_t*);
 } SITRONIX_TS_Drv_t;
 
-int32_t SITRONIX_Init(SITRONIX_Object_t *pObj);
-int32_t SITRONIX_DeInit(SITRONIX_Object_t *pObj);
-int32_t SITRONIX_GestureConfig(SITRONIX_Object_t *pObj,
-                               SITRONIX_Gesture_Init_t *GestureInit);
-int32_t SITRONIX_ReadID(SITRONIX_Object_t *pObj, uint32_t *Id);
-int32_t SITRONIX_GetState(SITRONIX_Object_t *pObj, SITRONIX_State_t *State);
-int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t *pObj,
-                                    SITRONIX_MultiTouch_State_t *State);
-int32_t SITRONIX_GetGesture(SITRONIX_Object_t *pObj, uint8_t *GestureId);
-int32_t SITRONIX_EnableIT(SITRONIX_Object_t *pObj);
-int32_t SITRONIX_DisableIT(SITRONIX_Object_t *pObj);
-int32_t SITRONIX_ITStatus(SITRONIX_Object_t *pObj);
-int32_t SITRONIX_ClearIT(SITRONIX_Object_t *pObj);
-int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t *pObj,
-                                 SITRONIX_Capabilities_t *Capabilities);
+int32_t SITRONIX_Init(SITRONIX_Object_t* pObj);
+int32_t SITRONIX_DeInit(SITRONIX_Object_t* pObj);
+int32_t SITRONIX_GestureConfig(SITRONIX_Object_t* pObj,
+                               SITRONIX_Gesture_Init_t* GestureInit);
+int32_t SITRONIX_ReadID(SITRONIX_Object_t* pObj, uint32_t* Id);
+int32_t SITRONIX_GetState(SITRONIX_Object_t* pObj, SITRONIX_State_t* State);
+int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t* pObj,
+                                    SITRONIX_MultiTouch_State_t* State);
+int32_t SITRONIX_GetGesture(SITRONIX_Object_t* pObj, uint8_t* GestureId);
+int32_t SITRONIX_EnableIT(SITRONIX_Object_t* pObj);
+int32_t SITRONIX_DisableIT(SITRONIX_Object_t* pObj);
+int32_t SITRONIX_ITStatus(SITRONIX_Object_t* pObj);
+int32_t SITRONIX_ClearIT(SITRONIX_Object_t* pObj);
+int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t* pObj,
+                                 SITRONIX_Capabilities_t* Capabilities);
 
 /* Touch screen driver structure initialization */
 SITRONIX_TS_Drv_t SITRONIX_TS_Driver = {
@@ -275,10 +275,10 @@ SITRONIX_TS_Drv_t SITRONIX_TS_Driver = {
  * @{
  */
 #if (SITRONIX_AUTO_CALIBRATION_ENABLED == 1)
-static int32_t SITRONIX_TS_Calibration(SITRONIX_Object_t *pObj);
-static int32_t SITRONIX_Delay(SITRONIX_Object_t *pObj, uint32_t Delay);
+static int32_t SITRONIX_TS_Calibration(SITRONIX_Object_t* pObj);
+static int32_t SITRONIX_Delay(SITRONIX_Object_t* pObj, uint32_t Delay);
 #endif /* SITRONIX_AUTO_CALIBRATION_ENABLED == 1 */
-static int32_t SITRONIX_DetectTouch(SITRONIX_Object_t *pObj);
+static int32_t SITRONIX_DetectTouch(SITRONIX_Object_t* pObj);
 // static int32_t ReadRegWrap(void *handle, uint8_t Reg, uint8_t *Data,
 //                            uint16_t Length);
 // static int32_t WriteRegWrap(void *handle, uint8_t Reg, uint8_t *Data,
@@ -299,8 +299,8 @@ static int32_t SITRONIX_DetectTouch(SITRONIX_Object_t *pObj);
  * @param  Capabilities pointer to SITRONIX sensor capabilities
  * @retval Component status
  */
-int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t *pObj,
-                                 SITRONIX_Capabilities_t *Capabilities) {
+int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t* pObj,
+                                 SITRONIX_Capabilities_t* Capabilities) {
   /* Prevent unused argument(s) compilation warning */
   (void)(pObj);
 
@@ -321,7 +321,7 @@ int32_t SITRONIX_GetCapabilities(SITRONIX_Object_t *pObj,
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_Init(SITRONIX_Object_t *pObj) {
+int32_t SITRONIX_Init(SITRONIX_Object_t* pObj) {
   int32_t ret = SITRONIX_OK;
   uint8_t data[28U];
 
@@ -346,7 +346,7 @@ int32_t SITRONIX_Init(SITRONIX_Object_t *pObj) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_DeInit(SITRONIX_Object_t *pObj) {
+int32_t SITRONIX_DeInit(SITRONIX_Object_t* pObj) {
   if (pObj->IsInitialized == 1U) {
     pObj->IsInitialized = 0;
   }
@@ -361,8 +361,8 @@ int32_t SITRONIX_DeInit(SITRONIX_Object_t *pObj) {
  * @param  GestureInit Gesture init structure
  * @retval Component status
  */
-int32_t SITRONIX_GestureConfig(SITRONIX_Object_t *pObj,
-                               SITRONIX_Gesture_Init_t *GestureInit) {
+int32_t SITRONIX_GestureConfig(SITRONIX_Object_t* pObj,
+                               SITRONIX_Gesture_Init_t* GestureInit) {
   return SITRONIX_ERROR;
 }
 
@@ -373,7 +373,7 @@ int32_t SITRONIX_GestureConfig(SITRONIX_Object_t *pObj,
  * @param  Id Pointer to component's ID
  * @retval Component status
  */
-int32_t SITRONIX_ReadID(SITRONIX_Object_t *pObj, uint32_t *Id) {
+int32_t SITRONIX_ReadID(SITRONIX_Object_t* pObj, uint32_t* Id) {
   int32_t ret = SITRONIX_OK;
   uint8_t data[28];
   uint8_t trial = 0;
@@ -399,7 +399,7 @@ uint8_t sitronix_touching = 0;
  * @param  State Single Touch structure pointer
  * @retval Component status.
  */
-int32_t SITRONIX_GetState(SITRONIX_Object_t *pObj, SITRONIX_State_t *State) {
+int32_t SITRONIX_GetState(SITRONIX_Object_t* pObj, SITRONIX_State_t* State) {
   int32_t ret = SITRONIX_OK;
   uint8_t data[64];
 
@@ -431,8 +431,8 @@ int32_t SITRONIX_GetState(SITRONIX_Object_t *pObj, SITRONIX_State_t *State) {
  * @param  State Multi Touch structure pointer
  * @retval Component status.
  */
-int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t *pObj,
-                                    SITRONIX_MultiTouch_State_t *State) {
+int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t* pObj,
+                                    SITRONIX_MultiTouch_State_t* State) {
   int32_t ret = SITRONIX_OK;
   uint8_t data[28];
 
@@ -454,7 +454,7 @@ int32_t SITRONIX_GetMultiTouchState(SITRONIX_Object_t *pObj,
  * @param  GestureId gesture ID
  * @retval Component status
  */
-int32_t SITRONIX_GetGesture(SITRONIX_Object_t *pObj, uint8_t *GestureId) {
+int32_t SITRONIX_GetGesture(SITRONIX_Object_t* pObj, uint8_t* GestureId) {
   /* Prevent unused argument(s) compilation warning */
   (void)(pObj);
 
@@ -468,7 +468,7 @@ int32_t SITRONIX_GetGesture(SITRONIX_Object_t *pObj, uint8_t *GestureId) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_EnableIT(SITRONIX_Object_t *pObj) {
+int32_t SITRONIX_EnableIT(SITRONIX_Object_t* pObj) {
   /* Prevent unused argument(s) compilation warning */
   (void)(pObj);
 
@@ -482,7 +482,7 @@ int32_t SITRONIX_EnableIT(SITRONIX_Object_t *pObj) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_DisableIT(SITRONIX_Object_t *pObj) {
+int32_t SITRONIX_DisableIT(SITRONIX_Object_t* pObj) {
   /* Prevent unused argument(s) compilation warning */
   (void)(pObj);
 
@@ -498,7 +498,7 @@ int32_t SITRONIX_DisableIT(SITRONIX_Object_t *pObj) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_ITStatus(SITRONIX_Object_t *pObj) {
+int32_t SITRONIX_ITStatus(SITRONIX_Object_t* pObj) {
   /* Prevent unused argument(s) compilation warning */
   (void)(pObj);
 
@@ -513,7 +513,7 @@ int32_t SITRONIX_ITStatus(SITRONIX_Object_t *pObj) {
  * @param  pObj Component object pointer
  * @retval Component status
  */
-int32_t SITRONIX_ClearIT(SITRONIX_Object_t *pObj) {
+int32_t SITRONIX_ClearIT(SITRONIX_Object_t* pObj) {
   /* Prevent unused argument(s) compilation warning */
   (void)(pObj);
 
@@ -537,14 +537,14 @@ int32_t SITRONIX_ClearIT(SITRONIX_Object_t *pObj) {
  * @retval Number of active touches detected (can be between 0 and10) or
  * SITRONIX_ERROR in case of error
  */
-__attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
-    SITRONIX_Object_t *pObj) {
+__attribute__((optimize("-O0"))) int32_t
+SITRONIX_DetectTouch(SITRONIX_Object_t* pObj) {
   int32_t ret;
   uint8_t nb_touch = 0;
   static uint8_t first_event = 0;
   uint8_t data[28];
 
-  if (sitronix_read_data((uint8_t *)&data, 28) != SITRONIX_OK) {
+  if (sitronix_read_data((uint8_t*)&data, 28) != SITRONIX_OK) {
     ret = SITRONIX_ERROR;
   } else {
     if (first_event == 0) {
@@ -713,18 +713,18 @@ typedef struct {
 } TS_Ctx_t;
 
 typedef struct {
-  int32_t (*Init)(void *);
-  int32_t (*DeInit)(void *);
-  int32_t (*GestureConfig)(void *, void *);
-  int32_t (*ReadID)(void *, uint32_t *);
-  int32_t (*GetState)(void *, void *);
-  int32_t (*GetMultiTouchState)(void *, void *);
-  int32_t (*GetGesture)(void *, void *);
-  int32_t (*GetCapabilities)(void *, void *);
-  int32_t (*EnableIT)(void *);
-  int32_t (*DisableIT)(void *);
-  int32_t (*ClearIT)(void *);
-  int32_t (*ITStatus)(void *);
+  int32_t (*Init)(void*);
+  int32_t (*DeInit)(void*);
+  int32_t (*GestureConfig)(void*, void*);
+  int32_t (*ReadID)(void*, uint32_t*);
+  int32_t (*GetState)(void*, void*);
+  int32_t (*GetMultiTouchState)(void*, void*);
+  int32_t (*GetGesture)(void*, void*);
+  int32_t (*GetCapabilities)(void*, void*);
+  int32_t (*EnableIT)(void*);
+  int32_t (*DisableIT)(void*);
+  int32_t (*ClearIT)(void*);
+  int32_t (*ITStatus)(void*);
 } TS_Drv_t;
 
 /* DSI TS INT pin */
@@ -769,8 +769,8 @@ typedef void (*BSP_EXTI_LineCallback)(void);
 /** @addtogroup STM32U5x9J_DISCOVERY_TS_Exported_Variables TS Exported Variables
  * @{
  */
-void *Ts_CompObj[TS_INSTANCES_NBR] = {0};
-TS_Drv_t *Ts_Drv[TS_INSTANCES_NBR] = {0};
+void* Ts_CompObj[TS_INSTANCES_NBR] = {0};
+TS_Drv_t* Ts_Drv[TS_INSTANCES_NBR] = {0};
 TS_Ctx_t Ts_Ctx[TS_INSTANCES_NBR] = {0};
 EXTI_HandleTypeDef hts_exti[TS_INSTANCES_NBR];
 IRQn_Type Ts_IRQn[TS_INSTANCES_NBR] = {EXTI15_IRQn};
@@ -798,7 +798,7 @@ static int32_t SITRONIX_Probe(uint32_t Instance);
  * @param  TS_Init  Pointer to TS initialization structure.
  * @retval BSP status.
  */
-int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init) {
+int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t* TS_Init) {
   int32_t status = BSP_ERROR_NONE;
 
   i2c_bus = i2c_bus_open(TOUCH_I2C_INSTANCE);
@@ -961,7 +961,7 @@ int32_t BSP_TS_Set_Orientation(uint32_t Instance, uint32_t Orientation) {
  * @param  Orientation Pointer to TS orientation.
  * @retval BSP status.
  */
-int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t *Orientation) {
+int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t* Orientation) {
   int32_t status = BSP_ERROR_NONE;
 
   if ((Instance >= TS_INSTANCES_NBR) || (Orientation == NULL)) {
@@ -980,7 +980,7 @@ int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t *Orientation) {
  * @param  TS_State Pointer to single touch structure.
  * @retval BSP status.
  */
-int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State) {
+int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t* TS_State) {
   int32_t status = BSP_ERROR_NONE;
   uint32_t x_oriented;
   uint32_t y_oriented;
@@ -1043,7 +1043,7 @@ int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State) {
  * @retval BSP status.
  */
 int32_t BSP_TS_Get_MultiTouchState(const uint32_t Instance,
-                                   TS_MultiTouch_State_t *TS_State) {
+                                   TS_MultiTouch_State_t* TS_State) {
   int32_t status;
 
   UNUSED(TS_State);
@@ -1065,7 +1065,7 @@ int32_t BSP_TS_Get_MultiTouchState(const uint32_t Instance,
  * @retval BSP status.
  */
 int32_t BSP_TS_GestureConfig(const uint32_t Instance,
-                             TS_Gesture_Config_t *GestureConfig) {
+                             TS_Gesture_Config_t* GestureConfig) {
   int32_t status;
 
   if ((Instance >= TS_INSTANCES_NBR) || (GestureConfig == NULL)) {
@@ -1084,7 +1084,7 @@ int32_t BSP_TS_GestureConfig(const uint32_t Instance,
  * @param  GestureId Pointer to gesture.
  * @retval BSP status.
  */
-int32_t BSP_TS_GetGestureId(const uint32_t Instance, uint32_t *GestureId) {
+int32_t BSP_TS_GetGestureId(const uint32_t Instance, uint32_t* GestureId) {
   int32_t status;
 
   if ((Instance >= TS_INSTANCES_NBR) || (GestureId == NULL)) {
@@ -1104,7 +1104,7 @@ int32_t BSP_TS_GetGestureId(const uint32_t Instance, uint32_t *GestureId) {
  * @retval BSP status.
  */
 int32_t BSP_TS_GetCapabilities(uint32_t Instance,
-                               TS_Capabilities_t *Capabilities) {
+                               TS_Capabilities_t* Capabilities) {
   int32_t status = BSP_ERROR_NONE;
 
   if ((Instance >= TS_INSTANCES_NBR) || (Capabilities == NULL)) {
@@ -1170,7 +1170,7 @@ static int32_t SITRONIX_Probe(uint32_t Instance) {
   static SITRONIX_Object_t SITRONIXObj;
 
   Ts_CompObj[Instance] = &SITRONIXObj;
-  Ts_Drv[Instance] = (TS_Drv_t *)&SITRONIX_TS_Driver;
+  Ts_Drv[Instance] = (TS_Drv_t*)&SITRONIX_TS_Driver;
   if (Ts_Drv[Instance]->Init(Ts_CompObj[Instance]) < 0) {
     status = BSP_ERROR_COMPONENT_FAILURE;
   } else {

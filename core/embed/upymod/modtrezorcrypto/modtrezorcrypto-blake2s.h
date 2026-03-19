@@ -49,9 +49,9 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_update(mp_obj_t self, mp_obj_t data);
 ///     """
 ///     Creates a hash context object.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Blake2s_make_new(const mp_obj_type_t *type,
+STATIC mp_obj_t mod_trezorcrypto_Blake2s_make_new(const mp_obj_type_t* type,
                                                   size_t n_args, size_t n_kw,
-                                                  const mp_obj_t *args) {
+                                                  const mp_obj_t* args) {
   STATIC const mp_arg_t allowed_args[] = {
       {MP_QSTR_data, MP_ARG_OBJ, {.u_obj = mp_const_empty_bytes}},
       {MP_QSTR_outlen,
@@ -69,22 +69,22 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_make_new(const mp_obj_type_t *type,
                             allowed_args, vals);
 
   size_t data_len = 0;
-  const uint8_t *data =
-      (const uint8_t *)mp_obj_str_get_data(vals[0].u_obj, &data_len);
+  const uint8_t* data =
+      (const uint8_t*)mp_obj_str_get_data(vals[0].u_obj, &data_len);
   const mp_int_t outlen = vals[1].u_int;
   size_t key_len = 0;
-  const uint8_t *key =
-      (const uint8_t *)mp_obj_str_get_data(vals[2].u_obj, &key_len);
+  const uint8_t* key =
+      (const uint8_t*)mp_obj_str_get_data(vals[2].u_obj, &key_len);
   size_t personal_len = 0;
-  const uint8_t *personal =
-      (const uint8_t *)mp_obj_str_get_data(vals[3].u_obj, &personal_len);
+  const uint8_t* personal =
+      (const uint8_t*)mp_obj_str_get_data(vals[3].u_obj, &personal_len);
 
   if (key_len > 0 && personal_len > 0) {
     mp_raise_ValueError(
         MP_ERROR_TEXT("Cannot use Blake2s key and personal at the same time"));
   }
 
-  mp_obj_Blake2s_t *o = m_new_obj_with_finaliser(mp_obj_Blake2s_t);
+  mp_obj_Blake2s_t* o = m_new_obj_with_finaliser(mp_obj_Blake2s_t);
   o->base.type = type;
   int res = 0;
 
@@ -114,7 +114,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_make_new(const mp_obj_type_t *type,
 ///     Update the hash context with hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake2s_update(mp_obj_t self, mp_obj_t data) {
-  mp_obj_Blake2s_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Blake2s_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
@@ -130,12 +130,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Blake2s_update_obj,
 ///     Returns the digest of hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake2s_digest(mp_obj_t self) {
-  mp_obj_Blake2s_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Blake2s_t* o = MP_OBJ_TO_PTR(self);
   BLAKE2S_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(BLAKE2S_CTX));
   vstr_t hash = {0};
   vstr_init_len(&hash, ctx.outlen);
-  blake2s_Final(&ctx, (uint8_t *)hash.buf, hash.len);
+  blake2s_Final(&ctx, (uint8_t*)hash.buf, hash.len);
   memzero(&ctx, sizeof(BLAKE2S_CTX));
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
@@ -143,7 +143,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake2s_digest_obj,
                                  mod_trezorcrypto_Blake2s_digest);
 
 STATIC mp_obj_t mod_trezorcrypto_Blake2s___del__(mp_obj_t self) {
-  mp_obj_Blake2s_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Blake2s_t* o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx), sizeof(BLAKE2S_CTX));
   return mp_const_none;
 }
@@ -167,5 +167,5 @@ STATIC const mp_obj_type_t mod_trezorcrypto_Blake2s_type = {
     {&mp_type_type},
     .name = MP_QSTR_Blake2s,
     .make_new = mod_trezorcrypto_Blake2s_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Blake2s_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_Blake2s_locals_dict,
 };

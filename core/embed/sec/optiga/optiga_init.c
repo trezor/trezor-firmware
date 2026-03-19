@@ -79,7 +79,7 @@ void optiga_init_and_configure(void) {
 
 uint32_t rtc_wakeup_event_id = 0;
 
-void optiga_rtc_wakeup_callback(void *context) {
+void optiga_rtc_wakeup_callback(void* context) {
   optiga_power_down();
   rtc_wakeup_event_id = 0;
 }

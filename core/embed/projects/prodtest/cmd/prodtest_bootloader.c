@@ -32,7 +32,7 @@
 #include <sec/boot_header.h>
 #endif
 
-static void prodtest_bootloader_version(cli_t *cli) {
+static void prodtest_bootloader_version(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -42,7 +42,7 @@ static void prodtest_bootloader_version(cli_t *cli) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
-  const boot_header_auth_t *hdr = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t* hdr = boot_header_auth_get(BOOTLOADER_START);
 
   if (hdr == NULL) {
     mpu_restore(mpu_mode);
@@ -62,8 +62,8 @@ static void prodtest_bootloader_version(cli_t *cli) {
 
   cli_trace(cli, "Reading bootloader image header..");
 
-  const image_header *header =
-      read_image_header((const uint8_t *)BOOTLOADER_START,
+  const image_header* header =
+      read_image_header((const uint8_t*)BOOTLOADER_START,
                         BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
 
   if (header != NULL) {
@@ -84,7 +84,7 @@ static void prodtest_bootloader_version(cli_t *cli) {
 
 #if USE_BOOT_UCB
 // Writes boot header and bootloader code to the BOOTUPDATE_AREA
-static bool write_to_bootupdate_area(const uint8_t *data, size_t size) {
+static bool write_to_bootupdate_area(const uint8_t* data, size_t size) {
   if (!IS_ALIGNED(size, FLASH_BLOCK_SIZE)) {
     return false;
   }
@@ -109,7 +109,7 @@ static bool write_to_bootupdate_area(const uint8_t *data, size_t size) {
 }
 #endif  // USE_BOOT_UCB
 
-static bool prodtest_bootloader_update_finalize(uint8_t *data, size_t len) {
+static bool prodtest_bootloader_update_finalize(uint8_t* data, size_t len) {
 #if USE_BOOT_UCB
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
 
@@ -119,7 +119,7 @@ static bool prodtest_bootloader_update_finalize(uint8_t *data, size_t len) {
   }
 
   boot_image_t bootloader_image = {
-      .image_ptr = (const void *)BOOTUPDATE_START,
+      .image_ptr = (const void*)BOOTUPDATE_START,
       .image_size = len,
   };
 
@@ -139,7 +139,7 @@ static bool prodtest_bootloader_update_finalize(uint8_t *data, size_t len) {
   return true;
 }
 
-static void prodtest_bootloader_update(cli_t *cli) {
+static void prodtest_bootloader_update(cli_t* cli) {
   binary_update(cli, prodtest_bootloader_update_finalize);
 }
 #endif

@@ -47,7 +47,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_uniform_obj,
 ///     maximum sources of entropy are used.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
-                                              const mp_obj_t *args) {
+                                              const mp_obj_t* args) {
   uint32_t len = trezor_obj_get_uint(args[0]);
   if (len > 1024) {
     mp_raise_ValueError(MP_ERROR_TEXT("Maximum requested size is 1024"));
@@ -55,13 +55,13 @@ STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
   vstr_t vstr = {0};
   vstr_init_len(&vstr, len);
   if (n_args > 1 && mp_obj_is_true(args[1])) {
-    if (!rng_fill_buffer_strong((uint8_t *)vstr.buf, len)) {
+    if (!rng_fill_buffer_strong((uint8_t*)vstr.buf, len)) {
       vstr_clear(&vstr);
       mp_raise_msg(&mp_type_RuntimeError,
                    MP_ERROR_TEXT("Failed to get strong randomness."));
     }
   } else {
-    rng_fill_buffer((uint8_t *)vstr.buf, len);
+    rng_fill_buffer((uint8_t*)vstr.buf, len);
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
@@ -74,7 +74,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_random_bytes_obj, 1,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_random_shuffle(mp_obj_t data) {
   size_t count = 0;
-  mp_obj_t *items = NULL;
+  mp_obj_t* items = NULL;
   mp_obj_get_array(data, &count, &items);
   if (count > 256) {
     mp_raise_ValueError(MP_ERROR_TEXT("Maximum list size is 256 items"));
@@ -126,5 +126,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_random_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_random_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_random_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_random_globals,
 };

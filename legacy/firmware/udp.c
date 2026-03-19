@@ -52,7 +52,7 @@ void waitAndProcessUSBRequests(uint32_t millis) {
     }
   }
 
-  const uint8_t *data;
+  const uint8_t* data;
   while ((data = msg_out_data()) != NULL) {
     emulatorSocketWrite(0, data, USB_PACKET_SIZE);
   }
@@ -73,7 +73,7 @@ char usbTiny(char set) {
 }
 
 void usbFlush(uint32_t millis) {
-  const uint8_t *data;
+  const uint8_t* data;
   while ((data = msg_out_data()) != NULL) {
     emulatorSocketWrite(0, data, USB_PACKET_SIZE);
   }

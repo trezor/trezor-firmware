@@ -40,7 +40,7 @@ static void* coreapp_api_getter = NULL;
 
 // defined in linker script
 extern uint32_t _kernel_flash_end;
-#define KERNEL_END ALIGN_UP((uint32_t) & _kernel_flash_end, COREAPP_ALIGNMENT)
+#define KERNEL_END ALIGN_UP((uint32_t)&_kernel_flash_end, COREAPP_ALIGNMENT)
 
 static void coreapp_clear_memory(applet_t* applet) {
   if (applet->layout.data1.size > 0) {

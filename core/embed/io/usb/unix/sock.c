@@ -3,12 +3,12 @@
 
 #include <string.h>
 
-void sock_init(emu_sock_t *sock) {
+void sock_init(emu_sock_t* sock) {
   memset(sock, 0, sizeof(*sock));
   sock->sock = -1;
 }
 
-void sock_start(emu_sock_t *sock, const char *ip, uint16_t port) {
+void sock_start(emu_sock_t* sock, const char* ip, uint16_t port) {
   sock->port = port;
   sock->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -22,19 +22,19 @@ void sock_start(emu_sock_t *sock, const char *ip, uint16_t port) {
   sock->si_me.sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_LOOPBACK);
   sock->si_me.sin_port = htons(sock->port);
 
-  ret = bind(sock->sock, (struct sockaddr *)&(sock->si_me),
+  ret = bind(sock->sock, (struct sockaddr*)&(sock->si_me),
              sizeof(struct sockaddr_in));
   ensure(sectrue * (ret == 0), NULL);
 }
 
-void sock_stop(emu_sock_t *sock) {
+void sock_stop(emu_sock_t* sock) {
   if (sock->sock >= 0) {
     close(sock->sock);
     sock->sock = -1;
   }
 }
 
-bool sock_can_send(emu_sock_t *sock) {
+bool sock_can_send(emu_sock_t* sock) {
   if (sock->slen == 0) {
     return true;
   }
@@ -45,7 +45,7 @@ bool sock_can_send(emu_sock_t *sock) {
   return (r > 0);
 }
 
-bool sock_can_recv(emu_sock_t *sock) {
+bool sock_can_recv(emu_sock_t* sock) {
   struct pollfd fds[] = {
       {sock->sock, POLLIN, 0},
   };
@@ -53,10 +53,10 @@ bool sock_can_recv(emu_sock_t *sock) {
   return (r > 0);
 }
 
-ssize_t sock_sendto(emu_sock_t *sock, const void *data, size_t len) {
+ssize_t sock_sendto(emu_sock_t* sock, const void* data, size_t len) {
   if (sock->slen > 0) {
     ssize_t r = sendto(sock->sock, data, len, 0,
-                       (const struct sockaddr *)&(sock->si_other), sock->slen);
+                       (const struct sockaddr*)&(sock->si_other), sock->slen);
     if (r != len) {
       return -1;
     }
@@ -65,12 +65,12 @@ ssize_t sock_sendto(emu_sock_t *sock, const void *data, size_t len) {
   return len;
 }
 
-ssize_t sock_recvfrom(emu_sock_t *sock, uint8_t *data, size_t max_len) {
+ssize_t sock_recvfrom(emu_sock_t* sock, uint8_t* data, size_t max_len) {
   struct sockaddr_in si;
   socklen_t sl = sizeof(si);
   memset(data, 0, max_len);
   ssize_t r =
-      recvfrom(sock->sock, data, max_len, 0, (struct sockaddr *)&si, &sl);
+      recvfrom(sock->sock, data, max_len, 0, (struct sockaddr*)&si, &sl);
   if (r <= 0) {
     return 0;
   }

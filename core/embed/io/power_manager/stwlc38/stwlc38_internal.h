@@ -64,13 +64,13 @@ typedef struct {
   EXTI_HandleTypeDef EXTI_Handle;
 
   // I2C bus where the STWLC38 is connected
-  i2c_bus_t *i2c_bus;
+  i2c_bus_t* i2c_bus;
   // Storage for the pending I2C packet
   i2c_packet_t pending_i2c_packet;
   // Report register (global buffer used for report readout)
   stwlc38_report_regs_t report_regs;
   // Timer used for periodic report readout
-  systimer_t *timer;
+  systimer_t* timer;
 
   // Set if the driver was requested to suspend background operations.
   // IF so, the driver waits until the last operation is finished,

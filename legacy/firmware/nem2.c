@@ -29,7 +29,7 @@
 #include "rng.h"
 #include "secp256k1.h"
 
-const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
+const char* nem_validate_common(NEMTransactionCommon* common, bool inner) {
   if (!common->has_network) {
     common->has_network = true;
     common->network = NEM_NETWORK_MAINNET;
@@ -52,7 +52,7 @@ const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
   return NULL;
 }
 
-const char *nem_validate_transfer(const NEMTransfer *transfer,
+const char* nem_validate_transfer(const NEMTransfer* transfer,
                                   uint8_t network) {
   if (transfer->has_public_key &&
       transfer->public_key.size != sizeof(ed25519_public_key)) {
@@ -65,16 +65,16 @@ const char *nem_validate_transfer(const NEMTransfer *transfer,
   return NULL;
 }
 
-const char *nem_validate_provision_namespace(
-    const NEMProvisionNamespace *provision_namespace, uint8_t network) {
+const char* nem_validate_provision_namespace(
+    const NEMProvisionNamespace* provision_namespace, uint8_t network) {
   if (!nem_validate_address(provision_namespace->sink, network))
     return _("Invalid rental sink address");
 
   return NULL;
 }
 
-const char *nem_validate_mosaic_creation(
-    const NEMMosaicCreation *mosaic_creation, uint8_t network) {
+const char* nem_validate_mosaic_creation(
+    const NEMMosaicCreation* mosaic_creation, uint8_t network) {
   if (!nem_validate_address(mosaic_creation->sink, network))
     return _("Invalid creation sink address");
 
@@ -116,20 +116,20 @@ const char *nem_validate_mosaic_creation(
   return NULL;
 }
 
-const char *nem_validate_supply_change(
-    const NEMMosaicSupplyChange *supply_change) {
+const char* nem_validate_supply_change(
+    const NEMMosaicSupplyChange* supply_change) {
   (void)supply_change;
   return NULL;
 }
 
-const char *nem_validate_aggregate_modification(
-    const NEMAggregateModification *aggregate_modification, bool creation) {
+const char* nem_validate_aggregate_modification(
+    const NEMAggregateModification* aggregate_modification, bool creation) {
   if (creation && aggregate_modification->modifications_count == 0) {
     return _("No modifications provided");
   }
 
   for (size_t i = 0; i < aggregate_modification->modifications_count; i++) {
-    const NEMCosignatoryModification *modification =
+    const NEMCosignatoryModification* modification =
         &aggregate_modification->modifications[i];
 
     if (modification->public_key.size != 32)
@@ -144,25 +144,25 @@ const char *nem_validate_aggregate_modification(
   return NULL;
 }
 
-const char *nem_validate_importance_transfer(
-    const NEMImportanceTransfer *importance_transfer) {
+const char* nem_validate_importance_transfer(
+    const NEMImportanceTransfer* importance_transfer) {
   if (importance_transfer->public_key.size != 32)
     return _("Invalid remote account provided");
 
   return NULL;
 }
 
-bool nem_askTransfer(const NEMTransactionCommon *common,
-                     const NEMTransfer *transfer, const char *desc) {
+bool nem_askTransfer(const NEMTransactionCommon* common,
+                     const NEMTransfer* transfer, const char* desc) {
   if (transfer->mosaics_count) {
-    const NEMMosaic *xem = NULL;
+    const NEMMosaic* xem = NULL;
     bool unknownMosaic = false;
 
-    const NEMMosaicDefinition *definitions[transfer->mosaics_count];
+    const NEMMosaicDefinition* definitions[transfer->mosaics_count];
     memset(definitions, 0, sizeof(definitions));
 
     for (size_t i = 0; i < transfer->mosaics_count; i++) {
-      const NEMMosaic *mosaic = &transfer->mosaics[i];
+      const NEMMosaic* mosaic = &transfer->mosaics[i];
 
       definitions[i] =
           nem_mosaicByName(mosaic->namespace, mosaic->mosaic, common->network);
@@ -195,7 +195,7 @@ bool nem_askTransfer(const NEMTransactionCommon *common,
     }
 
     for (size_t i = 0; i < transfer->mosaics_count; i++) {
-      const NEMMosaic *mosaic = &transfer->mosaics[i];
+      const NEMMosaic* mosaic = &transfer->mosaics[i];
 
       if (mosaic == xem) {
         continue;
@@ -238,13 +238,13 @@ bool nem_askTransfer(const NEMTransactionCommon *common,
   return true;
 }
 
-bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node,
-                     const NEMTransactionCommon *common,
-                     const NEMTransfer *transfer) {
+bool nem_fsmTransfer(nem_transaction_ctx* context, const HDNode* node,
+                     const NEMTransactionCommon* common,
+                     const NEMTransfer* transfer) {
   static uint8_t
       encrypted[NEM_ENCRYPTED_PAYLOAD_SIZE(sizeof(transfer->payload.bytes))];
 
-  const uint8_t *payload = transfer->payload.bytes;
+  const uint8_t* payload = transfer->payload.bytes;
   size_t size = transfer->payload.size;
 
   if (transfer->has_public_key) {
@@ -256,9 +256,9 @@ bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node,
 
     random_buffer(encrypted, NEM_SALT_SIZE + AES_BLOCK_SIZE);
 
-    const uint8_t *salt = encrypted;
-    const uint8_t *iv = &encrypted[NEM_SALT_SIZE];
-    uint8_t *buffer = &encrypted[NEM_SALT_SIZE + AES_BLOCK_SIZE];
+    const uint8_t* salt = encrypted;
+    const uint8_t* iv = &encrypted[NEM_SALT_SIZE];
+    uint8_t* buffer = &encrypted[NEM_SALT_SIZE + AES_BLOCK_SIZE];
 
     bool ret = hdnode_nem_encrypt(node, transfer->public_key.bytes, iv, salt,
                                   payload, size, buffer);
@@ -285,7 +285,7 @@ bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node,
   }
 
   for (size_t i = 0; i < transfer->mosaics_count; i++) {
-    const NEMMosaic *mosaic = &transfer->mosaics[i];
+    const NEMMosaic* mosaic = &transfer->mosaics[i];
 
     ret = nem_transaction_write_mosaic(context, mosaic->namespace,
                                        mosaic->mosaic, mosaic->quantity);
@@ -300,9 +300,9 @@ bool nem_fsmTransfer(nem_transaction_ctx *context, const HDNode *node,
   return true;
 }
 
-bool nem_askProvisionNamespace(const NEMTransactionCommon *common,
-                               const NEMProvisionNamespace *provision_namespace,
-                               const char *desc) {
+bool nem_askProvisionNamespace(const NEMTransactionCommon* common,
+                               const NEMProvisionNamespace* provision_namespace,
+                               const char* desc) {
   layoutDialogSwipe(
       &bmp_icon_question, _("Cancel"), _("Next"), desc, _("Create namespace"),
       provision_namespace->namespace,
@@ -324,8 +324,8 @@ bool nem_askProvisionNamespace(const NEMTransactionCommon *common,
 }
 
 bool nem_fsmProvisionNamespace(
-    nem_transaction_ctx *context, const NEMTransactionCommon *common,
-    const NEMProvisionNamespace *provision_namespace) {
+    nem_transaction_ctx* context, const NEMTransactionCommon* common,
+    const NEMProvisionNamespace* provision_namespace) {
   return nem_transaction_create_provision_namespace(
       context, common->network, common->timestamp, NULL, common->fee,
       common->deadline, provision_namespace->namespace,
@@ -333,9 +333,9 @@ bool nem_fsmProvisionNamespace(
       provision_namespace->sink, provision_namespace->fee);
 }
 
-bool nem_askMosaicCreation(const NEMTransactionCommon *common,
-                           const NEMMosaicCreation *mosaic_creation,
-                           const char *desc, const char *address) {
+bool nem_askMosaicCreation(const NEMTransactionCommon* common,
+                           const NEMMosaicCreation* mosaic_creation,
+                           const char* desc, const char* address) {
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"), desc,
                     _("Create mosaic"), mosaic_creation->definition.mosaic,
                     _("under namespace"), mosaic_creation->definition.namespace,
@@ -399,9 +399,9 @@ bool nem_askMosaicCreation(const NEMTransactionCommon *common,
   return true;
 }
 
-bool nem_fsmMosaicCreation(nem_transaction_ctx *context,
-                           const NEMTransactionCommon *common,
-                           const NEMMosaicCreation *mosaic_creation) {
+bool nem_fsmMosaicCreation(nem_transaction_ctx* context,
+                           const NEMTransactionCommon* common,
+                           const NEMMosaicCreation* mosaic_creation) {
   return nem_transaction_create_mosaic_creation(
       context, common->network, common->timestamp, NULL, common->fee,
       common->deadline, mosaic_creation->definition.namespace,
@@ -419,9 +419,9 @@ bool nem_fsmMosaicCreation(nem_transaction_ctx *context,
       mosaic_creation->fee);
 }
 
-bool nem_askSupplyChange(const NEMTransactionCommon *common,
-                         const NEMMosaicSupplyChange *supply_change,
-                         const char *desc) {
+bool nem_askSupplyChange(const NEMTransactionCommon* common,
+                         const NEMMosaicSupplyChange* supply_change,
+                         const char* desc) {
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"), desc,
                     _("Modify supply for"), supply_change->mosaic,
                     _("under namespace"), supply_change->namespace, NULL, NULL);
@@ -452,9 +452,9 @@ bool nem_askSupplyChange(const NEMTransactionCommon *common,
   return true;
 }
 
-bool nem_fsmSupplyChange(nem_transaction_ctx *context,
-                         const NEMTransactionCommon *common,
-                         const NEMMosaicSupplyChange *supply_change) {
+bool nem_fsmSupplyChange(nem_transaction_ctx* context,
+                         const NEMTransactionCommon* common,
+                         const NEMMosaicSupplyChange* supply_change) {
   return nem_transaction_create_mosaic_supply_change(
       context, common->network, common->timestamp, NULL, common->fee,
       common->deadline, supply_change->namespace, supply_change->mosaic,
@@ -462,8 +462,8 @@ bool nem_fsmSupplyChange(nem_transaction_ctx *context,
 }
 
 bool nem_askAggregateModification(
-    const NEMTransactionCommon *common,
-    const NEMAggregateModification *aggregate_modification, const char *desc,
+    const NEMTransactionCommon* common,
+    const NEMAggregateModification* aggregate_modification, const char* desc,
     bool creation) {
   if (creation) {
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"), desc,
@@ -477,7 +477,7 @@ bool nem_askAggregateModification(
   char address[NEM_ADDRESS_SIZE + 1] = {0};
 
   for (size_t i = 0; i < aggregate_modification->modifications_count; i++) {
-    const NEMCosignatoryModification *modification =
+    const NEMCosignatoryModification* modification =
         &aggregate_modification->modifications[i];
     nem_get_address(modification->public_key.bytes, common->network, address);
 
@@ -519,8 +519,8 @@ bool nem_askAggregateModification(
 }
 
 bool nem_fsmAggregateModification(
-    nem_transaction_ctx *context, const NEMTransactionCommon *common,
-    const NEMAggregateModification *aggregate_modification) {
+    nem_transaction_ctx* context, const NEMTransactionCommon* common,
+    const NEMAggregateModification* aggregate_modification) {
   bool ret = nem_transaction_create_aggregate_modification(
       context, common->network, common->timestamp, NULL, common->fee,
       common->deadline, aggregate_modification->modifications_count,
@@ -528,7 +528,7 @@ bool nem_fsmAggregateModification(
   if (!ret) return false;
 
   for (size_t i = 0; i < aggregate_modification->modifications_count; i++) {
-    const NEMCosignatoryModification *modification =
+    const NEMCosignatoryModification* modification =
         &aggregate_modification->modifications[i];
 
     ret = nem_transaction_write_cosignatory_modification(
@@ -545,9 +545,9 @@ bool nem_fsmAggregateModification(
   return true;
 }
 
-bool nem_askImportanceTransfer(const NEMTransactionCommon *common,
-                               const NEMImportanceTransfer *importance_transfer,
-                               const char *desc) {
+bool nem_askImportanceTransfer(const NEMTransactionCommon* common,
+                               const NEMImportanceTransfer* importance_transfer,
+                               const char* desc) {
   layoutDialogSwipe(
       &bmp_icon_question, _("Cancel"), _("Next"), desc,
       importance_transfer->mode ==
@@ -569,15 +569,15 @@ bool nem_askImportanceTransfer(const NEMTransactionCommon *common,
 }
 
 bool nem_fsmImportanceTransfer(
-    nem_transaction_ctx *context, const NEMTransactionCommon *common,
-    const NEMImportanceTransfer *importance_transfer) {
+    nem_transaction_ctx* context, const NEMTransactionCommon* common,
+    const NEMImportanceTransfer* importance_transfer) {
   return nem_transaction_create_importance_transfer(
       context, common->network, common->timestamp, NULL, common->fee,
       common->deadline, importance_transfer->mode,
       importance_transfer->public_key.bytes);
 }
 
-bool nem_askMultisig(const char *address, const char *desc, bool cosigning,
+bool nem_askMultisig(const char* address, const char* desc, bool cosigning,
                      uint64_t fee) {
   layoutNEMDialog(
       &bmp_icon_question, _("Cancel"), _("Next"), desc,
@@ -595,9 +595,9 @@ bool nem_askMultisig(const char *address, const char *desc, bool cosigning,
   return true;
 }
 
-bool nem_fsmMultisig(nem_transaction_ctx *context,
-                     const NEMTransactionCommon *common,
-                     const nem_transaction_ctx *inner, bool cosigning) {
+bool nem_fsmMultisig(nem_transaction_ctx* context,
+                     const NEMTransactionCommon* common,
+                     const nem_transaction_ctx* inner, bool cosigning) {
   bool ret;
   if (cosigning) {
     ret = nem_transaction_create_multisig_signature(
@@ -618,11 +618,11 @@ bool nem_fsmMultisig(nem_transaction_ctx *context,
   return true;
 }
 
-const NEMMosaicDefinition *nem_mosaicByName(const char *namespace,
-                                            const char *mosaic,
+const NEMMosaicDefinition* nem_mosaicByName(const char* namespace,
+                                            const char* mosaic,
                                             uint8_t network) {
   for (size_t i = 0; i < NEM_MOSAIC_DEFINITIONS_COUNT; i++) {
-    const NEMMosaicDefinition *definition = &NEM_MOSAIC_DEFINITIONS[i];
+    const NEMMosaicDefinition* definition = &NEM_MOSAIC_DEFINITIONS[i];
 
     if (nem_mosaicMatches(definition, namespace, mosaic, network)) {
       return definition;
@@ -632,10 +632,10 @@ const NEMMosaicDefinition *nem_mosaicByName(const char *namespace,
   return NULL;
 }
 
-static inline size_t format_amount(const NEMMosaicDefinition *definition,
-                                   const bignum256 *amnt,
-                                   const bignum256 *multiplier, int divisor,
-                                   char *str_out, size_t size) {
+static inline size_t format_amount(const NEMMosaicDefinition* definition,
+                                   const bignum256* amnt,
+                                   const bignum256* multiplier, int divisor,
+                                   char* str_out, size_t size) {
   bignum256 val = {0};
   memcpy(&val, amnt, sizeof(bignum256));
 
@@ -651,14 +651,14 @@ static inline size_t format_amount(const NEMMosaicDefinition *definition,
       -divisor, false, ',', str_out, size);
 }
 
-bool nem_canonicalizeMosaics(NEMTransfer *transfer) {
+bool nem_canonicalizeMosaics(NEMTransfer* transfer) {
   size_t old_count = transfer->mosaics_count;
 
   if (old_count <= 1) {
     return true;
   }
 
-  NEMMosaic *const mosaics = transfer->mosaics;
+  NEMMosaic* const mosaics = transfer->mosaics;
 
   bool skip[old_count];
   memzero(skip, sizeof(skip));
@@ -669,7 +669,7 @@ bool nem_canonicalizeMosaics(NEMTransfer *transfer) {
   for (size_t i = 0; i < old_count; i++) {
     if (skip[i]) continue;
 
-    NEMMosaic *mosaic = &mosaics[new_count];
+    NEMMosaic* mosaic = &mosaics[new_count];
 
     if (new_count++ != i) {
       memcpy(mosaic, &mosaics[i], sizeof(NEMMosaic));
@@ -678,7 +678,7 @@ bool nem_canonicalizeMosaics(NEMTransfer *transfer) {
     for (size_t j = i + 1; j < old_count; j++) {
       if (skip[j]) continue;
 
-      const NEMMosaic *new_mosaic = &mosaics[j];
+      const NEMMosaic* new_mosaic = &mosaics[j];
 
       if (nem_mosaicCompare(mosaic, new_mosaic) == 0) {
         skip[j] = true;
@@ -695,10 +695,10 @@ bool nem_canonicalizeMosaics(NEMTransfer *transfer) {
 
   // Sort mosaics
   for (size_t i = 0; i < new_count - 1; i++) {
-    NEMMosaic *a = &mosaics[i];
+    NEMMosaic* a = &mosaics[i];
 
     for (size_t j = i + 1; j < new_count; j++) {
-      NEMMosaic *b = &mosaics[j];
+      NEMMosaic* b = &mosaics[j];
 
       if (nem_mosaicCompare(a, b) > 0) {
         NEMMosaic temp = {0};
@@ -711,18 +711,18 @@ bool nem_canonicalizeMosaics(NEMTransfer *transfer) {
   return true;
 }
 
-void nem_mosaicFormatAmount(const NEMMosaicDefinition *definition,
-                            uint64_t quantity, const bignum256 *multiplier,
-                            char *str_out, size_t size) {
+void nem_mosaicFormatAmount(const NEMMosaicDefinition* definition,
+                            uint64_t quantity, const bignum256* multiplier,
+                            char* str_out, size_t size) {
   bignum256 amnt = {0};
   bn_read_uint64(quantity, &amnt);
 
   format_amount(definition, &amnt, multiplier, 0, str_out, size);
 }
 
-bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition,
-                          uint64_t quantity, const bignum256 *multiplier,
-                          uint8_t network, char *str_out, size_t size) {
+bool nem_mosaicFormatLevy(const NEMMosaicDefinition* definition,
+                          uint64_t quantity, const bignum256* multiplier,
+                          uint8_t network, char* str_out, size_t size) {
   if (!definition->has_levy || !definition->has_fee) {
     return false;
   }
@@ -731,7 +731,7 @@ bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition,
   bn_read_uint64(quantity, &amnt);
   bn_read_uint64(definition->fee, &fee);
 
-  const NEMMosaicDefinition *mosaic = nem_mosaicByName(
+  const NEMMosaicDefinition* mosaic = nem_mosaicByName(
       definition->levy_namespace, definition->levy_mosaic, network);
 
   switch (definition->levy) {
@@ -748,7 +748,7 @@ bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition,
   }
 }
 
-bool nem_path_check(uint32_t address_n_count, const uint32_t *address_n,
+bool nem_path_check(uint32_t address_n_count, const uint32_t* address_n,
                     uint8_t network, bool check_coin_type) {
   bool valid = (address_n_count >= 3);
   valid = valid && (address_n[0] == (PATH_HARDENED | 44));

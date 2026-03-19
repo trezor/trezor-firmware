@@ -42,7 +42,7 @@ static K_SEM_DEFINE(spi_can_send, 0, 1);
 static K_FIFO_DEFINE(fifo_spi_tx_data);
 static K_MUTEX_DEFINE(spi_mutex);
 
-const struct device *spi_dev;
+const struct device* spi_dev;
 static struct k_poll_signal spi_done_sig =
     K_POLL_SIGNAL_INITIALIZER(spi_done_sig);
 
@@ -80,7 +80,7 @@ typedef struct {
 } spi_packet_t;
 
 /* This function will run in interrupt context. Keep it as short as possible. */
-void gpio_callback_handler(const struct device *dev, struct gpio_callback *cb,
+void gpio_callback_handler(const struct device* dev, struct gpio_callback* cb,
                            uint32_t pins) {
   if (pins & BIT(spi_ready.pin)) {
     if (k_sem_count_get(&spi_can_send) == 0) {
@@ -116,13 +116,13 @@ void spi_init(void) {
   k_sem_give(&spi_comm_ok);
 }
 
-bool spi_send(uint8_t service_id, const uint8_t *data, uint32_t len) {
+bool spi_send(uint8_t service_id, const uint8_t* data, uint32_t len) {
   if (len > MAX_SPI_DATA_SIZE) {
     printk("Too big data\n");
     return false;
   }
 
-  trz_packet_t *tx = k_malloc(sizeof(*tx));
+  trz_packet_t* tx = k_malloc(sizeof(*tx));
 
   if (tx == NULL) {
     printk("Not able to allocate SPI send data buffer\n");
@@ -157,9 +157,9 @@ void spi_thread(void) {
     /* Wait indefinitely for signal to process */
     k_sem_take(&spi_can_send, K_FOREVER);
 
-    trz_packet_t *buf = k_fifo_get(&fifo_spi_tx_data, K_NO_WAIT);
+    trz_packet_t* buf = k_fifo_get(&fifo_spi_tx_data, K_NO_WAIT);
 
-    uint8_t *rx_data = k_malloc(PACKET_DATA_SIZE);
+    uint8_t* rx_data = k_malloc(PACKET_DATA_SIZE);
 
     if (rx_data == NULL) {
       printk("Not able to allocate SPI receive data buffer\n");
@@ -168,13 +168,13 @@ void spi_thread(void) {
     }
 
     const struct spi_buf rx_buf = {
-        .buf = (uint8_t *)rx_data,
+        .buf = (uint8_t*)rx_data,
         .len = PACKET_DATA_SIZE,
     };
 
     const struct spi_buf_set rx = {.buffers = &rx_buf, .count = 1};
 
-    const struct spi_buf_set *txp = NULL;
+    const struct spi_buf_set* txp = NULL;
     struct spi_buf tx_buf;
     struct spi_buf_set tx_set;
 
@@ -190,7 +190,7 @@ void spi_thread(void) {
       printk("SPI Data not sent\n");
     }
 
-    spi_packet_t *rx_msg = (spi_packet_t *)rx_data;
+    spi_packet_t* rx_msg = (spi_packet_t*)rx_data;
 
     uint8_t crc = crc8(rx_data, PACKET_DATA_SIZE - 1, 0x07, 0, false);
 

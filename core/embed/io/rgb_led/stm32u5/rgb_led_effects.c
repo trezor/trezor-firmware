@@ -46,16 +46,16 @@
 
 // Effect callback function prototypes
 static void rgb_led_effect_pairing(uint32_t elapsed_ms,
-                                   rgb_led_effect_data_t *data,
-                                   rgb_led_color_fs_t *color);
+                                   rgb_led_effect_data_t* data,
+                                   rgb_led_color_fs_t* color);
 static void rgb_led_effect_charging(uint32_t elapsed_ms,
-                                    rgb_led_effect_data_t *data,
-                                    rgb_led_color_fs_t *color);
+                                    rgb_led_effect_data_t* data,
+                                    rgb_led_color_fs_t* color);
 
 // Effect callback functions lookup table
 static void (*rgb_led_effects_callbacks[])(uint32_t elapsed_ms,
-                                           rgb_led_effect_data_t *data,
-                                           rgb_led_color_fs_t *color) = {
+                                           rgb_led_effect_data_t* data,
+                                           rgb_led_color_fs_t* color) = {
     [RGB_LED_EFFECT_PAIRING] = rgb_led_effect_pairing,
     [RGB_LED_EFFECT_CHARGING] = rgb_led_effect_charging,
 };
@@ -70,7 +70,7 @@ static inline float linear_interpolate_f(float y0, float y1, float x,
 // correction
 static void rgb_led_linear_gc_effect(uint32_t c0, uint32_t c1,
                                      uint32_t elapsed_ms, uint32_t total_ms,
-                                     rgb_led_color_fs_t *interp_color) {
+                                     rgb_led_color_fs_t* interp_color) {
   if (elapsed_ms >= total_ms) {
     interp_color->red = 0;
     interp_color->green = 0;
@@ -103,7 +103,7 @@ static void rgb_led_linear_gc_effect(uint32_t c0, uint32_t c1,
 }
 
 // Assign effect callback from the lookup table
-bool rgb_led_assign_effect(rgb_led_effect_t *effect,
+bool rgb_led_assign_effect(rgb_led_effect_t* effect,
                            rgb_led_effect_type_t effect_type) {
   if (effect_type >= RGB_LED_NUM_OF_EFFECTS || effect_type < 0) {
     return false;
@@ -124,8 +124,8 @@ bool rgb_led_assign_effect(rgb_led_effect_t *effect,
  * RGBLED_OFF
  */
 static void rgb_led_effect_pairing(uint32_t elapsed_ms,
-                                   rgb_led_effect_data_t *data,
-                                   rgb_led_color_fs_t *ef_color) {
+                                   rgb_led_effect_data_t* data,
+                                   rgb_led_color_fs_t* ef_color) {
   data->cycles = elapsed_ms / EF_BB_CYCLE_MS;
   uint32_t ef_time = elapsed_ms % EF_BB_CYCLE_MS;
 
@@ -164,8 +164,8 @@ static void rgb_led_effect_pairing(uint32_t elapsed_ms,
  * RGBLED_OFF
  */
 static void rgb_led_effect_charging(uint32_t elapsed_ms,
-                                    rgb_led_effect_data_t *data,
-                                    rgb_led_color_fs_t *ef_color) {
+                                    rgb_led_effect_data_t* data,
+                                    rgb_led_color_fs_t* ef_color) {
   data->cycles = elapsed_ms / EF_CHG_CYCLE_MS;
   uint32_t ef_time = elapsed_ms % EF_CHG_CYCLE_MS;
 

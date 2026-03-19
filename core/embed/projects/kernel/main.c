@@ -216,7 +216,7 @@ void drivers_init() {
 // Kernel task main loop
 //
 // Returns when the coreapp task is terminated
-static void kernel_loop(applet_t *coreapp) {
+static void kernel_loop(applet_t* coreapp) {
 #if SECURE_MODE && USE_STORAGE_HWKEY
   secure_aes_set_applet(coreapp);
 #endif
@@ -241,7 +241,7 @@ static void kernel_loop(applet_t *coreapp) {
 #ifndef USE_BOOTARGS_RSOD
 
 // Shows RSOD (Red Screen of Death)
-static void show_rsod(const systask_postmortem_t *pminfo) {
+static void show_rsod(const systask_postmortem_t* pminfo) {
 #ifdef RSOD_IN_COREAPP
   applet_t coreapp;
 
@@ -266,7 +266,7 @@ static void show_rsod(const systask_postmortem_t *pminfo) {
 }
 
 // Initializes system in emergency mode and shows RSOD
-static void init_and_show_rsod(const systask_postmortem_t *pminfo) {
+static void init_and_show_rsod(const systask_postmortem_t* pminfo) {
   // Initialize the system's core services
   // (If the kernel crashes in emergency mode, we are out of options
   // and show the RSOD without attempting to re-enter emergency mode)
@@ -286,7 +286,7 @@ static void init_and_show_rsod(const systask_postmortem_t *pminfo) {
 
 // Kernel panic handler
 // (may be called from interrupt context)
-static void kernel_panic(const systask_postmortem_t *pminfo) {
+static void kernel_panic(const systask_postmortem_t* pminfo) {
   // Since the system state is unreliable, enter emergency mode
   // and show the RSOD.
 #ifndef USE_BOOTARGS_RSOD

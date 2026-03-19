@@ -106,8 +106,8 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_signature));
 
-  bool ret = tropic_ecc_sign(idx, (const uint8_t *)dig.buf, dig.len,
-                             ((uint8_t *)sig.buf));
+  bool ret = tropic_ecc_sign(idx, (const uint8_t*)dig.buf, dig.len,
+                             ((uint8_t*)sig.buf));
   if (!ret) {
     vstr_clear(&sig);
     mp_raise_msg(&mp_type_TropicError,
@@ -120,8 +120,8 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_tropic_sign_obj,
                                  mod_trezorcrypto_tropic_sign);
 
-static bool get_slot_range(int index, uint16_t *first_slot,
-                           uint16_t *slot_count) {
+static bool get_slot_range(int index, uint16_t* first_slot,
+                           uint16_t* slot_count) {
   switch (index) {
     case TROPIC_DEVICE_CERT_INDEX:
       *first_slot = TROPIC_DEVICE_CERT_FIRST_SLOT;
@@ -157,7 +157,7 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_get_user_data(mp_obj_t index) {
 
   vstr_t data = {0};
   vstr_init_len(&data, data_size);
-  if (!tropic_data_multi_read(first_slot, slot_count, (uint8_t *)data.buf,
+  if (!tropic_data_multi_read(first_slot, slot_count, (uint8_t*)data.buf,
                               data.alloc, &data_size)) {
     vstr_clear(&data);
     mp_raise_msg(&mp_type_TropicError,
@@ -194,7 +194,7 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_tropic_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_tropic_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_tropic_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_tropic_globals,
 };
 
 #endif

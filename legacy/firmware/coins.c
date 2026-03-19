@@ -23,7 +23,7 @@
 #include "base58.h"
 #include "ecdsa.h"
 
-const CoinInfo *coinByName(const char *name) {
+const CoinInfo* coinByName(const char* name) {
   if (!name) return 0;
   for (int i = 0; i < COINS_COUNT; i++) {
     if (strcmp(name, coins[i].coin_name) == 0) {
@@ -33,7 +33,7 @@ const CoinInfo *coinByName(const char *name) {
   return 0;
 }
 
-const CoinInfo *coinByAddressType(uint32_t address_type) {
+const CoinInfo* coinByAddressType(uint32_t address_type) {
   for (int i = 0; i < COINS_COUNT; i++) {
     if (address_type == coins[i].address_type) {
       return &(coins[i]);
@@ -42,7 +42,7 @@ const CoinInfo *coinByAddressType(uint32_t address_type) {
   return 0;
 }
 
-const CoinInfo *coinBySlip44(uint32_t coin_type) {
+const CoinInfo* coinBySlip44(uint32_t coin_type) {
   if (coin_type == SLIP44_TESTNET) {
     // The slip44 coin type is the same for all testnets, so we return the
     // Bitcoin Testnet.
@@ -57,8 +57,8 @@ const CoinInfo *coinBySlip44(uint32_t coin_type) {
   return 0;
 }
 
-bool coinExtractAddressType(const CoinInfo *coin, const char *addr,
-                            uint32_t *address_type) {
+bool coinExtractAddressType(const CoinInfo* coin, const char* addr,
+                            uint32_t* address_type) {
   if (!addr) return false;
   uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
   int len = base58_decode_check(addr, coin->curve->hasher_base58, addr_raw,
@@ -69,8 +69,8 @@ bool coinExtractAddressType(const CoinInfo *coin, const char *addr,
   return false;
 }
 
-bool coinExtractAddressTypeRaw(const CoinInfo *coin, const uint8_t *addr_raw,
-                               uint32_t *address_type) {
+bool coinExtractAddressTypeRaw(const CoinInfo* coin, const uint8_t* addr_raw,
+                               uint32_t* address_type) {
   if (address_check_prefix(addr_raw, coin->address_type)) {
     *address_type = coin->address_type;
     return true;

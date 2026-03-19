@@ -27,10 +27,10 @@
 #include "hasher.h"
 
 typedef struct _CoinInfo {
-  const char *coin_name;
-  const char *coin_shortcut;
+  const char* coin_name;
+  const char* coin_shortcut;
   uint64_t maxfee_kb;
-  const char *signed_message_header;
+  const char* signed_message_header;
   uint32_t decimals;
   bool has_segwit;
   bool has_taproot;
@@ -46,12 +46,12 @@ typedef struct _CoinInfo {
   uint32_t xpub_magic_multisig_segwit_p2sh;
   uint32_t xpub_magic_multisig_segwit_native;
   uint32_t fork_id;
-  const char *bech32_prefix;
-  const char *cashaddr_prefix;
+  const char* bech32_prefix;
+  const char* cashaddr_prefix;
   uint32_t coin_type;
   bool negative_fee;
-  const char *curve_name;
-  const curve_info *curve;
+  const char* curve_name;
+  const curve_info* curve;
   bool extra_data;
   bool timestamp;
   bool overwintered;
@@ -65,12 +65,12 @@ typedef struct _CoinInfo {
 // SLIP-44 hardened coin type for all Testnet coins
 #define SLIP44_TESTNET 0x80000001
 
-const CoinInfo *coinByName(const char *name);
-const CoinInfo *coinByAddressType(uint32_t address_type);
-const CoinInfo *coinBySlip44(uint32_t coin_type);
-bool coinExtractAddressType(const CoinInfo *coin, const char *addr,
-                            uint32_t *address_type);
-bool coinExtractAddressTypeRaw(const CoinInfo *coin, const uint8_t *addr_raw,
-                               uint32_t *address_type);
+const CoinInfo* coinByName(const char* name);
+const CoinInfo* coinByAddressType(uint32_t address_type);
+const CoinInfo* coinBySlip44(uint32_t coin_type);
+bool coinExtractAddressType(const CoinInfo* coin, const char* addr,
+                            uint32_t* address_type);
+bool coinExtractAddressTypeRaw(const CoinInfo* coin, const uint8_t* addr_raw,
+                               uint32_t* address_type);
 
 #endif

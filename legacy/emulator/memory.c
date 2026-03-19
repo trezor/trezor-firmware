@@ -60,13 +60,13 @@ static ssize_t sector_to_offset(uint8_t sector) {
   }
 }
 
-static void *sector_to_address(uint8_t sector) {
+static void* sector_to_address(uint8_t sector) {
   ssize_t offset = sector_to_offset(sector);
   if (offset < 0) {
     return NULL;
   }
 
-  return (void *)FLASH_PTR(FLASH_ORIGIN + offset);
+  return (void*)FLASH_PTR(FLASH_ORIGIN + offset);
 }
 
 static ssize_t sector_to_size(uint8_t sector) {
@@ -86,7 +86,7 @@ static ssize_t sector_to_size(uint8_t sector) {
 void flash_erase_sector(uint8_t sector, uint32_t program_size) {
   (void)program_size;
 
-  void *address = sector_to_address(sector);
+  void* address = sector_to_address(sector);
   if (address == NULL) {
     return;
   }
@@ -106,11 +106,11 @@ void flash_erase_all_sectors(uint32_t program_size) {
 }
 
 void flash_program_word(uint32_t address, uint32_t data) {
-  *(volatile uint32_t *)FLASH_PTR(address) = data;
+  *(volatile uint32_t*)FLASH_PTR(address) = data;
 }
 
 void flash_program_byte(uint32_t address, uint8_t data) {
-  *(volatile uint8_t *)FLASH_PTR(address) = data;
+  *(volatile uint8_t*)FLASH_PTR(address) = data;
 }
 
 static bool flash_locked = true;

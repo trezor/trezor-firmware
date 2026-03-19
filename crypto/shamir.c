@@ -40,7 +40,7 @@
 #include <string.h>
 #include "memzero.h"
 
-static void bitslice(uint32_t r[8], const uint8_t *x, size_t len) {
+static void bitslice(uint32_t r[8], const uint8_t* x, size_t len) {
   size_t bit_idx = 0, arr_idx = 0;
   uint32_t cur = 0;
 
@@ -53,7 +53,7 @@ static void bitslice(uint32_t r[8], const uint8_t *x, size_t len) {
   }
 }
 
-static void unbitslice(uint8_t *r, const uint32_t x[8], size_t len) {
+static void unbitslice(uint8_t* r, const uint32_t x[8], size_t len) {
   size_t bit_idx = 0, arr_idx = 0;
   uint32_t cur = 0;
 
@@ -260,9 +260,9 @@ static void gf256_inv(uint32_t r[8], uint32_t x[8]) {
   memzero(z, sizeof(z));
 }
 
-bool shamir_interpolate(uint8_t *result, uint8_t result_index,
-                        const uint8_t *share_indices,
-                        const uint8_t **share_values, uint8_t share_count,
+bool shamir_interpolate(uint8_t* result, uint8_t result_index,
+                        const uint8_t* share_indices,
+                        const uint8_t** share_values, uint8_t share_count,
                         size_t len) {
   size_t i = 0, j = 0;
   uint32_t x[8] = {0};

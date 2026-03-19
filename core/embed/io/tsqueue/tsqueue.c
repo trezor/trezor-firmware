@@ -23,8 +23,8 @@
 #include <sys/irq.h>
 
 // Initialize the queue
-void tsqueue_init(tsqueue_t *queue, tsqueue_entry_t *entries,
-                  uint8_t *buffer_mem, uint16_t size, uint16_t qlen) {
+void tsqueue_init(tsqueue_t* queue, tsqueue_entry_t* entries,
+                  uint8_t* buffer_mem, uint16_t size, uint16_t qlen) {
   irq_key_t key = irq_lock();
   queue->entries = entries;
   queue->qlen = qlen;
@@ -39,7 +39,7 @@ void tsqueue_init(tsqueue_t *queue, tsqueue_entry_t *entries,
   irq_unlock(key);
 }
 
-static void tsqueue_entry_reset(tsqueue_entry_t *entry, uint32_t data_size) {
+static void tsqueue_entry_reset(tsqueue_entry_t* entry, uint32_t data_size) {
   entry->len = 0;
   entry->used = 0;
   entry->aborted = false;
@@ -47,7 +47,7 @@ static void tsqueue_entry_reset(tsqueue_entry_t *entry, uint32_t data_size) {
   memset(entry->buffer, 0, data_size);
 }
 
-void tsqueue_reset(tsqueue_t *queue) {
+void tsqueue_reset(tsqueue_t* queue) {
   irq_key_t key = irq_lock();
   queue->rix = 0;
   queue->wix = 0;
@@ -60,7 +60,7 @@ void tsqueue_reset(tsqueue_t *queue) {
   irq_unlock(key);
 }
 
-static int32_t get_next_id(tsqueue_t *queue) {
+static int32_t get_next_id(tsqueue_t* queue) {
   int val = 1;
   if (queue->next_id < INT32_MAX) {
     val = queue->next_id;
@@ -71,8 +71,8 @@ static int32_t get_next_id(tsqueue_t *queue) {
   return val;
 }
 
-bool tsqueue_enqueue(tsqueue_t *queue, const uint8_t *data, uint16_t len,
-                     int32_t *id) {
+bool tsqueue_enqueue(tsqueue_t* queue, const uint8_t* data, uint16_t len,
+                     int32_t* id) {
   irq_key_t key = irq_lock();
 
   if (queue->entries[queue->wix].used) {
@@ -100,15 +100,15 @@ bool tsqueue_enqueue(tsqueue_t *queue, const uint8_t *data, uint16_t len,
   return true;
 }
 
-static void tsqueue_discard_aborted(tsqueue_t *queue) {
+static void tsqueue_discard_aborted(tsqueue_t* queue) {
   while (queue->entries[queue->rix].aborted) {
     tsqueue_entry_reset(&queue->entries[queue->rix], queue->size);
     queue->rix = (queue->rix + 1) % queue->qlen;
   }
 }
 
-bool tsqueue_dequeue(tsqueue_t *queue, uint8_t *data, uint16_t max_len,
-                     uint16_t *len, int32_t *id) {
+bool tsqueue_dequeue(tsqueue_t* queue, uint8_t* data, uint16_t max_len,
+                     uint16_t* len, int32_t* id) {
   irq_key_t key = irq_lock();
 
   tsqueue_discard_aborted(queue);
@@ -139,7 +139,7 @@ bool tsqueue_dequeue(tsqueue_t *queue, uint8_t *data, uint16_t max_len,
 }
 
 // Check if the queue is full
-bool tsqueue_full(tsqueue_t *queue) {
+bool tsqueue_full(tsqueue_t* queue) {
   irq_key_t key = irq_lock();
 
   tsqueue_discard_aborted(queue);
@@ -149,7 +149,7 @@ bool tsqueue_full(tsqueue_t *queue) {
   return full;
 }
 
-bool tsqueue_empty(tsqueue_t *queue) {
+bool tsqueue_empty(tsqueue_t* queue) {
   irq_key_t key = irq_lock();
 
   tsqueue_discard_aborted(queue);
@@ -161,8 +161,8 @@ bool tsqueue_empty(tsqueue_t *queue) {
   return empty;
 }
 
-bool tsqueue_abort(tsqueue_t *queue, int32_t id, uint8_t *data,
-                   uint16_t max_len, uint16_t *len) {
+bool tsqueue_abort(tsqueue_t* queue, int32_t id, uint8_t* data,
+                   uint16_t max_len, uint16_t* len) {
   bool found = false;
   irq_key_t key = irq_lock();
 

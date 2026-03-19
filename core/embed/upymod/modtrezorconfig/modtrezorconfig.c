@@ -55,7 +55,7 @@ static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
 ///     Locks the storage if it is currently unlocked, and allows setting
 ///     a new UI callback.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t* args) {
   if (n_args > 0) {
     MP_STATE_VM(trezorconfig_ui_wait_callback) = args[0];
     storage_setup(wrapped_ui_wait_callback);
@@ -207,12 +207,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
 ///     the wipe code. Has to be run with unlocked storage.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
-                                            const mp_obj_t *args) {
+                                            const mp_obj_t* args) {
   mp_buffer_info_t newpin = {0};
   mp_get_buffer_raise(args[0], &newpin, MP_BUFFER_READ);
 
   mp_buffer_info_t ext_salt_b = {0};
-  const uint8_t *new_ext_salt = NULL;
+  const uint8_t* new_ext_salt = NULL;
   if (args[1] != mp_const_none) {
     mp_get_buffer_raise(args[1], &ext_salt_b, MP_BUFFER_READ);
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
@@ -283,7 +283,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_wipe_code_obj,
 ///     Change wipe code. Returns True on success, False on failure.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_change_wipe_code(size_t n_args,
-                                                  const mp_obj_t *args) {
+                                                  const mp_obj_t* args) {
   mp_buffer_info_t pin_b = {0};
   mp_get_buffer_raise(args[0], &pin_b, MP_BUFFER_READ);
 
@@ -291,7 +291,7 @@ STATIC mp_obj_t mod_trezorconfig_change_wipe_code(size_t n_args,
   mp_get_buffer_raise(args[2], &wipe_code_b, MP_BUFFER_READ);
 
   mp_buffer_info_t ext_salt_b = {0};
-  const uint8_t *ext_salt = NULL;
+  const uint8_t* ext_salt = NULL;
   if (args[1] != mp_const_none) {
     mp_get_buffer_raise(args[1], &ext_salt_b, MP_BUFFER_READ);
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
@@ -316,7 +316,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     Raises a RuntimeError if decryption or authentication of the stored
 ///     value fails.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t* args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
     mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
@@ -349,7 +349,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
 ///     """
 ///     Sets a value of given key for given app.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t* args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
     mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
@@ -376,7 +376,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
 ///     """
 ///     Deletes the given key of the given app.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t* args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
     mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
@@ -408,7 +408,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 4,
 ///     Sets the given key of the given app as a counter with the given value.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
-                                             const mp_obj_t *args) {
+                                             const mp_obj_t* args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
     mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
@@ -438,7 +438,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3,
 ///     returns the new value.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
-                                              const mp_obj_t *args) {
+                                              const mp_obj_t* args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
     mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
@@ -522,7 +522,7 @@ STATIC MP_DEFINE_CONST_DICT(mp_module_trezorconfig_globals,
 
 const mp_obj_module_t mp_module_trezorconfig = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mp_module_trezorconfig_globals,
+    .globals = (mp_obj_dict_t*)&mp_module_trezorconfig_globals,
 };
 
 MP_REGISTER_MODULE(MP_QSTR_trezorconfig, mp_module_trezorconfig);

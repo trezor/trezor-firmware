@@ -37,7 +37,7 @@
 
 extern nrf_driver_t g_nrf_driver;
 
-void nrf_spi_init(nrf_driver_t *drv) {
+void nrf_spi_init(nrf_driver_t* drv) {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   __HAL_RCC_GPDMA1_CLK_ENABLE();
@@ -122,9 +122,9 @@ void nrf_spi_deinit(void) {
   HAL_GPIO_DeInit(GPIOA, GPIO_PIN_7);
 }
 
-int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
-                     uint32_t len, nrf_tx_callback_t callback, void *context) {
-  nrf_driver_t *drv = &g_nrf_driver;
+int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t* data,
+                     uint32_t len, nrf_tx_callback_t callback, void* context) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return -1;
   }
@@ -156,10 +156,10 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
   memcpy(&tx_request.packet.data, data, len);
   memset(&tx_request.packet.data[len], 0, sizeof(tx_request.packet.data) - len);
   tx_request.packet.crc =
-      crc8((uint8_t *)&tx_request.packet, sizeof(tx_request.packet) - 1, 0x07,
+      crc8((uint8_t*)&tx_request.packet, sizeof(tx_request.packet) - 1, 0x07,
            0x00, false);
 
-  tsqueue_enqueue(&drv->tx_queue, (uint8_t *)&tx_request,
+  tsqueue_enqueue(&drv->tx_queue, (uint8_t*)&tx_request,
                   sizeof(nrf_tx_request_t), &id);
 
   irq_key_t key = irq_lock();
@@ -172,7 +172,7 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
 }
 
 bool nrf_abort_msg(int32_t id) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return false;
   }
@@ -211,7 +211,7 @@ void GPDMA1_Channel1_IRQHandler(void) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (drv->initialized) {
     HAL_DMA_IRQHandler(&drv->spi_tx_dma);
   }
@@ -226,7 +226,7 @@ void GPDMA1_Channel2_IRQHandler(void) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (drv->initialized) {
     HAL_DMA_IRQHandler(&drv->spi_rx_dma);
   }
@@ -241,7 +241,7 @@ void SPI1_IRQHandler(void) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (drv->initialized) {
     HAL_SPI_IRQHandler(&drv->spi);
   }
@@ -251,27 +251,27 @@ void SPI1_IRQHandler(void) {
   IRQ_LOG_EXIT();
 }
 
-static void nrf_process_msg(nrf_driver_t *drv, const uint8_t *data,
+static void nrf_process_msg(nrf_driver_t* drv, const uint8_t* data,
                             uint32_t len, nrf_service_id_t service) {
   if (drv->service_listeners[service] != NULL) {
     drv->service_listeners[service](data, len);
   }
 }
 
-void nrf_prepare_spi_data(nrf_driver_t *drv) {
+void nrf_prepare_spi_data(nrf_driver_t* drv) {
   if (drv->pending_spi_transaction) {
     return;
   }
   memset(&drv->long_rx_buffer, 0, sizeof(spi_packet_t));
-  if (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
+  if (tsqueue_dequeue(&drv->tx_queue, (uint8_t*)&drv->tx_request,
                       sizeof(nrf_tx_request_t), NULL, &drv->tx_request_id)) {
-    HAL_SPI_TransmitReceive_DMA(&drv->spi, (uint8_t *)&drv->tx_request.packet,
-                                (uint8_t *)&drv->long_rx_buffer,
+    HAL_SPI_TransmitReceive_DMA(&drv->spi, (uint8_t*)&drv->tx_request.packet,
+                                (uint8_t*)&drv->long_rx_buffer,
                                 sizeof(spi_packet_t));
   } else {
     memset(&drv->tx_request.packet, 0, sizeof(spi_packet_t));
-    HAL_SPI_TransmitReceive_DMA(&drv->spi, (uint8_t *)&drv->tx_request.packet,
-                                (uint8_t *)&drv->long_rx_buffer,
+    HAL_SPI_TransmitReceive_DMA(&drv->spi, (uint8_t*)&drv->tx_request.packet,
+                                (uint8_t*)&drv->long_rx_buffer,
                                 sizeof(spi_packet_t));
   }
 
@@ -282,8 +282,8 @@ void nrf_prepare_spi_data(nrf_driver_t *drv) {
   systimer_set(drv->timer, 2000);
 }
 
-void nrf_spi_transfer_complete(SPI_HandleTypeDef *hspi) {
-  nrf_driver_t *drv = &g_nrf_driver;
+void nrf_spi_transfer_complete(SPI_HandleTypeDef* hspi) {
+  nrf_driver_t* drv = &g_nrf_driver;
 
   if (!drv->initialized) {
     return;
@@ -311,7 +311,7 @@ void nrf_spi_transfer_complete(SPI_HandleTypeDef *hspi) {
   }
 
   // process received data
-  uint8_t crc = crc8((uint8_t *)&packet, MAX_SPI_DATA_SIZE + SPI_HEADER_SIZE,
+  uint8_t crc = crc8((uint8_t*)&packet, MAX_SPI_DATA_SIZE + SPI_HEADER_SIZE,
                      0x07, 0x00, false);
 
   if (nrf_is_valid_startbyte(packet.service_id) && packet.crc == crc) {
@@ -319,16 +319,16 @@ void nrf_spi_transfer_complete(SPI_HandleTypeDef *hspi) {
   }
 }
 
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi) {
   nrf_spi_transfer_complete(hspi);
 }
 
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef* hspi) {
   nrf_spi_transfer_complete(hspi);
 }
 
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi) {
-  nrf_driver_t *drv = &g_nrf_driver;
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef* hspi) {
+  nrf_driver_t* drv = &g_nrf_driver;
 
   if (!drv->initialized) {
     return;

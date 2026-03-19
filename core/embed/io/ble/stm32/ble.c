@@ -100,7 +100,7 @@ typedef struct {
   bool result;
   bool result_ready;
 
-  systimer_t *timer;
+  systimer_t* timer;
   uint16_t ping_cntr;
 
 #ifdef USE_POWER_MANAGER
@@ -115,20 +115,20 @@ static ble_driver_t g_ble_driver = {0};
 static const syshandle_vmt_t ble_handle_vmt;
 static const syshandle_vmt_t ble_iface_handle_vmt;
 
-static void ble_pairing_end(ble_driver_t *drv) {
+static void ble_pairing_end(ble_driver_t* drv) {
   drv->pairing_allowed = false;
   drv->pairing_requested = false;
   drv->mode_requested = BLE_MODE_KEEP_CONNECTION;
 }
 
-static bool ble_send_state_request(ble_driver_t *drv) {
+static bool ble_send_state_request(ble_driver_t* drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_SEND_STATE;
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
          0;
 }
 
-static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
+static bool ble_send_advertising_on(ble_driver_t* drv, bool whitelist) {
   (void)drv;
 
   unit_properties_t props;
@@ -148,11 +148,11 @@ static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
 
   memcpy(data.name, drv->adv_name, BLE_ADV_NAME_LEN);
 
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&data, sizeof(data),
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t*)&data, sizeof(data),
                       NULL, NULL) >= 0;
 }
 
-static bool ble_send_speed_request(ble_driver_t *drv, bool high_speed) {
+static bool ble_send_speed_request(ble_driver_t* drv, bool high_speed) {
   (void)drv;
   uint8_t cmd =
       high_speed ? INTERNAL_CMD_SET_SPEED_HIGH : INTERNAL_CMD_SET_SPEED_LOW;
@@ -160,7 +160,7 @@ static bool ble_send_speed_request(ble_driver_t *drv, bool high_speed) {
          0;
 }
 
-static bool ble_send_power_level_request(ble_driver_t *drv,
+static bool ble_send_power_level_request(ble_driver_t* drv,
                                          ble_tx_power_level_t power_level) {
   (void)drv;
   uint8_t cmd[2] = {INTERNAL_CMD_SET_TX_POWER, (uint8_t)power_level};
@@ -168,28 +168,28 @@ static bool ble_send_power_level_request(ble_driver_t *drv,
          0;
 }
 
-static bool ble_send_advertising_off(ble_driver_t *drv) {
+static bool ble_send_advertising_off(ble_driver_t* drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_ADVERTISING_OFF;
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
          0;
 }
 
-static bool ble_send_erase_bonds(ble_driver_t *drv) {
+static bool ble_send_erase_bonds(ble_driver_t* drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_ERASE_BONDS;
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
          0;
 }
 
-static bool ble_send_disconnect(ble_driver_t *drv) {
+static bool ble_send_disconnect(ble_driver_t* drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_DISCONNECT;
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
          0;
 }
 
-static bool ble_send_pairing_reject(ble_driver_t *drv) {
+static bool ble_send_pairing_reject(ble_driver_t* drv) {
   uint8_t cmd = INTERNAL_CMD_REJECT_PAIRING;
   bool result =
       nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
@@ -201,14 +201,14 @@ static bool ble_send_pairing_reject(ble_driver_t *drv) {
   return result;
 }
 
-static bool ble_send_pairing_accept(ble_driver_t *drv, uint8_t *code) {
+static bool ble_send_pairing_accept(ble_driver_t* drv, uint8_t* code) {
   cmd_allow_pairing_t data = {
       .cmd_id = INTERNAL_CMD_ALLOW_PAIRING,
   };
 
   memcpy(data.code, code, sizeof(data.code));
 
-  bool result = nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&data,
+  bool result = nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t*)&data,
                              sizeof(data), NULL, NULL);
 
   if (result) {
@@ -218,14 +218,14 @@ static bool ble_send_pairing_accept(ble_driver_t *drv, uint8_t *code) {
   return result;
 }
 
-static bool ble_send_mac_request(ble_driver_t *drv) {
+static bool ble_send_mac_request(ble_driver_t* drv) {
   UNUSED(drv);
   uint8_t cmd = INTERNAL_CMD_GET_MAC;
 
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
-static bool ble_send_bond_list_request(ble_driver_t *drv) {
+static bool ble_send_bond_list_request(ble_driver_t* drv) {
   UNUSED(drv);
   uint8_t cmd = INTERNAL_CMD_GET_BOND_LIST;
 
@@ -239,8 +239,8 @@ static bool ble_send_battery_update(uint8_t level) {
 }
 #endif
 
-static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+static void ble_process_rx_msg_status(const uint8_t* data, uint32_t len) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return;
@@ -259,8 +259,7 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
       // new connection
 
       ble_event_t event = {.type = BLE_CONNECTED};
-      tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event),
-                      NULL);
+      tsqueue_enqueue(&drv->event_queue, (uint8_t*)&event, sizeof(event), NULL);
 
       drv->pairing_requested = false;
       if (drv->mode_current == BLE_MODE_PAIRING) {
@@ -283,8 +282,7 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
     } else {
       // connection lost
       ble_event_t event = {.type = BLE_DISCONNECTED};
-      tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event),
-                      NULL);
+      tsqueue_enqueue(&drv->event_queue, (uint8_t*)&event, sizeof(event), NULL);
 
       if (drv->mode_requested == BLE_MODE_PAIRING) {
         ble_pairing_end(drv);
@@ -315,8 +313,7 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
       ble_event_t event = {.type = BLE_CONNECTION_CHANGED};
       memcpy(event.data, drv->connected_addr.addr,
              sizeof(drv->connected_addr.addr));
-      tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event),
-                      NULL);
+      tsqueue_enqueue(&drv->event_queue, (uint8_t*)&event, sizeof(event), NULL);
     }
   }
 
@@ -346,7 +343,7 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
     // bonded device connected in pairing mode - end pairing
 
     ble_event_t event = {.type = BLE_PAIRING_NOT_NEEDED};
-    tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
+    tsqueue_enqueue(&drv->event_queue, (uint8_t*)&event, sizeof(event), NULL);
 
     ble_pairing_end(drv);
   }
@@ -396,9 +393,9 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
   drv->status_valid = true;
 }
 
-static void ble_process_rx_msg_pairing_request(const uint8_t *data,
+static void ble_process_rx_msg_pairing_request(const uint8_t* data,
                                                uint32_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
@@ -416,7 +413,7 @@ static void ble_process_rx_msg_pairing_request(const uint8_t *data,
   ble_event_t event = {.type = BLE_PAIRING_REQUEST,
                        .data_len = BLE_PAIRING_CODE_LEN};
   memcpy(event.data, &data[1], BLE_PAIRING_CODE_LEN);
-  if (!tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event),
+  if (!tsqueue_enqueue(&drv->event_queue, (uint8_t*)&event, sizeof(event),
                        NULL)) {
     ble_send_pairing_reject(drv);
   } else {
@@ -424,34 +421,34 @@ static void ble_process_rx_msg_pairing_request(const uint8_t *data,
   }
 }
 
-static void ble_process_rx_msg_pairing_cancelled(const uint8_t *data,
+static void ble_process_rx_msg_pairing_cancelled(const uint8_t* data,
                                                  uint32_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
 
   ble_event_t event = {.type = BLE_PAIRING_CANCELLED, .data_len = 0};
-  tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
+  tsqueue_enqueue(&drv->event_queue, (uint8_t*)&event, sizeof(event), NULL);
   ble_pairing_end(drv);
 }
 
-static void ble_process_rx_msg_pairing_completed(const uint8_t *data,
+static void ble_process_rx_msg_pairing_completed(const uint8_t* data,
                                                  uint32_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
 
   ble_event_t event = {.type = BLE_PAIRING_COMPLETED, .data_len = 0};
-  tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
+  tsqueue_enqueue(&drv->event_queue, (uint8_t*)&event, sizeof(event), NULL);
   drv->pairing_allowed = false;
   drv->pairing_requested = false;
   drv->peer_count += 1;
 }
 
-static void ble_process_rx_msg_mac(const uint8_t *data, uint32_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+static void ble_process_rx_msg_mac(const uint8_t* data, uint32_t len) {
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
@@ -461,8 +458,8 @@ static void ble_process_rx_msg_mac(const uint8_t *data, uint32_t len) {
   memcpy(&drv->mac.addr, &data[1], sizeof(drv->mac.addr));
 }
 
-static void ble_process_rx_msg_bond_list(const uint8_t *data, uint32_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+static void ble_process_rx_msg_bond_list(const uint8_t* data, uint32_t len) {
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
@@ -476,8 +473,8 @@ static void ble_process_rx_msg_bond_list(const uint8_t *data, uint32_t len) {
   memcpy(&drv->bonds, &data[2], MIN(len - 2, sizeof(drv->bonds)));
 }
 
-static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+static void ble_process_rx_msg(const uint8_t* data, uint32_t len) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (len < 1) {
     return;
@@ -515,14 +512,14 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
   }
 }
 
-static bool ble_connected_add_match(ble_driver_t *drv, const uint8_t *addr) {
+static bool ble_connected_add_match(ble_driver_t* drv, const uint8_t* addr) {
   return (addr[0] == drv->connected_addr.type &&
           memcmp(&addr[1], drv->connected_addr.addr,
                  sizeof(drv->connected_addr.addr)) == 0);
 }
 
-static void ble_process_data(const uint8_t *data, uint32_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+static void ble_process_data(const uint8_t* data, uint32_t len) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized || !drv->enabled || !drv->accept_msgs) {
     return;
@@ -542,15 +539,15 @@ static void ble_process_data(const uint8_t *data, uint32_t len) {
     ble_event_t event = {.type = BLE_CONNECTION_CHANGED};
     memcpy(event.data, drv->connected_addr.addr,
            sizeof(drv->connected_addr.addr));
-    tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
+    tsqueue_enqueue(&drv->event_queue, (uint8_t*)&event, sizeof(event), NULL);
   }
 
   tsqueue_enqueue(&drv->rx_queue, data, len, NULL);
 }
 
 // background loop, called from systimer every LOOP_PERIOD_MS
-static void ble_loop(void *context) {
-  ble_driver_t *drv = (ble_driver_t *)context;
+static void ble_loop(void* context) {
+  ble_driver_t* drv = (ble_driver_t*)context;
 
   if (!drv->initialized) {
     return;
@@ -578,7 +575,7 @@ static void ble_loop(void *context) {
           .cmd_id = INTERNAL_CMD_SET_BUSY,
           .flag = 0,
       };
-      nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&cmd, sizeof(cmd), NULL,
+      nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t*)&cmd, sizeof(cmd), NULL,
                    NULL);
     }
 
@@ -587,7 +584,7 @@ static void ble_loop(void *context) {
           .cmd_id = INTERNAL_CMD_SET_BUSY,
           .flag = 1,
       };
-      nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&cmd, sizeof(cmd), NULL,
+      nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t*)&cmd, sizeof(cmd), NULL,
                    NULL);
     }
 
@@ -623,7 +620,7 @@ static void ble_loop(void *context) {
 }
 
 bool ble_init(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (drv->initialized) {
     return true;
@@ -632,14 +629,14 @@ bool ble_init(void) {
   memset(drv, 0, sizeof(ble_driver_t));
 
   tsqueue_init(&drv->event_queue, drv->event_queue_entries,
-               (uint8_t *)drv->event_queue_buffers, sizeof(ble_event_t),
+               (uint8_t*)drv->event_queue_buffers, sizeof(ble_event_t),
                EVENT_QUEUE_LEN);
 
   tsqueue_init(&drv->rx_queue, drv->rx_queue_entries,
-               (uint8_t *)drv->rx_queue_buffers, BLE_DATA_SIZE, RX_QUEUE_LEN);
+               (uint8_t*)drv->rx_queue_buffers, BLE_DATA_SIZE, RX_QUEUE_LEN);
 
   tsqueue_init(&drv->tx_queue, drv->ts_queue_entries,
-               (uint8_t *)drv->tx_queue_buffers, BLE_DATA_SIZE, TX_QUEUE_LEN);
+               (uint8_t*)drv->tx_queue_buffers, BLE_DATA_SIZE, TX_QUEUE_LEN);
 
   drv->timer = systimer_create(ble_loop, drv);
 
@@ -687,7 +684,7 @@ cleanup:
   return false;
 }
 
-static void ble_deinit_common(ble_driver_t *drv) {
+static void ble_deinit_common(ble_driver_t* drv) {
   if (!drv->initialized) {
     return;
   }
@@ -706,7 +703,7 @@ static void ble_deinit_common(ble_driver_t *drv) {
 }
 
 void ble_deinit(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (drv->initialized) {
     ble_deinit_common(drv);
@@ -715,8 +712,8 @@ void ble_deinit(void) {
   }
 }
 
-void ble_suspend(ble_wakeup_params_t *wakeup_params) {
-  ble_driver_t *drv = &g_ble_driver;
+void ble_suspend(ble_wakeup_params_t* wakeup_params) {
+  ble_driver_t* drv = &g_ble_driver;
 
   memset(wakeup_params, 0, sizeof(ble_wakeup_params_t));
 
@@ -750,8 +747,8 @@ void ble_suspend(ble_wakeup_params_t *wakeup_params) {
   }
 }
 
-bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
-  ble_driver_t *drv = &g_ble_driver;
+bool ble_resume(const ble_wakeup_params_t* wakeup_params) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!ble_init()) {
     return false;
@@ -787,7 +784,7 @@ bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
 }
 
 bool ble_connected(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -803,7 +800,7 @@ bool ble_connected(void) {
 }
 
 void ble_start(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return;
@@ -817,7 +814,7 @@ void ble_start(void) {
 }
 
 void ble_stop(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return;
@@ -832,7 +829,7 @@ void ble_stop(void) {
 }
 
 bool ble_can_write(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -852,8 +849,8 @@ bool ble_can_write(void) {
   return full;
 }
 
-bool ble_write(const uint8_t *data, uint16_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+bool ble_write(const uint8_t* data, uint16_t len) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -888,7 +885,7 @@ bool ble_write(const uint8_t *data, uint16_t len) {
 }
 
 bool ble_can_read(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -903,8 +900,8 @@ bool ble_can_read(void) {
   return result;
 }
 
-uint32_t ble_read(uint8_t *data, uint16_t max_len) {
-  ble_driver_t *drv = &g_ble_driver;
+uint32_t ble_read(uint8_t* data, uint16_t max_len) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -912,7 +909,7 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
 
   irq_key_t key = irq_lock();
 
-  tsqueue_t *queue = &drv->rx_queue;
+  tsqueue_t* queue = &drv->rx_queue;
 
   uint16_t read_len = 0;
 
@@ -935,7 +932,7 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
 }
 
 bool ble_switch_off(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -952,7 +949,7 @@ bool ble_switch_off(void) {
 }
 
 bool ble_switch_on(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized || !drv->enabled) {
     return false;
@@ -973,7 +970,7 @@ bool ble_switch_on(void) {
 }
 
 bool ble_set_static_mac(bool static_mac) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -989,7 +986,7 @@ bool ble_set_static_mac(bool static_mac) {
 }
 
 static void ble_event_flush(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return;
@@ -1002,8 +999,8 @@ static void ble_event_flush(void) {
   irq_unlock(key);
 }
 
-bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
-  ble_driver_t *drv = &g_ble_driver;
+bool ble_enter_pairing_mode(const uint8_t* name, size_t name_len) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized || !drv->enabled) {
     return false;
@@ -1053,7 +1050,7 @@ bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
 }
 
 bool ble_disconnect(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -1073,7 +1070,7 @@ bool ble_disconnect(void) {
 }
 
 bool ble_erase_bonds(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -1086,26 +1083,26 @@ bool ble_erase_bonds(void) {
   return result;
 }
 
-bool ble_allow_pairing(const uint8_t *pairing_code) {
+bool ble_allow_pairing(const uint8_t* pairing_code) {
   if (pairing_code == NULL) {
     return false;
   }
 
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
   }
 
   irq_key_t key = irq_lock();
-  bool result = ble_send_pairing_accept(drv, (uint8_t *)pairing_code);
+  bool result = ble_send_pairing_accept(drv, (uint8_t*)pairing_code);
   irq_unlock(key);
 
   return result;
 }
 
 bool ble_reject_pairing(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -1119,7 +1116,7 @@ bool ble_reject_pairing(void) {
 }
 
 bool ble_keep_connection(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -1139,8 +1136,8 @@ bool ble_keep_connection(void) {
   return true;
 }
 
-void ble_set_name(const uint8_t *name, size_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+void ble_set_name(const uint8_t* name, size_t len) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return;
@@ -1166,8 +1163,8 @@ void ble_set_name(const uint8_t *name, size_t len) {
   irq_unlock(key);
 }
 
-bool ble_get_event(ble_event_t *event) {
-  ble_driver_t *drv = &g_ble_driver;
+bool ble_get_event(ble_event_t* event) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -1175,7 +1172,7 @@ bool ble_get_event(ble_event_t *event) {
 
   irq_key_t key = irq_lock();
 
-  bool result = tsqueue_dequeue(&drv->event_queue, (uint8_t *)event,
+  bool result = tsqueue_dequeue(&drv->event_queue, (uint8_t*)event,
                                 sizeof(*event), NULL, NULL);
 
   irq_unlock(key);
@@ -1183,8 +1180,8 @@ bool ble_get_event(ble_event_t *event) {
   return result;
 }
 
-void ble_get_state(ble_state_t *state) {
-  const ble_driver_t *drv = &g_ble_driver;
+void ble_get_state(ble_state_t* state) {
+  const ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     memset(state, 0, sizeof(ble_state_t));
@@ -1205,8 +1202,8 @@ void ble_get_state(ble_state_t *state) {
   irq_unlock(key);
 }
 
-bool ble_get_mac(bt_le_addr_t *mac) {
-  ble_driver_t *drv = &g_ble_driver;
+bool ble_get_mac(bt_le_addr_t* mac) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     memset(mac, 0, sizeof(*mac));
@@ -1235,8 +1232,8 @@ bool ble_get_mac(bt_le_addr_t *mac) {
   return false;
 }
 
-uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
-  ble_driver_t *drv = &g_ble_driver;
+uint8_t ble_get_bond_list(bt_le_addr_t* bonds, size_t count) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized || count < BLE_MAX_BONDS) {
     memset(bonds, 0, count * sizeof(bt_le_addr_t));
@@ -1265,8 +1262,8 @@ uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
   return 0;
 }
 
-void ble_get_advertising_name(char *name, size_t max_len) {
-  ble_driver_t *drv = &g_ble_driver;
+void ble_get_advertising_name(char* name, size_t max_len) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (max_len < sizeof(drv->adv_name)) {
     memset(name, 0, max_len);
@@ -1281,8 +1278,8 @@ void ble_get_advertising_name(char *name, size_t max_len) {
   memcpy(name, drv->adv_name, sizeof(drv->adv_name));
 }
 
-bool ble_unpair(const bt_le_addr_t *addr) {
-  ble_driver_t *drv = &g_ble_driver;
+bool ble_unpair(const bt_le_addr_t* addr) {
+  ble_driver_t* drv = &g_ble_driver;
 
   if (!drv->initialized) {
     return false;
@@ -1326,7 +1323,7 @@ bool ble_unpair(const bt_le_addr_t *addr) {
 }
 
 void ble_set_high_speed(bool enable) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
@@ -1337,7 +1334,7 @@ void ble_set_high_speed(bool enable) {
 }
 
 void ble_set_tx_power(ble_tx_power_level_t level) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
@@ -1347,8 +1344,8 @@ void ble_set_tx_power(ble_tx_power_level_t level) {
   irq_unlock(key);
 }
 
-void ble_notify(const uint8_t *data, size_t len) {
-  ble_driver_t *drv = &g_ble_driver;
+void ble_notify(const uint8_t* data, size_t len) {
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
@@ -1361,7 +1358,7 @@ void ble_notify(const uint8_t *data, size_t len) {
 }
 
 void ble_set_enabled(bool enabled) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return;
   }
@@ -1379,14 +1376,14 @@ void ble_set_enabled(bool enabled) {
 }
 
 bool ble_get_enabled(void) {
-  ble_driver_t *drv = &g_ble_driver;
+  ble_driver_t* drv = &g_ble_driver;
   if (!drv->initialized) {
     return false;
   }
   return drv->enabled;
 }
 
-static void on_ble_iface_event_poll(void *context, bool read_awaited,
+static void on_ble_iface_event_poll(void* context, bool read_awaited,
                                     bool write_awaited) {
   UNUSED(context);
 
@@ -1405,8 +1402,8 @@ static void on_ble_iface_event_poll(void *context, bool read_awaited,
   }
 }
 
-static bool on_ble_iface_read_ready(void *context, systask_id_t task_id,
-                                    void *param) {
+static bool on_ble_iface_read_ready(void* context, systask_id_t task_id,
+                                    void* param) {
   UNUSED(context);
   UNUSED(task_id);
   UNUSED(param);
@@ -1414,8 +1411,8 @@ static bool on_ble_iface_read_ready(void *context, systask_id_t task_id,
   return ble_can_read();
 }
 
-static bool on_ble_iface_check_write_ready(void *context, systask_id_t task_id,
-                                           void *param) {
+static bool on_ble_iface_check_write_ready(void* context, systask_id_t task_id,
+                                           void* param) {
   UNUSED(context);
   UNUSED(task_id);
   UNUSED(param);
@@ -1431,8 +1428,8 @@ static const syshandle_vmt_t ble_iface_handle_vmt = {
     .poll = on_ble_iface_event_poll,
 };
 
-static void on_ble_poll(void *context, bool read_awaited, bool write_awaited) {
-  ble_driver_t *drv = (ble_driver_t *)context;
+static void on_ble_poll(void* context, bool read_awaited, bool write_awaited) {
+  ble_driver_t* drv = (ble_driver_t*)context;
 
   UNUSED(write_awaited);
 
@@ -1450,12 +1447,12 @@ static void on_ble_poll(void *context, bool read_awaited, bool write_awaited) {
   }
 }
 
-static bool on_ble_check_read_ready(void *context, systask_id_t task_id,
-                                    void *param) {
+static bool on_ble_check_read_ready(void* context, systask_id_t task_id,
+                                    void* param) {
   UNUSED(context);
   UNUSED(task_id);
 
-  bool queue_is_empty = *(bool *)param;
+  bool queue_is_empty = *(bool*)param;
 
   return !queue_is_empty;
 }

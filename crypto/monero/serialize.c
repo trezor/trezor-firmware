@@ -13,7 +13,7 @@ int xmr_size_varint(uint64_t num) {
   return ctr;
 }
 
-int xmr_write_varint(uint8_t *buff, size_t buff_size, uint64_t num) {
+int xmr_write_varint(uint8_t* buff, size_t buff_size, uint64_t num) {
   unsigned ctr = 0;
   while (num >= 0x80 && ctr < buff_size) {
     *buff = (uint8_t)(((num) & 0x7f) | 0x80);
@@ -30,7 +30,7 @@ int xmr_write_varint(uint8_t *buff, size_t buff_size, uint64_t num) {
   return ctr <= buff_size ? (int)ctr : -1;
 }
 
-int xmr_read_varint(uint8_t *buff, size_t buff_size, uint64_t *val) {
+int xmr_read_varint(uint8_t* buff, size_t buff_size, uint64_t* val) {
   unsigned read = 0;
   int finished_ok = 0;
   *val = 0;

@@ -20,8 +20,8 @@
 
 #include "lhs200kb-if21.h"
 
-void lhs200kb_if21_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
-                                    uint16_t *y_new) {
+void lhs200kb_if21_touch_correction(uint16_t x, uint16_t y, uint16_t* x_new,
+                                    uint16_t* y_new) {
   *x_new = y;
   *y_new = DISPLAY_RESY - x;
 }

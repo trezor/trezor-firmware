@@ -30,7 +30,7 @@ void flash_otp_init() {
   // intentionally left empty
 }
 
-secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
+secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t* data,
                        uint8_t datalen) {
   if (block >= FLASH_OTP_NUM_BLOCKS ||
       offset + datalen > FLASH_OTP_BLOCK_SIZE) {
@@ -40,8 +40,8 @@ secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
 
   for (uint8_t i = 0; i < datalen; i++) {
-    data[i] = *(__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE +
-                                offset + i);
+    data[i] = *(__IO uint8_t*)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE +
+                               offset + i);
   }
 
   mpu_restore(mpu_mode);
@@ -49,7 +49,7 @@ secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
   return sectrue;
 }
 
-secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
+secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t* data,
                         uint8_t datalen) {
   if (datalen % 16 != 0) {
     return secfalse;
@@ -82,8 +82,8 @@ secbool flash_otp_lock(uint8_t block) {
   }
 
   // check that all quadwords in the block have been written to
-  volatile uint8_t *addr =
-      (__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE);
+  volatile uint8_t* addr =
+      (__IO uint8_t*)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE);
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
 
@@ -111,8 +111,8 @@ secbool flash_otp_is_locked(uint8_t block) {
   secbool is_locked = secfalse;
 
   // considering block locked if any quadword in the block is non-0xFF
-  volatile uint8_t *addr =
-      (__IO uint8_t *)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE);
+  volatile uint8_t* addr =
+      (__IO uint8_t*)(FLASH_OTP_BASE + block * FLASH_OTP_BLOCK_SIZE);
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
 

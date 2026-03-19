@@ -28,7 +28,7 @@
  * (usb_stop is called). */
 typedef struct {
   syshandle_t handle;
-  uint8_t *rx_buffer;  // With length of max_packet_len bytes
+  uint8_t* rx_buffer;  // With length of max_packet_len bytes
   uint8_t iface_num;   // Address of this WebUSB interface
 #ifdef TREZOR_EMULATOR
   uint16_t emu_port;  // UDP port of this interface in the emulator.
@@ -42,4 +42,4 @@ typedef struct {
   uint8_t max_packet_len;    // Length of the biggest report and of rx_buffer
 } usb_webusb_info_t;
 
-secbool __wur usb_webusb_add(const usb_webusb_info_t *webusb_info);
+secbool __wur usb_webusb_add(const usb_webusb_info_t* webusb_info);

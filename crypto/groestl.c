@@ -333,9 +333,9 @@ static const sph_u32 T1dn[] = {
     memcpy((sc)->state.narrow, H, sizeof H); \
   } while (0)
 
-static void RBTT(size_t d0, size_t d1, sph_u32 *a, size_t b0, size_t b1,
+static void RBTT(size_t d0, size_t d1, sph_u32* a, size_t b0, size_t b1,
                  size_t b2, size_t b3, size_t b4, size_t b5, size_t b6,
-                 size_t b7, sph_u32 *t) {
+                 size_t b7, sph_u32* t) {
   sph_u32 fu2 = T0up[B32_2(a[b2])];
   sph_u32 fd2 = T0dn[B32_2(a[b2])];
   sph_u32 fu3 = T1up[B32_3(a[b3])];
@@ -352,7 +352,7 @@ static void RBTT(size_t d0, size_t d1, sph_u32 *a, size_t b0, size_t b1,
           R32u(fu6, fd6) ^ R32u(fu7, fd7);
 }
 
-static void ROUND_BIG_P(sph_u32 *a, int r) {
+static void ROUND_BIG_P(sph_u32* a, int r) {
   sph_u32 t[32] = {0};
   for (size_t i = 0; i < 16; i++) {
     int j = i << 4;
@@ -376,7 +376,7 @@ static void ROUND_BIG_P(sph_u32 *a, int r) {
   memcpy(a, t, sizeof(t));
 }
 
-static void ROUND_BIG_Q(sph_u32 *a, int r) {
+static void ROUND_BIG_Q(sph_u32* a, int r) {
   sph_u32 t[32] = {0};
   for (size_t i = 0; i < 16; i++) {
     int j = i << 4;
@@ -434,7 +434,7 @@ static void ROUND_BIG_Q(sph_u32 *a, int r) {
     for (uu = 0; uu < 32; uu++) H[uu] ^= x[uu]; \
   } while (0)
 
-static void groestl_big_init(sph_groestl_big_context *sc, unsigned out_size) {
+static void groestl_big_init(sph_groestl_big_context* sc, unsigned out_size) {
   size_t u = 0;
 
   sc->ptr = 0;
@@ -444,13 +444,13 @@ static void groestl_big_init(sph_groestl_big_context *sc, unsigned out_size) {
   sc->count = 0;
 }
 
-static void groestl_big_core(sph_groestl_big_context *sc, const void *data,
+static void groestl_big_core(sph_groestl_big_context* sc, const void* data,
                              size_t len) {
   if (len == 0) {
     return;
   }
 
-  unsigned char *buf = NULL;
+  unsigned char* buf = NULL;
   size_t ptr = 0;
   DECL_STATE_BIG
 
@@ -471,7 +471,7 @@ static void groestl_big_core(sph_groestl_big_context *sc, const void *data,
     if (clen > len) clen = len;
     memcpy(buf + ptr, data, clen);
     ptr += clen;
-    data = (const unsigned char *)data + clen;
+    data = (const unsigned char*)data + clen;
     len -= clen;
     if (ptr == sizeof sc->buf) {
       COMPRESS_BIG;
@@ -483,8 +483,8 @@ static void groestl_big_core(sph_groestl_big_context *sc, const void *data,
   sc->ptr = ptr;
 }
 
-static void groestl_big_close(sph_groestl_big_context *sc, unsigned ub,
-                              unsigned n, void *dst, size_t out_len) {
+static void groestl_big_close(sph_groestl_big_context* sc, unsigned ub,
+                              unsigned n, void* dst, size_t out_len) {
   unsigned char pad[136] = {0};
   size_t ptr = 0, pad_len = 0, u2 = 0;
   sph_u64 count = 0;
@@ -511,19 +511,19 @@ static void groestl_big_close(sph_groestl_big_context *sc, unsigned ub,
   groestl_big_init(sc, (unsigned)out_len << 3);
 }
 
-void groestl512_Init(void *cc) {
-  groestl_big_init((sph_groestl_big_context *)cc, 512);
+void groestl512_Init(void* cc) {
+  groestl_big_init((sph_groestl_big_context*)cc, 512);
 }
 
-void groestl512_Update(void *cc, const void *data, size_t len) {
-  groestl_big_core((sph_groestl_big_context *)cc, data, len);
+void groestl512_Update(void* cc, const void* data, size_t len) {
+  groestl_big_core((sph_groestl_big_context*)cc, data, len);
 }
 
-void groestl512_Final(void *cc, void *dst) {
-  groestl_big_close((sph_groestl_big_context *)cc, 0, 0, dst, 64);
+void groestl512_Final(void* cc, void* dst) {
+  groestl_big_close((sph_groestl_big_context*)cc, 0, 0, dst, 64);
 }
 
-void groestl512_DoubleTrunc(void *cc, void *dst) {
+void groestl512_DoubleTrunc(void* cc, void* dst) {
   char buf[64] = {0};
 
   groestl512_Final(cc, buf);

@@ -26,8 +26,8 @@
 #endif
 
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
-__attribute__((section(".buf")))
-uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];
+__attribute__((section(
+    ".buf"))) uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];
 
 static uint32_t check_sdcard(void) {
   if (sectrue != sdcard_power_on()) {
@@ -48,11 +48,10 @@ static uint32_t check_sdcard(void) {
   sdcard_power_off();
 
   if (sectrue == read_status) {
-    const image_header *hdr =
-        read_image_header((const uint8_t *)sdcard_buf, BOOTLOADER_IMAGE_MAGIC,
-                          BOOTLOADER_MAXSIZE);
+    const image_header* hdr = read_image_header(
+        (const uint8_t*)sdcard_buf, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
 
-    if (hdr != (const image_header *)sdcard_buf) {
+    if (hdr != (const image_header*)sdcard_buf) {
       return 0;
     }
 
@@ -71,7 +70,7 @@ static uint32_t check_sdcard(void) {
 
     if (sectrue !=
         (check_single_hash(hdr->hashes,
-                           (const uint8_t *)sdcard_buf + code_start_offset,
+                           (const uint8_t*)sdcard_buf + code_start_offset,
                            hdr->codelen))) {
       return 0;
     }
@@ -151,8 +150,8 @@ void sd_update_check_and_update(void) {
   // monotonic counter from the old bootloader. This is in case that the old
   // bootloader did not have the chance yet to write its monotonic counter to
   // the secret area - which normally happens later in the flow.
-  const image_header *old_hdr = read_image_header(
-      (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
+  const image_header* old_hdr = read_image_header(
+      (const uint8_t*)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
       flash_area_get_size(&BOOTLOADER_AREA));
 
   if ((old_hdr != NULL) && (sectrue == check_bootloader_header_sig(old_hdr)) &&

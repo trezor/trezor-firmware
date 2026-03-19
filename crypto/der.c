@@ -23,7 +23,7 @@
 #include "der.h"
 #include <string.h>
 
-bool der_read_length(BUFFER_READER *buf, size_t *len) {
+bool der_read_length(BUFFER_READER* buf, size_t* len) {
   // Read the initial octet.
   uint8_t init = 0;
   if (!buffer_get(buf, &init)) {
@@ -69,7 +69,7 @@ bool der_read_length(BUFFER_READER *buf, size_t *len) {
   return true;
 }
 
-bool der_write_length(BUFFER_WRITER *buf, size_t len) {
+bool der_write_length(BUFFER_WRITER* buf, size_t len) {
   if (len < 0x80) {
     // Short form. Encodes length in initial octet.
     return buffer_put(buf, len);
@@ -87,7 +87,7 @@ bool der_write_length(BUFFER_WRITER *buf, size_t len) {
   return buffer_write_array(buf, &encoding[pos], sizeof(encoding) - pos);
 }
 
-bool der_read_item(BUFFER_READER *buf, DER_ITEM *item) {
+bool der_read_item(BUFFER_READER* buf, DER_ITEM* item) {
   size_t begin_pos = buf->pos;
   if (!buffer_get(buf, &item->id) || ((item->id & 0x1f) == 0x1f)) {
     // Multi-byte identifiers not supported.
@@ -108,12 +108,12 @@ bool der_read_item(BUFFER_READER *buf, DER_ITEM *item) {
   return buffer_seek(&item->buf, header_size);
 }
 
-bool der_read_item_expected(BUFFER_READER *buf, const uint8_t expected_id,
-                            DER_ITEM *item) {
+bool der_read_item_expected(BUFFER_READER* buf, const uint8_t expected_id,
+                            DER_ITEM* item) {
   return der_read_item(buf, item) && item->id == expected_id;
 }
 
-bool der_equal(const DER_ITEM *a, const DER_ITEM *b) {
+bool der_equal(const DER_ITEM* a, const DER_ITEM* b) {
   if (a->id != b->id) {
     return false;
   }
@@ -128,7 +128,7 @@ bool der_equal(const DER_ITEM *a, const DER_ITEM *b) {
 // Reencode a positive integer which violates the encoding rules in Rec. ITU-T
 // X.690, section 8.3.2 (the bits of the first octet and bit 8 of the second
 // octet shall not all be zero).
-bool der_reencode_int(BUFFER_READER *reader, BUFFER_WRITER *writer) {
+bool der_reencode_int(BUFFER_READER* reader, BUFFER_WRITER* writer) {
   // Read a DER-encoded integer.
   DER_ITEM item = {0};
   if (!der_read_item_expected(reader, DER_INTEGER, &item)) {

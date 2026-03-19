@@ -47,7 +47,7 @@ extern uint32_t last_touch_sample_time;
 
 #ifdef USE_BLE
 
-static mp_obj_t parse_ble_event_data(const ble_event_t *event) {
+static mp_obj_t parse_ble_event_data(const ble_event_t* event) {
   if (event->data_len == 0) {
     return mp_const_none;
   }
@@ -89,7 +89,7 @@ static mp_obj_t parse_ble_event_data(const ble_event_t *event) {
 ///     """
 STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
                                   mp_obj_t timeout_ms) {
-  mp_obj_list_t *ret = MP_OBJ_TO_PTR(list_ref);
+  mp_obj_list_t* ret = MP_OBJ_TO_PTR(list_ref);
   if (!MP_OBJ_IS_TYPE(list_ref, &mp_type_list) || ret->len < 2) {
     mp_raise_TypeError(MP_ERROR_TEXT("invalid list_ref"));
   }
@@ -135,7 +135,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     if (signalled.read_ready & (1 << SYSHANDLE_IPC2)) {
       ipc_message_t message = {.remote = 2};
       if (ipc_try_receive(&message)) {
-        mp_obj_IpcMessage_t *o =
+        mp_obj_IpcMessage_t* o =
             mp_obj_malloc(mp_obj_IpcMessage_t, &mod_trezorio_IpcMessage_type);
         o->message = message;
         ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_IPC2);
@@ -154,7 +154,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
             (hal_ticks_ms() - last_touch_sample_time > 10)) {
           last_touch_sample_time = hal_ticks_ms();
 
-          mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+          mp_obj_tuple_t* tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
           const uint32_t etype = (evt >> 24) & 0xFFU;  // event type
           const uint32_t ex = (evt >> 12) & 0xFFFU;    // x position
           const uint32_t ey = evt & 0xFFFU;            // y position
@@ -193,7 +193,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     if (signalled.read_ready & (1 << SYSHANDLE_BUTTON)) {
       button_event_t btn_event = {0};
       if (button_get_event(&btn_event)) {
-        mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+        mp_obj_tuple_t* tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
         uint32_t etype = btn_event.event_type;
         uint32_t en = btn_event.button;
         if (display_get_orientation() == 180) {
@@ -224,7 +224,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     if (signalled.read_ready & (1 << SYSHANDLE_BLE)) {
       ble_event_t event = {0};
       if (ble_get_event(&event)) {
-        mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+        mp_obj_tuple_t* tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
         tuple->items[0] = MP_OBJ_NEW_SMALL_INT(event.type);
         tuple->items[1] = parse_ble_event_data(&event);
         ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BLE);

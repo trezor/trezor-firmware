@@ -31,7 +31,7 @@ void flash_otp_init(void) {
   memset(OTP_BUFFER, 0xFF, sizeof(OTP_BUFFER));
 }
 
-secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
+secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t* data,
                        uint8_t datalen) {
   if (offset + datalen > OTP_BLOCK_SIZE) {
     return secfalse;
@@ -41,13 +41,13 @@ secbool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
   return sectrue;
 }
 
-secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
+secbool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t* data,
                         uint8_t datalen) {
   if (offset + datalen > OTP_BLOCK_SIZE) {
     return secfalse;
   }
   uint32_t offset_in_sector = block * OTP_BLOCK_SIZE + offset;
-  uint8_t *flash = OTP_BUFFER + offset_in_sector;
+  uint8_t* flash = OTP_BUFFER + offset_in_sector;
   for (int i = 0; i < datalen; i++) {
     if ((flash[i] & data[i]) != data[i]) {
       return secfalse;  // we cannot change zeroes to ones

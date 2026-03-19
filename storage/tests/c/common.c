@@ -30,7 +30,7 @@ void __shutdown(void) {
   exit(3);
 }
 
-void __fatal_error(const char *msg, const char *file, int line) {
+void __fatal_error(const char* msg, const char* file, int line) {
   printf("\nFATAL ERROR:\n");
   if (msg) {
     printf("msg : %s\n", msg);

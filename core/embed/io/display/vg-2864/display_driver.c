@@ -50,11 +50,11 @@
 //
 // This type of display is used with T3B1 model (Trezor TS3)
 #define FRAME_BUFFER_SIZE \
-  ALIGN_UP_CONST(DISPLAY_RESX *DISPLAY_RESY, PHYSICAL_FRAME_BUFFER_ALIGNMENT)
+  ALIGN_UP_CONST(DISPLAY_RESX* DISPLAY_RESY, PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
-static
-    __attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-    uint8_t g_framebuf[FRAME_BUFFER_SIZE];
+static __attribute__((section(".fb1"),
+                      aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    g_framebuf[FRAME_BUFFER_SIZE];
 
 // Display driver context.
 typedef struct {
@@ -63,7 +63,7 @@ typedef struct {
   // SPI driver instance
   SPI_HandleTypeDef spi;
   // Frame buffer (8-bit Mono)
-  uint8_t *framebuf;
+  uint8_t* framebuf;
   // Current display orientation (0 or 180)
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
@@ -126,7 +126,7 @@ static const uint8_t vg_2864ksweg01_init_seq[] = {OLED_DISPLAYOFF,
                                                   OLED_DISPLAYON};
 
 // Configures SPI driver/controller
-static bool display_init_spi(display_driver_t *drv) {
+static bool display_init_spi(display_driver_t* drv) {
   drv->spi.Instance = OLED_SPI;
   drv->spi.State = HAL_SPI_STATE_RESET;
   drv->spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
@@ -145,13 +145,12 @@ static bool display_init_spi(display_driver_t *drv) {
 }
 
 // Sends specified number of bytes to the display via SPI interface
-static void display_send_bytes(display_driver_t *drv, const uint8_t *data,
+static void display_send_bytes(display_driver_t* drv, const uint8_t* data,
                                size_t len) {
   volatile int32_t timeout = 1000;
-  for (int i = 0; i < timeout; i++)
-    ;
+  for (int i = 0; i < timeout; i++);
 
-  if (HAL_OK != HAL_SPI_Transmit(&drv->spi, (uint8_t *)data, len, 1000)) {
+  if (HAL_OK != HAL_SPI_Transmit(&drv->spi, (uint8_t*)data, len, 1000)) {
     // TODO: error
     return;
   }
@@ -180,7 +179,7 @@ static void display_send_bytes(display_driver_t *drv, const uint8_t *data,
    (*(src + (7 * DISPLAY_RESX)) >= 128 ? 128 : 0))
 
 // Copies the framebuffer to the display via SPI interface
-static void display_sync_with_fb(display_driver_t *drv) {
+static void display_sync_with_fb(display_driver_t* drv) {
   static const uint8_t cursor_set_seq[3] = {OLED_SETLOWCOLUMN | 0x00,
                                             OLED_SETHIGHCOLUMN | 0x00,
                                             OLED_SETSTARTLINE | 0x00};
@@ -204,7 +203,7 @@ static void display_sync_with_fb(display_driver_t *drv) {
   if (drv->orientation_angle == 0) {
     for (int y = DISPLAY_RESY / 8 - 1; y >= 0; y--) {
       uint8_t buff[DISPLAY_RESX];
-      uint8_t *src = &drv->framebuf[y * DISPLAY_RESX * 8];
+      uint8_t* src = &drv->framebuf[y * DISPLAY_RESX * 8];
 
       for (int x = DISPLAY_RESX - 1; x >= 0; x--) {
         buff[x] = COLLECT_ROW_BYTE(src);
@@ -219,7 +218,7 @@ static void display_sync_with_fb(display_driver_t *drv) {
   } else {
     for (int y = 0; y < DISPLAY_RESY / 8; y++) {
       uint8_t buff[DISPLAY_RESX];
-      uint8_t *src = &drv->framebuf[y * DISPLAY_RESX * 8];
+      uint8_t* src = &drv->framebuf[y * DISPLAY_RESX * 8];
 
       for (int x = 0; x < DISPLAY_RESX; x++) {
         buff[x] = COLLECT_ROW_BYTE_REV(src);
@@ -244,7 +243,7 @@ static void display_sync_with_fb(display_driver_t *drv) {
 }
 
 bool display_init(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (drv->initialized) {
     return true;
@@ -325,7 +324,7 @@ bool display_init(display_content_mode_t mode) {
 }
 
 void display_deinit(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   mpu_set_active_fb(NULL, 0);
 
@@ -341,7 +340,7 @@ void display_set_unpriv_access(bool unpriv) {
 #endif  // USE_TRUSTZONE
 
 bool display_set_backlight(uint8_t level) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return false;
@@ -352,7 +351,7 @@ bool display_set_backlight(uint8_t level) {
 }
 
 uint8_t display_get_backlight(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -362,7 +361,7 @@ uint8_t display_get_backlight(void) {
 }
 
 int display_set_orientation(int angle) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -379,7 +378,7 @@ int display_set_orientation(int angle) {
 }
 
 int display_get_orientation(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -388,8 +387,8 @@ int display_get_orientation(void) {
   return drv->orientation_angle;
 }
 
-bool display_get_frame_buffer(display_fb_info_t *fb) {
-  display_driver_t *drv = &g_display_driver;
+bool display_get_frame_buffer(display_fb_info_t* fb) {
+  display_driver_t* drv = &g_display_driver;
 
   memset(fb, 0, sizeof(display_fb_info_t));
 
@@ -406,7 +405,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
 }
 
 void display_refresh(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -425,7 +424,7 @@ void display_refresh(void) {
   display_sync_with_fb(drv);
 }
 
-void display_fill(const gfx_bitblt_t *bb) {
+void display_fill(const gfx_bitblt_t* bb) {
   display_fb_info_t fb;
 
   if (!display_get_frame_buffer(&fb)) {
@@ -433,7 +432,7 @@ void display_fill(const gfx_bitblt_t *bb) {
   }
 
   gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = &(((uint8_t *)fb.ptr)[DISPLAY_RESX * bb_new.dst_y]);
+  bb_new.dst_row = &(((uint8_t*)fb.ptr)[DISPLAY_RESX * bb_new.dst_y]);
   bb_new.dst_stride = DISPLAY_RESX;
 
   if (!gfx_bitblt_check_dst_x(&bb_new, 8) ||
@@ -444,7 +443,7 @@ void display_fill(const gfx_bitblt_t *bb) {
   gfx_mono8_fill(&bb_new);
 }
 
-void display_copy_mono1p(const gfx_bitblt_t *bb) {
+void display_copy_mono1p(const gfx_bitblt_t* bb) {
   display_fb_info_t fb;
 
   if (!display_get_frame_buffer(&fb)) {
@@ -452,7 +451,7 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
   }
 
   gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = &(((uint8_t *)fb.ptr)[DISPLAY_RESX * bb_new.dst_y]);
+  bb_new.dst_row = &(((uint8_t*)fb.ptr)[DISPLAY_RESX * bb_new.dst_y]);
   bb_new.dst_stride = DISPLAY_RESX;
 
   if (!gfx_bitblt_check_dst_x(&bb_new, 8) ||

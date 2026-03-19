@@ -41,7 +41,7 @@
 
 #ifdef SECMON
 extern uint32_t _codelen;
-#define SECMON_SIZE ((uint32_t) & _codelen)
+#define SECMON_SIZE ((uint32_t)&_codelen)
 #define KERNEL_SECTOR_START \
   ((FIRMWARE_START_S + SECMON_SIZE - FLASH_BASE) / FLASH_PAGE_SIZE)
 
@@ -88,7 +88,7 @@ static bool flash_sector_is_secure(uint32_t sector) {
   return false;
 }
 
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
+const void* flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   if (sector >= FLASH_SECTOR_COUNT) {
     return NULL;
   }
@@ -100,7 +100,7 @@ const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
   uint32_t base_addr =
       flash_sector_is_secure(sector) ? FLASH_BASE_S : FLASH_BASE_NS;
 
-  return (const void *)(base_addr + FLASH_PAGE_SIZE * sector + offset);
+  return (const void*)(base_addr + FLASH_PAGE_SIZE * sector + offset);
 }
 
 uint32_t flash_sector_size(uint16_t first_sector, uint16_t sector_count) {
@@ -156,13 +156,13 @@ secbool flash_sector_erase(uint16_t sector) {
   }
 
   // check whether the sector was really deleted (contains only 0xFF)
-  const uint32_t *sector_start =
-      (const uint32_t *)flash_get_address(sector, 0, 0);
+  const uint32_t* sector_start =
+      (const uint32_t*)flash_get_address(sector, 0, 0);
 
-  const uint32_t *sector_end =
+  const uint32_t* sector_end =
       sector_start + flash_sector_size(sector, 1) / sizeof(uint32_t);
 
-  for (const uint32_t *addr = sector_start; addr < sector_end; addr++) {
+  for (const uint32_t* addr = sector_start; addr < sector_end; addr++) {
     if (*addr != 0xFFFFFFFF) {
       return secfalse;
     }
@@ -172,7 +172,7 @@ secbool flash_sector_erase(uint16_t sector) {
 }
 
 static secbool flash_write_quadword(uint16_t sector, uint32_t offset,
-                                    const uint32_t *data) {
+                                    const uint32_t* data) {
   uint32_t address =
       (uint32_t)flash_get_address(sector, offset, FLASH_QUADWORD_SIZE);
   if (address == 0) {
@@ -183,14 +183,14 @@ static secbool flash_write_quadword(uint16_t sector, uint32_t offset,
   }
 
   for (int i = 0; i < FLASH_QUADWORD_WORDS; i++) {
-    if (data[i] != (data[i] & *((const uint32_t *)address + i))) {
+    if (data[i] != (data[i] & *((const uint32_t*)address + i))) {
       return secfalse;
     }
   }
 
   secbool all_match = sectrue;
   for (int i = 0; i < FLASH_QUADWORD_WORDS; i++) {
-    if (data[i] != *((const uint32_t *)address + i)) {
+    if (data[i] != *((const uint32_t*)address + i)) {
       all_match = secfalse;
       break;
     }
@@ -205,7 +205,7 @@ static secbool flash_write_quadword(uint16_t sector, uint32_t offset,
   }
 
   for (int i = 0; i < FLASH_QUADWORD_WORDS; i++) {
-    if (data[i] != *((const uint32_t *)address + i)) {
+    if (data[i] != *((const uint32_t*)address + i)) {
       return secfalse;
     }
   }
@@ -213,7 +213,7 @@ static secbool flash_write_quadword(uint16_t sector, uint32_t offset,
 }
 
 secbool flash_write_burst(uint16_t sector, uint32_t offset,
-                          const uint32_t *data) {
+                          const uint32_t* data) {
   uint32_t address =
       (uint32_t)flash_get_address(sector, offset, FLASH_BURST_SIZE);
   if (address == 0) {
@@ -224,14 +224,14 @@ secbool flash_write_burst(uint16_t sector, uint32_t offset,
   }
 
   for (int i = 0; i < FLASH_BURST_WORDS; i++) {
-    if (data[i] != (data[i] & *((const uint32_t *)address + i))) {
+    if (data[i] != (data[i] & *((const uint32_t*)address + i))) {
       return secfalse;
     }
   }
 
   secbool all_match = sectrue;
   for (int i = 0; i < FLASH_BURST_WORDS; i++) {
-    if (data[i] != *((const uint32_t *)address + i)) {
+    if (data[i] != *((const uint32_t*)address + i)) {
       all_match = secfalse;
       break;
     }
@@ -246,7 +246,7 @@ secbool flash_write_burst(uint16_t sector, uint32_t offset,
   }
 
   for (int i = 0; i < FLASH_BURST_WORDS; i++) {
-    if (data[i] != *((const uint32_t *)address + i)) {
+    if (data[i] != *((const uint32_t*)address + i)) {
       return secfalse;
     }
   }

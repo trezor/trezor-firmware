@@ -34,4 +34,4 @@
  *
  * @return uint16_t Calculated CRC value.
  */
-uint16_t backup_ram_crc16(const void *data, size_t size, uint16_t initial_crc);
+uint16_t backup_ram_crc16(const void* data, size_t size, uint16_t initial_crc);

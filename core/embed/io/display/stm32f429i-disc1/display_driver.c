@@ -38,7 +38,7 @@ typedef struct {
   // Set if the driver is initialized
   bool initialized;
   // Pointer to the frame buffer
-  uint16_t *framebuf;
+  uint16_t* framebuf;
   // Current display orientation (0, 90, 180, 270)
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
@@ -51,14 +51,14 @@ static display_driver_t g_display_driver = {
 };
 
 bool display_init(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (drv->initialized) {
     return true;
   }
 
   memset(drv, 0, sizeof(display_driver_t));
-  drv->framebuf = (uint16_t *)FRAME_BUFFER_ADDR;
+  drv->framebuf = (uint16_t*)FRAME_BUFFER_ADDR;
 
   if (mode == DISPLAY_RESET_CONTENT) {
     // Initialize LTDC controller
@@ -74,7 +74,7 @@ bool display_init(display_content_mode_t mode) {
 }
 
 void display_deinit(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   gfx_bitblt_deinit();
 
@@ -84,7 +84,7 @@ void display_deinit(display_content_mode_t mode) {
 }
 
 bool display_set_backlight(uint8_t level) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return false;
@@ -96,7 +96,7 @@ bool display_set_backlight(uint8_t level) {
 }
 
 uint8_t display_get_backlight(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -106,7 +106,7 @@ uint8_t display_get_backlight(void) {
 }
 
 int display_set_orientation(int angle) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -121,7 +121,7 @@ int display_set_orientation(int angle) {
 }
 
 int display_get_orientation(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -130,15 +130,15 @@ int display_get_orientation(void) {
   return drv->orientation_angle;
 }
 
-bool display_get_frame_buffer(display_fb_info_t *fb) {
-  display_driver_t *drv = &g_display_driver;
+bool display_get_frame_buffer(display_fb_info_t* fb) {
+  display_driver_t* drv = &g_display_driver;
 
   memset(fb, 0, sizeof(display_fb_info_t));
 
   if (!drv->initialized) {
     return false;
   } else {
-    fb->ptr = (void *)drv->framebuf;
+    fb->ptr = (void*)drv->framebuf;
     fb->size = FRAME_BUFFER_SIZE;
     fb->stride = DISPLAY_RESX * sizeof(uint16_t);
     // Enable access to the frame buffer from the unprivileged code
@@ -154,8 +154,8 @@ void display_refresh(void) {
   mpu_set_active_fb(NULL, 0);
 }
 
-void display_fill(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_fill(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -173,8 +173,8 @@ void display_fill(const gfx_bitblt_t *bb) {
   gfx_rgb565_fill(&bb_new);
 }
 
-void display_copy_rgb565(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_copy_rgb565(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -193,8 +193,8 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
   gfx_rgb565_copy_rgb565(&bb_new);
 }
 
-void display_copy_mono1p(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_copy_mono1p(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;

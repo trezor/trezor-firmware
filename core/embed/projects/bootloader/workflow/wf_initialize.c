@@ -23,7 +23,7 @@
 #include "protob.h"
 #include "workflow.h"
 
-workflow_result_t workflow_initialize(protob_io_t *iface, const fw_info_t *fw) {
+workflow_result_t workflow_initialize(protob_io_t* iface, const fw_info_t* fw) {
   Initialize msg_recv;
   recv_msg_initialize(iface, &msg_recv);
   send_msg_features(iface, fw);

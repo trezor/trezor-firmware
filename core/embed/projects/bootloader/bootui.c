@@ -27,7 +27,7 @@
 #include "rust_ui_bootloader.h"
 #include "version.h"
 
-#define TOIF_LENGTH(ptr) ((*(uint32_t *)((ptr) + 8)) + 12)
+#define TOIF_LENGTH(ptr) ((*(uint32_t*)((ptr) + 8)) + 12)
 
 // common shared functions
 
@@ -35,7 +35,7 @@
 
 // Formats version number encoded as uint32_t into string
 // "X.Y.Z". Buffers smaller than needed will result in truncated output.
-static void format_ver(uint32_t version, char *buffer, size_t buffer_len) {
+static void format_ver(uint32_t version, char* buffer, size_t buffer_len) {
   buffer[0] = '\0';
   cstr_append_int32(buffer, buffer_len, (version & 0xFF));
   cstr_append(buffer, buffer_len, ".");
@@ -54,10 +54,10 @@ void ui_set_initial_setup(bool initial) { initial_setup = initial; }
 
 bool ui_get_initial_setup(void) { return initial_setup; }
 
-void ui_screen_boot(const vendor_header *const vhdr,
-                    const image_header *const hdr, int wait) {
+void ui_screen_boot(const vendor_header* const vhdr,
+                    const image_header* const hdr, int wait) {
   bool show_string = ((vhdr->vtrust & VTRUST_NO_STRING) == 0);
-  const char *vendor_str = show_string ? vhdr->vstr : NULL;
+  const char* vendor_str = show_string ? vhdr->vstr : NULL;
   const size_t vendor_str_len = show_string ? vhdr->vstr_len : 0;
   bool red_screen = ((vhdr->vtrust & VTRUST_NO_RED) == 0);
   uint32_t vimg_len = TOIF_LENGTH(vhdr->vimg);
@@ -66,8 +66,8 @@ void ui_screen_boot(const vendor_header *const vhdr,
               vimg_len, wait);
 }
 
-uint32_t ui_screen_intro(const vendor_header *const vhdr,
-                         const image_header *const hdr, bool fw_ok) {
+uint32_t ui_screen_intro(const vendor_header* const vhdr,
+                         const image_header* const hdr, bool fw_ok) {
   char bld_ver[VERSION_STRING_LEN];
   char ver_str[VERSION_STRING_LEN];
   format_ver(VERSION_UINT32, bld_ver, sizeof(bld_ver));
@@ -78,8 +78,8 @@ uint32_t ui_screen_intro(const vendor_header *const vhdr,
 
 // install UI
 
-confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
-                                           const image_header *const hdr,
+confirm_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
+                                           const image_header* const hdr,
                                            secbool should_keep_seed,
                                            secbool is_newvendor,
                                            secbool is_newinstall,

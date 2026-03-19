@@ -31,7 +31,7 @@
 #define SVC_TIMER_MS 4
 #define SVC_REBOOT_TO_BOOTLOADER 5
 
-#define STAY_IN_BOOTLOADER_FLAG_ADDR ((uint32_t *)0x20010000)
+#define STAY_IN_BOOTLOADER_FLAG_ADDR ((uint32_t*)0x20010000)
 #define STAY_IN_BOOTLOADER_FLAG 0x0FC35A96
 
 /* Unlocks flash.  This function needs to be called before programming

@@ -29,7 +29,7 @@
 extern uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 extern uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 
-bool display_gfxmmu_init(display_driver_t *drv) {
+bool display_gfxmmu_init(display_driver_t* drv) {
   // Reset GFXMMU
   __HAL_RCC_GFXMMU_FORCE_RESET();
   __HAL_RCC_GFXMMU_RELEASE_RESET();
@@ -89,7 +89,7 @@ cleanup:
   return false;
 }
 
-void display_gfxmmu_deinit(display_driver_t *drv) {
+void display_gfxmmu_deinit(display_driver_t* drv) {
   if (drv->hlcd_gfxmmu.Instance != NULL) {
     HAL_GFXMMU_DeInit(&drv->hlcd_gfxmmu);
   }

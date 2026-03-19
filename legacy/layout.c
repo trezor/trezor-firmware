@@ -22,7 +22,7 @@
 #include "layout.h"
 #include "oled.h"
 
-void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
+void layoutButtonNo(const char* btnNo, const BITMAP* icon) {
   int icon_width = 0;
   if (icon) {
     oledDrawBitmap(1, OLED_HEIGHT - 8, icon);
@@ -34,7 +34,7 @@ void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
              OLED_HEIGHT - 1);
 }
 
-void layoutButtonYes(const char *btnYes, const BITMAP *icon) {
+void layoutButtonYes(const char* btnYes, const BITMAP* icon) {
   int icon_width = 0;
   if (icon) {
     oledDrawBitmap(OLED_WIDTH - 8 - 1, OLED_HEIGHT - 8, icon);
@@ -47,19 +47,19 @@ void layoutButtonYes(const char *btnYes, const BITMAP *icon) {
       OLED_HEIGHT - 9, OLED_WIDTH - 1, OLED_HEIGHT - 1);
 }
 
-void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
-                  const char *desc, const char *line1, const char *line2,
-                  const char *line3, const char *line4, const char *line5,
-                  const char *line6) {
+void layoutDialog(const BITMAP* icon, const char* btnNo, const char* btnYes,
+                  const char* desc, const char* line1, const char* line2,
+                  const char* line3, const char* line4, const char* line5,
+                  const char* line6) {
   layoutDialogEx(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,
                  line6, FONT_STANDARD);
 }
 
-inline void layoutDialogEx(const BITMAP *icon, const char *btnNo,
-                           const char *btnYes, const char *desc,
-                           const char *line1, const char *line2,
-                           const char *line3, const char *line4,
-                           const char *line5, const char *line6, uint8_t font) {
+inline void layoutDialogEx(const BITMAP* icon, const char* btnNo,
+                           const char* btnYes, const char* desc,
+                           const char* line1, const char* line2,
+                           const char* line3, const char* line4,
+                           const char* line5, const char* line6, uint8_t font) {
   int left = 0;
   oledClear();
   if (icon) {
@@ -114,7 +114,7 @@ void layoutProgressUpdate(bool refresh) {
   }
 }
 
-void layoutProgress(const char *desc, int permil) {
+void layoutProgress(const char* desc, int permil) {
   oledClear();
   layoutProgressUpdate(false);
   // progressbar

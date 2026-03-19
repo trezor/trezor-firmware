@@ -32,7 +32,7 @@ secbool storage_check_pin(const uint32_t pin);
 secbool storage_unlock(const uint32_t pin);
 secbool storage_has_pin(void);
 secbool storage_change_pin(const uint32_t oldpin, const uint32_t newpin);
-secbool storage_get(const uint16_t key, const void **val, uint16_t *len);
-secbool storage_set(const uint16_t key, const void *val, uint16_t len);
+secbool storage_get(const uint16_t key, const void** val, uint16_t* len);
+secbool storage_set(const uint16_t key, const void* val, uint16_t len);
 
 #endif
