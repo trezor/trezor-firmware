@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     ListValue = list[StructValue]
     AnyValue = Value | StructValue | ListValue | list[Value | StructValue | ListValue]
 
-    Path = tuple[int, ...] | int
+    Path = tuple[int | tuple[int] | tuple[int, int], ...] | int
     PathWalker = Callable[[Path], Value]
 
     # Parses a Value from a slice of the calldata.
@@ -550,10 +550,19 @@ class ParsingContext:
                     if p is None:
                         p = None
                         break
-                    if isinstance(p, (list, tuple)):
+                    if isinstance(p, (list, tuple, bytes)):
                         # walk inside Arrays or Structs
                         try:
-                            p = p[step]
+                            if isinstance(step, int):
+                                p = p[step]
+                            elif isinstance(step, tuple) and len(step) in (1, 2):
+                                # steps encoded as tuples represent slices... [a:b] or [a:]
+                                if len(step) == 1:
+                                    p = p[step[0] :]
+                                else:
+                                    p = p[step[0] : step[1]]
+                            else:
+                                raise InvalidFormatDefinition
                         except (IndexError, TypeError):
                             raise InvalidFormatDefinition
                     else:
