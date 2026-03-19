@@ -381,6 +381,8 @@ class CoreEmulator(Emulator):
         if sdcard is not None:
             self.sdcard.write_bytes(sdcard)
 
+        self.tropic_model_port = tropic_model_port
+
         if launch_tropic_model:
             assert tropic_model_port
             assert tropic_model_configfile
@@ -422,8 +424,8 @@ class CoreEmulator(Emulator):
         if self.headless or self.disable_animation:
             env["TREZOR_DISABLE_FADE"] = "1"
             env["TREZOR_DISABLE_ANIMATION"] = "1"
-        if self.tropic_model:
-            env["TROPIC_MODEL_PORT"] = str(self.tropic_model.port)
+        if self.tropic_model_port is not None:
+            env["TROPIC_MODEL_PORT"] = str(self.tropic_model_port)
 
         return env
 

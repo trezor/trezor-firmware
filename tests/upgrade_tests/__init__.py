@@ -15,8 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
-import tempfile
-from contextlib import contextmanager
+import re
+from pathlib import Path
 from typing import List, Tuple
 
 import pytest
@@ -24,53 +24,74 @@ from _pytest.mark.structures import MarkDecorator
 
 from trezorlib.models import T1B1, T2T1, T3W1, by_internal_name
 
-from ..emulators import (
-    LOCAL_BUILD_PATHS,
-    TROPIC_CAPABLE_MODELS,
-    get_tags,
-    stop_shared_tropic_model,
-)
-
-
-@contextmanager
-def shared_profile_dir() -> tempfile.TemporaryDirectory:
-    profile_dir = tempfile.TemporaryDirectory()
-    try:
-        yield profile_dir
-    finally:
-        stop_shared_tropic_model(profile_dir.name)
-        if os.environ.get("TREZOR_KEEP_PROFILE_DIR") != "1":
-            profile_dir.cleanup()
-
+from ..emulators import LOCAL_BUILD_PATHS, get_tags
 
 ALL_TAGS = get_tags()
-_NESTED_TAGS = get_tags(prefer_nested=True)
-for model in TROPIC_CAPABLE_MODELS:
-    if model in _NESTED_TAGS:
-        ALL_TAGS[model] = _NESTED_TAGS[model]
 
 
-SELECTED_GENS = [
-    gen.strip() for gen in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",") if gen
+SELECTED_MODELS = [
+    m.strip().upper()
+    for m in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",")
+    if m.strip()
 ]
 
-if SELECTED_GENS:
-    # if any gens were selected via the environment variable, force enable all selected
-    LEGACY_ENABLED = "legacy" in SELECTED_GENS
-    if "core" in SELECTED_GENS:
-        raise ValueError(
-            "TREZOR_UPGRADE_TEST=core is ambiguous. Use core-t2t1 or core-t3w1."
-        )
-    CORE_T2T1_ENABLED = "core-t2t1" in SELECTED_GENS
-    CORE_T3W1_ENABLED = "core-t3w1" in SELECTED_GENS
-    CORE_ENABLED = CORE_T2T1_ENABLED or CORE_T3W1_ENABLED
+
+def _detect_local_core_build_model() -> str | None:
+    build_dir = Path(LOCAL_BUILD_PATHS["core"]).parent
+    if not build_dir.exists():
+        return None
+
+    for trezorhal_path in sorted(build_dir.rglob("trezorhal.rs")):
+        try:
+            content = trezorhal_path.read_text()
+        except OSError:
+            continue
+
+        match = re.search(r'MODEL_INTERNAL_NAME: .* = b"([A-Z0-9]+)\\0";', content)
+        if match:
+            return match.group(1)
+
+    return None
+
+
+if SELECTED_MODELS:
+    # Validate all selected model names
+    for name in SELECTED_MODELS:
+        if by_internal_name(name) is None:
+            raise ValueError(
+                f"Unknown model in TREZOR_UPGRADE_TEST: {name}. "
+                "Use model names like T1B1, T2T1, T3W1."
+            )
+
+    _enabled_models = {by_internal_name(name) for name in SELECTED_MODELS}
+    LEGACY_ENABLED = T1B1 in _enabled_models
+    CORE_T2T1_ENABLED = T2T1 in _enabled_models
+    CORE_T3W1_ENABLED = T3W1 in _enabled_models
+    # Models without their own upgrade emulators (e.g. T3B1, T3T1) enable
+    # the core path so that persistence tests using core_only still run.
+    CORE_ENABLED = (
+        CORE_T2T1_ENABLED
+        or CORE_T3W1_ENABLED
+        or bool(_enabled_models - {T1B1, T2T1, T3W1})
+    )
 
 else:
     # if no selection was provided, select those for which we have emulators
     LEGACY_ENABLED = LOCAL_BUILD_PATHS["legacy"].exists()
     CORE_ENABLED = LOCAL_BUILD_PATHS["core"].exists()
-    CORE_T2T1_ENABLED = CORE_ENABLED
-    CORE_T3W1_ENABLED = CORE_ENABLED
+    detected_core_model = _detect_local_core_build_model() if CORE_ENABLED else None
+
+    # Fail explicitly if local core build exists but model cannot be detected.
+    # Silently defaulting to T2T1 for unknown builds masks configuration issues.
+    if CORE_ENABLED and detected_core_model is None:
+        raise ValueError(
+            "Local core emulator build detected but model could not be determined. "
+            "Please ensure trezorhal.rs exists with MODEL_INTERNAL_NAME, "
+            "or specify TREZOR_UPGRADE_TEST=T2T1|T3W1 explicitly."
+        )
+
+    CORE_T2T1_ENABLED = CORE_ENABLED and detected_core_model != "T3W1"
+    CORE_T3W1_ENABLED = CORE_ENABLED and detected_core_model == "T3W1"
 
 
 def _is_model_enabled(model) -> bool:
@@ -105,8 +126,8 @@ def version_from_tag(tag: str | None) -> tuple | None:
 
 def for_all(
     *args: str,
-    legacy_minimum_version: Tuple[int, int, int] = (1, 0, 0),
-    core_minimum_version: Tuple[int, int, int] = (2, 0, 0),
+    t1b1_minimum_version: Tuple[int, int, int] = (1, 0, 0),
+    t2t1_minimum_version: Tuple[int, int, int] = (2, 0, 0),
     # Intentionally starts at 2.9.3 for T3W1 upgrade coverage.
     t3w1_minimum_version: Tuple[int, int, int] = (2, 9, 3),
 ) -> "MarkDecorator":
@@ -151,13 +172,13 @@ def for_all(
     for model in models_to_test:
         # Determine minimum version based on model
         if model == T1B1:
-            minimum_version = legacy_minimum_version
+            minimum_version = t1b1_minimum_version
         elif model == T3W1:
             minimum_version = t3w1_minimum_version
         elif model == T2T1:
-            minimum_version = core_minimum_version
+            minimum_version = t2t1_minimum_version
         else:
-            minimum_version = core_minimum_version
+            minimum_version = t2t1_minimum_version
 
         try:
             for tag in ALL_TAGS[model.internal_name]:
