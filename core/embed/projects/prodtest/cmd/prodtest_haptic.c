@@ -26,6 +26,7 @@
 
 static void prodtest_haptic_test(cli_t* cli) {
   uint32_t duration_ms = 0;  // ms
+  uint32_t amplitude = 100;  // default amplitude
 
   ts_t status;
 
@@ -34,7 +35,14 @@ static void prodtest_haptic_test(cli_t* cli) {
     return;
   }
 
-  if (cli_arg_count(cli) > 1) {
+  if (cli_arg_count(cli) == 2) {
+    if (!cli_arg_uint32(cli, "amplitude", &amplitude) || amplitude > 100) {
+      cli_error_arg(cli, "Expecting amplitude value in range 0-100.");
+      return;
+    }
+  }
+
+  if (cli_arg_count(cli) > 3) {
     cli_error_arg_count(cli);
     return;
   }
@@ -45,9 +53,10 @@ static void prodtest_haptic_test(cli_t* cli) {
     return;
   }
 
-  cli_trace(cli, "Running haptic feedback test for %d ms...", duration_ms);
+  cli_trace(cli, "Running haptic feedback test for %d ms with amplitude %d ...",
+            duration_ms, amplitude);
 
-  status = haptic_play_custom(100, duration_ms);
+  status = haptic_play_custom(amplitude, duration_ms);
   if (ts_error(status)) {
     cli_error(cli, CLI_ERROR, "Haptic feedback test failed.");
     return;
@@ -62,7 +71,7 @@ PRODTEST_CLI_CMD(
   .name = "haptic-test",
   .func = prodtest_haptic_test,
   .info = "Test the haptic feedback actuator",
-  .args = "<duration>"
+  .args = "<duration>[<amplitude>]"
 );
 
 #endif  // USE_HAPTIC
