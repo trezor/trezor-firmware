@@ -4,17 +4,17 @@
  }:
 
 let
-  # the last commit from master as of 2025-05-19
+  # the last commit from master as of 2026-03-16
   rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/bd030fd9983f7fddf87be1c64aa3064c8afa24c4.tar.gz";
-    sha256 = "1j3kjh0zlanj31c14hk18nzj9j9aw6ib8lg2pjmywlicd0hmhisv";
+    url = "https://github.com/oxalica/rust-overlay/archive/f600ea449c7b5bb596fa1cf21c871cc5b9e31316.tar.gz";
+    sha256 = "0x70l5b4v5zljnwkzbv7yi5ld04vb75zb6wk620sfm6vd406166c";
   });
   # define this variable and devTools if you want nrf{util,connect}
   acceptJlink = builtins.getEnv "TREZOR_FIRMWARE_ACCEPT_JLINK_LICENSE" == "yes";
-  # the last successful build of nixpkgs-unstable as of 2025-06-25
+  # the last successful build of nixpkgs-unstable as of 2026-03-16
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/992f916556fcfaa94451ebc7fc6e396134bbf5b1.tar.gz";
-    sha256 = "0wbqb6sy58q3mnrmx67ffdx8rq10jg4cvh4jx3rrbr1pqzpzsgxc";
+    url = "https://github.com/NixOS/nixpkgs/archive/a07d4ce6bee67d7c838a8a5796e75dff9caa21ef.tar.gz";
+    sha256 = "0f6zni3jn6ji5icwbidbpmcgxdal2qnjszp7ragdcy0857hvq3c5";
   }) {
     config = {
       allowUnfree = acceptJlink;
@@ -71,7 +71,6 @@ let
     version = "stm-cubeide-v1.13.0";
     nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ nixpkgs.autoreconfHook ];
   }));
-  llvmPackages = nixpkgs.llvmPackages_17;
   # see pyright/README.md for update procedure
   pyright = oldNixpkgs.callPackage ./ci/pyright {};
 in
@@ -94,7 +93,7 @@ stdenvNoCC.mkDerivation ({
     gcc-arm-embedded-13
     gcc14
     git
-    gitAndTools.git-subrepo
+    git-subrepo
     gnumake
     graphviz
     libffi
