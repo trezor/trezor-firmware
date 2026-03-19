@@ -19,13 +19,20 @@ import os
 import tempfile
 from collections import defaultdict
 from pathlib import Path
-from typing import Sequence, Tuple
+from typing import Dict, Sequence, Tuple
 
-from trezorlib._internal.emulator import CoreEmulator, Emulator, LegacyEmulator
-from trezorlib.models import CORE_MODELS, LEGACY_MODELS, by_internal_name
+from trezorlib._internal.emulator import (
+    CoreEmulator,
+    Emulator,
+    LegacyEmulator,
+    TropicModel,
+)
+from trezorlib.models import CORE_MODELS, LEGACY_MODELS
 
 ROOT = Path(__file__).resolve().parent.parent
 BINDIR = ROOT / "tests" / "emulators"
+
+_SHARED_TROPIC_MODELS: Dict[str, TropicModel] = {}
 
 LOCAL_BUILD_PATHS = {
     "core": ROOT / "core" / "build" / "unix" / "trezor-emu-core",
@@ -37,15 +44,53 @@ CORE_SRC_DIR = ROOT / "core" / "src"
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
 TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
+TROPIC_CAPABLE_MODELS = {"T3W1"}
+
+
+def is_tropic_capable_model(model_internal_name: str | None) -> bool:
+    return model_internal_name in TROPIC_CAPABLE_MODELS
 
 
 def gen_from_model(model_internal_name: str) -> str:
-    model = by_internal_name(model_internal_name)
-    if model in LEGACY_MODELS:
+    # Compare by internal_name string, not by object equality,
+    # because the models module may be patched during tests
+    legacy_names = {m.internal_name for m in LEGACY_MODELS}
+    core_names = {m.internal_name for m in CORE_MODELS}
+
+    if model_internal_name in legacy_names:
         return "legacy"
-    if model in CORE_MODELS:
+    if model_internal_name in core_names:
         return "core"
     raise ValueError(f"Unknown model: {model_internal_name}")
+
+
+def _get_shared_tropic_model(
+    profile_dir: str,
+    workdir: Path | None,
+    port: int,
+    configfile: Path,
+    logfile: Path | None,
+) -> TropicModel:
+    model = _SHARED_TROPIC_MODELS.get(profile_dir)
+    if model is None or model.process is None or model.process.poll() is not None:
+        if model is not None:
+            model.stop()
+        model = TropicModel(
+            workdir=workdir or ROOT,
+            profile_dir=Path(profile_dir),
+            port=port,
+            configfile=str(configfile),
+            logfile=logfile or (Path(profile_dir) / "trezor-tropic-model.log"),
+        )
+        model.start()
+        _SHARED_TROPIC_MODELS[profile_dir] = model
+    return model
+
+
+def stop_shared_tropic_model(profile_dir: str) -> None:
+    model = _SHARED_TROPIC_MODELS.pop(profile_dir, None)
+    if model:
+        model.stop()
 
 
 def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
@@ -59,37 +104,59 @@ def get_emulator_path(
     gen: str,
     model: str,
     tag: str,
-    subpath: str | None = None,
+    *,
+    prefer_nested: bool = False,
 ) -> Path:
-    filename = f"trezor-emu-{gen}-{model}-{tag}"
-    base = BINDIR / model
+    expected_name = f"trezor-emu-{gen}-{model}-{tag}"
+    top_level_path = BINDIR / model / expected_name
+    nested_paths = sorted(
+        p for p in (BINDIR / model).glob(f"*/{expected_name}") if p.is_file()
+    )
 
-    if subpath is not None:
-        return base / subpath / filename
+    if prefer_nested:
+        if nested_paths:
+            return nested_paths[0]
+        raise ValueError(
+            f"tropic-capable emulator executable not found: {BINDIR / model / '*/' / expected_name}"
+        )
+    else:
+        if top_level_path.exists():
+            return top_level_path
+        if nested_paths:
+            return nested_paths[0]
 
-    direct_path = base / filename
-    if direct_path.exists():
-        return direct_path
-
-    matches = [p for p in base.rglob(filename) if p.is_file()]
-    if matches:
-        return sorted(matches)[0]
-
-    return direct_path
+    return top_level_path
 
 
-def get_tags() -> dict[str, list[str]]:
-    files = [p for p in BINDIR.rglob("trezor-emu-*") if p.is_file()]
+def get_tags(*, prefer_nested: bool = False) -> dict[str, list[str]]:
+    result = defaultdict(list)
+    for model_dir in sorted(p for p in BINDIR.iterdir() if p.is_dir()):
+        seen_tags = set()
 
-    result: dict[str, set[str]] = defaultdict(set)
-    for f in sorted(files):
-        try:
-            # example: "trezor-emu-core-T2T1-v2.0.8" or "trezor-emu-core-T2T1-v2.0.8-46ab42fw"
-            _, _, _, model, tag = f.name.split("-", maxsplit=4)
-            result[model].add(tag)
-        except ValueError:
-            pass
-    return {model: sorted(tags) for model, tags in result.items()}
+        top_level_files = sorted(
+            p for p in model_dir.glob("trezor-emu-*") if p.is_file()
+        )
+        nested_files = sorted(
+            p for p in model_dir.glob("*/trezor-emu-*") if p.is_file()
+        )
+
+        if prefer_nested:
+            files = nested_files
+        else:
+            files = [*top_level_files, *nested_files]
+
+        for f in files:
+            try:
+                # example: "trezor-emu-core-T2T1-v2.0.8" or "trezor-emu-core-T2T1-v2.0.8-46ab42fw"
+                _, _, _, model, tag = f.name.split("-", maxsplit=4)
+            except ValueError:
+                continue
+
+            if tag in seen_tags:
+                continue
+            result[model].append(tag)
+            seen_tags.add(tag)
+    return result
 
 
 ALL_TAGS = get_tags()
@@ -119,26 +186,43 @@ class EmulatorWrapper:
 
     def __init__(
         self,
-        gen: str,
+        gen_or_model: str | None,
         tag: str | None = None,
         model: str | None = None,
         storage: bytes | None = None,
+        profile_dir: tempfile.TemporaryDirectory | None = None,
         worker_id: int = 0,
         headless: bool = True,
         auto_interact: bool = True,
         main_args: Sequence[str] = ("-m", "main"),
-        launch_tropic_model: bool = False,
+        launch_tropic_model: bool | None = None,
+        prefer_nested: bool = False,
     ) -> None:
 
+        if gen_or_model is None:
+            raise ValueError("Either emulator gen or model must be provided")
+
+        if gen_or_model in ("core", "legacy"):
+            gen = gen_or_model
+        else:
+            model = gen_or_model
+            gen = gen_from_model(model)
+
+        if launch_tropic_model is None:
+            launch_tropic_model = is_tropic_capable_model(model)
+
         if tag is not None and model is not None:
-            executable = get_emulator_path(gen, model, tag)
+            executable = get_emulator_path(
+                gen, model, tag, prefer_nested=prefer_nested
+            )
         else:
             executable = LOCAL_BUILD_PATHS[gen]
 
         if not executable.exists():
             raise ValueError(f"emulator executable not found: {executable}")
 
-        self.profile_dir = tempfile.TemporaryDirectory()
+        self.profile_dir = profile_dir or tempfile.TemporaryDirectory()
+        self.own_profile_dir = profile_dir is None
         if executable == LOCAL_BUILD_PATHS["core"]:
             workdir = CORE_SRC_DIR
         else:
@@ -153,6 +237,32 @@ class EmulatorWrapper:
                 Path(logs_dir) / f"trezor-tropic-model-{worker_id}.log"
             )
 
+        tropic_configfile = Path(TROPIC_MODEL_CONFIGFILE)
+        if launch_tropic_model:
+            tropic_config_output = (
+                Path(self.profile_dir.name) / "tropic_model_config_output.yml"
+            )
+            if tropic_config_output.exists():
+                tropic_configfile = tropic_config_output
+
+        use_shared_tropic_model = launch_tropic_model and not self.own_profile_dir
+        launch_tropic_model_for_emulator = launch_tropic_model
+        if use_shared_tropic_model:
+            shared_model = _get_shared_tropic_model(
+                profile_dir=self.profile_dir.name,
+                workdir=workdir,
+                port=_get_tropic_model_port(worker_id),
+                configfile=tropic_configfile,
+                logfile=(
+                    tropic_model_logfile
+                    if isinstance(tropic_model_logfile, Path)
+                    else None
+                ),
+            )
+            launch_tropic_model_for_emulator = False
+            tropic_model_port = shared_model.port
+        else:
+            tropic_model_port = _get_tropic_model_port(worker_id)
         if gen == "legacy":
             self.emulator = LegacyEmulator(
                 executable,
@@ -168,9 +278,9 @@ class EmulatorWrapper:
                 self.profile_dir.name,
                 storage=storage,
                 workdir=workdir,
-                launch_tropic_model=launch_tropic_model,
-                tropic_model_port=_get_tropic_model_port(worker_id),
-                tropic_model_configfile=str(TROPIC_MODEL_CONFIGFILE),
+                launch_tropic_model=launch_tropic_model_for_emulator,
+                tropic_model_port=tropic_model_port,
+                tropic_model_configfile=str(tropic_configfile),
                 tropic_model_logfile=tropic_model_logfile,
                 port=_get_port(worker_id),
                 headless=headless,
@@ -189,4 +299,5 @@ class EmulatorWrapper:
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.emulator.stop()
-        self.profile_dir.cleanup()
+        if self.own_profile_dir:
+            self.profile_dir.cleanup()
