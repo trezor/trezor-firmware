@@ -6,6 +6,7 @@ use crate::{
     micropython::{gc::GcBox, obj::Obj},
     strutil::TString,
     translations::TR,
+    trezorhal::usb,
     ui::{
         component::{
             text::{
@@ -23,6 +24,8 @@ use crate::{
 
 #[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
+
+use crate::ui::event::USBEvent;
 
 use super::{
     super::{
@@ -326,6 +329,7 @@ impl DeviceMenuScreen {
         screen.register_power_menu();
 
         let is_connected = connected_idx.is_some_and(|idx| usize::from(idx) < paired_devices.len());
+        let is_connected = is_connected || usb::usb_configured();
         let connected_subtext: Option<TString<'static>> =
             is_connected.then_some(TR::words__connected.into());
 
@@ -716,11 +720,10 @@ impl DeviceMenuScreen {
         }
 
         if self.has_submenu(DeviceMenuId::PairAndConnect) {
+            let connected = connected_subtext.is_some();
             let it =
                 MenuItem::go_to_submenu(TR::ble__pair_title.into(), DeviceMenuId::PairAndConnect)
-                    .with_subtext(
-                        connected_subtext.map(|t| (t, Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN))),
-                    );
+                    .with_connection_status(Some(connected));
             items.add(it);
         }
 
@@ -1001,11 +1004,17 @@ impl Component for DeviceMenuScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        #[cfg(feature = "ble")]
-        if matches!(
-            event,
-            Event::BLE(BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged)
-        ) {
+        let refresh = match event {
+            Event::USB(USBEvent::Configured | USBEvent::Deconfigured) => true,
+
+            #[cfg(feature = "ble")]
+            Event::BLE(
+                BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged,
+            ) => true,
+
+            _ => false,
+        };
+        if refresh {
             let submenu_idx = match self.active_screen.deref_mut() {
                 ActiveScreen::Menu(_, id) => *id,
                 ActiveScreen::Device(_) => DeviceMenuId::PairAndConnect,

@@ -23,7 +23,7 @@ enum State {
 }
 
 pub struct Marquee {
-    area: Rect,
+    pub area: Rect,
     pause_timer: Timer,
     min_offset: i16,
     max_offset: i16,

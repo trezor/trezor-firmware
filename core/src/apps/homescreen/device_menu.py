@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 import trezorble as ble
 import trezorui_api
-from trezor import TR, config, log, utils
+from trezor import TR, config, log, utils, workflow
 from trezor.ui.layouts import interact, raise_if_not_confirmed
+from trezor.ui.layouts.homescreen import UsbAwareLayout
 from trezor.wire import ActionCancelled, PinCancelled
 from trezorui_api import CANCELLED, DeviceMenuResult
 
@@ -116,7 +117,8 @@ async def handle_device_menu() -> None:
         firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
         production_year = _get_production_year()
 
-        menu_result = await interact(
+        workflow.close_others()
+        obj = UsbAwareLayout(
             trezorui_api.show_device_menu(
                 init_submenu_idx=init_submenu_idx,
                 backup_failed=backup_failed,
@@ -153,9 +155,11 @@ async def handle_device_menu() -> None:
                 ],
                 production_year=production_year,
             ),
-            "device_menu",
-            raise_on_cancel=None,
         )
+        try:
+            menu_result = await obj.get_result()
+        finally:
+            obj.__del__()
 
         if menu_result is CANCELLED:
             return

@@ -38,7 +38,23 @@ def _retry_with_gc(layout: Callable[P, R], *args: P.args, **kwargs: P.kwargs) ->
         return layout(*args, **kwargs)
 
 
-class HomescreenBase(ui.Layout):
+class UsbAwareLayout(ui.Layout):
+    """Layout that listens for USB connect/disconnect events."""
+
+    async def usb_checker_task(self) -> None:
+        from trezor import io, loop
+
+        usbcheck = loop.wait(io.USB_EVENT)
+        while True:
+            event = await usbcheck
+            self._event(self.layout.usb_event, event)
+
+    def create_tasks(self) -> Iterator[loop.Task]:
+        yield from super().create_tasks()
+        yield self.usb_checker_task()
+
+
+class HomescreenBase(UsbAwareLayout):
     RENDER_INDICATOR: object | None = None
 
     def __init__(self, layout: Any) -> None:
@@ -77,18 +93,6 @@ class Homescreen(HomescreenBase):
                 skip_first_paint=self._should_resume(),
             )
         )
-
-    async def usb_checker_task(self) -> None:
-        from trezor import io, loop
-
-        usbcheck = loop.wait(io.USB_EVENT)
-        while True:
-            event = await usbcheck
-            self._event(self.layout.usb_event, event)
-
-    def create_tasks(self) -> Iterator[loop.Task]:
-        yield from super().create_tasks()
-        yield self.usb_checker_task()
 
 
 class Lockscreen(HomescreenBase):
