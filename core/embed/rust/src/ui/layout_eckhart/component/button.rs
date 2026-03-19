@@ -17,7 +17,10 @@ use crate::{
     },
 };
 
-use super::super::theme::{self, Gradient};
+use super::super::{
+    component::ConnectionIndicator,
+    theme::{self, Gradient},
+};
 
 pub enum ButtonMsg {
     Pressed,
@@ -56,6 +59,7 @@ pub struct Button {
     long_timer: Timer,
     haptic: HapticMode,
     subtext_marquee: Option<Marquee>,
+    connection_indicator: Option<ConnectionIndicator>,
     #[cfg(feature = "ui_debug")]
     skip_test_visit: bool, // used by debuglink
 }
@@ -85,6 +89,13 @@ impl Button {
             )),
             _ => None,
         };
+        let connection_indicator = match content {
+            ButtonContent::TextAndSubtext {
+                connected_indicator: true,
+                ..
+            } => Some(ConnectionIndicator::new()),
+            _ => None,
+        };
         Self {
             content,
             content_offset: Offset::zero(),
@@ -99,6 +110,7 @@ impl Button {
             long_timer: Timer::new(),
             haptic: HapticMode::OnPress,
             subtext_marquee,
+            connection_indicator,
             #[cfg(feature = "ui_debug")]
             skip_test_visit: false,
         }
@@ -162,23 +174,22 @@ impl Button {
         stylesheet: ButtonStyleSheet,
         connected: bool,
     ) -> Self {
-        let (subtext, subtext_style) = if connected {
-            (
-                TR::words__connected.into(),
-                &theme::TEXT_MENU_ITEM_SUBTITLE_GREEN,
-            )
+        let subtext = if connected {
+            TR::words__connected.into()
         } else {
-            (
-                TR::words__disconnected.into(),
-                &theme::TEXT_MENU_ITEM_SUBTITLE,
-            )
+            TR::words__disconnected.into()
         };
 
-        Self::with_clipped_text_and_subtext(text, subtext, subtext_style)
-            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
-            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
-            .styled(stylesheet)
-            .with_radius(Self::MENU_ITEM_RADIUS)
+        Self::with_clipped_text_and_subtext(
+            text,
+            subtext,
+            &theme::TEXT_MENU_ITEM_SUBTITLE,
+            connected,
+        )
+        .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+        .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+        .styled(stylesheet)
+        .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
     pub const fn with_single_line_text(text: TString<'static>) -> Self {
@@ -205,12 +216,18 @@ impl Button {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
+        connected_indicator: bool,
     ) -> Self {
-        Self::new(ButtonContent::clipped_text_and_subtext(
+        let mut button = Self::new(ButtonContent::clipped_text_and_subtext(
             text,
             subtext,
             subtext_style,
-        ))
+            connected_indicator,
+        ));
+        if connected_indicator {
+            button.connection_indicator = Some(ConnectionIndicator::new_polled());
+        }
+        button
     }
 
     pub fn with_single_line_text_and_subtext(
@@ -640,6 +657,9 @@ impl Button {
                     }
                 });
 
+                if let Some(ci) = &self.connection_indicator {
+                    ci.render(target);
+                }
                 if let Some(m) = &self.subtext_marquee {
                     m.render(target);
                 } else {
@@ -693,14 +713,40 @@ impl Component for Button {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
 
-        if let ButtonContent::TextAndSubtext { .. } = self.content {
+        if let ButtonContent::TextAndSubtext {
+            connected_indicator,
+            ..
+        } = self.content
+        {
             let subtext_start = (bounds.height() + self.content_height(bounds.width())) / 2
                 - self.baseline_subtext_height();
+
+            // Place the connection indicator if present
+            if connected_indicator {
+                if let Some(ci) = self.connection_indicator.as_mut() {
+                    let ci_size = ConnectionIndicator::AREA_SIZE_NEEDED;
+                    let ci_area = Rect::from_top_left_and_size(
+                        Point::new(
+                            bounds.top_left().x + self.content_offset.x,
+                            bounds.top_left().y + subtext_start,
+                        ),
+                        Offset::new(ci_size, ci_size),
+                    );
+                    ci.place(ci_area);
+                }
+            }
+
             if let Some(m) = self.subtext_marquee.as_mut() {
+                let indicator_offset = if let Some(ci) = &self.connection_indicator {
+                    ci.content_width() + 12
+                } else {
+                    0
+                };
                 let marquee_area = self
                     .area
                     .inset(Insets::top(subtext_start))
-                    .inset(Insets::sides(self.content_offset.x));
+                    .inset(Insets::sides(self.content_offset.x))
+                    .inset(Insets::left(indicator_offset));
                 m.place(marquee_area);
             }
         }
@@ -712,6 +758,7 @@ impl Component for Button {
         if let Some(m) = &mut self.subtext_marquee {
             m.event(ctx, event);
         }
+
         let touch_area = self.touch_area();
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
@@ -866,6 +913,7 @@ pub enum ButtonContent {
         break_words: bool,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
+        connected_indicator: bool,
     },
     Icon(Icon),
     #[cfg(feature = "micropython")]
@@ -898,6 +946,7 @@ impl ButtonContent {
             break_words: false,
             subtext,
             subtext_style,
+            connected_indicator: false,
         }
     }
 
@@ -905,6 +954,7 @@ impl ButtonContent {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
+        connected_indicator: bool,
     ) -> Self {
         Self::TextAndSubtext {
             text,
@@ -912,6 +962,7 @@ impl ButtonContent {
             break_words: true,
             subtext,
             subtext_style,
+            connected_indicator,
         }
     }
 
@@ -926,6 +977,7 @@ impl ButtonContent {
             break_words: false,
             subtext,
             subtext_style,
+            connected_indicator: false,
         }
     }
 }
