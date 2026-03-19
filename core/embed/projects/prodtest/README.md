@@ -374,14 +374,14 @@ OK 2F0079001951354861125762
 ```
 
 ### haptic-test
-Test the functionality of the device's haptic actuator. It takes one input parameter, representing the duration of the vibration in milliseconds.
+Test the functionality of the device's haptic actuator. It takes one mandatory input parameter, representing the duration of the vibration in milliseconds and second optional parameter setting the vibration amplitude
 
 The device only vibrates if there is motor connected to the haptic driver, otherwise the effect needs to be measured by an oscilloscope.
 
 Example (runs the driver for 3s):
 ```
-haptic-test 3000
-# Running haptic feedback test for 3000 ms...
+haptic-test 3000 50
+# Running haptic feedback test for 3000 ms with amplitude 50 ...
 OK
 ```
 
