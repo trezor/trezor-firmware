@@ -1,7 +1,6 @@
 import functools
 import time
 import typing as t
-from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -9,6 +8,8 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.debuglink import DebugSession
 from trezorlib.thp.client import TrezorClientThp
+
+from ..test_msg_applysettings import homescreen_jpeg_path
 
 pytestmark = [pytest.mark.protocol("thp")]
 
@@ -48,9 +49,6 @@ def delay_call(func: t.Callable, seconds: float) -> t.Callable:
     return wrapper
 
 
-HERE = Path(__file__).parent.resolve()
-
-
 def test_delay_acks_from_host(session: DebugSession) -> None:
     assert isinstance(session.client, TrezorClientThp)
     channel = session.client.channel
@@ -60,7 +58,6 @@ def test_delay_acks_from_host(session: DebugSession) -> None:
     session.client.ping("Should succeed after some retransmits")
     session.client.ping("ButtonRequest should be retransmitted", button_protection=True)
 
-    file_name = "test_bg_eckhart.jpg"
-    with open(HERE.parent / file_name, "rb") as f:
+    with open(homescreen_jpeg_path(session.debug.layout_type), "rb") as f:
         # Multiple requests and responses
         device.apply_settings(session, homescreen=f.read())
