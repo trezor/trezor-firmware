@@ -540,6 +540,8 @@ class ParsingContext:
         list[tuple[StrPropertyType, EthereumTokenInfo | None, bytes | None]],
     ]:
         if self.truncated:
+            # this will not happen, because we already checked the data_length
+            # in the very beginning and bailed from clear signing
             raise OutOfBounds
 
         parameters: list[AnyValue] = []
@@ -639,6 +641,10 @@ def get_approver(
     chain_id = msg.chain_id
 
     if not address_bytes:
+        return None
+
+    if msg.data_length > MAX_CALLDATA_STORED:
+        # skip clear signing if the calldata is longer than what we can process
         return None
 
     data_reader = BufferReader(msg.data_initial_chunk)
