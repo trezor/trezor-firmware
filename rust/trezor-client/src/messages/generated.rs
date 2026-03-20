@@ -335,4 +335,5 @@ trezor_message_impl! {
     WebAuthnCredentials => MessageType_WebAuthnCredentials,
     WebAuthnAddResidentCredential => MessageType_WebAuthnAddResidentCredential,
     WebAuthnRemoveResidentCredential => MessageType_WebAuthnRemoveResidentCredential,
+    WebAuthnCredentialsAck => MessageType_WebAuthnCredentialsAck,
 }

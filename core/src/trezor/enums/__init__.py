@@ -628,6 +628,7 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
+        WebAuthnCredentialsAck = 804
         SolanaGetPublicKey = 900
         SolanaPublicKey = 901
         SolanaGetAddress = 902
