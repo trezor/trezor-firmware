@@ -345,10 +345,10 @@ class Dynamic(ABIValue):
             raise OutOfBounds
         pointer = int.from_bytes(raw_data[offset : offset + 32], "big")
         if pointer + 32 > len(raw_data):
-            return None, 32
+            raise OutOfBounds
         length = int.from_bytes(raw_data[pointer : pointer + 32], "big")
         if pointer + 32 + length > len(raw_data):
-            return None, 32
+            raise OutOfBounds
         data = raw_data[pointer + 32 : pointer + 32 + length]
         return self.parser(data), 32
 
