@@ -17,7 +17,7 @@
 import os
 import tempfile
 from contextlib import contextmanager
-from typing import List, Tuple
+from typing import Generator, List, Tuple
 
 import pytest
 from _pytest.mark.structures import MarkDecorator
@@ -33,13 +33,24 @@ from ..emulators import (
 
 
 @contextmanager
-def shared_profile_dir() -> tempfile.TemporaryDirectory:
+def shared_profile_dir() -> Generator[tempfile.TemporaryDirectory, None, None]:
+    keep_profile = os.environ.get("TREZOR_KEEP_PROFILE_DIR") == "1"
     profile_dir = tempfile.TemporaryDirectory()
+
+    if keep_profile:
+        # Prevent automatic cleanup when the object is GC'd.
+        finalizer = getattr(profile_dir, "_finalizer", None)
+        if finalizer is not None:
+            try:
+                finalizer.detach()
+            except AttributeError:
+                pass
+
     try:
         yield profile_dir
     finally:
         stop_shared_tropic_model(profile_dir.name)
-        if os.environ.get("TREZOR_KEEP_PROFILE_DIR") != "1":
+        if not keep_profile:
             profile_dir.cleanup()
 
 
