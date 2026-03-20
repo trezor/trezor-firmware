@@ -174,7 +174,9 @@ def go_back_from_mnemonic(debug: "DebugLink") -> None:
                 break
             debug.click(debug.screen_buttons.mnemonic_erase())
         if "MnemonicKeyboard" in debug.read_layout().all_components():
-            raise RuntimeError("MnemonicKeyboard still present after 100 erase attempts")
+            raise RuntimeError(
+                "MnemonicKeyboard still present after 100 erase attempts"
+            )
     else:
         raise ValueError("Unknown model")
 

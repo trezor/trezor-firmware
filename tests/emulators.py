@@ -212,9 +212,7 @@ class EmulatorWrapper:
             launch_tropic_model = is_tropic_capable_model(model)
 
         if tag is not None and model is not None:
-            executable = get_emulator_path(
-                gen, model, tag, prefer_nested=prefer_nested
-            )
+            executable = get_emulator_path(gen, model, tag, prefer_nested=prefer_nested)
         else:
             executable = LOCAL_BUILD_PATHS[gen]
 

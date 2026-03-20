@@ -85,6 +85,7 @@ def _detect_local_core_build_model() -> str | None:
 
     return None
 
+
 if SELECTED_GENS:
     # if any gens were selected via the environment variable, force enable all selected
     LEGACY_ENABLED = "legacy" in SELECTED_GENS
