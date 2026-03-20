@@ -69,18 +69,21 @@ def lower_models_minimum_version(func):
         original_trezors = models.ALL_MODELS.copy()
         original_t1b1 = models.T1B1
         original_t2t1 = models.T2T1
+        original_t3w1 = models.T3W1
 
         models.T1B1 = dataclasses.replace(models.T1B1, minimum_version=(1, 0, 0))
         models.T2T1 = dataclasses.replace(models.T2T1, minimum_version=(2, 0, 0))
+        models.T3W1 = dataclasses.replace(models.T3W1, minimum_version=(2, 0, 0))
         models.TREZOR_ONE = models.T1B1
         models.TREZOR_T = models.T2T1
-        models.ALL_MODELS = {models.T1B1, models.T2T1}
+        models.ALL_MODELS = {models.T1B1, models.T2T1, models.T3W1}
 
         try:
             result = func(*args, **kwargs)
         finally:
             models.T1B1 = original_t1b1
             models.T2T1 = original_t2t1
+            models.T3W1 = original_t3w1
             models.TREZOR_ONE = models.T1B1
             models.TREZOR_T = models.T2T1
             models.ALL_MODELS = original_trezors

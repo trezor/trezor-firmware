@@ -15,8 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
+import re
 import tempfile
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Generator, List, Tuple
 
 import pytest
@@ -65,6 +67,24 @@ SELECTED_GENS = [
     gen.strip() for gen in os.environ.get("TREZOR_UPGRADE_TEST", "").split(",") if gen
 ]
 
+
+def _detect_local_core_build_model() -> str | None:
+    build_dir = Path(LOCAL_BUILD_PATHS["core"]).parent
+    if not build_dir.exists():
+        return None
+
+    for trezorhal_path in sorted(build_dir.rglob("trezorhal.rs")):
+        try:
+            content = trezorhal_path.read_text()
+        except OSError:
+            continue
+
+        match = re.search(r'MODEL_INTERNAL_NAME: .* = b"([A-Z0-9]+)\\0";', content)
+        if match:
+            return match.group(1)
+
+    return None
+
 if SELECTED_GENS:
     # if any gens were selected via the environment variable, force enable all selected
     LEGACY_ENABLED = "legacy" in SELECTED_GENS
@@ -80,8 +100,9 @@ else:
     # if no selection was provided, select those for which we have emulators
     LEGACY_ENABLED = LOCAL_BUILD_PATHS["legacy"].exists()
     CORE_ENABLED = LOCAL_BUILD_PATHS["core"].exists()
-    CORE_T2T1_ENABLED = CORE_ENABLED
-    CORE_T3W1_ENABLED = CORE_ENABLED
+    detected_core_model = _detect_local_core_build_model() if CORE_ENABLED else None
+    CORE_T2T1_ENABLED = CORE_ENABLED and detected_core_model != "T3W1"
+    CORE_T3W1_ENABLED = CORE_ENABLED and detected_core_model == "T3W1"
 
 
 def _is_model_enabled(model) -> bool:
