@@ -229,14 +229,15 @@ def test_apply_homescreen_toif(session: Session):
         device.apply_settings(session, homescreen=img)
 
 
+def homescreen_jpeg_path(layout_type: LayoutType) -> Path:
+    return HERE / (
+        "test_bg_eckhart.jpg" if layout_type is LayoutType.Eckhart else "test_bg.jpg"
+    )
+
+
 @pytest.mark.models(skip=["legacy", "safe3"])
 def test_apply_homescreen_jpeg(session: Session):
-    file_name = (
-        "test_bg_eckhart.jpg"
-        if session.debug.layout_type is LayoutType.Eckhart
-        else "test_bg.jpg"
-    )
-    with open(HERE / file_name, "rb") as f:
+    with open(homescreen_jpeg_path(session.debug.layout_type), "rb") as f:
         img = f.read()
         with session.test_ctx as client:
             _set_expected_responses(client, homescreen=img)
@@ -250,13 +251,7 @@ def test_apply_homescreen_jpeg(session: Session):
 
 @pytest.mark.models(skip=["legacy", "safe3", "eckhart"])
 def test_apply_homescreen_jpeg_single_message(session: Session):
-    file_name = (
-        "test_bg_eckhart.jpg"
-        if session.layout_type is LayoutType.Eckhart
-        else "test_bg.jpg"
-    )
-
-    with open(HERE / file_name, "rb") as f:
+    with open(homescreen_jpeg_path(session.debug.layout_type), "rb") as f:
         img = f.read()
         with session.test_ctx as client:
             _set_expected_responses(client)
