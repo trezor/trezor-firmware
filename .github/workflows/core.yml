@@ -385,24 +385,34 @@ jobs:
       matrix:
         # FIXME: T3B1 https://github.com/trezor/trezor-firmware/issues/2724
         # FIXME: T3T1 https://github.com/trezor/trezor-firmware/issues/3595
-        model: [T2T1]
+        model: [T2T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
-      TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 20
       TESTOPTS: "--durations 10"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
+      - name: Set upgrade selector
+        run: |
+          echo "TREZOR_UPGRADE_TEST=${{ matrix.model }}" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
+        if: ${{ matrix.model != 'T3W1' }}
+      - uses: ./.github/actions/environment
+        if: ${{ matrix.model == 'T3W1' }}
+        with:
+          full-deps: true
       - run: nix-shell --run "tests/download_emulators.sh ${{ matrix.model }}"
       - run: nix-shell --run "uv run pytest tests/upgrade_tests"
+        if: ${{ matrix.model != 'T3W1' }}
+      - run: nix-shell --arg fullDeps true --run "uv run pytest tests/upgrade_tests"
+        if: ${{ matrix.model == 'T3W1' }}
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # actions/upload-artifact@v7.0.0
         with:
           name: core-test-upgrade-${{ matrix.model }}-${{ matrix.asan }}
@@ -431,6 +441,9 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
           submodules: recursive
+      - name: Set upgrade selector
+        run: |
+          echo "TREZOR_UPGRADE_TEST=${{ matrix.model }}" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3  # actions/download-artifact@v8.0.0
         with:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}

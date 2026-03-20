@@ -164,7 +164,7 @@ jobs:
       matrix:
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
-      TREZOR_UPGRADE_TEST: legacy
+      TREZOR_UPGRADE_TEST: T1B1
       PYTEST_TIMEOUT: 120
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
