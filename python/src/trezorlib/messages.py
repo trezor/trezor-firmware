@@ -683,6 +683,7 @@ class MessageType(IntEnum):
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    WebAuthnCredentialsAck = 804
     SolanaGetPublicKey = 900
     SolanaPublicKey = 901
     SolanaGetAddress = 902
@@ -8965,6 +8966,16 @@ class TronRawParameter(protobuf.MessageType):
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 800
+    FIELDS = {
+        1: protobuf.Field("batch_size", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        batch_size: Optional["int"] = None,
+    ) -> None:
+        self.batch_size = batch_size
 
 
 class WebAuthnAddResidentCredential(protobuf.MessageType):
@@ -8999,14 +9010,21 @@ class WebAuthnCredentials(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 801
     FIELDS = {
         1: protobuf.Field("credentials", "WebAuthnCredential", repeated=True, required=False, default=None),
+        2: protobuf.Field("is_done", "bool", repeated=False, required=False, default=True),
     }
 
     def __init__(
         self,
         *,
         credentials: Optional[Sequence["WebAuthnCredential"]] = None,
+        is_done: Optional["bool"] = True,
     ) -> None:
         self.credentials: Sequence["WebAuthnCredential"] = credentials if credentials is not None else []
+        self.is_done = is_done
+
+
+class WebAuthnCredentialsAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 804
 
 
 class WebAuthnCredential(protobuf.MessageType):

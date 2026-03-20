@@ -27,6 +27,9 @@ const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_7_2;
 // @@protoc_insertion_point(message:hw.trezor.messages.webauthn.WebAuthnListResidentCredentials)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct WebAuthnListResidentCredentials {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.webauthn.WebAuthnListResidentCredentials.batch_size)
+    pub batch_size: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.webauthn.WebAuthnListResidentCredentials.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -43,9 +46,33 @@ impl WebAuthnListResidentCredentials {
         ::std::default::Default::default()
     }
 
+    // optional uint32 batch_size = 1;
+
+    pub fn batch_size(&self) -> u32 {
+        self.batch_size.unwrap_or(0)
+    }
+
+    pub fn clear_batch_size(&mut self) {
+        self.batch_size = ::std::option::Option::None;
+    }
+
+    pub fn has_batch_size(&self) -> bool {
+        self.batch_size.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_batch_size(&mut self, v: u32) {
+        self.batch_size = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "batch_size",
+            |m: &WebAuthnListResidentCredentials| { &m.batch_size },
+            |m: &mut WebAuthnListResidentCredentials| { &mut m.batch_size },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WebAuthnListResidentCredentials>(
             "WebAuthnListResidentCredentials",
             fields,
@@ -64,6 +91,9 @@ impl ::protobuf::Message for WebAuthnListResidentCredentials {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
+                8 => {
+                    self.batch_size = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -76,12 +106,18 @@ impl ::protobuf::Message for WebAuthnListResidentCredentials {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
+        if let Some(v) = self.batch_size {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.batch_size {
+            os.write_uint32(1, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -99,11 +135,13 @@ impl ::protobuf::Message for WebAuthnListResidentCredentials {
     }
 
     fn clear(&mut self) {
+        self.batch_size = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static WebAuthnListResidentCredentials {
         static instance: WebAuthnListResidentCredentials = WebAuthnListResidentCredentials {
+            batch_size: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -432,6 +470,8 @@ pub struct WebAuthnCredentials {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.webauthn.WebAuthnCredentials.credentials)
     pub credentials: ::std::vec::Vec<web_authn_credentials::WebAuthnCredential>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.webauthn.WebAuthnCredentials.is_done)
+    pub is_done: ::std::option::Option<bool>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.webauthn.WebAuthnCredentials.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -448,13 +488,37 @@ impl WebAuthnCredentials {
         ::std::default::Default::default()
     }
 
+    // optional bool is_done = 2;
+
+    pub fn is_done(&self) -> bool {
+        self.is_done.unwrap_or(true)
+    }
+
+    pub fn clear_is_done(&mut self) {
+        self.is_done = ::std::option::Option::None;
+    }
+
+    pub fn has_is_done(&self) -> bool {
+        self.is_done.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_is_done(&mut self, v: bool) {
+        self.is_done = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "credentials",
             |m: &WebAuthnCredentials| { &m.credentials },
             |m: &mut WebAuthnCredentials| { &mut m.credentials },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "is_done",
+            |m: &WebAuthnCredentials| { &m.is_done },
+            |m: &mut WebAuthnCredentials| { &mut m.is_done },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WebAuthnCredentials>(
             "WebAuthnCredentials",
@@ -477,6 +541,9 @@ impl ::protobuf::Message for WebAuthnCredentials {
                 10 => {
                     self.credentials.push(is.read_message()?);
                 },
+                16 => {
+                    self.is_done = ::std::option::Option::Some(is.read_bool()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -493,6 +560,9 @@ impl ::protobuf::Message for WebAuthnCredentials {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         };
+        if let Some(v) = self.is_done {
+            my_size += 1 + 1;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -502,6 +572,9 @@ impl ::protobuf::Message for WebAuthnCredentials {
         for v in &self.credentials {
             ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
         };
+        if let Some(v) = self.is_done {
+            os.write_bool(2, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -520,12 +593,14 @@ impl ::protobuf::Message for WebAuthnCredentials {
 
     fn clear(&mut self) {
         self.credentials.clear();
+        self.is_done = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static WebAuthnCredentials {
         static instance: WebAuthnCredentials = WebAuthnCredentials {
             credentials: ::std::vec::Vec::new(),
+            is_done: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1202,24 +1277,129 @@ pub mod web_authn_credentials {
     }
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.webauthn.WebAuthnCredentialsAck)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct WebAuthnCredentialsAck {
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.webauthn.WebAuthnCredentialsAck.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a WebAuthnCredentialsAck {
+    fn default() -> &'a WebAuthnCredentialsAck {
+        <WebAuthnCredentialsAck as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl WebAuthnCredentialsAck {
+    pub fn new() -> WebAuthnCredentialsAck {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(0);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<WebAuthnCredentialsAck>(
+            "WebAuthnCredentialsAck",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for WebAuthnCredentialsAck {
+    const NAME: &'static str = "WebAuthnCredentialsAck";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> WebAuthnCredentialsAck {
+        WebAuthnCredentialsAck::new()
+    }
+
+    fn clear(&mut self) {
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static WebAuthnCredentialsAck {
+        static instance: WebAuthnCredentialsAck = WebAuthnCredentialsAck {
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for WebAuthnCredentialsAck {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("WebAuthnCredentialsAck").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for WebAuthnCredentialsAck {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for WebAuthnCredentialsAck {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x17messages-webauthn.proto\x12\x1bhw.trezor.messages.webauthn\"!\n\
-    \x1fWebAuthnListResidentCredentials\"D\n\x1dWebAuthnAddResidentCredentia\
-    l\x12#\n\rcredential_id\x18\x01\x20\x01(\x0cR\x0ccredentialId\"8\n\x20We\
-    bAuthnRemoveResidentCredential\x12\x14\n\x05index\x18\x01\x20\x01(\rR\
-    \x05index\"\xe9\x03\n\x13WebAuthnCredentials\x12e\n\x0bcredentials\x18\
-    \x01\x20\x03(\x0b2C.hw.trezor.messages.webauthn.WebAuthnCredentials.WebA\
-    uthnCredentialR\x0bcredentials\x1a\xea\x02\n\x12WebAuthnCredential\x12\
-    \x14\n\x05index\x18\x01\x20\x01(\rR\x05index\x12\x0e\n\x02id\x18\x02\x20\
-    \x01(\x0cR\x02id\x12\x13\n\x05rp_id\x18\x03\x20\x01(\tR\x04rpId\x12\x17\
-    \n\x07rp_name\x18\x04\x20\x01(\tR\x06rpName\x12\x17\n\x07user_id\x18\x05\
-    \x20\x01(\x0cR\x06userId\x12\x1b\n\tuser_name\x18\x06\x20\x01(\tR\x08use\
-    rName\x12*\n\x11user_display_name\x18\x07\x20\x01(\tR\x0fuserDisplayName\
-    \x12#\n\rcreation_time\x18\x08\x20\x01(\rR\x0ccreationTime\x12\x1f\n\x0b\
-    hmac_secret\x18\t\x20\x01(\x08R\nhmacSecret\x12$\n\x0euse_sign_count\x18\
-    \n\x20\x01(\x08R\x0cuseSignCount\x12\x1c\n\talgorithm\x18\x0b\x20\x01(\
-    \x11R\talgorithm\x12\x14\n\x05curve\x18\x0c\x20\x01(\x11R\x05curveB<\n#c\
-    om.satoshilabs.trezor.lib.protobufB\x15TrezorMessageWebAuthn\
+    \n\x17messages-webauthn.proto\x12\x1bhw.trezor.messages.webauthn\"@\n\
+    \x1fWebAuthnListResidentCredentials\x12\x1d\n\nbatch_size\x18\x01\x20\
+    \x01(\rR\tbatchSize\"D\n\x1dWebAuthnAddResidentCredential\x12#\n\rcreden\
+    tial_id\x18\x01\x20\x01(\x0cR\x0ccredentialId\"8\n\x20WebAuthnRemoveResi\
+    dentCredential\x12\x14\n\x05index\x18\x01\x20\x01(\rR\x05index\"\x88\x04\
+    \n\x13WebAuthnCredentials\x12e\n\x0bcredentials\x18\x01\x20\x03(\x0b2C.h\
+    w.trezor.messages.webauthn.WebAuthnCredentials.WebAuthnCredentialR\x0bcr\
+    edentials\x12\x1d\n\x07is_done\x18\x02\x20\x01(\x08:\x04trueR\x06isDone\
+    \x1a\xea\x02\n\x12WebAuthnCredential\x12\x14\n\x05index\x18\x01\x20\x01(\
+    \rR\x05index\x12\x0e\n\x02id\x18\x02\x20\x01(\x0cR\x02id\x12\x13\n\x05rp\
+    _id\x18\x03\x20\x01(\tR\x04rpId\x12\x17\n\x07rp_name\x18\x04\x20\x01(\tR\
+    \x06rpName\x12\x17\n\x07user_id\x18\x05\x20\x01(\x0cR\x06userId\x12\x1b\
+    \n\tuser_name\x18\x06\x20\x01(\tR\x08userName\x12*\n\x11user_display_nam\
+    e\x18\x07\x20\x01(\tR\x0fuserDisplayName\x12#\n\rcreation_time\x18\x08\
+    \x20\x01(\rR\x0ccreationTime\x12\x1f\n\x0bhmac_secret\x18\t\x20\x01(\x08\
+    R\nhmacSecret\x12$\n\x0euse_sign_count\x18\n\x20\x01(\x08R\x0cuseSignCou\
+    nt\x12\x1c\n\talgorithm\x18\x0b\x20\x01(\x11R\talgorithm\x12\x14\n\x05cu\
+    rve\x18\x0c\x20\x01(\x11R\x05curve\"\x18\n\x16WebAuthnCredentialsAckB<\n\
+    #com.satoshilabs.trezor.lib.protobufB\x15TrezorMessageWebAuthn\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1237,11 +1417,12 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(5);
+            let mut messages = ::std::vec::Vec::with_capacity(6);
             messages.push(WebAuthnListResidentCredentials::generated_message_descriptor_data());
             messages.push(WebAuthnAddResidentCredential::generated_message_descriptor_data());
             messages.push(WebAuthnRemoveResidentCredential::generated_message_descriptor_data());
             messages.push(WebAuthnCredentials::generated_message_descriptor_data());
+            messages.push(WebAuthnCredentialsAck::generated_message_descriptor_data());
             messages.push(web_authn_credentials::WebAuthnCredential::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
