@@ -228,7 +228,7 @@ class TokenAmountFormatter(FieldFormatter):
                 )
             return (
                 format_ethereum_amount(amount, token, definitions.network),
-                None,
+                token,
                 None,
             )
 
