@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from trezorlib.debuglink import LayoutType
 
 from .. import translations as TR
+from ..recovery_helpers import navigate_to_keyboard
 from .common import go_next
 
 if TYPE_CHECKING:
@@ -196,15 +197,11 @@ def enter_share(
         debug.swipe_up()
         layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Eckhart:
-        layout = debug.read_layout()
-        if "MnemonicKeyboard" not in layout.all_components():
-            debug.click(debug.screen_buttons.ok())
-            layout = debug.read_layout()
-        attempts = 0
-        while "MnemonicKeyboard" not in layout.all_components() and attempts < 10:
-            debug.click(debug.screen_buttons.ok())
-            layout = debug.read_layout()
-            attempts += 1
+        layout = navigate_to_keyboard(
+            debug,
+            component_names=("MnemonicKeyboard",),
+            max_attempts=10,
+        )
     else:
         raise ValueError("Unknown model")
 
