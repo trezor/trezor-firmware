@@ -71,8 +71,6 @@ let
     version = "stm-cubeide-v1.13.0";
     nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ nixpkgs.autoreconfHook ];
   }));
-  # see pyright/README.md for update procedure
-  pyright = oldNixpkgs.callPackage ./ci/pyright {};
 in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
