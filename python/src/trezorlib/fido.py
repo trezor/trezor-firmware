@@ -26,10 +26,17 @@ if TYPE_CHECKING:
 
 
 @workflow()
-def list_credentials(session: "Session") -> Sequence[messages.WebAuthnCredential]:
-    return session.call(
-        messages.WebAuthnListResidentCredentials(), expect=messages.WebAuthnCredentials
-    ).credentials
+def list_credentials(
+    session: "Session", batch_size: int | None = 10
+) -> Sequence[messages.WebAuthnCredential]:
+    creds = []
+    msg = messages.WebAuthnListResidentCredentials(batch_size=batch_size)
+    while True:
+        resp = session.call(msg, expect=messages.WebAuthnCredentials)
+        creds.extend(resp.credentials)
+        if resp.is_done:
+            return creds
+        msg = messages.WebAuthnCredentialsAck()
 
 
 @workflow()
