@@ -90,6 +90,9 @@ class Reassembler:
                 return False
 
             buffer = self.thp_read_buf.get(self.buffer_len)
+            if buffer is None:
+                # Failed to get the buffer
+                return False
             self._buffer_packet_data(buffer, packet, PacketHeader.CONT_LENGTH)
         else:
             self.reset()
@@ -97,6 +100,9 @@ class Reassembler:
             self.buffer_len = payload_length + PacketHeader.INIT_LENGTH
 
             buffer = self.thp_read_buf.get(self.buffer_len)
+            if buffer is None:
+                # Failed to get the buffer
+                return False
             self._buffer_packet_data(buffer, packet, 0)
 
         assert len(buffer) == self.buffer_len
@@ -415,6 +421,11 @@ class Channel:
         length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + PacketHeader.INIT_LENGTH
 
         buffer = self.write_buf.get(length)
+        if buffer is None:
+            from trezor import wire
+
+            raise wire.FirmwareError("Failed to get a sufficiently large write buffer.")
+
         noise_payload_len = memory_manager.encode_into_buffer(buffer, msg, session_id)
 
         self._encrypt(buffer, noise_payload_len)
