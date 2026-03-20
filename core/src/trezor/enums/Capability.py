@@ -30,4 +30,4 @@ if not utils.BITCOIN_ONLY:
     U2F = 14
     Solana = 18
     Tron = 24
-    CKB = 25
+    CKB = 28

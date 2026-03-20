@@ -39,12 +39,11 @@ async def get_address(msg: CKBGetAddress, keychain: Keychain) -> CKBAddress:
     # Derive lock script argument
     arg = get_lock_script_arg(public_key)
 
-    # Encode to Bech32m address
-    network = msg.network if msg.network else "Mainnet"
-
     # Validate network
-    if network not in ("Mainnet", "Testnet"):
-        raise DataError(f"Invalid network: {network}")
+    if not msg.network or msg.network not in ("Mainnet", "Testnet"):
+        raise DataError("Invalid CKB network")
+
+    network = msg.network
 
     address = encode_address(arg, network)
     mac = get_address_mac(address, SLIP44_ID, address_n, keychain)

@@ -26,8 +26,8 @@ def cli() -> None:
 @click.option(
     "--coin",
     type=click.Choice(["Mainnet", "Testnet"]),
-    default="Mainnet",
-    help="Network (default: Mainnet)",
+    required=True,
+    help="Network: Mainnet or Testnet",
 )
 @click.option("-C", "--chunkify", is_flag=True)
 @with_session
