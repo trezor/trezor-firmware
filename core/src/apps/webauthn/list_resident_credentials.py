@@ -8,8 +8,13 @@ async def list_resident_credentials(
     msg: WebAuthnListResidentCredentials,
 ) -> WebAuthnCredentials:
     from trezor import TR
-    from trezor.messages import WebAuthnCredential, WebAuthnCredentials
+    from trezor.messages import (
+        WebAuthnCredential,
+        WebAuthnCredentials,
+        WebAuthnCredentialsAck,
+    )
     from trezor.ui.layouts import confirm_action
+    from trezor.wire import DataError, context
 
     from . import resident_credentials
 
@@ -20,7 +25,7 @@ async def list_resident_credentials(
         verb=TR.buttons__export,
         prompt_screen=True,
     )
-    creds = [
+    creds_iter = (
         WebAuthnCredential(
             index=cred.index,
             id=cred.id,
@@ -36,5 +41,17 @@ async def list_resident_credentials(
             curve=cred.curve,
         )
         for cred in resident_credentials.find_all()
-    ]
-    return WebAuthnCredentials(credentials=creds)
+    )
+    if msg.batch_size is None:
+        return WebAuthnCredentials(credentials=list(creds_iter))
+
+    if msg.batch_size <= 0:
+        raise DataError("Invalid batch size")
+
+    while True:
+        creds = [cred for _, cred in zip(range(msg.batch_size), creds_iter)]
+        if not creds:
+            return WebAuthnCredentials(is_done=True)
+
+        resp = WebAuthnCredentials(credentials=creds, is_done=False)
+        await context.call(resp, expected_type=WebAuthnCredentialsAck)

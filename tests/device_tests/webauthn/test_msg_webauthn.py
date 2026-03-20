@@ -41,6 +41,8 @@ def test_add_remove(session: Session):
 
         # List should be empty.
         assert fido.list_credentials(session) == []
+        # Check non-paginated API.
+        assert fido.list_credentials(session, batch_size=None) == []
 
         # Add valid credential #1.
         fido.add_credential(session, CRED1)
@@ -81,6 +83,8 @@ def test_add_remove(session: Session):
         # Check that the invalid credential was not added.
         creds = fido.list_credentials(session)
         assert len(creds) == 1
+        # Check non-paginated API.
+        assert creds == fido.list_credentials(session, batch_size=None)
 
         # Add valid credential, which has same userId as #2, but different rpId.
         fido.add_credential(session, CRED3)
@@ -88,10 +92,17 @@ def test_add_remove(session: Session):
         # Check that the credential was added.
         creds = fido.list_credentials(session)
         assert len(creds) == 2
+        # Check non-paginated API.
+        assert creds == fido.list_credentials(session, batch_size=None)
 
         # Fill up the credential storage to maximum capacity.
-        for cred in CREDS[: RK_CAPACITY - 2]:
+        for expected_len, cred in enumerate(CREDS[: RK_CAPACITY - 2], 3):
             fido.add_credential(session, cred)
+            creds = fido.list_credentials(session)
+            assert len(creds) == expected_len
+            if expected_len <= 30:
+                # Check non-paginated API for small enough responses.
+                assert creds == fido.list_credentials(session, batch_size=None)
 
         # Adding one more valid credential to full storage should fail.
         with pytest.raises(TrezorFailure):
