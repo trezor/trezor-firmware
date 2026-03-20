@@ -844,16 +844,16 @@ async def _handle_generic_ui(
     for field, actual_token, actual_token_address in fields:
         properties_to_confirm.append(field)
         if actual_token is tokens.UNKNOWN_TOKEN:
-            assert actual_token_address is not None
-            token_address_str = address_from_bytes(
-                actual_token_address, definitions.network
-            )
-            token_address_property: StrPropertyType = (
-                TR.ethereum__token_contract,
-                token_address_str,
-                None,
-            )
-            properties_to_confirm.append(token_address_property)
+            if actual_token_address is not None:
+                token_address_str = address_from_bytes(
+                    actual_token_address, definitions.network
+                )
+                token_address_property: StrPropertyType = (
+                    TR.ethereum__token_contract,
+                    token_address_str,
+                    None,
+                )
+                properties_to_confirm.append(token_address_property)
 
     recipient_str = KNOWN_ADDRESSES.get(bytes_from_address(msg.to), msg.to)
 
