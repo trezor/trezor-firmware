@@ -13,6 +13,7 @@ from .clear_signing import (
     DisplayFormat,
     Dynamic,
     FieldDefinition,
+    RawBytesFormatter,
     Struct,
     TokenAmountFormatter,
     UnitFormatter,
@@ -23,7 +24,6 @@ from .clear_signing import (
     parse_uint24,
     parse_uint160,
     parse_uint256,
-    parse_uint256_array,
 )
 
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
@@ -140,13 +140,13 @@ ALL_DISPLAY_FORMATS.extend(
             binding_context=ONEINCH_CONTEXT,
             func_sig=unhexlify(
                 "83800a8e"
-            ),  # unoswap(address srcToken, uint256 amount, uint256 minReturn, uint256[] pools)
+            ),  # unoswap(address srcToken, uint256 amount, uint256 minReturn, bytes pools)
             intent="Swap",
             parameter_definitions=[
                 Atomic(parse_address),  # srcToken
                 Atomic(parse_uint256),  # amount
                 Atomic(parse_uint256),  # minReturn
-                Dynamic(parse_uint256_array),  # pools
+                Atomic(parse_bytes),  # pools
             ],
             field_definitions=[
                 FieldDefinition(
@@ -167,9 +167,12 @@ ALL_DISPLAY_FORMATS.extend(
                     AddressNameFormatter,
                 ),
                 FieldDefinition(
-                    (3, -1),  # pools.[-1]
-                    "Last pool",
-                    UnitFormatter,
+                    (3,),  # pools
+                    "Pools (hex)",
+                    # HACK: this parameter encodes data in a non-standard way
+                    # in order to extract human readable data from it,
+                    # we would need to parse this further
+                    RawBytesFormatter,
                 ),
             ],
         ),
@@ -177,14 +180,14 @@ ALL_DISPLAY_FORMATS.extend(
             binding_context=ONEINCH_CONTEXT,
             func_sig=unhexlify(
                 "e2c95c82"
-            ),  # unoswapTo(address recipient, address srcToken, uint256 amount, uint256 minReturn, uint256[] pools)
+            ),  # unoswapTo(address recipient, address srcToken, uint256 amount, uint256 minReturn, bytes pools)
             intent="Swap",
             parameter_definitions=[
                 Atomic(parse_address),  # recipient
                 Atomic(parse_address),  # srcToken
                 Atomic(parse_uint256),  # amount
                 Atomic(parse_uint256),  # minReturn
-                Dynamic(parse_uint256_array),  # pools
+                Atomic(parse_bytes),  # pools
             ],
             field_definitions=[
                 FieldDefinition(
@@ -205,9 +208,12 @@ ALL_DISPLAY_FORMATS.extend(
                     AddressNameFormatter,
                 ),
                 FieldDefinition(
-                    (4, -1),  # pools.[-1]
-                    "Last pool",
-                    UnitFormatter,
+                    (4,),  # pools
+                    "Pools (hex)",
+                    # HACK: this parameter encodes data in a non-standard way
+                    # in order to extract human readable data from it,
+                    # we would need to parse this further
+                    RawBytesFormatter,
                 ),
             ],
         ),

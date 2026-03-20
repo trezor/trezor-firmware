@@ -1,5 +1,6 @@
 from micropython import const
 from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
 from trezor import TR
 from trezor.utils import BufferReader
@@ -273,6 +274,27 @@ class UnitFormatter(FieldFormatter):
             prefix_symbol = si_prefixes.get(exponent, "")
 
             return f"{significand:g}{prefix_symbol}{self.base}", None, None
+
+
+class RawBytesFormatter(FieldFormatter):
+    """HACK: this is currently used to just dump some parameters
+    that encode more information in non-standard ways (see unoswap and unoswapTo from 1inch).
+    """
+
+    def format(
+        self,
+        raw_value: AnyValue,
+        _definitions: Definitions,
+        _token: EthereumTokenInfo,
+        _path_Walker: PathWalker,
+    ) -> tuple[str | None, EthereumTokenInfo | None, bytes | None]:
+        if raw_value is None:
+            return None, None, None
+        else:
+            if not isinstance(raw_value, bytes):
+                raise InvalidFormatDefinition
+
+            return hexlify(raw_value).decode(), None, None
 
 
 # https://eips.ethereum.org/EIPS/eip-7730#context-section
