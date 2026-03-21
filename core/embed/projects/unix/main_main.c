@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
+
 #include <trezor_rtl.h>
 
 #include <io/display.h>
@@ -61,7 +63,7 @@
 #include <sec/secret.h>
 #endif
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 static void drivers_deinit(void) { flash_deinit(); }
 
@@ -107,28 +109,28 @@ static void throw_exit_exception(systask_t* task, int code) {
   // We are back and the task should be terminated by now
 }
 
-static int sdl_event_filter(void* userdata, SDL_Event* event) {
+static bool sdl_event_filter(void* userdata, SDL_Event* event) {
   applet_t* coreapp = (applet_t*)userdata;
 
   switch (event->type) {
-    case SDL_QUIT:
+    case SDL_EVENT_QUIT:
       throw_exit_exception(&coreapp->task, 0);
-      return 0;
-    case SDL_KEYUP:
+      return true;
+    case SDL_EVENT_KEY_UP:
       if (event->key.repeat) {
-        return 0;
+        return true;
       }
-      switch (event->key.keysym.sym) {
+      switch (event->key.key) {
         case SDLK_ESCAPE:
           throw_exit_exception(&coreapp->task, 0);
-          return 0;
-        case SDLK_s:
+          return true;
+        case SDLK_S:
           display_save("emu");
-          return 0;
+          return true;
       }
       break;
   }
-  return 1;
+  return false;
 }
 
 // Kernel task main loop

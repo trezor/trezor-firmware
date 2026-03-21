@@ -555,9 +555,9 @@ except OSError:
     print("libjpeg not installed, Emulator build is not possible")
 
 try:
-    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
+    env.ParseConfig('pkg-config --cflags --libs sdl3 sdl3-image')
 except OSError:
-    print("SDL2 not installed, Emulator build is not possible")
+    print("SDL3 not installed, Emulator build is not possible")
 
 BYTECODE_OPTIMIZATION = {'0': '0', '1': '3'}[PYOPT]
 
@@ -968,7 +968,8 @@ env.Depends(obj_program, qstr_generated)
 program = env.Command(
     target='trezor-emu-core',
     source=obj_program,
-    action='$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS', )
+    action='$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS $_LIBS',
+)
 
 if CMAKELISTS != 0:
     env.Depends(program, cmake_gen)

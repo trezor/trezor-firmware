@@ -19,7 +19,7 @@
 
 #include "oled.h"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 static SDL_Renderer* renderer = NULL;
 static SDL_Texture* texture = NULL;
@@ -122,7 +122,7 @@ void oledRefresh(void) {
   }
 
   SDL_UpdateTexture(texture, NULL, data, OLED_WIDTH * sizeof(uint32_t));
-  SDL_RenderCopy(renderer, texture, NULL, &dstrect);
+  SDL_RenderTexture(renderer, texture, NULL, &dstrect);
   SDL_RenderPresent(renderer);
 
   /* Return it back */
@@ -133,7 +133,7 @@ void emulatorPoll(void) {
   SDL_Event event;
 
   if (SDL_PollEvent(&event)) {
-    if (event.type == SDL_QUIT) {
+    if (event.type == SDL_EVENT_QUIT) {
       exit(1);
     }
   }

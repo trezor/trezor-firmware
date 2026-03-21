@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#include "SDL.h"
+#include "SDL3/SDL.h"
 
 // This module provides a modular approach to processing SDL events.
 //

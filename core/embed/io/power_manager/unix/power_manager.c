@@ -23,8 +23,9 @@
 #include <io/power_manager.h>
 #include <io/unix/sdl_display.h>
 
-#include <SDL.h>
-#include "SDL_events.h"
+#include <SDL3/SDL.h>
+#include <stdlib.h>
+#include "SDL3/SDL_events.h"
 
 pm_status_t pm_init(bool inherit_state) { return PM_OK; }
 
@@ -40,11 +41,12 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
 
   SDL_Event event;
   while (SDL_WaitEvent(&event)) {
-    if (event.type == SDL_QUIT) {
+    if (event.type == SDL_EVENT_QUIT) {
       exit(1);
     }
-    if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP ||
-        event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+    if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP ||
+        event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+        event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
       *wakeup_reason = WAKEUP_FLAG_BUTTON;
       break;
     }

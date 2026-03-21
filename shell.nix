@@ -80,8 +80,8 @@ stdenvNoCC.mkDerivation ({
   ] ++ [
     # Current nixpkgs aliases SDL2 to sdl2-compat which on Ubuntu 25.04 makes the emulator
     # crash with SDL_CreateRenderer error.
-    oldNixpkgs.SDL2
-    oldNixpkgs.SDL2_image
+    sdl3
+    sdl3-image
     bash
     bloaty  # for binsize
     check
@@ -135,6 +135,9 @@ stdenvNoCC.mkDerivation ({
     nrfutil
     nrfconnect
   ];
+  shellHook = ''
+  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${sdl3.dev}/lib/pkgconfig:${sdl3-image.dev}/lib/pkgconfig
+  '';
   LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
