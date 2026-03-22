@@ -5,13 +5,20 @@ from hashlib import sha256
 from pathlib import Path
 
 import click
-import ecdsa
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    Prehashed,
+    decode_dss_signature,
+)
 
 from trezorlib.firmware.legacy import LegacyV2Firmware
 from trezorlib.firmware.models import LEGACY_V3_DEV
 
 SECRET_KEYS = [
-    ecdsa.SigningKey.from_string(bytes.fromhex(sk), curve=ecdsa.SECP256k1)
+    ec.derive_private_key(
+        int.from_bytes(bytes.fromhex(sk), "big"), ec.SECP256K1()
+    )
     for sk in (
         "ca8de06e1e93d101136fa6fbc41432c52b6530299dfe32808030ee8e679702f1",
         "dde47dd393f7d76f9b522bfa9760bc4543d2c3654491393774f54e066461fccb",
@@ -19,17 +26,25 @@ SECRET_KEYS = [
     )
 ]
 
-PUBLIC_KEYS: list[ecdsa.VerifyingKey] = [sk.get_verifying_key() for sk in SECRET_KEYS]
+PUBLIC_KEYS = [sk.public_key() for sk in SECRET_KEYS]
 
 # Should be these public keys
-assert [pk.to_string("compressed") for pk in PUBLIC_KEYS] == LEGACY_V3_DEV.firmware_keys
+assert [
+    pk.public_bytes(
+        serialization.Encoding.X962,
+        serialization.PublicFormat.CompressedPoint,
+    )
+    for pk in PUBLIC_KEYS
+] == LEGACY_V3_DEV.firmware_keys
 
 
-def signmessage(digest: bytes, key: ecdsa.SigningKey) -> bytes:
+def signmessage(digest: bytes, key: ec.EllipticCurvePrivateKey) -> bytes:
     """Sign via SignMessage"""
     btc_digest = b"\x18Bitcoin Signed Message:\n\x20" + digest
     final_digest = sha256(sha256(btc_digest).digest()).digest()
-    return key.sign_digest_deterministic(final_digest, hashfunc=sha256)
+    der_sig = key.sign(final_digest, ec.ECDSA(Prehashed(hashes.SHA256())))
+    r, s = decode_dss_signature(der_sig)
+    return r.to_bytes(32, "big") + s.to_bytes(32, "big")
 
 
 @click.command()

@@ -3,7 +3,13 @@ import argparse
 import hashlib
 import struct
 
-import ecdsa
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    decode_dss_signature,
+    encode_dss_signature,
+)
+from cryptography.exceptions import InvalidSignature
 
 SLOTS = 3
 
@@ -129,14 +135,16 @@ def check_signatures(data):
             print(f"Slot #{x + 1}", "is empty")
         else:
             pk = pubkeys[indexes[x]]
-            verify = ecdsa.VerifyingKey.from_string(
-                bytes.fromhex(pk)[1:],
-                curve=ecdsa.curves.SECP256k1,
-                hashfunc=hashlib.sha256,
+            verify = ec.EllipticCurvePublicKey.from_encoded_point(
+                ec.SECP256K1(),
+                bytes.fromhex(pk),
             )
 
             try:
-                verify.verify(signature, to_sign, hashfunc=hashlib.sha256)
+                r = int.from_bytes(signature[:32], "big")
+                s = int.from_bytes(signature[32:], "big")
+                der_sig = encode_dss_signature(r, s)
+                verify.verify(der_sig, to_sign, ec.ECDSA(hashes.SHA256()))
 
                 if indexes[x] in used:
                     print(f"Slot #{x + 1} signature: DUPLICATE", signature.hex())
@@ -176,7 +184,7 @@ def sign(data, is_pem):
         if pem_key.strip() == "":
             # Blank key,let's remove existing signature from slot
             return modify(data, slot, 0, b"\x00" * 64)
-        key = ecdsa.SigningKey.from_pem(pem_key)
+        key = serialization.load_pem_private_key(pem_key.encode(), password=None)
     else:
         print("Paste SECEXP (in hex) and press Enter:")
         print("(blank private key removes the signature on given index)")
@@ -184,16 +192,15 @@ def sign(data, is_pem):
         if secexp.strip() == "":
             # Blank key,let's remove existing signature from slot
             return modify(data, slot, 0, b"\x00" * 64)
-        key = ecdsa.SigningKey.from_secret_exponent(
-            secexp=int(secexp, 16),
-            curve=ecdsa.curves.SECP256k1,
-            hashfunc=hashlib.sha256,
-        )
+        key = ec.derive_private_key(int(secexp, 16), ec.SECP256K1())
 
     to_sign = get_header(data, zero_signatures=True)
 
     # Locate proper index of current signing key
-    pubkey = "04" + key.get_verifying_key().to_string().hex()
+    pubkey = key.public_key().public_bytes(
+        serialization.Encoding.X962,
+        serialization.PublicFormat.UncompressedPoint,
+    ).hex()
     index = None
     for i, pk in pubkeys.items():
         if pk == pubkey:
@@ -203,26 +210,41 @@ def sign(data, is_pem):
     if index is None:
         raise Exception("Unable to find private key index. Unknown private key?")
 
-    signature = key.sign_deterministic(to_sign, hashfunc=hashlib.sha256)
+    der_sig = key.sign(to_sign, ec.ECDSA(hashes.SHA256()))
+    r, s = decode_dss_signature(der_sig)
+    signature = r.to_bytes(32, "big") + s.to_bytes(32, "big")
 
     return modify(data, slot, index, signature)
 
 
 def main(args):
     if args.generate:
-        key = ecdsa.SigningKey.generate(
-            curve=ecdsa.curves.SECP256k1, hashfunc=hashlib.sha256
-        )
+        key = ec.generate_private_key(ec.SECP256K1())
 
         print("PRIVATE KEY (SECEXP):")
-        print(key.to_string().hex())
+        print(
+            key.private_numbers().private_value.to_bytes(32, "big").hex()
+        )
         print()
 
         print("PRIVATE KEY (PEM):")
-        print(key.to_pem())
+        print(
+            key.private_bytes(
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.TraditionalOpenSSL,
+                serialization.NoEncryption(),
+            ).decode()
+        )
 
         print("PUBLIC KEY:")
-        print("04" + key.get_verifying_key().to_string().hex())
+        print(
+            key.public_key()
+            .public_bytes(
+                serialization.Encoding.X962,
+                serialization.PublicFormat.UncompressedPoint,
+            )
+            .hex()
+        )
         return
 
     if not args.path:

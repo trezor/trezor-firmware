@@ -3,8 +3,13 @@ import argparse
 import hashlib
 import struct
 
-import ecdsa
-from ecdsa import BadSignatureError
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    decode_dss_signature,
+    encode_dss_signature,
+)
+from cryptography.exceptions import InvalidSignature
 
 SLOTS = 3
 
@@ -121,14 +126,16 @@ def check_signatures(data):
         else:
             pubkeys = pubkeys_dev
             pk = pubkeys[indexes[x]]
-            verify = ecdsa.VerifyingKey.from_string(
-                bytes.fromhex(pk)[1:],
-                curve=ecdsa.curves.SECP256k1,
-                hashfunc=hashlib.sha256,
+            verify = ec.EllipticCurvePublicKey.from_encoded_point(
+                ec.SECP256K1(),
+                bytes.fromhex(pk),
             )
 
             try:
-                verify.verify(signature, to_sign, hashfunc=hashlib.sha256)
+                r = int.from_bytes(signature[:32], "big")
+                s = int.from_bytes(signature[32:], "big")
+                der_sig = encode_dss_signature(r, s)
+                verify.verify(der_sig, to_sign, ec.ECDSA(hashes.SHA256()))
 
                 if indexes[x] in used:
                     print(f"Slot #{x + 1} signature: DUPLICATE", signature.hex())
@@ -150,16 +157,15 @@ def modify(data, slot, index, signature):
 
 
 def sign(data, slot, secexp):
-    key = ecdsa.SigningKey.from_secret_exponent(
-        secexp=int(secexp, 16),
-        curve=ecdsa.curves.SECP256k1,
-        hashfunc=hashlib.sha256,
-    )
+    key = ec.derive_private_key(int(secexp, 16), ec.SECP256K1())
 
     to_sign = get_header(data, zero_signatures=True)
 
     # Locate proper index of current signing key
-    pubkey = "04" + key.get_verifying_key().to_string().hex()
+    pubkey = key.public_key().public_bytes(
+        serialization.Encoding.X962,
+        serialization.PublicFormat.UncompressedPoint,
+    ).hex()
     index = None
 
     pubkeys = pubkeys_dev
@@ -171,7 +177,9 @@ def sign(data, slot, secexp):
     if index is None:
         raise Exception("Unable to find private key index. Unknown private key?")
 
-    signature = key.sign_deterministic(to_sign, hashfunc=hashlib.sha256)
+    der_sig = key.sign(to_sign, ec.ECDSA(hashes.SHA256()))
+    r, s = decode_dss_signature(der_sig)
+    signature = r.to_bytes(32, "big") + s.to_bytes(32, "big")
 
     return modify(data, slot, index, signature)
 
@@ -223,14 +231,16 @@ def check_signatures_old(data):
         else:
             pubkeys = pubkeys_dev
             pk = pubkeys[indexes[x]]
-            verify = ecdsa.VerifyingKey.from_string(
-                bytes.fromhex(pk)[1:],
-                curve=ecdsa.curves.SECP256k1,
-                hashfunc=hashlib.sha256,
+            verify = ec.EllipticCurvePublicKey.from_encoded_point(
+                ec.SECP256K1(),
+                bytes.fromhex(pk),
             )
 
             try:
-                verify.verify(signature, to_sign, hashfunc=hashlib.sha256)
+                r = int.from_bytes(signature[:32], "big")
+                s = int.from_bytes(signature[32:], "big")
+                der_sig = encode_dss_signature(r, s)
+                verify.verify(der_sig, to_sign, ec.ECDSA(hashes.SHA256()))
 
                 if indexes[x] in used:
                     print("Slot #%d signature: DUPLICATE" % (x + 1), signature.hex())
@@ -238,7 +248,7 @@ def check_signatures_old(data):
                     used.append(indexes[x])
                     print("Slot #%d signature: VALID" % (x + 1), signature.hex())
 
-            except BadSignatureError:
+            except InvalidSignature:
                 print("Slot #%d signature: INVALID" % (x + 1), signature.hex())
 
 
@@ -261,16 +271,15 @@ def modify_old(data, slot, index, signature):
 
 
 def sign_old(data, slot, secexp):
-    key = ecdsa.SigningKey.from_secret_exponent(
-        secexp=int(secexp, 16),
-        curve=ecdsa.curves.SECP256k1,
-        hashfunc=hashlib.sha256,
-    )
+    key = ec.derive_private_key(int(secexp, 16), ec.SECP256K1())
 
     to_sign = prepare_old(data)[256:]  # without meta
 
     # Locate proper index of current signing key
-    pubkey = "04" + key.get_verifying_key().to_string().hex()
+    pubkey = key.public_key().public_bytes(
+        serialization.Encoding.X962,
+        serialization.PublicFormat.UncompressedPoint,
+    ).hex()
     index = None
 
     pubkeys = pubkeys_dev
@@ -283,7 +292,9 @@ def sign_old(data, slot, secexp):
     if index is None:
         raise Exception("Unable to find private key index. Unknown private key?")
 
-    signature = key.sign_deterministic(to_sign, hashfunc=hashlib.sha256)
+    der_sig = key.sign(to_sign, ec.ECDSA(hashes.SHA256()))
+    r, s = decode_dss_signature(der_sig)
+    signature = r.to_bytes(32, "big") + s.to_bytes(32, "big")
 
     return modify_old(data, slot, index, signature)
 
