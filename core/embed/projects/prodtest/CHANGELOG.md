@@ -1,4 +1,12 @@
 
+## 0.3.7 [26th March 2026]
+
+### Added
+- [T3W1] Added explicit exit from manufacturing mode.  [#6613]
+
+### Changed
+- [T3W1,T3T1] Add optional amplitude argument to haptic-test command.  [#6621]
+
 ## 0.3.6 [18th March 2026]
 
 ### Added
@@ -209,3 +217,5 @@
 [#6334]: https://github.com/trezor/trezor-firmware/pull/6334
 [#6337]: https://github.com/trezor/trezor-firmware/pull/6337
 [#6346]: https://github.com/trezor/trezor-firmware/pull/6346
+[#6613]: https://github.com/trezor/trezor-firmware/pull/6613
+[#6621]: https://github.com/trezor/trezor-firmware/pull/6621
