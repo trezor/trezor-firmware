@@ -216,7 +216,7 @@ where
             channel_id,
         };
         log::debug!("Got channel id {}.", channel_id);
-        Ok(PacketInResult::channel_allocation(channel_id))
+        Ok(PacketInResult::channel_allocation())
     }
 }
 
