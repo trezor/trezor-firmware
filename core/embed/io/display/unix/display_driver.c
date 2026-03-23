@@ -118,8 +118,10 @@ bool display_init(display_content_mode_t mode) {
   if (drv->initialized) {
     return true;
   }
-
+  fprintf(stderr, "SDL video driver (before init): %s\n",
+          SDL_GetCurrentVideoDriver());
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
     LOG_ERR("%s", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
