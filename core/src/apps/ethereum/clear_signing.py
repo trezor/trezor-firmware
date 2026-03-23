@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from trezor.messages import EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
 
+    from apps.common.payment_request import PaymentRequestVerifier
+
     from .definitions import Definitions
     from .helpers import ConfirmDataFn
     from .keychain import MsgInSignTx
@@ -636,6 +638,7 @@ def get_approver(
     value: int,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
+    payment_request_verifier: PaymentRequestVerifier | None,
 ) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
     from .clear_signing_definitions import ALL_DISPLAY_FORMATS
 
@@ -677,6 +680,7 @@ def get_approver(
         token,
         maximum_fee,
         fee_items,
+        payment_request_verifier,
     )
 
 
@@ -702,6 +706,7 @@ def _get_summary_handler(
     token: EthereumTokenInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
+    payment_request_verifier: PaymentRequestVerifier | None,
 ) -> Coroutine[Any, Any, None]:
     from .clear_signing_definitions import (
         APPROVE_DISPLAY_FORMAT,
@@ -729,6 +734,7 @@ def _get_summary_handler(
             token,
             maximum_fee,
             fee_items,
+            payment_request_verifier,
         )
 
     # generic UI for any function that has a `DisplayFormat`
@@ -799,8 +805,9 @@ async def _handle_transfer(
     token: EthereumTokenInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
+    payment_request_verifier: PaymentRequestVerifier | None,
 ) -> None:
-    from .layout import require_confirm_tx
+    from .layout import require_confirm_payment_request, require_confirm_tx
 
     args, fields = context.get_parameters_and_fields(
         msg.address_n, msg.value, definitions, token
@@ -813,21 +820,42 @@ async def _handle_transfer(
     assert arg0_name == "To"
     assert isinstance(recipient_addr, str)
 
+    arg1_raw_value = args[1]
+    assert isinstance(arg1_raw_value, int)
     ((arg1_name, value, _), _, _) = fields[1]
     assert arg1_name == "Amount"
     assert isinstance(value, str)
 
-    await require_confirm_tx(
-        recipient_addr,
-        value,
-        address_bytes,
-        msg.address_n,
-        maximum_fee,
-        fee_items,
-        token,
-        is_send=True,
-        chunkify=bool(msg.chunkify),
-    )
+    if payment_request_verifier:
+        # SLIP-24 payment requests for ERC-20 token transfers
+
+        assert msg.payment_req is not None
+
+        payment_request_verifier.add_output(arg1_raw_value, recipient_addr)
+        payment_request_verifier.verify()
+        await require_confirm_payment_request(
+            recipient_addr,
+            msg.payment_req,
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            msg.chain_id,
+            definitions.network,
+            token,
+            address_from_bytes(address_bytes, definitions.network),
+        )
+    else:
+        await require_confirm_tx(
+            recipient_addr,
+            value,
+            address_bytes,
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            token,
+            is_send=True,
+            chunkify=bool(msg.chunkify),
+        )
 
 
 async def _handle_generic_ui(
