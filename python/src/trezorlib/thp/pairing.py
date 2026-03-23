@@ -385,6 +385,9 @@ def default_pairing_flow(
     code_entry_callback: t.Callable[[], str] | None = None,
     request_credential: bool = True,
 ) -> Credential | None:
+    # make sure a channel has been established
+    pairing.client.connect()
+    # no need to pair if auto-connected
     if pairing.is_paired():
         return
 
