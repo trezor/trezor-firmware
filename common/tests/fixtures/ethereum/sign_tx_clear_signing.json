@@ -25,46 +25,6 @@
             }
         },
         {
-            "name": "clear_sign_1inch_unoswap",
-            "parameters": {
-				"comment": "https://etherscan.io/tx/0x772f2a3302ff43260dd22c69b740597c0de9434821ddcdce10e42c253815edf6",
-                "data": "83800a8e000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000017cff16da2c808f348e280000000000000000000000d3e9895230e8fb1460852f6cda3c4b926fbc29d8fb39cfb5",
-                "path": "m/44'/60'/0'/0/1",
-                "to_address": "0x111111125421cA6dc452d289314280a0f8842A65",
-                "chain_id": 1,
-                "nonce": "0x0",
-                "gas_price": "0x14",
-                "gas_limit": "0x14",
-                "tx_type": null,
-                "value": "0x0"
-            },
-            "result": {
-                "sig_v": 38,
-                "sig_r": "f39ecdd11c46c8743385f5a20051268b1a37a56e7a981a616b83264375a4bbf8",
-                "sig_s": "35c18ed7ce660021551239b3b1746d1947acff335b89ee1c249835ebf732dc8f"
-            }
-        },
-        {
-            "name": "clear_sign_1inch_unoswapTo",
-            "parameters": {
-				"comment": "https://etherscan.io/tx/0xa3e7acb0c5702b9ae0ba93224ed9d51b4c827f3295c35c93b74e1d9b169dca6b",
-                "data": "e2c95c82000000000000000000000000d862cdcfeb856c32b3c4f7563f4811d8ddfd42e2000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20000000000000000000000000000000000000000000000000188932d0c201ca000000000000000000000000000000000000000000000000000c7c88c3b9a9b6d08000000000000003b6d03405c6919b79fac1c3555675ae59a9ac2484f3972f51e6abebb",
-                "path": "m/44'/60'/0'/0/1",
-                "to_address": "0x111111125421cA6dc452d289314280a0f8842A65",
-                "chain_id": 1,
-                "nonce": "0x0",
-                "gas_price": "0x14",
-                "gas_limit": "0x14",
-                "tx_type": null,
-                "value": "0x0"
-            },
-            "result": {
-                "sig_v": 37,
-                "sig_r": "d827ffec9e1ed6ee3c256b8e8ba1528d317f5f4005df46c7aae142862184f10c",
-                "sig_s": "377c9b3df8b23f30e8e8fad1bd4fb12a0972b35da9ab9a3460873fa02afc7d7f"
-            }
-        },
-        {
             "name": "clear_sign_lifi_swapTokensMultipleV3ERC20ToERC20",
             "parameters": {
 				"comment": "https://etherscan.io/tx/0x87de57fce4ebb73b1c001cdaad7cfebb024172b843e87208d13309fb062077d3",
