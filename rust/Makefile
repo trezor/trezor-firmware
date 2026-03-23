@@ -12,21 +12,21 @@ style:
 	); done
 
 style_check:
-	@for D in $(CRATES); do ( \
+	@set -e; for D in $(CRATES); do ( \
 		echo "[STYLE_CHECK $$D]"; \
 		cd $$D; \
 		cargo fmt -- --check \
 	); done
 
 clippy:
-	@for D in $(CRATES); do ( \
+	@set -e; for D in $(CRATES); do ( \
 		echo "[CLIPPY $$D]"; \
 		cd $$D; \
 		cargo clippy \
 	); done
 
 test:
-	@for D in $(CRATES_TEST); do ( \
+	@set -e; for D in $(CRATES_TEST); do ( \
 		echo "[TEST $$D]"; \
 		cd $$D; \
 		cargo test \
