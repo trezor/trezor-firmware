@@ -377,7 +377,7 @@ enum MessageType {
     MessageType_TronWithdrawUnfreeze = 2209 [(wire_in) = true];
     MessageType_TronVoteWitnessContract = 2210 [(wire_in) = true];
 
-    // CKB (Nervos Network)
+    // CKB
     MessageType_CKBGetAddress = 5500 [(wire_in) = true];
     MessageType_CKBAddress = 5501 [(wire_out) = true];
 

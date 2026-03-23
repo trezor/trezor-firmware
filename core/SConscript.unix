@@ -747,6 +747,7 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/enums/Tezos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Zcash*.py',
             SOURCE_PY_DIR + 'trezor/enums/Tron*.py',
+            SOURCE_PY_DIR + 'trezor/enums/CKB*.py',
         ] + (
             SOURCE_PY_DEBUG_ENUMS if PYOPT != '0' else []
         ) + (
@@ -843,6 +844,8 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tron/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tron*.py'))
+
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ckb/*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ripple*.py'))
