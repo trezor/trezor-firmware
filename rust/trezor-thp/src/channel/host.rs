@@ -56,24 +56,21 @@ enum PingState {
 /// Handles broadcast channel messages, notably channel allocation requests.
 /// Because host often only needs a single channel, you can throw away the Mux
 /// after allocating one, if you don't need the keep-alive functionality.
-pub struct Mux<C, B> {
-    cred_store: C,
+pub struct Mux<B> {
     internal_buffer: heapless::Vec<u8, MAX_DEVICE_PROPERTIES_LEN>,
     channel_allocation: AllocationState,
     ping: PingState,
     _phantom: PhantomData<B>,
 }
 
-impl<C, B> Mux<C, B>
+impl<B> Mux<B>
 where
-    C: CredentialStore,
     B: Backend,
 {
-    pub fn new(cred_store: C) -> Self {
+    pub fn new() -> Self {
         let mut internal_buffer = heapless::Vec::new();
         prepare_zeroed(&mut internal_buffer);
         Self {
-            cred_store,
             internal_buffer,
             channel_allocation: AllocationState::None,
             ping: PingState::None,
@@ -98,7 +95,10 @@ where
     }
 
     /// Create new [`ChannelOpen`] after channel allocation response was received.
-    pub fn channel_alloc(&mut self) -> Result<ChannelOpen<C, B>, Error> {
+    pub fn channel_alloc<C>(&mut self, cred_store: C) -> Result<ChannelOpen<C, B>, Error>
+    where
+        C: CredentialStore,
+    {
         let AllocationState::ReceivedId {
             try_to_unlock,
             channel_id,
@@ -106,12 +106,7 @@ where
         else {
             return Err(Error::not_ready());
         };
-        let ch = ChannelOpen::new(
-            channel_id,
-            self.cred_store.clone(),
-            &self.internal_buffer,
-            try_to_unlock,
-        )?;
+        let ch = ChannelOpen::new(channel_id, cred_store, &self.internal_buffer, try_to_unlock)?;
         self.channel_allocation = AllocationState::None;
         prepare_zeroed(&mut self.internal_buffer);
         Ok(ch)
@@ -124,8 +119,11 @@ where
 
     /// Same as [`Mux::channel_alloc`] but destroys the [`Mux`],
     /// like `complete()` does for other types.
-    pub fn complete(mut self) -> Result<ChannelOpen<C, B>, Error> {
-        self.channel_alloc()
+    pub fn complete<C>(mut self, cred_store: C) -> Result<ChannelOpen<C, B>, Error>
+    where
+        C: CredentialStore,
+    {
+        self.channel_alloc(cred_store)
     }
 
     fn handle_broadcast(&mut self, packet: &[u8]) -> Result<PacketInResult, Error> {
@@ -216,13 +214,21 @@ where
             channel_id,
         };
         log::debug!("Got channel id {}.", channel_id);
-        Ok(PacketInResult::channel_allocation(channel_id))
+        Ok(PacketInResult::channel_allocation())
     }
 }
 
-impl<C, B> ChannelIO for Mux<C, B>
+impl<B> Default for Mux<B>
 where
-    C: CredentialStore,
+    B: Backend,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<B> ChannelIO for Mux<B>
+where
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {

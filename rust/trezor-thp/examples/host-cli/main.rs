@@ -31,10 +31,7 @@ impl Backend for RustCrypto {
 
 type HostChannel = Channel<Host, RustCrypto>;
 
-fn do_allocation<C>(client: &mut Client<Mux<C, RustCrypto>>)
-where
-    C: CredentialStore,
-{
+fn do_allocation(client: &mut Client<Mux<RustCrypto>>) {
     client.call(0, &[]);
 }
 
@@ -108,13 +105,13 @@ pub fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::default().filter_or("RUST_LOG", "info"));
 
     let cred_lookup = NullCredentialStore;
-    let mut channel = Mux::<_, RustCrypto>::new(cred_lookup);
+    let mut channel = Mux::<RustCrypto>::new();
     channel.request_channel(false);
     let mut client = Client::open(get_address(), channel);
 
     do_allocation(&mut client);
     assert!(client.channel.channel_alloc_ready());
-    let mut client = client.map(|c| c.complete().unwrap());
+    let mut client = client.map(|c| c.complete(cred_lookup).unwrap());
 
     do_handshake(&mut client);
     assert!(client.channel.handshake_done());
