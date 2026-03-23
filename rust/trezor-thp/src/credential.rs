@@ -7,7 +7,7 @@ pub struct FoundCredential<'a> {
 
 /// Host-side credential store.
 /// Basically a set of (`remote_static_pubkey`, `local_static_privkey`, `auth_credential`).
-pub trait CredentialStore: Clone {
+pub trait CredentialStore {
     /// Find a record such that `remote_static_pubkey` satisfies
     /// `masked_static_pubkey == X25519(SHA-256(remote_static_pubkey || ephemeral_pubkey), remote_static_pubkey)`.
     /// If found, write `local_static_privkey` and `auth_credential` to `dest` and return the written subslices.
@@ -35,7 +35,7 @@ impl CredentialStore for NullCredentialStore {
 }
 
 /// Device-side credential handling.
-pub trait CredentialVerifier: Clone {
+pub trait CredentialVerifier {
     /// Validate given protobuf-encoded credential.
     fn verify(&self, remote_static_pubkey: &[u8], credential: &[u8]) -> PairingState;
 

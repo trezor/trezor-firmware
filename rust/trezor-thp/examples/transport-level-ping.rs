@@ -4,9 +4,7 @@ use std::net::{SocketAddr, UdpSocket};
 use std::str::FromStr;
 use std::time::Duration;
 
-use trezor_thp::{
-    Backend, channel::buffered::ChannelExt, channel::host::Mux, credential::NullCredentialStore,
-};
+use trezor_thp::{Backend, channel::buffered::ChannelExt, channel::host::Mux};
 
 struct RustCrypto;
 
@@ -31,7 +29,7 @@ pub fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind("127.0.0.1:0")?;
 
     let mut recvbuf = [0u8; PACKET_LEN];
-    let mut mux = Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+    let mut mux = Mux::<RustCrypto>::new().into_buffered();
     mux.set_packet_len(PACKET_LEN);
 
     for _i in 0..REPEAT {

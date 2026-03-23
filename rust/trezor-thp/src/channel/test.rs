@@ -258,13 +258,16 @@ impl Direction {
 fn test_open() -> Result<()> {
     setup();
 
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, cids) = create_mux();
     // channel allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.with_key(DEVICE_KEY).into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .with_key(DEVICE_KEY)
+        .into_buffered();
     take_turns(&mut hm, &mut d)?;
-    let mut h = hm.channel_alloc()?.into_buffered();
+    let mut h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
 
     // handshake
     assert!(!h.handshake_done());
@@ -293,13 +296,15 @@ fn test_open() -> Result<()> {
 fn test_device_locked() -> Result<()> {
     setup();
 
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, cids) = create_mux();
     // channel allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .into_buffered();
     take_turns(&mut hm, &mut d)?;
-    let mut h = hm.channel_alloc()?.into_buffered();
+    let mut h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
 
     // handshake
     assert!(!h.handshake_done());
@@ -318,14 +323,16 @@ fn test_device_locked() -> Result<()> {
 }
 
 fn create_mux() -> (
-    Buffered<host::Mux<NullCredentialStore, RustCrypto>>,
-    Buffered<device::Mux<TestCredentialVerifier, RustCrypto>>,
+    Buffered<host::Mux<RustCrypto>>,
+    Buffered<device::Mux<RustCrypto>>,
+    device::ChannelIdAllocator,
 ) {
-    let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+    let mut hm = host::Mux::<RustCrypto>::new().into_buffered();
     hm.set_packet_len(DEFAULT_PACKET_LEN);
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
+    let mut dm = device::Mux::<RustCrypto>::new().into_buffered();
     dm.set_packet_len(DEFAULT_PACKET_LEN);
-    (hm, dm)
+    let cids = device::ChannelIdAllocator::new_random::<RustCrypto>();
+    (hm, dm, cids)
 }
 
 fn open_channel(
@@ -334,14 +341,17 @@ fn open_channel(
     Buffered<Channel<Host, RustCrypto>>,
     Buffered<Channel<Device, RustCrypto>>,
 )> {
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, cids) = create_mux();
     hm.set_packet_len(packet_len);
     dm.set_packet_len(packet_len);
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.with_key(DEVICE_KEY).into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .with_key(DEVICE_KEY)
+        .into_buffered();
     take_turns(&mut d, &mut hm)?;
-    let mut h = hm.channel_alloc()?.into_buffered();
+    let mut h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
     take_turns(&mut h, &mut d)?;
     let h = h.map(|h| h.complete())?;
     let d = d.map(|d| d.unwrap().complete())?;
@@ -383,21 +393,25 @@ fn test_packet_length(packet_len: usize) -> Result<()> {
 fn test_one_device_multiple_hosts() -> Result<()> {
     const NHOSTS: usize = 4;
     setup();
-    let mut dm = device::Mux::<_, RustCrypto>::new(TestCredentialVerifier).into_buffered();
+    let mut dm = device::Mux::<RustCrypto>::new().into_buffered();
     dm.set_packet_len(DEFAULT_PACKET_LEN);
+    let cids = device::ChannelIdAllocator::new_from(42);
 
     let mut device_chans = Vec::<Buffered<Channel<Device, RustCrypto>>>::new();
     let mut host_chans = Vec::<Buffered<Channel<Host, RustCrypto>>>::new();
 
     // open channels
     for _i in 0..NHOSTS {
-        let mut hm = host::Mux::<_, RustCrypto>::new(NullCredentialStore).into_buffered();
+        let mut hm = host::Mux::<RustCrypto>::new().into_buffered();
         hm.set_packet_len(DEFAULT_PACKET_LEN);
         hm.request_channel(false);
         take_turns(&mut hm, &mut dm)?;
-        let mut d = dm.channel_alloc()?.with_key(DEVICE_KEY).into_buffered();
+        let mut d = dm
+            .channel_alloc(cids.get(), TestCredentialVerifier)?
+            .with_key(DEVICE_KEY)
+            .into_buffered();
         take_turns(&mut d, &mut hm)?;
-        let mut h = hm.channel_alloc()?.into_buffered();
+        let mut h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
         take_turns(&mut h, &mut d)?;
         let h = h.map(|h| h.complete())?;
         let d = d.map(|d| d.unwrap().complete())?;
@@ -457,7 +471,7 @@ fn lose_nth(dir: Direction, i: usize) -> impl FnMut(Direction, &mut VecDeque<Pac
 fn test_packet_loss_alloc() -> Result<()> {
     setup();
 
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, cids) = create_mux();
     // channel allocation request lost
     hm.request_channel(false);
     take_turns_mutate(&mut hm, &mut dm, lose_nth(HostToDevice, 0))?;
@@ -466,16 +480,20 @@ fn test_packet_loss_alloc() -> Result<()> {
     // channel allocation response lost
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .into_buffered();
     take_turns_mutate(&mut hm, &mut d, lose_nth(DeviceToHost, 0))?;
     assert!(!hm.channel_alloc_ready());
 
     // successful allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .into_buffered();
     take_turns(&mut hm, &mut d)?;
-    let mut _h = hm.channel_alloc()?.into_buffered();
+    let mut _h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
     Ok(())
 }
 
@@ -492,13 +510,16 @@ fn test_packet_loss_alloc() -> Result<()> {
 fn test_packet_loss_handshake(dir: Direction, lost_index: usize) -> Result<()> {
     setup();
 
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, cids) = create_mux();
     // channel allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.with_key(DEVICE_KEY).into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .with_key(DEVICE_KEY)
+        .into_buffered();
     take_turns(&mut hm, &mut d)?;
-    let mut h = hm.channel_alloc()?.into_buffered();
+    let mut h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
 
     // handshake
     take_turns_mutate(&mut h, &mut d, lose_nth(dir, lost_index))?;
@@ -554,7 +575,7 @@ fn damage_nth(
 fn test_packet_damage_alloc(byte_index: usize) -> Result<()> {
     setup();
 
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, cids) = create_mux();
     // channel allocation request lost
     hm.request_channel(false);
     take_turns_mutate(&mut hm, &mut dm, damage_nth(HostToDevice, 0, byte_index))?;
@@ -563,16 +584,20 @@ fn test_packet_damage_alloc(byte_index: usize) -> Result<()> {
     // channel allocation response lost
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .into_buffered();
     take_turns_mutate(&mut hm, &mut d, damage_nth(DeviceToHost, 0, byte_index))?;
     assert!(!hm.channel_alloc_ready());
 
     // successful allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .into_buffered();
     take_turns(&mut hm, &mut d)?;
-    let mut _h = hm.channel_alloc()?.into_buffered();
+    let mut _h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
     Ok(())
 }
 
@@ -600,13 +625,16 @@ fn test_packet_damage_handshake(
         return Ok(());
     }
 
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, cids) = create_mux();
     // channel allocation
     hm.request_channel(false);
     take_turns(&mut hm, &mut dm)?;
-    let mut d = dm.channel_alloc()?.with_key(DEVICE_KEY).into_buffered();
+    let mut d = dm
+        .channel_alloc(cids.get(), TestCredentialVerifier)?
+        .with_key(DEVICE_KEY)
+        .into_buffered();
     take_turns(&mut hm, &mut d)?;
-    let mut h = hm.channel_alloc()?.into_buffered();
+    let mut h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
 
     // handshake
     take_turns_mutate(&mut h, &mut d, damage_nth(dir, packet_index, byte_index))?;
@@ -669,7 +697,7 @@ fn test_codec_v1() -> Result<()> {
     let v1_cont = hex::decode(v1_cont).unwrap();
 
     // broadcast handling
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, _cids) = create_mux();
     // device::Mux shoud respond
     let pir = dm.packet_in(&v1_init);
     assert!(matches!(
@@ -712,7 +740,7 @@ fn test_codec_v1() -> Result<()> {
 fn test_ping() -> Result<()> {
     setup();
 
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, _cids) = create_mux();
     // host->device ping
     hm.ping();
     let ping_packet = hm.packet_out()?;
@@ -775,7 +803,7 @@ fn test_invalid_channel_id() -> Result<()> {
         res
     }
 
-    let (mut hm, mut dm) = create_mux();
+    let (mut hm, mut dm, _cids) = create_mux();
     // muxes return Route(cid) for valid non-broadcast channel
     let pir = dm.packet_in(&make_packet(66));
     assert_eq!(pir, PacketInResult::Route { channel_id: 66 });
@@ -887,25 +915,28 @@ fn test_channel_id_wraparound() -> Result<()> {
     setup();
 
     fn alloc_test(
-        hm: &mut Buffered<host::Mux<NullCredentialStore, RustCrypto>>,
-        dm: &mut Buffered<device::Mux<TestCredentialVerifier, RustCrypto>>,
+        hm: &mut Buffered<host::Mux<RustCrypto>>,
+        dm: &mut Buffered<device::Mux<RustCrypto>>,
+        cids: &device::ChannelIdAllocator,
         expected_id: u16,
     ) -> Result<()> {
         hm.request_channel(false);
         take_turns(hm, dm)?;
-        let mut d = dm.channel_alloc()?.into_buffered();
+        let mut d = dm
+            .channel_alloc(cids.get(), TestCredentialVerifier)?
+            .into_buffered();
         take_turns(hm, &mut d)?;
-        let h = hm.channel_alloc()?.into_buffered();
+        let h = hm.channel_alloc(NullCredentialStore)?.into_buffered();
         assert_eq!(h.channel_id(), expected_id);
         Ok(())
     }
 
-    let (mut hm, mut dm) = create_mux();
-    dm.set_next_channel_id(MAX_CHANNEL_ID - 1);
-    alloc_test(&mut hm, &mut dm, MAX_CHANNEL_ID - 1)?;
-    alloc_test(&mut hm, &mut dm, MAX_CHANNEL_ID)?;
-    alloc_test(&mut hm, &mut dm, MIN_CHANNEL_ID)?;
-    alloc_test(&mut hm, &mut dm, MIN_CHANNEL_ID + 1)?;
+    let (mut hm, mut dm, _) = create_mux();
+    let cids = device::ChannelIdAllocator::new_from(MAX_CHANNEL_ID - 1);
+    alloc_test(&mut hm, &mut dm, &cids, MAX_CHANNEL_ID - 1)?;
+    alloc_test(&mut hm, &mut dm, &cids, MAX_CHANNEL_ID)?;
+    alloc_test(&mut hm, &mut dm, &cids, MIN_CHANNEL_ID)?;
+    alloc_test(&mut hm, &mut dm, &cids, MIN_CHANNEL_ID + 1)?;
 
     Ok(())
 }

@@ -2,10 +2,7 @@ use std::io::ErrorKind;
 use std::net::{SocketAddr, UdpSocket};
 use std::time::Duration;
 
-use trezor_thp::{
-    Backend, ChannelIO, Error, channel::buffered::Buffered, channel::host::Mux,
-    credential::CredentialStore,
-};
+use trezor_thp::{Backend, ChannelIO, Error, channel::buffered::Buffered, channel::host::Mux};
 
 use protobuf::{Enum, Message};
 
@@ -23,12 +20,11 @@ pub struct Client<C> {
     emu_addr: SocketAddr,
 }
 
-impl<C, B> Client<Mux<C, B>>
+impl<B> Client<Mux<B>>
 where
     B: Backend,
-    C: CredentialStore,
 {
-    pub fn open(emu_addr: SocketAddr, channel: Mux<C, B>) -> Self {
+    pub fn open(emu_addr: SocketAddr, channel: Mux<B>) -> Self {
         let mut channel = Buffered::new(channel);
         channel.set_packet_len(PACKET_LEN);
         Client {

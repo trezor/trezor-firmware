@@ -324,11 +324,9 @@ pub enum PacketInResult {
     /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and [`host::Mux`]
     /// return this variant. There is no queue, do it before processing the next packet.
     ///
-    /// Please note that the library does not keep track of allocated ids, that is left to
-    /// the application. By creating a lot of new channels an attacker can obtain an id that
-    /// was issued earlier. If there is existing channel with such id it should be destroyed.
-    /// (This is only relevant on the device side.)
-    ChannelAllocation { channel_id: u16 },
+    /// On the device side, application is responsible for allocating unique ids. It can use
+    /// [`device::ChannelIdAllocator`] but still must check the result for uniqueness.
+    ChannelAllocation,
     /// Call [`device::ChannelOpen::set_static_key`] or [`device::ChannelOpen::send_device_locked`].
     /// Only [`device::ChannelOpen`] returns this variant.
     HandshakeKeyRequired { try_to_unlock: bool },
@@ -380,8 +378,8 @@ impl PacketInResult {
         Self::Failed { error }
     }
 
-    const fn channel_allocation(channel_id: u16) -> Self {
-        Self::ChannelAllocation { channel_id }
+    const fn channel_allocation() -> Self {
+        Self::ChannelAllocation
     }
 
     const fn pong() -> Self {
@@ -416,7 +414,7 @@ impl PacketInResult {
     }
 
     pub const fn got_channel(&self) -> bool {
-        matches!(self, Self::ChannelAllocation { .. })
+        matches!(self, Self::ChannelAllocation)
     }
 
     pub const fn got_pong(&self) -> bool {

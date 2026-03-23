@@ -16,7 +16,10 @@ use crate::{
     util::prepare_zeroed,
 };
 
-use core::marker::PhantomData;
+use core::{
+    marker::PhantomData,
+    sync::atomic::{AtomicU16, Ordering},
+};
 
 // Must fit any of:
 // - device_properties + overhead
@@ -34,12 +37,9 @@ const CODEC_V1_RESPONSE: &[u8] = b"?##\x00\x03\x00\x00\x00\x02\x08\x11";
 /// Every packet interface on the device needs to have one Mux. Event loop should pass every
 /// incoming packet to [`Mux::packet_in`] in order to determine what to do with it.
 /// Single packet only. Does not keep track of opened channels.
-pub struct Mux<C, B> {
-    // is_locked: bool,
-    next_channel_id: u16,
-    cred_verif: C,
+pub struct Mux<B> {
     outgoing: heapless::Deque<MuxOutgoing, BROADCAST_OUTGOING_QUEUE_LEN>,
-    new_channel: Option<(u16, Nonce)>,
+    new_channel: Option<Nonce>,
     _phantom: PhantomData<B>,
 }
 
@@ -59,17 +59,12 @@ impl MuxOutgoing {
     }
 }
 
-impl<C, B> Mux<C, B>
+impl<B> Mux<B>
 where
-    C: CredentialVerifier,
     B: Backend,
 {
-    pub fn new(cred_verif: C) -> Self {
-        // Use random starting id to avoid giving out the number of channels allocated since boot.
-        let next_channel_id = random_channel_id::<B>();
+    pub const fn new() -> Self {
         Self {
-            next_channel_id,
-            cred_verif,
             outgoing: heapless::Deque::new(),
             new_channel: None,
             _phantom: PhantomData,
@@ -77,11 +72,21 @@ where
     }
 
     /// Create new [`ChannelOpen`] when channel allocation request is pending.
-    pub fn channel_alloc(&mut self) -> Result<ChannelOpen<C, B>, Error> {
-        let Some((channel_id, nonce)) = self.new_channel.take() else {
+    pub fn channel_alloc<C>(
+        &mut self,
+        channel_id: u16,
+        cred_verif: C,
+    ) -> Result<ChannelOpen<C, B>, Error>
+    where
+        C: CredentialVerifier,
+    {
+        if !channel_id_valid(channel_id) || channel_id == BROADCAST_CHANNEL_ID {
+            return Err(Error::unexpected_input());
+        }
+        let Some(nonce) = self.new_channel.take() else {
             return Err(Error::not_ready());
         };
-        ChannelOpen::<C, B>::new(channel_id, nonce, self.cred_verif.clone())
+        ChannelOpen::<C, B>::new(channel_id, nonce, cred_verif)
     }
 
     /// Returns `true` if there is channel allocation request pending.
@@ -118,26 +123,21 @@ where
         })
     }
 
-    fn handle_broadcast(&mut self, packet: &[u8]) -> Result<Option<u16>, Error> {
+    // Returns true if allocation request has been received.
+    fn handle_broadcast(&mut self, packet: &[u8]) -> Result<bool, Error> {
         let (header, payload) = Reassembler::<Device>::single_inplace(packet)?;
         match header {
             Header::Ping if payload.len() == Nonce::LEN => {
-                let (nonce, _rest) = Nonce::parse(payload).unwrap();
-                self.enqueue(MuxOutgoing::Pong(nonce)).map(|_| None)
+                let (nonce, _rest) = Nonce::parse(payload)?;
+                self.enqueue(MuxOutgoing::Pong(nonce)).map(|_| false)
             }
             Header::ChannelAllocationRequest if payload.len() == Nonce::LEN => {
                 let (nonce, _rest) = Nonce::parse(payload)?;
-                let channel_id = self.next_channel_id;
-                self.next_channel_id += 1;
-                if self.next_channel_id > MAX_CHANNEL_ID {
-                    log::debug!("Channel id max value reached, wrapping around.");
-                    self.next_channel_id = MIN_CHANNEL_ID;
-                }
                 if self.new_channel.is_some() {
                     log::warn!("Dropping previous channel allocation request.");
                 }
-                self.new_channel = Some((channel_id, nonce));
-                Ok(Some(channel_id))
+                self.new_channel = Some(nonce);
+                Ok(true)
             }
             // No Header::TransportError for broadcast.
             _ => {
@@ -172,17 +172,19 @@ where
         };
         PacketInResult::ignore(Error::malformed_data())
     }
+}
 
-    #[cfg(test)]
-    pub(crate) fn set_next_channel_id(&mut self, channel_id: u16) {
-        assert!(channel_id_valid(channel_id));
-        self.next_channel_id = channel_id;
+impl<B> Default for Mux<B>
+where
+    B: Backend,
+{
+    fn default() -> Self {
+        Self::new()
     }
 }
 
-impl<C, B> ChannelIO for Mux<C, B>
+impl<B> ChannelIO for Mux<B>
 where
-    C: CredentialVerifier,
     B: Backend,
 {
     fn packet_in(&mut self, packet_buffer: &[u8], _receive_buffer: &mut [u8]) -> PacketInResult {
@@ -200,11 +202,12 @@ where
         if channel_id != BROADCAST_CHANNEL_ID {
             return PacketInResult::route(channel_id);
         }
-        PacketInResult::from_result(self.handle_broadcast(packet_buffer).map(|r| {
-            r.map_or_else(
-                || PacketInResult::accept(false),
-                PacketInResult::channel_allocation,
-            )
+        PacketInResult::from_result(self.handle_broadcast(packet_buffer).map(|is_allocation| {
+            if is_allocation {
+                PacketInResult::channel_allocation()
+            } else {
+                PacketInResult::accept(false)
+            }
         }))
     }
 
@@ -543,14 +546,39 @@ where
     }
 }
 
-fn random_channel_id<B: Backend>() -> u16 {
-    let mut bytes = [0u8, 0u8];
-    for _i in 0..16 {
+/// Helper for assigning consecutive channel IDs.
+pub struct ChannelIdAllocator {
+    // Next value. Not guaranteed to be valid channel id, these are skipped
+    // in `ChannelIdAllocator::get()` until a valid one is found.
+    counter: AtomicU16,
+}
+
+impl ChannelIdAllocator {
+    /// Use random starting id to avoid giving out the number of channels allocated since boot.
+    pub fn new_random<B: Backend>() -> Self {
+        let mut bytes = [0u8, 0u8];
         B::random_bytes(&mut bytes);
-        let channel_id = u16::from_be_bytes(bytes);
-        if channel_id_valid(channel_id) && channel_id != BROADCAST_CHANNEL_ID {
-            return channel_id;
+        Self::new_from(u16::from_be_bytes(bytes))
+    }
+
+    /// Use fixed starting id, mainly useful for tests.
+    /// Please note [`ChannelIdAllocator::get()`] skips invalid values so the first result
+    /// is not necessarily the argument passed to this constructor.
+    pub const fn new_from(init_val: u16) -> Self {
+        Self {
+            counter: AtomicU16::new(init_val),
         }
     }
-    panic!("Cannot generate random channel id.");
+
+    /// Get next ID. Wraps around to `MIN_CHANNEL_ID`.
+    /// If the caller has multiple channels it needs to check whether the returned
+    /// ID is not currently in use.
+    pub fn get(&self) -> u16 {
+        loop {
+            let channel_id = self.counter.fetch_add(1, Ordering::Relaxed);
+            if (MIN_CHANNEL_ID..=MAX_CHANNEL_ID).contains(&channel_id) {
+                return channel_id;
+            }
+        }
+    }
 }
