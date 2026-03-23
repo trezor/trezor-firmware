@@ -1,25 +1,24 @@
-use crate::{alternating_bit::SyncBits, error::Error};
+use crate::{alternating_bit::SyncBits, error::Error, header::HandshakeMessage};
 
-pub const CODEC_V1: u8 = 0x3F;
-pub const CONTINUATION_PACKET: u8 = 0x80;
+const CODEC_V1: u8 = 0x3F;
+const CONTINUATION_PACKET: u8 = 0x80;
 
-pub const CONTINUATION_PACKET_MASK: u8 = 0x80;
+const CONTINUATION_PACKET_MASK: u8 = 0x80;
 
-pub const ACK_MASK: u8 = 0xF7;
-pub const ACK_MESSAGE: u8 = 0x20;
+const ACK_MASK: u8 = 0xF7;
+const ACK_MESSAGE: u8 = 0x20;
+const DATA_MASK: u8 = 0xE7;
+const HANDSHAKE_INIT_REQ: u8 = 0x00;
+const HANDSHAKE_INIT_RES: u8 = 0x01;
+const HANDSHAKE_COMP_REQ: u8 = 0x02;
+const HANDSHAKE_COMP_RES: u8 = 0x03;
+const ENCRYPTED_TRANSPORT: u8 = 0x04;
 
-pub const DATA_MASK: u8 = 0xE7;
-pub const HANDSHAKE_INIT_REQ: u8 = 0x00;
-pub const HANDSHAKE_INIT_RES: u8 = 0x01;
-pub const HANDSHAKE_COMP_REQ: u8 = 0x02;
-pub const HANDSHAKE_COMP_RES: u8 = 0x03;
-pub const ENCRYPTED_TRANSPORT: u8 = 0x04;
-
-pub const CHANNEL_ALLOCATION_REQ: u8 = 0x40;
-pub const CHANNEL_ALLOCATION_RES: u8 = 0x41;
-pub const ERROR: u8 = 0x42;
-pub const PING: u8 = 0x43;
-pub const PONG: u8 = 0x44;
+const CHANNEL_ALLOCATION_REQ: u8 = 0x40;
+const CHANNEL_ALLOCATION_RES: u8 = 0x41;
+const ERROR: u8 = 0x42;
+const PING: u8 = 0x43;
+const PONG: u8 = 0x44;
 
 pub const ACK_BIT: u8 = 0x08;
 pub const SEQ_BIT: u8 = 0x10;
@@ -29,12 +28,49 @@ pub const SYNC_MASK: u8 = ACK_BIT | SEQ_BIT;
 pub struct ControlByte(u8);
 
 impl ControlByte {
-    pub fn sync_bits(&self) -> SyncBits {
-        SyncBits::from(self.0 & SYNC_MASK)
+    pub const fn codec_v1() -> Self {
+        Self(CODEC_V1)
     }
 
-    pub fn with_sync_bits(self, sb: SyncBits) -> Self {
-        Self(self.0 & !SYNC_MASK | <SyncBits as Into<u8>>::into(sb))
+    pub const fn continuation() -> Self {
+        Self(CONTINUATION_PACKET)
+    }
+
+    pub const fn ack() -> Self {
+        Self(ACK_MESSAGE)
+    }
+
+    pub const fn encrypted_transport() -> Self {
+        Self(ENCRYPTED_TRANSPORT)
+    }
+
+    pub const fn ping() -> Self {
+        Self(PING)
+    }
+
+    pub const fn pong() -> Self {
+        Self(PONG)
+    }
+
+    pub const fn error() -> Self {
+        Self(ERROR)
+    }
+
+    pub const fn channel_allocation_request() -> Self {
+        Self(CHANNEL_ALLOCATION_REQ)
+    }
+
+    pub const fn channel_allocation_response() -> Self {
+        Self(CHANNEL_ALLOCATION_RES)
+    }
+
+    pub const fn handshake(phase: HandshakeMessage) -> Self {
+        match phase {
+            HandshakeMessage::InitiationRequest => Self(HANDSHAKE_INIT_REQ),
+            HandshakeMessage::InitiationResponse => Self(HANDSHAKE_INIT_RES),
+            HandshakeMessage::CompletionRequest => Self(HANDSHAKE_COMP_REQ),
+            HandshakeMessage::CompletionResponse => Self(HANDSHAKE_COMP_RES),
+        }
     }
 
     pub const fn is_ack(&self) -> bool {
@@ -74,26 +110,49 @@ impl ControlByte {
     }
 
     pub const fn is_handshake(&self) -> bool {
-        self.0 & DATA_MASK == HANDSHAKE_INIT_REQ
-            || self.0 & DATA_MASK == HANDSHAKE_INIT_RES
-            || self.0 & DATA_MASK == HANDSHAKE_COMP_REQ
-            || self.0 & DATA_MASK == HANDSHAKE_COMP_RES
+        self.handshake_phase().is_some()
+    }
+
+    pub const fn handshake_phase(&self) -> Option<HandshakeMessage> {
+        let res = match self.0 & DATA_MASK {
+            HANDSHAKE_INIT_REQ => HandshakeMessage::InitiationRequest,
+            HANDSHAKE_INIT_RES => HandshakeMessage::InitiationResponse,
+            HANDSHAKE_COMP_REQ => HandshakeMessage::CompletionRequest,
+            HANDSHAKE_COMP_RES => HandshakeMessage::CompletionResponse,
+            _ => return None,
+        };
+        Some(res)
+    }
+
+    pub fn sync_bits(&self) -> SyncBits {
+        SyncBits::from(self.0 & SYNC_MASK)
+    }
+
+    pub fn with_sync_bits(self, sb: SyncBits) -> Self {
+        Self(self.0 & !SYNC_MASK | <SyncBits as Into<u8>>::into(sb))
     }
 }
 
-// Note consider TryFrom + validation
-impl From<u8> for ControlByte {
-    fn from(byte: u8) -> Self {
-        Self(byte)
-    }
-}
-
-impl TryFrom<&[u8]> for ControlByte {
+impl TryFrom<u8> for ControlByte {
     type Error = Error;
 
-    fn try_from(bytes: &[u8]) -> Result<Self, Error> {
-        let first_byte = bytes.first().ok_or_else(Error::malformed_data)?;
-        Ok(Self::from(*first_byte))
+    fn try_from(byte: u8) -> Result<Self, Error> {
+        let cb = Self(byte);
+        let valid = cb.is_continuation()
+            || cb.is_ack()
+            || cb.is_encrypted_transport()
+            || cb.is_error()
+            || cb.is_ping()
+            || cb.is_pong()
+            || cb.is_channel_allocation_request()
+            || cb.is_channel_allocation_response()
+            || cb.is_handshake()
+            || cb.is_codec_v1();
+        if !valid {
+            log::warn!("Invalid control byte {}.", byte);
+            return Err(Error::malformed_data());
+        }
+        Ok(cb)
     }
 }
 

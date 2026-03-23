@@ -180,14 +180,10 @@ impl<R: Role, B: Backend> Channel<R, B> {
             return Ok(PacketInResult::transport_error(te));
         }
         let is_cont = cb.is_continuation();
-        if !(is_cont
-            || cb.is_channel_allocation_request()
-            || cb.is_channel_allocation_response()
-            || cb.is_handshake()
-            || cb.is_encrypted_transport())
-        {
+        if !(is_cont || cb.is_handshake() || cb.is_encrypted_transport()) {
+            // Channel allocation and codec v1 are handled by Mux.
             log::warn!(
-                "[{}] Invalid control byte {}.",
+                "[{}] Unexpected control byte {}.",
                 self.channel_id,
                 u8::from(cb)
             );
