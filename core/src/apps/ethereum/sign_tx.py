@@ -199,11 +199,15 @@ async def confirm_tx_data(
     value = int.from_bytes(msg.value, "big")
 
     clear_signing_approver = clear_signing.get_approver(
-        msg, defs, address_bytes, value, maximum_fee, fee_items
+        msg,
+        defs,
+        address_bytes,
+        value,
+        maximum_fee,
+        fee_items,
+        payment_request_verifier,
     )
     if clear_signing_approver is not None:
-        if payment_request_verifier is not None:
-            raise DataError("Payment Requests don't support contract interactions")
         return clear_signing_approver
 
     recipient_str = (
@@ -211,8 +215,7 @@ async def confirm_tx_data(
     )
 
     if payment_request_verifier is not None:
-        if data_length > 0:
-            raise DataError("Payment Requests don't support contract interactions")
+        assert data_length == 0
 
         # If a payment_request_verifier is provided, then msg.payment_req must have been set.
         assert msg.payment_req is not None
@@ -228,7 +231,6 @@ async def confirm_tx_data(
             fee_items,
             msg.chain_id,
             network,
-            # TODO: SLIP-24 cannot deal with tokens? So we should get rid of these?
             None,
             None,
         )
