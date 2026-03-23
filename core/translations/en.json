@@ -1053,6 +1053,48 @@
     "monero__wanna_export_watchkey": "Do you really want to export watch-only credentials?",
     "monero__wanna_start_refresh": "Do you really want to\nstart refresh?",
     "monero__wanna_sync_key_images": "Do you really want to\nsync key images?",
+    "n4w1__footer_first": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Start with any tag"
+    },
+    "n4w1__footer_last": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Use the last remaining tag"
+    },
+    "n4w1__footer_next": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Use any remaining tag"
+    },
+    "n4w1__hold_first": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hold the first tag to the back of this Trezor."
+    },
+    "n4w1__hold_last": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hold the last tag to the back of this Trezor."
+    },
+    "n4w1__hold_next": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hold the next tag to the back of this Trezor."
+    },
+    "n4w1__writing": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Writing to tag..."
+    },
     "nem__absolute": {
       "Bolt": "absolute",
       "Caesar": "",
