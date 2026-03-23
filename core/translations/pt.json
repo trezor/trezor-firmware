@@ -775,6 +775,7 @@
     "ethereum__approve_revoke_from": "Revogar de",
     "ethereum__approve_to": "Aprovar a",
     "ethereum__approve_unlimited_template": "Aprovando quantia ilimitada de {0}",
+    "ethereum__confirm_contract": "Confirmar contrato",
     "ethereum__contract_address": "Endereço de contr. do provedor",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
     "ethereum__eip_7702": {
@@ -934,7 +935,7 @@
     "homescreen__settings_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Tela inicial",
+      "Delizia": "Papel de parede",
       "Eckhart": ""
     },
     "homescreen__title_backup_failed": "Falha no backup",
@@ -1461,7 +1462,7 @@
       "Eckhart": ""
     },
     "nostr__event_kind_template": "Tipo de evento: {0}",
-    "passphrase__access_hidden_wallet": "Acessar carteira oculta",
+    "passphrase__access_hidden_wallet": "Acessar carteira com frase secreta",
     "passphrase__access_wallet": "Acessar carteira com frase secreta?",
     "passphrase__always_on_device": "Inserir a frase secreta sempre no Trezor?",
     "passphrase__continue_with_empty_passphrase": "Continuar com frase secreta vazia?",
@@ -1471,7 +1472,7 @@
       "Delizia": "A frase secreta fornecida pelo app conectado será usada, mas não exibida devido às configurações do dispositivo.",
       "Eckhart": "A frase secreta fornecida pelo app conectado será usada, mas não exibida devido às configurações do dispositivo."
     },
-    "passphrase__hidden_wallet": "Carteira oculta",
+    "passphrase__hidden_wallet": "Carteira com frase secreta",
     "passphrase__hide": {
       "Bolt": "Ocultar a frase secreta fornecida pelo app?",
       "Caesar": "Ocultar a frase secreta fornecida pelo app?",
@@ -1807,10 +1808,10 @@
       "Eckhart": "Verif. backup"
     },
     "reset__check_group_share_title_template": {
-      "Bolt": "Ver. g{0} - share {1}",
+      "Bolt": "Verif. g. {0} - share {1}",
       "Caesar": "",
-      "Delizia": "Verif. g{0} - share {1}",
-      "Eckhart": "Ver. g{0} - share {1}"
+      "Delizia": "Verif. g. {0} - share {1}",
+      "Eckhart": "Verifique grupo {0} - share {1}"
     },
     "reset__check_share_backup_template": "Agora, uma rápida verificação do Share nº {0}.",
     "reset__check_share_title_template": {
@@ -1916,7 +1917,7 @@
     "reset__num_shares_for_group_template": "O número de shares necessário para formar o Grupo {0}.",
     "reset__number_of_shares_info": {
       "Bolt": "",
-      "Caesar": "= número total de diferentes listas de palavras usado no backup.",
+      "Caesar": "= número total de shares usado para backup da carteira.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2062,7 +2063,7 @@
     },
     "reset__threshold_info": {
       "Bolt": "",
-      "Caesar": "= número mínimo de listas de palavras exigido para recuperação.",
+      "Caesar": "= número mínimo de shares exigido para recuperação.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2818,6 +2819,7 @@
     "words__good_to_know": "Bom saber",
     "words__important": "Importante",
     "words__instructions": "Instruções",
+    "words__intent": "Intenção",
     "words__keep_it_safe": {
       "Bolt": "",
       "Caesar": "Guarde em local seguro!",
@@ -2865,7 +2867,7 @@
     },
     "words__recipient": "Destinatário",
     "words__recovery_share": "Share de recuperação",
-    "words__resource": "",
+    "words__resource": "Recurso",
     "words__review": "Revisar",
     "words__security": "Segurança",
     "words__send": "Enviar",
@@ -2921,8 +2923,8 @@
     "words__unknown": "Desconhecido",
     "words__unlimited": "Ilimitado",
     "words__unlocked": "Desbloqueado",
-    "words__votes": "",
-    "words__voting": "",
+    "words__votes": "Votos",
+    "words__voting": "Votação",
     "words__wallet": "Carteira",
     "words__warning": "Aviso",
     "words__wipe": "Limpar",

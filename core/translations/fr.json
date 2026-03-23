@@ -199,7 +199,7 @@
       "Delizia": "Données d'engagement",
       "Eckhart": "Données d'engagement"
     },
-    "bitcoin__confirm_locktime": "Conf. délai de verrouillage",
+    "bitcoin__confirm_locktime": "Confirmer le délai de verrouillage",
     "bitcoin__create_proof_of_ownership": "Voulez-vous créer une preuve de propriété ?",
     "bitcoin__high_mining_fee_template": {
       "Bolt": "Les frais de minage de {0}\nsont trop élevés.",
@@ -955,6 +955,7 @@
     "ethereum__approve_revoke_from": "Révoquer de",
     "ethereum__approve_to": "Approuver à",
     "ethereum__approve_unlimited_template": "Autoriser un montant illimité de {0}",
+    "ethereum__confirm_contract": "Confirmer le contrat",
     "ethereum__contract_address": "Adresse de contrat du fournisseur",
     "ethereum__data_size_template": "Taille : {0} octets",
     "ethereum__eip_7702": {
@@ -1114,7 +1115,7 @@
     "homescreen__settings_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Écran d'accueil",
+      "Delizia": "Fond d'écran",
       "Eckhart": ""
     },
     "homescreen__title_backup_failed": "La sauveg. a échoué",
@@ -1942,10 +1943,10 @@
       "Eckhart": "Vérifier la sauvegarde"
     },
     "reset__check_group_share_title_template": {
-      "Bolt": "Verif. g{0} - f{1}",
+      "Bolt": "Vérif. gr. {0} - fr. {1}",
       "Caesar": "",
       "Delizia": "Vérifier g{0} - fragm. {1}",
-      "Eckhart": "Vérifier g{0} - fragment {1}"
+      "Eckhart": "Vérifier groupe {0} - fragment {1}"
     },
     "reset__check_share_backup_template": "Vérifions rapidement le Fragment #{0}.",
     "reset__check_share_title_template": {
@@ -2046,7 +2047,7 @@
     "reset__num_shares_for_group_template": "Le nombre de parts requis pour former le Groupe {0}.",
     "reset__number_of_shares_info": {
       "Bolt": "",
-      "Caesar": "= nombre total de listes de mots uniques pour la sauveg. du portefeuille",
+      "Caesar": "= nombre total de fragments pour la sauveg. du portefeuille",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2192,7 +2193,7 @@
     "reset__the_word_is_repeated": "Le mot est répété",
     "reset__threshold_info": {
       "Bolt": "",
-      "Caesar": "= nombre min de listes de mots uniques utilisées pour la récup.",
+      "Caesar": "= nombre min de fragments utilisés pour la récupération",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2913,6 +2914,7 @@
     "words__good_to_know": "Bon à savoir",
     "words__important": "Important",
     "words__instructions": "Instructions",
+    "words__intent": "Intention",
     "words__keep_it_safe": {
       "Bolt": "",
       "Caesar": "Conservez-la en lieu sûr !",
@@ -2960,7 +2962,7 @@
     },
     "words__recipient": "Destinataire",
     "words__recovery_share": "Fragment de récupération",
-    "words__resource": "",
+    "words__resource": "Ressource",
     "words__review": "Vérifier",
     "words__security": "Sécurité",
     "words__send": "Envoyer",
@@ -3021,8 +3023,8 @@
       "Delizia": "Déverrouillé",
       "Eckhart": "Déverrouillé(e)(s)"
     },
-    "words__votes": "",
-    "words__voting": "",
+    "words__votes": "Votes ",
+    "words__voting": "Vote",
     "words__wallet": "Portefeuille",
     "words__warning": "Avertissement",
     "words__wipe": "Effacer",

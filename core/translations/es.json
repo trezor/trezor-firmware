@@ -373,12 +373,7 @@
     "cardano__addr_legacy": "Legado",
     "cardano__addr_pointer": "Puntero",
     "cardano__addr_reward": "Recompensa",
-    "cardano__address_no_staking": {
-      "Bolt": "dirección - sin recompensas de staking.",
-      "Caesar": "dirección - sin recompensas de staking.",
-      "Delizia": "dirección - sin recompensas de staking.",
-      "Eckhart": "dirección - sin recompensas de staking."
-    },
+    "cardano__address_no_staking": "dirección - sin recompensas de staking.",
     "cardano__always_abstain": "Abstenerse siempre",
     "cardano__always_no_confidence": "No Confianza siempre",
     "cardano__amount_burned_decimals_unknown": {
@@ -785,6 +780,7 @@
     "ethereum__approve_revoke_from": "Revocar de",
     "ethereum__approve_to": "Aprobar a",
     "ethereum__approve_unlimited_template": "Aprobando una cantidad ilimitada de {0}",
+    "ethereum__confirm_contract": "Confirmar contrato",
     "ethereum__contract_address": "Dir. del contrato del proveedor",
     "ethereum__data_size_template": "Tamaño: {0} bytes",
     "ethereum__eip_7702": {
@@ -919,7 +915,7 @@
     "homescreen__settings_title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Pantalla de inicio",
+      "Delizia": "Fondo de pantalla",
       "Eckhart": ""
     },
     "homescreen__title_backup_failed": "Error c. seg.",
@@ -1431,12 +1427,12 @@
       "Eckhart": ""
     },
     "nostr__event_kind_template": "Tipo de evento: {0}",
-    "passphrase__access_hidden_wallet": "Acceder a la billetera oculta",
+    "passphrase__access_hidden_wallet": "Acceder a la billetera con passphrase",
     "passphrase__access_wallet": "¿Ir a la billetera passphr.?",
     "passphrase__always_on_device": "¿Introducir siempre la passphrase en Trezor?",
     "passphrase__continue_with_empty_passphrase": "¿Continuar con la passphrase vacía?",
     "passphrase__from_host_not_shown": "Se usará la passphrase proveída por la aplicación conectada, pero no se verá debido a la configuración.",
-    "passphrase__hidden_wallet": "Billetera oculta",
+    "passphrase__hidden_wallet": "Billetera con passphrase",
     "passphrase__hide": {
       "Bolt": "¿Ocultar la passphrase que viene de la aplicación?",
       "Caesar": "¿Ocultar la passphrase que viene de la aplicación?",
@@ -1707,10 +1703,10 @@
       "Eckhart": "Verificar c. seg."
     },
     "reset__check_group_share_title_template": {
-      "Bolt": "Ver. g{0} - fra. {1}",
+      "Bolt": "Verif. gr. {0} - fra. {1}",
       "Caesar": "",
-      "Delizia": "Ver. g{0} - fra. {1}",
-      "Eckhart": "Ver. g{0} - fra. {1}"
+      "Delizia": "Verif. gr. {0} - fra. {1}",
+      "Eckhart": "Verificar grupo {0} - fragmento {1}"
     },
     "reset__check_share_backup_template": "Verifiquemos rápidamente el Fragmento #{0}.",
     "reset__check_share_title_template": {
@@ -1811,7 +1807,7 @@
     "reset__num_shares_for_group_template": "Nro.necesario de fragmentos para formar el grupo {0}.",
     "reset__number_of_shares_info": {
       "Bolt": "",
-      "Caesar": "= total de listas de palabras únicas usadas para la c. seg.",
+      "Caesar": "= número total de fragmentos usados para la c. seg.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -1952,7 +1948,7 @@
     "reset__the_word_is_repeated": "La palabra se repite",
     "reset__threshold_info": {
       "Bolt": "",
-      "Caesar": "= mínimo de listas de palabras únicas para la recuperación.",
+      "Caesar": "= número total de fragmentos usados para la recuperación.",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -2683,6 +2679,7 @@
     "words__good_to_know": "Bueno saber",
     "words__important": "Importante",
     "words__instructions": "Instrucciones",
+    "words__intent": "Intención",
     "words__keep_it_safe": {
       "Bolt": "",
       "Caesar": "¡Guárdala en un lugar seguro!",
@@ -2730,7 +2727,7 @@
     },
     "words__recipient": "Destinatario",
     "words__recovery_share": "Fragmento de recuperación",
-    "words__resource": "",
+    "words__resource": "Recurso",
     "words__review": "Revisar",
     "words__security": "Seguridad",
     "words__send": "Enviar",
@@ -2786,8 +2783,8 @@
     "words__unknown": "Desconocido",
     "words__unlimited": "Ilimitado",
     "words__unlocked": "Desbloqueado",
-    "words__votes": "",
-    "words__voting": "",
+    "words__votes": "Votos",
+    "words__voting": "Votación",
     "words__wallet": "Billetera",
     "words__warning": "Advertencia",
     "words__wipe": "Borrar",
