@@ -47,10 +47,10 @@ typedef struct {
   uint8_t buf[64];
 } BLAKE256_CTX;
 
-void blake256_Init(BLAKE256_CTX *);
-void blake256_Update(BLAKE256_CTX *, const uint8_t *, size_t);
-void blake256_Final(BLAKE256_CTX *, uint8_t *);
+void blake256_Init(BLAKE256_CTX*);
+void blake256_Update(BLAKE256_CTX*, const uint8_t*, size_t);
+void blake256_Final(BLAKE256_CTX*, uint8_t*);
 
-void blake256(const uint8_t *, size_t, uint8_t *);
+void blake256(const uint8_t*, size_t, uint8_t*);
 
 #endif /* __BLAKE256_H__ */

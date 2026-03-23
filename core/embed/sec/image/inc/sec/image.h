@@ -113,13 +113,13 @@ typedef struct {
   uint32_t hw_model;
   uint8_t fw_type;
   // uint8_t reserved[10];
-  const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
+  const uint8_t* vpub[MAX_VENDOR_PUBLIC_KEYS];
   uint8_t vstr_len;
-  const char *vstr;
-  const uint8_t *vimg;
+  const char* vstr;
+  const uint8_t* vimg;
   uint8_t sigmask;
   uint8_t sig[64];
-  const uint8_t *origin;  // pointer to the underlying data
+  const uint8_t* origin;  // pointer to the underlying data
 } vendor_header;
 
 typedef struct {
@@ -153,56 +153,56 @@ typedef struct {
   uint8_t sig[64];
 } secmon_header_t;
 
-const image_header *read_image_header(const uint8_t *const data,
+const image_header* read_image_header(const uint8_t* const data,
                                       const uint32_t magic,
                                       const uint32_t maxsize);
 
-secbool __wur check_image_model(const image_header *const hdr);
+secbool __wur check_image_model(const image_header* const hdr);
 
-secbool __wur check_image_header_sig(const image_header *const hdr,
+secbool __wur check_image_header_sig(const image_header* const hdr,
                                      uint8_t key_m, uint8_t key_n,
-                                     const uint8_t *const *keys);
+                                     const uint8_t* const* keys);
 
-secbool __wur read_vendor_header(const uint8_t *const data,
-                                 vendor_header *const vhdr);
+secbool __wur read_vendor_header(const uint8_t* const data,
+                                 vendor_header* const vhdr);
 
-secbool __wur check_vendor_header_model(const vendor_header *const vhdr);
+secbool __wur check_vendor_header_model(const vendor_header* const vhdr);
 
-secbool __wur check_vendor_header_sig(const vendor_header *const vhdr,
+secbool __wur check_vendor_header_sig(const vendor_header* const vhdr,
                                       uint8_t key_m, uint8_t key_n,
-                                      const uint8_t *const *keys);
+                                      const uint8_t* const* keys);
 
-secbool check_vendor_header_keys(const vendor_header *const vhdr);
+secbool check_vendor_header_keys(const vendor_header* const vhdr);
 
-void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash);
+void vendor_header_hash(const vendor_header* const vhdr, uint8_t* hash);
 
-secbool __wur check_single_hash(const uint8_t *const hash,
-                                const uint8_t *const data, int len);
+secbool __wur check_single_hash(const uint8_t* const hash,
+                                const uint8_t* const data, int len);
 
 #ifdef KERNEL_MODE
-secbool __wur check_image_contents(const image_header *const hdr,
+secbool __wur check_image_contents(const image_header* const hdr,
                                    uint32_t firstskip,
-                                   const flash_area_t *area);
+                                   const flash_area_t* area);
 #endif
 
-void get_image_fingerprint(const image_header *const hdr, uint8_t *const out);
+void get_image_fingerprint(const image_header* const hdr, uint8_t* const out);
 
-secbool check_firmware_header(const uint8_t *header, size_t header_size,
-                              firmware_header_info_t *info);
+secbool check_firmware_header(const uint8_t* header, size_t header_size,
+                              firmware_header_info_t* info);
 
-secbool __wur check_bootloader_header_sig(const image_header *const hdr);
+secbool __wur check_bootloader_header_sig(const image_header* const hdr);
 
 #ifdef USE_SECMON_VERIFICATION
-const secmon_header_t *read_secmon_header(const uint8_t *const data,
+const secmon_header_t* read_secmon_header(const uint8_t* const data,
                                           const uint32_t maxsize);
 
-secbool __wur check_secmon_model(const secmon_header_t *const hdr);
+secbool __wur check_secmon_model(const secmon_header_t* const hdr);
 
-secbool __wur check_secmon_header_sig(const secmon_header_t *const hdr);
+secbool __wur check_secmon_header_sig(const secmon_header_t* const hdr);
 
 #ifdef SECURE_MODE
-secbool __wur check_secmon_contents(const secmon_header_t *const hdr,
+secbool __wur check_secmon_contents(const secmon_header_t* const hdr,
                                     size_t code_offset,
-                                    const flash_area_t *area);
+                                    const flash_area_t* area);
 #endif
 #endif

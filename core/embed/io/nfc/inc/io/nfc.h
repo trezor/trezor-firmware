@@ -86,14 +86,14 @@ nfc_status_t nfc_deactivate_stm(void);
 // Calls NFC RFAL worker to service the NFC state machine and expolore
 // registered technologies. This function has to be actively called in loop
 // (main NFC poll function), returns nfc event.
-nfc_status_t nfc_get_event(nfc_event_t *event);
+nfc_status_t nfc_get_event(nfc_event_t* event);
 
 // Deactivate the currently activated NFC device and put RFAL state machine back
 // to discovary state.
 nfc_status_t nfc_dev_deactivate(void);
 
 // Read the general device information of the activated NFC device.
-nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
+nfc_status_t nfc_dev_read_info(nfc_dev_info_t* dev_info);
 
 // Write the NDEF message with the trezor.io URI to the activated NFC device.
 nfc_status_t nfc_dev_write_ndef_uri(void);

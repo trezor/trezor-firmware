@@ -43,7 +43,7 @@
 
 #define MAX_MULTISIG_PUBKEY_COUNT 15
 
-uint32_t ser_length(uint32_t len, uint8_t *out) {
+uint32_t ser_length(uint32_t len, uint8_t* out) {
   if (len < 253) {
     out[0] = len & 0xFF;
     return 1;
@@ -62,24 +62,24 @@ uint32_t ser_length(uint32_t len, uint8_t *out) {
   return 5;
 }
 
-uint32_t ser_length_hash(Hasher *hasher, uint32_t len) {
+uint32_t ser_length_hash(Hasher* hasher, uint32_t len) {
   if (len < 253) {
-    hasher_Update(hasher, (const uint8_t *)&len, 1);
+    hasher_Update(hasher, (const uint8_t*)&len, 1);
     return 1;
   }
   if (len < 0x10000) {
     uint8_t d = 253;
     hasher_Update(hasher, &d, 1);
-    hasher_Update(hasher, (const uint8_t *)&len, 2);
+    hasher_Update(hasher, (const uint8_t*)&len, 2);
     return 3;
   }
   uint8_t d = 254;
   hasher_Update(hasher, &d, 1);
-  hasher_Update(hasher, (const uint8_t *)&len, 4);
+  hasher_Update(hasher, (const uint8_t*)&len, 4);
   return 5;
 }
 
-uint32_t deser_length(const uint8_t *in, uint32_t *out) {
+uint32_t deser_length(const uint8_t* in, uint32_t* out) {
   if (in[0] < 253) {
     *out = in[0];
     return 1;
@@ -96,17 +96,17 @@ uint32_t deser_length(const uint8_t *in, uint32_t *out) {
   return 1 + 8;
 }
 
-int sshMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
-                   uint8_t *signature) {
+int sshMessageSign(HDNode* node, const uint8_t* message, size_t message_len,
+                   uint8_t* signature) {
   signature[0] = 0;  // prefix: pad with zero, so all signatures are 65 bytes
   return hdnode_sign(node, message, message_len, HASHER_SHA2, signature + 1,
                      NULL, NULL);
 }
 
-int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
-                   uint8_t *signature) {
+int gpgMessageSign(HDNode* node, const uint8_t* message, size_t message_len,
+                   uint8_t* signature) {
   signature[0] = 0;  // prefix: pad with zero, so all signatures are 65 bytes
-  const curve_info *ed25519_curve_info = get_curve_by_name(ED25519_NAME);
+  const curve_info* ed25519_curve_info = get_curve_by_name(ED25519_NAME);
   if (ed25519_curve_info && node->curve == ed25519_curve_info) {
     // GPG supports variable size digest for Ed25519 signatures
     return hdnode_sign(node, message, message_len, 0, signature + 1, NULL,
@@ -120,10 +120,10 @@ int gpgMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
   }
 }
 
-int signifyMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
-                       uint8_t *signature) {
+int signifyMessageSign(HDNode* node, const uint8_t* message, size_t message_len,
+                       uint8_t* signature) {
   signature[0] = 0;  // prefix: pad with zero, so all signatures are 65 bytes
-  const curve_info *ed25519_curve_info = get_curve_by_name(ED25519_NAME);
+  const curve_info* ed25519_curve_info = get_curve_by_name(ED25519_NAME);
   // only ed25519 is supported
   if (!ed25519_curve_info || node->curve != ed25519_curve_info) {
     return 1;
@@ -131,12 +131,12 @@ int signifyMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
   return hdnode_sign(node, message, message_len, 0, signature + 1, NULL, NULL);
 }
 
-static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message,
+static void cryptoMessageHash(const CoinInfo* coin, const uint8_t* message,
                               size_t message_len,
                               uint8_t hash[HASHER_DIGEST_LENGTH]) {
   Hasher hasher = {0};
   hasher_Init(&hasher, coin->curve->hasher_sign);
-  hasher_Update(&hasher, (const uint8_t *)coin->signed_message_header,
+  hasher_Update(&hasher, (const uint8_t*)coin->signed_message_header,
                 strlen(coin->signed_message_header));
   uint8_t varint[5] = {0};
   uint32_t l = ser_length(message_len, varint);
@@ -145,10 +145,10 @@ static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message,
   hasher_Final(&hasher, hash);
 }
 
-int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
+int cryptoMessageSign(const CoinInfo* coin, HDNode* node,
                       InputScriptType script_type, bool no_script_type,
-                      const uint8_t *message, size_t message_len,
-                      uint8_t *signature) {
+                      const uint8_t* message, size_t message_len,
+                      uint8_t* signature) {
   uint8_t script_type_info = 0;
   switch (script_type) {
     case InputScriptType_SPENDADDRESS:
@@ -184,8 +184,8 @@ int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
 }
 
 // Determines the script type from a non-multisig address.
-static InputScriptType address_to_script_type(const CoinInfo *coin,
-                                              const char *address) {
+static InputScriptType address_to_script_type(const CoinInfo* coin,
+                                              const char* address) {
   uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
   size_t addr_raw_len = 0;
 
@@ -231,9 +231,9 @@ static InputScriptType address_to_script_type(const CoinInfo *coin,
   return InputScriptType_EXTERNAL;  // unknown script type
 }
 
-int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
-                        size_t message_len, const char *address,
-                        const uint8_t *signature) {
+int cryptoMessageVerify(const CoinInfo* coin, const uint8_t* message,
+                        size_t message_len, const char* address,
+                        const uint8_t* signature) {
   // check if the address is correct
   InputScriptType script_type = address_to_script_type(coin, address);
   if (script_type == InputScriptType_EXTERNAL) {
@@ -329,11 +329,11 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
   return 0;
 }
 
-const HDNode *cryptoMultisigPubkey(const CoinInfo *coin,
-                                   const MultisigRedeemScriptType *multisig,
+const HDNode* cryptoMultisigPubkey(const CoinInfo* coin,
+                                   const MultisigRedeemScriptType* multisig,
                                    uint32_t index) {
-  const HDNodeType *node_ptr = NULL;
-  const uint32_t *address_n = NULL;
+  const HDNodeType* node_ptr = NULL;
+  const uint32_t* address_n = NULL;
   uint32_t address_n_count = 0;
   if (multisig->nodes_count) {  // use multisig->nodes
     if (index >= multisig->nodes_count) {
@@ -370,26 +370,26 @@ const HDNode *cryptoMultisigPubkey(const CoinInfo *coin,
   return &node;
 }
 
-uint32_t cryptoMultisigPubkeyCount(const MultisigRedeemScriptType *multisig) {
+uint32_t cryptoMultisigPubkeyCount(const MultisigRedeemScriptType* multisig) {
   return multisig->nodes_count ? multisig->nodes_count
                                : multisig->pubkeys_count;
 }
 
-static int comparePubkeysLexicographically(const void *first,
-                                           const void *second) {
+static int comparePubkeysLexicographically(const void* first,
+                                           const void* second) {
   return memcmp(first, second, 33);
 }
 
-uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
-                               const MultisigRedeemScriptType *multisig,
-                               uint8_t *pubkeys) {
+uint32_t cryptoMultisigPubkeys(const CoinInfo* coin,
+                               const MultisigRedeemScriptType* multisig,
+                               uint8_t* pubkeys) {
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
   if (n < 1 || n > MAX_MULTISIG_PUBKEY_COUNT) {
     return 0;
   }
 
   for (uint32_t i = 0; i < n; i++) {
-    const HDNode *pubnode = cryptoMultisigPubkey(coin, multisig, i);
+    const HDNode* pubnode = cryptoMultisigPubkey(coin, multisig, i);
     if (!pubnode) {
       return 0;
     }
@@ -404,9 +404,9 @@ uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
   return n;
 }
 
-int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
-                              const MultisigRedeemScriptType *multisig,
-                              const uint8_t *pubkey) {
+int cryptoMultisigPubkeyIndex(const CoinInfo* coin,
+                              const MultisigRedeemScriptType* multisig,
+                              const uint8_t* pubkey) {
   uint8_t pubkeys[33 * MAX_MULTISIG_PUBKEY_COUNT];
   if (!cryptoMultisigPubkeys(coin, multisig, pubkeys)) {
     return -1;
@@ -421,11 +421,11 @@ int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
   return -1;
 }
 
-int cryptoMultisigXpubIndex(const CoinInfo *coin,
-                            const MultisigRedeemScriptType *multisig,
-                            const uint8_t *pubkey) {
+int cryptoMultisigXpubIndex(const CoinInfo* coin,
+                            const MultisigRedeemScriptType* multisig,
+                            const uint8_t* pubkey) {
   for (size_t i = 0; i < cryptoMultisigPubkeyCount(multisig); i++) {
-    const HDNode *pubnode = cryptoMultisigPubkey(coin, multisig, i);
+    const HDNode* pubnode = cryptoMultisigPubkey(coin, multisig, i);
     if (pubnode && memcmp(pubnode->public_key, pubkey, 33) == 0) {
       return i;
     }
@@ -433,15 +433,15 @@ int cryptoMultisigXpubIndex(const CoinInfo *coin,
   return -1;
 }
 
-static int comparePubnodesLexicographically(const void *first,
-                                            const void *second) {
-  return memcmp(*(const HDNodeType **)first, *(const HDNodeType **)second,
+static int comparePubnodesLexicographically(const void* first,
+                                            const void* second) {
+  return memcmp(*(const HDNodeType**)first, *(const HDNodeType**)second,
                 sizeof(HDNodeType));
 }
 
-int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
-                              uint8_t *hash) {
-  static const HDNodeType *pubnodes[MAX_MULTISIG_PUBKEY_COUNT];
+int cryptoMultisigFingerprint(const MultisigRedeemScriptType* multisig,
+                              uint8_t* hash) {
+  static const HDNodeType* pubnodes[MAX_MULTISIG_PUBKEY_COUNT];
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
   if (n < 1 || n > MAX_MULTISIG_PUBKEY_COUNT) {
     return 0;
@@ -471,7 +471,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
     // If the order of pubkeys is lexicographic, we don't want the fingerprint
     // to depend on the order of the pubnodes, so we sort the pubnodes before
     // hashing.
-    qsort(pubnodes, n, sizeof(HDNodeType *), comparePubnodesLexicographically);
+    qsort(pubnodes, n, sizeof(HDNodeType*), comparePubnodesLexicographically);
   }
 
   SHA256_CTX ctx = {0};
@@ -491,38 +491,38 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
   return 1;
 }
 
-int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash) {
+int cryptoIdentityFingerprint(const IdentityType* identity, uint8_t* hash) {
   SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
   SHA256_UPDATE_INT(&ctx, identity->index, uint32_t);
   if (identity->has_proto && identity->proto[0]) {
-    sha256_Update(&ctx, (const uint8_t *)(identity->proto),
+    sha256_Update(&ctx, (const uint8_t*)(identity->proto),
                   strlen(identity->proto));
-    sha256_Update(&ctx, (const uint8_t *)"://", 3);
+    sha256_Update(&ctx, (const uint8_t*)"://", 3);
   }
   if (identity->has_user && identity->user[0]) {
-    sha256_Update(&ctx, (const uint8_t *)(identity->user),
+    sha256_Update(&ctx, (const uint8_t*)(identity->user),
                   strlen(identity->user));
-    sha256_Update(&ctx, (const uint8_t *)"@", 1);
+    sha256_Update(&ctx, (const uint8_t*)"@", 1);
   }
   if (identity->has_host && identity->host[0]) {
-    sha256_Update(&ctx, (const uint8_t *)(identity->host),
+    sha256_Update(&ctx, (const uint8_t*)(identity->host),
                   strlen(identity->host));
   }
   if (identity->has_port && identity->port[0]) {
-    sha256_Update(&ctx, (const uint8_t *)":", 1);
-    sha256_Update(&ctx, (const uint8_t *)(identity->port),
+    sha256_Update(&ctx, (const uint8_t*)":", 1);
+    sha256_Update(&ctx, (const uint8_t*)(identity->port),
                   strlen(identity->port));
   }
   if (identity->has_path && identity->path[0]) {
-    sha256_Update(&ctx, (const uint8_t *)(identity->path),
+    sha256_Update(&ctx, (const uint8_t*)(identity->path),
                   strlen(identity->path));
   }
   sha256_Final(&ctx, hash);
   return 1;
 }
 
-static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
+static bool check_cointype(const CoinInfo* coin, uint32_t slip44, bool full) {
 #if BITCOIN_ONLY
   (void)full;
 #else
@@ -542,8 +542,8 @@ static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
   return coin->coin_type == slip44;
 }
 
-bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
-                     uint32_t address_n_count, const uint32_t *address_n,
+bool coin_path_check(const CoinInfo* coin, InputScriptType script_type,
+                     uint32_t address_n_count, const uint32_t* address_n,
                      bool has_multisig, PathSchema unlock, bool full_check) {
   // This function checks that the path is a recognized path for the given coin.
   // Used by GetAddress to prevent ransom attacks where a user could be coerced
@@ -876,7 +876,7 @@ bool is_segwit_output_script_type(OutputScriptType script_type) {
 }
 
 bool change_output_to_input_script_type(OutputScriptType output_script_type,
-                                        InputScriptType *input_script_type) {
+                                        InputScriptType* input_script_type) {
   switch (output_script_type) {
     case OutputScriptType_PAYTOADDRESS:
       *input_script_type = InputScriptType_SPENDADDRESS;
@@ -898,24 +898,24 @@ bool change_output_to_input_script_type(OutputScriptType output_script_type,
   }
 }
 
-void slip21_from_seed(const uint8_t *seed, int seed_len, Slip21Node *out) {
-  hmac_sha512((uint8_t *)"Symmetric key seed", 18, seed, seed_len, out->data);
+void slip21_from_seed(const uint8_t* seed, int seed_len, Slip21Node* out) {
+  hmac_sha512((uint8_t*)"Symmetric key seed", 18, seed, seed_len, out->data);
 }
 
-void slip21_derive_path(Slip21Node *inout, const uint8_t *label,
+void slip21_derive_path(Slip21Node* inout, const uint8_t* label,
                         size_t label_len) {
   HMAC_SHA512_CTX hctx = {0};
   hmac_sha512_Init(&hctx, inout->data, 32);
-  hmac_sha512_Update(&hctx, (uint8_t *)"\0", 1);
+  hmac_sha512_Update(&hctx, (uint8_t*)"\0", 1);
   hmac_sha512_Update(&hctx, label, label_len);
   hmac_sha512_Final(&hctx, inout->data);
 }
 
-const uint8_t *slip21_key(const Slip21Node *node) { return &node->data[32]; }
+const uint8_t* slip21_key(const Slip21Node* node) { return &node->data[32]; }
 
-bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t *message,
+bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t* message,
                       const size_t message_len, const int threshold,
-                      const ed25519_public_key *pubkeys,
+                      const ed25519_public_key* pubkeys,
                       const int pubkeys_count, const uint8_t sigmask)
 
 {
@@ -957,7 +957,7 @@ bool cryptoCosiVerify(const ed25519_signature signature, const uint8_t *message,
   return res == 0;
 }
 
-bool multisig_uses_single_path(const MultisigRedeemScriptType *multisig) {
+bool multisig_uses_single_path(const MultisigRedeemScriptType* multisig) {
   if (multisig->pubkeys_count == 0) {
     // Pubkeys are specified by multisig.nodes and multisig.address_n, in this
     // case all the pubkeys use the same path
@@ -1012,14 +1012,14 @@ static uint64_t descriptor_polymod(uint64_t c, uint8_t val) {
   return c;
 }
 
-static bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
+static bool descriptor_checksum(const char* descriptor, size_t descriptor_len,
                                 char dest[DESCRIPTOR_CHECKSUM_LEN]) {
   uint64_t c = 1;
   uint8_t cls = 0;
   uint8_t clscount = 0;
 
   for (size_t i = 0; i < descriptor_len; i++) {
-    const char *const pos_ptr = strchr(INPUT_CHARSET, descriptor[i]);
+    const char* const pos_ptr = strchr(INPUT_CHARSET, descriptor[i]);
     if (!pos_ptr || !*pos_ptr) {
       return false;
     }
@@ -1052,9 +1052,9 @@ static bool descriptor_checksum(const char *descriptor, size_t descriptor_len,
 
 bool descriptor_format(InputScriptType script_type, uint32_t root_fingerprint,
                        const uint32_t address_n[], size_t address_n_count,
-                       const char *xpub, char *dest, size_t dest_size) {
-  const char *type = NULL;
-  const char *terminator = "";
+                       const char* xpub, char* dest, size_t dest_size) {
+  const char* type = NULL;
+  const char* terminator = "";
   if (script_type == InputScriptType_SPENDADDRESS) {
     type = "pkh";
   } else if (script_type == InputScriptType_SPENDP2SHWITNESS) {

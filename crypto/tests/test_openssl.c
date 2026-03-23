@@ -43,7 +43,7 @@
 
 #include "memzero.h"
 
-void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve) {
+void openssl_check(unsigned int iterations, int nid, const ecdsa_curve* curve) {
   uint8_t sig[64], pub_key33[33], pub_key65[65], priv_key[32], msg[256];
 
   for (unsigned int iter = 0; iter < iterations; iter++) {
@@ -53,7 +53,7 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve) {
     random_buffer(msg, msg_len);
 
     // new ECDSA key
-    EVP_PKEY_CTX *pkey_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+    EVP_PKEY_CTX* pkey_ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
     if (!pkey_ctx) {
       printf("EVP_PKEY_CTX_new_from_name failed\n");
       return;
@@ -70,7 +70,7 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve) {
     }
 
     // generate the key
-    EVP_PKEY *pkey = NULL;
+    EVP_PKEY* pkey = NULL;
     if (EVP_PKEY_keygen(pkey_ctx, &pkey) <= 0) {
       printf("EVP_PKEY_keygen failed\n");
       return;
@@ -78,7 +78,7 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve) {
     EVP_PKEY_CTX_free(pkey_ctx);
 
     // copy key to buffer
-    BIGNUM *K = NULL;
+    BIGNUM* K = NULL;
     if (!EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_PRIV_KEY, &K)) {
       printf("EVP_PKEY_get_bn_param failed\n");
       return;
@@ -122,7 +122,7 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve) {
 
     // compute the digest of the message
     // note: these are OpenSSL functions, not our own
-    EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
+    EVP_MD_CTX* md_ctx = EVP_MD_CTX_new();
     if (!md_ctx) {
       printf("EVP_MD_CTX_new failed\n");
       return;
@@ -153,7 +153,7 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve) {
   printf("All OK\n");
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   if (argc != 2) {
     printf("Usage: test_openssl iterations\n");
     return 1;

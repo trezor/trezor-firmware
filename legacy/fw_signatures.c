@@ -125,7 +125,7 @@ static const uint8_t * const pubkey_v2[PUBKEYS_V2] = {
 #define PREFIX_LENGTH (sizeof(VERIFYMESSAGE_PREFIX) - 1)
 #define SIGNED_LENGTH (PREFIX_LENGTH + 32)
 
-void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]) {
+void compute_firmware_fingerprint(const image_header* hdr, uint8_t hash[32]) {
   image_header copy = {0};
   memcpy(&copy, hdr, sizeof(image_header));
   memzero(copy.sig1, sizeof(copy.sig1));
@@ -134,10 +134,10 @@ void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]) {
   copy.sigindex1 = 0;
   copy.sigindex2 = 0;
   copy.sigindex3 = 0;
-  sha256_Raw((const uint8_t *)&copy, sizeof(image_header), hash);
+  sha256_Raw((const uint8_t*)&copy, sizeof(image_header), hash);
 }
 
-void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
+void compute_firmware_fingerprint_for_verifymessage(const image_header* hdr,
                                                     uint8_t hash[32]) {
   uint8_t prefixed_header[SIGNED_LENGTH] = VERIFYMESSAGE_PREFIX;
   uint8_t header_hash[32];
@@ -153,8 +153,8 @@ void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
 }
 
 bool firmware_present_new(void) {
-  const image_header *hdr =
-      (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
+  const image_header* hdr =
+      (const image_header*)FLASH_PTR(FLASH_FWHEADER_START);
   if (hdr->magic != FIRMWARE_MAGIC_NEW) return false;
   // we need to ignore hdrlen for now
   // because we keep reset_handler ptr there
@@ -167,11 +167,11 @@ bool firmware_present_new(void) {
   return true;
 }
 
-int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
+int signatures_ok(const image_header* hdr, uint8_t store_fingerprint[32],
                   secbool use_verifymessage) {
   uint8_t hash[32] = {0};
   // which set of public keys depend on scheme
-  const uint8_t *const *pubkey_ptr = NULL;
+  const uint8_t* const* pubkey_ptr = NULL;
   uint8_t pubkeys = 0;
   if (use_verifymessage == sectrue) {
     pubkey_ptr = pubkey_v3;
@@ -228,7 +228,7 @@ int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
   return SIG_OK;
 }
 
-int signatures_match(const image_header *hdr, uint8_t store_fingerprint[32]) {
+int signatures_match(const image_header* hdr, uint8_t store_fingerprint[32]) {
   int result = 0;
   // Return success if v3 ("verify message") or the v2 ("new") style matches.
   // Use XOR to always force computing both signatures to avoid potential
@@ -243,14 +243,14 @@ int signatures_match(const image_header *hdr, uint8_t store_fingerprint[32]) {
   return SIG_OK;
 }
 
-int mem_is_empty(const uint8_t *src, uint32_t len) {
+int mem_is_empty(const uint8_t* src, uint32_t len) {
   for (uint32_t i = 0; i < len; i++) {
     if (src[i]) return 0;
   }
   return 1;
 }
 
-int check_firmware_hashes(const image_header *hdr) {
+int check_firmware_hashes(const image_header* hdr) {
   uint8_t hash[32] = {0};
   // check hash of the first code chunk
   sha256_Raw(FLASH_PTR(FLASH_APP_START), (64 - 1) * 1024, hash);

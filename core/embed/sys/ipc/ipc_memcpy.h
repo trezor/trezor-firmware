@@ -30,4 +30,4 @@
  * @param src Source pointer
  * @param size Number of bytes to copy
  */
-void ipc_memcpy(void *dst, const void *src, size_t size);
+void ipc_memcpy(void* dst, const void* src, size_t size);

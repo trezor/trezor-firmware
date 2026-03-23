@@ -83,7 +83,7 @@
 // y = (bignum256) x
 // Assumes x is normalized and x < 2**261 == 2**(BITS_PER_LIMB * LIMBS)
 // Guarantees y is normalized
-void bn_copy_lower(const bignum512 *x, bignum256 *y) {
+void bn_copy_lower(const bignum512* x, bignum256* y) {
   for (int i = 0; i < BN_LIMBS; i++) {
     y->val[i] = x->val[i];
   }
@@ -92,7 +92,7 @@ void bn_copy_lower(const bignum512 *x, bignum256 *y) {
 // out_number = (bignum256) in_number
 // Assumes in_number is a raw bigendian 256-bit number
 // Guarantees out_number is normalized
-void bn_read_be(const uint8_t *in_number, bignum256 *out_number) {
+void bn_read_be(const uint8_t* in_number, bignum256* out_number) {
   uint32_t temp = 0;
 
   for (int i = 0; i < BN_LIMBS - 1; i++) {
@@ -110,7 +110,7 @@ void bn_read_be(const uint8_t *in_number, bignum256 *out_number) {
 // out_number = (bignum512) in_number
 // Assumes in_number is a raw bigendian 512-bit number
 // Guarantees out_number is normalized
-void bn_read_be_512(const uint8_t *in_number, bignum512 *out_number) {
+void bn_read_be_512(const uint8_t* in_number, bignum512* out_number) {
   bignum256 lower = {0}, upper = {0};
 
   bn_read_be(in_number + 32, &lower);
@@ -134,7 +134,7 @@ void bn_read_be_512(const uint8_t *in_number, bignum512 *out_number) {
 // out_number = (256BE) in_number
 // Assumes in_number < 2**256
 // Guarantess out_number is a raw bigendian 256-bit number
-void bn_write_be(const bignum256 *in_number, uint8_t *out_number) {
+void bn_write_be(const bignum256* in_number, uint8_t* out_number) {
   uint32_t temp = in_number->val[BN_LIMBS - 1];
   for (int i = BN_LIMBS - 2; i >= 0; i--) {
     uint32_t limb = in_number->val[i];
@@ -150,7 +150,7 @@ void bn_write_be(const bignum256 *in_number, uint8_t *out_number) {
 // out_number = (bignum256) in_number
 // Assumes in_number is a raw little endian 256-bit number
 // Guarantees out_number is normalized
-void bn_read_le(const uint8_t *in_number, bignum256 *out_number) {
+void bn_read_le(const uint8_t* in_number, bignum256* out_number) {
   uint32_t temp = 0;
   for (int i = 0; i < BN_LIMBS - 1; i++) {
     uint32_t limb = read_le(in_number + i * 4);
@@ -166,7 +166,7 @@ void bn_read_le(const uint8_t *in_number, bignum256 *out_number) {
 // out_number = (256LE) in_number
 // Assumes in_number < 2**256
 // Guarantess out_number is a raw little endian 256-bit number
-void bn_write_le(const bignum256 *in_number, uint8_t *out_number) {
+void bn_write_le(const bignum256* in_number, uint8_t* out_number) {
   uint32_t temp = in_number->val[BN_LIMBS - 1];
 
   for (int i = BN_LIMBS - 2; i >= 0; i--) {
@@ -180,7 +180,7 @@ void bn_write_le(const bignum256 *in_number, uint8_t *out_number) {
 
 // out_number = (bignum256) in_number
 // Guarantees out_number is normalized
-void bn_read_uint32(uint32_t in_number, bignum256 *out_number) {
+void bn_read_uint32(uint32_t in_number, bignum256* out_number) {
   out_number->val[0] = in_number & BN_LIMB_MASK;
   out_number->val[1] = in_number >> BN_BITS_PER_LIMB;
   for (uint32_t i = 2; i < BN_LIMBS; i++) out_number->val[i] = 0;
@@ -188,7 +188,7 @@ void bn_read_uint32(uint32_t in_number, bignum256 *out_number) {
 
 // out_number = (bignum256) in_number
 // Guarantees out_number is normalized
-void bn_read_uint64(uint64_t in_number, bignum256 *out_number) {
+void bn_read_uint64(uint64_t in_number, bignum256* out_number) {
   out_number->val[0] = in_number & BN_LIMB_MASK;
   out_number->val[1] = (in_number >>= BN_BITS_PER_LIMB) & BN_LIMB_MASK;
   out_number->val[2] = in_number >> BN_BITS_PER_LIMB;
@@ -199,7 +199,7 @@ void bn_read_uint64(uint64_t in_number, bignum256 *out_number) {
 // Assumes x is normalized
 // The function doesn't have neither constant control flow nor constant memory
 //   access flow
-int bn_bitcount(const bignum256 *x) {
+int bn_bitcount(const bignum256* x) {
   for (int i = BN_LIMBS - 1; i >= 0; i--) {
     uint32_t limb = x->val[i];
     if (limb != 0) {
@@ -215,7 +215,7 @@ int bn_bitcount(const bignum256 *x) {
 // Assumes x is normalized
 // The function doesn't have neither constant control flow nor constant memory
 //   access flow
-unsigned int bn_digitcount(const bignum256 *x) {
+unsigned int bn_digitcount(const bignum256* x) {
   bignum256 val = {0};
   bn_copy(x, &val);
 
@@ -241,7 +241,7 @@ unsigned int bn_digitcount(const bignum256 *x) {
 
 // x = 0
 // Guarantees x is normalized
-void bn_zero(bignum256 *x) {
+void bn_zero(bignum256* x) {
   for (int i = 0; i < BN_LIMBS; i++) {
     x->val[i] = 0;
   }
@@ -249,7 +249,7 @@ void bn_zero(bignum256 *x) {
 
 // x = 1
 // Guarantees x is normalized
-void bn_one(bignum256 *x) {
+void bn_one(bignum256* x) {
   x->val[0] = 1;
   for (int i = 1; i < BN_LIMBS; i++) {
     x->val[i] = 0;
@@ -258,7 +258,7 @@ void bn_one(bignum256 *x) {
 
 // Returns x == 0
 // Assumes x is normalized
-int bn_is_zero(const bignum256 *x) {
+int bn_is_zero(const bignum256* x) {
   uint32_t result = 0;
   for (int i = 0; i < BN_LIMBS; i++) {
     result |= x->val[i];
@@ -268,7 +268,7 @@ int bn_is_zero(const bignum256 *x) {
 
 // Returns x == 1
 // Assumes x is normalized
-int bn_is_one(const bignum256 *x) {
+int bn_is_one(const bignum256* x) {
   uint32_t result = x->val[0] ^ 1;
   for (int i = 1; i < BN_LIMBS; i++) {
     result |= x->val[i];
@@ -278,7 +278,7 @@ int bn_is_one(const bignum256 *x) {
 
 // Returns x < y
 // Assumes x, y are normalized
-int bn_is_less(const bignum256 *x, const bignum256 *y) {
+int bn_is_less(const bignum256* x, const bignum256* y) {
   uint32_t res1 = 0;
   uint32_t res2 = 0;
   for (int i = BN_LIMBS - 1; i >= 0; i--) {
@@ -290,7 +290,7 @@ int bn_is_less(const bignum256 *x, const bignum256 *y) {
 
 // Returns x == y
 // Assumes x, y are normalized
-int bn_is_equal(const bignum256 *x, const bignum256 *y) {
+int bn_is_equal(const bignum256* x, const bignum256* y) {
   uint32_t result = 0;
   for (int i = 0; i < BN_LIMBS; i++) {
     result |= x->val[i] ^ y->val[i];
@@ -302,8 +302,8 @@ int bn_is_equal(const bignum256 *x, const bignum256 *y) {
 // Assumes cond is either 0 or 1
 // Works properly even if &res == &truecase or &res == &falsecase or
 //   &truecase == &falsecase or &res == &truecase == &falsecase
-void bn_cmov(bignum256 *res, volatile uint32_t cond, const bignum256 *truecase,
-             const bignum256 *falsecase) {
+void bn_cmov(bignum256* res, volatile uint32_t cond, const bignum256* truecase,
+             const bignum256* falsecase) {
   // Intentional use of bitwise OR operator to ensure constant-time
   assert((int)(cond == 1) | (int)(cond == 0));
 
@@ -323,7 +323,7 @@ void bn_cmov(bignum256 *res, volatile uint32_t cond, const bignum256 *truecase,
 // Guarantees x is normalized
 // Assumes prime is normalized and
 //   0 < prime < 2**260 == 2**(BITS_PER_LIMB * LIMBS - 1)
-void bn_cnegate(volatile uint32_t cond, bignum256 *x, const bignum256 *prime) {
+void bn_cnegate(volatile uint32_t cond, bignum256* x, const bignum256* prime) {
   // Intentional use of bitwise OR operator to ensure constant time
   assert((int)(cond == 1) | (int)(cond == 0));
 
@@ -402,7 +402,7 @@ void bn_cnegate(volatile uint32_t cond, bignum256 *x, const bignum256 *prime) {
 // x <<= 1
 // Assumes x is normalized, x < 2**260 == 2**(LIMBS*BITS_PER_LIMB - 1)
 // Guarantees x is normalized
-void bn_lshift(bignum256 *x) {
+void bn_lshift(bignum256* x) {
   for (int i = BN_LIMBS - 1; i > 0; i--) {
     x->val[i] = ((x->val[i] << 1) & BN_LIMB_MASK) |
                 (x->val[i - 1] >> (BN_BITS_PER_LIMB - 1));
@@ -415,7 +415,7 @@ void bn_lshift(bignum256 *x) {
 // Guarantees x is normalized
 // If x is partly reduced (fully reduced) modulo prime,
 //   guarantess x will be partly reduced (fully reduced) modulo prime
-void bn_rshift(bignum256 *x) {
+void bn_rshift(bignum256* x) {
   for (int i = 0; i < BN_LIMBS - 1; i++) {
     x->val[i] =
         (x->val[i] >> 1) | ((x->val[i + 1] & 1) << (BN_BITS_PER_LIMB - 1));
@@ -428,7 +428,7 @@ void bn_rshift(bignum256 *x) {
 // Guarantees x is normalized
 // The function has constant control flow but not constant memory access flow
 //   with regard to i
-void bn_setbit(bignum256 *x, uint16_t i) {
+void bn_setbit(bignum256* x, uint16_t i) {
   assert(i < BN_LIMBS * BN_BITS_PER_LIMB);
   x->val[i / BN_BITS_PER_LIMB] |= (1u << (i % BN_BITS_PER_LIMB));
 }
@@ -438,7 +438,7 @@ void bn_setbit(bignum256 *x, uint16_t i) {
 // Guarantees x is normalized
 // The function has constant control flow but not constant memory access flow
 //   with regard to i
-void bn_clearbit(bignum256 *x, uint16_t i) {
+void bn_clearbit(bignum256* x, uint16_t i) {
   assert(i < BN_LIMBS * BN_BITS_PER_LIMB);
   x->val[i / BN_BITS_PER_LIMB] &= ~(1u << (i % BN_BITS_PER_LIMB));
 }
@@ -447,7 +447,7 @@ void bn_clearbit(bignum256 *x, uint16_t i) {
 // Assumes x is normalized and 0 <= i < 261 == LIMBS*BITS_PER_LIMB
 // The function has constant control flow but not constant memory access flow
 //   with regard to i
-uint32_t bn_testbit(const bignum256 *x, uint16_t i) {
+uint32_t bn_testbit(const bignum256* x, uint16_t i) {
   assert(i < BN_LIMBS * BN_BITS_PER_LIMB);
   return (x->val[i / BN_BITS_PER_LIMB] >> (i % BN_BITS_PER_LIMB)) & 1;
 }
@@ -456,7 +456,7 @@ uint32_t bn_testbit(const bignum256 *x, uint16_t i) {
 // Assumes x, y are normalized
 // Guarantees res is normalized
 // Works properly even if &res == &x or &res == &y or &res == &x == &y
-void bn_xor(bignum256 *res, const bignum256 *x, const bignum256 *y) {
+void bn_xor(bignum256* res, const bignum256* x, const bignum256* y) {
   for (int i = 0; i < BN_LIMBS; i++) {
     res->val[i] = x->val[i] ^ y->val[i];
   }
@@ -469,7 +469,7 @@ void bn_xor(bignum256 *res, const bignum256 *x, const bignum256 *y) {
 // If x is partly reduced (fully reduced) modulo prime,
 //   guarantess x will be partly reduced (fully reduced) modulo prime
 // Assumes prime is an odd number and normalized
-void bn_mult_half(bignum256 *x, const bignum256 *prime) {
+void bn_mult_half(bignum256* x, const bignum256* prime) {
   // x = x / 2 if is_even(x) else (x + prime) / 2
 
   uint32_t x_is_odd_mask =
@@ -526,7 +526,7 @@ void bn_mult_half(bignum256 *x, const bignum256 *prime) {
 // Assumes x is normalized, 0 <= k <= 8 = 2**(32 - BITS_PER_LIMB)
 // Assumes prime is normalized and 2^256 - 2^224 <= prime <= 2^256
 // Guarantees x is normalized and partly reduced modulo prime
-void bn_mult_k(bignum256 *x, uint8_t k, const bignum256 *prime) {
+void bn_mult_k(bignum256* x, uint8_t k, const bignum256* prime) {
   assert(k <= 8);
 
   for (int i = 0; i < BN_LIMBS; i++) {
@@ -544,7 +544,7 @@ void bn_mult_k(bignum256 *x, uint8_t k, const bignum256 *prime) {
 // Assumes x is partly reduced modulo prime
 // Guarantees x is fully reduced modulo prime
 // Assumes prime is nonzero and normalized
-void bn_mod(bignum256 *x, const bignum256 *prime) {
+void bn_mod(bignum256* x, const bignum256* prime) {
   uint32_t x_less_prime = bn_is_less(x, prime);
 
   bignum256 temp = {0};
@@ -558,7 +558,7 @@ void bn_mod(bignum256 *x, const bignum256 *prime) {
 // res = k * x
 // Assumes k and x are normalized
 // Guarantees res is normalized 18 digit little endian number in base 2**29
-void bn_multiply_long(const bignum256 *k, const bignum256 *x, bignum512 *res) {
+void bn_multiply_long(const bignum256* k, const bignum256* x, bignum512* res) {
   // Uses long multiplication in base 2**29, see
   // https://en.wikipedia.org/wiki/Multiplication_algorithm#Long_multiplication
 
@@ -608,7 +608,7 @@ void bn_multiply_long(const bignum256 *k, const bignum256 *x, bignum512 *res) {
 // Assumes res is normalized and res < 2**(256 + 29*d + 31)
 // Guarantess res in normalized and res < 2 * prime * 2**(29*d)
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
-void bn_multiply_reduce_step(bignum512 *res, const bignum256 *prime,
+void bn_multiply_reduce_step(bignum512* res, const bignum256* prime,
                              uint32_t d) {
   // clang-format off
   // Computes res = res - (res // 2**(256 + BITS_PER_LIMB * d)) * prime * 2**(BITS_PER_LIMB * d)
@@ -704,7 +704,7 @@ void bn_multiply_reduce_step(bignum512 *res, const bignum256 *prime,
 // Assumes x in normalized and res < 2**519
 // Guarantees x is normalized and partly reduced modulo prime
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
-void bn_reduce(bignum512 *x, const bignum256 *prime) {
+void bn_reduce(bignum512* x, const bignum256* prime) {
   for (int i = BN_LIMBS - 1; i >= 0; i--) {
     // res < 2**(256 + 29*i + 31)
     // Proof:
@@ -723,7 +723,7 @@ void bn_reduce(bignum512 *x, const bignum256 *prime) {
 // Assumes k, x are normalized, k * x < 2**519
 // Guarantees x is normalized and partly reduced modulo prime
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
-void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime) {
+void bn_multiply(const bignum256* k, bignum256* x, const bignum256* prime) {
   bignum512 res = {0};
 
   bn_multiply_long(k, x, &res);
@@ -737,7 +737,7 @@ void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime) {
 // Assumes limbs of x except the last (the most significant) one are normalized
 // Assumes prime is normalized and 2^256 - 2^224 <= prime <= 2^256
 // Guarantees x is normalized and partly reduced modulo prime
-void bn_fast_mod(bignum256 *x, const bignum256 *prime) {
+void bn_fast_mod(bignum256* x, const bignum256* prime) {
   // Computes x = x - (x // 2**256) * prime
 
   // x < 2**((LIMBS - 1) * BITS_PER_LIMB + 32) == 2**264
@@ -835,8 +835,8 @@ void bn_fast_mod(bignum256 *x, const bignum256 *prime) {
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
 // The function doesn't have neither constant control flow nor constant memory
 //  access flow with regard to e
-void bn_power_mod(const bignum256 *x, const bignum256 *e,
-                  const bignum256 *prime, bignum256 *res) {
+void bn_power_mod(const bignum256* x, const bignum256* e,
+                  const bignum256* prime, bignum256* res) {
   // Uses iterative right-to-left exponentiation by squaring, see
   // https://en.wikipedia.org/wiki/Modular_exponentiation#Right-to-left_binary_method
 
@@ -881,7 +881,7 @@ void bn_power_mod(const bignum256 *x, const bignum256 *e,
 // Guarantees x is normalized and fully reduced modulo prime
 // The function doesn't have neither constant control flow nor constant memory
 //  access flow with regard to prime
-void bn_sqrt(bignum256 *x, const bignum256 *prime) {
+void bn_sqrt(bignum256* x, const bignum256* prime) {
   // Uses the Lagrange formula for the primes of the special form, see
   // http://en.wikipedia.org/wiki/Quadratic_residue#Prime_or_prime_power_modulus
   // If prime % 4 == 3, then sqrt(x) % prime == x**((prime+1)//4) % prime
@@ -934,7 +934,7 @@ uint32_t inverse_mod_power_two(uint32_t a, uint32_t n) {
 // Guarantees x is normalized
 // If x is partly reduced (fully reduced) modulo prime,
 //   guarantess x will be partly reduced (fully reduced) modulo prime
-void bn_divide_base(bignum256 *x, const bignum256 *prime) {
+void bn_divide_base(bignum256* x, const bignum256* prime) {
   // Uses an explicit formula for the modular inverse of power of two
   // (x / 2**n) % prime == (x + ((-x / prime) % 2**n) * prime) // 2**n
   // Proof:
@@ -1004,7 +1004,7 @@ void bn_divide_base(bignum256 *x, const bignum256 *prime) {
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
 // The function doesn't have neither constant control flow nor constant memory
 //   access flow with regard to prime
-static void bn_inverse_slow(bignum256 *x, const bignum256 *prime) {
+static void bn_inverse_slow(bignum256* x, const bignum256* prime) {
   // Uses formula 1/x % prime == x**(prime - 2) % prime
   // See https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
 
@@ -1124,7 +1124,7 @@ static void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
 // Assumes prime is odd, normalized, 2**256 - 2**224 <= prime <= 2**256
 // The function has constant control flow but not constant memory access flow
 //   with regard to prime and x
-static void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
+static void bn_inverse_fast(bignum256* x, const bignum256* prime) {
   // Custom constant time version of "The Almost Montgomery Inverse" from the
   // section 3 of "Constant Time Modular Inversion" by Joppe W. Bos
   // See http://www.joppebos.com/files/CTInversion.pdf
@@ -1190,7 +1190,7 @@ static void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
 // BN_INVERSE_FAST_TERNARY(c, t, f) = t if c else f
 // Very nasty hack, sorry for that
 #define BN_INVERSE_FAST_TERNARY(c, t, f) \
-  ((void *)(((c) & (uintptr_t)(t)) | (~(c) & (uintptr_t)(f))))
+  ((void*)(((c) & (uintptr_t)(t)) | (~(c) & (uintptr_t)(f))))
 
     bn_subtract(BN_INVERSE_FAST_TERNARY(b3, &u, &v),
                 BN_INVERSE_FAST_TERNARY(
@@ -1378,7 +1378,7 @@ static void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
 // Normalizes x
 // Assumes x < 2**261 == 2**(LIMBS * BITS_PER_LIMB)
 // Guarantees x is normalized
-void bn_normalize(bignum256 *x) {
+void bn_normalize(bignum256* x) {
   uint32_t acc = 0;
 
   for (int i = 0; i < BN_LIMBS; i++) {
@@ -1399,7 +1399,7 @@ void bn_normalize(bignum256 *x) {
 // Assumes x, y are normalized, x + y < 2**(LIMBS*BITS_PER_LIMB) == 2**261
 // Guarantees x is normalized
 // Works properly even if &x == &y
-void bn_add(bignum256 *x, const bignum256 *y) {
+void bn_add(bignum256* x, const bignum256* y) {
   uint32_t acc = 0;
   for (int i = 0; i < BN_LIMBS; i++) {
     acc += x->val[i] + y->val[i];
@@ -1429,7 +1429,7 @@ void bn_add(bignum256 *x, const bignum256 *y) {
 // Assumes x, y are normalized
 // Guarantees x is normalized and partly reduced modulo prime
 // Assumes prime is normalized and 2^256 - 2^224 <= prime <= 2^256
-void bn_addmod(bignum256 *x, const bignum256 *y, const bignum256 *prime) {
+void bn_addmod(bignum256* x, const bignum256* y, const bignum256* prime) {
   for (int i = 0; i < BN_LIMBS; i++) {
     x->val[i] += y->val[i];
     // x[i] doesn't overflow 32 bits
@@ -1447,7 +1447,7 @@ void bn_addmod(bignum256 *x, const bignum256 *y, const bignum256 *prime) {
 // Assumes y <= 2**32 - 2**29 == 2**32 - 2**BITS_PER_LIMB and
 //   x + y < 2**261 == 2**(LIMBS * BITS_PER_LIMB)
 // Guarantees x is normalized
-void bn_addi(bignum256 *x, uint32_t y) {
+void bn_addi(bignum256* x, uint32_t y) {
   // assert(y <= 3758096384); // assert y <= 2**32 - 2**29
   uint32_t acc = y;
 
@@ -1488,7 +1488,7 @@ void bn_addi(bignum256 *x, uint32_t y) {
 // If x is fully reduced modulo prime,
 //   guarantess x will be partly reduced modulo prime
 // Assumes prime is nonzero and normalized
-void bn_subi(bignum256 *x, uint32_t y, const bignum256 *prime) {
+void bn_subi(bignum256* x, uint32_t y, const bignum256* prime) {
   assert(y < prime->val[0]);
 
   // x = x + prime - y
@@ -1525,8 +1525,8 @@ void bn_subi(bignum256 *x, uint32_t y, const bignum256 *prime) {
 // Assumes x + 2 * prime - y < 2**261 == 2**(BITS_PER_LIMB * LIMBS)
 // Guarantees res is normalized
 // Assumes prime is nonzero and normalized
-void bn_subtractmod(const bignum256 *x, const bignum256 *y, bignum256 *res,
-                    const bignum256 *prime) {
+void bn_subtractmod(const bignum256* x, const bignum256* y, bignum256* res,
+                    const bignum256* prime) {
   // res = x + (2 * prime - y)
 
   uint32_t acc = 1;
@@ -1578,7 +1578,7 @@ void bn_subtractmod(const bignum256 *x, const bignum256 *y, bignum256 *res,
 // Guarantees res is normalized
 // Works properly even if &x == &y or &x == &res or &y == &res or
 //   &x == &y == &res
-void bn_subtract(const bignum256 *x, const bignum256 *y, bignum256 *res) {
+void bn_subtract(const bignum256* x, const bignum256* y, bignum256* res) {
   uint32_t acc = 1;
   for (int i = 0; i < BN_LIMBS; i++) {
     acc += (BN_BASE - 1) + x->val[i] - y->val[i];

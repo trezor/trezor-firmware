@@ -24,7 +24,7 @@
 #define FLASH_OTP_LOCK_BASE 0x1FFF7A00U
 
 bool flash_otp_is_locked(uint8_t block) {
-  return 0x00 == *(volatile uint8_t *)(FLASH_OTP_LOCK_BASE + block);
+  return 0x00 == *(volatile uint8_t*)(FLASH_OTP_LOCK_BASE + block);
 }
 
 bool flash_otp_lock(uint8_t block) {
@@ -37,20 +37,20 @@ bool flash_otp_lock(uint8_t block) {
   return true;
 }
 
-bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t *data,
+bool flash_otp_read(uint8_t block, uint8_t offset, uint8_t* data,
                     uint8_t datalen) {
   if (block >= FLASH_OTP_NUM_BLOCKS ||
       offset + datalen > FLASH_OTP_BLOCK_SIZE) {
     return false;
   }
   for (uint8_t i = 0; i < datalen; i++) {
-    data[i] = *(volatile uint8_t *)(FLASH_OTP_BASE +
-                                    block * FLASH_OTP_BLOCK_SIZE + offset + i);
+    data[i] = *(volatile uint8_t*)(FLASH_OTP_BASE +
+                                   block * FLASH_OTP_BLOCK_SIZE + offset + i);
   }
   return true;
 }
 
-bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t *data,
+bool flash_otp_write(uint8_t block, uint8_t offset, const uint8_t* data,
                      uint8_t datalen) {
   if (block >= FLASH_OTP_NUM_BLOCKS ||
       offset + datalen > FLASH_OTP_BLOCK_SIZE) {

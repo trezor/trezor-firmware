@@ -27,8 +27,8 @@
 
 #ifndef KERNEL_MODE
 
-static inline uint32_t __attribute__((no_stack_protector))
-syscall_invoke0(uint32_t syscall) {
+static inline uint32_t __attribute__((no_stack_protector)) syscall_invoke0(
+    uint32_t syscall) {
   register uint32_t ret __asm__("r0");
   register uint32_t r6 __asm__("r6") = syscall;
 
@@ -54,8 +54,8 @@ syscall_invoke0_ret64(uint32_t syscall) {
   return ((uint64_t)ret_hi << 32) | ret_lo;
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-syscall_invoke1(uint32_t arg1, uint32_t syscall) {
+static inline uint32_t __attribute__((no_stack_protector)) syscall_invoke1(
+    uint32_t arg1, uint32_t syscall) {
   register uint32_t ret __asm__("r0") = arg1;
   register uint32_t r6 __asm__("r6") = syscall;
 
@@ -66,8 +66,8 @@ syscall_invoke1(uint32_t arg1, uint32_t syscall) {
   return ret;
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-syscall_invoke2(uint32_t arg1, uint32_t arg2, uint32_t syscall) {
+static inline uint32_t __attribute__((no_stack_protector)) syscall_invoke2(
+    uint32_t arg1, uint32_t arg2, uint32_t syscall) {
   register uint32_t ret __asm__("r0") = arg1;
   register uint32_t r1 __asm__("r1") = arg2;
   register uint32_t r6 __asm__("r6") = syscall;
@@ -94,8 +94,8 @@ syscall_invoke2_ret64(uint32_t arg1, uint32_t arg2, uint32_t syscall) {
   return ((uint64_t)ret_hi << 32) | ret_lo;
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-syscall_invoke3(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t syscall) {
+static inline uint32_t __attribute__((no_stack_protector)) syscall_invoke3(
+    uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t syscall) {
   register uint32_t ret __asm__("r0") = arg1;
   register uint32_t r1 __asm__("r1") = arg2;
   register uint32_t r2 __asm__("r2") = arg3;
@@ -110,9 +110,9 @@ syscall_invoke3(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t syscall) {
   return ret;
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-syscall_invoke4(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
-                uint32_t syscall) {
+static inline uint32_t __attribute__((no_stack_protector)) syscall_invoke4(
+    uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
+    uint32_t syscall) {
   register uint32_t ret __asm__("r0") = arg1;
   register uint32_t r1 __asm__("r1") = arg2;
   register uint32_t r2 __asm__("r2") = arg3;
@@ -128,9 +128,9 @@ syscall_invoke4(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
   return ret;
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-syscall_invoke5(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
-                uint32_t arg5, uint32_t syscall) {
+static inline uint32_t __attribute__((no_stack_protector)) syscall_invoke5(
+    uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4, uint32_t arg5,
+    uint32_t syscall) {
   register uint32_t ret __asm__("r0") = arg1;
   register uint32_t r1 __asm__("r1") = arg2;
   register uint32_t r2 __asm__("r2") = arg3;
@@ -147,9 +147,9 @@ syscall_invoke5(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
   return ret;
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-syscall_invoke6(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
-                uint32_t arg5, uint32_t arg6, uint32_t syscall) {
+static inline uint32_t __attribute__((no_stack_protector)) syscall_invoke6(
+    uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4, uint32_t arg5,
+    uint32_t arg6, uint32_t syscall) {
   register uint32_t ret __asm__("r0") = arg1;
   register uint32_t r1 __asm__("r1") = arg2;
   register uint32_t r2 __asm__("r2") = arg3;

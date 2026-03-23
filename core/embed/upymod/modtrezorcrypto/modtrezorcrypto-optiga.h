@@ -54,7 +54,7 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index) {
 
   vstr_t cert = {0};
   vstr_init_len(&cert, cert_size);
-  if (!optiga_read_cert(idx, (uint8_t *)cert.buf, cert.alloc, &cert_size)) {
+  if (!optiga_read_cert(idx, (uint8_t*)cert.buf, cert.alloc, &cert_size)) {
     vstr_clear(&cert);
     mp_raise_msg(&mp_type_OptigaError,
                  MP_ERROR_TEXT("Failed to read certificate."));
@@ -91,7 +91,7 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
   vstr_init_len(&sig, MAX_DER_SIGNATURE_SIZE);
   size_t sig_size = 0;
   optiga_sign_result ret =
-      optiga_sign(idx, (const uint8_t *)dig.buf, dig.len, ((uint8_t *)sig.buf),
+      optiga_sign(idx, (const uint8_t*)dig.buf, dig.len, ((uint8_t*)sig.buf),
                   sig.alloc, &sig_size);
   if (ret != OPTIGA_SIGN_SUCCESS) {
     vstr_clear(&sig);
@@ -162,7 +162,7 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_optiga_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_optiga_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_optiga_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_optiga_globals,
 };
 
 #endif

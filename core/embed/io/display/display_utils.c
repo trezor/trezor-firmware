@@ -49,14 +49,14 @@ typedef struct {
 
 static display_recording_t g_display_recording = {0};
 
-void display_record_start(uint8_t *target_dir, size_t target_dir_len,
+void display_record_start(uint8_t* target_dir, size_t target_dir_len,
                           int refresh_index) {
-  display_recording_t *rec = &g_display_recording;
+  display_recording_t* rec = &g_display_recording;
 
   rec->recording = true;
 
-  if (strlen((char *)rec->target_directory) != strlen((char *)target_dir) ||
-      strncmp((char *)target_dir, (char *)rec->target_directory,
+  if (strlen((char*)rec->target_directory) != strlen((char*)target_dir) ||
+      strncmp((char*)target_dir, (char*)rec->target_directory,
               target_dir_len) != 0) {
     // If the target directory is not set, we assume the recording is not
     // started yet.
@@ -70,19 +70,19 @@ void display_record_start(uint8_t *target_dir, size_t target_dir_len,
 }
 
 void display_record_stop(void) {
-  display_recording_t *rec = &g_display_recording;
+  display_recording_t* rec = &g_display_recording;
   rec->recording = false;
   display_clear_save();
 }
 
 bool display_is_recording(void) {
-  display_recording_t *rec = &g_display_recording;
+  display_recording_t* rec = &g_display_recording;
 
   return rec->recording;
 }
 
 void display_record_screen(void) {
-  display_recording_t *rec = &g_display_recording;
+  display_recording_t* rec = &g_display_recording;
 
   if (!rec->recording) {
     return;
@@ -96,7 +96,7 @@ void display_record_screen(void) {
 }
 
 #else
-void display_record_start(uint8_t *target_dir, size_t target_dir_len,
+void display_record_start(uint8_t* target_dir, size_t target_dir_len,
                           int refresh_index) {}
 void display_record_stop(void) {}
 bool display_is_recording(void) { return false; }

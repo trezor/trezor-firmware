@@ -45,7 +45,7 @@ void trz_comm_init(void) {
   uart_power_down();
 }
 
-bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t *data,
+bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t* data,
                        uint32_t len) {
   if (atomic_get(&g_suspended_flag) != 0 && service != NRF_SERVICE_BLE &&
       service != NRF_SERVICE_MANAGEMENT) {
@@ -60,8 +60,8 @@ bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t *data,
   return false;
 }
 
-void process_rx_msg(uint8_t service_id, uint8_t *data, uint32_t len) {
-  trz_packet_t *buf = k_malloc(sizeof(*buf));
+void process_rx_msg(uint8_t service_id, uint8_t* data, uint32_t len) {
+  trz_packet_t* buf = k_malloc(sizeof(*buf));
 
   atomic_set(&g_suspended_flag, 0);
 
@@ -93,7 +93,7 @@ void process_rx_msg(uint8_t service_id, uint8_t *data, uint32_t len) {
   }
 }
 
-trz_packet_t *trz_comm_poll_data(nrf_service_id_t service) {
+trz_packet_t* trz_comm_poll_data(nrf_service_id_t service) {
   switch (service) {
     case NRF_SERVICE_BLE:
       return k_fifo_get(&fifo_uart_rx_ble, K_FOREVER);

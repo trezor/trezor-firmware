@@ -43,11 +43,11 @@ const uint32_t sha256_initial_taptweak_state[8] = {
 // private_key_bytes has 32 bytes
 // public_key_bytes has 32 bytes
 // returns 0 on success
-int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
-                              uint8_t *public_key_bytes) {
+int zkp_bip340_get_public_key(const uint8_t* private_key_bytes,
+                              uint8_t* public_key_bytes) {
   int result = 0;
 
-  secp256k1_context *context_writable = NULL;
+  secp256k1_context* context_writable = NULL;
   if (result == 0) {
     context_writable = zkp_context_acquire_writable();
     if (context_writable == NULL) {
@@ -74,7 +74,7 @@ int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
   }
 
   secp256k1_xonly_pubkey xonly_pubkey = {0};
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
 
   if (result == 0) {
     if (secp256k1_xonly_pubkey_from_pubkey(context_read_only, &xonly_pubkey,
@@ -103,12 +103,12 @@ int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
 // signature_bytes has 64 bytes
 // auxiliary_data has 32 bytes or is NULL (32 zero bytes are used)
 // returns 0 on success
-int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
-                           const uint8_t *digest, uint8_t *signature_bytes,
-                           uint8_t *auxiliary_data) {
+int zkp_bip340_sign_digest(const uint8_t* private_key_bytes,
+                           const uint8_t* digest, uint8_t* signature_bytes,
+                           uint8_t* auxiliary_data) {
   int result = 0;
 
-  secp256k1_context *context_writable = NULL;
+  secp256k1_context* context_writable = NULL;
   if (result == 0) {
     context_writable = zkp_context_acquire_writable();
     if (context_writable == NULL) {
@@ -157,13 +157,13 @@ int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
 // signature_bytes has 64 bytes
 // digest has 32 bytes
 // returns 0 if verification succeeded
-int zkp_bip340_verify_digest(const uint8_t *public_key_bytes,
-                             const uint8_t *signature_bytes,
-                             const uint8_t *digest) {
+int zkp_bip340_verify_digest(const uint8_t* public_key_bytes,
+                             const uint8_t* signature_bytes,
+                             const uint8_t* digest) {
   int result = 0;
 
   secp256k1_xonly_pubkey xonly_pubkey = {0};
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
 
   if (result == 0) {
     if (secp256k1_xonly_pubkey_parse(context_read_only, &xonly_pubkey,
@@ -187,11 +187,11 @@ int zkp_bip340_verify_digest(const uint8_t *public_key_bytes,
 // BIP340 Schnorr public key verification
 // public_key_bytes has 32 bytes
 // returns 0 if verification succeeded
-int zkp_bip340_verify_publickey(const uint8_t *public_key_bytes) {
+int zkp_bip340_verify_publickey(const uint8_t* public_key_bytes) {
   int result = 0;
 
   secp256k1_xonly_pubkey xonly_pubkey = {0};
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
 
   if (result == 0) {
     if (secp256k1_xonly_pubkey_parse(context_read_only, &xonly_pubkey,
@@ -210,9 +210,9 @@ int zkp_bip340_verify_publickey(const uint8_t *public_key_bytes) {
 // root_hash has 32 bytes or is empty (NULL)
 // output_public_key has 32 bytes
 // returns 0 on success
-int zkp_bip340_tweak_public_key(const uint8_t *internal_public_key,
-                                const uint8_t *root_hash,
-                                uint8_t *output_public_key) {
+int zkp_bip340_tweak_public_key(const uint8_t* internal_public_key,
+                                const uint8_t* root_hash,
+                                uint8_t* output_public_key) {
   int result = 0;
 
   uint8_t tweak[SHA256_DIGEST_LENGTH] = {0};
@@ -226,7 +226,7 @@ int zkp_bip340_tweak_public_key(const uint8_t *internal_public_key,
     sha256_Final(&ctx, tweak);
   }
 
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
 
   secp256k1_xonly_pubkey internal_pubkey = {0};
   if (result == 0) {
@@ -275,12 +275,12 @@ int zkp_bip340_tweak_public_key(const uint8_t *internal_public_key,
 // root_hash has 32 bytes or is empty (NULL)
 // output_private_key has 32 bytes
 // returns 0 on success
-int zkp_bip340_tweak_private_key(const uint8_t *internal_private_key,
-                                 const uint8_t *root_hash,
-                                 uint8_t *output_private_key) {
+int zkp_bip340_tweak_private_key(const uint8_t* internal_private_key,
+                                 const uint8_t* root_hash,
+                                 uint8_t* output_private_key) {
   int result = 0;
 
-  secp256k1_context *context_writable = NULL;
+  secp256k1_context* context_writable = NULL;
   if (result == 0) {
     context_writable = zkp_context_acquire_writable();
     if (context_writable == NULL) {
@@ -306,7 +306,7 @@ int zkp_bip340_tweak_private_key(const uint8_t *internal_private_key,
     context_writable = NULL;
   }
 
-  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  const secp256k1_context* context_read_only = zkp_context_get_read_only();
 
   secp256k1_xonly_pubkey internal_xonly_pubkey = {0};
   if (result == 0) {

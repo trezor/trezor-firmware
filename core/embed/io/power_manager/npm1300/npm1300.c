@@ -737,10 +737,11 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
 }
 
 // I2C operation for writing constant value to the npm1300 register
-#define NPM_WRITE_CONST(reg, value)                                    \
-  {                                                                    \
-    .flags = I2C_FLAG_TX | I2C_FLAG_EMBED | I2C_FLAG_START, .size = 3, \
-    .data = {(reg) >> 8, (reg) & 0xFF, (value)},                       \
+#define NPM_WRITE_CONST(reg, value)                           \
+  {                                                           \
+      .flags = I2C_FLAG_TX | I2C_FLAG_EMBED | I2C_FLAG_START, \
+      .size = 3,                                              \
+      .data = {(reg) >> 8, (reg) & 0xFF, (value)},            \
   }
 
 // I2C operations for the value of specified uint8_t field

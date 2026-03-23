@@ -46,7 +46,7 @@ void ble_management_send_status_event(void) {
       connection_is_connected(), advertising_is_advertising(),
       advertising_is_advertising_whitelist(), bonds_get_count());
 
-  struct bt_conn *conn = connection_get_current();
+  struct bt_conn* conn = connection_get_current();
   bool connected = conn != NULL;
 
   event_status_msg_t msg = {0};
@@ -75,7 +75,7 @@ void ble_management_send_status_event(void) {
 
   msg.power_level = ble_get_tx_power();
 
-  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&msg, sizeof(msg));
+  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t*)&msg, sizeof(msg));
 }
 
 static void management_send_success_event(void) {
@@ -100,7 +100,7 @@ void ble_management_send_pairing_cancelled_event(void) {
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
-void ble_management_send_pairing_request_event(uint8_t *data, uint16_t len) {
+void ble_management_send_pairing_request_event(uint8_t* data, uint16_t len) {
   uint8_t tx_data[7] = {0};
 
   tx_data[0] = INTERNAL_EVENT_PAIRING_REQUEST;
@@ -122,7 +122,7 @@ void ble_management_send_pairing_completed(void) {
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
-static void management_send_mac(uint8_t *mac) {
+static void management_send_mac(uint8_t* mac) {
   uint8_t tx_data[1 + BT_ADDR_SIZE] = {0};
   tx_data[0] = INTERNAL_EVENT_MAC;
   memcpy(&tx_data[1], mac, BT_ADDR_SIZE);
@@ -143,7 +143,7 @@ static void management_send_bonds(void) {
            BT_ADDR_SIZE);
   }
 
-  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)tx_data,
+  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t*)tx_data,
                     sizeof(tx_data));
 }
 
@@ -151,7 +151,7 @@ static void management_update_battery(uint8_t level) {
   bt_bas_set_battery_level(level);
 }
 
-static void process_command(uint8_t *data, uint16_t len) {
+static void process_command(uint8_t* data, uint16_t len) {
   uint8_t cmd = data[0];
   bool success = true;
   bool send_response = true;
@@ -161,7 +161,7 @@ static void process_command(uint8_t *data, uint16_t len) {
       ble_management_send_status_event();
       break;
     case INTERNAL_CMD_ADVERTISING_ON: {
-      cmd_advertising_on_t *cmd = (cmd_advertising_on_t *)data;
+      cmd_advertising_on_t* cmd = (cmd_advertising_on_t*)data;
 
       int name_len = strnlen(cmd->name, BLE_ADV_NAME_LEN);
 
@@ -171,7 +171,7 @@ static void process_command(uint8_t *data, uint16_t len) {
 
       advertising_start(cmd->flags.whitelist != 0, cmd->flags.user_disconnect,
                         cmd->color, cmd->device_code, cmd->static_addr,
-                        (char *)cmd->name, name_len);
+                        (char*)cmd->name, name_len);
     } break;
     case INTERNAL_CMD_ADVERTISING_OFF:
       advertising_stop();
@@ -185,7 +185,7 @@ static void process_command(uint8_t *data, uint16_t len) {
       // pb_msg_ack();
       break;
     case INTERNAL_CMD_ALLOW_PAIRING: {
-      cmd_allow_pairing_t *cmd = (cmd_allow_pairing_t *)data;
+      cmd_allow_pairing_t* cmd = (cmd_allow_pairing_t*)data;
 
       pairing_num_comp_reply(true, cmd->code);
     } break;
@@ -220,7 +220,7 @@ static void process_command(uint8_t *data, uint16_t len) {
       connection_set_low_speed();
     } break;
     case INTERNAL_CMD_NOTIFY: {
-      struct bt_conn *conn = connection_get_current();
+      struct bt_conn* conn = connection_get_current();
       if (conn != NULL) {
         service_notify(conn, &data[1], len - 1);
       }
@@ -254,7 +254,7 @@ void ble_management_thread(void) {
   k_sem_take(&ble_management_ok, K_FOREVER);
 
   for (;;) {
-    trz_packet_t *buf = trz_comm_poll_data(NRF_SERVICE_BLE_MANAGER);
+    trz_packet_t* buf = trz_comm_poll_data(NRF_SERVICE_BLE_MANAGER);
     process_command(buf->data, buf->len);
     k_free(buf);
   }

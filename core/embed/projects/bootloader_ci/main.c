@@ -77,8 +77,8 @@ static void usb_init_all(secbool usb21_landing) {
   ensure(usb_start(&params), NULL);
 }
 
-static secbool bootloader_usb_loop(const vendor_header *const vhdr,
-                                   const image_header *const hdr) {
+static secbool bootloader_usb_loop(const vendor_header* const vhdr,
+                                   const image_header* const hdr) {
   // if both are NULL, we don't have a firmware installed
   // let's show a webusb landing page in this case
   usb_init_all((vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
@@ -149,7 +149,7 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
   }
 }
 
-static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
+static secbool check_vendor_header_lock(const vendor_header* const vhdr) {
   uint8_t lock[FLASH_OTP_BLOCK_SIZE];
   ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK, 0, lock,
                         FLASH_OTP_BLOCK_SIZE),
@@ -186,12 +186,12 @@ int main(void) {
   ensure_bootloader_min_version();
 #endif
 
-  const image_header *hdr = NULL;
+  const image_header* hdr = NULL;
   vendor_header vhdr;
   // detect whether the device contains a valid firmware
   secbool firmware_present = sectrue;
 
-  if (sectrue != read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr)) {
+  if (sectrue != read_vendor_header((const uint8_t*)FIRMWARE_START, &vhdr)) {
     firmware_present = secfalse;
   }
 
@@ -204,9 +204,9 @@ int main(void) {
   }
 
   if (sectrue == firmware_present) {
-    hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
+    hdr = read_image_header((const uint8_t*)(FIRMWARE_START + vhdr.hdrlen),
                             FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
-    if (hdr != (const image_header *)(FIRMWARE_START + vhdr.hdrlen)) {
+    if (hdr != (const image_header*)(FIRMWARE_START + vhdr.hdrlen)) {
       firmware_present = secfalse;
     }
   }
@@ -234,18 +234,18 @@ int main(void) {
     return 1;
   }
 
-  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr),
+  ensure(read_vendor_header((const uint8_t*)FIRMWARE_START, &vhdr),
          "invalid vendor header");
 
   ensure(check_vendor_header_keys(&vhdr), "invalid vendor header signature");
 
   ensure(check_vendor_header_lock(&vhdr), "unauthorized vendor keys");
 
-  hdr = read_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
+  hdr = read_image_header((const uint8_t*)(FIRMWARE_START + vhdr.hdrlen),
                           FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
-  ensure(hdr == (const image_header *)(FIRMWARE_START + vhdr.hdrlen) ? sectrue
-                                                                     : secfalse,
+  ensure(hdr == (const image_header*)(FIRMWARE_START + vhdr.hdrlen) ? sectrue
+                                                                    : secfalse,
          "invalid firmware header");
 
   ensure(check_image_model(hdr), "wrong firmware model");

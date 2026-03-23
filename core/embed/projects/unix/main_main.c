@@ -65,9 +65,9 @@
 
 #ifdef USE_TROPIC
 static uint16_t get_tropic_model_port(void) {
-  char *port_str = getenv("TROPIC_MODEL_PORT");
+  char* port_str = getenv("TROPIC_MODEL_PORT");
   if (port_str != NULL) {
-    char *endptr;
+    char* endptr;
     long port_long = strtol(port_str, &endptr, 10);
     if (*endptr != '\0' || port_long < 0 || port_long > 65535) {
       printf("FATAL: invalid TROPIC_MODEL_PORT\n");
@@ -114,17 +114,17 @@ static void drivers_init(void) {
 }
 
 // Throws MicroPython SystemExit exception in the context of the given task
-static void throw_exit_exception(systask_t *task, int code) {
+static void throw_exit_exception(systask_t* task, int code) {
   extern void coreapp_throw_exit_exception(int code);
   // Push call to the task
-  systask_push_call(task, (void *)coreapp_throw_exit_exception, code, 0, 0);
+  systask_push_call(task, (void*)coreapp_throw_exit_exception, code, 0, 0);
   // Yield to the task and throw the exception
   systask_yield_to(task);
   // We are back and the task should be terminated by now
 }
 
-static int sdl_event_filter(void *userdata, SDL_Event *event) {
-  applet_t *coreapp = (applet_t *)userdata;
+static int sdl_event_filter(void* userdata, SDL_Event* event) {
+  applet_t* coreapp = (applet_t*)userdata;
 
   switch (event->type) {
     case SDL_QUIT:
@@ -150,7 +150,7 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
 // Kernel task main loop
 //
 // Returns when the coreapp task is terminated
-static void kernel_loop(applet_t *coreapp) {
+static void kernel_loop(applet_t* coreapp) {
   do {
     sysevents_t awaited = {0};
     sysevents_t signalled = {0};
@@ -160,7 +160,7 @@ static void kernel_loop(applet_t *coreapp) {
   } while (applet_is_alive(coreapp));
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   system_init(&rsod_panic_handler);
 
 #if defined(USE_SECRET) && defined(LOCKABLE_BOOTLOADER)

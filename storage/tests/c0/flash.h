@@ -29,9 +29,9 @@
 secbool __wur flash_unlock(void);
 secbool __wur flash_lock(void);
 
-const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size);
+const void* flash_get_address(uint8_t sector, uint32_t offset, uint32_t size);
 
-secbool __wur flash_erase_sectors(const uint8_t *sectors, int len,
+secbool __wur flash_erase_sectors(const uint8_t* sectors, int len,
                                   void (*progress)(int pos, int len));
 static inline secbool flash_erase_sector(uint8_t sector) {
   return flash_erase_sectors(&sector, 1, NULL);

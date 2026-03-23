@@ -31,15 +31,15 @@ static boardloader_version_t boardloader_version = {0};
 
 const uint32_t get_board_name() { return board_name; }
 
-void get_boardloader_version(boardloader_version_t *version) {
+void get_boardloader_version(boardloader_version_t* version) {
   *version = boardloader_version;
 }
 
 void parse_boardloader_capabilities() {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOARDCAPS);
 
-  const uint8_t *pos = (const uint8_t *)BOARDCAPS_START;
-  const uint8_t *end = (const uint8_t *)(BOARDCAPS_START + BOARDCAPS_MAXSIZE);
+  const uint8_t* pos = (const uint8_t*)BOARDCAPS_START;
+  const uint8_t* end = (const uint8_t*)(BOARDCAPS_START + BOARDCAPS_MAXSIZE);
 
   if (memcmp(pos, CAPABILITIES_HEADER, 4) != 0) {
     mpu_restore(mpu_mode);
@@ -66,7 +66,7 @@ void parse_boardloader_capabilities() {
         if (length != sizeof(uint32_t)) {
           break;
         }
-        memcpy((uint8_t *)&board_name, pos, sizeof(uint32_t));
+        memcpy((uint8_t*)&board_name, pos, sizeof(uint32_t));
         break;
       case TAG_BOARDLOADER_VERSION:
         if (length != sizeof(boardloader_version)) {

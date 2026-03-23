@@ -22,13 +22,13 @@
 
 #include "rc4.h"
 
-static inline void rc4_swap(RC4_CTX *ctx, uint8_t i, uint8_t j) {
+static inline void rc4_swap(RC4_CTX* ctx, uint8_t i, uint8_t j) {
   uint8_t temp = ctx->S[i];
   ctx->S[i] = ctx->S[j];
   ctx->S[j] = temp;
 }
 
-void rc4_init(RC4_CTX *ctx, const uint8_t *key, size_t length) {
+void rc4_init(RC4_CTX* ctx, const uint8_t* key, size_t length) {
   ctx->i = 0;
   ctx->j = 0;
 
@@ -43,7 +43,7 @@ void rc4_init(RC4_CTX *ctx, const uint8_t *key, size_t length) {
   }
 }
 
-void rc4_encrypt(RC4_CTX *ctx, uint8_t *buffer, size_t length) {
+void rc4_encrypt(RC4_CTX* ctx, uint8_t* buffer, size_t length) {
   for (size_t idx = 0; idx < length; idx++) {
     ctx->i++;
     ctx->j += ctx->S[ctx->i];

@@ -54,36 +54,36 @@ static uint32_t data_total, data_left;
 static EthereumTxRequest msg_tx_request;
 static CONFIDENTIAL uint8_t privkey[32];
 static uint64_t chain_id;
-static const char *chain_suffix;
+static const char* chain_suffix;
 static bool eip1559;
 struct SHA3_CTX keccak_ctx = {0};
 
 static uint32_t signing_access_list_count;
 static EthereumAccessList signing_access_list[ACCESS_LIST_MAX_COUNT];
 _Static_assert(sizeof(signing_access_list) ==
-                   sizeof(((EthereumSignTxEIP1559 *)NULL)->access_list),
+                   sizeof(((EthereumSignTxEIP1559*)NULL)->access_list),
                "access_list buffer size mismatch");
 
 struct signing_params {
   bool pubkeyhash_set;
   uint8_t pubkeyhash[PUBKEYHASH_LEN];
   uint64_t chain_id;
-  const char *chain_suffix;
+  const char* chain_suffix;
 
   uint32_t data_length;
   uint32_t data_initial_chunk_size;
-  const uint8_t *data_initial_chunk_bytes;
+  const uint8_t* data_initial_chunk_bytes;
 
   bool has_to;
-  const char *to;
+  const char* to;
 
-  const EthereumTokenInfo *token;
+  const EthereumTokenInfo* token;
 
   uint32_t value_size;
-  const uint8_t *value_bytes;
+  const uint8_t* value_bytes;
 };
 
-static inline void hash_data(const uint8_t *buf, size_t size) {
+static inline void hash_data(const uint8_t* buf, size_t size) {
   sha3_Update(&keccak_ctx, buf, size);
 }
 
@@ -144,7 +144,7 @@ static void hash_rlp_list_length(uint32_t length) {
 /*
  * Push an RLP encoded length field and data to the hash buffer.
  */
-static void hash_rlp_field(const uint8_t *buf, size_t size) {
+static void hash_rlp_field(const uint8_t* buf, size_t size) {
   hash_rlp_length(size, buf[0]);
   hash_data(buf, size);
 }
@@ -207,7 +207,7 @@ static int rlp_calculate_number_length(uint64_t number) {
 }
 
 static uint32_t rlp_calculate_access_list_keys_length(
-    const EthereumAccessList_storage_keys_t *keys, uint32_t keys_count) {
+    const EthereumAccessList_storage_keys_t* keys, uint32_t keys_count) {
   uint32_t keys_length = 0;
   for (size_t i = 0; i < keys_count; i++) {
     keys_length += rlp_calculate_length(keys[i].size, keys[i].bytes[0]);
@@ -324,14 +324,14 @@ struct ethereum_amount {
 /* Format a 256 bit number (amount in wei) into a human readable format
  * using standard ethereum units.
  */
-static void ethereumFormatAmount(const bignum256 *amnt,
-                                 const EthereumTokenInfo *token, bool use_gwei,
-                                 struct ethereum_amount *result) {
+static void ethereumFormatAmount(const bignum256* amnt,
+                                 const EthereumTokenInfo* token, bool use_gwei,
+                                 struct ethereum_amount* result) {
   bignum256 bn1e9 = {0};
   bn_read_uint32(1000000000, &bn1e9);
 
   int decimals = 18;
-  const char *symbol = chain_suffix;
+  const char* symbol = chain_suffix;
   if (token) {
     symbol = token->symbol;
     decimals = token->decimals;
@@ -349,16 +349,16 @@ static void ethereumFormatAmount(const bignum256 *amnt,
   strlcpy(result->unit, symbol, sizeof(result->unit));
 }
 
-static void parse_bignum256(const uint8_t *value, uint32_t value_len,
-                            bignum256 *result) {
+static void parse_bignum256(const uint8_t* value, uint32_t value_len,
+                            bignum256* result) {
   uint8_t padded[32] = {0};
   memcpy(padded + (32 - value_len), value, value_len);
   bn_read_be(padded, result);
 }
 
-static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
-                                    const uint8_t *value, uint32_t value_len,
-                                    const EthereumTokenInfo *token) {
+static void layoutEthereumConfirmTx(const uint8_t* to, uint32_t to_len,
+                                    const uint8_t* value, uint32_t value_len,
+                                    const EthereumTokenInfo* token) {
   bignum256 val = {0};
   parse_bignum256(value, value_len, &val);
 
@@ -418,7 +418,7 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
 
 // Format number in decimal, going backwards from `ptr`.
 // The caller must allocate enough memory for the resulting string.
-static inline char *_format_decimal_backwards(char *ptr, uint32_t number) {
+static inline char* _format_decimal_backwards(char* ptr, uint32_t number) {
   while (number > 0) {
     *(--ptr) = '0' + number % 10;
     number = number / 10;
@@ -428,7 +428,7 @@ static inline char *_format_decimal_backwards(char *ptr, uint32_t number) {
 
 // Prepend null-terminated string, going backwards from `ptr`.
 // The caller must allocate enough memory for the resulting string.
-static inline char *_prepend_string(char *ptr, const char *str) {
+static inline char* _prepend_string(char* ptr, const char* str) {
   size_t len = strlen(str);
   while (len > 0) {
     *(--ptr) = str[--len];
@@ -436,7 +436,7 @@ static inline char *_prepend_string(char *ptr, const char *str) {
   return ptr;
 }
 
-static uint32_t layoutEthereumData(const uint8_t *data, uint32_t len,
+static uint32_t layoutEthereumData(const uint8_t* data, uint32_t len,
                                    uint32_t total_len, uint32_t offset) {
   char hexdata[3][17] = {0};
   char summary[32] = "... 4294967296/4294967296 bytes";
@@ -453,7 +453,7 @@ static uint32_t layoutEthereumData(const uint8_t *data, uint32_t len,
   offset += printed;
 
   // start from the terminating '\0'
-  char *ptr = summary + sizeof(summary) - 1;
+  char* ptr = summary + sizeof(summary) - 1;
 
   ptr = _prepend_string(ptr, " bytes");
   ptr = _format_decimal_backwards(ptr, total_len);
@@ -470,9 +470,9 @@ static uint32_t layoutEthereumData(const uint8_t *data, uint32_t len,
   return printed;
 }
 
-static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
-                              const uint8_t *gas_price, uint32_t gas_price_len,
-                              const uint8_t *gas_limit, uint32_t gas_limit_len,
+static void layoutEthereumFee(const uint8_t* value, uint32_t value_len,
+                              const uint8_t* gas_price, uint32_t gas_price_len,
+                              const uint8_t* gas_limit, uint32_t gas_limit_len,
                               bool is_token) {
   bignum256 val = {0}, gas = {0};
 
@@ -504,10 +504,10 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
                     _line2, NULL);
 }
 
-static void layoutEthereumFeeEIP1559(const char *description,
-                                     const uint8_t *amount_bytes,
+static void layoutEthereumFeeEIP1559(const char* description,
+                                     const uint8_t* amount_bytes,
                                      uint32_t amount_len,
-                                     const uint8_t *multiplier_bytes,
+                                     const uint8_t* multiplier_bytes,
                                      uint32_t multiplier_len, bool use_gwei) {
   bignum256 amount_val = {0};
   char amount_str[80] = {0};
@@ -539,7 +539,7 @@ static void layoutEthereumFeeEIP1559(const char *description,
  * - data (0 ..)
  */
 
-static bool ethereum_signing_init_common(struct signing_params *params) {
+static bool ethereum_signing_init_common(struct signing_params* params) {
   ethereum_signing = true;
   sha3_256_Init(&keccak_ctx);
 
@@ -599,8 +599,8 @@ static bool ethereum_signing_init_common(struct signing_params *params) {
   return true;
 }
 
-static void ethereum_signing_handle_erc20(struct signing_params *params,
-                                          const EthereumTokenInfo *token) {
+static void ethereum_signing_handle_erc20(struct signing_params* params,
+                                          const EthereumTokenInfo* token) {
   if (params->has_to && ethereum_parse(params->to, params->pubkeyhash)) {
     params->pubkeyhash_set = true;
   } else {
@@ -649,13 +649,13 @@ enum staking_operation_t {
 
 // Returns `true` if it is a staking-related transaction and updates `op` with
 // its specific operation.
-static bool isEthereumStakingTx(const struct signing_params *params,
-                                enum staking_operation_t *op) {
+static bool isEthereumStakingTx(const struct signing_params* params,
+                                enum staking_operation_t* op) {
   if (params->data_initial_chunk_size < SC_FUNC_SIG_BYTES) {
     return false;
   }
-  const uint8_t *pubkeyhash = params->pubkeyhash;
-  const uint8_t *data_chunk = params->data_initial_chunk_bytes;
+  const uint8_t* pubkeyhash = params->pubkeyhash;
+  const uint8_t* data_chunk = params->data_initial_chunk_bytes;
   bool is_address_pool =
       ((memcmp(pubkeyhash, POOL_HOODI_TESTNET, PUBKEYHASH_LEN) == 0) ||
        (memcmp(pubkeyhash, POOL_MAINNET, PUBKEYHASH_LEN) == 0));
@@ -681,16 +681,16 @@ static bool isEthereumStakingTx(const struct signing_params *params,
   return false;
 }
 
-static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
+static bool layoutEthereumConfirmStakingTx(const struct signing_params* params,
                                            enum staking_operation_t op) {
   uint32_t args_size = params->data_initial_chunk_size - SC_FUNC_SIG_BYTES;
-  const uint8_t *args_bytes =
+  const uint8_t* args_bytes =
       params->data_initial_chunk_bytes + SC_FUNC_SIG_BYTES;
 
   bignum256 value = {0};
   struct ethereum_amount amount = {.value = "", .unit = ""};
-  const char *_line1 = NULL;
-  const char *_line2 = NULL;
+  const char* _line1 = NULL;
+  const char* _line2 = NULL;
   char _line3[32] = {0};
   switch (op) {
     case ETH_STAKING_STAKE:
@@ -738,7 +738,7 @@ static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
 static const size_t MAX_DATA_PAGES = 5;
 
 static bool ethereum_signing_confirm_common(
-    const struct signing_params *params) {
+    const struct signing_params* params) {
   enum staking_operation_t staking_op;
   if (isEthereumStakingTx(params, &staking_op)) {
     if (!layoutEthereumConfirmStakingTx(params, staking_op)) {
@@ -770,7 +770,7 @@ static bool ethereum_signing_confirm_common(
   }
 
   if (params->token == NULL && data_total > 0) {
-    const uint8_t *chunk = params->data_initial_chunk_bytes;
+    const uint8_t* chunk = params->data_initial_chunk_bytes;
     uint32_t chunk_len = params->data_initial_chunk_size;
     uint32_t offset = 0;
 
@@ -800,8 +800,8 @@ static bool ethereum_signing_confirm_common(
   return true;
 }
 
-void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
-                           const EthereumDefinitionsDecoded *defs) {
+void ethereum_signing_init(const EthereumSignTx* msg, const HDNode* node,
+                           const EthereumDefinitionsDecoded* defs) {
   struct signing_params params = {
       .chain_id = msg->chain_id,
       .chain_suffix = defs->network->symbol,
@@ -905,9 +905,9 @@ void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
   }
 }
 
-void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
-                                   const HDNode *node,
-                                   const EthereumDefinitionsDecoded *defs) {
+void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559* msg,
+                                   const HDNode* node,
+                                   const EthereumDefinitionsDecoded* defs) {
   struct signing_params params = {
       .chain_id = msg->chain_id,
       .chain_suffix = defs->network->symbol,
@@ -1026,7 +1026,7 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
   }
 }
 
-void ethereum_signing_txack(const EthereumTxAck *tx) {
+void ethereum_signing_txack(const EthereumTxAck* tx) {
   if (!ethereum_signing) {
     fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
                     _("Not in Ethereum signing mode"));
@@ -1066,7 +1066,7 @@ void ethereum_signing_abort(void) {
   }
 }
 
-static void ethereum_message_hash(const uint8_t *message, size_t message_len,
+static void ethereum_message_hash(const uint8_t* message, size_t message_len,
                                   uint8_t hash[32]) {
   struct SHA3_CTX ctx = {0};
   sha3_256_Init(&ctx);
@@ -1114,8 +1114,8 @@ static void ethereum_message_hash(const uint8_t *message, size_t message_len,
   keccak_Final(&ctx, hash);
 }
 
-void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
-                           EthereumMessageSignature *resp) {
+void ethereum_message_sign(const EthereumSignMessage* msg, const HDNode* node,
+                           EthereumMessageSignature* resp) {
   uint8_t hash[32] = {0};
   ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
 
@@ -1131,7 +1131,7 @@ void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
   msg_write(MessageType_MessageType_EthereumMessageSignature, resp);
 }
 
-int ethereum_message_verify(const EthereumVerifyMessage *msg) {
+int ethereum_message_verify(const EthereumVerifyMessage* msg) {
   if (msg->signature.size != 65) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Malformed signature"));
     return 1;
@@ -1186,7 +1186,7 @@ static void ethereum_typed_hash(const uint8_t domain_separator_hash[32],
                                 bool has_message_hash, uint8_t hash[32]) {
   struct SHA3_CTX ctx = {0};
   sha3_256_Init(&ctx);
-  sha3_Update(&ctx, (const uint8_t *)"\x19\x01", 2);
+  sha3_Update(&ctx, (const uint8_t*)"\x19\x01", 2);
   sha3_Update(&ctx, domain_separator_hash, 32);
   if (has_message_hash) {
     sha3_Update(&ctx, message_hash, 32);
@@ -1194,9 +1194,9 @@ static void ethereum_typed_hash(const uint8_t domain_separator_hash[32],
   keccak_Final(&ctx, hash);
 }
 
-void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
-                              const HDNode *node,
-                              EthereumTypedDataSignature *resp) {
+void ethereum_typed_hash_sign(const EthereumSignTypedHash* msg,
+                              const HDNode* node,
+                              EthereumTypedDataSignature* resp) {
   uint8_t hash[32] = {0};
 
   ethereum_typed_hash(msg->domain_separator_hash.bytes, msg->message_hash.bytes,
@@ -1214,7 +1214,7 @@ void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
   msg_write(MessageType_MessageType_EthereumTypedDataSignature, resp);
 }
 
-bool ethereum_parse(const char *address, uint8_t pubkeyhash[PUBKEYHASH_LEN]) {
+bool ethereum_parse(const char* address, uint8_t pubkeyhash[PUBKEYHASH_LEN]) {
   memzero(pubkeyhash, PUBKEYHASH_LEN);
   size_t len = strlen(address);
   if (len == 40) {
@@ -1243,7 +1243,7 @@ bool ethereum_parse(const char *address, uint8_t pubkeyhash[PUBKEYHASH_LEN]) {
 }
 
 static bool check_ethereum_slip44_unhardened(
-    uint32_t slip44, const EthereumNetworkInfo *network) {
+    uint32_t slip44, const EthereumNetworkInfo* network) {
   if (is_unknown_network(network)) {
     // Allow Ethereum or testnet paths for unknown networks.
     return slip44 == 60 || slip44 == 1;
@@ -1257,9 +1257,9 @@ static bool check_ethereum_slip44_unhardened(
 }
 
 static bool ethereum_path_check_bip44(uint32_t address_n_count,
-                                      const uint32_t *address_n,
+                                      const uint32_t* address_n,
                                       bool pubkey_export,
-                                      const EthereumNetworkInfo *network) {
+                                      const EthereumNetworkInfo* network) {
   bool valid = (address_n_count >= 3);
   valid = valid && (address_n[0] == (PATH_HARDENED | 44));
   valid = valid && (address_n[1] & PATH_HARDENED);
@@ -1304,8 +1304,8 @@ static bool ethereum_path_check_bip44(uint32_t address_n_count,
 }
 
 static bool ethereum_path_check_casa45(uint32_t address_n_count,
-                                       const uint32_t *address_n,
-                                       const EthereumNetworkInfo *network) {
+                                       const uint32_t* address_n,
+                                       const EthereumNetworkInfo* network) {
   bool valid = (address_n_count == 5);
   valid = valid && (address_n[0] == (PATH_HARDENED | 45));
   valid = valid && (address_n[1] < PATH_HARDENED);
@@ -1319,9 +1319,9 @@ static bool ethereum_path_check_casa45(uint32_t address_n_count,
   return valid;
 }
 
-bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
+bool ethereum_path_check(uint32_t address_n_count, const uint32_t* address_n,
                          bool pubkey_export,
-                         const EthereumNetworkInfo *network) {
+                         const EthereumNetworkInfo* network) {
   if (address_n_count == 0) {
     return false;
   }

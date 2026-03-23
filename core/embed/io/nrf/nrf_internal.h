@@ -54,7 +54,7 @@ typedef struct {
 typedef struct {
   spi_packet_t packet;
   nrf_tx_callback_t callback;
-  void *context;
+  void* context;
 } nrf_tx_request_t;
 
 typedef struct {
@@ -91,7 +91,7 @@ typedef struct {
   bool auth_data_valid;
   uint8_t auth_data[SHA256_DIGEST_LENGTH];
 
-  systimer_t *timer;
+  systimer_t* timer;
   bool pending_spi_transaction;
 
   bool dfu_mode;
@@ -105,8 +105,8 @@ typedef struct {
 void nrf_start(void);
 void nrf_stop(void);
 
-void nrf_int_send(const uint8_t *data, uint32_t len);
-uint32_t nrf_int_receive(uint8_t *data, uint32_t len);
+void nrf_int_send(const uint8_t* data, uint32_t len);
+uint32_t nrf_int_receive(uint8_t* data, uint32_t len);
 
 bool nrf_reboot_to_bootloader(void);
 
@@ -117,18 +117,18 @@ bool nrf_force_reset(void);
 void nrf_stay_in_bootloader(bool set);
 bool nrf_in_reserved(void);
 
-void nrf_complete_current_request(nrf_driver_t *drv, nrf_status_t status);
-void nrf_spi_init(nrf_driver_t *drv);
+void nrf_complete_current_request(nrf_driver_t* drv, nrf_status_t status);
+void nrf_spi_init(nrf_driver_t* drv);
 void nrf_spi_deinit(void);
-void nrf_prepare_spi_data(nrf_driver_t *drv);
+void nrf_prepare_spi_data(nrf_driver_t* drv);
 
 #ifdef USE_SMP
-void nrf_uart_init(nrf_driver_t *drv);
+void nrf_uart_init(nrf_driver_t* drv);
 void nrf_uart_deinit(void);
 void nrf_uart_send(uint8_t data);
 uint8_t nrf_uart_get_received(void);
 void nrf_set_dfu_mode(bool set);
 bool nrf_is_dfu_mode(void);
-void nrf_dfu_comm_send(const uint8_t *data, uint32_t len);
-uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len);
+void nrf_dfu_comm_send(const uint8_t* data, uint32_t len);
+uint32_t nrf_dfu_comm_receive(uint8_t* data, uint32_t len);
 #endif

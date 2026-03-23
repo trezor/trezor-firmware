@@ -53,8 +53,7 @@ static bool display_pll_init(void) {
   /* Start and configure PLL3 */
   __HAL_RCC_PLL3_DISABLE();
 
-  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) != 0U)
-    ;
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) != 0U);
 
   __HAL_RCC_PLL3_CONFIG(RCC_PLLSOURCE_HSE, PLL3_M, PLL3_N, PLL3_P, PLL3_Q,
                         PLL3_R);
@@ -68,8 +67,7 @@ static bool display_pll_init(void) {
   __HAL_RCC_PLL3_ENABLE();
 
   /* Wait till PLL3 is ready */
-  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) == 0U)
-    ;
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) == 0U);
 
   __HAL_RCC_DSI_CONFIG(RCC_DSICLKSOURCE_PLL3);
   __HAL_RCC_LTDC_CONFIG(RCC_LTDCCLKSOURCE_PLL3);
@@ -77,14 +75,14 @@ static bool display_pll_init(void) {
   return true;
 }
 
-static void display_dsi_deinit(display_driver_t *drv) {
+static void display_dsi_deinit(display_driver_t* drv) {
   __HAL_RCC_DSI_CLK_DISABLE();
   __HAL_RCC_DSI_FORCE_RESET();
   __HAL_RCC_DSI_RELEASE_RESET();
   memset(&drv->hlcd_dsi, 0, sizeof(drv->hlcd_dsi));
 }
 
-static bool display_dsi_init(display_driver_t *drv) {
+static bool display_dsi_init(display_driver_t* drv) {
   DSI_PLLInitTypeDef PLLInit = {0};
   DSI_PHY_TimerTypeDef PhyTimers = {0};
   DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
@@ -233,7 +231,7 @@ cleanup:
   return false;
 }
 
-static bool display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
+static bool display_ltdc_config_layer(LTDC_HandleTypeDef* hltdc,
                                       uint32_t fb_addr) {
   LTDC_LayerCfgTypeDef LayerCfg = {0};
 
@@ -261,13 +259,13 @@ static bool display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
   return HAL_LTDC_ConfigLayer(hltdc, &LayerCfg, LTDC_LAYER_1) == HAL_OK;
 }
 
-void display_ltdc_deinit(display_driver_t *drv) {
+void display_ltdc_deinit(display_driver_t* drv) {
   __HAL_RCC_LTDC_CLK_DISABLE();
   __HAL_RCC_LTDC_FORCE_RESET();
   __HAL_RCC_LTDC_RELEASE_RESET();
 }
 
-static bool display_ltdc_init(display_driver_t *drv, uint32_t fb_addr) {
+static bool display_ltdc_init(display_driver_t* drv, uint32_t fb_addr) {
   __HAL_RCC_LTDC_FORCE_RESET();
   __HAL_RCC_LTDC_RELEASE_RESET();
 
@@ -309,14 +307,14 @@ cleanup:
 }
 
 bool display_set_fb(uint32_t fb_addr) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
   return display_ltdc_config_layer(&drv->hlcd_ltdc, fb_addr);
 }
 
 // This implementation does not support `mode` parameter, it
 // behaves as if `mode` is always `DISPLAY_RESET_CONTENT`.
 bool display_init(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (drv->initialized) {
     return true;
@@ -429,7 +427,7 @@ cleanup:
 // This implementation does not support `mode` parameter, it
 // behaves as if `mode` is always `DISPLAY_RESET_CONTENT`.
 void display_deinit(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   gfx_bitblt_deinit();
 
@@ -466,7 +464,7 @@ void display_deinit(display_content_mode_t mode) {
 
 #if REFRESH_RATE_SCALING_SUPPORTED
 void display_refresh_rate_timeout_set(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
   irq_key_t key;
 
   if (!drv->initialized) {
@@ -484,7 +482,7 @@ void display_refresh_rate_timeout_set(void) {
 }
 
 void display_refresh_rate_timeout_check(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
   irq_key_t key;
 
   if (!drv->initialized) {
@@ -507,7 +505,7 @@ void display_refresh_rate_timeout_check(void) {
   irq_unlock(key);
 }
 
-static inline void display_refresh_rate_reg_config(display_driver_t *drv) {
+static inline void display_refresh_rate_reg_config(display_driver_t* drv) {
   // LTDC && DSI disable.
   __HAL_LTDC_DISABLE(&drv->hlcd_ltdc);
   __HAL_DSI_DISABLE(&drv->hlcd_dsi);
@@ -526,7 +524,7 @@ static inline void display_refresh_rate_reg_config(display_driver_t *drv) {
 }
 
 void display_refresh_rate_set(display_refresh_rate_t refresh_rate) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
   irq_key_t key;
 
   if (!drv->initialized) {
@@ -552,7 +550,7 @@ void display_refresh_rate_set(display_refresh_rate_t refresh_rate) {
 }
 
 void display_refresh_rate_config(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
   irq_key_t key;
 
   if (!drv->initialized) {
@@ -607,7 +605,7 @@ void display_refresh_rate_config(void) {
 #endif  // REFRESH_RATE_SCALING_SUPPORTED
 
 bool display_set_backlight(uint8_t level) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return false;
@@ -627,7 +625,7 @@ bool display_set_backlight(uint8_t level) {
 }
 
 uint8_t display_get_backlight(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -647,7 +645,7 @@ void LTDC_IRQHandler(void) {
   IRQ_LOG_ENTER();
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (drv->hlcd_ltdc.State != HAL_LTDC_STATE_RESET) {
     HAL_LTDC_IRQHandler(&drv->hlcd_ltdc);
@@ -663,7 +661,7 @@ void LTDC_ER_IRQHandler(void) {
   IRQ_LOG_ENTER();
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (drv->hlcd_ltdc.State != HAL_LTDC_STATE_RESET) {
     HAL_LTDC_IRQHandler(&drv->hlcd_ltdc);

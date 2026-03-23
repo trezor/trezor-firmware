@@ -92,45 +92,45 @@ DSTATUS disk_status(BYTE pdrv) {
   return (sectrue == sdcard_is_present()) ? 0 : (STA_NOINIT | STA_NODISK);
 }
 
-DRESULT disk_read(BYTE pdrv, BYTE *buff, LBA_t sector, UINT count) {
+DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count) {
   (void)pdrv;
-  if (sectrue == sdcard_read_blocks((uint32_t *)buff, sector, count)) {
+  if (sectrue == sdcard_read_blocks((uint32_t*)buff, sector, count)) {
     return RES_OK;
   } else {
     return RES_ERROR;
   }
 }
 
-DRESULT disk_write(BYTE pdrv, const BYTE *buff, LBA_t sector, UINT count) {
+DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count) {
   (void)pdrv;
-  if (sectrue == sdcard_write_blocks((const uint32_t *)buff, sector, count)) {
+  if (sectrue == sdcard_write_blocks((const uint32_t*)buff, sector, count)) {
     return RES_OK;
   } else {
     return RES_ERROR;
   }
 }
 
-DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void *buff) {
+DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void* buff) {
   (void)pdrv;
   switch (cmd) {
     case CTRL_SYNC:
       return RES_OK;
     case GET_SECTOR_COUNT:
-      *((DWORD *)buff) = sdcard_get_capacity_in_bytes() / SDCARD_BLOCK_SIZE;
+      *((DWORD*)buff) = sdcard_get_capacity_in_bytes() / SDCARD_BLOCK_SIZE;
       return RES_OK;
     case GET_SECTOR_SIZE:
-      *((WORD *)buff) = SDCARD_BLOCK_SIZE;
+      *((WORD*)buff) = SDCARD_BLOCK_SIZE;
       return RES_OK;
     case GET_BLOCK_SIZE:
-      *((DWORD *)buff) = 1;
+      *((DWORD*)buff) = 1;
       return RES_OK;
     default:
       return RES_PARERR;
   }
 }
 
-STATIC mp_obj_t filinfo_to_tuple(const FILINFO *info) {
-  mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+STATIC mp_obj_t filinfo_to_tuple(const FILINFO* info) {
+  mp_obj_tuple_t* tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
   tuple->items[0] = mp_obj_new_int_from_uint(info->fsize);
   char attrs[] = "-----";
   if (info->fattrib & AM_RDO) {
@@ -177,8 +177,8 @@ typedef struct _mp_obj_FatFSFile_t {
 ///     Close an open file object
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile___exit__(size_t n_args,
-                                                const mp_obj_t *args) {
-  mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(args[0]);
+                                                const mp_obj_t* args) {
+  mp_obj_FatFSFile_t* o = MP_OBJ_TO_PTR(args[0]);
   FRESULT res = f_close(&(o->fp));
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -194,7 +194,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_FatFSFile___exit___obj,
 ///     Close an open file object
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile_close(mp_obj_t self) {
-  mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_FatFSFile_t* o = MP_OBJ_TO_PTR(self);
   FRESULT res = f_close(&(o->fp));
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -209,7 +209,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFSFile_close_obj,
 ///     Read data from the file
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile_read(mp_obj_t self, mp_obj_t data) {
-  mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_FatFSFile_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(data, &buf, MP_BUFFER_WRITE);
   UINT read = 0;
@@ -227,7 +227,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_read_obj,
 ///     Write data to the file
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile_write(mp_obj_t self, mp_obj_t data) {
-  mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_FatFSFile_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(data, &buf, MP_BUFFER_READ);
   UINT written = 0;
@@ -249,7 +249,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_write_obj,
 ///     Move file pointer of the file object
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile_seek(mp_obj_t self, mp_obj_t offset) {
-  mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_FatFSFile_t* o = MP_OBJ_TO_PTR(self);
   FSIZE_t ofs = trezor_obj_get_uint(offset);
   FRESULT res = f_lseek(&(o->fp), ofs);
   if (res != FR_OK) {
@@ -265,7 +265,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_seek_obj,
 ///     Truncate the file
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile_truncate(mp_obj_t self) {
-  mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_FatFSFile_t* o = MP_OBJ_TO_PTR(self);
   FRESULT res = f_truncate(&(o->fp));
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -280,7 +280,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFSFile_truncate_obj,
 ///     Flush cached data of the writing file
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile_sync(mp_obj_t self) {
-  mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_FatFSFile_t* o = MP_OBJ_TO_PTR(self);
   FRESULT res = f_sync(&(o->fp));
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -308,7 +308,7 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorio_FatFSFile_locals_dict,
 STATIC const mp_obj_type_t mod_trezorio_FatFSFile_type = {
     {&mp_type_type},
     .name = MP_QSTR_FatFSFile,
-    .locals_dict = (void *)&mod_trezorio_FatFSFile_locals_dict,
+    .locals_dict = (void*)&mod_trezorio_FatFSFile_locals_dict,
 };
 
 /// class FatFSDir(Iterator[tuple[int, str, str]]):
@@ -325,7 +325,7 @@ typedef struct _mp_obj_FatFSDir_t {
 ///     Read an entry in the directory
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSDir_iternext(mp_obj_t self) {
-  mp_obj_FatFSDir_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_FatFSDir_t* o = MP_OBJ_TO_PTR(self);
   FILINFO info = {0};
   FRESULT res = f_readdir(&(o->dp), &info);
   if (res != FR_OK) {
@@ -359,7 +359,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_open(mp_obj_t path, mp_obj_t flags) {
   mp_buffer_info_t _path = {0}, _flags = {0};
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   mp_get_buffer_raise(flags, &_flags, MP_BUFFER_READ);
-  const char *mode_s = _flags.buf;
+  const char* mode_s = _flags.buf;
   uint8_t mode = 0;
   while (*mode_s) {
     switch (*mode_s++) {
@@ -385,7 +385,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_open(mp_obj_t path, mp_obj_t flags) {
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
   }
-  mp_obj_FatFSFile_t *f =
+  mp_obj_FatFSFile_t* f =
       mp_obj_malloc(mp_obj_FatFSFile_t, &mod_trezorio_FatFSFile_type);
   f->fp = fp;
   return f;
@@ -406,7 +406,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_listdir(mp_obj_t path) {
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
   }
-  mp_obj_FatFSDir_t *d =
+  mp_obj_FatFSDir_t* d =
       mp_obj_malloc(mp_obj_FatFSDir_t, &mod_trezorio_FatFSDir_type);
   d->dp = dp;
   return d;
@@ -418,7 +418,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_listdir_obj,
 ///     """
 ///     Create a sub directory
 ///     """
-STATIC mp_obj_t mod_trezorio_fatfs_mkdir(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorio_fatfs_mkdir(size_t n_args, const mp_obj_t* args) {
   FATFS_ONLY_MOUNTED;
   mp_buffer_info_t path = {0};
   mp_get_buffer_raise(args[0], &path, MP_BUFFER_READ);
@@ -539,7 +539,7 @@ STATIC void wrapped_ui_wait_callback(uint32_t current) {
 ///     """
 ///     Create a FAT volume on the SD card,
 ///     """
-STATIC mp_obj_t mod_trezorio_fatfs_mkfs(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorio_fatfs_mkfs(size_t n_args, const mp_obj_t* args) {
   if (_fatfs_instance_is_mounted()) {
     FATFS_RAISE(FatFSError, FR_LOCKED);
   }
@@ -638,5 +638,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorio_fatfs_globals,
 
 STATIC const mp_obj_module_t mod_trezorio_fatfs_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorio_fatfs_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorio_fatfs_globals,
 };

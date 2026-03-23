@@ -41,11 +41,11 @@ STATIC mp_obj_t mod_trezorcrypto_Sha512_update(mp_obj_t self, mp_obj_t data);
 ///     """
 ///     Creates a hash context object.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Sha512_make_new(const mp_obj_type_t *type,
+STATIC mp_obj_t mod_trezorcrypto_Sha512_make_new(const mp_obj_type_t* type,
                                                  size_t n_args, size_t n_kw,
-                                                 const mp_obj_t *args) {
+                                                 const mp_obj_t* args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_Sha512_t *o = m_new_obj_with_finaliser(mp_obj_Sha512_t);
+  mp_obj_Sha512_t* o = m_new_obj_with_finaliser(mp_obj_Sha512_t);
   o->base.type = type;
   sha512_Init(&(o->ctx));
   if (n_args == 1) {
@@ -59,7 +59,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha512_make_new(const mp_obj_type_t *type,
 ///     Update the hash context with hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha512_update(mp_obj_t self, mp_obj_t data) {
-  mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Sha512_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
@@ -75,12 +75,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Sha512_update_obj,
 ///     Returns the digest of hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha512_digest(mp_obj_t self) {
-  mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Sha512_t* o = MP_OBJ_TO_PTR(self);
   vstr_t hash = {0};
   vstr_init_len(&hash, SHA512_DIGEST_LENGTH);
   SHA512_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(SHA512_CTX));
-  sha512_Final(&ctx, (uint8_t *)hash.buf);
+  sha512_Final(&ctx, (uint8_t*)hash.buf);
   memzero(&ctx, sizeof(SHA512_CTX));
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
@@ -88,7 +88,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha512_digest_obj,
                                  mod_trezorcrypto_Sha512_digest);
 
 STATIC mp_obj_t mod_trezorcrypto_Sha512___del__(mp_obj_t self) {
-  mp_obj_Sha512_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Sha512_t* o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx), sizeof(SHA512_CTX));
   return mp_const_none;
 }
@@ -112,5 +112,5 @@ STATIC const mp_obj_type_t mod_trezorcrypto_Sha512_type = {
     {&mp_type_type},
     .name = MP_QSTR_Sha512,
     .make_new = mod_trezorcrypto_Sha512_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Sha512_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_Sha512_locals_dict,
 };

@@ -42,12 +42,12 @@ void norcow_wipe(void);
 /*
  * Looks for the given key, returns status of the operation
  */
-secbool norcow_get(uint16_t key, const void **val, uint16_t *len);
+secbool norcow_get(uint16_t key, const void** val, uint16_t* len);
 
 /*
  * Sets the given key, returns status of the operation
  */
-secbool norcow_set(uint16_t key, const void *val, uint16_t len);
+secbool norcow_set(uint16_t key, const void* val, uint16_t len);
 
 /*
  * Update a word in flash in the given key at the given offset.

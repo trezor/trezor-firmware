@@ -50,13 +50,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_slip39_word_index_obj,
 STATIC mp_obj_t mod_trezorcrypto_slip39_get_word(mp_obj_t _index) {
   uint16_t index = mp_obj_get_int(_index);
 
-  const char *word = get_word(index);
+  const char* word = get_word(index);
   if (word == NULL) {
     mp_raise_ValueError(MP_ERROR_TEXT(
         "Invalid wordlist index (range between 0 and 1023 is allowed)"));
   }
 
-  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)word, strlen(word));
+  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t*)word, strlen(word));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_slip39_get_word_obj,
                                  mod_trezorcrypto_slip39_get_word);
@@ -73,5 +73,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_slip39_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_slip39_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_slip39_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_slip39_globals,
 };

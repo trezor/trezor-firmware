@@ -55,8 +55,8 @@ static uint32_t generate_guard_key(void) {
   return guard_key;
 }
 
-static secbool expand_guard_key(const uint32_t guard_key, uint32_t *guard_mask,
-                                uint32_t *guard) {
+static secbool expand_guard_key(const uint32_t guard_key, uint32_t* guard_mask,
+                                uint32_t* guard) {
   if (sectrue != check_guard_key(guard_key)) {
     handle_fault("guard key check");
     return secfalse;
@@ -100,7 +100,7 @@ static secbool pin_logs_init(uint32_t fails) {
 }
 
 static secbool pin_fails_reset(void) {
-  const void *logs = NULL;
+  const void* logs = NULL;
   uint16_t len = 0;
 
   if (sectrue != norcow_get(PIN_LOGS_KEY, &logs, &len) ||
@@ -116,13 +116,13 @@ static secbool pin_fails_reset(void) {
   uint32_t guard = 0;
   wait_random();
   if (sectrue !=
-      expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
+      expand_guard_key(*(const uint32_t*)logs, &guard_mask, &guard)) {
     return secfalse;
   }
 
   uint32_t unused = guard | ~guard_mask;
-  const uint32_t *success_log = ((const uint32_t *)logs) + GUARD_KEY_WORDS;
-  const uint32_t *entry_log = success_log + PIN_LOG_WORDS;
+  const uint32_t* success_log = ((const uint32_t*)logs) + GUARD_KEY_WORDS;
+  const uint32_t* entry_log = success_log + PIN_LOG_WORDS;
   for (size_t i = 0; i < PIN_LOG_WORDS; ++i) {
     if (entry_log[i] == unused) {
       if (edited == sectrue) {
@@ -141,7 +141,7 @@ static secbool pin_fails_reset(void) {
 }
 
 secbool pin_fails_increase(void) {
-  const void *logs = NULL;
+  const void* logs = NULL;
   uint16_t len = 0;
 
   wait_random();
@@ -158,13 +158,13 @@ secbool pin_fails_increase(void) {
   uint32_t guard = 0;
   wait_random();
   if (sectrue !=
-      expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
+      expand_guard_key(*(const uint32_t*)logs, &guard_mask, &guard)) {
     handle_fault("guard key expansion");
     return secfalse;
   }
 
-  const uint32_t *entry_log =
-      ((const uint32_t *)logs) + GUARD_KEY_WORDS + PIN_LOG_WORDS;
+  const uint32_t* entry_log =
+      ((const uint32_t*)logs) + GUARD_KEY_WORDS + PIN_LOG_WORDS;
   for (size_t i = 0; i < PIN_LOG_WORDS; ++i) {
     wait_random();
     if ((entry_log[i] & guard_mask) != guard) {
@@ -192,10 +192,10 @@ secbool pin_fails_increase(void) {
   return secfalse;
 }
 
-static secbool pin_get_fails(uint32_t *ctr) {
+static secbool pin_get_fails(uint32_t* ctr) {
   *ctr = PIN_MAX_TRIES;
 
-  const void *logs = NULL;
+  const void* logs = NULL;
   uint16_t len = 0;
   wait_random();
   if (sectrue != norcow_get(PIN_LOGS_KEY, &logs, &len) ||
@@ -208,14 +208,14 @@ static secbool pin_get_fails(uint32_t *ctr) {
   uint32_t guard = 0;
   wait_random();
   if (sectrue !=
-      expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
+      expand_guard_key(*(const uint32_t*)logs, &guard_mask, &guard)) {
     handle_fault("guard key expansion");
     return secfalse;
   }
   const uint32_t unused = guard | ~guard_mask;
 
-  const uint32_t *success_log = ((const uint32_t *)logs) + GUARD_KEY_WORDS;
-  const uint32_t *entry_log = success_log + PIN_LOG_WORDS;
+  const uint32_t* success_log = ((const uint32_t*)logs) + GUARD_KEY_WORDS;
+  const uint32_t* entry_log = success_log + PIN_LOG_WORDS;
   volatile int current = -1;
   volatile size_t i = 0;
   for (i = 0; i < PIN_LOG_WORDS; ++i) {

@@ -55,9 +55,9 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 ///     """
 ///     Create a PBKDF2 context.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
+STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t* type,
                                                  size_t n_args, size_t n_kw,
-                                                 const mp_obj_t *args) {
+                                                 const mp_obj_t* args) {
   mp_arg_check_num(n_args, n_kw, 3, 4, false);
 
   mp_buffer_info_t password = {0};
@@ -78,7 +78,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
   }
 
   mp_uint_t prf = trezor_obj_get_uint(args[0]);
-  mp_obj_Pbkdf2_t *o = m_new_obj_with_finaliser(mp_obj_Pbkdf2_t);
+  mp_obj_Pbkdf2_t* o = m_new_obj_with_finaliser(mp_obj_Pbkdf2_t);
   o->base.type = type;
   o->prf = prf;
   if (o->prf == PRF_HMAC_SHA256) {
@@ -104,7 +104,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self,
                                                mp_obj_t iterations) {
-  mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Pbkdf2_t* o = MP_OBJ_TO_PTR(self);
   uint32_t iter = trezor_obj_get_uint(iterations);
   if (o->prf == PRF_HMAC_SHA256) {
     pbkdf2_hmac_sha256_Update(&(o->ctx256), iter);
@@ -124,19 +124,19 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Pbkdf2_update_obj,
 ///     Retrieve derived key.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
-  mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Pbkdf2_t* o = MP_OBJ_TO_PTR(self);
   vstr_t out = {0};
   if (o->prf == PRF_HMAC_SHA256) {
     PBKDF2_HMAC_SHA256_CTX ctx = {0};
     memcpy(&ctx, &(o->ctx256), sizeof(PBKDF2_HMAC_SHA256_CTX));
     vstr_init_len(&out, SHA256_DIGEST_LENGTH);
-    pbkdf2_hmac_sha256_Final(&ctx, (uint8_t *)out.buf);
+    pbkdf2_hmac_sha256_Final(&ctx, (uint8_t*)out.buf);
     memzero(&ctx, sizeof(PBKDF2_HMAC_SHA256_CTX));
   } else if (o->prf == PRF_HMAC_SHA512) {
     PBKDF2_HMAC_SHA512_CTX ctx = {0};
     memcpy(&ctx, &(o->ctx512), sizeof(PBKDF2_HMAC_SHA512_CTX));
     vstr_init_len(&out, SHA512_DIGEST_LENGTH);
-    pbkdf2_hmac_sha512_Final(&ctx, (uint8_t *)out.buf);
+    pbkdf2_hmac_sha512_Final(&ctx, (uint8_t*)out.buf);
     memzero(&ctx, sizeof(PBKDF2_HMAC_SHA512_CTX));
   } else {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid PRF"));
@@ -147,7 +147,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Pbkdf2_key_obj,
                                  mod_trezorcrypto_Pbkdf2_key);
 
 STATIC mp_obj_t mod_trezorcrypto_Pbkdf2___del__(mp_obj_t self) {
-  mp_obj_Pbkdf2_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Pbkdf2_t* o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx256), sizeof(PBKDF2_HMAC_SHA256_CTX));
   memzero(&(o->ctx512), sizeof(PBKDF2_HMAC_SHA512_CTX));
   return mp_const_none;
@@ -171,5 +171,5 @@ STATIC const mp_obj_type_t mod_trezorcrypto_Pbkdf2_type = {
     {&mp_type_type},
     .name = MP_QSTR_Pbkdf2,
     .make_new = mod_trezorcrypto_Pbkdf2_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Pbkdf2_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_Pbkdf2_locals_dict,
 };

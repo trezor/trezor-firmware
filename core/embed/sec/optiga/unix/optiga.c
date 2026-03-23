@@ -43,10 +43,10 @@
 #error "Cert chain for specified model is not available."
 #endif
 
-optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
-                               size_t digest_size, uint8_t *der_signature,
+optiga_sign_result optiga_sign(uint8_t index, const uint8_t* digest,
+                               size_t digest_size, uint8_t* der_signature,
                                size_t max_der_signature_size,
-                               size_t *der_signature_size) {
+                               size_t* der_signature_size) {
   const uint8_t DEVICE_PRIV_KEY[ECDSA_PRIVATE_KEY_SIZE] = {1};
 
   if (index != OPTIGA_DEVICE_ECC_KEY_INDEX) {
@@ -68,7 +68,7 @@ optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
   return OPTIGA_SIGN_SUCCESS;
 }
 
-bool optiga_cert_size(uint8_t index, size_t *cert_size) {
+bool optiga_cert_size(uint8_t index, size_t* cert_size) {
   if (index != OPTIGA_DEVICE_CERT_INDEX) {
     return false;
   }
@@ -77,8 +77,8 @@ bool optiga_cert_size(uint8_t index, size_t *cert_size) {
   return true;
 }
 
-bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
-                      size_t *cert_size) {
+bool optiga_read_cert(uint8_t index, uint8_t* cert, size_t max_cert_size,
+                      size_t* cert_size) {
   if (index != OPTIGA_DEVICE_CERT_INDEX) {
     return false;
   }
@@ -92,7 +92,7 @@ bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
   return true;
 }
 
-bool optiga_read_sec(uint8_t *sec) {
+bool optiga_read_sec(uint8_t* sec) {
   *sec = 0;
   return true;
 }
@@ -101,7 +101,7 @@ void optiga_set_sec_max(void) {}
 
 bool optiga_pin_init(optiga_ui_progress_t ui_progress) { return true; }
 
-void optiga_pin_init_time(uint32_t *time_ms) {}
+void optiga_pin_init_time(uint32_t* time_ms) {}
 
 bool optiga_is_initialized() { return false; }
 
@@ -112,19 +112,19 @@ bool optiga_pin_stretch_cmac_ecdh(
 }
 
 void optiga_pin_stretch_cmac_ecdh_time(
-    uint32_t *time_ms, uint8_t *optiga_sec,
-    uint32_t *optiga_last_time_decreased_ms) {}
+    uint32_t* time_ms, uint8_t* optiga_sec,
+    uint32_t* optiga_last_time_decreased_ms) {}
 
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index) {
   return 0;
 }
 
-bool optiga_random_buffer(uint8_t *dest, size_t size) {
+bool optiga_random_buffer(uint8_t* dest, size_t size) {
   rng_fill_buffer(dest, size);
   return true;
 }
 
-void optiga_random_buffer_time(uint32_t *time_ms) {}
+void optiga_random_buffer_time(uint32_t* time_ms) {}
 
 bool optiga_pin_set(
     optiga_ui_progress_t ui_progress,
@@ -133,8 +133,8 @@ bool optiga_pin_set(
   return true;
 }
 
-void optiga_pin_set_time(uint32_t *time_ms, uint8_t *optiga_sec,
-                         uint32_t *optiga_last_time_decreased_ms) {}
+void optiga_pin_set_time(uint32_t* time_ms, uint8_t* optiga_sec,
+                         uint32_t* optiga_last_time_decreased_ms) {}
 
 optiga_pin_result optiga_pin_verify_v4(
     optiga_ui_progress_t ui_progress,
@@ -150,8 +150,8 @@ optiga_pin_result optiga_pin_verify(
   return OPTIGA_PIN_SUCCESS;
 }
 
-void optiga_pin_verify_time(uint8_t pin_index, uint32_t *time_ms,
-                            uint8_t *optiga_sec, uint32_t *optiga_last_time) {}
+void optiga_pin_verify_time(uint8_t pin_index, uint32_t* time_ms,
+                            uint8_t* optiga_sec, uint32_t* optiga_last_time) {}
 
 bool optiga_pin_reset_hmac_counter(
     optiga_ui_progress_t ui_progress,
@@ -160,15 +160,15 @@ bool optiga_pin_reset_hmac_counter(
 }
 
 void optiga_pin_reset_hmac_counter_time(
-    uint32_t *time_ms, uint8_t *optiga_sec,
-    uint32_t *optiga_last_time_decreased_ms) {}
+    uint32_t* time_ms, uint8_t* optiga_sec,
+    uint32_t* optiga_last_time_decreased_ms) {}
 
-bool optiga_pin_get_rem_v4(uint32_t *ctr) {
+bool optiga_pin_get_rem_v4(uint32_t* ctr) {
   *ctr = PIN_MAX_TRIES;
   return true;
 }
 
-bool optiga_pin_get_rem(uint32_t *ctr) {
+bool optiga_pin_get_rem(uint32_t* ctr) {
   *ctr = PIN_MAX_TRIES;
   return true;
 }

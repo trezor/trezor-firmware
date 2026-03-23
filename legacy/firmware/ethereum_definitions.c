@@ -68,19 +68,19 @@ struct EncodedDefinition {
   uint16_t payload_length;
 
   // payload
-  const pb_byte_t *payload;
+  const pb_byte_t* payload;
 
   // suffix
   uint8_t proof_length;
-  const proof_entry *proof;
+  const proof_entry* proof;
 
   uint8_t sigmask;
-  const uint8_t *signature;
+  const uint8_t* signature;
 };
 
-static bool parse_encoded_definition(struct EncodedDefinition *const result,
+static bool parse_encoded_definition(struct EncodedDefinition* const result,
                                      const pb_size_t size,
-                                     const pb_byte_t *bytes) {
+                                     const pb_byte_t* bytes) {
   // format version + definition type + data version + payload length + payload
   // (at least 1B) + proof length + sigmask + signature
   if (size < (FORMAT_VERSION_LENGTH + 1 + 4 + 2 + 1 + 1 + 1 +
@@ -88,17 +88,17 @@ static bool parse_encoded_definition(struct EncodedDefinition *const result,
     return false;
   }
 
-  const pb_byte_t *cursor = bytes;
+  const pb_byte_t* cursor = bytes;
   memcpy(result->format_version, cursor, FORMAT_VERSION_LENGTH);
   cursor += FORMAT_VERSION_LENGTH;
 
   result->definition_type = *cursor;
   cursor += 1;
 
-  result->data_version = *(uint32_t *)cursor;
+  result->data_version = *(uint32_t*)cursor;
   cursor += 4;
 
-  result->payload_length = *(uint16_t *)cursor;
+  result->payload_length = *(uint16_t*)cursor;
   cursor += 2;
 
   result->payload = cursor;
@@ -115,7 +115,7 @@ static bool parse_encoded_definition(struct EncodedDefinition *const result,
                   1 + sizeof(ed25519_signature)) {
     return false;
   }
-  result->proof = (proof_entry *)cursor;
+  result->proof = (proof_entry*)cursor;
   cursor += result->proof_length * sizeof(proof_entry);
 
   result->sigmask = *cursor;
@@ -125,12 +125,12 @@ static bool parse_encoded_definition(struct EncodedDefinition *const result,
   return true;
 }
 
-static bool decode_definition(const pb_size_t size, const pb_byte_t *bytes,
+static bool decode_definition(const pb_size_t size, const pb_byte_t* bytes,
                               const DefinitionType expected_type,
-                              void *definition) {
+                              void* definition) {
   // parse received definition
   static struct EncodedDefinition parsed_def;
-  const char *error_str = _("Invalid definition");
+  const char* error_str = _("Invalid definition");
 
   memzero(&parsed_def, sizeof(parsed_def));
   if (!parse_encoded_definition(&parsed_def, size, bytes)) {
@@ -161,7 +161,7 @@ static bool decode_definition(const pb_size_t size, const pb_byte_t *bytes,
   // leaf hash = sha256('\x00' + leaf data)
   sha256_Update(&context, (uint8_t[]){0}, 1);
   // signed data is everything from start of `bytes` to the end of `payload`
-  const pb_byte_t *payload_end = parsed_def.payload + parsed_def.payload_length;
+  const pb_byte_t* payload_end = parsed_def.payload + parsed_def.payload_length;
   size_t signed_data_size = payload_end - bytes;
   sha256_Update(&context, bytes, signed_data_size);
 
@@ -201,7 +201,7 @@ static bool decode_definition(const pb_size_t size, const pb_byte_t *bytes,
   }
 
   // decode message
-  const pb_msgdesc_t *fields = (expected_type == DefinitionType_ETHEREUM_NETWORK
+  const pb_msgdesc_t* fields = (expected_type == DefinitionType_ETHEREUM_NETWORK
                                     ? EthereumNetworkInfo_fields
                                     : EthereumTokenInfo_fields);
   pb_istream_t stream =
@@ -219,11 +219,11 @@ err:
   return false;
 }
 
-static const EthereumNetworkInfo *get_network(
-    const EncodedNetwork *encoded_network, const uint64_t chain_id,
+static const EthereumNetworkInfo* get_network(
+    const EncodedNetwork* encoded_network, const uint64_t chain_id,
     const uint32_t slip44) {
   static EthereumNetworkInfo decoded_network;
-  const EthereumNetworkInfo *network = &UNKNOWN_NETWORK;
+  const EthereumNetworkInfo* network = &UNKNOWN_NETWORK;
 
   // try to get built-in definition
   if (chain_id != CHAIN_ID_UNKNOWN) {
@@ -263,9 +263,9 @@ static const EthereumNetworkInfo *get_network(
   return &decoded_network;
 }
 
-static const EthereumTokenInfo *get_token(const EncodedToken *encoded_token,
+static const EthereumTokenInfo* get_token(const EncodedToken* encoded_token,
                                           const uint64_t chain_id,
-                                          const char *address) {
+                                          const char* address) {
   static EthereumTokenInfo decoded_token;
 
   // if we do not know the chain_id, we cannot get the token
@@ -282,7 +282,7 @@ static const EthereumTokenInfo *get_token(const EncodedToken *encoded_token,
   }
 
   // try to get built-in definition
-  const EthereumTokenInfo *token =
+  const EthereumTokenInfo* token =
       ethereum_token_by_address(chain_id, address_bytes.bytes);
   if (!is_unknown_token(token) || encoded_token == NULL) {
     // if we found one, or if there's no data to decode, we are done
@@ -310,13 +310,13 @@ static const EthereumTokenInfo *get_token(const EncodedToken *encoded_token,
   return &decoded_token;
 }
 
-const EthereumDefinitionsDecoded *ethereum_get_definitions(
-    const EncodedNetwork *encoded_network, const EncodedToken *encoded_token,
-    const uint64_t chain_id, const uint32_t slip44, const char *token_address) {
+const EthereumDefinitionsDecoded* ethereum_get_definitions(
+    const EncodedNetwork* encoded_network, const EncodedToken* encoded_token,
+    const uint64_t chain_id, const uint32_t slip44, const char* token_address) {
   static EthereumDefinitionsDecoded defs;
   memzero(&defs, sizeof(defs));
 
-  const EthereumNetworkInfo *network =
+  const EthereumNetworkInfo* network =
       get_network(encoded_network, chain_id, slip44);
   if (network == NULL) {
     // error while decoding, failure was sent by get_network
@@ -325,7 +325,7 @@ const EthereumDefinitionsDecoded *ethereum_get_definitions(
   defs.network = network;
 
   if (!is_unknown_network(network) && token_address != NULL) {
-    const EthereumTokenInfo *token =
+    const EthereumTokenInfo* token =
         get_token(encoded_token, network->chain_id, token_address);
     if (token == NULL) {
       // error while decoding, failure was sent by get_token

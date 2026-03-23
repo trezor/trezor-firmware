@@ -70,7 +70,7 @@ static const struct usb_config_descriptor config = {
     .interface = ifaces,
 };
 
-static const char *usb_strings[] = {
+static const char* usb_strings[] = {
     "SatoshiLabs",
     "TREZOR",
     "000000000000000000000000",

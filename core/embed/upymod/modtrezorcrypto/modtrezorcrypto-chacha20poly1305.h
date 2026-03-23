@@ -40,8 +40,8 @@ typedef struct _mp_obj_ChaCha20Poly1305_t {
 ///     using a 32 byte key and 12 byte nonce as in the RFC 7539 style.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
-    const mp_obj_type_t *type, size_t n_args, size_t n_kw,
-    const mp_obj_t *args) {
+    const mp_obj_type_t* type, size_t n_args, size_t n_kw,
+    const mp_obj_t* args) {
   mp_arg_check_num(n_args, n_kw, 2, 2, false);
   mp_buffer_info_t key = {0}, nonce = {0};
   mp_get_buffer_raise(args[0], &key, MP_BUFFER_READ);
@@ -52,7 +52,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
   if (nonce.len != 12) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of nonce"));
   }
-  mp_obj_ChaCha20Poly1305_t *o =
+  mp_obj_ChaCha20Poly1305_t* o =
       m_new_obj_with_finaliser(mp_obj_ChaCha20Poly1305_t);
   rfc7539_init(&(o->ctx), key.buf, nonce.buf);
   o->base.type = type;
@@ -68,12 +68,12 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
                                                           mp_obj_t data) {
-  mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_ChaCha20Poly1305_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
   vstr_t vstr = {0};
   vstr_init_len(&vstr, in.len);
-  chacha20poly1305_encrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
+  chacha20poly1305_encrypt(&(o->ctx), in.buf, (uint8_t*)vstr.buf, in.len);
   o->plen += in.len;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
@@ -87,12 +87,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
                                                           mp_obj_t data) {
-  mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_ChaCha20Poly1305_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
   vstr_t vstr = {0};
   vstr_init_len(&vstr, in.len);
-  chacha20poly1305_decrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
+  chacha20poly1305_decrypt(&(o->ctx), in.buf, (uint8_t*)vstr.buf, in.len);
   o->plen += in.len;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
@@ -107,7 +107,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_auth(mp_obj_t self,
                                                        mp_obj_t data) {
-  mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_ChaCha20Poly1305_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
   rfc7539_auth(&(o->ctx), in.buf, in.len);
@@ -122,17 +122,17 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_auth_obj,
 ///     Compute RFC 7539-style Poly1305 MAC.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_finish(mp_obj_t self) {
-  mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_ChaCha20Poly1305_t* o = MP_OBJ_TO_PTR(self);
   vstr_t mac = {0};
   vstr_init_len(&mac, 16);
-  rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t *)mac.buf);
+  rfc7539_finish(&(o->ctx), o->alen, o->plen, (uint8_t*)mac.buf);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &mac);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ChaCha20Poly1305_finish_obj,
                                  mod_trezorcrypto_ChaCha20Poly1305_finish);
 
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305___del__(mp_obj_t self) {
-  mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_ChaCha20Poly1305_t* o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx), sizeof(chacha20poly1305_ctx));
   o->alen = 0;
   o->plen = 0;
@@ -162,5 +162,5 @@ STATIC const mp_obj_type_t mod_trezorcrypto_ChaCha20Poly1305_type = {
     {&mp_type_type},
     .name = MP_QSTR_ChaCha20Poly1305,
     .make_new = mod_trezorcrypto_ChaCha20Poly1305_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_ChaCha20Poly1305_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_ChaCha20Poly1305_locals_dict,
 };

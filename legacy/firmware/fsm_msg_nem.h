@@ -18,7 +18,7 @@
  */
 
 static bool fsm_nemCheckPath(uint32_t address_n_count,
-                             const uint32_t *address_n, uint8_t network) {
+                             const uint32_t* address_n, uint8_t network) {
   if (nem_path_check(address_n_count, address_n, network, true)) {
     return true;
   }
@@ -32,12 +32,12 @@ static bool fsm_nemCheckPath(uint32_t address_n_count,
   return fsm_layoutPathWarning();
 }
 
-void fsm_msgNEMGetAddress(NEMGetAddress *msg) {
+void fsm_msgNEMGetAddress(NEMGetAddress* msg) {
   if (!msg->has_network) {
     msg->network = NEM_NETWORK_MAINNET;
   }
 
-  const char *network;
+  const char* network;
   CHECK_PARAM((network = nem_network_name(msg->network)),
               _("Invalid NEM network"));
 
@@ -51,7 +51,7 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg) {
     return;
   }
 
-  HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n,
+  HDNode* node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
 
@@ -75,8 +75,8 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg) {
   layoutHome();
 }
 
-void fsm_msgNEMSignTx(NEMSignTx *msg) {
-  const char *reason;
+void fsm_msgNEMSignTx(NEMSignTx* msg) {
+  const char* reason;
 
 #define NEM_CHECK_PARAM(s) CHECK_PARAM((reason = (s)) == NULL, reason)
 #define NEM_CHECK_PARAM_WHEN(b, s) \
@@ -123,7 +123,7 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
   CHECK_INITIALIZED
   CHECK_PIN
 
-  const char *network = nem_network_name(msg->transaction.network);
+  const char* network = nem_network_name(msg->transaction.network);
 
   if (msg->has_multisig) {
     char address[NEM_ADDRESS_SIZE + 1];
@@ -145,7 +145,7 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
     return;
   }
 
-  HDNode *node =
+  HDNode* node =
       fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->transaction.address_n,
                          msg->transaction.address_n_count, NULL);
   if (!node) return;
@@ -157,7 +157,7 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
     return;
   }
 
-  const NEMTransactionCommon *common =
+  const NEMTransactionCommon* common =
       msg->has_multisig ? &msg->multisig : &msg->transaction;
 
   char address[NEM_ADDRESS_SIZE + 1];
@@ -326,7 +326,7 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
   layoutHome();
 }
 
-void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg) {
+void fsm_msgNEMDecryptMessage(NEMDecryptMessage* msg) {
   RESP_INIT(NEMDecryptedMessage);
 
   CHECK_INITIALIZED
@@ -355,14 +355,14 @@ void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg) {
     layoutHome();
     return;
   }
-  const HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n,
+  const HDNode* node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;
 
-  const uint8_t *salt = msg->payload.bytes;
-  uint8_t *iv = &msg->payload.bytes[NEM_SALT_SIZE];
+  const uint8_t* salt = msg->payload.bytes;
+  uint8_t* iv = &msg->payload.bytes[NEM_SALT_SIZE];
 
-  const uint8_t *payload = &msg->payload.bytes[NEM_SALT_SIZE + AES_BLOCK_SIZE];
+  const uint8_t* payload = &msg->payload.bytes[NEM_SALT_SIZE + AES_BLOCK_SIZE];
   size_t size = msg->payload.size - NEM_SALT_SIZE - AES_BLOCK_SIZE;
 
   // hdnode_nem_decrypt mutates the IV, so this will modify msg

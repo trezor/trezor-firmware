@@ -25,8 +25,8 @@
 
 extern const EthereumTokenInfo UNKNOWN_TOKEN;
 
-const EthereumTokenInfo *ethereum_token_by_address(uint64_t chain_id,
-                                                   const uint8_t *address);
-bool is_unknown_token(const EthereumTokenInfo *token);
+const EthereumTokenInfo* ethereum_token_by_address(uint64_t chain_id,
+                                                   const uint8_t* address);
+bool is_unknown_token(const EthereumTokenInfo* token);
 
 #endif

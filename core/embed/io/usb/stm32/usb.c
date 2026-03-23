@@ -56,7 +56,7 @@ typedef struct {
 
 typedef struct {
   // USB class dispatch table
-  const USBD_ClassTypeDef *class;
+  const USBD_ClassTypeDef* class;
   // Internal state for USB class driver
   uint8_t state[USBD_CLASS_STATE_MAX_SIZE] __attribute__((aligned(8)));
 } usb_iface_t;
@@ -82,7 +82,7 @@ typedef struct {
   // (interface, endpoint, ..) added by registered class drivers
   uint8_t desc_buffer[USB_MAX_CONFIG_DESC_SIZE] __attribute__((aligned(4)));
   // Configuration descriptor (located at the beginning of the desc_buffer)
-  usb_config_descriptor_t *config_desc;
+  usb_config_descriptor_t* config_desc;
   // Temporary buffer for unicode strings
   uint8_t str_buf[USB_MAX_STR_DESC_SIZE] __attribute__((aligned(4)));
 
@@ -111,8 +111,8 @@ static const USBD_ClassTypeDef usb_class;
 static const USBD_DescriptorsTypeDef usb_descriptors;
 static const syshandle_vmt_t g_usb_handle_vmt;
 
-secbool usb_init(const usb_dev_info_t *dev_info) {
-  usb_driver_t *drv = &g_usb_driver;
+secbool usb_init(const usb_dev_info_t* dev_info) {
+  usb_driver_t* drv = &g_usb_driver;
 
   if (drv->initialized == sectrue) {
     // Already initialized
@@ -153,7 +153,7 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
           USB_MAX_STR_SIZE);
   strncpy(drv->str_table.interface, dev_info->interface, USB_MAX_STR_SIZE);
 
-  drv->config_desc = (usb_config_descriptor_t *)(drv->desc_buffer);
+  drv->config_desc = (usb_config_descriptor_t*)(drv->desc_buffer);
 
   // Configuration descriptor
   drv->config_desc->bLength = sizeof(usb_config_descriptor_t);
@@ -181,7 +181,7 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
 }
 
 void usb_deinit(void) {
-  usb_driver_t *drv = &g_usb_driver;
+  usb_driver_t* drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
     return;
@@ -194,8 +194,8 @@ void usb_deinit(void) {
   drv->initialized = secfalse;
 }
 
-secbool usb_start(const usb_start_params_t *params) {
-  usb_driver_t *drv = &g_usb_driver;
+secbool usb_start(const usb_start_params_t* params) {
+  usb_driver_t* drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
     // The driver is not initialized
@@ -226,14 +226,14 @@ secbool usb_start(const usb_start_params_t *params) {
   drv->was_ready = secfalse;
 
   if (USBD_OK != USBD_Init(&drv->dev_handle,
-                           (USBD_DescriptorsTypeDef *)&usb_descriptors,
+                           (USBD_DescriptorsTypeDef*)&usb_descriptors,
                            USB_PHY_ID)) {
     usb_stop();
     return secfalse;
   }
 
   if (USBD_OK !=
-      USBD_RegisterClass(&drv->dev_handle, (USBD_ClassTypeDef *)&usb_class)) {
+      USBD_RegisterClass(&drv->dev_handle, (USBD_ClassTypeDef*)&usb_class)) {
     usb_stop();
     return secfalse;
   }
@@ -247,7 +247,7 @@ secbool usb_start(const usb_start_params_t *params) {
 }
 
 void usb_stop(void) {
-  usb_driver_t *drv = &g_usb_driver;
+  usb_driver_t* drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
     // The driver is not initialized
@@ -266,14 +266,14 @@ void usb_stop(void) {
 }
 
 static secbool usb_configured(void) {
-  usb_driver_t *drv = &g_usb_driver;
+  usb_driver_t* drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
     // The driver is not initialized
     return secfalse;
   }
 
-  const USBD_HandleTypeDef *pdev = &drv->dev_handle;
+  const USBD_HandleTypeDef* pdev = &drv->dev_handle;
 
   if (pdev->dev_state == USBD_STATE_UNINITIALIZED) {
     // The driver has not been started yet
@@ -344,7 +344,7 @@ static secbool usb_configured(void) {
 }
 
 usb_event_t usb_get_event(void) {
-  usb_driver_t *drv = &g_usb_driver;
+  usb_driver_t* drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
     // The driver is not initialized
@@ -354,7 +354,7 @@ usb_event_t usb_get_event(void) {
   usb_state_t new_state;
   usb_get_state(&new_state);
 
-  usb_driver_tls_t *tls = &drv->tls[systask_id(systask_active())];
+  usb_driver_tls_t* tls = &drv->tls[systask_id(systask_active())];
 
   if (new_state.configured != tls->state.configured) {
     tls->state.configured = new_state.configured;
@@ -364,7 +364,7 @@ usb_event_t usb_get_event(void) {
   return USB_EVENT_NONE;
 }
 
-void usb_get_state(usb_state_t *state) {
+void usb_get_state(usb_state_t* state) {
   usb_state_t s = {0};
   s.configured = (usb_configured() == sectrue);
   *state = s;
@@ -374,11 +374,11 @@ void usb_get_state(usb_state_t *state) {
 // Utility functions for USB class drivers
 // ==========================================================================
 
-void *usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef *class) {
-  usb_driver_t *drv = &g_usb_driver;
+void* usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef* class) {
+  usb_driver_t* drv = &g_usb_driver;
 
   if (iface_num < USBD_MAX_NUM_INTERFACES) {
-    usb_iface_t *iface = &drv->ifaces[iface_num];
+    usb_iface_t* iface = &drv->ifaces[iface_num];
 
     if (iface->class == class) {
       return &iface->state;
@@ -389,8 +389,8 @@ void *usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef *class) {
   return NULL;
 }
 
-void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class) {
-  usb_driver_t *drv = &g_usb_driver;
+void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef* class) {
+  usb_driver_t* drv = &g_usb_driver;
 
   if (iface_num < USBD_MAX_NUM_INTERFACES) {
     if (drv->ifaces[iface_num].class == NULL && class != NULL) {
@@ -401,17 +401,17 @@ void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class) {
   }
 }
 
-USBD_HandleTypeDef *usb_get_dev_handle(void) {
-  usb_driver_t *drv = &g_usb_driver;
+USBD_HandleTypeDef* usb_get_dev_handle(void) {
+  usb_driver_t* drv = &g_usb_driver;
 
   return &drv->dev_handle;
 }
 
-void *usb_alloc_class_descriptors(size_t desc_len) {
-  usb_driver_t *drv = &g_usb_driver;
+void* usb_alloc_class_descriptors(size_t desc_len) {
+  usb_driver_t* drv = &g_usb_driver;
 
   if (drv->config_desc->wTotalLength + desc_len < USB_MAX_CONFIG_DESC_SIZE) {
-    void *retval = &drv->desc_buffer[drv->config_desc->wTotalLength];
+    void* retval = &drv->desc_buffer[drv->config_desc->wTotalLength];
     drv->config_desc->wTotalLength += desc_len;
     return retval;
   } else {
@@ -423,16 +423,16 @@ void *usb_alloc_class_descriptors(size_t desc_len) {
 // USB configuration (device & string descriptors)
 // ==========================================================================
 
-static uint8_t *usb_get_dev_descriptor(USBD_SpeedTypeDef speed,
-                                       uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_get_dev_descriptor(USBD_SpeedTypeDef speed,
+                                       uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
   *length = sizeof(drv->dev_desc);
-  return (uint8_t *)(&drv->dev_desc);
+  return (uint8_t*)(&drv->dev_desc);
 }
 
-static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed,
-                                              uint16_t *length) {
+static uint8_t* usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed,
+                                              uint16_t* length) {
   static const usb_langid_descriptor_t usb_langid_str_desc = {
       .bLength = USB_LEN_LANGID_STR_DESC,
       .bDescriptorType = USB_DESC_TYPE_STRING,
@@ -442,66 +442,82 @@ static uint8_t *usb_get_langid_str_descriptor(USBD_SpeedTypeDef speed,
   return UNCONST(&usb_langid_str_desc);
 }
 
-static uint8_t *usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed,
-                                                    uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_get_manufacturer_str_descriptor(USBD_SpeedTypeDef speed,
+                                                    uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
-  USBD_GetString((uint8_t *)drv->str_table.manufacturer, drv->str_buf, length);
+  USBD_GetString((uint8_t*)drv->str_table.manufacturer, drv->str_buf, length);
   return drv->str_buf;
 }
 
-static uint8_t *usb_get_product_str_descriptor(USBD_SpeedTypeDef speed,
-                                               uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_get_product_str_descriptor(USBD_SpeedTypeDef speed,
+                                               uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
-  USBD_GetString((uint8_t *)drv->str_table.product, drv->str_buf, length);
+  USBD_GetString((uint8_t*)drv->str_table.product, drv->str_buf, length);
   return drv->str_buf;
 }
 
-static uint8_t *usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed,
-                                              uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_get_serial_str_descriptor(USBD_SpeedTypeDef speed,
+                                              uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
-  USBD_GetString((uint8_t *)drv->str_table.serial_number, drv->str_buf, length);
+  USBD_GetString((uint8_t*)drv->str_table.serial_number, drv->str_buf, length);
   return drv->str_buf;
 }
 
-static uint8_t *usb_get_configuration_str_descriptor(USBD_SpeedTypeDef speed,
-                                                     uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_get_configuration_str_descriptor(USBD_SpeedTypeDef speed,
+                                                     uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
-  USBD_GetString((uint8_t *)"", drv->str_buf, length);
+  USBD_GetString((uint8_t*)"", drv->str_buf, length);
   return drv->str_buf;
 }
 
-static uint8_t *usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed,
-                                                 uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_get_interface_str_descriptor(USBD_SpeedTypeDef speed,
+                                                 uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
-  USBD_GetString((uint8_t *)drv->str_table.interface, drv->str_buf, length);
+  USBD_GetString((uint8_t*)drv->str_table.interface, drv->str_buf, length);
   return drv->str_buf;
 }
 
-static uint8_t *usb_get_bos_descriptor(USBD_SpeedTypeDef speed,
-                                       uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_get_bos_descriptor(USBD_SpeedTypeDef speed,
+                                       uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
   if (sectrue == drv->usb21_enabled) {
     static uint8_t bos[] = {
         // usb_bos_descriptor {
         0x05,               // uint8_t  bLength
         USB_DESC_TYPE_BOS,  // uint8_t  bDescriptorType
-        0x1d, 0x0,          // uint16_t wTotalLength
-        0x01,               // uint8_t  bNumDeviceCaps
+        0x1d,
+        0x0,   // uint16_t wTotalLength
+        0x01,  // uint8_t  bNumDeviceCaps
         // }
         // usb_device_capability_descriptor {
         0x18,                             // uint8_t  bLength
         USB_DESC_TYPE_DEVICE_CAPABILITY,  // uint8_t  bDescriptorType
         USB_DEVICE_CAPABILITY_PLATFORM,   // uint8_t  bDevCapabilityType
         0x00,                             // uint8_t  bReserved
-        0x38, 0xb6, 0x08, 0x34, 0xa9, 0x09, 0xa0, 0x47, 0x8b, 0xfd, 0xa0, 0x76,
-        0x88, 0x15, 0xb6, 0x65,   // uint128_t platformCompatibilityUUID
-        0x00, 0x01,               // uint16_t bcdVersion
+        0x38,
+        0xb6,
+        0x08,
+        0x34,
+        0xa9,
+        0x09,
+        0xa0,
+        0x47,
+        0x8b,
+        0xfd,
+        0xa0,
+        0x76,
+        0x88,
+        0x15,
+        0xb6,
+        0x65,  // uint128_t platformCompatibilityUUID
+        0x00,
+        0x01,                     // uint16_t bcdVersion
         USB_WEBUSB_VENDOR_CODE,   // uint8_t  bVendorCode
         USB_WEBUSB_LANDING_PAGE,  // uint8_t  iLandingPage
                                   // }
@@ -540,11 +556,11 @@ static const USBD_DescriptorsTypeDef usb_descriptors = {
 #define USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR 0x04
 #define USB_WINUSB_REQ_GET_EXTENDED_PROPERTIES_OS_FEATURE_DESCRIPTOR 0x05
 
-static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t usb_class_init(USBD_HandleTypeDef* dev, uint8_t cfg_idx) {
+  usb_driver_t* drv = &g_usb_driver;
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_iface_t *iface = &drv->ifaces[i];
+    usb_iface_t* iface = &drv->ifaces[i];
     if (iface->class != NULL && iface->class->Init != NULL) {
       dev->pUserData = iface->state;
       iface->class->Init(dev, cfg_idx);
@@ -556,11 +572,11 @@ static uint8_t usb_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   return USBD_OK;
 }
 
-static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t usb_class_deinit(USBD_HandleTypeDef* dev, uint8_t cfg_idx) {
+  usb_driver_t* drv = &g_usb_driver;
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_iface_t *iface = &drv->ifaces[i];
+    usb_iface_t* iface = &drv->ifaces[i];
     if (iface->class != NULL && iface->class->DeInit != NULL) {
       dev->pUserData = iface->state;
       iface->class->DeInit(dev, cfg_idx);
@@ -577,9 +593,9 @@ static uint8_t usb_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 #define USB_WEBUSB_URL_SCHEME_HTTP 0
 #define USB_WEBUSB_URL_SCHEME_HTTPS 1
 
-static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
-                               USBD_SetupReqTypedef *req) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t usb_class_setup(USBD_HandleTypeDef* dev,
+                               USBD_SetupReqTypedef* req) {
+  usb_driver_t* drv = &g_usb_driver;
 
   if (((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_CLASS) &&
       ((req->bmRequest & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) &&
@@ -628,19 +644,48 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
             USB_WINUSB_REQ_GET_COMPATIBLE_ID_FEATURE_DESCRIPTOR) {
           static const uint8_t winusb_wcid[] = {
               // header
-              0x28, 0x00, 0x00, 0x00,                    // dwLength
-              0x00, 0x01,                                // bcdVersion
-              0x04, 0x00,                                // wIndex
-              0x01,                                      // bNumSections
-              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
+              0x28,
+              0x00,
+              0x00,
+              0x00,  // dwLength
+              0x00,
+              0x01,  // bcdVersion
+              0x04,
+              0x00,  // wIndex
+              0x01,  // bNumSections
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,  // reserved
               // functions
               0x00,  // bInterfaceNumber - HACK: we present only interface 0 as
                      // WinUSB
               0x01,  // reserved
-              'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,  // compatibleId
-              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-              0x00,                                // subCompatibleId
-              0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
+              'W',
+              'I',
+              'N',
+              'U',
+              'S',
+              'B',
+              0x00,
+              0x00,  // compatibleId
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,  // subCompatibleId
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,  // reserved
           };
           wait_random();
           USBD_CtlSendData(dev, UNCONST(winusb_wcid),
@@ -662,26 +707,153 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
             (req->wValue & 0xFF) == 0) {  // reply only if interface is 0
           static const uint8_t winusb_guid[] = {
               // header
-              0x92, 0x00, 0x00, 0x00,  // dwLength
-              0x00, 0x01,              // bcdVersion
-              0x05, 0x00,              // wIndex
-              0x01, 0x00,              // wNumFeatures
+              0x92,
+              0x00,
+              0x00,
+              0x00,  // dwLength
+              0x00,
+              0x01,  // bcdVersion
+              0x05,
+              0x00,  // wIndex
+              0x01,
+              0x00,  // wNumFeatures
               // features
-              0x88, 0x00, 0x00, 0x00,  // dwLength
-              0x07, 0x00, 0x00, 0x00,  // dwPropertyDataType
-              0x2A, 0x00,              // wNameLength
-              'D', 0x00, 'e', 0x00, 'v', 0x00, 'i', 0x00, 'c', 0x00, 'e', 0x00,
-              'I', 0x00, 'n', 0x00, 't', 0x00, 'e', 0x00, 'r', 0x00, 'f', 0x00,
-              'a', 0x00, 'c', 0x00, 'e', 0x00, 'G', 0x00, 'U', 0x00, 'I', 0x00,
-              'D', 0x00, 's', 0x00, 0x00, 0x00,  // .name
-              0x50, 0x00, 0x00, 0x00,            // dwPropertyDataLength
-              '{', 0x00, 'c', 0x00, '6', 0x00, 'c', 0x00, '3', 0x00, '7', 0x00,
-              '4', 0x00, 'a', 0x00, '6', 0x00, '-', 0x00, '2', 0x00, '2', 0x00,
-              '8', 0x00, '5', 0x00, '-', 0x00, '4', 0x00, 'c', 0x00, 'b', 0x00,
-              '8', 0x00, '-', 0x00, 'a', 0x00, 'b', 0x00, '4', 0x00, '3', 0x00,
-              '-', 0x00, '1', 0x00, '7', 0x00, '6', 0x00, '4', 0x00, '7', 0x00,
-              'c', 0x00, 'e', 0x00, 'a', 0x00, '5', 0x00, '0', 0x00, '3', 0x00,
-              'd', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00,  // propertyData
+              0x88,
+              0x00,
+              0x00,
+              0x00,  // dwLength
+              0x07,
+              0x00,
+              0x00,
+              0x00,  // dwPropertyDataType
+              0x2A,
+              0x00,  // wNameLength
+              'D',
+              0x00,
+              'e',
+              0x00,
+              'v',
+              0x00,
+              'i',
+              0x00,
+              'c',
+              0x00,
+              'e',
+              0x00,
+              'I',
+              0x00,
+              'n',
+              0x00,
+              't',
+              0x00,
+              'e',
+              0x00,
+              'r',
+              0x00,
+              'f',
+              0x00,
+              'a',
+              0x00,
+              'c',
+              0x00,
+              'e',
+              0x00,
+              'G',
+              0x00,
+              'U',
+              0x00,
+              'I',
+              0x00,
+              'D',
+              0x00,
+              's',
+              0x00,
+              0x00,
+              0x00,  // .name
+              0x50,
+              0x00,
+              0x00,
+              0x00,  // dwPropertyDataLength
+              '{',
+              0x00,
+              'c',
+              0x00,
+              '6',
+              0x00,
+              'c',
+              0x00,
+              '3',
+              0x00,
+              '7',
+              0x00,
+              '4',
+              0x00,
+              'a',
+              0x00,
+              '6',
+              0x00,
+              '-',
+              0x00,
+              '2',
+              0x00,
+              '2',
+              0x00,
+              '8',
+              0x00,
+              '5',
+              0x00,
+              '-',
+              0x00,
+              '4',
+              0x00,
+              'c',
+              0x00,
+              'b',
+              0x00,
+              '8',
+              0x00,
+              '-',
+              0x00,
+              'a',
+              0x00,
+              'b',
+              0x00,
+              '4',
+              0x00,
+              '3',
+              0x00,
+              '-',
+              0x00,
+              '1',
+              0x00,
+              '7',
+              0x00,
+              '6',
+              0x00,
+              '4',
+              0x00,
+              '7',
+              0x00,
+              'c',
+              0x00,
+              'e',
+              0x00,
+              'a',
+              0x00,
+              '5',
+              0x00,
+              '0',
+              0x00,
+              '3',
+              0x00,
+              'd',
+              0x00,
+              '}',
+              0x00,
+              0x00,
+              0x00,
+              0x00,
+              0x00,  // propertyData
           };
           wait_random();
           USBD_CtlSendData(dev, UNCONST(winusb_guid),
@@ -702,7 +874,7 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
       return USBD_FAIL;
     }
 
-    usb_iface_t *iface = &drv->ifaces[req->wIndex];
+    usb_iface_t* iface = &drv->ifaces[req->wIndex];
     if (iface->class != NULL && iface->class->Setup != NULL) {
       dev->pUserData = iface->state;
       iface->class->Setup(dev, req);
@@ -716,15 +888,15 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
   return USBD_OK;
 }
 
-static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t usb_class_data_in(USBD_HandleTypeDef* dev, uint8_t ep_num) {
+  usb_driver_t* drv = &g_usb_driver;
 
 #ifdef RDI
   random_delays_refresh_rdi();
 #endif
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_iface_t *iface = &drv->ifaces[i];
+    usb_iface_t* iface = &drv->ifaces[i];
     if (iface->class != NULL && iface->class->DataIn != NULL) {
       dev->pUserData = iface->state;
       iface->class->DataIn(dev, ep_num);
@@ -736,15 +908,15 @@ static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   return USBD_OK;
 }
 
-static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t usb_class_data_out(USBD_HandleTypeDef* dev, uint8_t ep_num) {
+  usb_driver_t* drv = &g_usb_driver;
 
 #ifdef RDI
   random_delays_refresh_rdi();
 #endif
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_iface_t *iface = &drv->ifaces[i];
+    usb_iface_t* iface = &drv->ifaces[i];
     if (iface->class != NULL && iface->class->DataOut != NULL) {
       dev->pUserData = iface->state;
       iface->class->DataOut(dev, ep_num);
@@ -756,13 +928,13 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
   return USBD_OK;
 }
 
-static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t usb_class_sof(USBD_HandleTypeDef* dev) {
+  usb_driver_t* drv = &g_usb_driver;
 
   drv->ready_time = hal_ticks_ms();
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-    usb_iface_t *iface = &drv->ifaces[i];
+    usb_iface_t* iface = &drv->ifaces[i];
     if (iface->class != NULL && iface->class->SOF != NULL) {
       dev->pUserData = iface->state;
       iface->class->SOF(dev);
@@ -774,16 +946,16 @@ static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
   return USBD_OK;
 }
 
-static uint8_t *usb_class_get_cfg_desc(uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_class_get_cfg_desc(uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
   *length = drv->config_desc->wTotalLength;
   return drv->desc_buffer;
 }
 
-static uint8_t *usb_class_get_usrstr_desc(USBD_HandleTypeDef *dev,
-                                          uint8_t index, uint16_t *length) {
-  usb_driver_t *drv = &g_usb_driver;
+static uint8_t* usb_class_get_usrstr_desc(USBD_HandleTypeDef* dev,
+                                          uint8_t index, uint16_t* length) {
+  usb_driver_t* drv = &g_usb_driver;
 
   if (sectrue == drv->usb21_enabled && index == USB_WINUSB_EXTRA_STRING_INDEX) {
     static const uint8_t winusb_string_descriptor[] = {
@@ -817,13 +989,13 @@ static const USBD_ClassTypeDef usb_class = {
     .GetUsrStrDescriptor = usb_class_get_usrstr_desc,
 };
 
-static void on_task_created(void *context, systask_id_t task_id) {
-  usb_driver_t *drv = (usb_driver_t *)context;
-  usb_driver_tls_t *tls = &drv->tls[task_id];
+static void on_task_created(void* context, systask_id_t task_id) {
+  usb_driver_t* drv = (usb_driver_t*)context;
+  usb_driver_tls_t* tls = &drv->tls[task_id];
   memset(tls, 0, sizeof(usb_driver_tls_t));
 }
 
-static void on_event_poll(void *context, bool read_awaited,
+static void on_event_poll(void* context, bool read_awaited,
                           bool write_awaited) {
   UNUSED(context);
   UNUSED(write_awaited);
@@ -835,12 +1007,12 @@ static void on_event_poll(void *context, bool read_awaited,
   }
 }
 
-static bool on_check_read_ready(void *context, systask_id_t task_id,
-                                void *param) {
-  usb_driver_t *drv = (usb_driver_t *)context;
-  usb_driver_tls_t *tls = &drv->tls[task_id];
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  usb_driver_t* drv = (usb_driver_t*)context;
+  usb_driver_tls_t* tls = &drv->tls[task_id];
 
-  usb_state_t *new_state = (usb_state_t *)param;
+  usb_state_t* new_state = (usb_state_t*)param;
   return (new_state->configured != tls->state.configured);
 }
 

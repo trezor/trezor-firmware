@@ -30,14 +30,14 @@
 
 #ifdef KERNEL
 
-static inline bool inside_area(const void *addr, size_t len,
-                               const mpu_area_t *area) {
+static inline bool inside_area(const void* addr, size_t len,
+                               const mpu_area_t* area) {
   return ((uintptr_t)addr >= area->start) &&
          ((uintptr_t)addr + len <= area->start + area->size);
 }
 
-bool probe_read_access(const void *addr, size_t len) {
-  applet_t *applet = syscall_get_context();
+bool probe_read_access(const void* addr, size_t len) {
+  applet_t* applet = syscall_get_context();
 
   if (applet == NULL) {
     return false;
@@ -86,8 +86,8 @@ bool probe_read_access(const void *addr, size_t len) {
   return false;
 }
 
-bool probe_write_access(void *addr, size_t len) {
-  applet_t *applet = syscall_get_context();
+bool probe_write_access(void* addr, size_t len) {
+  applet_t* applet = syscall_get_context();
 
   if (applet == NULL) {
     return false;
@@ -119,8 +119,8 @@ bool probe_write_access(void *addr, size_t len) {
   return false;
 }
 
-bool probe_execute_access(const void *addr) {
-  applet_t *applet = syscall_get_context();
+bool probe_execute_access(const void* addr) {
+  applet_t* applet = syscall_get_context();
 
   if (addr == NULL) {
     return true;
@@ -140,10 +140,10 @@ bool probe_execute_access(const void *addr) {
   return false;
 }
 
-void handle_access_violation(const char *file, int line) {
-  static const char *msg = "Access violation";
-  applet_t *applet = syscall_get_context();
-  systask_t *task = applet != NULL ? &applet->task : systask_active();
+void handle_access_violation(const char* file, int line) {
+  static const char* msg = "Access violation";
+  applet_t* applet = syscall_get_context();
+  systask_t* task = applet != NULL ? &applet->task : systask_active();
   systask_exit_fatal(task, msg, strlen(msg), file, strlen(file), line);
 }
 

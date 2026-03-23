@@ -47,8 +47,8 @@ bool bonds_erase_all(void) {
   }
 }
 
-static void count_bonds(const struct bt_bond_info *info, void *user_data) {
-  int *bond_cnt = (int *)user_data;
+static void count_bonds(const struct bt_bond_info* info, void* user_data) {
+  int* bond_cnt = (int*)user_data;
   *bond_cnt += 1;
 }
 
@@ -62,7 +62,7 @@ int bonds_get_count(void) {
 
 bool bonds_erase_current(void) {
   int err;
-  struct bt_conn *current = connection_get_current();
+  struct bt_conn* current = connection_get_current();
 
   if (current == NULL) {
     return false;
@@ -83,12 +83,12 @@ bool bonds_erase_current(void) {
   return err == 0;
 }
 
-bool bonds_erase_device(const bt_addr_le_t *addr) {
+bool bonds_erase_device(const bt_addr_le_t* addr) {
   if (addr == NULL) {
     return false;
   }
 
-  struct bt_conn *current = connection_get_current();
+  struct bt_conn* current = connection_get_current();
 
   bool erased = false;
   bt_addr_le_t target;
@@ -132,20 +132,20 @@ bool bonds_erase_device(const bt_addr_le_t *addr) {
 }
 
 typedef struct {
-  bt_addr_le_t *addr_list;
+  bt_addr_le_t* addr_list;
   size_t max_count;
   size_t filled;
 } bonds_ctx_t;
 
-static void get_bonds(const struct bt_bond_info *info, void *user_data) {
-  bonds_ctx_t *ctx = (bonds_ctx_t *)user_data;
+static void get_bonds(const struct bt_bond_info* info, void* user_data) {
+  bonds_ctx_t* ctx = (bonds_ctx_t*)user_data;
 
   if (ctx == NULL) {
     return;
   }
 
   if ((ctx->filled < ctx->max_count) && (ctx->addr_list != NULL)) {
-    bt_addr_le_t *dst = &ctx->addr_list[ctx->filled];
+    bt_addr_le_t* dst = &ctx->addr_list[ctx->filled];
     // First byte: address type, next 6 bytes: MAC address
     dst->type = info->addr.type;
     memcpy(dst->a.val, info->addr.a.val, BT_ADDR_SIZE);
@@ -154,7 +154,7 @@ static void get_bonds(const struct bt_bond_info *info, void *user_data) {
   ctx->filled += 1;
 }
 
-size_t bonds_get_all(bt_addr_le_t *addr, size_t max_count) {
+size_t bonds_get_all(bt_addr_le_t* addr, size_t max_count) {
   // If no storage provided, just return total number of bonds
   if (addr == NULL || max_count == 0) {
     int total = 0;

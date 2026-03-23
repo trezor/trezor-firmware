@@ -25,8 +25,8 @@
 #include "layout.h"
 #include "sha2.h"
 
-#define FLASH_OPTION_BYTES_1 (*(const uint64_t *)0x1FFFC000)
-#define FLASH_OPTION_BYTES_2 (*(const uint64_t *)0x1FFFC008)
+#define FLASH_OPTION_BYTES_1 (*(const uint64_t*)0x1FFFC000)
+#define FLASH_OPTION_BYTES_2 (*(const uint64_t*)0x1FFFC008)
 
 void memory_protect(void) {
 #if PRODUCTION
@@ -88,13 +88,13 @@ void memory_write_unlock(void) {
 #endif
 }
 
-int memory_bootloader_hash(uint8_t *hash) {
+int memory_bootloader_hash(uint8_t* hash) {
   sha256_Raw(FLASH_PTR(FLASH_BOOT_START), FLASH_BOOT_LEN, hash);
   sha256_Raw(hash, 32, hash);
   return 32;
 }
 
-int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
+int memory_firmware_hash(const uint8_t* challenge, uint32_t challenge_size,
                          void (*progress_callback)(uint32_t, uint32_t),
                          uint8_t hash[BLAKE2S_DIGEST_LENGTH]) {
   BLAKE2S_CTX ctx;
@@ -109,7 +109,7 @@ int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
 
   for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
     uint32_t size = flash_sector_size(i, 1);
-    const void *data = flash_get_address(i, 0, size);
+    const void* data = flash_get_address(i, 0, size);
     if (data == NULL) {
       return 1;
     }

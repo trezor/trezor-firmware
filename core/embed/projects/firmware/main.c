@@ -66,9 +66,9 @@ extern const void nrf_app_size;
 
 LOG_DECLARE(coreapp_main)
 
-int main_func(uint32_t cmd, void *arg) {
+int main_func(uint32_t cmd, void* arg) {
   if (cmd == 1) {
-    systask_postmortem_t *info = (systask_postmortem_t *)arg;
+    systask_postmortem_t* info = (systask_postmortem_t*)arg;
     rsod_gui(info);
     system_exit(0);
   }
@@ -132,8 +132,8 @@ int main_func(uint32_t cmd, void *arg) {
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.
   mp_stack_set_top(&_stack_section_end);
-  mp_stack_set_limit((char *)&_stack_section_end -
-                     (char *)&_stack_section_start - 1024);
+  mp_stack_set_limit((char*)&_stack_section_end - (char*)&_stack_section_start -
+                     1024);
 
 #if MICROPY_ENABLE_PYSTACK
   static mp_obj_t pystack[1024];
@@ -167,24 +167,24 @@ int main_func(uint32_t cmd, void *arg) {
 
 // MicroPython default exception handler
 
-void __attribute__((noreturn)) nlr_jump_fail(void *val) {
+void __attribute__((noreturn)) nlr_jump_fail(void* val) {
   error_shutdown("(UE)");
 }
 
 // MicroPython builtin stubs
 
-mp_import_stat_t mp_import_stat(const char *path) {
+mp_import_stat_t mp_import_stat(const char* path) {
   return MP_IMPORT_STAT_NO_EXIST;
 }
 
-mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
+mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t* args, mp_map_t* kwargs) {
   return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
 
 // `reset_handler` is the application entry point (first routine called
 // from kernel)
-__attribute((no_stack_protector)) void reset_handler(uint32_t cmd, void *arg,
+__attribute((no_stack_protector)) void reset_handler(uint32_t cmd, void* arg,
                                                      uint32_t random_value) {
   // Initialize linker script defined sections (.bss, .data, ...)
   init_linker_sections();

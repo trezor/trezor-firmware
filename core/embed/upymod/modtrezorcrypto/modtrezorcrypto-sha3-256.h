@@ -46,9 +46,9 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data);
 ///     """
 ///     Creates a hash context object.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_Sha3_256_make_new(const mp_obj_type_t *type,
+STATIC mp_obj_t mod_trezorcrypto_Sha3_256_make_new(const mp_obj_type_t* type,
                                                    size_t n_args, size_t n_kw,
-                                                   const mp_obj_t *args) {
+                                                   const mp_obj_t* args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, true);
   STATIC const mp_arg_t allowed_args[] = {
       {MP_QSTR_data, MP_ARG_OBJ, {.u_obj = mp_const_none}},
@@ -58,7 +58,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_make_new(const mp_obj_type_t *type,
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
                             allowed_args, vals);
 
-  mp_obj_Sha3_256_t *o = m_new_obj_with_finaliser(mp_obj_Sha3_256_t);
+  mp_obj_Sha3_256_t* o = m_new_obj_with_finaliser(mp_obj_Sha3_256_t);
   o->base.type = type;
   o->keccak = 0;
   sha3_256_Init(&(o->ctx));
@@ -77,7 +77,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_256_make_new(const mp_obj_type_t *type,
 ///     Update the hash context with hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha3_256_update(mp_obj_t self, mp_obj_t data) {
-  mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Sha3_256_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
@@ -93,15 +93,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Sha3_256_update_obj,
 ///     Returns the digest of hashed data.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha3_256_digest(mp_obj_t self) {
-  mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Sha3_256_t* o = MP_OBJ_TO_PTR(self);
   vstr_t hash = {0};
   vstr_init_len(&hash, SHA3_256_DIGEST_LENGTH);
   SHA3_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(SHA3_CTX));
   if (o->keccak) {
-    keccak_Final(&ctx, (uint8_t *)hash.buf);
+    keccak_Final(&ctx, (uint8_t*)hash.buf);
   } else {
-    sha3_Final(&ctx, (uint8_t *)hash.buf);
+    sha3_Final(&ctx, (uint8_t*)hash.buf);
   }
   memzero(&ctx, sizeof(SHA3_CTX));
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
@@ -114,9 +114,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha3_256_digest_obj,
 ///     Returns the copy of the digest object with the current state
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha3_256_copy(size_t n_args,
-                                               const mp_obj_t *args) {
-  mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(args[0]);
-  mp_obj_Sha3_256_t *out = m_new_obj_with_finaliser(mp_obj_Sha3_256_t);
+                                               const mp_obj_t* args) {
+  mp_obj_Sha3_256_t* o = MP_OBJ_TO_PTR(args[0]);
+  mp_obj_Sha3_256_t* out = m_new_obj_with_finaliser(mp_obj_Sha3_256_t);
   out->base.type = o->base.type;
   out->keccak = o->keccak;
   memcpy(&(out->ctx), &(o->ctx), sizeof(SHA3_CTX));
@@ -127,7 +127,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_Sha3_256_copy_obj,
                                            mod_trezorcrypto_Sha3_256_copy);
 
 STATIC mp_obj_t mod_trezorcrypto_Sha3_256___del__(mp_obj_t self) {
-  mp_obj_Sha3_256_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_Sha3_256_t* o = MP_OBJ_TO_PTR(self);
   memzero(&(o->ctx), sizeof(SHA3_CTX));
   return mp_const_none;
 }
@@ -153,5 +153,5 @@ STATIC const mp_obj_type_t mod_trezorcrypto_Sha3_256_type = {
     {&mp_type_type},
     .name = MP_QSTR_Sha3_256,
     .make_new = mod_trezorcrypto_Sha3_256_make_new,
-    .locals_dict = (void *)&mod_trezorcrypto_Sha3_256_locals_dict,
+    .locals_dict = (void*)&mod_trezorcrypto_Sha3_256_locals_dict,
 };

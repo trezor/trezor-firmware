@@ -28,22 +28,22 @@
 
 void smcall_invoke(smcall_args_t* args, smcall_number_t smcall);
 
-static inline uint32_t __attribute__((no_stack_protector))
-smcall_invoke0(uint32_t smcall) {
+static inline uint32_t __attribute__((no_stack_protector)) smcall_invoke0(
+    uint32_t smcall) {
   smcall_args_t args = {0};
   smcall_invoke(&args, smcall);
   return args.arg[0];
 }
 
-static inline uint64_t __attribute__((no_stack_protector))
-smcall_invoke0_ret64(uint32_t smcall) {
+static inline uint64_t __attribute__((no_stack_protector)) smcall_invoke0_ret64(
+    uint32_t smcall) {
   smcall_args_t args = {0};
   smcall_invoke(&args, smcall);
   return ((uint64_t)args.arg[1] << 32) | args.arg[0];
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-smcall_invoke1(uint32_t arg1, uint32_t smcall) {
+static inline uint32_t __attribute__((no_stack_protector)) smcall_invoke1(
+    uint32_t arg1, uint32_t smcall) {
   smcall_args_t args = {
       .arg[0] = arg1,
   };
@@ -51,8 +51,8 @@ smcall_invoke1(uint32_t arg1, uint32_t smcall) {
   return args.arg[0];
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-smcall_invoke2(uint32_t arg1, uint32_t arg2, uint32_t smcall) {
+static inline uint32_t __attribute__((no_stack_protector)) smcall_invoke2(
+    uint32_t arg1, uint32_t arg2, uint32_t smcall) {
   smcall_args_t args = {
       .arg[0] = arg1,
       .arg[1] = arg2,
@@ -61,8 +61,8 @@ smcall_invoke2(uint32_t arg1, uint32_t arg2, uint32_t smcall) {
   return args.arg[0];
 }
 
-static inline uint64_t __attribute__((no_stack_protector))
-smcall_invoke2_ret64(uint32_t arg1, uint32_t arg2, uint32_t smcall) {
+static inline uint64_t __attribute__((no_stack_protector)) smcall_invoke2_ret64(
+    uint32_t arg1, uint32_t arg2, uint32_t smcall) {
   smcall_args_t args = {
       .arg[0] = arg1,
       .arg[1] = arg2,
@@ -71,8 +71,8 @@ smcall_invoke2_ret64(uint32_t arg1, uint32_t arg2, uint32_t smcall) {
   return ((uint64_t)args.arg[1] << 32) | args.arg[0];
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-smcall_invoke3(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t smcall) {
+static inline uint32_t __attribute__((no_stack_protector)) smcall_invoke3(
+    uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t smcall) {
   smcall_args_t args = {
       .arg[0] = arg1,
       .arg[1] = arg2,
@@ -82,9 +82,9 @@ smcall_invoke3(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t smcall) {
   return args.arg[0];
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-smcall_invoke4(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
-               uint32_t smcall) {
+static inline uint32_t __attribute__((no_stack_protector)) smcall_invoke4(
+    uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
+    uint32_t smcall) {
   smcall_args_t args = {
       .arg[0] = arg1,
       .arg[1] = arg2,
@@ -95,9 +95,9 @@ smcall_invoke4(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
   return args.arg[0];
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-smcall_invoke5(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
-               uint32_t arg5, uint32_t smcall) {
+static inline uint32_t __attribute__((no_stack_protector)) smcall_invoke5(
+    uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4, uint32_t arg5,
+    uint32_t smcall) {
   smcall_args_t args = {
       .arg[0] = arg1,
       .arg[1] = arg2,
@@ -109,9 +109,9 @@ smcall_invoke5(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
   return args.arg[0];
 }
 
-static inline uint32_t __attribute__((no_stack_protector))
-smcall_invoke6(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
-               uint32_t arg5, uint32_t arg6, uint32_t smcall) {
+static inline uint32_t __attribute__((no_stack_protector)) smcall_invoke6(
+    uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4, uint32_t arg5,
+    uint32_t arg6, uint32_t smcall) {
   smcall_args_t args = {
       .arg[0] = arg1,
       .arg[1] = arg2,

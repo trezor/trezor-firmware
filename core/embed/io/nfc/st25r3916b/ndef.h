@@ -62,14 +62,14 @@ typedef struct {
 
 // Parse the NDEF message from the byte buffer
 // Returns NDEF_OK if the message is parsed successfully
-ndef_status_t ndef_parse_message(const uint8_t *buffer, size_t buffer_size,
-                                 ndef_message_t *message);
+ndef_status_t ndef_parse_message(const uint8_t* buffer, size_t buffer_size,
+                                 ndef_message_t* message);
 
 // Parse the NDEF record from the byte buffer
 // Returns NDEF_OK if the record is parsed successfully
-ndef_status_t ndef_parse_record(const uint8_t *buffer, size_t buffer_size,
-                                ndef_record_t *rec);
+ndef_status_t ndef_parse_record(const uint8_t* buffer, size_t buffer_size,
+                                ndef_record_t* rec);
 
 // Write the NDEF message with single URI record into the byte buffer
 // Returns the size of the byte buffer.
-size_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size);
+size_t ndef_create_uri(const char* uri, uint8_t* buffer, size_t buffer_size);

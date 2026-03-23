@@ -27,9 +27,9 @@ typedef struct _mp_obj_USB_t {
   mp_obj_base_t base;
 } mp_obj_USB_t;
 
-static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
+static const char* get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
   size_t len;
-  const char *s = mp_obj_str_get_data(o, &len);
+  const char* s = mp_obj_str_get_data(o, &len);
   if ((len >= min_len) && (len <= max_len)) {
     if (len == 0 && s == NULL) {
       return "";
@@ -46,10 +46,10 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 /// ) -> None:
 ///     """
 ///     """
-STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
+STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t* type,
                                           size_t n_args, size_t n_kw,
-                                          const mp_obj_t *args) {
-  mp_obj_USB_t *o = m_new_obj_with_finaliser(mp_obj_USB_t);
+                                          const mp_obj_t* args) {
+  mp_obj_USB_t* o = m_new_obj_with_finaliser(mp_obj_USB_t);
   o->base.type = type;
 
   return MP_OBJ_FROM_PTR(o);
@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
 ///     """
 STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
                                       mp_obj_t serial_number_obj) {
-  const char *serial_number = get_0str(serial_number_obj, 0, USB_MAX_STR_SIZE);
+  const char* serial_number = get_0str(serial_number_obj, 0, USB_MAX_STR_SIZE);
   if (serial_number == NULL) {
     mp_raise_ValueError(MP_ERROR_TEXT("serial_number is invalid"));
   }
@@ -114,5 +114,5 @@ STATIC const mp_obj_type_t mod_trezorio_USB_type = {
     {&mp_type_type},
     .name = MP_QSTR_USB,
     .make_new = mod_trezorio_USB_make_new,
-    .locals_dict = (void *)&mod_trezorio_USB_locals_dict,
+    .locals_dict = (void*)&mod_trezorio_USB_locals_dict,
 };

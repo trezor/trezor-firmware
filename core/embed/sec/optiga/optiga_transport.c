@@ -113,7 +113,7 @@ enum {
   SCTR_PROTECTED = 0x23,  // Record exchange message. Fully protected.
 };
 
-static i2c_bus_t *i2c_bus = NULL;
+static i2c_bus_t* i2c_bus = NULL;
 
 static uint8_t frame_num_out = 0xff;
 static uint8_t frame_num_in = 0xff;
@@ -139,15 +139,15 @@ static aes_encrypt_ctx sec_chan_encr_ctx = {0};
 static aes_encrypt_ctx sec_chan_decr_ctx = {0};
 static uint8_t sec_chan_encr_nonce[8] = {0};
 static uint8_t sec_chan_decr_nonce[8] = {0};
-static uint8_t *const sec_chan_mseq = &sec_chan_encr_nonce[4];
-static uint8_t *const sec_chan_sseq = &sec_chan_decr_nonce[4];
+static uint8_t* const sec_chan_mseq = &sec_chan_encr_nonce[4];
+static uint8_t* const sec_chan_sseq = &sec_chan_decr_nonce[4];
 
 // Static buffer for encrypted commands and responses.
 static uint8_t sec_chan_buffer[OPTIGA_MAX_APDU_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
     {0};
 static size_t sec_chan_size = 0;
 
-static void optiga_log_transport(const char *prefix, const uint8_t *data,
+static void optiga_log_transport(const char* prefix, const uint8_t* data,
                                  size_t data_size) {
   if (LOG_MODULE_MAX_LEVEL >= LOG_LEVEL_DBG) {
     static uint8_t prev_data[4];
@@ -184,7 +184,7 @@ static uint16_t calc_crc_byte(uint16_t seed, uint8_t c) {
   return (((((h3 << 1) ^ h4) << 4) ^ h2) << 3) ^ h4 ^ (seed >> 8);
 }
 
-static uint16_t calc_crc(uint8_t *data, size_t data_size) {
+static uint16_t calc_crc(uint8_t* data, size_t data_size) {
   uint16_t crc = 0;
   for (size_t i = 0; i < data_size; ++i) {
     crc = calc_crc_byte(crc, data[i]);
@@ -222,14 +222,14 @@ void optiga_transport_close_channel(void) {
   sec_chan_size = 0;
 }
 
-static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {
+static optiga_result optiga_i2c_write(const uint8_t* data, uint16_t data_size) {
   optiga_log_transport(">>>", data, data_size);
 
   i2c_op_t ops[] = {
       {
           .flags = I2C_FLAG_TX,
           .size = data_size,
-          .ptr = (void *)data,
+          .ptr = (void*)data,
       },
   };
 
@@ -255,7 +255,7 @@ static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {
   return OPTIGA_ERR_I2C_WRITE;
 }
 
-static optiga_result optiga_i2c_read(uint8_t *buffer, uint16_t buffer_size) {
+static optiga_result optiga_i2c_read(uint8_t* buffer, uint16_t buffer_size) {
   i2c_op_t ops[] = {
       {
           .flags = I2C_FLAG_RX,
@@ -504,7 +504,7 @@ static optiga_result optiga_read(void) {
 }
 
 static optiga_result optiga_send_packet(uint8_t packet_control_byte,
-                                        const uint8_t *packet_data,
+                                        const uint8_t* packet_data,
                                         size_t packet_data_size) {
   _Static_assert(sizeof(frame_buffer) - 7 >= OPTIGA_MAX_PACKET_SIZE - 1);
 
@@ -531,10 +531,10 @@ static optiga_result optiga_send_packet(uint8_t packet_control_byte,
   return optiga_i2c_write(frame_buffer, packet_data_size + 7);
 }
 
-static optiga_result optiga_receive_packet(uint8_t *packet_control_byte,
-                                           uint8_t *packet_data,
+static optiga_result optiga_receive_packet(uint8_t* packet_control_byte,
+                                           uint8_t* packet_data,
                                            size_t max_packet_data_size,
-                                           size_t *packet_data_size) {
+                                           size_t* packet_data_size) {
   // Expected frame control information byte.
   uint8_t fctr = FTYPE_DATA | SEQCTR_ACK;
   fctr |= (frame_num_in << FRNR_SHIFT) & FRNR_MASK;
@@ -557,8 +557,8 @@ static optiga_result optiga_receive_packet(uint8_t *packet_control_byte,
 }
 
 static optiga_result optiga_transceive(
-    bool presentation_layer, const uint8_t *request_data, size_t request_size,
-    uint8_t *response_data, size_t max_response_size, size_t *response_size) {
+    bool presentation_layer, const uint8_t* request_data, size_t request_size,
+    uint8_t* response_data, size_t max_response_size, size_t* response_size) {
   *response_size = 0;
   optiga_result ret = optiga_ensure_ready();
   if (ret != OPTIGA_SUCCESS) {
@@ -670,11 +670,11 @@ static void increment_seq(uint8_t seq[SEC_CHAN_SEQ_SIZE]) {
   memzero(sec_chan_decr_nonce, sizeof(sec_chan_decr_nonce));
 }
 
-optiga_result optiga_execute_command(const uint8_t *command_data,
+optiga_result optiga_execute_command(const uint8_t* command_data,
                                      size_t command_size,
-                                     uint8_t *response_data,
+                                     uint8_t* response_data,
                                      size_t max_response_size,
-                                     size_t *response_size) {
+                                     size_t* response_size) {
   if (!sec_chan_established) {
     return optiga_transceive(false, command_data, command_size, response_data,
                              max_response_size, response_size);
@@ -690,7 +690,7 @@ optiga_result optiga_execute_command(const uint8_t *command_data,
   sec_chan_buffer[0] = SCTR_PROTECTED;
   memcpy(&sec_chan_buffer[SEC_CHAN_SEQ_OFFSET], sec_chan_mseq,
          SEC_CHAN_SEQ_SIZE);
-  uint8_t *ciphertext = &sec_chan_buffer[SEC_CHAN_CIPHERTEXT_OFFSET];
+  uint8_t* ciphertext = &sec_chan_buffer[SEC_CHAN_CIPHERTEXT_OFFSET];
   uint8_t associated_data[8] = {SCTR_PROTECTED, 0, 0, 0, 0, SEC_CHAN_PROTOCOL};
   memcpy(&associated_data[SEC_CHAN_SEQ_OFFSET], sec_chan_mseq,
          SEC_CHAN_SEQ_SIZE);
@@ -744,7 +744,7 @@ optiga_result optiga_execute_command(const uint8_t *command_data,
   return OPTIGA_SUCCESS;
 }
 
-optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
+optiga_result optiga_sec_chan_handshake(const uint8_t* secret,
                                         size_t secret_size) {
   static const uint8_t HANDSHAKE_HELLO[] = {SCTR_HELLO, SEC_CHAN_PROTOCOL};
 
@@ -765,12 +765,12 @@ optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
 
   uint8_t payload[SEC_CHAN_HANDSHAKE_SIZE] = {0};
   memcpy(payload, &sec_chan_buffer[2], sizeof(payload));
-  uint8_t *rnd = &payload[0];
-  uint8_t *sseq = &payload[SEC_CHAN_RND_SIZE];
+  uint8_t* rnd = &payload[0];
+  uint8_t* sseq = &payload[SEC_CHAN_RND_SIZE];
 
   // Compute encryption and decryption keys.
   uint8_t encryption_keys[40] = {0};
-  tls_prf_sha256(secret, secret_size, (const uint8_t *)"Platform Binding", 16,
+  tls_prf_sha256(secret, secret_size, (const uint8_t*)"Platform Binding", 16,
                  rnd, SEC_CHAN_RND_SIZE, encryption_keys,
                  sizeof(encryption_keys));
   aes_encrypt_key128(&encryption_keys[0], &sec_chan_encr_ctx);
@@ -783,7 +783,7 @@ optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
   uint8_t handshake_finished[SEC_CHAN_HANDSHAKE_SIZE + SEC_CHAN_OVERHEAD_SIZE] =
       {SCTR_FINISHED};
   memcpy(&handshake_finished[SEC_CHAN_SEQ_OFFSET], sseq, SEC_CHAN_SEQ_SIZE);
-  uint8_t *ciphertext = &handshake_finished[SEC_CHAN_CIPHERTEXT_OFFSET];
+  uint8_t* ciphertext = &handshake_finished[SEC_CHAN_CIPHERTEXT_OFFSET];
   uint8_t associated_data[8] = {
       SCTR_FINISHED, 0, 0, 0, 0, SEC_CHAN_PROTOCOL, 0, SEC_CHAN_HANDSHAKE_SIZE};
   memcpy(&associated_data[SEC_CHAN_SEQ_OFFSET], sseq, SEC_CHAN_SEQ_SIZE);
@@ -809,7 +809,7 @@ optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
       sec_chan_buffer[0] != SCTR_FINISHED) {
     return OPTIGA_ERR_UNEXPECTED;
   }
-  uint8_t *mseq = &sec_chan_buffer[SEC_CHAN_SEQ_OFFSET];
+  uint8_t* mseq = &sec_chan_buffer[SEC_CHAN_SEQ_OFFSET];
   ciphertext = &sec_chan_buffer[SEC_CHAN_CIPHERTEXT_OFFSET];
 
   // Verify payload.

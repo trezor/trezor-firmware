@@ -27,16 +27,16 @@ typedef struct __blake2s_state {
 #define BLAKE2S_DIGEST_LENGTH BLAKE2S_OUTBYTES
 #define BLAKE2S_KEY_LENGTH BLAKE2S_KEYBYTES
 
-int blake2s_Init(blake2s_state *S, size_t outlen);
-int blake2s_InitKey(blake2s_state *S, size_t outlen, const void *key,
+int blake2s_Init(blake2s_state* S, size_t outlen);
+int blake2s_InitKey(blake2s_state* S, size_t outlen, const void* key,
                     size_t keylen);
-int blake2s_InitPersonal(blake2s_state *S, size_t outlen, const void *personal,
+int blake2s_InitPersonal(blake2s_state* S, size_t outlen, const void* personal,
                          size_t personal_len);
-int blake2s_Update(blake2s_state *S, const void *pin, size_t inlen);
-int blake2s_Final(blake2s_state *S, void *out, size_t outlen);
+int blake2s_Update(blake2s_state* S, const void* pin, size_t inlen);
+int blake2s_Final(blake2s_state* S, void* out, size_t outlen);
 
-int blake2s(const uint8_t *msg, uint32_t msg_len, void *out, size_t outlen);
-int blake2s_Key(const uint8_t *msg, uint32_t msg_len, const void *key,
-                size_t keylen, void *out, size_t outlen);
+int blake2s(const uint8_t* msg, uint32_t msg_len, void* out, size_t outlen);
+int blake2s_Key(const uint8_t* msg, uint32_t msg_len, const void* key,
+                size_t keylen, void* out, size_t outlen);
 
 #endif

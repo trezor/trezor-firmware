@@ -32,7 +32,7 @@
 ///     Decode a Bech32 or Bech32m string
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bech32_decode(size_t n_args,
-                                               const mp_obj_t *args) {
+                                               const mp_obj_t* args) {
   mp_buffer_info_t bech = {0};
   mp_get_buffer_raise(args[0], &bech, MP_BUFFER_READ);
 
@@ -57,12 +57,12 @@ STATIC mp_obj_t mod_trezorcrypto_bech32_decode(size_t n_args,
     mp_raise_ValueError(NULL);
   }
 
-  mp_obj_list_t *data_list = MP_OBJ_TO_PTR(mp_obj_new_list(data_len, NULL));
+  mp_obj_list_t* data_list = MP_OBJ_TO_PTR(mp_obj_new_list(data_len, NULL));
   for (size_t i = 0; i < data_len; ++i) {
     data_list->items[i] = mp_obj_new_int_from_uint(data[i]);
   }
 
-  mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+  mp_obj_tuple_t* tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
   tuple->items[0] = mp_obj_new_str(hrp, strlen(hrp));
   tuple->items[1] = data_list;
   tuple->items[2] = MP_OBJ_NEW_SMALL_INT(enc);
@@ -84,5 +84,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_bech32_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_bech32_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_bech32_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_bech32_globals,
 };

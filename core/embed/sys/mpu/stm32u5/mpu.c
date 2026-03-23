@@ -109,7 +109,7 @@ static inline uint32_t mpu_permission_lookup(bool write, bool unpriv) {
     uint32_t _ap = mpu_permission_lookup(_write, _unpriv);   \
     uint32_t _xn = mpu_region_lookup[_type].xn;              \
     MPU->RBAR = _start | _sh | _ap | _xn;                    \
-    uint32_t _limit = (_start + (size)-1) & (~0x1F);         \
+    uint32_t _limit = (_start + (size) - 1) & (~0x1F);       \
     uint32_t _attr = mpu_region_lookup[_type].attr << 1;     \
     uint32_t _enable = LL_MPU_REGION_ENABLE;                 \
     MPU->RLAR = _limit | _attr | _enable;                    \
@@ -182,7 +182,7 @@ static inline bool is_flash_address(uint32_t addr) {
 #ifdef SECMON
 extern uint32_t _secmon_size;
 #define SECMON_START FIRMWARE_START_S
-#define SECMON_SIZE (uint32_t) & _secmon_size
+#define SECMON_SIZE (uint32_t)&_secmon_size
 #endif
 
 #ifdef KERNEL
@@ -190,12 +190,12 @@ extern uint32_t _kernel_flash_start;
 extern uint32_t _kernel_flash_end;
 
 #ifdef USE_SECMON_LAYOUT
-#define KERNEL_START ((uint32_t) & _kernel_flash_start)
+#define KERNEL_START ((uint32_t)&_kernel_flash_start)
 #else
 #define KERNEL_START FIRMWARE_START
 #endif
 
-#define KERNEL_END ALIGN_UP((uint32_t) & _kernel_flash_end, COREAPP_ALIGNMENT)
+#define KERNEL_END ALIGN_UP((uint32_t)&_kernel_flash_end, COREAPP_ALIGNMENT)
 #define KERNEL_SIZE (KERNEL_END - KERNEL_START)
 #endif  // KERNEL
 

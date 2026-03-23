@@ -77,8 +77,8 @@ static bool auto_states_add(optiga_oid oid) {
   return true;
 }
 
-static void operation_add_time(uint32_t *total_time_ms, uint8_t *optiga_sec,
-                               uint32_t *optiga_last_time_decreased_ms,
+static void operation_add_time(uint32_t* total_time_ms, uint8_t* optiga_sec,
+                               uint32_t* optiga_last_time_decreased_ms,
                                uint32_t operation_time_ms) {
   if (optiga_sec && optiga_last_time_decreased_ms) {
     // Every OPTIGA_T_MAX_MS, the SEC counter decreases by 1. Contrary to the
@@ -109,7 +109,7 @@ static void operation_add_time(uint32_t *total_time_ms, uint8_t *optiga_sec,
   *total_time_ms += operation_time_ms;
 }
 
-static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
+static optiga_result process_output(uint8_t** out_data, size_t* out_size) {
   // Check that there is no trailing output data in the response.
   if (tx_size < 4 || (tx_buffer[2] << 8) + tx_buffer[3] != tx_size - 4) {
     return OPTIGA_ERR_UNEXPECTED;
@@ -127,8 +127,8 @@ static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
   return OPTIGA_SUCCESS;
 }
 
-static optiga_result process_output_fixedlen(uint8_t *data, size_t data_size) {
-  uint8_t *out_data = NULL;
+static optiga_result process_output_fixedlen(uint8_t* data, size_t data_size) {
+  uint8_t* out_data = NULL;
   size_t out_size = 0;
   optiga_result ret = process_output(&out_data, &out_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -148,9 +148,9 @@ static optiga_result process_output_fixedlen(uint8_t *data, size_t data_size) {
   return OPTIGA_SUCCESS;
 }
 
-static optiga_result process_output_varlen(uint8_t *data, size_t max_data_size,
-                                           size_t *data_size) {
-  uint8_t *out_data = NULL;
+static optiga_result process_output_varlen(uint8_t* data, size_t max_data_size,
+                                           size_t* data_size) {
+  uint8_t* out_data = NULL;
   size_t out_size = 0;
   optiga_result ret = process_output(&out_data, &out_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -168,14 +168,14 @@ static optiga_result process_output_varlen(uint8_t *data, size_t max_data_size,
   return OPTIGA_SUCCESS;
 }
 
-static void write_uint16(uint8_t **ptr, uint16_t i) {
+static void write_uint16(uint8_t** ptr, uint16_t i) {
   **ptr = i >> 8;
   *ptr += 1;
   **ptr = i & 0xff;
   *ptr += 1;
 }
 
-static void write_prefixed_data(uint8_t **ptr, const uint8_t *data,
+static void write_prefixed_data(uint8_t** ptr, const uint8_t* data,
                                 size_t data_size) {
   write_uint16(ptr, data_size);
   if (data_size > 0) {
@@ -192,7 +192,7 @@ static void write_prefixed_data(uint8_t **ptr, const uint8_t *data,
 static const struct {
   size_t offset;
   uint8_t tag;
-  const optiga_metadata_item *default_value;
+  const optiga_metadata_item* default_value;
 } METADATA_OFFSET_TAG_MAP[] = {
     {offsetof(optiga_metadata, lcso), 0xC0, &OPTIGA_META_LCS_OPERATIONAL},
     {offsetof(optiga_metadata, version), 0xC1, &OPTIGA_META_VERSION_DEFAULT},
@@ -211,9 +211,9 @@ static const struct {
 static const size_t METADATA_TAG_COUNT =
     sizeof(METADATA_OFFSET_TAG_MAP) / sizeof(METADATA_OFFSET_TAG_MAP[0]);
 
-optiga_result optiga_parse_metadata(const uint8_t *serialized,
+optiga_result optiga_parse_metadata(const uint8_t* serialized,
                                     size_t serialized_size,
-                                    optiga_metadata *metadata) {
+                                    optiga_metadata* metadata) {
   memzero(metadata, sizeof(*metadata));
 
   if (serialized_size < 2 || serialized[0] != 0x20 ||
@@ -228,10 +228,10 @@ optiga_result optiga_parse_metadata(const uint8_t *serialized,
     }
 
     // Determine metadata type from tag.
-    optiga_metadata_item *item = NULL;
+    optiga_metadata_item* item = NULL;
     for (int i = 0; i < METADATA_TAG_COUNT; ++i) {
       if (METADATA_OFFSET_TAG_MAP[i].tag == serialized[pos]) {
-        item = (void *)((char *)metadata + METADATA_OFFSET_TAG_MAP[i].offset);
+        item = (void*)((char*)metadata + METADATA_OFFSET_TAG_MAP[i].offset);
         break;
       }
     }
@@ -253,10 +253,10 @@ optiga_result optiga_parse_metadata(const uint8_t *serialized,
   return OPTIGA_SUCCESS;
 }
 
-optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
-                                        uint8_t *serialized,
+optiga_result optiga_serialize_metadata(const optiga_metadata* metadata,
+                                        uint8_t* serialized,
                                         size_t max_serialized,
-                                        size_t *serialized_size) {
+                                        size_t* serialized_size) {
   *serialized_size = 0;
   if (max_serialized < 2) {
     return OPTIGA_ERR_SIZE;
@@ -266,8 +266,8 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
   size_t pos = 2;        // Leave room for length byte.
 
   for (int i = 0; i < METADATA_TAG_COUNT; ++i) {
-    optiga_metadata_item *item =
-        (void *)((char *)metadata + METADATA_OFFSET_TAG_MAP[i].offset);
+    optiga_metadata_item* item =
+        (void*)((char*)metadata + METADATA_OFFSET_TAG_MAP[i].offset);
     if (item->ptr == NULL) {
       continue;
     }
@@ -295,18 +295,18 @@ optiga_result optiga_serialize_metadata(const optiga_metadata *metadata,
 // Returns true if all items defined in the expected metadata have the same
 // value in the stored metadata, i.e. items that are not defined in the expected
 // metadata may have arbitrary value in the stored metadata.
-bool optiga_compare_metadata(const optiga_metadata *expected,
-                             const optiga_metadata *stored) {
+bool optiga_compare_metadata(const optiga_metadata* expected,
+                             const optiga_metadata* stored) {
   for (int i = 0; i < METADATA_TAG_COUNT; ++i) {
-    const optiga_metadata_item *expected_item =
-        (void *)((char *)expected + METADATA_OFFSET_TAG_MAP[i].offset);
+    const optiga_metadata_item* expected_item =
+        (void*)((char*)expected + METADATA_OFFSET_TAG_MAP[i].offset);
     if (expected_item->ptr == NULL) {
       // Ignore undefined items.
       continue;
     }
 
-    const optiga_metadata_item *stored_item =
-        (void *)((char *)stored + METADATA_OFFSET_TAG_MAP[i].offset);
+    const optiga_metadata_item* stored_item =
+        (void*)((char*)stored + METADATA_OFFSET_TAG_MAP[i].offset);
     if (stored_item->ptr == NULL) {
       if (METADATA_OFFSET_TAG_MAP[i].default_value == NULL) {
         return false;
@@ -341,9 +341,9 @@ optiga_result optiga_open_application(void) {
   return process_output_fixedlen(NULL, 0);
 }
 
-optiga_result optiga_get_error_code(uint8_t *error_code) {
+optiga_result optiga_get_error_code(uint8_t* error_code) {
   tx_size = 6;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0x01;  // command code
   *(ptr++) = 0x00;  // get data
   write_uint16(&ptr, tx_size - 4);
@@ -364,10 +364,10 @@ optiga_result optiga_get_error_code(uint8_t *error_code) {
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#getdataobject
  */
 optiga_result optiga_get_data_object(uint16_t oid, bool get_metadata,
-                                     uint8_t *data, size_t max_data_size,
-                                     size_t *data_size) {
+                                     uint8_t* data, size_t max_data_size,
+                                     size_t* data_size) {
   tx_size = 6;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0x81;  // command code
   *(ptr++) = get_metadata ? 0x01 : 0x00;
   write_uint16(&ptr, tx_size - 4);
@@ -384,7 +384,7 @@ optiga_result optiga_get_data_object(uint16_t oid, bool get_metadata,
   return process_output_varlen(data, max_data_size, data_size);
 }
 
-void optiga_get_data_object_time(bool is_metadata, uint32_t *time_ms) {
+void optiga_get_data_object_time(bool is_metadata, uint32_t* time_ms) {
   if (is_metadata) {
     operation_add_time(time_ms, NULL, NULL, 17);
   } else {
@@ -397,13 +397,13 @@ void optiga_get_data_object_time(bool is_metadata, uint32_t *time_ms) {
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#setdataobject
  */
 optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
-                                     const uint8_t *data, size_t data_size) {
+                                     const uint8_t* data, size_t data_size) {
   tx_size = data_size + 8;
   if (tx_size > sizeof(tx_buffer)) {
     return OPTIGA_ERR_PARAM;
   }
 
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0x82;  // command code
   *(ptr++) = set_metadata ? 0x01 : 0x40;
   write_uint16(&ptr, tx_size - 4);
@@ -428,7 +428,7 @@ optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
   return ret;
 }
 
-void optiga_set_data_object_time(bool is_metadata, uint32_t *time_ms) {
+void optiga_set_data_object_time(bool is_metadata, uint32_t* time_ms) {
   if (is_metadata) {
     operation_add_time(time_ms, NULL, NULL, 49);
   } else {
@@ -450,7 +450,7 @@ optiga_result optiga_count_data_object(uint16_t oid, uint8_t count) {
     return OPTIGA_ERR_PARAM;
   }
 
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0x82;  // command code
   *(ptr++) = 0x02;  // count data object
   write_uint16(&ptr, tx_size - 4);
@@ -473,14 +473,14 @@ optiga_result optiga_count_data_object(uint16_t oid, uint8_t count) {
 /*
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#getrandom
  */
-optiga_result optiga_get_random(uint8_t *random, size_t random_size) {
+optiga_result optiga_get_random(uint8_t* random, size_t random_size) {
   if (random_size < OPTIGA_RANDOM_MIN_SIZE ||
       random_size > OPTIGA_RANDOM_MAX_SIZE) {
     return OPTIGA_ERR_SIZE;
   }
 
   tx_size = 6;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0x8C;  // command code
   *(ptr++) = 0x00;  // random number from TRNG
   write_uint16(&ptr, tx_size - 4);
@@ -497,7 +497,7 @@ optiga_result optiga_get_random(uint8_t *random, size_t random_size) {
   return process_output_fixedlen(random, random_size);
 }
 
-void optiga_get_random_time(uint32_t *time_ms) {
+void optiga_get_random_time(uint32_t* time_ms) {
   // Assuming the random size is 32 bytes
   operation_add_time(time_ms, NULL, NULL, 16);
 }
@@ -507,15 +507,15 @@ void optiga_get_random_time(uint32_t *time_ms) {
  * Returns 0x61, mac_size (2 bytes), mac.
  */
 optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
-                                 const uint8_t *input, size_t input_size,
-                                 uint8_t *output, size_t max_output_size,
-                                 size_t *output_size) {
+                                 const uint8_t* input, size_t input_size,
+                                 uint8_t* output, size_t max_output_size,
+                                 size_t* output_size) {
   if (input_size < 1 || input_size > 640) {
     return OPTIGA_ERR_PARAM;
   }
 
   tx_size = 9 + input_size;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0x94;  // command code
   *(ptr++) = mode;
   write_uint16(&ptr, tx_size - 4);
@@ -536,9 +536,9 @@ optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
   return ret;
 }
 
-void optiga_encrypt_sym_time(optiga_sym_mode mode, uint32_t *time_ms,
-                             uint8_t *optiga_sec,
-                             uint32_t *optiga_last_time_decreased_ms) {
+void optiga_encrypt_sym_time(optiga_sym_mode mode, uint32_t* time_ms,
+                             uint8_t* optiga_sec,
+                             uint32_t* optiga_last_time_decreased_ms) {
   switch (mode) {
     case OPTIGA_SYM_MODE_CMAC:
       operation_add_time(time_ms, optiga_sec, optiga_last_time_decreased_ms,
@@ -558,11 +558,11 @@ void optiga_encrypt_sym_time(optiga_sym_mode mode, uint32_t *time_ms,
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#decryptsym
  */
 optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
-                                    const uint8_t *key, size_t key_size) {
+                                    const uint8_t* key, size_t key_size) {
   uint8_t nonce[16] = {0};
 
   tx_size = 11;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0x8C;  // command code
   *(ptr++) = 0x00;  // random number from TRNG
   write_uint16(&ptr, tx_size - 4);
@@ -617,15 +617,15 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   return process_output_fixedlen(NULL, 0);
 }
 
-void optiga_set_auto_state_time(uint32_t *time_ms, uint8_t *optiga_sec,
-                                uint32_t *optiga_last_time_decreased_ms) {
+void optiga_set_auto_state_time(uint32_t* time_ms, uint8_t* optiga_sec,
+                                uint32_t* optiga_last_time_decreased_ms) {
   // Assuming the key size is 32 bytes
   operation_add_time(time_ms, optiga_sec, optiga_last_time_decreased_ms, 131);
 }
 
 optiga_result optiga_clear_auto_state(uint16_t key_oid) {
   tx_size = 12;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0x95;  // command code
   *(ptr++) = 0x20;  // HMAC-SHA256
   write_uint16(&ptr, tx_size - 4);
@@ -654,7 +654,7 @@ optiga_result optiga_clear_auto_state(uint16_t key_oid) {
   return OPTIGA_SUCCESS;
 }
 
-void optiga_clear_auto_state_time(uint32_t *time_ms) {
+void optiga_clear_auto_state_time(uint32_t* time_ms) {
   operation_add_time(time_ms, NULL, NULL, 13);
 }
 
@@ -662,15 +662,15 @@ void optiga_clear_auto_state_time(uint32_t *time_ms) {
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#calcsign
  * Returns a signature pair (r,s) encoded as two DER INTEGERs.
  */
-optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
-                               size_t digest_size, uint8_t *signature,
-                               size_t max_sig_size, size_t *sig_size) {
+optiga_result optiga_calc_sign(uint16_t oid, const uint8_t* digest,
+                               size_t digest_size, uint8_t* signature,
+                               size_t max_sig_size, size_t* sig_size) {
   tx_size = digest_size + 12;
   if (tx_size > sizeof(tx_buffer)) {
     return OPTIGA_ERR_PARAM;
   }
 
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0xB1;  // command code
   *(ptr++) = 0x11;  // ECDSA signature scheme
   write_uint16(&ptr, tx_size - 4);
@@ -689,7 +689,7 @@ optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
     return ret;
   }
 
-  uint8_t *out_data = NULL;
+  uint8_t* out_data = NULL;
   size_t out_size = 0;
   ret = process_output(&out_data, &out_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -723,16 +723,16 @@ optiga_result optiga_calc_sign(uint16_t oid, const uint8_t *digest,
  * The public_key is encoded as a DER BIT STRING.
  * The signature pair (r,s) is encoded as two DER INTEGERs.
  */
-optiga_result optiga_verify_sign(optiga_curve curve, const uint8_t *public_key,
-                                 size_t public_key_size, const uint8_t *digest,
-                                 size_t digest_size, const uint8_t *signature,
+optiga_result optiga_verify_sign(optiga_curve curve, const uint8_t* public_key,
+                                 size_t public_key_size, const uint8_t* digest,
+                                 size_t digest_size, const uint8_t* signature,
                                  size_t sig_size) {
   tx_size = 17 + digest_size + sig_size + public_key_size;
   if (tx_size > sizeof(tx_buffer)) {
     return OPTIGA_ERR_PARAM;
   }
 
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0xB2;  // command code
   *(ptr++) = 0x11;  // ECDSA signature scheme
   write_uint16(&ptr, tx_size - 4);
@@ -766,11 +766,11 @@ optiga_result optiga_verify_sign(optiga_curve curve, const uint8_t *public_key,
  * The public_key is encoded as a DER BIT STRING.
  */
 optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
-                                  uint16_t oid, uint8_t *public_key,
+                                  uint16_t oid, uint8_t* public_key,
                                   size_t max_public_key_size,
-                                  size_t *public_key_size) {
+                                  size_t* public_key_size) {
   tx_size = 13;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0xB8;  // command code
   *(ptr++) = curve;
   write_uint16(&ptr, tx_size - 4);
@@ -794,7 +794,7 @@ optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
                                public_key_size);
 }
 
-void optiga_gen_key_pair_time(uint32_t *time_ms) {
+void optiga_gen_key_pair_time(uint32_t* time_ms) {
   // Assuming the curve is OPTIGA_CURVE_P256
   operation_add_time(time_ms, NULL, NULL, 151);
 }
@@ -805,7 +805,7 @@ void optiga_gen_key_pair_time(uint32_t *time_ms) {
 optiga_result optiga_gen_sym_key(optiga_aes algorithm, optiga_key_usage usage,
                                  uint16_t oid) {
   tx_size = 13;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0xB9;  // command code
   *(ptr++) = algorithm;
   write_uint16(&ptr, tx_size - 4);
@@ -828,7 +828,7 @@ optiga_result optiga_gen_sym_key(optiga_aes algorithm, optiga_key_usage usage,
   return process_output_fixedlen(NULL, 0);
 }
 
-void optiga_gen_sym_key_time(uint32_t *time_ms) {
+void optiga_gen_sym_key_time(uint32_t* time_ms) {
   // Assuming the key type is OPTIGA_AES_256
   operation_add_time(time_ms, NULL, NULL, 36);
 }
@@ -838,9 +838,9 @@ void optiga_gen_sym_key_time(uint32_t *time_ms) {
  * The public_key is encoded as a DER BIT STRING.
  */
 optiga_result optiga_calc_ssec(optiga_curve curve, uint16_t oid,
-                               const uint8_t *public_key,
-                               size_t public_key_size, uint8_t *secret,
-                               size_t max_secret_size, size_t *secret_size) {
+                               const uint8_t* public_key,
+                               size_t public_key_size, uint8_t* secret,
+                               size_t max_secret_size, size_t* secret_size) {
   // Size of a P521 public key encoded as a DER BIT STRING.
   static const size_t MAX_PUBKEY_SIZE = 5 + 2 * 66;
 
@@ -849,7 +849,7 @@ optiga_result optiga_calc_ssec(optiga_curve curve, uint16_t oid,
   }
 
   tx_size = 16 + public_key_size + 3;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0xB3;  // command code
   *(ptr++) = 0x01;  // ECDH key agreement
   write_uint16(&ptr, tx_size - 4);
@@ -878,8 +878,8 @@ optiga_result optiga_calc_ssec(optiga_curve curve, uint16_t oid,
   return process_output_varlen(secret, max_secret_size, secret_size);
 }
 
-void optiga_calc_ssec_time(uint32_t *time_ms, uint8_t *optiga_sec,
-                           uint32_t *optiga_last_time_decreased_ms) {
+void optiga_calc_ssec_time(uint32_t* time_ms, uint8_t* optiga_sec,
+                           uint32_t* optiga_last_time_decreased_ms) {
   // Assuming the curve is OPTIGA_CURVE_P256
   operation_add_time(time_ms, optiga_sec, optiga_last_time_decreased_ms, 150);
 }
@@ -888,8 +888,8 @@ void optiga_calc_ssec_time(uint32_t *time_ms, uint8_t *optiga_sec,
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#derivekey
  */
 optiga_result optiga_derive_key(optiga_key_derivation deriv, uint16_t oid,
-                                const uint8_t *salt, size_t salt_size,
-                                uint8_t *info, size_t info_size, uint8_t *key,
+                                const uint8_t* salt, size_t salt_size,
+                                uint8_t* info, size_t info_size, uint8_t* key,
                                 size_t key_size) {
   const bool is_hkdf =
       (deriv == OPTIGA_DERIV_HKDF_SHA256 || deriv == OPTIGA_DERIV_HKDF_SHA384 ||
@@ -904,7 +904,7 @@ optiga_result optiga_derive_key(optiga_key_derivation deriv, uint16_t oid,
   }
 
   tx_size = is_hkdf ? 23 + salt_size + info_size : 20 + salt_size;
-  uint8_t *ptr = tx_buffer;
+  uint8_t* ptr = tx_buffer;
   *(ptr++) = 0xB4;  // command code
   *(ptr++) = deriv;
   write_uint16(&ptr, tx_size - 4);
@@ -1102,7 +1102,7 @@ optiga_result optiga_reset_counter(uint16_t oid, uint32_t limit) {
   return optiga_set_data_object(oid, false, value_array, sizeof(value_array));
 }
 
-void optiga_reset_counter_time(uint32_t *time_ms) {
+void optiga_reset_counter_time(uint32_t* time_ms) {
   operation_add_time(time_ms, NULL, NULL, 24);
 }
 

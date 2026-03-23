@@ -29,7 +29,7 @@
 #include "wire/codec_v1.h"
 
 typedef struct {
-  wire_iface_t *wire;
+  wire_iface_t* wire;
   uint8_t buf[MAX_PACKET_SIZE];
   size_t msg_size;
 
@@ -40,36 +40,36 @@ typedef struct {
   size_t count;
 } protob_ios_t;
 
-secbool send_user_abort(protob_io_t *iface, const char *msg);
+secbool send_user_abort(protob_io_t* iface, const char* msg);
 
-secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw);
+secbool send_msg_features(protob_io_t* iface, const fw_info_t* fw);
 
-secbool send_msg_failure(protob_io_t *iface, FailureType type, const char *msg);
+secbool send_msg_failure(protob_io_t* iface, FailureType type, const char* msg);
 
-secbool send_msg_success(protob_io_t *iface, const char *msg);
+secbool send_msg_success(protob_io_t* iface, const char* msg);
 
-secbool send_msg_request_firmware(protob_io_t *iface, uint32_t offset,
+secbool send_msg_request_firmware(protob_io_t* iface, uint32_t offset,
                                   uint32_t length);
 
-secbool recv_msg_initialize(protob_io_t *iface, Initialize *msg);
+secbool recv_msg_initialize(protob_io_t* iface, Initialize* msg);
 
-secbool recv_msg_get_features(protob_io_t *iface, GetFeatures *msg);
+secbool recv_msg_get_features(protob_io_t* iface, GetFeatures* msg);
 
-secbool recv_msg_wipe_device(protob_io_t *iface, WipeDevice *msg);
+secbool recv_msg_wipe_device(protob_io_t* iface, WipeDevice* msg);
 
-secbool recv_msg_ping(protob_io_t *iface, Ping *msg);
+secbool recv_msg_ping(protob_io_t* iface, Ping* msg);
 
-secbool recv_msg_firmware_erase(protob_io_t *iface, FirmwareErase *msg);
+secbool recv_msg_firmware_erase(protob_io_t* iface, FirmwareErase* msg);
 
-secbool recv_msg_firmware_upload(protob_io_t *iface, FirmwareUpload *msg,
-                                 void *ctx,
-                                 void (*data_cb)(size_t len, void *ctx),
-                                 uint8_t *buffer, size_t buffer_size);
+secbool recv_msg_firmware_upload(protob_io_t* iface, FirmwareUpload* msg,
+                                 void* ctx,
+                                 void (*data_cb)(size_t len, void* ctx),
+                                 uint8_t* buffer, size_t buffer_size);
 
-void recv_msg_unknown(protob_io_t *iface);
+void recv_msg_unknown(protob_io_t* iface);
 
-void protob_init(protob_io_t *iface, wire_iface_t *wire);
+void protob_init(protob_io_t* iface, wire_iface_t* wire);
 
-uint32_t protob_get_iface_flag(protob_io_t *iface);
+uint32_t protob_get_iface_flag(protob_io_t* iface);
 
-secbool protob_get_msg_header(protob_io_t *iface, uint16_t *msg_id);
+secbool protob_get_msg_header(protob_io_t* iface, uint16_t* msg_id);

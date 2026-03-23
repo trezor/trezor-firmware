@@ -24,14 +24,14 @@
 #include "pb/messages-debug.pb.h"
 #include "protob/protob.h"
 
-secbool recv_msg_debug_link_decision(protob_io_t *iface,
-                                     DebugLinkDecision *msg);
+secbool recv_msg_debug_link_decision(protob_io_t* iface,
+                                     DebugLinkDecision* msg);
 
-secbool recv_msg_debug_link_screen_record(protob_io_t *iface,
-                                          DebugLinkRecordScreen *msg,
-                                          uint8_t *buffer, size_t buffer_size);
+secbool recv_msg_debug_link_screen_record(protob_io_t* iface,
+                                          DebugLinkRecordScreen* msg,
+                                          uint8_t* buffer, size_t buffer_size);
 
-secbool recv_msg_debug_link_get_state(protob_io_t *iface,
-                                      DebugLinkGetState *msg);
+secbool recv_msg_debug_link_get_state(protob_io_t* iface,
+                                      DebugLinkGetState* msg);
 
-secbool send_msg_debug_link_state(protob_io_t *iface);
+secbool send_msg_debug_link_state(protob_io_t* iface);

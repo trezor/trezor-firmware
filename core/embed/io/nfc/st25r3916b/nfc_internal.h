@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t *tx_data,
-                                           uint8_t *rx_data, uint16_t length);
+HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t* tx_data,
+                                           uint8_t* rx_data, uint16_t length);
 
 void nfc_ext_irq_set_callback(void (*cb)(void));

@@ -53,10 +53,10 @@
 void delay(uint32_t wait);
 
 // converts uint32 to hexa (8 digits)
-void uint32hex(uint32_t num, char *str);
+void uint32hex(uint32_t num, char* str);
 
 // converts data to hexa
-void data2hex(const uint8_t *data, uint32_t len, char *str);
+void data2hex(const uint8_t* data, uint32_t len, char* str);
 
 // defined in startup.s (or setup.c for emulator)
 extern void __attribute__((noreturn)) shutdown(void);
@@ -66,13 +66,14 @@ extern void __attribute__((noreturn)) shutdown(void);
 extern uint8_t _ram_start[], _ram_end[];
 
 // defined in startup.s
-extern void memset_reg(void *start, void *stop, uint32_t val);
+extern void memset_reg(void* start, void* stop, uint32_t val);
 
 #define FW_SIGNED 0x5A3CA5C3
 #define FW_UNTRUSTED 0x00000000
 
-static inline void __attribute__((noreturn))
-jump_to_firmware(const vector_table_t *ivt, int trust) {
+static inline void
+    __attribute__((noreturn)) jump_to_firmware(const vector_table_t* ivt,
+                                               int trust) {
   if (FW_SIGNED == trust) {    // trusted signed firmware
     SCB_VTOR = (uint32_t)ivt;  // * relocate vector table
     // Set stack pointer
@@ -92,8 +93,7 @@ jump_to_firmware(const vector_table_t *ivt, int trust) {
 
   // Prevent compiler from generating stack protector code (which causes CPU
   // fault because the stack is moved)
-  for (;;)
-    ;
+  for (;;);
 }
 
 static inline void set_mode_unprivileged(void) {

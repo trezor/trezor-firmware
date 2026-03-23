@@ -50,8 +50,8 @@ void display_io_init_te_interrupt(void);
                           (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN)))
 */
 
-extern __IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS;
-extern __IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS;
+extern __IO DISP_MEM_TYPE* const DISPLAY_CMD_ADDRESS;
+extern __IO DISP_MEM_TYPE* const DISPLAY_DATA_ADDRESS;
 
 #define ISSUE_CMD_BYTE(X) (*(DISPLAY_CMD_ADDRESS) = (X))
 #define ISSUE_DATA_BYTE(X) (*(DISPLAY_DATA_ADDRESS) = (X))

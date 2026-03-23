@@ -34,9 +34,9 @@ int state = 0;
 int frame = 0;
 
 uint8_t seed[128];
-uint8_t *pass = (uint8_t *)"meadow";
+uint8_t* pass = (uint8_t*)"meadow";
 uint32_t passlen = 0;
-uint8_t *salt = (uint8_t *)"TREZOR";
+uint8_t* salt = (uint8_t*)"TREZOR";
 uint32_t saltlen = 0;
 
 static const struct usb_device_descriptor dev_descr = {
@@ -143,19 +143,19 @@ static const struct {
     uint8_t bReportDescriptorType;
     uint16_t wDescriptorLength;
   } __attribute__((packed)) hid_report;
-} __attribute__((packed))
-hid_function = {.hid_descriptor =
-                    {
-                        .bLength = sizeof(hid_function),
-                        .bDescriptorType = USB_DT_HID,
-                        .bcdHID = 0x0111,
-                        .bCountryCode = 0,
-                        .bNumDescriptors = 1,
-                    },
-                .hid_report = {
-                    .bReportDescriptorType = USB_DT_REPORT,
-                    .wDescriptorLength = sizeof(hid_report_descriptor),
-                }};
+} __attribute__((packed)) hid_function = {
+    .hid_descriptor =
+        {
+            .bLength = sizeof(hid_function),
+            .bDescriptorType = USB_DT_HID,
+            .bcdHID = 0x0111,
+            .bCountryCode = 0,
+            .bNumDescriptors = 1,
+        },
+    .hid_report = {
+        .bReportDescriptorType = USB_DT_REPORT,
+        .wDescriptorLength = sizeof(hid_report_descriptor),
+    }};
 
 static const struct usb_endpoint_descriptor hid_endpoints[2] = {
     {
@@ -207,15 +207,15 @@ static const struct usb_config_descriptor config = {
     .interface = ifaces,
 };
 
-static const char *usb_strings[] = {
+static const char* usb_strings[] = {
     "SatoshiLabs",
     "TREZOR",
     "01234567",
 };
 
 static enum usbd_request_return_codes hid_control_request(
-    usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len,
-    usbd_control_complete_callback *complete) {
+    usbd_device* dev, struct usb_setup_data* req, uint8_t** buf, uint16_t* len,
+    usbd_control_complete_callback* complete) {
   (void)complete;
   (void)dev;
 
@@ -224,18 +224,18 @@ static enum usbd_request_return_codes hid_control_request(
     return 0;
 
   /* Handle the HID report descriptor. */
-  *buf = (uint8_t *)hid_report_descriptor;
+  *buf = (uint8_t*)hid_report_descriptor;
   *len = sizeof(hid_report_descriptor);
 
   return 1;
 }
 
-static void hid_rx_callback(usbd_device *dev, uint8_t ep) {
+static void hid_rx_callback(usbd_device* dev, uint8_t ep) {
   (void)dev;
   (void)ep;
 }
 
-static void hid_set_config(usbd_device *dev, uint16_t wValue) {
+static void hid_set_config(usbd_device* dev, uint16_t wValue) {
   (void)wValue;
 
   usbd_ep_setup(dev, 0x81, USB_ENDPOINT_ATTR_INTERRUPT, 64, 0);
@@ -246,7 +246,7 @@ static void hid_set_config(usbd_device *dev, uint16_t wValue) {
       USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, hid_control_request);
 }
 
-static usbd_device *usbd_dev;
+static usbd_device* usbd_dev;
 static uint8_t usbd_control_buffer[128];
 
 void usbInit(void) {
@@ -269,8 +269,8 @@ int main(void) {
 
   usbInit();
 
-  passlen = strlen((char *)pass);
-  saltlen = strlen((char *)salt);
+  passlen = strlen((char*)pass);
+  saltlen = strlen((char*)salt);
 
   for (;;) {
     frame = 0;

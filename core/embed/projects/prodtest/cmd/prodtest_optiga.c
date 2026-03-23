@@ -158,8 +158,10 @@ cleanup:
 }
 
 #if PRODUCTION
-#define METADATA_SET_LOCKED(metadata) \
-  { metadata.lcso = OPTIGA_META_LCS_OPERATIONAL; }
+#define METADATA_SET_LOCKED(metadata)            \
+  {                                              \
+    metadata.lcso = OPTIGA_META_LCS_OPERATIONAL; \
+  }
 #else
 #define METADATA_SET_LOCKED(metadata)
 #endif

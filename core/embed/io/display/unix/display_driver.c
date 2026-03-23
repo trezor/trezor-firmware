@@ -75,12 +75,12 @@ typedef struct {
   // Current backlight level ranging from 0 to 255
   uint8_t backlight_level;
 
-  SDL_Window *window;
-  SDL_Renderer *renderer;
-  SDL_Surface *buffer;
-  SDL_Texture *texture;
-  SDL_Texture *background;
-  SDL_Surface *prev_saved;
+  SDL_Window* window;
+  SDL_Renderer* renderer;
+  SDL_Surface* buffer;
+  SDL_Texture* texture;
+  SDL_Texture* background;
+  SDL_Surface* prev_saved;
 
 #if DISPLAY_MONO
   // SDL2 does not support 8bit surface/texture
@@ -103,7 +103,7 @@ int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
 bool display_init(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (drv->initialized) {
     return true;
@@ -114,8 +114,8 @@ bool display_init(display_content_mode_t mode) {
     error_shutdown("SDL_Init error");
   }
 
-  char *window_title = NULL;
-  char *window_title_alloc = NULL;
+  char* window_title = NULL;
+  char* window_title_alloc = NULL;
   if (asprintf(&window_title_alloc, "Trezor^emu: %s", profile_name()) > 0) {
     window_title = window_title_alloc;
   } else {
@@ -201,7 +201,7 @@ bool display_init(display_content_mode_t mode) {
 }
 
 void display_deinit(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -229,7 +229,7 @@ void display_deinit(display_content_mode_t mode) {
 }
 
 bool display_set_backlight(uint8_t level) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return false;
@@ -248,7 +248,7 @@ bool display_set_backlight(uint8_t level) {
 }
 
 uint8_t display_get_backlight(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -258,7 +258,7 @@ uint8_t display_get_backlight(void) {
 }
 
 int display_set_orientation(int angle) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -280,7 +280,7 @@ int display_set_orientation(int angle) {
 }
 
 int display_get_orientation(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return 0;
@@ -290,8 +290,8 @@ int display_get_orientation(void) {
 }
 
 #ifdef FRAMEBUFFER
-bool display_get_frame_buffer(display_fb_info_t *fb) {
-  display_driver_t *drv = &g_display_driver;
+bool display_get_frame_buffer(display_fb_info_t* fb) {
+  display_driver_t* drv = &g_display_driver;
 
   memset(fb, 0, sizeof(display_fb_info_t));
 
@@ -321,11 +321,11 @@ void display_wait_for_sync(void) {
 #ifdef DISPLAY_MONO
 // Copies driver's monochromatic framebuffer into the RGB framebuffer used by
 // SDL
-static void copy_mono_framebuf(display_driver_t *drv) {
+static void copy_mono_framebuf(display_driver_t* drv) {
   for (int y = 0; y < DISPLAY_RESY; y++) {
-    uint16_t *dst =
-        (uint16_t *)((uint8_t *)drv->buffer->pixels + drv->buffer->pitch * y);
-    uint8_t *src = &drv->mono_framebuf[y * DISPLAY_RESX];
+    uint16_t* dst =
+        (uint16_t*)((uint8_t*)drv->buffer->pixels + drv->buffer->pitch * y);
+    uint8_t* src = &drv->mono_framebuf[y * DISPLAY_RESX];
     for (int x = 0; x < DISPLAY_RESX; x++) {
       uint8_t lum = src[x] > 40 ? 255 : 0;
       dst[x] = gfx_color16_rgb(lum, lum, lum);
@@ -337,7 +337,7 @@ static void copy_mono_framebuf(display_driver_t *drv) {
 #ifdef USE_RGB_LED
 
 void display_rgb_led(uint32_t color) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
   if (!drv->initialized) {
     return;
   }
@@ -347,7 +347,7 @@ void display_rgb_led(uint32_t color) {
 }
 
 void draw_rgb_led() {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -392,7 +392,7 @@ void draw_rgb_led() {
 #endif  // USE_RGB_LED
 
 static SDL_Rect screen_rect(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
   if (drv->background) {
     return (SDL_Rect){TOUCH_OFFSET_X, TOUCH_OFFSET_Y, DISPLAY_RESX,
                       DISPLAY_RESY};
@@ -403,7 +403,7 @@ static SDL_Rect screen_rect(void) {
 }
 
 static void display_refresh_internal(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -438,7 +438,7 @@ static void display_refresh_internal(void) {
 static void display_refresh_trampoline(uintptr_t arg1, uintptr_t arg2,
                                        uintptr_t arg3) {
   display_refresh_internal();
-  systask_yield_to((systask_t *)arg1);
+  systask_yield_to((systask_t*)arg1);
 }
 
 void display_refresh(void) {
@@ -446,7 +446,7 @@ void display_refresh(void) {
   if (systask_active() == systask_kernel()) {
     display_refresh_internal();
   } else {
-    systask_push_call(systask_kernel(), (void *)display_refresh_trampoline,
+    systask_push_call(systask_kernel(), (void*)display_refresh_trampoline,
                       (uintptr_t)systask_active(), 0, 0);
     systask_yield_to(systask_kernel());
   }
@@ -454,8 +454,8 @@ void display_refresh(void) {
 
 #ifndef DISPLAY_MONO
 
-void display_fill(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_fill(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -463,7 +463,7 @@ void display_fill(const gfx_bitblt_t *bb) {
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
-      (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
+      (uint8_t*)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
 #ifdef UI_COLOR_32BIT
@@ -473,8 +473,8 @@ void display_fill(const gfx_bitblt_t *bb) {
 #endif
 }
 
-void display_copy_rgb565(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_copy_rgb565(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -482,7 +482,7 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
-      (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
+      (uint8_t*)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
 #ifdef UI_COLOR_32BIT
@@ -492,8 +492,8 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
 #endif
 }
 
-void display_copy_mono1p(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_copy_mono1p(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -501,7 +501,7 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row =
-      (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
+      (uint8_t*)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
   bb_new.dst_stride = drv->buffer->pitch;
 
 #ifdef UI_COLOR_32BIT
@@ -513,8 +513,8 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
 #else  // DISPLAY_MONO
 
-void display_fill(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_fill(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -527,8 +527,8 @@ void display_fill(const gfx_bitblt_t *bb) {
   gfx_mono8_fill(&bb_new);
 }
 
-void display_copy_mono1p(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
+void display_copy_mono1p(const gfx_bitblt_t* bb) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -543,8 +543,8 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
 #endif
 
-void display_save(const char *prefix) {
-  display_driver_t *drv = &g_display_driver;
+void display_save(const char* prefix) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -558,7 +558,7 @@ void display_save(const char *prefix) {
   static char filename[256];
   // take a cropped view of the screen contents
   const SDL_Rect rect = {0, 0, DISPLAY_RESX, DISPLAY_RESY};
-  SDL_Surface *crop = SDL_CreateRGBSurface(
+  SDL_Surface* crop = SDL_CreateRGBSurface(
       drv->buffer->flags, rect.w, rect.h, drv->buffer->format->BitsPerPixel,
       drv->buffer->format->Rmask, drv->buffer->format->Gmask,
       drv->buffer->format->Bmask, drv->buffer->format->Amask);
@@ -579,7 +579,7 @@ void display_save(const char *prefix) {
 }
 
 void display_clear_save(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -591,7 +591,7 @@ void display_clear_save(void) {
 
 #ifdef USE_POWER_MANAGER
 static void display_draw_suspend_overlay_internal(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -599,7 +599,7 @@ static void display_draw_suspend_overlay_internal(void) {
 
   SDL_Rect screen = screen_rect();
   // create a blue texture
-  SDL_Texture *overlay =
+  SDL_Texture* overlay =
       SDL_CreateTexture(drv->renderer, SDL_PIXELFORMAT_RGBA8888,
                         SDL_TEXTUREACCESS_STATIC, screen.w, screen.h);
   SDL_SetTextureBlendMode(overlay, SDL_BLENDMODE_BLEND);
@@ -610,7 +610,7 @@ static void display_draw_suspend_overlay_internal(void) {
   SDL_RenderClear(drv->renderer);
 
   // draw the suspend overlay png in the middle of the texture
-  SDL_Texture *suspend_text = IMG_LoadTexture_RW(
+  SDL_Texture* suspend_text = IMG_LoadTexture_RW(
       drv->renderer,
       SDL_RWFromMem(_suspend_overlay_text_data, _suspend_overlay_text_len), 0);
   int text_width, text_height;
@@ -635,7 +635,7 @@ static void display_draw_suspend_overlay_trampoline(uintptr_t arg1,
                                                     uintptr_t arg2,
                                                     uintptr_t arg3) {
   display_draw_suspend_overlay_internal();
-  systask_yield_to((systask_t *)arg1);
+  systask_yield_to((systask_t*)arg1);
 }
 
 void display_draw_suspend_overlay(void) {
@@ -644,7 +644,7 @@ void display_draw_suspend_overlay(void) {
     display_draw_suspend_overlay_internal();
   } else {
     systask_push_call(systask_kernel(),
-                      (void *)display_draw_suspend_overlay_trampoline,
+                      (void*)display_draw_suspend_overlay_trampoline,
                       (uintptr_t)systask_active(), 0, 0);
     systask_yield_to(systask_kernel());
   }

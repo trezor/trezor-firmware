@@ -10,19 +10,19 @@
  * The entry cp[i][j] contains the number (2*j+1)*16^i*G,
  * where G is the generator of the specified elliptic curve.
  */
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   int i, j, k;
   if (argc != 2) {
     printf("Usage: %s CURVE_NAME\n", argv[0]);
     return 1;
   }
-  const char *name = argv[1];
-  const curve_info *info = get_curve_by_name(name);
+  const char* name = argv[1];
+  const curve_info* info = get_curve_by_name(name);
   if (info == 0) {
     printf("Unknown curve '%s'\n", name);
     return 1;
   }
-  const ecdsa_curve *curve = info->params;
+  const ecdsa_curve* curve = info->params;
   if (curve == 0) {
     printf("Unknown curve params");
     return 1;

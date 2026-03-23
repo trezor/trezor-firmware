@@ -83,16 +83,16 @@ static void check_and_write_chunk(void) {
   uint8_t hash[32] = {0};
   SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
-  sha256_Update(&ctx, (const uint8_t *)FW_CHUNK + offset, chunk_pos - offset);
+  sha256_Update(&ctx, (const uint8_t*)FW_CHUNK + offset, chunk_pos - offset);
   if (chunk_pos < 64 * 1024) {
     // pad with FF
     for (uint32_t i = chunk_pos; i < 64 * 1024; i += 4) {
-      sha256_Update(&ctx, (const uint8_t *)"\xFF\xFF\xFF\xFF", 4);
+      sha256_Update(&ctx, (const uint8_t*)"\xFF\xFF\xFF\xFF", 4);
     }
   }
   sha256_Final(&ctx, hash);
 
-  const image_header *hdr = (const image_header *)FW_HEADER;
+  const image_header* hdr = (const image_header*)FW_HEADER;
   // invalid chunk sent
   if (0 != memcmp(hash, hdr->hashes + chunk_idx * 32, 32)) {
     // erase storage
@@ -129,8 +129,8 @@ static void check_and_write_chunk(void) {
 }
 
 // read protobuf integer and advance pointer
-static secbool readprotobufint(const uint8_t **ptr, const uint8_t *end,
-                               uint32_t *result) {
+static secbool readprotobufint(const uint8_t** ptr, const uint8_t* end,
+                               uint32_t* result) {
   *result = 0;
 
   for (int i = 0; i <= 3; ++i) {
@@ -190,7 +190,7 @@ static int should_keep_storage(int old_was_signed,
   // if the current firmware is unsigned, always erase storage
   if (SIG_OK != old_was_signed) return SIG_FAIL;
 
-  const image_header *new_hdr = (const image_header *)FW_HEADER;
+  const image_header* new_hdr = (const image_header*)FW_HEADER;
   // new header must be signed by v3 signmessage/verifymessage scheme
   if (SIG_OK != signatures_ok(new_hdr, NULL, sectrue)) return SIG_FAIL;
   // if the new header hashes don't match flash contents, erase storage
@@ -204,7 +204,7 @@ static int should_keep_storage(int old_was_signed,
   return SIG_OK;
 }
 
-static void rx_callback(usbd_device *dev, uint8_t ep) {
+static void rx_callback(usbd_device* dev, uint8_t ep) {
   (void)ep;
   static uint16_t msg_id = 0xFFFF;
   static uint8_t buf[64] __attribute__((aligned(4)));
@@ -280,8 +280,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       if (proceed) {
         // check whether the current firmware is signed (old or new method)
         if (firmware_present_new()) {
-          const image_header *hdr =
-              (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
+          const image_header* hdr =
+              (const image_header*)FLASH_PTR(FLASH_FWHEADER_START);
           // previous firmware was signed either v2 or v3 scheme
           old_was_signed =
               signatures_match(hdr, NULL) & check_firmware_hashes(hdr);
@@ -313,7 +313,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         return;
       }
       // read payload length
-      const uint8_t *p = buf + 10;
+      const uint8_t* p = buf + 10;
       if (readprotobufint(&p, buf + sizeof(buf), &flash_len) != sectrue) {
         // integer too large
         send_msg_failure(dev, 9);  // Failure_ProcessError
@@ -379,7 +379,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
     }
     flash_anim++;
 
-    const uint8_t *p = buf + 1;
+    const uint8_t* p = buf + 1;
     while (p < buf + 64 && flash_pos < flash_len) {
       // assign byte to first byte of uint32_t w
       w = (w >> 8) | (((uint32_t)*p) << 24);
@@ -406,7 +406,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         check_and_write_chunk();
       }
       flash_state = STATE_CHECK;
-      const image_header *hdr = (const image_header *)FW_HEADER;
+      const image_header* hdr = (const image_header*)FW_HEADER;
       // allow only v3 signmessage/verifymessage signature for new FW
       if (SIG_OK != signatures_ok(hdr, NULL, sectrue)) {
         send_msg_buttonrequest_firmwarecheck(dev);
@@ -419,7 +419,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if (flash_state == STATE_CHECK) {
     // use the firmware header from RAM
-    image_header *hdr = (image_header *)FW_HEADER;
+    image_header* hdr = (image_header*)FW_HEADER;
 
     bool hash_check_ok;
     // show fingerprint of unsigned firmware
@@ -505,7 +505,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   }
 }
 
-static void set_config(usbd_device *dev, uint16_t wValue) {
+static void set_config(usbd_device* dev, uint16_t wValue) {
   (void)wValue;
 
   usbd_ep_setup(dev, ENDPOINT_ADDRESS_IN, USB_ENDPOINT_ATTR_INTERRUPT, 64, 0);
@@ -513,18 +513,17 @@ static void set_config(usbd_device *dev, uint16_t wValue) {
                 rx_callback);
 }
 
-static usbd_device *usbd_dev;
+static usbd_device* usbd_dev;
 static uint8_t usbd_control_buffer[256] __attribute__((aligned(2)));
 
-static const struct usb_device_capability_descriptor *capabilities_landing[] = {
-    (const struct usb_device_capability_descriptor
-         *)&webusb_platform_capability_descriptor_landing,
+static const struct usb_device_capability_descriptor* capabilities_landing[] = {
+    (const struct
+     usb_device_capability_descriptor*)&webusb_platform_capability_descriptor_landing,
 };
 
-static const struct usb_device_capability_descriptor
-    *capabilities_no_landing[] = {
-        (const struct usb_device_capability_descriptor
-             *)&webusb_platform_capability_descriptor_no_landing,
+static const struct usb_device_capability_descriptor* capabilities_no_landing[] = {
+    (const struct
+     usb_device_capability_descriptor*)&webusb_platform_capability_descriptor_no_landing,
 };
 
 static const struct usb_bos_descriptor bos_descriptor_landing = {
@@ -543,7 +542,7 @@ static const struct usb_bos_descriptor bos_descriptor_no_landing = {
 
 static void usbInit(bool firmware_present) {
   usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings,
-                       sizeof(usb_strings) / sizeof(const char *),
+                       sizeof(usb_strings) / sizeof(const char*),
                        usbd_control_buffer, sizeof(usbd_control_buffer));
   usbd_register_set_config_callback(usbd_dev, set_config);
   usb21_setup(usbd_dev, firmware_present ? &bos_descriptor_no_landing

@@ -25,12 +25,11 @@
 
 uint32_t random_uniform(uint32_t n) {
   uint32_t x = 0, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
-  while ((x = random32()) >= max)
-    ;
+  while ((x = random32()) >= max);
   return x / (max / n);
 }
 
-void random_permute(char *str, size_t len) {
+void random_permute(char* str, size_t len) {
   for (int i = len - 1; i >= 1; i--) {
     int j = random_uniform(i + 1);
     char t = str[j];

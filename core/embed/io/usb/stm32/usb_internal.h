@@ -112,10 +112,10 @@ typedef struct __attribute__((packed)) {
 //
 // The returned array has `USBD_CLASS_STATE_MAX_SIZE` bytes
 // and is aligned to 8-byte boundary.
-void *usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef *class);
+void* usb_get_iface_state(uint8_t iface_num, const USBD_ClassTypeDef* class);
 
 // Assigns the concrete class to the slot `iface_num`.
-void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class);
+void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef* class);
 
 // Allocates the buffer for the class driver descriptors
 // (interface, endpoint, ...) inside the USB device structure.
@@ -124,4 +124,4 @@ void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class);
 //
 // The function checks if the remaining space is enough and
 // returns NULL if not.
-void *usb_alloc_class_descriptors(size_t desc_len);
+void* usb_alloc_class_descriptors(size_t desc_len);

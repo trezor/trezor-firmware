@@ -32,7 +32,7 @@
 typedef struct {
   struct jpeg_source_mgr pub;
   uint8_t buffer[4096];
-  jpegdec_input_t *input;
+  jpegdec_input_t* input;
 
 } custom_source_mgr_t;
 
@@ -75,8 +75,8 @@ static void init_source(j_decompress_ptr cinfo) {
 }
 
 static boolean fill_input_buffer(j_decompress_ptr cinfo) {
-  custom_source_mgr_t *src = (custom_source_mgr_t *)cinfo->src;
-  jpegdec_input_t *input = src->input;
+  custom_source_mgr_t* src = (custom_source_mgr_t*)cinfo->src;
+  jpegdec_input_t* input = src->input;
 
   if (input->offset < input->size) {
     size_t nbytes = MIN(input->size - input->offset, sizeof(src->buffer));
@@ -103,7 +103,7 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo) {
 }
 
 static void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {
-  custom_source_mgr_t *src = (custom_source_mgr_t *)cinfo->src;
+  custom_source_mgr_t* src = (custom_source_mgr_t*)cinfo->src;
 
   if (num_bytes > 0) {
     while (num_bytes > (long)src->pub.bytes_in_buffer) {
@@ -125,7 +125,7 @@ static void term_source(j_decompress_ptr cinfo) {
 //---------------------------------------------------------------------
 
 bool jpegdec_open(void) {
-  jpegdec_t *dec = &g_jpegdec;
+  jpegdec_t* dec = &g_jpegdec;
 
   if (dec->inuse) {
     return false;
@@ -139,7 +139,7 @@ bool jpegdec_open(void) {
   jpeg_create_decompress(&dec->cinfo);
 
   // Init our custom source manager
-  custom_source_mgr_t *src = &dec->source_mgr;
+  custom_source_mgr_t* src = &dec->source_mgr;
   src->pub.init_source = init_source;
   src->pub.fill_input_buffer = fill_input_buffer;
   src->pub.skip_input_data = skip_input_data;
@@ -148,15 +148,15 @@ bool jpegdec_open(void) {
   src->pub.bytes_in_buffer = 0;
   src->pub.next_input_byte = NULL;
   src->input = NULL;
-  dec->cinfo.src = (struct jpeg_source_mgr *)src;
+  dec->cinfo.src = (struct jpeg_source_mgr*)src;
 
   dec->state = JPEGDEC_STATE_NEED_DATA;
 
   return true;
 }
 
-jpegdec_state_t jpegdec_process(jpegdec_input_t *input) {
-  jpegdec_t *dec = &g_jpegdec;
+jpegdec_state_t jpegdec_process(jpegdec_input_t* input) {
+  jpegdec_t* dec = &g_jpegdec;
 
   if (!dec->inuse) {
     return JPEGDEC_STATE_ERROR;
@@ -266,8 +266,8 @@ jpegdec_state_t jpegdec_process(jpegdec_input_t *input) {
   return dec->state;
 }
 
-bool jpegdec_get_info(jpegdec_image_t *image) {
-  jpegdec_t *dec = &g_jpegdec;
+bool jpegdec_get_info(jpegdec_image_t* image) {
+  jpegdec_t* dec = &g_jpegdec;
 
   if (!dec->inuse) {
     return false;
@@ -281,8 +281,8 @@ bool jpegdec_get_info(jpegdec_image_t *image) {
   return true;
 }
 
-bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
-  jpegdec_t *dec = &g_jpegdec;
+bool jpegdec_get_slice_rgba8888(uint32_t* rgba8888, jpegdec_slice_t* slice) {
+  jpegdec_t* dec = &g_jpegdec;
 
   if (!dec->inuse) {
     return false;
@@ -298,16 +298,16 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
   slice->height = MIN(dec->image.height - dec->slice_y, MAX_SLICE_HEIGHT);
 
   for (int y = 0; y < slice->height; y++) {
-    void *src = &((uint32_t *)dec->slice_buffer[y])[slice->x];
-    void *dst = rgba8888 + y * slice->width;
+    void* src = &((uint32_t*)dec->slice_buffer[y])[slice->x];
+    void* dst = rgba8888 + y * slice->width;
     memcpy(dst, src, slice->width * sizeof(uint32_t));
   }
 
   return true;
 }
 
-bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
-  jpegdec_t *dec = &g_jpegdec;
+bool jpegdec_get_slice_mono8(uint32_t* mono8, jpegdec_slice_t* slice) {
+  jpegdec_t* dec = &g_jpegdec;
 
   if (!dec->inuse) {
     return false;
@@ -322,11 +322,11 @@ bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
   slice->width = MIN(dec->image.width - dec->slice_x, MAX_SLICE_WIDTH);
   slice->height = MIN(dec->image.height - dec->slice_y, MAX_SLICE_HEIGHT);
 
-  uint8_t *dst = (uint8_t *)mono8;
+  uint8_t* dst = (uint8_t*)mono8;
 
   for (int y = 0; y < slice->height; y++) {
     for (int x = 0; x < slice->width; x++) {
-      gfx_color32_t color = ((uint32_t *)dec->slice_buffer[y])[slice->x + x];
+      gfx_color32_t color = ((uint32_t*)dec->slice_buffer[y])[slice->x + x];
       dst[y * slice->width + x] = gfx_color32_lum(color);
     }
   }
@@ -335,7 +335,7 @@ bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
 }
 
 void jpegdec_close(void) {
-  jpegdec_t *dec = &g_jpegdec;
+  jpegdec_t* dec = &g_jpegdec;
 
   if (dec->inuse) {
     jpeg_destroy_decompress(&dec->cinfo);
