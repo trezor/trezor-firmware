@@ -1945,7 +1945,7 @@
     "reset__check_group_share_title_template": {
       "Bolt": "Vérif. gr. {0} - fr. {1}",
       "Caesar": "",
-      "Delizia": "Vérifier g{0} - fragm. {1}",
+      "Delizia": "Vérif. gr. {0} - fr. {1}",
       "Eckhart": "Vérifier groupe {0} - fragment {1}"
     },
     "reset__check_share_backup_template": "Vérifions rapidement le Fragment #{0}.",
