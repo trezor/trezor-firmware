@@ -195,9 +195,13 @@ class AmountFormatter(FieldFormatter):
 
 class TokenAmountFormatter(FieldFormatter):
     def __init__(
-        self, token_path: Path | None = None, threshold: int | None = None
+        self,
+        token_path: Path | None = None,
+        native_currency_address: list[bytes] | None = None,
+        threshold: int | None = None,
     ) -> None:
         self.token_path = token_path
+        self.native_currency_address = native_currency_address
         self.threshold = threshold
 
     def format(
@@ -222,11 +226,19 @@ class TokenAmountFormatter(FieldFormatter):
                 token_address = path_walker(self.token_path)
                 if not isinstance(token_address, bytes):
                     raise InvalidFormatDefinition
-                token = definitions.get_token(token_address)
+                is_native_currency = False
+                if self.native_currency_address is not None:
+                    if token_address in self.native_currency_address:
+                        is_native_currency = True
+                token = (
+                    definitions.get_token(token_address)
+                    if not is_native_currency
+                    else None
+                )
                 return (
                     format_ethereum_amount(amount, token, definitions.network),
                     token,
-                    token_address,
+                    token_address if not is_native_currency else None,
                 )
             return (
                 format_ethereum_amount(amount, token, definitions.network),
