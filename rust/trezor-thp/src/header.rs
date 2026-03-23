@@ -1,6 +1,6 @@
 use crate::Role;
 use crate::alternating_bit::SyncBits;
-use crate::control_byte::{self, ControlByte};
+use crate::control_byte::ControlByte;
 use crate::crc32;
 use crate::error::{Error, Result};
 
@@ -80,7 +80,7 @@ pub(crate) fn parse_cb_channel(buffer: &[u8]) -> Result<(ControlByte, u16, &[u8]
         return Err(Error::malformed_data());
     };
     let (channel_id, rest) = parse_u16(rest)?;
-    Ok((ControlByte::from(*cb), channel_id, rest))
+    Ok((ControlByte::try_from(*cb)?, channel_id, rest))
 }
 
 impl<R: Role> Header<R> {
@@ -177,7 +177,10 @@ impl<R: Role> Header<R> {
     }
 
     fn parse_unicast(cb: ControlByte, channel_id: u16, payload_len: u16) -> Option<Self> {
-        if let Some(phase) = HandshakeMessage::from_u8::<R>(cb.into()) {
+        if let Some(phase) = cb.handshake_phase() {
+            if !phase.valid_incoming::<R>() {
+                return None;
+            }
             return Some(Self::Handshake {
                 phase,
                 channel_id,
@@ -193,22 +196,25 @@ impl<R: Role> Header<R> {
         None
     }
 
-    pub(crate) fn control_byte(&self, sync_bits: SyncBits) -> Option<ControlByte> {
-        let cb = match self {
-            Self::Continuation { .. } => control_byte::CONTINUATION_PACKET,
-            Self::Ack { .. } => control_byte::ACK_MESSAGE,
-            Self::ChannelAllocationRequest if R::is_host() => control_byte::CHANNEL_ALLOCATION_REQ,
-            Self::ChannelAllocationResponse { .. } if !R::is_host() => {
-                control_byte::CHANNEL_ALLOCATION_RES
+    pub fn control_byte(&self, sync_bits: SyncBits) -> Option<ControlByte> {
+        let mut cb = match self {
+            Self::Continuation { .. } => ControlByte::continuation(),
+            Self::Ack { .. } => ControlByte::ack(),
+            Self::ChannelAllocationRequest if R::is_host() => {
+                ControlByte::channel_allocation_request()
             }
-            Self::TransportError { .. } => control_byte::ERROR,
-            Self::Ping if R::is_host() => control_byte::PING,
-            Self::Pong if !R::is_host() => control_byte::PONG,
-            Self::Handshake { phase, .. } => phase.to_u8::<R>()?,
-            Self::Encrypted { .. } => control_byte::ENCRYPTED_TRANSPORT,
+            Self::ChannelAllocationResponse { .. } if !R::is_host() => {
+                ControlByte::channel_allocation_response()
+            }
+            Self::TransportError { .. } => ControlByte::error(),
+            Self::Ping if R::is_host() => ControlByte::ping(),
+            Self::Pong if !R::is_host() => ControlByte::pong(),
+            Self::Handshake { phase, .. } if phase.valid_outgoing::<R>() => {
+                ControlByte::handshake(*phase)
+            }
+            Self::Encrypted { .. } => ControlByte::encrypted_transport(),
             _ => return None,
         };
-        let mut cb = ControlByte::from(cb);
         if self.is_ack() && sync_bits.seq_bit() {
             // ACK must have seq_bit=0
             return None;
@@ -224,7 +230,7 @@ impl<R: Role> Header<R> {
             return if dest.len() < Self::CONT_LEN {
                 None
             } else {
-                dest[0] = control_byte::CONTINUATION_PACKET;
+                dest[0] = ControlByte::continuation().into();
                 dest[1..3].copy_from_slice(&channel_id.to_be_bytes());
                 Some(Self::CONT_LEN)
             };
@@ -417,37 +423,20 @@ impl<R: Role> Header<R> {
 }
 
 impl HandshakeMessage {
-    pub fn from_u8<R: Role>(val: u8) -> Option<Self> {
-        let masked = val & control_byte::DATA_MASK;
-        Some(match masked {
-            control_byte::HANDSHAKE_INIT_REQ if !R::is_host() => {
-                HandshakeMessage::InitiationRequest
-            }
-            control_byte::HANDSHAKE_INIT_RES if R::is_host() => {
-                HandshakeMessage::InitiationResponse
-            }
-            control_byte::HANDSHAKE_COMP_REQ if !R::is_host() => {
-                HandshakeMessage::CompletionRequest
-            }
-            control_byte::HANDSHAKE_COMP_RES if R::is_host() => {
-                HandshakeMessage::CompletionResponse
-            }
-            _ => return None,
-        })
+    /// True if this is valid outgoing message for a given role.
+    fn valid_outgoing<R: Role>(&self) -> bool {
+        match self {
+            HandshakeMessage::InitiationRequest if R::is_host() => true,
+            HandshakeMessage::InitiationResponse if !R::is_host() => true,
+            HandshakeMessage::CompletionRequest if R::is_host() => true,
+            HandshakeMessage::CompletionResponse if !R::is_host() => true,
+            _ => false,
+        }
     }
 
-    pub fn to_u8<R: Role>(&self) -> Option<u8> {
-        Some(match self {
-            HandshakeMessage::InitiationRequest if R::is_host() => control_byte::HANDSHAKE_INIT_REQ,
-            HandshakeMessage::InitiationResponse if !R::is_host() => {
-                control_byte::HANDSHAKE_INIT_RES
-            }
-            HandshakeMessage::CompletionRequest if R::is_host() => control_byte::HANDSHAKE_COMP_REQ,
-            HandshakeMessage::CompletionResponse if !R::is_host() => {
-                control_byte::HANDSHAKE_COMP_RES
-            }
-            _ => return None,
-        })
+    /// True if this is valid outgoing message for a given role.
+    fn valid_incoming<R: Role>(&self) -> bool {
+        !self.valid_outgoing::<R>()
     }
 }
 
