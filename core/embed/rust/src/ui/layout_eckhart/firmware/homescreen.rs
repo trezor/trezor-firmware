@@ -382,7 +382,9 @@ impl Component for HomescreenHeader {
                 Offset::uniform(ConnectionIndicator::AREA_SIZE_NEEDED),
                 Alignment2D::CENTER_LEFT,
             )
-            .translate(Offset::x(Self::SUBCOMPONENTS_GAP));
+            .translate(Offset::x(Self::SUBCOMPONENTS_GAP))
+            // Visually align with the fuel gauge icon
+            .translate(Offset::y(-1));
 
             self.fuel_gauge.place(fuel_gauge_area);
             self.connection_indicator.place(connection_indicator_area);
@@ -443,8 +445,14 @@ impl Component for HomescreenHeader {
         if self.show_indicators {
             if let Some(animation) = &self.label_anim {
                 let x_offset = animation.eval_offset();
+                let shadow_offset = x_offset
+                    + Offset::x(i16::lerp(
+                        0,
+                        -Self::SUBCOMPONENTS_GAP,
+                        animation.hide_progress(),
+                    ));
                 if self.background_image {
-                    target.with_origin(x_offset, &|target| {
+                    target.with_origin(shadow_offset, &|target| {
                         render_pill_shaped_background(self.label_shadow_area, target);
                     });
                 }
@@ -566,6 +574,17 @@ impl ShowLabelAnimation {
 
         let pos = self.eval();
         Offset::x(i16::lerp(-self.label_width, 0, pos))
+    }
+
+    /// Returns 0.0 when label is fully visible, 1.0 when fully hidden.
+    pub fn hide_progress(&self) -> f32 {
+        if animation_disabled() || !self.animated {
+            if self.hidden && !self.animating {
+                return 1.0;
+            }
+            return 0.0;
+        }
+        1.0 - self.eval()
     }
 
     pub fn process_event(&mut self, ctx: &mut EventCtx, event: Event) {
