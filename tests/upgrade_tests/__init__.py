@@ -103,6 +103,16 @@ else:
     LEGACY_ENABLED = LOCAL_BUILD_PATHS["legacy"].exists()
     CORE_ENABLED = LOCAL_BUILD_PATHS["core"].exists()
     detected_core_model = _detect_local_core_build_model() if CORE_ENABLED else None
+
+    # Fail explicitly if local core build exists but model cannot be detected.
+    # Silently defaulting to T2T1 for unknown builds masks configuration issues.
+    if CORE_ENABLED and detected_core_model is None:
+        raise ValueError(
+            "Local core emulator build detected but model could not be determined. "
+            "Please ensure trezorhal.rs exists with MODEL_INTERNAL_NAME, "
+            "or specify TREZOR_UPGRADE_TEST=core-t2t1|core-t3w1 explicitly."
+        )
+
     CORE_T2T1_ENABLED = CORE_ENABLED and detected_core_model != "T3W1"
     CORE_T3W1_ENABLED = CORE_ENABLED and detected_core_model == "T3W1"
 
