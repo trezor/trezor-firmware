@@ -473,6 +473,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_modify_fee__transaction_fee;
   MP_QSTR_more_info_callback;
   MP_QSTR_multiple_pages_texts;
+  MP_QSTR_n4w1__footer_first;
+  MP_QSTR_n4w1__footer_last;
+  MP_QSTR_n4w1__footer_next;
+  MP_QSTR_n4w1__hold_first;
+  MP_QSTR_n4w1__hold_last;
+  MP_QSTR_n4w1__hold_next;
+  MP_QSTR_n4w1__writing;
   MP_QSTR_notification;
   MP_QSTR_page_count;
   MP_QSTR_page_counter;

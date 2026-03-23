@@ -1573,6 +1573,13 @@ pub enum TranslatedString {
     ethereum__confirm_contract = 1183,  // "Confirm contract"
     words__intent = 1184,  // "Intent"
     suite_sync__rotate_key = 1185,  // "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?"
+    n4w1__footer_first = 1186,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Start with any tag"}
+    n4w1__footer_last = 1187,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Use the last remaining tag"}
+    n4w1__footer_next = 1188,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Use any remaining tag"}
+    n4w1__hold_first = 1189,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the first tag to the back of this Trezor."}
+    n4w1__hold_last = 1190,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the last tag to the back of this Trezor."}
+    n4w1__hold_next = 1191,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the next tag to the back of this Trezor."}
+    n4w1__writing = 1192,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Writing to tag..."}
 }
 
 impl TranslatedString {
@@ -2766,6 +2773,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -3957,6 +3971,13 @@ impl TranslatedString {
                 21455,
                 21461,
                 21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5147,6 +5168,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6338,6 +6366,13 @@ impl TranslatedString {
                 21455,
                 21461,
                 21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7528,6 +7563,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8719,6 +8761,13 @@ impl TranslatedString {
                 21455,
                 21461,
                 21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -9909,6 +9958,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11099,6 +11155,13 @@ impl TranslatedString {
                 21439,
                 21455,
                 21461,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
+                21592,
                 21592,
             ];
 
@@ -12291,6 +12354,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13482,6 +13552,13 @@ impl TranslatedString {
                 18683,
                 18689,
                 18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14672,6 +14749,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15863,6 +15947,13 @@ impl TranslatedString {
                 18683,
                 18689,
                 18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17053,6 +17144,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18244,6 +18342,13 @@ impl TranslatedString {
                 18683,
                 18689,
                 18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19434,6 +19539,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20624,6 +20736,13 @@ impl TranslatedString {
                 18667,
                 18683,
                 18689,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
+                18820,
                 18820,
             ];
 
@@ -21816,6 +21935,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23007,6 +23133,13 @@ impl TranslatedString {
                 20539,
                 20545,
                 20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24197,6 +24330,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25388,6 +25528,13 @@ impl TranslatedString {
                 20539,
                 20545,
                 20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -26578,6 +26725,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27769,6 +27923,13 @@ impl TranslatedString {
                 20539,
                 20545,
                 20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -28959,6 +29120,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30149,6 +30317,13 @@ impl TranslatedString {
                 20523,
                 20539,
                 20545,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
+                20676,
                 20676,
             ];
 
@@ -31341,6 +31516,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "Start with any tag",
+                "Use the last remaining tag",
+                "Use any remaining tag",
+                "Hold the first tag to the back of this Trezor.",
+                "Hold the last tag to the back of this Trezor.",
+                "Hold the next tag to the back of this Trezor.",
+                "Writing to tag...",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -32532,6 +32714,13 @@ impl TranslatedString {
                 21248,
                 21254,
                 21385,
+                21403,
+                21429,
+                21450,
+                21496,
+                21541,
+                21586,
+                21603,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -33722,6 +33911,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "Start with any tag",
+                "Use the last remaining tag",
+                "Use any remaining tag",
+                "Hold the first tag to the back of this Trezor.",
+                "Hold the last tag to the back of this Trezor.",
+                "Hold the next tag to the back of this Trezor.",
+                "Writing to tag...",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -34913,6 +35109,13 @@ impl TranslatedString {
                 21248,
                 21254,
                 21385,
+                21403,
+                21429,
+                21450,
+                21496,
+                21541,
+                21586,
+                21603,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -36103,6 +36306,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "Start with any tag",
+                "Use the last remaining tag",
+                "Use any remaining tag",
+                "Hold the first tag to the back of this Trezor.",
+                "Hold the last tag to the back of this Trezor.",
+                "Hold the next tag to the back of this Trezor.",
+                "Writing to tag...",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37294,6 +37504,13 @@ impl TranslatedString {
                 21248,
                 21254,
                 21385,
+                21403,
+                21429,
+                21450,
+                21496,
+                21541,
+                21586,
+                21603,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -38484,6 +38701,13 @@ impl TranslatedString {
                 "Confirm contract",
                 "Intent",
                 "You are about to rotate the delegated identity key used for Suite Sync. This will invalidate previous keys. Do you want to proceed?",
+                "Start with any tag",
+                "Use the last remaining tag",
+                "Use any remaining tag",
+                "Hold the first tag to the back of this Trezor.",
+                "Hold the last tag to the back of this Trezor.",
+                "Hold the next tag to the back of this Trezor.",
+                "Writing to tag...",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39675,6 +39899,13 @@ impl TranslatedString {
                 21248,
                 21254,
                 21385,
+                21403,
+                21429,
+                21450,
+                21496,
+                21541,
+                21586,
+                21603,
             ];
 
         }
@@ -40439,6 +40670,13 @@ impl TranslatedString {
         (Qstr::MP_QSTR_monero__wanna_start_refresh, Self::monero__wanna_start_refresh),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_monero__wanna_sync_key_images, Self::monero__wanna_sync_key_images),
+        (Qstr::MP_QSTR_n4w1__footer_first, Self::n4w1__footer_first),
+        (Qstr::MP_QSTR_n4w1__footer_last, Self::n4w1__footer_last),
+        (Qstr::MP_QSTR_n4w1__footer_next, Self::n4w1__footer_next),
+        (Qstr::MP_QSTR_n4w1__hold_first, Self::n4w1__hold_first),
+        (Qstr::MP_QSTR_n4w1__hold_last, Self::n4w1__hold_last),
+        (Qstr::MP_QSTR_n4w1__hold_next, Self::n4w1__hold_next),
+        (Qstr::MP_QSTR_n4w1__writing, Self::n4w1__writing),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_nem__absolute, Self::nem__absolute),
         #[cfg(feature = "universal_fw")]

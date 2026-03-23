@@ -1184,5 +1184,12 @@
   "1182": "words__voting",
   "1183": "ethereum__confirm_contract",
   "1184": "words__intent",
-  "1185": "suite_sync__rotate_key"
+  "1185": "suite_sync__rotate_key",
+  "1186": "n4w1__footer_first",
+  "1187": "n4w1__footer_last",
+  "1188": "n4w1__footer_next",
+  "1189": "n4w1__hold_first",
+  "1190": "n4w1__hold_last",
+  "1191": "n4w1__hold_next",
+  "1192": "n4w1__writing"
 }
