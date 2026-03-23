@@ -627,11 +627,12 @@ def test_upgrade_shamir_backup(
             assert emu.client.features.backup_type == backup_type
             tag_version = version_from_tag(tag)
             if tag_version is not None:
-                assert (
-                    backup_type == BackupType.Slip39_Basic
+                expected_backup_type = (
+                    BackupType.Slip39_Basic
                     if tag_version < (2, 7, 1)
                     else BackupType.Slip39_Basic_Extendable
                 )
+                assert backup_type == expected_backup_type
 
             # Check that the backup contains the originally generated encrypted master secret.
             groups = shamir.decode_mnemonics(IF.mnemonics[:3])
