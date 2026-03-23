@@ -58,9 +58,10 @@ def shared_profile_dir() -> Generator[tempfile.TemporaryDirectory, None, None]:
 
 ALL_TAGS = get_tags()
 _NESTED_TAGS = get_tags(prefer_nested=True)
+# Always override T3W1 tags with nested results to ensure prefer_nested=True
+# lookups don't fail at runtime when binaries don't exist top-level.
 for model in TROPIC_CAPABLE_MODELS:
-    if model in _NESTED_TAGS:
-        ALL_TAGS[model] = _NESTED_TAGS[model]
+    ALL_TAGS[model] = _NESTED_TAGS.get(model, [])
 
 
 SELECTED_GENS = [
