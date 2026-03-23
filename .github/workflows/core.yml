@@ -441,6 +441,7 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+      TREZOR_UPGRADE_TEST: ${{ matrix.model == 'T3W1' && 'core-t3w1' || 'core-t2t1' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # actions/checkout@v6.0.2
         with:
