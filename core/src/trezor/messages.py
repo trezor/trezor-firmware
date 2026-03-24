@@ -2488,7 +2488,7 @@ if TYPE_CHECKING:
         no_backup: "bool | None"
         backup_type: "BackupType"
         entropy_check: "bool | None"
-        method: "BackupMethod"
+        backup_method: "BackupMethod"
 
         def __init__(
             self,
@@ -2502,7 +2502,7 @@ if TYPE_CHECKING:
             no_backup: "bool | None" = None,
             backup_type: "BackupType | None" = None,
             entropy_check: "bool | None" = None,
-            method: "BackupMethod | None" = None,
+            backup_method: "BackupMethod | None" = None,
         ) -> None:
             pass
 
@@ -2513,14 +2513,14 @@ if TYPE_CHECKING:
     class BackupDevice(protobuf.MessageType):
         group_threshold: "int | None"
         groups: "list[Slip39Group]"
-        method: "BackupMethod"
+        backup_method: "BackupMethod"
 
         def __init__(
             self,
             *,
             groups: "list[Slip39Group] | None" = None,
             group_threshold: "int | None" = None,
-            method: "BackupMethod | None" = None,
+            backup_method: "BackupMethod | None" = None,
         ) -> None:
             pass
 
@@ -2587,7 +2587,7 @@ if TYPE_CHECKING:
         input_method: "RecoveryDeviceInputMethod | None"
         u2f_counter: "int | None"
         type: "RecoveryType"
-        method: "BackupMethod"
+        backup_method: "BackupMethod"
 
         def __init__(
             self,
@@ -2600,7 +2600,7 @@ if TYPE_CHECKING:
             input_method: "RecoveryDeviceInputMethod | None" = None,
             u2f_counter: "int | None" = None,
             type: "RecoveryType | None" = None,
-            method: "BackupMethod | None" = None,
+            backup_method: "BackupMethod | None" = None,
         ) -> None:
             pass
 

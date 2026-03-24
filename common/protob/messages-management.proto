@@ -447,18 +447,18 @@ message LoadDevice {
  * @next Failure
  */
 message ResetDevice {
-    reserved 1;                                              // unused display_random
-    optional uint32 strength = 2 [default = 256];            // strength of seed in bits
-    optional bool passphrase_protection = 3;                 // enable master node encryption using passphrase
-    optional bool pin_protection = 4;                        // enable PIN protection
-    optional string language = 5 [deprecated = true];        // deprecated (use ChangeLanguage)
-    optional string label = 6;                               // device label
-    optional uint32 u2f_counter = 7;                         // U2F counter
-    optional bool skip_backup = 8;                           // postpone seed backup to BackupDevice workflow
-    optional bool no_backup = 9;                             // indicate that no backup is going to be made
-    optional BackupType backup_type = 10 [default = Bip39];  // type of the mnemonic backup
-    optional bool entropy_check = 11;                        // run with entropy check protocol
-    optional BackupMethod method = 12 [default = Display];   // how the mnemonic shares should be backed up
+    reserved 1;                                                    // unused display_random
+    optional uint32 strength = 2 [default = 256];                  // strength of seed in bits
+    optional bool passphrase_protection = 3;                       // enable master node encryption using passphrase
+    optional bool pin_protection = 4;                              // enable PIN protection
+    optional string language = 5 [deprecated = true];              // deprecated (use ChangeLanguage)
+    optional string label = 6;                                     // device label
+    optional uint32 u2f_counter = 7;                               // U2F counter
+    optional bool skip_backup = 8;                                 // postpone seed backup to BackupDevice workflow
+    optional bool no_backup = 9;                                   // indicate that no backup is going to be made
+    optional BackupType backup_type = 10 [default = Bip39];        // type of the mnemonic backup
+    optional bool entropy_check = 11;                              // run with entropy check protocol
+    optional BackupMethod backup_method = 12 [default = Display];  // how the mnemonic shares should be backed up
 }
 
 /**
@@ -473,7 +473,7 @@ message BackupDevice {
         required uint32 member_count = 2;
     }
     repeated Slip39Group groups = 2;
-    optional BackupMethod method = 3 [default = Display];  // how the mnemonic shares should be backed up
+    optional BackupMethod backup_method = 3 [default = Display];  // how the mnemonic shares should be backed up
 }
 
 /**
@@ -528,7 +528,7 @@ message RecoveryDevice {
     optional RecoveryDeviceInputMethod input_method = 8;         // supported recovery input method (T1 only)
     optional uint32 u2f_counter = 9;                             // U2F counter
     optional RecoveryType type = 10 [default = NormalRecovery];  // the type of recovery to perform
-    optional BackupMethod method = 11 [default = Display];       // how the shares should be recovered from backup
+    optional BackupMethod backup_method = 11 [default = Display];  // how the shares should be recovered from backup
     /**
      * Type of recovery procedure. These should be used as bitmask, e.g.,
      * `RecoveryDeviceInputMethod_ScrambledWords | RecoveryDeviceInputMethod_Matrix`

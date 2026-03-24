@@ -8,13 +8,13 @@ if TYPE_CHECKING:
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
 # All except `type` are allowed for T1 compatibility, but their values are ignored.
 # If set, `enforce_wordlist` must be True, because we do not support non-enforcing.
-# `method` allows choosing between different ways to input the shares (on Core devices).
+# `backup_method` allows choosing between different ways to input the shares (on Core devices).
 DRY_RUN_ALLOWED_FIELDS = (
     "type",
     "word_count",
     "enforce_wordlist",
     "input_method",
-    "method",
+    "backup_method",
 )
 
 

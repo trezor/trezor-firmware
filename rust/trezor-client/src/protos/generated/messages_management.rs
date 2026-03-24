@@ -7364,8 +7364,8 @@ pub struct ResetDevice {
     pub backup_type: ::std::option::Option<::protobuf::EnumOrUnknown<BackupType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ResetDevice.entropy_check)
     pub entropy_check: ::std::option::Option<bool>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.management.ResetDevice.method)
-    pub method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.ResetDevice.backup_method)
+    pub backup_method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.ResetDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -7609,26 +7609,26 @@ impl ResetDevice {
         self.entropy_check = ::std::option::Option::Some(v);
     }
 
-    // optional .hw.trezor.messages.management.BackupMethod method = 12;
+    // optional .hw.trezor.messages.management.BackupMethod backup_method = 12;
 
-    pub fn method(&self) -> BackupMethod {
-        match self.method {
+    pub fn backup_method(&self) -> BackupMethod {
+        match self.backup_method {
             Some(e) => e.enum_value_or(BackupMethod::Display),
             None => BackupMethod::Display,
         }
     }
 
-    pub fn clear_method(&mut self) {
-        self.method = ::std::option::Option::None;
+    pub fn clear_backup_method(&mut self) {
+        self.backup_method = ::std::option::Option::None;
     }
 
-    pub fn has_method(&self) -> bool {
-        self.method.is_some()
+    pub fn has_backup_method(&self) -> bool {
+        self.backup_method.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_method(&mut self, v: BackupMethod) {
-        self.method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    pub fn set_backup_method(&mut self, v: BackupMethod) {
+        self.backup_method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -7685,9 +7685,9 @@ impl ResetDevice {
             |m: &mut ResetDevice| { &mut m.entropy_check },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "method",
-            |m: &ResetDevice| { &m.method },
-            |m: &mut ResetDevice| { &mut m.method },
+            "backup_method",
+            |m: &ResetDevice| { &m.backup_method },
+            |m: &mut ResetDevice| { &mut m.backup_method },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ResetDevice>(
             "ResetDevice",
@@ -7738,7 +7738,7 @@ impl ::protobuf::Message for ResetDevice {
                     self.entropy_check = ::std::option::Option::Some(is.read_bool()?);
                 },
                 96 => {
-                    self.method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                    self.backup_method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -7782,7 +7782,7 @@ impl ::protobuf::Message for ResetDevice {
         if let Some(v) = self.entropy_check {
             my_size += 1 + 1;
         }
-        if let Some(v) = self.method {
+        if let Some(v) = self.backup_method {
             my_size += ::protobuf::rt::int32_size(12, v.value());
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -7821,7 +7821,7 @@ impl ::protobuf::Message for ResetDevice {
         if let Some(v) = self.entropy_check {
             os.write_bool(11, v)?;
         }
-        if let Some(v) = self.method {
+        if let Some(v) = self.backup_method {
             os.write_enum(12, ::protobuf::EnumOrUnknown::value(&v))?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -7851,7 +7851,7 @@ impl ::protobuf::Message for ResetDevice {
         self.no_backup = ::std::option::Option::None;
         self.backup_type = ::std::option::Option::None;
         self.entropy_check = ::std::option::Option::None;
-        self.method = ::std::option::Option::None;
+        self.backup_method = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -7867,7 +7867,7 @@ impl ::protobuf::Message for ResetDevice {
             no_backup: ::std::option::Option::None,
             backup_type: ::std::option::Option::None,
             entropy_check: ::std::option::Option::None,
-            method: ::std::option::Option::None,
+            backup_method: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -7899,8 +7899,8 @@ pub struct BackupDevice {
     pub group_threshold: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.groups)
     pub groups: ::std::vec::Vec<backup_device::Slip39Group>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.method)
-    pub method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.BackupDevice.backup_method)
+    pub backup_method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.BackupDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -7936,26 +7936,26 @@ impl BackupDevice {
         self.group_threshold = ::std::option::Option::Some(v);
     }
 
-    // optional .hw.trezor.messages.management.BackupMethod method = 3;
+    // optional .hw.trezor.messages.management.BackupMethod backup_method = 3;
 
-    pub fn method(&self) -> BackupMethod {
-        match self.method {
+    pub fn backup_method(&self) -> BackupMethod {
+        match self.backup_method {
             Some(e) => e.enum_value_or(BackupMethod::Display),
             None => BackupMethod::Display,
         }
     }
 
-    pub fn clear_method(&mut self) {
-        self.method = ::std::option::Option::None;
+    pub fn clear_backup_method(&mut self) {
+        self.backup_method = ::std::option::Option::None;
     }
 
-    pub fn has_method(&self) -> bool {
-        self.method.is_some()
+    pub fn has_backup_method(&self) -> bool {
+        self.backup_method.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_method(&mut self, v: BackupMethod) {
-        self.method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    pub fn set_backup_method(&mut self, v: BackupMethod) {
+        self.backup_method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -7972,9 +7972,9 @@ impl BackupDevice {
             |m: &mut BackupDevice| { &mut m.groups },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "method",
-            |m: &BackupDevice| { &m.method },
-            |m: &mut BackupDevice| { &mut m.method },
+            "backup_method",
+            |m: &BackupDevice| { &m.backup_method },
+            |m: &mut BackupDevice| { &mut m.backup_method },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<BackupDevice>(
             "BackupDevice",
@@ -8006,7 +8006,7 @@ impl ::protobuf::Message for BackupDevice {
                     self.groups.push(is.read_message()?);
                 },
                 24 => {
-                    self.method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                    self.backup_method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -8027,7 +8027,7 @@ impl ::protobuf::Message for BackupDevice {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         };
-        if let Some(v) = self.method {
+        if let Some(v) = self.backup_method {
             my_size += ::protobuf::rt::int32_size(3, v.value());
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -8042,7 +8042,7 @@ impl ::protobuf::Message for BackupDevice {
         for v in &self.groups {
             ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
         };
-        if let Some(v) = self.method {
+        if let Some(v) = self.backup_method {
             os.write_enum(3, ::protobuf::EnumOrUnknown::value(&v))?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -8064,7 +8064,7 @@ impl ::protobuf::Message for BackupDevice {
     fn clear(&mut self) {
         self.group_threshold = ::std::option::Option::None;
         self.groups.clear();
-        self.method = ::std::option::Option::None;
+        self.backup_method = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -8072,7 +8072,7 @@ impl ::protobuf::Message for BackupDevice {
         static instance: BackupDevice = BackupDevice {
             group_threshold: ::std::option::Option::None,
             groups: ::std::vec::Vec::new(),
-            method: ::std::option::Option::None,
+            backup_method: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -8922,8 +8922,8 @@ pub struct RecoveryDevice {
     pub u2f_counter: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.RecoveryDevice.type)
     pub type_: ::std::option::Option<::protobuf::EnumOrUnknown<RecoveryType>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.management.RecoveryDevice.method)
-    pub method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.RecoveryDevice.backup_method)
+    pub backup_method: ::std::option::Option<::protobuf::EnumOrUnknown<BackupMethod>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.RecoveryDevice.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -9151,26 +9151,26 @@ impl RecoveryDevice {
         self.type_ = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
-    // optional .hw.trezor.messages.management.BackupMethod method = 11;
+    // optional .hw.trezor.messages.management.BackupMethod backup_method = 11;
 
-    pub fn method(&self) -> BackupMethod {
-        match self.method {
+    pub fn backup_method(&self) -> BackupMethod {
+        match self.backup_method {
             Some(e) => e.enum_value_or(BackupMethod::Display),
             None => BackupMethod::Display,
         }
     }
 
-    pub fn clear_method(&mut self) {
-        self.method = ::std::option::Option::None;
+    pub fn clear_backup_method(&mut self) {
+        self.backup_method = ::std::option::Option::None;
     }
 
-    pub fn has_method(&self) -> bool {
-        self.method.is_some()
+    pub fn has_backup_method(&self) -> bool {
+        self.backup_method.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_method(&mut self, v: BackupMethod) {
-        self.method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    pub fn set_backup_method(&mut self, v: BackupMethod) {
+        self.backup_method = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -9222,9 +9222,9 @@ impl RecoveryDevice {
             |m: &mut RecoveryDevice| { &mut m.type_ },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "method",
-            |m: &RecoveryDevice| { &m.method },
-            |m: &mut RecoveryDevice| { &mut m.method },
+            "backup_method",
+            |m: &RecoveryDevice| { &m.backup_method },
+            |m: &mut RecoveryDevice| { &mut m.backup_method },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RecoveryDevice>(
             "RecoveryDevice",
@@ -9272,7 +9272,7 @@ impl ::protobuf::Message for RecoveryDevice {
                     self.type_ = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 88 => {
-                    self.method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                    self.backup_method = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -9313,7 +9313,7 @@ impl ::protobuf::Message for RecoveryDevice {
         if let Some(v) = self.type_ {
             my_size += ::protobuf::rt::int32_size(10, v.value());
         }
-        if let Some(v) = self.method {
+        if let Some(v) = self.backup_method {
             my_size += ::protobuf::rt::int32_size(11, v.value());
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -9349,7 +9349,7 @@ impl ::protobuf::Message for RecoveryDevice {
         if let Some(v) = self.type_ {
             os.write_enum(10, ::protobuf::EnumOrUnknown::value(&v))?;
         }
-        if let Some(v) = self.method {
+        if let Some(v) = self.backup_method {
             os.write_enum(11, ::protobuf::EnumOrUnknown::value(&v))?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -9378,7 +9378,7 @@ impl ::protobuf::Message for RecoveryDevice {
         self.input_method = ::std::option::Option::None;
         self.u2f_counter = ::std::option::Option::None;
         self.type_ = ::std::option::Option::None;
-        self.method = ::std::option::Option::None;
+        self.backup_method = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -9393,7 +9393,7 @@ impl ::protobuf::Message for RecoveryDevice {
             input_method: ::std::option::Option::None,
             u2f_counter: ::std::option::Option::None,
             type_: ::std::option::Option::None,
-            method: ::std::option::Option::None,
+            backup_method: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -12597,7 +12597,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     f_counter\x18\x08\x20\x01(\rR\nu2fCounter\x12!\n\x0cneeds_backup\x18\t\
     \x20\x01(\x08R\x0bneedsBackup\x12\x1b\n\tno_backup\x18\n\x20\x01(\x08R\
     \x08noBackup\x12+\n\x11unfinished_backup\x18\x0b\x20\x01(\x08R\x10unfini\
-    shedBackup\"\xeb\x03\n\x0bResetDevice\x12\x1f\n\x08strength\x18\x02\x20\
+    shedBackup\"\xf8\x03\n\x0bResetDevice\x12\x1f\n\x08strength\x18\x02\x20\
     \x01(\r:\x03256R\x08strength\x123\n\x15passphrase_protection\x18\x03\x20\
     \x01(\x08R\x14passphraseProtection\x12%\n\x0epin_protection\x18\x04\x20\
     \x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08l\
@@ -12606,66 +12606,67 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     backup\x18\x08\x20\x01(\x08R\nskipBackup\x12\x1b\n\tno_backup\x18\t\x20\
     \x01(\x08R\x08noBackup\x12Q\n\x0bbackup_type\x18\n\x20\x01(\x0e2).hw.tre\
     zor.messages.management.BackupType:\x05Bip39R\nbackupType\x12#\n\rentrop\
-    y_check\x18\x0b\x20\x01(\x08R\x0centropyCheck\x12L\n\x06method\x18\x0c\
-    \x20\x01(\x0e2+.hw.trezor.messages.management.BackupMethod:\x07DisplayR\
-    \x06methodJ\x04\x08\x01\x10\x02\"\xb3\x02\n\x0cBackupDevice\x12'\n\x0fgr\
-    oup_threshold\x18\x01\x20\x01(\rR\x0egroupThreshold\x12O\n\x06groups\x18\
-    \x02\x20\x03(\x0b27.hw.trezor.messages.management.BackupDevice.Slip39Gro\
-    upR\x06groups\x12L\n\x06method\x18\x03\x20\x01(\x0e2+.hw.trezor.messages\
-    .management.BackupMethod:\x07DisplayR\x06method\x1a[\n\x0bSlip39Group\
-    \x12)\n\x10member_threshold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12!\
-    \n\x0cmember_count\x18\x02\x20\x02(\rR\x0bmemberCount\"b\n\x0eEntropyReq\
-    uest\x12-\n\x12entropy_commitment\x18\x01\x20\x01(\x0cR\x11entropyCommit\
-    ment\x12!\n\x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bprevEntropy\"&\n\nE\
-    ntropyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\x13\n\
-    \x11EntropyCheckReady\"5\n\x14EntropyCheckContinue\x12\x1d\n\x06finish\
-    \x18\x01\x20\x01(\x08:\x05falseR\x06finish\"\xdb\x04\n\x0eRecoveryDevice\
-    \x12\x1d\n\nword_count\x18\x01\x20\x01(\rR\twordCount\x123\n\x15passphra\
-    se_protection\x18\x02\x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epi\
-    n_protection\x18\x03\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\
-    \x18\x04\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x05\
-    \x20\x01(\tR\x05label\x12)\n\x10enforce_wordlist\x18\x06\x20\x01(\x08R\
-    \x0fenforceWordlist\x12j\n\x0cinput_method\x18\x08\x20\x01(\x0e2G.hw.tre\
-    zor.messages.management.RecoveryDevice.RecoveryDeviceInputMethodR\x0binp\
-    utMethod\x12\x1f\n\x0bu2f_counter\x18\t\x20\x01(\rR\nu2fCounter\x12O\n\
-    \x04type\x18\n\x20\x01(\x0e2+.hw.trezor.messages.management.RecoveryType\
-    :\x0eNormalRecoveryR\x04type\x12L\n\x06method\x18\x0b\x20\x01(\x0e2+.hw.\
-    trezor.messages.management.BackupMethod:\x07DisplayR\x06method\";\n\x19R\
-    ecoveryDeviceInputMethod\x12\x12\n\x0eScrambledWords\x10\0\x12\n\n\x06Ma\
-    trix\x10\x01J\x04\x08\x07\x10\x08\"\xc5\x01\n\x0bWordRequest\x12N\n\x04t\
-    ype\x18\x01\x20\x02(\x0e2:.hw.trezor.messages.management.WordRequest.Wor\
-    dRequestTypeR\x04type\"f\n\x0fWordRequestType\x12\x19\n\x15WordRequestTy\
-    pe_Plain\x10\0\x12\x1b\n\x17WordRequestType_Matrix9\x10\x01\x12\x1b\n\
-    \x17WordRequestType_Matrix6\x10\x02\"\x1d\n\x07WordAck\x12\x12\n\x04word\
-    \x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2FCounter\x12\x1f\n\x0bu2f_counte\
-    r\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\"1\n\x0eN\
-    extU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\
-    \x11\n\x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\x15\n\x13Can\
-    celAuthorization\"\xeb\x01\n\x12RebootToBootloader\x12o\n\x0cboot_comman\
-    d\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.management.RebootToBootloade\
-    r.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ffirmware_header\
-    \x18\x02\x20\x01(\x0cR\x0efirmwareHeader\"5\n\x0bBootCommand\x12\x11\n\r\
-    STOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01J\x04\x08\x03\
-    \x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonce\x12\x14\n\x05nonce\x18\x01\
-    \x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\
-    \x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\
-    '\n\x13UnlockedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x02(\x0cR\x03mac\
-    \"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10UnlockBootloader\"%\n\rSetBrig\
-    htness\x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"\x11\n\x0fGetSer\
-    ialNumber\"3\n\x0cSerialNumber\x12#\n\rserial_number\x18\x01\x20\x02(\tR\
-    \x0cserialNumber*\x99\x01\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\n\
-    \x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\n\
-    \x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_Basic_Extendabl\
-    e\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\x05*%\n\x0cBackupM\
-    ethod\x12\x0b\n\x07Display\x10\0\x12\x08\n\x04N4W1\x10\x01*G\n\x10Safety\
-    CheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\x12\
-    \x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDisplayRotation\x12\t\n\x05No\
-    rth\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\x10\xb4\x01\x12\t\n\
-    \x04West\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toif\x10\x01\
-    \x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\n\x0cRecoveryType\
-    \x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\x10\x01\x12\x18\n\
-    \x14UnlockRepeatedBackup\x10\x02BB\n#com.satoshilabs.trezor.lib.protobuf\
-    B\x17TrezorMessageManagement\x80\xa6\x1d\x01\
+    y_check\x18\x0b\x20\x01(\x08R\x0centropyCheck\x12Y\n\rbackup_method\x18\
+    \x0c\x20\x01(\x0e2+.hw.trezor.messages.management.BackupMethod:\x07Displ\
+    ayR\x0cbackupMethodJ\x04\x08\x01\x10\x02\"\xc0\x02\n\x0cBackupDevice\x12\
+    '\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\x0egroupThreshold\x12O\n\x06g\
+    roups\x18\x02\x20\x03(\x0b27.hw.trezor.messages.management.BackupDevice.\
+    Slip39GroupR\x06groups\x12Y\n\rbackup_method\x18\x03\x20\x01(\x0e2+.hw.t\
+    rezor.messages.management.BackupMethod:\x07DisplayR\x0cbackupMethod\x1a[\
+    \n\x0bSlip39Group\x12)\n\x10member_threshold\x18\x01\x20\x02(\rR\x0fmemb\
+    erThreshold\x12!\n\x0cmember_count\x18\x02\x20\x02(\rR\x0bmemberCount\"b\
+    \n\x0eEntropyRequest\x12-\n\x12entropy_commitment\x18\x01\x20\x01(\x0cR\
+    \x11entropyCommitment\x12!\n\x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bpr\
+    evEntropy\"&\n\nEntropyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\
+    \x07entropy\"\x13\n\x11EntropyCheckReady\"5\n\x14EntropyCheckContinue\
+    \x12\x1d\n\x06finish\x18\x01\x20\x01(\x08:\x05falseR\x06finish\"\xe8\x04\
+    \n\x0eRecoveryDevice\x12\x1d\n\nword_count\x18\x01\x20\x01(\rR\twordCoun\
+    t\x123\n\x15passphrase_protection\x18\x02\x20\x01(\x08R\x14passphrasePro\
+    tection\x12%\n\x0epin_protection\x18\x03\x20\x01(\x08R\rpinProtection\
+    \x12\x1e\n\x08language\x18\x04\x20\x01(\tR\x08languageB\x02\x18\x01\x12\
+    \x14\n\x05label\x18\x05\x20\x01(\tR\x05label\x12)\n\x10enforce_wordlist\
+    \x18\x06\x20\x01(\x08R\x0fenforceWordlist\x12j\n\x0cinput_method\x18\x08\
+    \x20\x01(\x0e2G.hw.trezor.messages.management.RecoveryDevice.RecoveryDev\
+    iceInputMethodR\x0binputMethod\x12\x1f\n\x0bu2f_counter\x18\t\x20\x01(\r\
+    R\nu2fCounter\x12O\n\x04type\x18\n\x20\x01(\x0e2+.hw.trezor.messages.man\
+    agement.RecoveryType:\x0eNormalRecoveryR\x04type\x12Y\n\rbackup_method\
+    \x18\x0b\x20\x01(\x0e2+.hw.trezor.messages.management.BackupMethod:\x07D\
+    isplayR\x0cbackupMethod\";\n\x19RecoveryDeviceInputMethod\x12\x12\n\x0eS\
+    crambledWords\x10\0\x12\n\n\x06Matrix\x10\x01J\x04\x08\x07\x10\x08\"\xc5\
+    \x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.me\
+    ssages.management.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWordReque\
+    stType\x12\x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequest\
+    Type_Matrix9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\
+    \n\x07WordAck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2F\
+    Counter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\
+    \x11GetNextU2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\
+    \x18\x01\x20\x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14P\
+    reauthorizedRequest\"\x15\n\x13CancelAuthorization\"\xeb\x01\n\x12Reboot\
+    ToBootloader\x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.mes\
+    sages.management.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bboot\
+    Command\x12'\n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeade\
+    r\"5\n\x0bBootCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTAL\
+    L_UPGRADE\x10\x01J\x04\x08\x03\x10\x04\"\n\n\x08GetNonce\"\x1d\n\x05Nonc\
+    e\x12\x14\n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce\";\n\nUnlockPath\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\
+    \x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03mac\
+    \x18\x01\x20\x02(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\x10U\
+    nlockBootloader\"%\n\rSetBrightness\x12\x14\n\x05value\x18\x01\x20\x01(\
+    \rR\x05value\"\x11\n\x0fGetSerialNumber\"3\n\x0cSerialNumber\x12#\n\rser\
+    ial_number\x18\x01\x20\x02(\tR\x0cserialNumber*\x99\x01\n\nBackupType\
+    \x12\t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fS\
+    lip39_Advanced\x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\
+    \x1b\n\x17Slip39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_E\
+    xtendable\x10\x05*%\n\x0cBackupMethod\x12\x0b\n\x07Display\x10\0\x12\x08\
+    \n\x04N4W1\x10\x01*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\
+    \x10\n\x0cPromptAlways\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\
+    \n\x0fDisplayRotation\x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\
+    \n\n\x05South\x10\xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenF\
+    ormat\x12\x08\n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04T\
+    oiG\x10\x03*H\n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\
+    \n\x06DryRun\x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.s\
+    atoshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\
+    \x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
