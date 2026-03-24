@@ -101,9 +101,7 @@ impl<'a> Shape<'_> for Text<'a> {
                     break;
                 }
 
-                if let Some(left) = prev_char {
-                    r.x0 += self.font.get_kerning(left, ch) as i16;
-                }
+                r.x0 += prev_char.map_or(0, |p| self.font.get_kerning(p, ch).into());
 
                 let glyph = glyph_data.get_glyph(ch);
                 let glyph_bitmap = glyph.bitmap();

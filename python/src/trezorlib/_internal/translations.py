@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import json
+import struct
 import typing as t
 import unicodedata
 from hashlib import sha256
@@ -250,6 +251,17 @@ class FontsTable(BlobTable):
 
 
 class KerningList(Struct):
+    """Serializes font kerning pairs into the two-level binary format consumed by
+    the Rust ``KerningTable`` in ``blob.rs``.
+
+    Binary layout of ``kerning_data``:
+      [u16 index_count]
+      [u16 left_cp, u16 count] × index_count   (4 bytes, sorted by left_cp)
+      [u16 pair_count]
+      [u16 right_cp, i8 kern_val, u8 pad] × pair_count   (4 bytes)
+
+    Start offset for entry i is the sum of counts for all preceding entries.
+    """
 
     kerning_data: bytes
 
@@ -263,36 +275,50 @@ class KerningList(Struct):
     @classmethod
     def from_file(cls, file_path: Path) -> Self:
         json_content = json.loads(file_path.read_text())
+        triplets = json_content.get("kernings", [])
 
-        if len(json_content.get("kernings", [])) > 255:
-            raise ValueError("Too many kerning pairs (max 255 allowed)")
+        # Group pairs by left codepoint (sorted for binary search).
+        by_left: dict[int, list[tuple[int, int]]] = {}
+        for left_char, right_char, kern_val in triplets:
+            if not (-128 <= kern_val <= 127):
+                raise ValueError(f"Invalid kerning adjustment: {kern_val}")
+            left_cp, right_cp = ord(left_char), ord(right_char)
+            if left_cp > 0xFFFF or right_cp > 0xFFFF:
+                raise ValueError(
+                    f"Invalid kerning codepoint: {left_char!r}, {right_char!r}"
+                )
+            by_left.setdefault(left_cp, []).append((right_cp, kern_val))
 
-        kerning_bytes = [
-            cls.triplet_to_bytes(k) for k in json_content.get("kernings", [])
-        ]
+        kern_index: list[tuple[int, int]] = []  # (left_cp, count)
+        kern_pairs: list[tuple[int, int]] = []
+        for left_cp in sorted(by_left):
+            pairs = by_left[left_cp]
+            kern_index.append((left_cp, len(pairs)))
+            kern_pairs.extend(pairs)
 
-        return cls(kerning_data=b"".join(kerning_bytes))
+        if len(kern_index) > 0xFFFF:
+            raise ValueError(f"Too many unique left kerning chars: {len(kern_index)}")
 
-    @classmethod
-    def triplet_to_bytes(cls, triplet) -> bytes:
+        if len(kern_pairs) > 0xFFFF:
+            raise ValueError(f"Too many kerning pairs: {len(kern_pairs)}")
 
-        if not (-128 <= triplet[2] <= 127):
-            raise ValueError(f"Invalid kerning adjustment: {triplet[2]}")
+        # [u16 index_count] + [4-byte index entries (left_cp, count)]
+        # + [u16 pair_count] + [4-byte pair entries]
+        # Start offset for entry i is the sum of counts for all preceding entries.
+        data = struct.pack("<H", len(kern_index))
+        for left_cp, count in kern_index:
+            data += struct.pack("<HH", left_cp, count)
+        data += struct.pack("<H", len(kern_pairs))
+        for right_cp, kern_val in kern_pairs:
+            data += struct.pack("<Hb", right_cp, kern_val) + b"\x00"
 
-        if ord(triplet[0]) > 0xFFFF or ord(triplet[1]) > 0xFFFF:
-            raise ValueError(f"Invalid kerning codepoint: {triplet[0]}, {triplet[1]}")
-
-        left = c.Int16ul.build(ord(triplet[0]))
-        right = c.Int16ul.build(ord(triplet[1]))
-        kerning = c.Int8sl.build(triplet[2])
-        padding = b"\x00"  # pad to 6 bytes
-        return left + right + kerning + padding
+        return cls(kerning_data=data)
 
 
 class KerningTable(BlobTable):
 
     @classmethod
-    def from_dir(cls, model_fonts: dict[str, str], font_dir: Path):
+    def from_dir(cls, model_fonts: dict[str, str], font_dir: Path) -> "KerningTable":
         """Example structure of the font dict:
         (The key number corresponds to the index representation of each font set in `gen_font.py`)
         {
@@ -479,8 +505,9 @@ def blob_from_defs(
         )
 
     model_fonts = lang_data["fonts"][layout_type.name]
-    fonts = FontsTable.from_dir(model_fonts, fonts_dir)
-    kernings = KerningTable.from_dir(model_fonts, fonts_dir)
+    layout_fonts_dir = fonts_dir / layout_type.name.lower()
+    fonts = FontsTable.from_dir(model_fonts, layout_fonts_dir)
+    kernings = KerningTable.from_dir(model_fonts, layout_fonts_dir)
 
     for chunk_bytes in translations_chunks_bytes:
         assert len(chunk_bytes) % ALIGNMENT == 0
