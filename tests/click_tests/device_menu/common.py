@@ -38,10 +38,12 @@ REGULATORY_AREAS = [
     "Australia",
     "Japan",
     "Singapore",
+    "South Africa",
     "South Korea",
     "South Korea",  # additional page for South Korea
     "Taiwan",
     "Ukraine",
+    "United Arab Emirates",
 ]
 
 AUTOLOCK_DELAY_USB_DEFAULT_MS = 10 * 60 * 1000  # 10 minutes
