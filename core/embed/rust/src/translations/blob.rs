@@ -61,19 +61,36 @@ fn validate_offset_table(
 }
 
 #[cfg(feature = "ui_font_kerning")]
+#[derive(Clone, Copy)]
+#[repr(C, packed)]
+struct KernIndexEntry {
+    left_cp: u16,
+    count: u16,
+}
+
+#[cfg(feature = "ui_font_kerning")]
+#[derive(Clone, Copy)]
+#[repr(C, packed)]
+struct KernPair {
+    right_cp: u16,
+    value: i8,
+    _pad: u8,
+}
+
+#[cfg(feature = "ui_font_kerning")]
 /// Two-level kerning table stored in the translations blob.
 /// Binary layout (after the outer BlobTable slice):
 ///   [u16 data_bytes]                                          (outer
 /// KerningList length prefix)   [u16 index_count]
-///   [u16 left_cp, u16 count] × index_count                  (4 bytes each,
-/// sorted by left_cp)   [u16 right_cp, i8 kern_val, u8 _pad] × pair_count
+///   [KernIndexEntry] × index_count                           (4 bytes each,
+/// sorted by left_cp)   [KernPair]       × pair_count
 /// (4 bytes each)
 ///
 /// Start offset in pairs for entry i is the sum of counts for all preceding
 /// entries.
 pub struct KerningTable<'a> {
-    index: &'a [(u16, u16)],    // (left_cp, count), sorted by left_cp
-    pairs: &'a [(u16, i8, u8)], // (right_cp, kern_value, _padding)
+    index: &'a [KernIndexEntry],
+    pairs: &'a [KernPair],
 }
 
 #[cfg(feature = "ui_font_kerning")]
@@ -85,25 +102,24 @@ impl<'a> KerningTable<'a> {
         let data_bytes: usize = reader.read_u16_le()?.into();
         let index_count: usize = reader.read_u16_le()?.into();
 
-        let index_size = index_count * mem::size_of::<(u16, u16)>();
+        let index_size = index_count * mem::size_of::<KernIndexEntry>();
         let pairs_size = data_bytes
             .checked_sub(2 + index_size)
             .ok_or(INVALID_TRANSLATIONS_BLOB)?;
-        if pairs_size % mem::size_of::<(u16, i8, u8)>() != 0 {
+        if pairs_size % mem::size_of::<KernPair>() != 0 {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
 
         let index_data = reader.read(index_size)?;
-        // SAFETY: (u16, u16) is 4 bytes with no padding (both fields align-2).
-        let (_prefix, index, _suffix) = unsafe { index_data.align_to::<(u16, u16)>() };
+        // SAFETY: KernIndexEntry is #[repr(C, packed)] with size 4, align 1.
+        let (_prefix, index, _suffix) = unsafe { index_data.align_to::<KernIndexEntry>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
 
         let pairs_data = reader.read(pairs_size)?;
-        // SAFETY: (u16, i8, u8) is 4 bytes with no padding (u16 align-2, then two
-        // align-1).
-        let (_prefix, pairs, _suffix) = unsafe { pairs_data.align_to::<(u16, i8, u8)>() };
+        // SAFETY: KernPair is #[repr(C, packed)] with size 4, align 1.
+        let (_prefix, pairs, _suffix) = unsafe { pairs_data.align_to::<KernPair>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
@@ -113,19 +129,19 @@ impl<'a> KerningTable<'a> {
 
     pub fn get(&self, left_cp: u16, right_cp: u16) -> Option<i8> {
         let mut offset = 0usize;
-        for &(l, count) in self.index {
-            if l == left_cp {
-                for &(r, v, _) in &self.pairs[offset..offset + count as usize] {
-                    if r == right_cp {
-                        return Some(v);
+        for &entry in self.index {
+            if entry.left_cp == left_cp {
+                for &pair in &self.pairs[offset..offset + entry.count as usize] {
+                    if pair.right_cp == right_cp {
+                        return Some(pair.value);
                     }
                 }
                 return None;
             }
-            if l > left_cp {
+            if entry.left_cp > left_cp {
                 break; // index is sorted
             }
-            offset += count as usize;
+            offset += entry.count as usize;
         }
         None
     }
@@ -594,8 +610,7 @@ impl<'a> TranslationsHeader<'a> {
     ) -> Result<Vec<TranslationStringsChunk<'a>, MAX_TRANSLATION_CHUNKS>, Error> {
         let chunks_count = match self.blob_magic {
             BlobMagic::V0 => 1,
-            BlobMagic::V1 => reader.read_u16_le()?.into(),
-            BlobMagic::V2 => reader.read_u16_le()?.into(),
+            BlobMagic::V1 | BlobMagic::V2 => reader.read_u16_le()?.into(),
         };
         if chunks_count > MAX_TRANSLATION_CHUNKS {
             return Err(Error::OutOfRange);
