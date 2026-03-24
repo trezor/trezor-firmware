@@ -44,6 +44,11 @@ BACKUP_TYPE = {
     "advanced": messages.BackupType.Slip39_Advanced,
 }
 
+BACKUP_METHOD = {
+    "display": messages.BackupMethod.Display,
+    "n4w1": messages.BackupMethod.N4W1,
+}
+
 SD_PROTECT_OPERATIONS = {
     "on": messages.SdProtectOperationType.ENABLE,
     "off": messages.SdProtectOperationType.DISABLE,
@@ -231,6 +236,7 @@ def recover(
 @click.option("-s", "--skip-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
 @click.option("-b", "--backup-type", type=ChoiceType(BACKUP_TYPE))
+@click.option("-m", "--backup-method", type=ChoiceType(BACKUP_METHOD))
 @click.option("-e", "--entropy-check-count", type=click.IntRange(0))
 @with_session(seedless=True)
 def setup(
@@ -243,6 +249,7 @@ def setup(
     skip_backup: bool,
     no_backup: bool,
     backup_type: messages.BackupType | None,
+    backup_method: messages.BackupMethod | None,
     entropy_check_count: int | None,
 ) -> None:
     """Perform device setup and generate new seed."""
@@ -274,6 +281,7 @@ def setup(
         skip_backup=skip_backup,
         no_backup=no_backup,
         backup_type=backup_type,
+        backup_method=backup_method,
         entropy_check_count=entropy_check_count,
     )
 
@@ -286,15 +294,17 @@ def setup(
 @cli.command()
 @click.option("-t", "--group-threshold", type=int)
 @click.option("-g", "--group", "groups", type=(int, int), multiple=True, metavar="T N")
+@click.option("-m", "--method", "method", type=ChoiceType(BACKUP_METHOD))
 @with_session(seedless=True)
 def backup(
     session: "Session",
     group_threshold: int | None = None,
     groups: t.Sequence[tuple[int, int]] = (),
+    method: messages.BackupMethod = messages.BackupMethod.Display,
 ) -> None:
     """Perform device seed backup."""
 
-    device.backup(session, group_threshold, groups)
+    device.backup(session, group_threshold, groups, method)
 
 
 @cli.command()
