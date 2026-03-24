@@ -205,8 +205,16 @@ include_icon!(
     ICON_SINGAPORE,
     "layout_eckhart/res/regulatory/singapore.toif"
 );
+include_icon!(
+    ICON_SOUTH_AFRICA,
+    "layout_eckhart/res/regulatory/south_africa.toif"
+);
 include_icon!(ICON_TAIWAN, "layout_eckhart/res/regulatory/taiwan.toif");
 include_icon!(ICON_UKRAINE, "layout_eckhart/res/regulatory/ukraine.toif");
+include_icon!(
+    ICON_UNITED_ARAB_EMIRATES,
+    "layout_eckhart/res/regulatory/uae.toif"
+);
 
 // Square icon for BLE connection items
 include_icon!(ICON_SQUARE, "layout_eckhart/res/square.toif");
