@@ -403,5 +403,6 @@ pub const Font_RobotoMono_Medium_38_info: FontInfo = FontInfo {
     baseline: 9,
     glyph_data: &Font_RobotoMono_Medium_38,
     glyph_nonprintable: &Font_RobotoMono_Medium_38_glyph_nonprintable,
+    #[cfg(feature = "ui_font_kerning")]
     kernings: None,
 };
