@@ -60,25 +60,74 @@ fn validate_offset_table(
     Ok(())
 }
 
+#[cfg(feature = "ui_font_kerning")]
+/// Two-level kerning table stored in the translations blob.
+/// Binary layout (after the outer BlobTable slice):
+///   [u16 data_bytes]                                          (outer
+/// KerningList length prefix)   [u16 index_count]
+///   [u16 left_cp, u16 count] × index_count                  (4 bytes each,
+/// sorted by left_cp)   [u16 right_cp, i8 kern_val, u8 _pad] × pair_count
+/// (4 bytes each)
+///
+/// Start offset in pairs for entry i is the sum of counts for all preceding
+/// entries.
 pub struct KerningTable<'a> {
-    triplets: &'a [(u16, u16, i8, u8)],
+    index: &'a [(u16, u16)],    // (left_cp, count), sorted by left_cp
+    pairs: &'a [(u16, i8, u8)], // (right_cp, kern_value, _padding)
 }
 
+#[cfg(feature = "ui_font_kerning")]
 impl<'a> KerningTable<'a> {
     pub fn new(mut reader: InputStream<'a>) -> Result<Self, Error> {
-        let count = reader.read_u16_le()?;
-        let triplets_len: usize = count.into();
-        let triplets_data =
-            reader.read((triplets_len / 6) * mem::size_of::<(u16, u16, i8, u8)>())?;
+        // First u16 is the outer byte-length prefix written by KerningList.SUBCON.
+        // Use it to compute the exact number of pair bytes (avoids reading alignment
+        // padding).
+        let data_bytes: usize = reader.read_u16_le()?.into();
+        let index_count: usize = reader.read_u16_le()?.into();
 
-        // SAFETY: (u16, u16, i8, u8) is repr(packed) of 6 bytes, so any 6 bytes are
-        // a valid (u16, u16, i8, u8) value.
-        let (_prefix, triplets, _suffix) =
-            unsafe { triplets_data.align_to::<(u16, u16, i8, u8)>() };
+        let index_size = index_count * mem::size_of::<(u16, u16)>();
+        let pairs_size = data_bytes
+            .checked_sub(2 + index_size)
+            .ok_or(INVALID_TRANSLATIONS_BLOB)?;
+        if pairs_size % mem::size_of::<(u16, i8, u8)>() != 0 {
+            return Err(INVALID_TRANSLATIONS_BLOB);
+        }
+
+        let index_data = reader.read(index_size)?;
+        // SAFETY: (u16, u16) is 4 bytes with no padding (both fields align-2).
+        let (_prefix, index, _suffix) = unsafe { index_data.align_to::<(u16, u16)>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
-        Ok(Self { triplets })
+
+        let pairs_data = reader.read(pairs_size)?;
+        // SAFETY: (u16, i8, u8) is 4 bytes with no padding (u16 align-2, then two
+        // align-1).
+        let (_prefix, pairs, _suffix) = unsafe { pairs_data.align_to::<(u16, i8, u8)>() };
+        if !_prefix.is_empty() || !_suffix.is_empty() {
+            return Err(INVALID_TRANSLATIONS_BLOB);
+        }
+
+        Ok(Self { index, pairs })
+    }
+
+    pub fn get(&self, left_cp: u16, right_cp: u16) -> Option<i8> {
+        let mut offset = 0usize;
+        for &(l, count) in self.index {
+            if l == left_cp {
+                for &(r, v, _) in &self.pairs[offset..offset + count as usize] {
+                    if r == right_cp {
+                        return Some(v);
+                    }
+                }
+                return None;
+            }
+            if l > left_cp {
+                break; // index is sorted
+            }
+            offset += count as usize;
+        }
+        None
     }
 }
 
@@ -188,6 +237,7 @@ pub struct Translations<'a> {
     header: TranslationsHeader<'a>,
     chunks: Vec<TranslationStringsChunk<'a>, MAX_TRANSLATION_CHUNKS>,
     fonts: Table<'a>,
+    #[cfg(feature = "ui_font_kerning")]
     kernings: Table<'a>,
 }
 
@@ -231,6 +281,7 @@ impl<'a> Translations<'a> {
             font_table.validate()?;
         }
 
+        #[cfg(feature = "ui_font_kerning")]
         let kernings = if payload_reader.remaining() > 0 {
             let kerning_reader = read_u16_prefixed_block(&mut payload_reader)?;
 
@@ -257,6 +308,7 @@ impl<'a> Translations<'a> {
             header,
             chunks,
             fonts,
+            #[cfg(feature = "ui_font_kerning")]
             kernings,
         })
     }
@@ -343,6 +395,7 @@ impl<'a> Translations<'a> {
     /// string not to the underlying data, but to the _reference_ to the
     /// translations object. This is to facilitate safe interface to
     /// flash-based translations. See docs for `flash::get` for details.
+    #[cfg(feature = "ui_font_kerning")]
     #[allow(clippy::needless_lifetimes)]
     pub fn get_utf8_kernings<'b>(
         &'b self,
@@ -353,13 +406,7 @@ impl<'a> Translations<'a> {
         self.kernings.get(font_index).and_then(|data: &'a [u8]| {
             let reader = InputStream::new(data);
             let kern_table = KerningTable::new(reader).ok()?;
-
-            for triplet in kern_table.triplets {
-                if triplet.0 == left_codepoint && triplet.1 == right_codepoint {
-                    return Some(triplet.2);
-                }
-            }
-            None
+            kern_table.get(left_codepoint, right_codepoint)
         })
     }
 }

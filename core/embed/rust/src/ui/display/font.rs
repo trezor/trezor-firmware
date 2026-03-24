@@ -12,6 +12,44 @@ use crate::translations::flash;
 #[cfg(feature = "translations")]
 use crate::translations::Translations;
 
+#[cfg(feature = "ui_font_kerning")]
+/// Two-level kerning lookup table.
+/// `index` is sorted by left character, enabling binary search.
+/// Each entry stores `(left_char, count)` — the number of right-char pairs that
+/// follow. The start offset in `pairs` is the sum of counts for all preceding
+/// index entries.
+#[derive(PartialEq, Eq)]
+pub struct KerningTable {
+    pub index: &'static [(u8, u8)], // (left_char, count), sorted by left_char
+    pub pairs: &'static [(u8, i8)], // (right_char, kern_value)
+}
+
+#[cfg(feature = "ui_font_kerning")]
+// SAFETY: We are in a single-threaded environment.
+unsafe impl Sync for KerningTable {}
+
+#[cfg(feature = "ui_font_kerning")]
+impl KerningTable {
+    pub fn get(&self, left: u8, right: u8) -> i8 {
+        let mut offset = 0usize;
+        for &(l, count) in self.index {
+            if l == left {
+                for &(r, v) in &self.pairs[offset..offset + count as usize] {
+                    if r == right {
+                        return v;
+                    }
+                }
+                return 0;
+            }
+            if l > left {
+                break; // index is sorted
+            }
+            offset += count as usize;
+        }
+        0
+    }
+}
+
 /// Font information structure containing metadata and pointers to font data
 #[derive(PartialEq, Eq)]
 pub struct FontInfo {
@@ -21,7 +59,8 @@ pub struct FontInfo {
     pub baseline: i16,
     pub glyph_data: &'static [&'static [u8]],
     pub glyph_nonprintable: &'static [u8],
-    pub kernings: Option<&'static [(u8, u8, i8)]>,
+    #[cfg(feature = "ui_font_kerning")]
+    pub kernings: Option<&'static KerningTable>,
 }
 /// Convenience type for font references defined in the `fonts` module.
 pub type Font = &'static FontInfo;
@@ -262,7 +301,7 @@ impl FontInfo {
         });
         ascent + descent
     }
-
+    #[cfg(feature = "ui_font_kerning")]
     pub fn get_kerning(&'static self, left_ch: char, right_ch: char) -> i8 {
         let left: u16 = left_ch as u16;
         let right: u16 = right_ch as u16;
@@ -284,14 +323,15 @@ impl FontInfo {
             let left = left as u8;
             let right = right as u8;
 
-            if let Some(kernings) = self.kernings {
-                for &(l, r, v) in kernings {
-                    if l == left && r == right {
-                        return v;
-                    }
-                }
+            if let Some(table) = self.kernings {
+                return table.get(left, right);
             }
         }
+        0
+    }
+
+    #[cfg(not(feature = "ui_font_kerning"))]
+    pub fn get_kerning(&'static self, _left_ch: char, _right_ch: char) -> i8 {
         0
     }
 
@@ -445,6 +485,7 @@ pub trait GlyphMetrics {
     fn char_width(&self, ch: char) -> i16;
     fn text_width(&self, text: &str) -> i16;
     fn line_height(&self) -> i16;
+    fn get_kerning(&self, _left: char, _right: char) -> i16;
 }
 
 impl GlyphMetrics for Font {
@@ -458,6 +499,10 @@ impl GlyphMetrics for Font {
 
     fn line_height(&self) -> i16 {
         FontInfo::line_height(self)
+    }
+
+    fn get_kerning(&self, left: char, right: char) -> i16 {
+        FontInfo::get_kerning(self, left, right) as i16
     }
 }
 
