@@ -303,10 +303,14 @@ impl FontInfo {
     }
     #[cfg(feature = "ui_font_kerning")]
     pub fn get_kerning(&'static self, left_ch: char, right_ch: char) -> i8 {
-        let left: u16 = left_ch as u16;
-        let right: u16 = right_ch as u16;
+        let Some(left) = u16::try_from(left_ch).ok() else {
+            return 0;
+        };
+        let Some(right) = u16::try_from(right_ch).ok() else {
+            return 0;
+        };
 
-        if left >= 0x7F || right >= 0x7F {
+        if !left_ch.is_ascii() || !right_ch.is_ascii() {
             #[cfg(feature = "translations")]
             {
                 return self.with_glyph_data(|data| {
