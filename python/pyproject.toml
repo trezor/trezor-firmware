@@ -66,9 +66,6 @@ build-backend = "hatchling.build"
 [tool.uv]
 package = true
 
-[tool.black]
-target-version = ["py313"]
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/trezorlib"]
 
