@@ -403,5 +403,6 @@ pub const Font_TTHoves_Regular_21_info: FontInfo = FontInfo {
     baseline: 4,
     glyph_data: &Font_TTHoves_Regular_21,
     glyph_nonprintable: &Font_TTHoves_Regular_21_glyph_nonprintable,
+    #[cfg(feature = "ui_font_kerning")]
     kernings: None,
 };

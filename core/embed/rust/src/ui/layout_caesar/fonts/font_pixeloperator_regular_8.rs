@@ -504,6 +504,7 @@ pub const Font_PixelOperator_Regular_8_info: FontInfo = FontInfo {
     baseline: 1,
     glyph_data: &Font_PixelOperator_Regular_8,
     glyph_nonprintable: &Font_PixelOperator_Regular_8_glyph_nonprintable,
+    #[cfg(feature = "ui_font_kerning")]
     kernings: None,
 };
 
@@ -515,5 +516,6 @@ pub const Font_PixelOperator_Regular_8_upper_info: FontInfo = FontInfo {
     baseline: 1,
     glyph_data: &Font_PixelOperator_Regular_8_upper,
     glyph_nonprintable: &Font_PixelOperator_Regular_8_glyph_nonprintable,
+    #[cfg(feature = "ui_font_kerning")]
     kernings: None,
 };
