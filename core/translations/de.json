@@ -1702,12 +1702,7 @@
       "Delizia": "Die von der App bereitgestellte Passphrase wird benutzt, aber wegen Geräteeinstellungen nicht angezeigt.",
       "Eckhart": "Die von der App bereitgestellte Passphrase wird verwendet, aber wegen Geräteeinstellungen nicht angezeigt."
     },
-    "passphrase__hidden_wallet": {
-      "Bolt": "Versteckte Wallet",
-      "Caesar": "Passphrase-Wallet",
-      "Delizia": "Passphrase-Wallet",
-      "Eckhart": "Passphrase Wallet"
-    },
+    "passphrase__hidden_wallet": "Passphrase-Wallet",
     "passphrase__hide": {
       "Bolt": "Passphrase aus der App verbergen?",
       "Caesar": "Passphrase aus der App verbergen?",
