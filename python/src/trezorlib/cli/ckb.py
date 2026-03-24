@@ -47,3 +47,75 @@ def get_address(
         network=coin,
         chunkify=chunkify,
     )
+
+
+@cli.command()
+@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option(
+    "--coin",
+    type=click.Choice(["Mainnet", "Testnet"]),
+    default="Mainnet",
+    help="Network (default: Mainnet)",
+)
+@click.option("-C", "--chunkify", is_flag=True)
+@click.argument("json_file", type=click.File("r"))
+@with_session
+def sign_tx(
+    session: "Session",
+    address: str,
+    coin: str,
+    chunkify: bool,
+    json_file,
+) -> str:
+    """Sign CKB transaction from JSON file."""
+    import json
+
+    address_n = tools.parse_path(address)
+    tx_data = json.load(json_file)
+
+    inputs = []
+    for inp in tx_data.get("inputs", []):
+        inputs.append(ckb.create_cell_input(
+            tx_hash=inp["tx_hash"],
+            index=inp["index"],
+            since=inp.get("since", 0),
+        ))
+
+    outputs = []
+    for out in tx_data.get("outputs", []):
+        outputs.append(ckb.create_cell_output(
+            capacity=out["capacity"],
+            lock_code_hash=out["lock_code_hash"],
+            lock_hash_type=out["lock_hash_type"],
+            lock_args=out["lock_args"],
+            type_code_hash=out.get("type_code_hash"),
+            type_hash_type=out.get("type_hash_type"),
+            type_args=out.get("type_args"),
+            data=bytes.fromhex(out["data"].removeprefix("0x")) if out.get("data") else None,
+        ))
+
+    cell_deps = []
+    for dep in tx_data.get("cell_deps", []):
+        cell_deps.append(ckb.create_cell_dep(
+            tx_hash=dep["tx_hash"],
+            index=dep["index"],
+            dep_type=dep["dep_type"],
+        ))
+
+    fee = tx_data.get("fee")
+
+    result = ckb.sign_tx(
+        session,
+        address_n,
+        inputs=inputs,
+        outputs=outputs,
+        cell_deps=cell_deps,
+        network=coin,
+        fee=fee,
+        chunkify=chunkify,
+    )
+
+    return (
+        f"Signature: 0x{result.serialized.signature.hex()}\n"
+        f"TX Hash: 0x{result.serialized.tx_hash.hex()}"
+    )

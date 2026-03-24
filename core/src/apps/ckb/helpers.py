@@ -55,3 +55,34 @@ def encode_address(args: bytes, network: str) -> str:
     address = bech32_encode(hrp, payload_5bit, Encoding.BECH32M)
 
     return address
+
+
+def encode_address_full(
+    code_hash: bytes, hash_type: int, args: bytes, network: str
+) -> str:
+    """
+    Encode any lock script to Bech32m address using CKB2021 Full format.
+    Supports any lock script (secp256k1, omnilock, etc.)
+    """
+    payload_bytes = bytes([0x00]) + code_hash + bytes([hash_type]) + args
+
+    payload_5bit = convertbits(payload_bytes, 8, 5)
+
+    hrp = HRP_MAINNET if network == "Mainnet" else HRP_TESTNET
+
+    return bech32_encode(hrp, payload_5bit, Encoding.BECH32M)
+
+
+def format_amount(shannons: int) -> str:
+    """
+    Format capacity in shannons as human-readable CKB string.
+    1 CKB = 10^8 shannons.
+    Uses integer arithmetic to avoid float precision issues.
+    """
+    whole = shannons // 100_000_000
+    frac = shannons % 100_000_000
+    if frac == 0:
+        return f"{whole} CKB"
+    # Format fractional part with leading zeros, then strip trailing zeros
+    frac_str = f"{frac:08d}".rstrip("0")
+    return f"{whole}.{frac_str} CKB"
