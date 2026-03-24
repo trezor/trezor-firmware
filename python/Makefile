@@ -4,7 +4,7 @@ UV=uv
 EXCLUDES=.vscode
 STYLE_TARGETS=src tests tools helper-scripts
 
-# suppress black's warning 
+# suppress black's warning
 BLACK_FLAGS ?=--fast
 
 dist: doc clean
