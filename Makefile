@@ -9,7 +9,7 @@ PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./to
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 PROTO_FILES = $(shell find common core -type f -name '*.proto')
 
-# suppress black's warning - remove after using Python 3.14
+# suppress black's warning - remove when using Python 3.14
 BLACK_FAST ?= 1
 
 ifeq ($(BLACK_FAST),1)
