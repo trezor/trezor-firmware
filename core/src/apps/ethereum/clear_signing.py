@@ -1,6 +1,5 @@
 from micropython import const
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 from trezor import TR
 from trezor.utils import BufferReader
@@ -637,6 +636,10 @@ def get_approver(
     chain_id = msg.chain_id
 
     if not address_bytes:
+        return None
+
+    if msg.data_length > len(msg.data_initial_chunk):
+        # we only support clear signing one chunk for now
         return None
 
     if msg.data_length > MAX_CALLDATA_STORED:

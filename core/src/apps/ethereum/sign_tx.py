@@ -61,6 +61,7 @@ async def sign_tx(
 
     from apps.common import paths, safety_checks
 
+    from .clear_signing import InvalidFormatDefinition, InvalidFunctionCall
     from .helpers import format_ethereum_amount, get_fee_items_regular
 
     # local_cache_attribute
@@ -106,18 +107,6 @@ async def sign_tx(
             amount_size_bytes=32,
         )
 
-    # data chunks will be confirmed during digest (see below)
-    # tx summary will confirmed before signing the digest (see below)
-    confirm_data_chunk, confirm_summary = await confirm_tx_data(
-        msg,
-        defs,
-        tx_type,
-        address_bytes,
-        maximum_fee,
-        fee_items,
-        payment_req_verifier,
-    )
-
     # digest
     total_length = _get_total_length(msg, data_total)
 
@@ -130,8 +119,45 @@ async def sign_tx(
     for field in (msg.nonce, msg.gas_price, msg.gas_limit, address_bytes, msg.value):
         rlp.write(sha, field)
 
+    confirm_data_chunk, confirm_summary = await confirm_tx_data(
+        msg,
+        defs,
+        tx_type,
+        address_bytes,
+        maximum_fee,
+        fee_items,
+        payment_req_verifier,
+        try_clear_signing=True,
+    )
+
     await confirm_data_chunk(msg.data_initial_chunk)
+
     data_left = data_total - len(msg.data_initial_chunk)
+
+    summary_confirmed = False
+    if data_left == 0:  # Note: clear signing only works with the 1st chunk for now
+        try:
+            await confirm_summary
+            summary_confirmed = True
+        except (InvalidFunctionCall, InvalidFormatDefinition):
+            # parsing calldata by the clear signer failed,
+            # retry without clear signing
+            confirm_data_chunk, confirm_summary = await confirm_tx_data(
+                msg,
+                defs,
+                tx_type,
+                address_bytes,
+                maximum_fee,
+                fee_items,
+                payment_req_verifier,
+                try_clear_signing=False,
+            )
+
+            # we can safely assume that the initial data chunk was not confirmed
+            # because we are currently handling clear signer's exception
+            # so let's finally confirm the initial data chunk!
+            await confirm_data_chunk(msg.data_initial_chunk)
+
     rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, msg.data_initial_chunk)
     sha.extend(msg.data_initial_chunk)
 
@@ -148,8 +174,8 @@ async def sign_tx(
 
     digest = sha.get_digest()
 
-    # show tx summary and confirm
-    await confirm_summary
+    if not summary_confirmed:
+        await confirm_summary
 
     # transaction data confirmed, proceed with signing
     result = _sign_digest(msg, keychain, digest)
@@ -166,8 +192,10 @@ async def confirm_tx_data(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
+    try_clear_signing: bool,
 ) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]]:
     """Returns data chunk callback and transaction summary layout to be awaited."""
+
     from trezor.ui.layouts import confirm_value
 
     from . import clear_signing, staking
@@ -198,17 +226,18 @@ async def confirm_tx_data(
 
     value = int.from_bytes(msg.value, "big")
 
-    clear_signing_approver = clear_signing.get_approver(
-        msg,
-        defs,
-        address_bytes,
-        value,
-        maximum_fee,
-        fee_items,
-        payment_request_verifier,
-    )
-    if clear_signing_approver is not None:
-        return clear_signing_approver
+    if try_clear_signing:
+        clear_signing_approver = clear_signing.get_approver(
+            msg,
+            defs,
+            address_bytes,
+            value,
+            maximum_fee,
+            fee_items,
+            payment_request_verifier,
+        )
+        if clear_signing_approver is not None:
+            return clear_signing_approver
 
     recipient_str = (
         address_from_bytes(address_bytes, network) if address_bytes else None
