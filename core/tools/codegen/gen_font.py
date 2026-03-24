@@ -474,7 +474,7 @@ class FaceProcessor:
                             )
                             key = f"{left_char}{right_char}"
                             print(
-                                f"Special Lang character kerning for '{key}' : {kern_val} pixels"
+                                f"Special {lang} character kerning for '{key}' : {kern_val} pixels"
                             )
 
             file_name = self._foreign_json_name(upper_cased, lang)
