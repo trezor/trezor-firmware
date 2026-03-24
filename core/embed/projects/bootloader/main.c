@@ -496,9 +496,11 @@ void real_jump_to_firmware(void) {
 
   system_deinit();
 
-  jump_to_next_stage(
+  uint32_t vectbl_addr =
       IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE) +
-      secmon_code_offset);
+      secmon_code_offset;
+
+  jump_to_next_stage(vectbl_addr, NULL);
 }
 
 __attribute__((noreturn)) void reboot_with_fade(void) {

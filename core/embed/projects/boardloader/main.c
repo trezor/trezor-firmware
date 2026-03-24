@@ -353,7 +353,7 @@ int main(void) {
   system_deinit();
 
   // Jump to bootloader code
-  jump_to_next_stage(next_stage_addr);
+  jump_to_next_stage(next_stage_addr, NULL);
 
   // We should never reach this point, but if we do,
   // we can return anything, as the system will reset anyway.
