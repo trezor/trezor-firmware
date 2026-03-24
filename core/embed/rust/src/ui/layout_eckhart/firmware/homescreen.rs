@@ -46,7 +46,8 @@ pub struct Homescreen {
     bootscreen: bool,
     /// Swipe component for vertical swiping
     swipe: Swipe,
-    // swipe_config: SwipeConfig,
+    /// Notification homebar button (with notification style), if applicable
+    notification_btn: Option<Button>,
 }
 
 pub enum HomescreenMsg {
@@ -73,20 +74,48 @@ impl Homescreen {
             image_used,
         );
 
-        // Homebar
-        let btn = notification_center.homebar_button(bootscreen, locked);
+        // Build the default homebar (as if no notification)
+        let default_btn = Self::make_default_homebar(bootscreen, locked);
+        // Build the notification homebar if there's an actionable notification
+        let notification_btn = if notification_center.actionable_notification {
+            Some(notification_center.homebar_button(bootscreen, locked))
+        } else {
+            None
+        };
 
         let is_alert = notification_center.is_alert();
+        let show_immediately = is_alert || animation_disabled();
+
+        // Start with default button unless notification shows immediately
+        let initial_btn = if show_immediately && notification_btn.is_some() {
+            notification_center.homebar_button(bootscreen, locked)
+        } else {
+            default_btn
+        };
 
         Ok(Self {
             header: HomescreenHeader::new(label, image_used, !is_alert),
             notification_center,
-            action_bar: ActionBar::new_single(btn),
+            action_bar: ActionBar::new_single(initial_btn),
             image,
             locked,
             bootscreen,
             swipe: Swipe::new().up(),
+            notification_btn,
         })
+    }
+
+    /// Build a homebar button with default style (no notification)
+    fn make_default_homebar(bootscreen: bool, locked: bool) -> Button {
+        let text: Option<TString<'static>> = if bootscreen || locked {
+            Some(TR::lockscreen__unlock.into())
+        } else {
+            None
+        };
+        let (style_sheet, gradient) = button_homebar_style(None, false);
+        Button::new(ButtonContent::HomeBar(text))
+            .styled(style_sheet)
+            .with_gradient(gradient)
     }
 }
 
@@ -112,6 +141,18 @@ impl Component for Homescreen {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.header.event(ctx, event);
         self.notification_center.event(ctx, event);
+
+        // Swap action bar to notification style when notification becomes visible
+        if self.notification_center.notification_visible {
+            if let Some(btn) = self.notification_btn.take() {
+                self.action_bar = ActionBar::new_single(btn);
+                // Re-place the action bar in its area
+                let bar_area = SCREEN.split_bottom(theme::ACTION_BAR_HEIGHT).1;
+                self.action_bar.place(bar_area);
+                self.swipe.place(self.action_bar.touch_area());
+                ctx.request_paint();
+            }
+        }
 
         let swipe_up = matches!(self.swipe.event(ctx, event), Some(Direction::Up));
         let homebar_tap = matches!(
@@ -158,6 +199,10 @@ struct HomescreenNotificationCenter {
     led_timer: Timer,
     /// Whether a custom background image is used, which affects the UI
     background_image: bool,
+    /// Whether the notification UI (hint/actionbar) has become visible.
+    /// Starts false, becomes true after the first LED toggle duration,
+    /// and stays true permanently.
+    notification_visible: bool,
 }
 
 impl HomescreenNotificationCenter {
@@ -185,6 +230,13 @@ impl HomescreenNotificationCenter {
             _ => None,
         };
 
+        // Alerts are visible immediately
+        let is_alert = notification
+            .as_ref()
+            .map(|n| matches!(n.level, NotificationLevel::Alert))
+            .unwrap_or(false);
+        let show_immediately = is_alert || animation_disabled();
+
         Self {
             notification,
             actionable_notification,
@@ -194,6 +246,7 @@ impl HomescreenNotificationCenter {
             led_active: false,
             led_timer: Timer::new(),
             background_image,
+            notification_visible: show_immediately && led_color.is_some(),
         }
     }
 
@@ -269,26 +322,29 @@ impl Component for HomescreenNotificationCenter {
         const LED_TOGGLE_DURATION: Duration = Duration::from_millis(3000);
 
         if self.led_color.is_some() {
-            if self.is_alert() {
-                // Alert: LED is always on, no timer needed
+            if self.is_alert() || animation_disabled() {
+                // Alert: LED is always on, notification visible immediately
                 if matches!(event, Event::Attach(_)) {
                     self.led_active = true;
+                    self.notification_visible = true;
                     ctx.request_paint();
                 }
             } else {
                 match event {
                     Event::Attach(_) => {
-                        // Start off, schedule turning on after 3s
+                        // Start off, schedule turning on after LED_TOGGLE_DURATION
                         self.led_active = false;
+                        self.notification_visible = false;
                         self.led_timer.start(ctx, LED_TOGGLE_DURATION);
                     }
                     Event::Timer(_) if self.led_timer.expire(event) => {
                         if !self.led_active {
-                            // Turn on, schedule turning off
+                            // Turn on LED, make notification UI visible (permanently)
                             self.led_active = true;
+                            self.notification_visible = true;
                             self.led_timer.start(ctx, LED_TOGGLE_DURATION);
                         } else {
-                            // Turn off, don't restart the timer
+                            // Turn off LED, but notification UI stays visible
                             self.led_active = false;
                         }
                         ctx.request_paint();
@@ -307,12 +363,18 @@ impl Component for HomescreenNotificationCenter {
         };
 
         if self.background_image {
-            render_pill_shaped_background(self.hint_shadow_area, target);
+            // Only render hint shadow when notification is visible
+            if self.notification_visible {
+                render_pill_shaped_background(self.hint_shadow_area, target);
+            }
         } else {
             // default homescreen
             ScreenBackground::new(active_color, None).render(target);
         }
-        self.hint.render(target);
+        // Only render hint when notification has become visible
+        if self.notification_visible {
+            self.hint.render(target);
+        }
 
         #[cfg(feature = "rgb_led")]
         target.set_led_state(LedState::Static(active_color.unwrap_or_else(Color::black)));
