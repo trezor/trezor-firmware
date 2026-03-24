@@ -3770,7 +3770,7 @@ class ResetDevice(protobuf.MessageType):
         9: protobuf.Field("no_backup", "bool", repeated=False, required=False, default=None),
         10: protobuf.Field("backup_type", "BackupType", repeated=False, required=False, default=BackupType.Bip39),
         11: protobuf.Field("entropy_check", "bool", repeated=False, required=False, default=None),
-        12: protobuf.Field("method", "BackupMethod", repeated=False, required=False, default=BackupMethod.Display),
+        12: protobuf.Field("backup_method", "BackupMethod", repeated=False, required=False, default=BackupMethod.Display),
     }
 
     def __init__(
@@ -3786,7 +3786,7 @@ class ResetDevice(protobuf.MessageType):
         no_backup: Optional["bool"] = None,
         backup_type: Optional["BackupType"] = BackupType.Bip39,
         entropy_check: Optional["bool"] = None,
-        method: Optional["BackupMethod"] = BackupMethod.Display,
+        backup_method: Optional["BackupMethod"] = BackupMethod.Display,
     ) -> None:
         self.strength = strength
         self.passphrase_protection = passphrase_protection
@@ -3798,7 +3798,7 @@ class ResetDevice(protobuf.MessageType):
         self.no_backup = no_backup
         self.backup_type = backup_type
         self.entropy_check = entropy_check
-        self.method = method
+        self.backup_method = backup_method
 
 
 class BackupDevice(protobuf.MessageType):
@@ -3806,7 +3806,7 @@ class BackupDevice(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("group_threshold", "uint32", repeated=False, required=False, default=None),
         2: protobuf.Field("groups", "Slip39Group", repeated=True, required=False, default=None),
-        3: protobuf.Field("method", "BackupMethod", repeated=False, required=False, default=BackupMethod.Display),
+        3: protobuf.Field("backup_method", "BackupMethod", repeated=False, required=False, default=BackupMethod.Display),
     }
 
     def __init__(
@@ -3814,11 +3814,11 @@ class BackupDevice(protobuf.MessageType):
         *,
         groups: Optional[Sequence["Slip39Group"]] = None,
         group_threshold: Optional["int"] = None,
-        method: Optional["BackupMethod"] = BackupMethod.Display,
+        backup_method: Optional["BackupMethod"] = BackupMethod.Display,
     ) -> None:
         self.groups: Sequence["Slip39Group"] = groups if groups is not None else []
         self.group_threshold = group_threshold
-        self.method = method
+        self.backup_method = backup_method
 
 
 class EntropyRequest(protobuf.MessageType):
@@ -3882,7 +3882,7 @@ class RecoveryDevice(protobuf.MessageType):
         8: protobuf.Field("input_method", "RecoveryDeviceInputMethod", repeated=False, required=False, default=None),
         9: protobuf.Field("u2f_counter", "uint32", repeated=False, required=False, default=None),
         10: protobuf.Field("type", "RecoveryType", repeated=False, required=False, default=RecoveryType.NormalRecovery),
-        11: protobuf.Field("method", "BackupMethod", repeated=False, required=False, default=BackupMethod.Display),
+        11: protobuf.Field("backup_method", "BackupMethod", repeated=False, required=False, default=BackupMethod.Display),
     }
 
     def __init__(
@@ -3897,7 +3897,7 @@ class RecoveryDevice(protobuf.MessageType):
         input_method: Optional["RecoveryDeviceInputMethod"] = None,
         u2f_counter: Optional["int"] = None,
         type: Optional["RecoveryType"] = RecoveryType.NormalRecovery,
-        method: Optional["BackupMethod"] = BackupMethod.Display,
+        backup_method: Optional["BackupMethod"] = BackupMethod.Display,
     ) -> None:
         self.word_count = word_count
         self.passphrase_protection = passphrase_protection
@@ -3908,7 +3908,7 @@ class RecoveryDevice(protobuf.MessageType):
         self.input_method = input_method
         self.u2f_counter = u2f_counter
         self.type = type
-        self.method = method
+        self.backup_method = backup_method
 
 
 class WordRequest(protobuf.MessageType):
