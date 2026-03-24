@@ -46,7 +46,8 @@ typedef enum {
   DISPLAY_DEINIT = 0x00,
   DISPLAY_IO_INIT,
   DISPLAY_SPI_INIT,
-  DISPLAY_PANEL_INIT,
+  DISPLAY_PANEL_INIT1,
+  DISPLAY_PANEL_INIT2
 } display_state_t;
 
 // Display driver context.
@@ -320,23 +321,23 @@ static bool display_spi_transmit(display_spi_tx_rx_type_t tx_type,
   return true;
 }
 
-static bool display_spi_receive(uint8_t* data, size_t size) {
-  display_driver_t* drv = &g_display_driver;
+// static bool display_spi_receive(uint8_t* data, size_t size) {
+//   display_driver_t* drv = &g_display_driver;
 
-  if (drv->state < DISPLAY_SPI_INIT) {
-    return false;  // Not initialized enough to receive
-  }
+//   if (drv->state < DISPLAY_SPI_INIT) {
+//     return false;  // Not initialized enough to receive
+//   }
 
-  display_spi_dc_set(DISPLAY_EP_SPI_TX_RX_DATA);
+//   display_spi_dc_set(DISPLAY_EP_SPI_TX_RX_DATA);
 
-  // Wait until not busy before receiving and receive data over SPI
-  if (!display_busy_wait(TIMEOUT_BUSY_MS_MAX) ||
-      (HAL_OK != HAL_SPI_Receive(&drv->hspi, data, size, 100))) {
-    return false;
-  }
+//   // Wait until not busy before receiving and receive data over SPI
+//   if (!display_busy_wait(TIMEOUT_BUSY_MS_MAX) ||
+//       (HAL_OK != HAL_SPI_Receive(&drv->hspi, data, size, 100))) {
+//     return false;
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
 #if 0
 static void display_panel_power_off(void) {
@@ -370,7 +371,7 @@ static void display_panel_power_on(void) {
 static void display_panel_deep_sleep(void) {
   display_driver_t* drv = &g_display_driver;
 
-  if (drv->state != DISPLAY_PANEL_INIT) {
+  if (drv->state < DISPLAY_PANEL_INIT1) {
     return;  // Not initialized enough to perform panel deep sleep
   }
 
@@ -383,7 +384,7 @@ static void display_panel_window_set(uint16_t x, uint16_t y, uint16_t w,
                                      uint16_t h) {
   display_driver_t* drv = &g_display_driver;
 
-  if (drv->state != DISPLAY_PANEL_INIT) {
+  if (drv->state < DISPLAY_PANEL_INIT1) {
     return;  // Not initialized enough to perform panel refresh
   }
 
@@ -420,8 +421,12 @@ static void display_panel_window_set(uint16_t x, uint16_t y, uint16_t w,
 
 static void display_panel_refresh(void) {
   display_driver_t* drv = &g_display_driver;
+  bool status;
 
-  if (drv->state != DISPLAY_PANEL_INIT) {
+  uint32_t timestamp_ms_tmp;
+  uint32_t timestamp_diff_ms;
+
+  if (drv->state < DISPLAY_PANEL_INIT1) {
     return;  // Not initialized enough to perform panel refresh
   }
   
@@ -441,9 +446,17 @@ static void display_panel_refresh(void) {
   // Display Update Control
   display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1); 
   display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, &param, 1);
+
+  timestamp_ms_tmp = ticks();
+
   // Activate Display Update Sequence
   display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1); 
-  display_busy_wait(TIMEOUT_BUSY_MS_MAX);
+  status = display_busy_wait(TIMEOUT_BUSY_MS_MAX);
+
+  timestamp_diff_ms = ticks() - timestamp_ms_tmp;
+
+  UNUSED(status);
+  UNUSED(timestamp_diff_ms);
 
 #if 0
   if (partial_update_mode || drv->panel_mode == DISPLAY_FAST_MODE) {
@@ -463,78 +476,108 @@ static void display_panel_refresh(void) {
 static bool display_panel_init(display_panel_mode_t mode) {
   display_driver_t* drv = &g_display_driver;
 
-  if (drv->state != DISPLAY_SPI_INIT) {
-    return false;  // Not initialized enough to init panel
-  }
+  if (drv->state == DISPLAY_SPI_INIT) {
+    systick_delay_ms(10);
+    HAL_GPIO_WritePin(DISPLAY_EP_RESET_PORT, DISPLAY_EP_RESET_PIN,
+                      GPIO_PIN_RESET);
+    systick_delay_ms(10);
+    HAL_GPIO_WritePin(DISPLAY_EP_RESET_PORT, DISPLAY_EP_RESET_PIN, GPIO_PIN_SET);
+    systick_delay_ms(10);
 
-  systick_delay_ms(10);
-  HAL_GPIO_WritePin(DISPLAY_EP_RESET_PORT, DISPLAY_EP_RESET_PIN,
-                    GPIO_PIN_RESET);
-  systick_delay_ms(10);
-  HAL_GPIO_WritePin(DISPLAY_EP_RESET_PORT, DISPLAY_EP_RESET_PIN, GPIO_PIN_SET);
-  systick_delay_ms(10);
-
-  if (mode != DISPLAY_PARTIAL_MODE) {
     // SWRESET
     display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x12}, 1);
     display_busy_wait(1000);
-  }
 
-  // Driver output control  
-  display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x01}, 1);
-  display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA,
-                        (uint8_t[]){0xC7, 0x00, 0x00}, 3);
+    // Driver output control  
+    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x01}, 1);
+    display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA,
+                          (uint8_t[]){0xC7, 0x00, 0x00}, 3);
 
-  // Data entry mode
-  display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x11}, 1);
-  display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x01}, 1);
+    // Data entry mode
+    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x11}, 1);
+    display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x01}, 1);
 
-  // Temperature sensor selection (internal)
-  display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x18}, 1);
-  display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x80}, 1);
-
-  // Read the temperature register
-  uint8_t temp_reg_val[2] = {0};
-  display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x1B}, 1);
-  display_spi_receive(temp_reg_val, 2);
-  UNUSED(temp_reg_val);
-
-  if (mode != DISPLAY_PARTIAL_MODE) {
     // BorderWavefrom
     display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x3C}, 1);
     display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x05}, 1);
 
-    // Load temperature value
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0xB1}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1);
+    // Temperature sensor selection (internal)
+    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x18}, 1);
+    display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x80}, 1);
+
     display_busy_wait(1000);
 
-    // Load LUT for slow/fast update
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x91}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1);
+    drv->panel_mode = mode;
+
+    drv->state = DISPLAY_PANEL_INIT1;
+  } else if (drv->state == DISPLAY_PANEL_INIT1 || drv->state == DISPLAY_PANEL_INIT2) {
+    systick_delay_ms(10);
+    HAL_GPIO_WritePin(DISPLAY_EP_RESET_PORT, DISPLAY_EP_RESET_PIN,
+                      GPIO_PIN_RESET);
+    systick_delay_ms(10);
+    HAL_GPIO_WritePin(DISPLAY_EP_RESET_PORT, DISPLAY_EP_RESET_PIN, GPIO_PIN_SET);
+    systick_delay_ms(10);
+
+    if (mode != DISPLAY_PARTIAL_MODE) {
+      // SWRESET
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x12}, 1);
+      display_busy_wait(1000);
+
+      // Temperature sensor selection (internal)
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x18}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x80}, 1);
+
+      // Load temperature value
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0xB1}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1);
+      display_busy_wait(1000);
+
+      // HACK: write to the temperature register
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x1A}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x64, 0x00}, 2);
+
+      // Load LUT for slow/fast update
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x91}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1);
+      display_busy_wait(1000);
+
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x3C}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x05}, 1);
+    } else {
+      // Temperature sensor selection (internal)
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x18}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x80}, 1);
+
+      // // Load temperature value
+      // display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1);
+      // display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0xB1}, 1);
+      // display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1);
+      // display_busy_wait(1000);
+
+      // HACK: write to the temperature register
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x1A}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x64, 0x00}, 2);
+
+      // // Load LUT for slow/fast update
+      // display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1);
+      // display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x91}, 1);
+      // display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1);
+      // display_busy_wait(1000);
+
+      display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x3C}, 1);
+      display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0xC0}, 1);
+    }
+
+    display_busy_wait(1000);
+
+    drv->panel_mode = mode;
+
+    drv->state = DISPLAY_PANEL_INIT2;
   } else {
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x3C}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0xC0}, 1);
-
-    // Load temperature value
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0xb9}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1);
-    display_busy_wait(1000);
-
-    // Load LUT for partial update
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x22}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_RX_DATA, (uint8_t[]){0x99}, 1);
-    display_spi_transmit(DISPLAY_EP_SPI_TX_CMD, (uint8_t[]){0x20}, 1);
+    return false;  // Not initialized enough to init panel
   }
-
-  display_busy_wait(1000);
-
-  drv->panel_mode = mode;
-
-  drv->state = DISPLAY_PANEL_INIT;
 
   return true;
 }
@@ -542,7 +585,7 @@ static bool display_panel_init(display_panel_mode_t mode) {
 static bool display_panel_deinit(bool reset_content) {
   display_driver_t *drv = &g_display_driver;
 
-  if (drv->state != DISPLAY_PANEL_INIT) {
+  if (drv->state < DISPLAY_PANEL_INIT1) {
     return false;  // Not initialized enough to deinit panel
   }
 
@@ -572,7 +615,11 @@ static bool display_panel_deinit(bool reset_content) {
 
   // Panel deinit does not affect SPI and IO initialization, so just move back
   // to SPI init state
-  drv->state = DISPLAY_SPI_INIT;  
+  if (drv->state == DISPLAY_PANEL_INIT2) {
+    drv->state = DISPLAY_PANEL_INIT1;  
+  } else {
+    drv->state = DISPLAY_SPI_INIT;  
+  }
 
   return true;
 }
@@ -580,7 +627,7 @@ static bool display_panel_deinit(bool reset_content) {
 static void display_color_fill(display_color_t color) {
   display_driver_t *drv = &g_display_driver;
 
-  if (drv->state < DISPLAY_SPI_INIT) {
+  if (drv->state < DISPLAY_PANEL_INIT1) {
     return;
   }
 
@@ -614,7 +661,7 @@ static void display_img_show(const uint8_t* img_data, uint16_t x, uint16_t y,
                              display_panel_mode_t mode) {
   display_driver_t* drv = &g_display_driver;
 
-  if (drv->state < DISPLAY_SPI_INIT) {
+  if (drv->state < DISPLAY_PANEL_INIT1) {
     return;
   }
 
