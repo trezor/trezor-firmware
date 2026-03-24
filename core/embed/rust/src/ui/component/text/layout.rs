@@ -833,6 +833,10 @@ mod tests {
         fn text_width(&self, text: &str) -> i16 {
             self.width * text.len() as i16
         }
+
+        fn get_kerning(&self, _left: char, _right: char) -> i16 {
+            0
+        }
     }
 
     const FIXED_FONT: Fixed = Fixed {
