@@ -24,6 +24,7 @@ if TYPE_CHECKING:
         raise_on_cancel: ExceptionType | None = ActionCancelled,
         *,
         confirm_only: Literal[True],
+        layout_type: type[ui.Layout] = ui.Layout,
     ) -> None: ...
 
     @overload
@@ -34,16 +35,18 @@ if TYPE_CHECKING:
         raise_on_cancel: ExceptionType | None = ActionCancelled,
         *,
         confirm_only: bool = False,
+        layout_type: type[ui.Layout] = ui.Layout,
     ) -> T: ...
 
 
 async def interact(
-    layout_obj: ui.LayoutObj[T],
+    layout_obj: ui.LayoutObj[T] | ui.Layout[T],
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     raise_on_cancel: ExceptionType | None = ActionCancelled,
     *,
     confirm_only: bool = False,
+    layout_type: type[ui.Layout] = ui.Layout,
 ) -> T | None:
     """Return the result of user interaction with the layout.
 
@@ -61,7 +64,9 @@ async def interact(
     # shut down other workflows to prevent them from interfering with the current one
     workflow.close_others()
     # start the layout
-    layout = ui.Layout(layout_obj)
+    layout = (
+        layout_obj if isinstance(layout_obj, ui.Layout) else layout_type(layout_obj)
+    )
     layout.start()
     if br_name is not None:
         # store the first button request to be sent
