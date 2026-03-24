@@ -322,6 +322,7 @@ def setup(
     skip_backup: bool = False,
     no_backup: bool = False,
     backup_type: Optional[messages.BackupType] = None,
+    backup_method: Optional[messages.BackupMethod] = None,
     entropy_check_count: Optional[int] = None,
     paths: Iterable[Address] = [],
     _get_entropy: Callable[[], bytes] = _get_external_entropy,
@@ -407,6 +408,7 @@ def setup(
         no_backup=bool(no_backup),
         backup_type=backup_type,
         entropy_check=entropy_check_count > 0,
+        backup_method=backup_method,
     )
     if entropy_check_count > 0:
         xpubs = _reset_with_entropycheck(
@@ -553,6 +555,7 @@ def backup(
     session: "Session",
     group_threshold: Optional[int] = None,
     groups: Iterable[tuple[int, int]] = (),
+    backup_method: Optional[messages.BackupMethod] = None,
 ) -> None:
     session.call(
         messages.BackupDevice(
@@ -561,6 +564,7 @@ def backup(
                 messages.Slip39Group(member_threshold=t, member_count=c)
                 for t, c in groups
             ],
+            backup_method=backup_method,
         ),
         expect=messages.Success,
     )
