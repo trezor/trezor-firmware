@@ -728,13 +728,15 @@ impl Span {
         };
 
         let mut span_width = 0;
+        let mut prev_char: Option<char> = None;
         let mut found_any_whitespace = false;
 
         let mut char_indices_iter = text.char_indices().peekable();
         // Iterating manually because we need a reference to the iterator inside the
         // loop.
         while let Some((i, ch)) = char_indices_iter.next() {
-            let char_width = text_font.char_width(ch);
+            let kern = prev_char.map_or(0, |p| text_font.get_kerning(p, ch));
+            let char_width = text_font.char_width(ch) + kern;
 
             // All chunkification logic goes here.
             if let Some(chunkify_config) = chunks {
@@ -796,6 +798,7 @@ impl Span {
             }
 
             span_width += char_width;
+            prev_char = Some(ch);
         }
 
         // The whole text is fitting on the current line.
