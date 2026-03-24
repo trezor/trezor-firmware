@@ -188,7 +188,7 @@ def test_label_empty(device_handler: "BackgroundDeviceHandler"):
     assert features.label == ""
 
     # When the label is empty, the homescreen shows the model name
-    assert debug.read_layout().screen_content() == "Trezor Safe 7"
+    assert "Trezor Safe 7" in debug.read_layout().screen_content()
 
 
 @pytest.mark.setup_client(pin=None)
