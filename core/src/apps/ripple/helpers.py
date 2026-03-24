@@ -1,6 +1,10 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from . import base58_ripple
+
+if TYPE_CHECKING:
+    from trezor.messages import RippleSignTx
 
 # HASH_TX_ID = const(0x5458_4E00)  # 'TXN'
 HASH_TX_SIGN = const(0x5354_5800)  # 'STX'
@@ -50,3 +54,16 @@ def decode_address(address: str) -> bytes:
     """Returns so called Account ID"""
     adr = base58_ripple.decode_check(address)
     return adr[1:]
+
+
+def is_payment_transaction(msg: RippleSignTx) -> bool:
+    """Returns True for Payment, False for AccountDelete Transaction Type, raises ValueError for any invalid cases"""
+    if msg.payment or msg.account_delete:
+        if msg.payment and msg.account_delete:
+            raise ValueError("Ripple: Multiple transaction types")
+        elif msg.payment:
+            return True
+        else:
+            return False
+    else:
+        raise ValueError("Ripple: Missing transaction type")
