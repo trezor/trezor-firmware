@@ -296,3 +296,9 @@ if not utils.BITCOIN_ONLY:
     TronVoteWitnessContract = 2210
     CKBGetAddress = 5500
     CKBAddress = 5501
+    CKBSignTx = 5502
+    CKBTxRequest = 5503
+    CKBTxAckInput = 5504
+    CKBTxAckOutput = 5505
+    CKBTxAckCellDep = 5506
+    CKBSignedTx = 5507

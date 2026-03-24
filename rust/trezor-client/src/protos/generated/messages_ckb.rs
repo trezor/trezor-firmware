@@ -495,6 +495,2561 @@ impl ::protobuf::reflect::ProtobufValue for CKBAddress {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBCellInput)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBCellInput {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellInput.previous_output_tx_hash)
+    pub previous_output_tx_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellInput.previous_output_index)
+    pub previous_output_index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellInput.since)
+    pub since: ::std::option::Option<u64>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBCellInput.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBCellInput {
+    fn default() -> &'a CKBCellInput {
+        <CKBCellInput as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBCellInput {
+    pub fn new() -> CKBCellInput {
+        ::std::default::Default::default()
+    }
+
+    // required bytes previous_output_tx_hash = 1;
+
+    pub fn previous_output_tx_hash(&self) -> &[u8] {
+        match self.previous_output_tx_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_previous_output_tx_hash(&mut self) {
+        self.previous_output_tx_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_previous_output_tx_hash(&self) -> bool {
+        self.previous_output_tx_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_previous_output_tx_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.previous_output_tx_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_previous_output_tx_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.previous_output_tx_hash.is_none() {
+            self.previous_output_tx_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.previous_output_tx_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_previous_output_tx_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.previous_output_tx_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required uint32 previous_output_index = 2;
+
+    pub fn previous_output_index(&self) -> u32 {
+        self.previous_output_index.unwrap_or(0)
+    }
+
+    pub fn clear_previous_output_index(&mut self) {
+        self.previous_output_index = ::std::option::Option::None;
+    }
+
+    pub fn has_previous_output_index(&self) -> bool {
+        self.previous_output_index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_previous_output_index(&mut self, v: u32) {
+        self.previous_output_index = ::std::option::Option::Some(v);
+    }
+
+    // optional uint64 since = 3;
+
+    pub fn since(&self) -> u64 {
+        self.since.unwrap_or(0u64)
+    }
+
+    pub fn clear_since(&mut self) {
+        self.since = ::std::option::Option::None;
+    }
+
+    pub fn has_since(&self) -> bool {
+        self.since.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_since(&mut self, v: u64) {
+        self.since = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "previous_output_tx_hash",
+            |m: &CKBCellInput| { &m.previous_output_tx_hash },
+            |m: &mut CKBCellInput| { &mut m.previous_output_tx_hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "previous_output_index",
+            |m: &CKBCellInput| { &m.previous_output_index },
+            |m: &mut CKBCellInput| { &mut m.previous_output_index },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "since",
+            |m: &CKBCellInput| { &m.since },
+            |m: &mut CKBCellInput| { &mut m.since },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBCellInput>(
+            "CKBCellInput",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBCellInput {
+    const NAME: &'static str = "CKBCellInput";
+
+    fn is_initialized(&self) -> bool {
+        if self.previous_output_tx_hash.is_none() {
+            return false;
+        }
+        if self.previous_output_index.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.previous_output_tx_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                16 => {
+                    self.previous_output_index = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                24 => {
+                    self.since = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.previous_output_tx_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.previous_output_index {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.since {
+            my_size += ::protobuf::rt::uint64_size(3, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.previous_output_tx_hash.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.previous_output_index {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.since {
+            os.write_uint64(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBCellInput {
+        CKBCellInput::new()
+    }
+
+    fn clear(&mut self) {
+        self.previous_output_tx_hash = ::std::option::Option::None;
+        self.previous_output_index = ::std::option::Option::None;
+        self.since = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBCellInput {
+        static instance: CKBCellInput = CKBCellInput {
+            previous_output_tx_hash: ::std::option::Option::None,
+            previous_output_index: ::std::option::Option::None,
+            since: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBCellInput {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBCellInput").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBCellInput {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBCellInput {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBCellOutput)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBCellOutput {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellOutput.capacity)
+    pub capacity: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellOutput.lock_code_hash)
+    pub lock_code_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellOutput.lock_hash_type)
+    pub lock_hash_type: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellOutput.lock_args)
+    pub lock_args: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellOutput.type_code_hash)
+    pub type_code_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellOutput.type_hash_type)
+    pub type_hash_type: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellOutput.type_args)
+    pub type_args: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellOutput.data)
+    pub data: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBCellOutput.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBCellOutput {
+    fn default() -> &'a CKBCellOutput {
+        <CKBCellOutput as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBCellOutput {
+    pub fn new() -> CKBCellOutput {
+        ::std::default::Default::default()
+    }
+
+    // required uint64 capacity = 1;
+
+    pub fn capacity(&self) -> u64 {
+        self.capacity.unwrap_or(0)
+    }
+
+    pub fn clear_capacity(&mut self) {
+        self.capacity = ::std::option::Option::None;
+    }
+
+    pub fn has_capacity(&self) -> bool {
+        self.capacity.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_capacity(&mut self, v: u64) {
+        self.capacity = ::std::option::Option::Some(v);
+    }
+
+    // required bytes lock_code_hash = 2;
+
+    pub fn lock_code_hash(&self) -> &[u8] {
+        match self.lock_code_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_lock_code_hash(&mut self) {
+        self.lock_code_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_lock_code_hash(&self) -> bool {
+        self.lock_code_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_lock_code_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.lock_code_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_lock_code_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.lock_code_hash.is_none() {
+            self.lock_code_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.lock_code_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_lock_code_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.lock_code_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required uint32 lock_hash_type = 3;
+
+    pub fn lock_hash_type(&self) -> u32 {
+        self.lock_hash_type.unwrap_or(0)
+    }
+
+    pub fn clear_lock_hash_type(&mut self) {
+        self.lock_hash_type = ::std::option::Option::None;
+    }
+
+    pub fn has_lock_hash_type(&self) -> bool {
+        self.lock_hash_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_lock_hash_type(&mut self, v: u32) {
+        self.lock_hash_type = ::std::option::Option::Some(v);
+    }
+
+    // required bytes lock_args = 4;
+
+    pub fn lock_args(&self) -> &[u8] {
+        match self.lock_args.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_lock_args(&mut self) {
+        self.lock_args = ::std::option::Option::None;
+    }
+
+    pub fn has_lock_args(&self) -> bool {
+        self.lock_args.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_lock_args(&mut self, v: ::std::vec::Vec<u8>) {
+        self.lock_args = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_lock_args(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.lock_args.is_none() {
+            self.lock_args = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.lock_args.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_lock_args(&mut self) -> ::std::vec::Vec<u8> {
+        self.lock_args.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes type_code_hash = 5;
+
+    pub fn type_code_hash(&self) -> &[u8] {
+        match self.type_code_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_type_code_hash(&mut self) {
+        self.type_code_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_type_code_hash(&self) -> bool {
+        self.type_code_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type_code_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.type_code_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_type_code_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.type_code_hash.is_none() {
+            self.type_code_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.type_code_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_type_code_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.type_code_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional uint32 type_hash_type = 6;
+
+    pub fn type_hash_type(&self) -> u32 {
+        self.type_hash_type.unwrap_or(0)
+    }
+
+    pub fn clear_type_hash_type(&mut self) {
+        self.type_hash_type = ::std::option::Option::None;
+    }
+
+    pub fn has_type_hash_type(&self) -> bool {
+        self.type_hash_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type_hash_type(&mut self, v: u32) {
+        self.type_hash_type = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes type_args = 7;
+
+    pub fn type_args(&self) -> &[u8] {
+        match self.type_args.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_type_args(&mut self) {
+        self.type_args = ::std::option::Option::None;
+    }
+
+    pub fn has_type_args(&self) -> bool {
+        self.type_args.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_type_args(&mut self, v: ::std::vec::Vec<u8>) {
+        self.type_args = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_type_args(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.type_args.is_none() {
+            self.type_args = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.type_args.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_type_args(&mut self) -> ::std::vec::Vec<u8> {
+        self.type_args.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes data = 8;
+
+    pub fn data(&self) -> &[u8] {
+        match self.data.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_data(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_data(&self) -> bool {
+        self.data.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_data(&mut self, v: ::std::vec::Vec<u8>) {
+        self.data = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_data(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.data.is_none() {
+            self.data = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.data.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_data(&mut self) -> ::std::vec::Vec<u8> {
+        self.data.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(8);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "capacity",
+            |m: &CKBCellOutput| { &m.capacity },
+            |m: &mut CKBCellOutput| { &mut m.capacity },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "lock_code_hash",
+            |m: &CKBCellOutput| { &m.lock_code_hash },
+            |m: &mut CKBCellOutput| { &mut m.lock_code_hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "lock_hash_type",
+            |m: &CKBCellOutput| { &m.lock_hash_type },
+            |m: &mut CKBCellOutput| { &mut m.lock_hash_type },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "lock_args",
+            |m: &CKBCellOutput| { &m.lock_args },
+            |m: &mut CKBCellOutput| { &mut m.lock_args },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type_code_hash",
+            |m: &CKBCellOutput| { &m.type_code_hash },
+            |m: &mut CKBCellOutput| { &mut m.type_code_hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type_hash_type",
+            |m: &CKBCellOutput| { &m.type_hash_type },
+            |m: &mut CKBCellOutput| { &mut m.type_hash_type },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "type_args",
+            |m: &CKBCellOutput| { &m.type_args },
+            |m: &mut CKBCellOutput| { &mut m.type_args },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "data",
+            |m: &CKBCellOutput| { &m.data },
+            |m: &mut CKBCellOutput| { &mut m.data },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBCellOutput>(
+            "CKBCellOutput",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBCellOutput {
+    const NAME: &'static str = "CKBCellOutput";
+
+    fn is_initialized(&self) -> bool {
+        if self.capacity.is_none() {
+            return false;
+        }
+        if self.lock_code_hash.is_none() {
+            return false;
+        }
+        if self.lock_hash_type.is_none() {
+            return false;
+        }
+        if self.lock_args.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.capacity = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                18 => {
+                    self.lock_code_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                24 => {
+                    self.lock_hash_type = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                34 => {
+                    self.lock_args = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                42 => {
+                    self.type_code_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                48 => {
+                    self.type_hash_type = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                58 => {
+                    self.type_args = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                66 => {
+                    self.data = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.capacity {
+            my_size += ::protobuf::rt::uint64_size(1, v);
+        }
+        if let Some(v) = self.lock_code_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.lock_hash_type {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.lock_args.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
+        if let Some(v) = self.type_code_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(5, &v);
+        }
+        if let Some(v) = self.type_hash_type {
+            my_size += ::protobuf::rt::uint32_size(6, v);
+        }
+        if let Some(v) = self.type_args.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(7, &v);
+        }
+        if let Some(v) = self.data.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(8, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.capacity {
+            os.write_uint64(1, v)?;
+        }
+        if let Some(v) = self.lock_code_hash.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.lock_hash_type {
+            os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.lock_args.as_ref() {
+            os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.type_code_hash.as_ref() {
+            os.write_bytes(5, v)?;
+        }
+        if let Some(v) = self.type_hash_type {
+            os.write_uint32(6, v)?;
+        }
+        if let Some(v) = self.type_args.as_ref() {
+            os.write_bytes(7, v)?;
+        }
+        if let Some(v) = self.data.as_ref() {
+            os.write_bytes(8, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBCellOutput {
+        CKBCellOutput::new()
+    }
+
+    fn clear(&mut self) {
+        self.capacity = ::std::option::Option::None;
+        self.lock_code_hash = ::std::option::Option::None;
+        self.lock_hash_type = ::std::option::Option::None;
+        self.lock_args = ::std::option::Option::None;
+        self.type_code_hash = ::std::option::Option::None;
+        self.type_hash_type = ::std::option::Option::None;
+        self.type_args = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBCellOutput {
+        static instance: CKBCellOutput = CKBCellOutput {
+            capacity: ::std::option::Option::None,
+            lock_code_hash: ::std::option::Option::None,
+            lock_hash_type: ::std::option::Option::None,
+            lock_args: ::std::option::Option::None,
+            type_code_hash: ::std::option::Option::None,
+            type_hash_type: ::std::option::Option::None,
+            type_args: ::std::option::Option::None,
+            data: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBCellOutput {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBCellOutput").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBCellOutput {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBCellOutput {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBCellDep)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBCellDep {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellDep.tx_hash)
+    pub tx_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellDep.index)
+    pub index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBCellDep.dep_type)
+    pub dep_type: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBCellDep.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBCellDep {
+    fn default() -> &'a CKBCellDep {
+        <CKBCellDep as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBCellDep {
+    pub fn new() -> CKBCellDep {
+        ::std::default::Default::default()
+    }
+
+    // required bytes tx_hash = 1;
+
+    pub fn tx_hash(&self) -> &[u8] {
+        match self.tx_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_tx_hash(&mut self) {
+        self.tx_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_tx_hash(&self) -> bool {
+        self.tx_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_tx_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.tx_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_tx_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.tx_hash.is_none() {
+            self.tx_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.tx_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_tx_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.tx_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required uint32 index = 2;
+
+    pub fn index(&self) -> u32 {
+        self.index.unwrap_or(0)
+    }
+
+    pub fn clear_index(&mut self) {
+        self.index = ::std::option::Option::None;
+    }
+
+    pub fn has_index(&self) -> bool {
+        self.index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_index(&mut self, v: u32) {
+        self.index = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 dep_type = 3;
+
+    pub fn dep_type(&self) -> u32 {
+        self.dep_type.unwrap_or(0)
+    }
+
+    pub fn clear_dep_type(&mut self) {
+        self.dep_type = ::std::option::Option::None;
+    }
+
+    pub fn has_dep_type(&self) -> bool {
+        self.dep_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_dep_type(&mut self, v: u32) {
+        self.dep_type = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "tx_hash",
+            |m: &CKBCellDep| { &m.tx_hash },
+            |m: &mut CKBCellDep| { &mut m.tx_hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "index",
+            |m: &CKBCellDep| { &m.index },
+            |m: &mut CKBCellDep| { &mut m.index },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "dep_type",
+            |m: &CKBCellDep| { &m.dep_type },
+            |m: &mut CKBCellDep| { &mut m.dep_type },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBCellDep>(
+            "CKBCellDep",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBCellDep {
+    const NAME: &'static str = "CKBCellDep";
+
+    fn is_initialized(&self) -> bool {
+        if self.tx_hash.is_none() {
+            return false;
+        }
+        if self.index.is_none() {
+            return false;
+        }
+        if self.dep_type.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.tx_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                16 => {
+                    self.index = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                24 => {
+                    self.dep_type = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.tx_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.index {
+            my_size += ::protobuf::rt::uint32_size(2, v);
+        }
+        if let Some(v) = self.dep_type {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.tx_hash.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.index {
+            os.write_uint32(2, v)?;
+        }
+        if let Some(v) = self.dep_type {
+            os.write_uint32(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBCellDep {
+        CKBCellDep::new()
+    }
+
+    fn clear(&mut self) {
+        self.tx_hash = ::std::option::Option::None;
+        self.index = ::std::option::Option::None;
+        self.dep_type = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBCellDep {
+        static instance: CKBCellDep = CKBCellDep {
+            tx_hash: ::std::option::Option::None,
+            index: ::std::option::Option::None,
+            dep_type: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBCellDep {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBCellDep").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBCellDep {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBCellDep {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSignTx)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBSignTx {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.address_n)
+    pub address_n: ::std::vec::Vec<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.network)
+    pub network: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.inputs_count)
+    pub inputs_count: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.outputs_count)
+    pub outputs_count: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.cell_deps_count)
+    pub cell_deps_count: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.fee)
+    pub fee: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignTx.chunkify)
+    pub chunkify: ::std::option::Option<bool>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSignTx.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBSignTx {
+    fn default() -> &'a CKBSignTx {
+        <CKBSignTx as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBSignTx {
+    pub fn new() -> CKBSignTx {
+        ::std::default::Default::default()
+    }
+
+    // optional string network = 2;
+
+    pub fn network(&self) -> &str {
+        match self.network.as_ref() {
+            Some(v) => v,
+            None => "Mainnet",
+        }
+    }
+
+    pub fn clear_network(&mut self) {
+        self.network = ::std::option::Option::None;
+    }
+
+    pub fn has_network(&self) -> bool {
+        self.network.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_network(&mut self, v: ::std::string::String) {
+        self.network = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_network(&mut self) -> &mut ::std::string::String {
+        if self.network.is_none() {
+            self.network = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.network.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_network(&mut self) -> ::std::string::String {
+        self.network.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required uint32 inputs_count = 3;
+
+    pub fn inputs_count(&self) -> u32 {
+        self.inputs_count.unwrap_or(0)
+    }
+
+    pub fn clear_inputs_count(&mut self) {
+        self.inputs_count = ::std::option::Option::None;
+    }
+
+    pub fn has_inputs_count(&self) -> bool {
+        self.inputs_count.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_inputs_count(&mut self, v: u32) {
+        self.inputs_count = ::std::option::Option::Some(v);
+    }
+
+    // required uint32 outputs_count = 4;
+
+    pub fn outputs_count(&self) -> u32 {
+        self.outputs_count.unwrap_or(0)
+    }
+
+    pub fn clear_outputs_count(&mut self) {
+        self.outputs_count = ::std::option::Option::None;
+    }
+
+    pub fn has_outputs_count(&self) -> bool {
+        self.outputs_count.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_outputs_count(&mut self, v: u32) {
+        self.outputs_count = ::std::option::Option::Some(v);
+    }
+
+    // optional uint32 cell_deps_count = 5;
+
+    pub fn cell_deps_count(&self) -> u32 {
+        self.cell_deps_count.unwrap_or(0u32)
+    }
+
+    pub fn clear_cell_deps_count(&mut self) {
+        self.cell_deps_count = ::std::option::Option::None;
+    }
+
+    pub fn has_cell_deps_count(&self) -> bool {
+        self.cell_deps_count.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_cell_deps_count(&mut self, v: u32) {
+        self.cell_deps_count = ::std::option::Option::Some(v);
+    }
+
+    // optional uint64 fee = 6;
+
+    pub fn fee(&self) -> u64 {
+        self.fee.unwrap_or(0)
+    }
+
+    pub fn clear_fee(&mut self) {
+        self.fee = ::std::option::Option::None;
+    }
+
+    pub fn has_fee(&self) -> bool {
+        self.fee.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_fee(&mut self, v: u64) {
+        self.fee = ::std::option::Option::Some(v);
+    }
+
+    // optional bool chunkify = 7;
+
+    pub fn chunkify(&self) -> bool {
+        self.chunkify.unwrap_or(false)
+    }
+
+    pub fn clear_chunkify(&mut self) {
+        self.chunkify = ::std::option::Option::None;
+    }
+
+    pub fn has_chunkify(&self) -> bool {
+        self.chunkify.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_chunkify(&mut self, v: bool) {
+        self.chunkify = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "address_n",
+            |m: &CKBSignTx| { &m.address_n },
+            |m: &mut CKBSignTx| { &mut m.address_n },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "network",
+            |m: &CKBSignTx| { &m.network },
+            |m: &mut CKBSignTx| { &mut m.network },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "inputs_count",
+            |m: &CKBSignTx| { &m.inputs_count },
+            |m: &mut CKBSignTx| { &mut m.inputs_count },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "outputs_count",
+            |m: &CKBSignTx| { &m.outputs_count },
+            |m: &mut CKBSignTx| { &mut m.outputs_count },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "cell_deps_count",
+            |m: &CKBSignTx| { &m.cell_deps_count },
+            |m: &mut CKBSignTx| { &mut m.cell_deps_count },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "fee",
+            |m: &CKBSignTx| { &m.fee },
+            |m: &mut CKBSignTx| { &mut m.fee },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "chunkify",
+            |m: &CKBSignTx| { &m.chunkify },
+            |m: &mut CKBSignTx| { &mut m.chunkify },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSignTx>(
+            "CKBSignTx",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBSignTx {
+    const NAME: &'static str = "CKBSignTx";
+
+    fn is_initialized(&self) -> bool {
+        if self.inputs_count.is_none() {
+            return false;
+        }
+        if self.outputs_count.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    is.read_repeated_packed_uint32_into(&mut self.address_n)?;
+                },
+                8 => {
+                    self.address_n.push(is.read_uint32()?);
+                },
+                18 => {
+                    self.network = ::std::option::Option::Some(is.read_string()?);
+                },
+                24 => {
+                    self.inputs_count = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                32 => {
+                    self.outputs_count = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                40 => {
+                    self.cell_deps_count = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                48 => {
+                    self.fee = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                56 => {
+                    self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.address_n {
+            my_size += ::protobuf::rt::uint32_size(1, *value);
+        };
+        if let Some(v) = self.network.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        if let Some(v) = self.inputs_count {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.outputs_count {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
+        if let Some(v) = self.cell_deps_count {
+            my_size += ::protobuf::rt::uint32_size(5, v);
+        }
+        if let Some(v) = self.fee {
+            my_size += ::protobuf::rt::uint64_size(6, v);
+        }
+        if let Some(v) = self.chunkify {
+            my_size += 1 + 1;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.address_n {
+            os.write_uint32(1, *v)?;
+        };
+        if let Some(v) = self.network.as_ref() {
+            os.write_string(2, v)?;
+        }
+        if let Some(v) = self.inputs_count {
+            os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.outputs_count {
+            os.write_uint32(4, v)?;
+        }
+        if let Some(v) = self.cell_deps_count {
+            os.write_uint32(5, v)?;
+        }
+        if let Some(v) = self.fee {
+            os.write_uint64(6, v)?;
+        }
+        if let Some(v) = self.chunkify {
+            os.write_bool(7, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBSignTx {
+        CKBSignTx::new()
+    }
+
+    fn clear(&mut self) {
+        self.address_n.clear();
+        self.network = ::std::option::Option::None;
+        self.inputs_count = ::std::option::Option::None;
+        self.outputs_count = ::std::option::Option::None;
+        self.cell_deps_count = ::std::option::Option::None;
+        self.fee = ::std::option::Option::None;
+        self.chunkify = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBSignTx {
+        static instance: CKBSignTx = CKBSignTx {
+            address_n: ::std::vec::Vec::new(),
+            network: ::std::option::Option::None,
+            inputs_count: ::std::option::Option::None,
+            outputs_count: ::std::option::Option::None,
+            cell_deps_count: ::std::option::Option::None,
+            fee: ::std::option::Option::None,
+            chunkify: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBSignTx {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSignTx").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBSignTx {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBSignTx {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBTxRequest)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBTxRequest {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequest.request_type)
+    pub request_type: ::std::option::Option<::protobuf::EnumOrUnknown<CKBTxRequestType>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequest.details)
+    pub details: ::protobuf::MessageField<CKBTxRequestDetails>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequest.serialized)
+    pub serialized: ::protobuf::MessageField<CKBTxRequestSerialized>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxRequest.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBTxRequest {
+    fn default() -> &'a CKBTxRequest {
+        <CKBTxRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBTxRequest {
+    pub fn new() -> CKBTxRequest {
+        ::std::default::Default::default()
+    }
+
+    // optional .hw.trezor.messages.ckb.CKBTxRequestType request_type = 1;
+
+    pub fn request_type(&self) -> CKBTxRequestType {
+        match self.request_type {
+            Some(e) => e.enum_value_or(CKBTxRequestType::TXINPUT),
+            None => CKBTxRequestType::TXINPUT,
+        }
+    }
+
+    pub fn clear_request_type(&mut self) {
+        self.request_type = ::std::option::Option::None;
+    }
+
+    pub fn has_request_type(&self) -> bool {
+        self.request_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_request_type(&mut self, v: CKBTxRequestType) {
+        self.request_type = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "request_type",
+            |m: &CKBTxRequest| { &m.request_type },
+            |m: &mut CKBTxRequest| { &mut m.request_type },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CKBTxRequestDetails>(
+            "details",
+            |m: &CKBTxRequest| { &m.details },
+            |m: &mut CKBTxRequest| { &mut m.details },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CKBTxRequestSerialized>(
+            "serialized",
+            |m: &CKBTxRequest| { &m.serialized },
+            |m: &mut CKBTxRequest| { &mut m.serialized },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxRequest>(
+            "CKBTxRequest",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBTxRequest {
+    const NAME: &'static str = "CKBTxRequest";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.request_type = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.details)?;
+                },
+                26 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.serialized)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.request_type {
+            my_size += ::protobuf::rt::int32_size(1, v.value());
+        }
+        if let Some(v) = self.details.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.serialized.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.request_type {
+            os.write_enum(1, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
+        if let Some(v) = self.details.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        if let Some(v) = self.serialized.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBTxRequest {
+        CKBTxRequest::new()
+    }
+
+    fn clear(&mut self) {
+        self.request_type = ::std::option::Option::None;
+        self.details.clear();
+        self.serialized.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBTxRequest {
+        static instance: CKBTxRequest = CKBTxRequest {
+            request_type: ::std::option::Option::None,
+            details: ::protobuf::MessageField::none(),
+            serialized: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBTxRequest {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBTxRequest").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBTxRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBTxRequest {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBTxRequestDetails)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBTxRequestDetails {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequestDetails.request_index)
+    pub request_index: ::std::option::Option<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxRequestDetails.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBTxRequestDetails {
+    fn default() -> &'a CKBTxRequestDetails {
+        <CKBTxRequestDetails as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBTxRequestDetails {
+    pub fn new() -> CKBTxRequestDetails {
+        ::std::default::Default::default()
+    }
+
+    // optional uint32 request_index = 1;
+
+    pub fn request_index(&self) -> u32 {
+        self.request_index.unwrap_or(0)
+    }
+
+    pub fn clear_request_index(&mut self) {
+        self.request_index = ::std::option::Option::None;
+    }
+
+    pub fn has_request_index(&self) -> bool {
+        self.request_index.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_request_index(&mut self, v: u32) {
+        self.request_index = ::std::option::Option::Some(v);
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "request_index",
+            |m: &CKBTxRequestDetails| { &m.request_index },
+            |m: &mut CKBTxRequestDetails| { &mut m.request_index },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxRequestDetails>(
+            "CKBTxRequestDetails",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBTxRequestDetails {
+    const NAME: &'static str = "CKBTxRequestDetails";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                8 => {
+                    self.request_index = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.request_index {
+            my_size += ::protobuf::rt::uint32_size(1, v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.request_index {
+            os.write_uint32(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBTxRequestDetails {
+        CKBTxRequestDetails::new()
+    }
+
+    fn clear(&mut self) {
+        self.request_index = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBTxRequestDetails {
+        static instance: CKBTxRequestDetails = CKBTxRequestDetails {
+            request_index: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBTxRequestDetails {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBTxRequestDetails").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBTxRequestDetails {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBTxRequestDetails {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBTxRequestSerialized)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBTxRequestSerialized {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequestSerialized.signature)
+    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxRequestSerialized.tx_hash)
+    pub tx_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxRequestSerialized.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBTxRequestSerialized {
+    fn default() -> &'a CKBTxRequestSerialized {
+        <CKBTxRequestSerialized as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBTxRequestSerialized {
+    pub fn new() -> CKBTxRequestSerialized {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes signature = 1;
+
+    pub fn signature(&self) -> &[u8] {
+        match self.signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signature(&mut self) {
+        self.signature = ::std::option::Option::None;
+    }
+
+    pub fn has_signature(&self) -> bool {
+        self.signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature.is_none() {
+            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes tx_hash = 2;
+
+    pub fn tx_hash(&self) -> &[u8] {
+        match self.tx_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_tx_hash(&mut self) {
+        self.tx_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_tx_hash(&self) -> bool {
+        self.tx_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_tx_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.tx_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_tx_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.tx_hash.is_none() {
+            self.tx_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.tx_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_tx_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.tx_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature",
+            |m: &CKBTxRequestSerialized| { &m.signature },
+            |m: &mut CKBTxRequestSerialized| { &mut m.signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "tx_hash",
+            |m: &CKBTxRequestSerialized| { &m.tx_hash },
+            |m: &mut CKBTxRequestSerialized| { &mut m.tx_hash },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxRequestSerialized>(
+            "CKBTxRequestSerialized",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBTxRequestSerialized {
+    const NAME: &'static str = "CKBTxRequestSerialized";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.tx_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.tx_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.signature.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.tx_hash.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBTxRequestSerialized {
+        CKBTxRequestSerialized::new()
+    }
+
+    fn clear(&mut self) {
+        self.signature = ::std::option::Option::None;
+        self.tx_hash = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBTxRequestSerialized {
+        static instance: CKBTxRequestSerialized = CKBTxRequestSerialized {
+            signature: ::std::option::Option::None,
+            tx_hash: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBTxRequestSerialized {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBTxRequestSerialized").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBTxRequestSerialized {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBTxRequestSerialized {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBTxAckInput)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBTxAckInput {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxAckInput.input)
+    pub input: ::protobuf::MessageField<CKBCellInput>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxAckInput.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBTxAckInput {
+    fn default() -> &'a CKBTxAckInput {
+        <CKBTxAckInput as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBTxAckInput {
+    pub fn new() -> CKBTxAckInput {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CKBCellInput>(
+            "input",
+            |m: &CKBTxAckInput| { &m.input },
+            |m: &mut CKBTxAckInput| { &mut m.input },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxAckInput>(
+            "CKBTxAckInput",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBTxAckInput {
+    const NAME: &'static str = "CKBTxAckInput";
+
+    fn is_initialized(&self) -> bool {
+        for v in &self.input {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.input)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.input.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.input.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBTxAckInput {
+        CKBTxAckInput::new()
+    }
+
+    fn clear(&mut self) {
+        self.input.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBTxAckInput {
+        static instance: CKBTxAckInput = CKBTxAckInput {
+            input: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBTxAckInput {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBTxAckInput").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBTxAckInput {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBTxAckInput {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBTxAckOutput)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBTxAckOutput {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxAckOutput.output)
+    pub output: ::protobuf::MessageField<CKBCellOutput>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxAckOutput.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBTxAckOutput {
+    fn default() -> &'a CKBTxAckOutput {
+        <CKBTxAckOutput as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBTxAckOutput {
+    pub fn new() -> CKBTxAckOutput {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CKBCellOutput>(
+            "output",
+            |m: &CKBTxAckOutput| { &m.output },
+            |m: &mut CKBTxAckOutput| { &mut m.output },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxAckOutput>(
+            "CKBTxAckOutput",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBTxAckOutput {
+    const NAME: &'static str = "CKBTxAckOutput";
+
+    fn is_initialized(&self) -> bool {
+        for v in &self.output {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.output)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.output.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.output.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBTxAckOutput {
+        CKBTxAckOutput::new()
+    }
+
+    fn clear(&mut self) {
+        self.output.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBTxAckOutput {
+        static instance: CKBTxAckOutput = CKBTxAckOutput {
+            output: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBTxAckOutput {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBTxAckOutput").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBTxAckOutput {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBTxAckOutput {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBTxAckCellDep)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBTxAckCellDep {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBTxAckCellDep.cell_dep)
+    pub cell_dep: ::protobuf::MessageField<CKBCellDep>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBTxAckCellDep.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBTxAckCellDep {
+    fn default() -> &'a CKBTxAckCellDep {
+        <CKBTxAckCellDep as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBTxAckCellDep {
+    pub fn new() -> CKBTxAckCellDep {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CKBCellDep>(
+            "cell_dep",
+            |m: &CKBTxAckCellDep| { &m.cell_dep },
+            |m: &mut CKBTxAckCellDep| { &mut m.cell_dep },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBTxAckCellDep>(
+            "CKBTxAckCellDep",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBTxAckCellDep {
+    const NAME: &'static str = "CKBTxAckCellDep";
+
+    fn is_initialized(&self) -> bool {
+        for v in &self.cell_dep {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.cell_dep)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.cell_dep.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.cell_dep.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBTxAckCellDep {
+        CKBTxAckCellDep::new()
+    }
+
+    fn clear(&mut self) {
+        self.cell_dep.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBTxAckCellDep {
+        static instance: CKBTxAckCellDep = CKBTxAckCellDep {
+            cell_dep: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBTxAckCellDep {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBTxAckCellDep").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBTxAckCellDep {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBTxAckCellDep {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSignedTx)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct CKBSignedTx {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignedTx.signature)
+    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignedTx.tx_hash)
+    pub tx_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSignedTx.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a CKBSignedTx {
+    fn default() -> &'a CKBSignedTx {
+        <CKBSignedTx as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl CKBSignedTx {
+    pub fn new() -> CKBSignedTx {
+        ::std::default::Default::default()
+    }
+
+    // required bytes signature = 1;
+
+    pub fn signature(&self) -> &[u8] {
+        match self.signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signature(&mut self) {
+        self.signature = ::std::option::Option::None;
+    }
+
+    pub fn has_signature(&self) -> bool {
+        self.signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature.is_none() {
+            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required bytes tx_hash = 2;
+
+    pub fn tx_hash(&self) -> &[u8] {
+        match self.tx_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_tx_hash(&mut self) {
+        self.tx_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_tx_hash(&self) -> bool {
+        self.tx_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_tx_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.tx_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_tx_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.tx_hash.is_none() {
+            self.tx_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.tx_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_tx_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.tx_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature",
+            |m: &CKBSignedTx| { &m.signature },
+            |m: &mut CKBSignedTx| { &mut m.signature },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "tx_hash",
+            |m: &CKBSignedTx| { &m.tx_hash },
+            |m: &mut CKBSignedTx| { &mut m.tx_hash },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSignedTx>(
+            "CKBSignedTx",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for CKBSignedTx {
+    const NAME: &'static str = "CKBSignedTx";
+
+    fn is_initialized(&self) -> bool {
+        if self.signature.is_none() {
+            return false;
+        }
+        if self.tx_hash.is_none() {
+            return false;
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.tx_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.tx_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.signature.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.tx_hash.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> CKBSignedTx {
+        CKBSignedTx::new()
+    }
+
+    fn clear(&mut self) {
+        self.signature = ::std::option::Option::None;
+        self.tx_hash = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static CKBSignedTx {
+        static instance: CKBSignedTx = CKBSignedTx {
+            signature: ::std::option::Option::None,
+            tx_hash: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for CKBSignedTx {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSignedTx").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for CKBSignedTx {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for CKBSignedTx {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+// @@protoc_insertion_point(enum:hw.trezor.messages.ckb.CKBTxRequestType)
+pub enum CKBTxRequestType {
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.ckb.CKBTxRequestType.TXINPUT)
+    TXINPUT = 0,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.ckb.CKBTxRequestType.TXOUTPUT)
+    TXOUTPUT = 1,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.ckb.CKBTxRequestType.TXCELLDEP)
+    TXCELLDEP = 2,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.ckb.CKBTxRequestType.TXFINISHED)
+    TXFINISHED = 3,
+}
+
+impl ::protobuf::Enum for CKBTxRequestType {
+    const NAME: &'static str = "CKBTxRequestType";
+
+    fn value(&self) -> i32 {
+        *self as i32
+    }
+
+    fn from_i32(value: i32) -> ::std::option::Option<CKBTxRequestType> {
+        match value {
+            0 => ::std::option::Option::Some(CKBTxRequestType::TXINPUT),
+            1 => ::std::option::Option::Some(CKBTxRequestType::TXOUTPUT),
+            2 => ::std::option::Option::Some(CKBTxRequestType::TXCELLDEP),
+            3 => ::std::option::Option::Some(CKBTxRequestType::TXFINISHED),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    fn from_str(str: &str) -> ::std::option::Option<CKBTxRequestType> {
+        match str {
+            "TXINPUT" => ::std::option::Option::Some(CKBTxRequestType::TXINPUT),
+            "TXOUTPUT" => ::std::option::Option::Some(CKBTxRequestType::TXOUTPUT),
+            "TXCELLDEP" => ::std::option::Option::Some(CKBTxRequestType::TXCELLDEP),
+            "TXFINISHED" => ::std::option::Option::Some(CKBTxRequestType::TXFINISHED),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    const VALUES: &'static [CKBTxRequestType] = &[
+        CKBTxRequestType::TXINPUT,
+        CKBTxRequestType::TXOUTPUT,
+        CKBTxRequestType::TXCELLDEP,
+        CKBTxRequestType::TXFINISHED,
+    ];
+}
+
+impl ::protobuf::EnumFull for CKBTxRequestType {
+    fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().enum_by_package_relative_name("CKBTxRequestType").unwrap()).clone()
+    }
+
+    fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+        let index = *self as usize;
+        Self::enum_descriptor().value_by_index(index)
+    }
+}
+
+impl ::std::default::Default for CKBTxRequestType {
+    fn default() -> Self {
+        CKBTxRequestType::TXINPUT
+    }
+}
+
+impl CKBTxRequestType {
+    fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<CKBTxRequestType>("CKBTxRequestType")
+    }
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x12messages-ckb.proto\x12\x16hw.trezor.messages.ckb\x1a\roptions.prot\
     o\"\x8c\x01\n\rCKBGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
@@ -502,8 +3057,44 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12\x18\n\x07network\x18\x03\x20\x02(\tR\x07network\x12\x1a\n\x08chunki\
     fy\x18\x04\x20\x01(\x08R\x08chunkify:\x05\x90\xb2\x19\xfc*\"?\n\nCKBAddr\
     ess\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x10\n\x03mac\
-    \x18\x02\x20\x01(\x0cR\x03mac:\x05\x90\xb2\x19\xfd*B7\n#com.satoshilabs.\
-    trezor.lib.protobufB\x10TrezorMessageCKB\
+    \x18\x02\x20\x01(\x0cR\x03mac:\x05\x90\xb2\x19\xfd*\"\x92\x01\n\x0cCKBCe\
+    llInput\x125\n\x17previous_output_tx_hash\x18\x01\x20\x02(\x0cR\x14previ\
+    ousOutputTxHash\x122\n\x15previous_output_index\x18\x02\x20\x02(\rR\x13p\
+    reviousOutputIndex\x12\x17\n\x05since\x18\x03\x20\x01(\x04:\x010R\x05sin\
+    ce\"\x91\x02\n\rCKBCellOutput\x12\x1a\n\x08capacity\x18\x01\x20\x02(\x04\
+    R\x08capacity\x12$\n\x0elock_code_hash\x18\x02\x20\x02(\x0cR\x0clockCode\
+    Hash\x12$\n\x0elock_hash_type\x18\x03\x20\x02(\rR\x0clockHashType\x12\
+    \x1b\n\tlock_args\x18\x04\x20\x02(\x0cR\x08lockArgs\x12$\n\x0etype_code_\
+    hash\x18\x05\x20\x01(\x0cR\x0ctypeCodeHash\x12$\n\x0etype_hash_type\x18\
+    \x06\x20\x01(\rR\x0ctypeHashType\x12\x1b\n\ttype_args\x18\x07\x20\x01(\
+    \x0cR\x08typeArgs\x12\x12\n\x04data\x18\x08\x20\x01(\x0cR\x04data\"V\n\n\
+    CKBCellDep\x12\x17\n\x07tx_hash\x18\x01\x20\x02(\x0cR\x06txHash\x12\x14\
+    \n\x05index\x18\x02\x20\x02(\rR\x05index\x12\x19\n\x08dep_type\x18\x03\
+    \x20\x02(\rR\x07depType\"\xf3\x01\n\tCKBSignTx\x12\x1b\n\taddress_n\x18\
+    \x01\x20\x03(\rR\x08addressN\x12!\n\x07network\x18\x02\x20\x01(\t:\x07Ma\
+    innetR\x07network\x12!\n\x0cinputs_count\x18\x03\x20\x02(\rR\x0binputsCo\
+    unt\x12#\n\routputs_count\x18\x04\x20\x02(\rR\x0coutputsCount\x12)\n\x0f\
+    cell_deps_count\x18\x05\x20\x01(\r:\x010R\rcellDepsCount\x12\x10\n\x03fe\
+    e\x18\x06\x20\x01(\x04R\x03fee\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\
+    \x08R\x08chunkify:\x05\x90\xb2\x19\xfe*\"\xf9\x01\n\x0cCKBTxRequest\x12K\
+    \n\x0crequest_type\x18\x01\x20\x01(\x0e2(.hw.trezor.messages.ckb.CKBTxRe\
+    questTypeR\x0brequestType\x12E\n\x07details\x18\x02\x20\x01(\x0b2+.hw.tr\
+    ezor.messages.ckb.CKBTxRequestDetailsR\x07details\x12N\n\nserialized\x18\
+    \x03\x20\x01(\x0b2..hw.trezor.messages.ckb.CKBTxRequestSerializedR\nseri\
+    alized:\x05\x90\xb2\x19\xff*\":\n\x13CKBTxRequestDetails\x12#\n\rrequest\
+    _index\x18\x01\x20\x01(\rR\x0crequestIndex\"O\n\x16CKBTxRequestSerialize\
+    d\x12\x1c\n\tsignature\x18\x01\x20\x01(\x0cR\tsignature\x12\x17\n\x07tx_\
+    hash\x18\x02\x20\x01(\x0cR\x06txHash\"R\n\rCKBTxAckInput\x12:\n\x05input\
+    \x18\x01\x20\x01(\x0b2$.hw.trezor.messages.ckb.CKBCellInputR\x05input:\
+    \x05\x90\xb2\x19\x80+\"V\n\x0eCKBTxAckOutput\x12=\n\x06output\x18\x01\
+    \x20\x01(\x0b2%.hw.trezor.messages.ckb.CKBCellOutputR\x06output:\x05\x90\
+    \xb2\x19\x81+\"W\n\x0fCKBTxAckCellDep\x12=\n\x08cell_dep\x18\x01\x20\x01\
+    (\x0b2\".hw.trezor.messages.ckb.CKBCellDepR\x07cellDep:\x05\x90\xb2\x19\
+    \x82+\"K\n\x0bCKBSignedTx\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsi\
+    gnature\x12\x17\n\x07tx_hash\x18\x02\x20\x02(\x0cR\x06txHash:\x05\x90\
+    \xb2\x19\x83+*L\n\x10CKBTxRequestType\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\
+    \n\x08TXOUTPUT\x10\x01\x12\r\n\tTXCELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\
+    \x10\x03B7\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessageCKB\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -522,10 +3113,22 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(2);
+            let mut messages = ::std::vec::Vec::with_capacity(13);
             messages.push(CKBGetAddress::generated_message_descriptor_data());
             messages.push(CKBAddress::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(0);
+            messages.push(CKBCellInput::generated_message_descriptor_data());
+            messages.push(CKBCellOutput::generated_message_descriptor_data());
+            messages.push(CKBCellDep::generated_message_descriptor_data());
+            messages.push(CKBSignTx::generated_message_descriptor_data());
+            messages.push(CKBTxRequest::generated_message_descriptor_data());
+            messages.push(CKBTxRequestDetails::generated_message_descriptor_data());
+            messages.push(CKBTxRequestSerialized::generated_message_descriptor_data());
+            messages.push(CKBTxAckInput::generated_message_descriptor_data());
+            messages.push(CKBTxAckOutput::generated_message_descriptor_data());
+            messages.push(CKBTxAckCellDep::generated_message_descriptor_data());
+            messages.push(CKBSignedTx::generated_message_descriptor_data());
+            let mut enums = ::std::vec::Vec::with_capacity(1);
+            enums.push(CKBTxRequestType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
                 deps,

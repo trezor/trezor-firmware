@@ -32,3 +32,137 @@ message CKBAddress {
     required string address = 1;                                 // Bech32m encoded CKB address (ckb1... or ckt1...)
     optional bytes mac = 2;                                      // authentication code for the address
 }
+
+// ============================================================
+// Transaction Signing Messages
+// ============================================================
+
+/**
+ * CKB Cell Input - reference to a cell to spend
+ */
+message CKBCellInput {
+    required bytes previous_output_tx_hash = 1;                  // 32-byte transaction hash
+    required uint32 previous_output_index = 2;                   // output index in that transaction
+    optional uint64 since = 3 [default=0];                       // since field for time-lock
+}
+
+/**
+ * CKB Cell Output - new cell to create
+ */
+message CKBCellOutput {
+    required uint64 capacity = 1;                                // capacity in shannons (1 CKB = 10^8 shannons)
+    required bytes lock_code_hash = 2;                           // 32-byte lock script code hash
+    required uint32 lock_hash_type = 3;                          // 0=data, 1=type, 2=data1, 4=data2
+    required bytes lock_args = 4;                                // lock script args (usually 20-byte blake160)
+    optional bytes type_code_hash = 5;                           // 32-byte type script code hash (optional)
+    optional uint32 type_hash_type = 6;                          // type script hash type
+    optional bytes type_args = 7;                                // type script args
+    optional bytes data = 8;                                     // output data
+}
+
+/**
+ * CKB Cell Dependency - reference to deployed code/data
+ */
+message CKBCellDep {
+    required bytes tx_hash = 1;                                  // 32-byte transaction hash
+    required uint32 index = 2;                                   // output index
+    required uint32 dep_type = 3;                                // 0=code, 1=dep_group
+}
+
+/**
+ * Request: Sign CKB transaction
+ * @start
+ * @next CKBTxRequest
+ * @next Failure
+ */
+message CKBSignTx {
+    option (wire_type) = 5502;
+
+    repeated uint32 address_n = 1;                               // BIP-32 path for signing key
+    optional string network = 2 [default='Mainnet'];             // Mainnet or Testnet
+    required uint32 inputs_count = 3;                            // number of cell inputs
+    required uint32 outputs_count = 4;                           // number of cell outputs
+    optional uint32 cell_deps_count = 5 [default=0];             // number of cell dependencies
+    optional uint64 fee = 6;                                     // transaction fee in shannons
+    optional bool chunkify = 7;                                  // display addresses in chunks
+}
+
+/**
+ * Request: Device asks for transaction data
+ * @next CKBTxAckInput
+ * @next CKBTxAckOutput
+ * @next CKBTxAckCellDep
+ */
+message CKBTxRequest {
+    option (wire_type) = 5503;
+
+    optional CKBTxRequestType request_type = 1;
+    optional CKBTxRequestDetails details = 2;
+    optional CKBTxRequestSerialized serialized = 3;
+}
+
+/**
+ * Type of transaction data requested
+ */
+enum CKBTxRequestType {
+    TXINPUT = 0;
+    TXOUTPUT = 1;
+    TXCELLDEP = 2;
+    TXFINISHED = 3;
+}
+
+/**
+ * Details about the requested item
+ */
+message CKBTxRequestDetails {
+    optional uint32 request_index = 1;
+}
+
+/**
+ * Serialized signature data
+ */
+message CKBTxRequestSerialized {
+    optional bytes signature = 1;                                // 65-byte recoverable secp256k1 signature
+    optional bytes tx_hash = 2;                                  // 32-byte transaction hash
+}
+
+/**
+ * Acknowledge: Provide cell input data
+ * @next CKBTxRequest
+ */
+message CKBTxAckInput {
+    option (wire_type) = 5504;
+
+    optional CKBCellInput input = 1;
+}
+
+/**
+ * Acknowledge: Provide cell output data
+ * @next CKBTxRequest
+ */
+message CKBTxAckOutput {
+    option (wire_type) = 5505;
+
+    optional CKBCellOutput output = 1;
+}
+
+/**
+ * Acknowledge: Provide cell dependency data
+ * @next CKBTxRequest
+ */
+message CKBTxAckCellDep {
+    option (wire_type) = 5506;
+
+    optional CKBCellDep cell_dep = 1;
+}
+
+/**
+ * Response: Signed CKB transaction
+ * @end
+ */
+message CKBSignedTx {
+    option (wire_type) = 5507;
+
+    required bytes signature = 1;                                // 65-byte recoverable signature
+    required bytes tx_hash = 2;                                  // 32-byte transaction hash
+}

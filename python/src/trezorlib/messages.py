@@ -193,6 +193,13 @@ class CardanoTxWitnessType(IntEnum):
     SHELLEY_WITNESS = 1
 
 
+class CKBTxRequestType(IntEnum):
+    TXINPUT = 0
+    TXOUTPUT = 1
+    TXCELLDEP = 2
+    TXFINISHED = 3
+
+
 class BackupType(IntEnum):
     Bip39 = 0
     Slip39_Basic = 1
@@ -775,6 +782,12 @@ class MessageType(IntEnum):
     TronVoteWitnessContract = 2210
     CKBGetAddress = 5500
     CKBAddress = 5501
+    CKBSignTx = 5502
+    CKBTxRequest = 5503
+    CKBTxAckInput = 5504
+    CKBTxAckOutput = 5505
+    CKBTxAckCellDep = 5506
+    CKBSignedTx = 5507
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -3129,6 +3142,223 @@ class CKBAddress(protobuf.MessageType):
     ) -> None:
         self.address = address
         self.mac = mac
+
+
+class CKBCellInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("previous_output_tx_hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("previous_output_index", "uint32", repeated=False, required=True),
+        3: protobuf.Field("since", "uint64", repeated=False, required=False, default=0),
+    }
+
+    def __init__(
+        self,
+        *,
+        previous_output_tx_hash: "bytes",
+        previous_output_index: "int",
+        since: Optional["int"] = 0,
+    ) -> None:
+        self.previous_output_tx_hash = previous_output_tx_hash
+        self.previous_output_index = previous_output_index
+        self.since = since
+
+
+class CKBCellOutput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("capacity", "uint64", repeated=False, required=True),
+        2: protobuf.Field("lock_code_hash", "bytes", repeated=False, required=True),
+        3: protobuf.Field("lock_hash_type", "uint32", repeated=False, required=True),
+        4: protobuf.Field("lock_args", "bytes", repeated=False, required=True),
+        5: protobuf.Field("type_code_hash", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("type_hash_type", "uint32", repeated=False, required=False, default=None),
+        7: protobuf.Field("type_args", "bytes", repeated=False, required=False, default=None),
+        8: protobuf.Field("data", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        capacity: "int",
+        lock_code_hash: "bytes",
+        lock_hash_type: "int",
+        lock_args: "bytes",
+        type_code_hash: Optional["bytes"] = None,
+        type_hash_type: Optional["int"] = None,
+        type_args: Optional["bytes"] = None,
+        data: Optional["bytes"] = None,
+    ) -> None:
+        self.capacity = capacity
+        self.lock_code_hash = lock_code_hash
+        self.lock_hash_type = lock_hash_type
+        self.lock_args = lock_args
+        self.type_code_hash = type_code_hash
+        self.type_hash_type = type_hash_type
+        self.type_args = type_args
+        self.data = data
+
+
+class CKBCellDep(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("tx_hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("index", "uint32", repeated=False, required=True),
+        3: protobuf.Field("dep_type", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        tx_hash: "bytes",
+        index: "int",
+        dep_type: "int",
+    ) -> None:
+        self.tx_hash = tx_hash
+        self.index = index
+        self.dep_type = dep_type
+
+
+class CKBSignTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5502
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("network", "string", repeated=False, required=False, default='Mainnet'),
+        3: protobuf.Field("inputs_count", "uint32", repeated=False, required=True),
+        4: protobuf.Field("outputs_count", "uint32", repeated=False, required=True),
+        5: protobuf.Field("cell_deps_count", "uint32", repeated=False, required=False, default=0),
+        6: protobuf.Field("fee", "uint64", repeated=False, required=False, default=None),
+        7: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        inputs_count: "int",
+        outputs_count: "int",
+        address_n: Optional[Sequence["int"]] = None,
+        network: Optional["str"] = 'Mainnet',
+        cell_deps_count: Optional["int"] = 0,
+        fee: Optional["int"] = None,
+        chunkify: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.inputs_count = inputs_count
+        self.outputs_count = outputs_count
+        self.network = network
+        self.cell_deps_count = cell_deps_count
+        self.fee = fee
+        self.chunkify = chunkify
+
+
+class CKBTxRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5503
+    FIELDS = {
+        1: protobuf.Field("request_type", "CKBTxRequestType", repeated=False, required=False, default=None),
+        2: protobuf.Field("details", "CKBTxRequestDetails", repeated=False, required=False, default=None),
+        3: protobuf.Field("serialized", "CKBTxRequestSerialized", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        request_type: Optional["CKBTxRequestType"] = None,
+        details: Optional["CKBTxRequestDetails"] = None,
+        serialized: Optional["CKBTxRequestSerialized"] = None,
+    ) -> None:
+        self.request_type = request_type
+        self.details = details
+        self.serialized = serialized
+
+
+class CKBTxRequestDetails(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("request_index", "uint32", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        request_index: Optional["int"] = None,
+    ) -> None:
+        self.request_index = request_index
+
+
+class CKBTxRequestSerialized(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("tx_hash", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: Optional["bytes"] = None,
+        tx_hash: Optional["bytes"] = None,
+    ) -> None:
+        self.signature = signature
+        self.tx_hash = tx_hash
+
+
+class CKBTxAckInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5504
+    FIELDS = {
+        1: protobuf.Field("input", "CKBCellInput", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        input: Optional["CKBCellInput"] = None,
+    ) -> None:
+        self.input = input
+
+
+class CKBTxAckOutput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5505
+    FIELDS = {
+        1: protobuf.Field("output", "CKBCellOutput", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        output: Optional["CKBCellOutput"] = None,
+    ) -> None:
+        self.output = output
+
+
+class CKBTxAckCellDep(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5506
+    FIELDS = {
+        1: protobuf.Field("cell_dep", "CKBCellDep", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        cell_dep: Optional["CKBCellDep"] = None,
+    ) -> None:
+        self.cell_dep = cell_dep
+
+
+class CKBSignedTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 5507
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        2: protobuf.Field("tx_hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+        tx_hash: "bytes",
+    ) -> None:
+        self.signature = signature
+        self.tx_hash = tx_hash
 
 
 class CipherKeyValue(protobuf.MessageType):

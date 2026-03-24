@@ -171,6 +171,12 @@ trezor_message_impl! {
 trezor_message_impl! {
     CKBGetAddress => MessageType_CKBGetAddress,
     CKBAddress => MessageType_CKBAddress,
+    CKBSignTx => MessageType_CKBSignTx,
+    CKBTxRequest => MessageType_CKBTxRequest,
+    CKBTxAckInput => MessageType_CKBTxAckInput,
+    CKBTxAckOutput => MessageType_CKBTxAckOutput,
+    CKBTxAckCellDep => MessageType_CKBTxAckCellDep,
+    CKBSignedTx => MessageType_CKBSignedTx,
 }
 
 #[cfg(feature = "eos")]
