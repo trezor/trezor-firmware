@@ -16,6 +16,8 @@ if utils.USE_THP:
     CHANNEL_HOST_STATIC_PUBKEY = const(9)
     CHANNEL_ACK_LATENCY_MS = const(10)
 
+    CACHE_ENCRYPTED_KEYS_CHANNEL = (CHANNEL_HOST_STATIC_PUBKEY,)
+
     # Cache keys for THP session
     # CHANNEL_ID = const(0)
     SESSION_ID = const(1)
@@ -29,3 +31,16 @@ if utils.USE_THP:
         APP_CARDANO_ICARUS_SECRET = const(8)
         APP_CARDANO_ICARUS_TREZOR_SECRET = const(9)
         APP_MONERO_LIVE_REFRESH = const(10)
+
+    if utils.BITCOIN_ONLY:
+        CACHE_ENCRYPTED_KEYS_SESSION_THP = (
+            APP_COMMON_SEED,
+            APP_COMMON_NONCE,
+        )
+    else:
+        CACHE_ENCRYPTED_KEYS_SESSION_THP = (
+            APP_COMMON_SEED,
+            APP_COMMON_NONCE,
+            APP_CARDANO_ICARUS_SECRET,
+            APP_CARDANO_ICARUS_TREZOR_SECRET,
+        )
