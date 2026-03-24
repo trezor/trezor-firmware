@@ -14,6 +14,7 @@ def init_ui(
         rust_features.append("ui_jpeg")
         rust_features.append("ui_image_buffer")
         rust_features.append("ui_overlay")
+        rust_features.append("ui_font_kerning")
 
 
 def get_ui_layout() -> str:

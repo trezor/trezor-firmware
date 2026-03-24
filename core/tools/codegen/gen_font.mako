@@ -7,6 +7,10 @@
 //   - rest is packed ${bpp}-bit glyph data
 
 use crate::ui::display::font::FontInfo;
+% if gen_kernings:
+#[cfg(feature = "ui_font_kerning")]
+use crate::ui::display::font::KerningTable;
+% endif
 
 % for g in glyphs:
 /// '${g["char"]}' (ASCII ${g["ascii"]})
@@ -35,12 +39,31 @@ const Font_${name}_upper: [&[u8]; ${len(glyph_array_upper)}] = [
 % endif
 % if gen_kernings:
 
-/// Array of kerning tripples
-const Font_${name}_kernings: [(u8, u8, i8); ${len(kernings)}] = [
-% for ref in kernings:
-    ${ref}, // ${chr(ref[0])} + ${chr(ref[1])}
-%endfor
+/// Kerning index: (left_char, count), sorted by left_char.
+/// Start offset in kern_pairs is the sum of counts for all preceding entries.
+#[cfg(feature = "ui_font_kerning")]
+const Font_${name}_kern_index: [(u8, u8); ${len(kern_index)}] = [
+% for left, count in kern_index:
+    (${left}, ${count}),  // '${chr(left)}'
+% endfor
 ];
+
+/// Kerning pairs: (right_char, kern_value), grouped by left_char
+#[cfg(feature = "ui_font_kerning")]
+const Font_${name}_kern_pairs: [(u8, i8); ${len(kern_pairs)}] = [
+% for left, pairs in kern_groups:
+    // '${chr(left)}' (${left}) +
+% for right, val in pairs:
+    (${right}, ${val}),  // + '${chr(right)}'
+% endfor
+% endfor
+];
+
+#[cfg(feature = "ui_font_kerning")]
+const Font_${name}_kernings: KerningTable = KerningTable {
+    index: &Font_${name}_kern_index,
+    pairs: &Font_${name}_kern_pairs,
+};
 % endif
 % if gen_normal:
 
@@ -52,8 +75,9 @@ pub const Font_${name}_info: FontInfo = FontInfo {
     baseline: ${font_info["baseline"]},
     glyph_data: &${font_info["glyph_array"]},
     glyph_nonprintable: &${font_info["nonprintable"]},
+    #[cfg(feature = "ui_font_kerning")]
 %if gen_kernings:
-    kernings: &${font_info_upper["kernings"]},
+    kernings: Some(&${font_info["kernings"]}),
 %else:
     kernings: None,
 %endif
@@ -69,8 +93,9 @@ pub const Font_${name}_upper_info: FontInfo = FontInfo {
     baseline: ${font_info_upper["baseline"]},
     glyph_data: &${font_info_upper["glyph_array"]},
     glyph_nonprintable: &${font_info_upper["nonprintable"]},
+    #[cfg(feature = "ui_font_kerning")]
 %if gen_kernings:
-    kernings: &${font_info_upper["kernings"]},
+    kernings: Some(&${font_info_upper["kernings"]}),
 %else:
     kernings: None,
 %endif

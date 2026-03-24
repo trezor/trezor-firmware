@@ -12,6 +12,41 @@ use crate::translations::flash;
 #[cfg(feature = "translations")]
 use crate::translations::Translations;
 
+#[cfg(feature = "ui_font_kerning")]
+/// Two-level kerning lookup table.
+/// `index` is sorted by left character, enabling binary search.
+/// Each entry stores `(left_char, count)` — the number of right-char pairs that
+/// follow. The start offset in `pairs` is the sum of counts for all preceding
+/// index entries.
+#[derive(PartialEq, Eq)]
+pub struct KerningTable {
+    pub index: &'static [(u8, u8)], // (left_char, count), sorted by left_char
+    pub pairs: &'static [(u8, i8)], // (right_char, kern_value)
+}
+
+#[cfg(feature = "ui_font_kerning")]
+impl KerningTable {
+    pub fn get(&self, left: u8, right: u8) -> i8 {
+        let mut offset = 0usize;
+        for &(l, count) in self.index {
+            let next_offset = offset + usize::from(count);
+            if l == left {
+                for &(r, v) in &self.pairs[offset..next_offset] {
+                    if r == right {
+                        return v;
+                    }
+                }
+                return 0;
+            }
+            if l > left {
+                break; // index is sorted
+            }
+            offset = next_offset;
+        }
+        0
+    }
+}
+
 /// Font information structure containing metadata and pointers to font data
 #[derive(PartialEq, Eq)]
 pub struct FontInfo {
@@ -21,7 +56,8 @@ pub struct FontInfo {
     pub baseline: i16,
     pub glyph_data: &'static [&'static [u8]],
     pub glyph_nonprintable: &'static [u8],
-    pub kernings: Option<&'static [(u8, u8, i8)]>,
+    #[cfg(feature = "ui_font_kerning")]
+    pub kernings: Option<&'static KerningTable>,
 }
 /// Convenience type for font references defined in the `fonts` module.
 pub type Font = &'static FontInfo;
@@ -210,9 +246,7 @@ impl FontInfo {
         let mut prev_char: Option<char> = None;
 
         for c in text.chars() {
-            if let Some(left) = prev_char {
-                width += self.get_kerning(left, c) as i16;
-            }
+            width += prev_char.map_or(0, |left| i16::from(self.get_kerning(left, c)));
             width += self.char_width(c);
             prev_char = Some(c);
         }
@@ -259,12 +293,16 @@ impl FontInfo {
         });
         ascent + descent
     }
-
+    #[cfg(feature = "ui_font_kerning")]
     pub fn get_kerning(&'static self, left_ch: char, right_ch: char) -> i8 {
-        let left: u16 = left_ch as u16;
-        let right: u16 = right_ch as u16;
+        let Some(left) = u16::try_from(left_ch).ok() else {
+            return 0;
+        };
+        let Some(right) = u16::try_from(right_ch).ok() else {
+            return 0;
+        };
 
-        if left >= 0x7F || right >= 0x7F {
+        if !left_ch.is_ascii() || !right_ch.is_ascii() {
             #[cfg(feature = "translations")]
             {
                 return self.with_glyph_data(|data| {
@@ -281,14 +319,15 @@ impl FontInfo {
             let left = left as u8;
             let right = right as u8;
 
-            if let Some(kernings) = self.kernings {
-                for &(l, r, v) in kernings {
-                    if l == left && r == right {
-                        return v;
-                    }
-                }
+            if let Some(table) = self.kernings {
+                return table.get(left, right);
             }
         }
+        0
+    }
+
+    #[cfg(not(feature = "ui_font_kerning"))]
+    pub fn get_kerning(&'static self, _left_ch: char, _right_ch: char) -> i8 {
         0
     }
 
@@ -442,6 +481,7 @@ pub trait GlyphMetrics {
     fn char_width(&self, ch: char) -> i16;
     fn text_width(&self, text: &str) -> i16;
     fn line_height(&self) -> i16;
+    fn get_kerning(&self, _left: char, _right: char) -> i16;
 }
 
 impl GlyphMetrics for Font {
@@ -456,10 +496,77 @@ impl GlyphMetrics for Font {
     fn line_height(&self) -> i16 {
         FontInfo::line_height(self)
     }
+
+    fn get_kerning(&self, left: char, right: char) -> i16 {
+        FontInfo::get_kerning(self, left, right).into()
+    }
 }
 
 #[cfg(test)]
 mod tests {
+
+    #[cfg(feature = "ui_font_kerning")]
+    mod kerning_table_tests {
+        use super::super::KerningTable;
+
+        // index: (left_char, count), pairs: (right_char, kern_value)
+        // 'A'=65, 'V'=86, 'T'=84, 'W'=87
+        static INDEX: &[(u8, u8)] = &[
+            (b'A', 2), // pairs[0..2]
+            (b'T', 1), // pairs[2..3]
+        ];
+        static PAIRS: &[(u8, i8)] = &[
+            (b'V', -3), // A + V
+            (b'W', -2), // A + W
+            (b'A', -4), // T + A
+        ];
+
+        fn table() -> KerningTable {
+            KerningTable {
+                index: INDEX,
+                pairs: PAIRS,
+            }
+        }
+
+        #[test]
+        fn found_returns_kern_value() {
+            let t = table();
+            assert_eq!(t.get(b'A', b'V'), -3);
+            assert_eq!(t.get(b'A', b'W'), -2);
+            assert_eq!(t.get(b'T', b'A'), -4);
+        }
+
+        #[test]
+        fn left_found_right_missing_returns_zero() {
+            let t = table();
+            assert_eq!(t.get(b'A', b'X'), 0);
+            assert_eq!(t.get(b'T', b'V'), 0);
+        }
+
+        #[test]
+        fn left_missing_returns_zero() {
+            let t = table();
+            assert_eq!(t.get(b'B', b'V'), 0);
+            assert_eq!(t.get(b'Z', b'A'), 0);
+        }
+
+        #[test]
+        fn early_exit_on_sorted_index() {
+            // 'A' < 'T', so querying 'B' (between them) must still return 0
+            // and not match 'T'
+            let t = table();
+            assert_eq!(t.get(b'B', b'A'), 0);
+        }
+
+        #[test]
+        fn empty_table_returns_zero() {
+            let t = KerningTable {
+                index: &[],
+                pairs: &[],
+            };
+            assert_eq!(t.get(b'A', b'V'), 0);
+        }
+    }
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "layout_bolt")] {
