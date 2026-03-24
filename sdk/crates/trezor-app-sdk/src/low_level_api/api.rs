@@ -249,7 +249,7 @@ pub fn ed25519_sign_open(
 }
 
 pub fn ed25519_cosi_combine_publickeys(
-    pks: &[&ffi::ed25519_public_key],
+    pks: &[ffi::ed25519_public_key],
 ) -> Result<[u8; 32], ApiError> {
     let n = pks.len();
 
@@ -258,14 +258,16 @@ pub fn ed25519_cosi_combine_publickeys(
         return Err(ApiError::Failed);
     }
 
-    let mut res = [0u8; 32];
+    let mut res: ffi::ed25519_public_key = [0u8; 32];
     let result = unsafe {
         (get_crypto_or_die().ed25519_cosi_combine_publickeys)(
             res.as_mut_ptr(),
-            pks.as_ptr() as *const _,
+            pks.as_ptr(),
             n,
         )
     };
+    info!("COSI combine public keys result: {}", result);
+    info!("COSI combine public keys output: {:?}", res);
     if result == 0 {
         Ok(res)
     } else {

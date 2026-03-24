@@ -11,6 +11,7 @@ use alloc::{
     vec,
     vec::Vec,
 };
+use primitive_types::U256;
 #[cfg(test)]
 use std::{
     string::{String, ToString},
@@ -134,6 +135,7 @@ pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
         }
         // TODO: better implement parsing int value from bytes
         let mut buf = [0u8; 16];
+        assert!(data.len() <= 16);
         buf[16 - data.len()..].copy_from_slice(data);
         let v = u128::from_be_bytes(buf);
         return Ok(v.to_string());
@@ -152,11 +154,11 @@ pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
 }
 
 pub fn get_fee_items_regular(
-    gas_price: u128,
-    gas_limit: u128,
+    gas_price: U256,
+    gas_limit: U256,
     network: &EthereumNetworkInfo,
 ) -> [(String, String, bool); 2] {
-    let gas_limit_str = uformat!("{} units", gas_limit);
+    let gas_limit_str = uformat!("{} units", gas_limit.to_string().as_str());
     let gas_price_str = format_ethereum_amount(gas_price, None, network, true);
 
     [
@@ -166,7 +168,7 @@ pub fn get_fee_items_regular(
 }
 
 pub fn format_ethereum_amount(
-    value: u128,
+    value: U256,
     token: Option<&EthereumTokenInfo>,
     network: &EthereumNetworkInfo,
     force_unit_gwei: bool,
@@ -183,7 +185,7 @@ pub fn format_ethereum_amount(
         decimals -= 9;
         suffix = "Gwei".to_string();
     } else if decimals > 9 {
-        let mut threshold = 1u128;
+        let mut threshold = U256::from(1);
         let mut i = 0usize;
         while i < (decimals - 9) {
             threshold *= 10;
@@ -201,8 +203,8 @@ pub fn format_ethereum_amount(
 }
 
 // TODO: this is a very naive implementation, we should consider using a library for this
-fn format_amount(amount: u128, decimals: usize) -> String {
-    let mut divisor = 1u128;
+fn format_amount(amount: U256, decimals: usize) -> String {
+    let mut divisor = U256::from(1);
     let mut i = 0usize;
     while i < decimals {
         divisor *= 10;
@@ -214,7 +216,11 @@ fn format_amount(amount: u128, decimals: usize) -> String {
     } else {
         amount / divisor
     };
-    let decimal = if decimals == 0 { 0 } else { amount % divisor };
+    let decimal = if decimals == 0 {
+        U256::from(0)
+    } else {
+        amount % divisor
+    };
 
     let integer_str = integer.to_string();
     let mut grouped_integer = String::new();
@@ -251,4 +257,85 @@ fn format_amount(amount: u128, decimals: usize) -> String {
     }
 
     out
+}
+
+pub fn write_compact_size(n: u32) -> Vec<u8> {
+    let mut out = Vec::with_capacity(5);
+
+    if n < 253 {
+        out.push(n as u8);
+    } else if n < 0x1_0000 {
+        out.push(253);
+        out.extend_from_slice(&(n as u16).to_le_bytes());
+    } else {
+        out.push(254);
+        out.extend_from_slice(&(n as u32).to_le_bytes());
+    }
+
+    out
+}
+
+#[derive(Debug, Clone)]
+pub struct Refund {
+    pub address: String,
+    pub account: Option<String>,
+    pub account_path: Option<String>,
+}
+
+impl Refund {
+    pub fn new(address: &str, account: Option<&str>, account_path: Option<&str>) -> Result<Self> {
+        Ok(Self {
+            address: address.to_string(),
+            account: account.map(|s| s.to_string()),
+            account_path: account_path.map(|s| s.to_string()),
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Trade {
+    pub sell_amount: Option<String>,
+    pub buy_amount: String,
+    pub address: String,
+    pub account: Option<String>,
+    pub account_path: Option<String>,
+}
+
+impl Trade {
+    pub fn new(
+        sell_amount: Option<&str>,
+        buy_amount: &str,
+        address: &str,
+        account: Option<&str>,
+        account_path: Option<&str>,
+    ) -> Result<Self> {
+        if let Some(ref sell_amount) = sell_amount {
+            if !sell_amount.starts_with('-') {
+                return Err(Error::DataError);
+            }
+        }
+
+        if !buy_amount.starts_with('+') {
+            return Err(Error::DataError);
+        }
+
+        Ok(Self {
+            sell_amount: sell_amount.map(|s| s.to_string()),
+            buy_amount: buy_amount.to_string(),
+            address: address.to_string(),
+            account: account.map(|s| s.to_string()),
+            account_path: account_path.map(|s| s.to_string()),
+        })
+    }
+}
+
+pub fn is_swap(trades: &[Trade]) -> Result<bool> {
+    let has_sell_amount = trades.iter().any(|t| t.sell_amount.is_some());
+    let has_missing_sell_amount = trades.iter().any(|t| t.sell_amount.is_none());
+
+    if has_sell_amount && has_missing_sell_amount {
+        return Err(Error::DataError);
+    }
+
+    Ok(has_sell_amount)
 }

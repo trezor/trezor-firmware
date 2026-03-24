@@ -731,6 +731,7 @@ def test_signtx_payment_req_long_value(
 
     _do_test_signtx(
         session,
+        instance_id,
         params,
         example_input_data_long_value["result"],
     )

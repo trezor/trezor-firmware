@@ -42,6 +42,8 @@ _SERIVICE_CRYPTO_GET_XPUB = const(0)
 _SERIVICE_CRYPTO_GET_ETH_XPUB_HASH = const(1)
 _SERVICE_CRYPTO_SIGN_TYPED_HASH = const(2)
 _SERVICE_CRYPTO_GET_ADDRESS_MAC = const(3)
+_SERVICE_CRYPTO_VERIFY_NONCE_CACHE = const(4)
+_SERVICE_CRYPTO_CHECK_ADDRESS_MAC = const(5)
 
 
 def fn_id(service: int, message_id: int) -> int:
@@ -144,15 +146,21 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
 
                 elif message_id == _SERVICE_CRYPTO_SIGN_TYPED_HASH:
                     print("Handling sign typed hash request")
-                    assert len(obj) == 4
+                    assert len(obj) == 5
                     address_n: list[int] = obj[0]
                     data_hash: bytes = obj[1]
                     encoded_network: bytes | None = obj[2]
                     encoded_token: bytes | None = obj[3]
+                    chain_id: int | None = obj[4]
                     try:
                         result = await _sign_typed_hash(
-                            address_n, data_hash, encoded_network, encoded_token
+                            address_n,
+                            data_hash,
+                            encoded_network,
+                            encoded_token,
+                            chain_id,
                         )
+                        print("Successfully signed typed hash", result)
                     except:
                         print("Failed to sign typed hash")
                         result = False
@@ -168,7 +176,24 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
                     except:
                         print("Failed to get address MAC")
                         result = False
-
+                elif message_id == _SERVICE_CRYPTO_VERIFY_NONCE_CACHE:
+                    print("Handling verify nonce cache request")
+                    nonce: bytes = obj
+                    try:
+                        result = await _verify_nonce_cache(bytes(nonce))
+                    except:
+                        print("Failed to verify nonce cache")
+                        result = False
+                elif message_id == _SERVICE_CRYPTO_CHECK_ADDRESS_MAC:
+                    print("Handling check address MAC request")
+                    assert len(obj) == 4
+                    address_n: list[int] = obj[0]
+                    mac: bytes = obj[1]
+                    address_str: str = obj[2]
+                    network: bytes | None = obj[3]
+                    result = await _check_address_mac(
+                        address_n, mac, address_str, network
+                    )
                 else:
                     print("Unknown crypto message ID:", message_id)
                     die(DataError("Unknown crypto operation"))
@@ -193,6 +218,12 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             )
             print("Calling context with response data")
             ack = await context.call(response, ExtAppMessage)
+            print(
+                "Context call returned, sending IPC message back to extapp with id:",
+                ack.message_id,
+                "and data length:",
+                len(ack.data),
+            )
             if ack.message_id > 0xFFFF:
                 die(DataError("Invalid message ID."))
             print("Received context response, sending IPC message back to extapp")
@@ -207,7 +238,7 @@ async def run(request: ExtAppMessage) -> ExtAppResponse:
             response = ExtAppResponse(
                 message_id=message_id, data=msg.data, finished=True
             )
-            task.unload()
+            # task.unload()
             return response
 
         elif service == _SERVICE_PROGRESS:
@@ -333,11 +364,38 @@ async def _get_address_mac(
     return get_address_mac(address, paths.unharden(slip44_id), address_n, keychain)
 
 
+async def _check_address_mac(
+    address_n: list[int], mac: bytes, address: str, encoded_network: bytes | None
+) -> bool:
+    from apps.common.address_mac import check_address_mac
+    from apps.ethereum.keychain import (
+        PATTERNS_ADDRESS,
+        _slip44_from_address_n,
+        _schemas_from_network,
+    )
+
+    slip44 = _slip44_from_address_n(address_n)
+    defs = Definitions.from_encoded(
+        encoded_network=encoded_network, encoded_token=None, slip44=slip44
+    )
+    schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
+    keychain = await get_keychain("secp256k1", schemas, [[b"SLIP-0024"]])
+
+    slip44_id = address_n[1]  # it depends on the network (ETH vs ETC...)
+
+    try:
+        check_address_mac(address, mac, paths.unharden(slip44_id), address_n, keychain)
+    except DataError:
+        return False
+    return True
+
+
 async def _sign_typed_hash(
     address_n: list[int],
     data_hash: bytes,
     encoded_network: bytes | None,
     encoded_token: bytes | None,
+    chain_id: int | None,
 ) -> bytes:
     from trezor import TR
     from trezor.crypto.curve import secp256k1
@@ -348,20 +406,40 @@ async def _sign_typed_hash(
         _schemas_from_network,
     )
 
-    slip44 = _slip44_from_address_n(address_n)
-    defs = Definitions.from_encoded(encoded_network, encoded_token, slip44=slip44)
+    if chain_id is not None:
+        print("Using chain_id to determine definitions")
+        defs = Definitions.from_encoded(
+            encoded_network, encoded_token, chain_id=chain_id
+        )
+    else:
+        print("Using address_n to determine definitions")
+        slip44 = _slip44_from_address_n(address_n)
+        defs = Definitions.from_encoded(encoded_network, encoded_token, slip44=slip44)
     schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
     keychain = await get_keychain("secp256k1", schemas, [[b"SLIP-0024"]])
 
     node = keychain.derive(address_n)
 
-    # progress_obj = progress(title=TR.progress__signing_transaction)
-    # progress_obj.report(600)
+    progress_obj = progress(title=TR.progress__signing_transaction)
+    progress_obj.report(600)
+    print("signing")
     signature = secp256k1.sign(
         node.private_key(),
         data_hash,
         False,
         secp256k1.CANONICAL_SIG_ETHEREUM,
     )
-    # progress_obj.stop()
+    print("signing done")
+    progress_obj.stop()
     return signature
+
+
+async def _verify_nonce_cache(nonce: bytes) -> bool:
+    from storage.cache_common import APP_COMMON_NONCE
+
+    result = context.cache_get(APP_COMMON_NONCE) == nonce
+
+    if result:
+        context.cache_delete(APP_COMMON_NONCE)
+
+    return result

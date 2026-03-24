@@ -414,12 +414,13 @@ pub fn confirm_value(
     page_counter: bool,
     cancel: bool,
     external_menu: bool,
+    warning_footer: Option<&str>,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmValue {
         title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
         value: ExtraLongString::from_str(content).map_err(|_| Error::FailedToSend)?,
         description: description
-            .map(|d| ShortString::from_str(d).map_err(|_| Error::FailedToSend))
+            .map(|d| LongString::from_str(d).map_err(|_| Error::FailedToSend))
             .transpose()?,
         is_data,
         subtitle: subtitle
@@ -438,6 +439,9 @@ pub fn confirm_value(
             .transpose()?,
         br_code,
         external_menu,
+        warning_footer: warning_footer
+            .map(|w| ShortString::from_str(w).map_err(|_| Error::FailedToSend))
+            .transpose()?,
     };
     ipc_ui_call(&value)
 }
@@ -455,7 +459,7 @@ fn confirm_value_intro(
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmValueIntro {
         title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        value: ExtraLongString::from_str(content).map_err(|_| Error::FailedToSend)?,
+        value: LongString::from_str(content).map_err(|_| Error::FailedToSend)?,
         subtitle: subtitle
             .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
             .transpose()?,
@@ -487,14 +491,15 @@ pub fn confirm_blob(
     verb_cancel: Option<&str>,
     chunkify: bool,
     ask_pagination: bool,
+    is_data: bool,
 ) -> UiResult {
     if ask_pagination {
         interact_with_info_flow(
             |name| {
                 confirm_value_intro(
                     title,
-                    data,
-                    subtitle,
+                    &data[..data.len().min(150)], /* TODO: be precise about the 1 st page */
+                    description,
                     verb,
                     verb_cancel,
                     hold,
@@ -510,15 +515,16 @@ pub fn confirm_blob(
                     None,
                     name,
                     br_code,
-                    true,
-                    verb,
-                    subtitle,
+                    is_data,
+                    None,
+                    None,
                     false,
                     hold,
                     chunkify,
                     true,
                     true,
                     false,
+                    None,
                 )
             },
             br_name,
@@ -541,6 +547,7 @@ pub fn confirm_blob(
             false,
             true,
             false,
+            None,
         )
     }
 }
@@ -587,7 +594,7 @@ pub fn confirm_summary(
             .transpose()?,
         br_code: br_code,
     };
-    ipc_ui_call_confirm(&value)
+    ipc_ui_call(&value)
 }
 
 pub fn confirm_action(
@@ -701,14 +708,25 @@ pub fn show_properties(
 }
 
 /// Show a warning message
-pub fn show_warning(title: &str, content: &str, br_name: Option<&str>, br_code: i32) -> Result<()> {
+pub fn show_warning(
+    title: &str,
+    content: &str,
+    verb: &str,
+    br_name: Option<&str>,
+    br_code: i32,
+    allow_cancel: bool,
+    danger: bool,
+) -> Result<()> {
     let value = TrezorUiEnum::Warning {
         title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
         content: ShortString::from_str(content).map_err(|_| Error::FailedToSend)?,
+        verb: ShortString::from_str(verb).map_err(|_| Error::FailedToSend)?,
         br_name: br_name
             .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
             .transpose()?,
         br_code,
+        allow_cancel,
+        danger,
     };
     ipc_ui_call_void(&value)
 }
@@ -740,15 +758,53 @@ pub fn show_mismatch(title: &str) -> UiResult {
     ipc_ui_call_confirm(&value)
 }
 
-/// Show a danger message
-pub fn show_danger(title: &str, content: &str, br_name: Option<&str>, br_code: i32) -> UiResult {
-    let value = TrezorUiEnum::Danger {
+pub fn confirm_trade(
+    title: &str,
+    subtitle: &str,
+    buy: &str,
+    sell: Option<&str>,
+    can_go_back: bool,
+    br_name: Option<&str>,
+    br_code: i32,
+) -> UiResult {
+    let value = TrezorUiEnum::ConfirmTrade {
         title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        content: ShortString::from_str(content).map_err(|_| Error::FailedToSend)?,
+        subtitle: ShortString::from_str(subtitle).map_err(|_| Error::FailedToSend)?,
+        buy: ShortString::from_str(buy).map_err(|_| Error::FailedToSend)?,
+        sell: sell
+            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        back_button: can_go_back,
         br_name: br_name
             .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
             .transpose()?,
         br_code,
+    };
+    ipc_ui_call(&value)
+}
+
+/// Show a danger message
+pub fn show_danger(
+    title: &str,
+    content: &str,
+    br_name: Option<&str>,
+    br_code: i32,
+    verb_cancel: Option<&str>,
+    menu_title: Option<&str>,
+) -> UiResult {
+    let value = TrezorUiEnum::Danger {
+        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
+        content: LongString::from_str(content).map_err(|_| Error::FailedToSend)?,
+        br_name: br_name
+            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        br_code,
+        verb_cancel: verb_cancel
+            .map(|v| ShortString::from_str(v).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        menu_title: menu_title
+            .map(|m| ShortString::from_str(m).map_err(|_| Error::FailedToSend))
+            .transpose()?,
     };
     ipc_ui_call_confirm(&value)
 }
@@ -824,17 +880,10 @@ pub fn should_show_more(
     para: &[(&str, bool)],
     button_text: &str,
     br_name: Option<&str>,
+    br_code: i32,
 ) -> Result<bool> {
-    let value = TrezorUiEnum::ShouldShowMore {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        items: StrExtList::from_str_slice(para).map_err(|_| Error::FailedToSend)?,
-        button_text: ShortString::from_str(button_text).map_err(|_| Error::FailedToSend)?,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-    };
     // TODO: move mapping to the coreapp
-    match ipc_ui_call(&value) {
+    match confirm_with_info(title, None, para, "Confirm", button_text, br_name, br_code) {
         Ok(TrezorUiResult::Confirmed) => Ok(false),
         Ok(TrezorUiResult::Info) => Ok(true),
         _ => {
@@ -842,6 +891,31 @@ pub fn should_show_more(
             Err(Error::Timeout)
         }
     }
+}
+
+pub fn confirm_with_info(
+    title: &str,
+    subtitle: Option<&str>,
+    para: &[(&str, bool)],
+    verb: &str,
+    verb_info: &str,
+    br_name: Option<&str>,
+    br_code: i32,
+) -> UiResult {
+    let value = TrezorUiEnum::ConfirmWithInfo {
+        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
+        subtitle: subtitle
+            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        items: StrExtList::from_str_slice(para).map_err(|_| Error::FailedToSend)?,
+        verb: ShortString::from_str(verb).map_err(|_| Error::FailedToSend)?,
+        verb_info: ShortString::from_str(verb_info).map_err(|_| Error::FailedToSend)?,
+        br_name: br_name
+            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
+            .transpose()?,
+        br_code,
+    };
+    ipc_ui_call_confirm(&value)
 }
 
 pub fn show_address(

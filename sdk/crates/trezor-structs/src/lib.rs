@@ -31,7 +31,8 @@ pub type String<const N: usize> = Buffer<N>;
 
 pub type ShortString = String<50>;
 pub type LongString = String<150>;
-pub type ExtraLongString = String<1030>;
+// TODO: decrease size and use long string confirmation instead of blob
+pub type ExtraLongString = String<5000>;
 
 pub type ShortBuffer = Buffer<100>;
 pub type LongBuffer = Buffer<200>;
@@ -202,31 +203,20 @@ impl DerivationPath {
     }
 }
 
-#[derive(Default, Archive, Serialize)]
-pub struct TypedHash {
-    pub data: [u8; 32],
-}
-
-impl TypedHash {
-    pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
-        if slice.len() != 32 {
-            return Err(());
-        }
-        let mut data = [0u8; 32];
-        data.copy_from_slice(slice);
-        Ok(Self { data })
-    }
-
-    pub fn as_slice(&self) -> &[u8] {
-        &self.data
-    }
-}
-
 #[derive(Archive, Serialize)]
 pub enum TrezorUiEnum {
     SelectMenu {
         items: StrList,
         cancel: Option<ShortString>,
+    },
+    ConfirmTrade {
+        title: ShortString,
+        subtitle: ShortString,
+        buy: ShortString,
+        sell: Option<ShortString>,
+        back_button: bool,
+        br_name: Option<ShortString>,
+        br_code: i32,
     },
     ConfirmAction {
         title: ShortString,
@@ -253,7 +243,7 @@ pub enum TrezorUiEnum {
     ConfirmValue {
         title: ShortString,
         value: ExtraLongString,
-        description: Option<ShortString>,
+        description: Option<LongString>,
         is_data: bool,
         subtitle: Option<ShortString>,
         verb: Option<ShortString>,
@@ -265,10 +255,11 @@ pub enum TrezorUiEnum {
         br_name: Option<ShortString>,
         br_code: i32,
         external_menu: bool,
+        warning_footer: Option<ShortString>,
     },
     ConfirmValueIntro {
         title: ShortString,
-        value: ExtraLongString,
+        value: LongString,
         subtitle: Option<ShortString>,
         verb: Option<ShortString>,
         verb_cancel: Option<ShortString>,
@@ -284,17 +275,22 @@ pub enum TrezorUiEnum {
     Warning {
         title: ShortString,
         content: ShortString,
+        verb: ShortString,
         br_name: Option<ShortString>,
         br_code: i32,
+        allow_cancel: bool,
+        danger: bool,
     },
     Mismatch {
         title: ShortString,
     },
     Danger {
         title: ShortString,
-        content: ShortString,
+        content: LongString,
         br_name: Option<ShortString>,
         br_code: i32,
+        verb_cancel: Option<ShortString>,
+        menu_title: Option<ShortString>,
     },
     Success {
         title: ShortString,
@@ -341,11 +337,14 @@ pub enum TrezorUiEnum {
         br_name: Option<ShortString>,
         br_code: i32,
     },
-    ShouldShowMore {
+    ConfirmWithInfo {
         title: ShortString,
+        subtitle: Option<ShortString>,
         items: StrExtList,
-        button_text: ShortString,
+        verb: ShortString,
+        verb_info: ShortString,
         br_name: Option<ShortString>,
+        br_code: i32,
     },
     ShowAddress {
         address: ShortString,
@@ -381,14 +380,24 @@ pub enum TrezorCryptoEnum {
     },
     SignTypedHash {
         address_n: DerivationPath,
-        hash: TypedHash,
+        hash: [u8; 32],
         encoded_network: Option<LongBuffer>,
         encoded_token: Option<LongBuffer>,
+        chain_id: Option<u64>,
     },
     GetAddressMac {
         address_n: DerivationPath,
         address: ShortString,
         encoded_network: Option<ShortBuffer>,
+    },
+    CheckAddressMac {
+        address_n: DerivationPath,
+        mac: [u8; 32],
+        address: ShortString,
+        encoded_network: Option<ShortBuffer>,
+    },
+    VerifyNonceCache {
+        nonce: LongBuffer,
     },
 }
 
@@ -399,6 +408,8 @@ impl TrezorCryptoEnum {
             Self::GetEthPubkeyHash { .. } => 1,
             Self::SignTypedHash { .. } => 2,
             Self::GetAddressMac { .. } => 3,
+            Self::VerifyNonceCache { .. } => 4,
+            Self::CheckAddressMac { .. } => 5,
         }
     }
 }
@@ -410,7 +421,7 @@ pub enum TrezorCryptoResult {
     Signature([u8; 65]),
     EthPubkeyHash([u8; 20]),
     AddressMac([u8; 32]),
-    Failed(ShortString),
+    Boolean(bool),
 }
 
 /// Outgoing Crypto result message for IPC

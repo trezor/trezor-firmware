@@ -1,14 +1,15 @@
 use crate::{
-    ed25519::verify,
+    ed25519,
     proto::definitions::{DefinitionType, EthereumNetworkInfo, EthereumTokenInfo},
     tokens::{token_by_chain_address, unknown_token},
+    uformat,
 };
 #[cfg(not(test))]
-use alloc::{collections::BTreeMap, vec::Vec};
+use alloc::{collections::BTreeMap, string::String, vec::Vec};
 use prost::Message;
 #[cfg(test)]
-use std::{collections::BTreeMap, vec::Vec};
-use trezor_app_sdk::crypto::Sha256;
+use std::{collections::BTreeMap, string::String, vec::Vec};
+use trezor_app_sdk::{crypto::Sha256, info};
 
 const THRESHOLD: usize = 2;
 const PUBLIC_KEYS: [&[u8;32]; 3] = [
@@ -16,6 +17,12 @@ const PUBLIC_KEYS: [&[u8;32]; 3] = [
     b"\xa9\xa2\x2c\xc2\x65\xa0\xcb\x1d\x6c\xb3\x29\xbc\x0e\x60\xbc\x45\xdf\x76\xb9\xab\x28\xfb\x87\xb6\x11\x36\xfe\xaf\x8d\x8f\xdc\x96",
     b"\xb8\xd2\xb2\x1d\xe2\x71\x24\xf0\x51\x1f\x90\x3a\xe7\xe6\x0e\x07\x96\x18\x10\xa0\xb8\xf2\x8e\xa7\x55\xfa\x50\x36\x7a\x8a\x2b\x8b",
 ];
+
+const DEV_PUBLIC_KEYS: [&[u8;32]; 3] = [
+        b"\x68\x46\x0e\xbe\xf3\xb1\x38\x16\x4e\xc7\xfd\x86\x10\xe9\x58\x00\xdf\x75\x98\xf7\x0f\x2f\x2e\xa7\xdb\x51\x72\xac\x74\xeb\xc1\x44",
+        b"\x8d\x4a\xbe\x07\x4f\xef\x92\x29\xd3\xb4\x41\xdf\xea\x4f\x98\xf8\x05\xb1\xa2\xb3\xa0\x6a\xe6\x45\x81\x0e\xfe\xce\x77\xfd\x50\x44",
+        b"\x97\xf7\x13\x5a\x9a\x26\x90\xe7\x3b\xeb\x26\x55\x6f\x1c\xb1\x63\xbe\xa2\x53\x2a\xff\xa1\xe7\x78\x24\x30\xbe\x98\xc0\xe5\x68\x12",
+    ];
 
 const MIN_DATA_VERSION: u32 = 1764611524;
 const FORMAT_VERSION: &[u8] = b"trzd1";
@@ -47,8 +54,12 @@ impl Definitions {
             return Ok(Self::new(unknown_network(), tokens));
         };
 
-        if network == unknown_network() && encoded_network.is_some() {
-            network = decode_definition::<EthereumNetworkInfo>(encoded_network.unwrap())?;
+        if network == unknown_network() {
+            if let Some(encoded_network) = encoded_network {
+                info!("Decoding network definition from the message");
+                network = decode_definition::<EthereumNetworkInfo>(encoded_network)?;
+                info!("Decoded network definition: ");
+            }
         }
 
         if network == unknown_network() {
@@ -57,12 +68,14 @@ impl Definitions {
         }
 
         if let Some(chain_id) = chain_id {
+            info!("Network definition mismatch");
             if network.chain_id != chain_id {
                 // "Network definition mismatch"
                 return Err(());
             }
         }
         if let Some(slip44) = slip44 {
+            info!("Network definition mismatch");
             if network.slip44 != slip44 {
                 // "Network definition mismatch"
                 return Err(());
@@ -71,6 +84,7 @@ impl Definitions {
 
         // get token definition
         if let Some(encoded_token) = encoded_token {
+            info!("Decoding token definition from the message");
             let token = decode_definition::<EthereumTokenInfo>(encoded_token)?;
             // Ignore token if it doesn't match the network instead of raising an error.
             // This might help us in the future if we allow multiple networks/tokens
@@ -130,57 +144,78 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
     let expected_type = A::definition_type();
 
     let mut offset = 0;
+    let mut remaining = encoded.len();
 
     let header_len = FORMAT_VERSION.len() + 1 + 4 + 2; // format version + type + data version + payload length
-    if encoded.len() < header_len {
+    info!("encoded len {} header len {}", remaining, header_len);
+    if remaining < header_len {
         return Err(()); // Invalid definition
     }
 
     // first check format version
-    if &encoded[..FORMAT_VERSION.len()] != FORMAT_VERSION {
+    if &encoded[offset..offset + FORMAT_VERSION.len()] != FORMAT_VERSION {
+        info!("Definition format version mismatch");
         return Err(()); // Invalid definition
     }
     offset += FORMAT_VERSION.len();
+    remaining -= FORMAT_VERSION.len();
 
     // second check the type of the data
     if encoded[offset] != expected_type as u8 {
+        info!("Definition type mismatch");
+
         return Err(()); // Definition type mismatch
     }
     offset += 1;
+    remaining -= 1;
 
     // third check data version
-    let version = u32::from_le_bytes(encoded[offset..offset + 4].try_into().unwrap());
+    info!("getting version from definition");
+    let version = u32::from_le_bytes(encoded[offset..offset + 4].try_into().map_err(|_| ())?);
+    info!("definition version: {}", version);
     if version < MIN_DATA_VERSION {
+        info!("Definition data version too old");
         return Err(()); // Definition is outdated
     }
     offset += 4;
+    remaining -= 4;
 
     // get payload
-    let payload_len = u16::from_le_bytes(encoded[offset..offset + 2].try_into().unwrap()) as usize;
+    info!("getting payload from definition");
+    let payload_len =
+        u16::from_le_bytes(encoded[offset..offset + 2].try_into().map_err(|_| ())?) as usize;
+    info!("definition payload length: {}", payload_len);
     offset += 2;
+    remaining -= 2;
 
-    if encoded.len() < header_len + payload_len + 1 {
+    if remaining < (payload_len + 1) {
+        info!("Definition payload length mismatch");
         return Err(()); // Invalid definition
     }
     let payload = &encoded[offset..offset + payload_len];
     offset += payload_len;
+    remaining -= payload_len;
 
     // at the end compute Merkle tree root hash using
     // provided leaf data (payload with prefix) and proof
 
+    info!("Computing definition hash");
     let mut hasher = Sha256::new(Some(b"\x00"));
     hasher.update(&encoded[..offset]);
     let hash = hasher.digest();
 
     let proof_len = encoded[offset];
     offset += 1;
+    remaining -= 1;
 
     for _ in 0..proof_len {
-        if offset + 32 > encoded.len() {
+        if remaining < 32 {
+            info!("Definition proof length mismatch");
             return Err(());
         }
         let proof_entry = &encoded[offset..offset + 32];
         offset += 32;
+        remaining -= 32;
 
         let (hash_a, hash_b) = if hash.as_slice() <= proof_entry {
             (hash.as_slice(), proof_entry)
@@ -188,25 +223,55 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
             (proof_entry, hash.as_slice())
         };
 
+        info!("Updating definition hash with proof entry");
         let mut hasher = Sha256::new(Some(b"\x01"));
         hasher.update(&hash_a);
         hasher.update(&hash_b);
         let hash = hasher.digest();
     }
 
-    if offset + 1 + 64 >= encoded.len() {
+    if remaining < 1 + 64 {
+        info!("Definition signature length mismatch");
         return Err(());
     }
 
     let sigmask = encoded[offset];
     offset += 1;
+    remaining -= 1;
 
-    let signature: &[u8; 64] = (&encoded[offset..offset + 64]).try_into().unwrap();
+    let signature: &[u8; 64] = (&encoded[offset..offset + 64]).try_into().map_err(|_| ())?;
+    offset += 64;
+    remaining -= 64;
+
+    info!("remaining after parsing definition: {}", remaining);
+    if remaining != 0 {
+        info!("Definition has extra data at the end");
+        return Err(()); // Invalid definition
+    }
+
+    let mut hash_str = String::new();
+    for byte in hash.as_slice() {
+        hash_str.push_str(&uformat!("{} ", *byte));
+    }
+    let mut sig_str = String::new();
+    for byte in signature {
+        sig_str.push_str(&uformat!("{} ", *byte));
+    }
+    info!("Definition signature: {}", sig_str.as_str());
+    info!("Definition hash: {}", hash_str.as_str());
+    info!("Definition sigmask: {}", sigmask);
+    info!("Definition threshold: {}", THRESHOLD);
 
     // verify signature
-    let result = verify(signature, &hash, THRESHOLD, &PUBLIC_KEYS, sigmask).map_err(|_| ())?;
+    info!("Verifying definition signature");
+    // TODO: use real signature verification instead of dummy implementation
+    let result =
+        ed25519::verify(signature, &hash, THRESHOLD, &DEV_PUBLIC_KEYS, sigmask).map_err(|_| ())?;
+
+
+    info!("Definition signature verification result: {}", result);
     if !result {
-        // TODO: proper error type: Invalid definition signature
+        info!("Invalid definition signature");
         return Err(());
     }
 

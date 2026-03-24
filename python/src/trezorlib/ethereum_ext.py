@@ -74,6 +74,8 @@ def message_id(message: type[MessageType]) -> int:
         return EthereumMessages.SignTx
     elif message == messages.EthereumTxRequest:
         return EthereumMessages.TxRequest
+    elif message == messages.EthereumTxAck:
+        return EthereumMessages.TxAck
     elif message == messages.EthereumSignTypedData:
         return EthereumMessages.SignTypedData
     elif message == messages.EthereumTypedDataSignature:
@@ -171,6 +173,14 @@ def call_ext(
         expect_ids = [message_id(cls) for cls in expect]
         try:
             # Find the index of the matching message ID
+            print(
+                "received message with ID",
+                resp.message_id,
+                "expecting",
+                expect_ids,
+                "expect message types",
+                expect,
+            )
             idx = expect_ids.index(resp.message_id)
             return protobuf.load_message(buf, expect[idx])
         except:
@@ -504,7 +514,6 @@ def sign_typed_data(
         metamask_v4_compat=metamask_v4_compat,
         definitions=definitions,
     )
-    msg_id = EthereumMessages.SignTypedData
     if show_message_hash is not None:
         request.show_message_hash = show_message_hash
 

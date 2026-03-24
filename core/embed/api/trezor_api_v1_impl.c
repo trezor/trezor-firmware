@@ -41,7 +41,9 @@ const trezor_crypto_v1_t trezor_crypto_v1 = {
     .hmac_sha256_Update = hmac_sha256_Update,
     .hmac_sha256_Final = hmac_sha256_Final,
     .ecdsa_recover_pub_from_sig = ecdsa_recover_pub_from_sig,
+    .ecdsa_verify_digest = ecdsa_verify_digest,
     .secp256k1 = &secp256k1,
+    .nist256p1 = &nist256p1,
 };
 
 const trezor_api_v1_t trezor_api_v1 = {

@@ -167,21 +167,8 @@ pub struct ecdsa_curve {
     pub G: curve_point,
     pub order: bignum256,
     pub order_half: bignum256,
-    pub a: cty::c_int,
+    pub a: core::ffi::c_int,
     pub b: bignum256,
-}
-
-unsafe extern "C" {
-    pub fn ecdsa_recover_pub_from_sig(
-        curve: *const ecdsa_curve,
-        pub_key: *mut u8,
-        sig: *const u8,
-        digest: *const u8,
-        recid: cty::c_int,
-    ) -> cty::c_int;
-}
-unsafe extern "C" {
-    pub static secp256k1: ecdsa_curve;
 }
 
 /// Trezor crypto v1 function pointers
@@ -216,9 +203,16 @@ pub struct trezor_crypto_v1_t {
         pub_key: *mut u8,
         sig: *const u8,
         digest: *const u8,
-        recid: cty::c_int,
-    ) -> cty::c_int,
+        recid: core::ffi::c_int,
+    ) -> core::ffi::c_int,
+    pub ecdsa_verify_digest: unsafe extern "C" fn(
+        curve: *const ecdsa_curve,
+        pub_key: *const u8,
+        sig: *const u8,
+        digest: *const u8,
+    ) -> core::ffi::c_int,
     pub secp256k1: *const ecdsa_curve,
+    pub nist256p1: *const ecdsa_curve,
 }
 
 unsafe impl Sync for trezor_api_v1_t {}

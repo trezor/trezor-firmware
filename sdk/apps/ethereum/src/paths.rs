@@ -68,10 +68,12 @@ impl Bip32Path {
         keychain.verify_path(self)?;
         if !keychain.is_in_keychain(self) {
             ui::show_danger(
+                "Important",
                 "Wrong derivation path for selected account.",
-                &self.to_string(),
                 Some("path_warning"),
                 ButtonRequestType::ButtonRequestUnknownDerivationPath.into(),
+                Some("Cancel and exit"),
+                Some("Receive"),
             )?;
         }
         Ok(())

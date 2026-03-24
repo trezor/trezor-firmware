@@ -26,6 +26,7 @@ mod get_public_key;
 mod helpers;
 mod keychain;
 mod paths;
+mod payment_request;
 mod rlp;
 mod sign_message;
 mod sign_tx;
@@ -61,14 +62,16 @@ pub(crate) enum EthereumMessages {
     TypedDataValueAck = 14,
     VerifyMessage = 15,
     Success = 16,
+    SignTxEIP1559 = 17,
 
     #[num_enum(catch_all)]
     Unknown(u16),
 }
 
+// TODO: decrease size and use long string confirmation instead of blob
 #[cfg(not(test))]
 #[global_allocator]
-static ALLOCATOR: emballoc::Allocator<8192> = emballoc::Allocator::new();
+static ALLOCATOR: emballoc::Allocator<32768> = emballoc::Allocator::new();
 
 /// Macro to generate handler functions
 macro_rules! wire_handler {

@@ -74,6 +74,7 @@ pub(crate) fn confirm_signverify(
                     false,
                     true,
                     false,
+                    None,
                 )
             },
             |name| {
@@ -128,6 +129,7 @@ pub(crate) fn confirm_signverify(
             None,
             chunkify,
             true,
+            true,
         )?;
     } else {
         ui::error_if_not_confirmed(ui::confirm_value(
@@ -145,6 +147,7 @@ pub(crate) fn confirm_signverify(
             false,
             true,
             false,
+            None,
         )?)?;
     };
     Ok(())
@@ -187,6 +190,7 @@ pub(crate) fn confirm_address(
             false,
             true,
             false,
+            warning_footer,
         ),
         Ok(ui::TrezorUiResult::Confirmed)
     ) {

@@ -1696,6 +1696,28 @@ impl FirmwareUI for UIEckhart {
                     Obj::const_none(),
                 ))
             }
+            ArchivedTrezorUiEnum::ConfirmTrade {
+                title,
+                subtitle,
+                buy,
+                sell,
+                back_button,
+                br_code,
+                br_name,
+            } => {
+                let layout = Self::confirm_trade(
+                    tstr_from_archived(title),
+                    tstr_from_archived(subtitle),
+                    tstr_from_archived_option(sell),
+                    tstr_from_archived(buy),
+                    *back_button,
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
+                ))
+            }
             ArchivedTrezorUiEnum::ConfirmAction {
                 title,
                 action,
@@ -1830,6 +1852,7 @@ impl FirmwareUI for UIEckhart {
                 br_name,
                 br_code,
                 external_menu,
+                warning_footer,
             } => {
                 // Use safe Deref trait instead of raw pointers
                 let layout = Self::confirm_value(
@@ -1848,7 +1871,7 @@ impl FirmwareUI for UIEckhart {
                     false, // unused parameter
                     *cancel,
                     false,
-                    None,
+                    tstr_from_archived_option(warning_footer),
                     *external_menu,
                 )?;
                 Ok((
@@ -1870,11 +1893,14 @@ impl FirmwareUI for UIEckhart {
                     Obj::const_none(),
                 ))
             }
-            ArchivedTrezorUiEnum::ShouldShowMore {
+            ArchivedTrezorUiEnum::ConfirmWithInfo {
                 title,
+                subtitle,
                 items,
-                button_text,
+                verb,
+                verb_info,
                 br_name,
+                br_code,
             } => {
                 let mut tuple_objs = heapless::Vec::<Obj, 5>::new();
                 for i in 0..(items.len as usize) {
@@ -1895,16 +1921,16 @@ impl FirmwareUI for UIEckhart {
                 let list = List::alloc(&tuple_objs)?;
                 let layout = Self::confirm_with_info(
                     tstr_from_archived(title),
-                    None,
+                    tstr_from_archived_option(subtitle),
                     list.into(),
-                    "Confirm".into(),
-                    tstr_from_archived(button_text),
+                    tstr_from_archived(verb),
+                    tstr_from_archived(verb_info),
                     None,
                     false,
                 )?;
                 Ok((
                     layout,
-                    1, /* TODO */
+                    br_code.to_native().try_into()?,
                     obj_from_archived_option(br_name)?,
                 ))
             }
@@ -1952,16 +1978,19 @@ impl FirmwareUI for UIEckhart {
             ArchivedTrezorUiEnum::Warning {
                 title,
                 content,
+                verb,
                 br_name,
                 br_code,
+                allow_cancel,
+                danger,
             } => Ok((
                 Self::show_warning(
                     tstr_from_archived(title),
-                    TR::buttons__continue.into(),
+                    tstr_from_archived(verb),
                     tstr_from_archived(content),
                     TString::empty(),
-                    false,
-                    false,
+                    *allow_cancel,
+                    *danger,
                 )?,
                 br_code.to_native().try_into()?,
                 obj_from_archived_option(br_name)?,
@@ -1971,18 +2000,22 @@ impl FirmwareUI for UIEckhart {
                 content,
                 br_name,
                 br_code,
-            } => Ok((
-                Self::show_warning(
+                verb_cancel,
+                menu_title,
+            } => {
+                let layout = Self::show_danger(
                     tstr_from_archived(title),
-                    TR::buttons__continue.into(),
                     tstr_from_archived(content),
                     TString::empty(),
-                    true,
-                    true,
-                )?,
-                br_code.to_native().try_into()?,
-                obj_from_archived_option(br_name)?,
-            )),
+                    tstr_from_archived_option(menu_title),
+                    tstr_from_archived_option(verb_cancel),
+                )?;
+                Ok((
+                    LayoutObj::new_root(layout)?,
+                    br_code.to_native().try_into()?,
+                    obj_from_archived_option(br_name)?,
+                ))
+            }
             ArchivedTrezorUiEnum::Success {
                 title,
                 content,

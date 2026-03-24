@@ -93,8 +93,13 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
         show_message_hash
     ));
 
-    let signature =
-        crypto::sign_typed_hash(dp.as_ref(), &data_hash, encoded_network, encoded_token)?;
+    let signature = crypto::sign_typed_hash(
+        dp.as_ref(),
+        &data_hash,
+        encoded_network,
+        encoded_token,
+        None,
+    )?;
 
     let mut sig = EthereumTypedDataSignature::default();
     sig.address = address_from_bytes(&address_bytes, Some(definitions.network()));
@@ -484,6 +489,7 @@ fn should_show_domain(name: &[u8], version: &[u8]) -> Result<bool> {
         &para,
         "Show full domain",
         Some("should_show_domain"),
+        ButtonRequestType::ButtonRequestOther.into(),
     )
     .map_err(|_| Error::Cancelled)
 }
@@ -520,6 +526,7 @@ fn confirm_text(
         false,
         false,
         false,
+        None,
     )?;
     Ok(())
 }
@@ -547,8 +554,14 @@ fn should_show_struct(
         (&field_names, false),
     ];
 
-    ui::should_show_more(title, &para, button_text, Some("should_show_struct"))
-        .map_err(|_| Error::Cancelled)
+    ui::should_show_more(
+        title,
+        &para,
+        button_text,
+        Some("should_show_struct"),
+        ButtonRequestType::ButtonRequestOther.into(),
+    )
+    .map_err(|_| Error::Cancelled)
 }
 
 fn confirm_message_hash(hash: &[u8]) -> Result<()> {
@@ -568,6 +581,7 @@ fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         false,
         true,
         false,
+        None,
     )?;
     Ok(())
 }

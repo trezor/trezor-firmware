@@ -32,16 +32,17 @@
 #endif
 
 #include "bip32.h"
+#include "ecdsa.h"
 #include "ed25519-donna/ed25519.h"
 #include "hmac.h"
+#include "secp256k1.h"
 #include "sha2.h"
 #include "sha3.h"
-#include "ecdsa.h"
-#include "secp256k1.h"
+#include "nist256p1.h"
 
 #ifndef USE_DBG_CONSOLE
-// temporary hack to allow compilation when DBG console is disabled
-ssize_t dbg_console_write(const void* data, size_t data_size);
+    // temporary hack to allow compilation when DBG console is disabled
+    ssize_t dbg_console_write(const void* data, size_t data_size);
 #endif
 
 typedef struct {
@@ -68,9 +69,12 @@ typedef struct {
                              const uint32_t msglen);
   void (*hmac_sha256_Final)(HMAC_SHA256_CTX* hctx, uint8_t* hmac);
   int (*ecdsa_recover_pub_from_sig)(const ecdsa_curve* curve, uint8_t* pub_key,
-                               const uint8_t* sig, const uint8_t* digest,
-                               int recid);
-  const ecdsa_curve *secp256k1;
+                                    const uint8_t* sig, const uint8_t* digest,
+                                    int recid);
+  int (*ecdsa_verify_digest)(const ecdsa_curve* curve, const uint8_t* pub_key,
+                             const uint8_t* sig, const uint8_t* digest);
+  const ecdsa_curve* secp256k1;
+  const ecdsa_curve* nist256p1;
 } trezor_crypto_v1_t;
 
 typedef struct {

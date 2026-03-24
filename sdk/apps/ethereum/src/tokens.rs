@@ -1,8 +1,8 @@
 use crate::proto::definitions::EthereumTokenInfo;
 #[cfg(not(test))]
-use alloc::{vec, vec::Vec};
+use alloc::vec;
 #[cfg(test)]
-use std::{vec, vec::Vec};
+use std::vec;
 
 pub fn unknown_token() -> EthereumTokenInfo {
     EthereumTokenInfo {

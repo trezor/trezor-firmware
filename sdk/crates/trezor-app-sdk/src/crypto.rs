@@ -10,7 +10,7 @@ use rkyv::rancor::Failure;
 use rkyv::to_bytes;
 pub use trezor_structs::TrezorCryptoResult;
 use trezor_structs::{
-    DerivationPath, LongBuffer, LongString, ShortBuffer, ShortString, TrezorCryptoEnum, TypedHash,
+    DerivationPath, LongBuffer, LongString, ShortBuffer, ShortString, TrezorCryptoEnum,
 };
 
 use crate::core_services::services_or_die;
@@ -100,13 +100,15 @@ pub fn sign_typed_hash(
     hash: &[u8; 32],
     encoded_network: Option<&[u8]>,
     encoded_token: Option<&[u8]>,
+    chain_id: Option<u64>,
 ) -> Result<[u8; 65]> {
     let value = TrezorCryptoEnum::SignTypedHash {
         address_n: unwrap!(DerivationPath::from_slice(address_n)),
-        hash: unwrap!(TypedHash::from_slice(hash)),
+        hash: *hash,
         encoded_network: encoded_network
             .map(|network| unwrap!(LongBuffer::buf_from_slice(network))),
         encoded_token: encoded_token.map(|token| unwrap!(LongBuffer::buf_from_slice(token))),
+        chain_id,
     };
 
     let res = ipc_crypto_call(&value);
@@ -119,14 +121,38 @@ pub fn sign_typed_hash(
     }
 }
 
+pub fn check_address_mac(
+    address_n: &[u32],
+    mac: &[u8; 32],
+    address: &str,
+    encoded_network: Option<&[u8]>,
+) -> Result<bool> {
+    let value = TrezorCryptoEnum::CheckAddressMac {
+        address_n: unwrap!(DerivationPath::from_slice(address_n)),
+        mac: *mac,
+        address: unwrap!(ShortString::from_str(address)),
+        encoded_network: encoded_network
+            .map(|network| unwrap!(ShortBuffer::buf_from_slice(network))),
+    };
+
+    let res = ipc_crypto_call(&value);
+
+    if let Ok(TrezorCryptoResult::Boolean(valid)) = res {
+        Ok(valid)
+    } else {
+        // TODO: proper error type
+        Err(Error::Timeout)
+    }
+}
+
 pub fn get_address_mac(
     address_n: &[u32],
-    key: &str,
+    address: &str,
     encoded_network: Option<&[u8]>,
 ) -> Result<[u8; 32]> {
     let value = TrezorCryptoEnum::GetAddressMac {
         address_n: unwrap!(DerivationPath::from_slice(address_n)),
-        address: unwrap!(ShortString::from_str(key)),
+        address: unwrap!(ShortString::from_str(address)),
         encoded_network: encoded_network
             .map(|network| unwrap!(ShortBuffer::buf_from_slice(network))),
     };
@@ -135,6 +161,21 @@ pub fn get_address_mac(
 
     if let Ok(TrezorCryptoResult::AddressMac(mac)) = res {
         Ok(mac)
+    } else {
+        // TODO: proper error type
+        Err(Error::Timeout)
+    }
+}
+
+pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
+    let value = TrezorCryptoEnum::VerifyNonceCache {
+        nonce: LongBuffer::buf_from_slice(nonce).map_err(|_| Error::FailedToSend)?,
+    };
+
+    let res = ipc_crypto_call(&value);
+
+    if let Ok(TrezorCryptoResult::Boolean(valid)) = res {
+        Ok(valid)
     } else {
         // TODO: proper error type
         Err(Error::Timeout)
@@ -180,6 +221,29 @@ pub fn secp256k1_verify_recover(
     Some((pub_key, if compressed { 33 } else { 65 }))
 }
 
+/// Uses public key to verify the signature of the digest.
+/// Returns True on success.
+pub fn nist256p1_verify(public_key: &[u8], signature: &[u8], digest: &[u8; 32]) -> bool {
+    if public_key.len() != 33 && public_key.len() != 65 {
+        return false; // Invalid input lengths
+    }
+    if signature.len() != 64 && signature.len() != 65 {
+        return false; // Invalid signature length
+    }
+
+    let offset = if signature.len() == 65 { 1 } else { 0 };
+    let nist256p1 = unsafe { &*get_crypto_or_die().nist256p1 };
+
+    unsafe {
+        (get_crypto_or_die().ecdsa_verify_digest)(
+            nist256p1,
+            public_key.as_ptr(),
+            signature.as_ptr().byte_offset(offset),
+            digest.as_ptr(),
+        ) == 0
+    }
+}
+
 pub struct Sha256 {
     ctx: SHA256_CTX,
 }
@@ -202,9 +266,10 @@ impl Sha256 {
         unsafe { (get_crypto_or_die().sha256_Update)(&mut self.ctx, data.as_ptr(), data.len()) };
     }
 
-    pub fn digest(mut self) -> [u8; 32] {
+    pub fn digest(&mut self) -> [u8; 32] {
         let mut digest = [0u8; 32];
-        unsafe { (get_crypto_or_die().sha256_Final)(&mut self.ctx, digest.as_mut_ptr()) };
+        let mut ctx = self.ctx;
+        unsafe { (get_crypto_or_die().sha256_Final)(&mut ctx, digest.as_mut_ptr()) };
         digest
     }
 

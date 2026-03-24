@@ -45,7 +45,7 @@ pub fn sign_message(msg: EthereumSignMessage) -> Result<EthereumMessageSignature
     let hash = message_digest(&msg.message);
 
     let encoded_network = msg.encoded_network.as_ref().map(|buf| buf.as_ref());
-    let signature = crypto::sign_typed_hash(dp.as_ref(), &hash, encoded_network, None)?;
+    let signature = crypto::sign_typed_hash(dp.as_ref(), &hash, encoded_network, None, None)?;
 
     let mut sig = signature[1..].to_vec();
     sig.push(signature[0]);
