@@ -37,7 +37,7 @@ pub struct FuelGauge {
     /// State of battery charging
     charging_state: ChargingState,
     /// State of charge (0-100) [%]
-    soc: Option<u8>,
+    soc: u8,
     /// Cached formatted SOC text
     soc_text: ShortString,
     /// Font used for the soc percentage
@@ -79,11 +79,10 @@ impl FuelGauge {
     }
 
     pub fn update_pm_state(&mut self) {
-        self.soc = Some(power_manager::soc());
+        self.soc = power_manager::soc();
         self.charging_state = power_manager::charging_state();
-        self.soc_text = uformat!("{} %", self.soc.unwrap_or(0));
-        self.battery_indication =
-            self.battery_indication(self.charging_state, self.soc.unwrap_or(0));
+        self.soc_text = uformat!("{} %", self.soc);
+        self.battery_indication = self.battery_indication(self.charging_state, self.soc);
     }
 
     pub fn should_be_shown(&self) -> bool {
@@ -122,7 +121,7 @@ impl FuelGauge {
             area: Rect::zero(),
             mode,
             charging_state: ChargingState::Idle,
-            soc: None,
+            soc: 0,
             soc_text: ShortString::new(),
             font,
             battery_indication: (ICON_BATTERY_EMPTY, GREY_LIGHT, GREY_LIGHT),
@@ -177,9 +176,7 @@ impl Component for FuelGauge {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
             Event::Attach(_) => {
-                if self.soc.is_none() {
-                    self.update_pm_state();
-                }
+                self.update_pm_state();
                 ctx.request_paint();
             }
             Event::PM(_e) => {
@@ -258,7 +255,7 @@ impl Component for FuelGauge {
 impl crate::trace::Trace for FuelGauge {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("FuelGauge");
-        t.int("soc", self.soc.unwrap_or(0) as i64);
+        t.int("soc", self.soc as i64);
     }
 }
 
