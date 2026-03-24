@@ -298,26 +298,35 @@ impl<'a> Translations<'a> {
         }
 
         #[cfg(feature = "ui_font_kerning")]
-        let kernings = if payload_reader.remaining() > 0 {
-            let kerning_reader = read_u16_prefixed_block(&mut payload_reader)?;
+        let kernings = match header.blob_magic {
+            BlobMagic::V2 if payload_reader.remaining() > 0 => {
+                let kerning_reader = read_u16_prefixed_block(&mut payload_reader)?;
 
-            // construct and validate kerning table
-            let kernings = Table::new(kerning_reader)?;
-            kernings.validate()?;
+                // construct and validate kerning table
+                let kernings = Table::new(kerning_reader)?;
+                kernings.validate()?;
 
-            // Validate by parsing the kernings table
-            for (_, kern_data) in kernings.iter() {
-                let reader = InputStream::new(kern_data);
-                KerningTable::new(reader)?;
+                // Validate by parsing the kernings table
+                for (_, kern_data) in kernings.iter() {
+                    let reader = InputStream::new(kern_data);
+                    KerningTable::new(reader)?;
+                }
+
+                kernings
             }
-
-            kernings
-        } else {
-            // Create empty kerning table when no kerning data is present
-            Table {
+            BlobMagic::V0 | BlobMagic::V1 => {
+                if payload_reader.remaining() > 0 {
+                    return Err(INVALID_TRANSLATIONS_BLOB);
+                }
+                Table {
+                    offsets: &[],
+                    data: &[],
+                }
+            }
+            _ => Table {
                 offsets: &[],
                 data: &[],
-            }
+            },
         };
 
         Ok(Self {
