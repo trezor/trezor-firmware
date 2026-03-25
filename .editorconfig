@@ -18,7 +18,7 @@ insert_final_newline = unset
 trim_trailing_whitespace = unset
 
 # Ignore rfal nfc library
-[/core/embed/io/nfc/rfal/**]
+[/core/embed/io/nfc/st25/rfal*/**]
 end_of_line = unset
 insert_final_newline = unset
 trim_trailing_whitespace = unset
