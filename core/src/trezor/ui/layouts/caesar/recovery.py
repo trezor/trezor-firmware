@@ -16,6 +16,12 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
+    from apps.management.recovery_device.layout import homescreen_dialog
+
+    # Show confirmation screen before choosing the number of words
+    # May raise `RecoveryAborted`
+    await homescreen_dialog(TR.buttons__continue, TR.recovery__num_of_words)
+
     count = await interact(
         trezorui_api.select_word_count(recovery_type=recovery_type),
         "recovery_word_count",

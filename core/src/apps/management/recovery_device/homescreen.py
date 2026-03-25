@@ -90,7 +90,6 @@ async def _continue_repeated_backup() -> None:
 
 
 async def _continue_recovery_process() -> Success:
-    from trezor import utils
     from trezor.enums import RecoveryType
     from trezor.errors import MnemonicError
 
@@ -115,14 +114,6 @@ async def _continue_recovery_process() -> Success:
     while secret is None:
         if is_first_step:
             # If we are starting recovery, ask for word count first...
-            # _request_word_count
-            # For others than Caesar (TS3), just continue straight to word count keyboard
-            # pylint: disable-next=consider-using-in
-            if utils.UI_LAYOUT == "CAESAR":
-                await layout.homescreen_dialog(
-                    TR.buttons__continue, TR.recovery__num_of_words
-                )
-            # ask for the number of words
             try:
                 word_count = await layout.request_word_count(recovery_type)
             except wire.ActionCancelled:

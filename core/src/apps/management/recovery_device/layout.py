@@ -75,7 +75,7 @@ async def request_mnemonic(
         i += 1
 
         non_empty_words = [word for word in words if word]
-        # raises `WordValidityResult` on error.
+        # Raises `WordValidityResult` on error.
         word_validity.check(backup_type, non_empty_words)
 
     return " ".join(words)
