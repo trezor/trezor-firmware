@@ -89,11 +89,24 @@ async def _continue_repeated_backup() -> None:
         backup.deactivate_repeated_backup()
 
 
+async def _request_mnemonic(
+    word_count: int, backup_type: BackupType | None
+) -> str | None:
+    """Return the mnemonic or `None` on cancellation/validation error."""
+    from .word_validity import WordValidityResult
+
+    try:
+        # returns `None` on cancellation
+        return await layout.request_mnemonic(word_count, backup_type)
+    except WordValidityResult as exc:
+        # if they were invalid or some checks failed we continue and request them again
+        await exc.show_error()
+        return None
+
+
 async def _continue_recovery_process() -> Success:
     from trezor.enums import RecoveryType
     from trezor.errors import MnemonicError
-
-    from .word_validity import WordValidityResult
 
     # gather the current recovery state from storage
     recovery_type = storage_recovery.get_type()
@@ -103,45 +116,37 @@ async def _continue_recovery_process() -> Success:
     # either set or unset. We use 'backup_type is None' to detect status of both.
     # The following variable indicates that we are (re)starting the first recovery step,
     # which includes word count selection.
-    is_first_step = backup_type is None
-
-    if not is_first_step:
-        assert word_count is not None
-        # If we continue recovery, show starting screen with word count immediately.
-        await _request_share_first_screen(word_count, recovery_type)
-
     secret = None
+
+    # Will be shown in the beginning, on some failures, and after a successful share entry.
+    show_enter_share = _request_share_first_screen
     while secret is None:
-        if is_first_step:
+        if backup_type is None:
             # If we are starting recovery, ask for word count first...
             try:
                 word_count = await layout.request_word_count(recovery_type)
             except wire.ActionCancelled:
                 raise RecoveryAborted
             # ...and only then show the starting screen with word count.
-            await _request_share_first_screen(word_count, recovery_type)
+            show_enter_share = _request_share_first_screen
+
+        # If we continue recovery, show starting screen with word count immediately.
         assert word_count is not None
 
-        # ask for mnemonic words one by one
-        try:
-            # returns `None` on cancellation
-            words = await layout.request_mnemonic(word_count, backup_type)
-        except WordValidityResult as exc:
-            await exc.show_error()
-            words = None
+        if show_enter_share is not None:
+            await show_enter_share(word_count, recovery_type)
+            show_enter_share = None
 
-        # if they were invalid or some checks failed we continue and request them again
-        if not words:
-            if not is_first_step:
-                await _request_share_next_screen()
-            continue
+        # Ask for mnemonic words one by one
+        words = await _request_mnemonic(word_count, backup_type)
 
         try:
-            secret, backup_type = await _process_words(words)
-            # If _process_words succeeded, we now have both backup_type (from
-            # its result) and word_count (from request_word_count earlier), which means
-            # that the first step is complete.
-            is_first_step = False
+            if words is not None:
+                secret, backup_type = await _process_words(words)
+                # If _process_words succeeded, we now have both backup_type (from
+                # its result) and word_count (from request_word_count earlier), which means
+                # that the first step is complete.
+            show_enter_share = _request_share_first_screen
         except MnemonicError:
             await show_invalid_mnemonic(word_count)
 
@@ -274,7 +279,6 @@ async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
         assert share is not None
         if share.group_count and share.group_count > 1:
             await layout.show_group_share_success(share.index, share.group_index)
-        await _request_share_next_screen()
 
     return secret, backup_type
 
@@ -287,7 +291,14 @@ async def _request_share_first_screen(
     if backup_types.is_slip39_word_count(word_count):
         remaining = storage_recovery.fetch_slip39_remaining_shares()
         if remaining:
-            await _request_share_next_screen()
+            group_count = storage_recovery.get_slip39_group_count()
+            if group_count > 1:
+                await layout.enter_share(
+                    remaining_shares_info=_get_remaining_groups_and_shares()
+                )
+            else:
+                entered = len(storage_recovery_shares.fetch_group(0))
+                await layout.enter_share(entered_remaining=(entered, remaining[0]))
         else:
             if recovery_type == RecoveryType.UnlockRepeatedBackup:
                 text = TR.recovery__enter_backup
@@ -308,22 +319,6 @@ async def _request_share_first_screen(
             TR.recovery__word_count_template.format(word_count),
             show_instructions=True,
         )
-
-
-async def _request_share_next_screen() -> None:
-    remaining = storage_recovery.fetch_slip39_remaining_shares()
-    group_count = storage_recovery.get_slip39_group_count()
-    if not remaining:
-        # 'remaining' should be stored at this point
-        raise RuntimeError
-
-    if group_count > 1:
-        await layout.enter_share(
-            remaining_shares_info=_get_remaining_groups_and_shares()
-        )
-    else:
-        entered = len(storage_recovery_shares.fetch_group(0))
-        await layout.enter_share(entered_remaining=(entered, remaining[0]))
 
 
 def _get_remaining_groups_and_shares() -> "RemainingSharesInfo":
