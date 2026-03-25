@@ -40,7 +40,7 @@ async def reset_device(msg: ResetDevice) -> Success:
         prompt_backup,
         show_wallet_created_success,
     )
-    from trezor.wire.context import call, try_get_ctx_ids
+    from trezor.wire.context import call, continue_on_errors, try_get_ctx_ids
 
     from apps.common.request_pin import request_pin_confirm
 
@@ -125,7 +125,9 @@ async def reset_device(msg: ResetDevice) -> Success:
 
     # generate and display backup information for the master secret
     if perform_backup:
-        await backup_seed(backup_type, secret)
+        # avoid failing backup process due to I/O-related errors
+        with continue_on_errors("Backup in progress"):
+            await backup_seed(backup_type, secret)
 
     # write settings and master secret into storage
     if msg.label is not None:
