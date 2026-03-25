@@ -59,30 +59,32 @@ def write(transport: Transport, message_type: int, message_data: bytes) -> None:
         transport.write_chunk(chunk)
 
 
-def read(transport: Transport, timeout: float | None = None) -> tuple[int, bytes]:
+def read(
+    transport: Transport, timeout: float | None = None, _ignore_bad_magic: bool = False
+) -> tuple[int, bytes]:
     """Read out and reassemble protocol-v1 chunked message from transport."""
     if timeout is None:
         timeout = client._DEFAULT_READ_TIMEOUT
 
     # Chunked transports prefix the first packet with "?##" and all following packets with "?".
     # Non-chunked (i.e., bridge) just load all the data in one go.
-    use_chunk_magic = transport.CHUNK_SIZE is not None
+    if transport.CHUNK_SIZE is not None:
+        FIRST_MAGIC = b"?##"
+        NEXT_MAGIC = b"?"
+    else:
+        FIRST_MAGIC = NEXT_MAGIC = b""
 
-    def read_next_chunk() -> bytes:
-        chunk = transport.read_chunk(timeout=timeout)
-        if use_chunk_magic and chunk[:1] != b"?":
-            raise exceptions.ProtocolError(f"Missing chunk magic: {chunk.hex()}")
-        return chunk[1:]
+    def read_next_chunk(magic: bytes) -> bytes:
+        while True:
+            chunk = transport.read_chunk(timeout=timeout)
+            if not chunk.startswith(magic):
+                if _ignore_bad_magic:
+                    continue
+                raise exceptions.ProtocolError(f"Missing chunk magic: {chunk.hex()}")
+            return chunk[len(magic) :]
 
     # process first chunk
-    chunk = read_next_chunk()
-    if use_chunk_magic:
-        # '?' was stripped in read_next_chunk(), we just detect the "##"
-        if chunk[:2] != b"##":
-            raise exceptions.ProtocolError(
-                f"Unexpected first chunk magic: {chunk.hex()}"
-            )
-        chunk = chunk[2:]
+    chunk = read_next_chunk(FIRST_MAGIC)
 
     # extract header
     header = chunk[:HEADER_LEN]
@@ -91,7 +93,7 @@ def read(transport: Transport, timeout: float | None = None) -> tuple[int, bytes
     # read rest of the message
     buffer = bytearray(chunk[HEADER_LEN:])
     while len(buffer) < datalen:
-        buffer.extend(read_next_chunk())
+        buffer.extend(read_next_chunk(NEXT_MAGIC))
     return msg_type, bytes(buffer[:datalen])
 
 
@@ -351,7 +353,8 @@ def probe(
     cancel_msg = messages.Cancel()
     cancel_msg_type, cancel_msg_bytes = mapping.encode(cancel_msg)
     write(transport, cancel_msg_type, cancel_msg_bytes)
-    resp_type, resp_bytes = read(transport)
+    # Ignore previously sent unexpected packets, while waiting for the response.
+    resp_type, resp_bytes = read(transport, _ignore_bad_magic=True)
     resp = mapping.decode(resp_type, resp_bytes)
     if isinstance(resp, messages.Failure):
         if resp.code == messages.FailureType.InvalidProtocol:
