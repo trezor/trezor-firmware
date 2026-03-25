@@ -94,6 +94,8 @@ async def _continue_recovery_process() -> Success:
     from trezor.enums import RecoveryType
     from trezor.errors import MnemonicError
 
+    from .word_validity import WordValidityResult
+
     # gather the current recovery state from storage
     recovery_type = storage_recovery.get_type()
     word_count, backup_type = recover.load_slip39_state()
@@ -130,7 +132,12 @@ async def _continue_recovery_process() -> Success:
         assert word_count is not None
 
         # ask for mnemonic words one by one
-        words = await layout.request_mnemonic(word_count, backup_type)
+        try:
+            # returns `None` on cancellation
+            words = await layout.request_mnemonic(word_count, backup_type)
+        except WordValidityResult as exc:
+            await exc.show_error()
+            words = None
 
         # if they were invalid or some checks failed we continue and request them again
         if not words:
