@@ -37,6 +37,7 @@
 #include "rfal_rf.h"
 #include "rfal_t2t.h"
 #include "rfal_utils.h"
+#include "sys/mpu.h"
 
 // NFC-A SEL_RES configured for Type 4A Tag Platform
 #define LM_SEL_RES 0x20U
@@ -606,6 +607,8 @@ void nfc_ext_irq_set_callback(void (*cb)(void)) {
 }
 
 void NFC_EXTI_INTERRUPT_HANDLER(void) {
+  IRQ_LOG_ENTER();
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
   st25_driver_t *drv = &g_st25_driver;
 
@@ -614,6 +617,9 @@ void NFC_EXTI_INTERRUPT_HANDLER(void) {
   if (drv->nfc_irq_callback != NULL) {
     drv->nfc_irq_callback();
   }
+
+  mpu_restore(mode);
+  IRQ_LOG_EXIT();
 }
 
 static void nfc_card_emulator_loop(rfalNfcDevice *nfc_dev) {
