@@ -213,6 +213,12 @@ def build_all_blobs(
     signature: bytes,
     production: bool = False,
 ) -> None:
+    max_sizes = {}
+    for model in ALL_MODELS:
+        parser_output = subprocess.check_output(args=["layout_parser", model.internal_name, "ASSETS_MAXSIZE"])
+        max_sizes[model.internal_name] = int(parser_output.decode().strip())
+
+    sizes = []
     for blob in all_blobs:
         proof = translations.Proof(
             merkle_proof=merkle_tree.get_proof(blob.header_bytes),
@@ -228,8 +234,23 @@ def build_all_blobs(
         else:
             suffix = "-unsigned"
         filename = f"translation-{model}-{header.language}-{version}{suffix}.bin"
-        (HERE / filename).write_bytes(blob.build())
+        blob_bytes = blob.build()
+        (HERE / filename).write_bytes(blob_bytes)
+
+        sizes.append((filename, len(blob_bytes), model))
         LOG.info(f"Wrote {header.language} for {model} v{version}: {filename}")
+
+    for filename, size, model in sorted(sizes):
+        max_size = max_sizes[model]
+        ratio = size / max_size
+        if ratio < 0.95:
+            continue
+        elif ratio < 0.99:
+            log_fn, icon = LOG.warning, "🟡"
+        else:
+            log_fn, icon = LOG.error, "🔴"
+
+        log_fn(f"{icon} {filename} flash utilization is {ratio * 100:.1f}% (out of {max_size / 1024:.1f} kB)")
 
 
 @click.group()
