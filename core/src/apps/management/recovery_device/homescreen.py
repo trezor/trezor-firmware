@@ -139,7 +139,7 @@ async def _continue_recovery_process() -> Success:
         try:
             secret, backup_type = await _process_words(words)
             # If _process_words succeeded, we now have both backup_type (from
-            # its result) and word_count (from _request_word_count earlier), which means
+            # its result) and word_count (from request_word_count earlier), which means
             # that the first step is complete.
             is_first_step = False
         except MnemonicError:
