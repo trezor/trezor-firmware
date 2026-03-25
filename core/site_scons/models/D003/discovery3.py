@@ -80,6 +80,34 @@ def configure(
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
 
+    if "nfc" in features_wanted:
+        sources += ["embed/io/nfc/st25/nfc.c"]
+        sources += ["embed/io/nfc/st25/ndef.c"]
+        sources += ["embed/io/nfc/st25/card_emulation.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/st25r200/rfal_rfst25r200.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_analogConfig.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfc.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfca.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfcb.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfcf.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfcv.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_isoDep.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_nfcDep.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_st25tb.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_t1t.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_t2t.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_iso15693_2.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/rfal_crc.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/st25r200/st25r200.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/st25r200/st25r200_com.c"]
+        sources += ["embed/io/nfc/st25/rfal004/source/st25r200/st25r200_irq.c"]
+        paths += ["embed/io/nfc/inc/"]
+        paths += ["embed/io/nfc/st25/"]
+        paths += ["embed/io/nfc/st25/rfal004/source"]
+        paths += ["embed/io/nfc/st25/rfal004/source/st25r200"]
+        paths += ["embed/io/nfc/st25/rfal004/include/"]
+        defines += [("USE_NFC", "1")]
+
     defines += [
         "DISPLAY_RGB565",
         ("USE_RGB_COLORS", "1"),
