@@ -58,9 +58,16 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     }
   }
 
-  nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B | NFC_POLLER_TECH_F |
-                    NFC_POLLER_TECH_V);
-  nfc_activate_stm();
+  if (NFC_OK != nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B |
+                                  NFC_POLLER_TECH_F | NFC_POLLER_TECH_V)) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC tech registration failed");
+    goto cleanup;
+  }
+
+  if (NFC_OK != nfc_activate_stm()) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC activation failed");
+    goto cleanup;
+  }
 
   nfc_event_t nfc_event;
   uint32_t expire_time = ticks_timeout(timeout);
