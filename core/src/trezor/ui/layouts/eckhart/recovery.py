@@ -162,7 +162,7 @@ async def show_already_added() -> None:
     )
 
 
-async def show_group_thresholod() -> None:
+async def show_group_threshold() -> None:
     await show_recovery_warning(
         "warning_group_threshold",
         f"{TR.recovery__group_threshold_reached} {TR.recovery__enter_share_from_diff_group}",

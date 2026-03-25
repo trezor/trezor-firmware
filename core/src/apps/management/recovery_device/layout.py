@@ -6,7 +6,7 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
     show_already_added,
     show_dry_run_result,
     show_group_share_success,
-    show_group_thresholod,
+    show_group_threshold,
     show_identifier_mismatch,
     show_recovery_warning,
 )
@@ -81,7 +81,7 @@ async def request_mnemonic(
             return None
         except word_validity.ThresholdReached:
             # show_group_threshold_reached
-            await show_group_thresholod()
+            await show_group_threshold()
             return None
 
     return " ".join(words)
