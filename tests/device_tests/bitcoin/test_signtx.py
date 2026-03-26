@@ -1805,7 +1805,7 @@ def test_change_output_wrong_coin_type_is_rejected(session: Session):
     )
 
     # Change output using a DIFFERENT coin_type (1h = Testnet instead of 0h = Bitcoin).
-    # This must NOT be treated as change — the user must be asked to confirm it.
+    # This must be rejected by the device.
     out1 = messages.TxOutputType(
         address_n=parse_path("m/44h/1h/0h/1/0"),
         amount=50_248,
