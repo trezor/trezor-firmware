@@ -989,6 +989,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__continue_anyway;
   MP_QSTR_words__continue_anyway_question;
   MP_QSTR_words__continue_with;
+  MP_QSTR_words__deposit;
   MP_QSTR_words__device;
   MP_QSTR_words__disabled;
   MP_QSTR_words__disconnect;
@@ -1099,7 +1100,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__delegating_to;
   MP_QSTR_cardano__delegating_to_key_hash;
   MP_QSTR_cardano__delegating_to_script;
-  MP_QSTR_cardano__deposit;
   MP_QSTR_cardano__empty_message;
   MP_QSTR_cardano__for_account_and_index_template;
   MP_QSTR_cardano__for_account_template;
@@ -1236,6 +1236,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__confirm_contract;
   MP_QSTR_ethereum__contract_address;
   MP_QSTR_ethereum__data_size_template;
+  MP_QSTR_ethereum__deposit_amount;
+  MP_QSTR_ethereum__deposit_to;
   MP_QSTR_ethereum__eip_7702;
   MP_QSTR_ethereum__eip_7702_title;
   MP_QSTR_ethereum__gas_limit;
@@ -1246,6 +1248,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__new_contract;
   MP_QSTR_ethereum__no_message_field;
   MP_QSTR_ethereum__priority_fee;
+  MP_QSTR_ethereum__redeem_amount;
+  MP_QSTR_ethereum__redeem_from;
+  MP_QSTR_ethereum__reward_tokens;
+  MP_QSTR_ethereum__rewards_claim;
   MP_QSTR_ethereum__show_full_array;
   MP_QSTR_ethereum__show_full_domain;
   MP_QSTR_ethereum__show_full_message;
@@ -1272,6 +1278,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__unknown_contract_address;
   MP_QSTR_ethereum__unknown_token;
   MP_QSTR_ethereum__valid_signature;
+  MP_QSTR_ethereum__vault_claim_intro;
+  MP_QSTR_ethereum__vault_deposit_intro;
+  MP_QSTR_ethereum__vault_redeem_intro;
+  MP_QSTR_ethereum__vault_withdraw_intro;
+  MP_QSTR_ethereum__withdraw;
+  MP_QSTR_ethereum__withdraw_from;
+  MP_QSTR_ethereum__withdraw_intro;
+  MP_QSTR_ethereum__your_address;
   MP_QSTR_fido__already_registered;
   MP_QSTR_fido__device_already_registered;
   MP_QSTR_fido__device_already_registered_with_template;

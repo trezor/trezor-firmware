@@ -1184,5 +1184,20 @@
   "1182": "words__voting",
   "1183": "ethereum__confirm_contract",
   "1184": "words__intent",
-  "1185": "suite_sync__rotate_key"
+  "1185": "suite_sync__rotate_key",
+  "1186": "ethereum__deposit_amount",
+  "1187": "ethereum__deposit_to",
+  "1188": "ethereum__redeem_amount",
+  "1189": "ethereum__redeem_from",
+  "1190": "ethereum__reward_tokens",
+  "1191": "ethereum__rewards_claim",
+  "1192": "ethereum__vault_claim_intro",
+  "1193": "ethereum__vault_deposit_intro",
+  "1194": "ethereum__vault_redeem_intro",
+  "1195": "ethereum__vault_withdraw_intro",
+  "1196": "ethereum__withdraw",
+  "1197": "ethereum__withdraw_from",
+  "1198": "ethereum__withdraw_intro",
+  "1199": "ethereum__your_address",
+  "1200": "words__deposit"
 }
