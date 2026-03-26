@@ -86,6 +86,7 @@ async def sign_tx(
 
     # have the user confirm signing
     await paths.validate_path(keychain, msg.address_n)
+    sender_bytes = keychain.derive(msg.address_n).ethereum_pubkeyhash()
     gas_price = int.from_bytes(msg.gas_price, "big")
     gas_limit = int.from_bytes(msg.gas_limit, "big")
     maximum_fee = format_ethereum_amount(gas_price * gas_limit, None, network)
@@ -128,6 +129,7 @@ async def sign_tx(
         fee_items,
         payment_req_verifier,
         try_clear_signing=True,
+        sender_bytes=sender_bytes,
     )
 
     await confirm_data_chunk(msg.data_initial_chunk)
@@ -151,6 +153,7 @@ async def sign_tx(
                 fee_items,
                 payment_req_verifier,
                 try_clear_signing=False,
+                sender_bytes=sender_bytes,
             )
 
             # we can safely assume that the initial data chunk was not confirmed
@@ -193,12 +196,13 @@ async def confirm_tx_data(
     fee_items: Iterable[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
     try_clear_signing: bool,
+    sender_bytes: bytes = b"",
 ) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]]:
     """Returns data chunk callback and transaction summary layout to be awaited."""
 
     from trezor.ui.layouts import confirm_value
 
-    from . import clear_signing, staking
+    from . import clear_signing, staking, yielding
     from .helpers import format_ethereum_amount
     from .layout import require_confirm_payment_request, require_confirm_tx
 
@@ -213,6 +217,14 @@ async def confirm_tx_data(
         if payment_request_verifier is not None:
             raise DataError("Payment Requests don't support staking")
         return staking_approver
+
+    yielding_approver = yielding.get_approver(
+        msg, network, address_bytes, maximum_fee, fee_items, sender_bytes
+    )
+    if yielding_approver is not None:
+        if payment_request_verifier is not None:
+            raise DataError("Payment Requests don't support yielding")
+        return yielding_approver
 
     if tx_type == EIP_7702_TX_TYPE:
         # we have already made sure that the address is a known address

@@ -5,6 +5,7 @@ from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (
     confirm_blob,
     confirm_ethereum_staking_tx,
+    confirm_ethereum_vault_tx,
     confirm_text,
     should_show_more,
 )
@@ -212,7 +213,6 @@ async def require_confirm_stake(
     maximum_fee: str,
     fee_info_items: Iterable[StrPropertyType],
     network: EthereumNetworkInfo,
-    chunkify: bool,
 ) -> None:
 
     addr_str = address_from_bytes(addr_bytes, network)
@@ -227,10 +227,40 @@ async def require_confirm_stake(
         account,
         account_path,
         maximum_fee,
-        addr_str,  # address
+        addr_str,
         TR.ethereum__staking_stake_address,  # address_title
         fee_info_items,  # info_items
-        chunkify=chunkify,
+    )
+
+
+async def require_confirm_deposit(
+    value: int,
+    address_n: list[int],
+    maximum_fee: str,
+    fee_info_items: Iterable[StrPropertyType],
+    network: EthereumNetworkInfo,
+) -> None:
+
+    from trezor.strings import format_amount
+
+    from .clear_signing_definitions import VAULT_GAUNTLET_USDC
+
+    _, owner_name, decimals, asset_id = VAULT_GAUNTLET_USDC
+    total_amount = f"{format_amount(value, decimals)} {asset_id}"
+    account, account_path = get_account_and_path(address_n)
+
+    await confirm_ethereum_vault_tx(
+        TR.words__deposit,  # title
+        TR.ethereum__vault_deposit_intro,  # intro_question
+        TR.ethereum__deposit_to,  # verb
+        owner_name,
+        total_amount,
+        account,
+        account_path,
+        maximum_fee,
+        # TR.ethereum__your_address,  # address_title
+        fee_info_items,  # info_items
+        network.name,
     )
 
 

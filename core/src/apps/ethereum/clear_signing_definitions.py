@@ -651,6 +651,15 @@ ALL_DISPLAY_FORMATS.extend(
     ]
 )
 
+# Stablecoin Yielding Vaults
+# Each vault entry: (vault_address, owner_name, asset_decimals, asset_identifier)
+VAULT_GAUNTLET_USDC = (
+    unhexlify("BEEF01735c132Ada46AA9aA4c54623cAA92A64CB"),  # vault contract address
+    "Gauntlet USDC",  # owner/protocol name
+    6,  # USDC has 6 decimal places
+    "USDC",  # underlying asset identifier
+)
+
 KNOWN_ADDRESSES = {
     ONEINCH_ADDRESS: ONEINCH_OWNER,
     LIFI_ADDRESS: LIFI_OWNER,
