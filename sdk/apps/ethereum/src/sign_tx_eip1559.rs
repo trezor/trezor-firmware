@@ -9,7 +9,7 @@ use crate::{
     },
     definitions::Definitions,
     helpers::{
-        address_from_bytes, bytes_from_address, format_ethereum_amount, get_fee_items_regular,
+        address_from_bytes, bytes_from_address, format_ethereum_amount, get_fee_items_eip1559,
     },
     keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
     paths::{Bip32Path, unharden},
@@ -17,77 +17,31 @@ use crate::{
     proto::{
         common::button_request::ButtonRequestType,
         definitions::{EthereumNetworkInfo, EthereumTokenInfo},
-        ethereum::{EthereumSignTx, EthereumTxRequest},
+        ethereum::{
+            EthereumSignTxEip1559, EthereumTxRequest, ethereum_sign_tx_eip1559::EthereumAccessList,
+        },
     },
     rlp::{self, RLPItem},
-    strutil::hex_decode,
     tokens,
 };
 #[cfg(not(test))]
-use alloc::{collections::BTreeMap, string::String, vec, vec::Vec};
+use alloc::{string::String, vec, vec::Vec};
 use primitive_types::U256;
 #[cfg(test)]
-use std::{collections::BTreeMap, string::String, vec, vec::Vecs};
+use std::{string::String, vec, vec::Vecs};
 use trezor_app_sdk::{Error, Result, crypto, info, ui, unwrap};
 
-// Compile-time assertion
-const _: () = assert!(SC_ARGUMENT_ADDRESS_BYTES <= SC_ARGUMENT_BYTES);
+const TX_TYPE: u32 = 2;
 
-// EIP-7702
-const EIP_7702_TX_TYPE: u32 = 4;
-
-// Maximum chain_id which returns the full signature_v (which must fit into an uint32).
-// chain_ids larger than this will only return one bit and the caller must recalculate
-// the full value: v = 2 * chain_id + 35 + v_bit
-const MAX_CHAIN_ID: u64 = (0xFFFF_FFFF - 36) / 2;
-
-pub fn get_eip_7702_known_addresses() -> BTreeMap<Vec<u8>, &'static str> {
-    let mut map = BTreeMap::new();
-    map.insert(
-        hex_decode("000000009B1D0aF20D8C6d0A44e162d11F9b8f00").unwrap(),
-        "Uniswap",
-    );
-    map.insert(
-        hex_decode("69007702764179f14F51cdce752f4f775d74E139").unwrap(),
-        "alchemyplatform",
-    );
-    map.insert(
-        hex_decode("5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d").unwrap(),
-        "AmbireTech",
-    );
-    map.insert(
-        hex_decode("63c0c19a282a1b52b07dd5a65b58948a07dae32b").unwrap(),
-        "MetaMask",
-    );
-    map.insert(
-        hex_decode("4Cd241E8d1510e30b2076397afc7508Ae59C66c9").unwrap(),
-        "Ethereum Foundation AA team",
-    );
-    map.insert(
-        hex_decode("17c11FDdADac2b341F2455aFe988fec4c3ba26e3").unwrap(),
-        "Luganodes",
-    );
-    map
-}
-
-pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
-    msg.nonce.get_or_insert_default();
+pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxRequest> {
     msg.to.get_or_insert_default();
-    msg.value.get_or_insert_default();
     msg.data_initial_chunk.get_or_insert_default();
-    msg.data_length.get_or_insert_default();
 
-    assert!(msg.nonce.is_some());
     assert!(msg.to.is_some());
-    assert!(msg.value.is_some());
     assert!(msg.data_initial_chunk.is_some());
-    assert!(msg.data_length.is_some());
 
-    let nonce = msg.nonce.as_deref().ok_or(Error::DataError)?;
     let to = msg.to.as_deref().ok_or(Error::DataError)?;
-    let value = msg.value.as_deref().ok_or(Error::DataError)?;
     let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-    let data_total = msg.data_length.ok_or(Error::DataError)?;
 
     info!("Signing transaction");
     let dp = Bip32Path::from_slice(&msg.address_n);
@@ -112,63 +66,43 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     info!("setting up keychain");
     let keychain = Keychain::new(schemas);
 
-    info!("checking common fields");
+    // check
+    if msg.max_gas_fee.len() + msg.gas_limit.len() > 30 {
+        // TODO: proper error handling: fee overflow
+        return Err(Error::DataError);
+    }
+    if msg.max_priority_fee.len() + msg.gas_limit.len() > 30 {
+        // TODO: proper error handling: fee overflow
+        return Err(Error::DataError);
+    }
 
+    info!("checking common fields");
     check_common_fields(&msg)?;
 
-    info!("getting bytes from address");
+    // have a user confirm signing
+    dp.validate(&keychain)?;
 
     let address_bytes = bytes_from_address(to)?;
 
-    info!("checking transaction type");
-
-    if !matches!(
-        msg.tx_type,
-        Some(1) | Some(6) | Some(EIP_7702_TX_TYPE) | None
-    ) {
-        info!("unsupported transaction type");
-        return Err(Error::DataError);
-    }
-
-    if matches!(msg.tx_type, Some(EIP_7702_TX_TYPE)) {
-        // TODO: safety checks
-        // if safety_checks.is_strict():
-        // raise DataError("EIP-7702 not allowed in strict checks")
-
-        if !get_eip_7702_known_addresses().contains_key(&address_bytes) {
-            // TODO: proper error type: DataError("Unknown EIP-7702 address")
-            info!("Unknown EIP-7702 address");
-            return Err(Error::DataError);
-        }
-    }
-
-    if msg.gas_price.len() + msg.gas_limit.len() > 30 {
-        // TODO: proper error type: DataError("Fee overflow")
-        info!("Fee overflow");
-        return Err(Error::DataError);
-    }
-
-    info!("validating path");
-    // have the user confirm signing
-    dp.validate(&keychain)?;
-
-    info!("parsing fee information");
-
-    info!("gas price");
+    // TODO: better implement parsing int value from bytes
+    assert!(msg.gas_limit.len() <= 32);
+    let max_gas_fee = U256::from_big_endian(&msg.max_gas_fee);
 
     // TODO: better implement parsing int value from bytes
-    assert!(msg.gas_price.len() <= 32);
-    let gas_price = U256::from_big_endian(&msg.gas_price);
+    assert!(msg.max_priority_fee.len() <= 32);
+    let max_priority_fee = U256::from_big_endian(&msg.max_priority_fee);
 
-    info!("gas limit");
     // TODO: better implement parsing int value from bytes
     assert!(msg.gas_limit.len() <= 32);
     let gas_limit = U256::from_big_endian(&msg.gas_limit);
-
-    info!("max fee");
     let maximum_fee =
-        format_ethereum_amount(gas_price * gas_limit, None, &definitions.network(), false);
-    let fee_items = get_fee_items_regular(gas_price, gas_limit, &definitions.network());
+        format_ethereum_amount(max_gas_fee * gas_limit, None, definitions.network(), false);
+    let fee_items = get_fee_items_eip1559(
+        max_gas_fee,
+        max_priority_fee,
+        gas_limit,
+        definitions.network(),
+    );
 
     let fee_items_ref: Vec<(&str, &str, bool)> = fee_items
         .iter()
@@ -193,11 +127,10 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     confirm_tx_data(
         &msg,
         &definitions,
-        msg.tx_type,
         &address_bytes,
         &maximum_fee,
         &fee_items_ref,
-        data_total,
+        msg.data_length,
         payment_req_verifier,
     )?;
 
@@ -207,30 +140,28 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     // sign
     let mut data = Vec::new();
     data.extend_from_slice(data_initial_chunk);
-    let mut data_left = data_total - data_initial_chunk.len() as u32;
+    let mut data_left = msg.data_length - data_initial_chunk.len() as u32;
 
     // Calculate total RLP length
-    let total_length = get_total_length(&msg, data_total)?;
+    let total_length = get_total_length(&msg, msg.data_length)?;
     info!("total RLP length: {}", total_length);
 
     let mut rlp_buffer = Vec::new();
 
+    rlp::write(&mut rlp_buffer, &RLPItem::Int(TX_TYPE.into()));
+
     info!("writing RLP header");
     rlp::write_header(&mut rlp_buffer, total_length, rlp::LIST_HEADER_BYTE, None);
 
-    info!("current len of RLP buffer: {}", rlp_buffer.len());
-
-    if let Some(tx_type) = msg.tx_type {
-        rlp::write(&mut rlp_buffer, &RLPItem::Int(tx_type.into()));
-    }
-
     // Write transaction fields
     let fields: Vec<RLPItem> = vec![
-        RLPItem::Bytes(nonce),
-        RLPItem::Bytes(&msg.gas_price),
-        RLPItem::Bytes(&msg.gas_limit),
+        RLPItem::Int(msg.chain_id.into()),
+        RLPItem::Bytes(&msg.nonce),
+        RLPItem::Bytes(&msg.max_priority_fee),
+        RLPItem::Bytes(&msg.max_gas_fee),
+        RLPItem::Int(gas_limit),
         RLPItem::Bytes(&address_bytes),
-        RLPItem::Bytes(value),
+        RLPItem::Bytes(&msg.value),
     ];
 
     for field in &fields {
@@ -245,7 +176,7 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         info!("writing RLP data header");
         rlp::write_header(
             &mut rlp_buffer,
-            data_total,
+            msg.data_length,
             rlp::STRING_HEADER_BYTE,
             Some(&data),
         );
@@ -273,12 +204,44 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         info!("progress updated");
     }
 
-    info!("all data chunks received, finalizing RLP encoding");
-    // EIP-155 replay protection
-    rlp::write(&mut rlp_buffer, &RLPItem::Int(msg.chain_id.into()));
-    rlp::write(&mut rlp_buffer, &RLPItem::Int(0.into()));
-    rlp::write(&mut rlp_buffer, &RLPItem::Int(0.into()));
-    info!("RLP encoding finalized, total length: {}", rlp_buffer.len());
+    info!("all data chunks received");
+
+    // write_access_list
+    let payload_length: u32 = msg.access_list.iter().try_fold(0u32, |acc, item| {
+        Ok::<u32, Error>(acc + access_list_item_length(item)?)
+    })?;
+    info!("writing RLP access list header");
+    rlp::write_header(&mut rlp_buffer, payload_length, rlp::LIST_HEADER_BYTE, None);
+
+    info!("writing RLP access list items");
+    for item in &msg.access_list {
+        info!("bytes from address");
+        let address_bytes = bytes_from_address(&item.address)?;
+        info!("calculating address length");
+        let address_length = rlp::length(&&RLPItem::Bytes(address_bytes.as_slice()));
+
+        let storage_key_items: Vec<RLPItem<'_>> = item
+            .storage_keys
+            .iter()
+            .map(|k| RLPItem::Bytes(k.as_slice()))
+            .collect();
+        info!("calculating storage keys length");
+        let keys_length = rlp::length(&RLPItem::List(storage_key_items.as_slice()));
+        info!("writing RLP access list item header");
+        rlp::write_header(
+            &mut rlp_buffer,
+            address_length + keys_length,
+            rlp::LIST_HEADER_BYTE,
+            None,
+        );
+        info!("writing RLP address");
+        rlp::write(&mut rlp_buffer, &RLPItem::Bytes(address_bytes.as_slice()));
+        info!("writing RLP storage keys");
+        rlp::write(
+            &mut rlp_buffer,
+            &RLPItem::List(storage_key_items.as_slice()),
+        );
+    }
 
     info!("calculating transaction digest");
     let digest = crypto::keccak_256(&rlp_buffer);
@@ -301,16 +264,16 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
     Ok(res)
 }
 
-fn check_common_fields(msg: &EthereumSignTx) -> Result<()> {
-    let data_length = msg.data_length.ok_or(Error::DataError)?;
+// TODO: very similar code in sign_tx.rs, should be refactored to avoid duplication
+fn check_common_fields(msg: &EthereumSignTxEip1559) -> Result<()> {
+    let data_length = msg.data_length;
     let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
     let to = msg.to.as_deref().ok_or(Error::DataError)?;
 
-    info!("checking data length and initial chunk");
     if data_length > 0 {
         // TODO: proper error type: DataError("Data length provided, but no initial chunk")
+        info!("Data length provided, but no initial chunk");
         if data_initial_chunk.is_empty() {
-            info!("Data length provided, but no initial chunk");
             return Err(Error::DataError);
         }
 
@@ -342,7 +305,6 @@ fn check_common_fields(msg: &EthereumSignTx) -> Result<()> {
         return Err(Error::DataError);
     }
 
-    info!("checking chain id");
     if msg.chain_id == 0 {
         // TODO: proper error type: DataError("Chain ID out of bounds")
         info!("Chain ID out of bounds");
@@ -352,10 +314,10 @@ fn check_common_fields(msg: &EthereumSignTx) -> Result<()> {
     Ok(())
 }
 
+// TODO: this function is very similar to the confirm_tx_data function in sign_tx.rs, should be refactored to avoid duplication
 fn confirm_tx_data(
-    msg: &EthereumSignTx,
+    msg: &EthereumSignTxEip1559,
     definitions: &Definitions,
-    tx_type: Option<u32>,
     address_bytes: &[u8],
     maximum_fee: &str,
     fee_items: &[(&str, &str, bool)],
@@ -375,36 +337,6 @@ fn confirm_tx_data(
         )?
     {
         return Ok(());
-    }
-
-    info!("checking if transaction is a known contract call");
-    if matches!(tx_type, Some(EIP_7702_TX_TYPE)) {
-        // we have already made sure that the address is a known address
-        // as part of the initial validation
-
-        info!("authorizing smart account");
-        info!(
-            "address is known: {}",
-            get_eip_7702_known_addresses().contains_key(address_bytes)
-        );
-
-        ui::error_if_not_confirmed(ui::confirm_value(
-            "Smart accounts",
-            unwrap!(get_eip_7702_known_addresses().get(address_bytes)),
-            Some("Authorize the following contract as an EIP-7702 on your account?"),
-            Some("confirm_provider"),
-            ButtonRequestType::ButtonRequestOther.into(),
-            true,
-            None,
-            None,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            None,
-        )?)?;
     }
 
     info!("handling known contract calls");
@@ -556,7 +488,7 @@ fn confirm_tx_data(
                 fee_items,
                 definitions.network(),
                 token.as_ref(),
-                !is_contract_interaction && msg.tx_type != Some(EIP_7702_TX_TYPE),
+                !is_contract_interaction,
                 msg.chunkify.unwrap_or(false),
             )?;
         };
@@ -565,8 +497,96 @@ fn confirm_tx_data(
     Ok(())
 }
 
+// TODO: this function is very similar to the confirm_tx_data function in sign_tx.rs, should be refactored to avoid duplication
+fn run_staking_approver<'a>(
+    msg: &'a EthereumSignTxEip1559,
+    network: &'a EthereumNetworkInfo,
+    address_bytes: &'a [u8],
+    maximum_fee: &'a str,
+    fee_items: &'a [(&'a str, &'a str, bool)],
+) -> Result<bool> {
+    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+
+    if data_initial_chunk.len() < SC_FUNC_SIG_BYTES {
+        return Ok(false);
+    }
+
+    let func_sig = &data_initial_chunk[..SC_FUNC_SIG_BYTES];
+    let data = &data_initial_chunk[SC_FUNC_SIG_BYTES..];
+    if addresses_pool()
+        .iter()
+        .any(|addr| addr.as_slice() == address_bytes)
+    {
+        if func_sig == sc_func_sig_stake().as_slice() {
+            handle_staking_tx_stake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
+            return Ok(true);
+        } else if func_sig == sc_func_sig_unstake().as_slice() {
+            handle_staking_tx_unstake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
+            return Ok(true);
+        }
+    }
+
+    if addresses_accounting()
+        .iter()
+        .any(|addr| addr.as_slice() == address_bytes)
+    {
+        if func_sig == sc_func_sig_claim().as_slice() {
+            handle_staking_tx_claim(
+                data,
+                msg,
+                address_bytes,
+                maximum_fee,
+                fee_items,
+                network,
+            )?;
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
+pub fn get_total_length(msg: &EthereumSignTxEip1559, data_total: u32) -> Result<u32> {
+    let mut length = 0;
+
+    let to = msg.to.as_deref().ok_or(Error::DataError)?;
+    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+
+    let to_bytes = bytes_from_address(to)?;
+
+    info!("to bytes length: {}", to_bytes.len());
+
+    let fields: Vec<RLPItem> = vec![
+        RLPItem::Bytes(&msg.nonce),
+        RLPItem::Bytes(&msg.gas_limit),
+        RLPItem::Bytes(&to_bytes),
+        RLPItem::Bytes(&msg.value),
+        RLPItem::Int(msg.chain_id.into()),
+        RLPItem::Bytes(&msg.max_gas_fee),
+        RLPItem::Bytes(&msg.max_priority_fee),
+    ];
+
+    for field in &fields {
+        length += rlp::length(field);
+        info!("field length: {}", rlp::length(field));
+    }
+
+    length += rlp::header_length(data_total, Some(data_initial_chunk));
+    length += data_total;
+
+    let payload_length: u32 = msg.access_list.iter().try_fold(0u32, |acc, item| {
+        Ok::<u32, Error>(acc + access_list_item_length(item)?)
+    })?;
+    let access_list_length = rlp::header_length(payload_length, None) + payload_length;
+
+    length += access_list_length;
+
+    Ok(length)
+}
+
+// TODO: this function is very similar to the handle_known_contract_calls function in sign_tx.rs, should be refactored to avoid duplication
 fn handle_known_contract_calls(
-    msg: &EthereumSignTx,
+    msg: &EthereumSignTxEip1559,
     definitions: &Definitions,
     address_bytes: &[u8],
 ) -> Result<(
@@ -577,8 +597,6 @@ fn handle_known_contract_calls(
     Option<U256>,
 )> {
     let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-    let data_length = msg.data_length.ok_or(Error::DataError)?;
-    let value_bytes = msg.value.as_deref().ok_or(Error::DataError)?;
     let to = msg.to.as_deref().ok_or(Error::DataError)?;
 
     let mut token = None;
@@ -586,8 +604,8 @@ fn handle_known_contract_calls(
     let mut recipient = Vec::from(address_bytes);
 
     // TODO: better implement parsing int value from bytes
-    assert!(value_bytes.len() <= 32);
-    let mut value = Some(U256::from_big_endian(value_bytes));
+    assert!(msg.value.len() <= 32);
+    let mut value = Some(U256::from_big_endian(&msg.value));
 
     let mut offset = 0;
     let mut remaining = data_initial_chunk.len();
@@ -604,8 +622,8 @@ fn handle_known_contract_calls(
     remaining -= SC_FUNC_SIG_BYTES;
 
     if matches!(to.len(), 40 | 42)
-        && value_bytes.len() == 0
-        && data_length == 68
+        && msg.value.len() == 0
+        && msg.data_length == 68
         && data_initial_chunk.len() == 68
         && (matches!(func_sig.as_deref(), Some(sig) if sig == sc_func_sig_transfer())
             || matches!( func_sig.as_deref(), Some(sig) if sig == &sc_func_sig_approve()))
@@ -659,71 +677,29 @@ fn handle_known_contract_calls(
     Ok((token, token_address, func_sig, recipient, value))
 }
 
-/// Runs confirmation for ETH staking approval for staking related transactions.
-fn run_staking_approver<'a>(
-    msg: &'a EthereumSignTx,
-    network: &'a EthereumNetworkInfo,
-    address_bytes: &'a [u8],
-    maximum_fee: &'a str,
-    fee_items: &'a [(&'a str, &'a str, bool)],
-) -> Result<bool> {
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-
-    if data_initial_chunk.len() < SC_FUNC_SIG_BYTES {
-        return Ok(false);
-    }
-
-    let func_sig = &data_initial_chunk[..SC_FUNC_SIG_BYTES];
-    let data = &data_initial_chunk[SC_FUNC_SIG_BYTES..];
-    if addresses_pool()
-        .iter()
-        .any(|addr| addr.as_slice() == address_bytes)
-    {
-        if func_sig == sc_func_sig_stake().as_slice() {
-            handle_staking_tx_stake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
-            return Ok(true);
-        } else if func_sig == sc_func_sig_unstake().as_slice() {
-            handle_staking_tx_unstake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
-            return Ok(true);
-        }
-    }
-
-    if addresses_accounting()
-        .iter()
-        .any(|addr| addr.as_slice() == address_bytes)
-    {
-        if func_sig == sc_func_sig_claim().as_slice() {
-            handle_staking_tx_claim(
-                data,
-                msg,
-                address_bytes,
-                maximum_fee,
-                fee_items,
-                network,
-            )?;
-            return Ok(true);
-        }
-    }
-
-    Ok(false)
-}
-
-fn handle_staking_tx_claim(
+// TODO: this function is very similar to the handle_staking_tx_stake and handle_staking_tx_claim functions in sign_tx.rs, should be refactored to avoid duplication
+fn handle_staking_tx_stake(
     data: &[u8],
-    msg: &EthereumSignTx,
-    staking_address: &[u8],
+    msg: &EthereumSignTxEip1559,
+    network: &EthereumNetworkInfo,
+    address_bytes: &[u8],
     maximum_fee: &str,
     fee_items: &[(&str, &str, bool)],
-    network: &EthereumNetworkInfo,
 ) -> Result<()> {
-    // claim has no args
+    // stake args:
+    // - arg0: uint64, source (1 for Trezor)
 
-    if data.len() != 0 {
+    if data.len() != SC_ARGUMENT_BYTES {
+        // TODO: proper error type: ValueError: wrong number of arguments for stake (should be 1)
         return Err(Error::DataError);
     }
 
-    require_confirm_claim(
-        staking_address,
+    assert!(msg.value.len() <= 32);
+    let value = U256::from_big_endian(&msg.value);
+
+    require_confirm_stake(
+        address_bytes,
+        value,
         &Bip32Path::from_slice(&msg.address_n),
         maximum_fee,
         fee_items,
@@ -733,9 +709,10 @@ fn handle_staking_tx_claim(
     Ok(())
 }
 
+// TODO: this function is very similar to the handle_staking_tx_stake and handle_staking_tx_claim functions in sign_tx.rs, should be refactored to avoid duplication
 fn handle_staking_tx_unstake(
     data: &[u8],
-    msg: &EthereumSignTx,
+    msg: &EthereumSignTxEip1559,
     network: &EthereumNetworkInfo,
     address_bytes: &[u8],
     maximum_fee: &str,
@@ -769,29 +746,23 @@ fn handle_staking_tx_unstake(
     Ok(())
 }
 
-fn handle_staking_tx_stake(
+// TODO: this function is very similar to the handle_staking_tx_stake and handle_staking_tx_unstake functions in sign_tx.rs, should be refactored to avoid duplication
+fn handle_staking_tx_claim(
     data: &[u8],
-    msg: &EthereumSignTx,
-    network: &EthereumNetworkInfo,
-    address_bytes: &[u8],
+    msg: &EthereumSignTxEip1559,
+    staking_address: &[u8],
     maximum_fee: &str,
     fee_items: &[(&str, &str, bool)],
+    network: &EthereumNetworkInfo,
 ) -> Result<()> {
-    // stake args:
-    // - arg0: uint64, source (1 for Trezor)
+    // claim has no args
 
-    if data.len() != SC_ARGUMENT_BYTES {
-        // TODO: proper error type: ValueError: wrong number of arguments for stake (should be 1)
+    if data.len() != 0 {
         return Err(Error::DataError);
     }
 
-    let value_bytes = msg.value.as_deref().ok_or(Error::DataError)?;
-    assert!(value_bytes.len() <= 32);
-    let value = U256::from_big_endian(value_bytes);
-
-    require_confirm_stake(
-        address_bytes,
-        value,
+    require_confirm_claim(
+        staking_address,
         &Bip32Path::from_slice(&msg.address_n),
         maximum_fee,
         fee_items,
@@ -801,79 +772,30 @@ fn handle_staking_tx_stake(
     Ok(())
 }
 
-fn sign_digest(msg: &EthereumSignTx, digest: &[u8; 32]) -> Result<EthereumTxRequest> {
-    let (encoded_network, encoded_token) = match &msg.definitions {
-        Some(def) => (
-            def.encoded_network.as_ref().map(|d| d.as_ref()),
-            def.encoded_token.as_ref().map(|d| d.as_ref()),
-        ),
-        None => (None, None),
-    };
-    info!("signing typed hash");
+fn access_list_item_length(item: &EthereumAccessList) -> Result<u32> {
+    let address_bytes = bytes_from_address(&item.address)?;
+    let address_length = rlp::length(&RLPItem::Bytes(&address_bytes));
 
-    let signature = crypto::sign_typed_hash(
-        &msg.address_n,
-        digest,
-        encoded_network,
-        encoded_token,
-        Some(msg.chain_id),
-    )?;
+    let storage_key_items: Vec<RLPItem<'_>> = item
+        .storage_keys
+        .iter()
+        .map(|k| RLPItem::Bytes(k.as_slice())) // use Bytes(...) if your enum variant is named that way
+        .collect();
+
+    let keys_length = rlp::length(&RLPItem::List(storage_key_items.as_slice()));
+
+    Ok(rlp::header_length(address_length + keys_length, None) + address_length + keys_length)
+}
+
+fn sign_digest(msg: &EthereumSignTxEip1559, digest: &[u8; 32]) -> Result<EthereumTxRequest> {
+    let signature =
+        crypto::sign_typed_hash(&msg.address_n, digest, None, None, Some(msg.chain_id))?;
 
     info!("signing typed hash completed, processing signature");
     let mut req = EthereumTxRequest::default();
-    let mut signature_v: u32 = signature[0].into();
-
-    if msg.chain_id > MAX_CHAIN_ID {
-        signature_v -= 27;
-    } else {
-        signature_v += 2 * msg.chain_id as u32 + 8;
-    }
-
-    req.signature_v = Some(signature_v);
+    req.signature_v = Some(signature[0] as u32 - 27);
     req.signature_r = Some(signature[1..33].to_vec());
     req.signature_s = Some(signature[33..].to_vec());
 
     Ok(req)
-}
-
-pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> Result<u32> {
-    let mut length = 0;
-
-    if let Some(tx_type) = msg.tx_type {
-        length += rlp::length(&RLPItem::Int(tx_type.into()));
-        info!(
-            "tx_type length: {:?}",
-            rlp::length(&RLPItem::Int(tx_type.into()))
-        );
-    }
-
-    let nonce = msg.nonce.as_deref().ok_or(Error::DataError)?;
-    let value = msg.value.as_deref().ok_or(Error::DataError)?;
-    let to_str = msg.to.as_deref().ok_or(Error::DataError)?;
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-
-    let to_bytes = bytes_from_address(to_str)?;
-
-    info!("to bytes length: {}", to_bytes.len());
-
-    let fields: Vec<RLPItem> = vec![
-        RLPItem::Bytes(nonce),
-        RLPItem::Bytes(&msg.gas_price),
-        RLPItem::Bytes(&msg.gas_limit),
-        RLPItem::Bytes(&to_bytes),
-        RLPItem::Bytes(value),
-        RLPItem::Int(msg.chain_id.into()),
-        RLPItem::Int(0.into()),
-        RLPItem::Int(0.into()),
-    ];
-
-    for field in &fields {
-        length += rlp::length(field);
-        info!("field length: {}", rlp::length(field));
-    }
-
-    length += rlp::header_length(data_total, Some(data_initial_chunk));
-    length += data_total;
-
-    Ok(length)
 }

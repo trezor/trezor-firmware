@@ -30,6 +30,7 @@ mod payment_request;
 mod rlp;
 mod sign_message;
 mod sign_tx;
+mod sign_tx_eip1559;
 mod sign_typed_data;
 mod strutil;
 mod tokens;
@@ -37,7 +38,7 @@ mod verify_message;
 
 use proto::ethereum::{
     EthereumGetAddress, EthereumGetPublicKey, EthereumSignMessage, EthereumSignTx,
-    EthereumVerifyMessage,
+    EthereumSignTxEip1559, EthereumVerifyMessage,
 };
 use proto::ethereum_eip712::EthereumSignTypedData;
 use ufmt::derive::uDebug;
@@ -132,6 +133,12 @@ wire_handler!(
     sign_tx::sign_tx
 );
 wire_handler!(
+    handle_sign_tx_eip1559,
+    EthereumSignTxEip1559,
+    EthereumMessages::TxRequest,
+    sign_tx_eip1559::sign_tx_eip1559
+);
+wire_handler!(
     handle_sign_typed_data,
     EthereumSignTypedData,
     EthereumMessages::TypedDataSignature,
@@ -148,18 +155,20 @@ wire_handler!(
 #[cfg(not(test))]
 #[unsafe(no_mangle)]
 pub fn app() -> Result<()> {
-    let message = CORE_SERVICE.receive(Timeout::max())?;
-    match message.service().into() {
-        CoreIpcService::WireStart => handle_wire_message(&message),
-        _ => {
-            error!(
-                "Invalid service invoked: {:?}, message id {:?}, data {:?}",
-                message.service(),
-                message.id(),
-                message.data()
-            );
-            Err(Error::InvalidFunction)
-        }
+    loop {
+        let message = CORE_SERVICE.receive(Timeout::max())?;
+        match message.service().into() {
+            CoreIpcService::WireStart => handle_wire_message(&message)?,
+            _ => {
+                error!(
+                    "Invalid service invoked: {:?}, message id {:?}, data {:?}",
+                    message.service(),
+                    message.id(),
+                    message.data()
+                );
+                return Err(Error::InvalidFunction);
+            }
+        };
     }
 }
 
@@ -174,6 +183,7 @@ pub fn handle_wire_message(message: &IpcMessage) -> Result<()> {
         EthereumMessages::GetAddress => handle_get_address(message.data()),
         EthereumMessages::SignMessage => handle_sign_message(message.data()),
         EthereumMessages::SignTx => handle_sign_tx(message.data()),
+        EthereumMessages::SignTxEIP1559 => handle_sign_tx_eip1559(message.data()),
         EthereumMessages::SignTypedData => handle_sign_typed_data(message.data()),
         EthereumMessages::VerifyMessage => handle_verify_message(message.data()),
         _ => {

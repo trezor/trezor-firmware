@@ -49,6 +49,8 @@ ts_t __wur app_loader_init(void);
  */
 ts_t __wur app_task_spawn(const app_hash_t* hash, systask_id_t* task_id);
 
+ts_t app_task_get_id(const app_hash_t* hash, systask_id_t* task_id);
+
 /**
  * Checks if an application is currently running.
  */

@@ -93,11 +93,11 @@ extern "C" fn new_deserialize_crypto_message(
             } => {
                 let dp = dp_from_archived(address_n);
                 let network_obj = match encoded_network.as_ref() {
-                    Some(network) => buffer_from_archived(network),
+                    Some(network) => Obj::try_from(slice_from_archived(network))?,
                     None => Obj::const_none(),
                 };
                 let token_obj = match encoded_token.as_ref() {
-                    Some(token) => buffer_from_archived(token),
+                    Some(token) => Obj::try_from(slice_from_archived(token))?,
                     None => Obj::const_none(),
                 };
                 (obj_from_dp(&dp), network_obj, token_obj).try_into()?
@@ -110,13 +110,13 @@ extern "C" fn new_deserialize_crypto_message(
                 chain_id,
             } => {
                 let dp = dp_from_archived(address_n);
+                let hash_obj = Obj::try_from(hash.as_slice())?;
                 let network_obj = match encoded_network.as_ref() {
-                    Some(network) => buffer_from_archived(network),
+                    Some(network) => Obj::try_from(slice_from_archived(network))?,
                     None => Obj::const_none(),
                 };
-                let hash_obj = Obj::try_from(hash.as_slice())?;
                 let token_obj = match encoded_token.as_ref() {
-                    Some(token) => buffer_from_archived(token),
+                    Some(token) => Obj::try_from(slice_from_archived(token))?,
                     None => Obj::const_none(),
                 };
                 let chain_id_obj = match chain_id.as_ref() {
@@ -140,14 +140,13 @@ extern "C" fn new_deserialize_crypto_message(
                 let dp = dp_from_archived(address_n);
                 let address_str = str_from_archived(address);
                 let buffer_obj = match encoded_network.as_ref() {
-                    Some(network) => buffer_from_archived(network),
+                    Some(network) => Obj::try_from(slice_from_archived(network))?,
                     None => Obj::const_none(),
                 };
                 (obj_from_dp(&dp), address_str.try_into()?, buffer_obj).try_into()?
             }
             ArchivedTrezorCryptoEnum::VerifyNonceCache { nonce } => {
-                let buffer_obj = buffer_from_archived(nonce);
-                buffer_obj
+                Obj::try_from(slice_from_archived(nonce))?
             }
             ArchivedTrezorCryptoEnum::CheckAddressMac {
                 address_n,
@@ -158,7 +157,7 @@ extern "C" fn new_deserialize_crypto_message(
                 let dp = dp_from_archived(address_n);
                 let address_str = str_from_archived(address);
                 let buffer_obj = match encoded_network.as_ref() {
-                    Some(network) => buffer_from_archived(network),
+                    Some(network) => Obj::try_from(slice_from_archived(network))?,
                     None => Obj::const_none(),
                 };
                 (

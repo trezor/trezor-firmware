@@ -16,6 +16,7 @@ const MEMO_TYPE_TEXT_DETAILS: u32 = 4;
 pub fn parse_amount(amount: &[u8]) -> Result<U256> {
     if amount.len() != PaymentRequestVerifier::AMOUNT_SIZE_BYTES {
         // TODO: proper error type: DataError("Amount must be exactly AMOUNT_SIZE_BYTES bytes long.")
+        info!("Amount must be exactly AMOUNT_SIZE_BYTES bytes long");
         return Err(Error::DataError);
     }
 
@@ -47,20 +48,20 @@ pub fn sanitize_payment_request(payment_request: &PaymentRequest) -> Result<()> 
     Ok(())
 }
 
-pub fn is_coin_swap(payment_request: &PaymentRequest) -> bool {
-    let has_coin_purchase = payment_request
-        .memos
-        .iter()
-        .any(|memo| memo.coin_purchase_memo.is_some());
-    info!("has coin purchase memo: {}", has_coin_purchase);
-    let has_refund = payment_request
-        .memos
-        .iter()
-        .any(|memo| memo.refund_memo.is_some());
-    info!("has refund memo: {}", has_refund);
+// pub fn is_coin_swap(payment_request: &PaymentRequest) -> bool {
+//     let has_coin_purchase = payment_request
+//         .memos
+//         .iter()
+//         .any(|memo| memo.coin_purchase_memo.is_some());
+//     info!("has coin purchase memo: {}", has_coin_purchase);
+//     let has_refund = payment_request
+//         .memos
+//         .iter()
+//         .any(|memo| memo.refund_memo.is_some());
+//     info!("has refund memo: {}", has_refund);
 
-    has_coin_purchase && has_refund
-}
+//     has_coin_purchase && has_refund
+// }
 
 // TODO: differentiate debug and release config
 pub fn verify_payment_request_is_supported(payment_request: &PaymentRequest) -> Result<()> {
@@ -113,7 +114,6 @@ impl PaymentRequestVerifier {
 
         let h_outputs = crypto::Sha256::new(None);
         let mut h_pr = crypto::Sha256::new(None);
-        let amount = U256::from(0);
 
         let expected_amount = if let Some(amount) = payment_request.amount.as_deref() {
             info!("parsing expected amount from payment request");

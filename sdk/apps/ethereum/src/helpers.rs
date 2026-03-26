@@ -167,6 +167,22 @@ pub fn get_fee_items_regular(
     ]
 }
 
+pub fn get_fee_items_eip1559(
+    max_gas_fee: U256,
+    max_priority_fee: U256,
+    gas_limit: U256,
+    network: &EthereumNetworkInfo,
+) -> [(String, String, bool); 3] {
+    let gas_limit_str = uformat!("{} units", gas_limit.to_string().as_str());
+    let max_gas_fee_str = format_ethereum_amount(max_gas_fee, None, network, true);
+    let max_priority_fee_str = format_ethereum_amount(max_priority_fee, None, network, true);
+    [
+        ("Gas limit".into(), gas_limit_str, false),
+        ("Max fee per gas".into(), max_gas_fee_str, false),
+        ("Max priority fee".into(), max_priority_fee_str, false),
+    ]
+}
+
 pub fn format_ethereum_amount(
     value: U256,
     token: Option<&EthereumTokenInfo>,

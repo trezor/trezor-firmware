@@ -21,8 +21,8 @@ pub use crate::low_level_api::{
     ed25519_cosi_combine_publickeys, ed25519_sign_open, keccak_256, sha3_256,
 };
 use crate::service::{CoreIpcService, Error, NoUtilHandler};
+use crate::unwrap;
 use crate::util::Timeout;
-use crate::{info, unwrap};
 pub type ArchivedTrezorCryptoResult = Archived<TrezorCryptoResult>;
 pub type ArchivedTrezorCryptoEnum = Archived<TrezorCryptoEnum>;
 

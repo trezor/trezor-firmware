@@ -34,7 +34,7 @@ use crate::service::{
     CoreIpcService, Error, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler,
 };
 use crate::util::Timeout;
-use crate::{error, info, unwrap};
+use crate::{error, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;

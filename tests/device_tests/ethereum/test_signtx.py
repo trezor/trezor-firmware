@@ -286,6 +286,7 @@ def test_data_streaming(session: Session, instance_id: int):
     checked in vectorized function above.
     """
     with session.test_ctx as client:
+        client.set_resp_filter(messages.ExtAppResponse, ethereum_ext.resp_filter)
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),

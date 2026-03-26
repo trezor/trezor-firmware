@@ -1,5 +1,6 @@
 #[cfg(not(test))]
 use alloc::vec::Vec;
+use primitive_types::U256;
 #[cfg(test)]
 use std::vec::Vec;
 
@@ -7,25 +8,25 @@ pub const STRING_HEADER_BYTE: u8 = 0x80;
 pub const LIST_HEADER_BYTE: u8 = 0xC0;
 
 pub enum RLPItem<'a> {
-    Int(u64),
+    Int(U256),
     Bytes(&'a [u8]),
-    List(Vec<RLPItem<'a>>),
+    List(&'a [RLPItem<'a>]),
 }
 
 /// Returns the minimum number of bytes needed to represent an unsigned integer
-fn byte_size(x: u64) -> usize {
-    for exp in 0..=8 {
-        if x < 0x100_u64.pow(exp) {
+fn byte_size(x: U256) -> usize {
+    for exp in 0..=32 {
+        if x < U256::from(0x100_u64).pow(U256::from(exp)) {
             return exp as usize;
         }
     }
-    8 // max 8 bytes for u64
+    32 // max 32 bytes for U256
 }
 
 /// Converts unsigned integer to big-endian bytes (minimal representation)
-pub fn int_to_bytes(x: u64) -> Vec<u8> {
+pub fn int_to_bytes(x: U256) -> Vec<u8> {
     let size = byte_size(x);
-    x.to_be_bytes()[8 - size..].to_vec()
+    x.to_big_endian()[32 - size..].to_vec()
 }
 
 /// Calculates the length of the RLP header for given payload length
@@ -42,7 +43,7 @@ pub fn header_length(length: u32, data_start: Option<&[u8]>) -> u32 {
     if length <= 55 {
         1
     } else {
-        let encoded_length = int_to_bytes(length as u64);
+        let encoded_length = int_to_bytes(length.into());
         1 + encoded_length.len() as u32
     }
 }
@@ -76,7 +77,7 @@ pub fn write_header(w: &mut Vec<u8>, length: u32, header_byte: u8, data_start: O
     if length <= 55 {
         w.push(header_byte + length as u8);
     } else {
-        let encoded_length = int_to_bytes(length as u64);
+        let encoded_length = int_to_bytes(length.into());
         w.push(header_byte + 55 + encoded_length.len() as u8);
         w.extend_from_slice(&encoded_length);
     }
@@ -151,7 +152,7 @@ mod tests {
     #[test]
     fn test_integer_0() {
         let mut w = Vec::new();
-        write(&mut w, &RLPItem::Int(0));
+        write(&mut w, &RLPItem::Int(0.into()));
         assert_eq!(w, vec![0x80]);
     }
 
@@ -181,11 +182,11 @@ mod tests {
         // [ [], [[]], [ [], [[]] ] ]
         let mut w = Vec::new();
         let items = vec![
-            RLPItem::List(vec![]),                      // []
-            RLPItem::List(vec![RLPItem::List(vec![])]), // [[]]
-            RLPItem::List(vec![
-                RLPItem::List(vec![]),                      // []
-                RLPItem::List(vec![RLPItem::List(vec![])]), // [[]]
+            RLPItem::List(&[]),                   // []
+            RLPItem::List(&[RLPItem::List(&[])]), // [[]]
+            RLPItem::List(&[
+                RLPItem::List(&[]),                   // []
+                RLPItem::List(&[RLPItem::List(&[])]), // [[]]
             ]),
         ];
         write_list(&mut w, &items);

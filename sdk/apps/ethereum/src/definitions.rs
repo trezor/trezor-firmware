@@ -68,14 +68,14 @@ impl Definitions {
         }
 
         if let Some(chain_id) = chain_id {
-            info!("Network definition mismatch");
+            info!("chain id: {} network chain id: {}", chain_id, network.chain_id);
             if network.chain_id != chain_id {
                 // "Network definition mismatch"
                 return Err(());
             }
         }
         if let Some(slip44) = slip44 {
-            info!("Network definition mismatch");
+            info!("Network definition mismatch slip44");
             if network.slip44 != slip44 {
                 // "Network definition mismatch"
                 return Err(());
@@ -101,9 +101,9 @@ impl Definitions {
         &self.network
     }
 
-    pub fn chain_id(&self) -> u64 {
-        self.network.chain_id
-    }
+    // pub fn chain_id(&self) -> u64 {
+    //     self.network.chain_id
+    // }
 
     pub fn slip44(&self) -> u32 {
         self.network.slip44
@@ -240,7 +240,7 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
     remaining -= 1;
 
     let signature: &[u8; 64] = (&encoded[offset..offset + 64]).try_into().map_err(|_| ())?;
-    offset += 64;
+    // offset += 64;
     remaining -= 64;
 
     info!("remaining after parsing definition: {}", remaining);
@@ -267,7 +267,6 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
     // TODO: use real signature verification instead of dummy implementation
     let result =
         ed25519::verify(signature, &hash, THRESHOLD, &DEV_PUBLIC_KEYS, sigmask).map_err(|_| ())?;
-
 
     info!("Definition signature verification result: {}", result);
     if !result {

@@ -1392,6 +1392,12 @@ class TrezorTestContext:
             t.Callable[[protobuf.MessageType], protobuf.MessageType],
         ] = {}
 
+    def reset_resp_filters(self) -> None:
+        self.resp_filters: dict[
+            type[protobuf.MessageType],
+            t.Callable[[protobuf.MessageType], protobuf.MessageType],
+        ] = {}
+
     # === required overrides for the base class ===
 
     def _wrap_write(
@@ -1592,9 +1598,39 @@ class TrezorTestContext:
         else:
             self.filters[message_type] = callback
 
+    def set_resp_filter(
+        self,
+        message_type: t.Type[protobuf.MessageType],
+        callback: t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
+    ) -> None:
+        """Configure a filter function for a specified message type.
+
+        The `callback` must be a function that accepts a protobuf message, and returns
+        a (possibly modified) protobuf message of the same type. Whenever a message
+        is sent or received that matches `message_type`, `callback` is invoked on the
+        message and its result is substituted for the original.
+
+        Useful for test scenarios with an active malicious actor on the wire.
+        """
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+
+        if callback is None:
+            del self.resp_filters[message_type]
+        else:
+            self.resp_filters[message_type] = callback
+
     def _filter_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
         message_type = msg.__class__
         callback = self.filters.get(message_type)
+        if callable(callback):
+            return callback(deepcopy(msg))
+        else:
+            return msg
+
+    def _filter_resp_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
+        message_type = msg.__class__
+        callback = self.resp_filters.get(message_type)
         if callable(callback):
             return callback(deepcopy(msg))
         else:
@@ -1630,11 +1666,11 @@ class TrezorTestContext:
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
             input_flow.throw(value)
+        self.reset_resp_filters()
         self.actual_responses = []
 
-    @classmethod
     def _verify_responses(
-        cls,
+        self,
         expected: list[MessageFilter] | None,
         actual: list[protobuf.MessageType],
     ) -> None:
@@ -1645,7 +1681,7 @@ class TrezorTestContext:
 
         for i, (exp, act) in enumerate(zip_longest(expected, actual)):
             if exp is None:
-                output = cls._expectation_lines(expected, i)
+                output = self._expectation_lines(expected, i)
                 output.append("No more messages were expected, but we got:")
                 for resp in actual[i:]:
                     output.append(
@@ -1653,13 +1689,14 @@ class TrezorTestContext:
                     )
                 raise AssertionError("\n".join(output))
 
-            if act is None:
-                output = cls._expectation_lines(expected, i)
+            act_filtered = self._filter_resp_message(act)
+            if act_filtered is None:
+                output = self._expectation_lines(expected, i)
                 output.append("This and the following message was not received.")
                 raise AssertionError("\n".join(output))
 
-            if not exp.match(act):
-                output = cls._expectation_lines(expected, i)
+            if not exp.match(act_filtered):
+                output = self._expectation_lines(expected, i)
                 output.append("Actually received:")
                 output.append(textwrap.indent(protobuf.format_message(act), "    "))
                 raise AssertionError("\n".join(output))

@@ -125,6 +125,20 @@ static void remove_entry(app_entry_t* entry) {
   memset(entry, 0, sizeof(*entry));
 }
 
+ts_t app_task_get_id(const app_hash_t* hash, systask_id_t* task_id) {
+  if (hash == NULL || task_id == NULL) {
+    return TS_EINVAL;
+  }
+
+  app_entry_t* entry = find_app_by_hash(hash);
+  if (entry == NULL) {
+    return TS_ENOENT;
+  }
+
+  *task_id = entry->applet.task.id;
+  return TS_OK;
+}
+
 ts_t app_task_spawn(const app_hash_t* hash, systask_id_t* task_id) {
   app_loader_t* loader = &g_app_loader;
 

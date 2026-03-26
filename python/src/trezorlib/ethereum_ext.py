@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 from requests.api import request
 from requests.sessions import session
 
-from . import exceptions, messages, protobuf, extapp
-from .tools import prepare_message_bytes, workflow
+from . import exceptions, messages, protobuf
+from .tools import prepare_message_bytes
 from .protobuf import MessageType
 from enum import IntEnum
 
@@ -31,7 +31,6 @@ from enum import IntEnum
 if TYPE_CHECKING:
     from .client import Session
     from .tools import Address
-    from .messages import Failure
 
 MT = t.TypeVar("MT", bound=MessageType)
 
@@ -94,10 +93,6 @@ def message_id(message: type[MessageType]) -> int:
         return EthereumMessages.Success
     elif message == messages.EthereumSignTxEIP1559:
         return EthereumMessages.SignTxEIP1559
-    elif message == messages.PaymentRequest:
-        # Payment request can be sent with any message ID (as it's only relevant for the app)
-        # but we need to know that it is being sent in order to properly encode it in the protobuf message.
-        raise ValueError("PaymentRequest message does not have a fixed message ID")
     else:
         raise ValueError(f"Unsupported message type: {message}")
 
@@ -134,9 +129,7 @@ def message_type(msg_id: int) -> type[MessageType]:
     elif msg_id == EthereumMessages.VerifyMessage:
         return messages.EthereumVerifyMessage
     elif msg_id == EthereumMessages.Success:
-        # Success message does not have a fixed structure, it can be returned for any request.
-        # We will be checking the success status in the client code based on the context of the request.
-        raise ValueError("Success message does not have a fixed structure")
+        return messages.Success
     else:
         raise ValueError(f"Unsupported message ID: {msg_id}")
 
@@ -173,14 +166,6 @@ def call_ext(
         expect_ids = [message_id(cls) for cls in expect]
         try:
             # Find the index of the matching message ID
-            print(
-                "received message with ID",
-                resp.message_id,
-                "expecting",
-                expect_ids,
-                "expect message types",
-                expect,
-            )
             idx = expect_ids.index(resp.message_id)
             return protobuf.load_message(buf, expect[idx])
         except:
@@ -644,3 +629,19 @@ def sign_typed_data_hash(
         ),
         expect=[messages.EthereumTypedDataSignature],
     )
+
+
+def resp_filter(msg: protobuf.MessageType) -> protobuf.MessageType:
+    if isinstance(msg, messages.ExtAppResponse):
+        message_type_cls = message_type(msg.message_id)
+        print(
+            "Received ExtAppResponse message with ID",
+            msg.message_id,
+            "expecting",
+            message_type_cls,
+        )
+        return protobuf.load_message(io.BytesIO(msg.data), message_type_cls)
+
+    else:
+        print("Received non-ExtAppResponse message:", msg, "this shoudnt happen")
+        return msg
