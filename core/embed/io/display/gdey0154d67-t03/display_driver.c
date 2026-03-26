@@ -778,6 +778,7 @@ void display_ep_deinit(display_content_mode_t mode) {
 }
 
 void display_ep_demo(void) {
+#if 0
   display_color_fill(DISPLAY_COLOR_BLACK);
   systick_delay_ms(2000);
   display_color_fill(DISPLAY_COLOR_WHITE);
@@ -802,6 +803,14 @@ void display_ep_demo(void) {
   systick_delay_ms(2000);
   display_img_show(IMAGE_DATA, 50, 50, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2,
                    DISPLAY_PARTIAL_MODE);
+#else
+  display_color_fill(DISPLAY_COLOR_WHITE);
+  display_img_show(gImage_address_p1, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
+                   DISPLAY_SLOW_MODE);
+  systick_delay_ms(5000);
+  display_img_show(gImage_address_p1_inv, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
+                   DISPLAY_SLOW_MODE);
+#endif
 
 #if 0  
   display_img_show(test_img, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
