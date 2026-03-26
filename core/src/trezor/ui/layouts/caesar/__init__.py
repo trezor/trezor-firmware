@@ -1296,6 +1296,76 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
         )
 
+    async def confirm_ethereum_vault_tx(
+        title: str,
+        intro_question: str,
+        verb: str,
+        vault_str: str,
+        total_amount: str,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        info_items: Iterable[StrPropertyType],
+        chain: str,
+        br_name: str = "ethereum/vault",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> None:
+        from ..properties import with_colon
+
+        account_properties: list[StrPropertyType] = []
+        if account:
+            account_properties.append((TR.words__account, account, None))
+        if account_path:
+            account_properties.append(
+                (TR.address_details__derivation_path, account_path, None)
+            )
+
+        await confirm_value(
+            title=title,
+            value=intro_question,
+            is_data=False,
+            description=None,
+            verb=TR.buttons__continue,
+            chunkify=False,
+            info_items=account_properties if account_properties else None,
+            cancel=True,
+            br_name=br_name + "/intro",
+            br_code=br_code,
+        )
+
+        await confirm_value(
+            title=title,
+            value=vault_str,
+            description=verb,
+            verb=TR.buttons__continue,
+            cancel=True,
+            br_name=br_name + "/vault",
+            br_code=br_code,
+        )
+
+        await confirm_properties(
+            br_name + "/amount",
+            title,
+            [
+                (TR.ethereum__deposit_amount, total_amount, False),
+                (TR.words__chain, chain, False),
+            ],
+        )
+
+        await raise_if_not_confirmed(
+            trezorui_api.confirm_summary(
+                amount=None,
+                amount_label=None,
+                fee=maximum_fee,
+                fee_label=with_colon(TR.send__maximum_fee),
+                extra_title=TR.confirm_total__title_fee,
+                extra_items=with_colon(info_items),
+                title=title,
+            ),
+            br_name=br_name + "/summary",
+            br_code=br_code,
+        )
+
     def confirm_solana_unknown_token_warning() -> Awaitable[None]:
         return show_danger(
             "unknown_token_warning",
