@@ -482,7 +482,8 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       // first block and headers are not yet parsed
       vendor_header vhdr;
 
-      if (sectrue != read_vendor_header((uint8_t *)chunk_buffer, &vhdr)) {
+      if (sectrue != read_vendor_header((uint8_t *)chunk_buffer,
+                                        IMAGE_CHUNK_SIZE, &vhdr)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid vendor header");
@@ -534,8 +535,9 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       secbool is_new = secfalse;
 
-      if (sectrue !=
-          read_vendor_header((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
+      if (sectrue != read_vendor_header((const uint8_t *)FIRMWARE_START,
+                                        VENDOR_HEADER_MAX_SIZE,
+                                        &current_vhdr)) {
         is_new = sectrue;
       }
 
