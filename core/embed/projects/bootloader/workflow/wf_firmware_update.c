@@ -211,7 +211,8 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       // first block and headers are not yet parsed
       vendor_header vhdr;
 
-      if (sectrue != read_vendor_header((uint8_t *)chunk_buffer, &vhdr)) {
+      if (sectrue != read_vendor_header((uint8_t *)chunk_buffer,
+                                        IMAGE_CHUNK_SIZE, &vhdr)) {
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          "Invalid vendor header");
         return UPLOAD_ERR_INVALID_VENDOR_HEADER;
@@ -308,8 +309,9 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
 
       secbool is_new = secfalse;
 
-      if (sectrue !=
-          read_vendor_header((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
+      if (sectrue != read_vendor_header((const uint8_t *)FIRMWARE_START,
+                                        VENDOR_HEADER_MAX_SIZE,
+                                        &current_vhdr)) {
         is_new = sectrue;
       }
 

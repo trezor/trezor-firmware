@@ -163,7 +163,7 @@ secbool __wur check_image_header_sig(const image_header *const hdr,
                                      uint8_t key_m, uint8_t key_n,
                                      const uint8_t *const *keys);
 
-secbool __wur read_vendor_header(const uint8_t *const data,
+secbool __wur read_vendor_header(const uint8_t *const data, size_t data_Size,
                                  vendor_header *const vhdr);
 
 secbool __wur check_vendor_header_model(const vendor_header *const vhdr);
