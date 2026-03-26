@@ -1285,6 +1285,89 @@ if not utils.BITCOIN_ONLY:
             br_name="confirm_ethereum_tx",
         )
 
+    async def confirm_ethereum_vault_tx(
+        title: str,
+        intro_question: str,
+        verb: str,
+        vault_str: str,
+        total_amount: str,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        info_items: Iterable[StrPropertyType],
+        chain: str,
+        br_name: str = "ethereum/vault",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, interact_with_menu
+
+        menu_items = []
+        account_properties = _get_account_info_items(account, account_path)
+        if account_properties:
+            menu_items.append(
+                create_details(
+                    TR.address_details__account_info,
+                    account_properties,
+                    title=TR.address_details__account_info,
+                    subtitle=TR.send__send_from,
+                )
+            )
+
+        await confirm_linear_flow(
+            lambda: interact_with_menu(
+                trezorui_api.confirm_action(
+                    title=title,
+                    action=intro_question,
+                    description=None,
+                    external_menu=True,
+                    cancel=False,
+                ),
+                Menu.root(menu_items, TR.send__cancel_sign),
+                br_name + "/intro",
+                br_code,
+            ),
+            lambda: interact_with_menu(
+                trezorui_api.confirm_with_info(
+                    title=title,
+                    subtitle=verb,
+                    items=[(vault_str, True)],
+                    verb=TR.buttons__continue,
+                ),
+                Menu.root(menu_items, TR.send__cancel_sign),
+                br_name + "/vault_name",
+                br_code,
+            ),
+            lambda: interact_with_menu(
+                trezorui_api.confirm_properties(
+                    title=title,
+                    items=[
+                        (TR.ethereum__deposit_amount, total_amount, False),
+                        (TR.words__chain, chain, False),
+                    ],
+                    hold=False,
+                    verb=TR.buttons__continue,
+                ),
+                Menu.root(menu_items, TR.send__cancel_sign),
+                br_name + "/amount",
+                br_code,
+            ),
+            lambda: interact_with_menu(
+                trezorui_api.confirm_summary(
+                    amount=None,
+                    amount_label=None,
+                    fee=maximum_fee,
+                    fee_label=TR.send__maximum_fee,
+                    extra_title=TR.confirm_total__title_fee,
+                    extra_items=list(info_items),
+                    title=title,
+                    back_button=False,
+                ),
+                Menu.root(menu_items, TR.send__cancel_sign),
+                br_name + "/summary",
+                br_code,
+            ),
+        )
+
     async def confirm_ethereum_staking_tx(
         title: str,
         intro_question: str,

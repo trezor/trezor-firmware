@@ -5,6 +5,7 @@ from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (
     confirm_blob,
     confirm_ethereum_staking_tx,
+    confirm_ethereum_vault_tx,
     confirm_text,
     should_show_more,
 )
@@ -227,10 +228,41 @@ async def require_confirm_stake(
         account,
         account_path,
         maximum_fee,
-        addr_str,  # address
+        addr_str,
         TR.ethereum__staking_stake_address,  # address_title
         fee_info_items,  # info_items
         chunkify=chunkify,
+    )
+
+
+async def require_confirm_deposit(
+    value: int,
+    address_n: list[int],
+    maximum_fee: str,
+    fee_info_items: Iterable[StrPropertyType],
+    network: EthereumNetworkInfo,
+    vault_addr: AnyBytes,
+) -> None:
+
+    from .yielding_vaults import lookup_vault
+
+    vault_name, token = lookup_vault(vault_addr, network)
+
+    total_amount = format_ethereum_amount(value, token, network)
+    account, account_path = get_account_and_path(address_n)
+
+    await confirm_ethereum_vault_tx(
+        title=TR.words__deposit,
+        intro_question=TR.ethereum__vault_deposit_intro,
+        verb=TR.ethereum__deposit_to,
+        vault_str=vault_name,
+        total_amount=total_amount,
+        account=account,
+        account_path=account_path,
+        maximum_fee=maximum_fee,
+        info_items=fee_info_items,
+        chain=network.name,
+        br_name="ethereum/vault/deposit",
     )
 
 

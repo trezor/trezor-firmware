@@ -63,6 +63,7 @@ async def sign_tx_eip1559(
 
     # have a user confirm signing
     await paths.validate_path(keychain, msg.address_n)
+    sender_bytes = keychain.derive(msg.address_n).ethereum_pubkeyhash()
     address_bytes = bytes_from_address(msg.to)
 
     max_gas_fee = int.from_bytes(msg.max_gas_fee, "big")
@@ -113,6 +114,7 @@ async def sign_tx_eip1559(
         maximum_fee,
         fee_items,
         payment_req_verifier,
+        sender_bytes,
     )
 
     if confirm_data_chunk is not None:
