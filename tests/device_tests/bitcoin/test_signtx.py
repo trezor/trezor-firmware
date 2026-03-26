@@ -1784,3 +1784,81 @@ def test_information_replacement(session: Session):
             [out1],
             prev_txes=TX_CACHE_TESTNET,
         )
+
+
+def test_change_output_wrong_coin_type_is_rejected(session: Session):
+    """Verify that an output with a derivation path using a different coin_type
+    than the signed coin is rejected with a 'Forbidden key path' error.
+
+    This is a regression test for a hypothetical attack where a compromised host
+    sets the output path to a different coin_type (e.g., Testnet path
+    m/44h/1h/0h/1/0 when signing a Bitcoin transaction), hoping the device
+    silently accepts it.
+    """
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+    )
+
+    # Change output using a DIFFERENT coin_type (1h = Testnet instead of 0h = Bitcoin).
+    # This must NOT be treated as change — the user must be asked to confirm it.
+    out1 = messages.TxOutputType(
+        address_n=parse_path("m/44h/1h/0h/1/0"),
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
+
+
+def test_change_output_wrong_account_is_not_change(session: Session):
+    """Verify that a change output whose account prefix doesn't match any input
+    is NOT silently treated as change.
+
+    Input is from account m/44h/0h/5h, output claims to be change from
+    m/44h/0h/99h — a completely different account.
+    """
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+    )
+
+    # Change output from a different account (99h instead of 5h).
+    # WalletPathChecker prefix: [44', 0', 99'] != [44', 0', 5'] => not change.
+    out1 = messages.TxOutputType(
+        address_n=parse_path("m/44h/0h/99h/1/0"),
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_output(0),
+                # Not treated as change — user must confirm the output.
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(TXHASH_0dac36),
+                request_input(0, TXHASH_0dac36),
+                request_output(0, TXHASH_0dac36),
+                request_output(1, TXHASH_0dac36),
+                request_input(0),
+                request_output(0),
+                request_output(0),
+                request_finished(),
+            ]
+        )
+
+        btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
