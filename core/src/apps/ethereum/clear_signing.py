@@ -2,13 +2,12 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import TR
-from trezor.utils import BufferReader
 
 from .helpers import address_from_bytes, format_ethereum_amount, get_account_and_path
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
-    from typing import Any, Callable, Coroutine, Iterable
+    from typing import Callable, Iterable
 
     from trezor.messages import EthereumTokenInfo
     from trezor.ui.layouts import StrPropertyType
@@ -16,7 +15,6 @@ if TYPE_CHECKING:
     from apps.common.payment_request import PaymentRequestVerifier
 
     from .definitions import Definitions
-    from .helpers import ConfirmDataFn
     from .keychain import MsgInSignTx
 
     # Represents values that have been parsed from the calldata
@@ -35,10 +33,13 @@ if TYPE_CHECKING:
 
 
 SC_FUNC_SIG_BYTES = const(4)
-MAX_CALLDATA_STORED = const(4096)
 
 
-class InvalidFunctionCall(Exception):
+class ClearSigningFailed(Exception):
+    pass
+
+
+class InvalidFunctionCall(ClearSigningFailed):
     """Raised when the calldata encoding of a function call,
     including its parameters, is invalid."""
 
@@ -62,7 +63,7 @@ class OutOfBounds(InvalidFunctionCall):
     pass
 
 
-class InvalidFormatDefinition(Exception):
+class InvalidFormatDefinition(ClearSigningFailed):
     """Raised when we fail to format data according to the definitions,
     if for example the parsed calldata has other types than what
     the format definition expects."""
@@ -494,37 +495,9 @@ class DisplayFormat:
 
         return self.binding_context.matches(chain_id, address)
 
-
-class ParsingContext:
-    def __init__(self, display_format: DisplayFormat) -> None:
-        self.data = bytes()
-        self.display_format = display_format
-        self.truncated = False
-
-    def process_data_chunk(self, offset: int, chunk: memoryview) -> None:
-        if offset == 0:
-            # skip function signature
-            chunk = chunk[SC_FUNC_SIG_BYTES:]
-
-        if not chunk:
-            # nothing to process after skipping function signature
-            return
-
-        current_len = len(self.data)
-        if current_len >= MAX_CALLDATA_STORED:
-            self.truncated = True
-            # reached the storage limit. ignore further chunks.
-            return
-
-        remaining = MAX_CALLDATA_STORED - current_len
-        if len(chunk) > remaining:
-            self.truncated = True
-            chunk = chunk[:remaining]
-        if chunk:
-            self.data += bytes(chunk)
-
-    def get_parameters_and_fields(
+    def parse(
         self,
+        calldata: memoryview,
         address_n: list[int],
         tx_value: AnyBytes,
         definitions: Definitions,
@@ -533,17 +506,11 @@ class ParsingContext:
         list[AnyValue],
         list[tuple[StrPropertyType, EthereumTokenInfo | None, AnyBytes | None]],
     ]:
-        if self.truncated:
-            # this will not happen, because we already checked the data_length
-            # in the very beginning and bailed from clear signing
-            raise OutOfBounds
-
         parameters: list[AnyValue] = []
 
-        data = memoryview(self.data)
         offset = 0
-        for parameter_definition in self.display_format.parameter_definitions:
-            value, consumed = parameter_definition.parse(data, offset)
+        for parameter_definition in self.parameter_definitions:
+            value, consumed = parameter_definition.parse(calldata, offset)
             parameters.append(value)
             offset += consumed
 
@@ -595,7 +562,7 @@ class ParsingContext:
         fields: list[
             tuple[StrPropertyType, EthereumTokenInfo | None, AnyBytes | None]
         ] = []
-        for field_definition in self.display_format.field_definitions:
+        for field_definition in self.field_definitions:
             (
                 formatted_value,
                 actual_token,
@@ -621,38 +588,28 @@ class ParsingContext:
         return parameters, fields
 
 
-def get_approver(
+async def try_parse(
+    data: AnyBytes,
+    address_bytes: bytes,
     msg: MsgInSignTx,
     definitions: Definitions,
-    address_bytes: bytes,
-    value: int,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
-) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
-    from .clear_signing_definitions import ALL_DISPLAY_FORMATS
-
-    # local_cache_attribute
-    chain_id = msg.chain_id
+) -> bool:
+    from .clear_signing_definitions import (
+        ALL_DISPLAY_FORMATS,
+        APPROVE_DISPLAY_FORMAT,
+        TRANSFER_DISPLAY_FORMAT,
+    )
 
     if not address_bytes:
-        return None
+        return False
 
-    if msg.data_length > len(msg.data_initial_chunk):
-        # we only support clear signing one chunk for now
-        return None
+    if len(data) < SC_FUNC_SIG_BYTES:
+        return False
 
-    if msg.data_length > MAX_CALLDATA_STORED:
-        # skip clear signing if the calldata is longer than what we can process
-        return None
-
-    data_reader = BufferReader(msg.data_initial_chunk)
-    if data_reader.remaining_count() < SC_FUNC_SIG_BYTES:
-        return None
-
-    token = definitions.get_token(address_bytes)
-
-    func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
+    func_sig = data[0:SC_FUNC_SIG_BYTES]
 
     display_format = None
     for f in ALL_DISPLAY_FORMATS:
@@ -660,58 +617,19 @@ def get_approver(
             display_format = f
             break
     else:
-        return None
+        return False
 
-    if not display_format.matches_context(chain_id, address_bytes):
-        return None
-    parser, parsing_context = _get_data_chunk_parser(display_format)
+    if not display_format.matches_context(msg.chain_id, address_bytes):
+        return False
 
-    return parser, _get_summary_handler(
-        parsing_context,
-        address_bytes,
-        msg,
-        definitions,
-        token,
-        maximum_fee,
-        fee_items,
-        payment_request_verifier,
-    )
-
-
-def _get_data_chunk_parser(
-    display_format: DisplayFormat,
-) -> tuple[ConfirmDataFn, ParsingContext]:
-    offset = 0
-    context = ParsingContext(display_format)
-
-    async def confirm_fn(chunk: AnyBytes) -> None:
-        nonlocal offset
-        context.process_data_chunk(offset, memoryview(chunk))
-        offset += len(chunk)
-
-    return confirm_fn, context
-
-
-def _get_summary_handler(
-    context: ParsingContext,
-    address_bytes: bytes,
-    msg: MsgInSignTx,
-    definitions: Definitions,
-    token: EthereumTokenInfo,
-    maximum_fee: str,
-    fee_items: Iterable[StrPropertyType],
-    payment_request_verifier: PaymentRequestVerifier | None,
-) -> Coroutine[Any, Any, None]:
-    from .clear_signing_definitions import (
-        APPROVE_DISPLAY_FORMAT,
-        TRANSFER_DISPLAY_FORMAT,
-    )
+    calldata = memoryview(data)[SC_FUNC_SIG_BYTES:]
+    token = definitions.get_token(address_bytes)
 
     # custom treatment of certain functions (APPROVE, TRANSFER)
-
-    if context.display_format.func_sig == APPROVE_DISPLAY_FORMAT.func_sig:
-        return _handle_approve(
-            context,
+    if display_format.func_sig == APPROVE_DISPLAY_FORMAT.func_sig:
+        await _handle_approve(
+            calldata,
+            display_format,
             address_bytes,
             msg,
             definitions,
@@ -719,9 +637,10 @@ def _get_summary_handler(
             maximum_fee,
             fee_items,
         )
-    elif context.display_format.func_sig == TRANSFER_DISPLAY_FORMAT.func_sig:
-        return _handle_transfer(
-            context,
+    elif display_format.func_sig == TRANSFER_DISPLAY_FORMAT.func_sig:
+        await _handle_transfer(
+            calldata,
+            display_format,
             address_bytes,
             msg,
             definitions,
@@ -730,16 +649,22 @@ def _get_summary_handler(
             fee_items,
             payment_request_verifier,
         )
-
-    # generic UI for any function that has a `DisplayFormat`
-
-    return _handle_generic_ui(
-        context, msg, definitions, address_bytes, token, maximum_fee
-    )
+    else:
+        # generic UI for any function that has a `DisplayFormat`
+        await _handle_generic_ui(
+            calldata,
+            display_format,
+            msg,
+            definitions,
+            token,
+            maximum_fee,
+        )
+    return True
 
 
 async def _handle_approve(
-    context: ParsingContext,
+    calldata: memoryview,
+    display_format: DisplayFormat,
     address_bytes: bytes,
     msg: MsgInSignTx,
     definitions: Definitions,
@@ -753,8 +678,8 @@ async def _handle_approve(
     )
     from .layout import require_confirm_approve
 
-    args, fields = context.get_parameters_and_fields(
-        msg.address_n, msg.value, definitions, token
+    args, fields = display_format.parse(
+        calldata, msg.address_n, msg.value, definitions, token
     )
 
     assert len(args) == 2
@@ -792,7 +717,8 @@ async def _handle_approve(
 
 
 async def _handle_transfer(
-    context: ParsingContext,
+    calldata: memoryview,
+    display_format: DisplayFormat,
     address_bytes: bytes,
     msg: MsgInSignTx,
     definitions: Definitions,
@@ -803,8 +729,8 @@ async def _handle_transfer(
 ) -> None:
     from .layout import require_confirm_payment_request, require_confirm_tx
 
-    args, fields = context.get_parameters_and_fields(
-        msg.address_n, msg.value, definitions, token
+    args, fields = display_format.parse(
+        calldata, msg.address_n, msg.value, definitions, token
     )
 
     assert len(args) == 2
@@ -853,10 +779,10 @@ async def _handle_transfer(
 
 
 async def _handle_generic_ui(
-    context: ParsingContext,
+    calldata: memoryview,
+    display_format: DisplayFormat,
     msg: MsgInSignTx,
     definitions: Definitions,
-    address_bytes: bytes,
     token: EthereumTokenInfo,
     maximum_fee: str,
 ) -> None:
@@ -865,8 +791,8 @@ async def _handle_generic_ui(
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
 
-    _, fields = context.get_parameters_and_fields(
-        msg.address_n, msg.value, definitions, token
+    _, fields = display_format.parse(
+        calldata, msg.address_n, msg.value, definitions, token
     )
 
     properties_to_confirm = []
@@ -888,5 +814,5 @@ async def _handle_generic_ui(
     recipient_str = KNOWN_ADDRESSES.get(bytes_from_address(msg.to), msg.to)
 
     await require_confirm_clear_signing(
-        recipient_str, context.display_format.intent, properties_to_confirm, maximum_fee
+        recipient_str, display_format.intent, properties_to_confirm, maximum_fee
     )

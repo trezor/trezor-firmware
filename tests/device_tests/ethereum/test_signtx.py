@@ -288,30 +288,43 @@ def test_data_streaming(session: Session):
         client.set_input_flow(flow.get())
         is_legacy = client.model in models.LEGACY_MODELS
 
-        br_sign_tx = messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)
+        def br_sign_tx(n):
+            return messages.ButtonRequest(
+                code=messages.ButtonRequestType.SignTx, name=n
+            )
+
         br_protect = messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall)
 
-        expected_responses: list[ExpectedResponse] = [br_sign_tx]
-        if is_legacy:
-            expected_responses += [br_sign_tx] * LEGACY_MAX_DATA_PAGES + [
-                br_protect,
-                br_sign_tx,
-            ]
-
-        expected_responses.extend(
-            message_filters.EthereumTxRequest(
-                data_length=data_length,
-                signature_r=None,
-                signature_s=None,
-                signature_v=None,
+        def tx_request(l):
+            return message_filters.EthereumTxRequest(
+                data_length=l, signature_r=None, signature_s=None, signature_v=None
             )
-            for data_length in (1_024, 1_024, 1_024, 3)
-        )
 
-        if not is_legacy:
-            expected_responses += [br_sign_tx, br_sign_tx]
+        if is_legacy:
+            expected_responses: list[ExpectedResponse] = []
+            expected_responses += [br_sign_tx(None)]
+            expected_responses += [br_sign_tx(None)] * LEGACY_MAX_DATA_PAGES
+            expected_responses += [
+                br_protect,
+                br_sign_tx(None),
+            ]
+            expected_responses += [tx_request(l) for l in (1024, 1024, 1024, 3)]
+            expected_responses += [message_filters.EthereumTxRequest(data_length=None)]
+        else:
+            expected_responses: list[ExpectedResponse] = []
+            expected_responses += [tx_request(l) for l in (1024, 1024, 1024)]
+            expected_responses += [br_sign_tx("confirm_data")]
+            expected_responses += [tx_request(3)]
+            if client.model is models.T3T1 or client.model is models.T3W1:
+                # related issue: https://github.com/trezor/trezor-firmware/issues/6490
+                # TODO: make these consistent!
+                expected_responses += [br_sign_tx("confirm_output")]
+                expected_responses += [br_sign_tx("confirm_total")]
+            else:
+                expected_responses += [br_sign_tx("confirm_ethereum_tx")]
+                expected_responses += [br_sign_tx("confirm_ethereum_tx")]
+            expected_responses += [message_filters.EthereumTxRequest(data_length=None)]
 
-        expected_responses += [message_filters.EthereumTxRequest(data_length=None)]
         client.set_expected_responses(expected_responses)
 
         ethereum.sign_tx(
