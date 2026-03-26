@@ -854,6 +854,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tron*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ckb/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/CKB*.py'))
 
     source_mpy = env.FrozenModule(
         source=SOURCE_PY,
