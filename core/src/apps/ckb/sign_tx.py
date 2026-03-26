@@ -444,10 +444,16 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     # Create witness placeholder and compute sighash
     witness_placeholder = _create_witness_args_with_placeholder()
 
+    # All inputs processed by Trezor Suite belong to the same account and share the
+    # same lock script. Thus, they form a single lock script group. The CKB node's
+    # sighash_all logic will iterate over all inputs in the group and hash their
+    # corresponding witnesses (padding with empty witnesses if not present).
+    other_witnesses = [b""] * (msg.inputs_count - 1) if msg.inputs_count > 1 else []
+
     sighash = _compute_sighash_all(
         tx_hash=tx_hash,
         witness_for_group=witness_placeholder,
-        other_witnesses=[],
+        other_witnesses=other_witnesses,
     )
 
     # Confirm total
