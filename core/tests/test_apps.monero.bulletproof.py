@@ -289,6 +289,32 @@ class TestMoneroBulletproof(unittest.TestCase):
         proof = bpi.prove_batch(sv, gamma)
         bpi.verify_batch([proof])
 
+    def test_log2(self):
+        for x, y in [
+            (1, 0),
+            (2, 1),
+            (3, 1),
+            (4, 2),
+            (5, 2),
+            (6, 2),
+            (7, 2),
+            (8, 3),
+            (9, 3),
+        ]:
+            self.assertEqual(bp._log2(x), y)
+
+        for y in range(2, 100):
+            x = 2**y
+            self.assertEqual(bp._log2(x - 2), y - 1)
+            self.assertEqual(bp._log2(x - 1), y - 1)
+            self.assertEqual(bp._log2(x), y)
+            self.assertEqual(bp._log2(x + 1), y)
+            self.assertEqual(bp._log2(x + 2), y)
+
+        for x in [0, -1, -2, -3, -10, -100, -1000]:
+            with self.assertRaises(AssertionError):
+                bp._log2(x)
+
 
 if __name__ == "__main__":
     unittest.main()
