@@ -25,9 +25,6 @@ pub struct FontInfo {
 /// Convenience type for font references defined in the `fonts` module.
 pub type Font = &'static FontInfo;
 
-// SAFETY: We are in a single-threaded environment.
-unsafe impl Sync for FontInfo {}
-
 /// Representation of a single glyph.
 /// We use standard typographic terms. For a nice explanation, see, e.g.,
 /// the FreeType docs at https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
