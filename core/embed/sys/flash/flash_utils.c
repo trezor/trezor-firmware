@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
@@ -101,3 +103,5 @@ secbool erase_device(flash_progress_callback_t progress_cb) {
 
   return erase_areas(areas, ARRAY_LENGTH(areas), progress_cb);
 }
+
+#endif  // KERNEL_MODE
