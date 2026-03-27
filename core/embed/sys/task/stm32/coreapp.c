@@ -30,7 +30,6 @@
 #include <sys/systask.h>
 
 #ifdef USE_TRUSTZONE
-#include <io/display.h>
 #include <sys/trustzone.h>
 #endif
 
@@ -63,8 +62,6 @@ static void applet_set_unpriv(applet_t* applet, bool unpriv) {
   tz_set_flash_unpriv(layout->code2.start, layout->code2.size, unpriv);
 
   tz_set_flash_unpriv(ASSETS_START, ASSETS_MAXSIZE, unpriv);
-
-  display_set_unpriv_access(unpriv);
 }
 #endif  // USE_TRUSTZONE
 
