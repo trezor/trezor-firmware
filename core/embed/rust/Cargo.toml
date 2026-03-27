@@ -6,7 +6,7 @@ edition = "2021"
 build = "build.rs"
 
 [features]
-default = ["layout_bolt"]
+#default = ["layout_bolt"] # !@# removed, but maybe needed in some cases
 crypto = ["zeroize"]
 layout_bolt = []
 layout_caesar = []
@@ -85,9 +85,11 @@ test = [
     "universal_fw",
 ]
 universal_fw = []
+with_new_crates = ["dep:io", "dep:xbuild"]
+with_upymod = ["dep:upymod"]
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["staticlib", "rlib"]
 
 [profile.dev]
 panic = "abort"
@@ -116,6 +118,8 @@ spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
 ufmt = "0.2.0"
 zeroize = { version = "1.8.2", default-features = false, optional = true }
+io = { path = "../io", optional = true }
+upymod = { path = "../upymod", optional = true }
 
 # Runtime dependencies
 
@@ -176,6 +180,10 @@ version = "1.0.69"
 [build-dependencies.glob]
 optional = true
 version = "0.3.0"
+
+[build-dependencies.xbuild]
+optional = true
+path = "../xbuild"
 
 [dev-dependencies]
 hex = "0.4.3"

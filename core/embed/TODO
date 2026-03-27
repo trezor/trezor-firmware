@@ -1,0 +1,28 @@
+- build options (xtask + features in top-level cargo.toml)
+  - disable-optiga
+  - disable-tropic
+  - extapp-support
+  - unsafe_fw
+  - scm_revision??
+  - storage-insecure-testing
+
+- add d001, d002 models
+- copy binaries/map files to build-xtask/artifacts
+
+- print binary size / used memory
+
+- implement xtask flash command
+- implement xtask upload command
+
+- generate compile_commands.json
+
+- mpy-cross tool build
+
+- resolve remaining cyclic dependencies in C
+- implement panic handler in secmon, boardloader and bootloader_ci
+
+- clean with arguments
+
+
+
+

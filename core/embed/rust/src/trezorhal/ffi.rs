@@ -6,4 +6,8 @@
 #![allow(clippy::transmute_int_to_bool)]
 #![allow(clippy::too_many_arguments)]
 
+#[cfg(not(rust_analyzer))]
 include!(concat!(env!("OUT_DIR"), "/trezorhal.rs"));
+
+#[cfg(rust_analyzer)]
+include!("trezorhal_ra.rs");

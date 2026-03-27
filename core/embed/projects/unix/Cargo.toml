@@ -1,0 +1,237 @@
+[package]
+name = "unix"
+version = "0.0.0"
+edition = "2024"
+links = "unix"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+trezor_lib.workspace = true
+io.workspace = true
+sec.workspace = true
+sys.workspace = true
+rtl.workspace = true
+models.workspace = true
+upymod.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = []
+model_d002 = []
+
+model_t2t1 = [
+    "io/model_t2t1",
+    "upymod/model_t2t1",
+    "mcu_stm32f4",
+    "backlight",
+    "dma2d",
+    "touch",
+    "layout_bolt",
+    "sd_card",
+]
+
+model_t2b1 = [
+    "io/model_t2b1",
+    "upymod/model_t2b1",
+    "mcu_stm32f4",
+    "button",
+    "consumption_mask",
+    "lockable_bootloader",
+    "optiga",
+    "secret",
+    "layout_caesar",
+]
+
+model_t3b1 = [
+    "io/model_t3b1",
+    "upymod/model_t3b1",
+    "mcu_stm32u58",
+    "button",
+    "consumption_mask",
+    "hash_processor",
+    "lockable_bootloader",
+    "optiga",
+    "secret",
+    "secure_aes",
+    "tamper",
+    "layout_caesar",
+]
+
+model_t3t1 = [
+    "io/model_t3t1",
+    "upymod/model_t3t1",
+    "mcu_stm32u58",
+    "backlight",
+    "dma2d",
+    "haptic",
+    "hash_processor",
+    "lockable_bootloader",
+    "sd_card",
+    "optiga",
+    "secret",
+    "secure_aes",
+    "tamper",
+    "touch",
+    "layout_delizia",
+]
+
+model_t3w1 = [
+    "io/model_t3w1",
+    "upymod/model_t3w1",
+    "mcu_stm32u5g",
+    "backlight",
+    "backup_ram",
+    "ble",
+    "boot_ucb",
+    "button",
+    "dma2d",
+    "haptic",
+    "hash_processor",
+    "iwdg",
+    "lockable_bootloader",
+    "optiga",
+    "power_manager",
+    "secmon_layout",
+    "secret",
+    "serial_number",
+    "suspend",
+    "tamper",
+    "telemetry",
+    "thp",
+    "touch",
+    "layout_eckhart",
+    "rgb_led",
+    # "tropic", # can be enabled from command line
+    #"trezor_lib/app_loading",
+]
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+
+benchmark = ["upymod/benchmark"]
+dbg_console = ["sys/dbg_console", "trezor_lib/dbg_console"]
+debug = ["trezor_lib/debug"]
+debuglink = ["trezor_lib/debuglink", "io/usb_iface_debug"]
+disable_animation = ["upymod/disable_animation"]
+emulator = ["io/emulator", "upymod/emulator"]
+log_stack_usage = ["upymod/log_stack_usage"]
+micropy_enable_source_line = ["upymod/enable_source_line"]
+frozen = ["upymod/frozen"]
+optiga_testing = ["sec/optiga_testing"]
+pyopt = ["upymod/pyopt"]
+ui_debug = ["trezor_lib/ui_debug"]
+ui_debug_overlay = ["trezor_lib/ui_debug_overlay"]
+ui_performance_overlay = ["trezor_lib/ui_performance_overlay"]
+universal_fw = ["trezor_lib/universal_fw", "upymod/universal_fw"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+    #"trezor_lib/clippy",  !@#
+
+
+default = [
+    "io/display",
+    "io/fancy_fatal_error",
+    "io/kernel_mode",
+    "io/secure_mode",
+    "io/usb_iface_wire",
+    "rtl/secp256k1_zkp",
+
+    "trezor_lib/with_new_crates", # only for transitional period
+    "trezor_lib/with_upymod", # only for transitional period
+
+    "trezor_lib/crypto",
+    "trezor_lib/micropython",
+    "trezor_lib/protobuf",
+    "trezor_lib/ui",
+    #"trezor_lib/dev_keys",
+    "trezor_lib/storage",
+    "trezor_lib/translations",
+    "trezor_lib/usb",
+    ]
+
+mcu_stm32f4 = ["io/mcu_stm32f4", "upymod/mcu_stm32f4", "mcu_stm32"]
+mcu_stm32u58 = ["io/mcu_stm32u58", "upymod/mcu_stm32u58", "mcu_stm32u5", "mcu_stm32"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "upymod/mcu_stm32u5g", "mcu_stm32u5", "mcu_stm32"]
+mcu_stm32u5 = ["sys/trustzone"]
+mcu_stm32 = []
+
+app_loading = ["upymod/app_loading"]
+backlight = ["io/backlight", "trezor_lib/backlight"]
+backup_ram = ["sec/backup_ram"]
+ble = ["io/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
+boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
+button = ["io/button", "trezor_lib/button"]
+consumption_mask = ["sec/consumption_mask"]
+dma2d = ["io/dma2d", "trezor_lib/dma2d"]
+haptic = ["io/haptic", "trezor_lib/haptic"]
+hash_processor = ["sec/hash_processor"]
+iwdg = ["sec/iwdg"]
+lockable_bootloader = ["models/lockable_bootloader"]
+nrf = ["io/nrf", "trezor_lib/nrf"]
+nrf_auth = ["io/nrf_auth"]
+optiga = ["sec/optiga", "trezor_lib/optiga"]
+power_manager = ["io/power_manager", "trezor_lib/power_manager", "trezor_lib/pmic"]
+rgb_led = ["io/rgb_led", "trezor_lib/rgb_led"]
+sd_card = ["io/sd_card", "upymod/sd_card", "trezor_lib/sd_card"]
+secmon_layout = ["models/secmon_layout"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+serial_number = ["upymod/serial_number", "trezor_lib/serial_number"]
+suspend = ["io/suspend"]
+storage_hw_key = ["sec/storage_hw_key"]
+tamper = ["sec/tamper"]
+telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
+touch = ["io/touch", "trezor_lib/touch"]
+thp = ["upymod/thp"]
+tropic = ["sec/tropic", "trezor_lib/tropic"]
+
+layout_bolt = [
+    "trezor_lib/layout_bolt",
+    "upymod/layout_bolt",
+    "trezor_lib/display_rgb565",
+    "trezor_lib/ui_blurring",
+    "trezor_lib/ui_jpeg",
+    ]
+
+layout_caesar = [
+    "trezor_lib/layout_caesar",
+    "upymod/layout_caesar",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_mono",
+    ]
+
+layout_delizia = [
+    "trezor_lib/layout_delizia",
+    "upymod/layout_delizia",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_rgb565",
+    "trezor_lib/ui_blurring",
+    "trezor_lib/ui_image_buffer",
+    "trezor_lib/ui_overlay",
+    "trezor_lib/ui_jpeg",
+    ]
+
+layout_eckhart = [
+    "trezor_lib/layout_eckhart",
+    "upymod/layout_eckhart",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_rgba8888",
+    "trezor_lib/ui_blurring",
+    "trezor_lib/ui_image_buffer",
+    "trezor_lib/ui_color_32bit",
+    "trezor_lib/ui_overlay",
+    "trezor_lib/ui_jpeg",
+    "trezor_lib/hw_jpeg_decoder",
+    "io/hw_jpeg_decoder",
+    ]
