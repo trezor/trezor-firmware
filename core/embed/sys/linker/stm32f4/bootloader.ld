@@ -2,11 +2,11 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = BOOTLOADER_START, LENGTH = BOOTLOADER_MAXSIZE
-  MAIN_STACK (wal)  : ORIGIN = S_MAIN_STACK_START, LENGTH = S_MAIN_STACK_SIZE
-  MAIN_RAM (wal)  : ORIGIN = S_MAIN_RAM_START, LENGTH = S_MAIN_RAM_SIZE
-  FB1 (wal)       : ORIGIN = S_FB1_RAM_START, LENGTH = S_FB1_RAM_SIZE
-  BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
-  AUX1_RAM   (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  MAIN_STACK (rw) : ORIGIN = S_MAIN_STACK_START, LENGTH = S_MAIN_STACK_SIZE
+  MAIN_RAM (rw)   : ORIGIN = S_MAIN_RAM_START, LENGTH = S_MAIN_RAM_SIZE
+  FB1 (rw)        : ORIGIN = S_FB1_RAM_START, LENGTH = S_FB1_RAM_SIZE
+  BOOT_ARGS (rw)  : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
+  AUX1_RAM   (rw) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
 }
 
 _stack_section_start = ADDR(.stack);
@@ -39,7 +39,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
+    . += 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
   } >MAIN_STACK
 
   .data : ALIGN(4) {

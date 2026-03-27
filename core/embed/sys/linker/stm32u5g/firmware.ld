@@ -1,8 +1,8 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
-  AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  FLASH  (rx)   : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
+  AUX1_RAM (rw) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
 }
 
 _stack_section_start = ADDR(.stack);
@@ -56,7 +56,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 32K; /* Overflow causes UsageFault */
+    . += 32K; /* Overflow causes UsageFault */
   } >AUX1_RAM
 
   .data : ALIGN(4) {
