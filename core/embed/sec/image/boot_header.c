@@ -29,59 +29,6 @@
 #include <../vendor/sphincsplus/ref/api.h>
 #include <ed25519-donna/ed25519.h>
 
-#include <version.h>
-
-#ifdef BOOTLOADER
-extern const uint8_t _bootloader_code_size;
-
-typedef union {
-  boot_header_auth_t hdr;
-  uint8_t raw[BOOT_HEADER_MAXSIZE];
-} boot_header_padded_t;
-
-__attribute__((section(".header")))
-const boot_header_padded_t g_bootloader_header = {
-    .hdr = {
-        .magic = BOOT_HEADER_MAGIC_TRZQ,
-        .hw_model = HW_MODEL,
-        .hw_revision = HW_REVISION,
-        .version =
-            {
-                .major = VERSION_MAJOR,
-                .minor = VERSION_MINOR,
-                .patch = VERSION_PATCH,
-                .build = VERSION_BUILD,
-            },
-        .fix_version =
-            {
-                .major = FIX_VERSION_MAJOR,
-                .minor = FIX_VERSION_MINOR,
-                .patch = FIX_VERSION_PATCH,
-                .build = FIX_VERSION_BUILD,
-            },
-        .min_prev_version =
-            {
-                .major = 0,
-                .minor = 0,
-                .patch = 0,
-                .build = 0,
-            },
-        .monotonic_version = BOOTLOADER_MONOTONIC_VERSION,
-        // The sigmask field is properly initialized later by headertool_pq
-        // (= 0 => no keys used for signature verification; prevents booting)
-        .sigmask = 0,
-        .header_size = BOOT_HEADER_MAXSIZE,
-        // The authenticated part size is calculated for a zero-length Merkle
-        // proof, since the Merkle proof is not known at compile time.
-        // headertool_pq must update this value later when adding the Merkle
-        // proof to the header.
-        .auth_size = BOOT_HEADER_MAXSIZE - sizeof(boot_header_merkle_proof_t) -
-                     sizeof(boot_header_unauth_t),
-        .code_size = (uint32_t)&_bootloader_code_size,
-        .storage_address = STORAGE_1_START,
-    }};
-#endif
-
 static const uint8_t * const BOARDLOADER_PQ_KEYS[] = {
 #if !PRODUCTION
     (const uint8_t*) "\xec\x01\xe6\x02\x63\x02\x4f\x7e\x71\x72\x80\x13\xb7\x31\xf7\xba\x12\x99\xf5\x18\xc2\x7b\xa3\xed\x8f\x4a\x21\x99\x74\x12\x7c\x62",

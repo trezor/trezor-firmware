@@ -178,6 +178,9 @@ if DEBUGLINK:
     ]
 
 if "boot_ucb" in FEATURES_AVAILABLE:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/header_pq.c',
+    ]
     env.Replace(
         HEADERTOOL='headertool_pq',
     )
