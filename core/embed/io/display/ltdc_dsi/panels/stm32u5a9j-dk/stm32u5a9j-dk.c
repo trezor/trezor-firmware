@@ -1175,7 +1175,7 @@ bool panel_init(display_driver_t* drv) {
 #ifdef USE_SUSPEND
 bool panel_suspend(display_driver_t* drv) {
   // TODO: Implement proper suspend sequence for this panel
-  return true;
+  return false;
 }
 #endif  // USE_SUSPEND
 
