@@ -41,6 +41,10 @@
 
 #ifdef USE_POWER_MANAGER
 #include "suspend_overlay.h"
+
+
+
+
 #endif
 
 LOG_DECLARE(display_driver)
@@ -68,6 +72,16 @@ LOG_DECLARE(display_driver)
 #define PIXEL_SIZE 2
 
 #endif
+
+
+#define SDL_INIT_AUDIO      0x00000010u /**< `SDL_INIT_AUDIO` implies `SDL_INIT_EVENTS` */
+#define SDL_INIT_VIDEO      0x00000020u /**< `SDL_INIT_VIDEO` implies `SDL_INIT_EVENTS`, should be initialized on the main thread */
+#define SDL_INIT_JOYSTICK   0x00000200u /**< `SDL_INIT_JOYSTICK` implies `SDL_INIT_EVENTS` */
+#define SDL_INIT_HAPTIC     0x00001000u
+#define SDL_INIT_GAMEPAD    0x00002000u /**< `SDL_INIT_GAMEPAD` implies `SDL_INIT_JOYSTICK` */
+#define SDL_INIT_EVENTS     0x00004000u
+#define SDL_INIT_SENSOR     0x00008000u /**< `SDL_INIT_SENSOR` implies `SDL_INIT_EVENTS` */
+#define SDL_INIT_CAMERA     0x00010000u /**< `SDL_INIT_CAMERA` implies `SDL_INIT_EVENTS` */
 
 SDL_Surface* SDL_CreateRGBSurface(Uint32 flags, int width, int height,
                                   int depth, Uint32 Rmask, Uint32 Gmask,
@@ -120,9 +134,16 @@ bool display_init(display_content_mode_t mode) {
   }
   fprintf(stderr, "SDL video driver (before init): %s\n",
           SDL_GetCurrentVideoDriver());
+  if (SDL_InitSubSystem(SDL_INIT_EVENTS) != 0) {
+    fprintf(stderr, "SDL_InitSubSystem(SDL_INIT_EVENTS) failed: %s\n %s\n", SDL_GetError(), "why");
+  }
+  if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    fprintf(stderr, "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s\n", SDL_GetError());
+  }
+
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
-    LOG_ERR("%s", SDL_GetError());
+    fprintf("%s", SDL_GetError());
     error_shutdown("SDL_Init error");
   }
 

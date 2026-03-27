@@ -149,7 +149,16 @@ stdenvNoCC.mkDerivation ({
     nrfconnect
   ];
   shellHook = ''
-  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${sdl3.dev}/lib/pkgconfig:${sdl3-image.dev}/lib/pkgconfig
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${sdl3.dev}/lib/pkgconfig:${sdl3-image.dev}/lib/pkgconfig
+
+    # --- Forward host display environment (CRITICAL) ---
+    export DISPLAY=${builtins.getEnv "DISPLAY"}
+    export WAYLAND_DISPLAY=${builtins.getEnv "WAYLAND_DISPLAY"}
+    export XDG_RUNTIME_DIR=${builtins.getEnv "XDG_RUNTIME_DIR"}
+    export XAUTHORITY=${builtins.getEnv "XAUTHORITY"}
+
+    # --- Force SDL to use X11 (more reliable in nix shells) ---
+    export SDL_VIDEODRIVER=x11
   '';
   LD_LIBRARY_PATH = lib.makeLibraryPath [
     libffi
