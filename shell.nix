@@ -75,6 +75,7 @@ in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
   name = "trezor-firmware-env";
+  nativeBuildInputs = [ autoPatchelfHook ];
   buildInputs = lib.optionals fullDeps [
     bitcoind
   ] ++ [
@@ -82,6 +83,19 @@ stdenvNoCC.mkDerivation ({
     # crash with SDL_CreateRenderer error.
     sdl3
     sdl3-image
+    libX11 # for SDL3 - start
+    libXrandr
+    libXcursor
+    libXi
+    libXinerama
+    libXxf86vm
+    libXext
+    libXrender
+    libXfixes
+    libxkbcommon
+    libGL
+    libdrm
+    wayland # for SDL3 - end
     bash
     bloaty  # for binsize
     check
@@ -112,7 +126,6 @@ stdenvNoCC.mkDerivation ({
     zlib
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
-    autoPatchelfHook
     procps
     valgrind
   ] ++ lib.optionals (stdenv.isDarwin) [
@@ -138,7 +151,29 @@ stdenvNoCC.mkDerivation ({
   shellHook = ''
   export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${sdl3.dev}/lib/pkgconfig:${sdl3-image.dev}/lib/pkgconfig
   '';
-  LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
+  LD_LIBRARY_PATH = lib.makeLibraryPath [
+    libffi
+    libjpeg
+    libusb1
+    libressl
+
+    # --- SDL3 critical runtime deps ---
+    sdl3
+    sdl3-image
+    libX11
+    libXext
+    libXrender
+    libXcursor
+    libXi
+    libXrandr
+    libXinerama
+    libXxf86vm
+    libXfixes
+    libxkbcommon
+    wayland
+    libGL
+    libdrm
+  ];
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
 
