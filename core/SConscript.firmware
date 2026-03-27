@@ -279,7 +279,6 @@ SOURCE_MOD += [
     'embed/rtl/error_handling.c',
     'embed/rtl/scm_revision.c',
     'embed/rtl/strutils.c',
-    'embed/sec/image/boot_image_embdata.c',
     'embed/sec/image/image.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
@@ -476,6 +475,7 @@ env = Environment(
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 SOURCE_FIRMWARE = [
+    'embed/projects/firmware/boot_image_embdata.c',
     'embed/projects/firmware/header.S',
     'embed/projects/firmware/main.c',
     'embed/projects/firmware/mphalport.c',
