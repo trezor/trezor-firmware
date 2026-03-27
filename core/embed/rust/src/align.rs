@@ -6,6 +6,7 @@ pub struct AlignedTo<Align, Bytes: ?Sized> {
     pub data: Bytes,
 }
 
+#[allow(unused_macros)]
 macro_rules! include_aligned {
     ($align:ty, $filename:expr) => {{
         use $crate::align::AlignedTo;
@@ -18,4 +19,6 @@ macro_rules! include_aligned {
         &ALIGNED.data
     }};
 }
+
+#[allow(unused_imports)]
 pub(crate) use include_aligned;
