@@ -286,18 +286,30 @@ def _get_exponent_univ(dst, base, idx, salt):
 
 
 def _sc_square_mult(dst: Scalar | None, x: Scalar, n: int) -> Scalar:
-    import math
-
     if n == 0:
         return decodeint_into_noreduce(dst, _ONE)
 
-    lg = int(math.log(n, 2))
+    lg = _log2(n)
     dst = sc_copy(dst, x)
     for i in range(1, lg + 1):
         sc_mul_into(dst, dst, dst)
         if n & (1 << (lg - i)) > 0:
             sc_mul_into(dst, dst, x)
     return dst
+
+
+def _log2(n: int) -> int:
+    """
+    Replaces `math.log(n, 2)` for positive `n`.
+    """
+    assert n > 0
+
+    lg = -1
+    while n > 0:
+        n >>= 1
+        lg += 1
+
+    return lg
 
 
 def _invert_batch(x):
