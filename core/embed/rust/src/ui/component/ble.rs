@@ -2,9 +2,11 @@ use crate::ui::{
     component::{Component, Event, EventCtx},
     event::BLEEvent,
     geometry::Rect,
-    led::{Effect, LedState},
     shape::Renderer,
 };
+
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::{Effect, LedState};
 
 pub enum BLEHandlerMode {
     /// Advertising without whitelist started, waiting for some host to respond
