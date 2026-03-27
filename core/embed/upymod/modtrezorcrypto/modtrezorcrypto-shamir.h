@@ -19,7 +19,7 @@
 
 #include "py/obj.h"
 
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
 
 #include "shamir.h"
 

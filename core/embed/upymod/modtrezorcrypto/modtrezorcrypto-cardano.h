@@ -21,7 +21,7 @@
 
 #include "py/objstr.h"
 
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
 #include "hdnode.h"
 
 #include "bip39.h"

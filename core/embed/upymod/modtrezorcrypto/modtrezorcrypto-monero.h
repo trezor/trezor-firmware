@@ -21,7 +21,7 @@
 #include "py/objint.h"
 #include "py/objstr.h"
 
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
 
 #include "bignum.h"
 #include "memzero.h"
