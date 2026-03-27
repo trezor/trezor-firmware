@@ -418,17 +418,17 @@ secbool touch_suspend(void) {
 
   touch_poll_deinit();
 
-  // Enable the interrupt to wake up on touch
-  __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_EXTI_INTERRUPT_PIN);
-  NVIC_ClearPendingIRQ(TOUCH_EXTI_INTERRUPT_NUM);
-  NVIC_EnableIRQ(TOUCH_EXTI_INTERRUPT_NUM);
-
   // Set the touch driver to monitor mode
   if (secfalse == ft3168_power_mode_set(driver->i2c_bus, P_MONITOR_MODE)) {
     goto cleanup;
   }
 
   driver->suspended = sectrue;
+
+  // Enable the interrupt to wake up on touch
+  __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_EXTI_INTERRUPT_PIN);
+  NVIC_ClearPendingIRQ(TOUCH_EXTI_INTERRUPT_NUM);
+  NVIC_EnableIRQ(TOUCH_EXTI_INTERRUPT_NUM);
 
   return sectrue;
 
