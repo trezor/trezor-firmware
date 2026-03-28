@@ -1,7 +1,7 @@
 use heapless;
 
 use crate::{
-    Backend, Channel, ChannelIO, Error, Host,
+    Backend, ChannelIO, Error, Host,
     alternating_bit::SyncBits,
     channel::{ChannelState, Nonce, PacketInResult, PairingState, noise::NoiseHandshake},
     credential::CredentialStore,
@@ -21,6 +21,8 @@ use core::marker::PhantomData;
 // - DH key + credential + 2 AEAD tags + overhead
 const INTERNAL_BUFFER_LEN: usize = 192;
 const MAX_DEVICE_PROPERTIES_LEN: usize = 128;
+
+pub type Channel<B> = super::Channel<Host, B>;
 
 enum AllocationState {
     None,
@@ -325,7 +327,7 @@ enum HandshakeState {
 /// - perform [`ChannelIO`] with empty messages until [`ChannelOpen::handshake_done`]
 /// - call [`ChannelOpen::complete`] to obtain [`Channel`]
 pub struct ChannelOpen<C: CredentialStore, B: Backend> {
-    channel: Channel<Host, B>,
+    channel: Channel<B>,
     state: HandshakeState,
     noise: NoiseHandshake<Host, B>,
     internal_buffer: heapless::Vec<u8, INTERNAL_BUFFER_LEN>,
@@ -457,7 +459,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     ///
     /// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
     /// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
-    pub fn complete(self) -> Result<Channel<Host, B>, Error> {
+    pub fn complete(self) -> Result<Channel<B>, Error> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }

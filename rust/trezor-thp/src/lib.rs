@@ -12,7 +12,7 @@ mod fragment;
 pub mod header;
 mod util;
 
-pub use channel::{Backend, Channel, ChannelIO};
+pub use channel::{Backend, ChannelIO};
 pub use error::Error;
 
 pub trait Role: Clone + PartialEq {
