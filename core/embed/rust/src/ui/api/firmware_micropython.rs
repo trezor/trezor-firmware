@@ -471,7 +471,10 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             .try_into_option()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let verb: TString = kwargs.get(Qstr::MP_QSTR_verb)?.try_into()?;
-        let verb_info: TString = kwargs.get(Qstr::MP_QSTR_verb_info)?.try_into()?;
+        let verb_info: Option<TString<'static>> = kwargs
+            .get(Qstr::MP_QSTR_verb_info)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb_cancel: Option<TString<'static>> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -1686,7 +1689,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     subtitle: str | None = None,
     ///     items: Iterable[tuple[StrOrBytes, bool]],
     ///     verb: str,
-    ///     verb_info: str,
+    ///     verb_info: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:

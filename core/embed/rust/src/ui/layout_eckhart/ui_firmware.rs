@@ -586,7 +586,7 @@ impl FirmwareUI for UIEckhart {
         subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
-        verb_info: TString<'static>,
+        verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -617,7 +617,7 @@ impl FirmwareUI for UIEckhart {
             None,
             Some(verb),
             false,
-            Some(verb_info),
+            verb_info,
             None,
         )?;
         LayoutObj::new_root(flow)
