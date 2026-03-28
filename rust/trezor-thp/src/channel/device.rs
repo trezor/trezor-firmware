@@ -1,7 +1,7 @@
 use heapless;
 
 use crate::{
-    Backend, Channel, ChannelIO, Device, Error,
+    Backend, ChannelIO, Device, Error,
     alternating_bit::SyncBits,
     channel::{
         ChannelState, Nonce, PRIVKEY_LEN, PacketInResult, PairingState, noise::NoiseHandshake,
@@ -32,6 +32,8 @@ const INTERNAL_BUFFER_LEN: usize = 192;
 const BROADCAST_OUTGOING_QUEUE_LEN: usize = 8;
 // "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
 const CODEC_V1_RESPONSE: &[u8] = b"?##\x00\x03\x00\x00\x00\x02\x08\x11";
+
+pub type Channel<B> = super::Channel<Device, B>;
 
 /// Maps packets to channels. Handles broadcast channel messages, notably channel allocation.
 /// Every packet interface on the device needs to have one Mux. Event loop should pass every
@@ -282,7 +284,7 @@ enum HandshakeState {
 /// Please note that this object also handles sending ChannelAllocationResponse
 /// which is a broadcast message, which are normally handled by [`Mux`].
 pub struct ChannelOpen<C: CredentialVerifier, B: Backend> {
-    channel: Channel<Device, B>,
+    channel: Channel<B>,
     state: HandshakeState,
     noise: NoiseHandshake<Device, B>,
     internal_buffer: heapless::Vec<u8, INTERNAL_BUFFER_LEN>,
@@ -418,7 +420,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     ///
     /// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
     /// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
-    pub fn complete(self) -> Result<Channel<Device, B>, Error> {
+    pub fn complete(self) -> Result<Channel<B>, Error> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }
