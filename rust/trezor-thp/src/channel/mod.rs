@@ -79,14 +79,17 @@ enum ChannelState<R: Role> {
     /// Ready to send or receive.
     Idle,
     /// In the process of sending a message, or waiting for ACK.
-    Sending(Fragmenter<R>),
+    Sending {
+        fragmenter: Fragmenter<R>,
+        retry: u8,
+    },
     /// In the process of receiving a message, or waiting for the consumer to pick up
     /// an assembled message.
-    Receiving(Reassembler<R>),
+    Receiving { reassembler: Reassembler<R> },
     /// Channel is inoperable.
     /// None: local failure
     /// Some: error message received from other side
-    Failed(Option<TransportError>),
+    Failed { error: Option<TransportError> },
 }
 
 /// THP channel with established secure layer.
@@ -125,24 +128,36 @@ impl<R: Role, B: Backend> Channel<R, B> {
         self.noise.as_ref().unwrap().handshake_hash()
     }
 
+    /// Return the retransmission attempt number (the first transmission returns 0),
+    /// or `None` if the channel is currently not sending anything.
+    pub fn sending_retry(&self) -> Option<u8> {
+        match self.state {
+            ChannelState::Sending { retry, .. } => Some(retry),
+            _ => None,
+        }
+    }
+
     fn raw_in(&mut self, header: Header<R>, send_buffer: &[u8]) -> Result<()> {
         let ChannelState::Idle = self.state else {
             return Err(Error::not_ready());
         };
         let sb = self.sync.send_start().ok_or_else(Error::not_ready)?;
-        let frag = Fragmenter::new(header, sb, send_buffer)?;
-        self.state = ChannelState::Sending(frag);
+        let fragmenter = Fragmenter::new(header, sb, send_buffer)?;
+        self.state = ChannelState::Sending {
+            fragmenter,
+            retry: 0,
+        };
         Ok(())
     }
 
     fn raw_out(&mut self, receive_buffer: &[u8]) -> Result<(Header<R>, usize)> {
-        let ChannelState::Receiving(r) = &mut self.state else {
+        let ChannelState::Receiving { reassembler } = &mut self.state else {
             return Err(Error::not_ready());
         };
-        if !r.is_done() {
+        if !reassembler.is_done() {
             return Err(Error::not_ready());
         }
-        let len = match r.verify(receive_buffer) {
+        let len = match reassembler.verify(receive_buffer) {
             Ok(len) => len,
             Err(e) => {
                 log::warn!(
@@ -153,7 +168,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
             }
         };
         self.send_ack = Some(self.sync.receive_acknowledge());
-        let header = r.header().clone();
+        let header = reassembler.header().clone();
         self.state = ChannelState::Idle;
         Ok((header, len))
     }
@@ -191,27 +206,27 @@ impl<R: Role, B: Backend> Channel<R, B> {
         }
         Ok(match &mut self.state {
             // First fragment.
-            ChannelState::Receiving(_) | ChannelState::Idle if !is_cont => {
+            ChannelState::Receiving { .. } | ChannelState::Idle if !is_cont => {
                 let (is_done, enlarge) = self.handle_init(packet_buffer, receive_buffer)?;
                 PacketInResult::accept(is_done).with_buffer(enlarge)
             }
             // Continuation fragments.
-            ChannelState::Receiving(r) => {
-                r.update(packet_buffer, receive_buffer)?;
-                PacketInResult::accept(r.is_done())
+            ChannelState::Receiving { reassembler } => {
+                reassembler.update(packet_buffer, receive_buffer)?;
+                PacketInResult::accept(reassembler.is_done())
             }
             // Ignore unexpected continuations.
             ChannelState::Idle => return Err(Error::malformed_data()),
             // Might possibly happen when we've sent an ACK and it got lost.
             // We end up sending reply while the other side is retransmitting.
             // Is this recoverable?
-            ChannelState::Sending(_) => return Err(Error::malformed_data()),
-            ChannelState::Failed(_e) => return Err(Error::unexpected_input()),
+            ChannelState::Sending { .. } => return Err(Error::malformed_data()),
+            ChannelState::Failed { .. } => return Err(Error::unexpected_input()),
         })
     }
 
     fn handle_ack(&mut self, packet_buffer: &[u8]) -> Result<()> {
-        if matches!(self.state, ChannelState::Sending(_)) {
+        if matches!(self.state, ChannelState::Sending { .. }) {
             let sb = SyncBits::try_from(packet_buffer)?;
             self.sync.send_mark_delivered(sb);
             if self.sync.can_send() {
@@ -230,7 +245,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                 if let Ok(te) = TransportError::try_from(payload) {
                     log::error!("[{}] Peer sent an error: {}.", self.channel_id, te as u8);
                     if !te.is_recoverable() {
-                        self.state = ChannelState::Failed(Some(te));
+                        self.state = ChannelState::Failed { error: Some(te) };
                     }
                     return Ok(te);
                 } else {
@@ -241,7 +256,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                     );
                 }
             }
-            self.state = ChannelState::Failed(None);
+            self.state = ChannelState::Failed { error: None };
             return Err(Error::malformed_data());
         }
         log::warn!("[{}] Peer sent an error with invalid CRC.", self.channel_id);
@@ -261,9 +276,9 @@ impl<R: Role, B: Backend> Channel<R, B> {
             return Err(Error::malformed_data());
         }
         receive_buffer.fill(0);
-        let r = Reassembler::new(packet_buffer, receive_buffer)?;
-        let is_done = r.is_done();
-        let payload_len = r.header().payload_len();
+        let reassembler = Reassembler::new(packet_buffer, receive_buffer)?;
+        let is_done = reassembler.is_done();
+        let payload_len = reassembler.header().payload_len();
         let enlarge = (usize::from(payload_len) > receive_buffer.len()).then_some(payload_len);
         if enlarge.is_some() {
             log::debug!(
@@ -272,7 +287,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
                 receive_buffer.len()
             );
         }
-        self.state = ChannelState::Receiving(r);
+        self.state = ChannelState::Receiving { reassembler };
         Ok((is_done, enlarge))
     }
 }
@@ -524,6 +539,8 @@ pub trait ChannelIO {
 
     /// Retransmit message previously submitted using [`Self::message_in`]. Does nothing if
     /// ACK was already received.
+    /// The library does not limit the number of retries - application needs to decide when
+    /// to abandon the channel.
     fn message_retransmit(&mut self) -> Result<()>;
 
     /// Submit message for channel to encrypt and fragment into packets.
@@ -557,12 +574,12 @@ pub trait ChannelIO {
 
 impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     fn packet_in(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> PacketInResult {
-        if let ChannelState::Failed(_e) = self.state {
+        if let ChannelState::Failed { .. } = self.state {
             return PacketInResult::fail(Error::unexpected_input());
         }
         let res = PacketInResult::from_result(self.handle_packet(packet_buffer, receive_buffer));
         if let PacketInResult::Failed { .. } = res {
-            self.state = ChannelState::Failed(None);
+            self.state = ChannelState::Failed { error: None };
         }
         res
     }
@@ -574,15 +591,15 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             Fragmenter::single(header, sb, &[], packet_buffer)?;
             return Ok(());
         }
-        let ChannelState::Sending(f) = &mut self.state else {
+        let ChannelState::Sending { fragmenter, .. } = &mut self.state else {
             return Err(Error::not_ready());
         };
-        let written = f.next(send_buffer, packet_buffer)?;
+        let written = fragmenter.next(send_buffer, packet_buffer)?;
         if !written {
             return Err(Error::not_ready());
         }
-        if f.is_done() {
-            if f.header().channel_id() == BROADCAST_CHANNEL_ID {
+        if fragmenter.is_done() {
+            if fragmenter.header().channel_id() == BROADCAST_CHANNEL_ID {
                 // This is a special case for `channel_allocation_response` which is the only
                 // message sent through Channel (by `device::ChannelOpen`) but does not
                 // wait for ACK because as it is sent on broadcast channel.
@@ -599,7 +616,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             return true;
         }
         match &self.state {
-            ChannelState::Sending(f) => !f.is_done(),
+            ChannelState::Sending { fragmenter, .. } => !fragmenter.is_done(),
             _ => false,
         }
     }
@@ -637,7 +654,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             Ok(plaintext_len) => &receive_buffer[..plaintext_len],
             Err(e) => {
                 log::error!("[{}] Decryption failed, channel closed.", self.channel_id);
-                self.state = ChannelState::Failed(None);
+                self.state = ChannelState::Failed { error: None };
                 return Err(e);
             }
         };
@@ -654,18 +671,32 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
 
     fn message_out_ready(&self) -> bool {
         match &self.state {
-            ChannelState::Receiving(r) => r.is_done(),
+            ChannelState::Receiving { reassembler } => reassembler.is_done(),
             _ => false,
         }
     }
 
     fn message_retransmit(&mut self) -> Result<()> {
-        let ChannelState::Sending(f) = &mut self.state else {
+        let ChannelState::Sending { fragmenter, retry } = &mut self.state else {
             log::warn!("[{}] Nothing to retransmit.", self.channel_id);
             return Ok(());
         };
         log::debug!("[{}] Retransmitting message.", self.channel_id);
-        f.reset();
+        fragmenter.reset();
+        *retry = retry.saturating_add(1);
         Ok(())
     }
+}
+
+/// Returns how many milliseconds to wait for an ACK for a given retransmission attempt.
+/// First timeout (0th retry) is after 200ms till ~3.52s.
+///
+/// Taken from the original micropython implementation - not part of the specification,
+/// you are free to use different function. It is recommended to measure the duration between
+/// sending last packet and receiving an ACK ("ack_latency") and add it to this number.
+pub fn retransmit_after_ms(retry: u8) -> u32 {
+    const MAX_RETRANSMISSION_COUNT: u8 = 50;
+    let retry: u32 = retry.min(MAX_RETRANSMISSION_COUNT - 1).into();
+
+    10300 - 1010000 / retry.saturating_add(100)
 }
