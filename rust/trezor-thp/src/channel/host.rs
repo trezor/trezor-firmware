@@ -429,17 +429,9 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
         self.device_properties.as_slice()
     }
 
-    /// Returns pairing state if handshake finished, or None otherwise.
-    pub fn pairing_state(&self) -> Option<PairingState> {
-        match self.state {
-            HandshakeState::Finished { pairing_state } => Some(pairing_state),
-            _ => None,
-        }
-    }
-
     /// True if handshake finished and [`ChannelOpen::complete()`] can be called.
     pub fn handshake_done(&self) -> bool {
-        self.pairing_state().is_some()
+        matches!(self.state, HandshakeState::Finished { .. })
     }
 
     /// True if the handshake failed and the object should be discarded.
@@ -459,13 +451,16 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     ///
     /// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
     /// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
-    pub fn complete(self) -> Result<Channel<B>, Error> {
+    pub fn complete(mut self) -> Result<Channel<B>, Error> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }
         log::debug!("Handshake complete.");
         Ok(match self.state {
-            HandshakeState::Finished { .. } => self.channel,
+            HandshakeState::Finished { pairing_state } => {
+                self.channel.pairing_state = pairing_state;
+                self.channel
+            }
             _ => return Err(Error::unexpected_input()),
         })
     }
