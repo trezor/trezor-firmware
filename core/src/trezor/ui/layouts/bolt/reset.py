@@ -279,9 +279,8 @@ def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> Awaitable[int]
     )
 
 
-def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable[None]:
-    if single_share:
-        assert num_of_words is not None
+def show_intro_backup(num_of_words: int | None) -> Awaitable[None]:
+    if num_of_words is not None:
         description = TR.backup__info_single_share_backup.format(num_of_words)
     else:
         description = TR.backup__info_multi_share_backup
