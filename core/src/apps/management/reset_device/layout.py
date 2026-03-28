@@ -104,12 +104,10 @@ async def _do_confirm_share_words(
     return True
 
 
-async def show_backup_intro(
-    single_share: bool, num_of_words: int | None = None
-) -> None:
+async def show_backup_intro(num_of_words: int | None = None) -> None:
     from trezor.ui.layouts.reset import show_intro_backup
 
-    await show_intro_backup(single_share, num_of_words)
+    await show_intro_backup(num_of_words)
 
 
 async def show_backup_success() -> None:
