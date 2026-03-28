@@ -420,6 +420,7 @@ class Channel:
             retries_left -= 1
             time.sleep(retry_backoff_time)
             retry_backoff_time *= 2
+            print("RETRY")
             return True
 
         while True:
@@ -475,6 +476,9 @@ class Channel:
                 # process ACK bit, return message in next _read
                 self._next_message = message
             else:
+                print(
+                    f"{self.is_ack_piggybacking_allowed} {expected_seq_bit} {message.ack_bit}"
+                )
                 LOG.error("Received message is not a valid ACK: %s", message)
                 # data messages and their acks should have been handled by _read()
                 continue

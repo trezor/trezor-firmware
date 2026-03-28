@@ -441,6 +441,16 @@ impl Obj {
             Err(e) => Err(e.into()),
         }
     }
+
+    pub fn from_option<T>(val: Option<T>) -> Result<Self, Error>
+    where
+        T: TryInto<Obj, Error = Error>,
+    {
+        match val {
+            Some(v) => v.try_into(),
+            None => Ok(Self::const_none()),
+        }
+    }
 }
 
 impl Obj {

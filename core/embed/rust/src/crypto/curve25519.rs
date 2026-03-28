@@ -12,6 +12,35 @@ impl Drop for Point {
     }
 }
 
+#[cfg(feature = "thp")]
+impl trezor_thp::channel::U8Array for Point {
+    fn new() -> Self {
+        Self { bytes: [0u8; 32] }
+    }
+
+    fn new_with(c: u8) -> Self {
+        Self { bytes: [c; 32] }
+    }
+
+    fn from_slice(src: &[u8]) -> Self {
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice(src);
+        Self { bytes }
+    }
+
+    fn len() -> usize {
+        32
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    fn as_mut(&mut self) -> &mut [u8] {
+        &mut self.bytes
+    }
+}
+
 pub struct Scalar {
     bytes: [u8; 32],
 }
@@ -19,6 +48,35 @@ pub struct Scalar {
 impl Drop for Scalar {
     fn drop(&mut self) {
         self.bytes.zeroize()
+    }
+}
+
+#[cfg(feature = "thp")]
+impl trezor_thp::channel::U8Array for Scalar {
+    fn new() -> Self {
+        Self { bytes: [0u8; 32] }
+    }
+
+    fn new_with(c: u8) -> Self {
+        Self { bytes: [c; 32] }
+    }
+
+    fn from_slice(src: &[u8]) -> Self {
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice(src);
+        Self { bytes }
+    }
+
+    fn len() -> usize {
+        32
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    fn as_mut(&mut self) -> &mut [u8] {
+        &mut self.bytes
     }
 }
 
@@ -32,10 +90,9 @@ impl Scalar {
         res
     }
 
-    #[cfg(feature = "test")]
     pub fn generate() -> Self {
         let mut bytes = [0u8; 32];
-        crate::trezorhal::random::bytes(&mut bytes);
+        crate::trezorhal::random::bytes(&mut bytes); // TODO make sure this is safe
         Self::from_bytes(bytes)
     }
 }

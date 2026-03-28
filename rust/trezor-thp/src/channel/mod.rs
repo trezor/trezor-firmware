@@ -23,8 +23,8 @@ pub use noise::{
     Backend, Cipher, DH, HANDSHAKE_HASH_LEN, Hash, PRIVKEY_LEN, PUBKEY_LEN, TAG_LEN, U8Array,
 };
 
-pub const MAX_DEVICE_PROPERTIES_LEN: usize = 128;
-pub const MAX_CREDENTIAL_LEN: usize = 128;
+pub const MAX_DEVICE_PROPERTIES_LEN: usize = 128; // TODO currently fits 32
+pub const MAX_CREDENTIAL_LEN: usize = 128; // TODO consider making this smaller, currently fits 96
 
 // Size of internal buffer used when opening a channel.
 const HANDSHAKE_BUFFER_LEN: usize = CHECKSUM_LEN
@@ -835,7 +835,11 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
             log::warn!("[{:04x}] Nothing to retransmit.", self.channel_id);
             return Ok(());
         };
-        log::debug!("[{:04x}] Retransmitting message.", self.channel_id);
+        log::debug!(
+            "[{:04x}] Retransmitting message, retry {}.",
+            self.channel_id,
+            retry
+        );
         fragmenter.reset();
         *retry = retry.saturating_add(1);
         Ok(())

@@ -1,47 +1,22 @@
-import ustruct
-import utime
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_common import (
-    CHANNEL_ACK_LATENCY_MS,
-    CHANNEL_HANDSHAKE_HASH,
-    CHANNEL_HOST_STATIC_PUBKEY,
-    CHANNEL_IFACE,
-    CHANNEL_KEY_RECEIVE,
-    CHANNEL_KEY_SEND,
-    CHANNEL_NONCE_RECEIVE,
-    CHANNEL_NONCE_SEND,
-    CHANNEL_STATE,
-)
-from storage.cache_thp import (
-    SESSION_ID_LENGTH,
-    TAG_LENGTH,
-    ChannelCache,
-    clear_sessions_with_channel_id,
-    conditionally_replace_channel,
-    is_there_a_channel_to_replace,
-)
-from trezor import protobuf, utils, workflow
-from trezor.loop import Timeout, race, sleep
-from trezor.wire.context import UnexpectedMessageException
+import trezorthp
+from storage.cache_thp import clear_sessions_with_channel_id, migrate_sessions
+from trezor import loop, protobuf, utils, workflow
+from trezor.loop import Timeout, sleep
+
+from apps.thp.credential_manager import decode_credential, unwrap_credential
 
 from ..protocol_common import Message
-from . import ACK_MESSAGE, ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError
-from . import alternating_bit_protocol as ABP
-from . import control_byte, crypto, memory_manager
-from .checksum import CHECKSUM_LENGTH, is_valid
-from .writer import MESSAGE_TYPE_LENGTH
+from . import ChannelState, ThpError, memory_manager
 
 if __debug__:
     from trezor import log
-    from trezor.utils import hexlify_if_bytes
-
-    from . import state_to_str
 
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
-    from typing import Any, Awaitable, Callable, Generator
+    from typing import Any
 
     from trezor.messages import ThpPairingCredential
     from trezor.wire import WireInterface
@@ -60,98 +35,11 @@ _MIN_RETRANSMISSION_COUNT = const(2)
 _WRITE_TIMEOUT_MS = const(5_000)
 _WRITE_TIMEOUT = sleep(_WRITE_TIMEOUT_MS)
 
-# Preempt a stale channel if another channel becomes active and we allowed enough time for the host to respond.
-# It allows interrupting a "stuck" THP workflow using a different channel on the same interface.
-_PREEMPT_TIMEOUT_MS = const(1_000)
-
-EMPTY_ACK_PAYLOAD = memoryview(b"")
-
 _TRACE = const(False)
 
-
-class Reassembler:
-    def __init__(self, read_buf: ThpBuffer) -> None:
-        self.thp_read_buf = read_buf
-        self.reset()
-
-    def reset(self, message: memoryview | None = None) -> None:
-        self.bytes_read: int = 0
-        self.buffer_len: int = 0
-        self.message = message
-
-    def handle_packet(self, packet: memoryview) -> bool:
-        """
-        Process current packet, returning `True` when a valid message is reassembled.
-        The parsed message can retrieved via the `message` field (if it's not `None`).
-        In case of a checksum error or if the reassembly is not over, return `False`.
-        """
-        ctrl_byte = packet[0]
-        if control_byte.is_continuation(ctrl_byte):
-            if not self.bytes_read:
-                # ignore unexpected continuation packets
-                return False
-
-            buffer = self.thp_read_buf.get(self.buffer_len)
-            if buffer is None:
-                # Failed to get the buffer
-                return False
-            self._buffer_packet_data(buffer, packet, PacketHeader.CONT_LENGTH)
-        else:
-            self.reset()
-            _, _, payload_length = ustruct.unpack(PacketHeader.INIT_FORMAT, packet)
-            self.buffer_len = payload_length + PacketHeader.INIT_LENGTH
-
-            buffer = self.thp_read_buf.get(self.buffer_len)
-            if buffer is None:
-                # Failed to get the buffer
-                return False
-            self._buffer_packet_data(buffer, packet, 0)
-
-        assert len(buffer) == self.buffer_len
-        if self.bytes_read < self.buffer_len:
-            return False
-
-        if self.bytes_read > self.buffer_len:
-            if __debug__:
-                log.warning(
-                    __name__,
-                    "Reassembled %d bytes, %d expected",
-                    self.bytes_read,
-                    self.buffer_len,
-                )
-            self.reset()
-            return False
-
-        if not is_checksum_valid(buffer):
-            return False
-
-        assert self.message is None
-        self.message = buffer
-        return True
-
-    def _buffer_packet_data(
-        self, payload_buffer: memoryview, packet: memoryview, offset: int
-    ) -> None:
-        self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
-
-
-def is_checksum_valid(buffer: memoryview) -> bool:
-    """
-    Returns `True` if the checksum is valid, otherwise returns `False`.
-    """
-    if is_valid(buffer[-CHECKSUM_LENGTH:], buffer[:-CHECKSUM_LENGTH]):
-        return True
-    # ignore invalid payloads
-    if __debug__:
-        log.warning("Invalid payload checksum: %s", utils.hexlify_if_bytes(buffer))
-    return False
-
-
-class ChannelPreemptedException(UnexpectedMessageException):
-    """Raising this exception should restart the event loop."""
-
-    def __init__(self) -> None:
-        super().__init__(msg=None)
+TREZOR_STATE_UNPAIRED = const(0x00)
+TREZOR_STATE_PAIRED = const(0x01)
+TREZOR_STATE_PAIRED_AUTOCONNECT = const(0x02)
 
 
 class Channel:
@@ -161,251 +49,138 @@ class Channel:
 
     def __init__(
         self,
-        channel_cache: ChannelCache,
-        ctx: InterfaceContext,
+        channel_id: int,
+        iface_ctx: InterfaceContext,
         buffers: tuple[ThpBuffer, ThpBuffer],
     ) -> None:
-        assert ctx._iface.iface_num() == channel_cache.get_int(CHANNEL_IFACE)
-
         # Channel properties
-        self.channel_id: bytes = channel_cache.channel_id
-        self.iface_ctx: InterfaceContext = ctx
+        self.channel_id = channel_id
+        self.iface_ctx: InterfaceContext = iface_ctx
         self.read_buf, self.write_buf = buffers
-        if __debug__ and _TRACE:
-            self._log("channel initialization")
-        self.channel_cache: ChannelCache = channel_cache
+
+        # used by read loop to wake up context.read
+        self.incoming_box: loop.mailbox[None | Exception] = loop.mailbox()
+
+        # used by read loop to wake up context.write
+        self.ack_box: loop.mailbox[None | Exception] = loop.mailbox()
+
+        self.expecting_message = False
+        self.expecting_ack = False
+
+        self.send_buffer: AnyBuffer | None = None
+        self.receive_buffer: AnyBuffer | None = None
+
+        self._info = trezorthp.channel_info(iface_ctx._iface.iface_num(), channel_id)
+        self.state = {
+            TREZOR_STATE_UNPAIRED: ChannelState.TP0,
+            TREZOR_STATE_PAIRED: ChannelState.TC1,
+            TREZOR_STATE_PAIRED_AUTOCONNECT: ChannelState.TC1,
+            None: ChannelState.ENCRYPTED_TRANSPORT,
+        }.get(self._info.pairing_state)
 
         # Shared variables
         self.sessions: dict[int, GenericSessionContext] = {}
-        self.reassembler = Reassembler(self.read_buf)
-        self.last_write_ms: int = utime.ticks_ms()
 
         # Temporary objects
-        self.credential: ThpPairingCredential | None = None
         self.connection_context: PairingContext | None = None
+        self.credential: ThpPairingCredential | None = None
+        try:
+            if self._info.credential and (
+                inner := unwrap_credential(self._info.credential)
+            ):
+                self.credential = decode_credential(inner)
+        except Exception as e:
+            self._log(f"Cannot parse credential: {e}")
+
+    def channel_id_bytes(self) -> bytes:
+        return self.channel_id.to_bytes(2, "big")
 
     @property
     def iface(self) -> WireInterface:
         return self.iface_ctx._iface
 
     def clear(self) -> None:
-        clear_sessions_with_channel_id(self.channel_id)
-        self.channel_cache.clear()
+        clear_sessions_with_channel_id(self.channel_id_bytes())
+        trezorthp.channel_close(self.iface.iface_num(), self.channel_id)
+        self.expecting_message = False
+        self.expecting_ack = False
 
     # ACCESS TO CHANNEL_DATA
 
-    def get_channel_id_int(self) -> int:
-        return int.from_bytes(self.channel_id, "big")
-
     def get_channel_state(self) -> int:
-        state = self.channel_cache.get_int(
-            CHANNEL_STATE, default=ChannelState.UNALLOCATED
-        )
-        assert isinstance(state, int)
-        if __debug__ and _TRACE:
-            self._log("get_channel_state: ", state_to_str(state))
-        return state
-
-    def get_handshake_hash(self) -> bytes:
-        h = self.channel_cache.get(CHANNEL_HANDSHAKE_HASH)
-        assert h is not None
-        return h
-
-    def set_channel_state(self, state: ChannelState) -> None:
-        self.channel_cache.set_int(CHANNEL_STATE, state)
-        if __debug__ and _TRACE:
-            self._log("set_channel_state: ", state_to_str(state))
-
-    def replace_old_channels_with_the_same_host_public_key(self) -> None:
-        was_any_replaced = conditionally_replace_channel(
-            new_channel=self.channel_cache,
-            required_state=ChannelState.ENCRYPTED_TRANSPORT,
-            required_key=CHANNEL_HOST_STATIC_PUBKEY,
-        )
-        if was_any_replaced:
-            # In case a channel was replaced, close all running workflows
-            workflow.close_others()
-        if __debug__ and _TRACE:
-            self._log("Was any channel replaced? ", str(was_any_replaced))
+        assert isinstance(self.state, int)
+        return self.state
 
     def is_channel_to_replace(self) -> bool:
-        return is_there_a_channel_to_replace(
-            new_channel=self.channel_cache,
-            required_state=ChannelState.ENCRYPTED_TRANSPORT,
-            required_key=CHANNEL_HOST_STATIC_PUBKEY,
+        return self._info.pairing_state == TREZOR_STATE_PAIRED_AUTOCONNECT
+
+    def get_handshake_hash(self) -> bytes:
+        assert self._info.handshake_hash is not None
+        return self._info.handshake_hash
+
+    def get_host_static_public_key(self) -> bytes:
+        assert self._info.host_static_public_key is not None
+        return self._info.host_static_public_key
+
+    # returns milliseconds since last write
+    def get_last_write(self) -> int | None:
+        try:
+            info = trezorthp.channel_info(self.iface.iface_num(), self.channel_id)
+            return info.last_write
+        except IndexError:
+            return None
+
+    def set_channel_state(self, state: ChannelState) -> None:
+        self._log(f"set state {state}")
+        self.state = state
+
+    def end_pairing_and_replace(self) -> None:
+        replaced_channel_id = trezorthp.channel_paired(
+            self.iface.iface_num(), self.channel_id
         )
-
-    # READ and DECRYPT
-
-    async def recv_payload(
-        self,
-        expected_ctrl_byte: Callable[[int], bool] | None,
-        timeout_ms: int | None = None,
-    ) -> memoryview:
-        """
-        Receive and return a valid THP payload from this channel & its control byte.
-        Also handle ACKs while waiting for the payload.
-
-        Raise if the received control byte is an unexpected one.
-
-        If `expected_ctrl_byte` is `None`, returns after the first received ACK.
-        """
-
-        return_after_ack = expected_ctrl_byte is None
-        is_ack_piggybacking_allowed = ABP.is_ack_piggybacking_allowed(
-            self.channel_cache
-        )
-
-        while True:
-            # Handle an existing message (if already reassembled).
-            # Otherwise, receive and reassemble a new one.
-            msg = await self._get_reassembled_message(timeout_ms=timeout_ms)
-
-            # Synchronization process
-            ctrl_byte = msg[0]
-            payload = msg[PacketHeader.INIT_LENGTH : -CHECKSUM_LENGTH]
-            seq_bit = control_byte.get_seq_bit(ctrl_byte)
-
-            # 1: Handle ACKs
-            if control_byte.is_ack(ctrl_byte):
-                handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
-                if return_after_ack:
-                    assert not payload
-                    return EMPTY_ACK_PAYLOAD
-                continue
-
-            if is_ack_piggybacking_allowed:
-                handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
-                if return_after_ack and ABP.is_sending_allowed(self.channel_cache):
-                    # A valid ACK has been received - keep the payload for the next `recv_payload()` call
-                    self.reassembler.reset(msg)
-                    return EMPTY_ACK_PAYLOAD
-
-            if return_after_ack or not expected_ctrl_byte(ctrl_byte):
-                if __debug__:
-                    self._log(
-                        "Unexpected control byte - ignoring ",
-                        utils.hexlify_if_bytes(msg),
-                        logger=log.warning,
-                    )
-                continue
-
-            # 2: Handle message with unexpected sequential bit
-            if seq_bit != ABP.get_expected_receive_seq_bit(self.channel_cache):
-                if __debug__:
-                    self._log(
-                        "Received message with an unexpected sequential bit",
-                        logger=log.warning,
-                    )
-                await send_ack(self, ack_bit=seq_bit)
-                continue
-
-            # 3: Send ACK in response
-            await send_ack(self, ack_bit=seq_bit)
-
-            ABP.set_expected_receive_seq_bit(self.channel_cache, 1 - seq_bit)
-
-            return payload
-
-    async def _get_reassembled_message(
-        self, timeout_ms: int | None = None
-    ) -> memoryview:
-        """Doesn't block if a message has been already reassembled."""
-        thp_ctx = self.iface_ctx.thp_ctx
-        while self.reassembler.message is None:
-            # receive and reassemble a new message from any THP channel
-            try:
-                channel = await thp_ctx.get_next_message(timeout_ms=timeout_ms)
-                if channel is None:
-                    continue
-            except ChannelPreemptedException:
-                elapsed_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
-                # allow preempting channel only after enough time has passed
-                is_stale = elapsed_ms > _PREEMPT_TIMEOUT_MS
-                if __debug__:
-                    self._log(
-                        f"Interrupted channel after {elapsed_ms} ms",
-                        logger=(log.error if is_stale else log.warning),
-                    )
-                if is_stale:
-                    raise
-                continue
-
-            if channel is self:
-                break
-
-            # currently only single-channel sessions are supported during a single event loop run
+        if replaced_channel_id is not None:
+            migrate_sessions(
+                replaced_channel_id.to_bytes(2, "big"), self.channel_id_bytes()
+            )
+            # In case a channel was replaced, close all running workflows
+            workflow.close_others()
+        self.credential = None
+        if __debug__:
             self._log(
-                "Ignoring unexpected channel: ",
-                utils.hexlify_if_bytes(channel.channel_id),
-                logger=log.warning,
+                "Was any channel replaced? ", str(replaced_channel_id is not None)
             )
 
-        msg = self.reassembler.message
-        self.reassembler.reset()  # next call will reassemble a new message
-        assert msg is not None
-        return msg
-
-    def reassemble(self, packet: AnyBuffer) -> bool:
-        """
-        Process current packet, returning `True` when a valid message is reassembled.
-        The parsed message can retrieved via the `message` field (if it's not `None`).
-        In case of a checksum error or if the reassembly is not over, return `False`.
-        """
-        if self.get_channel_state() == ChannelState.UNALLOCATED:
-            return False
-        return self.reassembler.handle_packet(memoryview(packet))
-
-    async def decrypt_message(self) -> tuple[int, Message]:
+    async def read(self) -> tuple[int, Message]:
         """
         Receive, decrypt and return a `(session_id, message)` tuple.
-        Also handle ACKs while waiting for the message.
         """
-        payload = await self.recv_payload(control_byte.is_encrypted_transport)
-        self._decrypt_buffer(payload)
-        session_id, message_type = ustruct.unpack(">BH", payload)
+        self.expecting_message = True
+        self.iface_ctx.request_read()
+        await self.incoming_box
+        assert self.receive_buffer is not None
+        try:
+            session_id, message_type, message_bytes_len = trezorthp.message_out(
+                self.iface.iface_num(), self.channel_id, self.receive_buffer
+            )
+        except Exception:
+            self.expecting_message = False
+            raise
+        finally:
+            # wake up write loop to send ACKs or DECRYPTION_FAILED
+            self.iface_ctx.request_write()
+        self._log("message is ready")
         message = Message(
             message_type,
-            payload[SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH : -TAG_LENGTH],
+            self.receive_buffer[3:][:message_bytes_len],
         )
+        self.receive_buffer = None
         return (session_id, message)
-
-    def _decrypt_buffer(self, payload: memoryview) -> None:
-        noise_buffer = payload[:-TAG_LENGTH]
-        tag = payload[-TAG_LENGTH:]
-
-        key_receive = self.channel_cache.get(CHANNEL_KEY_RECEIVE)
-        nonce_receive = self.channel_cache.get_int(CHANNEL_NONCE_RECEIVE)
-
-        assert key_receive is not None
-        assert nonce_receive is not None
-
-        if __debug__ and _TRACE:
-            self._log("Buffer before decryption: ", hexlify_if_bytes(noise_buffer))
-
-        is_tag_valid = crypto.dec(noise_buffer, tag, key_receive, nonce_receive)
-        if __debug__ and _TRACE:
-            self._log("Buffer after decryption: ", hexlify_if_bytes(noise_buffer))
-
-        self.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, nonce_receive + 1)
-
-        if __debug__ and _TRACE:
-            self._log("Is decrypted tag valid? ", str(is_tag_valid))
-            self._log("Received tag: ", hexlify_if_bytes(tag))
-            self._log("New nonce_receive: ", str((nonce_receive + 1)))
-
-        if not is_tag_valid:
-            raise ThpDecryptionError()
-
-    # WRITE and ENCRYPT
 
     async def write(
         self,
         msg: protobuf.MessageType,
         session_id: int = 0,
     ) -> None:
-        assert ABP.is_sending_allowed(self.channel_cache)
-
         if __debug__:
             self._log(
                 f"write message: {msg.MESSAGE_NAME}",
@@ -419,119 +194,66 @@ class Channel:
                     iface=self.iface,
                 )
 
-        msg_size = protobuf.encoded_length(msg)
-        payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
-        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + PacketHeader.INIT_LENGTH
+        self.expecting_message = False
+        buffer_size = memory_manager.buffer_size(msg)
+        self.send_buffer = self.write_buf.get(buffer_size)
+        if self.send_buffer is None:
+            self.send_buffer = bytearray(buffer_size)
+        noise_payload_len = memory_manager.encode_into_buffer(
+            self.send_buffer, msg, session_id
+        )
+        trezorthp.message_in(
+            self.iface.iface_num(), self.channel_id, noise_payload_len, self.send_buffer
+        )
 
-        buffer = self.write_buf.get(length)
-        if buffer is None:
-            from trezor import wire
-
-            raise wire.FirmwareError("Failed to get a sufficiently large write buffer.")
-
-        noise_payload_len = memory_manager.encode_into_buffer(buffer, msg, session_id)
-
-        self._encrypt(buffer, noise_payload_len)
-        payload_length = noise_payload_len + TAG_LENGTH
-
-        return await self.write_encrypted_payload(ENCRYPTED, buffer[:payload_length])
-
-    async def write_encrypted_payload(self, ctrl_byte: int, payload: AnyBytes) -> None:
-        assert ABP.is_sending_allowed(self.channel_cache)
-
-        # Construct THP header
-        payload_len = len(payload) + CHECKSUM_LENGTH
-        sync_bit = ABP.get_send_seq_bit(self.channel_cache)
-        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
-
-        if ABP.is_ack_piggybacking_allowed(self.channel_cache):
-            ack_bit = ABP.get_send_ack_bit(self.channel_cache)
-            ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ctrl_byte, ack_bit)
-
-        header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
-
-        ack_latency_ms = self.channel_cache.get_int(CHANNEL_ACK_LATENCY_MS) or 0
-
-        # ACK is needed before sending more data
-        ABP.set_sending_allowed(self.channel_cache, False)
-
-        # allows preempting this channel, if another channel becomes active
-        self.last_write_ms = utime.ticks_ms()
-
-        def _write_loop() -> Generator[Any, Any, None]:
-            """
-            Retransmit the payload (with increasing delay), raising `Timeout` in the end.
-
-            This task is spawned concurrently with `_wait_for_ack()` using `loop.race()`,
-            so it will be cancelled when the expected ACK is received.
-            """
-            if __debug__ and _TRACE:
-                self._log(f"Sending {len(payload)} bytes, latency: {ack_latency_ms} ms")
-
-            for i in range(_MAX_RETRANSMISSION_COUNT):
-                # Try to send the payload (split into packets), or raise if transport is blocked
-                yield from self._write_payload_once(header, payload)
-                # Channel's estimated latency + a variable delay (from 200ms till ~3.52s)
-                delay_ms = ack_latency_ms + round(10300 - 1010000 / (100 + i))
-                yield from sleep(delay_ms)
-                if __debug__:
-                    log.warning(__name__, "Retransmit after %d ms", delay_ms)
-
-            # restart event loop due to unresponsive channel
-            raise Timeout("THP retransmission timeout")
-
-        def _wait_for_ack() -> Generator[Any, Any, None]:
-            """
-            Wait for the expected ACK to be received.
-
-            This task is spawned concurrently with `_write_loop()` using `loop.race()`,
-            so it will be cancelled when retransmission loop is over.
-            """
-            while not ABP.is_sending_allowed(self.channel_cache):
-                # `ABP.set_sending_allowed()` will be called after a valid ACK
-                yield from self.recv_payload(expected_ctrl_byte=None)
+        self.iface_ctx.request_write()
+        # self.iface_ctx.recompute_timeouts()
 
         try:
-            # wait and return after receiving an ACK, or raise in case of an unexpected message / retransmission timeout.
-            await race(_wait_for_ack(), _write_loop())
+            await self.ack_box
+        except Timeout:
+            if __debug__:
+                self._log("Exceeded retransmission limit")
+            self.clear()
+            raise Timeout("THP retransmission timeout")
         finally:
-            ack_latency_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
-            # Limit estimated latency to avoid integer overflows and too long delays
-            ack_latency_ms = max(0, min(800, ack_latency_ms))
-            self.channel_cache.set_int(CHANNEL_ACK_LATENCY_MS, ack_latency_ms)
+            self.send_buffer = None
 
-            # Make sure to use the next `seq_bit` for the next payload
-            ABP.set_send_seq_bit_to_opposite(self.channel_cache)
-
-    async def _write_payload_once(
-        self, header: PacketHeader, payload: AnyBytes
-    ) -> None:
-        """Write the payload and raise if the interface is blocked."""
-        result = await race(
-            self.iface_ctx.write_payload(header, payload), _WRITE_TIMEOUT
+    def read_packet(self, packet_buffer: AnyBytes, buffer_size: int) -> None:
+        iface_num = self.iface.iface_num()
+        if self.receive_buffer is None or buffer_size > 0:
+            self.receive_buffer = self.read_buf.get(buffer_size) or bytearray(
+                buffer_size
+            )
+        result = trezorthp.packet_in_channel(
+            iface_num, self.channel_id, packet_buffer, self.receive_buffer
         )
-        if isinstance(result, int):
-            # Can happen when the USB peer is not reading.
-            raise Timeout("THP write is blocked")
+        self._log(f"packet_in: {result}")
+        if result is trezorthp.ACK or result is trezorthp.MESSAGE_READY_ACK:
+            self.ack_box.put(None)
+            self.expecting_ack = False
+            self.iface_ctx.recompute_timeouts()
+        if result is trezorthp.MESSAGE_READY or result is trezorthp.MESSAGE_READY_ACK:
+            self.incoming_box.put(None)
+            self.expecting_message = False
+        elif result == trezorthp.FAILED:
+            self.clear()
+            raise ThpError
 
-    def _encrypt(self, buffer: AnyBuffer, noise_payload_len: int) -> None:
-        assert len(buffer) >= noise_payload_len + TAG_LENGTH + CHECKSUM_LENGTH
-
-        noise_buffer = memoryview(buffer)[0:noise_payload_len]
-
-        key_send = self.channel_cache.get(CHANNEL_KEY_SEND)
-        nonce_send = self.channel_cache.get_int(CHANNEL_NONCE_SEND)
-
-        assert key_send is not None
-        assert nonce_send is not None
-
-        tag = crypto.enc(noise_buffer, key_send, nonce_send)
-
-        self.channel_cache.set_int(CHANNEL_NONCE_SEND, nonce_send + 1)
-        if __debug__ and _TRACE:
-            self._log("New nonce_send: ", str((nonce_send + 1)))
-
-        buffer[noise_payload_len : noise_payload_len + TAG_LENGTH] = tag
+    def write_packet(self, packet: AnyBuffer) -> bool:
+        try:
+            buffer = self.send_buffer or bytearray()
+            res = trezorthp.packet_out(
+                self.iface.iface_num(), self.channel_id, buffer, packet
+            )
+            if res is False and self.send_buffer is not None:
+                self.expecting_ack = True
+                self.iface_ctx.request_read()
+            return res
+        except Exception as e:
+            log.exception(__name__, e)
+            self.clear()
+            return False
 
     if __debug__:
 
@@ -539,35 +261,8 @@ class Channel:
             logger(
                 __name__,
                 "(cid: %s) %s%s",
-                hexlify_if_bytes(self.channel_id),
+                hex(self.channel_id)[2:],
                 text_1,
                 text_2,
                 iface=self.iface,
             )
-
-
-def send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
-    ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ACK_MESSAGE, ack_bit)
-    header = PacketHeader(ctrl_byte, channel.get_channel_id_int(), CHECKSUM_LENGTH)
-    if __debug__ and _TRACE:
-        log.debug(
-            __name__,
-            "Writing ACK message to a channel with cid: %s, ack_bit: %d",
-            hexlify_if_bytes(channel.channel_id),
-            ack_bit,
-            iface=channel.iface,
-        )
-    return channel.iface_ctx.write_payload(header, b"")
-
-
-def handle_ack(ctx: Channel, ack_bit: int) -> None:
-    if not ABP.is_ack_valid(ctx.channel_cache, ack_bit):
-        return
-    # ACK is expected and it has correct sync bit
-    if __debug__ and _TRACE:
-        log.debug(
-            __name__,
-            "Received ACK message with correct ack bit",
-            iface=ctx.iface,
-        )
-    ABP.set_sending_allowed(ctx.channel_cache, True)

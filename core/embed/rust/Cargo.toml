@@ -9,7 +9,7 @@ build = "build.rs"
 
 [features]
 default = ["layout_bolt"]
-crypto = ["zeroize"]
+crypto = ["dep:zeroize"]
 layout_bolt = []
 layout_caesar = []
 layout_delizia = []
@@ -64,6 +64,7 @@ translations = ["crypto"]
 secmon_layout = []
 dbg_console = []
 app_loading = []
+thp = ["dep:trezor-thp", "dep:zeroize"]
 test = [
     "backlight",
     "button",
@@ -118,8 +119,9 @@ debug = 2
 [dependencies]
 cfg-if = { version = "1.0" }
 qrcodegen = { version = "1.8.0", path = "../../vendor/QR-Code-generator/rust-no-heap" }
-spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
+spin = { version = "0.9.8", features = ["rwlock", "spin_mutex", "lazy"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
+trezor-thp = { path = "../../../rust/trezor-thp", optional = true }
 ufmt = "0.2.0"
 zeroize = { version = "1.8.2", default-features = false, optional = true }
 
