@@ -525,10 +525,16 @@ fn test_packet_loss_handshake(dir: Direction, lost_index: usize) -> Result<()> {
     take_turns_mutate(&mut h, &mut d, lose_nth(dir, lost_index))?;
     if dir == DeviceToHost {
         assert!(!h.handshake_done());
+        assert_eq!(h.sending_retry(), None);
+        assert_eq!(d.sending_retry(), Some(0));
         d.message_retransmit()?;
+        assert_eq!(d.sending_retry(), Some(1));
     } else {
         assert!(!d.handshake_done());
+        assert_eq!(d.sending_retry(), None);
+        assert_eq!(h.sending_retry(), Some(0));
         h.message_retransmit()?;
+        assert_eq!(h.sending_retry(), Some(1));
     }
     take_turns(&mut h, &mut d)?;
     let mut h = h.map(|h| h.complete())?;
@@ -640,10 +646,16 @@ fn test_packet_damage_handshake(
     take_turns_mutate(&mut h, &mut d, damage_nth(dir, packet_index, byte_index))?;
     if dir == DeviceToHost {
         assert!(!h.handshake_done());
+        assert_eq!(h.sending_retry(), None);
+        assert_eq!(d.sending_retry(), Some(0));
         d.message_retransmit()?;
+        assert_eq!(d.sending_retry(), Some(1));
     } else {
         assert!(!d.handshake_done());
+        assert_eq!(d.sending_retry(), None);
+        assert_eq!(h.sending_retry(), Some(0));
         h.message_retransmit()?;
+        assert_eq!(h.sending_retry(), Some(1));
     }
     take_turns(&mut h, &mut d)?;
     let mut h = h.map(|h| h.complete())?;
