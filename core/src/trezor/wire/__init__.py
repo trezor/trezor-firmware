@@ -130,13 +130,15 @@ if utils.USE_THP:
             _THP_CHANNELS.extend(iface_ctx._channels for iface_ctx in ctx._iface_ctxs)
 
         try:
-            while (channel := await ctx.get_next_message()) is None:
-                # wait until a new channel is established (on any interface)
-                pass
+            # wait until channel activity (on any interface)
+            channel = await ctx.get_active_channel()
 
-            while await received_message_handler.handle_received_message(channel):
-                pass
+            # at this point channel has valid message waiting
+            await received_message_handler.handle_received_message(channel)
+
         finally:
+            # Send out any queued messages.
+            await ctx.close()
             if __debug__:
                 log.debug(__name__, "Finished THP session: %s", ifaces)
             # Wait for all active workflows to finish.

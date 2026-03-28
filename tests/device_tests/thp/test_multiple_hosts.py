@@ -16,6 +16,7 @@ def _new_channel(client) -> Channel:
     return channel
 
 
+# FIXME concurrent handshakes are now possible?
 def test_concurrent_handshakes(client: Client) -> None:
     channel_1 = _new_channel(client)
     channel_2 = _new_channel(client)

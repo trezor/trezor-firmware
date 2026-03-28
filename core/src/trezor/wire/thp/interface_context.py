@@ -1,32 +1,20 @@
-import ustruct
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_thp import (
-    BROADCAST_CHANNEL_ID,
-    find_allocated_channel,
-    update_channel_last_used,
-)
-from trezor import io, utils
-from trezor.loop import Timeout, race, sleep, wait
+import trezorthp
+from trezor import config, io, loop, utils
+from trezor.loop import Timeout, race, wait
 
-from . import (
-    CHANNEL_ALLOCATION_REQ,
-    CODEC_V1,
-    PING,
-    PacketHeader,
-    ThpErrorType,
-    channel_manager,
-    checksum,
-    control_byte,
-    get_channel_allocation_response,
+from . import get_encoded_device_properties
+from .channel import (
+    TREZOR_STATE_PAIRED,
+    TREZOR_STATE_UNPAIRED,
+    Channel,
+    ChannelPreemptedException,
 )
-from .channel import Channel, ChannelPreemptedException
-from .checksum import CHECKSUM_LENGTH
 
 if __debug__:
     from trezor import log
-
 
 if utils.USE_BLE:
     import trezorble as ble
@@ -35,16 +23,17 @@ if utils.USE_BLE:
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
     from trezorio import WireInterface
-    from typing import Awaitable, Generator, Iterable, NoReturn
 
-_BROADCAST_PAYLOAD_LENGTH = const(12)
-_TRACE = const(False)
+    from typing_extensions import Self
 
+# Preempt a stale channel if another channel becomes active and we allowed enough time for the host to respond.
+# It allows interrupting a "stuck" THP workflow using a different channel on the same interface.
+_PREEMPT_TIMEOUT_MS = const(1_000)
 
-# Uses `yield` instead of `await` to avoid allocations.
-def _timeout_after(ms: int) -> Generator[sleep, int, NoReturn]:
-    yield sleep(ms)
-    raise Timeout
+# TODO
+_LAST_WRITE_TIMEOUT_MS = const(400)
+
+EMPTY_BUFFER = bytearray()
 
 
 class ThpContext:
@@ -54,30 +43,51 @@ class ThpContext:
     """
 
     def __init__(self, *ifaces: WireInterface) -> None:
-        max_packet_len = max(iface.RX_PACKET_LEN for iface in ifaces)
-        self._packet_buf = bytearray(max_packet_len)
-        self._packet_view = memoryview(self._packet_buf)
         self._iface_ctxs = [InterfaceContext(iface, self) for iface in ifaces]
+        self.channel_ready_box: loop.mailbox[Channel] = loop.mailbox()
+        self.active_channel: Channel | None = None
 
-    async def get_next_message(self, timeout_ms: int | None = None) -> Channel | None:
+    # Blocks until a channel in pairing/credential/transport phase starts receiving data.
+    async def get_active_channel(self) -> Channel:
         """
         Reassemble a valid THP payload from any THP interface, and return its channel.
 
         Also handle THP channel allocation.
         """
-        # wait until one of the channels becomes readable
-        children = (iface_ctx._wait_for_packet() for iface_ctx in self._iface_ctxs)
-        if timeout_ms is None:
-            race_task = race(*children)
-        else:
-            race_task = race(*children, _timeout_after(timeout_ms))
 
-        iface_ctx, packet_len = await race_task  # will raise on timeout
-        assert packet_len == iface_ctx._iface.RX_PACKET_LEN
+        for iface_ctx in self._iface_ctxs:
+            channel_id = trezorthp.message_out_ready(iface_ctx._iface.iface_num())
+            if channel_id is not None:
+                log.error(
+                    __name__,
+                    f"(cid: {hex(channel_id)}) message ready from previous loop but buffer is lost, waiting for retransmission",
+                )
 
-        # read and handle the packet using its `InterfaceContext`
-        iface_ctx._iface.read(self._packet_buf, 0)
-        return await iface_ctx.handle_packet(self._packet_view[:packet_len])
+        self.active_channel = await self.channel_ready_box
+        return self.active_channel
+
+    def preempt_active_channel_if_stale(self) -> None:
+        assert self.active_channel is not None
+        last_write_ms = self.active_channel.get_last_write()
+        if last_write_ms is None or last_write_ms > _PREEMPT_TIMEOUT_MS:
+            log.error(
+                __name__,
+                f"Interrupting channel {self.active_channel.channel_id} after {last_write_ms} ms",
+            )
+            self.active_channel.clear()
+            self.active_channel.incoming_box.put(
+                ChannelPreemptedException(), replace=True
+            )
+
+    async def close(self) -> None:
+        try:
+            close_tasks = (
+                loop.spawn(iface_ctx.close()) for iface_ctx in self._iface_ctxs
+            )
+            for task in close_tasks:
+                await task
+        except Exception as exc:
+            log.exception(__name__, exc)
 
 
 class InterfaceContext:
@@ -93,147 +103,245 @@ class InterfaceContext:
         self._channels: dict[int, Channel] = {}
         self.thp_ctx = thp_ctx
 
-    def _wait_for_packet(self) -> Generator[wait, int, tuple["InterfaceContext", int]]:
-        """Block until this interface is readable.
+        self._read_box: loop.mailbox[None] = loop.mailbox()
+        self._write_box: loop.mailbox[bool] = loop.mailbox()
+        self._retrans_box: loop.mailbox[None] = loop.mailbox()
 
-        It adapts `loop.wait`, to be used in a `race()` over multiple THP interfaces by `ThpContext.get_next_message()`.
-        """
-        # Uses `yield` instead of `await` to avoid allocations.
-        packet_len = yield self._read
-        if utils.USE_BLE and self._iface is ble.interface:
-            # prevent auto-lock while handling longer workflows on Bluetooth
-            idle_timer.touch()
-        return self, packet_len
+        self._read_loop: loop.spawn = loop.spawn(self.read_loop())
+        self._write_loop: loop.spawn = loop.spawn(self.write_loop())
+        self._retrans_loop: loop.spawn = loop.spawn(self.retransmission_loop())
+        self._handshake_key_task: loop.spawn | None = None
 
-    async def handle_packet(self, packet: AnyBuffer) -> Channel | None:
-        """
-        Reassemble a valid THP payload and return its channel, if reassembly succeeds.
-        Otherwise, returns `None` and should be called again (with the next packet).
+        self._packet_buf = bytearray(iface.RX_PACKET_LEN)
+        self._packet_view = memoryview(self._packet_buf)
 
-        Also handle THP channel allocation.
-        """
-        ctrl_byte = _get_ctrl_byte(packet)
-        if ctrl_byte == CODEC_V1:
-            return await self._handle_codec_v1(packet)
+        self.write_error_cids = []
 
-        cid = ustruct.unpack(">BH", packet)[1]
-        if cid == BROADCAST_CHANNEL_ID:
-            return await self._handle_broadcast(packet)
+        trezorthp.init(
+            iface.iface_num(),
+            get_encoded_device_properties(iface),
+        )
 
-        if (cache := find_allocated_channel(cid)) is None:
-            if not control_byte.is_continuation(_get_ctrl_byte(packet)):
-                await self.write_error(cid, ThpErrorType.UNALLOCATED_CHANNEL)
-            return None
+    async def close(self) -> None:
+        if self._handshake_key_task:
+            self._handshake_key_task.close()
+        self._retrans_loop.close()
+        self._read_loop.close()
 
-        if (channel := self._channels.get(cid)) is None:
+        self.request_write(exit_afterwards=True)
+        await race(self._write_loop, loop.sleep(_LAST_WRITE_TIMEOUT_MS))
+        self._write_loop.close()
+
+    def read_packet_for_channel(self, channel_id: int, packet_buffer: AnyBytes) -> None:
+        if channel_id not in self._channels:
             from .. import THP_BUFFERS_PROVIDER
 
             if (buffers := THP_BUFFERS_PROVIDER.take()) is None:
-                # concurrent payload reassembly is not supported
-                await self.write_error(cid, ThpErrorType.TRANSPORT_BUSY)
-                raise ChannelPreemptedException  # try to preempt the caller (if stale)
+                trezorthp.send_transport_busy(self._iface.iface_num(), channel_id)
+                self.write_error_cids.append(channel_id)
+                self.request_write()
+                self.thp_ctx.preempt_active_channel_if_stale()
+                return
+            self._channels[channel_id] = Channel(
+                channel_id,
+                self,
+                buffers=buffers,
+            )
+        channel = self._channels[channel_id]
+        # TODO catch exceptions and remove channel
+        channel.read_packet(packet_buffer)
+        self.thp_ctx.channel_ready_box.put(channel, replace=True)
 
-            channel = self._channels[cid] = Channel(cache, self, buffers)
+    def should_read(self) -> bool:
+        waiting_for_channel = self.thp_ctx.active_channel is None
+        expecting_message = any(ch.expecting_message for ch in self._channels.values())
+        expecting_ack = any(ch.expecting_ack for ch in self._channels.values())
+        # log.debug(__name__, f"should_read: {waiting_for_channel} {expecting_message} {expecting_ack}", iface=self._iface)
+        return waiting_for_channel or expecting_message or expecting_ack
 
-        if channel.reassemble(packet):
-            if __debug__ and _TRACE and channel.reassembler.message is not None:
-                msg_type = "ACK" if control_byte.is_ack(ctrl_byte) else "message"
-                msg = channel.reassembler.message
-                channel._log(f"reassembled valid {msg_type}: {len(msg)} bytes")
-            update_channel_last_used(channel.channel_id)
-            return channel
+    async def read_loop(self) -> None:
+        iface = self._iface
+        iface_num = iface.iface_num()
+        verify_fn = self.verify_credential
 
-    def write_payload(self, header: PacketHeader, payload: AnyBytes) -> Awaitable[None]:
-        checksum_bytes = checksum.compute(
-            payload, checksum.compute_int(header.to_bytes())
-        )
-        return self._write_payload_chunks(header, payload, checksum_bytes)
+        while True:
+            while not self.should_read():
+                log.debug(__name__, "read loop paused", iface=iface)
+                await self._read_box
 
-    def _write_payload_chunks(
-        self, header: PacketHeader, *chunks: AnyBytes
-    ) -> Awaitable[None]:
-        fragments = header.fragment_payload(self._iface.TX_PACKET_LEN, *chunks)
-        return self._write_packets(fragments)
+            packet_len = await self._read
+            if utils.USE_BLE and self._iface is ble.interface:
+                # prevent auto-lock while handling longer workflows on Bluetooth
+                idle_timer.touch()
 
-    async def _write_packets(self, fragments: Iterable[AnyBytes]) -> None:
-        packet_len = self._iface.TX_PACKET_LEN
-        for packet in fragments:
-            assert len(packet) == packet_len
+            assert packet_len == self._iface.RX_PACKET_LEN
 
+            self._iface.read(self._packet_buf, 0)
+            packet_buffer = self._packet_view[:packet_len]
+            log.debug(
+                __name__,
+                f"read: {utils.hexlify_if_bytes(packet_buffer)}",
+                iface=iface,
+            )
+            result = trezorthp.packet_in(iface_num, packet_buffer, verify_fn)
+
+            if isinstance(result, int):
+                self.read_packet_for_channel(result, packet_buffer)
+                continue
+
+            log.debug(__name__, f"packet_in: {result}", iface=iface)
+            if result in (trezorthp.KEY_REQUIRED, trezorthp.KEY_REQUIRED_UNLOCK):
+                if self._handshake_key_task is None:
+                    self._handshake_key_task = loop.spawn(
+                        self.handshake_unlock(result == trezorthp.KEY_REQUIRED_UNLOCK)
+                    )
+
+            # maybe we got ACK, recompute next retransmission timeout
+            # TODO request_write calls it too, maybe remove from here?
+            self.recompute_timeouts()
+            # wake up write loop in case broadcast/handshake channels have outgoing data
+            self.request_write()
+
+    async def write_loop(self) -> None:
+        iface = self._iface
+        packet_len = iface.TX_PACKET_LEN
+        packet = bytearray(packet_len)
+
+        while True:
+            exit_afterwards = await self._write_box
+            log.debug(__name__, "write requested", iface=iface)
+            await self.write_all_packets(self, packet)
+            for channel in self._channels.values():
+                await self.write_all_packets(channel, packet)
+            self.recompute_timeouts()
+            log.debug(__name__, "write done", iface=iface)
+            if exit_afterwards:
+                break
+
+    async def write_all_packets(
+        self, channel: Channel | Self, packet: AnyBuffer
+    ) -> None:
+        while channel.write_packet(packet):
+            log.debug(
+                __name__,
+                f"write: {utils.hexlify_if_bytes(packet)}",
+                iface=self._iface,
+            )
             n_written = 0
             while n_written == 0:
                 await self._write
                 n_written = self._iface.write(packet)
 
-            assert n_written == packet_len
+            assert n_written == self._iface.TX_PACKET_LEN
 
-    async def _handle_codec_v1(self, packet: AnyBytes) -> None:
-        # If the received packet is not an initial codec_v1 packet, do not send error message
-        if packet[1:3] == b"##":
-            response = bytearray(self._iface.TX_PACKET_LEN)
-            # Codec_v1 magic constant:
-            # "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
-            utils.memcpy(response, 0, b"?##\x00\x03\x00\x00\x00\x02\x08\x11", 0)
-            await self._write_packets([response])
+    def write_packet(self, packet: AnyBuffer) -> bool:
+        if self.write_error_cids:
+            channel_id = self.write_error_cids.pop(0)
+            if trezorthp.packet_out(
+                self._iface.iface_num(), channel_id, EMPTY_BUFFER, packet
+            ):
+                return True
+        return trezorthp.packet_out(self._iface.iface_num(), None, EMPTY_BUFFER, packet)
 
-    async def _handle_broadcast(self, packet: AnyBytes) -> None:
-        ctrl_byte, _, payload_length = ustruct.unpack(">BHH", packet)
+    async def retransmission_loop(self) -> None:
+        channel_id = None
+        timeout_ms = None
+        iface_num = self._iface.iface_num()
 
-        packet = packet[: PacketHeader.INIT_LENGTH + payload_length]
-        if not checksum.is_valid(packet[-CHECKSUM_LENGTH:], packet[:-CHECKSUM_LENGTH]):
-            if __debug__:
-                log.debug(
-                    __name__, "Invalid checksum: %s", utils.hexlify_if_bytes(packet)
-                )
-            return
+        while True:
+            if timeout_ms is None or channel_id is None:
+                await self._retrans_box
+            else:
+                res = await race(self._retrans_box, loop.sleep(timeout_ms))
+                if isinstance(res, int):
+                    ok = trezorthp.message_retransmit(iface_num, channel_id)
+                    if ok:
+                        log.warning(
+                            __name__,
+                            f"({hex(channel_id)}) retransmitting message after {timeout_ms} ms",
+                            iface=self._iface,
+                        )
+                        self.request_write()
+                    elif channel_id in self._channels:
+                        self._channels[channel_id].ack_box.put(
+                            Timeout("THP retransmission timeout")
+                        )
+                    else:
+                        log.error(
+                            __name__,
+                            f"({hex(channel_id)}) retransmission timeout, channel closed",
+                            iface=self._iface,
+                        )
 
-        if payload_length != _BROADCAST_PAYLOAD_LENGTH:
-            if __debug__:
+            res = trezorthp.next_timeout(iface_num)
+            channel_id, timeout_ms = res or (None, None)
+
+    def recompute_timeouts(self) -> None:
+        self._retrans_box.put(None, replace=True)
+
+    def request_write(self, exit_afterwards: bool = False) -> None:
+        self._write_box.put(exit_afterwards, replace=True)
+
+    def request_read(self) -> None:
+        self._read_box.put(None, replace=True)
+
+    async def handshake_unlock(self, try_to_unlock: bool) -> None:
+        try:
+            if not config.is_unlocked() and try_to_unlock:
+                from trezor import workflow
+
+                from apps.common.lock_manager import unlock_device
+
                 log.debug(
                     __name__,
-                    "Invalid length in broadcast channel packet: %d",
-                    payload_length,
+                    "Static key needed but device is locked, spawning unlock dialog",
+                    iface=self._iface,
                 )
-            return
+                # Register the unlock prompt with the workflow management system
+                # (in order to avoid immediately respawning the lockscreen task)
+                await workflow.spawn(unlock_device())
+            trezor_static_privkey, _trezor_static_pubkey = _derive_static_key_pair()
+        except Exception as e:
+            log.exception(__name__, e)
+            trezorthp.handshake_key(self._iface.iface_num(), None)
+        else:
+            trezorthp.handshake_key(self._iface.iface_num(), trezor_static_privkey)
+        finally:
+            self.request_write()
+            self._handshake_key_task = None
 
-        nonce = packet[PacketHeader.INIT_LENGTH : -CHECKSUM_LENGTH]
-
-        if ctrl_byte == PING:
-            response_header = PacketHeader.get_pong_header(_BROADCAST_PAYLOAD_LENGTH)
-            return await self.write_payload(response_header, nonce)
-
-        if ctrl_byte != CHANNEL_ALLOCATION_REQ:
-            if __debug__:
-                log.debug(
-                    __name__,
-                    "Unexpected ctrl_byte in a broadcast channel packet: %d",
-                    ctrl_byte,
-                )
-            return
-
-        channel_cache = channel_manager.create_new_channel(self._iface)
-        response_data = get_channel_allocation_response(
-            nonce, channel_cache.channel_id, self._iface
+    def verify_credential(
+        self, channel_id: int, host_static_public_key: bytes, payload: bytes
+    ) -> int:
+        from apps.thp.credential_manager import (
+            decode_credential,
+            unwrap_credential,
+            validate_credential,
         )
-        response_header = PacketHeader.get_channel_allocation_response_header(
-            len(response_data) + CHECKSUM_LENGTH,
-        )
-        if __debug__:
-            log.debug(
-                __name__,
-                "New channel allocated with id: %s",
-                utils.hexlify_if_bytes(channel_cache.channel_id),
-                iface=self._iface,
+
+        try:
+            encoded_credential = unwrap_credential(payload)
+            if not encoded_credential:
+                return TREZOR_STATE_UNPAIRED
+            credential = decode_credential(encoded_credential)
+            paired = validate_credential(
+                credential,
+                host_static_public_key,
             )
-        await self.write_payload(response_header, response_data)
+            if paired:
+                from trezor.wire.thp.paired_cache import cache_host_info
 
-    def write_error(self, cid: int, err_type: ThpErrorType) -> Awaitable[None]:
-        if __debug__:
-            log.error(__name__, "(cid: %04x) THP error #%d", cid, err_type)
-        msg_data = err_type.to_bytes(1, "big")
-        length = len(msg_data) + CHECKSUM_LENGTH
-        header = PacketHeader.get_error_header(cid, length)
-        return self.write_payload(header, msg_data)
+                cache_host_info(
+                    mac_addr=self.connected_addr(),
+                    host_name=credential.cred_metadata.host_name,
+                    app_name=credential.cred_metadata.app_name,
+                )
+                return TREZOR_STATE_PAIRED
+            else:
+                return TREZOR_STATE_UNPAIRED
+        except Exception as e:
+            log.exception(__name__, e, iface=self._iface)
+        return TREZOR_STATE_UNPAIRED
 
     def connected_addr(self) -> AnyBytes | None:
         """
@@ -248,5 +356,20 @@ class InterfaceContext:
         return None
 
 
-def _get_ctrl_byte(packet: AnyBytes) -> int:
-    return packet[0]
+def _derive_static_key_pair() -> tuple[bytes, bytes]:
+    from trezorcrypto import bip32
+
+    from storage import device
+
+    HARDENED = const(0x8000_0000)
+
+    node_int = HARDENED | int.from_bytes(b"\x00THP", "big")
+    node = bip32.from_seed(device.get_device_secret(), "curve25519")
+    node.derive(node_int)
+
+    trezor_static_private_key = node.private_key()
+    trezor_static_public_key = node.public_key()[1:33]
+    # Note: the first byte (\x01) of the public key is removed, as it
+    # only indicates the type of the elliptic curve used
+
+    return trezor_static_private_key, trezor_static_public_key

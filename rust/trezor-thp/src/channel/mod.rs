@@ -373,6 +373,8 @@ pub enum PacketInResult {
     Route {
         /// Channel id of the destination. Never a broadcast.
         channel_id: u16,
+        //TODO
+        // buffer_size: u16,
     },
     /// Channel allocation request/response was received. Event loop should call
     /// [`Mux::channel_alloc`] to create new channel object. Only [`device::Mux`] and [`host::Mux`]

@@ -50,12 +50,12 @@ class Context:
     single Bluetooth connection, etc.).
     """
 
-    channel_id: AnyBytes
+    channel_id: int
 
     def __init__(
         self,
         iface: WireInterface,
-        channel_id: AnyBytes | None = None,
+        channel_id: int | None = None,
         message_type_enum_name: str = "MessageType",
     ) -> None:
         self.iface: WireInterface = iface
