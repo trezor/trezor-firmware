@@ -376,8 +376,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
 
     /// True if the handshake failed and the object should be discarded.
     pub fn handshake_failed(&self) -> bool {
-        matches!(self.state, HandshakeState::Failed)
-            || matches!(self.channel.state, ChannelState::Failed(_))
+        matches!(self.state, HandshakeState::Failed) || self.channel.is_failed()
     }
 
     /// True if the handshake is waiting for device static key to be supplied using
@@ -425,12 +424,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         if !self.static_key_required() {
             return Err(Error::not_ready());
         }
-        let header = Header::new_error(self.channel.channel_id)?;
-        self.internal_buffer.clear();
-        let _ = self
-            .internal_buffer
-            .push(TransportError::DeviceLocked.into());
-        self.channel.raw_in(header, &self.internal_buffer)?;
+        self.channel.send_error(TransportError::DeviceLocked);
         self.state = HandshakeState::SendingDeviceLocked;
         Ok(())
     }
@@ -471,10 +465,6 @@ where
             return PacketInResult::ignore(Error::malformed_data());
         }
         if res.got_ack() {
-            if matches!(self.state, HandshakeState::SendingDeviceLocked) {
-                self.state = HandshakeState::Failed;
-                return res;
-            }
             prepare_zeroed(&mut self.internal_buffer);
         }
         if res.got_message() {

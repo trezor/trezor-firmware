@@ -100,6 +100,9 @@ enum ChannelState<R: Role> {
         fragmenter: Fragmenter<R>,
         retry: u8,
     },
+    /// About to send Transport error, these are not ACKed.
+    /// Transitions to Failed afterwards unless the error is recoverable.
+    SendingError { error: TransportError },
     /// In the process of receiving a message, or waiting for the consumer to pick up
     /// an assembled message.
     Receiving { reassembler: Reassembler<R> },
@@ -169,6 +172,10 @@ impl<R: Role, B: Backend> Channel<R, B> {
             ChannelState::Sending { retry, .. } => Some(retry),
             _ => None,
         }
+    }
+
+    pub fn send_error(&mut self, error: TransportError) {
+        self.state = ChannelState::SendingError { error };
     }
 
     fn raw_in(&mut self, header: Header<R>, send_buffer: &[u8]) -> Result<()> {
@@ -255,6 +262,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
             // We end up sending reply while the other side is retransmitting.
             // Is this recoverable?
             ChannelState::Sending { .. } => return Err(Error::malformed_data()),
+            ChannelState::SendingError { .. } => return Err(Error::unexpected_input()),
             ChannelState::Failed { .. } => return Err(Error::unexpected_input()),
         })
     }
@@ -351,9 +359,6 @@ pub enum PacketInResult {
     },
     /// Peer sent a `TRANSPORT_ERROR` message.
     TransportError {
-        /// True if the packet contained valid ACK and channel is ready to send next message.
-        /// Reserved for ACK piggybacking.
-        ack_received: bool,
         /// Error sent by the peer.
         error: TransportError,
     },
@@ -413,10 +418,7 @@ impl PacketInResult {
     }
 
     const fn transport_error(e: TransportError) -> Self {
-        Self::TransportError {
-            ack_received: false,
-            error: e,
-        }
+        Self::TransportError { error: e }
     }
 
     const fn route(channel_id: u16) -> Self {
@@ -444,7 +446,6 @@ impl PacketInResult {
         match self {
             Self::Accepted { ack_received, .. } => *ack_received,
             Self::EnlargeBuffer { ack_received, .. } => *ack_received,
-            Self::TransportError { ack_received, .. } => *ack_received,
             _ => false,
         }
     }
@@ -540,7 +541,7 @@ pub trait ChannelIO {
     ///
     /// The message including the application header (session id, message type) is passed in
     /// `send_buffer`, occupying first `plaintext_len` bytes. There must be at least 16 more
-    /// bytes in the buffer for authentication tag.
+    /// bytes in the buffer for the authentication tag.
     ///
     /// Instead of this function you can use [`Self::message_in_from`] to prepare the send
     /// buffer for you.
@@ -608,7 +609,7 @@ pub trait ChannelIO {
 
 impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
     fn packet_in(&mut self, packet_buffer: &[u8], receive_buffer: &mut [u8]) -> PacketInResult {
-        if let ChannelState::Failed { .. } = self.state {
+        if self.is_failed() {
             return PacketInResult::fail(Error::unexpected_input());
         }
         let res = PacketInResult::from_result(self.handle_packet(packet_buffer, receive_buffer));
@@ -623,6 +624,16 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         if let Some(sb) = self.send_ack.take() {
             let header = Header::<R>::new_ack(self.channel_id)?;
             Fragmenter::single(header, sb, &[], packet_buffer)?;
+            return Ok(());
+        }
+        if let ChannelState::SendingError { error } = self.state {
+            let header = Header::<R>::new_error(self.channel_id)?;
+            Fragmenter::single(header, SyncBits::new(), &[error.into()], packet_buffer)?;
+            if error.is_recoverable() {
+                self.state = ChannelState::Idle;
+            } else {
+                self.state = ChannelState::Failed { error: None };
+            }
             return Ok(());
         }
         let ChannelState::Sending { fragmenter, .. } = &mut self.state else {
@@ -651,6 +662,7 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         }
         match &self.state {
             ChannelState::Sending { fragmenter, .. } => !fragmenter.is_done(),
+            ChannelState::SendingError { .. } => true,
             _ => false,
         }
     }
@@ -687,8 +699,11 @@ impl<R: Role, B: Backend> ChannelIO for Channel<R, B> {
         let receive_buffer = match self.noise()?.decrypt(receive_buffer) {
             Ok(plaintext_len) => &receive_buffer[..plaintext_len],
             Err(e) => {
-                log::error!("[{}] Decryption failed, channel closed.", self.channel_id);
-                self.state = ChannelState::Failed { error: None };
+                log::error!(
+                    "[{}] Decryption failed, sending DECRYPTION_FAILED.",
+                    self.channel_id
+                );
+                self.send_error(TransportError::DecryptionFailed); // TODO host only?
                 return Err(e);
             }
         };

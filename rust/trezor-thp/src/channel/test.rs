@@ -315,8 +315,7 @@ fn test_device_locked() -> Result<()> {
     d.send_device_locked()?;
     take_turns(&mut h, &mut d)?;
     assert!(h.handshake_failed());
-    // TODO: either the host needs to ACK the error, or host transitions to ack after sending it
-    // assert!(d.handshake_failed());
+    assert!(d.handshake_failed());
     Ok(())
 }
 

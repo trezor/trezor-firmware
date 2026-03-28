@@ -436,8 +436,7 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
 
     /// True if the handshake failed and the object should be discarded.
     pub fn handshake_failed(&self) -> bool {
-        matches!(self.state, HandshakeState::Failed)
-            || matches!(self.channel.state, ChannelState::Failed(_))
+        matches!(self.state, HandshakeState::Failed) || self.channel.is_failed()
     }
 
     /// Finish the handshake.
