@@ -167,7 +167,7 @@ pub trait FirmwareUI {
         subtitle: Option<TString<'static>>,
         items: Obj, // TODO: replace Obj
         verb: TString<'static>,
-        verb_info: TString<'static>,
+        verb_info: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error>;
