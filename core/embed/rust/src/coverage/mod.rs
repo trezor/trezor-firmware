@@ -1,5 +1,5 @@
 /// Off-heap data structure for collecting code coverage data.
-use heapless::{Entry, FnvIndexMap};
+use heapless::index_map::{Entry, FnvIndexMap};
 use spin::RwLock;
 
 use crate::{
