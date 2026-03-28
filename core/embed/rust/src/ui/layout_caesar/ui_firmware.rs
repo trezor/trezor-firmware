@@ -624,7 +624,7 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
-        verb_info: TString<'static>,
+        verb_info: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -651,7 +651,7 @@ impl FirmwareUI for UICaesar {
                 paragraphs.into_paragraphs(),
                 verb_cancel,
                 verb,
-                verb_info,
+                verb_info.unwrap_or_else(TString::empty),
             )
             .with_menu(external_menu),
         ))
