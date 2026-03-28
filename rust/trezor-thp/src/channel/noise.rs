@@ -48,10 +48,12 @@ pub struct NoiseHandshake<R: Role, B: Backend> {
     hss: HandshakeState<B::DH, B::Cipher, B::Hash>,
     _phantom: PhantomData<R>,
 }
+
 pub struct NoiseCiphers<B: Backend> {
     encrypt: CipherState<B::Cipher>,
     decrypt: CipherState<B::Cipher>,
     handshake_hash: [u8; HANDSHAKE_HASH_LEN],
+    remote_static_pubkey: [u8; PUBKEY_LEN],
 }
 
 impl<B: Backend> NoiseCiphers<B> {
@@ -74,6 +76,10 @@ impl<B: Backend> NoiseCiphers<B> {
 
     pub fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
         &self.handshake_hash
+    }
+
+    pub fn remote_static_pubkey(&self) -> &[u8; PUBKEY_LEN] {
+        &self.remote_static_pubkey
     }
 }
 
@@ -119,10 +125,13 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         self.hss.read_message(incoming, &mut [])?;
 
         // Look up static key based on remote keys, or generate a new one.
-        let remote_static_key = self.hss.get_rs().ok_or_else(Error::crypto_error)?;
-        let remote_ephemeral_key = self.hss.get_re().ok_or_else(Error::crypto_error)?;
-        let (local_static, pairing_credential) =
-            Self::credential_from_store(cred_store, &remote_ephemeral_key, &remote_static_key)?;
+        let remote_static_pubkey = self.hss.get_rs().ok_or_else(Error::crypto_error)?;
+        let remote_ephemeral_pubkey = self.hss.get_re().ok_or_else(Error::crypto_error)?;
+        let (local_static, pairing_credential) = Self::credential_from_store(
+            cred_store,
+            &remote_ephemeral_pubkey,
+            &remote_static_pubkey,
+        )?;
         self.hss.set_s(local_static);
 
         buffer.fill(0);
@@ -137,12 +146,12 @@ impl<B: Backend> NoiseHandshake<Host, B> {
             return Err(Error::crypto_error());
         }
         let (encrypt, decrypt) = self.hss.get_ciphers();
-        let mut handshake_hash = [0u8; HANDSHAKE_HASH_LEN];
-        handshake_hash.copy_from_slice(self.hss.get_hash());
+        let handshake_hash = self.hss.get_hash().try_into().unwrap();
         let nc = NoiseCiphers {
             encrypt,
             decrypt,
             handshake_hash,
+            remote_static_pubkey: remote_static_pubkey.as_slice().try_into().unwrap(),
         };
         Ok((nc, dest))
     }
@@ -235,16 +244,22 @@ impl<B: Backend> NoiseHandshake<Device, B> {
             return Err(Error::crypto_error());
         }
 
-        let remote_static_pubkey = self.hss.get_rs().ok_or_else(Error::crypto_error)?;
+        let remote_static_pubkey = self
+            .hss
+            .get_rs()
+            .ok_or_else(Error::crypto_error)?
+            .as_slice()
+            .try_into()
+            .unwrap();
+        let handshake_hash = self.hss.get_hash().try_into().unwrap();
         let (decrypt, encrypt) = self.hss.get_ciphers();
-        let mut handshake_hash = [0u8; HANDSHAKE_HASH_LEN];
-        handshake_hash.copy_from_slice(self.hss.get_hash());
         let mut nc = NoiseCiphers {
             encrypt,
             decrypt,
             handshake_hash,
+            remote_static_pubkey,
         };
-        let pairing_state = cred_verifier.verify(remote_static_pubkey.as_slice(), &cred);
+        let pairing_state = cred_verifier.verify(&nc.remote_static_pubkey, &cred);
         let payload = &[pairing_state as u8];
         let plaintext_len = payload.len();
         let dest = dest

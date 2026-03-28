@@ -48,7 +48,7 @@ impl Nonce {
 
 /// Sent by device after successful handshake to indicate whether pairing is required.
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PairingState {
     Unpaired = 0,
     Paired = 1,
@@ -66,11 +66,28 @@ impl TryFrom<&[u8]> for PairingState {
 
     fn try_from(bytes: &[u8]) -> Result<Self> {
         Ok(match bytes {
-            [0] => Self::Unpaired,
-            [1] => Self::Paired,
-            [2] => Self::PairedAutoconnect,
+            [n] => PairingState::try_from(*n)?,
             _ => return Err(Error::malformed_data()),
         })
+    }
+}
+
+impl TryFrom<u8> for PairingState {
+    type Error = Error;
+
+    fn try_from(val: u8) -> Result<Self> {
+        Ok(match val {
+            0 => Self::Unpaired,
+            1 => Self::Paired,
+            2 => Self::PairedAutoconnect,
+            _ => return Err(Error::malformed_data()),
+        })
+    }
+}
+
+impl From<PairingState> for u8 {
+    fn from(pairing_state: PairingState) -> Self {
+        pairing_state as u8
     }
 }
 
@@ -103,6 +120,7 @@ pub struct Channel<R: Role, B: Backend> {
     noise: Option<NoiseCiphers<B>>,
     send_ack: Option<SyncBits>,
     state: ChannelState<R>,
+    pairing_state: PairingState,
 }
 
 impl<R: Role, B: Backend> Channel<R, B> {
@@ -113,6 +131,7 @@ impl<R: Role, B: Backend> Channel<R, B> {
             noise: None,
             send_ack: None,
             state: ChannelState::Idle,
+            pairing_state: PairingState::Unpaired,
         }
     }
 
@@ -126,6 +145,21 @@ impl<R: Role, B: Backend> Channel<R, B> {
 
     pub fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
         self.noise.as_ref().unwrap().handshake_hash()
+    }
+
+    /// Returns the channel pairing state at the end of the handshake.
+    /// This is read-only attribute to inform the application whether it needs to perform
+    /// pairing, or can directly transition to encrypted transport state.
+    pub fn handshake_pairing_state(&self) -> PairingState {
+        self.pairing_state
+    }
+
+    pub fn remote_static_pubkey(&self) -> &[u8; PUBKEY_LEN] {
+        self.noise.as_ref().unwrap().remote_static_pubkey()
+    }
+
+    pub fn is_failed(&self) -> bool {
+        matches!(self.state, ChannelState::Failed { .. })
     }
 
     /// Return the retransmission attempt number (the first transmission returns 0),
