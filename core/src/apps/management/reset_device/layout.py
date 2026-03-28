@@ -10,6 +10,9 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_show_checklist,
 )
 
+if TYPE_CHECKING:
+    from trezor.messages import BackupMethod
+
 _NUM_OF_CHOICES = const(3)
 
 
@@ -159,7 +162,7 @@ async def slip39_advanced_show_and_confirm_shares(
     )
 
 
-class DisplayBackup:
+class _DisplayBackup:
 
     async def intro(self, num_of_words: int | None = None) -> None:
         from trezor.ui.layouts.reset import show_intro_backup
@@ -186,3 +189,16 @@ class DisplayBackup:
                 # make the user confirm words from the share
                 if await _share_words_confirmed(share):
                     break  # this share is confirmed, go to next one
+
+
+async def choose_backup_handler(method: BackupMethod | None) -> BackupHandler:
+    # TODO: prompt the user if method is `None`.
+    if __debug__:
+        from trezor.enums import BackupMethod
+
+        if method not in (None, BackupMethod.Display):
+            from trezor import log
+
+            log.warning(__name__, "Unsupported backup method: %s", method)
+
+    return _DisplayBackup()
