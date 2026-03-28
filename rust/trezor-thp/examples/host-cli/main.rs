@@ -6,8 +6,8 @@ use std::{env, net::SocketAddr, str::FromStr};
 use protobuf::Message;
 
 use trezor_thp::{
-    Backend, Channel, Host,
-    channel::host::{ChannelOpen, Mux},
+    Backend,
+    channel::host::{Channel, ChannelOpen, Mux},
     credential::{CredentialStore, NullCredentialStore},
 };
 
@@ -29,7 +29,7 @@ impl Backend for RustCrypto {
     }
 }
 
-type HostChannel = Channel<Host, RustCrypto>;
+type HostChannel = Channel<RustCrypto>;
 
 fn do_allocation(client: &mut Client<Mux<RustCrypto>>) {
     client.call(0, &[]);
@@ -87,7 +87,7 @@ fn do_pairing_skip(client: &mut Client<HostChannel>) {
     );
 }
 
-fn do_ping(client: &mut Client<Channel<Host, RustCrypto>>) {
+fn do_ping(client: &mut Client<HostChannel>) {
     let mut ping = Ping::new();
     ping.set_message("trezor-thp/examples".into());
     ping.set_button_protection(true);
