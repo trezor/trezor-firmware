@@ -84,7 +84,8 @@ async def _continue_repeated_backup() -> None:
         )
 
     try:
-        await perform_backup(is_repeated_backup=True)
+        # During on-device flow, the backup method will be chosen later.
+        await perform_backup(is_repeated_backup=True, method=None)
     finally:
         backup.deactivate_repeated_backup()
 

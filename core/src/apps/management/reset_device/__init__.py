@@ -125,8 +125,10 @@ async def reset_device(msg: ResetDevice) -> Success:
 
     # generate and display backup information for the master secret
     if perform_backup:
+        # choose backup handler (prompt the user if method is `None`)
+        handler = await layout.choose_backup_handler(msg.backup_method)
         await backup_seed(
-            handler=layout.DisplayBackup(),
+            handler=handler,
             backup_type=backup_type,
             mnemonic_secret=secret,
         )
