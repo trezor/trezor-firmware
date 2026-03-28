@@ -473,6 +473,10 @@ impl<C: CredentialStore, B: Backend> ChannelOpen<C, B> {
     pub fn channel_id(&self) -> u16 {
         self.channel.channel_id
     }
+
+    pub fn sending_retry(&self) -> Option<u8> {
+        self.channel.sending_retry()
+    }
 }
 
 impl<C, B> ChannelIO for ChannelOpen<C, B>

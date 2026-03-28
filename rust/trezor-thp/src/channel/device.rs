@@ -420,6 +420,10 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         self.channel.channel_id
     }
 
+    pub fn sending_retry(&self) -> Option<u8> {
+        self.channel.sending_retry()
+    }
+
     /// Notify host that handshake cannot proceed because device static key is not available.
     pub fn send_device_locked(&mut self) -> Result<(), Error> {
         if !self.static_key_required() {
