@@ -382,13 +382,6 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         Ok(ps)
     }
 
-    pub fn pairing_state(&self) -> Option<PairingState> {
-        match self.state {
-            HandshakeState::SendingCompletionResponse { pairing_state } => Some(pairing_state),
-            _ => None,
-        }
-    }
-
     /// True if handshake finished and [`ChannelOpen::complete()`] can be called.
     pub fn handshake_done(&self) -> bool {
         // Done only after peer acknowledges completion response.
@@ -420,13 +413,16 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     ///
     /// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
     /// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
-    pub fn complete(self) -> Result<Channel<B>, Error> {
+    pub fn complete(mut self) -> Result<Channel<B>, Error> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }
         log::debug!("Handshake complete.");
         Ok(match self.state {
-            HandshakeState::SendingCompletionResponse { .. } => self.channel,
+            HandshakeState::SendingCompletionResponse { pairing_state } => {
+                self.channel.pairing_state = pairing_state;
+                self.channel
+            }
             _ => return Err(Error::unexpected_input()),
         })
     }
@@ -463,6 +459,10 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         self.send_initiation_response(static_privkey)?;
         self.state = HandshakeState::SendingInitiationResponse;
         Ok(())
+    }
+
+    pub fn credential_verifier(&mut self) -> &mut C {
+        &mut self.cred_verif
     }
 }
 
