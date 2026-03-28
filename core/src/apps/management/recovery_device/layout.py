@@ -30,6 +30,12 @@ if TYPE_CHECKING:
 async def request_mnemonic(
     word_count: int, backup_type: BackupType | None
 ) -> str | None:
+    """
+    Loops until a mnemonic is entered.
+
+    Returns a space-separated mnemonic on success, None on cancellation.
+    Raises `WordValidityResult` on share-related error.
+    """
     from trezor.ui.layouts.recovery import request_word
 
     from . import word_validity
@@ -68,21 +74,9 @@ async def request_mnemonic(
 
         i += 1
 
-        try:
-            non_empty_words = [word for word in words if word]
-            word_validity.check(backup_type, non_empty_words)
-        except word_validity.AlreadyAdded:
-            # show_share_already_added
-            await show_already_added()
-            return None
-        except word_validity.IdentifierMismatch:
-            # show_identifier_mismatch
-            await show_identifier_mismatch()
-            return None
-        except word_validity.ThresholdReached:
-            # show_group_threshold_reached
-            await show_group_threshold()
-            return None
+        non_empty_words = [word for word in words if word]
+        # Raises `WordValidityResult` on error.
+        word_validity.check(backup_type, non_empty_words)
 
     return " ".join(words)
 
