@@ -295,6 +295,8 @@ def test_credential_phase(test_ctx: TrezorTestContext) -> None:
         test_ctx.set_expected_responses([ThpEndResponse])
         pairing.finish()
 
+    time.sleep(1)  # FIXME wait for workflow restart
+
     # Connect using autoconnect credential
     pairing = prepare_channel_for_pairing(test_ctx, credential=credential_auto)
     assert pairing.is_paired()

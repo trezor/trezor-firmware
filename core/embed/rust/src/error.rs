@@ -104,3 +104,17 @@ impl From<TryFromIntError> for Error {
         Self::OutOfRange
     }
 }
+
+#[cfg(feature = "thp")]
+impl From<trezor_thp::Error> for Error {
+    fn from(error: trezor_thp::Error) -> Self {
+        match error {
+            trezor_thp::Error::UnexpectedInput => Error::RuntimeError(c"THP UnexpectedInput"),
+            trezor_thp::Error::NotReady => Error::RuntimeError(c"THP NotReady"),
+            trezor_thp::Error::MalformedData => Error::ValueError(c"THP MalformedData"),
+            trezor_thp::Error::InvalidChecksum => Error::ValueError(c"THP InvalidChecksum"),
+            trezor_thp::Error::InsufficientBuffer => Error::RuntimeError(c"THP InsufficientBuffer"),
+            trezor_thp::Error::CryptoError => Error::RuntimeError(c"THP CryptoError"),
+        }
+    }
+}

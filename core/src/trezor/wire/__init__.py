@@ -134,8 +134,11 @@ if utils.USE_THP:
                 # wait until a new channel is established (on any interface)
                 pass
 
-            while await received_message_handler.handle_received_message(channel):
-                pass
+            # at this point channel has valid message waiting
+            await received_message_handler.handle_received_message(channel)
+            # the original implementation did not restart the event loop only during handshake
+            # we don't need to handle that so always restart
+            await loop.sleep(1)  # XXX maybe wait for write loop to finish or something?
         finally:
             if __debug__:
                 log.debug(__name__, "Finished THP session: %s", ifaces)

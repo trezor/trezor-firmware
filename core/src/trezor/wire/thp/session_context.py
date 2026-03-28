@@ -25,7 +25,6 @@ _REPEAT_LOOP = False
 
 if __debug__:
     from trezor import log
-    from trezor.utils import hexlify_if_bytes
 
 
 class GenericSessionContext(Context):
@@ -40,7 +39,7 @@ class GenericSessionContext(Context):
             log.debug(
                 __name__,
                 "handle - start (channel_id (bytes): %s, session_id: %d)",
-                hexlify_if_bytes(self.channel_id),
+                hex(self.channel_id),
                 self.session_id,
                 iface=self.iface,
             )
@@ -67,7 +66,7 @@ class GenericSessionContext(Context):
 
     async def _read_next_message(self) -> Message:
         while True:
-            session_id, message = await self.channel.decrypt_message()
+            session_id, message = await self.channel.read()
             if session_id == self.session_id:
                 return message
             if __debug__:
@@ -133,7 +132,7 @@ class SeedlessSessionContext(GenericSessionContext):
 class SessionContext(GenericSessionContext):
 
     def __init__(self, channel_ctx: Channel, session_cache: SessionThpCache) -> None:
-        if channel_ctx.channel_id != session_cache.channel_id:
+        if channel_ctx.channel_id_bytes() != session_cache.channel_id:
             raise Exception(
                 "The session has different channel id than the provided channel context!"
             )

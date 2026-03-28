@@ -120,7 +120,7 @@ where
         let (header, payload) = Reassembler::<Device>::single_inplace(packet)?;
         match header {
             Header::Ping if payload.len() == Nonce::LEN => {
-                let (nonce, _rest) = Nonce::parse(payload).unwrap();
+                let (nonce, _rest) = Nonce::parse(payload)?;
                 self.enqueue(MuxOutgoing::Pong(nonce)).map(|_| false)
             }
             Header::ChannelAllocationRequest if payload.len() == Nonce::LEN => {
