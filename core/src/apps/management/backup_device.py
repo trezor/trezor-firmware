@@ -53,15 +53,26 @@ async def perform_backup(
     backup.deactivate_repeated_backup()
     storage_device.set_backed_up()
 
+    handler = layout.DisplayBackup()
     if group_threshold is not None:
         # Parameters provided from host side.
         assert backup_types.is_slip39_backup_type(backup_type)
         extendable = backup_types.is_extendable_backup_type(backup_type)
         # Run the backup process directly.
-        await backup_slip39_custom(mnemonic_secret, group_threshold, groups, extendable)
+        await backup_slip39_custom(
+            handler=handler,
+            encrypted_master_secret=mnemonic_secret,
+            group_threshold=group_threshold,
+            groups=groups,
+            extendable=extendable,
+        )
     else:
         # No parameters provided, allow the user to configure them on screen.
-        await backup_seed(backup_type, mnemonic_secret)
+        await backup_seed(
+            handler=handler,
+            backup_type=backup_type,
+            mnemonic_secret=mnemonic_secret,
+        )
 
     # If the backup was successful, clear the unfinished flag and show success.
 

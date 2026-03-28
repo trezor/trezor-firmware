@@ -125,7 +125,11 @@ async def reset_device(msg: ResetDevice) -> Success:
 
     # generate and display backup information for the master secret
     if perform_backup:
-        await backup_seed(backup_type, secret)
+        await backup_seed(
+            handler=layout.DisplayBackup(),
+            backup_type=backup_type,
+            mnemonic_secret=secret,
+        )
 
     # write settings and master secret into storage
     if msg.label is not None:
@@ -175,29 +179,34 @@ async def _entropy_check(secret: bytes) -> bool:
         msg = await get_public_key(req, keychain=keychain)
 
 
-async def _backup_bip39(mnemonic: str) -> None:
+async def _backup_bip39(handler: layout.BackupHandler, mnemonic: str) -> None:
     words = mnemonic.split()
-    await layout.show_backup_intro(single_share=True, num_of_words=len(words))
-    await layout.show_and_confirm_single_share(words)
+    await handler.intro(num_of_words=len(words))
+    await layout.show_and_confirm_single_share(handler, words)
 
 
 async def _backup_slip39_single(
-    encrypted_master_secret: bytes, extendable: bool
+    handler: layout.BackupHandler,
+    encrypted_master_secret: bytes,
+    extendable: bool,
 ) -> None:
     mnemonics = _get_slip39_mnemonics(encrypted_master_secret, 1, ((1, 1),), extendable)
     words = mnemonics[0][0].split()
 
     # for a single 1-of-1 group, we use the same layouts as for BIP39
-    await layout.show_backup_intro(single_share=True, num_of_words=len(words))
-    await layout.show_and_confirm_single_share(words)
+    await handler.intro(num_of_words=len(words))
+    await layout.show_and_confirm_single_share(handler, words)
 
 
 async def _backup_slip39_basic(
-    encrypted_master_secret: bytes, num_of_words: int, extendable: bool
+    handler: layout.BackupHandler,
+    encrypted_master_secret: bytes,
+    num_of_words: int,
+    extendable: bool,
 ) -> None:
     group_threshold = 1
 
-    await layout.show_backup_intro(single_share=False)
+    await handler.intro()
 
     # get number of shares
     await layout.slip39_show_checklist(0, advanced=False)
@@ -218,13 +227,16 @@ async def _backup_slip39_basic(
     await layout.slip39_show_checklist(
         2, advanced=False, count=share_count, threshold=share_threshold
     )
-    await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
+    await layout.slip39_basic_show_and_confirm_shares(handler, mnemonics[0])
 
 
 async def _backup_slip39_advanced(
-    encrypted_master_secret: bytes, num_of_words: int, extendable: bool
+    handler: layout.BackupHandler,
+    encrypted_master_secret: bytes,
+    num_of_words: int,
+    extendable: bool,
 ) -> None:
-    await layout.show_backup_intro(single_share=False)
+    await handler.intro()
 
     # get number of groups
     await layout.slip39_show_checklist(0, advanced=True)
@@ -249,10 +261,11 @@ async def _backup_slip39_advanced(
     )
 
     # show and confirm individual shares
-    await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
+    await layout.slip39_advanced_show_and_confirm_shares(handler, mnemonics)
 
 
 async def backup_slip39_custom(
+    handler: layout.BackupHandler,
     encrypted_master_secret: bytes,
     group_threshold: int,
     groups: Sequence[tuple[int, int]],
@@ -260,7 +273,7 @@ async def backup_slip39_custom(
 ) -> None:
     # show and confirm individual shares
     if len(groups) == 1 and groups[0][0] == 1 and groups[0][1] == 1:
-        await _backup_slip39_single(encrypted_master_secret, extendable)
+        await _backup_slip39_single(handler, encrypted_master_secret, extendable)
     else:
         mnemonics = _get_slip39_mnemonics(
             encrypted_master_secret, group_threshold, groups, extendable
@@ -274,9 +287,9 @@ async def backup_slip39_custom(
             verb=TR.buttons__continue,
         )
         if len(groups) == 1:
-            await layout.slip39_basic_show_and_confirm_shares(mnemonics[0])
+            await layout.slip39_basic_show_and_confirm_shares(handler, mnemonics[0])
         else:
-            await layout.slip39_advanced_show_and_confirm_shares(mnemonics)
+            await layout.slip39_advanced_show_and_confirm_shares(handler, mnemonics)
 
 
 def _get_slip39_mnemonics(
@@ -338,17 +351,25 @@ def _compute_secret_from_entropy(
     return secret
 
 
-async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
+async def backup_seed(
+    handler: layout.BackupHandler,
+    backup_type: BackupType,
+    mnemonic_secret: bytes,
+) -> None:
     if backup_types.is_slip39_backup_type(backup_type):
         num_of_words = backup_types.get_num_of_words_per_share(
             backup_type, len(mnemonic_secret)
         )
         extendable = backup_types.is_extendable_backup_type(backup_type)
         if backup_types.is_slip39_advanced_backup_type(backup_type):
-            await _backup_slip39_advanced(mnemonic_secret, num_of_words, extendable)
+            await _backup_slip39_advanced(
+                handler, mnemonic_secret, num_of_words, extendable
+            )
         elif backup_type == BAK_T_SLIP39_SINGLE_EXT:
-            await _backup_slip39_single(mnemonic_secret, extendable)
+            await _backup_slip39_single(handler, mnemonic_secret, extendable)
         else:
-            await _backup_slip39_basic(mnemonic_secret, num_of_words, extendable)
+            await _backup_slip39_basic(
+                handler, mnemonic_secret, num_of_words, extendable
+            )
     else:
-        await _backup_bip39(mnemonic_secret.decode())
+        await _backup_bip39(handler, mnemonic_secret.decode())
