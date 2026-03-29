@@ -453,16 +453,13 @@ obj_program += [rust]
 
 
 if "secmon_layout" in FEATURES_AVAILABLE:
-    SECMON_LIB = SECMON_API
-else:
-    SECMON_LIB = ''
-
+    obj_program.append(SECMON_API)
 
 program_elf = env.Command(
     target='kernel.elf',
     source=obj_program,
     action=
-    f'$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc {SECMON_LIB} ',
+    f'$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc ',
 )
 
 env.Depends(program_elf, linkerscript_gen)
