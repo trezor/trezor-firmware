@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Updates maxfee_kb in given JSON coin definitions."""
+
 import glob
 import json
 import logging

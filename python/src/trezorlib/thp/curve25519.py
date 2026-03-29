@@ -120,13 +120,13 @@ def multiply(private_scalar: bytes, public_point: bytes) -> bytes:
     for i in reversed(range(256)):
         bit = (k >> i) & 1
         swap = bit ^ swap
-        (x_2, x_3) = conditional_swap(x_2, x_3, swap)
-        (z_2, z_3) = conditional_swap(z_2, z_3, swap)
+        x_2, x_3 = conditional_swap(x_2, x_3, swap)
+        z_2, z_3 = conditional_swap(z_2, z_3, swap)
         swap = bit
         x_2, z_2, x_3, z_3 = ladder_operation(x_1, x_2, z_2, x_3, z_3)
 
-    (x_2, x_3) = conditional_swap(x_2, x_3, swap)
-    (z_2, z_3) = conditional_swap(z_2, z_3, swap)
+    x_2, x_3 = conditional_swap(x_2, x_3, swap)
+    z_2, z_3 = conditional_swap(z_2, z_3, swap)
 
     x = pow(z_2, p - 2, p) * x_2 % p
     return encode_coordinate(x)

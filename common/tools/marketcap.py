@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fetch market capitalization data."""
+
 import json
 import os
 import time

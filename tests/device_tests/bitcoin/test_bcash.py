@@ -345,7 +345,7 @@ def test_send_bch_multisig_wrongchange(session: Session):
                 request_finished(),
             ]
         )
-        (signatures1, serialized_tx) = btc.sign_tx(
+        signatures1, serialized_tx = btc.sign_tx(
             session, "Bcash", [inp1], [out1], prev_txes=TX_API
         )
     assert (
@@ -414,7 +414,7 @@ def test_send_bch_multisig_change(session: Session):
                 request_finished(),
             ]
         )
-        (signatures1, serialized_tx) = btc.sign_tx(
+        signatures1, serialized_tx = btc.sign_tx(
             session, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
         )
 
@@ -453,7 +453,7 @@ def test_send_bch_multisig_change(session: Session):
                 request_finished(),
             ]
         )
-        (signatures1, serialized_tx) = btc.sign_tx(
+        signatures1, serialized_tx = btc.sign_tx(
             session, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
         )
 

@@ -8,7 +8,6 @@ sys.path.insert(0, str(ROOT))
 from tests.ui_tests.common import TestResult, _hash_files  # isort:skip
 from tests.ui_tests.common import get_current_fixtures  # isort:skip
 
-
 FIXTURES = get_current_fixtures()
 
 for result in TestResult.recent_results():
