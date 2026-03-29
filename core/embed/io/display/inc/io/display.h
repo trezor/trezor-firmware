@@ -80,16 +80,12 @@ typedef struct {
 // Suspends the display driver.
 //
 // Saves the current display state into `wakeup_params`.
-// Returns `true` if the driver was successfully suspended,
-// `false` otherwise.
-bool display_suspend(display_wakeup_params_t *wakeup_params);
+void display_suspend(display_wakeup_params_t *wakeup_params);
 
 // Resumes the display driver.
 //
 // Restores the display state from `wakeup_params`.
-// Returns `true` if the driver was successfully resumed,
-// `false` otherwise.
-bool display_resume(const display_wakeup_params_t *wakeup_params);
+void display_resume(const display_wakeup_params_t *wakeup_params);
 #endif  // USE_SUSPEND
 
 // Allows unprivileged access to the display framebuffer from

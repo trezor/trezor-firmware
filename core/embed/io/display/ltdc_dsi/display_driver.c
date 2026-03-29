@@ -635,21 +635,20 @@ void display_refresh_rate_config(void) {
 #endif  // REFRESH_RATE_SCALING_SUPPORTED
 
 #ifdef USE_SUSPEND
-bool display_suspend(display_wakeup_params_t *wakeup_params) {
+void display_suspend(display_wakeup_params_t *wakeup_params) {
   display_driver_t *drv = &g_display_driver;
 
-  if (!drv->initialized || NULL == wakeup_params) {
-    // The driver isn't initialized, wrong control flow applied OR invalid
-    // parameter has been passed, return error
-    return false;
+  memset(wakeup_params, 0, sizeof(display_wakeup_params_t));
+
+  if (!drv->initialized) {
+    // The driver isn't initialized, wrong control flow applied
+    return;
   }
 
   if (!drv->suspended) {
     drv->wakeup_params.backlight_level = display_get_backlight();
 
-    if (!panel_suspend(drv)) {
-      return false;
-    }
+    panel_suspend(drv);
 
     display_deinit_ll(DISPLAY_RESET_CONTENT);
 
@@ -657,22 +656,19 @@ bool display_suspend(display_wakeup_params_t *wakeup_params) {
   }
 
   memcpy(wakeup_params, &drv->wakeup_params, sizeof(display_wakeup_params_t));
-
-  return true;
 }
 
-bool display_resume(const display_wakeup_params_t *wakeup_params) {
+void display_resume(const display_wakeup_params_t *wakeup_params) {
   display_driver_t *drv = &g_display_driver;
 
-  if (!drv->initialized || NULL == wakeup_params) {
-    // The driver isn't initialized, wrong control flow applied OR invalid
-    // parameter has been passed, return error
-    return false;
+  if (!drv->initialized) {
+    // The driver isn't initialized, wrong control flow applied
+    return;
   }
 
   if (!drv->suspended) {
     // The driver isn't suspended, nothing to resume
-    return true;
+    return;
   }
 
   if (!display_init_ll(DISPLAY_RESET_CONTENT)) {
@@ -685,11 +681,11 @@ bool display_resume(const display_wakeup_params_t *wakeup_params) {
 
   drv->suspended = false;
 
-  return true;
+  return;
 
 cleanup:
   display_deinit(DISPLAY_RESET_CONTENT);
-  return false;
+  return;
 }
 #endif  // USE_SUSPEND
 

@@ -403,25 +403,24 @@ void touch_deinit(void) {
 }
 
 #ifdef USE_SUSPEND
-secbool touch_suspend(void) {
+void touch_suspend(void) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (secfalse == driver->initialized) {
-    // The driver isn't initialized, wrong control flow applied, return error
-    return secfalse;
+    // The driver isn't initialized, wrong control flow applied
+    return;
   }
 
   if (sectrue == driver->suspended) {
     // The driver is already suspended
-    return sectrue;
+    return;
   }
 
   touch_poll_deinit();
 
-  // Set the touch driver to monitor mode
-  if (secfalse == ft3168_power_mode_set(driver->i2c_bus, P_MONITOR_MODE)) {
-    goto cleanup;
-  }
+  // Set the touch driver to monitor mode (in case it fails, the controller
+  // will switch to monitor mode anyway after some time of inactivity)
+  ft3168_power_mode_set(driver->i2c_bus, P_MONITOR_MODE);
 
   driver->suspended = sectrue;
 
@@ -429,25 +428,19 @@ secbool touch_suspend(void) {
   __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_EXTI_INTERRUPT_PIN);
   NVIC_ClearPendingIRQ(TOUCH_EXTI_INTERRUPT_NUM);
   NVIC_EnableIRQ(TOUCH_EXTI_INTERRUPT_NUM);
-
-  return sectrue;
-
-cleanup:
-  touch_deinit();
-  return secfalse;
 }
 
-secbool touch_resume(void) {
+void touch_resume(void) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (secfalse == driver->initialized) {
-    // The driver isn't initialized, wrong control flow applied, return error
-    return secfalse;
+    // The driver isn't initialized, wrong control flow applied
+    return;
   }
 
   if (secfalse == driver->suspended) {
     // The driver isn't suspended, nothing to resume
-    return sectrue;
+    return;
   }
 
   // Disable the interrupt for normal operation
@@ -469,11 +462,11 @@ secbool touch_resume(void) {
 
   driver->suspended = secfalse;
 
-  return sectrue;
+  return;
 
 cleanup:
   touch_deinit();
-  return secfalse;
+  return;
 }
 #endif  // USE_SUSPEND
 

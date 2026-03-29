@@ -39,21 +39,14 @@ void touch_deinit();
 #ifdef USE_SUSPEND
 // Suspends the touch driver
 //
-// The function suspends the touch controller, sets it to low-power
-// mode and configures it to generate wakeup by touch.
-//
-// Returns `sectrue` if the driver has been successfully suspended,
-// or `secfalse` otherwise.
-secbool touch_suspend(void);
+// The function suspends the touch controller.
+void touch_suspend(void);
 
 // Resumes the touch driver
 //
-// The function resumes touch controller's normal functionality
-// as it was before suspension.
-//
-// Returns `sectrue` if the driver has been successfully resumed,
-// or `secfalse` otherwise.
-secbool touch_resume(void);
+// The function resumes touch controller's normal functionality as it was
+// before suspension.
+void touch_resume(void);
 #endif  // USE_SUSPEND
 
 // Powers on/off the touch controller
