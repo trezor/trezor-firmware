@@ -402,5 +402,7 @@ pub const Font_Roboto_Bold_20_info: FontInfo = FontInfo {
     baseline: 4,
     glyph_data: &Font_Roboto_Bold_20,
     glyph_nonprintable: &Font_Roboto_Bold_20_glyph_nonprintable,
+    #[cfg(feature = "ui_font_kerning")]
+    kernings: None,
 };
 

@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import json
+import struct
 import typing as t
 import unicodedata
 from hashlib import sha256
@@ -209,10 +210,10 @@ class Font(BlobTable):
     @classmethod
     def from_file(cls, file: Path) -> Self:
         json_content = json.loads(file.read_text())
-        assert all(len(codepoint) == 1 for codepoint in json_content)
+        assert all(len(codepoint) == 1 for codepoint in json_content["glyphs"])
         raw_content = {
             ord(codepoint): bytes.fromhex(data)
-            for codepoint, data in json_content.items()
+            for codepoint, data in json_content["glyphs"].items()
         }
         return cls.from_items(raw_content)
 
@@ -249,6 +250,95 @@ class FontsTable(BlobTable):
         return Font.parse(font_bytes)
 
 
+class KerningList(Struct):
+    """Serializes font kerning pairs into the two-level binary format consumed by
+    the Rust ``KerningTable`` in ``blob.rs``.
+
+    Binary layout of ``kerning_data``:
+      [u16 index_count]
+      [u16 left_cp, u16 count] × index_count   (4 bytes, sorted by left_cp)
+      [u16 right_cp, i8 kern_val, u8 pad] × pair_count   (4 bytes)
+
+    Start offset for entry i is the sum of counts for all preceding entries.
+    """
+
+    kerning_data: bytes
+
+    SUBCON = c.Struct(
+        "_length" / c.Rebuild(c.Int16ul, c.len_(c.this.kerning_data)),
+        "kerning_data" / c.GreedyBytes,
+        ALIGN_SUBCON,
+        c.Terminated,
+    )
+
+    @classmethod
+    def from_file(cls, file_path: Path) -> Self:
+        json_content = json.loads(file_path.read_text())
+        triplets = json_content.get("kernings", [])
+
+        # Group pairs by left codepoint (sorted for binary search).
+        by_left: dict[int, list[tuple[int, int]]] = {}
+        for left_char, right_char, kern_val in triplets:
+            if not (-128 <= kern_val <= 127):
+                raise ValueError(f"Invalid kerning adjustment: {kern_val}")
+            left_cp, right_cp = ord(left_char), ord(right_char)
+            if left_cp > 0xFFFF or right_cp > 0xFFFF:
+                raise ValueError(
+                    f"Invalid kerning codepoint: {left_char!r}, {right_char!r}"
+                )
+            by_left.setdefault(left_cp, []).append((right_cp, kern_val))
+
+        kern_index: list[tuple[int, int]] = []  # (left_cp, count)
+        kern_pairs: list[tuple[int, int]] = []
+        for left_cp in sorted(by_left):
+            pairs = by_left[left_cp]
+            kern_index.append((left_cp, len(pairs)))
+            kern_pairs.extend(pairs)
+
+        if len(kern_index) > 0xFFFF:
+            raise ValueError(f"Too many unique left kerning chars: {len(kern_index)}")
+
+        # [u16 index_count] + [4-byte index entries (left_cp, count)] + [4-byte pair entries]
+        # Start offset for entry i is the sum of counts for all preceding entries.
+        data = struct.pack("<H", len(kern_index))
+        for left_cp, count in kern_index:
+            data += struct.pack("<HH", left_cp, count)
+        for right_cp, kern_val in kern_pairs:
+            data += struct.pack("<Hb", right_cp, kern_val) + b"\x00"
+
+        return cls(kerning_data=data)
+
+
+class KerningTable(BlobTable):
+
+    @classmethod
+    def from_dir(cls, model_fonts: dict[str, str], font_dir: Path) -> "KerningTable":
+        """Example structure of the font dict:
+        (The key number corresponds to the index representation of each font set in `gen_font.py`)
+        {
+          "1": "font_tthoves_regular_21_cs.json",
+          "3": "font_robotomono_medium_20_cs.json",
+          "5": "font_tthoves_demibold_21_cs.json",
+          "7": "font_tthoves_bold_17_upper_cs.json"
+        }
+        """
+
+        kernings = {}
+
+        for font_name, file_name in model_fonts.items():
+            if not file_name:
+                continue
+            file_path = font_dir / file_name
+            file_id = int(font_name)
+
+            try:
+                kernings[file_id] = KerningList.from_file(file_path).build()
+            except Exception as e:
+                raise ValueError(f"Failed to load font {file_name}") from e
+
+        return cls.from_items(kernings)
+
+
 # =========
 
 MAX_TRANSLATION_CHUNKS = 4
@@ -257,11 +347,13 @@ MAX_TRANSLATION_CHUNKS = 4
 class Payload(Struct):
     translations_chunks_bytes: list[bytes]
     fonts_bytes: bytes
+    kernings_bytes: bytes
 
     # fmt: off
     SUBCON = c.Struct(
         "translations_chunks_bytes" / c.PrefixedArray(c.Int16ul, c.Prefixed(c.Int16ul, c.GreedyBytes)),
         "fonts_bytes" / c.Prefixed(c.Int16ul, c.GreedyBytes),
+        "kernings_bytes" / c.Prefixed(c.Int16ul, c.GreedyBytes),
         c.Terminated,
     )
     # fmt: on
@@ -274,7 +366,7 @@ class TranslationsBlob(Struct):
 
     # fmt: off
     SUBCON = c.Struct(
-        "magic" / c.Const(b"TRTR01"),
+        "magic" / c.Const(b"TRTR02"),
         "total_length" / c.Rebuild(
             c.Int32ul,
             lambda ctx: (
@@ -283,6 +375,7 @@ class TranslationsBlob(Struct):
                 + sum(map(len, ctx.payload['translations_chunks_bytes']))
                 + len(ctx.payload['fonts_bytes'])
                 + 2 * (4 + len(ctx.payload['translations_chunks_bytes']))  # sizeof(u16) * number of fields
+                + 2 + len(ctx.payload['kernings_bytes'])
             )
         ),
         "_start_offset" / c.Tell,
@@ -325,6 +418,7 @@ class TranslationsBlob(Struct):
         for chunk in self.payload.translations_chunks_bytes:
             assert len(chunk) % ALIGNMENT == 0
         assert len(self.payload.fonts_bytes) % ALIGNMENT == 0
+        assert len(self.payload.kernings_bytes) % ALIGNMENT == 0
         return super().build()
 
 
@@ -405,16 +499,22 @@ def blob_from_defs(
         )
 
     model_fonts = lang_data["fonts"][layout_type.name]
-    fonts = FontsTable.from_dir(model_fonts, fonts_dir)
+    layout_fonts_dir = fonts_dir / layout_type.name.lower()
+    fonts = FontsTable.from_dir(model_fonts, layout_fonts_dir)
+    kernings = KerningTable.from_dir(model_fonts, layout_fonts_dir)
 
     for chunk_bytes in translations_chunks_bytes:
         assert len(chunk_bytes) % ALIGNMENT == 0
     fonts_bytes = fonts.build()
     assert len(fonts_bytes) % ALIGNMENT == 0
 
+    kernings_bytes = kernings.build()
+    assert len(kernings_bytes) % ALIGNMENT == 0
+
     payload = Payload(
         translations_chunks_bytes=translations_chunks_bytes,
         fonts_bytes=fonts_bytes,
+        kernings_bytes=kernings_bytes,
     )
     data = payload.build()
 
