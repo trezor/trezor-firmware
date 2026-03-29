@@ -168,13 +168,13 @@ def all_transports() -> t.Iterable[type[Transport]]:
     from .webusb import WebUsbTransport
 
     transports: tuple[type[Transport], ...] = (
-        BridgeTransport,
         HidTransport,
         UdpTransport,
         WebUsbTransport,
         BleTransport,
+        BridgeTransport,
     )
-    return set(t for t in transports if t.ENABLED)
+    return [t for t in transports if t.ENABLED]
 
 
 def enumerate_devices(
