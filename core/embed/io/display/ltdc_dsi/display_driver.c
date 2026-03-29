@@ -645,7 +645,7 @@ bool display_suspend(display_wakeup_params_t *wakeup_params) {
   }
 
   if (!drv->suspended) {
-    drv->display.backlight_level = display_get_backlight();
+    drv->wakeup_params.backlight_level = display_get_backlight();
 
     if (!panel_suspend(drv)) {
       return false;
@@ -656,7 +656,7 @@ bool display_suspend(display_wakeup_params_t *wakeup_params) {
     drv->suspended = true;
   }
 
-  memcpy(wakeup_params, &drv->display, sizeof(display_wakeup_params_t));
+  memcpy(wakeup_params, &drv->wakeup_params, sizeof(display_wakeup_params_t));
 
   return true;
 }

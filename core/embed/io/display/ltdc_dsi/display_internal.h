@@ -111,7 +111,7 @@ typedef struct {
   // Set if the driver is currently suspended
   bool suspended;
   // Display wakeup parameters
-  display_wakeup_params_t display;
+  display_wakeup_params_t wakeup_params;
 #endif  // KERNEL_MODE && USE_SUSPEND
 
 } display_driver_t;
