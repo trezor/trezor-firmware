@@ -453,8 +453,13 @@ secbool touch_resume(void) {
   // Disable the interrupt for normal operation
   NVIC_DisableIRQ(TOUCH_EXTI_INTERRUPT_NUM);
 
-  // Set the touch driver to active mode
-  if (secfalse == ft3168_power_mode_set(driver->i2c_bus, P_ACTIVE_MODE)) {
+  // Ensure the touch controller is awake (just a precaution).
+  ft3168_wake_up(driver->i2c_bus);
+
+  // Configure the touch controller (the display and touch controllers share
+  // the same power and reset lines => we need to configure the touch controller
+  // again after resuming from suspend).
+  if (secfalse == ft3168_configure(driver->i2c_bus)) {
     goto cleanup;
   }
 
