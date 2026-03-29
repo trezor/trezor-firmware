@@ -950,6 +950,8 @@ if EVERYTHING:
     features.append('universal_fw')
 if not PRODUCTION:
     features.append('dev_keys')
+if THP:
+    features.append('thp')
 
 rust = tools.add_rust_lib(
     env=env,

@@ -1,4 +1,4 @@
-use core::pin::Pin;
+use core::{mem::MaybeUninit, pin::Pin};
 
 use zeroize::Zeroize as _;
 
@@ -54,6 +54,38 @@ pub fn digest(data: &[u8]) -> Digest {
     digest_into(data, &mut out);
     out
 }
+
+#[derive(Clone, Copy)] // TODO TODO TODO
+pub struct NoPinSha256 {
+    ctx: ffi::SHA256_CTX,
+}
+
+impl Default for NoPinSha256 {
+    fn default() -> Self {
+        let mut ctx = unsafe { MaybeUninit::<ffi::SHA256_CTX>::zeroed().assume_init() };
+        unsafe { ffi::sha256_Init(&mut ctx) };
+        Self { ctx }
+    }
+}
+
+impl NoPinSha256 {
+    pub fn update(&mut self, data: &[u8]) {
+        // SAFETY: safe
+        unsafe { ffi::sha256_Update(&mut self.ctx as *mut _, data.as_ptr(), data.len()) };
+    }
+
+    pub fn finalize_into(mut self, out: &mut Digest) {
+        // SAFETY: safe
+        unsafe { ffi::sha256_Final(&mut self.ctx as *mut _, out.as_mut_ptr()) };
+    }
+}
+
+/* // FIXME
+impl Drop for NoPinSha256 {
+    fn drop(&mut self) {
+        self.ctx.zeroize();
+    }
+} */
 
 #[cfg(test)]
 mod test {

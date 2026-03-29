@@ -5,6 +5,7 @@ from trezor.crypto import hmac
 from trezor.messages import (
     ThpAuthenticatedCredentialData,
     ThpCredentialMetadata,
+    ThpHandshakeCompletionReqNoisePayload,
     ThpPairingCredential,
 )
 from trezor.wire.message_handler import wrap_protobuf_load
@@ -64,6 +65,13 @@ def issue_credential(
     proto_msg = ThpPairingCredential(cred_metadata=credential_metadata, mac=mac)
     credential_raw = _encode_message_into_new_buffer(proto_msg)
     return credential_raw
+
+
+def unwrap_credential(encoded_noise_payload: AnyBytes) -> AnyBytes | None:
+    expected_type = protobuf.type_for_name("ThpHandshakeCompletionReqNoisePayload")
+    msg = wrap_protobuf_load(encoded_noise_payload, expected_type)
+    assert ThpHandshakeCompletionReqNoisePayload.is_type_of(msg)
+    return msg.host_pairing_credential
 
 
 def decode_credential(

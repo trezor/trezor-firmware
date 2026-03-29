@@ -36,6 +36,8 @@ mod protobuf;
 #[cfg(feature = "storage")]
 mod storage;
 mod strutil;
+#[cfg(feature = "thp")]
+mod thp;
 mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;

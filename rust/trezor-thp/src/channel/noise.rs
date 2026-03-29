@@ -48,10 +48,12 @@ pub struct NoiseHandshake<R: Role, B: Backend> {
     hss: HandshakeState<B::DH, B::Cipher, B::Hash>,
     _phantom: PhantomData<R>,
 }
+
 pub struct NoiseCiphers<B: Backend> {
     encrypt: CipherState<B::Cipher>,
     decrypt: CipherState<B::Cipher>,
     handshake_hash: [u8; HANDSHAKE_HASH_LEN],
+    remote_static_pubkey: [u8; PUBKEY_LEN],
 }
 
 impl<B: Backend> NoiseCiphers<B> {
@@ -74,6 +76,10 @@ impl<B: Backend> NoiseCiphers<B> {
 
     pub fn handshake_hash(&self) -> &[u8; HANDSHAKE_HASH_LEN] {
         &self.handshake_hash
+    }
+
+    pub fn remote_static_key(&self) -> &[u8; PUBKEY_LEN] {
+        &self.remote_static_pubkey
     }
 }
 
@@ -139,10 +145,13 @@ impl<B: Backend> NoiseHandshake<Host, B> {
         let (encrypt, decrypt) = self.hss.get_ciphers();
         let mut handshake_hash = [0u8; HANDSHAKE_HASH_LEN];
         handshake_hash.copy_from_slice(self.hss.get_hash());
+        let mut remote_static_pubkey = [0u8; PUBKEY_LEN];
+        remote_static_pubkey.copy_from_slice(self.hss.get_rs().unwrap().as_slice());
         let nc = NoiseCiphers {
             encrypt,
             decrypt,
             handshake_hash,
+            remote_static_pubkey,
         };
         Ok((nc, dest))
     }
@@ -235,7 +244,8 @@ impl<B: Backend> NoiseHandshake<Device, B> {
             return Err(Error::crypto_error());
         }
 
-        let remote_static_pubkey = self.hss.get_rs().ok_or_else(Error::crypto_error)?;
+        let mut remote_static_pubkey = [0u8; PUBKEY_LEN];
+        remote_static_pubkey.copy_from_slice(self.hss.get_rs().unwrap().as_slice());
         let (decrypt, encrypt) = self.hss.get_ciphers();
         let mut handshake_hash = [0u8; HANDSHAKE_HASH_LEN];
         handshake_hash.copy_from_slice(self.hss.get_hash());
@@ -243,8 +253,9 @@ impl<B: Backend> NoiseHandshake<Device, B> {
             encrypt,
             decrypt,
             handshake_hash,
+            remote_static_pubkey,
         };
-        let pairing_state = cred_verifier.verify(remote_static_pubkey.as_slice(), &cred);
+        let pairing_state = cred_verifier.verify(&nc.remote_static_pubkey, &cred);
         let payload = &[pairing_state as u8];
         let plaintext_len = payload.len();
         let dest = dest

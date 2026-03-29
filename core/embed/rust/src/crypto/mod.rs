@@ -7,7 +7,7 @@ pub mod curve25519;
 pub mod ed25519;
 mod ffi;
 pub mod hmac;
-mod memory;
+pub mod memory;
 pub mod merkle;
 pub mod sha256;
 pub mod sha512;

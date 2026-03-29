@@ -1,7 +1,7 @@
 use heapless;
 
 use crate::{
-    Backend, Channel, ChannelIO, Device, Error,
+    Backend, ChannelIO, Device, Error,
     alternating_bit::SyncBits,
     channel::{
         ChannelState, Nonce, PRIVKEY_LEN, PacketInResult, PairingState, noise::NoiseHandshake,
@@ -30,16 +30,16 @@ const BROADCAST_OUTGOING_QUEUE_LEN: usize = 8;
 // "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
 const CODEC_V1_RESPONSE: &[u8] = b"?##\x00\x03\x00\x00\x00\x02\x08\x11";
 
+pub type Channel<B> = super::Channel<Device, B>;
+
 /// Maps packets to channels. Handles broadcast channel messages, notably channel allocation.
 /// Every packet interface on the device needs to have one Mux. Event loop should pass every
 /// incoming packet to [`Mux::packet_in`] in order to determine what to do with it.
 /// Single packet only. Does not keep track of opened channels.
 pub struct Mux<C, B> {
-    // is_locked: bool,
-    next_channel_id: u16,
     cred_verif: C,
     outgoing: heapless::Deque<MuxOutgoing, BROADCAST_OUTGOING_QUEUE_LEN>,
-    new_channel: Option<(u16, Nonce)>,
+    new_channel: Option<Nonce>,
     _phantom: PhantomData<B>,
 }
 
@@ -65,10 +65,7 @@ where
     B: Backend,
 {
     pub fn new(cred_verif: C) -> Self {
-        // Use random starting id to avoid giving out the number of channels allocated since boot.
-        let next_channel_id = random_channel_id::<B>();
         Self {
-            next_channel_id,
             cred_verif,
             outgoing: heapless::Deque::new(),
             new_channel: None,
@@ -77,8 +74,8 @@ where
     }
 
     /// Create new [`ChannelOpen`] when channel allocation request is pending.
-    pub fn channel_alloc(&mut self) -> Result<ChannelOpen<C, B>, Error> {
-        let Some((channel_id, nonce)) = self.new_channel.take() else {
+    pub fn channel_alloc(&mut self, channel_id: u16) -> Result<ChannelOpen<C, B>, Error> {
+        let Some(nonce) = self.new_channel.take() else {
             return Err(Error::not_ready());
         };
         ChannelOpen::<C, B>::new(channel_id, nonce, self.cred_verif.clone())
@@ -118,26 +115,21 @@ where
         })
     }
 
-    fn handle_broadcast(&mut self, packet: &[u8]) -> Result<Option<u16>, Error> {
+    // Returns true if allocation request has been received.
+    fn handle_broadcast(&mut self, packet: &[u8]) -> Result<bool, Error> {
         let (header, payload) = Reassembler::<Device>::single_inplace(packet)?;
         match header {
             Header::Ping if payload.len() == Nonce::LEN => {
-                let (nonce, _rest) = Nonce::parse(payload).unwrap();
-                self.enqueue(MuxOutgoing::Pong(nonce)).map(|_| None)
+                let (nonce, _rest) = Nonce::parse(payload)?;
+                self.enqueue(MuxOutgoing::Pong(nonce)).map(|_| false)
             }
             Header::ChannelAllocationRequest if payload.len() == Nonce::LEN => {
                 let (nonce, _rest) = Nonce::parse(payload)?;
-                let channel_id = self.next_channel_id;
-                self.next_channel_id += 1;
-                if self.next_channel_id > MAX_CHANNEL_ID {
-                    log::debug!("Channel id max value reached, wrapping around.");
-                    self.next_channel_id = MIN_CHANNEL_ID;
-                }
                 if self.new_channel.is_some() {
                     log::warn!("Dropping previous channel allocation request.");
                 }
-                self.new_channel = Some((channel_id, nonce));
-                Ok(Some(channel_id))
+                self.new_channel = Some(nonce);
+                Ok(true)
             }
             // No Header::TransportError for broadcast.
             _ => {
@@ -172,12 +164,6 @@ where
         };
         PacketInResult::ignore(Error::malformed_data())
     }
-
-    #[cfg(test)]
-    pub(crate) fn set_next_channel_id(&mut self, channel_id: u16) {
-        assert!(channel_id_valid(channel_id));
-        self.next_channel_id = channel_id;
-    }
 }
 
 impl<C, B> ChannelIO for Mux<C, B>
@@ -201,10 +187,11 @@ where
             return PacketInResult::route(channel_id);
         }
         PacketInResult::from_result(self.handle_broadcast(packet_buffer).map(|r| {
-            r.map_or_else(
-                || PacketInResult::accept(false),
-                PacketInResult::channel_allocation,
-            )
+            if r {
+                PacketInResult::channel_allocation()
+            } else {
+                PacketInResult::accept(false)
+            }
         }))
     }
 
@@ -282,7 +269,7 @@ enum HandshakeState {
 /// Please note that this object also handles sending ChannelAllocationResponse
 /// which is a broadcast message, which are normally handled by [`Mux`].
 pub struct ChannelOpen<C: CredentialVerifier, B: Backend> {
-    channel: Channel<Device, B>,
+    channel: Channel<B>,
     state: HandshakeState,
     noise: NoiseHandshake<Device, B>,
     internal_buffer: heapless::Vec<u8, INTERNAL_BUFFER_LEN>,
@@ -380,13 +367,6 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         Ok(ps)
     }
 
-    pub fn pairing_state(&self) -> Option<PairingState> {
-        match self.state {
-            HandshakeState::SendingCompletionResponse { pairing_state } => Some(pairing_state),
-            _ => None,
-        }
-    }
-
     /// True if handshake finished and [`ChannelOpen::complete()`] can be called.
     pub fn handshake_done(&self) -> bool {
         // Done only after peer acknowledges completion response.
@@ -396,8 +376,7 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
 
     /// True if the handshake failed and the object should be discarded.
     pub fn handshake_failed(&self) -> bool {
-        matches!(self.state, HandshakeState::Failed)
-            || matches!(self.channel.state, ChannelState::Failed(_))
+        matches!(self.state, HandshakeState::Failed) || self.channel.is_failed()
     }
 
     /// True if the handshake is waiting for device static key to be supplied using
@@ -418,13 +397,16 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
     ///
     /// [Pairing phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#pairing-phase
     /// [Credential phase]: https://docs.trezor.io/trezor-firmware/common/thp/specification.html#credential-phase
-    pub fn complete(self) -> Result<Channel<Device, B>, Error> {
+    pub fn complete(mut self) -> Result<Channel<B>, Error> {
         if self.channel.noise.is_none() {
             return Err(Error::unexpected_input());
         }
         log::debug!("Handshake complete.");
         Ok(match self.state {
-            HandshakeState::SendingCompletionResponse { .. } => self.channel,
+            HandshakeState::SendingCompletionResponse { pairing_state } => {
+                self.channel.pairing_state = pairing_state;
+                self.channel
+            }
             _ => return Err(Error::unexpected_input()),
         })
     }
@@ -433,17 +415,16 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         self.channel.channel_id
     }
 
+    pub fn sending_retry(&self) -> Option<u8> {
+        self.channel.sending_retry()
+    }
+
     /// Notify host that handshake cannot proceed because device static key is not available.
     pub fn send_device_locked(&mut self) -> Result<(), Error> {
         if !self.static_key_required() {
             return Err(Error::not_ready());
         }
-        let header = Header::new_error(self.channel.channel_id)?;
-        self.internal_buffer.clear();
-        let _ = self
-            .internal_buffer
-            .push(TransportError::DeviceLocked.into());
-        self.channel.raw_in(header, &self.internal_buffer)?;
+        self.channel.send_error(TransportError::DeviceLocked);
         self.state = HandshakeState::SendingDeviceLocked;
         Ok(())
     }
@@ -457,6 +438,10 @@ impl<C: CredentialVerifier, B: Backend> ChannelOpen<C, B> {
         self.send_initiation_response(static_privkey)?;
         self.state = HandshakeState::SendingInitiationResponse;
         Ok(())
+    }
+
+    pub fn credential_verifier(&mut self) -> &mut C {
+        &mut self.cred_verif
     }
 }
 
@@ -480,10 +465,6 @@ where
             return PacketInResult::ignore(Error::malformed_data());
         }
         if res.got_ack() {
-            if matches!(self.state, HandshakeState::SendingDeviceLocked) {
-                self.state = HandshakeState::Failed;
-                return res;
-            }
             prepare_zeroed(&mut self.internal_buffer);
         }
         if res.got_message() {
@@ -543,14 +524,41 @@ where
     }
 }
 
-fn random_channel_id<B: Backend>() -> u16 {
-    let mut bytes = [0u8, 0u8];
-    for _i in 0..16 {
+pub struct ChannelIdAllocator {
+    next_channel_id: u16,
+}
+
+impl ChannelIdAllocator {
+    /// Use random starting id to avoid giving out the number of channels allocated since boot.
+    pub fn new_random<B: Backend>() -> Self {
+        let mut bytes = [0u8, 0u8];
         B::random_bytes(&mut bytes);
-        let channel_id = u16::from_be_bytes(bytes);
-        if channel_id_valid(channel_id) && channel_id != BROADCAST_CHANNEL_ID {
-            return channel_id;
+        let mut channel_id = u16::from_be_bytes(bytes);
+        while !channel_id_valid(channel_id) || channel_id == BROADCAST_CHANNEL_ID {
+            channel_id = channel_id.wrapping_add(1);
+        }
+        Self {
+            next_channel_id: channel_id,
         }
     }
-    panic!("Cannot generate random channel id.");
+
+    /// Use fixed starting id, mainly useful for tests.
+    pub fn new_from(first_channel_id: u16) -> Option<Self> {
+        if !channel_id_valid(first_channel_id) || first_channel_id == BROADCAST_CHANNEL_ID {
+            return None;
+        }
+        Some(Self {
+            next_channel_id: first_channel_id,
+        })
+    }
+
+    pub fn get(&mut self) -> u16 {
+        let channel_id = self.next_channel_id;
+        self.next_channel_id += 1;
+        if self.next_channel_id > MAX_CHANNEL_ID {
+            log::debug!("Channel id max value reached, wrapping around.");
+            self.next_channel_id = MIN_CHANNEL_ID;
+        }
+        channel_id
+    }
 }
