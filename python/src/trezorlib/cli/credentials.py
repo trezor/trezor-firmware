@@ -190,12 +190,13 @@ class CredentialStore:
 
     def delete(self, id_or_key: bytes | TrezorPublicKeys) -> None:
         with self._with_app() as app_data:
-            credential = self._get(app_data, id_or_key)
-            if credential is None:
-                LOG.warning("Credential not found: %s", id_or_key)
-            else:
+            found = False
+            while (credential := self._get(app_data, id_or_key)) is not None:
                 credential.delete()
                 app_data.remove(credential.id)
+                found = True
+            if not found:
+                LOG.warning("Credential not found: %s", id_or_key)
 
     def clear(self) -> None:
         with self._with_app() as app_data:
