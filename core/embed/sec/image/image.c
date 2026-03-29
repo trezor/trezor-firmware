@@ -263,13 +263,24 @@ secbool check_secmon_contents(const secmon_header_t *const hdr,
 
 #endif  // USE_SECMON_VERIFICATION
 
-secbool __wur read_vendor_header(const uint8_t *const data,
+secbool __wur read_vendor_header(const uint8_t *const data, size_t header_size,
                                  vendor_header *const vhdr) {
+  // Need at least 23 bytes to safely read all fixed-offset fields through
+  // fw_type at offset 22.
+  if (header_size < 23) return secfalse;
+
   memcpy(&vhdr->magic, data, 4);
   if (vhdr->magic != 0x565A5254) return secfalse;  // TRZV
 
   memcpy(&vhdr->hdrlen, data + 4, 4);
   if (vhdr->hdrlen > VENDOR_HEADER_MAX_SIZE) return secfalse;
+
+  // hdrlen must be large enough to hold the IMAGE_SIG_SIZE-byte signature at
+  // its tail; otherwise the offset data + hdrlen - IMAGE_SIG_SIZE underflows.
+  if (vhdr->hdrlen < IMAGE_SIG_SIZE) return secfalse;
+
+  // The full declared header must fit within the provided buffer.
+  if (header_size < vhdr->hdrlen) return secfalse;
 
   memcpy(&vhdr->expiry, data + 8, 4);
   if (vhdr->expiry != 0) return secfalse;
@@ -285,6 +296,13 @@ secbool __wur read_vendor_header(const uint8_t *const data,
   memcpy(&vhdr->fw_type, data + 22, 1);
 
   if (vhdr->vsig_n > MAX_VENDOR_PUBLIC_KEYS) {
+    return secfalse;
+  }
+
+  // The public-key array and the vstr_len byte that follows it must all fit
+  // within the header body (the region before the trailing signature).
+  uint32_t vstr_len_offset = 32 + (uint32_t)vhdr->vsig_n * 32;
+  if (vstr_len_offset >= vhdr->hdrlen - IMAGE_SIG_SIZE) {
     return secfalse;
   }
 
@@ -466,10 +484,17 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
                               firmware_header_info_t *info) {
   // parse and check vendor header
   vendor_header vhdr;
-  if (sectrue != read_vendor_header(header, &vhdr)) {
+  if (sectrue != read_vendor_header(header, header_size, &vhdr)) {
     return secfalse;
   }
   if (sectrue != check_vendor_header_keys(&vhdr)) {
+    return secfalse;
+  }
+
+  // Ensure the image header fits within the provided buffer after the vendor
+  // header.
+  if (header_size < vhdr.hdrlen ||
+      header_size - vhdr.hdrlen < IMAGE_HEADER_SIZE) {
     return secfalse;
   }
 
