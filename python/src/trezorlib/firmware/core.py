@@ -25,7 +25,7 @@ import construct as c
 from construct_classes import Struct, subcon
 
 from .. import cosi, merkle_tree
-from ..tools import EnumAdapter, TupleAdapter
+from ..construct_helpers import EnumAdapter, TupleAdapter
 from . import consts, models, util
 from .models import Model
 from .vendor import VendorHeader
