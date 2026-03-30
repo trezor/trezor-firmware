@@ -108,7 +108,7 @@ jobs:
 
       - name: Ask git
         run: |
-          git diff --exit-code origin/main -- core/embed/rust/Cargo.lock || echo cargo_modified=1 > $GITHUB_ENV
+          git diff --exit-code origin/${{ github.base_ref }}...HEAD -- core/embed/rust/Cargo.lock || echo cargo_modified=1 > $GITHUB_ENV
           cat $GITHUB_OUTPUT
 
       - name: Find Comment
