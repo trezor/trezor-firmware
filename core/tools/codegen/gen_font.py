@@ -33,7 +33,8 @@ def _extract_gpos_kerning(font_path: str) -> dict[tuple[int, int], int]:
     kerning: dict[tuple[int, int], int] = {}
     try:
         tt = TTFont(font_path)
-    except Exception:
+    except Exception as e:
+        print(f"Warning: failed to open font {font_path}: {e}")
         return kerning
 
     if "GPOS" not in tt:
@@ -65,9 +66,9 @@ def _extract_gpos_kerning(font_path: str) -> dict[tuple[int, int], int]:
                         if pvr.Value1 and hasattr(pvr.Value1, "XAdvance"):
                             val = pvr.Value1.XAdvance
                         if val != 0:
-                            for lcp in left_cps:
-                                for rcp in right_cps:
-                                    kerning[(lcp, rcp)] = val
+                            for left_cp in left_cps:
+                                for right_cp in right_cps:
+                                    kerning[(left_cp, right_cp)] = val
             elif subtable.Format == 2 and hasattr(subtable, "ClassDef1"):
                 # PairPos Format 2
                 class1 = subtable.ClassDef1.classDefs
@@ -101,11 +102,13 @@ def _extract_gpos_kerning(font_path: str) -> dict[tuple[int, int], int]:
                             ]
                         else:
                             right_glyphs = [g for g, c in class2.items() if c == c2_idx]
-                        for lg in left_glyphs:
-                            for rg in right_glyphs:
-                                for lcp in glyph_to_codepoints.get(lg, []):
-                                    for rcp in glyph_to_codepoints.get(rg, []):
-                                        kerning[(lcp, rcp)] = val
+                        for left_glyph in left_glyphs:
+                            for right_glyph in right_glyphs:
+                                for left_cp in glyph_to_codepoints.get(left_glyph, []):
+                                    for right_cp in glyph_to_codepoints.get(
+                                        right_glyph, []
+                                    ):
+                                        kerning[(left_cp, right_cp)] = val
 
     tt.close()
     return kerning

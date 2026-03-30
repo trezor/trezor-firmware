@@ -25,16 +25,13 @@ pub struct KerningTable {
 }
 
 #[cfg(feature = "ui_font_kerning")]
-// SAFETY: We are in a single-threaded environment.
-unsafe impl Sync for KerningTable {}
-
-#[cfg(feature = "ui_font_kerning")]
 impl KerningTable {
     pub fn get(&self, left: u8, right: u8) -> i8 {
         let mut offset = 0usize;
         for &(l, count) in self.index {
+            let next_offset = offset + usize::from(count);
             if l == left {
-                for &(r, v) in &self.pairs[offset..offset + count as usize] {
+                for &(r, v) in &self.pairs[offset..next_offset] {
                     if r == right {
                         return v;
                     }
@@ -44,7 +41,7 @@ impl KerningTable {
             if l > left {
                 break; // index is sorted
             }
-            offset += count as usize;
+            offset = next_offset;
         }
         0
     }
@@ -506,7 +503,7 @@ impl GlyphMetrics for Font {
     }
 
     fn get_kerning(&self, left: char, right: char) -> i16 {
-        FontInfo::get_kerning(self, left, right) as i16
+        FontInfo::get_kerning(self, left, right).into()
     }
 }
 
