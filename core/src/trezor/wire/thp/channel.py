@@ -66,6 +66,8 @@ _PREEMPT_TIMEOUT_MS = const(1_000)
 
 EMPTY_ACK_PAYLOAD = memoryview(b"")
 
+_TRACE = const(False)
+
 
 class Reassembler:
     def __init__(self, read_buf: ThpBuffer) -> None:
@@ -169,7 +171,7 @@ class Channel:
         self.channel_id: bytes = channel_cache.channel_id
         self.iface_ctx: InterfaceContext = ctx
         self.read_buf, self.write_buf = buffers
-        if __debug__:
+        if __debug__ and _TRACE:
             self._log("channel initialization")
         self.channel_cache: ChannelCache = channel_cache
 
@@ -200,7 +202,7 @@ class Channel:
             CHANNEL_STATE, default=ChannelState.UNALLOCATED
         )
         assert isinstance(state, int)
-        if __debug__:
+        if __debug__ and _TRACE:
             self._log("get_channel_state: ", state_to_str(state))
         return state
 
@@ -211,7 +213,7 @@ class Channel:
 
     def set_channel_state(self, state: ChannelState) -> None:
         self.channel_cache.set_int(CHANNEL_STATE, state)
-        if __debug__:
+        if __debug__ and _TRACE:
             self._log("set_channel_state: ", state_to_str(state))
 
     def replace_old_channels_with_the_same_host_public_key(self) -> None:
@@ -223,7 +225,7 @@ class Channel:
         if was_any_replaced:
             # In case a channel was replaced, close all running workflows
             workflow.close_others()
-        if __debug__:
+        if __debug__ and _TRACE:
             self._log("Was any channel replaced? ", str(was_any_replaced))
 
     def is_channel_to_replace(self) -> bool:
@@ -293,6 +295,7 @@ class Channel:
                 if __debug__:
                     self._log(
                         "Received message with an unexpected sequential bit",
+                        logger=log.warning,
                     )
                 await send_ack(self, ack_bit=seq_bit)
                 continue
@@ -377,16 +380,16 @@ class Channel:
         assert key_receive is not None
         assert nonce_receive is not None
 
-        if __debug__:
+        if __debug__ and _TRACE:
             self._log("Buffer before decryption: ", hexlify_if_bytes(noise_buffer))
 
         is_tag_valid = crypto.dec(noise_buffer, tag, key_receive, nonce_receive)
-        if __debug__:
+        if __debug__ and _TRACE:
             self._log("Buffer after decryption: ", hexlify_if_bytes(noise_buffer))
 
         self.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, nonce_receive + 1)
 
-        if __debug__:
+        if __debug__ and _TRACE:
             self._log("Is decrypted tag valid? ", str(is_tag_valid))
             self._log("Received tag: ", hexlify_if_bytes(tag))
             self._log("New nonce_receive: ", str((nonce_receive + 1)))
@@ -408,7 +411,7 @@ class Channel:
                 f"write message: {msg.MESSAGE_NAME}",
                 logger=log.info,
             )
-            if utils.EMULATOR:
+            if utils.EMULATOR and _TRACE:
                 log.debug(
                     __name__,
                     "message contents:\n%s",
@@ -462,7 +465,7 @@ class Channel:
             This task is spawned concurrently with `_wait_for_ack()` using `loop.race()`,
             so it will be cancelled when the expected ACK is received.
             """
-            if __debug__:
+            if __debug__ and _TRACE:
                 self._log(f"Sending {len(payload)} bytes, latency: {ack_latency_ms} ms")
 
             for i in range(_MAX_RETRANSMISSION_COUNT):
@@ -512,9 +515,6 @@ class Channel:
             raise Timeout("THP write is blocked")
 
     def _encrypt(self, buffer: AnyBuffer, noise_payload_len: int) -> None:
-        if __debug__:
-            self._log("encrypt")
-
         assert len(buffer) >= noise_payload_len + TAG_LENGTH + CHECKSUM_LENGTH
 
         noise_buffer = memoryview(buffer)[0:noise_payload_len]
@@ -528,7 +528,7 @@ class Channel:
         tag = crypto.enc(noise_buffer, key_send, nonce_send)
 
         self.channel_cache.set_int(CHANNEL_NONCE_SEND, nonce_send + 1)
-        if __debug__:
+        if __debug__ and _TRACE:
             self._log("New nonce_send: ", str((nonce_send + 1)))
 
         buffer[noise_payload_len : noise_payload_len + TAG_LENGTH] = tag
@@ -549,7 +549,7 @@ class Channel:
 def send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
     ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ACK_MESSAGE, ack_bit)
     header = PacketHeader(ctrl_byte, channel.get_channel_id_int(), CHECKSUM_LENGTH)
-    if __debug__:
+    if __debug__ and _TRACE:
         log.debug(
             __name__,
             "Writing ACK message to a channel with cid: %s, ack_bit: %d",
@@ -564,7 +564,7 @@ def handle_ack(ctx: Channel, ack_bit: int) -> None:
     if not ABP.is_ack_valid(ctx.channel_cache, ack_bit):
         return
     # ACK is expected and it has correct sync bit
-    if __debug__:
+    if __debug__ and _TRACE:
         log.debug(
             __name__,
             "Received ACK message with correct ack bit",
