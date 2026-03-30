@@ -67,9 +67,7 @@ async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
     if msg.thp_credential is None:
         raise DataError("THP credential must be provided when THP is enabled")
     credential_received = decode_credential(msg.thp_credential)
-    host_static_public_key = (
-        get_channel_context().channel_cache.get_host_static_public_key()
-    )
+    host_static_public_key = get_channel_context().get_host_static_public_key()
     if not validate_credential(credential_received, host_static_public_key):
         raise DataError("Invalid credential")
 

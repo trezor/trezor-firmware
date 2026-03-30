@@ -11,6 +11,7 @@ extern mp_obj_module_t mp_module_trezorproto;
 extern mp_obj_module_t mp_module_trezorui_api;
 extern mp_obj_module_t mp_module_trezortranslate;
 extern mp_obj_module_t mp_module_trezorble;
+extern mp_obj_module_t mp_module_trezorthp;
 
 #if !PYOPT
 mp_obj_t ui_debug_layout_type();

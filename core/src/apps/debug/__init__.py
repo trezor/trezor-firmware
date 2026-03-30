@@ -311,7 +311,7 @@ if __debug__:
         from trezor.messages import DebugLinkPairingInfo
 
         return DebugLinkPairingInfo(
-            channel_id=ctx.channel_id,
+            channel_id=ctx.channel_ctx.channel_id_bytes(),
             handshake_hash=ctx.channel_ctx.get_handshake_hash(),
             code_entry_code=ctx.code_code_entry,
             code_qr_code=ctx.code_qr_code,

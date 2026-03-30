@@ -59,7 +59,7 @@ class PairingContext(Context):
                     # If the previous run did not keep an unprocessed message for us,
                     # wait for a new one.
                     try:
-                        _, message = await self.channel_ctx.decrypt_message()
+                        _, message = await self.channel_ctx.read()
                     except protocol_common.WireError as e:
                         if __debug__:
                             log.exception(__name__, e, iface=self.iface)
@@ -106,7 +106,7 @@ class PairingContext(Context):
                 iface=self.iface,
             )
 
-        _, message = await self.channel_ctx.decrypt_message()
+        _, message = await self.channel_ctx.read()
         if not expected_types or message.type not in expected_types:
             from trezor.messages import Cancel
 
