@@ -94,10 +94,14 @@ impl<'a> Shape<'_> for Text<'a> {
         // TODO: optimize  text clipping, use canvas.viewport()
 
         self.font.with_glyph_data(|glyph_data| {
+            let mut prev_char: Option<char> = None;
+
             for ch in self.text.chars() {
                 if r.x0 >= r.x1 {
                     break;
                 }
+
+                r.x0 += prev_char.map_or(0, |p| self.font.get_kerning(p, ch).into());
 
                 let glyph = glyph_data.get_glyph(ch);
                 let glyph_bitmap = glyph.bitmap();
@@ -110,7 +114,9 @@ impl<'a> Shape<'_> for Text<'a> {
                     ));
 
                 canvas.blend_bitmap(r, glyph_view);
+
                 r.x0 += glyph.adv;
+                prev_char = Some(ch)
             }
         });
     }

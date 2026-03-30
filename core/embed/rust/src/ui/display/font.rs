@@ -12,6 +12,41 @@ use crate::translations::flash;
 #[cfg(feature = "translations")]
 use crate::translations::Translations;
 
+#[cfg(feature = "ui_font_kerning")]
+/// Two-level kerning lookup table.
+/// `index` is sorted by left character, enabling binary search.
+/// Each entry stores `(left_char, count)` — the number of right-char pairs that
+/// follow. The start offset in `pairs` is the sum of counts for all preceding
+/// index entries.
+#[derive(PartialEq, Eq)]
+pub struct KerningTable {
+    pub index: &'static [(u8, u8)], // (left_char, count), sorted by left_char
+    pub pairs: &'static [(u8, i8)], // (right_char, kern_value)
+}
+
+#[cfg(feature = "ui_font_kerning")]
+impl KerningTable {
+    pub fn get(&self, left: u8, right: u8) -> i8 {
+        let mut offset = 0usize;
+        for &(l, count) in self.index {
+            let next_offset = offset + usize::from(count);
+            if l == left {
+                for &(r, v) in &self.pairs[offset..next_offset] {
+                    if r == right {
+                        return v;
+                    }
+                }
+                return 0;
+            }
+            if l > left {
+                break; // index is sorted
+            }
+            offset = next_offset;
+        }
+        0
+    }
+}
+
 /// Font information structure containing metadata and pointers to font data
 #[derive(PartialEq, Eq)]
 pub struct FontInfo {
@@ -21,6 +56,8 @@ pub struct FontInfo {
     pub baseline: i16,
     pub glyph_data: &'static [&'static [u8]],
     pub glyph_nonprintable: &'static [u8],
+    #[cfg(feature = "ui_font_kerning")]
+    pub kernings: Option<&'static KerningTable>,
 }
 /// Convenience type for font references defined in the `fonts` module.
 pub type Font = &'static FontInfo;
@@ -208,12 +245,17 @@ fn calculate_glyph_size(header: &[u8]) -> usize {
 impl FontInfo {
     /// Supports UTF8 characters
     pub fn text_width(&'static self, text: &str) -> i16 {
-        self.with_glyph_data(|data| {
-            text.chars().fold(0, |acc, c| {
-                let char_width = data.get_glyph(c).adv;
-                acc + char_width
-            })
-        })
+        let mut width = 0;
+        let mut prev_char: Option<char> = None;
+
+        for c in text.chars() {
+            if let Some(left) = prev_char {
+                width += self.get_kerning(left, c) as i16;
+            }
+            width += self.char_width(c);
+            prev_char = Some(c);
+        }
+        width
     }
 
     /// Width of the text that is visible.
@@ -255,6 +297,43 @@ impl FontInfo {
             }
         });
         ascent + descent
+    }
+    #[cfg(feature = "ui_font_kerning")]
+    pub fn get_kerning(&'static self, left_ch: char, right_ch: char) -> i8 {
+        let Some(left) = u16::try_from(left_ch).ok() else {
+            return 0;
+        };
+        let Some(right) = u16::try_from(right_ch).ok() else {
+            return 0;
+        };
+
+        if !left_ch.is_ascii() || !right_ch.is_ascii() {
+            #[cfg(feature = "translations")]
+            {
+                return self.with_glyph_data(|data| {
+                    data.translations_guard
+                        .as_ref()
+                        .and_then(|guard| guard.as_ref())
+                        .and_then(|translations| {
+                            translations.get_utf8_kernings(left, right, self.translation_blob_idx)
+                        })
+                        .unwrap_or(0)
+                });
+            }
+        } else {
+            let left = left as u8;
+            let right = right as u8;
+
+            if let Some(table) = self.kernings {
+                return table.get(left, right);
+            }
+        }
+        0
+    }
+
+    #[cfg(not(feature = "ui_font_kerning"))]
+    pub fn get_kerning(&'static self, _left_ch: char, _right_ch: char) -> i8 {
+        0
     }
 
     /// Calculates the height of text containing both uppercase
@@ -407,6 +486,7 @@ pub trait GlyphMetrics {
     fn char_width(&self, ch: char) -> i16;
     fn text_width(&self, text: &str) -> i16;
     fn line_height(&self) -> i16;
+    fn get_kerning(&self, _left: char, _right: char) -> i16;
 }
 
 impl GlyphMetrics for Font {
@@ -420,6 +500,10 @@ impl GlyphMetrics for Font {
 
     fn line_height(&self) -> i16 {
         FontInfo::line_height(self)
+    }
+
+    fn get_kerning(&self, left: char, right: char) -> i16 {
+        FontInfo::get_kerning(self, left, right).into()
     }
 }
 
