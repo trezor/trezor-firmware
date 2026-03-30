@@ -410,7 +410,6 @@
     "cardano__delegating_to": "Delegando a",
     "cardano__delegating_to_key_hash": "Delegando al hash de clave",
     "cardano__delegating_to_script": "Delegando al script",
-    "cardano__deposit": "Depósito",
     "cardano__empty_message": "Mensaje vacío",
     "cardano__for_account_and_index_template": "Para la cuenta {0} y el índice {1}",
     "cardano__for_account_template": "Para la cuenta {0}",
@@ -2651,6 +2650,7 @@
     "words__continue_anyway": "Continuar igualmente",
     "words__continue_anyway_question": "¿Continuar igualmente?",
     "words__continue_with": "Continuar con",
+    "words__deposit": "Depósito",
     "words__device": "Dispositivo",
     "words__disabled": {
       "Bolt": "",
