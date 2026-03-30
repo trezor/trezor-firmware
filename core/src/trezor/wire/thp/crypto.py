@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 HARDENED = const(0x8000_0000)
 PUBKEY_LENGTH = const(32)
 
+_TRACE = const(False)
+
 if __debug__:
     from trezor.utils import hexlify_if_bytes
 
@@ -25,7 +27,7 @@ def enc(buffer: AnyBuffer, key: bytes, nonce: int, auth_data: bytes = b"") -> by
     Encrypts the provided `buffer` with AES-GCM (in place).
     Returns a 16-byte long encryption tag.
     """
-    if __debug__:
+    if __debug__ and _TRACE:
         log.debug(__name__, "enc (key: %s, nonce: %d)", hexlify_if_bytes(key), nonce)
     iv = _get_iv_from_nonce(nonce)
     aes_ctx = aesgcm(key, iv)
@@ -46,7 +48,7 @@ def dec(
     the tag computed in decryption, otherwise it returns `False`.
     """
     iv = _get_iv_from_nonce(nonce)
-    if __debug__:
+    if __debug__ and _TRACE:
         log.debug(__name__, "dec (key: %s, nonce: %d)", hexlify_if_bytes(key), nonce)
     aes_ctx = aesgcm(key, iv)
     aes_ctx.auth(auth_data)

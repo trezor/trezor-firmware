@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from typing import Awaitable, Generator, Iterable, NoReturn
 
 _BROADCAST_PAYLOAD_LENGTH = const(12)
+_TRACE = const(False)
 
 
 # Uses `yield` instead of `await` to avoid allocations.
@@ -135,7 +136,7 @@ class InterfaceContext:
             channel = self._channels[cid] = Channel(cache, self, buffers)
 
         if channel.reassemble(packet):
-            if __debug__ and channel.reassembler.message is not None:
+            if __debug__ and _TRACE and channel.reassembler.message is not None:
                 msg_type = "ACK" if control_byte.is_ack(ctrl_byte) else "message"
                 msg = channel.reassembler.message
                 channel._log(f"reassembled valid {msg_type}: {len(msg)} bytes")
