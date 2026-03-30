@@ -18,7 +18,7 @@ use std::{
     vec,
     vec::Vec,
 };
-use trezor_app_sdk::{Error, Result, crypto::keccak_256};
+use trezor_app_sdk::{Error, Result, crypto::keccak_256, info};
 
 const RSKIP60_NETWORKS: [u64; 2] = [30, 31];
 
@@ -119,6 +119,7 @@ pub fn get_type_name(field: &EthereumFieldType) -> Result<String> {
 
 /// Used by sign_typed_data module to show data to user.
 pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
+    info!("decoding typed data for type: {}", type_name);
     if type_name.starts_with("bytes") {
         return Ok(hex_encode(data));
     } else if type_name == "string" {
@@ -130,14 +131,11 @@ pub fn decode_typed_data(data: &[u8], type_name: &str) -> Result<String> {
     } else if type_name == "bool" {
         return Ok(if data == [0x01] { "true" } else { "false" }.to_string());
     } else if type_name.starts_with("uint") {
-        if data.len() > 16 {
+        if data.len() > 32 {
             return Err(Error::InvalidMessage);
         }
         // TODO: better implement parsing int value from bytes
-        let mut buf = [0u8; 16];
-        assert!(data.len() <= 16);
-        buf[16 - data.len()..].copy_from_slice(data);
-        let v = u128::from_be_bytes(buf);
+        let v = U256::from_big_endian(data);
         return Ok(v.to_string());
     } else if type_name.starts_with("int") {
         if data.len() > 16 {

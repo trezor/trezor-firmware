@@ -422,7 +422,6 @@ async def _sign_typed_hash(
 
     progress_obj = progress(title=TR.progress__signing_transaction)
     progress_obj.report(600)
-    print("signing")
     signature = secp256k1.sign(
         node.private_key(),
         data_hash,

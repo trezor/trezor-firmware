@@ -68,7 +68,10 @@ impl Definitions {
         }
 
         if let Some(chain_id) = chain_id {
-            info!("chain id: {} network chain id: {}", chain_id, network.chain_id);
+            info!(
+                "chain id: {} network chain id: {}",
+                chain_id, network.chain_id
+            );
             if network.chain_id != chain_id {
                 // "Network definition mismatch"
                 return Err(());
@@ -202,7 +205,7 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
     info!("Computing definition hash");
     let mut hasher = Sha256::new(Some(b"\x00"));
     hasher.update(&encoded[..offset]);
-    let hash = hasher.digest();
+    let mut hash = hasher.digest();
 
     let proof_len = encoded[offset];
     offset += 1;
@@ -227,7 +230,7 @@ fn decode_definition<A: DefinitionMessage>(encoded: &[u8]) -> Result<A, ()> {
         let mut hasher = Sha256::new(Some(b"\x01"));
         hasher.update(&hash_a);
         hasher.update(&hash_b);
-        let hash = hasher.digest();
+        hash = hasher.digest();
     }
 
     if remaining < 1 + 64 {

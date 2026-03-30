@@ -1,8 +1,14 @@
 #[cfg(not(test))]
-use alloc::{string::String, vec::Vec};
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use core::{convert::Infallible, result::Result};
 #[cfg(test)]
-use std::{string::String, vec::Vec};
+use std::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use trezor_app_sdk::unwrap;
 use ufmt::uWrite;
 pub struct StringWriter(String);
@@ -70,6 +76,28 @@ pub fn hex_decode(hex: &str) -> Result<Vec<u8>, ()> {
     }
 
     Ok(bytes)
+}
+
+pub fn format_plural_english(count: u32, singular: &str) -> String {
+    let mut plural = singular.to_string();
+    if count != 1 {
+        // candy -> candies, but key -> keys
+        if singular.ends_with('y')
+            && !matches!(
+                singular.chars().nth_back(1),
+                Some('a' | 'e' | 'i' | 'o' | 'u' | 'y')
+            )
+        {
+            plural.pop(); // remove trailing 'y'
+            plural.push_str("ies");
+        } else if matches!(singular.chars().last(), Some('h' | 's' | 'x' | 'z')) {
+            plural.push_str("es");
+        } else {
+            plural.push('s');
+        }
+    }
+
+    uformat!("{} {}", count, plural.as_str())
 }
 
 #[cfg(test)]

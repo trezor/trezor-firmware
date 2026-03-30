@@ -16,7 +16,7 @@ use crate::{
             },
         },
     },
-    strutil::hex_encode,
+    strutil::{format_plural_english, hex_encode},
 };
 #[cfg(not(test))]
 use alloc::{
@@ -26,6 +26,7 @@ use alloc::{
     vec,
     vec::Vec,
 };
+use primitive_types::U256;
 #[cfg(test)]
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -56,7 +57,7 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
         None,
         slip44,
     )
-    .unwrap();
+    .map_err(|_| Error::DataError)?;
 
     let schemas = schemas_from_network(&PATTERNS_ADDRESS, definitions.slip44())?;
     let keychain = Keychain::new(schemas);
@@ -87,11 +88,8 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
     };
     info!("Generating typed data hash");
 
-    let data_hash = unwrap!(generate_typed_data_hash(
-        &msg.primary_type,
-        metamask_v4_compat,
-        show_message_hash
-    ));
+    let data_hash =
+        generate_typed_data_hash(&msg.primary_type, metamask_v4_compat, show_message_hash)?;
 
     let signature = crypto::sign_typed_hash(
         dp.as_ref(),
@@ -105,6 +103,8 @@ pub fn sign_typed_data(msg: EthereumSignTypedData) -> Result<EthereumTypedDataSi
     sig.address = address_from_bytes(&address_bytes, Some(definitions.network()));
     sig.signature.extend_from_slice(&signature[1..]);
     sig.signature.push(signature[0]);
+
+    info!("address: {}", sig.address.as_str());
 
     info!("Typed data signed successfully");
     Ok(sig)
@@ -122,11 +122,13 @@ fn generate_typed_data_hash(
     metamask_v4_compat: bool,
     show_message_hash: Option<&[u8]>,
 ) -> Result<[u8; 32]> {
+    ui::init_progress(None, None, true, false)?;
+
     info!("Collecting type information from client");
     let mut data_envelope = TypedDataEnvelope::new(primary_type, metamask_v4_compat);
 
     info!("Collecting types");
-    data_envelope.collect_types()?;
+    data_envelope.collect_types(|p| p * 700f32 as u32)?;
 
     info!("getting name and version");
     let (name, version) = get_name_and_version_for_domain(&data_envelope)?;
@@ -134,8 +136,17 @@ fn generate_typed_data_hash(
     info!("Determining whether to show domain information");
     let show_domain = should_show_domain(&name, &version)?;
 
-    let domain_separator =
-        data_envelope.hash_struct("EIP712Domain", &[0], show_domain, &["EIP712Domain"])?;
+    let domain_separator = data_envelope.hash_struct(
+        "EIP712Domain",
+        &[0],
+        show_domain,
+        &["EIP712Domain"],
+        Some(|p| 700 + 3 * p),
+    )?;
+
+    info!("Domain separator calculated, now processing message");
+
+    ui::end_progress()?;
 
     // Setting the primary_type to "EIP712Domain" is technically in spec
     // In this case, we ignore the "message" part and only use the "domain" part
@@ -143,7 +154,7 @@ fn generate_typed_data_hash(
     let message_hash = if primary_type == "EIP712Domain" {
         info!("empty typed message");
         confirm_empty_typed_message()?;
-        [0u8; 32]
+        Vec::new()
     } else {
         info!("Determining whether to show struct");
         let show_message = should_show_struct(
@@ -151,10 +162,21 @@ fn generate_typed_data_hash(
             unwrap!(data_envelope.types.get(primary_type))
                 .members
                 .as_slice(),
-            Some("<title>"),
-            Some("<button_text>"),
+            Some("Confirm message"),
+            Some("Show full message"),
         )?;
-        data_envelope.hash_struct(primary_type, &[1], show_message, &[primary_type])?
+        ui::init_progress(None, Some("Loading transaction..."), false, false)?;
+        info!("Hashing message struct");
+        let message_hash = data_envelope.hash_struct(
+            primary_type,
+            &[1],
+            show_message,
+            &[primary_type],
+            Some(|p| 10 * p),
+        )?;
+
+        ui::end_progress()?;
+        message_hash.to_vec()
     };
 
     if let Some(show_message_hash) = show_message_hash {
@@ -170,9 +192,14 @@ fn generate_typed_data_hash(
     info!("Confirming final signing action with user");
     confirm_typed_data_final()?;
 
+    info!("domain separator: {:?}", &domain_separator);
+    info!("message hash: {:?}", message_hash.as_slice());
+
     let mut data = Vec::new();
     data.extend_from_slice(b"\x19\x01");
     data.extend_from_slice(&domain_separator);
+
+    info!("extending data with message hash");
     data.extend_from_slice(&message_hash);
     Ok(keccak_256(&data))
 }
@@ -193,16 +220,22 @@ impl TypedDataEnvelope {
         }
     }
 
-    pub fn collect_types(&mut self) -> Result<()> {
+    pub fn collect_types<F>(&mut self, map_progress: F) -> Result<()>
+    where
+        F: Fn(u32) -> u32 + Copy,
+    {
         let primary_type = self.primary_type.clone();
         info!("primary type {}", primary_type.as_str());
-        self._collect_types("EIP712Domain")?;
-        self._collect_types(&primary_type)?;
+        self._collect_types("EIP712Domain", Some(|p| map_progress(p) / 2))?;
+        self._collect_types(&primary_type, Some(|p| map_progress(p) / 2 + 500))?;
         Ok(())
     }
 
     /// Recursively collect types from the client.
-    fn _collect_types(&mut self, type_name: &str) -> Result<()> {
+    fn _collect_types<F>(&mut self, type_name: &str, map_progress: Option<F>) -> Result<()>
+    where
+        F: Fn(u32) -> u32 + Copy,
+    {
         let req = EthereumTypedDataStructRequest {
             name: type_name.to_string(),
         };
@@ -213,7 +246,13 @@ impl TypedDataEnvelope {
         let members = current_type.members.clone();
         self.types.insert(type_name.to_string(), current_type);
 
-        for member in members.iter() {
+        for (index, member) in members.iter().enumerate() {
+            if let Some(map_progress) = &map_progress {
+                ui::update_progress(
+                    None,
+                    map_progress(index as u32 * 100 / members.len() as u32),
+                )?;
+            }
             let mut member_type = &member.r#type;
             validate_field_type(&member_type)?;
             while member_type.data_type == EthereumDataType::Array as i32 {
@@ -226,7 +265,7 @@ impl TypedDataEnvelope {
             if member_type.data_type == EthereumDataType::Struct as i32 {
                 if let Some(struct_name) = &member_type.struct_name {
                     if !self.types.contains_key(struct_name) {
-                        self._collect_types(struct_name)?;
+                        self._collect_types::<F>(struct_name, None)?;
                     }
                 } else {
                     return Err(Error::InvalidMessage);
@@ -237,32 +276,246 @@ impl TypedDataEnvelope {
     }
 
     /// Generate a hash representation of the whole struct.
-    fn hash_struct(
+    fn hash_struct<F>(
         &self,
         primary_type: &str,
         member_value_path: &[u32],
         show_data: bool,
         parent_objects: &[&str],
-    ) -> Result<[u8; 32]> {
-        let data = Vec::new();
-        // TODO: implement
+        map_progress: Option<F>,
+    ) -> Result<[u8; 32]>
+    where
+        F: Fn(u32) -> u32 + Copy,
+    {
+        let mut w = Vec::new();
 
-        let hashed_type = self.hash_type(primary_type)?;
+        info!("hashing type");
+
+        self.hash_type(&mut w, primary_type)?;
 
         info!("Hashing struct {}", primary_type);
 
-        Ok(crypto::keccak_256(&data))
+        self.get_and_encode_data(
+            &mut w,
+            primary_type,
+            member_value_path,
+            show_data,
+            parent_objects,
+            map_progress,
+        )?;
+
+        info!("done");
+
+        Ok(crypto::keccak_256(&w))
     }
 
-    // TODO: implement
-    fn get_and_encode_data() -> Result<()> {
+    /// Gradually fetch data from client and encode the whole struct.
+    ///
+    /// SPEC:
+    /// The encoding of a struct instance is enc(value₁) ‖ enc(value₂) ‖ … ‖ enc(valueₙ),
+    /// i.e. the concatenation of the encoded member values in the order that they appear in the type.
+    /// Each encoded member value is exactly 32-byte long.
+    fn get_and_encode_data<F>(
+        &self,
+        w: &mut Vec<u8>,
+        primary_type: &str,
+        member_path: &[u32],
+        show_data: bool,
+        parent_objects: &[&str],
+        map_progress: Option<F>,
+    ) -> Result<()>
+    where
+        F: Fn(u32) -> u32 + Copy,
+    {
+        let type_members = &self
+            .types
+            .get(primary_type)
+            .ok_or(Error::DataError)?
+            .members;
+        info!("get and encode data");
+        // let members_count = type_members.len();
+        let mut member_value_path = member_path.to_vec();
+        member_value_path.push(0);
+        let mut current_parent_objects = parent_objects.to_vec();
+        current_parent_objects.push("");
+
+        info!("for cycle");
+        for (member_index, member) in type_members.iter().enumerate() {
+            // TODO: implement progress
+
+            if let Some(map_progress) = &map_progress {
+                ui::update_progress(
+                    None,
+                    map_progress(member_index as u32 * 100 / type_members.len() as u32),
+                )?;
+            }
+
+            // we can unwrap because the vector is never empty
+            *unwrap!(member_value_path.last_mut()) = member_index as u32;
+            let field_name = &member.name;
+            let field_type = &member.r#type;
+
+            // Arrays and structs need special recursive handling
+            if field_type.data_type == EthereumDataType::Struct as i32 {
+                if let Some(struct_name) = &field_type.struct_name {
+                    // we can unwrap because the vector is never empty
+                    *unwrap!(current_parent_objects.last_mut()) = field_name;
+
+                    let show_struct = if show_data {
+                        should_show_struct(
+                            struct_name,
+                            &self.types[struct_name].members,
+                            Some(&current_parent_objects.join(".")),
+                            None,
+                        )?
+                    } else {
+                        false
+                    };
+
+                    info!("Hashing struct");
+                    let hash = self.hash_struct::<F>(
+                        struct_name,
+                        &member_value_path,
+                        show_struct,
+                        &current_parent_objects,
+                        None,
+                    )?;
+                    w.extend_from_slice(&hash);
+                    info!("extending w with hash of struct {}", struct_name.as_str());
+                } else {
+                    // TODO: proper error type: Missing struct name for struct field
+                    info!("Missing struct name for struct field");
+                    return Err(Error::DataError);
+                }
+            } else if field_type.data_type == EthereumDataType::Array as i32 {
+                // Getting the length of the array first, if not fixed
+                let array_size = field_type
+                    .size
+                    .unwrap_or(_get_array_size(&member_value_path)?);
+
+                if let Some(entry_type) = &field_type.entry_type {
+                    // we can unwrap because the vector is never empty
+                    *unwrap!(current_parent_objects.last_mut()) = field_name;
+                    info!("showing array");
+                    let show_array = if show_data {
+                        should_show_array(
+                            &current_parent_objects,
+                            &get_type_name(entry_type)?,
+                            array_size,
+                        )?
+                    } else {
+                        false
+                    };
+                    info!("creating arr_w");
+                    let mut arr_w = Vec::new();
+                    let mut el_member_path = member_value_path.to_vec();
+                    el_member_path.push(0);
+                    for idx in 0..array_size {
+                        // we can unwrap because the vector is never empty
+                        *unwrap!(el_member_path.last_mut()) = idx as u32;
+                        // TODO: we do not support arrays of arrays, check if we should
+                        if entry_type.data_type == EthereumDataType::Struct as i32 {
+                            if let Some(struct_name) = &entry_type.struct_name {
+                                // Metamask V4 implementation has a bug, that causes the
+                                // behavior of structs in array be different from SPEC
+                                // Explanation at https://github.com/MetaMask/eth-sig-util/pull/107
+                                // encode_data() is the way to process structs in arrays, but
+                                // Metamask V4 is using hash_struct() even in this case
+                                if self.metamask_v4_compat {
+                                    info!(
+                                        "hashing struct metamask_v4_compat struct_name {} member_path: {:?} show_array {} current_parent_objects.len: {:?} ",
+                                        struct_name.as_str(),
+                                        el_member_path.as_slice(),
+                                        show_array,
+                                        current_parent_objects.len(),
+                                    );
+                                    let hash_struct = self.hash_struct::<F>(
+                                        struct_name,
+                                        &el_member_path,
+                                        show_array,
+                                        &current_parent_objects,
+                                        None,
+                                    )?;
+                                    arr_w.extend_from_slice(&hash_struct);
+                                    info!(
+                                        " 378 extending arr_w with hash of struct {:?}",
+                                        &hash_struct
+                                    );
+                                } else {
+                                    info!("recursive call ");
+                                    self.get_and_encode_data::<F>(
+                                        &mut arr_w,
+                                        struct_name,
+                                        &el_member_path,
+                                        show_array,
+                                        &current_parent_objects,
+                                        None,
+                                    )?;
+                                }
+                            } else {
+                                // TODO: proper error type: Missing entry type for array field
+                                info!("Missing entry type for array field");
+                                return Err(Error::DataError);
+                            }
+                        } else {
+                            info!("plain get value");
+                            let value = get_value(entry_type, &el_member_path)?;
+                            info!(
+                                "encoding field with data len {} and name {}",
+                                value.len(),
+                                field_name.as_str()
+                            );
+                            encode_field(&mut arr_w, entry_type, &value)?;
+                            if show_array {
+                                confirm_typed_value(
+                                    field_name,
+                                    &value,
+                                    &parent_objects,
+                                    entry_type,
+                                    Some(idx),
+                                )?
+                            }
+                        }
+                    }
+                    info!("hashing array element with {:?}", arr_w.as_slice());
+                    let hash = crypto::keccak_256(&arr_w);
+                    info!("extending w with hash of array element {:?}", &hash);
+                    w.extend_from_slice(&hash);
+                } else {
+                    // TODO: proper error type: Missing entry type for array field
+                    info!("Missing entry type for array field");
+                    return Err(Error::DataError);
+                }
+            } else {
+                info!("plain getting value 412");
+                let value = get_value(field_type, &member_value_path)?;
+                info!(
+                    "encoding field with data len {} and name {}",
+                    value.len(),
+                    field_name.as_str()
+                );
+                info!("encoding field");
+                encode_field(w, field_type, &value)?;
+                info!("field encoded");
+                if show_data {
+                    info!("confirming typed value");
+                    confirm_typed_value(field_name, &value, &parent_objects, field_type, None)?
+                }
+            }
+        }
         Ok(())
     }
 
-    fn hash_type(&self, primary_type: &str) -> Result<[u8; 32]> {
-        Ok(crypto::keccak_256(&self.encode_type(primary_type)?))
+    fn hash_type(&self, w: &mut Vec<u8>, primary_type: &str) -> Result<()> {
+        info!(
+            "extending w with {:?}",
+            &crypto::keccak_256(&self.encode_type(primary_type)?)
+        );
+        w.extend_from_slice(&crypto::keccak_256(&self.encode_type(primary_type)?));
+        Ok(())
     }
 
+    /// SPEC:
     /// The type of a struct is encoded as name ‖ "(" ‖ member₁ ‖ "," ‖ member₂ ‖ "," ‖ … ‖ memberₙ ")"
     /// where each member is written as type ‖ " " ‖ name
     /// If the struct type references other struct types (and these in turn reference even more struct types),
@@ -343,6 +596,7 @@ impl TypedDataEnvelope {
 }
 
 fn validate_field_type(field: &EthereumFieldType) -> Result<()> {
+    info!("Validating field type");
     let data_type = field.data_type;
 
     // entry_type is only for arrays
@@ -475,7 +729,9 @@ fn validate_value(field: &EthereumFieldType, value: &[u8]) -> Result<()> {
 }
 
 fn should_show_domain(name: &[u8], version: &[u8]) -> Result<bool> {
+    info!("Determining whether to show domain information");
     let domain_name = decode_typed_data(name, "string")?;
+    info!("decoding domain version");
     let domain_version = decode_typed_data(version, "string")?;
 
     let para = [
@@ -484,11 +740,37 @@ fn should_show_domain(name: &[u8], version: &[u8]) -> Result<bool> {
         (&domain_version, false),
     ];
 
-    ui::should_show_more(
+    info!("asking user whether to show domain information");
+    info!(
+        "domain name {} domain version {}",
+        domain_name.as_str(),
+        domain_version.as_str()
+    );
+
+    let result = ui::should_show_more(
         "Confirm domain",
         &para,
         "Show full domain",
         Some("should_show_domain"),
+        ButtonRequestType::ButtonRequestOther.into(),
+    )
+    .map_err(|_| Error::Cancelled)?;
+    info!("show more done");
+    Ok(result)
+}
+
+fn should_show_array(parent_objects: &[&str], data_type: &str, size: u32) -> Result<bool> {
+    // Leaving english plural form because of dynamic noun - data_type
+    let array_of_plural = uformat!(
+        "Array of {}",
+        format_plural_english(size, data_type).as_str()
+    );
+    let para = [(array_of_plural.as_str(), false)];
+    ui::should_show_more(
+        &limit_str(&parent_objects.to_vec().join("."), None),
+        &para,
+        "Show full array",
+        Some("should_show_array"),
         ButtonRequestType::ButtonRequestOther.into(),
     )
     .map_err(|_| Error::Cancelled)
@@ -500,7 +782,7 @@ fn confirm_empty_typed_message() -> Result<()> {
         "Confirm message",
         "",
         Some("No message field"),
-        None,
+        ButtonRequestType::ButtonRequestOther.into(),
     )
 }
 
@@ -509,16 +791,16 @@ fn confirm_text(
     title: &str,
     data: &str,
     description: Option<&str>,
-    br_code: Option<i32>,
+    br_code: i32,
 ) -> Result<()> {
-    ui::confirm_value(
+    ui::error_if_not_confirmed(ui::confirm_value(
         title,
         data,
         description,
         Some(br_name),
-        br_code.unwrap_or(ButtonRequestType::ButtonRequestOther.into()),
-        false,
-        Some("Confirm"),
+        br_code,
+        true,
+        None,
         None,
         false,
         false,
@@ -527,7 +809,7 @@ fn confirm_text(
         false,
         false,
         None,
-    )?;
+    )?)?;
     Ok(())
 }
 
@@ -566,7 +848,7 @@ fn should_show_struct(
 
 fn confirm_message_hash(hash: &[u8]) -> Result<()> {
     let message_hash_hex = uformat!("0x{}", hex_encode(hash).as_str());
-    ui::confirm_value(
+    ui::error_if_not_confirmed(ui::confirm_value(
         "Confirm message hash",
         &message_hash_hex,
         None,
@@ -582,7 +864,7 @@ fn confirm_message_hash(hash: &[u8]) -> Result<()> {
         true,
         false,
         None,
-    )?;
+    )?)?;
     Ok(())
 }
 
@@ -592,10 +874,172 @@ fn confirm_typed_data_final() -> Result<()> {
         "Really sign EIP-712 typed data?",
         true,
         None,
-        None,
+        Some("confirm_typed_data_final"),
         ButtonRequestType::ButtonRequestOther.into(),
     )? {
         ui::TrezorUiResult::Confirmed => Ok(()),
         _ => Err(Error::Cancelled),
     }
+}
+
+fn confirm_typed_value(
+    name: &str,
+    value: &[u8],
+    parent_objects: &[&str],
+    field: &EthereumFieldType,
+    array_idx: Option<u32>,
+) -> Result<()> {
+    let type_name = get_type_name(field)?;
+
+    info!("creating parts");
+    let mut parts: Vec<&str> = parent_objects.to_vec();
+
+    info!("creating title and description");
+    let (title, description) = if let Some(idx) = array_idx {
+        parts.push(name);
+        (
+            limit_str(&parts.join("."), None),
+            uformat!("[{}] ({})", idx, type_name.as_str()),
+        )
+    } else {
+        (
+            limit_str(&parts.join("."), None),
+            uformat!("{} ({})", name, type_name.as_str()),
+        )
+    };
+
+    info!("decoding typed data for confirmation");
+    let data = decode_typed_data(value, &type_name)?;
+    let br_name = "confirm_typed_value";
+    let br_code = ButtonRequestType::ButtonRequestOther.into();
+
+    if field.data_type == EthereumDataType::Address as i32
+        || field.data_type == EthereumDataType::Bytes as i32
+    {
+        info!("confirming blob");
+        ui::error_if_not_confirmed(ui::confirm_blob(
+            &title,
+            &data,
+            Some(&description),
+            None,
+            br_name,
+            br_code,
+            false,
+            None,
+            None,
+            false,
+            false,
+            true,
+        )?)?;
+    } else {
+        info!("confirming text");
+        confirm_text(br_name, &title, &data, Some(&description), br_code)?;
+    }
+
+    Ok(())
+}
+
+/// Shortens string to show the last <limit> characters.
+fn limit_str(s: &str, limit: Option<usize>) -> String {
+    let limit = limit.unwrap_or(16);
+    if s.len() <= limit + 2 {
+        return s.to_string();
+    }
+
+    uformat!("..{}", &s[s.len() - limit..])
+}
+
+fn leftpad32(value: &[u8], signed: bool) -> Result<[u8; 32]> {
+    if value.len() > 32 {
+        // TODO: proper error type: Value too long to encode as 32 bytes
+        return Err(Error::DataError);
+    }
+
+    // Values need to be sign-extended, so accounting for negative ints
+    let pad_value = if signed && value[0] & 0x80 != 0 {
+        0xFF
+    } else {
+        0x00
+    };
+    let mut res = [pad_value; 32];
+
+    res[32 - value.len()..].copy_from_slice(value);
+    Ok(res)
+}
+
+fn rightpad32(value: &[u8]) -> Result<[u8; 32]> {
+    if value.len() > 32 {
+        // TODO: proper error type: Value too long to encode as 32 bytes
+        return Err(Error::DataError);
+    }
+
+    let mut res = [0; 32];
+
+    res[..value.len()].copy_from_slice(value);
+    Ok(res)
+}
+
+/// SPEC:
+/// Atomic types:
+/// - Boolean false and true are encoded as uint256 values 0 and 1 respectively
+/// - Addresses are encoded as uint160
+/// - Integer values are sign-extended to 256-bit and encoded in big endian order
+/// - Bytes1 to bytes31 are arrays with a beginning (index 0)
+///   and an end (index length - 1), they are zero-padded at the end to bytes32 and encoded
+///   in beginning to end order
+/// Dynamic types:
+/// - Bytes and string are encoded as a keccak256 hash of their contents
+/// Reference types:
+/// - Array values are encoded as the keccak256 hash of the concatenated
+///   encodeData of their contents
+/// - Struct values are encoded recursively as hashStruct(value)
+fn encode_field(w: &mut Vec<u8>, field: &EthereumFieldType, value: &[u8]) -> Result<()> {
+    if field.data_type == EthereumDataType::Bytes as i32 {
+        if let Some(_size) = field.size {
+            // write_rightpad32
+            info!("extending w with {:?}", &rightpad32(value)?);
+            w.extend_from_slice(&rightpad32(value)?);
+        } else {
+            info!(
+                "no size, encoding as dynamic bytes {:?}",
+                &crypto::keccak_256(value)
+            );
+            info!("extending w with {:?}", &crypto::keccak_256(value));
+            w.extend_from_slice(&crypto::keccak_256(value));
+        };
+    } else if field.data_type == EthereumDataType::String as i32 {
+        info!("extending w with {:?}", &crypto::keccak_256(value));
+
+        w.extend_from_slice(&crypto::keccak_256(value));
+    } else if field.data_type == EthereumDataType::Int as i32 {
+        info!("extending w with {:?}", &leftpad32(value, true)?);
+        w.extend_from_slice(&leftpad32(value, true)?);
+    } else if field.data_type == EthereumDataType::Uint as i32
+        || field.data_type == EthereumDataType::Bool as i32
+        || field.data_type == EthereumDataType::Address as i32
+    {
+        info!("extending w with {:?}", &leftpad32(value, false)?);
+        w.extend_from_slice(&leftpad32(value, false)?);
+    } else {
+        // TODO: proper error type: ValueError  # Unsupported data type for field encoding
+        return Err(Error::DataError);
+    }
+
+    Ok(())
+}
+
+/// Get the length of an array at specific `member_path` from the client.
+fn _get_array_size(member_path: &[u32]) -> Result<u32> {
+    // Field type for getting the array length from client, so we can check the return value
+    let array_length_type = EthereumFieldType {
+        data_type: EthereumDataType::Uint as i32,
+        size: Some(2),
+        entry_type: None,
+        struct_name: None,
+    };
+    let length_value = get_value(&array_length_type, member_path)?;
+
+    Ok(U256::from_big_endian(&length_value)
+        .try_into()
+        .map_err(|_| Error::DataError)?)
 }

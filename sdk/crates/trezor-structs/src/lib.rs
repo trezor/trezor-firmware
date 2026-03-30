@@ -146,7 +146,7 @@ impl StrList {
     }
 }
 
-type StrExt = (ShortString, bool);
+type StrExt = (LongString, bool);
 
 #[derive(Archive, Serialize)]
 pub struct StrExtList {
@@ -171,7 +171,7 @@ impl StrExtList {
 
         let mut list = Self::default();
         for (s, flag) in slice {
-            let s = ShortString::from_str(s)?;
+            let s = LongString::from_str(s)?;
             list.data[list.len as usize] = (s, *flag);
             list.len += 1;
         }

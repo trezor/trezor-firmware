@@ -915,7 +915,7 @@ pub fn confirm_with_info(
             .transpose()?,
         br_code,
     };
-    ipc_ui_call_confirm(&value)
+    ipc_ui_call(&value)
 }
 
 pub fn show_address(
