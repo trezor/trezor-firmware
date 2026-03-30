@@ -44,7 +44,7 @@ LOG_DECLARE(touch_driver)
 // #define TOUCH_TRACE_REGS
 
 #define FT3168_P_MONITOR_AUTO_ENTRY_DEFAULT (FT3168_P_MONITOR_AUTO_ENTRY_ON)
-#define FT3168_TIMEENTERMONITOR_DEFAULT 12  // In seconds
+#define FT3168_TIMEENTERMONITOR_DEFAULT 10  // In seconds
 
 typedef struct {
   // Set if the driver is initialized
