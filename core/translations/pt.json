@@ -410,7 +410,6 @@
     "cardano__delegating_to": "Delegando a",
     "cardano__delegating_to_key_hash": "Delegando à chave com hash",
     "cardano__delegating_to_script": "Delegando ao script",
-    "cardano__deposit": "Depósito",
     "cardano__empty_message": "Mensagem vazia",
     "cardano__for_account_and_index_template": "Para a conta {0} e o índice {1}",
     "cardano__for_account_template": "Para a conta {0}",
@@ -2791,6 +2790,7 @@
       "Eckhart": "Continuar mesmo assim?"
     },
     "words__continue_with": "Continuar com",
+    "words__deposit": "Depósito",
     "words__device": "Dispositivo",
     "words__disabled": {
       "Bolt": "",

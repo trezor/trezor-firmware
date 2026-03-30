@@ -395,7 +395,6 @@
     "cardano__delegating_to": "Delegování na",
     "cardano__delegating_to_key_hash": "Delegování na hash klíče",
     "cardano__delegating_to_script": "Delegování na skript",
-    "cardano__deposit": "Vklad",
     "cardano__empty_message": "Prázdná zpráva",
     "cardano__for_account_and_index_template": "Pro účet {0} a index {1}",
     "cardano__for_account_template": "Pro účet {0}",
@@ -2586,6 +2585,7 @@
     "words__continue_anyway": "Přesto pokračovat",
     "words__continue_anyway_question": "Přesto pokračovat?",
     "words__continue_with": "Pokračovat s",
+    "words__deposit": "Vklad",
     "words__device": "Zařízení",
     "words__disabled": {
       "Bolt": "",

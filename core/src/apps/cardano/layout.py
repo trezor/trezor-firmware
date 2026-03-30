@@ -728,7 +728,7 @@ async def confirm_certificate(
         assert certificate.deposit is not None  # validate_certificate
         props.append(
             (
-                TR.cardano__deposit,
+                TR.words__deposit,
                 format_coin_amount(certificate.deposit, network_id),
                 False,
             )

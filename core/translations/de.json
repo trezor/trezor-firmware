@@ -480,7 +480,6 @@
     "cardano__delegating_to": "Delegieren an",
     "cardano__delegating_to_key_hash": "Delegieren an Key-Hash",
     "cardano__delegating_to_script": "Delegieren an Skript",
-    "cardano__deposit": "Einzahlung",
     "cardano__empty_message": "Leere Nachricht",
     "cardano__for_account_and_index_template": "Für Konto {0} und Index {1}",
     "cardano__for_account_template": "Für Konto {0}",
@@ -3321,6 +3320,7 @@
     "words__continue_anyway": "Trotzdem fortfahren",
     "words__continue_anyway_question": "Trotzdem fortfahren?",
     "words__continue_with": "Weiter mit",
+    "words__deposit": "Einzahlung",
     "words__device": "Gerät",
     "words__disabled": {
       "Bolt": "",

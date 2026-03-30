@@ -1194,8 +1194,7 @@ pub enum TranslatedString {
     cardano__delegating_to_key_hash = 849,  // "Delegating to key hash"
     #[cfg(feature = "universal_fw")]
     cardano__delegating_to_script = 850,  // "Delegating to script"
-    #[cfg(feature = "universal_fw")]
-    cardano__deposit = 851,  // "Deposit"
+    words__deposit = 851,  // "Deposit"
     #[cfg(feature = "universal_fw")]
     cardano__vote_delegation = 852,  // "Vote delegation"
     instructions__tap_to_confirm = 854,  // "Tap to confirm"
@@ -1580,6 +1579,34 @@ pub enum TranslatedString {
     n4w1__hold_last = 1190,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the last tag to the back of this Trezor."}
     n4w1__hold_next = 1191,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Hold the next tag to the back of this Trezor."}
     n4w1__writing = 1192,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Writing to tag..."}
+    #[cfg(feature = "universal_fw")]
+    ethereum__deposit_amount = 1193,  // "Deposit amount"
+    #[cfg(feature = "universal_fw")]
+    ethereum__deposit_to = 1194,  // "Deposit to"
+    #[cfg(feature = "universal_fw")]
+    ethereum__redeem_amount = 1195,  // "Redeem amount"
+    #[cfg(feature = "universal_fw")]
+    ethereum__redeem_from = 1196,  // "Redeem from"
+    #[cfg(feature = "universal_fw")]
+    ethereum__reward_tokens = 1197,  // "Reward tokens"
+    #[cfg(feature = "universal_fw")]
+    ethereum__rewards_claim = 1198,  // "Rewards claim"
+    #[cfg(feature = "universal_fw")]
+    ethereum__vault_claim_intro = 1199,  // "Review details to claim rewards."
+    #[cfg(feature = "universal_fw")]
+    ethereum__vault_deposit_intro = 1200,  // "Review details to deposit to vault."
+    #[cfg(feature = "universal_fw")]
+    ethereum__vault_redeem_intro = 1201,  // "Review details to redeem from vault."
+    #[cfg(feature = "universal_fw")]
+    ethereum__vault_withdraw_intro = 1202,  // "Review details to withdraw from vault."
+    #[cfg(feature = "universal_fw")]
+    ethereum__withdraw = 1203,  // "Withdraw"
+    #[cfg(feature = "universal_fw")]
+    ethereum__withdraw_from = 1204,  // "Withdraw from"
+    #[cfg(feature = "universal_fw")]
+    ethereum__withdraw_intro = 1205,  // "Review details to withdraw from vault."
+    #[cfg(feature = "universal_fw")]
+    ethereum__your_address = 1206,  // "Your address"
 }
 
 impl TranslatedString {
@@ -2780,6 +2807,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -3978,6 +4019,20 @@ impl TranslatedString {
                 21592,
                 21592,
                 21592,
+                21606,
+                21616,
+                21629,
+                21640,
+                21653,
+                21666,
+                21698,
+                21733,
+                21769,
+                21807,
+                21815,
+                21828,
+                21866,
+                21878,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -5175,6 +5230,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -6373,6 +6442,20 @@ impl TranslatedString {
                 21592,
                 21592,
                 21592,
+                21606,
+                21616,
+                21629,
+                21640,
+                21653,
+                21666,
+                21698,
+                21733,
+                21769,
+                21807,
+                21815,
+                21828,
+                21866,
+                21878,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -7570,6 +7653,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -8768,6 +8865,20 @@ impl TranslatedString {
                 21592,
                 21592,
                 21592,
+                21606,
+                21616,
+                21629,
+                21640,
+                21653,
+                21666,
+                21698,
+                21733,
+                21769,
+                21807,
+                21815,
+                21828,
+                21866,
+                21878,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -9965,6 +10076,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -11163,6 +11288,20 @@ impl TranslatedString {
                 21592,
                 21592,
                 21592,
+                21606,
+                21616,
+                21629,
+                21640,
+                21653,
+                21666,
+                21698,
+                21733,
+                21769,
+                21807,
+                21815,
+                21828,
+                21866,
+                21878,
             ];
 
         } else if #[cfg(feature = "layout_caesar")] {
@@ -12361,6 +12500,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -13559,6 +13712,20 @@ impl TranslatedString {
                 18820,
                 18820,
                 18820,
+                18834,
+                18844,
+                18857,
+                18868,
+                18881,
+                18894,
+                18926,
+                18961,
+                18997,
+                19035,
+                19043,
+                19056,
+                19094,
+                19106,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -14756,6 +14923,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -15954,6 +16135,20 @@ impl TranslatedString {
                 18820,
                 18820,
                 18820,
+                18834,
+                18844,
+                18857,
+                18868,
+                18881,
+                18894,
+                18926,
+                18961,
+                18997,
+                19035,
+                19043,
+                19056,
+                19094,
+                19106,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -17151,6 +17346,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -18349,6 +18558,20 @@ impl TranslatedString {
                 18820,
                 18820,
                 18820,
+                18834,
+                18844,
+                18857,
+                18868,
+                18881,
+                18894,
+                18926,
+                18961,
+                18997,
+                19035,
+                19043,
+                19056,
+                19094,
+                19106,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -19546,6 +19769,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -20744,6 +20981,20 @@ impl TranslatedString {
                 18820,
                 18820,
                 18820,
+                18834,
+                18844,
+                18857,
+                18868,
+                18881,
+                18894,
+                18926,
+                18961,
+                18997,
+                19035,
+                19043,
+                19056,
+                19094,
+                19106,
             ];
 
         } else if #[cfg(feature = "layout_delizia")] {
@@ -21942,6 +22193,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -23140,6 +23405,20 @@ impl TranslatedString {
                 20676,
                 20676,
                 20676,
+                20690,
+                20700,
+                20713,
+                20724,
+                20737,
+                20750,
+                20782,
+                20817,
+                20853,
+                20891,
+                20899,
+                20912,
+                20950,
+                20962,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -24337,6 +24616,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -25535,6 +25828,20 @@ impl TranslatedString {
                 20676,
                 20676,
                 20676,
+                20690,
+                20700,
+                20713,
+                20724,
+                20737,
+                20750,
+                20782,
+                20817,
+                20853,
+                20891,
+                20899,
+                20912,
+                20950,
+                20962,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -26732,6 +27039,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -27930,6 +28251,20 @@ impl TranslatedString {
                 20676,
                 20676,
                 20676,
+                20690,
+                20700,
+                20713,
+                20724,
+                20737,
+                20750,
+                20782,
+                20817,
+                20853,
+                20891,
+                20899,
+                20912,
+                20950,
+                20962,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -29127,6 +29462,20 @@ impl TranslatedString {
                 "",
                 "",
                 "",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -30325,6 +30674,20 @@ impl TranslatedString {
                 20676,
                 20676,
                 20676,
+                20690,
+                20700,
+                20713,
+                20724,
+                20737,
+                20750,
+                20782,
+                20817,
+                20853,
+                20891,
+                20899,
+                20912,
+                20950,
+                20962,
             ];
 
         } else if #[cfg(feature = "layout_eckhart")] {
@@ -31523,6 +31886,20 @@ impl TranslatedString {
                 "Hold the last tag to the back of this Trezor.",
                 "Hold the next tag to the back of this Trezor.",
                 "Writing to tag...",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(feature = "debug", feature = "universal_fw"))]
@@ -32721,6 +33098,20 @@ impl TranslatedString {
                 21541,
                 21586,
                 21603,
+                21617,
+                21627,
+                21640,
+                21651,
+                21664,
+                21677,
+                21709,
+                21744,
+                21780,
+                21818,
+                21826,
+                21839,
+                21877,
+                21889,
             ];
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -33918,6 +34309,20 @@ impl TranslatedString {
                 "Hold the last tag to the back of this Trezor.",
                 "Hold the next tag to the back of this Trezor.",
                 "Writing to tag...",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(feature = "debug", not(feature = "universal_fw")))]
@@ -35116,6 +35521,20 @@ impl TranslatedString {
                 21541,
                 21586,
                 21603,
+                21617,
+                21627,
+                21640,
+                21651,
+                21664,
+                21677,
+                21709,
+                21744,
+                21780,
+                21818,
+                21826,
+                21839,
+                21877,
+                21889,
             ];
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -36313,6 +36732,20 @@ impl TranslatedString {
                 "Hold the last tag to the back of this Trezor.",
                 "Hold the next tag to the back of this Trezor.",
                 "Writing to tag...",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(not(feature = "debug"), feature = "universal_fw"))]
@@ -37511,6 +37944,20 @@ impl TranslatedString {
                 21541,
                 21586,
                 21603,
+                21617,
+                21627,
+                21640,
+                21651,
+                21664,
+                21677,
+                21709,
+                21744,
+                21780,
+                21818,
+                21826,
+                21839,
+                21877,
+                21889,
             ];
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -38708,6 +39155,20 @@ impl TranslatedString {
                 "Hold the last tag to the back of this Trezor.",
                 "Hold the next tag to the back of this Trezor.",
                 "Writing to tag...",
+                "Deposit amount",
+                "Deposit to",
+                "Redeem amount",
+                "Redeem from",
+                "Reward tokens",
+                "Rewards claim",
+                "Review details to claim rewards.",
+                "Review details to deposit to vault.",
+                "Review details to redeem from vault.",
+                "Review details to withdraw from vault.",
+                "Withdraw",
+                "Withdraw from",
+                "Review details to withdraw from vault.",
+                "Your address",
             );
 
             #[cfg(all(not(feature = "debug"), not(feature = "universal_fw")))]
@@ -39906,6 +40367,20 @@ impl TranslatedString {
                 21541,
                 21586,
                 21603,
+                21617,
+                21627,
+                21640,
+                21651,
+                21664,
+                21677,
+                21709,
+                21744,
+                21780,
+                21818,
+                21826,
+                21839,
+                21877,
+                21889,
             ];
 
         }
@@ -40131,8 +40606,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__delegating_to_key_hash, Self::cardano__delegating_to_key_hash),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__delegating_to_script, Self::cardano__delegating_to_script),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_cardano__deposit, Self::cardano__deposit),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__empty_message, Self::cardano__empty_message),
         #[cfg(feature = "universal_fw")]
@@ -40429,6 +40902,10 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__deposit_amount, Self::ethereum__deposit_amount),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__deposit_to, Self::ethereum__deposit_to),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__eip_7702, Self::ethereum__eip_7702),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__eip_7702_title, Self::ethereum__eip_7702_title),
@@ -40448,6 +40925,14 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__no_message_field, Self::ethereum__no_message_field),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__priority_fee, Self::ethereum__priority_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__redeem_amount, Self::ethereum__redeem_amount),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__redeem_from, Self::ethereum__redeem_from),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__reward_tokens, Self::ethereum__reward_tokens),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__rewards_claim, Self::ethereum__rewards_claim),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__show_full_array, Self::ethereum__show_full_array),
         #[cfg(feature = "universal_fw")]
@@ -40500,6 +40985,22 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__unknown_token, Self::ethereum__unknown_token),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__valid_signature, Self::ethereum__valid_signature),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__vault_claim_intro, Self::ethereum__vault_claim_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__vault_deposit_intro, Self::ethereum__vault_deposit_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__vault_redeem_intro, Self::ethereum__vault_redeem_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__vault_withdraw_intro, Self::ethereum__vault_withdraw_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__withdraw, Self::ethereum__withdraw),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__withdraw_from, Self::ethereum__withdraw_from),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__withdraw_intro, Self::ethereum__withdraw_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__your_address, Self::ethereum__your_address),
         (Qstr::MP_QSTR_experimental_mode__enable, Self::experimental_mode__enable),
         (Qstr::MP_QSTR_experimental_mode__only_for_dev, Self::experimental_mode__only_for_dev),
         (Qstr::MP_QSTR_experimental_mode__title, Self::experimental_mode__title),
@@ -41414,6 +41915,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__continue_anyway, Self::words__continue_anyway),
         (Qstr::MP_QSTR_words__continue_anyway_question, Self::words__continue_anyway_question),
         (Qstr::MP_QSTR_words__continue_with, Self::words__continue_with),
+        (Qstr::MP_QSTR_words__deposit, Self::words__deposit),
         (Qstr::MP_QSTR_words__device, Self::words__device),
         (Qstr::MP_QSTR_words__disabled, Self::words__disabled),
         (Qstr::MP_QSTR_words__disconnect, Self::words__disconnect),
