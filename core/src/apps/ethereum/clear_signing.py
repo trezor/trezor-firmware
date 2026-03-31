@@ -761,13 +761,13 @@ async def _handle_approve(
     assert len(fields) == 2
 
     arg0_raw_value = args[0]
-    ((field0_name, recipient_addr, _), _, _) = fields[0]
+    (field0_name, recipient_addr, _), _, _ = fields[0]
     assert field0_name == "Spender"
     assert isinstance(arg0_raw_value, bytes)
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
-    ((field1_name, value, _), _, _) = fields[1]
+    (field1_name, value, _), _, _ = fields[1]
     assert field1_name == "Amount"
     assert isinstance(arg1_raw_value, int)
 
@@ -810,13 +810,13 @@ async def _handle_transfer(
     assert len(args) == 2
     assert len(fields) == 2
 
-    ((arg0_name, recipient_addr, _), _, _) = fields[0]
+    (arg0_name, recipient_addr, _), _, _ = fields[0]
     assert arg0_name == "To"
     assert isinstance(recipient_addr, str)
 
     arg1_raw_value = args[1]
     assert isinstance(arg1_raw_value, int)
-    ((arg1_name, value, _), _, _) = fields[1]
+    (arg1_name, value, _), _, _ = fields[1]
     assert arg1_name == "Amount"
     assert isinstance(value, str)
 
