@@ -96,7 +96,7 @@ def get_context() -> Context:
     Result of this function should not be stored -- the context is technically allowed
     to change inbetween any `await` statements.
 
-    Raises KeyError if there is currently no context.
+    Raises NoWireContext if there is currently no context.
     """
     if CURRENT_CONTEXT is None:
         raise NoWireContext
