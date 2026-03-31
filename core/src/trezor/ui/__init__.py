@@ -277,17 +277,7 @@ class Layout(Generic[T]):
         try:
             if (ctx := self.context) is not None and self.result_box.is_empty():
                 is_done = loop.mailbox()  # (see below)
-
-                def _button_request_task() -> Generator[Any, Any, None]:
-                    try:
-                        yield from ctx.button_request_handler.handle(
-                            button_requests=self.button_request_box,
-                            ack_callback=self._button_request_acked,
-                        )
-                    finally:
-                        is_done.put(None)
-
-                self.button_request_task = _button_request_task()
+                self.button_request_task = self._button_request_task(ctx, is_done)
                 self._start_task(self.button_request_task)
             elif __debug__ and not self.button_request_box.is_empty():
                 log.debug(
@@ -296,20 +286,27 @@ class Layout(Generic[T]):
                     self.button_request_box.value,
                 )
 
-            result = await self.result_box
-            assert CURRENT_LAYOUT is None  # the screen is blank now
-
-            if is_done is not None:
-                # Make sure ButtonRequest is ACKed, before the result is returned.
-                # Otherwise, THP channel may become desynced (due to two consecutive writes).
+            try:
+                result = await self.result_box
+                assert CURRENT_LAYOUT is None  # the screen is blank now
+                return result
+            except GeneratorExit:
+                # GeneratorExit is raised if the layout task is being closed (e.g. via `workflow.close_others()`).
+                # Skip the `await` below, since MicroPython doesn't allow a closed generator to yield:
+                # https://github.com/trezor/micropython/blob/73ccede09a1108fc10f11b935b2e5611b3ea5c60/py/objgenerator.c#L319
+                is_done = None
+                raise
+            finally:
                 self.put_button_request(None)
-                task = loop.spawn(_waiting_screen())
-                try:
-                    await is_done
-                finally:
-                    task.close()
+                if is_done is not None:
+                    # Wait for ButtonRequest to be ACKed, before the result is returned.
+                    # Otherwise, THP channel may become desynced (due to two consecutive writes).
+                    task = loop.spawn(_waiting_screen())
+                    try:
+                        await is_done
+                    finally:
+                        task.close()
 
-            return result
         finally:
             # Close all tasks (including ButtonRequest handler)
             self.stop()
@@ -488,6 +485,17 @@ class Layout(Generic[T]):
                 return
             finally:
                 touch.close()
+
+    def _button_request_task(
+        self, ctx: Context, is_done: loop.mailbox[None]
+    ) -> Generator[Any, Any, None]:
+        try:
+            yield from ctx.button_request_handler.handle(
+                button_requests=self.button_request_box,
+                ack_callback=self._button_request_acked,
+            )
+        finally:
+            is_done.put(None)
 
     def _button_request_acked(self) -> None:
         if self.button_request_ack_pending and self.state is LayoutState.TRANSITIONING:

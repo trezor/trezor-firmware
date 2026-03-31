@@ -211,7 +211,6 @@ extern const struct _mp_print_t mp_stderr_print;
 #define MICROPY_PERSISTENT_CODE_SAVE (1)
 #define MICROPY_COMP_CONST (0)
 #endif
-#define MICROPY_PY_SYS_EXC_INFO     (1)
 
 // extern const struct _mp_print_t mp_stderr_print;
 
