@@ -220,7 +220,7 @@
             "name": "vault_deposit_gauntlet_usdc",
             "parameters": {
                 "comment": "ERC-4626 deposit of 1 USDC into Gauntlet USDC vault",
-                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000008b13dbef164beb9d984aeb715c31d1d1bb0bd8bb",
+                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
                 "chain_id": 1,
@@ -231,9 +231,9 @@
                 "value": "0x0"
             },
             "result": {
-                "sig_v": 37,
-                "sig_r": "3d475ad752dbf2b0327aa59bdbfa8cb2fe409eea36ffb3bdb72c3be14534c3e9",
-                "sig_s": "1ad803c6c6ecfde7c92adacd1238676dc31b17170a82baa25f88a3b22e21e020"
+                "sig_v": 38,
+                "sig_r": "0f9b666dcdd49ed170dac61ed8bb70ddd62907ce7c5b6ffdd836725bf1ab00f0",
+                "sig_s": "03aa82111b1428c56f2dbfa6f9c58faf595b3f9b6704ff03c18b05837f92e5d4"
             }
         },
         {
