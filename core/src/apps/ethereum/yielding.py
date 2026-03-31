@@ -78,7 +78,7 @@ async def _handle_deposit(
 
     # deposit(uint256 assets, address receiver)
     # - arg0: asset(USDC) quantity
-    # - arg1: vault address
+    # - arg1: user address
     try:
         asset_amount = int.from_bytes(data_reader.read_memoryview(32), "big")
         receiver_bytes = bytes(data_reader.read_memoryview(32)[12:])
@@ -89,6 +89,9 @@ async def _handle_deposit(
 
     if asset_amount == 0:
         raise DataError("Invalid assets amount for vault deposit")
+
+    from trezor import log
+    log.debug(__name__, f"\nReceived bytes: {receiver_bytes}\nSender bytes: {sender_bytes}")
     if receiver_bytes != sender_bytes:
         raise DataError("Receiver must equal sender for vault deposit")
 

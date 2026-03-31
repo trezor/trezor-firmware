@@ -1336,7 +1336,7 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "ethereum/vault",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        if title == TR.ethereum__deposit_to:
+        if title == TR.words__deposit:
             br_name += "/deposit"
 
         account_properties: list[StrPropertyType] = []
