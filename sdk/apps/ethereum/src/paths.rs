@@ -1,4 +1,4 @@
-use crate::{keychain::PATTERNS_ADDRESS, proto::common::button_request::ButtonRequestType};
+use crate::{common::COIN, keychain::PATTERNS_ADDRESS, proto::common::button_request::ButtonRequestType};
 
 #[cfg(not(test))]
 use alloc::{
@@ -125,7 +125,7 @@ impl Bip32Path {
         }
 
         let slip44_id = self.path[1]; //it depends on the network (ETH vs ETC...)
-        let account = self.get_account_name("ETH", &PATTERNS_ADDRESS, slip44_id);
+        let account = self.get_account_name(COIN, &PATTERNS_ADDRESS, slip44_id);
         let path = self.to_string();
 
         (account, Some(path))

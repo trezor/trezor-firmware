@@ -1,14 +1,15 @@
 use crate::{
+    common::COIN,
     ed25519,
     proto::definitions::{DefinitionType, EthereumNetworkInfo, EthereumTokenInfo},
     tokens::{token_by_chain_address, unknown_token},
     uformat,
 };
 #[cfg(not(test))]
-use alloc::{collections::BTreeMap, string::String, vec::Vec};
+use alloc::string::String;
 use prost::Message;
 #[cfg(test)]
-use std::{collections::BTreeMap, string::String, vec::Vec};
+use std::string::String;
 use trezor_app_sdk::{crypto::Sha256, info};
 
 const THRESHOLD: usize = 2;
@@ -29,12 +30,12 @@ const FORMAT_VERSION: &[u8] = b"trzd1";
 
 pub struct Definitions {
     pub network: EthereumNetworkInfo,
-    pub tokens: BTreeMap<Vec<u8>, EthereumTokenInfo>,
+    pub token: Option<EthereumTokenInfo>,
 }
 
 impl Definitions {
-    pub fn new(network: EthereumNetworkInfo, tokens: BTreeMap<Vec<u8>, EthereumTokenInfo>) -> Self {
-        Self { network, tokens }
+    pub fn new(network: EthereumNetworkInfo, token: Option<EthereumTokenInfo>) -> Self {
+        Self { network, token }
     }
 
     pub fn from_encoded(
@@ -43,15 +44,15 @@ impl Definitions {
         chain_id: Option<u64>,
         slip44: Option<u32>,
     ) -> Result<Self, ()> {
-        let mut tokens = BTreeMap::new();
         // if we have a built-in definition, use it
+        let mut token = None;
         let mut network = if let Some(chain_id) = chain_id {
             by_chain_id(chain_id)
         } else if let Some(slip44) = slip44 {
             by_slip44(slip44)
         } else {
             // ignore tokens if we don't have a network
-            return Ok(Self::new(unknown_network(), tokens));
+            return Ok(Self::new(unknown_network(), token));
         };
 
         if network == unknown_network() {
@@ -64,7 +65,7 @@ impl Definitions {
 
         if network == unknown_network() {
             // ignore tokens if we don't have a network
-            return Ok(Self::new(unknown_network(), tokens));
+            return Ok(Self::new(unknown_network(), token));
         }
 
         if let Some(chain_id) = chain_id {
@@ -88,16 +89,16 @@ impl Definitions {
         // get token definition
         if let Some(encoded_token) = encoded_token {
             info!("Decoding token definition from the message");
-            let token = decode_definition::<EthereumTokenInfo>(encoded_token)?;
+            let token_info = decode_definition::<EthereumTokenInfo>(encoded_token)?;
             // Ignore token if it doesn't match the network instead of raising an error.
             // This might help us in the future if we allow multiple networks/tokens
             // in the same message.
-            if token.chain_id == network.chain_id {
-                tokens.insert(token.address.clone(), token);
+            if token_info.chain_id == network.chain_id {
+                token = Some(token_info);
             }
         }
 
-        Ok(Self::new(network, tokens))
+        Ok(Self::new(network, token))
     }
 
     pub fn network(&self) -> &EthereumNetworkInfo {
@@ -116,11 +117,12 @@ impl Definitions {
         // if we have a built-in definition, use it
         let token = token_by_chain_address(self.network.chain_id, address);
 
-        if let Some(token) = token {
-            return token;
+        if let Some(token_info) = token {
+            return token_info;
         }
-        if self.tokens.contains_key(address) {
-            self.tokens.get(address).unwrap().clone()
+
+        if let Some(token_info) = self.token.iter().find(|t| t.address.as_slice() == address) {
+            token_info.clone()
         } else {
             unknown_token()
         }
@@ -320,13 +322,13 @@ pub fn by_slip44(slip44: u32) -> EthereumNetworkInfo {
 
 fn _networks_iterator() -> &'static [(u64, u32, &'static str, &'static str)] {
     &[
-        (1, 60, "ETH", "Ethereum"),
-        (10, 614, "ETH", "Optimism"),
+        (1, 60, COIN, "Ethereum"),
+        (10, 614, COIN, "Optimism"),
         (56, 714, "BNB", "BNB Smart Chain"),
-        (61, 61, "ETC", "Ethereum Classic"),
+        (61, 61, COIN, "Ethereum Classic"),
         (137, 966, "POL", "Polygon"),
-        (8453, 8453, "ETH", "Base"),
-        (42161, 9001, "ETH", "Arbitrum One"),
+        (8453, 8453, COIN, "Base"),
+        (42161, 9001, COIN, "Arbitrum One"),
         (560048, 60, "tHOD", "Hoodi"),
         (11155111, 60, "tSEP", "Sepolia"),
     ]

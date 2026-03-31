@@ -197,10 +197,10 @@ test_emu_sanity: ## make sure the emulator doesn't crash on startup
 	timeout -v 10 $(EMU) --disable-animation --headless --temporary-profile --command true
 
 test_emu: ## run selected device tests from python-trezor
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) --lang=$(TEST_LANG)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests/ethereum_backup/test_sign_typed_data.py::test_ethereum_sign_typed_data[bare_minimum]  --ui=test $(TESTOPTS) --lang=$(TEST_LANG)
 
 test_emu_extapp: ## run selected device tests from python-trezor
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests/ethereum/test_sign_verify_message.py::test_verify $(TESTOPTS) --extapp=../sdk/apps/ethereum/target/release/ethereum_rust --ui=test
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests/ethereum/test_signtx.py --ui=test $(TESTOPTS) --extapp=../sdk/apps/ethereum/target/release/ethereum_rust --ui=test
 
 test_emu_multicore: ## run device tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \

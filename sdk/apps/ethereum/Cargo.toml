@@ -10,8 +10,13 @@ strip = "none"
 
 [profile.release]
 panic = "abort"
+opt-level = "z"
 lto = "fat"
 codegen-units = 1
+debug = 0
+debug-assertions = false
+overflow-checks = false
+incremental = false
 
 [dependencies]
 trezor-app-sdk = { path = "../../crates/trezor-app-sdk" }

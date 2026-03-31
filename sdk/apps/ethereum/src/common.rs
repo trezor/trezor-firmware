@@ -8,22 +8,18 @@ use crate::{
         definitions::{EthereumNetworkInfo, EthereumTokenInfo},
         ethereum::{EthereumTxAck, EthereumTxRequest},
     },
-    strutil::{hex_decode, hex_encode},
+    strutil::hex_encode,
     tokens, uformat, wire_request,
 };
 #[cfg(not(test))]
 use alloc::{
-    collections::BTreeMap,
     string::{String, ToString},
-    vec,
     vec::Vec,
 };
 use primitive_types::U256;
 #[cfg(test)]
 use std::{
-    collections::BTreeMap,
     string::{String, ToString},
-    vec,
     vec::Vec,
 };
 use trezor_app_sdk::{Error, Result, info, ui, unwrap};
@@ -32,25 +28,11 @@ use trezor_app_sdk::{Error, Result, info, ui, unwrap};
 const LONG_MSG_PAGE_THRESHOLD: usize = 300;
 
 // Known ERC-20 functions
-pub fn sc_func_sig_transfer() -> Vec<u8> {
-    hex_decode("a9059cbb").unwrap()
-}
-
-pub fn sc_func_sig_approve() -> Vec<u8> {
-    hex_decode("095ea7b3").unwrap()
-}
-
-pub fn sc_func_sig_stake() -> Vec<u8> {
-    hex_decode("3a29dbae").unwrap()
-}
-
-pub fn sc_func_sig_unstake() -> Vec<u8> {
-    hex_decode("76ec871c").unwrap()
-}
-
-pub fn sc_func_sig_claim() -> Vec<u8> {
-    hex_decode("33986ffa").unwrap()
-}
+pub const SC_FUNC_SIG_TRANSFER: [u8; 4] = [0xa9, 0x05, 0x9c, 0xbb];
+pub const SC_FUNC_SIG_APPROVE: [u8; 4] = [0x09, 0x5e, 0xa7, 0xb3];
+pub const SC_FUNC_SIG_STAKE: [u8; 4] = [0x3a, 0x29, 0xdb, 0xae];
+pub const SC_FUNC_SIG_UNSTAKE: [u8; 4] = [0x76, 0xec, 0x87, 0x1c];
+pub const SC_FUNC_SIG_CLAIM: [u8; 4] = [0x33, 0x98, 0x6f, 0xfa];
 
 // Smart contract 'data' field lengths in bytes
 pub const SC_FUNC_SIG_BYTES: usize = 4;
@@ -61,39 +43,58 @@ pub const SC_FUNC_APPROVE_REVOKE_AMOUNT: u32 = 0;
 // Everstake staking
 
 // addresses for pool (stake/unstake) and accounting (claim) operations
-pub fn addresses_pool() -> Vec<Vec<u8>> {
-    vec![
-        unwrap!(hex_decode("AFA848357154a6a624686b348303EF9a13F63264")), // Hoodi testnet
-        unwrap!(hex_decode("D523794C879D9eC028960a231F866758e405bE34")), // mainnet
-    ]
-}
+pub const ADDRESSES_POOL: [[u8; 20]; 2] = [
+    [
+        0xAF, 0xA8, 0x48, 0x35, 0x71, 0x54, 0xA6, 0xA6, 0x24, 0x68, 0x6B, 0x34, 0x83, 0x03, 0xEF,
+        0x9A, 0x13, 0xF6, 0x32, 0x64,
+    ], // Hoodi testnet
+    [
+        0xD5, 0x23, 0x79, 0x4C, 0x87, 0x9D, 0x9E, 0xC0, 0x28, 0x96, 0x0A, 0x23, 0x1F, 0x86, 0x67,
+        0x58, 0xE4, 0x05, 0xBE, 0x34,
+    ], // mainnet
+];
 
-pub fn addresses_accounting() -> Vec<Vec<u8>> {
-    vec![
-        unwrap!(hex_decode("624087DD1904ab122A32878Ce9e933C7071F53B9")), // Hoodi testnet
-        unwrap!(hex_decode("7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e")), // mainnet
-    ]
-}
+pub const ADDRESSES_ACCOUNTING: [[u8; 20]; 2] = [
+    [
+        0x62, 0x40, 0x87, 0xDD, 0x19, 0x04, 0xAB, 0x12, 0x2A, 0x32, 0x87, 0x8C, 0xE9, 0xE9, 0x33,
+        0xC7, 0x07, 0x1F, 0x53, 0xB9,
+    ], // Hoodi testnet
+    [
+        0x7A, 0x7F, 0x0B, 0x3C, 0x23, 0xC2, 0x3A, 0x31, 0xCF, 0xCB, 0x0C, 0x44, 0x70, 0x9B, 0xE7,
+        0x0D, 0x4D, 0x54, 0x5C, 0x6E,
+    ], // mainnet
+];
 
 // Approve known addresses
 // This should eventually grow into a more comprehensive database and stored in some other way,
 // but for now let's just keep a few known addresses here!
-pub fn get_approve_known_addresses() -> BTreeMap<Vec<u8>, &'static str> {
-    let mut map = BTreeMap::new();
-    map.insert(
-        hex_decode("e592427a0aece92de3edee1f18e0157c05861564").unwrap(),
-        "Uniswap V3 Router",
-    );
-    map.insert(
-        hex_decode("111111125421cA6dc452d289314280a0f8842A65").unwrap(),
-        "1inch Aggregation Router V6",
-    );
-    map.insert(
-        hex_decode("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE").unwrap(),
-        "LiFI Diamond",
-    );
-    map
+const ADDR_UNISWAP_V3_ROUTER: [u8; 20] = [
+    0xe5, 0x92, 0x42, 0x7a, 0x0a, 0xec, 0xe9, 0x2d, 0xe3, 0xed, 0xee, 0x1f, 0x18, 0xe0, 0x15, 0x7c,
+    0x05, 0x86, 0x15, 0x64,
+];
+const ADDR_1INCH_V6: [u8; 20] = [
+    0x11, 0x11, 0x11, 0x12, 0x54, 0x21, 0xca, 0x6d, 0xc4, 0x52, 0xd2, 0x89, 0x31, 0x42, 0x80, 0xa0,
+    0xf8, 0x84, 0x2a, 0x65,
+];
+const ADDR_LIFI_DIAMOND: [u8; 20] = [
+    0x12, 0x31, 0xde, 0xb6, 0xf5, 0x74, 0x9e, 0xf6, 0xce, 0x69, 0x43, 0xa2, 0x75, 0xa1, 0xd3, 0xe7,
+    0x48, 0x6f, 0x4e, 0xae,
+];
+
+pub const APPROVE_KNOWN_ADDRESSES: [([u8; 20], &str); 3] = [
+    (ADDR_UNISWAP_V3_ROUTER, "Uniswap V3 Router"),
+    (ADDR_1INCH_V6, "1inch Aggregation Router V6"),
+    (ADDR_LIFI_DIAMOND, "LiFI Diamond"),
+];
+
+pub fn get_approve_known_address(addr: &[u8]) -> Option<&'static str> {
+    APPROVE_KNOWN_ADDRESSES
+        .iter()
+        .find(|(a, _)| a.as_slice() == addr)
+        .map(|(_, name)| *name)
 }
+
+pub const COIN: &str = "ETH";
 
 pub(crate) fn require_confirm_address(
     address_bytes: &[u8],
@@ -294,7 +295,7 @@ pub fn require_confirm_approve(
     token_address: &[u8],
     chunkify: bool,
 ) -> Result<()> {
-    let recipient_str = get_approve_known_addresses().get(to_bytes).copied();
+    let recipient_str = get_approve_known_address(to_bytes);
     let recipient_addr = address_from_bytes(to_bytes, Some(network));
     let chain_id_str = uformat!("{} (0x{:x})", chain_id, chain_id);
     let token_address_str = address_from_bytes(token_address, Some(network));
@@ -657,12 +658,14 @@ pub fn require_confirm_payment_request(
     token: Option<&EthereumTokenInfo>,
     token_address: &str,
 ) -> Result<()> {
+    info!("formatting total amount for display");
     let total_amount = format_ethereum_amount(
         parse_amount(unwrap!(verified_payment_req.amount.as_deref()))?,
         token,
         network,
         false,
     );
+    info!("total amount is {}", total_amount.as_str());
 
     let mut texts = Vec::new();
     let mut refunds = Vec::new();
@@ -698,6 +701,8 @@ pub fn require_confirm_payment_request(
         }
     }
 
+    info!("memos finished");
+
     let (account, account_path) = dp.account_and_path();
     let mut account_items = Vec::with_capacity(3);
     if let Some(ref account) = account {
@@ -710,6 +715,7 @@ pub fn require_confirm_payment_request(
     if chain_id != 0 {
         account_items.push(("Chain ID", &chain_id_str, true));
     }
+    info!("confirming payment request");
 
     confirm_payment_request(
         verified_payment_req.recipient_name.as_str(),
@@ -744,6 +750,7 @@ fn confirm_payment_request(
     };
 
     for (text_title, text) in texts {
+        info!("confirming text: {}", text);
         ui::error_if_not_confirmed(ui::confirm_value(
             text_title.unwrap_or(title),
             text,
@@ -1185,4 +1192,208 @@ pub fn send_request_chunk(data_left: u32) -> Result<EthereumTxAck> {
     info!("received data chunk response");
 
     Ok(resp)
+}
+
+pub fn handle_staking_tx_claim(
+    data: &[u8],
+    dp: &Bip32Path,
+    staking_address: &[u8],
+    maximum_fee: &str,
+    fee_items: &[(&str, &str, bool)],
+    network: &EthereumNetworkInfo,
+) -> Result<()> {
+    // claim has no args
+
+    if data.len() != 0 {
+        return Err(Error::DataError);
+    }
+
+    require_confirm_claim(staking_address, dp, maximum_fee, fee_items, network)?;
+
+    Ok(())
+}
+
+pub fn handle_staking_tx_stake(
+    data: &[u8],
+    dp: &Bip32Path,
+    value: &[u8],
+    network: &EthereumNetworkInfo,
+    address_bytes: &[u8],
+    maximum_fee: &str,
+    fee_items: &[(&str, &str, bool)],
+) -> Result<()> {
+    // stake args:
+    // - arg0: uint64, source (1 for Trezor)
+
+    if data.len() != SC_ARGUMENT_BYTES {
+        // TODO: proper error type: ValueError: wrong number of arguments for stake (should be 1)
+        return Err(Error::DataError);
+    }
+
+    assert!(value.len() <= 32);
+    let value = U256::from_big_endian(value);
+
+    require_confirm_stake(address_bytes, value, dp, maximum_fee, fee_items, network)?;
+
+    Ok(())
+}
+
+pub fn handle_staking_tx_unstake(
+    data: &[u8],
+    dp: &Bip32Path,
+    network: &EthereumNetworkInfo,
+    address_bytes: &[u8],
+    maximum_fee: &str,
+    fee_items: &[(&str, &str, bool)],
+) -> Result<()> {
+    // unstake args:
+    // - arg0: uint256, value
+    // - arg1: uint16, isAllowedInterchange (bool)
+    // - arg2: uint64, source (1 for Trezor)
+
+    if data.len() != 3 * SC_ARGUMENT_BYTES {
+        // TODO: proper error type: ValueError: wrong number of arguments for unstake (should be 3)
+        return Err(Error::DataError);
+    }
+
+    // parse arg0: uint256, value (only lower 16 bytes fit in u128)
+    let arg0 = &data[..SC_ARGUMENT_BYTES];
+    let value = U256::from_big_endian(arg0);
+
+    // skip arg1 and arg2
+
+    require_confirm_unstake(address_bytes, value, dp, maximum_fee, fee_items, network)?;
+
+    Ok(())
+}
+
+/// Runs confirmation for ETH staking approval for staking related transactions.
+pub fn run_staking_approver<'a>(
+    dp: &'a Bip32Path,
+    data_initial_chunk: &'a [u8],
+    value: &'a [u8],
+    network: &'a EthereumNetworkInfo,
+    address_bytes: &'a [u8],
+    maximum_fee: &'a str,
+    fee_items: &'a [(&'a str, &'a str, bool)],
+) -> Result<bool> {
+    if data_initial_chunk.len() < SC_FUNC_SIG_BYTES {
+        return Ok(false);
+    }
+
+    let func_sig = &data_initial_chunk[..SC_FUNC_SIG_BYTES];
+    let data = &data_initial_chunk[SC_FUNC_SIG_BYTES..];
+    if ADDRESSES_POOL
+        .iter()
+        .any(|addr| addr.as_slice() == address_bytes)
+    {
+        if func_sig == &SC_FUNC_SIG_STAKE {
+            handle_staking_tx_stake(
+                data,
+                &dp,
+                value,
+                network,
+                address_bytes,
+                maximum_fee,
+                fee_items,
+            )?;
+            return Ok(true);
+        } else if func_sig == &SC_FUNC_SIG_UNSTAKE {
+            handle_staking_tx_unstake(data, &dp, network, address_bytes, maximum_fee, fee_items)?;
+            return Ok(true);
+        }
+    }
+
+    if ADDRESSES_ACCOUNTING
+        .iter()
+        .any(|addr| addr.as_slice() == address_bytes)
+    {
+        if func_sig == &SC_FUNC_SIG_CLAIM {
+            handle_staking_tx_claim(data, &dp, address_bytes, maximum_fee, fee_items, network)?;
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::strutil::hex_decode;
+
+    // Verify constants match the hex strings they replaced
+    #[test]
+    fn test_sc_func_sig_constants() {
+        assert_eq!(
+            SC_FUNC_SIG_TRANSFER,
+            hex_decode("a9059cbb").unwrap().as_slice()
+        );
+        assert_eq!(
+            SC_FUNC_SIG_APPROVE,
+            hex_decode("095ea7b3").unwrap().as_slice()
+        );
+        assert_eq!(
+            SC_FUNC_SIG_STAKE,
+            hex_decode("3a29dbae").unwrap().as_slice()
+        );
+        assert_eq!(
+            SC_FUNC_SIG_UNSTAKE,
+            hex_decode("76ec871c").unwrap().as_slice()
+        );
+        assert_eq!(
+            SC_FUNC_SIG_CLAIM,
+            hex_decode("33986ffa").unwrap().as_slice()
+        );
+    }
+
+    #[test]
+    fn test_everstake_address_constants() {
+        assert_eq!(
+            &ADDRESSES_POOL[0][..],
+            hex_decode("AFA848357154a6a624686b348303EF9a13F63264")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDRESSES_POOL[1][..],
+            hex_decode("D523794C879D9eC028960a231F866758e405bE34")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDRESSES_ACCOUNTING[0][..],
+            hex_decode("624087DD1904ab122A32878Ce9e933C7071F53B9")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDRESSES_ACCOUNTING[1][..],
+            hex_decode("7a7f0b3c23C23a31cFcb0c44709be70d4D545c6e")
+                .unwrap()
+                .as_slice()
+        );
+    }
+
+    #[test]
+    fn test_approve_known_address_constants() {
+        assert_eq!(
+            &ADDR_UNISWAP_V3_ROUTER[..],
+            hex_decode("e592427a0aece92de3edee1f18e0157c05861564")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDR_1INCH_V6[..],
+            hex_decode("111111125421cA6dc452d289314280a0f8842A65")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDR_LIFI_DIAMOND[..],
+            hex_decode("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE")
+                .unwrap()
+                .as_slice()
+        );
+    }
 }

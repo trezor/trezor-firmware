@@ -681,7 +681,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
   return ret & 0xff;
 }
 
-uint32_t ipc_buffer[1024];  // !@# for tests
+uint32_t ipc_buffer[4096];  // !@# for tests
 
 int coreapp_emu(int argc, char **argv) {
   ipc_register(2, ipc_buffer, sizeof(ipc_buffer));  // !@# test

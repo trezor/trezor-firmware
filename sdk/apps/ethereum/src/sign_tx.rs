@@ -1,11 +1,12 @@
 use crate::{
     common::{
-        SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES, SC_FUNC_APPROVE_REVOKE_AMOUNT,
-        SC_FUNC_SIG_BYTES, addresses_accounting, addresses_pool, require_confirm_address,
+        ADDRESSES_ACCOUNTING, ADDRESSES_POOL, SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES,
+        SC_FUNC_APPROVE_REVOKE_AMOUNT, SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_BYTES, SC_FUNC_SIG_CLAIM,
+        SC_FUNC_SIG_STAKE, SC_FUNC_SIG_TRANSFER, SC_FUNC_SIG_UNSTAKE, handle_staking_tx_claim,
+        handle_staking_tx_stake, handle_staking_tx_unstake, require_confirm_address,
         require_confirm_approve, require_confirm_claim, require_confirm_other_data,
         require_confirm_payment_request, require_confirm_stake, require_confirm_tx,
-        require_confirm_unstake, sc_func_sig_approve, sc_func_sig_claim, sc_func_sig_stake,
-        sc_func_sig_transfer, sc_func_sig_unstake, send_request_chunk,
+        require_confirm_unstake, run_staking_approver, send_request_chunk,
     },
     definitions::Definitions,
     helpers::{
@@ -24,10 +25,10 @@ use crate::{
     tokens,
 };
 #[cfg(not(test))]
-use alloc::{collections::BTreeMap, string::String, vec, vec::Vec};
+use alloc::{string::String, vec, vec::Vec};
 use primitive_types::U256;
 #[cfg(test)]
-use std::{collections::BTreeMap, string::String, vec, vec::Vecs};
+use std::{string::String, vec, vec::Vec};
 use trezor_app_sdk::{Error, Result, crypto, info, ui, unwrap};
 
 // Compile-time assertion
@@ -41,33 +42,46 @@ const EIP_7702_TX_TYPE: u32 = 4;
 // the full value: v = 2 * chain_id + 35 + v_bit
 const MAX_CHAIN_ID: u64 = (0xFFFF_FFFF - 36) / 2;
 
-pub fn get_eip_7702_known_addresses() -> BTreeMap<Vec<u8>, &'static str> {
-    let mut map = BTreeMap::new();
-    map.insert(
-        hex_decode("000000009B1D0aF20D8C6d0A44e162d11F9b8f00").unwrap(),
-        "Uniswap",
-    );
-    map.insert(
-        hex_decode("69007702764179f14F51cdce752f4f775d74E139").unwrap(),
-        "alchemyplatform",
-    );
-    map.insert(
-        hex_decode("5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d").unwrap(),
-        "AmbireTech",
-    );
-    map.insert(
-        hex_decode("63c0c19a282a1b52b07dd5a65b58948a07dae32b").unwrap(),
-        "MetaMask",
-    );
-    map.insert(
-        hex_decode("4Cd241E8d1510e30b2076397afc7508Ae59C66c9").unwrap(),
-        "Ethereum Foundation AA team",
-    );
-    map.insert(
-        hex_decode("17c11FDdADac2b341F2455aFe988fec4c3ba26e3").unwrap(),
-        "Luganodes",
-    );
-    map
+// EIP-7702
+const ADDR_EIP7702_UNISWAP: [u8; 20] = [
+    0x00, 0x00, 0x00, 0x00, 0x9b, 0x1d, 0x0a, 0xf2, 0x0d, 0x8c, 0x6d, 0x0a, 0x44, 0xe1, 0x62, 0xd1,
+    0x1f, 0x9b, 0x8f, 0x00,
+];
+const ADDR_EIP7702_ALCHEMY: [u8; 20] = [
+    0x69, 0x00, 0x77, 0x02, 0x76, 0x41, 0x79, 0xf1, 0x4f, 0x51, 0xcd, 0xce, 0x75, 0x2f, 0x4f, 0x77,
+    0x5d, 0x74, 0xe1, 0x39,
+];
+const ADDR_EIP7702_AMBIRE: [u8; 20] = [
+    0x5a, 0x7f, 0xc1, 0x13, 0x97, 0xe9, 0xa8, 0xad, 0x41, 0xbf, 0x10, 0xbf, 0x13, 0xf2, 0x2b, 0x0a,
+    0x63, 0xf9, 0x6f, 0x6d,
+];
+const ADDR_EIP7702_METAMASK: [u8; 20] = [
+    0x63, 0xc0, 0xc1, 0x9a, 0x28, 0x2a, 0x1b, 0x52, 0xb0, 0x7d, 0xd5, 0xa6, 0x5b, 0x58, 0x94, 0x8a,
+    0x07, 0xda, 0xe3, 0x2b,
+];
+const ADDR_EIP7702_EF_AA: [u8; 20] = [
+    0x4c, 0xd2, 0x41, 0xe8, 0xd1, 0x51, 0x0e, 0x30, 0xb2, 0x07, 0x63, 0x97, 0xaf, 0xc7, 0x50, 0x8a,
+    0xe5, 0x9c, 0x66, 0xc9,
+];
+const ADDR_EIP7702_LUGANODES: [u8; 20] = [
+    0x17, 0xc1, 0x1f, 0xdd, 0xad, 0xac, 0x2b, 0x34, 0x1f, 0x24, 0x55, 0xaf, 0xe9, 0x88, 0xfe, 0xc4,
+    0xc3, 0xba, 0x26, 0xe3,
+];
+
+const EIP7702_KNOWN_ADDRESSES: [([u8; 20], &str); 6] = [
+    (ADDR_EIP7702_UNISWAP, "Uniswap"),
+    (ADDR_EIP7702_ALCHEMY, "alchemyplatform"),
+    (ADDR_EIP7702_AMBIRE, "AmbireTech"),
+    (ADDR_EIP7702_METAMASK, "MetaMask"),
+    (ADDR_EIP7702_EF_AA, "Ethereum Foundation AA team"),
+    (ADDR_EIP7702_LUGANODES, "Luganodes"),
+];
+
+fn get_eip_7702_known_address(addr: &[u8]) -> Option<&'static str> {
+    EIP7702_KNOWN_ADDRESSES
+        .iter()
+        .find(|(a, _)| a.as_slice() == addr)
+        .map(|(_, name)| *name)
 }
 
 pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
@@ -135,7 +149,7 @@ pub fn sign_tx(mut msg: EthereumSignTx) -> Result<EthereumTxRequest> {
         // if safety_checks.is_strict():
         // raise DataError("EIP-7702 not allowed in strict checks")
 
-        if !get_eip_7702_known_addresses().contains_key(&address_bytes) {
+        if get_eip_7702_known_address(&address_bytes).is_none() {
             // TODO: proper error type: DataError("Unknown EIP-7702 address")
             info!("Unknown EIP-7702 address");
             return Err(Error::DataError);
@@ -364,10 +378,13 @@ fn confirm_tx_data(
 ) -> Result<()> {
     let dp = Bip32Path::from_slice(&msg.address_n);
     let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
+    let value = msg.value.as_deref().ok_or(Error::DataError)?;
 
     if true
         == run_staking_approver(
-            &msg,
+            &dp,
+            data_initial_chunk,
+            value,
             &definitions.network(),
             address_bytes,
             maximum_fee,
@@ -383,14 +400,10 @@ fn confirm_tx_data(
         // as part of the initial validation
 
         info!("authorizing smart account");
-        info!(
-            "address is known: {}",
-            get_eip_7702_known_addresses().contains_key(address_bytes)
-        );
 
         ui::error_if_not_confirmed(ui::confirm_value(
             "Smart accounts",
-            unwrap!(get_eip_7702_known_addresses().get(address_bytes)),
+            unwrap!(get_eip_7702_known_address(&address_bytes)),
             Some("Authorize the following contract as an EIP-7702 on your account?"),
             Some("confirm_provider"),
             ButtonRequestType::ButtonRequestOther.into(),
@@ -417,7 +430,7 @@ fn confirm_tx_data(
         "func sig len is {}",
         func_sig.as_ref().map(|s| s.len()).unwrap_or(0)
     );
-    let is_approve = func_sig.as_deref() == Some(sc_func_sig_approve().as_slice());
+    let is_approve = func_sig.as_deref() == Some(SC_FUNC_SIG_APPROVE.as_slice());
     let is_unknown_token = &token == &Some(tokens::unknown_token());
 
     if is_unknown_token {
@@ -607,8 +620,8 @@ fn handle_known_contract_calls(
         && value_bytes.len() == 0
         && data_length == 68
         && data_initial_chunk.len() == 68
-        && (matches!(func_sig.as_deref(), Some(sig) if sig == sc_func_sig_transfer())
-            || matches!( func_sig.as_deref(), Some(sig) if sig == &sc_func_sig_approve()))
+        && (matches!(func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_TRANSFER)
+            || matches!( func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_APPROVE))
     {
         // The two functions happen to have the exact same parameters, so we treat them together.
         // This will need to be made into a more generic solution eventually.
@@ -629,7 +642,7 @@ fn handle_known_contract_calls(
 
         let arg1 = &data_initial_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
 
-        if matches!(func_sig.as_deref(), Some(sig) if sig == &sc_func_sig_approve())
+        if matches!(func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_APPROVE)
             && arg1.iter().all(|&byte| byte == 255)
         {
             // "Unlimited" approval (all bits set) is a special case
@@ -657,148 +670,6 @@ fn handle_known_contract_calls(
     };
 
     Ok((token, token_address, func_sig, recipient, value))
-}
-
-/// Runs confirmation for ETH staking approval for staking related transactions.
-fn run_staking_approver<'a>(
-    msg: &'a EthereumSignTx,
-    network: &'a EthereumNetworkInfo,
-    address_bytes: &'a [u8],
-    maximum_fee: &'a str,
-    fee_items: &'a [(&'a str, &'a str, bool)],
-) -> Result<bool> {
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-
-    if data_initial_chunk.len() < SC_FUNC_SIG_BYTES {
-        return Ok(false);
-    }
-
-    let func_sig = &data_initial_chunk[..SC_FUNC_SIG_BYTES];
-    let data = &data_initial_chunk[SC_FUNC_SIG_BYTES..];
-    if addresses_pool()
-        .iter()
-        .any(|addr| addr.as_slice() == address_bytes)
-    {
-        if func_sig == sc_func_sig_stake().as_slice() {
-            handle_staking_tx_stake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
-            return Ok(true);
-        } else if func_sig == sc_func_sig_unstake().as_slice() {
-            handle_staking_tx_unstake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
-            return Ok(true);
-        }
-    }
-
-    if addresses_accounting()
-        .iter()
-        .any(|addr| addr.as_slice() == address_bytes)
-    {
-        if func_sig == sc_func_sig_claim().as_slice() {
-            handle_staking_tx_claim(
-                data,
-                msg,
-                address_bytes,
-                maximum_fee,
-                fee_items,
-                network,
-            )?;
-            return Ok(true);
-        }
-    }
-
-    Ok(false)
-}
-
-fn handle_staking_tx_claim(
-    data: &[u8],
-    msg: &EthereumSignTx,
-    staking_address: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
-    network: &EthereumNetworkInfo,
-) -> Result<()> {
-    // claim has no args
-
-    if data.len() != 0 {
-        return Err(Error::DataError);
-    }
-
-    require_confirm_claim(
-        staking_address,
-        &Bip32Path::from_slice(&msg.address_n),
-        maximum_fee,
-        fee_items,
-        network,
-    )?;
-
-    Ok(())
-}
-
-fn handle_staking_tx_unstake(
-    data: &[u8],
-    msg: &EthereumSignTx,
-    network: &EthereumNetworkInfo,
-    address_bytes: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
-) -> Result<()> {
-    // unstake args:
-    // - arg0: uint256, value
-    // - arg1: uint16, isAllowedInterchange (bool)
-    // - arg2: uint64, source (1 for Trezor)
-
-    if data.len() != 3 * SC_ARGUMENT_BYTES {
-        // TODO: proper error type: ValueError: wrong number of arguments for unstake (should be 3)
-        return Err(Error::DataError);
-    }
-
-    // parse arg0: uint256, value (only lower 16 bytes fit in u128)
-    let arg0 = &data[..SC_ARGUMENT_BYTES];
-    let value = U256::from_big_endian(arg0);
-
-    // skip arg1 and arg2
-
-    require_confirm_unstake(
-        address_bytes,
-        value,
-        &Bip32Path::from_slice(&msg.address_n),
-        maximum_fee,
-        fee_items,
-        network,
-    )?;
-
-    Ok(())
-}
-
-fn handle_staking_tx_stake(
-    data: &[u8],
-    msg: &EthereumSignTx,
-    network: &EthereumNetworkInfo,
-    address_bytes: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
-) -> Result<()> {
-    // stake args:
-    // - arg0: uint64, source (1 for Trezor)
-
-    if data.len() != SC_ARGUMENT_BYTES {
-        // TODO: proper error type: ValueError: wrong number of arguments for stake (should be 1)
-        return Err(Error::DataError);
-    }
-
-    let value_bytes = msg.value.as_deref().ok_or(Error::DataError)?;
-    assert!(value_bytes.len() <= 32);
-    let value = U256::from_big_endian(value_bytes);
-
-    require_confirm_stake(
-        address_bytes,
-        value,
-        &Bip32Path::from_slice(&msg.address_n),
-        maximum_fee,
-        fee_items,
-        network,
-    )?;
-
-    Ok(())
 }
 
 fn sign_digest(msg: &EthereumSignTx, digest: &[u8; 32]) -> Result<EthereumTxRequest> {
@@ -876,4 +747,50 @@ pub fn get_total_length(msg: &EthereumSignTx, data_total: u32) -> Result<u32> {
     length += data_total;
 
     Ok(length)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::strutil::hex_decode;
+
+    #[test]
+    fn test_eip7702_known_address_constants() {
+        assert_eq!(
+            &ADDR_EIP7702_UNISWAP[..],
+            hex_decode("000000009B1D0aF20D8C6d0A44e162d11F9b8f00")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDR_EIP7702_ALCHEMY[..],
+            hex_decode("69007702764179f14F51cdce752f4f775d74E139")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDR_EIP7702_AMBIRE[..],
+            hex_decode("5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDR_EIP7702_METAMASK[..],
+            hex_decode("63c0c19a282a1b52b07dd5a65b58948a07dae32b")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDR_EIP7702_EF_AA[..],
+            hex_decode("4Cd241E8d1510e30b2076397afc7508Ae59C66c9")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            &ADDR_EIP7702_LUGANODES[..],
+            hex_decode("17c11FDdADac2b341F2455aFe988fec4c3ba26e3")
+                .unwrap()
+                .as_slice()
+        );
+    }
 }

@@ -1,7 +1,6 @@
 use core::ffi::c_void;
 
 use super::ffi::{self, ipc_message_t};
-use crate::log::info;
 
 pub const TREZOR_API_SUPPORTED_VERSION: u32 = ffi::TREZOR_API_VERSION_1;
 
@@ -46,10 +45,6 @@ impl ApiError {
 /// The `getter` must be a valid function pointer to the API getter function.
 pub unsafe fn init(getter: ffi::trezor_api_getter_t) {
     API.call_once(|| {
-        info!(
-            "Initializing API with version {}",
-            TREZOR_API_SUPPORTED_VERSION
-        );
         // SAFETY: Safe, assuming getter itself is ok.
         let ptr = unsafe { getter(TREZOR_API_SUPPORTED_VERSION) };
         // SAFETY: Getter returns null or a valid pointer to the API struct.
@@ -260,14 +255,8 @@ pub fn ed25519_cosi_combine_publickeys(
 
     let mut res: ffi::ed25519_public_key = [0u8; 32];
     let result = unsafe {
-        (get_crypto_or_die().ed25519_cosi_combine_publickeys)(
-            res.as_mut_ptr(),
-            pks.as_ptr(),
-            n,
-        )
+        (get_crypto_or_die().ed25519_cosi_combine_publickeys)(res.as_mut_ptr(), pks.as_ptr(), n)
     };
-    info!("COSI combine public keys result: {}", result);
-    info!("COSI combine public keys output: {:?}", res);
     if result == 0 {
         Ok(res)
     } else {

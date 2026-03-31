@@ -34,7 +34,7 @@ use crate::service::{
     CoreIpcService, Error, NoUtilHandler, UtilContext, UtilHandleResult, UtilHandler,
 };
 use crate::util::Timeout;
-use crate::{error, unwrap};
+use crate::{error, info, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
 pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
@@ -94,16 +94,20 @@ fn ipc_ui_call(value: &TrezorUiEnum) -> UiResult {
 }
 
 fn ipc_ui_call_ext(value: &TrezorUiEnum, util_handler: &dyn UtilHandler) -> UiResult {
+    info!("serializing message");
     let bytes = to_bytes::<Failure>(value).map_err(|_| Error::FailedToSend)?;
     let message = IpcMessage::new(0, &bytes);
-
+    info!("sending message with size {} bytes", bytes.len());
     let result =
         services_or_die().call(CoreIpcService::Ui, &message, Timeout::max(), util_handler)?;
     // Safe validation using bytecheck before accessing archived data
+    info!("validating message");
     let archived = unwrap!(rkyv::access::<ArchivedTrezorUiResult, Failure>(
         result.data()
     ));
+    info!("deserializing message");
     let deserialized = unwrap!(deserialize::<TrezorUiResult, Failure>(archived));
+    info!("UI call deserialized successfully");
     Ok(deserialized)
 }
 
@@ -443,6 +447,7 @@ pub fn confirm_value(
             .map(|w| ShortString::from_str(w).map_err(|_| Error::FailedToSend))
             .transpose()?,
     };
+    info!("confirm_value calling ui call");
     ipc_ui_call(&value)
 }
 

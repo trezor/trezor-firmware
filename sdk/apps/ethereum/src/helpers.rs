@@ -193,75 +193,47 @@ pub fn format_ethereum_amount(
         (network.symbol.as_str().to_string(), 18usize)
     };
 
+    let digits = value.to_string();
+    info!("digits: {}", digits.as_str());
+
     if force_unit_gwei {
         debug_assert!(token.is_none());
         debug_assert!(decimals >= 9);
         decimals -= 9;
         suffix = "Gwei".to_string();
     } else if decimals > 9 {
-        let mut threshold = U256::from(1);
-        let mut i = 0usize;
-        while i < (decimals - 9) {
-            threshold *= 10;
-            i += 1;
-        }
-
-        if value < threshold {
+        if digits.len() <= (decimals - 9) {
             suffix = uformat!("Wei {}", suffix.as_str());
             decimals = 0;
         }
     }
 
-    let amount = format_amount(value, decimals);
+    let amount = format_amount_from_digits(&digits, decimals);
     uformat!("{} {}", amount.as_str(), suffix.as_str())
 }
 
-// TODO: this is a very naive implementation, we should consider using a library for this
-fn format_amount(amount: U256, decimals: usize) -> String {
-    let mut divisor = U256::from(1);
-    let mut i = 0usize;
-    while i < decimals {
-        divisor *= 10;
-        i += 1;
-    }
-
-    let integer = if decimals == 0 {
-        amount
-    } else {
-        amount / divisor
-    };
-    let decimal = if decimals == 0 {
-        U256::from(0)
-    } else {
-        amount % divisor
-    };
-
-    let integer_str = integer.to_string();
-    let mut grouped_integer = String::new();
-
-    for (i, ch) in integer_str.chars().enumerate() {
-        if i != 0 && (integer_str.len() - i) % 3 == 0 {
-            grouped_integer.push(',');
-        }
-        grouped_integer.push(ch);
-    }
+fn format_amount_from_digits(digits: &str, decimals: usize) -> String {
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3 + 3);
 
     if decimals == 0 {
-        return grouped_integer;
+        push_grouped_digits(&mut out, digits);
+        return out;
     }
 
-    let decimal_str = decimal.to_string();
-    let zero_pad = decimals.saturating_sub(decimal_str.len());
-
-    let mut out = grouped_integer;
-    out.push('.');
-
-    let mut i = 0usize;
-    while i < zero_pad {
+    if digits.len() <= decimals {
         out.push('0');
-        i += 1;
+        out.push('.');
+        for _ in 0..(decimals - digits.len()) {
+            out.push('0');
+        }
+        out.push_str(digits);
+    } else {
+        let split = digits.len() - decimals;
+        let (int_part, frac_part) = digits.split_at(split);
+        push_grouped_digits(&mut out, int_part);
+        out.push('.');
+        out.push_str(frac_part);
     }
-    out.push_str(&decimal_str);
 
     while out.ends_with('0') {
         out.pop();
@@ -271,6 +243,15 @@ fn format_amount(amount: U256, decimals: usize) -> String {
     }
 
     out
+}
+
+fn push_grouped_digits(out: &mut String, digits: &str) {
+    for (i, ch) in digits.chars().enumerate() {
+        if i != 0 && (digits.len() - i) % 3 == 0 {
+            out.push(',');
+        }
+        out.push(ch);
+    }
 }
 
 pub fn write_compact_size(n: u32) -> Vec<u8> {

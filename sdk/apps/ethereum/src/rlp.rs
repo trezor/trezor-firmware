@@ -15,12 +15,7 @@ pub enum RLPItem<'a> {
 
 /// Returns the minimum number of bytes needed to represent an unsigned integer
 fn byte_size(x: U256) -> usize {
-    for exp in 0..=32 {
-        if x < U256::from(0x100_u64).pow(U256::from(exp)) {
-            return exp as usize;
-        }
-    }
-    32 // max 32 bytes for U256
+    (x.bits() + 7) / 8
 }
 
 /// Converts unsigned integer to big-endian bytes (minimal representation)

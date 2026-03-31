@@ -14,5 +14,5 @@ rustflags = [
     "-C", "link-arg=-z",
     "-C", "link-arg=max-page-size=0x20",
     "-C", "link-arg=--no-dynamic-linker",
-    "--cfg", "log_level=\"trace\""
+    "--cfg", "log_level=\"error\""
 ]

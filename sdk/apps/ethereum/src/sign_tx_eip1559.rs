@@ -1,11 +1,12 @@
 use crate::{
     common::{
-        SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES, SC_FUNC_APPROVE_REVOKE_AMOUNT,
-        SC_FUNC_SIG_BYTES, addresses_accounting, addresses_pool, require_confirm_address,
+        ADDRESSES_ACCOUNTING, ADDRESSES_POOL, SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES,
+        SC_FUNC_APPROVE_REVOKE_AMOUNT, SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_BYTES, SC_FUNC_SIG_CLAIM,
+        SC_FUNC_SIG_STAKE, SC_FUNC_SIG_TRANSFER, SC_FUNC_SIG_UNSTAKE, handle_staking_tx_claim,
+        handle_staking_tx_stake, handle_staking_tx_unstake, require_confirm_address,
         require_confirm_approve, require_confirm_claim, require_confirm_other_data,
         require_confirm_payment_request, require_confirm_stake, require_confirm_tx,
-        require_confirm_unstake, sc_func_sig_approve, sc_func_sig_claim, sc_func_sig_stake,
-        sc_func_sig_transfer, sc_func_sig_unstake, send_request_chunk,
+        require_confirm_unstake, run_staking_approver, send_request_chunk,
     },
     definitions::Definitions,
     helpers::{
@@ -28,7 +29,7 @@ use crate::{
 use alloc::{string::String, vec, vec::Vec};
 use primitive_types::U256;
 #[cfg(test)]
-use std::{string::String, vec, vec::Vecs};
+use std::{string::String, vec, vec::Vec};
 use trezor_app_sdk::{Error, Result, crypto, info, ui, unwrap};
 
 const TX_TYPE: u32 = 2;
@@ -329,7 +330,9 @@ fn confirm_tx_data(
 
     if true
         == run_staking_approver(
-            &msg,
+            &dp,
+            data_initial_chunk,
+            &msg.value,
             &definitions.network(),
             address_bytes,
             maximum_fee,
@@ -349,7 +352,7 @@ fn confirm_tx_data(
         "func sig len is {}",
         func_sig.as_ref().map(|s| s.len()).unwrap_or(0)
     );
-    let is_approve = func_sig.as_deref() == Some(sc_func_sig_approve().as_slice());
+    let is_approve = func_sig.as_deref() == Some(&SC_FUNC_SIG_APPROVE);
     let is_unknown_token = &token == &Some(tokens::unknown_token());
 
     if is_unknown_token {
@@ -497,55 +500,6 @@ fn confirm_tx_data(
     Ok(())
 }
 
-// TODO: this function is very similar to the confirm_tx_data function in sign_tx.rs, should be refactored to avoid duplication
-fn run_staking_approver<'a>(
-    msg: &'a EthereumSignTxEip1559,
-    network: &'a EthereumNetworkInfo,
-    address_bytes: &'a [u8],
-    maximum_fee: &'a str,
-    fee_items: &'a [(&'a str, &'a str, bool)],
-) -> Result<bool> {
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-
-    if data_initial_chunk.len() < SC_FUNC_SIG_BYTES {
-        return Ok(false);
-    }
-
-    let func_sig = &data_initial_chunk[..SC_FUNC_SIG_BYTES];
-    let data = &data_initial_chunk[SC_FUNC_SIG_BYTES..];
-    if addresses_pool()
-        .iter()
-        .any(|addr| addr.as_slice() == address_bytes)
-    {
-        if func_sig == sc_func_sig_stake().as_slice() {
-            handle_staking_tx_stake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
-            return Ok(true);
-        } else if func_sig == sc_func_sig_unstake().as_slice() {
-            handle_staking_tx_unstake(data, msg, network, address_bytes, maximum_fee, fee_items)?;
-            return Ok(true);
-        }
-    }
-
-    if addresses_accounting()
-        .iter()
-        .any(|addr| addr.as_slice() == address_bytes)
-    {
-        if func_sig == sc_func_sig_claim().as_slice() {
-            handle_staking_tx_claim(
-                data,
-                msg,
-                address_bytes,
-                maximum_fee,
-                fee_items,
-                network,
-            )?;
-            return Ok(true);
-        }
-    }
-
-    Ok(false)
-}
-
 pub fn get_total_length(msg: &EthereumSignTxEip1559, data_total: u32) -> Result<u32> {
     let mut length = 0;
 
@@ -625,8 +579,8 @@ fn handle_known_contract_calls(
         && msg.value.len() == 0
         && msg.data_length == 68
         && data_initial_chunk.len() == 68
-        && (matches!(func_sig.as_deref(), Some(sig) if sig == sc_func_sig_transfer())
-            || matches!( func_sig.as_deref(), Some(sig) if sig == &sc_func_sig_approve()))
+        && (matches!(func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_TRANSFER)
+            || matches!( func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_APPROVE))
     {
         // The two functions happen to have the exact same parameters, so we treat them together.
         // This will need to be made into a more generic solution eventually.
@@ -647,7 +601,7 @@ fn handle_known_contract_calls(
 
         let arg1 = &data_initial_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
 
-        if matches!(func_sig.as_deref(), Some(sig) if sig == &sc_func_sig_approve())
+        if matches!(func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_APPROVE)
             && arg1.iter().all(|&byte| byte == 255)
         {
             // "Unlimited" approval (all bits set) is a special case
@@ -675,101 +629,6 @@ fn handle_known_contract_calls(
     };
 
     Ok((token, token_address, func_sig, recipient, value))
-}
-
-// TODO: this function is very similar to the handle_staking_tx_stake and handle_staking_tx_claim functions in sign_tx.rs, should be refactored to avoid duplication
-fn handle_staking_tx_stake(
-    data: &[u8],
-    msg: &EthereumSignTxEip1559,
-    network: &EthereumNetworkInfo,
-    address_bytes: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
-) -> Result<()> {
-    // stake args:
-    // - arg0: uint64, source (1 for Trezor)
-
-    if data.len() != SC_ARGUMENT_BYTES {
-        // TODO: proper error type: ValueError: wrong number of arguments for stake (should be 1)
-        return Err(Error::DataError);
-    }
-
-    assert!(msg.value.len() <= 32);
-    let value = U256::from_big_endian(&msg.value);
-
-    require_confirm_stake(
-        address_bytes,
-        value,
-        &Bip32Path::from_slice(&msg.address_n),
-        maximum_fee,
-        fee_items,
-        network,
-    )?;
-
-    Ok(())
-}
-
-// TODO: this function is very similar to the handle_staking_tx_stake and handle_staking_tx_claim functions in sign_tx.rs, should be refactored to avoid duplication
-fn handle_staking_tx_unstake(
-    data: &[u8],
-    msg: &EthereumSignTxEip1559,
-    network: &EthereumNetworkInfo,
-    address_bytes: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
-) -> Result<()> {
-    // unstake args:
-    // - arg0: uint256, value
-    // - arg1: uint16, isAllowedInterchange (bool)
-    // - arg2: uint64, source (1 for Trezor)
-
-    if data.len() != 3 * SC_ARGUMENT_BYTES {
-        // TODO: proper error type: ValueError: wrong number of arguments for unstake (should be 3)
-        return Err(Error::DataError);
-    }
-
-    // parse arg0: uint256, value (only lower 16 bytes fit in u128)
-    let arg0 = &data[..SC_ARGUMENT_BYTES];
-    let value = U256::from_big_endian(arg0);
-
-    // skip arg1 and arg2
-
-    require_confirm_unstake(
-        address_bytes,
-        value,
-        &Bip32Path::from_slice(&msg.address_n),
-        maximum_fee,
-        fee_items,
-        network,
-    )?;
-
-    Ok(())
-}
-
-// TODO: this function is very similar to the handle_staking_tx_stake and handle_staking_tx_unstake functions in sign_tx.rs, should be refactored to avoid duplication
-fn handle_staking_tx_claim(
-    data: &[u8],
-    msg: &EthereumSignTxEip1559,
-    staking_address: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
-    network: &EthereumNetworkInfo,
-) -> Result<()> {
-    // claim has no args
-
-    if data.len() != 0 {
-        return Err(Error::DataError);
-    }
-
-    require_confirm_claim(
-        staking_address,
-        &Bip32Path::from_slice(&msg.address_n),
-        maximum_fee,
-        fee_items,
-        network,
-    )?;
-
-    Ok(())
 }
 
 fn access_list_item_length(item: &EthereumAccessList) -> Result<u32> {

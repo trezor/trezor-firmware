@@ -1,5 +1,5 @@
 use crate::{
-    common::confirm_signverify,
+    common::{COIN, confirm_signverify},
     definitions::Definitions,
     helpers::address_from_bytes,
     keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
@@ -36,11 +36,9 @@ pub fn sign_message(msg: EthereumSignMessage) -> Result<EthereumMessageSignature
     let address = address_from_bytes(&pubkey_hash, Some(definitions.network()));
     let path = dp.to_string();
 
-    let account = "ETH";
-
     let message = crate::common::decode_message(&msg.message);
 
-    confirm_signverify(&message, &address, false, Some(&path), Some(account), false)?;
+    confirm_signverify(&message, &address, false, Some(&path), Some(COIN), false)?;
 
     let hash = message_digest(&msg.message);
 

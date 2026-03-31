@@ -1,10 +1,5 @@
 use crate::{
-    definitions::Definitions,
-    helpers::address_from_bytes,
-    keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
-    paths::Bip32Path,
-    proto::ethereum::{EthereumAddress, EthereumGetAddress},
-    uformat,
+    common::COIN, definitions::Definitions, helpers::address_from_bytes, keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network}, paths::Bip32Path, proto::ethereum::{EthereumAddress, EthereumGetAddress}, uformat
 };
 use trezor_app_sdk::{Result, crypto, ui};
 
@@ -26,10 +21,9 @@ pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
     let mac = crypto::get_address_mac(dp.as_ref(), &address, encoded_network)?;
 
     if let Some(true) = msg.show_display {
-        let coin = "ETH";
-        let subtitle = uformat!("{} address", coin);
+        let subtitle = uformat!("{} address", COIN);
         let account_name = dp
-            .get_account_name(coin, &PATTERNS_ADDRESS, *slip44_id)
+            .get_account_name(COIN, &PATTERNS_ADDRESS, *slip44_id)
             .unwrap();
         ui::show_address(
             &address,
