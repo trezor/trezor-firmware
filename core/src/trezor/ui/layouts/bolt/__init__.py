@@ -650,7 +650,7 @@ async def should_show_more(
             title=title,
             items=items,
             verb=confirm or TR.buttons__confirm,
-            verb_info=TR.buttons__show_all if button_text is None else button_text,
+            verb_info=button_text,
         ),
         br_name,
         br_code,
@@ -686,6 +686,7 @@ async def _confirm_ask_pagination(
         if not await should_show_more(
             title,
             [(description, False), (data, True)],
+            button_text=TR.buttons__show_all,
             br_name=br_name,
             br_code=br_code,
             confirm=DOWN_ARROW if extra_confirmation_if_not_read else None,
@@ -740,7 +741,7 @@ async def confirm_blob_prefix(
     )
     confirmed_len += len(prefix)
 
-    button_text = TR.words__show_next if confirmed_len < total_len else ""
+    button_text = TR.words__show_next if confirmed_len < total_len else None
 
     show_more = await should_show_more(
         title=f"{title}:\n{confirmed_len} / {total_len} bytes",
