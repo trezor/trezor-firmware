@@ -215,6 +215,46 @@
                     "sig_r": "869433a7e19c05d9beb0f223d18fb27c6fb6a1817d60b38144f249237b27a36d",
                     "sig_s": "1379434319ea9953d6632cf54d8b2ec09c8d0d6fb932c530b67f0c03a318af57"
             }
+        },
+        {
+            "name": "vault_deposit_gauntlet_usdc",
+            "parameters": {
+                "comment": "ERC-4626 deposit of 1 USDC into Gauntlet USDC vault",
+                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000008b13dbef164beb9d984aeb715c31d1d1bb0bd8bb",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "3d475ad752dbf2b0327aa59bdbfa8cb2fe409eea36ffb3bdb72c3be14534c3e9",
+                "sig_s": "1ad803c6c6ecfde7c92adacd1238676dc31b17170a82baa25f88a3b22e21e020"
+            }
+        },
+        {
+            "name": "vault_deposit_unknown_vault",
+            "parameters": {
+                "comment": "ERC-4626 deposit of 1 USDC into unknown vault (fake address)",
+                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000008b13dbef164beb9d984aeb715c31d1d1bb0bd8bb",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "d36e3dfe45f6746f4473bd286513121620a44e468ca47fbb0bdff1941c8c262d",
+                "sig_s": "0d40475d6da7da9b0bc0a488b63ee9901037850aa0b63b7d6e41aced15000810"
+            }
         }
     ]
 }
