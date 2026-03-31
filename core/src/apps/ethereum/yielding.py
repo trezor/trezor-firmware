@@ -91,7 +91,10 @@ async def _handle_deposit(
         raise DataError("Invalid assets amount for vault deposit")
 
     from trezor import log
-    log.debug(__name__, f"\nReceived bytes: {receiver_bytes}\nSender bytes: {sender_bytes}")
+
+    log.debug(
+        __name__, f"\nReceived bytes: {receiver_bytes}\nSender bytes: {sender_bytes}"
+    )
     if receiver_bytes != sender_bytes:
         raise DataError("Receiver must equal sender for vault deposit")
 
