@@ -45,6 +45,69 @@
                     "sig_r": "0x0",
                     "sig_s": "0x0"
             }
+        },
+        {
+            "name": "vault_deposit_with_eth",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 deposit of 1 USDC into some vault along with native ETH.",
+                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000008b13dbef164beb9d984aeb715c31d1d1bb0bd8bb",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0xDE0B6B3A7640000"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "0x0",
+                "sig_s": "0x0"
+            }
+        },
+        {
+            "name": "vault_deposit_receiver_mismatch",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 deposit - receiver does not equal sender",
+                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f424000000000000000000000000018db8b43dda9c5ea96b8ab07648f3f910e86bf2a",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "0x0",
+                "sig_s": "0x0"
+            }
+        },
+        {
+            "name": "vault_deposit_trailing_bytes",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 deposit - extra trailing byte after the two ABI-encoded arguments",
+                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000008b13dbef164beb9d984aeb715c31d1d1bb0bd8bb00",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "0x0",
+                "sig_s": "0x0"
+            }
         }
 
     ]
