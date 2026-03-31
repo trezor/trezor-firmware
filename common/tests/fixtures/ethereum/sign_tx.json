@@ -215,6 +215,48 @@
                     "sig_r": "869433a7e19c05d9beb0f223d18fb27c6fb6a1817d60b38144f249237b27a36d",
                     "sig_s": "1379434319ea9953d6632cf54d8b2ec09c8d0d6fb932c530b67f0c03a318af57"
             }
+        },
+        {
+            "name": "deposit_known_vault",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 deposit of 100 USDC into Test Vault (Base)",
+                "data": "6e553f650000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xAc8C6e8779Dddc60F5cEF7701DcE70eCBa5ef518",
+                "chain_id": 8453,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 16941,
+                "sig_r": "bf889237f23132a5070dec9e66b123e7d21011638a9d35e967125d49087f8d3b",
+                "sig_s": "0e0921051980d873410ef7ab080b9b01858ddc4295f2a57a344d0e28b681fd0c"
+            }
+        },
+        {
+            "name": "deposit_unknown_vault",
+            "skip_models": ["t1"],
+            "parameters": {
+                "comment": "ERC-4626 deposit of 100 USDC into unknown vault (fake address)",
+                "data": "6e553f650000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
+                "chain_id": 8453,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 16941,
+                "sig_r": "ed656873aec0bd52de96e444124eb1748193db011dbe4a1fc4bd563898ff1af8",
+                "sig_s": "52dd1b7e32e6ba03403c0829f19b67618e8dd5a6c5557fd040b02cda676ab241"
+            }
         }
     ]
 }
