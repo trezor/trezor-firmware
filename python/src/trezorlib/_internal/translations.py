@@ -257,6 +257,7 @@ class KerningList(Struct):
     Binary layout of ``kerning_data``:
       [u16 index_count]
       [u16 left_cp, u16 count] × index_count   (4 bytes, sorted by left_cp)
+      [u16 pair_count]
       [u16 right_cp, i8 kern_val, u8 pad] × pair_count   (4 bytes)
 
     Start offset for entry i is the sum of counts for all preceding entries.
@@ -298,11 +299,16 @@ class KerningList(Struct):
         if len(kern_index) > 0xFFFF:
             raise ValueError(f"Too many unique left kerning chars: {len(kern_index)}")
 
-        # [u16 index_count] + [4-byte index entries (left_cp, count)] + [4-byte pair entries]
+        if len(kern_pairs) > 0xFFFF:
+            raise ValueError(f"Too many kerning pairs: {len(kern_pairs)}")
+
+        # [u16 index_count] + [4-byte index entries (left_cp, count)]
+        # + [u16 pair_count] + [4-byte pair entries]
         # Start offset for entry i is the sum of counts for all preceding entries.
         data = struct.pack("<H", len(kern_index))
         for left_cp, count in kern_index:
             data += struct.pack("<HH", left_cp, count)
+        data += struct.pack("<H", len(kern_pairs))
         for right_cp, kern_val in kern_pairs:
             data += struct.pack("<Hb", right_cp, kern_val) + b"\x00"
 

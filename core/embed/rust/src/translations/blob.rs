@@ -83,6 +83,7 @@ struct KernPair {
 ///   [u16 data_bytes]               (outer KerningList length prefix)
 ///   [u16 index_count]
 ///   [KernIndexEntry] × index_count (4 bytes each, sorted by left_cp)
+///   [u16 pair_count]
 ///   [KernPair]       × pair_count  (4 bytes each)
 ///
 /// Start offset in pairs for entry i is the sum of counts for all preceding
@@ -96,23 +97,25 @@ pub struct KerningTable<'a> {
 impl<'a> KerningTable<'a> {
     pub fn new(mut reader: InputStream<'a>) -> Result<Self, Error> {
         // First u16 is the outer byte-length prefix written by KerningList.SUBCON.
-        // Use it to compute the exact number of pair bytes (avoids reading alignment
-        // padding).
+        // Used to cross-validate the explicit index_count and pair_count fields.
         let data_bytes: usize = reader.read_u16_le()?.into();
         let index_count: usize = reader.read_u16_le()?.into();
 
         let index_size = index_count * mem::size_of::<KernIndexEntry>();
-        let pairs_size = data_bytes
-            .checked_sub(2 + index_size)
-            .ok_or(INVALID_TRANSLATIONS_BLOB)?;
-        if pairs_size % mem::size_of::<KernPair>() != 0 {
-            return Err(INVALID_TRANSLATIONS_BLOB);
-        }
 
         let index_data = reader.read(index_size)?;
         // SAFETY: KernIndexEntry is #[repr(C, packed)] with size 4, align 1.
         let (_prefix, index, _suffix) = unsafe { index_data.align_to::<KernIndexEntry>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
+            return Err(INVALID_TRANSLATIONS_BLOB);
+        }
+
+        let pair_count: usize = reader.read_u16_le()?.into();
+        let pairs_size = pair_count * mem::size_of::<KernPair>();
+
+        // Validate that data_bytes is consistent with the explicit counts.
+        let expected_data_bytes = 2 + index_size + 2 + pairs_size;
+        if data_bytes != expected_data_bytes {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
 
