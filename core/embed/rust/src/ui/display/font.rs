@@ -249,9 +249,7 @@ impl FontInfo {
         let mut prev_char: Option<char> = None;
 
         for c in text.chars() {
-            if let Some(left) = prev_char {
-                width += self.get_kerning(left, c) as i16;
-            }
+            width += prev_char.map_or(0, |left| i16::from(self.get_kerning(left, c)));
             width += self.char_width(c);
             prev_char = Some(c);
         }
@@ -509,6 +507,69 @@ impl GlyphMetrics for Font {
 
 #[cfg(test)]
 mod tests {
+
+    #[cfg(feature = "ui_font_kerning")]
+    mod kerning_table_tests {
+        use super::super::KerningTable;
+
+        // index: (left_char, count), pairs: (right_char, kern_value)
+        // 'A'=65, 'V'=86, 'T'=84, 'W'=87
+        static INDEX: &[(u8, u8)] = &[
+            (b'A', 2), // pairs[0..2]
+            (b'T', 1), // pairs[2..3]
+        ];
+        static PAIRS: &[(u8, i8)] = &[
+            (b'V', -3), // A + V
+            (b'W', -2), // A + W
+            (b'A', -4), // T + A
+        ];
+
+        fn table() -> KerningTable {
+            KerningTable {
+                index: INDEX,
+                pairs: PAIRS,
+            }
+        }
+
+        #[test]
+        fn found_returns_kern_value() {
+            let t = table();
+            assert_eq!(t.get(b'A', b'V'), -3);
+            assert_eq!(t.get(b'A', b'W'), -2);
+            assert_eq!(t.get(b'T', b'A'), -4);
+        }
+
+        #[test]
+        fn left_found_right_missing_returns_zero() {
+            let t = table();
+            assert_eq!(t.get(b'A', b'X'), 0);
+            assert_eq!(t.get(b'T', b'V'), 0);
+        }
+
+        #[test]
+        fn left_missing_returns_zero() {
+            let t = table();
+            assert_eq!(t.get(b'B', b'V'), 0);
+            assert_eq!(t.get(b'Z', b'A'), 0);
+        }
+
+        #[test]
+        fn early_exit_on_sorted_index() {
+            // 'A' < 'T', so querying 'B' (between them) must still return 0
+            // and not match 'T'
+            let t = table();
+            assert_eq!(t.get(b'B', b'A'), 0);
+        }
+
+        #[test]
+        fn empty_table_returns_zero() {
+            let t = KerningTable {
+                index: &[],
+                pairs: &[],
+            };
+            assert_eq!(t.get(b'A', b'V'), 0);
+        }
+    }
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "layout_bolt")] {

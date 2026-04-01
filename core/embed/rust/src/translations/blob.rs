@@ -80,11 +80,10 @@ struct KernPair {
 #[cfg(feature = "ui_font_kerning")]
 /// Two-level kerning table stored in the translations blob.
 /// Binary layout (after the outer BlobTable slice):
-///   [u16 data_bytes]                                          (outer
-/// KerningList length prefix)   [u16 index_count]
-///   [KernIndexEntry] × index_count                           (4 bytes each,
-/// sorted by left_cp)   [KernPair]       × pair_count
-/// (4 bytes each)
+///   [u16 data_bytes]               (outer KerningList length prefix)
+///   [u16 index_count]
+///   [KernIndexEntry] × index_count (4 bytes each, sorted by left_cp)
+///   [KernPair]       × pair_count  (4 bytes each)
 ///
 /// Start offset in pairs for entry i is the sum of counts for all preceding
 /// entries.
