@@ -1,11 +1,10 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Awaitable
 
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
 from trezor import TR, utils, wire
 from trezor.messages import Success
-from trezor.ui.layouts.recovery import show_invalid_mnemonic
 from trezor.wire import message_handler
 
 from apps.common import backup_types
@@ -89,28 +88,19 @@ async def _continue_repeated_backup() -> None:
         backup.deactivate_repeated_backup()
 
 
-async def _request_mnemonic(
-    word_count: int, backup_type: BackupType | None
-) -> str | None:
-    """Return the mnemonic or `None` on cancellation/validation error."""
-    from .word_validity import WordValidityResult
+class _DisplayHandler:
+    def __init__(
+        self,
+        recovery_type: RecoveryType,
+        word_count: int,
+        backup_type: BackupType | None,
+    ) -> None:
+        self.recovery_type = recovery_type
+        self.word_count = word_count
+        self.backup_type = backup_type
 
-    try:
-        # returns `None` on cancellation
-        return await layout.request_mnemonic(word_count, backup_type)
-    except WordValidityResult as exc:
-        # if they were invalid or some checks failed we continue and request them again
-        await exc.show_error()
-        return None
-
-
-async def _recover_secret(recovery_type: RecoveryType) -> tuple[bytes, BackupType]:
-    from trezor.errors import MnemonicError
-
-    # Show recovery state in the beginning, on some failures, and after a successful share entry.
-    is_retry = False
-
-    while True:
+    @classmethod
+    async def load(cls, recovery_type: RecoveryType) -> "_DisplayHandler":
         # `slip39_state is None` indicates that we are (re)starting the first recovery step,
         # which includes word count selection.
         if (slip39_state := recover.load_slip39_state()) is None:
@@ -126,21 +116,54 @@ async def _recover_secret(recovery_type: RecoveryType) -> tuple[bytes, BackupTyp
             # SLIP-39 recovery is ongoing (at least one share was entered).
             word_count, backup_type = slip39_state
 
-        # If we continue recovery, show starting screen with word count immediately.
-        if not is_retry or backup_type is None:
-            await _request_share_first_screen(word_count, recovery_type)
+        return cls(recovery_type, word_count, backup_type)
+
+    async def show_state(self, is_retry: bool) -> None:
+        if is_retry and self.backup_type is not None:
+            # skip showing recovery state on retries (if first share was entered)
+            return
+        await _request_share_first_screen(self.word_count, self.recovery_type)
+
+    async def request_mnemonic(self) -> str | None:
+        """Return the mnemonic or `None` on cancellation/validation error."""
+        from .word_validity import WordValidityResult
+
+        try:
+            # returns `None` on cancellation
+            return await layout.request_mnemonic(self.word_count, self.backup_type)
+        except WordValidityResult as exc:
+            # if they were invalid or some checks failed we continue and request them again
+            await exc.show_error()
+            return None
+
+    def show_invalid_mnemonic(self) -> Awaitable[None]:
+        from trezor.ui.layouts.recovery import show_invalid_mnemonic
+
+        return show_invalid_mnemonic(self.word_count)
+
+
+async def _recover_secret(recovery_type: RecoveryType) -> tuple[bytes, BackupType]:
+    from trezor.errors import MnemonicError
+
+    # Show recovery state in the beginning, on some failures, and after a successful share entry.
+    is_retry = False
+
+    while True:
+        # Load existing recovery state (persisted by _process_words below).
+        handler = await _DisplayHandler.load(recovery_type)
+        await handler.show_state(is_retry)
         is_retry = False
 
-        # Ask for mnemonic words one by one
+        # Ask for mnemonic words one by one.
         # Returns `None` on cancellation/validation error.
-        if (words := await _request_mnemonic(word_count, backup_type)) is None:
+        if (words := await handler.request_mnemonic()) is None:
             continue
         try:
             if (result := await _process_words(words)) is not None:
                 return result
             # If _process_words succeeded, at least one share was entered.
         except MnemonicError:
-            await show_invalid_mnemonic(word_count)
+            await handler.show_invalid_mnemonic()
             is_retry = True  # Retry share entry (without showing recovery state)
 
 
