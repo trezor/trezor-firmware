@@ -177,6 +177,12 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
 
         build_cmd = "cargo build " + " ".join(cargo_opts)
 
+        # Remap build-specific paths to generic ones so that builds from
+        # different host machines produce identical binaries (see #2626).
+        rustc_flags = [
+            f"--remap-path-prefix={build_dir}=/build",
+        ]
+
         unstable_rustc_flags = [
             # see https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
             "print-type-sizes",
@@ -187,7 +193,9 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
             "emit-stack-sizes",
         ]
 
-        env.Append(ENV={"RUSTFLAGS": " ".join(f"-Z {f}" for f in unstable_rustc_flags)})
+        env.Append(ENV={"RUSTFLAGS": " ".join(
+            rustc_flags + [f"-Z {f}" for f in unstable_rustc_flags]
+        )})
 
         bindgen_macros = get_bindgen_defines(env.get("CPPDEFINES"), all_paths)
 

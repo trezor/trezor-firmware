@@ -100,7 +100,10 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 split-debuginfo = "off"
-debug = 2
+# Debug info is stripped from the final binary by objcopy anyway.
+# Keeping it enabled during compilation/LTO introduces non-deterministic
+# symbol ordering across host architectures (see issue #2626).
+debug = 0
 
 [profile.release.package.trezor-tjpgdec]
 opt-level = 3
