@@ -43,7 +43,7 @@ use rkyv::{
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
-use trezor_structs::{ArchivedStringN, ArchivedTrezorProgressEnum, ShortString, TrezorUiResult};
+use trezor_structs::{ArchivedStrSlice, ArchivedTrezorProgressEnum, TrezorUiResult};
 
 #[cfg(feature = "backlight")]
 use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
@@ -1307,7 +1307,12 @@ extern "C" fn new_process_ipc_message(n_args: usize, args: *const Obj, kwargs: *
         });
         let (main_layout, br_code, br_name) =
             ModelUI::process_ipc_message(data, request_cb.unwrap())?;
-        Ok((main_layout.into(), Obj::try_from(br_code)?, br_name).try_into()?)
+        Ok((
+            main_layout.into(),
+            Obj::try_from(u32::try_from(br_code)?)?,
+            br_name,
+        )
+            .try_into()?)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1336,11 +1341,6 @@ extern "C" fn new_send_ui_result(n_args: usize, args: *const Obj, kwargs: *mut M
             TrezorUiResult::Back
         } else if obj == INFO.as_obj() {
             TrezorUiResult::Info
-        } else if obj.is_str() {
-            let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
-            TrezorUiResult::String(unwrap!(ShortString::from_str(unwrap!(
-                core::str::from_utf8(data)
-            ))))
         } else if let Ok(val) = u32::try_from(obj) {
             TrezorUiResult::Integer(val)
         } else {
@@ -1375,18 +1375,11 @@ extern "C" fn new_deserialize_progress_message(
 
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
-        fn str_from_archived<'a, const N: usize>(s: &'a ArchivedStringN<N>) -> &'a str {
-            let str = unwrap!(core::str::from_utf8(unsafe {
-                core::slice::from_raw_parts(s.data.as_ptr(), s.len.to_native() as usize)
-            }));
-            str
-        }
-
-        fn obj_from_archived_option<const N: usize>(
-            s: &ArchivedOption<ArchivedStringN<N>>,
+        fn obj_from_archived_borrowed_str_option(
+            s: &ArchivedOption<ArchivedStrSlice>,
         ) -> Result<Obj, Error> {
             match s.as_ref() {
-                Some(archived_str) => Ok(Obj::try_from(str_from_archived(archived_str))?),
+                Some(s) => Ok(Obj::try_from(s.as_str())?),
                 None => Ok(Obj::const_none()),
             }
         }
@@ -1402,8 +1395,11 @@ extern "C" fn new_deserialize_progress_message(
                 indeterminate,
                 danger,
             } => {
-                let description = obj_from_archived_option(description)?;
-                let title = obj_from_archived_option(title)?;
+                let description = description
+                    .as_ref()
+                    .map(|d| Obj::try_from(d.as_str()))
+                    .unwrap_or(Ok(Obj::const_none()))?;
+                let title = obj_from_archived_borrowed_str_option(title)?;
 
                 (
                     description,
@@ -1414,7 +1410,7 @@ extern "C" fn new_deserialize_progress_message(
                     .try_into()?
             }
             ArchivedTrezorProgressEnum::Update { description, value } => {
-                let description = obj_from_archived_option(description)?;
+                let description = obj_from_archived_borrowed_str_option(description)?;
                 let value = Obj::try_from(value.to_native())?;
                 (description, value).try_into()?
             }

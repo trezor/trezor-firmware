@@ -1,5 +1,14 @@
 use crate::{
-    common::COIN, definitions::Definitions, helpers::address_from_bytes, keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network}, paths::Bip32Path, proto::ethereum::{EthereumAddress, EthereumGetAddress}, uformat
+    common::COIN,
+    definitions::Definitions,
+    helpers::address_from_bytes,
+    keychain::{Keychain, PATTERNS_ADDRESS, schemas_from_network},
+    paths::Bip32Path,
+    proto::{
+        common::button_request::ButtonRequestType,
+        ethereum::{EthereumAddress, EthereumGetAddress},
+    },
+    uformat,
 };
 use trezor_app_sdk::{Result, crypto, ui};
 
@@ -33,6 +42,7 @@ pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
             Some(&dp.to_string()),
             &[],
             msg.chunkify,
+            ButtonRequestType::ButtonRequestOther.into(),
         )?;
 
         ui::show_success(
@@ -41,6 +51,7 @@ pub fn get_address(msg: EthereumGetAddress) -> Result<EthereumAddress> {
             "Continue in the app",
             Some(3200),
             None,
+            ButtonRequestType::ButtonRequestOther.into(),
         )?;
     }
 

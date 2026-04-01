@@ -1,7 +1,10 @@
 use crate::{
     common::{confirm_signverify, decode_message},
     helpers::{address_from_bytes, bytes_from_address},
-    proto::{common::Success, ethereum::EthereumVerifyMessage},
+    proto::{
+        common::{Success, button_request::ButtonRequestType},
+        ethereum::EthereumVerifyMessage,
+    },
     sign_message::message_digest,
 };
 #[cfg(not(test))]
@@ -60,6 +63,7 @@ pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
         "Continue",
         None,
         Some("verify_message"),
+        ButtonRequestType::ButtonRequestOther.into(),
     )?;
 
     let mut msg = Success::default();

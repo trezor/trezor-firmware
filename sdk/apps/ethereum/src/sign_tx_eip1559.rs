@@ -1,12 +1,9 @@
 use crate::{
     common::{
-        ADDRESSES_ACCOUNTING, ADDRESSES_POOL, SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES,
-        SC_FUNC_APPROVE_REVOKE_AMOUNT, SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_BYTES, SC_FUNC_SIG_CLAIM,
-        SC_FUNC_SIG_STAKE, SC_FUNC_SIG_TRANSFER, SC_FUNC_SIG_UNSTAKE, handle_staking_tx_claim,
-        handle_staking_tx_stake, handle_staking_tx_unstake, require_confirm_address,
-        require_confirm_approve, require_confirm_claim, require_confirm_other_data,
-        require_confirm_payment_request, require_confirm_stake, require_confirm_tx,
-        require_confirm_unstake, run_staking_approver, send_request_chunk,
+        SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES, SC_FUNC_APPROVE_REVOKE_AMOUNT,
+        SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_BYTES, SC_FUNC_SIG_TRANSFER, require_confirm_address,
+        require_confirm_approve, require_confirm_other_data, require_confirm_payment_request,
+        require_confirm_tx, run_staking_approver, send_request_chunk,
     },
     definitions::Definitions,
     helpers::{
@@ -17,7 +14,7 @@ use crate::{
     payment_request::PaymentRequestVerifier,
     proto::{
         common::button_request::ButtonRequestType,
-        definitions::{EthereumNetworkInfo, EthereumTokenInfo},
+        definitions::EthereumTokenInfo,
         ethereum::{
             EthereumSignTxEip1559, EthereumTxRequest, ethereum_sign_tx_eip1559::EthereumAccessList,
         },
@@ -260,6 +257,7 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
         "Continue in the app",
         Some(3200),
         None,
+        ButtonRequestType::ButtonRequestOther.into(),
     )?;
 
     Ok(res)

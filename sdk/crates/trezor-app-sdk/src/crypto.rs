@@ -8,10 +8,8 @@ pub use rkyv::Archived;
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
-pub use trezor_structs::TrezorCryptoResult;
-use trezor_structs::{
-    DerivationPath, LongBuffer, LongString, ShortBuffer, ShortString, TrezorCryptoEnum,
-};
+use trezor_structs::TrezorCryptoEnum;
+pub use trezor_structs::{String, TrezorCryptoResult};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
@@ -23,8 +21,7 @@ pub use crate::low_level_api::{
 use crate::service::{CoreIpcService, Error, NoUtilHandler};
 use crate::unwrap;
 use crate::util::Timeout;
-pub type ArchivedTrezorCryptoResult = Archived<TrezorCryptoResult>;
-pub type ArchivedTrezorCryptoEnum = Archived<TrezorCryptoEnum>;
+pub type ArchivedTrezorCryptoEnum<'a> = Archived<TrezorCryptoEnum<'a>>;
 
 // ============================================================================
 // Helper Functions
@@ -33,7 +30,7 @@ pub type ArchivedTrezorCryptoEnum = Archived<TrezorCryptoEnum>;
 type Result<T> = core::result::Result<T, Error<'static>>;
 type CryptoResult = Result<TrezorCryptoResult>;
 
-fn ipc_crypto_call(value: &TrezorCryptoEnum) -> CryptoResult {
+fn ipc_crypto_call<'a>(value: &TrezorCryptoEnum<'a>) -> CryptoResult {
     let bytes = unwrap!(to_bytes::<Failure>(value));
     let message = IpcMessage::new(value.id() as _, &bytes);
     let result = services_or_die().call(
@@ -44,7 +41,7 @@ fn ipc_crypto_call(value: &TrezorCryptoEnum) -> CryptoResult {
     )?;
 
     // Safe validation using bytecheck before accessing archived data
-    let archived = unwrap!(rkyv::access::<ArchivedTrezorCryptoResult, Failure>(
+    let archived = unwrap!(rkyv::access::<Archived<TrezorCryptoResult>, Failure>(
         result.data()
     ));
     let deserialized = unwrap!(deserialize::<TrezorCryptoResult, Failure>(archived));
@@ -58,13 +55,12 @@ fn ipc_crypto_call(value: &TrezorCryptoEnum) -> CryptoResult {
 /// Show a confirmation dialog with title and content
 ///
 /// Returns `Ok(xpub)` if successful or an error otherwise.
-pub fn get_xpub(address_n: &[u32]) -> Result<LongString> {
+pub fn get_xpub(address_n: &[u32]) -> Result<String<150>> {
     let value = TrezorCryptoEnum::GetXpub {
-        address_n: unwrap!(DerivationPath::from_slice(address_n)),
+        address_n: address_n.into(),
     };
 
     let res = ipc_crypto_call(&value);
-
     if let Ok(TrezorCryptoResult::Xpub(xpub)) = res {
         Ok(xpub)
     } else {
@@ -79,10 +75,9 @@ pub fn get_eth_pubkey_hash(
     encoded_token: Option<&[u8]>,
 ) -> Result<[u8; 20]> {
     let value = TrezorCryptoEnum::GetEthPubkeyHash {
-        address_n: unwrap!(DerivationPath::from_slice(address_n)),
-        encoded_network: encoded_network
-            .map(|network| unwrap!(ShortBuffer::buf_from_slice(network))),
-        encoded_token: encoded_token.map(|token| unwrap!(ShortBuffer::buf_from_slice(token))),
+        address_n: address_n.into(),
+        encoded_network: encoded_network.map(|network| network.into()),
+        encoded_token: encoded_token.map(|token| token.into()),
     };
 
     let res = ipc_crypto_call(&value);
@@ -103,11 +98,10 @@ pub fn sign_typed_hash(
     chain_id: Option<u64>,
 ) -> Result<[u8; 65]> {
     let value = TrezorCryptoEnum::SignTypedHash {
-        address_n: unwrap!(DerivationPath::from_slice(address_n)),
+        address_n: address_n.into(),
         hash: *hash,
-        encoded_network: encoded_network
-            .map(|network| unwrap!(LongBuffer::buf_from_slice(network))),
-        encoded_token: encoded_token.map(|token| unwrap!(LongBuffer::buf_from_slice(token))),
+        encoded_network: encoded_network.map(|network| network.into()),
+        encoded_token: encoded_token.map(|token| token.into()),
         chain_id,
     };
 
@@ -128,11 +122,10 @@ pub fn check_address_mac(
     encoded_network: Option<&[u8]>,
 ) -> Result<bool> {
     let value = TrezorCryptoEnum::CheckAddressMac {
-        address_n: unwrap!(DerivationPath::from_slice(address_n)),
+        address_n: address_n.into(),
         mac: *mac,
-        address: unwrap!(ShortString::from_str(address)),
-        encoded_network: encoded_network
-            .map(|network| unwrap!(ShortBuffer::buf_from_slice(network))),
+        address: address.into(),
+        encoded_network: encoded_network.map(|network| network.into()),
     };
 
     let res = ipc_crypto_call(&value);
@@ -151,10 +144,9 @@ pub fn get_address_mac(
     encoded_network: Option<&[u8]>,
 ) -> Result<[u8; 32]> {
     let value = TrezorCryptoEnum::GetAddressMac {
-        address_n: unwrap!(DerivationPath::from_slice(address_n)),
-        address: unwrap!(ShortString::from_str(address)),
-        encoded_network: encoded_network
-            .map(|network| unwrap!(ShortBuffer::buf_from_slice(network))),
+        address_n: address_n.into(),
+        address: address.into(),
+        encoded_network: encoded_network.map(|network| network.into()),
     };
 
     let res = ipc_crypto_call(&value);
@@ -169,7 +161,7 @@ pub fn get_address_mac(
 
 pub fn verify_nonce_cache(nonce: &[u8]) -> Result<bool> {
     let value = TrezorCryptoEnum::VerifyNonceCache {
-        nonce: LongBuffer::buf_from_slice(nonce).map_err(|_| Error::FailedToSend)?,
+        nonce: nonce.into(),
     };
 
     let res = ipc_crypto_call(&value);

@@ -22,10 +22,7 @@ pub use rkyv::Archived;
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
-use trezor_structs::{
-    ArchivedUtilEnum, ExtraLongString, LongString, PropsList, ShortString, StrExtList, StrList,
-    TrezorUiEnum,
-};
+use trezor_structs::{ArchivedUtilEnum, PropsList, StrExtList, StrList, TrezorUiEnum};
 pub use trezor_structs::{TrezorProgressEnum, TrezorUiResult};
 
 use crate::core_services::services_or_die;
@@ -37,7 +34,7 @@ use crate::util::Timeout;
 use crate::{error, info, unwrap};
 
 pub type ArchivedTrezorUiResult = Archived<TrezorUiResult>;
-pub type ArchivedTrezorUiEnum = Archived<TrezorUiEnum>;
+pub type ArchivedTrezorUiEnum<'a> = Archived<TrezorUiEnum<'a>>;
 
 pub const CHARS_PER_PAGE: usize = 96;
 
@@ -148,12 +145,8 @@ pub fn init_progress(
     danger: bool,
 ) -> Result<()> {
     let value = TrezorProgressEnum::Init {
-        description: description
-            .map(|d| ShortString::from_str(d).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        title: title
-            .map(|t| ShortString::from_str(t).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        description: description.map(|d| d.into()),
+        title: title.map(|t| t.into()),
         indeterminate,
         danger,
     };
@@ -162,9 +155,7 @@ pub fn init_progress(
 
 pub fn update_progress(description: Option<&str>, value: u32) -> Result<()> {
     let value = TrezorProgressEnum::Update {
-        description: description
-            .map(|d| ShortString::from_str(d).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        description: description.map(|d| d.into()),
         value,
     };
     ipc_progress_call(&value)
@@ -344,6 +335,7 @@ impl<'a> Menu<'a> {
             let choice = select_menu(
                 &items[..self.children.len()],
                 self.cancel.as_ref().map(|c| c.title),
+                1, /* TODO: proper br_code */
             )?;
 
             match choice {
@@ -421,31 +413,21 @@ pub fn confirm_value(
     warning_footer: Option<&str>,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmValue {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        value: ExtraLongString::from_str(content).map_err(|_| Error::FailedToSend)?,
-        description: description
-            .map(|d| LongString::from_str(d).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        title: title.into(),
+        value: content.into(),
+        description: description.map(|d| d.into()),
         is_data,
-        subtitle: subtitle
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        verb: verb
-            .map(|v| ShortString::from_str(v).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        subtitle: subtitle.map(|s| s.into()),
+        verb: verb.map(|v| v.into()),
         info,
         hold,
         chunkify,
         page_counter,
         cancel,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        br_name: br_name.map(|b| b.into()),
         br_code,
         external_menu,
-        warning_footer: warning_footer
-            .map(|w| ShortString::from_str(w).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        warning_footer: warning_footer.map(|w| w.into()),
     };
     info!("confirm_value calling ui call");
     ipc_ui_call(&value)
@@ -463,22 +445,14 @@ fn confirm_value_intro(
     br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmValueIntro {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        value: LongString::from_str(content).map_err(|_| Error::FailedToSend)?,
-        subtitle: subtitle
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        verb: verb
-            .map(|v| ShortString::from_str(v).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        verb_cancel: verb_cancel
-            .map(|v| ShortString::from_str(v).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        title: title.into(),
+        value: content.into(),
+        subtitle: subtitle.map(|s| s.into()),
+        verb: verb.map(|v| v.into()),
+        verb_cancel: verb_cancel.map(|v| v.into()),
         hold,
         chunkify,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        br_name: br_name.map(|b| b.into()),
         br_code,
     };
     ipc_ui_call(&value)
@@ -572,31 +546,21 @@ pub fn confirm_summary(
     br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmSummary {
-        title: ShortString::from_str(title.unwrap_or("Send")).map_err(|_| Error::FailedToSend)?,
-        amount: amount
-            .map(|a| ShortString::from_str(a).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        amount_label: amount_label
-            .map(|l| ShortString::from_str(l).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        fee: ShortString::from_str(fee).map_err(|_| Error::FailedToSend)?,
-        fee_label: ShortString::from_str(fee_label).map_err(|_| Error::FailedToSend)?,
-        account_title: account_title
-            .map(|t| ShortString::from_str(t).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        title: title.unwrap_or("Send").into(),
+        amount: amount.map(|a| a.into()),
+        amount_label: amount_label.map(|l| l.into()),
+        fee: fee.into(),
+        fee_label: fee_label.into(),
+        account_title: account_title.map(|t| t.into()),
         account_items: account_items
             .map(|items| PropsList::from_prop_slice(items).map_err(|_| Error::FailedToSend))
             .transpose()?,
-        extra_title: extra_title
-            .map(|t| ShortString::from_str(t).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        extra_title: extra_title.map(|t| t.into()),
         extra_items: extra_items
             .map(|items| PropsList::from_prop_slice(items).map_err(|_| Error::FailedToSend))
             .transpose()?,
         back_button: back_button,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        br_name: br_name.map(|b| b.into()),
         br_code: br_code,
     };
     ipc_ui_call(&value)
@@ -611,24 +575,21 @@ pub fn confirm_action(
     br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmAction {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        action: ShortString::from_str(action).map_err(|_| Error::FailedToSend)?,
+        title: title.into(),
+        action: action.into(),
         hold,
-        verb: verb
-            .map(|v| ShortString::from_str(v).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        verb: verb.map(|v| v.into()),
+        br_name: br_name.map(|b| b.into()),
         br_code,
     };
     ipc_ui_call_confirm(&value)
 }
 
-pub fn confirm_long_value(title: &str, content: &str) -> UiResult {
+pub fn confirm_long_value(title: &str, content: &str, br_code: i32) -> UiResult {
     let value = TrezorUiEnum::ConfirmLong {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
+        title: title.into(),
         pages: (content.chars().count() + CHARS_PER_PAGE - 1) / CHARS_PER_PAGE,
+        br_code,
     };
 
     match ipc_ui_call_ext(&value, &LongContentHandler(content)) {
@@ -641,12 +602,11 @@ pub fn confirm_long_value(title: &str, content: &str) -> UiResult {
     }
 }
 
-fn select_menu(items: &[&str], cancel: Option<&str>) -> UiResult {
+fn select_menu(items: &[&str], cancel: Option<&str>, br_code: i32) -> UiResult {
     let value = TrezorUiEnum::SelectMenu {
         items: StrList::from_str_slice(items).map_err(|_| Error::FailedToSend)?,
-        cancel: cancel
-            .map(|c| ShortString::from_str(c).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        cancel: cancel.map(|c| c.into()),
+        br_code,
     };
     match ipc_ui_call(&value) {
         Ok(TrezorUiResult::Integer(idx)) if (idx as usize) < items.len() => {
@@ -674,18 +634,12 @@ pub fn confirm_properties(
     br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmProperties {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
+        title: title.into(),
         props: PropsList::from_prop_slice(props).map_err(|_| Error::FailedToSend)?,
-        subtitle: subtitle
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        verb: verb
-            .map(|v| ShortString::from_str(v).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        subtitle: subtitle.map(|s| s.into()),
+        verb: verb.map(|v| v.into()),
         hold,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        br_name: br_name.map(|b| b.into()),
         br_code,
     };
     ipc_ui_call_confirm(&value)
@@ -699,14 +653,10 @@ pub fn show_properties(
     br_code: i32,
 ) -> Result<()> {
     let value = TrezorUiEnum::ShowProperties {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
+        title: title.into(),
         props: PropsList::from_prop_slice(props).map_err(|_| Error::FailedToSend)?,
-        subtitle: subtitle
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        subtitle: subtitle.map(|s| s.into()),
+        br_name: br_name.map(|b| b.into()),
         br_code,
     };
     ipc_ui_call_void(&value)
@@ -723,12 +673,10 @@ pub fn show_warning(
     danger: bool,
 ) -> Result<()> {
     let value = TrezorUiEnum::Warning {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        content: ShortString::from_str(content).map_err(|_| Error::FailedToSend)?,
-        verb: ShortString::from_str(verb).map_err(|_| Error::FailedToSend)?,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        title: title.into(),
+        content: content.into(),
+        verb: verb.into(),
+        br_name: br_name.map(|b| b.into()),
         br_code,
         allow_cancel,
         danger,
@@ -744,21 +692,20 @@ pub fn show_info_with_cancel(
     br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ShowInfoWithCancel {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
+        title: title.into(),
         items: PropsList::from_prop_slice(items).map_err(|_| Error::FailedToSend)?,
         chunkify,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        br_name: br_name.map(|b| b.into()),
         br_code,
     };
     ipc_ui_call_confirm(&value)
 }
 
 /// Show a mismatch message
-pub fn show_mismatch(title: &str) -> UiResult {
+pub fn show_mismatch(title: &str, br_code: i32) -> UiResult {
     let value = TrezorUiEnum::Mismatch {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
+        title: title.into(),
+        br_code,
     };
     ipc_ui_call_confirm(&value)
 }
@@ -773,16 +720,13 @@ pub fn confirm_trade(
     br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmTrade {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        subtitle: ShortString::from_str(subtitle).map_err(|_| Error::FailedToSend)?,
-        buy: ShortString::from_str(buy).map_err(|_| Error::FailedToSend)?,
-        sell: sell
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        title: title.into(),
+        subtitle: subtitle.into(),
+        buy: buy.into(),
+        sell: sell.map(|s| s.into()),
+
         back_button: can_go_back,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        br_name: br_name.map(|b| b.into()),
         br_code,
     };
     ipc_ui_call(&value)
@@ -798,18 +742,12 @@ pub fn show_danger(
     menu_title: Option<&str>,
 ) -> UiResult {
     let value = TrezorUiEnum::Danger {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        content: LongString::from_str(content).map_err(|_| Error::FailedToSend)?,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        title: title.into(),
+        content: content.into(),
+        br_name: br_name.map(|b| b.into()),
         br_code,
-        verb_cancel: verb_cancel
-            .map(|v| ShortString::from_str(v).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        menu_title: menu_title
-            .map(|m| ShortString::from_str(m).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        verb_cancel: verb_cancel.map(|v| v.into()),
+        menu_title: menu_title.map(|m| m.into()),
     };
     ipc_ui_call_confirm(&value)
 }
@@ -821,27 +759,35 @@ pub fn show_success(
     button: &str,
     duration_ms: Option<u32>,
     br_name: Option<&str>,
+    br_code: i32,
 ) -> Result<()> {
     let value = TrezorUiEnum::Success {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        content: ShortString::from_str(content).map_err(|_| Error::FailedToSend)?,
-        button: ShortString::from_str(button).map_err(|_| Error::FailedToSend)?,
+        title: title.into(),
+        content: content.into(),
+        button: button.into(),
         duration_ms,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        br_name: br_name.map(|b| b.into()),
+        br_code,
     };
     ipc_ui_call_void(&value)
 }
 
 /// Request a number from the user within a range
-pub fn request_number(title: &str, content: &str, initial: u32, min: u32, max: u32) -> UiResult {
+pub fn request_number(
+    title: &str,
+    content: &str,
+    initial: u32,
+    min: u32,
+    max: u32,
+    br_code: i32,
+) -> UiResult {
     let value = TrezorUiEnum::RequestNumber {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        content: ShortString::from_str(content).map_err(|_| Error::FailedToSend)?,
+        title: title.into(),
+        content: content.into(),
         initial,
         min,
         max,
+        br_code,
     };
 
     let result = ipc_ui_call(&value)?;
@@ -853,29 +799,21 @@ pub fn request_number(title: &str, content: &str, initial: u32, min: u32, max: u
 
 pub fn show_public_key(
     key: &str,
-    title: Option<&str>,
+    title: &str,
     account: Option<&str>,
     path: Option<&str>,
     warning: Option<&str>,
-    br_name: Option<&str>,
+    br_name: &str,
+    br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ShowPublicKey {
-        pubkey: LongString::from_str(key).map_err(|_| Error::FailedToSend)?,
-        title: title
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        account: account
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        path: path
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        warning: warning
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        br_name: br_name
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        pubkey: key.into(),
+        title: title.into(),
+        account: account.map(|s| s.into()),
+        path: path.map(|s| s.into()),
+        warning: warning.map(|s| s.into()),
+        br_name: br_name.into(),
+        br_code,
     };
     ipc_ui_call_confirm(&value)
 }
@@ -908,16 +846,12 @@ pub fn confirm_with_info(
     br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmWithInfo {
-        title: ShortString::from_str(title).map_err(|_| Error::FailedToSend)?,
-        subtitle: subtitle
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        title: title.into(),
+        subtitle: subtitle.map(|s| s.into()),
         items: StrExtList::from_str_slice(para).map_err(|_| Error::FailedToSend)?,
-        verb: ShortString::from_str(verb).map_err(|_| Error::FailedToSend)?,
-        verb_info: ShortString::from_str(verb_info).map_err(|_| Error::FailedToSend)?,
-        br_name: br_name
-            .map(|b| ShortString::from_str(b).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        verb: verb.into(),
+        verb_info: verb_info.into(),
+        br_name: br_name.map(|b| b.into()),
         br_code,
     };
     ipc_ui_call(&value)
@@ -931,23 +865,17 @@ pub fn show_address(
     path: Option<&str>,
     xpubs: &[(&str, &str, bool)],
     chunkify: Option<bool>,
+    br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ShowAddress {
-        address: ShortString::from_str(address).map_err(|_| Error::FailedToSend)?,
-        title: title
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        subtitle: subtitle
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        account: account
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
-        path: path
-            .map(|s| ShortString::from_str(s).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        address: address.into(),
+        title: title.map(|s| s.into()),
+        subtitle: subtitle.map(|s| s.into()),
+        account: account.map(|s| s.into()),
+        path: path.map(|s| s.into()),
         xpubs: PropsList::from_prop_slice(xpubs).map_err(|_| Error::FailedToSend)?,
         chunkify,
+        br_code,
     };
     ipc_ui_call_confirm(&value)
 }

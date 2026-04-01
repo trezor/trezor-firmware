@@ -500,12 +500,5 @@ pub trait FirmwareUI {
     fn process_ipc_message(
         data: &[u8],
         request_cb: impl Fn(&[u8], u16) + 'static,
-    ) -> Result<
-        (
-            Gc<LayoutObj>,
-            u32,
-            Obj,
-        ),
-        Error,
-    >;
+    ) -> Result<(Gc<LayoutObj>, i32, Obj), Error>;
 }

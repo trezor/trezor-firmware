@@ -1,6 +1,6 @@
 use crate::{
     proto::{
-        common::HdNodeType,
+        common::{HdNodeType, button_request::ButtonRequestType},
         ethereum::{EthereumGetPublicKey, EthereumPublicKey},
     },
     strutil::hex_encode,
@@ -31,7 +31,15 @@ pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
 
     if matches!(msg.show_display, Some(true)) {
         let xpub = hex_encode(&node.public_key);
-        ui::show_public_key(xpub.as_str(), None, None, None, None, None)?;
+        ui::show_public_key(
+            xpub.as_str(),
+            "Public key",
+            None,
+            None,
+            None,
+            "show_pubkey",
+            ButtonRequestType::ButtonRequestOther.into(),
+        )?;
 
         ui::show_success(
             "Done",
@@ -39,6 +47,7 @@ pub fn get_public_key(msg: EthereumGetPublicKey) -> Result<EthereumPublicKey> {
             "Continue in the app",
             Some(3200),
             None,
+            ButtonRequestType::ButtonRequestOther.into(),
         )?;
     }
 

@@ -36,7 +36,9 @@ use crate::{
 };
 
 use rkyv::option::ArchivedOption;
-use trezor_structs::{ArchivedPropsList, ArchivedStringN, ArchivedTrezorUiEnum};
+use trezor_structs::{
+    ArchivedPropsList, ArchivedStrExtList, ArchivedStrSlice, ArchivedTrezorUiEnum,
+};
 
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
@@ -1611,68 +1613,52 @@ impl FirmwareUI for UIEckhart {
     fn process_ipc_message(
         data: &[u8],
         request_cb: impl Fn(&[u8], u16) + 'static,
-    ) -> Result<(Gc<LayoutObj>, u32, Obj), Error> {
-        // Safe helper to convert archived string to TString using Deref
-        fn tstr_from_archived<const N: usize>(s: &ArchivedStringN<N>) -> TString<'static> {
-            unsafe { StrBuffer::from_ptr_and_len(s.data.as_ptr(), s.len.to_native() as usize) }
-                .into()
+    ) -> Result<(Gc<LayoutObj>, i32, Obj), Error> {
+        fn tstr_from_archived_borrowed_str(s: &ArchivedStrSlice) -> TString<'static> {
+            unwrap!(StrBuffer::alloc(s.as_str())).into()
         }
 
-        fn tstr_from_archived_option<const N: usize>(
-            s: &ArchivedOption<ArchivedStringN<N>>,
+        fn tstr_from_archived_borrowed_str_option(
+            s: &ArchivedOption<ArchivedStrSlice>,
         ) -> Option<TString<'static>> {
-            s.as_ref().map(tstr_from_archived)
+            s.as_ref()
+                .map(|s| unwrap!(StrBuffer::alloc(s.as_str())).into())
         }
 
-        fn str_from_archived<'a, const N: usize>(s: &'a ArchivedStringN<N>) -> &'a str {
-            let str = unwrap!(core::str::from_utf8(unsafe {
-                core::slice::from_raw_parts(s.data.as_ptr(), s.len.to_native() as usize)
-            }));
-            str
-        }
-
-        fn obj_from_archived_option<const N: usize>(
-            s: &ArchivedOption<ArchivedStringN<N>>,
+        fn obj_from_archived_borrowed_str_option(
+            s: Option<&ArchivedStrSlice>,
         ) -> Result<Obj, Error> {
             match s.as_ref() {
-                Some(archived_str) => Ok(Obj::try_from(str_from_archived(archived_str))?),
+                Some(s) => Ok(Obj::try_from(s.as_str())?),
                 None => Ok(Obj::const_none()),
             }
         }
 
-        fn obj_from_proplist_option(
-            props: &ArchivedOption<ArchivedPropsList>,
-        ) -> Result<Option<Obj>, Error> {
-            props.as_ref().map(obj_from_proplist).transpose()
+        fn obj_from_strextlist(ext_list: &ArchivedStrExtList) -> Obj {
+            let mut list = unwrap!(List::with_capacity(ext_list.len as usize));
+
+            for item in ext_list.data.iter().take(ext_list.len as usize) {
+                let obj = unwrap!(Obj::try_from((
+                    unwrap!(Obj::try_from(item.0.as_str())),
+                    unwrap!(Obj::try_from(item.1))
+                )));
+                unwrap!(list.append(obj));
+            }
+            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
         }
 
-        fn obj_from_proplist(props: &ArchivedPropsList) -> Result<Obj, Error> {
-            let mut vec = heapless::Vec::<Obj, 5>::new();
-            for i in 0..(props.len as usize) {
-                let key = unwrap!(core::str::from_utf8(unsafe {
-                    core::slice::from_raw_parts(
-                        props.data[i].0.data.as_ptr(),
-                        props.data[i].0.len.to_native() as usize,
-                    )
-                }));
+        fn obj_from_proplist(ext_list: &ArchivedPropsList) -> Obj {
+            let mut list = unwrap!(List::with_capacity(ext_list.len as usize));
 
-                let value = unwrap!(core::str::from_utf8(unsafe {
-                    core::slice::from_raw_parts(
-                        props.data[i].1.data.as_ptr(),
-                        props.data[i].1.len.to_native() as usize,
-                    )
-                }));
-                let is_data = props.data[i].2;
-                let prop: Obj = unwrap!((
-                    unwrap!(Obj::try_from(key)),
-                    unwrap!(Obj::try_from(value)),
-                    unwrap!(Obj::try_from(is_data))
-                )
-                    .try_into());
-                unwrap!(vec.push(prop));
+            for item in ext_list.data.iter().take(ext_list.len as usize) {
+                let obj = unwrap!(Obj::try_from((
+                    unwrap!(Obj::try_from(item.0.as_str())),
+                    unwrap!(Obj::try_from(item.1.as_str())),
+                    unwrap!(Obj::try_from(item.2))
+                )));
+                unwrap!(list.append(obj));
             }
-            let list = List::alloc(&vec)?;
-            Ok(Obj::from(list))
+            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
         }
 
         // Deserialize the rkyv archived data directly from the static buffer
@@ -1680,20 +1666,24 @@ impl FirmwareUI for UIEckhart {
 
         // Access the archived data zero-copy using safe Deref access
         match archived {
-            ArchivedTrezorUiEnum::SelectMenu { items, cancel } => {
+            ArchivedTrezorUiEnum::SelectMenu {
+                items,
+                cancel,
+                br_code,
+            } => {
                 let mut vec = heapless::Vec::<TString<'static>, 5>::new();
                 for i in 0..(items.len as usize) {
-                    unwrap!(vec.push(tstr_from_archived(&items.data[i])));
+                    unwrap!(vec.push(tstr_from_archived_borrowed_str(&items.data[i])));
                 }
                 let layout = Self::select_menu(
                     vec,
                     0, // current selection (not used in this context)
-                    cancel.as_ref().map(|s| tstr_from_archived(s)),
+                    tstr_from_archived_borrowed_str_option(cancel),
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    1, /* TODO */
-                    Obj::const_none(),
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
                 ))
             }
             ArchivedTrezorUiEnum::ConfirmTrade {
@@ -1706,16 +1696,16 @@ impl FirmwareUI for UIEckhart {
                 br_name,
             } => {
                 let layout = Self::confirm_trade(
-                    tstr_from_archived(title),
-                    tstr_from_archived(subtitle),
-                    tstr_from_archived_option(sell),
-                    tstr_from_archived(buy),
+                    tstr_from_archived_borrowed_str(title),
+                    tstr_from_archived_borrowed_str(subtitle),
+                    tstr_from_archived_borrowed_str_option(sell),
+                    tstr_from_archived_borrowed_str(buy),
                     *back_button,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
             ArchivedTrezorUiEnum::ConfirmAction {
@@ -1728,11 +1718,11 @@ impl FirmwareUI for UIEckhart {
             } => {
                 // Use safe Deref trait instead of raw pointers
                 let layout = Self::confirm_action(
-                    tstr_from_archived(title),
-                    Some(tstr_from_archived(action)),
+                    tstr_from_archived_borrowed_str(title),
+                    Some(tstr_from_archived_borrowed_str(action)),
                     None,
                     None,
-                    tstr_from_archived_option(verb),
+                    tstr_from_archived_borrowed_str_option(verb),
                     true,
                     None,
                     *hold,
@@ -1744,8 +1734,8 @@ impl FirmwareUI for UIEckhart {
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
             ArchivedTrezorUiEnum::ShowInfoWithCancel {
@@ -1756,15 +1746,15 @@ impl FirmwareUI for UIEckhart {
                 br_code,
             } => {
                 let layout = Self::show_info_with_cancel(
-                    tstr_from_archived(title),
-                    obj_from_proplist(items)?,
+                    tstr_from_archived_borrowed_str(title),
+                    obj_from_proplist(items),
                     false, // horizontal
                     *chunkify,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
             ArchivedTrezorUiEnum::ConfirmValueIntro {
@@ -1778,21 +1768,19 @@ impl FirmwareUI for UIEckhart {
                 br_name,
                 br_code,
             } => {
-                // Use safe Deref trait instead of raw pointers
-                let value_str = str_from_archived(value);
                 let layout = Self::confirm_value_intro(
-                    tstr_from_archived(title),
-                    value_str.try_into()?,
-                    tstr_from_archived_option(subtitle),
-                    tstr_from_archived_option(verb),
-                    tstr_from_archived_option(verb_cancel),
+                    tstr_from_archived_borrowed_str(title),
+                    value.as_str().try_into()?,
+                    tstr_from_archived_borrowed_str_option(subtitle),
+                    tstr_from_archived_borrowed_str_option(verb),
+                    tstr_from_archived_borrowed_str_option(verb_cancel),
                     *hold,
                     *chunkify,
                 )?;
                 Ok((
                     layout,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
             ArchivedTrezorUiEnum::ConfirmSummary {
@@ -1810,31 +1798,31 @@ impl FirmwareUI for UIEckhart {
                 br_code,
             } => {
                 let layout = Self::confirm_summary(
-                    tstr_from_archived_option(amount),
-                    tstr_from_archived_option(amount_label),
-                    tstr_from_archived(fee),
-                    tstr_from_archived(fee_label),
-                    Some(tstr_from_archived(title)),
-                    obj_from_proplist_option(account_items)?,
-                    tstr_from_archived_option(account_title),
-                    obj_from_proplist_option(extra_items)?,
-                    tstr_from_archived_option(extra_title),
+                    tstr_from_archived_borrowed_str_option(amount),
+                    tstr_from_archived_borrowed_str_option(amount_label),
+                    tstr_from_archived_borrowed_str(fee),
+                    tstr_from_archived_borrowed_str(fee_label),
+                    Some(tstr_from_archived_borrowed_str(title)),
+                    account_items.as_ref().map(|items| obj_from_proplist(items)),
+                    tstr_from_archived_borrowed_str_option(account_title),
+                    extra_items.as_ref().map(|items| obj_from_proplist(items)),
+                    tstr_from_archived_borrowed_str_option(extra_title),
                     None,
                     *back_button,
                     false,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
-            ArchivedTrezorUiEnum::Mismatch { title } => {
-                let layout = Self::show_mismatch(tstr_from_archived(title))?;
+            ArchivedTrezorUiEnum::Mismatch { title, br_code } => {
+                let layout = Self::show_mismatch(tstr_from_archived_borrowed_str(title))?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    1, /* TODO */
-                    Obj::const_none(),
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
                 ))
             }
             ArchivedTrezorUiEnum::ConfirmValue {
@@ -1856,13 +1844,13 @@ impl FirmwareUI for UIEckhart {
             } => {
                 // Use safe Deref trait instead of raw pointers
                 let layout = Self::confirm_value(
-                    tstr_from_archived(title),
-                    unwrap!(tstr_from_archived(value).try_into()),
-                    tstr_from_archived_option(description),
+                    tstr_from_archived_borrowed_str(title),
+                    Obj::try_from(value.as_str())?,
+                    tstr_from_archived_borrowed_str_option(description),
                     *is_data,
                     None, // extra
-                    tstr_from_archived_option(subtitle),
-                    tstr_from_archived_option(verb),
+                    tstr_from_archived_borrowed_str_option(subtitle),
+                    tstr_from_archived_borrowed_str_option(verb),
                     None, // unused parameter
                     *info,
                     *hold,
@@ -1871,26 +1859,30 @@ impl FirmwareUI for UIEckhart {
                     false, // unused parameter
                     *cancel,
                     false,
-                    tstr_from_archived_option(warning_footer),
+                    tstr_from_archived_borrowed_str_option(warning_footer),
                     *external_menu,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
-            ArchivedTrezorUiEnum::ConfirmLong { title, pages } => {
+            ArchivedTrezorUiEnum::ConfirmLong {
+                title,
+                pages,
+                br_code,
+            } => {
                 // Use safe Deref trait instead of raw pointers
                 let layout = Self::confirm_long(
-                    tstr_from_archived(title),
+                    tstr_from_archived_borrowed_str(title),
                     unwrap!(usize::try_from(pages.to_native())),
                     request_cb,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    1, /* TODO */
-                    Obj::const_none(),
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
                 ))
             }
             ArchivedTrezorUiEnum::ConfirmWithInfo {
@@ -1902,36 +1894,19 @@ impl FirmwareUI for UIEckhart {
                 br_name,
                 br_code,
             } => {
-                let mut tuple_objs = heapless::Vec::<Obj, 5>::new();
-                for i in 0..(items.len as usize) {
-                    let str = unsafe {
-                        unwrap!(core::str::from_utf8(core::slice::from_raw_parts(
-                            items.data[i].0.data.as_ptr(),
-                            items.data[i].0.len.to_native() as usize,
-                        )))
-                    };
-                    let prop: Obj =
-                        unwrap!(
-                            (unwrap!(Obj::try_from(str)), Obj::from(items.data[i].1),).try_into()
-                        );
-
-                    unwrap!(tuple_objs.push(prop));
-                }
-
-                let list = List::alloc(&tuple_objs)?;
                 let layout = Self::confirm_with_info(
-                    tstr_from_archived(title),
-                    tstr_from_archived_option(subtitle),
-                    list.into(),
-                    tstr_from_archived(verb),
-                    tstr_from_archived(verb_info),
+                    tstr_from_archived_borrowed_str(title),
+                    tstr_from_archived_borrowed_str_option(subtitle),
+                    obj_from_strextlist(items),
+                    tstr_from_archived_borrowed_str(verb),
+                    tstr_from_archived_borrowed_str(verb_info),
                     None,
                     false,
                 )?;
                 Ok((
                     layout,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
             ArchivedTrezorUiEnum::ConfirmProperties {
@@ -1944,17 +1919,17 @@ impl FirmwareUI for UIEckhart {
                 br_code,
             } => {
                 let layout = Self::confirm_properties(
-                    tstr_from_archived(title),
-                    tstr_from_archived_option(subtitle),
-                    obj_from_proplist(props)?,
+                    tstr_from_archived_borrowed_str(title),
+                    tstr_from_archived_borrowed_str_option(subtitle),
+                    obj_from_proplist(props),
                     *hold,
-                    tstr_from_archived_option(verb),
+                    tstr_from_archived_borrowed_str_option(verb),
                     false,
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
             ArchivedTrezorUiEnum::ShowProperties {
@@ -1965,14 +1940,14 @@ impl FirmwareUI for UIEckhart {
                 br_code,
             } => {
                 let layout = Self::show_properties(
-                    tstr_from_archived(title),
-                    tstr_from_archived_option(subtitle),
-                    obj_from_proplist(props)?,
+                    tstr_from_archived_borrowed_str(title),
+                    tstr_from_archived_borrowed_str_option(subtitle),
+                    obj_from_proplist(props),
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
             ArchivedTrezorUiEnum::Warning {
@@ -1985,15 +1960,15 @@ impl FirmwareUI for UIEckhart {
                 danger,
             } => Ok((
                 Self::show_warning(
-                    tstr_from_archived(title),
-                    tstr_from_archived(verb),
-                    tstr_from_archived(content),
+                    tstr_from_archived_borrowed_str(title),
+                    tstr_from_archived_borrowed_str(verb),
+                    tstr_from_archived_borrowed_str(content),
                     TString::empty(),
                     *allow_cancel,
                     *danger,
                 )?,
-                br_code.to_native().try_into()?,
-                obj_from_archived_option(br_name)?,
+                br_code.to_native(),
+                obj_from_archived_borrowed_str_option(br_name.as_ref())?,
             )),
             ArchivedTrezorUiEnum::Danger {
                 title,
@@ -2004,16 +1979,16 @@ impl FirmwareUI for UIEckhart {
                 menu_title,
             } => {
                 let layout = Self::show_danger(
-                    tstr_from_archived(title),
-                    tstr_from_archived(content),
+                    tstr_from_archived_borrowed_str(title),
+                    tstr_from_archived_borrowed_str(content),
                     TString::empty(),
-                    tstr_from_archived_option(menu_title),
-                    tstr_from_archived_option(verb_cancel),
+                    tstr_from_archived_borrowed_str_option(menu_title),
+                    tstr_from_archived_borrowed_str_option(verb_cancel),
                 )?;
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    br_code.to_native().try_into()?,
-                    obj_from_archived_option(br_name)?,
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(br_name.as_ref())?,
                 ))
             }
             ArchivedTrezorUiEnum::Success {
@@ -2022,16 +1997,17 @@ impl FirmwareUI for UIEckhart {
                 button,
                 br_name,
                 duration_ms,
+                br_code,
             } => Ok((
                 Self::show_success(
-                    tstr_from_archived(title),
-                    tstr_from_archived(button),
-                    tstr_from_archived(content),
+                    tstr_from_archived_borrowed_str(title),
+                    tstr_from_archived_borrowed_str(button),
+                    tstr_from_archived_borrowed_str(content),
                     false,
                     duration_ms.as_ref().map(|d| d.to_native()).unwrap_or(0),
                 )?,
-                1, /* TODO */
-                obj_from_archived_option(br_name)?,
+                br_code.to_native(),
+                obj_from_archived_borrowed_str_option(br_name.as_ref())?,
             )),
             ArchivedTrezorUiEnum::ShowPublicKey {
                 pubkey,
@@ -2040,25 +2016,26 @@ impl FirmwareUI for UIEckhart {
                 path,
                 warning,
                 br_name,
+                br_code,
             } => {
-                let pubkey = tstr_from_archived(pubkey);
-                let account = tstr_from_archived_option(account);
+                let account = tstr_from_archived_borrowed_str_option(account);
+                let pubkey = tstr_from_archived_borrowed_str(pubkey);
                 let layout = Self::flow_get_pubkey(
                     pubkey,
-                    tstr_from_archived_option(title).unwrap_or("Public key".into()),
+                    tstr_from_archived_borrowed_str(title),
                     account,
-                    tstr_from_archived_option(warning),
+                    tstr_from_archived_borrowed_str_option(warning),
                     pubkey,
                     account,
-                    tstr_from_archived_option(path),
-                    11,
-                    tstr_from_archived_option(br_name).unwrap_or("show_pubkey".into()),
+                    tstr_from_archived_borrowed_str_option(path),
+                    11, // TODO: proper br code
+                    tstr_from_archived_borrowed_str(br_name),
                 )?;
 
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    1, /* TODO */
-                    Obj::const_none(),
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
                 ))
             }
             ArchivedTrezorUiEnum::ShowAddress {
@@ -2069,27 +2046,28 @@ impl FirmwareUI for UIEckhart {
                 path,
                 xpubs,
                 chunkify,
+                br_code,
             } => {
                 let layout = Self::flow_get_address(
-                    tstr_from_archived(address),
-                    tstr_from_archived_option(title).unwrap_or("Receive".into()),
-                    tstr_from_archived_option(subtitle),
+                    tstr_from_archived_borrowed_str(address),
+                    tstr_from_archived_borrowed_str_option(title).unwrap_or("Receive".into()),
+                    tstr_from_archived_borrowed_str_option(subtitle),
                     None,
                     None,
                     chunkify.unwrap_or(false),
-                    tstr_from_archived(address),
+                    tstr_from_archived_borrowed_str(address),
                     false,
-                    tstr_from_archived_option(account),
-                    tstr_from_archived_option(path),
-                    obj_from_proplist(xpubs)?,
+                    tstr_from_archived_borrowed_str_option(account),
+                    tstr_from_archived_borrowed_str_option(path),
+                    obj_from_proplist(xpubs),
                     10, //ButtonRequestType.Addresss
                     "show_address".into(),
                 )?;
 
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    1, /* TODO */
-                    Obj::const_none(),
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
                 ))
             }
             ArchivedTrezorUiEnum::RequestNumber {
@@ -2098,20 +2076,21 @@ impl FirmwareUI for UIEckhart {
                 initial,
                 min,
                 max,
+                br_code,
             } => {
                 let layout = Self::request_number(
-                    tstr_from_archived(title),
+                    tstr_from_archived_borrowed_str(title),
                     (*initial).into(),
                     (*min).into(),
                     (*max).into(),
-                    Some(tstr_from_archived(content)),
+                    Some(tstr_from_archived_borrowed_str(content)),
                     Some(|_| TString::empty()),
                 )?;
 
                 Ok((
                     LayoutObj::new_root(layout)?,
-                    1, /* TODO */
-                    Obj::const_none(),
+                    br_code.to_native(),
+                    obj_from_archived_borrowed_str_option(None)?,
                 ))
             }
         }

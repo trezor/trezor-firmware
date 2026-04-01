@@ -181,7 +181,10 @@ pub(crate) fn confirm_signverify(
             Err(_) => {
                 // Right button aborts action, left goes back to showing address.
                 if matches!(
-                    ui::show_mismatch("Address mismatch?"),
+                    ui::show_mismatch(
+                        "Address mismatch?",
+                        ButtonRequestType::ButtonRequestOther.into()
+                    ),
                     Ok(ui::TrezorUiResult::Confirmed)
                 ) {
                     return Err(Error::Cancelled);

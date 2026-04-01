@@ -1,21 +1,30 @@
 #![no_std]
 
-use rkyv::{Archive, Deserialize, Serialize};
+use rkyv::{
+    munge::munge, rancor::Fallible, ser::Writer, Archive, ArchiveUnsized, Deserialize, Place,
+    Portable, RelPtr, Serialize, SerializeUnsized,
+};
 
-/// Fixed-capacity byte buffer for `no_std`, serialized as `[u8; N] + len`.
+/// Fixed-capacity byte string for `no_std`, serialized as `[u8; N] + len`.
 #[derive(Archive, Serialize, Deserialize, Copy, Clone)]
-pub struct Buffer<const N: usize> {
+pub struct String<const N: usize> {
     pub data: [u8; N],
     pub len: usize,
 }
 
-impl<const N: usize> Buffer<N> {
-    pub fn as_slice(&self) -> &[u8] {
+impl<const N: usize> String<N> {
+    fn as_slice(&self) -> &[u8] {
         &self.data[..self.len]
     }
 
-    pub fn buf_from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
+    pub fn as_str(&self) -> &str {
+        // SAFETY: We ensure that the data up to `len` is always valid UTF-8 when creating a String.
+        core::str::from_utf8(self.as_slice()).unwrap()
+    }
+
+    pub fn from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
         if slice.len() > N {
+            // TODO: better error handling
             return Err(());
         }
         let mut data = [0u8; N];
@@ -27,333 +36,375 @@ impl<const N: usize> Buffer<N> {
     }
 }
 
-pub type String<const N: usize> = Buffer<N>;
+#[derive(Copy, Clone, Default)]
+pub struct StrSlice<'a> {
+    inner: &'a str,
+}
 
-pub type ShortString = String<50>;
-pub type LongString = String<150>;
-// TODO: decrease size and use long string confirmation instead of blob
-pub type ExtraLongString = String<5000>;
-
-pub type ShortBuffer = Buffer<100>;
-pub type LongBuffer = Buffer<200>;
-
-pub type ArchivedStringN<const N: usize> = rkyv::Archived<String<N>>;
-pub type ArchivedShortString = rkyv::Archived<String<50>>;
-pub type ArchivedLongString = rkyv::Archived<String<150>>;
-
-pub type ArchivedBufferN<const N: usize> = rkyv::Archived<Buffer<N>>;
-pub type ArchivedShortBuffer = rkyv::Archived<Buffer<100>>;
-pub type ArchivedLongBuffer = rkyv::Archived<Buffer<200>>;
-
-impl<const N: usize> String<N> {
-    pub fn from_str(s: &str) -> core::result::Result<Self, ()> {
-        if N > (usize::MAX as usize) || s.len() > N {
-            return Err(());
-        }
-
-        let mut data = [0u8; N];
-        data[..s.len()].copy_from_slice(s.as_bytes());
-        Ok(Self { data, len: s.len() })
+impl<'a> StrSlice<'a> {
+    pub fn new(s: &'a str) -> Self {
+        Self { inner: s }
     }
 
+    pub fn as_str(&self) -> &'a str {
+        self.inner
+    }
+}
+
+impl<'a> From<&'a str> for StrSlice<'a> {
+    fn from(s: &'a str) -> Self {
+        Self::new(s)
+    }
+}
+
+#[derive(Portable)]
+#[repr(transparent)]
+pub struct ArchivedStrSlice {
+    // This will be a relative pointer to our string
+    ptr: RelPtr<str>,
+}
+
+impl ArchivedStrSlice {
+    // This will help us get the bytes of our type as a str again.
     pub fn as_str(&self) -> &str {
-        core::str::from_utf8(&self.data[..self.len]).unwrap_or("#INVALID#")
-    }
-
-    pub fn str_from_slice(slice: &[u8]) -> core::result::Result<Self, ()> {
-        let s = core::str::from_utf8(slice).map_err(|_| ())?;
-        Self::from_str(s)
-    }
-}
-
-impl<const N: usize> AsRef<str> for String<N> {
-    fn as_ref(&self) -> &str {
-        core::str::from_utf8(&self.data[..self.len]).unwrap_or("#INVALID#")
-    }
-}
-
-impl<const N: usize> Default for String<N> {
-    fn default() -> Self {
-        Self {
-            data: [0u8; N],
-            len: 0,
+        unsafe {
+            // The as_ptr() function of RelPtr will get a pointer the str
+            &*self.ptr.as_ptr()
         }
     }
 }
 
-type Prop = (ShortString, ShortString, bool);
+pub struct BorrowedResolver {
+    // This will be the position that the bytes of our string are stored at.
+    // We'll use this to resolve the relative pointer of our
+    // ArchivedStrSlice.
+    pos: usize,
+}
 
-#[derive(Archive, Serialize)]
-pub struct PropsList {
-    pub data: [Prop; 5],
+// The Archive implementation defines the archived version of our type and
+// determines how to turn the resolver into the archived form. The Serialize
+// implementations determine how to make a resolver from the original value.
+impl<'a> Archive for StrSlice<'a> {
+    type Archived = ArchivedStrSlice;
+    // This is the resolver we can create our Archived version from.
+    type Resolver = BorrowedResolver;
+
+    // The resolve function consumes the resolver and produces the archived
+    // value at the given position.
+    fn resolve(&self, resolver: Self::Resolver, out: Place<Self::Archived>) {
+        munge!(let ArchivedStrSlice { ptr } = out);
+        RelPtr::emplace_unsized(resolver.pos, self.inner.archived_metadata(), ptr);
+    }
+}
+
+// We restrict our serializer types with Writer because we need its
+// capabilities to serialize the inner string. For other types, we might
+// need more or less restrictive bounds on the type of S.
+impl<'a, S: Fallible + Writer + ?Sized> Serialize<S> for StrSlice<'a> {
+    fn serialize(&self, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
+        // This is where we want to write the bytes of our string and return
+        // a resolver that knows where those bytes were written.
+        // We also need to serialize the metadata for our str.
+        Ok(BorrowedResolver {
+            pos: self.inner.serialize_unsized(serializer)?,
+        })
+    }
+}
+
+type Prop<'a> = (StrSlice<'a>, StrSlice<'a>, bool);
+
+#[derive(Archive, Serialize, Default)]
+pub struct PropsList<'a> {
+    pub data: [Prop<'a>; 5],
     pub len: u8,
 }
 
-impl Default for PropsList {
-    fn default() -> Self {
-        Self {
-            data: [Prop::default(); 5],
-            len: 0,
-        }
-    }
-}
-
-impl PropsList {
-    pub fn from_prop_slice(slice: &[(&str, &str, bool)]) -> core::result::Result<Self, ()> {
+impl<'a> PropsList<'a> {
+    pub fn from_prop_slice(
+        slice: &'a [(&'a str, &'a str, bool)],
+    ) -> core::result::Result<Self, ()> {
         if slice.len() > 5 {
             return Err(());
         }
 
         let mut props = Self::default();
         for (key, value, is_mono) in slice {
-            let key = ShortString::from_str(key)?;
-            let value = ShortString::from_str(value)?;
-            props.data[props.len as usize] = (key, value, *is_mono);
+            props.data[props.len as usize] =
+                (StrSlice::from(*key), StrSlice::from(*value), *is_mono);
             props.len += 1;
         }
         Ok(props)
     }
 }
 
-#[derive(Archive, Serialize)]
-pub struct StrList {
-    pub data: [ShortString; 5],
+#[derive(Archive, Serialize, Default)]
+pub struct StrList<'a> {
+    pub data: [StrSlice<'a>; 5],
     pub len: u8,
 }
 
-impl Default for StrList {
-    fn default() -> Self {
-        Self {
-            data: [ShortString::default(); 5],
-            len: 0,
-        }
-    }
-}
-
-impl StrList {
-    pub fn from_str_slice(slice: &[&str]) -> core::result::Result<Self, ()> {
+impl<'a> StrList<'a> {
+    pub fn from_str_slice(slice: &'a [&'a str]) -> core::result::Result<Self, ()> {
         if slice.len() > 5 {
             return Err(());
         }
 
         let mut list = Self::default();
         for s in slice {
-            let s = ShortString::from_str(s)?;
-            list.data[list.len as usize] = s;
+            list.data[list.len as usize] = StrSlice::from(*s);
             list.len += 1;
         }
         Ok(list)
     }
 }
 
-type StrExt = (LongString, bool);
+type StrExt<'a> = (StrSlice<'a>, bool);
 
-#[derive(Archive, Serialize)]
-pub struct StrExtList {
-    pub data: [StrExt; 5],
+#[derive(Archive, Serialize, Default)]
+pub struct StrExtList<'a> {
+    pub data: [StrExt<'a>; 5],
     pub len: u8,
 }
 
-impl Default for StrExtList {
-    fn default() -> Self {
-        Self {
-            data: [StrExt::default(); 5],
-            len: 0,
-        }
-    }
-}
-
-impl StrExtList {
-    pub fn from_str_slice(slice: &[(&str, bool)]) -> core::result::Result<Self, ()> {
+impl<'a> StrExtList<'a> {
+    pub fn from_str_slice(slice: &'a [(&'a str, bool)]) -> core::result::Result<Self, ()> {
         if slice.len() > 5 {
             return Err(());
         }
 
         let mut list = Self::default();
         for (s, flag) in slice {
-            let s = LongString::from_str(s)?;
-            list.data[list.len as usize] = (s, *flag);
+            list.data[list.len as usize] = (StrSlice::from(*s), *flag);
             list.len += 1;
         }
         Ok(list)
     }
 }
 
-#[derive(Archive, Serialize, Default)]
-pub struct DerivationPath {
-    pub data: [u32; 8],
-    pub len: u8,
+pub struct Slice<'a, T: Archive> {
+    inner: &'a [T],
 }
 
-impl DerivationPath {
-    pub fn from_slice(slice: &[u32]) -> core::result::Result<Self, ()> {
-        if slice.len() > 8 {
-            return Err(());
-        }
-        let mut data = [0u32; 8];
-        data[..slice.len()].copy_from_slice(slice);
-        Ok(Self {
-            data,
-            len: slice.len() as u8,
-        })
+impl<'a, T: Archive> Slice<'a, T> {
+    pub fn new(s: &'a [T]) -> Self {
+        Self { inner: s }
     }
 
-    pub fn as_slice(&self) -> &[u32] {
-        &self.data[..self.len as usize]
+    pub fn as_slice(&self) -> &'a [T] {
+        self.inner
+    }
+
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.inner.is_empty()
+    }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        self.inner.get(index)
+    }
+}
+
+impl<'a, T: Archive> From<&'a [T]> for Slice<'a, T> {
+    fn from(s: &'a [T]) -> Self {
+        Self::new(s)
+    }
+}
+
+#[derive(Portable)]
+#[repr(transparent)]
+pub struct ArchivedSlice<T: Archive> {
+    ptr: RelPtr<[T::Archived]>,
+}
+
+impl<T: Archive> ArchivedSlice<T> {
+    pub fn as_slice(&self) -> &[T::Archived] {
+        unsafe { &*self.ptr.as_ptr() }
+    }
+}
+
+impl<'a, T: Archive> Archive for Slice<'a, T> {
+    type Archived = ArchivedSlice<T>;
+    type Resolver = BorrowedResolver;
+
+    fn resolve(&self, resolver: Self::Resolver, out: Place<Self::Archived>) {
+        munge!(let ArchivedSlice { ptr } = out);
+        let metadata = rkyv::rend::u32_le::from_native(self.inner.len() as u32);
+        RelPtr::emplace_unsized(resolver.pos, metadata, ptr);
+    }
+}
+
+impl<'a, T: Archive, S: Fallible + Writer + ?Sized> Serialize<S> for Slice<'a, T>
+where
+    [T]: SerializeUnsized<S>,
+{
+    fn serialize(&self, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
+        Ok(BorrowedResolver {
+            pos: self.inner.serialize_unsized(serializer)?,
+        })
     }
 }
 
 #[derive(Archive, Serialize)]
-pub enum TrezorUiEnum {
+pub enum TrezorUiEnum<'a> {
     SelectMenu {
-        items: StrList,
-        cancel: Option<ShortString>,
+        items: StrList<'a>,
+        cancel: Option<StrSlice<'a>>,
+        br_code: i32,
     },
     ConfirmTrade {
-        title: ShortString,
-        subtitle: ShortString,
-        buy: ShortString,
-        sell: Option<ShortString>,
+        title: StrSlice<'a>,
+        subtitle: StrSlice<'a>,
+        buy: StrSlice<'a>,
+        sell: Option<StrSlice<'a>>,
         back_button: bool,
-        br_name: Option<ShortString>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
     },
     ConfirmAction {
-        title: ShortString,
-        action: ShortString,
+        title: StrSlice<'a>,
+        action: StrSlice<'a>,
         hold: bool,
-        verb: Option<ShortString>,
-        br_name: Option<ShortString>,
+        verb: Option<StrSlice<'a>>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
     },
     ConfirmSummary {
-        title: ShortString,
-        amount: Option<ShortString>,
-        amount_label: Option<ShortString>,
-        fee: ShortString,
-        fee_label: ShortString,
-        account_title: Option<ShortString>,
-        account_items: Option<PropsList>,
-        extra_title: Option<ShortString>,
-        extra_items: Option<PropsList>,
+        title: StrSlice<'a>,
+        amount: Option<StrSlice<'a>>,
+        amount_label: Option<StrSlice<'a>>,
+        fee: StrSlice<'a>,
+        fee_label: StrSlice<'a>,
+        account_title: Option<StrSlice<'a>>,
+        account_items: Option<PropsList<'a>>,
+        extra_title: Option<StrSlice<'a>>,
+        extra_items: Option<PropsList<'a>>,
         back_button: bool,
-        br_name: Option<ShortString>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
     },
     ConfirmValue {
-        title: ShortString,
-        value: ExtraLongString,
-        description: Option<LongString>,
+        title: StrSlice<'a>,
+        value: StrSlice<'a>,
+        description: Option<StrSlice<'a>>,
         is_data: bool,
-        subtitle: Option<ShortString>,
-        verb: Option<ShortString>,
+        subtitle: Option<StrSlice<'a>>,
+        verb: Option<StrSlice<'a>>,
         info: bool,
         hold: bool,
         chunkify: bool,
         page_counter: bool,
         cancel: bool,
-        br_name: Option<ShortString>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
         external_menu: bool,
-        warning_footer: Option<ShortString>,
+        warning_footer: Option<StrSlice<'a>>,
     },
     ConfirmValueIntro {
-        title: ShortString,
-        value: LongString,
-        subtitle: Option<ShortString>,
-        verb: Option<ShortString>,
-        verb_cancel: Option<ShortString>,
+        title: StrSlice<'a>,
+        value: StrSlice<'a>,
+        subtitle: Option<StrSlice<'a>>,
+        verb: Option<StrSlice<'a>>,
+        verb_cancel: Option<StrSlice<'a>>,
         hold: bool,
         chunkify: bool,
-        br_name: Option<ShortString>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
     },
     ConfirmLong {
-        title: ShortString,
+        title: StrSlice<'a>,
         pages: usize,
+        br_code: i32,
     },
     Warning {
-        title: ShortString,
-        content: ShortString,
-        verb: ShortString,
-        br_name: Option<ShortString>,
+        title: StrSlice<'a>,
+        content: StrSlice<'a>,
+        verb: StrSlice<'a>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
         allow_cancel: bool,
         danger: bool,
     },
     Mismatch {
-        title: ShortString,
+        title: StrSlice<'a>,
+        br_code: i32,
     },
     Danger {
-        title: ShortString,
-        content: LongString,
-        br_name: Option<ShortString>,
+        title: StrSlice<'a>,
+        content: StrSlice<'a>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
-        verb_cancel: Option<ShortString>,
-        menu_title: Option<ShortString>,
+        verb_cancel: Option<StrSlice<'a>>,
+        menu_title: Option<StrSlice<'a>>,
     },
     Success {
-        title: ShortString,
-        content: ShortString,
-        button: ShortString,
+        title: StrSlice<'a>,
+        content: StrSlice<'a>,
+        button: StrSlice<'a>,
         duration_ms: Option<u32>,
-        br_name: Option<ShortString>,
+        br_name: Option<StrSlice<'a>>,
+        br_code: i32,
     },
     RequestNumber {
-        title: ShortString,
-        content: ShortString,
+        title: StrSlice<'a>,
+        content: StrSlice<'a>,
         initial: u32,
         min: u32,
         max: u32,
+        br_code: i32,
     },
     ConfirmProperties {
-        title: ShortString,
-        props: PropsList,
-        subtitle: Option<ShortString>,
-        verb: Option<ShortString>,
+        title: StrSlice<'a>,
+        props: PropsList<'a>,
+        subtitle: Option<StrSlice<'a>>,
+        verb: Option<StrSlice<'a>>,
         hold: bool,
-        br_name: Option<ShortString>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
     },
     ShowProperties {
-        title: ShortString,
-        props: PropsList,
-        subtitle: Option<ShortString>,
-        br_name: Option<ShortString>,
+        title: StrSlice<'a>,
+        props: PropsList<'a>,
+        subtitle: Option<StrSlice<'a>>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
     },
     ShowPublicKey {
-        pubkey: LongString,
-        title: Option<ShortString>,
-        account: Option<ShortString>,
-        path: Option<ShortString>,
-        warning: Option<ShortString>,
-        br_name: Option<ShortString>,
+        pubkey: StrSlice<'a>,
+        title: StrSlice<'a>,
+        account: Option<StrSlice<'a>>,
+        path: Option<StrSlice<'a>>,
+        warning: Option<StrSlice<'a>>,
+        br_name: StrSlice<'a>,
+        br_code: i32,
     },
     ShowInfoWithCancel {
-        title: ShortString,
-        items: PropsList,
+        title: StrSlice<'a>,
+        items: PropsList<'a>,
         chunkify: bool,
-        br_name: Option<ShortString>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
     },
     ConfirmWithInfo {
-        title: ShortString,
-        subtitle: Option<ShortString>,
-        items: StrExtList,
-        verb: ShortString,
-        verb_info: ShortString,
-        br_name: Option<ShortString>,
+        title: StrSlice<'a>,
+        subtitle: Option<StrSlice<'a>>,
+        items: StrExtList<'a>,
+        verb: StrSlice<'a>,
+        verb_info: StrSlice<'a>,
+        br_name: Option<StrSlice<'a>>,
         br_code: i32,
     },
     ShowAddress {
-        address: ShortString,
-        title: Option<ShortString>,
-        subtitle: Option<ShortString>,
-        account: Option<ShortString>,
-        path: Option<ShortString>,
-        xpubs: PropsList,
+        address: StrSlice<'a>,
+        title: Option<StrSlice<'a>>,
+        subtitle: Option<StrSlice<'a>>,
+        account: Option<StrSlice<'a>>,
+        path: Option<StrSlice<'a>>,
+        xpubs: PropsList<'a>,
         chunkify: Option<bool>,
+        br_code: i32,
     },
 }
 
@@ -365,43 +416,42 @@ pub enum TrezorUiResult {
     Cancelled,
     Info,
     Integer(u32),
-    String(ShortString),
 }
 
 #[derive(Archive, Serialize)]
-pub enum TrezorCryptoEnum {
+pub enum TrezorCryptoEnum<'a> {
     GetXpub {
-        address_n: DerivationPath,
+        address_n: Slice<'a, u32>,
     },
     GetEthPubkeyHash {
-        address_n: DerivationPath,
-        encoded_network: Option<ShortBuffer>,
-        encoded_token: Option<ShortBuffer>,
+        address_n: Slice<'a, u32>,
+        encoded_network: Option<Slice<'a, u8>>,
+        encoded_token: Option<Slice<'a, u8>>,
     },
     SignTypedHash {
-        address_n: DerivationPath,
+        address_n: Slice<'a, u32>,
         hash: [u8; 32],
-        encoded_network: Option<LongBuffer>,
-        encoded_token: Option<LongBuffer>,
+        encoded_network: Option<Slice<'a, u8>>,
+        encoded_token: Option<Slice<'a, u8>>,
         chain_id: Option<u64>,
     },
     GetAddressMac {
-        address_n: DerivationPath,
-        address: ShortString,
-        encoded_network: Option<ShortBuffer>,
+        address_n: Slice<'a, u32>,
+        address: StrSlice<'a>,
+        encoded_network: Option<Slice<'a, u8>>,
     },
     CheckAddressMac {
-        address_n: DerivationPath,
+        address_n: Slice<'a, u32>,
         mac: [u8; 32],
-        address: ShortString,
-        encoded_network: Option<ShortBuffer>,
+        address: StrSlice<'a>,
+        encoded_network: Option<Slice<'a, u8>>,
     },
     VerifyNonceCache {
-        nonce: LongBuffer,
+        nonce: Slice<'a, u8>,
     },
 }
 
-impl TrezorCryptoEnum {
+impl<'a> TrezorCryptoEnum<'a> {
     pub fn id(&self) -> u8 {
         match self {
             Self::GetXpub { .. } => 0,
@@ -417,7 +467,7 @@ impl TrezorCryptoEnum {
 /// Outgoing Crypto result message for IPC
 #[derive(Archive, Serialize, Deserialize)]
 pub enum TrezorCryptoResult {
-    Xpub(LongString),
+    Xpub(String<150>), // (xpub bytes, xpub length)
     Signature([u8; 65]),
     EthPubkeyHash([u8; 20]),
     AddressMac([u8; 32]),
@@ -431,21 +481,21 @@ pub enum UtilEnum {
 }
 
 #[derive(Archive, Serialize, Deserialize)]
-pub enum TrezorProgressEnum {
+pub enum TrezorProgressEnum<'a> {
     Init {
-        description: Option<ShortString>,
-        title: Option<ShortString>,
+        description: Option<StrSlice<'a>>,
+        title: Option<StrSlice<'a>>,
         indeterminate: bool,
         danger: bool,
     },
     Update {
-        description: Option<ShortString>,
+        description: Option<StrSlice<'a>>,
         value: u32,
     },
     End,
 }
 
-impl TrezorProgressEnum {
+impl<'a> TrezorProgressEnum<'a> {
     pub fn id(&self) -> u16 {
         match self {
             TrezorProgressEnum::Init { .. } => 0,

@@ -18,10 +18,7 @@ use rkyv::{
     ser::{allocator::SubAllocator, writer::Buffer},
     util::Align,
 };
-use trezor_structs::{
-    ArchivedBufferN, ArchivedDerivationPath, ArchivedStringN, ArchivedTrezorCryptoEnum,
-    DerivationPath, LongString, TrezorCryptoResult,
-};
+use trezor_structs::{ArchivedSlice, ArchivedTrezorCryptoEnum, String, TrezorCryptoResult};
 
 extern "C" fn new_deserialize_crypto_message(
     n_args: usize,
@@ -33,48 +30,14 @@ extern "C" fn new_deserialize_crypto_message(
 
         let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
 
-        // Safe helper to convert archived string to DerivationPath using Deref
-        fn dp_from_archived(s: &ArchivedDerivationPath) -> DerivationPath {
-            let slice = unsafe {
-                core::slice::from_raw_parts(s.data.as_ptr() as *const u32, s.len as usize)
-            };
-            DerivationPath::from_slice(slice).unwrap_or_default()
-        }
+        fn obj_from_dp_slice(slice: &ArchivedSlice<u32>) -> Obj {
+            let slice = slice.as_slice();
+            let mut list = unwrap!(List::with_capacity(slice.len()));
 
-        fn obj_from_dp(dp: &DerivationPath) -> Obj {
-            let mut tuple_objs = heapless::Vec::<Obj, 10>::new();
-            for i in 0..(dp.as_slice().len() as usize) {
-                unwrap!(dp
-                    .as_slice()
-                    .get(i)
-                    .map(|&x| unwrap!(tuple_objs.push(unwrap!(x.try_into()))))
-                    .ok_or(Error::TypeError));
+            for &item in slice {
+                unwrap!(list.append(unwrap!(Obj::try_from(item.to_native()))));
             }
-            unwrap!(List::alloc(&tuple_objs)).into()
-        }
-
-        fn slice_from_archived<'a, const N: usize>(s: &'a ArchivedBufferN<N>) -> &'a [u8] {
-            let buf = unsafe {
-                core::slice::from_raw_parts::<u8>(s.data.as_ptr(), s.len.to_native() as usize)
-            };
-            buf
-        }
-
-        fn str_from_archived<'a, const N: usize>(s: &'a ArchivedStringN<N>) -> &'a str {
-            let str = unwrap!(core::str::from_utf8(slice_from_archived(s)));
-            str
-        }
-
-        fn buffer_from_archived<const N: usize>(s: &ArchivedBufferN<N>) -> Obj {
-            let slice = slice_from_archived(s);
-            let mut tuple_objs = heapless::Vec::<Obj, N>::new();
-            for i in 0..(slice.len() as usize) {
-                unwrap!(slice
-                    .get(i)
-                    .map(|&x| unwrap!(tuple_objs.push(unwrap!(x.try_into()))))
-                    .ok_or(Error::TypeError));
-            }
-            Obj::from(unwrap!(List::alloc(&tuple_objs)))
+            unwrap!(List::alloc(unsafe { list.as_slice() })).into()
         }
 
         // Deserialize the rkyv archived data directly from the static buffer
@@ -82,25 +45,21 @@ extern "C" fn new_deserialize_crypto_message(
 
         // Access the archived data zero-copy using safe Deref access
         let result: Obj = match archived {
-            ArchivedTrezorCryptoEnum::GetXpub { address_n } => {
-                let dp = dp_from_archived(address_n);
-                obj_from_dp(&dp)
-            }
+            ArchivedTrezorCryptoEnum::GetXpub { address_n } => obj_from_dp_slice(address_n),
             ArchivedTrezorCryptoEnum::GetEthPubkeyHash {
                 address_n,
                 encoded_network,
                 encoded_token,
             } => {
-                let dp = dp_from_archived(address_n);
                 let network_obj = match encoded_network.as_ref() {
-                    Some(network) => Obj::try_from(slice_from_archived(network))?,
+                    Some(network) => Obj::try_from(network.as_slice())?,
                     None => Obj::const_none(),
                 };
                 let token_obj = match encoded_token.as_ref() {
-                    Some(token) => Obj::try_from(slice_from_archived(token))?,
+                    Some(token) => Obj::try_from(token.as_slice())?,
                     None => Obj::const_none(),
                 };
-                (obj_from_dp(&dp), network_obj, token_obj).try_into()?
+                (obj_from_dp_slice(address_n), network_obj, token_obj).try_into()?
             }
             ArchivedTrezorCryptoEnum::SignTypedHash {
                 address_n,
@@ -109,14 +68,13 @@ extern "C" fn new_deserialize_crypto_message(
                 encoded_token,
                 chain_id,
             } => {
-                let dp = dp_from_archived(address_n);
                 let hash_obj = Obj::try_from(hash.as_slice())?;
                 let network_obj = match encoded_network.as_ref() {
-                    Some(network) => Obj::try_from(slice_from_archived(network))?,
+                    Some(network) => Obj::try_from(network.as_slice())?,
                     None => Obj::const_none(),
                 };
                 let token_obj = match encoded_token.as_ref() {
-                    Some(token) => Obj::try_from(slice_from_archived(token))?,
+                    Some(token) => Obj::try_from(token.as_slice())?,
                     None => Obj::const_none(),
                 };
                 let chain_id_obj = match chain_id.as_ref() {
@@ -124,7 +82,7 @@ extern "C" fn new_deserialize_crypto_message(
                     None => Obj::const_none(),
                 };
                 (
-                    obj_from_dp(&dp),
+                    obj_from_dp_slice(address_n),
                     hash_obj,
                     network_obj,
                     token_obj,
@@ -137,16 +95,19 @@ extern "C" fn new_deserialize_crypto_message(
                 address,
                 encoded_network,
             } => {
-                let dp = dp_from_archived(address_n);
-                let address_str = str_from_archived(address);
                 let buffer_obj = match encoded_network.as_ref() {
-                    Some(network) => Obj::try_from(slice_from_archived(network))?,
+                    Some(network) => Obj::try_from(network.as_slice())?,
                     None => Obj::const_none(),
                 };
-                (obj_from_dp(&dp), address_str.try_into()?, buffer_obj).try_into()?
+                (
+                    obj_from_dp_slice(address_n),
+                    address.as_str().try_into()?,
+                    buffer_obj,
+                )
+                    .try_into()?
             }
             ArchivedTrezorCryptoEnum::VerifyNonceCache { nonce } => {
-                Obj::try_from(slice_from_archived(nonce))?
+                Obj::try_from(nonce.as_slice())?
             }
             ArchivedTrezorCryptoEnum::CheckAddressMac {
                 address_n,
@@ -154,16 +115,14 @@ extern "C" fn new_deserialize_crypto_message(
                 address,
                 encoded_network,
             } => {
-                let dp = dp_from_archived(address_n);
-                let address_str = str_from_archived(address);
                 let buffer_obj = match encoded_network.as_ref() {
-                    Some(network) => Obj::try_from(slice_from_archived(network))?,
+                    Some(network) => Obj::try_from(network.as_slice())?,
                     None => Obj::const_none(),
                 };
                 (
-                    obj_from_dp(&dp),
+                    obj_from_dp_slice(address_n),
                     mac.as_slice().try_into()?,
-                    address_str.try_into()?,
+                    address.as_str().try_into()?,
                     buffer_obj,
                 )
                     .try_into()?
@@ -192,10 +151,8 @@ extern "C" fn new_send_crypto_result(n_args: usize, args: *const Obj, kwargs: *m
 
         // Map MicroPython CryptoResult object to Rust enum for serialization
         let msg = if obj.is_str() {
-            let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
-            TrezorCryptoResult::Xpub(unwrap!(LongString::from_str(unwrap!(
-                core::str::from_utf8(data)
-            ))))
+            let slice = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
+            TrezorCryptoResult::Xpub(unwrap!(String::from_slice(slice)))
         } else if obj.is_bytes() {
             let data = unwrap!(unsafe { crate::micropython::buffer::get_buffer(obj) });
             dbg_println!("Data with length: {}", data.len());

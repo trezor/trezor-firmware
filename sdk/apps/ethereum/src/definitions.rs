@@ -325,7 +325,7 @@ fn _networks_iterator() -> &'static [(u64, u32, &'static str, &'static str)] {
         (1, 60, COIN, "Ethereum"),
         (10, 614, COIN, "Optimism"),
         (56, 714, "BNB", "BNB Smart Chain"),
-        (61, 61, COIN, "Ethereum Classic"),
+        (61, 61, "ETC", "Ethereum Classic"),
         (137, 966, "POL", "Polygon"),
         (8453, 8453, COIN, "Base"),
         (42161, 9001, COIN, "Arbitrum One"),

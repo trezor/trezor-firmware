@@ -72,7 +72,7 @@ pub(crate) enum EthereumMessages {
 // TODO: decrease size and use long string confirmation instead of blob
 #[cfg(not(test))]
 #[global_allocator]
-static ALLOCATOR: emballoc::Allocator<32768> = emballoc::Allocator::new();
+static ALLOCATOR: emballoc::Allocator<65536> = emballoc::Allocator::new();
 
 /// Macro to generate handler functions
 macro_rules! wire_handler {
