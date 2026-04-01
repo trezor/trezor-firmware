@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import unicodedata
+from collections import defaultdict
 from dataclasses import dataclass
 from itertools import groupby
 from pathlib import Path
@@ -47,9 +48,9 @@ def _extract_gpos_kerning(font_path: str) -> dict[tuple[int, int], int]:
         return kerning
 
     # Reverse map: glyph name -> list of codepoints
-    glyph_to_codepoints: dict[str, list[int]] = {}
+    glyph_to_codepoints: defaultdict[str, list[int]] = defaultdict(list)
     for cp, glyph_name in cmap.items():
-        glyph_to_codepoints.setdefault(glyph_name, []).append(cp)
+        glyph_to_codepoints[glyph_name].append(cp)
 
     gpos = tt["GPOS"].table
     for lookup in gpos.LookupList.Lookup:
@@ -58,10 +59,10 @@ def _extract_gpos_kerning(font_path: str) -> dict[tuple[int, int], int]:
                 # PairPos Format 1
                 for i, pair_set in enumerate(subtable.PairSet):
                     left_glyph = subtable.Coverage.glyphs[i]
-                    left_cps = glyph_to_codepoints.get(left_glyph, [])
+                    left_cps = glyph_to_codepoints[left_glyph]
                     for pvr in pair_set.PairValueRecord:
                         right_glyph = pvr.SecondGlyph
-                        right_cps = glyph_to_codepoints.get(right_glyph, [])
+                        right_cps = glyph_to_codepoints[right_glyph]
                         val = 0
                         if pvr.Value1 and hasattr(pvr.Value1, "XAdvance"):
                             val = pvr.Value1.XAdvance
@@ -104,10 +105,8 @@ def _extract_gpos_kerning(font_path: str) -> dict[tuple[int, int], int]:
                             right_glyphs = [g for g, c in class2.items() if c == c2_idx]
                         for left_glyph in left_glyphs:
                             for right_glyph in right_glyphs:
-                                for left_cp in glyph_to_codepoints.get(left_glyph, []):
-                                    for right_cp in glyph_to_codepoints.get(
-                                        right_glyph, []
-                                    ):
+                                for left_cp in glyph_to_codepoints[left_glyph]:
+                                    for right_cp in glyph_to_codepoints[right_glyph]:
                                         kerning[(left_cp, right_cp)] = val
 
     tt.close()
