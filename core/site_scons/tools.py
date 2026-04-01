@@ -185,6 +185,11 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
             # - https://blog.japaric.io/stack-analysis/
             # - https://github.com/japaric/stack-sizes/
             "emit-stack-sizes",
+            # Ensure DWARF debug info is generated in a deterministic order across
+            # host platforms (x86_64 vs aarch64). Without this, the Rust compiler's
+            # internal hash maps produce different symbol orderings on different hosts,
+            # breaking cross-platform build reproducibility (see GitHub issue #2626).
+            "deterministic-debuginfo",
         ]
 
         env.Append(ENV={"RUSTFLAGS": " ".join(f"-Z {f}" for f in unstable_rustc_flags)})

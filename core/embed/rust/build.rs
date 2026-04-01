@@ -167,6 +167,14 @@ fn prepare_bindings() -> bindgen::Builder {
 
     // Pass in correct include paths and defines.
     if is_firmware() {
+        // Set the cross-compilation target so clang uses ARM macros and ABI,
+        // not the host platform's (x86_64 vs aarch64). Without this, builds
+        // from different host architectures produce different bindings because
+        // clang uses host-specific predefined macros (__x86_64__, __aarch64__,
+        // __SIZEOF_LONG_DOUBLE__, etc.) when processing the C headers.
+        let target = env::var("TARGET").unwrap();
+        clang_args.push(format!("--target={}", target));
+
         clang_args.push("-nostdinc".to_string());
         clang_args.push("-fshort-enums".to_string()); // Make sure enums use the same size as in C
 
