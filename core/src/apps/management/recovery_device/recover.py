@@ -90,15 +90,15 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
 
 
 if TYPE_CHECKING:
-    Slip39State = tuple[int, BackupType] | tuple[None, None]
+    Slip39State = tuple[int, BackupType]
 
 
-def load_slip39_state() -> Slip39State:
+def load_slip39_state() -> Slip39State | None:
     from apps.common import backup_types
 
     previous_mnemonics = fetch_previous_mnemonics()
     if not previous_mnemonics:
-        return None, None
+        return None
     # let's get the first mnemonic and decode it to find out the metadata
     mnemonic = next(p[0] for p in previous_mnemonics if p)
     share = slip39.decode_mnemonic(mnemonic)

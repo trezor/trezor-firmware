@@ -104,53 +104,56 @@ async def _request_mnemonic(
         return None
 
 
-async def _continue_recovery_process() -> Success:
-    from trezor.enums import RecoveryType
+async def _recover_secret(recovery_type: RecoveryType) -> tuple[bytes, BackupType]:
     from trezor.errors import MnemonicError
 
-    # gather the current recovery state from storage
-    recovery_type = storage_recovery.get_type()
-    word_count, backup_type = recover.load_slip39_state()
+    # Show recovery state in the beginning, on some failures, and after a successful share entry.
+    is_retry = False
 
-    # Both word_count and backup_type are derived from the same data. Both will be
-    # either set or unset. We use 'backup_type is None' to detect status of both.
-    # The following variable indicates that we are (re)starting the first recovery step,
-    # which includes word count selection.
-    secret = None
-
-    # Will be shown in the beginning, on some failures, and after a successful share entry.
-    show_enter_share = _request_share_first_screen
-    while secret is None:
-        if backup_type is None:
+    while True:
+        # `slip39_state is None` indicates that we are (re)starting the first recovery step,
+        # which includes word count selection.
+        if (slip39_state := recover.load_slip39_state()) is None:
             # If we are starting recovery, ask for word count first...
             try:
                 word_count = await layout.request_word_count(recovery_type)
             except wire.ActionCancelled:
                 raise RecoveryAborted
             # ...and only then show the starting screen with word count.
-            show_enter_share = _request_share_first_screen
+            # Backup type will be deduced from the first share.
+            backup_type = None
+        else:
+            # SLIP-39 recovery is ongoing (at least one share was entered).
+            word_count, backup_type = slip39_state
 
         # If we continue recovery, show starting screen with word count immediately.
-        assert word_count is not None
-
-        if show_enter_share is not None:
-            await show_enter_share(word_count, recovery_type)
-            show_enter_share = None
+        if not is_retry or backup_type is None:
+            await _request_share_first_screen(word_count, recovery_type)
+        is_retry = False
 
         # Ask for mnemonic words one by one
-        words = await _request_mnemonic(word_count, backup_type)
-
+        # Returns `None` on cancellation/validation error.
+        if (words := await _request_mnemonic(word_count, backup_type)) is None:
+            continue
         try:
-            if words is not None:
-                secret, backup_type = await _process_words(words)
-                # If _process_words succeeded, we now have both backup_type (from
-                # its result) and word_count (from request_word_count earlier), which means
-                # that the first step is complete.
-            show_enter_share = _request_share_first_screen
+            if (result := await _process_words(words)) is not None:
+                return result
+            # If _process_words succeeded, at least one share was entered.
         except MnemonicError:
             await show_invalid_mnemonic(word_count)
+            is_retry = True  # Retry share entry (without showing recovery state)
 
-    assert backup_type is not None
+
+async def _continue_recovery_process() -> Success:
+    from trezor.enums import RecoveryType
+
+    # gather the current recovery state from storage
+    recovery_type = storage_recovery.get_type()
+
+    # run recovery process - may raise RecoveryAborted
+    secret, backup_type = await _recover_secret(recovery_type)
+
+    # finish recovery
     if recovery_type == RecoveryType.DryRun:
         result = await _finish_recovery_dry_run(secret, backup_type)
     elif recovery_type == RecoveryType.UnlockRepeatedBackup:
@@ -264,7 +267,7 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
     return Success(message="Device recovered")
 
 
-async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
+async def _process_words(words: str) -> tuple[bytes, BackupType] | None:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
@@ -279,6 +282,7 @@ async def _process_words(words: str) -> tuple[bytes | None, BackupType]:
         assert share is not None
         if share.group_count and share.group_count > 1:
             await layout.show_group_share_success(share.index, share.group_index)
+        return None  # more shares are needed
 
     return secret, backup_type
 
