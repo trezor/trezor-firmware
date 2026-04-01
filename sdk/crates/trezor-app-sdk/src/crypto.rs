@@ -183,13 +183,14 @@ pub fn secp256k1_verify_recover(
     signature: &[u8; 65],
     digest: &[u8; 32],
 ) -> Option<([u8; 65], usize)> {
-    let recid = i32::from(signature[0]) - 27;
+    let mut recid = signature[0] - 27;
 
     if recid >= 8 {
         return None; // Invalid recovery id
     }
 
     let compressed = recid >= 4;
+    recid &= 3;
     let mut pub_key = [0u8; 65];
     let secp256k1 = unsafe { &*get_crypto_or_die().secp256k1 };
 
@@ -199,7 +200,7 @@ pub fn secp256k1_verify_recover(
             &mut pub_key as *mut u8,
             &signature[1],
             digest.as_ptr(),
-            recid,
+            recid.into(),
         )
     } != 0
     {

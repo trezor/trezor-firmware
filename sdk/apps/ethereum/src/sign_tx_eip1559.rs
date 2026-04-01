@@ -1,9 +1,10 @@
 use crate::{
     common::{
         SC_ARGUMENT_ADDRESS_BYTES, SC_ARGUMENT_BYTES, SC_FUNC_APPROVE_REVOKE_AMOUNT,
-        SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_BYTES, SC_FUNC_SIG_TRANSFER, require_confirm_address,
-        require_confirm_approve, require_confirm_other_data, require_confirm_payment_request,
-        require_confirm_tx, run_staking_approver, send_request_chunk,
+        SC_FUNC_SIG_APPROVE, SC_FUNC_SIG_BYTES, SC_FUNC_SIG_TRANSFER, check_common_fields,
+        confirm_tx_data, require_confirm_address, require_confirm_approve,
+        require_confirm_other_data, require_confirm_payment_request, require_confirm_tx,
+        run_staking_approver, send_request_chunk,
     },
     definitions::Definitions,
     helpers::{
@@ -27,7 +28,11 @@ use alloc::{string::String, vec, vec::Vec};
 use primitive_types::U256;
 #[cfg(test)]
 use std::{string::String, vec, vec::Vec};
-use trezor_app_sdk::{Error, Result, crypto, info, ui, unwrap};
+use trezor_app_sdk::{
+    Error, Result, crypto, info,
+    ui::{self, Property},
+    unwrap,
+};
 
 const TX_TYPE: u32 = 2;
 
@@ -75,7 +80,7 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
     }
 
     info!("checking common fields");
-    check_common_fields(&msg)?;
+    check_common_fields(msg.data_length, data_initial_chunk, to, msg.chain_id)?;
 
     // have a user confirm signing
     dp.validate(&keychain)?;
@@ -102,9 +107,9 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
         definitions.network(),
     );
 
-    let fee_items_ref: Vec<(&str, &str, bool)> = fee_items
+    let fee_items_ref: Vec<Property> = fee_items
         .iter()
-        .map(|(k, v, mono)| (k.as_str(), v.as_str(), *mono))
+        .map(|(k, v, mono)| Property::new(k, v, *mono))
         .collect();
 
     info!("payment request verifier");
@@ -123,12 +128,19 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
     info!("confirming transaction data");
 
     confirm_tx_data(
-        &msg,
+        &dp,
+        data_initial_chunk,
+        msg.data_length,
+        &msg.value,
+        &to,
+        msg.chain_id,
+        msg.chunkify,
         &definitions,
+        None,
         &address_bytes,
         &maximum_fee,
         &fee_items_ref,
-        msg.data_length,
+        msg.payment_req.as_ref(),
         payment_req_verifier,
     )?;
 
@@ -263,241 +275,6 @@ pub fn sign_tx_eip1559(mut msg: EthereumSignTxEip1559) -> Result<EthereumTxReque
     Ok(res)
 }
 
-// TODO: very similar code in sign_tx.rs, should be refactored to avoid duplication
-fn check_common_fields(msg: &EthereumSignTxEip1559) -> Result<()> {
-    let data_length = msg.data_length;
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-    let to = msg.to.as_deref().ok_or(Error::DataError)?;
-
-    if data_length > 0 {
-        // TODO: proper error type: DataError("Data length provided, but no initial chunk")
-        info!("Data length provided, but no initial chunk");
-        if data_initial_chunk.is_empty() {
-            return Err(Error::DataError);
-        }
-
-        // Our encoding only supports transactions up to 2^24 bytes. To
-        // prevent exceeding the limit we use a stricter limit on data length.
-        if data_length > 16_000_000 {
-            // TODO: proper error type: DataError("Data length exceeds limit")
-            info!("Data length exceeds limit");
-            return Err(Error::DataError);
-        }
-
-        if data_initial_chunk.len() > data_length as usize {
-            // TODO: proper error type: DataError("Invalid size of initial chunk")
-            info!("Invalid size of initial chunk");
-            return Err(Error::DataError);
-        }
-    }
-
-    if !matches!(to.len(), 0 | 40 | 42) {
-        // TODO: proper error type: DataError("Invalid recipient address")
-        info!("Invalid recipient address");
-        return Err(Error::DataError);
-    }
-
-    if to.is_empty() && data_length == 0 {
-        // sending transaction to address 0 (contract creation) without a data field
-        // TODO: proper error type: DataError("Contract creation without data")
-        info!("Contract creation without data");
-        return Err(Error::DataError);
-    }
-
-    if msg.chain_id == 0 {
-        // TODO: proper error type: DataError("Chain ID out of bounds")
-        info!("Chain ID out of bounds");
-        return Err(Error::DataError);
-    }
-
-    Ok(())
-}
-
-// TODO: this function is very similar to the confirm_tx_data function in sign_tx.rs, should be refactored to avoid duplication
-fn confirm_tx_data(
-    msg: &EthereumSignTxEip1559,
-    definitions: &Definitions,
-    address_bytes: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
-    data_total_len: u32,
-    payment_req_verifier: Option<PaymentRequestVerifier>,
-) -> Result<()> {
-    let dp = Bip32Path::from_slice(&msg.address_n);
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-
-    if true
-        == run_staking_approver(
-            &dp,
-            data_initial_chunk,
-            &msg.value,
-            &definitions.network(),
-            address_bytes,
-            maximum_fee,
-            fee_items,
-        )?
-    {
-        return Ok(());
-    }
-
-    info!("handling known contract calls");
-    let (token, token_address, func_sig, recipient, value) =
-        handle_known_contract_calls(msg, definitions, address_bytes)?;
-
-    info!("recipient len is {}", recipient.len());
-
-    info!(
-        "func sig len is {}",
-        func_sig.as_ref().map(|s| s.len()).unwrap_or(0)
-    );
-    let is_approve = func_sig.as_deref() == Some(&SC_FUNC_SIG_APPROVE);
-    let is_unknown_token = &token == &Some(tokens::unknown_token());
-
-    if is_unknown_token {
-        let title = String::from(if is_approve {
-            if matches!(value, Some(v) if v == U256::from(SC_FUNC_APPROVE_REVOKE_AMOUNT)) {
-                "Token revocation"
-            } else {
-                "Token approval"
-            }
-        } else {
-            "Send"
-        });
-
-        info!(
-            "unknown token contract address: showing warning with title {}",
-            title.as_str()
-        );
-
-        ui::error_if_not_confirmed(ui::show_danger(
-            "Important",
-            "Unknown token contract address. Continue only if you know what you are doing!",
-            Some("unknown_contract_warning"),
-            ButtonRequestType::ButtonRequestWarning.into(),
-            Some("Cancel sign"),
-            Some(&title),
-        )?)?;
-
-        if !is_approve {
-            // For unknown tokens we also show the token address immediately after the warning
-            // except in the case of the "approve" flow which shows the token address later on!
-            require_confirm_address(
-                address_bytes,
-                Some("Send"),
-                Some("Token contract address"),
-                None,
-                Some("Continue"),
-                Some("unknown_token"),
-                Some("Unknown token contract address."),
-            )?
-        }
-    }
-
-    if is_approve {
-        info!("handling approve flow");
-
-        if token.is_none() || token_address.is_none() {
-            // TODO: proper error type
-            return Err(Error::DataError);
-        }
-
-        info!(
-            "token address len is {:?}",
-            token_address.as_deref().map(|a| a.len())
-        );
-
-        if payment_req_verifier.is_some() {
-            // TODO: proper error type: DataError("Payment Requests not supported for the APPROVE call")
-            return Err(Error::DataError);
-        }
-
-        require_confirm_approve(
-            &recipient,
-            value,
-            &dp,
-            maximum_fee,
-            fee_items,
-            msg.chain_id,
-            &definitions.network(),
-            &token.unwrap(),
-            &token_address.unwrap(),
-            msg.chunkify.unwrap_or(false),
-        )?;
-    } else {
-        info!("handling regular transaction flow");
-        assert!(value.is_some());
-
-        let recipient_str = if !recipient.is_empty() {
-            info!("recipient is not empty, treating as regular transaction");
-            Some(address_from_bytes(&recipient, Some(definitions.network())))
-        } else {
-            info!("recipient is empty, treating as contract creation");
-            None
-        };
-        let token_address_str = address_from_bytes(address_bytes, Some(definitions.network()));
-        let is_contract_interaction = token.is_none() && data_total_len > 0;
-
-        info!("is contract interaction: {}", is_contract_interaction);
-        info!("datatotal_len: {}", data_total_len);
-
-        if let Some(mut payment_req_verifier) = payment_req_verifier {
-            info!("handling payment request flow");
-            if is_contract_interaction {
-                // TODO: proper error type: DataError("Payment Requests don't support contract interactions")
-                info!("payment requests don't support contract interactions");
-                return Err(Error::DataError);
-            }
-
-            // If a payment_req_verifier is provided, then msg.payment_req must have been set.
-            if msg.payment_req.is_none() || recipient_str.is_none() {
-                // TODO: proper error type
-                info!(
-                    "invalid payment request: recipient must be empty and payment_req must be provided"
-                );
-                return Err(Error::DataError);
-            }
-
-            payment_req_verifier.add_output(
-                unwrap!(value).into(),
-                unwrap!(recipient_str.as_deref()),
-                None,
-            )?;
-            info!("verifying payment request");
-            payment_req_verifier.verify()?;
-
-            require_confirm_payment_request(
-                unwrap!(recipient_str.as_deref()),
-                msg.payment_req.as_ref().unwrap(),
-                &dp,
-                maximum_fee,
-                fee_items,
-                msg.chain_id,
-                definitions.network(),
-                token.as_ref(),
-                &token_address_str,
-            )?;
-        } else {
-            if is_contract_interaction {
-                require_confirm_other_data(data_initial_chunk, data_total_len)?;
-            };
-
-            require_confirm_tx(
-                recipient_str.as_deref(),
-                unwrap!(value),
-                &dp,
-                maximum_fee,
-                fee_items,
-                definitions.network(),
-                token.as_ref(),
-                !is_contract_interaction,
-                msg.chunkify.unwrap_or(false),
-            )?;
-        };
-    };
-
-    Ok(())
-}
-
 pub fn get_total_length(msg: &EthereumSignTxEip1559, data_total: u32) -> Result<u32> {
     let mut length = 0;
 
@@ -534,99 +311,6 @@ pub fn get_total_length(msg: &EthereumSignTxEip1559, data_total: u32) -> Result<
     length += access_list_length;
 
     Ok(length)
-}
-
-// TODO: this function is very similar to the handle_known_contract_calls function in sign_tx.rs, should be refactored to avoid duplication
-fn handle_known_contract_calls(
-    msg: &EthereumSignTxEip1559,
-    definitions: &Definitions,
-    address_bytes: &[u8],
-) -> Result<(
-    Option<EthereumTokenInfo>,
-    Option<Vec<u8>>,
-    Option<Vec<u8>>,
-    Vec<u8>,
-    Option<U256>,
-)> {
-    let data_initial_chunk = msg.data_initial_chunk.as_deref().ok_or(Error::DataError)?;
-    let to = msg.to.as_deref().ok_or(Error::DataError)?;
-
-    let mut token = None;
-    let mut token_address = None;
-    let mut recipient = Vec::from(address_bytes);
-
-    // TODO: better implement parsing int value from bytes
-    assert!(msg.value.len() <= 32);
-    let mut value = Some(U256::from_big_endian(&msg.value));
-
-    let mut offset = 0;
-    let mut remaining = data_initial_chunk.len();
-
-    if remaining < SC_FUNC_SIG_BYTES {
-        info!("data too short");
-        return Ok((token, token_address, None, recipient, value));
-    }
-
-    let mut func_sig = Some(Vec::from(
-        &data_initial_chunk[offset..(offset + SC_FUNC_SIG_BYTES)],
-    ));
-    offset += SC_FUNC_SIG_BYTES;
-    remaining -= SC_FUNC_SIG_BYTES;
-
-    if matches!(to.len(), 40 | 42)
-        && msg.value.len() == 0
-        && msg.data_length == 68
-        && data_initial_chunk.len() == 68
-        && (matches!(func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_TRANSFER)
-            || matches!( func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_APPROVE))
-    {
-        // The two functions happen to have the exact same parameters, so we treat them together.
-        // This will need to be made into a more generic solution eventually.
-        // arg0: address, Address, 20 bytes (left padded with zeroes)
-        // arg1: value, uint256, 32 bytes
-
-        if remaining < SC_ARGUMENT_BYTES * 2 {
-            return Ok((token, token_address, None, recipient, value));
-        }
-
-        let arg0 = &data_initial_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
-        offset += SC_ARGUMENT_BYTES;
-        // remaining -= SC_ARGUMENT_BYTES;
-
-        let pad_len = SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES;
-        assert!(arg0[..pad_len].iter().all(|&byte| byte == 0));
-        recipient = Vec::from(&arg0[pad_len..]);
-
-        let arg1 = &data_initial_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
-
-        if matches!(func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_APPROVE)
-            && arg1.iter().all(|&byte| byte == 255)
-        {
-            // "Unlimited" approval (all bits set) is a special case
-            // which we encode as value=None internally.
-            value = None;
-            info!("Detected unlimited approval, treating value as None");
-        } else {
-            // TODO: better implement parsing int value from bytes
-            assert!(arg1.len() <= 32);
-            value = Some(U256::from_big_endian(arg1));
-            // info!("Parsed value from function arguments: {}", value);
-        }
-
-        token = Some(definitions.get_token(address_bytes));
-        token_address = Some(Vec::from(address_bytes));
-    } else {
-        // If the function was known but something else (data length) was unexpected,
-        // pretend we did not recognize the function so we fall back to blind signing.
-        // See the approve_avantis test case and ERC-8021.
-
-        func_sig = None;
-        info!(
-            "Function signature not recognized or data length mismatch, treating as unknown function"
-        );
-    };
-
-    Ok((token, token_address, func_sig, recipient, value))
 }
 
 fn access_list_item_length(item: &EthereumAccessList) -> Result<u32> {

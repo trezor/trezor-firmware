@@ -22,8 +22,8 @@ pub use rkyv::Archived;
 use rkyv::api::low::deserialize;
 use rkyv::rancor::Failure;
 use rkyv::to_bytes;
-use trezor_structs::{ArchivedUtilEnum, PropsList, StrExtList, StrList, TrezorUiEnum};
-pub use trezor_structs::{TrezorProgressEnum, TrezorUiResult};
+use trezor_structs::{ArchivedUtilEnum, StrSlice, TrezorUiEnum};
+pub use trezor_structs::{Property, StrExt, TrezorProgressEnum, TrezorUiResult};
 
 use crate::core_services::services_or_die;
 use crate::ipc::IpcMessage;
@@ -253,7 +253,7 @@ pub fn interact_with_info_flow(
 
 pub struct Details<'a> {
     pub name: &'a str,
-    pub props: &'a [(&'a str, &'a str, bool)],
+    pub props: &'a [Property<'a>],
     pub title: Option<&'a str>,
     pub subtitle: Option<&'a str>,
     pub br_code: i32,
@@ -262,7 +262,7 @@ pub struct Details<'a> {
 impl<'a> Details<'a> {
     pub fn new(
         name: &'a str,
-        props: &'a [(&'a str, &'a str, bool)],
+        props: &'a [Property<'a>],
         title: Option<&'a str>,
         subtitle: Option<&'a str>,
         br_code: i32,
@@ -324,10 +324,10 @@ impl<'a> Menu<'a> {
             return Err(Error::Timeout);
         }
 
-        let mut items = [""; Self::MAX_MENU_ITEMS];
+        let mut items = ["".into(); Self::MAX_MENU_ITEMS];
         let mut i = 0usize;
         while i < self.children.len() {
-            items[i] = self.children[i].name;
+            items[i] = self.children[i].name.into();
             i += 1;
         }
 
@@ -531,16 +531,16 @@ pub fn confirm_blob(
     }
 }
 
-pub fn confirm_summary(
+pub fn confirm_summary<'a>(
     title: Option<&str>,
     amount: Option<&str>,
     amount_label: Option<&str>,
     fee: &str,
     fee_label: &str,
     account_title: Option<&str>,
-    account_items: Option<&[(&str, &str, bool)]>,
+    account_items: Option<&[Property<'a>]>,
     extra_title: Option<&str>,
-    extra_items: Option<&[(&str, &str, bool)]>,
+    extra_items: Option<&[Property<'a>]>,
     back_button: bool,
     br_name: Option<&str>,
     br_code: i32,
@@ -552,13 +552,9 @@ pub fn confirm_summary(
         fee: fee.into(),
         fee_label: fee_label.into(),
         account_title: account_title.map(|t| t.into()),
-        account_items: account_items
-            .map(|items| PropsList::from_prop_slice(items).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        account_items: account_items.map(|items| items.into()),
         extra_title: extra_title.map(|t| t.into()),
-        extra_items: extra_items
-            .map(|items| PropsList::from_prop_slice(items).map_err(|_| Error::FailedToSend))
-            .transpose()?,
+        extra_items: extra_items.map(|items| items.into()),
         back_button: back_button,
         br_name: br_name.map(|b| b.into()),
         br_code: br_code,
@@ -602,9 +598,9 @@ pub fn confirm_long_value(title: &str, content: &str, br_code: i32) -> UiResult 
     }
 }
 
-fn select_menu(items: &[&str], cancel: Option<&str>, br_code: i32) -> UiResult {
+fn select_menu<'a>(items: &[StrSlice<'a>], cancel: Option<&str>, br_code: i32) -> UiResult {
     let value = TrezorUiEnum::SelectMenu {
-        items: StrList::from_str_slice(items).map_err(|_| Error::FailedToSend)?,
+        items: items.into(),
         cancel: cancel.map(|c| c.into()),
         br_code,
     };
@@ -624,9 +620,9 @@ fn select_menu(items: &[&str], cancel: Option<&str>, br_code: i32) -> UiResult {
 /// Show a confirmation dialog with a list of key-value properties
 ///
 /// Returns `Ok(true)` if user confirms, `Ok(false)` if user cancels
-pub fn confirm_properties(
+pub fn confirm_properties<'a>(
     title: &str,
-    props: &[(&str, &str, bool)],
+    props: &[Property<'a>],
     subtitle: Option<&str>,
     verb: Option<&str>,
     hold: bool,
@@ -635,7 +631,7 @@ pub fn confirm_properties(
 ) -> UiResult {
     let value = TrezorUiEnum::ConfirmProperties {
         title: title.into(),
-        props: PropsList::from_prop_slice(props).map_err(|_| Error::FailedToSend)?,
+        props: props.into(),
         subtitle: subtitle.map(|s| s.into()),
         verb: verb.map(|v| v.into()),
         hold,
@@ -645,16 +641,16 @@ pub fn confirm_properties(
     ipc_ui_call_confirm(&value)
 }
 
-pub fn show_properties(
+pub fn show_properties<'a>(
     title: &str,
-    props: &[(&str, &str, bool)],
+    props: &[Property<'a>],
     subtitle: Option<&str>,
     br_name: Option<&str>,
     br_code: i32,
 ) -> Result<()> {
     let value = TrezorUiEnum::ShowProperties {
         title: title.into(),
-        props: PropsList::from_prop_slice(props).map_err(|_| Error::FailedToSend)?,
+        props: props.into(),
         subtitle: subtitle.map(|s| s.into()),
         br_name: br_name.map(|b| b.into()),
         br_code,
@@ -684,16 +680,16 @@ pub fn show_warning(
     ipc_ui_call_void(&value)
 }
 
-pub fn show_info_with_cancel(
+pub fn show_info_with_cancel<'a>(
     title: &str,
-    items: &[(&str, &str, bool)],
+    items: &[Property<'a>],
     chunkify: bool,
     br_name: Option<&str>,
     br_code: i32,
 ) -> UiResult {
     let value = TrezorUiEnum::ShowInfoWithCancel {
         title: title.into(),
-        items: PropsList::from_prop_slice(items).map_err(|_| Error::FailedToSend)?,
+        items: items.into(),
         chunkify,
         br_name: br_name.map(|b| b.into()),
         br_code,
@@ -818,9 +814,9 @@ pub fn show_public_key(
     ipc_ui_call_confirm(&value)
 }
 
-pub fn should_show_more(
+pub fn should_show_more<'a>(
     title: &str,
-    para: &[(&str, bool)],
+    para: &[StrExt<'a>],
     button_text: &str,
     br_name: Option<&str>,
     br_code: i32,
@@ -836,10 +832,10 @@ pub fn should_show_more(
     }
 }
 
-pub fn confirm_with_info(
+pub fn confirm_with_info<'a>(
     title: &str,
     subtitle: Option<&str>,
-    para: &[(&str, bool)],
+    para: &[StrExt<'a>],
     verb: &str,
     verb_info: &str,
     br_name: Option<&str>,
@@ -848,7 +844,7 @@ pub fn confirm_with_info(
     let value = TrezorUiEnum::ConfirmWithInfo {
         title: title.into(),
         subtitle: subtitle.map(|s| s.into()),
-        items: StrExtList::from_str_slice(para).map_err(|_| Error::FailedToSend)?,
+        items: para.into(),
         verb: verb.into(),
         verb_info: verb_info.into(),
         br_name: br_name.map(|b| b.into()),
@@ -857,13 +853,13 @@ pub fn confirm_with_info(
     ipc_ui_call(&value)
 }
 
-pub fn show_address(
+pub fn show_address<'a>(
     address: &str,
     title: Option<&str>,
     subtitle: Option<&str>,
     account: Option<&str>,
     path: Option<&str>,
-    xpubs: &[(&str, &str, bool)],
+    xpubs: &[Property<'a>],
     chunkify: Option<bool>,
     br_code: i32,
 ) -> UiResult {
@@ -873,7 +869,7 @@ pub fn show_address(
         subtitle: subtitle.map(|s| s.into()),
         account: account.map(|s| s.into()),
         path: path.map(|s| s.into()),
-        xpubs: PropsList::from_prop_slice(xpubs).map_err(|_| Error::FailedToSend)?,
+        xpubs: xpubs.into(),
         chunkify,
         br_code,
     };

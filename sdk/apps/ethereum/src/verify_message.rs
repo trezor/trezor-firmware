@@ -11,9 +11,10 @@ use crate::{
 use alloc::{string::ToString, vec::Vec};
 #[cfg(test)]
 use std::{string::ToString, vec::Vec};
-use trezor_app_sdk::{Error, Result, crypto, ui};
+use trezor_app_sdk::{Error, Result, crypto, info, ui};
 
 pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
+    info!("verify message");
     let digest = message_digest(msg.message.as_slice());
     if msg.signature.len() != 65 {
         // TODO: proper error type: DataError("Invalid signature")
@@ -34,11 +35,14 @@ pub fn verify_message(msg: EthereumVerifyMessage) -> Result<Success> {
         .try_into()
         .map_err(|_| Error::DataError)?;
 
+    info!("verifying secp256k1_verify_recover");
     let (pubkey, len) = crypto::secp256k1_verify_recover(&sig, &digest).ok_or(Error::DataError)?;
 
+    info!("hashing pubkey");
     let pkh_hash = crypto::keccak_256(&pubkey[1..len]);
     let pkh = &pkh_hash[pkh_hash.len() - 20..]; // Last 20 bytes
 
+    info!("getting address");
     let address_bytes = bytes_from_address(&msg.address)?;
 
     if address_bytes != pkh {

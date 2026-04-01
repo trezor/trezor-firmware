@@ -36,6 +36,38 @@ impl<const N: usize> String<N> {
     }
 }
 
+#[derive(Archive, Serialize, Deserialize)]
+pub struct Property<'a> {
+    pub key: StrSlice<'a>,
+    pub value: StrSlice<'a>,
+    pub mono: bool,
+}
+
+impl<'a> Property<'a> {
+    pub fn new(key: &'a str, value: &'a str, mono: bool) -> Self {
+        Self {
+            key: key.into(),
+            value: value.into(),
+            mono,
+        }
+    }
+}
+
+#[derive(Archive, Serialize, Deserialize)]
+pub struct StrExt<'a> {
+    pub key: StrSlice<'a>,
+    pub mono: bool,
+}
+
+impl<'a> StrExt<'a> {
+    pub fn new(key: &'a str, mono: bool) -> Self {
+        Self {
+            key: key.into(),
+            mono,
+        }
+    }
+}
+
 #[derive(Copy, Clone, Default)]
 pub struct StrSlice<'a> {
     inner: &'a str,
@@ -111,76 +143,6 @@ impl<'a, S: Fallible + Writer + ?Sized> Serialize<S> for StrSlice<'a> {
     }
 }
 
-type Prop<'a> = (StrSlice<'a>, StrSlice<'a>, bool);
-
-#[derive(Archive, Serialize, Default)]
-pub struct PropsList<'a> {
-    pub data: [Prop<'a>; 5],
-    pub len: u8,
-}
-
-impl<'a> PropsList<'a> {
-    pub fn from_prop_slice(
-        slice: &'a [(&'a str, &'a str, bool)],
-    ) -> core::result::Result<Self, ()> {
-        if slice.len() > 5 {
-            return Err(());
-        }
-
-        let mut props = Self::default();
-        for (key, value, is_mono) in slice {
-            props.data[props.len as usize] =
-                (StrSlice::from(*key), StrSlice::from(*value), *is_mono);
-            props.len += 1;
-        }
-        Ok(props)
-    }
-}
-
-#[derive(Archive, Serialize, Default)]
-pub struct StrList<'a> {
-    pub data: [StrSlice<'a>; 5],
-    pub len: u8,
-}
-
-impl<'a> StrList<'a> {
-    pub fn from_str_slice(slice: &'a [&'a str]) -> core::result::Result<Self, ()> {
-        if slice.len() > 5 {
-            return Err(());
-        }
-
-        let mut list = Self::default();
-        for s in slice {
-            list.data[list.len as usize] = StrSlice::from(*s);
-            list.len += 1;
-        }
-        Ok(list)
-    }
-}
-
-type StrExt<'a> = (StrSlice<'a>, bool);
-
-#[derive(Archive, Serialize, Default)]
-pub struct StrExtList<'a> {
-    pub data: [StrExt<'a>; 5],
-    pub len: u8,
-}
-
-impl<'a> StrExtList<'a> {
-    pub fn from_str_slice(slice: &'a [(&'a str, bool)]) -> core::result::Result<Self, ()> {
-        if slice.len() > 5 {
-            return Err(());
-        }
-
-        let mut list = Self::default();
-        for (s, flag) in slice {
-            list.data[list.len as usize] = (StrSlice::from(*s), *flag);
-            list.len += 1;
-        }
-        Ok(list)
-    }
-}
-
 pub struct Slice<'a, T: Archive> {
     inner: &'a [T],
 }
@@ -250,7 +212,7 @@ where
 #[derive(Archive, Serialize)]
 pub enum TrezorUiEnum<'a> {
     SelectMenu {
-        items: StrList<'a>,
+        items: Slice<'a, StrSlice<'a>>,
         cancel: Option<StrSlice<'a>>,
         br_code: i32,
     },
@@ -278,9 +240,9 @@ pub enum TrezorUiEnum<'a> {
         fee: StrSlice<'a>,
         fee_label: StrSlice<'a>,
         account_title: Option<StrSlice<'a>>,
-        account_items: Option<PropsList<'a>>,
+        account_items: Option<Slice<'a, Property<'a>>>,
         extra_title: Option<StrSlice<'a>>,
-        extra_items: Option<PropsList<'a>>,
+        extra_items: Option<Slice<'a, Property<'a>>>,
         back_button: bool,
         br_name: Option<StrSlice<'a>>,
         br_code: i32,
@@ -357,7 +319,7 @@ pub enum TrezorUiEnum<'a> {
     },
     ConfirmProperties {
         title: StrSlice<'a>,
-        props: PropsList<'a>,
+        props: Slice<'a, Property<'a>>,
         subtitle: Option<StrSlice<'a>>,
         verb: Option<StrSlice<'a>>,
         hold: bool,
@@ -366,7 +328,7 @@ pub enum TrezorUiEnum<'a> {
     },
     ShowProperties {
         title: StrSlice<'a>,
-        props: PropsList<'a>,
+        props: Slice<'a, Property<'a>>,
         subtitle: Option<StrSlice<'a>>,
         br_name: Option<StrSlice<'a>>,
         br_code: i32,
@@ -382,7 +344,7 @@ pub enum TrezorUiEnum<'a> {
     },
     ShowInfoWithCancel {
         title: StrSlice<'a>,
-        items: PropsList<'a>,
+        items: Slice<'a, Property<'a>>,
         chunkify: bool,
         br_name: Option<StrSlice<'a>>,
         br_code: i32,
@@ -390,7 +352,7 @@ pub enum TrezorUiEnum<'a> {
     ConfirmWithInfo {
         title: StrSlice<'a>,
         subtitle: Option<StrSlice<'a>>,
-        items: StrExtList<'a>,
+        items: Slice<'a, StrExt<'a>>,
         verb: StrSlice<'a>,
         verb_info: StrSlice<'a>,
         br_name: Option<StrSlice<'a>>,
@@ -402,7 +364,7 @@ pub enum TrezorUiEnum<'a> {
         subtitle: Option<StrSlice<'a>>,
         account: Option<StrSlice<'a>>,
         path: Option<StrSlice<'a>>,
-        xpubs: PropsList<'a>,
+        xpubs: Slice<'a, Property<'a>>,
         chunkify: Option<bool>,
         br_code: i32,
     },

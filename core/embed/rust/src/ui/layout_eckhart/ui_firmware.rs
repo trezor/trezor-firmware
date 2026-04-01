@@ -36,9 +36,7 @@ use crate::{
 };
 
 use rkyv::option::ArchivedOption;
-use trezor_structs::{
-    ArchivedPropsList, ArchivedStrExtList, ArchivedStrSlice, ArchivedTrezorUiEnum,
-};
+use trezor_structs::{ArchivedSlice, ArchivedStrSlice, ArchivedTrezorUiEnum, Property, StrExt};
 
 #[cfg(feature = "ble")]
 use crate::ui::component::{BLEHandler, BLEHandlerMode};
@@ -1634,27 +1632,29 @@ impl FirmwareUI for UIEckhart {
             }
         }
 
-        fn obj_from_strextlist(ext_list: &ArchivedStrExtList) -> Obj {
-            let mut list = unwrap!(List::with_capacity(ext_list.len as usize));
+        fn obj_from_strextlist(archived: &ArchivedSlice<StrExt>) -> Obj {
+            let slice = archived.as_slice();
+            let mut list = unwrap!(List::with_capacity(slice.len()));
 
-            for item in ext_list.data.iter().take(ext_list.len as usize) {
+            for item in slice {
                 let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.0.as_str())),
-                    unwrap!(Obj::try_from(item.1))
+                    unwrap!(Obj::try_from(item.key.as_str())),
+                    unwrap!(Obj::try_from(item.mono))
                 )));
                 unwrap!(list.append(obj));
             }
             unwrap!(List::alloc(unsafe { list.as_slice() })).into()
         }
 
-        fn obj_from_proplist(ext_list: &ArchivedPropsList) -> Obj {
-            let mut list = unwrap!(List::with_capacity(ext_list.len as usize));
+        fn obj_from_proplist(archived: &ArchivedSlice<Property>) -> Obj {
+            let slice = archived.as_slice();
+            let mut list = unwrap!(List::with_capacity(slice.len()));
 
-            for item in ext_list.data.iter().take(ext_list.len as usize) {
+            for item in slice {
                 let obj = unwrap!(Obj::try_from((
-                    unwrap!(Obj::try_from(item.0.as_str())),
-                    unwrap!(Obj::try_from(item.1.as_str())),
-                    unwrap!(Obj::try_from(item.2))
+                    unwrap!(Obj::try_from(item.key.as_str())),
+                    unwrap!(Obj::try_from(item.value.as_str())),
+                    unwrap!(Obj::try_from(item.mono))
                 )));
                 unwrap!(list.append(obj));
             }
@@ -1672,8 +1672,8 @@ impl FirmwareUI for UIEckhart {
                 br_code,
             } => {
                 let mut vec = heapless::Vec::<TString<'static>, 5>::new();
-                for i in 0..(items.len as usize) {
-                    unwrap!(vec.push(tstr_from_archived_borrowed_str(&items.data[i])));
+                for item in items.as_slice() {
+                    unwrap!(vec.push(tstr_from_archived_borrowed_str(item)));
                 }
                 let layout = Self::select_menu(
                     vec,
@@ -1747,7 +1747,7 @@ impl FirmwareUI for UIEckhart {
             } => {
                 let layout = Self::show_info_with_cancel(
                     tstr_from_archived_borrowed_str(title),
-                    obj_from_proplist(items),
+                    obj_from_proplist(items.into()),
                     false, // horizontal
                     *chunkify,
                 )?;

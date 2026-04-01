@@ -1,7 +1,9 @@
 use crate::{
-    EthereumMessages, definitions,
+    EthereumMessages,
+    definitions::{self, Definitions},
     helpers::{Refund, Trade, address_from_bytes, format_ethereum_amount, is_swap},
     paths::Bip32Path,
+    payment_request::PaymentRequestVerifier,
     payment_request::parse_amount,
     proto::{
         common::{PaymentRequest, button_request::ButtonRequestType},
@@ -22,7 +24,11 @@ use std::{
     string::{String, ToString},
     vec::Vec,
 };
-use trezor_app_sdk::{Error, Result, info, ui, unwrap};
+use trezor_app_sdk::{
+    Error, Result, info,
+    ui::{self, Property, StrExt},
+    unwrap,
+};
 
 // TODO: This threshold is arbitrary
 const LONG_MSG_PAGE_THRESHOLD: usize = 300;
@@ -96,6 +102,51 @@ pub fn get_approve_known_address(addr: &[u8]) -> Option<&'static str> {
 
 pub const COIN: &str = "ETH";
 
+// EIP-7702
+pub const EIP_7702_TX_TYPE: u32 = 4;
+
+// EIP-7702
+const ADDR_EIP7702_UNISWAP: [u8; 20] = [
+    0x00, 0x00, 0x00, 0x00, 0x9b, 0x1d, 0x0a, 0xf2, 0x0d, 0x8c, 0x6d, 0x0a, 0x44, 0xe1, 0x62, 0xd1,
+    0x1f, 0x9b, 0x8f, 0x00,
+];
+const ADDR_EIP7702_ALCHEMY: [u8; 20] = [
+    0x69, 0x00, 0x77, 0x02, 0x76, 0x41, 0x79, 0xf1, 0x4f, 0x51, 0xcd, 0xce, 0x75, 0x2f, 0x4f, 0x77,
+    0x5d, 0x74, 0xe1, 0x39,
+];
+const ADDR_EIP7702_AMBIRE: [u8; 20] = [
+    0x5a, 0x7f, 0xc1, 0x13, 0x97, 0xe9, 0xa8, 0xad, 0x41, 0xbf, 0x10, 0xbf, 0x13, 0xf2, 0x2b, 0x0a,
+    0x63, 0xf9, 0x6f, 0x6d,
+];
+const ADDR_EIP7702_METAMASK: [u8; 20] = [
+    0x63, 0xc0, 0xc1, 0x9a, 0x28, 0x2a, 0x1b, 0x52, 0xb0, 0x7d, 0xd5, 0xa6, 0x5b, 0x58, 0x94, 0x8a,
+    0x07, 0xda, 0xe3, 0x2b,
+];
+const ADDR_EIP7702_EF_AA: [u8; 20] = [
+    0x4c, 0xd2, 0x41, 0xe8, 0xd1, 0x51, 0x0e, 0x30, 0xb2, 0x07, 0x63, 0x97, 0xaf, 0xc7, 0x50, 0x8a,
+    0xe5, 0x9c, 0x66, 0xc9,
+];
+const ADDR_EIP7702_LUGANODES: [u8; 20] = [
+    0x17, 0xc1, 0x1f, 0xdd, 0xad, 0xac, 0x2b, 0x34, 0x1f, 0x24, 0x55, 0xaf, 0xe9, 0x88, 0xfe, 0xc4,
+    0xc3, 0xba, 0x26, 0xe3,
+];
+
+const EIP7702_KNOWN_ADDRESSES: [([u8; 20], &str); 6] = [
+    (ADDR_EIP7702_UNISWAP, "Uniswap"),
+    (ADDR_EIP7702_ALCHEMY, "alchemyplatform"),
+    (ADDR_EIP7702_AMBIRE, "AmbireTech"),
+    (ADDR_EIP7702_METAMASK, "MetaMask"),
+    (ADDR_EIP7702_EF_AA, "Ethereum Foundation AA team"),
+    (ADDR_EIP7702_LUGANODES, "Luganodes"),
+];
+
+pub fn get_eip_7702_known_address(addr: &[u8]) -> Option<&'static str> {
+    EIP7702_KNOWN_ADDRESSES
+        .iter()
+        .find(|(a, _)| a.as_slice() == addr)
+        .map(|(_, name)| *name)
+}
+
 pub(crate) fn require_confirm_address(
     address_bytes: &[u8],
     title: Option<&'static str>,
@@ -134,10 +185,10 @@ pub(crate) fn confirm_signverify(
     };
 
     let mut items = Vec::with_capacity(3);
-    account.map(|a| items.push(("Account", a, true)));
-    path.map(|p| items.push(("Derivation path", p, true)));
+    account.map(|a| items.push(Property::new("Account", a, true)));
+    path.map(|p| items.push(Property::new("Derivation path", p, true)));
     let size = uformat!("{} bytes", message.len());
-    items.push(("Message size", &size, true));
+    items.push(Property::new("Message size", size.as_str(), true));
 
     loop {
         let res = ui::interact_with_info_flow(
@@ -286,16 +337,16 @@ pub(crate) fn confirm_address(
     }
 }
 
-pub fn require_confirm_approve(
-    to_bytes: &[u8],
+pub fn require_confirm_approve<'a>(
+    to_bytes: &'a [u8],
     value: Option<U256>,
-    dp: &Bip32Path,
-    maximum_fee: &str,
-    fee_info_items: &[(&str, &str, bool)],
+    dp: &'a Bip32Path,
+    maximum_fee: &'a str,
+    fee_info_items: &[Property<'a>],
     chain_id: u64,
-    network: &EthereumNetworkInfo,
-    token: &EthereumTokenInfo,
-    token_address: &[u8],
+    network: &'a EthereumNetworkInfo,
+    token: &'a EthereumTokenInfo,
+    token_address: &'a [u8],
     chunkify: bool,
 ) -> Result<()> {
     let recipient_str = get_approve_known_address(to_bytes);
@@ -335,20 +386,20 @@ pub fn require_confirm_approve(
     Ok(())
 }
 
-fn confirm_ethereum_approve(
-    recipient_addr: &str,
-    recipient_str: Option<&str>,
+fn confirm_ethereum_approve<'a>(
+    recipient_addr: &'a str,
+    recipient_str: Option<&'a str>,
     is_unknown_token: bool,
-    token_address: &str,
-    token_symbol: &str,
+    token_address: &'a str,
+    token_symbol: &'a str,
     is_unknown_network: bool,
-    chain_id: &str,
-    network_name: &str,
+    chain_id: &'a str,
+    network_name: &'a str,
     is_revoke: bool,
-    total_amount: Option<&str>,
-    account_path: Option<&str>,
-    maximum_fee: &str,
-    fee_info_items: &[(&str, &str, bool)],
+    total_amount: Option<&'a str>,
+    account_path: Option<&'a str>,
+    maximum_fee: &'a str,
+    fee_info_items: &[Property<'a>],
     chunkify: bool,
 ) -> Result<()> {
     let br_name = "confirm_ethereum_approve";
@@ -388,7 +439,7 @@ fn confirm_ethereum_approve(
                 ui::confirm_with_info(
                     title,
                     Some(subtitle),
-                    &[(recipient_str, true)],
+                    &[StrExt::new(recipient_str, true)],
                     "Continue",
                     "Provider contract address",
                     name,
@@ -398,7 +449,7 @@ fn confirm_ethereum_approve(
             |name| {
                 ui::show_info_with_cancel(
                     title,
-                    &[("", recipient_addr, true)],
+                    &[Property::new("", recipient_addr, true)],
                     chunkify,
                     name,
                     br_code,
@@ -484,16 +535,16 @@ fn confirm_ethereum_approve(
 
     let mut props = Vec::with_capacity(2);
     if is_revoke {
-        props.push(("Token", token_symbol, true));
+        props.push(Property::new("Token", token_symbol, true));
     } else {
-        props.push((
+        props.push(Property::new(
             "Amount allowance",
             total_amount.unwrap_or("Unlimited"),
             false,
         ));
     }
     if !is_unknown_network {
-        props.push(("Chain", network_name, false));
+        props.push(Property::new("Chain", network_name, false));
     }
 
     ui::error_if_not_confirmed(ui::confirm_properties(
@@ -506,7 +557,7 @@ fn confirm_ethereum_approve(
         ButtonRequestType::ButtonRequestOther.into(),
     )?)?;
 
-    let account_item = account_path.map(|p| [("Derivation path", p, true)]);
+    let account_item = account_path.map(|p| [Property::new("Derivation path", p, true)]);
 
     ui::error_if_not_confirmed(ui::confirm_summary(
         Some(title),
@@ -526,12 +577,12 @@ fn confirm_ethereum_approve(
     Ok(())
 }
 
-pub fn require_confirm_claim(
-    address_bytes: &[u8],
-    dp: &Bip32Path,
-    maximum_fee: &str,
-    fee_info_items: &[(&str, &str, bool)],
-    network: &EthereumNetworkInfo,
+pub fn require_confirm_claim<'a>(
+    address_bytes: &'a [u8],
+    dp: &'a Bip32Path,
+    maximum_fee: &'a str,
+    fee_info_items: &'a [Property<'a>],
+    network: &'a EthereumNetworkInfo,
 ) -> Result<()> {
     let addr_str = address_from_bytes(address_bytes, Some(network));
     let (account, account_path) = dp.account_and_path();
@@ -554,18 +605,18 @@ pub fn require_confirm_claim(
     Ok(())
 }
 
-fn confirm_ethereum_staking_tx(
-    title: &str,
-    intro_question: &str,
-    verb: &str,
-    total_amount: &str,
-    account: Option<&str>,
-    account_path: Option<&str>,
-    maximum_fee: &str,
-    address: &str,
-    address_title: &str,
-    info_items: &[(&str, &str, bool)],
-    br_name: Option<&str>,
+fn confirm_ethereum_staking_tx<'a>(
+    title: &'a str,
+    intro_question: &'a str,
+    verb: &'a str,
+    total_amount: &'a str,
+    account: Option<&'a str>,
+    account_path: Option<&'a str>,
+    maximum_fee: &'a str,
+    address: &'a str,
+    address_title: &'a str,
+    info_items: &[Property<'a>],
+    br_name: Option<&'a str>,
     br_code: Option<i32>,
 ) -> Result<()> {
     assert!(verb == "Stake" || verb == "Unstake" || verb == "Claim");
@@ -574,7 +625,7 @@ fn confirm_ethereum_staking_tx(
     let br_code = br_code.unwrap_or(ButtonRequestType::ButtonRequestSignTx.into());
 
     let mut menu_items = Vec::with_capacity(2);
-    let props = [("", address, true)];
+    let props = [Property::new("", address, true)];
     menu_items.push(ui::Details::new(
         address_title,
         &props,
@@ -650,16 +701,16 @@ fn confirm_ethereum_staking_tx(
     Ok(())
 }
 
-pub fn require_confirm_payment_request(
-    provider_address: &str,
-    verified_payment_req: &PaymentRequest,
-    dp: &Bip32Path,
-    maximum_fee: &str,
-    fee_info_items: &[(&str, &str, bool)],
+pub fn require_confirm_payment_request<'a>(
+    provider_address: &'a str,
+    verified_payment_req: &'a PaymentRequest,
+    dp: &'a Bip32Path,
+    maximum_fee: &'a str,
+    fee_info_items: &'a [Property<'a>],
     chain_id: u64,
-    network: &EthereumNetworkInfo,
-    token: Option<&EthereumTokenInfo>,
-    token_address: &str,
+    network: &'a EthereumNetworkInfo,
+    token: Option<&'a EthereumTokenInfo>,
+    token_address: &'a str,
 ) -> Result<()> {
     info!("formatting total amount for display");
     let total_amount = format_ethereum_amount(
@@ -709,14 +760,18 @@ pub fn require_confirm_payment_request(
     let (account, account_path) = dp.account_and_path();
     let mut account_items = Vec::with_capacity(3);
     if let Some(ref account) = account {
-        account_items.push(("Account", account.as_str(), true));
+        account_items.push(Property::new("Account", account.as_str(), true));
     }
     if let Some(ref account_path) = account_path {
-        account_items.push(("Derivation path", account_path.as_str(), true));
+        account_items.push(Property::new(
+            "Derivation path",
+            account_path.as_str(),
+            true,
+        ));
     }
     let chain_id_str = uformat!("{} ({})", network.name.as_str(), chain_id);
     if chain_id != 0 {
-        account_items.push(("Chain ID", &chain_id_str, true));
+        account_items.push(Property::new("Chain ID", chain_id_str.as_str(), true));
     }
     info!("confirming payment request");
 
@@ -729,22 +784,22 @@ pub fn require_confirm_payment_request(
         &account_items,
         Some(maximum_fee),
         Some(fee_info_items),
-        Some(&[("Token contract", token_address)]),
+        Some(&[("Token contract".into(), token_address.into())]),
     )?;
 
     Ok(())
 }
 
-fn confirm_payment_request(
-    recipient_name: &str,
-    recipient_address: Option<&str>,
-    texts: &[(Option<&str>, &str)],
+fn confirm_payment_request<'a>(
+    recipient_name: &'a str,
+    recipient_address: Option<&'a str>,
+    texts: &[(Option<&'a str>, &'a str)],
     refunds: &[Refund],
     trades: &[Trade],
-    account_items: &[(&str, &str, bool)],
-    transaction_fee: Option<&str>,
-    fee_info_items: Option<&[(&str, &str, bool)]>,
-    extra_menu_items: Option<&[(&str, &str)]>,
+    account_items: &[Property<'a>],
+    transaction_fee: Option<&'a str>,
+    fee_info_items: Option<&[Property<'a>]>,
+    extra_menu_items: Option<&[(&'a str, &'a str)]>,
 ) -> Result<()> {
     let (title, summary_title) = if is_swap(trades)? {
         ("Swap", "Swap")
@@ -777,7 +832,7 @@ fn confirm_payment_request(
 
     let props;
     if let Some(recipient_address) = recipient_address {
-        props = [("", recipient_address, true)];
+        props = [Property::new("", recipient_address, true)];
         menu_items.push(ui::Details::new(
             "Provider address",
             &props,
@@ -787,17 +842,21 @@ fn confirm_payment_request(
         ));
     }
 
-    let mut refund_account_infos: Vec<Vec<(&str, &str, bool)>> = Vec::with_capacity(refunds.len());
+    let mut refund_account_infos: Vec<Vec<Property>> = Vec::with_capacity(refunds.len());
     for refund in refunds {
         let mut refund_account_info = Vec::with_capacity(3);
-        refund_account_info.push(("", refund.address.as_str(), false));
+        refund_account_info.push(Property::new("", refund.address.as_str(), false));
 
         if let Some(ref refund_account) = refund.account {
-            refund_account_info.push(("Account", refund_account.as_str(), true));
+            refund_account_info.push(Property::new("Account", refund_account.as_str(), true));
         }
 
         if let Some(ref refund_account_path) = refund.account_path {
-            refund_account_info.push(("Derivation path", refund_account_path.as_str(), true));
+            refund_account_info.push(Property::new(
+                "Derivation path",
+                refund_account_path.as_str(),
+                true,
+            ));
         }
 
         refund_account_infos.push(refund_account_info);
@@ -910,10 +969,10 @@ fn confirm_payment_request(
 pub fn get_account_info_items<'a>(
     account: Option<&'a str>,
     account_path: Option<&'a str>,
-) -> Vec<(&'a str, &'a str, bool)> {
+) -> Vec<Property<'a>> {
     let mut items = Vec::with_capacity(2);
-    account.map(|acc| items.push(("Account", acc, false)));
-    account_path.map(|path| items.push(("Derivation path", path, false)));
+    account.map(|acc| items.push(Property::new("Account", acc, false)));
+    account_path.map(|path| items.push(Property::new("Derivation path", path, false)));
 
     items
 }
@@ -945,13 +1004,13 @@ pub fn require_confirm_other_data(data: &[u8], data_total: u32) -> Result<()> {
     Ok(())
 }
 
-pub fn require_confirm_stake(
+pub fn require_confirm_stake<'a>(
     address_bytes: &[u8],
     value: U256,
-    dp: &Bip32Path,
-    maximum_fee: &str,
-    fee_info_items: &[(&str, &str, bool)],
-    network: &EthereumNetworkInfo,
+    dp: &'a Bip32Path,
+    maximum_fee: &'a str,
+    fee_info_items: &'a [Property<'a>],
+    network: &'a EthereumNetworkInfo,
 ) -> Result<()> {
     let address_str = address_from_bytes(address_bytes, Some(network));
     let total_amount = format_ethereum_amount(value, None, network, false);
@@ -975,14 +1034,14 @@ pub fn require_confirm_stake(
     Ok(())
 }
 
-pub fn require_confirm_tx(
-    recipient: Option<&str>,
+pub fn require_confirm_tx<'a>(
+    recipient: Option<&'a str>,
     value: U256,
-    dp: &Bip32Path,
-    maximum_fee: &str,
-    fee_info_items: &[(&str, &str, bool)],
-    network: &EthereumNetworkInfo,
-    token: Option<&EthereumTokenInfo>,
+    dp: &'a Bip32Path,
+    maximum_fee: &'a str,
+    fee_info_items: &'a [Property<'a>],
+    network: &'a EthereumNetworkInfo,
+    token: Option<&'a EthereumTokenInfo>,
     is_send: bool,
     chunkify: bool,
 ) -> Result<()> {
@@ -1004,15 +1063,15 @@ pub fn require_confirm_tx(
     Ok(())
 }
 
-fn confirm_ethereum_tx(
-    recipient: Option<&str>,
+fn confirm_ethereum_tx<'a>(
+    recipient: Option<&'a str>,
     total_amount: &str,
-    account: Option<&str>,
-    account_path: Option<&str>,
+    account: Option<&'a str>,
+    account_path: Option<&'a str>,
     maximum_fee: &str,
-    fee_info_items: &[(&str, &str, bool)],
+    fee_info_items: &[Property<'a>],
     is_send: bool,
-    br_name: Option<&str>,
+    br_name: Option<&'a str>,
     br_code: Option<i32>,
     chunkify: bool,
 ) -> Result<()> {
@@ -1088,13 +1147,13 @@ fn confirm_ethereum_tx(
     Ok(())
 }
 
-pub fn require_confirm_unstake(
-    address_bytes: &[u8],
+pub fn require_confirm_unstake<'a>(
+    address_bytes: &'a [u8],
     value: U256,
-    dp: &Bip32Path,
-    maximum_fee: &str,
-    fee_info_items: &[(&str, &str, bool)],
-    network: &EthereumNetworkInfo,
+    dp: &'a Bip32Path,
+    maximum_fee: &'a str,
+    fee_info_items: &'a [Property<'a>],
+    network: &'a EthereumNetworkInfo,
 ) -> Result<()> {
     let address_str = address_from_bytes(address_bytes, Some(network));
     let total_amount = format_ethereum_amount(value, None, network, false);
@@ -1126,12 +1185,16 @@ fn trade_flow(
     back_button: bool,
 ) -> ui::UiResult {
     let mut account_properties = Vec::with_capacity(3);
-    account_properties.push(("", trade.address.as_str(), true));
+    account_properties.push(Property::new("", trade.address.as_str(), true));
     if let Some(ref account) = trade.account {
-        account_properties.push(("Account", account.as_str(), true));
+        account_properties.push(Property::new("Account", account.as_str(), true));
     }
     if let Some(ref account_path) = trade.account_path {
-        account_properties.push(("Derivation path", account_path.as_str(), true));
+        account_properties.push(Property::new(
+            "Derivation path",
+            account_path.as_str(),
+            true,
+        ));
     }
 
     let mut menu_items = Vec::new();
@@ -1143,10 +1206,10 @@ fn trade_flow(
         ButtonRequestType::ButtonRequestOther.into(),
     ));
 
-    let extra_props: Option<Vec<[(&str, &str, bool); 1]>> = extra_menu_items.map(|items| {
+    let extra_props: Option<Vec<[Property; 1]>> = extra_menu_items.map(|items| {
         items
             .iter()
-            .map(|(_, value)| [(*value, "", false)])
+            .map(|(_, value)| [Property::new(*value, "", false)])
             .collect()
     });
 
@@ -1197,13 +1260,13 @@ pub fn send_request_chunk(data_left: u32) -> Result<EthereumTxAck> {
     Ok(resp)
 }
 
-pub fn handle_staking_tx_claim(
-    data: &[u8],
-    dp: &Bip32Path,
-    staking_address: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
-    network: &EthereumNetworkInfo,
+pub fn handle_staking_tx_claim<'a>(
+    data: &'a [u8],
+    dp: &'a Bip32Path,
+    staking_address: &'a [u8],
+    maximum_fee: &'a str,
+    fee_items: &'a [Property<'a>],
+    network: &'a EthereumNetworkInfo,
 ) -> Result<()> {
     // claim has no args
 
@@ -1216,14 +1279,14 @@ pub fn handle_staking_tx_claim(
     Ok(())
 }
 
-pub fn handle_staking_tx_stake(
-    data: &[u8],
-    dp: &Bip32Path,
-    value: &[u8],
-    network: &EthereumNetworkInfo,
-    address_bytes: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
+pub fn handle_staking_tx_stake<'a>(
+    data: &'a [u8],
+    dp: &'a Bip32Path,
+    value: &'a [u8],
+    network: &'a EthereumNetworkInfo,
+    address_bytes: &'a [u8],
+    maximum_fee: &'a str,
+    fee_items: &'a [Property<'a>],
 ) -> Result<()> {
     // stake args:
     // - arg0: uint64, source (1 for Trezor)
@@ -1241,13 +1304,13 @@ pub fn handle_staking_tx_stake(
     Ok(())
 }
 
-pub fn handle_staking_tx_unstake(
-    data: &[u8],
-    dp: &Bip32Path,
-    network: &EthereumNetworkInfo,
-    address_bytes: &[u8],
-    maximum_fee: &str,
-    fee_items: &[(&str, &str, bool)],
+pub fn handle_staking_tx_unstake<'a>(
+    data: &'a [u8],
+    dp: &'a Bip32Path,
+    network: &'a EthereumNetworkInfo,
+    address_bytes: &'a [u8],
+    maximum_fee: &'a str,
+    fee_items: &'a [Property<'a>],
 ) -> Result<()> {
     // unstake args:
     // - arg0: uint256, value
@@ -1278,7 +1341,7 @@ pub fn run_staking_approver<'a>(
     network: &'a EthereumNetworkInfo,
     address_bytes: &'a [u8],
     maximum_fee: &'a str,
-    fee_items: &'a [(&'a str, &'a str, bool)],
+    fee_items: &'a [Property<'a>],
 ) -> Result<bool> {
     if data_initial_chunk.len() < SC_FUNC_SIG_BYTES {
         return Ok(false);
@@ -1318,6 +1381,370 @@ pub fn run_staking_approver<'a>(
     }
 
     Ok(false)
+}
+
+pub fn check_common_fields(
+    data_length: u32,
+    data_initial_chunk: &[u8],
+    to: &str,
+    chain_id: u64,
+) -> Result<()> {
+    info!("checking data length and initial chunk");
+    if data_length > 0 {
+        // TODO: proper error type: DataError("Data length provided, but no initial chunk")
+        if data_initial_chunk.is_empty() {
+            info!("Data length provided, but no initial chunk");
+            return Err(Error::DataError);
+        }
+
+        // Our encoding only supports transactions up to 2^24 bytes. To
+        // prevent exceeding the limit we use a stricter limit on data length.
+        if data_length > 16_000_000 {
+            // TODO: proper error type: DataError("Data length exceeds limit")
+            info!("Data length exceeds limit");
+            return Err(Error::DataError);
+        }
+
+        if data_initial_chunk.len() > data_length as usize {
+            // TODO: proper error type: DataError("Invalid size of initial chunk")
+            info!("Invalid size of initial chunk");
+            return Err(Error::DataError);
+        }
+    }
+
+    if !matches!(to.len(), 0 | 40 | 42) {
+        // TODO: proper error type: DataError("Invalid recipient address")
+        info!("Invalid recipient address");
+        return Err(Error::DataError);
+    }
+
+    if to.is_empty() && data_length == 0 {
+        // sending transaction to address 0 (contract creation) without a data field
+        // TODO: proper error type: DataError("Contract creation without data")
+        info!("Contract creation without data");
+        return Err(Error::DataError);
+    }
+
+    info!("checking chain id");
+    if chain_id == 0 {
+        // TODO: proper error type: DataError("Chain ID out of bounds")
+        info!("Chain ID out of bounds");
+        return Err(Error::DataError);
+    }
+
+    Ok(())
+}
+
+pub fn confirm_tx_data<'a>(
+    dp: &'a Bip32Path,
+    data_initial_chunk: &'a [u8],
+    data_length: u32,
+    value: &'a [u8],
+    to: &'a str,
+    chain_id: u64,
+    chunkify: Option<bool>,
+    definitions: &'a Definitions,
+    tx_type: Option<u32>,
+    address_bytes: &'a [u8],
+    maximum_fee: &'a str,
+    fee_items: &'a [Property<'a>],
+    payment_req: Option<&'a PaymentRequest>,
+    payment_req_verifier: Option<PaymentRequestVerifier>,
+) -> Result<()> {
+    if true
+        == run_staking_approver(
+            &dp,
+            data_initial_chunk,
+            value,
+            &definitions.network(),
+            address_bytes,
+            maximum_fee,
+            fee_items,
+        )?
+    {
+        return Ok(());
+    }
+
+    info!("checking if transaction is a known contract call");
+    if matches!(tx_type, Some(EIP_7702_TX_TYPE)) {
+        // we have already made sure that the address is a known address
+        // as part of the initial validation
+
+        info!("authorizing smart account");
+
+        ui::error_if_not_confirmed(ui::confirm_value(
+            "Smart accounts",
+            unwrap!(get_eip_7702_known_address(&address_bytes)),
+            Some("Authorize the following contract as an EIP-7702 on your account?"),
+            Some("confirm_provider"),
+            ButtonRequestType::ButtonRequestOther.into(),
+            true,
+            None,
+            None,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            None,
+        )?)?;
+    }
+
+    info!("handling known contract calls");
+    let (token, token_address, func_sig, recipient, value) = handle_known_contract_calls(
+        data_initial_chunk,
+        data_length,
+        to,
+        value,
+        definitions,
+        address_bytes,
+    )?;
+
+    info!("recipient len is {}", recipient.len());
+
+    info!(
+        "func sig len is {}",
+        func_sig.as_ref().map(|s| s.len()).unwrap_or(0)
+    );
+    let is_approve = func_sig.as_deref() == Some(SC_FUNC_SIG_APPROVE.as_slice());
+    let is_unknown_token = &token == &Some(tokens::unknown_token());
+
+    if is_unknown_token {
+        let title = String::from(if is_approve {
+            if matches!(value, Some(v) if v == U256::from(SC_FUNC_APPROVE_REVOKE_AMOUNT)) {
+                "Token revocation"
+            } else {
+                "Token approval"
+            }
+        } else {
+            "Send"
+        });
+
+        info!(
+            "unknown token contract address: showing warning with title {}",
+            title.as_str()
+        );
+
+        ui::error_if_not_confirmed(ui::show_danger(
+            "Important",
+            "Unknown token contract address. Continue only if you know what you are doing!",
+            Some("unknown_contract_warning"),
+            ButtonRequestType::ButtonRequestWarning.into(),
+            Some("Cancel sign"),
+            Some(&title),
+        )?)?;
+
+        if !is_approve {
+            // For unknown tokens we also show the token address immediately after the warning
+            // except in the case of the "approve" flow which shows the token address later on!
+            require_confirm_address(
+                address_bytes,
+                Some("Send"),
+                Some("Token contract address"),
+                None,
+                Some("Continue"),
+                Some("unknown_token"),
+                Some("Unknown token contract address."),
+            )?
+        }
+    }
+
+    if is_approve {
+        info!("handling approve flow");
+
+        if token.is_none() || token_address.is_none() {
+            // TODO: proper error type
+            return Err(Error::DataError);
+        }
+
+        info!(
+            "token address len is {:?}",
+            token_address.as_deref().map(|a| a.len())
+        );
+
+        if payment_req_verifier.is_some() {
+            // TODO: proper error type: DataError("Payment Requests not supported for the APPROVE call")
+            return Err(Error::DataError);
+        }
+
+        require_confirm_approve(
+            &recipient,
+            value,
+            &dp,
+            maximum_fee,
+            fee_items,
+            chain_id,
+            &definitions.network(),
+            &token.unwrap(),
+            &token_address.unwrap(),
+            chunkify.unwrap_or(false),
+        )?;
+    } else {
+        info!("handling regular transaction flow");
+        assert!(value.is_some());
+
+        let recipient_str = if !recipient.is_empty() {
+            info!("recipient is not empty, treating as regular transaction");
+            Some(address_from_bytes(&recipient, Some(definitions.network())))
+        } else {
+            info!("recipient is empty, treating as contract creation");
+            None
+        };
+        let token_address_str = address_from_bytes(address_bytes, Some(definitions.network()));
+        let is_contract_interaction = token.is_none() && data_length > 0;
+
+        info!("is contract interaction: {}", is_contract_interaction);
+        info!("data_length: {}", data_length);
+
+        if let Some(mut payment_req_verifier) = payment_req_verifier {
+            info!("handling payment request flow");
+            if is_contract_interaction {
+                // TODO: proper error type: DataError("Payment Requests don't support contract interactions")
+                info!("payment requests don't support contract interactions");
+                return Err(Error::DataError);
+            }
+
+            // If a payment_req_verifier is provided, then msg.payment_req must have been set.
+            if payment_req.is_none() || recipient_str.is_none() {
+                // TODO: proper error type
+                info!(
+                    "invalid payment request: recipient must be empty and payment_req must be provided"
+                );
+                return Err(Error::DataError);
+            }
+
+            payment_req_verifier.add_output(
+                unwrap!(value).into(),
+                unwrap!(recipient_str.as_deref()),
+                None,
+            )?;
+            info!("verifying payment request");
+            payment_req_verifier.verify()?;
+
+            require_confirm_payment_request(
+                unwrap!(recipient_str.as_deref()),
+                payment_req.as_ref().unwrap(),
+                &dp,
+                maximum_fee,
+                fee_items,
+                chain_id,
+                definitions.network(),
+                token.as_ref(),
+                &token_address_str,
+            )?;
+        } else {
+            if is_contract_interaction {
+                require_confirm_other_data(data_initial_chunk, data_length)?;
+            };
+
+            require_confirm_tx(
+                recipient_str.as_deref(),
+                unwrap!(value),
+                &dp,
+                maximum_fee,
+                fee_items,
+                definitions.network(),
+                token.as_ref(),
+                !is_contract_interaction && tx_type != Some(EIP_7702_TX_TYPE),
+                chunkify.unwrap_or(false),
+            )?;
+        };
+    };
+
+    Ok(())
+}
+
+fn handle_known_contract_calls(
+    data_initial_chunk: &[u8],
+    data_length: u32,
+    to: &str,
+    value_bytes: &[u8],
+    definitions: &Definitions,
+    address_bytes: &[u8],
+) -> Result<(
+    Option<EthereumTokenInfo>,
+    Option<Vec<u8>>,
+    Option<Vec<u8>>,
+    Vec<u8>,
+    Option<U256>,
+)> {
+    let mut token = None;
+    let mut token_address = None;
+    let mut recipient = Vec::from(address_bytes);
+
+    // TODO: better implement parsing int value from bytes
+    assert!(value_bytes.len() <= 32);
+    let mut value = Some(U256::from_big_endian(value_bytes));
+
+    let mut offset = 0;
+    let mut remaining = data_initial_chunk.len();
+
+    if remaining < SC_FUNC_SIG_BYTES {
+        info!("data too short");
+        return Ok((token, token_address, None, recipient, value));
+    }
+
+    let mut func_sig = Some(Vec::from(
+        &data_initial_chunk[offset..(offset + SC_FUNC_SIG_BYTES)],
+    ));
+    offset += SC_FUNC_SIG_BYTES;
+    remaining -= SC_FUNC_SIG_BYTES;
+
+    if matches!(to.len(), 40 | 42)
+        && value_bytes.len() == 0
+        && data_length == 68
+        && data_initial_chunk.len() == 68
+        && (matches!(func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_TRANSFER)
+            || matches!( func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_APPROVE))
+    {
+        // The two functions happen to have the exact same parameters, so we treat them together.
+        // This will need to be made into a more generic solution eventually.
+        // arg0: address, Address, 20 bytes (left padded with zeroes)
+        // arg1: value, uint256, 32 bytes
+
+        if remaining < SC_ARGUMENT_BYTES * 2 {
+            return Ok((token, token_address, None, recipient, value));
+        }
+
+        let arg0 = &data_initial_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
+        offset += SC_ARGUMENT_BYTES;
+        // remaining -= SC_ARGUMENT_BYTES;
+
+        let pad_len = SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES;
+        assert!(arg0[..pad_len].iter().all(|&byte| byte == 0));
+        recipient = Vec::from(&arg0[pad_len..]);
+
+        let arg1 = &data_initial_chunk[offset..(offset + SC_ARGUMENT_BYTES)];
+
+        if matches!(func_sig.as_deref(), Some(sig) if sig == &SC_FUNC_SIG_APPROVE)
+            && arg1.iter().all(|&byte| byte == 255)
+        {
+            // "Unlimited" approval (all bits set) is a special case
+            // which we encode as value=None internally.
+            value = None;
+            info!("Detected unlimited approval, treating value as None");
+        } else {
+            // TODO: better implement parsing int value from bytes
+            assert!(arg1.len() <= 32);
+            value = Some(U256::from_big_endian(arg1));
+            // info!("Parsed value from function arguments: {}", value);
+        }
+
+        token = Some(definitions.get_token(address_bytes));
+        token_address = Some(Vec::from(address_bytes));
+    } else {
+        // If the function was known but something else (data length) was unexpected,
+        // pretend we did not recognize the function so we fall back to blind signing.
+        // See the approve_avantis test case and ERC-8021.
+
+        func_sig = None;
+        info!(
+            "Function signature not recognized or data length mismatch, treating as unknown function"
+        );
+    };
+
+    Ok((token, token_address, func_sig, recipient, value))
 }
 
 #[cfg(test)]

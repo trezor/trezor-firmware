@@ -38,7 +38,9 @@ use std::{
 use trezor_app_sdk::{
     Error, Result,
     crypto::{self, keccak_256},
-    info, ui, unwrap,
+    info,
+    ui::{self, StrExt},
+    unwrap,
 };
 
 /// Ethereum uses Bitcoin xpub format
@@ -735,9 +737,9 @@ fn should_show_domain(name: &[u8], version: &[u8]) -> Result<bool> {
     let domain_version = decode_typed_data(version, "string")?;
 
     let para = [
-        ("Name and version", false),
-        (&domain_name, false),
-        (&domain_version, false),
+        StrExt::new("Name and version", false),
+        StrExt::new(&domain_name, false),
+        StrExt::new(&domain_version, false),
     ];
 
     info!("asking user whether to show domain information");
@@ -765,7 +767,7 @@ fn should_show_array(parent_objects: &[&str], data_type: &str, size: u32) -> Res
         "Array of {}",
         format_plural_english(size, data_type).as_str()
     );
-    let para = [(array_of_plural.as_str(), false)];
+    let para = [StrExt::new(&array_of_plural, false)];
     ui::should_show_more(
         &limit_str(&parent_objects.to_vec().join("."), None),
         &para,
@@ -831,9 +833,9 @@ fn should_show_struct(
         .join(", ");
 
     let para = [
-        (description, false),
-        (&contains, false),
-        (&field_names, false),
+        StrExt::new(description, false),
+        StrExt::new(&contains, false),
+        StrExt::new(&field_names, false),
     ];
 
     ui::should_show_more(
