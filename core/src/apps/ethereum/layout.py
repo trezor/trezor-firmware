@@ -245,7 +245,7 @@ async def require_confirm_deposit(
 
     from trezor.strings import format_amount
 
-    from .clear_signing_definitions import VAULT_GAUNTLET_USDC
+    from .yielding_vaults import VAULT_GAUNTLET_USDC
 
     _, owner_name, decimals, asset_id, _ = VAULT_GAUNTLET_USDC
     total_amount = f"{format_amount(value, decimals)} {asset_id}"

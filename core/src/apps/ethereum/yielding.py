@@ -18,7 +18,7 @@ def _verify_vault(
     address_bytes: bytes,
     msg: MsgInSignTx,
 ) -> bool:
-    from .clear_signing_definitions import VAULT_GAUNTLET_USDC as vault
+    from .yielding_vaults import VAULT_GAUNTLET_USDC as vault
 
     if address_bytes == vault[0] and msg.chain_id == vault[4]:
         if int.from_bytes(msg.value, "big") == 0:
@@ -74,21 +74,26 @@ async def _handle_deposit(
     sender_bytes: bytes,
 ) -> None:
 
+    from .clear_signing import InvalidFunctionCall, parse_address, parse_uint256
     from .layout import require_confirm_deposit
 
     # deposit(uint256 assets, address receiver)
     # - arg0: asset(USDC) quantity
     # - arg1: user address
     try:
-        asset_amount = int.from_bytes(data_reader.read_memoryview(32), "big")
-        receiver_bytes = bytes(data_reader.read_memoryview(32)[12:])
-        if data_reader.remaining_count() != 0:
-            raise ValueError  # wrong number of arguments
-    except (ValueError, EOFError):
+        asset_amount = parse_uint256(data_reader.read_memoryview(32))
+        receiver_bytes = parse_address(data_reader.read_memoryview(32))
+        if (
+            data_reader.remaining_count() != 0
+            or not isinstance(asset_amount, int)
+            or not isinstance(receiver_bytes, bytes)
+        ):
+            raise ValueError  # wrong number of arguments or unexpected parsed types
+    except (ValueError, EOFError, InvalidFunctionCall):
         raise DataError("Invalid data for vault deposit")
 
     if asset_amount == 0:
-        raise DataError("Invalid assets amount for vault deposit")
+        raise DataError("Invalid asset amount for vault deposit")
 
     if receiver_bytes != sender_bytes:
         raise DataError("Receiver must equal sender for vault deposit")
