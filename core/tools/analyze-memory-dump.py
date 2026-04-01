@@ -10,7 +10,8 @@ from typing import Any, Iterator, Optional
 from typing_extensions import TypeGuard
 
 if len(sys.argv) < 2:
-    print("""\
+    print(
+        """\
 USAGE: ./analyze-memory-dump.py somefile.json [memorymap.html]
 
 Where "somefile.json" was produced by using `trezor.utils.mem_dump("somefile.json")`
@@ -31,7 +32,8 @@ actually care about.
 Modules are nothing but a link to a globals dict. The dict must be examined separately.
 
 Generators and closures are painful :(
-""")
+"""
+    )
 
 
 with open(sys.argv[1]) as f:
@@ -265,7 +267,8 @@ import dominate.tags as t
 doc = dominate.document(title="memory map")
 with doc.head:
     t.meta(charset="utf-8")
-    t.style("""\
+    t.style(
+        """\
 span, a {
     font-family: monospace;
     color: black;
@@ -294,7 +297,8 @@ dl { border-left: 1px solid grey; padding-left: 0.4rem; }
 dt { font-weight: bold }
 
 div.
-""")
+"""
+    )
 
 ctr = 0
 newline = True
