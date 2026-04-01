@@ -217,13 +217,13 @@
             }
         },
         {
-            "name": "vault_deposit_gauntlet_usdc",
+            "name": "deposit_known_vault",
             "parameters": {
-                "comment": "ERC-4626 deposit of 1 USDC into Gauntlet USDC vault",
-                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
+                "comment": "ERC-4626 deposit of 100 USDC into Test Vault (Base)",
+                "data": "6e553f650000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
                 "path": "m/44'/60'/0'/0/1",
-                "to_address": "0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB",
-                "chain_id": 1,
+                "to_address": "0xAc8C6e8779Dddc60F5cEF7701DcE70eCBa5ef518",
+                "chain_id": 8453,
                 "nonce": "0x0",
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
@@ -231,19 +231,19 @@
                 "value": "0x0"
             },
             "result": {
-                "sig_v": 38,
-                "sig_r": "0f9b666dcdd49ed170dac61ed8bb70ddd62907ce7c5b6ffdd836725bf1ab00f0",
-                "sig_s": "03aa82111b1428c56f2dbfa6f9c58faf595b3f9b6704ff03c18b05837f92e5d4"
+                "sig_v": 16941,
+                "sig_r": "bf889237f23132a5070dec9e66b123e7d21011638a9d35e967125d49087f8d3b",
+                "sig_s": "0e0921051980d873410ef7ab080b9b01858ddc4295f2a57a344d0e28b681fd0c"
             }
         },
         {
-            "name": "vault_deposit_unknown_vault",
+            "name": "deposit_unknown_vault",
             "parameters": {
-                "comment": "ERC-4626 deposit of 1 USDC into unknown vault (fake address)",
-                "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000008b13dbef164beb9d984aeb715c31d1d1bb0bd8bb",
+                "comment": "ERC-4626 deposit of 100 USDC into unknown vault (fake address)",
+                "data": "6e553f650000000000000000000000000000000000000000000000000000000005f5e1000000000000000000000000004f4f1488acb1ae1b46146ceff804f591dfe660ac",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDdDd",
-                "chain_id": 1,
+                "chain_id": 8453,
                 "nonce": "0x0",
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
@@ -251,9 +251,9 @@
                 "value": "0x0"
             },
             "result": {
-                "sig_v": 38,
-                "sig_r": "d36e3dfe45f6746f4473bd286513121620a44e468ca47fbb0bdff1941c8c262d",
-                "sig_s": "0d40475d6da7da9b0bc0a488b63ee9901037850aa0b63b7d6e41aced15000810"
+                "sig_v": 16941,
+                "sig_r": "ed656873aec0bd52de96e444124eb1748193db011dbe4a1fc4bd563898ff1af8",
+                "sig_s": "52dd1b7e32e6ba03403c0829f19b67618e8dd5a6c5557fd040b02cda676ab241"
             }
         }
     ]
