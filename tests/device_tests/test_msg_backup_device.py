@@ -15,12 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import itertools
-import typing as t
 
 import pytest
 import shamir_mnemonic as shamir
 
-from tests.common import BRGeneratorType
 from trezorlib import device, messages, models
 from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import LayoutType
@@ -35,55 +33,21 @@ from ..common import (
     MNEMONIC_SLIP39_CUSTOM_1of1,
 )
 from ..input_flows import (
+    FlowAdapter,
     InputFlowBip39Backup,
     InputFlowSlip39AdvancedBackup,
     InputFlowSlip39BasicBackup,
     InputFlowSlip39CustomBackup,
+    normal,
+    try_to_cancel,
 )
 
-BACKUP_IN_PROGRESS = messages.Failure(
-    code=messages.FailureType.InProgress,
-    message="Backup in progress",
-)
-
-
-def _normal(
-    _session: Session, flow: t.Callable[[], BRGeneratorType]
-) -> BRGeneratorType:
-    return flow()
-
-
-def _try_to_cancel(
-    session: Session, flow: t.Callable[[], BRGeneratorType]
-) -> BRGeneratorType:
-    gen = flow()
-    next(gen)
-    while True:
-        br = yield
-        # Entering session's context will send an explicit THP ACK after `BACKUP_IN_PROGRESS` is received.
-        with session.client._interact(force_flush=True):
-            # Try to cancel the backup flow on Core
-            with pytest.raises(TrezorFailure) as exc_info:
-                session.call(messages.Cancel(), expect=messages.Failure)
-            # Following #6483, backup is not cancellable
-            assert exc_info.value.failure == BACKUP_IN_PROGRESS
-        try:
-            gen.send(br)
-        except StopIteration:
-            return
-
-
-if t.TYPE_CHECKING:
-    FlowAdapter = t.Callable[
-        [Session, t.Callable[[], BRGeneratorType]], BRGeneratorType
-    ]
+FLOW_ADAPTERS = [normal, try_to_cancel()]
 
 
 @pytest.mark.models("core")  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
-@pytest.mark.parametrize(
-    "adapt_flow", [_try_to_cancel, _normal], ids=lambda f: f.__name__
-)
+@pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
 def test_backup_bip39(session: Session, adapt_flow: "FlowAdapter"):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
@@ -103,7 +67,7 @@ def test_backup_bip39(session: Session, adapt_flow: "FlowAdapter"):
     assert session.features.backup_type is messages.BackupType.Bip39
 
 
-SLIP39_BASIC_PARAMS = list(itertools.product([True, False], [_try_to_cancel, _normal]))
+SLIP39_BASIC_PARAMS = list(itertools.product([True, False], FLOW_ADAPTERS))
 SLIP39_BASIC_IDS = [
     f"{['no_click_info', 'click_info'][click_info]}_{adapt_flow.__name__}"
     for click_info, adapt_flow in SLIP39_BASIC_PARAMS
@@ -146,9 +110,7 @@ def test_backup_slip39_basic(
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
-@pytest.mark.parametrize(
-    "adapt_flow", [_try_to_cancel, _normal], ids=lambda f: f.__name__
-)
+@pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
 def test_backup_slip39_single(session: Session, adapt_flow: "FlowAdapter"):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
@@ -175,9 +137,7 @@ def test_backup_slip39_single(session: Session, adapt_flow: "FlowAdapter"):
     )
 
 
-SLIP39_ADVANCED_PARAMS = list(
-    itertools.product([True, False], [_try_to_cancel, _normal])
-)
+SLIP39_ADVANCED_PARAMS = list(itertools.product([True, False], FLOW_ADAPTERS))
 SLIP39_ADVANCED_IDS = [
     f"{['no_click_info', 'click_info'][click_info]}_{adapt_flow.__name__}"
     for click_info, adapt_flow in SLIP39_ADVANCED_PARAMS
@@ -223,7 +183,7 @@ def test_backup_slip39_advanced(
 SLIP39_CUSTOM_PARAMS = [
     (threshold, count, adapt_flow)
     for threshold, count in ((1, 1), (2, 2), (3, 5))
-    for adapt_flow in (_try_to_cancel, _normal)
+    for adapt_flow in FLOW_ADAPTERS
 ]
 SLIP39_CUSTOM_IDS = [
     f"{threshold}_of_{count}_{adapt_flow.__name__}"
