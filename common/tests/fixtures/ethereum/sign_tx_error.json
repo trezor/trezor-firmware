@@ -47,7 +47,7 @@
             }
         },
         {
-            "name": "vault_deposit_gauntlet_usdc_nonzero_value",
+            "name": "vault_deposit_gauntlet_usdc_with_eth",
             "parameters": {
                 "comment": "ERC-4626 deposit of 1 USDC into Gauntlet USDC vault with non-zero ETH value",
                 "data": "6e553f6500000000000000000000000000000000000000000000000000000000000f42400000000000000000000000008b13dbef164beb9d984aeb715c31d1d1bb0bd8bb",
