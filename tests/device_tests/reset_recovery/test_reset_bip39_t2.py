@@ -25,19 +25,34 @@ from trezorlib.exceptions import TrezorFailure
 
 from ...common import EXTERNAL_ENTROPY, MNEMONIC12, MOCK_GET_ENTROPY, generate_entropy
 from ...input_flows import (
+    FlowAdapter,
     InputFlowBip39ResetBackup,
     InputFlowBip39ResetFailedCheck,
     InputFlowBip39ResetPIN,
+    normal,
+    try_to_cancel,
 )
 
 pytestmark = pytest.mark.models("core")
 
+FLOW_ADAPTERS = [
+    normal,
+    try_to_cancel(
+        {
+            "setup_device",
+            "confirm_setup_device",
+            "backup_device",
+            "success_backup",
+        }
+    ),
+]
 
-def reset_device(session: Session, strength: int):
+
+def reset_device(session: Session, strength: int, adapt_flow: FlowAdapter):
     debug = session.debug
     with session.test_ctx as client:
         IF = InputFlowBip39ResetBackup(session)
-        client.set_input_flow(IF.get())
+        client.set_input_flow(adapt_flow(session, IF.get()))
 
         # No PIN, no passphrase, don't display random
         device.setup(
@@ -76,13 +91,15 @@ def reset_device(session: Session, strength: int):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device(session: Session):
-    reset_device(session, 128)  # 12 words
+@pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
+def test_reset_device(session: Session, adapt_flow: FlowAdapter):
+    reset_device(session, 128, adapt_flow)  # 12 words
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_192(session: Session):
-    reset_device(session, 192)  # 18 words
+@pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
+def test_reset_device_192(session: Session, adapt_flow: FlowAdapter):
+    reset_device(session, 192, adapt_flow)  # 18 words
 
 
 @pytest.mark.setup_client(uninitialized=True)
