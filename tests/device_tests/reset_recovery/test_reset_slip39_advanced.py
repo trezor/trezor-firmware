@@ -23,21 +23,32 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupAvailability, BackupType
 
 from ...common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
-from ...input_flows import InputFlowSlip39AdvancedResetRecovery
+from ...input_flows import (
+    FlowAdapter,
+    InputFlowSlip39AdvancedResetRecovery,
+    normal,
+    try_to_cancel,
+)
 
 pytestmark = pytest.mark.models("core")
+
+FLOW_ADAPTERS = [
+    normal,
+    try_to_cancel({"backup_device", "setup_device", "success_backup"}),
+]
 
 
 # TODO: test with different options
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_slip39_advanced(client: Client):
+@pytest.mark.parametrize("adapt_flow", FLOW_ADAPTERS, ids=lambda f: f.__name__)
+def test_reset_device_slip39_advanced(client: Client, adapt_flow: FlowAdapter):
     strength = 128
     member_threshold = 3
 
     session = client.get_seedless_session()
     with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedResetRecovery(client, False)
-        client.set_input_flow(IF.get())
+        client.set_input_flow(adapt_flow(session, IF.get()))
         # No PIN, no passphrase, don't display random
         device.setup(
             session,
