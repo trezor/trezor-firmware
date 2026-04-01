@@ -14,21 +14,6 @@ if TYPE_CHECKING:
     from .keychain import MsgInSignTx
 
 
-def _verify_vault(
-    address_bytes: bytes,
-    msg: MsgInSignTx,
-) -> bool:
-    from .yielding_vaults import VAULT_GAUNTLET_USDC as vault
-
-    if address_bytes == vault[0] and msg.chain_id == vault[4]:
-        if int.from_bytes(msg.value, "big") == 0:
-            return True
-        else:
-            raise DataError("Native ETH cannot be sent with vault transactions")
-    else:
-        return False
-
-
 def get_approver(
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
@@ -51,16 +36,16 @@ def get_approver(
         return None
 
     func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
-    if _verify_vault(address_bytes, msg):
-        if func_sig == FUNC_SIG_DEPOSIT:
-            return get_progress_indicator(msg.data_length), _handle_deposit(
-                data_reader,
-                msg,
-                network,
-                maximum_fee,
-                fee_items,
-                sender_bytes,
-            )
+    if func_sig == FUNC_SIG_DEPOSIT:
+        return get_progress_indicator(msg.data_length), _handle_deposit(
+            data_reader,
+            msg,
+            network,
+            maximum_fee,
+            fee_items,
+            sender_bytes,
+            address_bytes,
+        )
 
     return None
 
@@ -72,6 +57,7 @@ async def _handle_deposit(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     sender_bytes: bytes,
+    vault_addr: bytes,
 ) -> None:
 
     from .clear_signing import InvalidFunctionCall, parse_address, parse_uint256
@@ -87,13 +73,19 @@ async def _handle_deposit(
             data_reader.remaining_count() != 0
             or not isinstance(asset_amount, int)
             or not isinstance(receiver_bytes, bytes)
+            or int.from_bytes(msg.value, "big") != 0
         ):
-            raise ValueError  # wrong number of arguments or unexpected parsed types
+            raise ValueError
     except (ValueError, EOFError, InvalidFunctionCall):
         raise DataError("Invalid data for vault deposit")
 
     if asset_amount == 0:
         raise DataError("Invalid asset amount for vault deposit")
+
+    if __debug__:
+        from trezor import log
+
+        log.debug(__name__, f"Reciever: {receiver_bytes}, Sender: {sender_bytes}")
 
     if receiver_bytes != sender_bytes:
         raise DataError("Receiver must equal sender for vault deposit")
@@ -104,4 +96,5 @@ async def _handle_deposit(
         maximum_fee,
         fee_items,
         network,
+        vault_addr,
     )

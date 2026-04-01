@@ -25,6 +25,9 @@ from .clear_signing import (
     parse_uint256,
 )
 
+if __debug__:
+    from .yielding_vaults import KNOWN_VAULT
+
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
 
 APPROVE_DISPLAY_FORMAT = DisplayFormat(

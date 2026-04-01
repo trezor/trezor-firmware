@@ -241,21 +241,27 @@ async def require_confirm_deposit(
     maximum_fee: str,
     fee_info_items: Iterable[StrPropertyType],
     network: EthereumNetworkInfo,
+    vault_addr: bytes,
 ) -> None:
 
-    from trezor.strings import format_amount
+    from .tokens import UNKNOWN_TOKEN
+    from .yielding_vaults import KNOWN_VAULT
 
-    from .yielding_vaults import VAULT_GAUNTLET_USDC
+    if vault_addr == KNOWN_VAULT[0] and network.chain_id == KNOWN_VAULT[1]:
+        vault_name = KNOWN_VAULT[2]
+        token = KNOWN_VAULT[3]
+    else:
+        vault_name = address_from_bytes(vault_addr, network)
+        token = UNKNOWN_TOKEN
 
-    _, owner_name, decimals, asset_id, _ = VAULT_GAUNTLET_USDC
-    total_amount = f"{format_amount(value, decimals)} {asset_id}"
+    total_amount = format_ethereum_amount(value, token, network)
     account, account_path = get_account_and_path(address_n)
 
     await confirm_ethereum_vault_tx(
         title=TR.words__deposit,
         intro_question=TR.ethereum__vault_deposit_intro,
         verb=TR.ethereum__deposit_to,
-        vault_str=owner_name,
+        vault_str=vault_name,
         total_amount=total_amount,
         account=account,
         account_path=account_path,
