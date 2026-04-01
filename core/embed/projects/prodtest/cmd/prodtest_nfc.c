@@ -59,7 +59,7 @@ static void prodtest_nfc_read_card(cli_t* cli) {
   }
 
   if (NFC_OK != nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B |
-                                  NFC_POLLER_TECH_F | NFC_POLLER_TECH_V)) {
+                                  NFC_POLLER_TECH_V)) {
     cli_error(cli, CLI_ERROR_FATAL, "NFC tech registration failed");
     goto cleanup;
   }
