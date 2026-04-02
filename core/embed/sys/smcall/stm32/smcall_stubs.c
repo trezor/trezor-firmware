@@ -401,7 +401,7 @@ bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
 
 #endif  // USE_BACKUP_RAM
 
-#ifdef USE_NRF
+#ifdef USE_NRF_AUTH
 
 #include <sec/secret.h>
 
