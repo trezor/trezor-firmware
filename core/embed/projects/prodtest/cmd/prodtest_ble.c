@@ -281,6 +281,7 @@ static void prodtest_ble_radio_test_cmd(cli_t* cli) {
     return;
   }
 
+#ifndef TREZOR_EMULATOR
   // Deinitialize BLE module
   ble_deinit();
 
@@ -361,6 +362,7 @@ static void prodtest_ble_radio_test_cmd(cli_t* cli) {
   HAL_UART_DeInit(&huart);
   __HAL_RCC_USART3_CLK_DISABLE();
   ble_init();  // Reinitialize BLE module
+#endif         // TREZOR_EMULATOR
 
   cli_ok(cli, "");
 }
@@ -375,6 +377,7 @@ void prodtest_ble_direct_test_mode_cmd(cli_t* cli) {
     return;
   }
 
+#ifndef TREZOR_EMULATOR
   uint8_t cmd_line_byte;
 
   // Reset NRF
@@ -398,6 +401,8 @@ void prodtest_ble_direct_test_mode_cmd(cli_t* cli) {
   }
 
   nrf_set_dtm_mode(false, NULL);
+
+#endif  // TREZOR_EMULATOR
 
   cli_ok(cli, "");
 }
