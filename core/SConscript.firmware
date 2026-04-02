@@ -478,6 +478,7 @@ SOURCE_FIRMWARE = [
     'embed/projects/firmware/boot_image_embdata.c',
     'embed/projects/firmware/header.S',
     'embed/projects/firmware/main.c',
+    'embed/projects/firmware/stm32/vectortable.S',
     'embed/projects/firmware/mphalport.c',
     'embed/projects/firmware/nlrthumb.c',
 ]
