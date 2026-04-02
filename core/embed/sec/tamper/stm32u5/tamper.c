@@ -22,7 +22,6 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <io/rsod.h>
 #include <sec/tamper.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
@@ -246,6 +245,9 @@ void tamper_build_pminfo(systask_postmortem_t* pminfo, uint32_t tamper_sr) {
   memcpy(pminfo->error.message, reason, strlen(reason));
 #endif
 }
+
+// TODO!@#: hack to avoid including io/rsod.h in this file.
+extern void rsod_panic_handler(const systask_postmortem_t* pminfo);
 
 // Interrupt handle for all tamper events
 // It displays an error message
