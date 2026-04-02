@@ -336,10 +336,10 @@ enum MessageType {
     MessageType_SolanaTxSignature = 905 [(wire_out) = true];
 
     // THP
-    MessageType_ThpCreateNewSession = 1000 [(bitcoin_only) = true];
+    MessageType_ThpCreateNewSession = 1000 [(wire_in) = true, (bitcoin_only) = true];
     reserved 1001 to 1015;  // see ThpMessageType in messages-thp.proto
-    MessageType_ThpCredentialRequest = 1016 [(bitcoin_only) = true];
-    MessageType_ThpCredentialResponse = 1017 [(bitcoin_only) = true];
+    MessageType_ThpCredentialRequest = 1016 [(wire_in) = true, (bitcoin_only) = true];
+    MessageType_ThpCredentialResponse = 1017 [(wire_out) = true, (bitcoin_only) = true];
     reserved 1018 to 1099;  // see ThpMessageType in messages-thp.proto
 
     // Nostr
