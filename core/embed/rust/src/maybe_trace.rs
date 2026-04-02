@@ -12,4 +12,5 @@ mod maybe_trace_private {
     impl<T> MaybeTrace for T {}
 }
 
+#[allow(unused_imports)]
 pub use maybe_trace_private::MaybeTrace;
