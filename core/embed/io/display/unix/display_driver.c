@@ -17,12 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#include "SDL_blendmode.h"
-#include "SDL_render.h"
-#endif
-
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -32,8 +26,14 @@
 #include <sys/logging.h>
 #include <sys/systask.h>
 
-#include <SDL.h>
-#include <SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#include <SDL2/SDL_blendmode.h>
+#include <SDL2/SDL_render.h>
+#endif
 
 #include "profile.h"
 
