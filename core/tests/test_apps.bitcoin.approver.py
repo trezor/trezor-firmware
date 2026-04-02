@@ -12,8 +12,6 @@ from trezor.messages import (
     TxInput,
     TxOutput,
 )
-from trezor.wire import context
-from trezor.wire.codec.codec_context import CodecContext
 
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover

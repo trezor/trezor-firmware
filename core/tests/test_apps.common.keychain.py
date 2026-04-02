@@ -7,14 +7,11 @@ from trezor import wire
 from trezor.crypto import bip39
 from trezor.enums import SafetyCheckLevel
 from trezor.wire import context
-from trezor.wire.codec.codec_context import CodecContext
 
 from apps.common import safety_checks
 from apps.common.keychain import Keychain, LRUCache, get_keychain, with_slip44_keychain
 from apps.common.paths import PATTERN_SEP5, PathSchema
 
-if utils.USE_THP:
-    import thp_common
 if not utils.USE_THP:
     from storage import cache_codec
 
