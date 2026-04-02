@@ -1,5 +1,6 @@
 build/
 build-docker/
+build-xtask/
 .sconsign.dblite
 compile_commands.json
 emu.config

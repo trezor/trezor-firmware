@@ -86,6 +86,7 @@ stdenvNoCC.mkDerivation ({
     oldNixpkgs.SDL2
     oldNixpkgs.SDL2_image
     bash
+    bear
     bloaty  # for binsize
     check
     crowdin-cli  # for translations
@@ -106,6 +107,7 @@ stdenvNoCC.mkDerivation ({
     pkg-config
     poetry
     ps
+    sccache
     oldNixpkgs.protobuf3_19
     pyright
     python3

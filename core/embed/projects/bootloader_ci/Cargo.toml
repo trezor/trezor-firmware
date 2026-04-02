@@ -1,0 +1,138 @@
+[package]
+name = "bootloader_ci"
+version = "0.0.0"
+edition = "2024"
+links = "bootloader_ci"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+io.workspace = true
+sec.workspace = true
+sys.workspace = true
+rtl.workspace = true
+models.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = []
+model_d002 = []
+
+model_t2t1 = [
+    "io/model_t2t1",
+    "mcu_stm32f4",
+    "backlight",
+    "dma2d",
+    "touch",
+]
+
+model_t2b1 = [
+    "io/model_t2b1",
+    "mcu_stm32f4",
+    "button",
+    "consumption_mask",
+    "lockable_bootloader",
+    "secret",
+]
+
+model_t3b1 = [
+    "io/model_t3b1",
+    "mcu_stm32u58",
+    "button",
+    "consumption_mask",
+    "hash_processor",
+    "lockable_bootloader",
+    "secret",
+    "secure_aes",
+    "tamper",
+]
+
+model_t3t1 = [
+    "io/model_t3t1",
+    "mcu_stm32u58",
+    "backlight",
+    "dma2d",
+    "haptic",
+    "hash_processor",
+    "lockable_bootloader",
+    "secret",
+    "secure_aes",
+    "tamper",
+    "touch",
+]
+
+model_t3w1 = [
+    "io/model_t3w1",
+    "mcu_stm32u5g",
+    "backlight",
+    "backup_ram",
+    "boot_ucb",
+    "button",
+    "dma2d",
+    "haptic",
+    "hash_processor",
+    "iwdg",
+    "lockable_bootloader",
+    "power_manager",
+    "rgb_led",
+    "secret",
+    "secure_aes",
+    "suspend",
+    "tamper",
+    "telemetry",
+    "touch",
+]
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+
+clippy = []
+emulator = ["io/emulator"]
+dbg_console_swo = ["dbg_console"]
+dbg_console_vcp = ["dbg_console", "io/usb_iface_vcp"]
+dbg_console_system_view = ["dbg_console", "sys/system_view"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "io/display",
+    "io/kernel_mode",
+    "io/secure_mode",
+    "io/usb_iface_wire",
+    "models/bootloader",
+    "rtl/ed25519_no_precomp",
+    ]
+
+mcu_stm32f4 = ["io/mcu_stm32f4"]
+mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_stm32u5 = ["sec/trustzone"]
+
+backlight = ["io/backlight"]
+backup_ram = ["sec/backup_ram"]
+boot_ucb = ["sec/boot_ucb"]
+button = ["io/button"]
+consumption_mask = ["sec/consumption_mask"]
+dbg_console = ["sys/dbg_console"]
+dma2d = ["io/dma2d"]
+haptic = ["io/haptic"]
+hash_processor = ["sec/hash_processor"]
+iwdg = ["sec/iwdg"]
+lockable_bootloader = ["io/lockable_bootloader"]
+power_manager = ["io/power_manager"]
+rgb_led = ["io/rgb_led"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+suspend = ["io/suspend"]
+tamper = ["sec/tamper"]
+telemetry = ["sec/telemetry"]
+touch = ["io/touch"]

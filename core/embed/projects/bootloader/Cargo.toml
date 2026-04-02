@@ -1,0 +1,200 @@
+[package]
+name = "bootloader"
+version = "0.0.0"
+edition = "2024"
+links = "bootloader"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+trezor_lib.workspace = true
+io.workspace = true
+sec.workspace = true
+sys.workspace = true
+rtl.workspace = true
+models.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = []
+model_d002 = []
+
+model_t2t1 = [
+    "io/model_t2t1",
+    "mcu_stm32f4",
+    "backlight",
+    "dma2d",
+    "pvd",
+    "touch",
+    "layout_bolt",
+]
+
+model_t2b1 = [
+    "io/model_t2b1",
+    "mcu_stm32f4",
+    "button",
+    "consumption_mask",
+    "lockable_bootloader",
+    "pvd",
+    "secret",
+    "ui_empty_lock",
+    "layout_caesar",
+]
+
+model_t3b1 = [
+    "io/model_t3b1",
+    "mcu_stm32u58",
+    "button",
+    "consumption_mask",
+    "hash_processor",
+    "lockable_bootloader",
+    "pvd",
+    "secret",
+    "secure_aes",
+    "storage_hw_key",
+    "tamper",
+    "layout_caesar",
+]
+
+model_t3t1 = [
+    "io/model_t3t1",
+    "mcu_stm32u58",
+    "backlight",
+    "dma2d",
+    "hash_processor",
+    "lockable_bootloader",
+    "pvd",
+    "secret",
+    "secure_aes",
+    "storage_hw_key",
+    "tamper",
+    "touch",
+    "layout_delizia",
+]
+
+model_t3w1 = [
+    "io/model_t3w1",
+    "mcu_stm32u5g",
+    "backlight",
+    "backup_ram",
+    "ble",
+    "boot_ucb",
+    "button",
+    "dma2d",
+    "haptic",
+    "hash_processor",
+    "iwdg",
+    "lockable_bootloader",
+    "power_manager",
+    "rgb_led",
+    "rtc",
+    "secmon_verification",
+    "secret",
+    "secure_aes",
+    "storage_hw_key",
+    "suspend",
+    "tamper",
+    "telemetry",
+    "touch",
+    "layout_eckhart",
+]
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+
+emulator = ["io/emulator"]
+clippy = ["trezor_lib/clippy"]
+dbg_console_swo = ["dbg_console", "sys/dbg_console_swo"]
+dbg_console_vcp = ["dbg_console",  "sys/dbg_console_vcp",  "io/usb_iface_vcp"]
+dbg_console_system_view = ["dbg_console", "sys/dbg_console_system_view"]
+debug = ["trezor_lib/debug"]
+debuglink = ["trezor_lib/debuglink", "io/usb_iface_debug"]
+disable_animation = []
+ui_debug = ["trezor_lib/ui_debug"]
+ui_debug_overlay = ["trezor_lib/ui_debug_overlay"]
+ui_performance_overlay = ["trezor_lib/ui_performance_overlay"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "io/display",
+    "io/fancy_fatal_error",
+    "io/kernel_mode",
+    "io/secure_mode",
+    "io/usb_iface_wire",
+    "models/bootloader",
+    "rtl/ed25519_no_precomp",
+
+    "trezor_lib/with_new_crates", # only for transitional period
+
+    "trezor_lib/crypto",
+    "trezor_lib/ui",
+    "trezor_lib/bootloader",
+    "trezor_lib/usb",
+    ]
+
+mcu_stm32f4 = ["io/mcu_stm32f4"]
+mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_stm32u5 = ["sec/trustzone"]
+
+backlight = ["io/backlight", "trezor_lib/backlight"]
+backup_ram = ["sec/backup_ram"]
+ble = ["io/ble", "trezor_lib/ble", "nrf", "nrf_auth"]
+nrf = ["io/nrf", "trezor_lib/nrf"]
+nrf_auth = ["io/nrf_auth"]
+boot_ucb = ["sec/boot_ucb", "trezor_lib/boot_ucb"]
+button = ["io/button", "trezor_lib/button"]
+consumption_mask = ["sec/consumption_mask"]
+dbg_console = ["sys/dbg_console"]
+dma2d = ["io/dma2d", "trezor_lib/dma2d"]
+haptic = ["io/haptic", "trezor_lib/haptic"]
+hash_processor = ["sec/hash_processor"]
+iwdg = ["sec/iwdg"]
+lockable_bootloader = ["io/lockable_bootloader"]
+power_manager = ["io/power_manager", "trezor_lib/power_manager", "trezor_lib/pmic"]
+pvd = ["sys/pvd"]
+rgb_led = ["io/rgb_led", "trezor_lib/rgb_led"]
+rtc = ["sys/rtc"]
+secmon_verification = ["sec/secmon_verification"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+storage_hw_key = ["sec/storage_hw_key"]
+suspend = ["io/suspend"]
+tamper = ["sec/tamper"]
+telemetry = ["sec/telemetry", "trezor_lib/telemetry"]
+touch = ["io/touch", "trezor_lib/touch"]
+ui_empty_lock = ["trezor_lib/ui_empty_lock"]
+
+layout_bolt = [
+    "trezor_lib/layout_bolt",
+    "trezor_lib/display_rgb565",
+    ]
+
+layout_caesar = [
+    "trezor_lib/layout_caesar",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_mono",
+    ]
+
+layout_delizia = [
+    "trezor_lib/layout_delizia",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_rgb565",
+    ]
+
+layout_eckhart = [
+    "trezor_lib/layout_eckhart",
+    "trezor_lib/framebuffer",
+    "trezor_lib/display_rgba8888",
+    "trezor_lib/ui_color_32bit",
+    ]

@@ -1,0 +1,41 @@
+## high priority
+
+- xtask: consider using -Og and -ggdb (in emulator?? ) when --debug switch is used
+
+- TREZOR_EMULATOR_CLANG?? do we need this anymore?
+
+- copy versioned artifacts to artifacts/{model}/versioned
+
+- resolve remaining cyclic dependencies in C (remove hacks)
+
+- add d001, d002 models configurations
+
+- implement xtask flash --erase
+
+- print binary sizes / % of used memory
+
+- mpy-cross tool build (include binary in repository?? or xtask build-mpy-cross???)
+
+- implement xtask build combine
+
+- fix incremental build of upymod when built with --frozen
+
+- combine compile_commands.json for firmware, kernel and secmon
+
+## low priority
+
+- review xbuild paths processing (relative/absolute paths)
+- centralize rerun-if-changed, remove duplicates
+
+- implement fast processing in build.rs (for cargo clippy, cargo check)
+   (generate compile_commands.json only)
+
+- move trezor-crypto code from rtl into crypto crate
+
+- xtask clean with arguments
+
+- implement panic handler in secmon, boardloader and bootloader_ci
+
+## postponed
+
+- implement xtask test command

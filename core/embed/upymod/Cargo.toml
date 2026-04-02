@@ -1,0 +1,76 @@
+[package]
+name = "upymod"
+version = "0.0.0"
+edition = "2024"
+links = "upymod"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+models.workspace = true
+rtl.workspace = true
+sec.workspace = true
+io.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d001 = ["io/model_d001"]
+model_d002 = ["io/model_d002"]
+model_t2t1 = ["io/model_t2t1"]
+model_t2b1 = ["io/model_t2b1"]
+model_t3b1 = ["io/model_t3b1"]
+model_t3t1 = ["io/model_t3t1"]
+model_t3w1 = ["io/model_t3w1"]
+
+# --------------------------------------------------------------------------
+# MCU features
+# --------------------------------------------------------------------------
+
+mcu_stm32f4 = ["io/mcu_stm32f4", "mcu_stm32"]
+mcu_stm32u58 = ["io/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["io/mcu_stm32u5g", "mcu_stm32u5"]
+
+# --------------------------------------------------------------------------
+# Selectable components
+# --------------------------------------------------------------------------
+
+app_loading = ["io/app_loading", "io/ipc"]
+backlight = ["io/backlight"]
+benchmark = []
+ble = ["io/ble"]
+button = []
+disable_animation = []
+enable_source_line = []
+emulator = ["io/emulator"]
+frozen = []
+layout_bolt = []
+layout_caesar = []
+layout_delizia = []
+layout_eckhart = []
+log_stack_usage = []
+memperf = []
+optiga = ["sec/optiga"]
+power_manager = ["io/power_manager"]
+pyopt = []
+serial_number = []
+sd_card = ["io/sd_card"]
+telemetry = ["sec/telemetry"]
+thp = []
+touch = []
+tropic = []
+universal_fw = ["rtl/universal_fw"]
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = ["sec/storage"]
+
+mcu_stm32u5 = ["mcu_stm32"]
+mcu_stm32 = []

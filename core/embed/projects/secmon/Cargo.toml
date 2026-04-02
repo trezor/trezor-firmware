@@ -1,0 +1,119 @@
+[package]
+name = "secmon"
+version = "0.0.0"
+edition = "2024"
+links = "secmon"
+
+[build-dependencies]
+color-eyre.workspace = true
+xbuild.workspace = true
+
+[dependencies]
+sec.workspace = true
+sys.workspace = true
+rtl.workspace = true
+models.workspace = true
+
+[features]
+
+# --------------------------------------------------------------------------
+# Model features
+# --------------------------------------------------------------------------
+
+model_d002 = []
+
+model_t3b1 = [
+    "sec/model_t3b1",
+    "mcu_stm32u58",
+    "consumption_mask",
+    "hash_processor",
+    "lockable_bootloader",
+    # "optiga", # selected from xtask
+    "secret",
+    "secure_aes",
+    "storage_hw_key",
+    "tamper",
+    ]
+
+model_t3t1 = [
+    "sec/model_t3t1",
+    "mcu_stm32u58",
+    "hash_processor",
+    "lockable_bootloader",
+    # "optiga", # selected from xtask
+    "secret",
+    "storage_hw_key",
+    "secure_aes",
+    "tamper",
+    ]
+
+model_t3w1 = [
+    "sec/model_t3w1",
+    "mcu_stm32u5g",
+    "backup_ram",
+    "boot_ucb",
+    "hash_processor",
+    "lockable_bootloader",
+    "nrf_auth",
+    # "optiga", # selected from xtask
+    "secret",
+    "secure_aes",
+    "storage_hw_key",
+    "suspend",
+    "tamper",
+    "telemetry",
+    #"tropic", # selected from xtask
+    ]
+
+# --------------------------------------------------------------------------
+# Selectable features
+# --------------------------------------------------------------------------
+
+bootloader_devel = []
+bootloader_qa = []
+clippy = []
+emulator = ["sec/emulator"]
+dbg_console_swo = ["dbg_console"]
+dbg_console_system_view = ["dbg_console", "sys/system_view"]
+optiga_testing = ["sec/optiga_testing"]
+production = ["sec/production"]
+storage_insecure_testing_mode = ["sec/storage_insecure_testing_mode"]
+universal_fw = []
+unsafe_fw = []
+
+# --------------------------------------------------------------------------
+# Automatically derived features (do not enable from outside)
+# --------------------------------------------------------------------------
+
+default = [
+    "secmon_layout",
+    "models/secmon",
+    "sec/kernel_mode",
+    "sec/secure_mode",
+    "sec/storage",
+    "sec/random_delays",
+    "rtl/aes_gcm",
+    ]
+
+mcu_stm32f4 = ["sec/mcu_stm32f4"]
+mcu_stm32u58 = ["sec/mcu_stm32u58", "mcu_stm32u5"]
+mcu_stm32u5g = ["sec/mcu_stm32u5g", "mcu_stm32u5"]
+mcu_stm32u5 = ["sec/trustzone"]
+
+backup_ram = ["sec/backup_ram"]
+boot_ucb = ["sec/boot_ucb"]
+consumption_mask = ["sec/consumption_mask"]
+dbg_console = ["sys/dbg_console"]
+hash_processor = ["sec/hash_processor"]
+lockable_bootloader = ["sec/lockable_bootloader"]
+nrf_auth = ["sec/nrf_auth"]
+optiga = ["sec/optiga"]
+secmon_layout = ["models/secmon_layout"]
+secret = ["sec/secret"]
+secure_aes = ["sec/secure_aes"]
+storage_hw_key = ["sec/storage_hw_key"]
+suspend = ["sec/suspend"]
+tamper = ["sec/tamper"]
+telemetry = ["sec/telemetry"]
+tropic = ["sec/tropic"]
+

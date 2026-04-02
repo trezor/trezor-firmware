@@ -309,6 +309,10 @@ static void kernel_panic(const systask_postmortem_t *pminfo) {
 }
 
 int main(void) {
+#if defined(USE_TRUSTZONE) && defined(SECURE_MODE)
+  tz_init();
+#endif
+
   // Initialize system's core services
   system_init(&kernel_panic);
 

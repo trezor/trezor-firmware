@@ -1,0 +1,1 @@
+../../../../build-xtask/trezorhal_ra.rs

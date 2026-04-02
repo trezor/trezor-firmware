@@ -1,0 +1,56 @@
+[workspace]
+members = [
+    "models",
+    "rtl",
+    "sys",
+    "sec",
+    "io",
+    "upymod",
+    "rust",
+    "projects/boardloader",
+    "projects/bootloader",
+    "projects/bootloader_ci",
+    "projects/secmon",
+    "projects/kernel",
+    "projects/prodtest",
+    "projects/unix",
+    "projects/firmware",
+    "xbuild",
+    "xtask",
+]
+
+resolver = "3"
+
+[profile.dev]
+panic = "abort"
+split-debuginfo = "off"
+debug = 2
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true
+codegen-units = 1
+split-debuginfo = "off"
+debug = 2
+
+[profile.release.package.trezor-tjpgdec]
+opt-level = 3
+
+[profile.test]
+split-debuginfo = "off"
+debug = 2
+
+[workspace.dependencies]
+color-eyre = "0.6.5"
+anyhow = "1.0"
+
+models = { path = "models" }
+rtl = { path = "rtl" }
+sys = { path = "sys" }
+sec = { path = "sec" }
+io = { path = "io" }
+upymod = { path = "upymod" }
+trezor_lib = { path = "rust", default-features = false }
+
+xbuild = { path = "xbuild" }
