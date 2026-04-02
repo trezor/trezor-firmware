@@ -209,8 +209,11 @@ class Layout(Generic[T]):
         # do not notify debuglink, we will do it when we receive an ATTACHED event
         set_current_layout(self)
 
-        # save context
-        self.context = context.CURRENT_CONTEXT
+        try:
+            # save context (if exists)
+            self.context = context.get_context()
+        except context.NoWireContext:
+            pass
 
         # attach a timer callback and paint self
         self._event(self.layout.attach_timer_fn, self._set_timer, transition_in)

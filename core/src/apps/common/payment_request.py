@@ -107,7 +107,9 @@ class PaymentRequestVerifier:
         if __debug__:
             self._use_debug_key()
             self._use_debug_verification()
-            if context.CURRENT_CONTEXT is None:
+            try:
+                context.get_context()
+            except context.NoWireContext:
                 # in unit tests we don't have a context, so we replace
                 # the nonce verification with the debug version
                 # otherwise (device tests, etc) we should use the proper nonce verification
