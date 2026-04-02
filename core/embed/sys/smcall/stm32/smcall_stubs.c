@@ -207,7 +207,7 @@ void optiga_init_and_configure(void) {
   smcall_invoke0(SMCALL_OPTIGA_INIT_AND_CONFIGURE);
 }
 
-#if PYOPT == 0
+#if USE_OPTIGA_TESTING
 void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 
 #endif

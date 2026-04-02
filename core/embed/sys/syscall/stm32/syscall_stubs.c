@@ -480,7 +480,7 @@ bool optiga_read_sec(uint8_t *sec) {
   return (bool)syscall_invoke1((uint32_t)sec, SYSCALL_OPTIGA_READ_SEC);
 }
 
-#if PYOPT == 0
+#if USE_OPTIGA_TESTING
 void optiga_set_sec_max(void) { syscall_invoke0(SYSCALL_OPTIGA_SET_SEC_MAX); }
 
 #endif
