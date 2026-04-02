@@ -122,7 +122,7 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
 #define RFAL_FEATURE_LISTEN_MODE \
   true /*!< Enable/Disable RFAL support for Listen Mode */
 #define RFAL_FEATURE_WAKEUP_MODE \
-  true /*!< Enable/Disable RFAL support for the Wake-Up mode */
+  false /*!< Enable/Disable RFAL support for the Wake-Up mode */
 #define RFAL_FEATURE_LOWPOWER_MODE \
   false /*!< Enable/Disable RFAL support for the Low Power mode */
 #define RFAL_FEATURE_NFCA \
@@ -145,7 +145,7 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
 #define RFAL_FEATURE_DYNAMIC_ANALOG_CONFIG \
   false /*!< Enable/Disable Analog Configs to be dynamically updated (RAM) */
 #define RFAL_FEATURE_DPO \
-  true /*!< Enable/Disable RFAL Dynamic Power Output support */
+  false /*!< Enable/Disable RFAL Dynamic Power Output support */
 #define RFAL_FEATURE_ISO_DEP \
   true /*!< Enable/Disable RFAL support for ISO-DEP (ISO14443-4) */
 #define RFAL_FEATURE_ISO_DEP_POLL                                     \

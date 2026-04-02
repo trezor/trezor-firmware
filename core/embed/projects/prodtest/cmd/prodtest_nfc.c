@@ -22,10 +22,124 @@
 #include <trezor_rtl.h>
 
 #include <io/nfc.h>
+#include <rfal_chip.h>
+#include <st25r3916.h>
 #include <rtl/cli.h>
 #include <sys/systick.h>
 
 static nfc_dev_info_t dev_info = {0};
+
+#define NFC_REG_READ_MAX_LEN 32U
+
+static void prodtest_nfc_read_reg(cli_t* cli) {
+  uint32_t reg = 0;
+  uint32_t len = 1;
+  uint8_t values[NFC_REG_READ_MAX_LEN] = {0};
+
+  if (cli_arg_count(cli) < 1 || cli_arg_count(cli) > 2) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (!cli_arg_uint32(cli, "reg", &reg)) {
+    cli_error_arg(cli, "Expecting register address (dec or 0xHEX).");
+    return;
+  }
+
+  if (cli_has_arg(cli, "len") && !cli_arg_uint32(cli, "len", &len)) {
+    cli_error_arg(cli, "Expecting length argument.");
+    return;
+  }
+
+  if (reg > 0xFFU) {
+    cli_error_arg(cli, "Register address must be in range 0x00..0xFF.");
+    return;
+  }
+
+  if (len == 0U || len > NFC_REG_READ_MAX_LEN || (reg + len - 1U) > 0xFFU) {
+    cli_error_arg(cli, "Length must be 1..32 and stay within 0xFF register space.");
+    return;
+  }
+
+  nfc_status_t ret = nfc_init();
+  if (ret != NFC_OK) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
+    goto cleanup;
+  }
+
+  ReturnCode rfal_ret =
+      rfalChipReadReg((uint16_t)reg, values, (uint8_t)len);
+  if (rfal_ret != RFAL_ERR_NONE) {
+    cli_error(cli, CLI_ERROR, "NFC register read failed (%u)",
+              (unsigned)rfal_ret);
+    goto cleanup;
+  }
+
+  cli_ok_hexdata(cli, values, len);
+
+cleanup:
+  nfc_deinit();
+}
+
+static void prodtest_nfc_read_regs_all(cli_t* cli) {
+  t_st25r3916Regs reg_dump = {0};
+
+  if (cli_arg_count(cli) != 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  nfc_status_t ret = nfc_init();
+  if (ret != NFC_OK) {
+    cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
+    goto cleanup;
+  }
+
+  ReturnCode rfal_ret = st25r3916GetRegsDump(&reg_dump);
+  if (rfal_ret != RFAL_ERR_NONE) {
+    cli_error(cli, CLI_ERROR, "NFC register dump failed (%u)",
+              (unsigned)rfal_ret);
+    goto cleanup;
+  }
+
+  cli_trace(cli, "ST25R3916 registers - Space A");
+  for (size_t i = 0; i < sizeof(reg_dump.RsA); i += 8U) {
+    cli_trace(cli,
+              "A %02X: %02X %02X %02X %02X %02X %02X %02X %02X",
+              (unsigned)i, (unsigned)reg_dump.RsA[i + 0U],
+              (unsigned)reg_dump.RsA[i + 1U], (unsigned)reg_dump.RsA[i + 2U],
+              (unsigned)reg_dump.RsA[i + 3U], (unsigned)reg_dump.RsA[i + 4U],
+              (unsigned)reg_dump.RsA[i + 5U], (unsigned)reg_dump.RsA[i + 6U],
+              (unsigned)reg_dump.RsA[i + 7U]);
+  }
+
+  cli_trace(cli, "ST25R3916 registers - Space B (dump order)");
+  for (size_t i = 0; i < sizeof(reg_dump.RsB); i += 8U) {
+    size_t rem = sizeof(reg_dump.RsB) - i;
+    if (rem >= 8U) {
+      cli_trace(cli,
+                "B %02X: %02X %02X %02X %02X %02X %02X %02X %02X",
+                (unsigned)i, (unsigned)reg_dump.RsB[i + 0U],
+                (unsigned)reg_dump.RsB[i + 1U],
+                (unsigned)reg_dump.RsB[i + 2U],
+                (unsigned)reg_dump.RsB[i + 3U],
+                (unsigned)reg_dump.RsB[i + 4U],
+                (unsigned)reg_dump.RsB[i + 5U],
+                (unsigned)reg_dump.RsB[i + 6U],
+                (unsigned)reg_dump.RsB[i + 7U]);
+    } else {
+      for (size_t j = i; j < sizeof(reg_dump.RsB); j++) {
+        cli_trace(cli, "B %02X: %02X", (unsigned)j,
+                  (unsigned)reg_dump.RsB[j]);
+      }
+    }
+  }
+
+  cli_ok(cli, "");
+
+cleanup:
+  nfc_deinit();
+}
 
 static void prodtest_nfc_read_card(cli_t* cli) {
   uint32_t timeout = 0;
@@ -299,6 +413,20 @@ PRODTEST_CLI_CMD(
   .func = prodtest_nfc_write_card,
   .info = "Activate NFC in reader mode and write a URI to the attached card",
   .args = "[<timeout>]"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-read-reg",
+  .func = prodtest_nfc_read_reg,
+  .info = "Read one or more ST25R3916 registers",
+  .args = "<reg> [<len>]"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nfc-read-regs-all",
+  .func = prodtest_nfc_read_regs_all,
+  .info = "Read and print all ST25R3916 registers",
+  .args = ""
 );
 
 #endif  // USE_NFC
