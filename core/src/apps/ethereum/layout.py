@@ -241,7 +241,7 @@ async def require_confirm_deposit(
     maximum_fee: str,
     fee_info_items: Iterable[StrPropertyType],
     network: EthereumNetworkInfo,
-    vault_addr: bytes,
+    vault_addr: AnyBytes,
 ) -> None:
 
     from .yielding_vaults import lookup_vault

@@ -129,6 +129,7 @@ async def sign_tx(
         maximum_fee,
         fee_items,
         payment_req_verifier,
+        sender_bytes,
     )
 
     # `confirm_data_chunk` and `confirm_summary` can be `None`
@@ -212,6 +213,7 @@ async def confirm_tx_data(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
+    sender_bytes: AnyBytes,
 ) -> tuple[ConfirmDataFn | None, Coroutine[Any, Any, None] | None]:
     """Returns data chunk callback and transaction summary layout to be awaited.
     [None, None] implies clear signing attempted and succeeded."""

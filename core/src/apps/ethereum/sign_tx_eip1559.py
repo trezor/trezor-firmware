@@ -114,6 +114,7 @@ async def sign_tx_eip1559(
         maximum_fee,
         fee_items,
         payment_req_verifier,
+        sender_bytes,
     )
 
     if confirm_data_chunk is not None:

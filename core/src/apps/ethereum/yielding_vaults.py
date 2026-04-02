@@ -1,4 +1,9 @@
 if __debug__:
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        from buffer_types import AnyBytes
+
     from ubinascii import unhexlify
 
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
@@ -20,7 +25,7 @@ if __debug__:
     )
 
     def lookup_vault(
-        vault_addr: bytes, network: EthereumNetworkInfo
+        vault_addr: AnyBytes, network: EthereumNetworkInfo
     ) -> tuple[str, EthereumTokenInfo]:
         from .helpers import address_from_bytes
         from .tokens import UNKNOWN_TOKEN

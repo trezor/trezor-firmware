@@ -25,9 +25,6 @@ from .clear_signing import (
     parse_uint256,
 )
 
-if __debug__:
-    from .yielding_vaults import KNOWN_VAULT
-
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/ercs/calldata-erc20-tokens.json#L27
 
 APPROVE_DISPLAY_FORMAT = DisplayFormat(
@@ -646,12 +643,3 @@ ALL_DISPLAY_FORMATS.extend(
         ),
     ]
 )
-
-KNOWN_ADDRESSES = {
-    ONEINCH_ADDRESS: ONEINCH_OWNER,
-    LIFI_ADDRESS: LIFI_OWNER,
-    UNISWAP_V3_ROUTER_ADDRESS: UNISWAP_OWNER,
-    UNISWAP_V3_OLD_DEPLOYER: UNISWAP_OWNER,
-}
-if __debug__:
-    KNOWN_ADDRESSES[KNOWN_VAULT[0]] = KNOWN_VAULT[2]

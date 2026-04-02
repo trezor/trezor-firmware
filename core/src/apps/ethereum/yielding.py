@@ -5,6 +5,7 @@ from trezor.utils import BufferReader
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Coroutine, Iterable
 
     from trezor.messages import EthereumNetworkInfo
@@ -17,10 +18,10 @@ if TYPE_CHECKING:
 def get_approver(
     msg: MsgInSignTx,
     network: EthereumNetworkInfo,
-    address_bytes: bytes,
+    address_bytes: AnyBytes,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-    sender_bytes: bytes,
+    sender_bytes: AnyBytes,
 ) -> tuple[ConfirmDataFn, Coroutine[Any, Any, None]] | None:
 
     from .clear_signing import SC_FUNC_SIG_BYTES
@@ -43,8 +44,8 @@ def get_approver(
             network,
             maximum_fee,
             fee_items,
-            sender_bytes,
             address_bytes,
+            sender_bytes,
         )
 
     return None
@@ -56,8 +57,8 @@ async def _handle_deposit(
     network: EthereumNetworkInfo,
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
-    sender_bytes: bytes,
-    vault_addr: bytes,
+    vault_addr: AnyBytes,
+    sender_bytes: AnyBytes,
 ) -> None:
 
     from .clear_signing import InvalidFunctionCall, parse_address, parse_uint256
