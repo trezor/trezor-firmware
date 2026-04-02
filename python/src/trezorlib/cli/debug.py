@@ -135,3 +135,93 @@ def set_log_filter(session: "Session", filter: str) -> None:
     debug = DebugLink(transport=debug_transport)
     debuglink_set_log_filter(debug, filter)
     debug_transport.close()
+
+
+@cli.command()
+@click.option(
+    "--soc",
+    type=click.IntRange(0, 100),
+    default=None,
+    help="State of charge percentage (0-100)",
+)
+@click.option(
+    "--usb/--no-usb", "usb_connected", default=None, help="USB cable connected"
+)
+@click.option(
+    "--wireless/--no-wireless",
+    "wireless_connected",
+    default=None,
+    help="Wireless charger connected",
+)
+@click.option(
+    "--ntc/--no-ntc", "ntc_connected", default=None, help="Temperature sensor connected"
+)
+@click.option(
+    "--charging-limited/--no-charging-limited",
+    default=None,
+    help="Charging current is limited",
+)
+@click.option(
+    "--temp-control/--no-temp-control",
+    "temp_control_active",
+    default=None,
+    help="Temperature control active",
+)
+@click.option(
+    "--battery/--no-battery",
+    "battery_connected",
+    default=None,
+    help="Battery physically connected",
+)
+@with_session(seedless=True)
+def set_battery_state(
+    session: "Session",
+    soc: int | None,
+    usb_connected: bool | None,
+    wireless_connected: bool | None,
+    ntc_connected: bool | None,
+    charging_limited: bool | None,
+    temp_control_active: bool | None,
+    battery_connected: bool | None,
+) -> None:
+    """Set emulated battery/power state (emulator only).
+
+    All options are optional — only specified values are changed.
+    Charging status and power status are derived from connection states.
+
+    Examples:
+
+      trezorctl debug set-battery-state --soc 50 --usb
+
+      trezorctl debug set-battery-state --no-usb --wireless --soc 30
+
+      trezorctl debug set-battery-state --no-battery
+    """
+    debug_transport = session.client.transport.find_debug()
+    debug_transport.open()
+    debug = DebugLink(transport=debug_transport)
+    flags = dict(
+        usb_connected=usb_connected,
+        wireless_connected=wireless_connected,
+        ntc_connected=ntc_connected,
+        charging_limited=charging_limited,
+        temp_control_active=temp_control_active,
+        battery_connected=battery_connected,
+    )
+    debug.set_battery_state(soc=soc, **flags)
+    debug_transport.close()
+
+    parts = []
+    if soc is not None:
+        parts.append(f"soc={soc}%")
+
+    if usb_connected is not None:
+        parts.append(f"usb={'on' if usb_connected else 'off'}")
+    for name, value in flags.items():
+        if value is not None:
+            parts.append(f"{name}={'on' if value else 'off'}")
+
+    if parts:
+        click.echo(f"Battery state updated: {', '.join(parts)}")
+    else:
+        click.echo("No battery state parameters specified. Nothing changed.")
