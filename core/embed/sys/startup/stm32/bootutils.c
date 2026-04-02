@@ -33,7 +33,7 @@
 #include <sys/sysutils.h>
 
 #ifdef STM32F4
-#include <io/display.h>
+// #include <io/display.h> //!@#HACK
 #endif
 
 // Battery powered devices (USE_POWER_MANAGER) should not stall
@@ -193,9 +193,9 @@ __attribute__((noreturn)) static void reboot_with_args(boot_command_t command,
   // ensure that the device is in a compatible state. Following lines
   // ensure the display is properly deinitialized, CPU frequency is
   // properly set and we are running in privileged thread mode.
-  display_deinit(DISPLAY_RESET_CONTENT);
+  /*display_deinit(DISPLAY_RESET_CONTENT);
   ensure_compatible_settings();
-  ensure_thread_mode();
+  ensure_thread_mode();!@#HACK*/
 #endif
 
   // Disable interrupts, MPU, clear all registers and set up a new stack
@@ -267,8 +267,8 @@ void __attribute__((noreturn)) jump_to_next_stage(uint32_t vectbl_address) {
   // Ensure the display is properly deinitialized, CPU frequency is
   // properly set. It's needed for backward compatibility with the older
   // firmware.
-  display_deinit(DISPLAY_JUMP_BEHAVIOR);
-  ensure_compatible_settings();
+  /*display_deinit(DISPLAY_JUMP_BEHAVIOR);
+  ensure_compatible_settings();!@#HACK*/
 #endif
 
   // Disable interrupts, MPU, clear all registers and set up a new stack
