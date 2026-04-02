@@ -55,7 +55,12 @@ class NoWireContext(RuntimeError):
     pass
 
 
-CURRENT_CONTEXT: Context | None = None
+class _Current:
+    def __init__(self, ctx: Context) -> None:
+        self.ctx = ctx
+
+
+_CURRENT: _Current | None = None
 
 
 async def call(
@@ -65,10 +70,7 @@ async def call(
     """Send a message to the host and wait for a response of a particular type.
 
     Raises if there is no context for this workflow."""
-    if CURRENT_CONTEXT is None:
-        raise NoWireContext
-
-    return await CURRENT_CONTEXT.call(msg, expected_type)
+    return await get_context().call(msg, expected_type)
 
 
 async def call_any(
@@ -79,12 +81,14 @@ async def call_any(
     The response can be of any of the types specified in `expected_wire_types`.
 
     Raises if there is no context for this workflow."""
-    if CURRENT_CONTEXT is None:
+    if _CURRENT is None:
         raise NoWireContext
 
-    await CURRENT_CONTEXT.write(msg)
+    ctx = _CURRENT.ctx
+
+    await ctx.write(msg)
     del msg
-    return await CURRENT_CONTEXT.read(expected_wire_types)
+    return await ctx.read(expected_wire_types)
 
 
 def get_context() -> Context:
@@ -98,9 +102,9 @@ def get_context() -> Context:
 
     Raises NoWireContext if there is currently no context.
     """
-    if CURRENT_CONTEXT is None:
+    if _CURRENT is None:
         raise NoWireContext
-    return CURRENT_CONTEXT
+    return _CURRENT.ctx
 
 
 if utils.USE_THP:
@@ -121,12 +125,13 @@ def with_context(ctx: Context, workflow: loop.Task[T]) -> Generator[Any, Any, T]
     the closure is resumed, thus making sure that all calls to `wire.context.*` will
     work as expected.
     """
-    global CURRENT_CONTEXT
+    global _CURRENT
     send_val = None
     send_exc = None
+    current = _Current(ctx)
 
     while True:
-        CURRENT_CONTEXT = ctx
+        _CURRENT = current
         try:
             if send_exc is not None:
                 res = workflow.throw(send_exc)
@@ -135,7 +140,7 @@ def with_context(ctx: Context, workflow: loop.Task[T]) -> Generator[Any, Any, T]
         except StopIteration as st:
             return st.value
         finally:
-            CURRENT_CONTEXT = None
+            _CURRENT = None
 
         try:
             send_val = yield res
@@ -219,9 +224,7 @@ def cache_delete(key: int) -> None:
 def _get_cache_for_key(key: int) -> DataCache:
     if key & SESSIONLESS_FLAG:
         return cache.get_sessionless_cache()
-    if CURRENT_CONTEXT is None:
-        raise NoWireContext
-    return CURRENT_CONTEXT.cache
+    return get_context().cache
 
 
 def continue_on_errors(msg: str) -> ContinueOnErrors:
