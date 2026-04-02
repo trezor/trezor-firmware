@@ -1301,8 +1301,6 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, interact_with_menu
 
-        if title == TR.words__deposit:
-            br_name += "/deposit"
         menu_items = []
         account_properties = _get_account_info_items(account, account_path)
         if account_properties:
@@ -1334,7 +1332,6 @@ if not utils.BITCOIN_ONLY:
                     subtitle=verb,
                     items=[(vault_str, True)],
                     verb=TR.buttons__continue,
-                    # verb_info=TR.ethereum__contract_address,
                 ),
                 Menu.root(menu_items, TR.send__cancel_sign),
                 br_name + "/vault_name",

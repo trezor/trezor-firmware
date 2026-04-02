@@ -244,15 +244,9 @@ async def require_confirm_deposit(
     vault_addr: bytes,
 ) -> None:
 
-    from .tokens import UNKNOWN_TOKEN
-    from .yielding_vaults import KNOWN_VAULT
+    from .yielding_vaults import lookup_vault
 
-    if vault_addr == KNOWN_VAULT[0] and network.chain_id == KNOWN_VAULT[1]:
-        vault_name = KNOWN_VAULT[2]
-        token = KNOWN_VAULT[3]
-    else:
-        vault_name = address_from_bytes(vault_addr, network)
-        token = UNKNOWN_TOKEN
+    vault_name, token = lookup_vault(vault_addr, network)
 
     total_amount = format_ethereum_amount(value, token, network)
     account, account_path = get_account_and_path(address_n)
@@ -268,6 +262,7 @@ async def require_confirm_deposit(
         maximum_fee=maximum_fee,
         info_items=fee_info_items,
         chain=network.name,
+        br_name="ethereum/vault/deposit",
     )
 
 

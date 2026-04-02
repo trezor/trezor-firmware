@@ -1312,9 +1312,6 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from ..properties import with_colon
 
-        if title == TR.words__deposit:
-            br_name += "/deposit"
-
         account_properties: list[StrPropertyType] = []
         if account:
             account_properties.append((TR.words__account, account, None))

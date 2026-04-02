@@ -1305,8 +1305,6 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, interact_with_menu
 
-        if title == TR.words__deposit:
-            br_name += "/deposit"
         menu_items = []
         account_info_items = _get_account_info_items(account, account_path)
         if account_info_items:

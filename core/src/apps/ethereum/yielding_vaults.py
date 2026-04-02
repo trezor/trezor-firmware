@@ -1,7 +1,7 @@
 if __debug__:
     from ubinascii import unhexlify
 
-    from trezor.messages import EthereumTokenInfo
+    from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 
     # Stablecoin Yielding Vaults
     # Each entry: (vault_address, owner_name, asset_decimals, asset_identifier, chain_id)
@@ -18,3 +18,14 @@ if __debug__:
             name="USD Coin",
         ),
     )
+
+    def lookup_vault(
+        vault_addr: bytes, network: EthereumNetworkInfo
+    ) -> tuple[str, EthereumTokenInfo]:
+        from .helpers import address_from_bytes
+        from .tokens import UNKNOWN_TOKEN
+
+        if vault_addr == KNOWN_VAULT[0] and network.chain_id == KNOWN_VAULT[1]:
+            return KNOWN_VAULT[2], KNOWN_VAULT[3]
+        else:
+            return address_from_bytes(vault_addr, network), UNKNOWN_TOKEN
