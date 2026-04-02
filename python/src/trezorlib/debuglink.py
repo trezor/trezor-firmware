@@ -891,6 +891,37 @@ class DebugLink:
             messages.DebugLinkEraseSdCard(format=format), expect=messages.Success
         )
 
+    def set_battery_state(
+        self,
+        soc: int | None = None,
+        usb_connected: bool | None = None,
+        wireless_connected: bool | None = None,
+        ntc_connected: bool | None = None,
+        charging_limited: bool | None = None,
+        temp_control_active: bool | None = None,
+        battery_connected: bool | None = None,
+        charging_status: messages.ChargingStatus | None = None,
+        power_status: messages.PowerStatus | None = None,
+    ) -> None:
+        """Set emulated battery/power state. Only works on emulator.
+
+        All parameters are optional — pass only what you want to change.
+        """
+        self._call(
+            messages.DebugLinkSetBatteryState(
+                soc=soc,
+                usb_connected=usb_connected,
+                wireless_connected=wireless_connected,
+                ntc_connected=ntc_connected,
+                charging_limited=charging_limited,
+                temp_control_active=temp_control_active,
+                battery_connected=battery_connected,
+                charging_status=charging_status,
+                power_status=power_status,
+            ),
+            expect=messages.Success,
+        )
+
     def snapshot_legacy(self) -> None:
         """Snapshot the current state of the device."""
         if self.model is not models.T1B1:

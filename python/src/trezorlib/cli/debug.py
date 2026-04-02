@@ -22,6 +22,7 @@ from pathlib import Path
 
 import click
 
+from .. import messages
 from ..client import Session
 from ..debuglink import DebugLink
 from ..debuglink import optiga_set_sec_max as debuglink_optiga_set_sec_max
@@ -135,3 +136,145 @@ def set_log_filter(session: "Session", filter: str) -> None:
     debug = DebugLink(transport=debug_transport)
     debuglink_set_log_filter(debug, filter)
     debug_transport.close()
+
+
+CHARGING_STATUS_MAP = {
+    "idle": messages.ChargingStatus.IDLE,
+    "discharging": messages.ChargingStatus.DISCHARGING,
+    "charging": messages.ChargingStatus.CHARGING,
+}
+
+POWER_STATUS_MAP = {
+    "hibernate": messages.PowerStatus.HIBERNATE,
+    "charging": messages.PowerStatus.CHARGING_STATE,
+    "suspend": messages.PowerStatus.SUSPEND,
+    "shutting-down": messages.PowerStatus.SHUTTING_DOWN,
+    "power-save": messages.PowerStatus.POWER_SAVE,
+    "active": messages.PowerStatus.ACTIVE,
+}
+
+
+@cli.command()
+@click.option(
+    "--soc",
+    type=click.IntRange(0, 100),
+    default=None,
+    help="State of charge percentage (0-100)",
+)
+@click.option(
+    "--usb/--no-usb", "usb_connected", default=None, help="USB cable connected"
+)
+@click.option(
+    "--wireless/--no-wireless",
+    "wireless_connected",
+    default=None,
+    help="Wireless charger connected",
+)
+@click.option(
+    "--ntc/--no-ntc", "ntc_connected", default=None, help="Temperature sensor connected"
+)
+@click.option(
+    "--charging-limited/--no-charging-limited",
+    default=None,
+    help="Charging current is limited",
+)
+@click.option(
+    "--temp-control/--no-temp-control",
+    "temp_control_active",
+    default=None,
+    help="Temperature control active",
+)
+@click.option(
+    "--battery/--no-battery",
+    "battery_connected",
+    default=None,
+    help="Battery physically connected",
+)
+@click.option(
+    "--charging-status",
+    type=click.Choice(list(CHARGING_STATUS_MAP.keys()), case_sensitive=False),
+    default=None,
+    help="Override charging status",
+)
+@click.option(
+    "--power-status",
+    type=click.Choice(list(POWER_STATUS_MAP.keys()), case_sensitive=False),
+    default=None,
+    help="Override power status",
+)
+@with_session(seedless=True)
+def set_battery_state(
+    session: "Session",
+    soc: int | None,
+    usb_connected: bool | None,
+    wireless_connected: bool | None,
+    ntc_connected: bool | None,
+    charging_limited: bool | None,
+    temp_control_active: bool | None,
+    battery_connected: bool | None,
+    charging_status: str | None,
+    power_status: str | None,
+) -> None:
+    """Set emulated battery/power state (emulator only).
+
+    All options are optional — only specified values are changed.
+
+    Examples:
+
+      trezorctl debug set-battery-state --soc 50 --usb
+
+      trezorctl debug set-battery-state --no-usb --wireless --soc 30
+
+      trezorctl debug set-battery-state --charging-status idle --soc 100
+
+      trezorctl debug set-battery-state --no-battery
+
+      trezorctl debug set-battery-state --power-status power-save --soc 10
+    """
+    charging_status_enum = (
+        CHARGING_STATUS_MAP[charging_status] if charging_status is not None else None
+    )
+    power_status_enum = (
+        POWER_STATUS_MAP[power_status] if power_status is not None else None
+    )
+
+    debug_transport = session.client.transport.find_debug()
+    debug_transport.open()
+    debug = DebugLink(transport=debug_transport)
+    debug.set_battery_state(
+        soc=soc,
+        usb_connected=usb_connected,
+        wireless_connected=wireless_connected,
+        ntc_connected=ntc_connected,
+        charging_limited=charging_limited,
+        temp_control_active=temp_control_active,
+        battery_connected=battery_connected,
+        charging_status=charging_status_enum,
+        power_status=power_status_enum,
+    )
+    debug_transport.close()
+
+    parts = []
+    if soc is not None:
+        parts.append(f"soc={soc}%")
+    if usb_connected is not None:
+        parts.append(f"usb={'on' if usb_connected else 'off'}")
+    if wireless_connected is not None:
+        parts.append(f"wireless={'on' if wireless_connected else 'off'}")
+    if ntc_connected is not None:
+        parts.append(f"ntc={'on' if ntc_connected else 'off'}")
+    if charging_limited is not None:
+        parts.append(f"charging_limited={'on' if charging_limited else 'off'}")
+    if temp_control_active is not None:
+        parts.append(f"temp_control={'on' if temp_control_active else 'off'}")
+    if battery_connected is not None:
+        parts.append(f"battery={'on' if battery_connected else 'off'}")
+    if charging_status is not None:
+        parts.append(f"charging_status={charging_status}")
+    if power_status is not None:
+        parts.append(f"power_status={power_status}")
+
+    if parts:
+        click.echo(f"Battery state updated: {', '.join(parts)}")
+    else:
+        click.echo("No battery state parameters specified. Nothing changed.")
