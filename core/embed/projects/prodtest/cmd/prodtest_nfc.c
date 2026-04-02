@@ -32,17 +32,31 @@ static nfc_dev_info_t dev_info = {0};
 #define NFC_REG_READ_MAX_LEN 32U
 
 static void prodtest_nfc_read_reg(cli_t* cli) {
+  const char* space = NULL;
   uint32_t reg = 0;
   uint32_t len = 1;
+  uint8_t reg_addr = 0;
+  uint16_t reg_sel = 0;
   uint8_t values[NFC_REG_READ_MAX_LEN] = {0};
 
-  if (cli_arg_count(cli) < 1 || cli_arg_count(cli) > 2) {
+  if (cli_arg_count(cli) < 2 || cli_arg_count(cli) > 3) {
     cli_error_arg_count(cli);
     return;
   }
 
+  space = cli_arg(cli, "space");
+
+  if ((space[0] == 'A' || space[0] == 'a') && space[1] == '\0') {
+    reg_sel = 0x00U;
+  } else if ((space[0] == 'B' || space[0] == 'b') && space[1] == '\0') {
+    reg_sel = ST25R3916_SPACE_B;
+  } else {
+    cli_error_arg(cli, "Expecting space argument A or B.");
+    return;
+  }
+
   if (!cli_arg_uint32(cli, "reg", &reg)) {
-    cli_error_arg(cli, "Expecting register address (dec or 0xHEX).");
+    cli_error_arg(cli, "Expecting register address in selected space (dec or 0xHEX).");
     return;
   }
 
@@ -51,15 +65,19 @@ static void prodtest_nfc_read_reg(cli_t* cli) {
     return;
   }
 
-  if (reg > 0xFFU) {
-    cli_error_arg(cli, "Register address must be in range 0x00..0xFF.");
+  if (reg > 0x3FU) {
+    cli_error_arg(cli, "Register address in a space must be in range 0x00..0x3F.");
     return;
   }
 
-  if (len == 0U || len > NFC_REG_READ_MAX_LEN || (reg + len - 1U) > 0xFFU) {
-    cli_error_arg(cli, "Length must be 1..32 and stay within 0xFF register space.");
+  if (len == 0U || len > NFC_REG_READ_MAX_LEN || (reg + len - 1U) > 0x3FU) {
+    cli_error_arg(cli,
+                  "Length must be 1..32 and stay within selected space 0x00..0x3F.");
     return;
   }
+
+  reg_addr = (uint8_t)reg;
+  reg_sel |= reg_addr;
 
   nfc_status_t ret = nfc_init();
   if (ret != NFC_OK) {
@@ -67,8 +85,7 @@ static void prodtest_nfc_read_reg(cli_t* cli) {
     goto cleanup;
   }
 
-  ReturnCode rfal_ret =
-      rfalChipReadReg((uint16_t)reg, values, (uint8_t)len);
+  ReturnCode rfal_ret = rfalChipReadReg(reg_sel, values, (uint8_t)len);
   if (rfal_ret != RFAL_ERR_NONE) {
     cli_error(cli, CLI_ERROR, "NFC register read failed (%u)",
               (unsigned)rfal_ret);
@@ -418,8 +435,8 @@ PRODTEST_CLI_CMD(
 PRODTEST_CLI_CMD(
   .name = "nfc-read-reg",
   .func = prodtest_nfc_read_reg,
-  .info = "Read one or more ST25R3916 registers",
-  .args = "<reg> [<len>]"
+  .info = "Read one or more ST25R3916 registers from Space A or B",
+  .args = "<space> <reg> [<len>]"
 );
 
 PRODTEST_CLI_CMD(
