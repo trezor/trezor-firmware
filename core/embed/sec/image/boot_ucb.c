@@ -34,11 +34,13 @@
 
 #if defined(BOOTLOADER) || defined(BOARDLOADER)
 void adjust_to_secure_flash(uint32_t* address) {
+#ifndef TREZOR_EMULATOR
   if (*address < FLASH_BASE_S) {
     // Address is in the non-secure flash region, adjust it to point to the
     // secure flash region.
     *address += FLASH_BASE_S - FLASH_BASE_NS;
   }
+#endif
 }
 #endif
 

@@ -17,14 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <io/haptic.h>
 
-#ifdef KERNEL_MODE
+static bool g_haptic_enabled = false;
 
-// Initialize the Programmable Voltage Detector (PVD) peripheral.
-//
-// The PVD is used to detect a voltage drop below a certain threshold
-// and trigger an interrupt. This is used to safely shutdown the device.
-void pvd_init(void);
+ts_t __wur haptic_init(void) { return TS_OK; }
 
-#endif  // KERNEL_MODE
+void haptic_deinit(void) {}
+
+ts_t haptic_set_enabled(bool enabled) {
+  g_haptic_enabled = enabled;
+  return TS_OK;
+}
+
+bool haptic_get_enabled(void) { return g_haptic_enabled; }
+
+ts_t haptic_play(haptic_effect_t effect) { return TS_OK; }
+
+ts_t haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
+  return TS_OK;
+}

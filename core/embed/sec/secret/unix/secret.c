@@ -191,4 +191,6 @@ secbool secret_lock(void) {
 
 #endif
 
+void secret_bhk_regenerate(void) {}
+
 #endif  // KERNEL_MODE
