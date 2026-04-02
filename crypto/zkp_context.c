@@ -28,7 +28,7 @@
 #include "rand.h"
 #include "zkp_context.h"
 
-#include "vendor/secp256k1-zkp/include/secp256k1.h"
+#include "secp256k1.h"
 
 static uint8_t context_buffer[SECP256K1_CONTEXT_SIZE];
 static secp256k1_context *context;

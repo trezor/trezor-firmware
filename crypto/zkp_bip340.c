@@ -27,9 +27,9 @@
 #include "sha2.h"
 #include "zkp_context.h"
 
-#include "vendor/secp256k1-zkp/include/secp256k1.h"
-#include "vendor/secp256k1-zkp/include/secp256k1_extrakeys.h"
-#include "vendor/secp256k1-zkp/include/secp256k1_schnorrsig.h"
+#include "secp256k1.h"
+#include "secp256k1_extrakeys.h"
+#include "secp256k1_schnorrsig.h"
 
 #include "zkp_bip340.h"
 

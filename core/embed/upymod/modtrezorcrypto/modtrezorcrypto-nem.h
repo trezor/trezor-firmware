@@ -19,7 +19,7 @@
 
 #include "py/objstr.h"
 
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
 
 #include "nem.h"
 

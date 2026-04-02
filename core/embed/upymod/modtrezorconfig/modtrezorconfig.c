@@ -27,7 +27,7 @@
 
 #include <sec/storage.h>
 
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
 
 #include "memzero.h"
 

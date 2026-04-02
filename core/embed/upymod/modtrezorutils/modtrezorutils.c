@@ -31,8 +31,8 @@
 
 #if MICROPY_PY_TREZORUTILS
 
-#include "embed/upymod/modtrezorutils/modtrezorutils-meminfo.h"
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
+#include "modtrezorutils-meminfo.h"
 
 #include <io/usb.h>
 #include <sys/logging.h>

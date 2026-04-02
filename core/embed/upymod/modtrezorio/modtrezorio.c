@@ -45,7 +45,7 @@ uint32_t last_touch_sample_time = 0;
     mp_raise_ValueError((mp_rom_error_text_t)msg); \
   }
 
-#include "embed/upymod/trezorobj.h"
+#include "../trezorobj.h"
 
 // clang-format off
 #include "modtrezorio-usb.h"
