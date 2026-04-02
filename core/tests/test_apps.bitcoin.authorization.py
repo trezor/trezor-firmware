@@ -18,22 +18,9 @@ else:
     from trezor.wire.codec.codec_context import CodecContext
 
 
-class TestAuthorization(unittest.TestCase):
+class TestAuthorization(TestCaseWithContext):
 
     coin = coins.by_name("Bitcoin")
-
-    if utils.USE_THP:
-
-        def setUpClass(self):
-            thp_common.prepare_context()
-
-    else:
-
-        def setUpClass(self):
-            context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-
-    def tearDownClass(self):
-        context.CURRENT_CONTEXT = None
 
     def setUp(self):
         self.msg_auth = AuthorizeCoinJoin(

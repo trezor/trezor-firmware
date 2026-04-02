@@ -20,13 +20,13 @@ if utils.USE_THP:
         from trezor import protobuf
         from trezor.wire import WireInterface
 
-    def prepare_context() -> None:
+    def create_context() -> SessionContext:
         mock_iface = MockHID()
         channel = get_new_channel(mock_iface)
         session_cache = cache_thp.create_or_replace_session(
             channel.channel_cache, session_id=b"\x01"
         )
-        context.CURRENT_CONTEXT = SessionContext(channel, session_cache)
+        return SessionContext(channel, session_cache)
 
     def get_new_channel(iface: WireInterface) -> Channel:
         channel_cache = create_new_channel(iface)

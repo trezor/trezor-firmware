@@ -42,10 +42,7 @@ if utils.USE_THP:
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
-class TestTrezorHostProtocolChannel(unittest.TestCase):
-    def setUp(self):
-        thp_common.prepare_context()
-
+class TestTrezorHostProtocolChannel(TestCaseWithContext):
     def test_reassembler_get_buffer(self):
         """
         Test request of a reassembly buffer (various sizes).

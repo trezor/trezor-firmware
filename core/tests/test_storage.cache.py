@@ -33,7 +33,7 @@ else:
         return cache_codec.get_active_session()
 
 
-class TestStorageCache(unittest.TestCase):
+class TestStorageCache(TestCaseWithContext):
 
     if utils.USE_THP:
 
@@ -346,17 +346,6 @@ class TestStorageCache(unittest.TestCase):
             self.assertEqual(session_1.get(KEY), b"hello")
 
     else:
-
-        def setUpClass(self):
-            from trezor.wire import context
-            from trezor.wire.codec.codec_context import CodecContext
-
-            context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-
-        def tearDownClass(self):
-            from trezor.wire import context
-
-            context.CURRENT_CONTEXT = None
 
         def setUp(self):
             cache.clear_all()
