@@ -7,14 +7,11 @@ from storage import cache_common
 from trezor import wire
 from trezor.crypto import bip39
 from trezor.wire import context
-from trezor.wire.codec.codec_context import CodecContext
 
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
 
-if utils.USE_THP:
-    import thp_common
-else:
+if not utils.USE_THP:
     from storage import cache_codec
 
 

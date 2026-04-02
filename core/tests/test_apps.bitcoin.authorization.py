@@ -1,21 +1,16 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-import storage.cache_codec
 from trezor.enums import InputScriptType
 from trezor.messages import AuthorizeCoinJoin, GetOwnershipProof, SignTx
-from trezor.wire import context
 
 from apps.bitcoin.authorization import CoinJoinAuthorization
 from apps.common import coins
 
 _ROUND_ID_LEN = 32
 
-if utils.USE_THP:
-    import thp_common
-else:
+if not utils.USE_THP:
     import storage.cache_codec
-    from trezor.wire.codec.codec_context import CodecContext
 
 
 class TestAuthorization(TestCaseWithContext):
