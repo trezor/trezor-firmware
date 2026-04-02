@@ -31,28 +31,25 @@ SECTIONS {
     KEEP(*(.header));
   } >FLASH AT>FLASH
 
-  .flash2 : ALIGN(CODE_ALIGNMENT) {
-    build/firmware/frozen_mpy.o(.rodata*);
-    . = ALIGN(4);
-    */libtrezor_lib.a:(.text*);
-    . = ALIGN(4);
-    */libtrezor_lib.a:(.rodata*);
-    . = ALIGN(512);
-  } >FLASH2 AT>FLASH2
-
   .flash : ALIGN(512) {
     KEEP(*(.kernel));
     . = ALIGN(COREAPP_ALIGNMENT);
     KEEP(*(.vector_table));
     . = ALIGN(4);
-    *(.text*);
-    . = ALIGN(4);
-    *(.rodata*);
+    *frozen_mpy.o(.rodata*);
+    */libupymod.a:frozen_mpy.o(.rodata*);
     . = ALIGN(4);
     KEEP(*(.bootloader));
     *(.bootloader*);
-    . = ALIGN(512);
   } >FLASH AT>FLASH
+
+  .flash2 : ALIGN(512) {
+    . = ALIGN(4);
+    *(.text*);
+    . = ALIGN(4);
+    *(.rodata*);
+    . = ALIGN(512);
+  } >FLASH2 AT>FLASH2
 
   .stack : ALIGN(8) {
     . += 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
