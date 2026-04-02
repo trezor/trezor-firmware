@@ -9,6 +9,7 @@ from trezor.ui.layouts import confirm_action
 from trezor.wire import ProcessError
 
 from apps.common import backup_types
+from apps.common.lock_manager import with_prolonged_suspend_time
 
 from . import layout
 
@@ -338,6 +339,7 @@ def _compute_secret_from_entropy(
     return secret
 
 
+@with_prolonged_suspend_time
 async def backup_seed(backup_type: BackupType, mnemonic_secret: bytes) -> None:
     if backup_types.is_slip39_backup_type(backup_type):
         num_of_words = backup_types.get_num_of_words_per_share(

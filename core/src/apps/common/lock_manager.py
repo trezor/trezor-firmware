@@ -15,8 +15,14 @@ if utils.USE_BLE:
     import trezorble as ble
 
 if TYPE_CHECKING:
+    from typing import Awaitable, Callable, ParamSpec, TypeVar
+
     from trezor import protobuf
     from trezor.wire import Handler, Msg
+
+    MsgOut = TypeVar("MsgOut")
+    AsyncFunc = Callable[..., Awaitable[MsgOut]]
+    P = ParamSpec("P")
 
 _SCREENSAVER_IS_ON = False
 
@@ -26,12 +32,17 @@ if not utils.USE_POWER_MANAGER:
     def notify_suspend() -> None:
         pass
 
+    def with_prolonged_suspend_time(func: AsyncFunc) -> AsyncFunc:
+        return func
+
 else:
     from trezor import loop
 
     _SHOULD_SUSPEND = False
     _notify_power_button: loop.mailbox[None] = loop.mailbox()
     notify_bootscreen: loop.mailbox[None] = loop.mailbox()
+
+    PROLONGED_SUSPEND_TIME_MS = 2 * 60 * 1000
 
     def _schedule_suspend_after_workflow() -> None:
         """Signal that the device should be suspended by the default task after the
@@ -107,6 +118,43 @@ else:
             storage_device.get_autolock_delay_battery_ms(),
             lock_device_if_unlocked_on_battery,
         )
+
+    def with_prolonged_suspend_time(func: AsyncFunc) -> AsyncFunc:
+        """Decorator to prolong the suspend time to at least `PROLONGED_SUSPEND_TIME_MS` while executing the decorated function."""
+
+        if __debug__:
+            from trezor import log
+
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> AsyncFunc:
+            original_suspend_time_ms = storage_device.get_autolock_delay_battery_ms()
+            if original_suspend_time_ms < PROLONGED_SUSPEND_TIME_MS:
+                if __debug__:
+                    log.debug(
+                        __name__,
+                        "Prolonging suspend time for the duration of %s",
+                        func,
+                    )
+                workflow.idle_timer.set(
+                    PROLONGED_SUSPEND_TIME_MS,
+                    lock_device_if_unlocked_on_battery,
+                )
+                try:
+                    return await func(*args, **kwargs)
+                finally:
+                    if __debug__:
+                        log.debug(
+                            __name__,
+                            "Restoring original suspend time: %d ms",
+                            original_suspend_time_ms,
+                        )
+                    workflow.idle_timer.set(
+                        original_suspend_time_ms,
+                        lock_device_if_unlocked_on_battery,
+                    )
+            else:
+                return await func(*args, **kwargs)
+
+        return wrapper
 
 
 def set_homescreen() -> None:
