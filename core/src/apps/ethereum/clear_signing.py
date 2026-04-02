@@ -102,6 +102,20 @@ def parse_uint24(raw_data: memoryview) -> Value:
     return parse_uint256(raw_data)
 
 
+def parse_uint16(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, 16 // 8)
+    return parse_uint256(raw_data)
+
+
+def parse_uint8(raw_data: memoryview) -> Value:
+    if len(raw_data) < 32:
+        raise OutOfBounds
+    _check_padding_zero(raw_data, 8 // 8)
+    return parse_uint256(raw_data)
+
+
 def parse_bool(raw_data: memoryview) -> Value:
     if len(raw_data) < 32:
         raise OutOfBounds
@@ -152,6 +166,17 @@ class FieldFormatter:
         if formatting this value implied dealing with a new token
         (like getting a token from parameters using `token_path`).
         """
+        raise NotImplementedError
+
+
+class TODOFormatter(FieldFormatter):
+    def format(
+        self,
+        value: AnyValue,
+        definitions: Definitions,
+        token: EthereumTokenInfo,
+        path_walker: PathWalker,
+    ) -> tuple[str | None, EthereumTokenInfo | None, AnyBytes | None]:
         raise NotImplementedError
 
 
@@ -597,7 +622,7 @@ async def try_parse(
     fee_items: Iterable[StrPropertyType],
     payment_request_verifier: PaymentRequestVerifier | None,
 ) -> bool:
-    from .clear_signing_definitions import (
+    from .clear_signing_defs import (
         ALL_DISPLAY_FORMATS,
         APPROVE_DISPLAY_FORMAT,
         TRANSFER_DISPLAY_FORMAT,
