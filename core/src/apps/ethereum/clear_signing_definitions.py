@@ -82,7 +82,6 @@ ONEINCH_CHAINS = [
     59144,
     1313161554,
 ]
-ONEINCH_OWNER = "1inch Aggregation Router V6"
 
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/lifi/calldata-LIFIDiamond.json
 LIFI_ADDRESS = unhexlify("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE")
@@ -118,7 +117,6 @@ LIFI_CHAINS = [
     1313161554,
     1666600000,
 ]
-LIFI_OWNER = "LiFI Diamond"
 
 LIFI_CONTEXT = BindingContext(
     [(chain, LIFI_ADDRESS) for chain in LIFI_CHAINS],
@@ -470,11 +468,6 @@ ALL_DISPLAY_FORMATS.extend(
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json#L6
 UNISWAP_V3_ROUTER_ADDRESS = unhexlify("68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
 UNISWAP_V3_ROUTER_CHAINS = [1]
-UNISWAP_OWNER = "Uniswap V3 Router"
-
-UNISWAP_V3_OLD_DEPLOYER = unhexlify(
-    "e592427a0aece92de3edee1f18e0157c05861564"
-)  # https://etherscan.io/address/0xe592427a0aece92de3edee1f18e0157c05861564
 
 # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/uniswap/calldata-UniswapV3Router02.json
 
@@ -650,10 +643,3 @@ ALL_DISPLAY_FORMATS.extend(
         ),
     ]
 )
-
-KNOWN_ADDRESSES = {
-    ONEINCH_ADDRESS: ONEINCH_OWNER,
-    LIFI_ADDRESS: LIFI_OWNER,
-    UNISWAP_V3_ROUTER_ADDRESS: UNISWAP_OWNER,
-    UNISWAP_V3_OLD_DEPLOYER: UNISWAP_OWNER,
-}

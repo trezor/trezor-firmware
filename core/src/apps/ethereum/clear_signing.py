@@ -672,11 +672,9 @@ async def _handle_approve(
     maximum_fee: str,
     fee_items: Iterable[StrPropertyType],
 ) -> None:
-    from .clear_signing_definitions import (
-        KNOWN_ADDRESSES,
-        SC_FUNC_APPROVE_REVOKE_AMOUNT,
-    )
+    from .clear_signing_definitions import SC_FUNC_APPROVE_REVOKE_AMOUNT
     from .layout import require_confirm_approve
+    from .sc_constants import KNOWN_ADDRESSES
 
     args, fields = display_format.parse(
         calldata, msg.address_n, msg.value, definitions, token
@@ -787,9 +785,9 @@ async def _handle_generic_ui(
     maximum_fee: str,
 ) -> None:
     from . import tokens
-    from .clear_signing_definitions import KNOWN_ADDRESSES
     from .helpers import bytes_from_address
     from .layout import require_confirm_clear_signing
+    from .sc_constants import KNOWN_ADDRESSES
 
     _, fields = display_format.parse(
         calldata, msg.address_n, msg.value, definitions, token
