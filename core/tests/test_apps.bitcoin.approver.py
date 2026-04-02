@@ -21,26 +21,8 @@ from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
 
-if utils.USE_THP:
-    import thp_common
-else:
-    import storage.cache_codec
-    from trezor.wire.codec.codec_context import CodecContext
 
-
-class TestApprover(unittest.TestCase):
-    if utils.USE_THP:
-
-        def setUpClass(self):
-            thp_common.prepare_context()
-
-    else:
-
-        def setUpClass(self):
-            context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-
-    def tearDownClass(self):
-        context.CURRENT_CONTEXT = None
+class TestApprover(TestCaseWithContext):
 
     def setUp(self):
         self.coin = coins.by_name("Bitcoin")

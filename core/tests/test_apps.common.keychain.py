@@ -19,23 +19,12 @@ if not utils.USE_THP:
     from storage import cache_codec
 
 
-class TestKeychain(unittest.TestCase):
+class TestKeychain(TestCaseWithContext):
 
-    if utils.USE_THP:
-
-        def setUpClass(self):
-            thp_common.prepare_context()
-
-    else:
-
-        def setUpClass(self):
-            context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
+    if not utils.USE_THP:
 
         def setUp(self):
             cache_codec.start_session()
-
-    def tearDownClass(self):
-        context.CURRENT_CONTEXT = None
 
     def tearDown(self):
         cache.clear_all()
