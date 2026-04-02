@@ -64,9 +64,6 @@ void system_init(systask_error_handler_t error_handler) {
 #ifdef USE_SDRAM
   sdram_init();
 #endif
-#ifdef USE_TRUSTZONE
-  tz_init();
-#endif
   mpu_init();
   mpu_reconfig(MPU_MODE_DEFAULT);
   systask_scheduler_init(error_handler);

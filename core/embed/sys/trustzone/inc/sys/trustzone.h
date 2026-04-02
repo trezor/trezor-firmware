@@ -21,9 +21,6 @@
 
 #include <trezor_types.h>
 
-// Initializes the TrustZone subsystem for current firmware layer.
-void tz_init(void);
-
 // Alignment required by MCPBB/GTZC for SRAM regions
 #define TZ_SRAM_ALIGNMENT 512
 

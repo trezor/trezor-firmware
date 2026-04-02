@@ -25,6 +25,7 @@
 #include <sec/option_bytes.h>
 #include <sec/random_delays.h>
 #include <sec/secure_aes.h>
+#include <sec/tz_init.h>
 #include <sec/unit_properties.h>
 #include <sys/bootutils.h>
 #include <sys/flash.h>
@@ -130,6 +131,8 @@ extern uint32_t _secmon_size;
 #define KERNEL_START (FIRMWARE_START + SECMON_SIZE)
 
 int main(void) {
+  tz_init();
+
   // Initialize system's core services
   system_init(secmon_panic);
 
