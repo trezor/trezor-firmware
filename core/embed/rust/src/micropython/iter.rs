@@ -61,7 +61,7 @@ impl<'a> Iter<'a> {
         //    `Iter`.
         //  - Returned obj is referencing into `iter_buf`.
         // EXCEPTION: Raises if `o` is not iterable and possibly in other cases too.
-        let iter = catch_exception(|| unsafe { ffi::mp_getiter(o, &mut iter_buf.iter_buf) })?;
+        let iter = catch_exception!(unsafe { ffi::mp_getiter } => { o, &mut iter_buf.iter_buf })?;
         Ok(Self {
             iter,
             iter_buf,
@@ -81,7 +81,7 @@ impl<'a> Iterator for Iter<'a> {
         //  - We assume that `mp_iternext` returns objects without any lifetime
         //    invariants, i.e. heap-allocated, unlike `mp_getiter`.
         // EXCEPTION: Can raise from the underlying iterator.
-        let item = catch_exception(|| unsafe { ffi::mp_iternext(self.iter) });
+        let item = catch_exception!(unsafe { ffi::mp_iternext } => { self.iter });
         match item {
             Err(Error::CaughtException(exc)) if self.iter_buf.error_checking => {
                 self.iter_buf.caught_exception = exc;
