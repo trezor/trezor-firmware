@@ -1041,7 +1041,7 @@ if not utils.BITCOIN_ONLY:
     ) -> Awaitable[None]:
         return show_danger(
             "unknown_contract_warning",
-            content=f"{TR.ethereum__unknown_contract_address}. {TR.words__know_what_your_doing}",
+            content=f"{TR.ethereum__unknown_contract_address} {TR.words__know_what_your_doing}",
             verb_cancel=TR.send__cancel_sign,
         )
 
@@ -1292,7 +1292,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_unknown_token_warning() -> Awaitable[None]:
         return show_danger(
             "unknown_token_warning",
-            content=f"{TR.solana__unknown_token_address}. {TR.words__know_what_your_doing}",
+            content=f"{TR.solana__unknown_token_address} {TR.words__know_what_your_doing}",
             verb_cancel=TR.send__cancel_sign,
         )
 
