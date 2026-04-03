@@ -24,9 +24,9 @@ import typing as t
 import click
 import requests
 
-from .. import authentication, debuglink, device, exceptions, messages, ui
+from .. import authentication, debuglink, device, exceptions, messages
 from ..tools import format_path
-from . import ChoiceType, with_session
+from . import ChoiceType, ui, with_session
 
 if t.TYPE_CHECKING:
     from ..client import Session
