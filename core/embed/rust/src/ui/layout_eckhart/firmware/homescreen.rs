@@ -412,6 +412,8 @@ impl HomescreenHeader {
     pub const SUBCOMPONENTS_GAP: i16 = 16;
     const SHADOW_OFFSET_X: Offset = Offset::x(SHADOW_HEIGHT / 2);
     const SHADOW_ANCHOR: Point = Point::new(0, 21).ofs(Self::SHADOW_OFFSET_X.neg());
+    const FG_Y_OFFSET: i16 = -1;
+    const LABEL_Y_OFFSET: i16 = 1;
 
     pub fn new(label: TString<'static>, background_image: bool, show_info: bool) -> Self {
         let style = theme::firmware::TEXT_SMALL;
@@ -444,9 +446,8 @@ impl Component for HomescreenHeader {
                 Offset::uniform(ConnectionIndicator::AREA_SIZE_NEEDED),
                 Alignment2D::CENTER_LEFT,
             )
-            .translate(Offset::x(Self::SUBCOMPONENTS_GAP))
             // Visually align with the fuel gauge icon
-            .translate(Offset::y(-1));
+            .translate(Offset::new(Self::SUBCOMPONENTS_GAP, Self::FG_Y_OFFSET));
 
             self.fuel_gauge.place(fuel_gauge_area);
             self.connection_indicator.place(connection_indicator_area);
@@ -462,7 +463,8 @@ impl Component for HomescreenHeader {
                     Offset::new(self.text_width, self.label.font().max_height),
                     Alignment2D::CENTER_LEFT,
                 )
-                .translate(Offset::x(Self::SUBCOMPONENTS_GAP))
+                // Visually align with the fuel gauge icon
+                .translate(Offset::new(Self::SUBCOMPONENTS_GAP, Self::LABEL_Y_OFFSET))
             };
             self.label_area = label_area;
             self.label.place(label_area);
@@ -489,7 +491,7 @@ impl Component for HomescreenHeader {
         if self.show_indicators {
             self.fuel_gauge.event(ctx, event);
             let connection_event = self.connection_indicator.event(ctx, event);
-            if matches!(event, Event::PM(_)) || connection_event.is_some() {
+            if matches!(event, Event::Attach(_) | Event::PM(_)) || connection_event.is_some() {
                 // TODO: could FuelGauge also return Some(()) on update?
                 self.place(self.area);
                 ctx.request_paint();
