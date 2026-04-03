@@ -972,3 +972,10 @@ program = env.Command(
 
 if CMAKELISTS != 0:
     env.Depends(program, cmake_gen)
+    cmake_gen_commands = env.Command(
+        target='compile_commands.json',
+        source='CMakeLists.txt',
+        action='cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -S . -B build'
+    )
+    env.Depends(program, cmake_gen_commands)
+

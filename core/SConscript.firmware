@@ -1033,6 +1033,12 @@ env.Depends(program_elf, linkerscript_gen)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
+    cmake_gen_commands = env.Command(
+        target='compile_commands.json',
+        source='CMakeLists.txt',
+        action='cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -S . -B build'
+    )
+    env.Depends(program_elf, cmake_gen_commands)
 
 BINARY_NAME = f"build/firmware/firmware-{TREZOR_MODEL}"
 if not EVERYTHING:
