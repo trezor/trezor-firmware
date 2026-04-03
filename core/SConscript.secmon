@@ -406,7 +406,7 @@ linkerscript_gen = env.Command(
 )
 
 program_elf = env.Command(
-    target='secmon.elf',
+    target=['secmon.elf', 'secmon_api.o'],
     source=obj_program,
     action=
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
