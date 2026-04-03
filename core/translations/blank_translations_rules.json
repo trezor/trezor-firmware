@@ -71,8 +71,7 @@
       "tutorial__title_skip",
       "tutorial__title_tutorial_complete",
       "tutorial__use_trezor",
-      "tutorial__welcome_press_right",
-      "tutorial__what_is_tropic"
+      "tutorial__welcome_press_right"
     ],
     "allowedLayouts": [ "Caesar" ],
     "description": "Only used by tutorial of Caesar"
