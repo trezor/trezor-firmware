@@ -156,7 +156,6 @@ async def confirm_withdraw_unfreeze(owner_address: AnyBytes) -> None:
         chunkify=True,
         hold=True,
         br_name="tron/claim",
-        cancel=True,
     )
 
 
