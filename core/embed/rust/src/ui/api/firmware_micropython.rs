@@ -2011,7 +2011,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     horizontal: bool = False,
     ///     chunkify: bool = False,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Show metadata for outgoing transaction."""
+    ///     """Show metadata for outgoing transaction with a 'close' button."""
     Qstr::MP_QSTR_show_info_with_cancel => obj_fn_kw!(0, new_show_info_with_cancel).as_obj(),
 
     /// def show_lockscreen(
