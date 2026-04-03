@@ -31,13 +31,14 @@ def format_energy_amount(amount: int) -> str:
     return f"{strings.format_amount(amount, 0)} SUN"
 
 
-async def confirm_transfer_contract(contract: TronTransferContract) -> None:
-    to_address = get_encoded_address(contract.to_address)
-
-    await layouts.confirm_address(
-        TR.send__title_sending_to,
-        to_address,
-        chunkify=True,
+async def confirm_trx_transfer(
+    contract: TronTransferContract, account_details: tuple[str | None, str]
+) -> None:
+    await layouts.confirm_tron_send(
+        amount=format_trx_amount(contract.amount),
+        fee=None,
+        account_details=account_details,
+        address=get_encoded_address(contract.to_address),
     )
 
 
@@ -51,7 +52,7 @@ async def confirm_unknown_smart_contract(
         confirm_address,
         confirm_blob,
         confirm_ethereum_unknown_contract_warning,
-        confirm_tron_send,
+        confirm_tron_summary,
     )
 
     await confirm_ethereum_unknown_contract_warning(TR.words__send)
@@ -74,7 +75,9 @@ async def confirm_unknown_smart_contract(
         ask_pagination=True,
     )
 
-    await confirm_tron_send(None, format_energy_amount(fee_limit))
+    await confirm_tron_summary(
+        TR.words__title_summary, None, format_energy_amount(fee_limit)
+    )
 
 
 async def confirm_known_trc20_smart_contract(
