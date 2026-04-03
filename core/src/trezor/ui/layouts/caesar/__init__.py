@@ -1409,12 +1409,10 @@ if not utils.BITCOIN_ONLY:
             fee_label=with_colon(fee_label),
             external_menu=True,
         )
-        account_details: list[StrPropertyType] = with_colon(
-            (
-                (TR.words__account, account, None),
-                (TR.address_details__derivation_path, account_path, None),
-            )
-        )
+        account_details: list[StrPropertyType] = [
+            (TR.words__account, account, None),
+            (TR.address_details__derivation_path, account_path, None),
+        ]
         iter = [
             (TR.confirm_total__title_fee, fee_details),
             (TR.address_details__account_info, account_details),
@@ -1510,11 +1508,9 @@ if not utils.BITCOIN_ONLY:
                 amount_label=None,
                 fee=fee,
                 fee_label=TR.send__maximum_fee,
-                account_items=with_colon(
-                    (
-                        (TR.words__account, account_name, None),
-                        (TR.address_details__derivation_path, account_path, None),
-                    )
+                account_items=(
+                    (TR.words__account, account_name, None),
+                    (TR.address_details__derivation_path, account_path, None),
                 ),
                 account_title=(
                     TR.send__send_from

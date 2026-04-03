@@ -110,7 +110,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_address__xpub;
   MP_QSTR_address_details__account_info;
   MP_QSTR_address_details__derivation_path;
-  MP_QSTR_address_details__derivation_path_colon;
   MP_QSTR_address_details__title_receive_address;
   MP_QSTR_address_label;
   MP_QSTR_address_qr;
@@ -292,7 +291,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_summary;
   MP_QSTR_confirm_thp_pairing;
   MP_QSTR_confirm_total__fee_rate;
-  MP_QSTR_confirm_total__fee_rate_colon;
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
   MP_QSTR_confirm_trade;
@@ -965,7 +963,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_words;
   MP_QSTR_words__about;
   MP_QSTR_words__account;
-  MP_QSTR_words__account_colon;
   MP_QSTR_words__address;
   MP_QSTR_words__amount;
   MP_QSTR_words__are_you_sure;

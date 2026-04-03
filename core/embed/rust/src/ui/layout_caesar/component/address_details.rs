@@ -47,13 +47,13 @@ impl AddressDetails {
         let details_view = {
             let mut para = ParagraphVecShort::new();
             if let Some(account) = account {
-                para.add(Paragraph::new(&theme::TEXT_BOLD, TR::words__account_colon));
+                para.add(Paragraph::new(&theme::TEXT_BOLD, TR::words__account));
                 para.add(Paragraph::new(&theme::TEXT_MONO, account));
             }
             if let Some(path) = path {
                 para.add(Paragraph::new(
                     &theme::TEXT_BOLD,
-                    TR::address_details__derivation_path_colon,
+                    TR::address_details__derivation_path,
                 ));
                 para.add(Paragraph::new(&theme::TEXT_MONO, path));
             }

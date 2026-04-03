@@ -39,16 +39,13 @@ impl AddressDetails {
     ) -> Result<Self, Error> {
         let mut para = ParagraphVecShort::new();
         if let Some(a) = account {
-            para.add(Paragraph::new(
-                &theme::TEXT_NORMAL,
-                TR::words__account_colon,
-            ));
+            para.add(Paragraph::new(&theme::TEXT_NORMAL, TR::words__account));
             para.add(Paragraph::new(&theme::TEXT_MONO_DATA, a));
         }
         if let Some(p) = path {
             para.add(Paragraph::new(
                 &theme::TEXT_NORMAL,
-                TR::address_details__derivation_path_colon,
+                TR::address_details__derivation_path,
             ));
             para.add(Paragraph::new(&theme::TEXT_MONO_DATA, p));
         }

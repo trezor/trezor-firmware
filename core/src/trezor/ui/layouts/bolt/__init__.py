@@ -1090,12 +1090,10 @@ if not utils.BITCOIN_ONLY:
             chunkify=(chunkify if recipient else False),
         )
 
-        items = with_colon(
-            (
-                (TR.words__account, account, None),
-                (TR.address_details__derivation_path, account_path, None),
-            )
-        )
+        items: list[StrPropertyType] = [
+            (TR.words__account, account, None),
+            (TR.address_details__derivation_path, account_path, None),
+        ]
         account_info_layout = trezorui_api.show_info_with_cancel(
             title=TR.send__send_from,
             items=items,
