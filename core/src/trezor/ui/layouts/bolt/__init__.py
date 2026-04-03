@@ -786,6 +786,8 @@ def confirm_address(
     chunkify: bool = True,
     br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
+    info_items: Iterable[StrPropertyType] | None = None,
+    info_title: str | None = None,
 ) -> Awaitable[None]:
     return confirm_value(
         title,
@@ -796,6 +798,8 @@ def confirm_address(
         subtitle=subtitle,
         verb=(verb or TR.buttons__confirm),
         chunkify=chunkify,
+        info_items=info_items,
+        info_title=info_title,
     )
 
 
@@ -1658,15 +1662,57 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-    async def confirm_tron_send(amount: str | None, fee: str | None) -> None:
+    async def confirm_tron_summary(
+        title: str | None,
+        amount: str | None,
+        fee: str | None,
+        account_details: tuple[str | None, str] | None = None,
+    ) -> None:
+        account_items = (
+            [
+                (TR.words__account_colon, account_details[0], False),
+                (TR.address_details__derivation_path_colon, account_details[1], False),
+            ]
+            if account_details
+            else None
+        )
         await _confirm_summary(
             amount or "",
-            amount_label=TR.send__total_amount if amount else "",
+            amount_label=TR.words__amount if amount else "",
             fee=fee or "",
             fee_label=TR.words__fee_limit if fee else "",
-            extra_items=None,
-            br_name="tron/send",
+            title=title or TR.words__title_summary,
+            account_items=account_items,
+            account_title=TR.address_details__account_info,
+            br_name="tron/summary",
             br_code=ButtonRequestType.SignTx,
+        )
+
+    async def confirm_tron_send(
+        amount: str | None,
+        fee: str | None,
+        account_details: tuple[str | None, str],
+        address: str,
+        chunkify: bool = True,
+    ) -> None:
+        await confirm_address(
+            title=TR.words__send,
+            subtitle=TR.words__recipient,
+            address=address,
+            verb=TR.buttons__continue,
+            chunkify=chunkify,
+            br_name="tron/send",
+            info_items=[
+                (TR.words__account_colon, account_details[0], False),
+                (TR.address_details__derivation_path_colon, account_details[1], False),
+            ],
+            info_title=TR.address_details__account_info,
+        )
+        await confirm_tron_summary(
+            TR.words__send,
+            amount,
+            fee,
+            account_details,
         )
 
     # TODO: #6359 Reword the TR strings to be ETH agnostic.
