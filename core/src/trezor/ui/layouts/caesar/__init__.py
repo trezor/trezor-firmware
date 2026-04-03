@@ -874,6 +874,8 @@ def confirm_address(
     chunkify: bool = True,
     br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
+    info_items: Iterable[StrPropertyType] | None = None,
+    info_title: str | None = None,
 ) -> Awaitable[None]:
 
     return confirm_blob(
@@ -1567,19 +1569,30 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-    async def confirm_tron_send(amount: str | None, fee: str | None) -> None:
+    async def confirm_tron_summary(amount: str | None, fee: str | None, account_details: tuple[str | None, str] | None = None) -> None:
+        # caesar's confirm_summary always displays the fee row; when there is no
+        # fee but there is an amount, pass the amount into the fee slot so it
+        # is shown correctly.
+        if amount and not fee:
+            display_amount, display_amount_label = None, None
+            display_fee, display_fee_label = amount, TR.words__amount
+        else:
+            display_amount, display_amount_label = amount or "", TR.words__amount if amount else ""
+            display_fee, display_fee_label = fee or "", TR.words__fee_limit if fee else ""
         await raise_if_not_confirmed(
             trezorui_api.confirm_summary(
-                amount=amount or "",
-                amount_label=TR.send__total_amount if amount else "",
-                fee=fee or "",
-                fee_label=TR.words__fee_limit if fee else "",
+                title=TR.words__send,
+                amount=display_amount,
+                amount_label=display_amount_label,
+                fee=display_fee,
+                fee_label=display_fee_label,
+                account_items=[(TR.words__account_colon, account_details[0], False), (TR.address_details__derivation_path_colon, account_details[1], None)] if account_details else None,
+                account_title=TR.address_details__account_info,
             ),
             br_name="tron/send",
             br_code=ButtonRequestType.SignTx,
         )
 
-    # TODO: #6359 Reword the TR strings to be ETH agnostic.
     async def confirm_tron_approve(
         recipient_addr: str,
         amount_str: str,
@@ -1591,16 +1604,16 @@ if not utils.BITCOIN_ONLY:
 
         br_name = "tron/approve"
         if is_revoke:
-            title = TR.ethereum__approve_intro_title_revoke
-            action_subtitle = TR.ethereum__approve_intro_revoke
-            value_subtitle = TR.ethereum__approve_revoke_from
+            title = "Revoke approval"
+            action_subtitle = "Review details to revoke spending."
+            value_subtitle = "Revoke from"
             summary_view = (TR.words__token, amount_str[2:], True)
         else:
-            title = TR.ethereum__approve_intro_title
-            action_subtitle = TR.ethereum__approve_intro
-            value_subtitle = TR.ethereum__approve_to
+            title = "Approve spending"
+            action_subtitle = "Review details to approve spending."
+            value_subtitle = "Approve to"
             summary_view = (
-                TR.ethereum__approve_amount_allowance,
+                "Amount allowance",
                 amount_str,
                 False,
             )

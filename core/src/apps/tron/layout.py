@@ -31,14 +31,26 @@ def format_energy_amount(amount: int) -> str:
     return f"{strings.format_amount(amount, 0)} SUN"
 
 
-async def confirm_transfer_contract(contract: TronTransferContract) -> None:
+async def confirm_trx_transfer(contract: TronTransferContract, account_details: tuple[str | None, str]) -> None:
+    # await layout.confirm_transfer_contract(contract)
+    # from layouts import confirm_tron_send
     to_address = get_encoded_address(contract.to_address)
 
     await layouts.confirm_address(
-        TR.send__title_sending_to,
-        to_address,
+        title=TR.words__send,
+        subtitle=TR.words__recipient,
+        address=to_address,
+        verb=TR.buttons__continue,
+        footer=TR.address__check_with_source,
+        is_footer_warning=False,
         chunkify=True,
+        br_name="tron/transfer",
+        info_items=[(TR.words__account_colon, account_details[0], False), (TR.address_details__derivation_path_colon, account_details[1], False)],
+        info_title=TR.address_details__account_info,
     )
+
+    await layouts.confirm_tron_summary(format_trx_amount(contract.amount), None, account_details=account_details)
+
 
 
 # TODO: Refactor ETH references to crypto-neutral references.
@@ -51,7 +63,7 @@ async def confirm_unknown_smart_contract(
         confirm_address,
         confirm_blob,
         confirm_ethereum_unknown_contract_warning,
-        confirm_tron_send,
+        confirm_tron_summary,
     )
 
     await confirm_ethereum_unknown_contract_warning(TR.words__send)
@@ -74,7 +86,7 @@ async def confirm_unknown_smart_contract(
         ask_pagination=True,
     )
 
-    await confirm_tron_send(None, format_energy_amount(fee_limit))
+    await confirm_tron_summary(None, format_energy_amount(fee_limit))
 
 
 async def confirm_known_trc20_smart_contract(

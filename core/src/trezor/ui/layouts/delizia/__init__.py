@@ -792,8 +792,15 @@ def confirm_address(
     chunkify: bool = True,
     br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
+    info_items: Iterable[StrPropertyType] | None = None,
+    info_title: str | None = None,
 ) -> Awaitable[ui.UiResult]:
 
+    menu_info_items = (
+        [(info_title or TR.words__title_information, list(info_items), None)]
+        if info_items
+        else None
+    )
     return confirm_value(
         title,
         address,
@@ -803,6 +810,7 @@ def confirm_address(
         subtitle=subtitle,
         verb=(verb or TR.buttons__confirm),
         chunkify=chunkify,
+        info_items=menu_info_items,
     )
 
 
@@ -1467,13 +1475,15 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
-    async def confirm_tron_send(amount: str | None, fee: str | None) -> None:
+    async def confirm_tron_summary(amount: str | None, fee: str | None, account_details: tuple[str | None, str] | None = None) -> None:
         await _confirm_summary(
-            amount or "",
-            amount_label=TR.send__total_amount if amount else "",
+            title=TR.words__send,
+            amount=amount or "",
+            amount_label=TR.words__recipient if amount else "",
             fee=fee or "",
             fee_label=TR.words__fee_limit if fee else "",
-            extra_items=None,
+            account_items=[(TR.words__account_colon, account_details[0], False), (TR.address_details__derivation_path_colon, account_details[1], None)] if account_details else None,
+            account_title=TR.address_details__account_info,
             br_name="tron/send",
             br_code=ButtonRequestType.SignTx,
         )
