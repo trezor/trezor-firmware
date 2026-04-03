@@ -5,7 +5,12 @@
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Please contact Trezor support at",
-    "addr_mismatch__key_mismatch": "Key mismatch?",
+    "addr_mismatch__key_mismatch": {
+      "Bolt": "Key mismatch?",
+      "Caesar": "Key mismatch?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "addr_mismatch__mismatch": "Address mismatch?",
     "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": "Wrong derivation path for selected account.",
@@ -76,11 +81,21 @@
       "Delizia": "You should back up your new wallet right now.",
       "Eckhart": "Back up your new wallet now."
     },
-    "backup__it_should_be_backed_up_now": "It should be backed up now!",
+    "backup__it_should_be_backed_up_now": {
+      "Bolt": "",
+      "Caesar": "It should be backed up now!",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "backup__new_wallet_created": "Wallet created.\n",
     "backup__new_wallet_successfully_created": "Wallet created successfully.",
     "backup__not_recommend": "We don't recommend to skip wallet backup creation.",
-    "backup__recover_anytime": "You can use your backup to recover your wallet at any time.",
+    "backup__recover_anytime": {
+      "Bolt": "",
+      "Caesar": "You can use your backup to recover your wallet at any time.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "backup__title_backup_completed": {
       "Bolt": "",
       "Caesar": "",
@@ -95,7 +110,12 @@
     },
     "backup__title_create_wallet_backup": "Create wallet backup",
     "backup__title_skip": "Skip backup",
-    "backup__want_to_skip": "Are you sure you want to skip the backup?",
+    "backup__want_to_skip": {
+      "Bolt": "Are you sure you want to skip the backup?",
+      "Caesar": "Are you sure you want to skip the backup?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "bitcoin__commitment_data": "Commitment data",
     "bitcoin__confirm_locktime": "Confirm Locktime",
     "bitcoin__create_proof_of_ownership": "Do you want to create a proof of ownership?",
@@ -268,7 +288,12 @@
       "Eckhart": "Waiting for connection..."
     },
     "brightness__change_title": "Change display brightness",
-    "brightness__changed_title": "Display brightness changed",
+    "brightness__changed_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Display brightness changed",
+      "Eckhart": ""
+    },
     "brightness__title": "Display brightness",
     "buttons__abort": "Abort",
     "buttons__access": "Access",
@@ -290,7 +315,6 @@
     "buttons__continue": "Continue",
     "buttons__details": "Details",
     "buttons__enable": "Enable",
-    "buttons__enter": "Enter",
     "buttons__enter_share": "Enter share",
     "buttons__export": "Export",
     "buttons__finish": "Finish",
@@ -449,14 +473,16 @@
     "coinjoin__waiting_for_others": "Waiting for others",
     "confirm_total__fee_rate": "Fee rate",
     "confirm_total__fee_rate_colon": "Fee rate:",
-    "confirm_total__sending_from_account": "Sending from account:",
     "confirm_total__title_fee": "Fee info",
-    "confirm_total__title_sending_from": "Sending from",
+    "confirm_total__title_sending_from": {
+      "Bolt": "",
+      "Caesar": "Sending from",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "debug__loading_seed": "Loading seed",
     "debug__loading_seed_not_recommended": "Loading private seed is not recommended.",
     "device_name__change_template": "Change device name to {0}?",
-    "device_name__changed": "Device name changed.",
-    "device_name__continue_with_empty_label": "Continue with empty device name?",
     "device_name__enter": "Enter device name",
     "device_name__title": "Device name",
     "entropy__send": "Do you really want to send entropy?",
@@ -795,16 +821,26 @@
     },
     "fido__erase_credentials": {
       "Bolt": "erase all credentials?",
-      "Caesar": "erase all credentials?",
+      "Caesar": "",
       "Delizia": "erase all credentials?",
       "Eckhart": "Delete all of the saved credentials?"
     },
     "fido__export_credentials": "Export information about the credentials stored on this device?",
-    "fido__more_credentials": "More credentials",
+    "fido__more_credentials": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "More credentials",
+      "Eckhart": ""
+    },
     "fido__not_registered": "Not registered",
     "fido__not_registered_with_template": "This device is not registered with\n{0}.",
     "fido__please_enable_pin_protection": "Please enable PIN protection.",
-    "fido__select_intro": "Select the credential that you would like to use for authentication.",
+    "fido__select_intro": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Select the credential that you would like to use for authentication.",
+      "Eckhart": "Select the credential that you would like to use for authentication."
+    },
     "fido__title_authenticate": "FIDO2 authenticate",
     "fido__title_credential_details": "Credential details",
     "fido__title_for_authentication": "for authentication",
@@ -818,7 +854,12 @@
     "fido__title_u2f_register": "U2F register",
     "fido__title_verify_user": "FIDO2 verify user",
     "fido__unable_to_verify_user": "Unable to verify user.",
-    "fido__wanna_erase_credentials": "Do you really want to erase all credentials?",
+    "fido__wanna_erase_credentials": {
+      "Bolt": "",
+      "Caesar": "Do you really want to erase all credentials?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "firmware_update__restart": "Trezor will restart after update.",
     "firmware_update__title": "Update firmware",
     "firmware_update__title_fingerprint": "FW fingerprint",
@@ -846,12 +887,27 @@
       "Delizia": "Haptic feedback",
       "Eckhart": "Haptic feedback"
     },
-    "homescreen__backup_needed_info": "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets.",
-    "homescreen__click_to_connect": "Click to Connect",
+    "homescreen__backup_needed_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
+    },
+    "homescreen__click_to_connect": {
+      "Bolt": "",
+      "Caesar": "Click to Connect",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "homescreen__click_to_unlock": "Click to Unlock",
     "homescreen__firmware_type": "Firmware type",
     "homescreen__firmware_version": "Firmware version",
-    "homescreen__set_default": "Change wallpaper to default image?",
+    "homescreen__set_default": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Change wallpaper to default image?",
+      "Eckhart": "Change wallpaper to default image?"
+    },
     "homescreen__settings_subtitle": "Settings",
     "homescreen__settings_title": {
       "Bolt": "",
@@ -992,7 +1048,12 @@
     "lockscreen__tap_to_unlock": "Tap to unlock",
     "lockscreen__title_locked": "Locked",
     "lockscreen__title_not_connected": "Not connected",
-    "lockscreen__unlock": "Unlock",
+    "lockscreen__unlock": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Unlock"
+    },
     "misc__decrypt_value": "Decrypt value",
     "misc__enable_labeling": "Enable labeling?",
     "misc__encrypt_value": "Encrypt value",
@@ -1461,7 +1522,12 @@
     "pin__change": "Change PIN",
     "pin__change_question": "Change PIN?",
     "pin__changed": "PIN changed.",
-    "pin__cursor_will_change": "Position of the cursor will change between entries for enhanced security.",
+    "pin__cursor_will_change": {
+      "Bolt": "",
+      "Caesar": "Position of the cursor will change between entries for enhanced security.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "pin__diff_from_wipe_code": "The new PIN must be different from your wipe code.",
     "pin__disabled": "PIN protection\nturned off.",
     "pin__enabled": {
@@ -1491,7 +1557,12 @@
     },
     "pin__reenter": "Re-enter PIN",
     "pin__reenter_new": "Re-enter new PIN",
-    "pin__reenter_to_confirm": "Please re-enter PIN to confirm.",
+    "pin__reenter_to_confirm": {
+      "Bolt": "",
+      "Caesar": "Please re-enter PIN to confirm.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "pin__remove": "Remove PIN",
     "pin__setup_completed": {
       "Bolt": "",
@@ -1499,9 +1570,19 @@
       "Delizia": "",
       "Eckhart": "PIN setup completed."
     },
-    "pin__should_be_long": "PIN should be 4-50 digits long.",
+    "pin__should_be_long": {
+      "Bolt": "",
+      "Caesar": "PIN should be 4-50 digits long.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "pin__title": "PIN code",
-    "pin__title_check_pin": "Check PIN",
+    "pin__title_check_pin": {
+      "Bolt": "",
+      "Caesar": "Check PIN",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "pin__title_settings": "PIN settings",
     "pin__title_wrong_pin": "Wrong PIN",
     "pin__tries_left": "tries left",
@@ -1556,7 +1637,12 @@
       "Delizia": "Check your backup?",
       "Eckhart": "Let's do a wallet backup check."
     },
-    "recovery__cursor_will_change": "Position of the cursor will change between entries for enhanced security.",
+    "recovery__cursor_will_change": {
+      "Bolt": "",
+      "Caesar": "Position of the cursor will change between entries for enhanced security.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "recovery__dry_run_backup_not_on_this_device": "Wallet backup not on this device",
     "recovery__dry_run_bip39_valid_match": "The entered wallet backup is valid and matches the one in this device.",
     "recovery__dry_run_bip39_valid_mismatch": "The entered wallet backup is valid but does not match the one in the device.",
@@ -1570,7 +1656,6 @@
       "Eckhart": "The entered wallet backup is valid but doesn't match the one on this device."
     },
     "recovery__dry_run_slip39_valid_share": "Entered share is valid and belongs to the backup in the device",
-    "recovery__dry_run_verify_remaining_shares": "Verify remaining recovery shares?",
     "recovery__enter_any_share": "Enter any share",
     "recovery__enter_backup": "Enter your backup.",
     "recovery__enter_different_share": "Enter a different share.",
@@ -1583,7 +1668,6 @@
       "Eckhart": ""
     },
     "recovery__group_threshold_reached": "Group threshold reached.",
-    "recovery__info_about_disconnect": "It's safe to disconnect your Trezor while recovering your wallet and continue later.",
     "recovery__invalid_share_entered": "Invalid recovery share entered.",
     "recovery__invalid_wallet_backup_entered": "Invalid wallet backup entered.",
     "recovery__more_shares_needed": {
@@ -1689,7 +1773,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__button_create": "Create wallet",
+    "reset__button_create": {
+      "Bolt": "Create wallet",
+      "Caesar": "Create wallet",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__button_recover": "Recover wallet",
     "reset__by_continuing": {
       "Bolt": "By continuing you agree to Trezor Company's terms and conditions.",
@@ -1711,7 +1800,12 @@
       "Delizia": "Check gr. {0} - share {1}",
       "Eckhart": "Check group {0} - share {1}"
     },
-    "reset__check_share_backup_template": "Let's do a quick check of Share #{0}.",
+    "reset__check_share_backup_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Let's do a quick check of Share #{0}."
+    },
     "reset__check_share_title_template": {
       "Bolt": "Check share #{0}",
       "Caesar": "",
@@ -1733,8 +1827,18 @@
     },
     "reset__create_x_of_y_multi_share_backup_template": "Do you want to create a {0} of {1} multi-share backup?",
     "reset__finished_verifying_group_template": "You have finished verifying your recovery shares for group {0}.",
-    "reset__finished_verifying_shares": "You have finished verifying your recovery shares.",
-    "reset__finished_verifying_wallet_backup": "You have finished verifying your wallet backup.",
+    "reset__finished_verifying_shares": {
+      "Bolt": "You have finished verifying your recovery shares.",
+      "Caesar": "You have finished verifying your recovery shares.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__finished_verifying_wallet_backup": {
+      "Bolt": "You have finished verifying your wallet backup.",
+      "Caesar": "You have finished verifying your wallet backup.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__group_description": {
       "Bolt": "A group is made up of recovery shares.",
       "Caesar": "",
@@ -1800,7 +1904,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "reset__num_of_shares_how_many": "How many wallet backup shares do you want to create?",
+    "reset__num_of_shares_how_many": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "How many wallet backup shares do you want to create?",
+      "Eckhart": "How many wallet backup shares do you want to create?"
+    },
     "reset__num_of_shares_long_info_template": {
       "Bolt": "",
       "Caesar": "",
@@ -1831,9 +1940,24 @@
     "reset__recovery_share_title_template": "Recovery share #{0}",
     "reset__recovery_wallet_backup_title": "Wallet backup",
     "reset__repeat_for_all_shares": "Repeat for all shares.",
-    "reset__required_number_of_groups": "The required number of groups for recovery.",
-    "reset__select_correct_word": "Select the correct word for each position.",
-    "reset__select_threshold": "Select the minimum shares required to recover your wallet.",
+    "reset__required_number_of_groups": {
+      "Bolt": "The required number of groups for recovery.",
+      "Caesar": "",
+      "Delizia": "The required number of groups for recovery.",
+      "Eckhart": "The required number of groups for recovery."
+    },
+    "reset__select_correct_word": {
+      "Bolt": "",
+      "Caesar": "Select the correct word for each position.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "reset__select_threshold": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Select the minimum shares required to recover your wallet.",
+      "Eckhart": "Select the minimum shares required to recover your wallet."
+    },
     "reset__select_word_from_share_template": {
       "Bolt": "",
       "Caesar": "",
@@ -2015,14 +2139,24 @@
       "Eckhart": ""
     },
     "reset__words_may_repeat": "Words may repeat.",
-    "reset__words_written_down_template": "I wrote down all {0} words in order.",
+    "reset__words_written_down_template": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "I wrote down all {0} words in order.",
+      "Eckhart": "I wrote down all {0} words in order."
+    },
     "reset__write_down_words_template": {
       "Bolt": "",
       "Caesar": "Write the following {0} words in order on your wallet backup card.",
       "Delizia": "Write the following {0} words in order on your wallet backup card.",
       "Eckhart": "Write the following {0} words in order on your wallet backup card."
     },
-    "reset__wrong_word_selected": "Wrong word selected!",
+    "reset__wrong_word_selected": {
+      "Bolt": "Wrong word selected!",
+      "Caesar": "Wrong word selected!",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "reset__you_need_one_share": {
       "Bolt": "For recovery you need 1 share.",
       "Caesar": "",
@@ -2462,15 +2596,29 @@
       "Eckhart": "Scan QR code to pair"
     },
     "tutorial__continue": "Continue tutorial",
-    "tutorial__did_you_know": "Did you know?",
+    "tutorial__did_you_know": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Did you know?",
+      "Eckhart": ""
+    },
     "tutorial__exit": "Exit tutorial",
     "tutorial__first_wallet": "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.",
-    "tutorial__get_started": "Get started!",
     "tutorial__last_one": "Last one",
     "tutorial__lets_begin": "Learn how to use and navigate this device with ease.",
     "tutorial__menu": "Find context-specific actions and options in the menu.",
-    "tutorial__menu_appendix": "View more info, quit flow, ...",
-    "tutorial__middle_click": "Press both left and right at the same\ntime to confirm.",
+    "tutorial__menu_appendix": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "View more info, quit flow, ..."
+    },
+    "tutorial__middle_click": {
+      "Bolt": "",
+      "Caesar": "Press both left and right at the same\ntime to confirm.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__navigation_ts7": {
       "Bolt": "",
       "Caesar": "",
@@ -2484,13 +2632,38 @@
       "Delizia": "",
       "Eckhart": "Use the power button on the side to turn your device on or off."
     },
-    "tutorial__press_and_hold": "Press and hold the right button to\napprove important operations.",
-    "tutorial__ready_to_use": "You're ready to\nuse Trezor.",
-    "tutorial__ready_to_use_safe5": "You're all set to start using your device!",
+    "tutorial__press_and_hold": {
+      "Bolt": "",
+      "Caesar": "Press and hold the right button to\napprove important operations.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__ready_to_use": {
+      "Bolt": "",
+      "Caesar": "You're ready to\nuse Trezor.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__ready_to_use_safe5": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "You're all set to start using your device!",
+      "Eckhart": "You're all set to start using your device!"
+    },
     "tutorial__restart_tutorial": "Restart tutorial",
-    "tutorial__scroll_down": "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.",
+    "tutorial__scroll_down": {
+      "Bolt": "",
+      "Caesar": "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__suite_restart": "Replay this tutorial anytime from the Trezor Suite app.",
-    "tutorial__sure_you_want_skip": "Are you sure you\nwant to skip the tutorial?",
+    "tutorial__sure_you_want_skip": {
+      "Bolt": "",
+      "Caesar": "Are you sure you\nwant to skip the tutorial?",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__swipe_up_and_down": {
       "Bolt": "",
       "Caesar": "",
@@ -2500,7 +2673,12 @@
     "tutorial__tap_to_start": "Tap to start tutorial",
     "tutorial__title_easy_navigation": "Easy navigation",
     "tutorial__title_handy_menu": "Handy menu",
-    "tutorial__title_hello": "Hello",
+    "tutorial__title_hello": {
+      "Bolt": "",
+      "Caesar": "Hello",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__title_hold": {
       "Bolt": "Hold to confirm important actions",
       "Caesar": "Hold to confirm important actions",
@@ -2508,10 +2686,30 @@
       "Eckhart": "Hold the on-screen button at the bottom to confirm important actions."
     },
     "tutorial__title_lets_begin": "Let's begin",
-    "tutorial__title_screen_scroll": "Screen scroll",
-    "tutorial__title_skip": "Skip tutorial",
-    "tutorial__title_tutorial_complete": "Tutorial complete",
-    "tutorial__title_well_done": "Well done!",
+    "tutorial__title_screen_scroll": {
+      "Bolt": "",
+      "Caesar": "Screen scroll",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_skip": {
+      "Bolt": "",
+      "Caesar": "Skip tutorial",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_tutorial_complete": {
+      "Bolt": "",
+      "Caesar": "Tutorial complete",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "tutorial__title_well_done": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Well done!",
+      "Eckhart": "Well done!"
+    },
     "tutorial__tropic_info": {
       "Bolt": "",
       "Caesar": "",
@@ -2524,7 +2722,12 @@
       "Delizia": "",
       "Eckhart": ""
     },
-    "tutorial__welcome_press_right": "Welcome to Trezor. Press right to continue.",
+    "tutorial__welcome_press_right": {
+      "Bolt": "",
+      "Caesar": "Welcome to Trezor. Press right to continue.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "tutorial__welcome_safe5": {
       "Bolt": "",
       "Caesar": "",
@@ -2552,8 +2755,8 @@
     "wipe__title": "Wipe device",
     "wipe__want_to_wipe": "Do you really want to wipe the device?\n",
     "wipe_code__cancel_setup": {
-      "Bolt": "Cancel wipe code setup",
-      "Caesar": "Cancel wipe code setup",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Cancel wipe code setup",
       "Eckhart": "Cancel wipe code setup?"
     },
@@ -2569,14 +2772,29 @@
     "wipe_code__mismatch": "The wipe codes you entered do not match.",
     "wipe_code__pin_not_set_description": "PIN must be set before enabling wipe code.",
     "wipe_code__reenter": "Re-enter wipe code",
-    "wipe_code__reenter_to_confirm": "Please re-enter wipe code to confirm.",
+    "wipe_code__reenter_to_confirm": {
+      "Bolt": "",
+      "Caesar": "Please re-enter wipe code to confirm.",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "wipe_code__remove": "Remove wipe code",
     "wipe_code__title": "Wipe code",
-    "wipe_code__title_check": "Check wipe code",
+    "wipe_code__title_check": {
+      "Bolt": "",
+      "Caesar": "Check wipe code",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "wipe_code__title_invalid": "Invalid wipe code",
     "wipe_code__title_settings": "Wipe code settings",
     "wipe_code__turn_off": "Turn off wipe code protection?",
-    "wipe_code__turn_on": "Turn on wipe code protection?",
+    "wipe_code__turn_on": {
+      "Bolt": "Turn on wipe code protection?",
+      "Caesar": "Turn on wipe code protection?",
+      "Delizia": "Turn on wipe code protection?",
+      "Eckhart": ""
+    },
     "wipe_code__wipe_code_mismatch": "Wipe code mismatch",
     "word_count__title": "Number of words",
     "words__about": "About",
@@ -2593,7 +2811,12 @@
     "words__bluetooth": "Bluetooth",
     "words__buying": "Buying",
     "words__cancel_and_exit": "Cancel and exit",
-    "words__cancel_question": "Cancel?",
+    "words__cancel_question": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Cancel?"
+    },
     "words__chain": "Chain",
     "words__comm_trouble": "Your Trezor is having trouble communicating with your connected device.",
     "words__confirm": "Confirm",
@@ -2631,7 +2854,6 @@
       "Delizia": "from",
       "Eckhart": ""
     },
-    "words__good_to_know": "Good to know",
     "words__important": "Important",
     "words__instructions": "Instructions",
     "words__intent": "Intent",
@@ -2647,7 +2869,12 @@
     "words__my_trezor": "My Trezor",
     "words__name": "Name",
     "words__no": "No",
-    "words__not_recommended": "Not recommended!",
+    "words__not_recommended": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Not recommended!",
+      "Eckhart": ""
+    },
     "words__note": "Note",
     "words__off": {
       "Bolt": "",
@@ -2692,7 +2919,12 @@
     "words__sign": "Sign",
     "words__signer": "Signer",
     "words__swap": "Swap",
-    "words__title_check": "Check",
+    "words__title_check": {
+      "Bolt": "",
+      "Caesar": "Check",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "words__title_done": "Done",
     "words__title_group": {
       "Bolt": "",
@@ -2737,7 +2969,12 @@
     },
     "words__unknown": "Unknown",
     "words__unlimited": "Unlimited",
-    "words__unlocked": "Unlocked",
+    "words__unlocked": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Unlocked",
+      "Eckhart": ""
+    },
     "words__votes": "Votes",
     "words__voting": "Voting",
     "words__wallet": "Wallet",
