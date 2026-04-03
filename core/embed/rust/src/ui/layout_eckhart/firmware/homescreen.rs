@@ -463,6 +463,8 @@ impl Component for HomescreenHeader {
                     Alignment2D::CENTER_LEFT,
                 )
                 .translate(Offset::x(Self::SUBCOMPONENTS_GAP))
+                // Visually align with the fuel gauge icon
+                .translate(Offset::y(1))
             };
             self.label_area = label_area;
             self.label.place(label_area);
@@ -489,7 +491,7 @@ impl Component for HomescreenHeader {
         if self.show_indicators {
             self.fuel_gauge.event(ctx, event);
             let connection_event = self.connection_indicator.event(ctx, event);
-            if matches!(event, Event::PM(_)) || connection_event.is_some() {
+            if matches!(event, Event::Attach(_) | Event::PM(_)) || connection_event.is_some() {
                 // TODO: could FuelGauge also return Some(()) on update?
                 self.place(self.area);
                 ctx.request_paint();
