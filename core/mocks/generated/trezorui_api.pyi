@@ -701,7 +701,7 @@ def show_info_with_cancel(
     horizontal: bool = False,
     chunkify: bool = False,
 ) -> LayoutObj[UiResult]:
-    """Show metadata for outgoing transaction."""
+    """Show metadata for outgoing transaction with a 'close' button."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
