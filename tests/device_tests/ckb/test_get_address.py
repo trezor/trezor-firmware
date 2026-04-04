@@ -13,13 +13,19 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ckb, pytest.mark.models("core")]
 @parametrize_using_common_fixtures("ckb/get_address.json")
 def test_get_address(session: Session, parameters, result):
     address_n = parse_path(parameters["path"])
-    address = ckb.get_address(session, address_n, show_display=True, network="Mainnet")
+    network = parameters["network"]
+    address = ckb.get_address(session, address_n, show_display=True, network=network)
     assert address == result["address"]
 
 
 def test_invalid_path(session: Session):
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         ckb.get_address(session, parse_path("m/44h/999h/0h/0/0"), show_display=True, network="Mainnet")
+
+
+def test_rejects_invalid_network(session: Session):
+    with pytest.raises(TrezorFailure, match="Invalid CKB network"):
+        ckb.get_address(session, parse_path("m/44h/309h/0h/0/0"), show_display=False, network="Devnet")
 
 
 def test_get_address_cancel_show(session: Session):

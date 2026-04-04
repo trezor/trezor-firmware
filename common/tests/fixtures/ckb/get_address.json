@@ -6,34 +6,78 @@
   "tests": [
     {
       "parameters": {
-        "path": "m/44'/309'/0'/0/0"
+        "path": "m/44'/309'/0'/0/0",
+        "network": "Mainnet"
       },
       "result": {
         "address": "ckb1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqg2l882x57v5q8tzu78ggz50c6c46k39rcdwx5zg"
       }
     },
     {
+      "name": "testnet_account_0_address_0",
       "parameters": {
-        "path": "m/44'/309'/0'/0/1"
+        "path": "m/44'/309'/0'/0/0",
+        "network": "Testnet"
+      },
+      "result": {
+        "address": "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqg2l882x57v5q8tzu78ggz50c6c46k39rcrudmgs"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/44'/309'/0'/0/1",
+        "network": "Mainnet"
       },
       "result": {
         "address": "ckb1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsq275lj4dh3wd9jc5qthe2z6xfkqqptuwmq8yvn72"
       }
     },
     {
+      "name": "testnet_account_0_address_1",
       "parameters": {
-        "path": "m/44'/309'/1'/0/0"
+        "path": "m/44'/309'/0'/0/1",
+        "network": "Testnet"
+      },
+      "result": {
+        "address": "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsq275lj4dh3wd9jc5qthe2z6xfkqqptuwmqfk8u5j"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/44'/309'/1'/0/0",
+        "network": "Mainnet"
       },
       "result": {
         "address": "ckb1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqw6ddg6dtx3xvfxwwj36hf73m4rxyhvp6qsv346a"
       }
     },
     {
+      "name": "testnet_account_1_address_0",
       "parameters": {
-        "path": "m/44'/309'/2'/0/0"
+        "path": "m/44'/309'/1'/0/0",
+        "network": "Testnet"
+      },
+      "result": {
+        "address": "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqw6ddg6dtx3xvfxwwj36hf73m4rxyhvp6q7766s9"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/44'/309'/2'/0/0",
+        "network": "Mainnet"
       },
       "result": {
         "address": "ckb1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqt2a2648udlhp4p6ewae4flgvuugfq6ykc93s8l9"
+      }
+    },
+    {
+      "name": "testnet_account_2_address_0",
+      "parameters": {
+        "path": "m/44'/309'/2'/0/0",
+        "network": "Testnet"
+      },
+      "result": {
+        "address": "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqt2a2648udlhp4p6ewae4flgvuugfq6ykctrmg4a"
       }
     }
   ]
