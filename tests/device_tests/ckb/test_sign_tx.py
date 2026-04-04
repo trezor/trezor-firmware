@@ -102,3 +102,29 @@ def test_sign_tx_invalid_path(session: Session):
             outputs=outputs,
             network="Mainnet",
         )
+
+
+def test_rejects_invalid_network(session: Session):
+    inputs = [
+        ckb.create_cell_input(
+            tx_hash="d7aa3d44cd6e05823e9b76e4f74932545707832785e3a8ed92b7e409f46c18ac",
+            index=0,
+        )
+    ]
+    outputs = [
+        ckb.create_cell_output(
+            capacity=10000000000,
+            lock_code_hash="9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+            lock_hash_type=1,
+            lock_args="abcdef0123456789abcdef0123456789abcdef01",
+        )
+    ]
+
+    with pytest.raises(TrezorFailure, match="Invalid CKB network"):
+        ckb.sign_tx(
+            session,
+            parse_path("m/44h/309h/0h/0/0"),
+            inputs=inputs,
+            outputs=outputs,
+            network="Devnet",
+        )

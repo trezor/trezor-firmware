@@ -361,6 +361,10 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
 
     await paths.validate_path(keychain, msg.address_n)
 
+    network = msg.network or "Mainnet"
+    if network not in ("Mainnet", "Testnet"):
+        raise DataError("Invalid CKB network")
+
     # Collect inputs
     inputs: list["CKBCellInput"] = []
     for i in range(msg.inputs_count):
@@ -411,7 +415,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
                 output.lock_code_hash,
                 output.lock_hash_type,
                 output.lock_args,
-                msg.network or "Mainnet",
+                network,
             )
             amount_str = helpers.format_amount(output.capacity)
 
