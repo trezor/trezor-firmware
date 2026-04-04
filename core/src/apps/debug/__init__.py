@@ -15,7 +15,6 @@ if __debug__:
     from trezor import io, log, loop, ui, utils, wire, workflow
     from trezor.enums import DebugTouchEventType, DebugWaitType, MessageType
     from trezor.messages import Success
-    from trezor.ui import display
 
     if TYPE_CHECKING:
         from typing import Any, Awaitable, Callable, NoReturn
@@ -344,6 +343,8 @@ if __debug__:
             return _state(msg.return_empty_state)
 
     async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:
+        from trezor.ui import display
+
         if msg.target_directory:
             # Ensure we consistently start at a layout, instead of randomly sometimes
             # hitting the pause between layouts and rendering the "upcoming" one.
