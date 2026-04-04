@@ -10,7 +10,7 @@
 ^\./crypto/sha3
 ^\./legacy/vendor
 ^\./core/embed/sys/dbg/stm32/systemview
-^\./core/embed/io/nfc/rfal
+^\./core/embed/io/nfc/st25/rfal*
 ^\./nordic/trezor/radio_test
 ^\./nordic/trezor/direct_test_mode
 ^\./nordic/trezor/.*build
