@@ -64,8 +64,8 @@ void fw_check(fw_info_t *fw_info) {
   volatile secbool version_ok = secfalse;
   volatile secbool secmon_valid = secfalse;
 
-  vhdr_present =
-      read_vendor_header((const uint8_t *)FIRMWARE_START, &fw_info->vhdr);
+  vhdr_present = read_vendor_header((const uint8_t *)FIRMWARE_START,
+                                    VENDOR_HEADER_MAX_SIZE, &fw_info->vhdr);
 
   if (sectrue == vhdr_present) {
     vhdr_keys_ok = check_vendor_header_keys(&fw_info->vhdr);

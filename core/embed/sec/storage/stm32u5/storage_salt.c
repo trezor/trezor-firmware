@@ -37,7 +37,9 @@ void storage_salt_get(storage_salt_t* salt) {
   memset(salt, 0, sizeof(*salt));
 
   vendor_header vhdr = {0};
-  ensure(read_vendor_header((const uint8_t*)FIRMWARE_START, &vhdr), NULL);
+  ensure(read_vendor_header((const uint8_t*)FIRMWARE_START,
+                            VENDOR_HEADER_MAX_SIZE, &vhdr),
+         NULL);
 
   _Static_assert(SECRET_KEY_STORAGE_SALT_SIZE <= sizeof(salt->bytes));
   secbool retval = secret_key_storage_salt(vhdr.fw_type, salt->bytes);

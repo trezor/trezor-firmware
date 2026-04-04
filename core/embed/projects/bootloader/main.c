@@ -117,7 +117,8 @@ static secbool is_manufacturing_mode(void) {
 
   vendor_header vhdr;
   memset(&vhdr, 0, sizeof(vhdr));
-  (void)!read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr);
+  (void)!read_vendor_header((const uint8_t *)FIRMWARE_START,
+                            VENDOR_HEADER_MAX_SIZE, &vhdr);
 
   if ((vhdr.vtrust & VTRUST_ALLOW_PROVISIONING) != VTRUST_ALLOW_PROVISIONING) {
     return secfalse;
@@ -377,7 +378,8 @@ void real_jump_to_firmware(void) {
   const image_header *hdr = NULL;
   vendor_header vhdr = {0};
 
-  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr),
+  ensure(read_vendor_header((const uint8_t *)FIRMWARE_START,
+                            VENDOR_HEADER_MAX_SIZE, &vhdr),
          "Firmware is corrupted");
 
   ensure(check_vendor_header_keys(&vhdr), "Firmware is corrupted");

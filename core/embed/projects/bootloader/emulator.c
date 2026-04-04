@@ -75,7 +75,7 @@ bool load_firmware(const char *filename, uint8_t *hash) {
 
   // read vendor and image header
   vendor_header vhdr;
-  if (sectrue != read_vendor_header(buffer, &vhdr)) {
+  if (sectrue != read_vendor_header(buffer, sizeof(buffer), &vhdr)) {
     printf("File '%s' does not contain a valid vendor header.\n", filename);
     return false;
   }

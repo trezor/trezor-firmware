@@ -111,7 +111,8 @@ secbool firmware_get_vendor(char* buff, size_t buff_size) {
 
   memset(buff, 0, buff_size);
 
-  if (data == NULL || sectrue != read_vendor_header(data, &vhdr)) {
+  if (data == NULL ||
+      sectrue != read_vendor_header(data, VENDOR_HEADER_MAX_SIZE, &vhdr)) {
     return secfalse;
   }
 
