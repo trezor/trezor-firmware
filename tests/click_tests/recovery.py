@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from trezorlib.debuglink import LayoutType
 
 from .. import translations as TR
+from ..recovery_helpers import navigate_to_keyboard
 from .common import go_next
 
 if TYPE_CHECKING:
@@ -168,8 +169,14 @@ def go_back_from_mnemonic(debug: "DebugLink") -> None:
     assert "MnemonicKeyboard" in layout.all_components()
 
     if debug.layout_type is LayoutType.Eckhart:
-        while "MnemonicKeyboard" in debug.read_layout().all_components():
+        for _ in range(100):  # max 100 erases to prevent infinite loop
+            if "MnemonicKeyboard" not in debug.read_layout().all_components():
+                break
             debug.click(debug.screen_buttons.mnemonic_erase())
+        if "MnemonicKeyboard" in debug.read_layout().all_components():
+            raise RuntimeError(
+                "MnemonicKeyboard still present after 100 erase attempts"
+            )
     else:
         raise ValueError("Unknown model")
 
@@ -194,8 +201,11 @@ def enter_share(
         debug.swipe_up()
         layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Eckhart:
-        debug.click(debug.screen_buttons.ok())
-        layout = debug.read_layout()
+        layout = navigate_to_keyboard(
+            debug,
+            component_names=("MnemonicKeyboard",),
+            max_attempts=10,
+        )
     else:
         raise ValueError("Unknown model")
 
