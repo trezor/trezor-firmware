@@ -64,10 +64,9 @@ SECTIONS {
     . = ALIGN(4);
   } >FLASH
 
-  .stack : ALIGN(8) {
-    . = 12K; /* Overflow causes UsageFault */
-  } >RAM
-
+  /* .data and .bss are intentionally placed before the .stack
+     section to ensure they are located in SRAM2, which is
+     cleared on security events */
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(4);
@@ -76,6 +75,10 @@ SECTIONS {
   .bss : ALIGN(4) {
     *(.bss*);
     . = ALIGN(4);
+  } >RAM
+
+  .stack : ALIGN(8) {
+    . = 80K; /* Overflow causes UsageFault */
   } >RAM
 
   .fb1 : ALIGN(4) {
