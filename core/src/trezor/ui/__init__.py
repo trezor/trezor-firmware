@@ -35,6 +35,8 @@ else:
 if __debug__:
     from trezorui_api import disable_animation
 
+    from apps.debug import notify_layout_change
+
     disable_animation(utils.DISABLE_ANIMATION)
 
 
@@ -143,12 +145,6 @@ class Layout(Generic[T]):
 
         def __str__(self) -> str:
             return f"{repr(self)}({self._trace(self.layout)[:150]})"
-
-        @staticmethod
-        def notify_debuglink(layout: "Layout | None") -> None:
-            from apps.debug import notify_layout_change
-
-            notify_layout_change(layout)
 
     def __init__(self, layout: LayoutObj[T]) -> None:
         """Set up a layout."""
@@ -269,7 +265,7 @@ class Layout(Generic[T]):
                         log.error(__name__, msg)
                     else:
                         raise wire.FirmwareError(msg)
-                self.notify_debuglink(None)
+                notify_layout_change(None)
 
     async def get_result(self) -> T:
         """Wait for, and return, the result of this UI layout."""
@@ -351,7 +347,7 @@ class Layout(Generic[T]):
             if self.button_request_ack_pending:
                 state = LayoutState.TRANSITIONING
             elif __debug__:
-                self.notify_debuglink(self)
+                notify_layout_change(self)
 
         if state is not None:
             self.state = state
@@ -497,7 +493,7 @@ class Layout(Generic[T]):
             self.button_request_ack_pending = False
             self.state = LayoutState.ATTACHED
             if __debug__:
-                self.notify_debuglink(self)
+                notify_layout_change(self)
 
     if utils.USE_BLE:
 
