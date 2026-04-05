@@ -2760,224 +2760,6 @@ impl ::protobuf::reflect::ProtobufValue for CKBTxAckCellDep {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.ckb.CKBSignedTx)
-#[derive(PartialEq,Clone,Default,Debug)]
-pub struct CKBSignedTx {
-    // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignedTx.signature)
-    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ckb.CKBSignedTx.tx_hash)
-    pub tx_hash: ::std::option::Option<::std::vec::Vec<u8>>,
-    // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.ckb.CKBSignedTx.special_fields)
-    pub special_fields: ::protobuf::SpecialFields,
-}
-
-impl<'a> ::std::default::Default for &'a CKBSignedTx {
-    fn default() -> &'a CKBSignedTx {
-        <CKBSignedTx as ::protobuf::Message>::default_instance()
-    }
-}
-
-impl CKBSignedTx {
-    pub fn new() -> CKBSignedTx {
-        ::std::default::Default::default()
-    }
-
-    // required bytes signature = 1;
-
-    pub fn signature(&self) -> &[u8] {
-        match self.signature.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_signature(&mut self) {
-        self.signature = ::std::option::Option::None;
-    }
-
-    pub fn has_signature(&self) -> bool {
-        self.signature.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
-        self.signature = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.signature.is_none() {
-            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.signature.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
-        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // required bytes tx_hash = 2;
-
-    pub fn tx_hash(&self) -> &[u8] {
-        match self.tx_hash.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_tx_hash(&mut self) {
-        self.tx_hash = ::std::option::Option::None;
-    }
-
-    pub fn has_tx_hash(&self) -> bool {
-        self.tx_hash.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_tx_hash(&mut self, v: ::std::vec::Vec<u8>) {
-        self.tx_hash = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_tx_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.tx_hash.is_none() {
-            self.tx_hash = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.tx_hash.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_tx_hash(&mut self) -> ::std::vec::Vec<u8> {
-        self.tx_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
-        let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "signature",
-            |m: &CKBSignedTx| { &m.signature },
-            |m: &mut CKBSignedTx| { &mut m.signature },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "tx_hash",
-            |m: &CKBSignedTx| { &m.tx_hash },
-            |m: &mut CKBSignedTx| { &mut m.tx_hash },
-        ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CKBSignedTx>(
-            "CKBSignedTx",
-            fields,
-            oneofs,
-        )
-    }
-}
-
-impl ::protobuf::Message for CKBSignedTx {
-    const NAME: &'static str = "CKBSignedTx";
-
-    fn is_initialized(&self) -> bool {
-        if self.signature.is_none() {
-            return false;
-        }
-        if self.tx_hash.is_none() {
-            return false;
-        }
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
-        while let Some(tag) = is.read_raw_tag_or_eof()? {
-            match tag {
-                10 => {
-                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                18 => {
-                    self.tx_hash = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                tag => {
-                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u64 {
-        let mut my_size = 0;
-        if let Some(v) = self.signature.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
-        }
-        if let Some(v) = self.tx_hash.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
-        }
-        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
-        self.special_fields.cached_size().set(my_size as u32);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.signature.as_ref() {
-            os.write_bytes(1, v)?;
-        }
-        if let Some(v) = self.tx_hash.as_ref() {
-            os.write_bytes(2, v)?;
-        }
-        os.write_unknown_fields(self.special_fields.unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn special_fields(&self) -> &::protobuf::SpecialFields {
-        &self.special_fields
-    }
-
-    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
-        &mut self.special_fields
-    }
-
-    fn new() -> CKBSignedTx {
-        CKBSignedTx::new()
-    }
-
-    fn clear(&mut self) {
-        self.signature = ::std::option::Option::None;
-        self.tx_hash = ::std::option::Option::None;
-        self.special_fields.clear();
-    }
-
-    fn default_instance() -> &'static CKBSignedTx {
-        static instance: CKBSignedTx = CKBSignedTx {
-            signature: ::std::option::Option::None,
-            tx_hash: ::std::option::Option::None,
-            special_fields: ::protobuf::SpecialFields::new(),
-        };
-        &instance
-    }
-}
-
-impl ::protobuf::MessageFull for CKBSignedTx {
-    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
-        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("CKBSignedTx").unwrap()).clone()
-    }
-}
-
-impl ::std::fmt::Display for CKBSignedTx {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for CKBSignedTx {
-    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
-}
-
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.ckb.CKBTxRequestType)
 pub enum CKBTxRequestType {
@@ -3090,11 +2872,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\x0b2%.hw.trezor.messages.ckb.CKBCellOutputR\x06output:\x05\x90\
     \xb2\x19\x81+\"W\n\x0fCKBTxAckCellDep\x12=\n\x08cell_dep\x18\x01\x20\x01\
     (\x0b2\".hw.trezor.messages.ckb.CKBCellDepR\x07cellDep:\x05\x90\xb2\x19\
-    \x82+\"K\n\x0bCKBSignedTx\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsi\
-    gnature\x12\x17\n\x07tx_hash\x18\x02\x20\x02(\x0cR\x06txHash:\x05\x90\
-    \xb2\x19\x83+*L\n\x10CKBTxRequestType\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\
-    \n\x08TXOUTPUT\x10\x01\x12\r\n\tTXCELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\
-    \x10\x03B7\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessageCKB\
+    \x82+*L\n\x10CKBTxRequestType\x12\x0b\n\x07TXINPUT\x10\0\x12\x0c\n\x08TX\
+    OUTPUT\x10\x01\x12\r\n\tTXCELLDEP\x10\x02\x12\x0e\n\nTXFINISHED\x10\x03B\
+    7\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessageCKB\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3113,7 +2893,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(13);
+            let mut messages = ::std::vec::Vec::with_capacity(12);
             messages.push(CKBGetAddress::generated_message_descriptor_data());
             messages.push(CKBAddress::generated_message_descriptor_data());
             messages.push(CKBCellInput::generated_message_descriptor_data());
@@ -3126,7 +2906,6 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(CKBTxAckInput::generated_message_descriptor_data());
             messages.push(CKBTxAckOutput::generated_message_descriptor_data());
             messages.push(CKBTxAckCellDep::generated_message_descriptor_data());
-            messages.push(CKBSignedTx::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(1);
             enums.push(CKBTxRequestType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
