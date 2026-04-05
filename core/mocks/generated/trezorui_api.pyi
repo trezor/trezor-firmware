@@ -345,7 +345,7 @@ def confirm_with_info(
     subtitle: str | None = None,
     items: Iterable[tuple[StrOrBytes, bool]],
     verb: str,
-    verb_info: str,
+    verb_info: str | None = None,
     verb_cancel: str | None = None,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:

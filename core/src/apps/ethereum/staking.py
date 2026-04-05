@@ -48,7 +48,7 @@ def get_approver(
     # local_cache_attribute
     data_length = msg.data_length
 
-    if msg.data_length > len(msg.data_initial_chunk):
+    if data_length > len(msg.data_initial_chunk):
         return None
 
     data_reader = BufferReader(msg.data_initial_chunk)

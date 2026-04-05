@@ -1,5 +1,7 @@
 from ubinascii import unhexlify
 
+from .yielding_vaults import KNOWN_VAULT
+
 KNOWN_ADDRESSES = {
     # https://github.com/LedgerHQ/clear-signing-erc7730-registry/blob/master/registry/1inch/calldata-AggregationRouterV6.json#L9
     unhexlify(
@@ -12,3 +14,5 @@ KNOWN_ADDRESSES = {
     # https://etherscan.io/address/0xe592427a0aece92de3edee1f18e0157c05861564
     unhexlify("e592427a0aece92de3edee1f18e0157c05861564"): "Uniswap V3 Router",
 }
+if __debug__:
+    KNOWN_ADDRESSES[KNOWN_VAULT[0]] = KNOWN_VAULT[2]

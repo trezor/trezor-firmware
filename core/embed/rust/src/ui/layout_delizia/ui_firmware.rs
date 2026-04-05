@@ -467,7 +467,7 @@ impl FirmwareUI for UIDelizia {
         subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
-        verb_info: TString<'static>,
+        verb_info: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
@@ -495,9 +495,7 @@ impl FirmwareUI for UIDelizia {
         }
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new().with_verb_info(Some(verb_info)),
-            ),
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_info(verb_info)),
             strings,
             ConfirmActionOptions::new(),
         )?;

@@ -650,7 +650,7 @@ async def should_show_more(
             title=title,
             items=items,
             verb=confirm or TR.buttons__confirm,
-            verb_info=TR.buttons__show_all if button_text is None else button_text,
+            verb_info=button_text,
         ),
         br_name,
         br_code,
@@ -686,6 +686,7 @@ async def _confirm_ask_pagination(
         if not await should_show_more(
             title,
             [(description, False), (data, True)],
+            button_text=TR.buttons__show_all,
             br_name=br_name,
             br_code=br_code,
             confirm=DOWN_ARROW if extra_confirmation_if_not_read else None,
@@ -740,7 +741,7 @@ async def confirm_blob_prefix(
     )
     confirmed_len += len(prefix)
 
-    button_text = TR.words__show_next if confirmed_len < total_len else ""
+    button_text = TR.words__show_next if confirmed_len < total_len else None
 
     show_more = await should_show_more(
         title=f"{title}:\n{confirmed_len} / {total_len} bytes",
@@ -1318,6 +1319,72 @@ if not utils.BITCOIN_ONLY:
             extra_items=info_items,
             extra_title=TR.confirm_total__title_fee,
             br_name=br_name,
+            br_code=br_code,
+        )
+
+    async def confirm_ethereum_vault_tx(
+        title: str,
+        intro_question: str,
+        verb: str,
+        vault_str: str,
+        total_amount: str,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        info_items: Iterable[StrPropertyType],
+        chain: str,
+        br_name: str = "ethereum/vault",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> None:
+
+        account_properties: list[StrPropertyType] = []
+        if account:
+            account_properties.append((TR.words__account, account, None))
+        if account_path:
+            account_properties.append(
+                (TR.address_details__derivation_path, account_path, None)
+            )
+
+        await confirm_value(
+            title=title,
+            value=intro_question,
+            description="",
+            br_name=br_name + "/intro",
+            br_code=br_code,
+            verb=TR.buttons__continue,
+            is_data=False,
+            info_items=account_properties if account_properties else None,
+            info_title=TR.address_details__account_info,
+        )
+
+        await confirm_value(
+            title=verb,
+            value=vault_str,
+            description="",
+            br_name=br_name + "/vault",
+            br_code=br_code,
+            verb=TR.buttons__continue,
+        )
+
+        await confirm_properties(
+            br_name=br_name + "/amount",
+            title=title,
+            props=[
+                (TR.ethereum__deposit_amount, total_amount, False),
+                (TR.words__chain, chain, False),
+            ],
+            br_code=br_code,
+        )
+
+        await _confirm_summary(
+            amount=None,
+            amount_label=None,
+            fee=maximum_fee,
+            fee_label=TR.send__maximum_fee,
+            title=title,
+            extra_items=info_items,
+            extra_title=TR.confirm_total__title_fee,
+            br_name=br_name + "/summary",
             br_code=br_code,
         )
 
