@@ -423,6 +423,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
                 address,
                 amount_str,
                 title=TR.send__confirm_sending,
+                chunkify=bool(msg.chunkify),
             )
 
     # Collect cell_deps
