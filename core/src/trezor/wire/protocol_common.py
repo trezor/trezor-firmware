@@ -133,6 +133,7 @@ class ButtonRequestHandler:
 
     def __init__(self, ctx: Context) -> None:
         self.ctx = ctx
+        self.ignore_host = False
 
     async def handle(
         self,
@@ -150,11 +151,16 @@ class ButtonRequestHandler:
             if br is None:
                 return
 
-            if __debug__:
-                log.info(__name__, "ButtonRequest sent: %s", br.name)
-            await self.ctx.call(br, ButtonAck)
-            if __debug__:
-                log.info(__name__, "ButtonRequest acked: %s", br.name)
+            if self.ignore_host:
+                if __debug__:
+                    log.debug(__name__, "ButtonRequest ignored: %s", br.name)
+            else:
+                if __debug__:
+                    log.info(__name__, "ButtonRequest sent: %s", br.name)
+                await self.ctx.call(br, ButtonAck)
+                if __debug__:
+                    log.info(__name__, "ButtonRequest acked: %s", br.name)
+
             if ack_callback is not None:
                 ack_callback()
 
@@ -182,7 +188,7 @@ class ContinueOnErrors(ButtonRequestHandler):
             except UnexpectedMessageException as exc:
                 # in case of THP channel preemption, `msg` is not set.
                 # TRANSPORT_BUSY error has been already sent by `InterfaceContext.handle_packet()`.
-                if exc.msg:
+                if exc.msg and not self.ignore_host:
                     from trezor.enums import FailureType
                     from trezor.messages import Failure
 
@@ -190,7 +196,13 @@ class ContinueOnErrors(ButtonRequestHandler):
                     await self.ctx.write(
                         Failure(code=FailureType.InProgress, message=self.msg)
                     )
-                # continue receiving messages
+                # continue receiving messages from the host
+            except Exception as exc:
+                self.ignore_host = True
+                if __debug__:
+                    log.error(__name__, "Ignoring host after I/O error")
+                    log.exception(__name__, exc)
+                # continue receiving messages from the host
 
     def __enter__(self) -> None:
         assert self._prev_handler is None
