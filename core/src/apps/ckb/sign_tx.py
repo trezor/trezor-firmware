@@ -413,6 +413,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         if not is_change:
             has_external_output = True
 
+    self_send_shown = False
     for output in outputs:
         is_change = (
             output.lock_args == sender_lock_args
@@ -421,7 +422,15 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
             and output.type_code_hash is None
         )
 
-        if not is_change or not has_external_output:
+        if not is_change:
+            show = True
+        elif not has_external_output and not self_send_shown:
+            show = True
+            self_send_shown = True
+        else:
+            show = False
+
+        if show:
             send_amount += output.capacity
             address = helpers.encode_address_full(
                 output.lock_code_hash,
