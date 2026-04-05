@@ -387,6 +387,7 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
     outputs: list["CKBCellOutput"] = []
     outputs_data: list[bytes] = []
     send_amount = 0
+    has_external_output = False
 
     for i in range(msg.outputs_count):
         req = CKBTxRequest(
@@ -410,6 +411,17 @@ async def sign_tx(msg: "CKBSignTx", keychain: "Keychain") -> "CKBTxRequest":
         )
 
         if not is_change:
+            has_external_output = True
+
+    for output in outputs:
+        is_change = (
+            output.lock_args == sender_lock_args
+            and output.lock_code_hash == sender_lock_code_hash
+            and output.lock_hash_type == sender_lock_hash_type
+            and output.type_code_hash is None
+        )
+
+        if not is_change or not has_external_output:
             send_amount += output.capacity
             address = helpers.encode_address_full(
                 output.lock_code_hash,
