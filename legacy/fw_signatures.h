@@ -78,7 +78,7 @@ bool firmware_present_new(void);
  * @param hdr header
  * @param hash store resulting hash here
  */
-void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]);
+void compute_firmware_fingerprint(const image_header* hdr, uint8_t hash[32]);
 
 /**
  * Compute fingerprint for given header. Fingerprint is done
@@ -92,7 +92,7 @@ void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]);
  * @param hdr header
  * @param hash store resulting hash here
  */
-void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
+void compute_firmware_fingerprint_for_verifymessage(const image_header* hdr,
                                                     uint8_t hash[32]);
 
 /**
@@ -108,7 +108,7 @@ void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
  * SignMessage/VerifyMessage scheme
  * @return SIG_OK or SIG_FAIL
  */
-int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
+int signatures_ok(const image_header* hdr, uint8_t store_fingerprint[32],
                   secbool use_verifymessage);
 
 /**
@@ -121,14 +121,14 @@ int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
  * @param store_fingerprint if non-NULL, store v2 fingerprint here (not v3)
  * @return SIG_OK or SIG_FAIL
  */
-int signatures_match(const image_header *hdr, uint8_t store_fingerprint[32]);
+int signatures_match(const image_header* hdr, uint8_t store_fingerprint[32]);
 
 /**
  * Check hashes of FW chunks according to what header says they should be.
  * @param hdr header with chunk hashes
  * @return SIG_OK or SIG_FAIL
  */
-int check_firmware_hashes(const image_header *hdr);
+int check_firmware_hashes(const image_header* hdr);
 
 /**
  * Check that block of memory is zeroed. Not constant-time.
@@ -137,6 +137,6 @@ int check_firmware_hashes(const image_header *hdr);
  * @param len length in bytes
  * @return 0 for false or 1 for true
  */
-int mem_is_empty(const uint8_t *src, uint32_t len);
+int mem_is_empty(const uint8_t* src, uint32_t len);
 
 #endif

@@ -23,7 +23,7 @@
 #include <string.h>
 
 #if (!defined __APPLE__) && (!defined HAVE_STRLCPY)
-size_t strlcpy(char *dst, const char *src, size_t size) {
+size_t strlcpy(char* dst, const char* src, size_t size) {
   size_t ret = strlen(src);
 
   if (size) {
@@ -35,7 +35,7 @@ size_t strlcpy(char *dst, const char *src, size_t size) {
   return ret;
 }
 
-size_t strlcat(char *dst, const char *src, size_t size) {
+size_t strlcat(char* dst, const char* src, size_t size) {
   size_t n = strnlen(dst, size);
 
   return n + strlcpy(&dst[n], src, size - n);

@@ -45,11 +45,11 @@
 ///     used (see CIP-3).
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
-                                                       const mp_obj_t *args) {
+                                                       const mp_obj_t* args) {
   mp_buffer_info_t binary_mnemonic = {0}, phrase = {0};
   mp_get_buffer_raise(args[0], &binary_mnemonic, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &phrase, MP_BUFFER_READ);
-  const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
+  const char* ppassphrase = phrase.len > 0 ? phrase.buf : "";
 
   bool trezor_derivation = mp_obj_is_true(args[2]);
 
@@ -75,9 +75,9 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
     mnemonic_bytes_used = entropy_bytes + (binary_mnemonic.len / 33);
   }
   const int res = secret_from_entropy_cardano_icarus(
-      (const uint8_t *)ppassphrase, phrase.len,
-      (const uint8_t *)binary_mnemonic.buf, mnemonic_bytes_used,
-      (uint8_t *)vstr.buf, callback);
+      (const uint8_t*)ppassphrase, phrase.len,
+      (const uint8_t*)binary_mnemonic.buf, mnemonic_bytes_used,
+      (uint8_t*)vstr.buf, callback);
 
   ui_wait_callback = mp_const_none;
 
@@ -104,7 +104,7 @@ STATIC mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret length"));
   }
 
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
+  mp_obj_HDNode_t* o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
   o->base.type = &mod_trezorcrypto_HDNode_type;
   const int res = hdnode_from_secret_cardano(bufinfo.buf, &o->hdnode);
   if (res != 1) {
@@ -147,7 +147,7 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
         MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
 
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
+  mp_obj_HDNode_t* o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
   o->base.type = &mod_trezorcrypto_HDNode_type;
   o->hdnode = hdnode;
   o->fingerprint = hdnode_fingerprint(&o->hdnode);
@@ -184,7 +184,7 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_ledger(mp_obj_t seed) {
         MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
 
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
+  mp_obj_HDNode_t* o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
   o->base.type = &mod_trezorcrypto_HDNode_type;
   o->hdnode = hdnode;
   o->fingerprint = hdnode_fingerprint(&o->hdnode);
@@ -210,7 +210,7 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_cardano_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_cardano_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_cardano_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_cardano_globals,
 };
 
 #endif  // !BITCOIN_ONLY

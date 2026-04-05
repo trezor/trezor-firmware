@@ -36,9 +36,9 @@ typedef struct _mp_obj_USBIF_t {
 /// ) -> None:
 ///     """
 ///     """
-STATIC mp_obj_t mod_trezorio_USBIF_make_new(const mp_obj_type_t *type,
+STATIC mp_obj_t mod_trezorio_USBIF_make_new(const mp_obj_type_t* type,
                                             size_t n_args, size_t n_kw,
-                                            const mp_obj_t *args) {
+                                            const mp_obj_t* args) {
   STATIC const mp_arg_t allowed_args[] = {
       {MP_QSTR_handle,
        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT,
@@ -52,7 +52,7 @@ STATIC mp_obj_t mod_trezorio_USBIF_make_new(const mp_obj_type_t *type,
 
   CHECK_PARAM_RANGE(handle, 0, 32)
 
-  mp_obj_USBIF_t *o = mp_obj_malloc(mp_obj_USBIF_t, type);
+  mp_obj_USBIF_t* o = mp_obj_malloc(mp_obj_USBIF_t, type);
 
   o->handle = handle;
 
@@ -64,7 +64,7 @@ STATIC mp_obj_t mod_trezorio_USBIF_make_new(const mp_obj_type_t *type,
 ///     Returns the configured number of this interface.
 ///     """
 STATIC mp_obj_t mod_trezorio_USBIF_iface_num(mp_obj_t self) {
-  mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_USBIF_t* o = MP_OBJ_TO_PTR(self);
   return MP_OBJ_NEW_SMALL_INT(o->handle);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USBIF_iface_num_obj,
@@ -75,7 +75,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USBIF_iface_num_obj,
 ///     Sends message using USB interface.
 ///     """
 STATIC mp_obj_t mod_trezorio_USBIF_write(mp_obj_t self, mp_obj_t msg) {
-  mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_USBIF_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
 
@@ -101,7 +101,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USBIF_write_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_USBIF_write_blocking(mp_obj_t self, mp_obj_t msg,
                                                   mp_obj_t timeout_ms) {
-  mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(self);
+  mp_obj_USBIF_t* o = MP_OBJ_TO_PTR(self);
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
 
@@ -122,8 +122,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_USBIF_write_blocking_obj,
 ///     """
 ///     Reads message using USB interface
 ///     """
-STATIC mp_obj_t mod_trezorio_USBIF_read(size_t n_args, const mp_obj_t *args) {
-  mp_obj_USBIF_t *o = MP_OBJ_TO_PTR(args[0]);
+STATIC mp_obj_t mod_trezorio_USBIF_read(size_t n_args, const mp_obj_t* args) {
+  mp_obj_USBIF_t* o = MP_OBJ_TO_PTR(args[0]);
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(args[1], &buf, MP_BUFFER_WRITE);
 
@@ -147,7 +147,7 @@ STATIC mp_obj_t mod_trezorio_USBIF_read(size_t n_args, const mp_obj_t *args) {
   }
 
   ssize_t r =
-      syshandle_read(o->handle, &((uint8_t *)buf.buf)[offset], USB_PACKET_LEN);
+      syshandle_read(o->handle, &((uint8_t*)buf.buf)[offset], USB_PACKET_LEN);
 
   if (r != USB_PACKET_LEN) {
     mp_raise_msg(&mp_type_RuntimeError,
@@ -182,5 +182,5 @@ STATIC const mp_obj_type_t mod_trezorio_USBIF_type = {
     {&mp_type_type},
     .name = MP_QSTR_USBIF,
     .make_new = mod_trezorio_USBIF_make_new,
-    .locals_dict = (void *)&mod_trezorio_USBIF_locals_dict,
+    .locals_dict = (void*)&mod_trezorio_USBIF_locals_dict,
 };

@@ -32,25 +32,25 @@
 #include "stwlc38_defs.h"
 #include "stwlc38_internal.h"
 
-static i2c_status_t stwlc38_write_fw_register(i2c_bus_t *i2c_bus,
+static i2c_status_t stwlc38_write_fw_register(i2c_bus_t* i2c_bus,
                                               uint16_t address, uint8_t value);
-static i2c_status_t stwlc38_write_hw_register(i2c_bus_t *i2c_bus,
+static i2c_status_t stwlc38_write_hw_register(i2c_bus_t* i2c_bus,
                                               uint32_t address, uint8_t vaule);
-static i2c_status_t stwlc38_read_fw_register(i2c_bus_t *i2c_bus,
-                                             uint16_t address, uint8_t *data);
-static i2c_status_t stwlc38_write_n_bytes(i2c_bus_t *i2c_bus, uint16_t address,
-                                          uint8_t *data, size_t size);
-static i2c_status_t stwlc38_read_n_bytes(i2c_bus_t *i2c_bus, uint16_t address,
-                                         uint8_t *data, size_t size);
-static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t *i2c_bus,
-                                             const uint8_t *data, size_t size,
+static i2c_status_t stwlc38_read_fw_register(i2c_bus_t* i2c_bus,
+                                             uint16_t address, uint8_t* data);
+static i2c_status_t stwlc38_write_n_bytes(i2c_bus_t* i2c_bus, uint16_t address,
+                                          uint8_t* data, size_t size);
+static i2c_status_t stwlc38_read_n_bytes(i2c_bus_t* i2c_bus, uint16_t address,
+                                         uint8_t* data, size_t size);
+static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t* i2c_bus,
+                                             const uint8_t* data, size_t size,
                                              uint8_t sec_idx);
-static i2c_status_t stwlc38_nvm_write_bulk(i2c_bus_t *i2c_bus,
-                                           const uint8_t *data, size_t size,
+static i2c_status_t stwlc38_nvm_write_bulk(i2c_bus_t* i2c_bus,
+                                           const uint8_t* data, size_t size,
                                            uint8_t sec_idx);
 
 bool stwlc38_patch_and_config() {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
   i2c_status_t status;
 
   if (!drv->initialized) {
@@ -100,7 +100,7 @@ bool stwlc38_patch_and_config() {
     return false;
   }
 
-  const uint8_t *config_data;
+  const uint8_t* config_data;
   if (chip_rev == STWLC38_CUT_1_2) {
     config_data = cfg_data_cut_1_2;
   } else if (chip_rev == STWLC38_CUT_1_3) {
@@ -135,8 +135,8 @@ bool stwlc38_patch_and_config() {
   return true;
 }
 
-bool stwlc38_read_chip_info(stwlc38_chip_info_t *chip_info) {
-  stwlc38_driver_t *drv = &g_stwlc38_driver;
+bool stwlc38_read_chip_info(stwlc38_chip_info_t* chip_info) {
+  stwlc38_driver_t* drv = &g_stwlc38_driver;
 
   if (!drv->initialized) {
     return false;
@@ -148,7 +148,7 @@ bool stwlc38_read_chip_info(stwlc38_chip_info_t *chip_info) {
 
   // Read first block of chip information (Address 0x0000 - 0x000F)
   i2c_status_t ret = stwlc38_read_n_bytes(
-      drv->i2c_bus, STWLC38_FWREG_CHIP_ID_REG, (uint8_t *)&raw_data, 15);
+      drv->i2c_bus, STWLC38_FWREG_CHIP_ID_REG, (uint8_t*)&raw_data, 15);
   if (ret != I2C_STATUS_OK) {
     systimer_resume(drv->timer, lock);
     return false;
@@ -166,7 +166,7 @@ bool stwlc38_read_chip_info(stwlc38_chip_info_t *chip_info) {
 
   // Read second block of chip information - device ID (Address 0x0010 - 0x001F)
   ret = stwlc38_read_n_bytes(drv->i2c_bus, STWLC38_FWREG_DEVICE_ID_REG,
-                             (uint8_t *)&raw_data, 16);
+                             (uint8_t*)&raw_data, 16);
   if (ret != I2C_STATUS_OK) {
     systimer_resume(drv->timer, lock);
     return false;
@@ -177,7 +177,7 @@ bool stwlc38_read_chip_info(stwlc38_chip_info_t *chip_info) {
   // Read third block of chip information - system error (Address 0x002C -
   // 0x002F)
   ret = stwlc38_read_n_bytes(drv->i2c_bus, STWLC38_FWREG_SYS_ERR_REG,
-                             (uint8_t *)&raw_data, 4);
+                             (uint8_t*)&raw_data, 4);
   if (ret != I2C_STATUS_OK) {
     systimer_resume(drv->timer, lock);
     return false;
@@ -190,7 +190,7 @@ bool stwlc38_read_chip_info(stwlc38_chip_info_t *chip_info) {
   return true;
 }
 
-static i2c_status_t stwlc38_write_fw_register(i2c_bus_t *i2c_bus,
+static i2c_status_t stwlc38_write_fw_register(i2c_bus_t* i2c_bus,
                                               uint16_t address, uint8_t value) {
   i2c_status_t status;
 
@@ -204,7 +204,7 @@ static i2c_status_t stwlc38_write_fw_register(i2c_bus_t *i2c_bus,
 
   i2c_packet_t i2c_pkt = {
       .address = STWLC38_I2C_ADDRESS,
-      .ops = (i2c_op_t *)&op,
+      .ops = (i2c_op_t*)&op,
       .op_count = ARRAY_LENGTH(op),
   };
 
@@ -213,8 +213,8 @@ static i2c_status_t stwlc38_write_fw_register(i2c_bus_t *i2c_bus,
   return status;
 }
 
-static i2c_status_t stwlc38_read_fw_register(i2c_bus_t *i2c_bus,
-                                             uint16_t address, uint8_t *data) {
+static i2c_status_t stwlc38_read_fw_register(i2c_bus_t* i2c_bus,
+                                             uint16_t address, uint8_t* data) {
   i2c_op_t op[] = {
       {
           .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
@@ -230,7 +230,7 @@ static i2c_status_t stwlc38_read_fw_register(i2c_bus_t *i2c_bus,
 
   i2c_packet_t i2c_pkt = {
       .address = STWLC38_I2C_ADDRESS,
-      .ops = (i2c_op_t *)&op,
+      .ops = (i2c_op_t*)&op,
       .op_count = ARRAY_LENGTH(op),
   };
 
@@ -239,7 +239,7 @@ static i2c_status_t stwlc38_read_fw_register(i2c_bus_t *i2c_bus,
   return status;
 }
 
-static i2c_status_t stwlc38_write_hw_register(i2c_bus_t *i2c_bus,
+static i2c_status_t stwlc38_write_hw_register(i2c_bus_t* i2c_bus,
                                               uint32_t address, uint8_t value) {
   i2c_op_t op[] = {
       {
@@ -262,7 +262,7 @@ static i2c_status_t stwlc38_write_hw_register(i2c_bus_t *i2c_bus,
 
   i2c_packet_t i2c_pkt = {
       .address = STWLC38_I2C_ADDRESS,
-      .ops = (i2c_op_t *)&op,
+      .ops = (i2c_op_t*)&op,
       .op_count = ARRAY_LENGTH(op),
   };
 
@@ -270,8 +270,8 @@ static i2c_status_t stwlc38_write_hw_register(i2c_bus_t *i2c_bus,
   return status;
 }
 
-static i2c_status_t stwlc38_write_n_bytes(i2c_bus_t *i2c_bus, uint16_t address,
-                                          uint8_t *data, size_t size) {
+static i2c_status_t stwlc38_write_n_bytes(i2c_bus_t* i2c_bus, uint16_t address,
+                                          uint8_t* data, size_t size) {
   i2c_op_t op[] = {
       {
           .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
@@ -287,7 +287,7 @@ static i2c_status_t stwlc38_write_n_bytes(i2c_bus_t *i2c_bus, uint16_t address,
 
   i2c_packet_t i2c_pkt = {
       .address = STWLC38_I2C_ADDRESS,
-      .ops = (i2c_op_t *)&op,
+      .ops = (i2c_op_t*)&op,
       .op_count = ARRAY_LENGTH(op),
   };
 
@@ -295,8 +295,8 @@ static i2c_status_t stwlc38_write_n_bytes(i2c_bus_t *i2c_bus, uint16_t address,
   return status;
 }
 
-static i2c_status_t stwlc38_read_n_bytes(i2c_bus_t *i2c_bus, uint16_t address,
-                                         uint8_t *data, size_t size) {
+static i2c_status_t stwlc38_read_n_bytes(i2c_bus_t* i2c_bus, uint16_t address,
+                                         uint8_t* data, size_t size) {
   i2c_op_t op[] = {
       {
           .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
@@ -312,7 +312,7 @@ static i2c_status_t stwlc38_read_n_bytes(i2c_bus_t *i2c_bus, uint16_t address,
 
   i2c_packet_t i2c_pkt = {
       .address = STWLC38_I2C_ADDRESS,
-      .ops = (i2c_op_t *)&op,
+      .ops = (i2c_op_t*)&op,
       .op_count = ARRAY_LENGTH(op),
   };
 
@@ -320,8 +320,8 @@ static i2c_status_t stwlc38_read_n_bytes(i2c_bus_t *i2c_bus, uint16_t address,
   return status;
 }
 
-static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t *i2c_bus,
-                                             const uint8_t *data, size_t size,
+static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t* i2c_bus,
+                                             const uint8_t* data, size_t size,
                                              uint8_t sec_idx) {
   int32_t ret;
   int32_t i;
@@ -346,7 +346,7 @@ static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t *i2c_bus,
       ret = stwlc38_write_n_bytes(
           i2c_bus,
           STWLC38_FWREG_AUX_DATA_00_REG + chunk * STWLC38_MAX_WRITE_CHUNK,
-          ((uint8_t *)(data)) + chunk * STWLC38_MAX_WRITE_CHUNK,
+          ((uint8_t*)(data)) + chunk * STWLC38_MAX_WRITE_CHUNK,
           STWLC38_MAX_WRITE_CHUNK);
       if (ret != I2C_STATUS_OK) {
         return ret;
@@ -358,7 +358,7 @@ static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t *i2c_bus,
       ret = stwlc38_write_n_bytes(
           i2c_bus,
           STWLC38_FWREG_AUX_DATA_00_REG + chunk * STWLC38_MAX_WRITE_CHUNK,
-          ((uint8_t *)data) + chunk * STWLC38_MAX_WRITE_CHUNK, remaining);
+          ((uint8_t*)data) + chunk * STWLC38_MAX_WRITE_CHUNK, remaining);
       if (ret != I2C_STATUS_OK) {
         return ret;
       }
@@ -396,8 +396,8 @@ static i2c_status_t stwlc38_nvm_write_sector(i2c_bus_t *i2c_bus,
   return timeout ? I2C_STATUS_TIMEOUT : I2C_STATUS_OK;
 }
 
-static i2c_status_t stwlc38_nvm_write_bulk(i2c_bus_t *i2c_bus,
-                                           const uint8_t *data, size_t size,
+static i2c_status_t stwlc38_nvm_write_bulk(i2c_bus_t* i2c_bus,
+                                           const uint8_t* data, size_t size,
                                            uint8_t sec_idx) {
   int32_t ret;
   size_t remaining = size;

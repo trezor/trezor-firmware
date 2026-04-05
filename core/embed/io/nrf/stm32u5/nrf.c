@@ -43,7 +43,7 @@
 nrf_driver_t g_nrf_driver = {0};
 
 void nrf_start(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return;
   }
@@ -58,7 +58,7 @@ void nrf_start(void) {
   }
 }
 
-void nrf_complete_current_request(nrf_driver_t *drv, nrf_status_t status) {
+void nrf_complete_current_request(nrf_driver_t* drv, nrf_status_t status) {
   if (drv->tx_request_id >= 0) {
     if (drv->tx_request.callback != NULL) {
       drv->tx_request.callback(status, drv->tx_request.context);
@@ -68,13 +68,13 @@ void nrf_complete_current_request(nrf_driver_t *drv, nrf_status_t status) {
   }
 }
 
-static void nrf_abort_comm(nrf_driver_t *drv) {
+static void nrf_abort_comm(nrf_driver_t* drv) {
   HAL_SPI_Abort(&drv->spi);
   drv->pending_spi_transaction = false;
 
   nrf_complete_current_request(drv, NRF_STATUS_ERROR);
 
-  while (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
+  while (tsqueue_dequeue(&drv->tx_queue, (uint8_t*)&drv->tx_request,
                          sizeof(nrf_tx_request_t), NULL, NULL)) {
     if (drv->tx_request.callback != NULL) {
       drv->tx_request.callback(NRF_STATUS_ERROR, drv->tx_request.context);
@@ -87,7 +87,7 @@ static void nrf_abort_comm(nrf_driver_t *drv) {
 }
 
 void nrf_stop(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return;
   }
@@ -99,8 +99,8 @@ void nrf_stop(void) {
   irq_unlock(key);
 }
 
-void nrf_management_rx_cb(const uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
+void nrf_management_rx_cb(const uint8_t* data, uint32_t len) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return;
   }
@@ -119,8 +119,8 @@ void nrf_management_rx_cb(const uint8_t *data, uint32_t len) {
   }
 }
 
-void nrf_timer_callback(void *context) {
-  nrf_driver_t *drv = (nrf_driver_t *)context;
+void nrf_timer_callback(void* context) {
+  nrf_driver_t* drv = (nrf_driver_t*)context;
   if (drv->initialized && drv->pending_spi_transaction) {
     nrf_signal_data_ready();
     systick_delay_us(1);
@@ -130,7 +130,7 @@ void nrf_timer_callback(void *context) {
 }
 
 void nrf_init(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
 
   if (drv->initialized) {
     return;
@@ -141,9 +141,8 @@ void nrf_init(void) {
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   memset(drv, 0, sizeof(*drv));
-  tsqueue_init(&drv->tx_queue, drv->tx_queue_entries,
-               (uint8_t *)drv->tx_buffers, sizeof(nrf_tx_request_t),
-               TX_QUEUE_SIZE);
+  tsqueue_init(&drv->tx_queue, drv->tx_queue_entries, (uint8_t*)drv->tx_buffers,
+               sizeof(nrf_tx_request_t), TX_QUEUE_SIZE);
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -226,7 +225,7 @@ void nrf_init(void) {
   }
 }
 
-static void nrf_deinit_common(nrf_driver_t *drv) {
+static void nrf_deinit_common(nrf_driver_t* drv) {
   nrf_stop();
 
   systimer_delete(drv->timer);
@@ -254,7 +253,7 @@ static void nrf_deinit_common(nrf_driver_t *drv) {
 }
 
 void nrf_suspend(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
 
   uint8_t data[1] = {MGMT_CMD_SUSPEND};
   nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL);
@@ -267,7 +266,7 @@ void nrf_suspend(void) {
 }
 
 void nrf_resume(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
 
   drv->timer = systimer_create(nrf_timer_callback, drv);
 
@@ -322,7 +321,7 @@ void nrf_resume(void) {
 }
 
 void nrf_deinit(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
 
   if (drv->initialized) {
     NVIC_DisableIRQ(NRF_EXTI_INTERRUPT_NUM);
@@ -337,7 +336,7 @@ void nrf_deinit(void) {
 
 bool nrf_register_listener(nrf_service_id_t service,
                            nrf_rx_callback_t callback) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return false;
   }
@@ -358,7 +357,7 @@ bool nrf_register_listener(nrf_service_id_t service,
 }
 
 void nrf_unregister_listener(nrf_service_id_t service) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return;
   }
@@ -376,7 +375,7 @@ void NRF_EXTI_INTERRUPT_HANDLER(void) {
   IRQ_LOG_ENTER();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
 
 #ifdef USE_SUSPEND
   if (drv->wakeup) {
@@ -456,7 +455,7 @@ void nrf_signal_no_data(void) {
 }
 
 bool nrf_is_running(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return false;
   }
@@ -466,8 +465,8 @@ bool nrf_is_running(void) {
   return drv->comm_running;
 }
 
-bool nrf_get_info(nrf_info_t *info) {
-  nrf_driver_t *drv = &g_nrf_driver;
+bool nrf_get_info(nrf_info_t* info) {
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return false;
   }
@@ -492,7 +491,7 @@ bool nrf_get_info(nrf_info_t *info) {
 }
 
 uint32_t nrf_get_version(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return 0;
   }
@@ -521,7 +520,7 @@ uint32_t nrf_get_version(void) {
 }
 
 bool nrf_system_off(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return false;
   }
@@ -546,7 +545,7 @@ bool nrf_system_off(void) {
 }
 
 bool nrf_authenticate(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
+  nrf_driver_t* drv = &g_nrf_driver;
   if (!drv->initialized) {
     return false;
   }
@@ -584,7 +583,7 @@ bool nrf_authenticate(void) {
   while (!ticks_expired(timeout)) {
     if (drv->auth_data_valid) {
       secbool auth =
-          secret_validate_nrf_pairing((uint8_t *)challenge, sizeof(challenge),
+          secret_validate_nrf_pairing((uint8_t*)challenge, sizeof(challenge),
                                       drv->auth_data, SHA256_DIGEST_LENGTH);
       return sectrue == auth;
     }

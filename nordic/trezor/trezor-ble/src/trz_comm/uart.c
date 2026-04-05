@@ -37,7 +37,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)
 #define UART_WAIT_FOR_RX CONFIG_BT_NUS_UART_RX_WAIT_TIME
 
-static const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(trezor_trz_uart));
+static const struct device* uart = DEVICE_DT_GET(DT_CHOSEN(trezor_trz_uart));
 
 static K_FIFO_DEFINE(fifo_uart_tx_data);
 
@@ -49,13 +49,13 @@ static struct k_work_delayable uart_work;
 
 static volatile bool g_uart_rx_running = false;
 
-static void uart_cb(const struct device *dev, struct uart_event *evt,
-                    void *user_data) {
+static void uart_cb(const struct device* dev, struct uart_event* evt,
+                    void* user_data) {
   ARG_UNUSED(dev);
 
   static size_t aborted_len;
-  trz_packet_t *buf;
-  static uint8_t *aborted_buf;
+  trz_packet_t* buf;
+  static uint8_t* aborted_buf;
   static bool disable_req;
   static uint8_t rx_data = 0;
 
@@ -103,7 +103,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
       buf->len += evt->data.rx.len;
       rx_data = buf->data[0];
 
-      trz_packet_t *tx = k_malloc(sizeof(*tx));
+      trz_packet_t* tx = k_malloc(sizeof(*tx));
 
       if (tx == NULL) {
         LOG_WRN("Not able to allocate UART send data buffer");
@@ -150,7 +150,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
     case UART_TX_ABORTED:
       LOG_DBG("UART_TX_ABORTED");
       if (!aborted_buf) {
-        aborted_buf = (uint8_t *)evt->data.tx.buf;
+        aborted_buf = (uint8_t*)evt->data.tx.buf;
       }
 
       aborted_len += evt->data.tx.len;
@@ -168,7 +168,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 
 int uart_start_rx(void) {
   int err;
-  trz_packet_t *rx = k_malloc(sizeof(*rx));
+  trz_packet_t* rx = k_malloc(sizeof(*rx));
   if (rx) {
     rx->len = 0;
   } else {
@@ -189,8 +189,8 @@ int uart_start_rx(void) {
   return err;
 }
 
-static void uart_work_handler(struct k_work *item) {
-  trz_packet_t *buf;
+static void uart_work_handler(struct k_work* item) {
+  trz_packet_t* buf;
 
   if (!g_uart_rx_running) {
     uart_power_down();
@@ -259,8 +259,8 @@ void uart_deinit(void) {
   }
 }
 
-bool uart_send(uint8_t service_id, const uint8_t *tx_data, uint8_t len) {
-  trz_packet_t *tx = k_malloc(sizeof(*tx));
+bool uart_send(uint8_t service_id, const uint8_t* tx_data, uint8_t len) {
+  trz_packet_t* tx = k_malloc(sizeof(*tx));
 
   if (tx == NULL) {
     LOG_WRN("Not able to allocate UART send data buffer");

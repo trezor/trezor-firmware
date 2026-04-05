@@ -34,7 +34,7 @@ void display_fade(uint8_t start, uint8_t end, int delay);
  * @param refresh_index Index used for the refresh sequence in filenames
  * @note Only available in emulator builds
  */
-void display_record_start(uint8_t *target_dir, size_t target_dir_len,
+void display_record_start(uint8_t* target_dir, size_t target_dir_len,
                           int refresh_index);
 
 /**

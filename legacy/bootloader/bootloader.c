@@ -36,7 +36,7 @@
 #include "usb.h"
 #include "util.h"
 
-void layoutFirmwareFingerprint(const uint8_t *hash) {
+void layoutFirmwareFingerprint(const uint8_t* hash) {
   char str[4][17] = {0};
   for (int i = 0; i < 4; i++) {
     data2hex(hash + i * 8, 8, str[i]);
@@ -53,18 +53,18 @@ bool get_button_response(void) {
   return button.YesUp;
 }
 
-void show_halt(const char *line1, const char *line2) {
+void show_halt(const char* line1, const char* line2) {
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, NULL,
                "Unplug your Trezor,", "reinstall firmware.", NULL);
   shutdown();
 }
 
-void show_unplug(const char *line1, const char *line2) {
+void show_unplug(const char* line1, const char* line2) {
   layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, line1, line2, NULL,
                "You may now", "unplug your Trezor.", NULL);
 }
 
-static void show_unofficial_warning(const uint8_t *hash) {
+static void show_unofficial_warning(const uint8_t* hash) {
 // On production bootloader, show warning and wait for user
 // to accept or reject it
 // On non-production we only use unofficial firmwares,
@@ -98,7 +98,7 @@ static void __attribute__((noreturn)) load_app(int signed_firmware) {
   // zero out SRAM
   memset_reg(_ram_start, _ram_end, 0);
 
-  jump_to_firmware((const vector_table_t *)FLASH_PTR(FLASH_APP_START),
+  jump_to_firmware((const vector_table_t*)FLASH_PTR(FLASH_APP_START),
                    signed_firmware);
 }
 
@@ -153,8 +153,8 @@ int main(void) {
     oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_empty_half);
     oledRefresh();
 
-    const image_header *hdr =
-        (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
+    const image_header* hdr =
+        (const image_header*)FLASH_PTR(FLASH_FWHEADER_START);
 
     uint8_t fingerprint[32] = {0};
     int signed_firmware = signatures_match(hdr, fingerprint);

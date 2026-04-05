@@ -92,7 +92,7 @@ struct image_header {
  */
 static int read_image_sha256(uint8_t area_id,
                              uint8_t out_hash[IMAGE_HASH_LEN]) {
-  const struct flash_area *fa;
+  const struct flash_area* fa;
   int rc;
 
   /* Open the flash area (slot) */
@@ -160,9 +160,9 @@ static void send_info(void) {
   trz_comm_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data));
 }
 
-static void mgmt_process_challenge(uint8_t *data, uint16_t len) {
+static void mgmt_process_challenge(uint8_t* data, uint16_t len) {
   uint8_t response[1 + SHA256_BLOCK_LENGTH];
-  const uint8_t *key = prodtest_get_pairing_key();
+  const uint8_t* key = prodtest_get_pairing_key();
 
   hmac_sha256(key, PAIRING_SECRET_SIZE, data, len, &response[1]);
 
@@ -171,7 +171,7 @@ static void mgmt_process_challenge(uint8_t *data, uint16_t len) {
   trz_comm_send_msg(NRF_SERVICE_MANAGEMENT, response, sizeof(response));
 }
 
-static void process_command(uint8_t *data, uint16_t len) {
+static void process_command(uint8_t* data, uint16_t len) {
   uint8_t cmd = data[0];
   switch (cmd) {
     case MGMT_CMD_SYSTEM_OFF:
@@ -220,7 +220,7 @@ void management_thread(void) {
   k_sem_take(&management_ok, K_FOREVER);
 
   for (;;) {
-    trz_packet_t *buf = trz_comm_poll_data(NRF_SERVICE_MANAGEMENT);
+    trz_packet_t* buf = trz_comm_poll_data(NRF_SERVICE_MANAGEMENT);
     process_command(buf->data, buf->len);
     k_free(buf);
   }

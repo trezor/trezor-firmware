@@ -94,10 +94,10 @@
 #include "syscall_internal.h"
 #include "syscall_verifiers.h"
 
-__attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
+__attribute((no_stack_protector)) void syscall_handler(uint32_t* args,
                                                        uint32_t syscall,
-                                                       void *applet) {
-  syscall_set_context((applet_t *)applet);
+                                                       void* applet) {
+  syscall_set_context((applet_t*)applet);
 
   switch (syscall) {
     case SYSCALL_RETURN_FROM_CALLBACK: {
@@ -112,20 +112,20 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_SYSTEM_EXIT_ERROR: {
-      const char *title = (const char *)args[0];
+      const char* title = (const char*)args[0];
       size_t title_len = (size_t)args[1];
-      const char *message = (const char *)args[2];
+      const char* message = (const char*)args[2];
       size_t message_len = (size_t)args[3];
-      const char *footer = (const char *)args[4];
+      const char* footer = (const char*)args[4];
       size_t footer_len = (size_t)args[5];
       system_exit_error__verified(title, title_len, message, message_len,
                                   footer, footer_len);
     } break;
 
     case SYSCALL_SYSTEM_EXIT_FATAL: {
-      const char *message = (const char *)args[0];
+      const char* message = (const char*)args[0];
       size_t message_len = (size_t)args[1];
-      const char *file = (const char *)args[2];
+      const char* file = (const char*)args[2];
       size_t file_len = (size_t)args[3];
       int line = (int)args[4];
       system_exit_fatal__verified(message, message_len, file, file_len, line);
@@ -155,8 +155,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_SYSEVENTS_POLL: {
-      const sysevents_t *awaited = (sysevents_t *)args[0];
-      sysevents_t *signalled = (sysevents_t *)args[1];
+      const sysevents_t* awaited = (sysevents_t*)args[0];
+      sysevents_t* signalled = (sysevents_t*)args[1];
       uint32_t deadline = args[2];
       if (!syscall_get_context()->task.in_callback) {
         sysevents_poll__verified(awaited, signalled, deadline);
@@ -165,46 +165,46 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_SYSHANDLE_READ: {
       syshandle_t handle = (syshandle_t)args[0];
-      void *buffer = (void *)args[1];
+      void* buffer = (void*)args[1];
       size_t buffer_size = (size_t)args[2];
       args[0] = syshandle_read__verified(handle, buffer, buffer_size);
     } break;
 
     case SYSCALL_SYSHANDLE_WRITE: {
       syshandle_t handle = (syshandle_t)args[0];
-      const void *data = (const void *)args[1];
+      const void* data = (const void*)args[1];
       size_t data_size = (size_t)args[2];
       args[0] = syshandle_write__verified(handle, data, data_size);
     } break;
 
 #ifdef USE_DBG_CONSOLE
     case SYSCALL_DBG_CONSOLE_READ: {
-      void *buffer = (void *)args[0];
+      void* buffer = (void*)args[0];
       size_t buffer_size = (size_t)args[1];
       args[0] = dbg_console_read__verified(buffer, buffer_size);
     } break;
 
     case SYSCALL_DBG_CONSOLE_WRITE: {
-      const void *data = (const void *)args[0];
+      const void* data = (const void*)args[0];
       size_t data_size = (size_t)args[1];
       args[0] = dbg_console_write__verified(data, data_size);
     } break;
 
     case SYSCALL_SYSLOG_START_RECORD: {
-      const log_source_t *source = (const log_source_t *)args[0];
+      const log_source_t* source = (const log_source_t*)args[0];
       uint8_t level = (uint8_t)args[1];
       args[0] = syslog_start_record__verified(source, level);
     } break;
 
     case SYSCALL_SYSLOG_WRITE_CHUNK: {
-      const char *text = (const char *)args[0];
+      const char* text = (const char*)args[0];
       size_t text_len = (size_t)args[1];
       bool end_record = (bool)args[2];
       args[0] = syslog_write_chunk__verified(text, text_len, end_record);
     } break;
 
     case SYSCALL_SYSLOG_SET_FILTER: {
-      const char *filter = (const char *)args[0];
+      const char* filter = (const char*)args[0];
       size_t filter_len = (size_t)args[1];
       args[0] = syslog_set_filter__verified(filter, filter_len);
     } break;
@@ -214,7 +214,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #ifdef USE_IPC
     case SYSCALL_IPC_REGISTER: {
       systask_id_t origin = (systask_id_t)args[0];
-      void *buffer = (void *)args[1];
+      void* buffer = (void*)args[1];
       size_t size = (size_t)args[2];
       args[0] = ipc_register__verified(origin, buffer, size);
     } break;
@@ -225,31 +225,31 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_IPC_TRY_RECEIVE: {
-      ipc_message_t *msg = (ipc_message_t *)args[0];
+      ipc_message_t* msg = (ipc_message_t*)args[0];
       args[0] = ipc_try_receive__verified(msg);
     } break;
 
     case SYSCALL_IPC_FREE_MESSAGE: {
-      ipc_message_t *msg = (ipc_message_t *)args[0];
+      ipc_message_t* msg = (ipc_message_t*)args[0];
       ipc_message_free__verified(msg);
     } break;
 
     case SYSCALL_IPC_SEND: {
       systask_id_t remote = (systask_id_t)args[0];
       uint32_t fn = (uint32_t)args[1];
-      const void *data = (const void *)args[2];
+      const void* data = (const void*)args[2];
       size_t data_size = (size_t)args[3];
       args[0] = ipc_send__verified(remote, fn, data, data_size);
     } break;
 #endif  // USE_IPC
 
     case SYSCALL_BOOT_IMAGE_CHECK: {
-      const boot_image_t *image = (const boot_image_t *)args[0];
+      const boot_image_t* image = (const boot_image_t*)args[0];
       args[0] = boot_image_check__verified(image);
     } break;
 
     case SYSCALL_BOOT_IMAGE_REPLACE: {
-      const boot_image_t *image = (const boot_image_t *)args[0];
+      const boot_image_t* image = (const boot_image_t*)args[0];
       boot_image_replace__verified(image);
     } break;
 
@@ -262,7 +262,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_REBOOT_AND_UPGRADE: {
-      const uint8_t *hash = (const uint8_t *)args[0];
+      const uint8_t* hash = (const uint8_t*)args[0];
       reboot_and_upgrade__verified(hash);
     } break;
 
@@ -291,7 +291,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #if FRAMEBUFFER
     case SYSCALL_DISPLAY_GET_FB_INFO: {
-      display_fb_info_t *fb = (display_fb_info_t *)args[0];
+      display_fb_info_t* fb = (display_fb_info_t*)args[0];
       args[0] = (uint32_t)display_get_frame_buffer__verified(fb);
     } break;
 #else
@@ -301,13 +301,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
     case SYSCALL_DISPLAY_FILL: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       display_fill__verified(bb);
     } break;
 
 #ifdef USE_RGB_COLORS
     case SYSCALL_DISPLAY_COPY_RGB565: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       display_copy_rgb565__verified(bb);
     } break;
 #endif
@@ -317,7 +317,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_USB_START: {
-      const usb_start_params_t *params = (const usb_start_params_t *)args[0];
+      const usb_start_params_t* params = (const usb_start_params_t*)args[0];
       args[0] = usb_start__verified(params);
     } break;
 
@@ -330,7 +330,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_USB_GET_STATE: {
-      usb_state_t *state = (usb_state_t *)args[0];
+      usb_state_t* state = (usb_state_t*)args[0];
       usb_get_state__verified(state);
     } break;
 
@@ -352,14 +352,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_SDCARD_READ_BLOCKS: {
-      uint32_t *dest = (uint32_t *)args[0];
+      uint32_t* dest = (uint32_t*)args[0];
       uint32_t block_num = args[1];
       uint32_t num_blocks = args[2];
       args[0] = sdcard_read_blocks__verified(dest, block_num, num_blocks);
     } break;
 
     case SYSCALL_SDCARD_WRITE_BLOCKS: {
-      const uint32_t *src = (const uint32_t *)args[0];
+      const uint32_t* src = (const uint32_t*)args[0];
       uint32_t block_num = args[1];
       uint32_t num_blocks = args[2];
       args[0] = sdcard_write_blocks__verified(src, block_num, num_blocks);
@@ -367,14 +367,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
     case SYSCALL_UNIT_PROPERTIES_GET: {
-      unit_properties_t *props = (unit_properties_t *)args[0];
+      unit_properties_t* props = (unit_properties_t*)args[0];
       unit_properties_get__verified(props);
     } break;
 
     case SYSCALL_UNIT_PROPERTIES_GET_SN: {
-      uint8_t *device_sn = (uint8_t *)args[0];
+      uint8_t* device_sn = (uint8_t*)args[0];
       size_t max_device_sn_size = args[1];
-      size_t *device_sn_size = (size_t *)args[2];
+      size_t* device_sn_size = (size_t*)args[2];
       args[0] = unit_properties_get_sn__verified(device_sn, max_device_sn_size,
                                                  device_sn_size);
     } break;
@@ -389,7 +389,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #ifdef USE_BUTTON
     case SYSCALL_BUTTON_GET_EVENT: {
-      button_event_t *event = (button_event_t *)args[0];
+      button_event_t* event = (button_event_t*)args[0];
       args[0] = button_get_event__verified(event);
     } break;
 #endif
@@ -464,32 +464,32 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #ifdef USE_OPTIGA
     case SYSCALL_OPTIGA_SIGN: {
       uint8_t index = args[0];
-      const uint8_t *digest = (const uint8_t *)args[1];
+      const uint8_t* digest = (const uint8_t*)args[1];
       size_t digest_size = args[2];
-      uint8_t *signature = (uint8_t *)args[3];
+      uint8_t* signature = (uint8_t*)args[3];
       size_t max_sig_size = args[4];
-      size_t *sig_size = (size_t *)args[5];
+      size_t* sig_size = (size_t*)args[5];
       args[0] = optiga_sign__verified(index, digest, digest_size, signature,
                                       max_sig_size, sig_size);
     } break;
 
     case SYSCALL_OPTIGA_CERT_SIZE: {
       uint8_t index = args[0];
-      size_t *cert_size = (size_t *)args[1];
+      size_t* cert_size = (size_t*)args[1];
       args[0] = optiga_cert_size__verified(index, cert_size);
     } break;
 
     case SYSCALL_OPTIGA_READ_CERT: {
       uint8_t index = args[0];
-      uint8_t *cert = (uint8_t *)args[1];
+      uint8_t* cert = (uint8_t*)args[1];
       size_t max_cert_size = args[2];
-      size_t *cert_size = (size_t *)args[3];
+      size_t* cert_size = (size_t*)args[3];
       args[0] =
           optiga_read_cert__verified(index, cert, max_cert_size, cert_size);
     } break;
 
     case SYSCALL_OPTIGA_READ_SEC: {
-      uint8_t *sec = (uint8_t *)args[0];
+      uint8_t* sec = (uint8_t*)args[0];
       args[0] = optiga_read_sec__verified(sec);
     } break;
 
@@ -503,14 +503,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #ifdef USE_SECRET_KEYS
     case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
       uint16_t rotation_index = args[0];
-      uint8_t *dest = (uint8_t *)args[1];
+      uint8_t* dest = (uint8_t*)args[1];
       args[0] = secret_key_delegated_identity__verified(rotation_index, dest);
     } break;
 #endif
 
 #ifdef USE_TELEMETRY
     case SYSCALL_TELEMETRY_GET: {
-      telemetry_data_t *out = (telemetry_data_t *)args[0];
+      telemetry_data_t* out = (telemetry_data_t*)args[0];
       args[0] = telemetry_get__verified(out);
     } break;
 #endif
@@ -533,9 +533,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_UNLOCK: {
-      const uint8_t *pin = (const uint8_t *)args[0];
+      const uint8_t* pin = (const uint8_t*)args[0];
       size_t pin_len = args[1];
-      const uint8_t *ext_salt = (const uint8_t *)args[2];
+      const uint8_t* ext_salt = (const uint8_t*)args[2];
       args[0] = storage_unlock__verified(pin, pin_len, ext_salt);
     } break;
 
@@ -552,14 +552,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_CHANGE_PIN: {
-      const uint8_t *newpin = (const uint8_t *)args[0];
+      const uint8_t* newpin = (const uint8_t*)args[0];
       size_t newpin_len = args[1];
-      const uint8_t *new_ext_salt = (const uint8_t *)args[2];
+      const uint8_t* new_ext_salt = (const uint8_t*)args[2];
       args[0] = storage_change_pin__verified(newpin, newpin_len, new_ext_salt);
     } break;
 
     case SYSCALL_STORAGE_ENSURE_NOT_WIPE_CODE: {
-      const uint8_t *pin = (const uint8_t *)args[0];
+      const uint8_t* pin = (const uint8_t*)args[0];
       size_t pin_len = args[1];
       storage_ensure_not_wipe_code__verified(pin, pin_len);
     } break;
@@ -569,10 +569,10 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_CHANGE_WIPE_CODE: {
-      const uint8_t *pin = (const uint8_t *)args[0];
+      const uint8_t* pin = (const uint8_t*)args[0];
       size_t pin_len = args[1];
-      const uint8_t *ext_salt = (const uint8_t *)args[2];
-      const uint8_t *wipe_code = (const uint8_t *)args[3];
+      const uint8_t* ext_salt = (const uint8_t*)args[2];
+      const uint8_t* wipe_code = (const uint8_t*)args[3];
       size_t wipe_code_len = args[4];
       args[0] = storage_change_wipe_code__verified(pin, pin_len, ext_salt,
                                                    wipe_code, wipe_code_len);
@@ -585,15 +585,15 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_STORAGE_GET: {
       uint16_t key = (uint16_t)args[0];
-      void *val = (void *)args[1];
+      void* val = (void*)args[1];
       uint16_t max_len = (uint16_t)args[2];
-      uint16_t *len = (uint16_t *)args[3];
+      uint16_t* len = (uint16_t*)args[3];
       args[0] = storage_get__verified(key, val, max_len, len);
     } break;
 
     case SYSCALL_STORAGE_SET: {
       uint16_t key = (uint16_t)args[0];
-      const void *val = (const void *)args[1];
+      const void* val = (const void*)args[1];
       uint16_t len = (uint16_t)args[2];
       args[0] = storage_set__verified(key, val, len);
     } break;
@@ -611,19 +611,19 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_STORAGE_NEXT_COUNTER: {
       uint16_t key = (uint16_t)args[0];
-      uint32_t *count = (uint32_t *)args[1];
+      uint32_t* count = (uint32_t*)args[1];
       args[0] = storage_next_counter__verified(key, count);
     } break;
 
     case SYSCALL_TRANSLATIONS_WRITE: {
-      const uint8_t *data = (const uint8_t *)args[0];
+      const uint8_t* data = (const uint8_t*)args[0];
       uint32_t offset = args[1];
       uint32_t len = args[2];
       args[0] = translations_write__verified(data, offset, len);
     } break;
 
     case SYSCALL_TRANSLATIONS_READ: {
-      uint32_t *len = (uint32_t *)args[0];
+      uint32_t* len = (uint32_t*)args[0];
       uint32_t offset = args[1];
       args[0] = (uint32_t)translations_read__verified(len, offset);
     } break;
@@ -637,31 +637,31 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_RNG_FILL_BUFFER: {
-      void *buffer = (void *)args[0];
+      void* buffer = (void*)args[0];
       size_t buffer_size = (size_t)args[1];
       rng_fill_buffer__verified(buffer, buffer_size);
     } break;
 
     case SYSCALL_RNG_FILL_BUFFER_STRONG: {
-      void *buffer = (void *)args[0];
+      void* buffer = (void*)args[0];
       size_t buffer_size = (size_t)args[1];
       args[0] = rng_fill_buffer_strong__verified(buffer, buffer_size);
     } break;
 
     case SYSCALL_FIRMWARE_GET_VENDOR: {
-      char *buff = (char *)args[0];
+      char* buff = (char*)args[0];
       size_t buff_size = args[1];
       args[0] = firmware_get_vendor__verified(buff, buff_size);
     } break;
 
     case SYSCALL_FIRMWARE_HASH_START: {
-      const uint8_t *challenge = (const uint8_t *)args[0];
+      const uint8_t* challenge = (const uint8_t*)args[0];
       size_t challenge_len = args[1];
       args[0] = firmware_hash_start__verified(challenge, challenge_len);
     } break;
 
     case SYSCALL_FIRMWARE_HASH_CONTINUE: {
-      uint8_t *hash = (uint8_t *)args[0];
+      uint8_t* hash = (uint8_t*)args[0];
       size_t hash_len = args[1];
       args[0] = firmware_hash_continue__verified(hash, hash_len);
     } break;
@@ -680,7 +680,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_BLE_ENTER_PAIRING_MODE: {
-      const uint8_t *name = (const uint8_t *)args[0];
+      const uint8_t* name = (const uint8_t*)args[0];
       size_t name_len = (size_t)args[1];
       args[0] = ble_enter_pairing_mode__verified(name, name_len);
     } break;
@@ -694,7 +694,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_BLE_ALLOW_PAIRING: {
-      const uint8_t *code = (const uint8_t *)args[0];
+      const uint8_t* code = (const uint8_t*)args[0];
       args[0] = ble_allow_pairing__verified(code);
     } break;
 
@@ -703,12 +703,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_BLE_GET_STATE: {
-      ble_state_t *state = (ble_state_t *)args[0];
+      ble_state_t* state = (ble_state_t*)args[0];
       ble_get_state__verified(state);
     } break;
 
     case SYSCALL_BLE_GET_EVENT: {
-      ble_event_t *event = (ble_event_t *)args[0];
+      ble_event_t* event = (ble_event_t*)args[0];
       args[0] = ble_get_event__verified(event);
     } break;
 
@@ -717,7 +717,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_BLE_WRITE: {
-      uint8_t *data = (uint8_t *)args[0];
+      uint8_t* data = (uint8_t*)args[0];
       size_t len = args[1];
       args[0] = ble_write__verified(data, len);
     } break;
@@ -727,24 +727,24 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_BLE_READ: {
-      uint8_t *data = (uint8_t *)args[0];
+      uint8_t* data = (uint8_t*)args[0];
       size_t len = args[1];
       args[0] = ble_read__verified(data, len);
     } break;
 
     case SYSCALL_BLE_SET_NAME: {
-      const uint8_t *name = (const uint8_t *)args[0];
+      const uint8_t* name = (const uint8_t*)args[0];
       size_t len = args[1];
       ble_set_name__verified(name, len);
     } break;
 
     case SYSCALL_BLE_UNPAIR: {
-      const bt_le_addr_t *addr = (const bt_le_addr_t *)args[0];
+      const bt_le_addr_t* addr = (const bt_le_addr_t*)args[0];
       args[0] = ble_unpair__verified(addr);
     } break;
 
     case SYSCALL_BLE_GET_BOND_LIST: {
-      bt_le_addr_t *list = (bt_le_addr_t *)args[0];
+      bt_le_addr_t* list = (bt_le_addr_t*)args[0];
       size_t list_size = args[1];
       args[0] = ble_get_bond_list__verified(list, list_size);
     } break;
@@ -768,13 +768,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #ifdef USE_NRF
 
     case SYSCALL_NRF_UPDATE_REQUIRED: {
-      const uint8_t *data = (const uint8_t *)args[0];
+      const uint8_t* data = (const uint8_t*)args[0];
       size_t len = args[1];
       args[0] = nrf_update_required__verified(data, len);
     } break;
 
     case SYSCALL_NRF_UPDATE: {
-      const uint8_t *data = (const uint8_t *)args[0];
+      const uint8_t* data = (const uint8_t*)args[0];
       size_t len = args[1];
       args[0] = nrf_update__verified(data, len);
     } break;
@@ -795,7 +795,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #ifdef USE_POWER_MANAGER
     case SYSCALL_POWER_MANAGER_SUSPEND: {
-      wakeup_flags_t *wakeup_flags = (wakeup_flags_t *)args[0];
+      wakeup_flags_t* wakeup_flags = (wakeup_flags_t*)args[0];
       args[0] = pm_suspend__verified(wakeup_flags);
     } break;
 
@@ -812,12 +812,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_POWER_MANAGER_GET_STATE: {
-      pm_state_t *status = (pm_state_t *)args[0];
+      pm_state_t* status = (pm_state_t*)args[0];
       args[0] = pm_get_state__verified(status);
     } break;
 
     case SYSCALL_POWER_MANAGER_GET_EVENTS: {
-      pm_event_t *status = (pm_event_t *)args[0];
+      pm_event_t* status = (pm_event_t*)args[0];
       args[0] = pm_get_events__verified(status);
     } break;
 #endif
@@ -832,23 +832,23 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_JPEGDEC_PROCESS: {
-      args[0] = jpegdec_process__verified((jpegdec_input_t *)args[0]);
+      args[0] = jpegdec_process__verified((jpegdec_input_t*)args[0]);
     } break;
 
     case SYSCALL_JPEGDEC_GET_INFO: {
-      args[0] = jpegdec_get_info__verified((jpegdec_image_t *)args[0]);
+      args[0] = jpegdec_get_info__verified((jpegdec_image_t*)args[0]);
       break;
     }
 
     case SYSCALL_JPEGDEC_GET_SLICE_RGBA8888: {
-      args[0] = jpegdec_get_slice_rgba8888__verified(
-          (void *)args[0], (jpegdec_slice_t *)args[1]);
+      args[0] = jpegdec_get_slice_rgba8888__verified((void*)args[0],
+                                                     (jpegdec_slice_t*)args[1]);
       break;
     }
 
     case SYSCALL_JPEGDEC_GET_SLICE_MONO8: {
-      args[0] = jpegdec_get_slice_mono8__verified((void *)args[0],
-                                                  (jpegdec_slice_t *)args[1]);
+      args[0] = jpegdec_get_slice_mono8__verified((void*)args[0],
+                                                  (jpegdec_slice_t*)args[1]);
       break;
     }
 #endif  // USE_HW_JPEG_DECODER
@@ -859,65 +859,65 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_DMA2D_RGB565_FILL: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgb565_fill__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGB565_COPY_MONO4: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgb565_copy_mono4__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGB565_COPY_RGB565: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgb565_copy_rgb565__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGB565_BLEND_MONO4: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgb565_blend_mono4__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGB565_BLEND_MONO8: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgb565_blend_mono8__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGBA8888_FILL: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgba8888_fill__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGBA8888_COPY_MONO4: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgba8888_copy_mono4__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGBA8888_COPY_RGB565: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgba8888_copy_rgb565__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGBA8888_COPY_RGBA8888: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgba8888_copy_rgba8888__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGBA8888_BLEND_MONO4: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgba8888_blend_mono4__verified(bb);
     } break;
 
     case SYSCALL_DMA2D_RGBA8888_BLEND_MONO8: {
-      const gfx_bitblt_t *bb = (const gfx_bitblt_t *)args[0];
+      const gfx_bitblt_t* bb = (const gfx_bitblt_t*)args[0];
       args[0] = dma2d_rgba8888_blend_mono8__verified(bb);
     } break;
 #endif  // USE_DMA2D
 
 #ifdef USE_TROPIC
     case SYSCALL_TROPIC_PING: {
-      const uint8_t *msg_out = (const uint8_t *)args[0];
-      uint8_t *msg_in = (uint8_t *)args[1];
+      const uint8_t* msg_out = (const uint8_t*)args[0];
+      uint8_t* msg_in = (uint8_t*)args[1];
       uint16_t msg_len = (uint16_t)args[2];
       args[0] = tropic_ping__verified(msg_out, msg_in, msg_len);
     } break;
@@ -929,24 +929,24 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_TROPIC_ECC_SIGN: {
       uint16_t key_slot_index = (uint16_t)args[0];
-      const uint8_t *dig = (const uint8_t *)args[1];
+      const uint8_t* dig = (const uint8_t*)args[1];
       uint16_t dig_len = (uint16_t)args[2];
-      uint8_t *sig = (uint8_t *)args[3];
+      uint8_t* sig = (uint8_t*)args[3];
       args[0] = tropic_ecc_sign__verified(key_slot_index, dig, dig_len, sig);
     } break;
 
     case SYSCALL_TROPIC_DATA_READ: {
       uint16_t udata_slot = (uint16_t)args[0];
-      uint8_t *data = (uint8_t *)args[1];
-      uint16_t *size = (uint16_t *)args[2];
+      uint8_t* data = (uint8_t*)args[1];
+      uint16_t* size = (uint16_t*)args[2];
       args[0] = tropic_data_read__verified(udata_slot, data, size);
     } break;
 #endif
 
 #ifdef USE_APP_LOADING
     case SYSCALL_APP_TASK_SPAWN: {
-      const app_hash_t *hash = (const app_hash_t *)args[0];
-      systask_id_t *task_id = (systask_id_t *)args[1];
+      const app_hash_t* hash = (const app_hash_t*)args[0];
+      systask_id_t* task_id = (systask_id_t*)args[1];
       ts_t status = app_task_spawn__verified(hash, task_id);
       args[0] = ts_code(status);
     } break;
@@ -958,7 +958,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_APP_TASK_GET_PMINFO: {
       systask_id_t task_id = (systask_id_t)args[0];
-      systask_postmortem_t *pminfo = (systask_postmortem_t *)args[1];
+      systask_postmortem_t* pminfo = (systask_postmortem_t*)args[1];
       ts_t status = app_task_get_pminfo__verified(task_id, pminfo);
       args[0] = ts_code(status);
     } break;
@@ -969,7 +969,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_APP_CACHE_CREATE_IMAGE: {
-      const app_hash_t *hash = (const app_hash_t *)args[0];
+      const app_hash_t* hash = (const app_hash_t*)args[0];
       size_t image_size = (size_t)args[1];
       args[0] = (uintptr_t)app_cache_create_image__verified(hash, image_size);
     } break;
@@ -977,7 +977,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_APP_CACHE_WRITE_IMAGE: {
       app_cache_handle_t handle = (app_cache_handle_t)args[0];
       uintptr_t offset = (uintptr_t)args[1];
-      const void *data = (const void *)args[2];
+      const void* data = (const void*)args[2];
       size_t size = (size_t)args[3];
       ts_t status = app_cache_write_image__verified(handle, offset, data, size);
       args[0] = ts_code(status);

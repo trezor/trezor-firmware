@@ -18,7 +18,7 @@
  */
 
 static bool fsm_stellarCheckPath(uint32_t address_n_count,
-                                 const uint32_t *address_n) {
+                                 const uint32_t* address_n) {
   if (stellar_path_check(address_n_count, address_n)) {
     return true;
   }
@@ -31,7 +31,7 @@ static bool fsm_stellarCheckPath(uint32_t address_n_count,
   return fsm_layoutPathWarning();
 }
 
-void fsm_msgStellarGetAddress(const StellarGetAddress *msg) {
+void fsm_msgStellarGetAddress(const StellarGetAddress* msg) {
   RESP_INIT(StellarAddress);
 
   CHECK_INITIALIZED
@@ -43,7 +43,7 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg) {
     return;
   }
 
-  const HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
+  const HDNode* node = stellar_deriveNode(msg->address_n, msg->address_n_count);
   if (!node) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to derive private key"));
@@ -67,7 +67,7 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg) {
   layoutHome();
 }
 
-void fsm_msgStellarSignTx(const StellarSignTx *msg) {
+void fsm_msgStellarSignTx(const StellarSignTx* msg) {
   CHECK_INITIALIZED
   CHECK_PIN
 
@@ -92,7 +92,7 @@ void fsm_msgStellarSignTx(const StellarSignTx *msg) {
   msg_write(MessageType_MessageType_StellarTxOpRequest, resp);
 }
 
-void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg) {
+void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmCreateAccountOp(msg)) return;
@@ -112,7 +112,7 @@ void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg) {
   }
 }
 
-void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg) {
+void fsm_msgStellarPaymentOp(const StellarPaymentOp* msg) {
   CHECK_UNLOCKED
 
   // This will display additional dialogs to the user
@@ -135,7 +135,7 @@ void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg) {
 }
 
 void fsm_msgStellarPathPaymentStrictReceiveOp(
-    const StellarPathPaymentStrictReceiveOp *msg) {
+    const StellarPathPaymentStrictReceiveOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmPathPaymentStrictReceiveOp(msg)) return;
@@ -156,7 +156,7 @@ void fsm_msgStellarPathPaymentStrictReceiveOp(
 }
 
 void fsm_msgStellarPathPaymentStrictSendOp(
-    const StellarPathPaymentStrictSendOp *msg) {
+    const StellarPathPaymentStrictSendOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmPathPaymentStrictSendOp(msg)) return;
@@ -176,7 +176,7 @@ void fsm_msgStellarPathPaymentStrictSendOp(
   }
 }
 
-void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
+void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmManageBuyOfferOp(msg)) return;
@@ -196,7 +196,7 @@ void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
   }
 }
 
-void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg) {
+void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmManageSellOfferOp(msg)) return;
@@ -217,7 +217,7 @@ void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg) {
 }
 
 void fsm_msgStellarCreatePassiveSellOfferOp(
-    const StellarCreatePassiveSellOfferOp *msg) {
+    const StellarCreatePassiveSellOfferOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmCreatePassiveSellOfferOp(msg)) return;
@@ -237,7 +237,7 @@ void fsm_msgStellarCreatePassiveSellOfferOp(
   }
 }
 
-void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg) {
+void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmSetOptionsOp(msg)) return;
@@ -257,7 +257,7 @@ void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg) {
   }
 }
 
-void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg) {
+void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmChangeTrustOp(msg)) return;
@@ -277,7 +277,7 @@ void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg) {
   }
 }
 
-void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg) {
+void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmAllowTrustOp(msg)) return;
@@ -297,7 +297,7 @@ void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg) {
   }
 }
 
-void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg) {
+void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmAccountMergeOp(msg)) return;
@@ -317,7 +317,7 @@ void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg) {
   }
 }
 
-void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg) {
+void fsm_msgStellarManageDataOp(const StellarManageDataOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmManageDataOp(msg)) return;
@@ -337,7 +337,7 @@ void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg) {
   }
 }
 
-void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg) {
+void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp* msg) {
   CHECK_UNLOCKED
 
   if (!stellar_confirmBumpSequenceOp(msg)) return;

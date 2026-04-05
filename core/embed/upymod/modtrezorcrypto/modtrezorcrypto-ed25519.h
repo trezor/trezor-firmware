@@ -33,7 +33,7 @@
 STATIC mp_obj_t mod_trezorcrypto_ed25519_generate_secret() {
   vstr_t sk = {0};
   vstr_init_len(&sk, 32);
-  rng_fill_buffer((uint8_t *)sk.buf, sk.len);
+  rng_fill_buffer((uint8_t*)sk.buf, sk.len);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_generate_secret_obj,
@@ -51,8 +51,8 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_publickey(mp_obj_t secret_key) {
   }
   vstr_t pk = {0};
   vstr_init_len(&pk, sizeof(ed25519_public_key));
-  ed25519_publickey(*(const ed25519_secret_key *)sk.buf,
-                    *(ed25519_public_key *)pk.buf);
+  ed25519_publickey(*(const ed25519_secret_key*)sk.buf,
+                    *(ed25519_public_key*)pk.buf);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ed25519_publickey_obj,
@@ -65,7 +65,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ed25519_publickey_obj,
 ///     Uses secret key to produce the signature of message.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
-                                              const mp_obj_t *args) {
+                                              const mp_obj_t* args) {
   mp_buffer_info_t sk = {0}, msg = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &msg, MP_BUFFER_READ);
@@ -83,15 +83,15 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
     mp_get_buffer_raise(args[2], &hash_func, MP_BUFFER_READ);
     // if hash_func == 'keccak':
     if (memcmp(hash_func.buf, "keccak", sizeof("keccak")) == 0) {
-      ed25519_sign_keccak(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
-                          *(ed25519_signature *)sig.buf);
+      ed25519_sign_keccak(msg.buf, msg.len, *(const ed25519_secret_key*)sk.buf,
+                          *(ed25519_signature*)sig.buf);
     } else {
       vstr_clear(&sig);
       mp_raise_ValueError(MP_ERROR_TEXT("Unknown hash function"));
     }
   } else {
-    ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
-                 *(ed25519_signature *)sig.buf);
+    ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key*)sk.buf,
+                 *(ed25519_signature*)sig.buf);
   }
 
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
@@ -126,9 +126,9 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_scalar,
   }
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_signature));
-  ed25519_sign_ext(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
-                   *(const ed25519_secret_key *)skext.buf,
-                   *(ed25519_signature *)sig.buf);
+  ed25519_sign_ext(msg.buf, msg.len, *(const ed25519_secret_key*)sk.buf,
+                   *(const ed25519_secret_key*)skext.buf,
+                   *(ed25519_signature*)sig.buf);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_sign_ext_obj,
@@ -160,8 +160,8 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_verify(mp_obj_t public_key,
     return mp_const_false;
   }
   return (0 == ed25519_sign_open(msg.buf, msg.len,
-                                 *(const ed25519_public_key *)pk.buf,
-                                 *(const ed25519_signature *)sig.buf))
+                                 *(const ed25519_public_key*)pk.buf,
+                                 *(const ed25519_signature*)sig.buf))
              ? mp_const_true
              : mp_const_false;
 }
@@ -175,7 +175,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_verify_obj,
 STATIC mp_obj_t
 mod_trezorcrypto_ed25519_cosi_combine_publickeys(mp_obj_t public_keys) {
   size_t pklen = 0;
-  mp_obj_t *pkitems = NULL;
+  mp_obj_t* pkitems = NULL;
   mp_obj_get_array(public_keys, &pklen, &pkitems);
   if (pklen > 15) {
     mp_raise_ValueError(
@@ -193,7 +193,7 @@ mod_trezorcrypto_ed25519_cosi_combine_publickeys(mp_obj_t public_keys) {
   }
   vstr_t pk = {0};
   vstr_init_len(&pk, sizeof(ed25519_public_key));
-  if (0 != ed25519_cosi_combine_publickeys(*(ed25519_public_key *)pk.buf, pks,
+  if (0 != ed25519_cosi_combine_publickeys(*(ed25519_public_key*)pk.buf, pks,
                                            pklen)) {
     vstr_clear(&pk);
     mp_raise_ValueError(MP_ERROR_TEXT("Error combining public keys"));
@@ -218,7 +218,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_combine_signatures(
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of R"));
   }
   size_t siglen = 0;
-  mp_obj_t *sigitems = NULL;
+  mp_obj_t* sigitems = NULL;
   mp_obj_get_array(signatures, &siglen, &sigitems);
   if (siglen > 15) {
     mp_raise_ValueError(
@@ -236,8 +236,8 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_combine_signatures(
   }
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_signature));
-  ed25519_cosi_combine_signatures(*(ed25519_signature *)sig.buf,
-                                  *(const ed25519_public_key *)sigR.buf, sigs,
+  ed25519_cosi_combine_signatures(*(ed25519_signature*)sig.buf,
+                                  *(const ed25519_public_key*)sigR.buf, sigs,
                                   siglen);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
@@ -254,9 +254,9 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_commit() {
   vstr_t commitment = {0};
   vstr_init_len(&nonce, 32);
   vstr_init_len(&commitment, 32);
-  ed25519_cosi_commit(*(ed25519_secret_key *)nonce.buf,
-                      *(ed25519_public_key *)commitment.buf);
-  mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+  ed25519_cosi_commit(*(ed25519_secret_key*)nonce.buf,
+                      *(ed25519_public_key*)commitment.buf);
+  mp_obj_tuple_t* tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
   tuple->items[0] = mp_obj_new_str_from_vstr(&mp_type_bytes, &nonce);
   tuple->items[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &commitment);
   return MP_OBJ_FROM_PTR(tuple);
@@ -275,7 +275,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_cosi_commit_obj,
 ///     Produce signature of message using COSI cosigning scheme.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_sign(size_t n_args,
-                                                   const mp_obj_t *args) {
+                                                   const mp_obj_t* args) {
   mp_buffer_info_t sk = {0}, msg = {0}, nonce = {0}, sigR = {0}, pk = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &msg, MP_BUFFER_READ);
@@ -298,11 +298,11 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_sign(size_t n_args,
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_cosi_signature));
   if (0 != ed25519_cosi_sign(msg.buf, msg.len,
-                             *(const ed25519_secret_key *)sk.buf,
-                             *(const ed25519_secret_key *)nonce.buf,
-                             *(const ed25519_public_key *)sigR.buf,
-                             *(const ed25519_secret_key *)pk.buf,
-                             *(ed25519_cosi_signature *)sig.buf)) {
+                             *(const ed25519_secret_key*)sk.buf,
+                             *(const ed25519_secret_key*)nonce.buf,
+                             *(const ed25519_public_key*)sigR.buf,
+                             *(const ed25519_secret_key*)pk.buf,
+                             *(ed25519_cosi_signature*)sig.buf)) {
     vstr_clear(&sig);
     mp_raise_ValueError(MP_ERROR_TEXT("Signing failed"));
   }
@@ -339,5 +339,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_ed25519_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_ed25519_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_ed25519_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_ed25519_globals,
 };

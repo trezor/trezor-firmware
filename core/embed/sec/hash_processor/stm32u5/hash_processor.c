@@ -72,17 +72,16 @@ void GPDMA1_Channel12_IRQHandler(void) {
   mpu_restore(mpu_mode);
 }
 
-static void hash_processor_sha256_calc_dma(const uint8_t *data, uint32_t len,
-                                           uint8_t *hash) {
+static void hash_processor_sha256_calc_dma(const uint8_t* data, uint32_t len,
+                                           uint8_t* hash) {
   while (len > 0) {
     uint32_t chunk = len > 0x8000 ? 0x8000 : len;
     bool last = (len - chunk) <= 0;
 
     __HAL_HASH_SET_MDMAT();
 
-    HAL_HASHEx_SHA256_Start_DMA(&hhash, (uint8_t *)data, chunk);
-    while (HAL_HASH_GetState(&hhash) != HAL_HASH_STATE_READY)
-      ;
+    HAL_HASHEx_SHA256_Start_DMA(&hhash, (uint8_t*)data, chunk);
+    while (HAL_HASH_GetState(&hhash) != HAL_HASH_STATE_READY);
 
     if (last) {
       HASH->STR |= HASH_STR_DCAL;
@@ -93,21 +92,21 @@ static void hash_processor_sha256_calc_dma(const uint8_t *data, uint32_t len,
   }
 }
 
-void hash_processor_sha256_calc(const uint8_t *data, uint32_t len,
-                                uint8_t *hash) {
+void hash_processor_sha256_calc(const uint8_t* data, uint32_t len,
+                                uint8_t* hash) {
   if (((uint32_t)data & 0x3) == 0) {
     hash_processor_sha256_calc_dma(data, len, hash);
   } else {
-    HAL_HASHEx_SHA256_Start(&hhash, (uint8_t *)data, len, hash, 1000);
+    HAL_HASHEx_SHA256_Start(&hhash, (uint8_t*)data, len, hash, 1000);
   }
 }
 
-void hash_processor_sha256_init(hash_sha256_context_t *ctx) {
+void hash_processor_sha256_init(hash_sha256_context_t* ctx) {
   memzero(ctx, sizeof(hash_sha256_context_t));
 }
 
-void hash_processor_sha256_update(hash_sha256_context_t *ctx,
-                                  const uint8_t *data, uint32_t len) {
+void hash_processor_sha256_update(hash_sha256_context_t* ctx,
+                                  const uint8_t* data, uint32_t len) {
   if (ctx->length > 0) {
     uint32_t chunk = HASH_SHA256_BUFFER_SIZE - ctx->length;
     if (chunk > len) {
@@ -118,7 +117,7 @@ void hash_processor_sha256_update(hash_sha256_context_t *ctx,
     data += chunk;
     len -= chunk;
     if (ctx->length == HASH_SHA256_BUFFER_SIZE) {
-      HAL_HASHEx_SHA256_Accmlt(&hhash, (uint8_t *)ctx->buffer,
+      HAL_HASHEx_SHA256_Accmlt(&hhash, (uint8_t*)ctx->buffer,
                                HASH_SHA256_BUFFER_SIZE);
       ctx->length = 0;
       memzero(ctx->buffer, HASH_SHA256_BUFFER_SIZE);
@@ -130,7 +129,7 @@ void hash_processor_sha256_update(hash_sha256_context_t *ctx,
 
   while (len_aligned > 0) {
     uint32_t chunk = len_aligned > 0x8000 ? 0x8000 : len_aligned;
-    HAL_HASHEx_SHA256_Accmlt(&hhash, (uint8_t *)data, chunk);
+    HAL_HASHEx_SHA256_Accmlt(&hhash, (uint8_t*)data, chunk);
     data += chunk;
     len_aligned -= chunk;
   }
@@ -141,11 +140,11 @@ void hash_processor_sha256_update(hash_sha256_context_t *ctx,
   }
 }
 
-void hash_processor_sha256_final(hash_sha256_context_t *ctx, uint8_t *output) {
+void hash_processor_sha256_final(hash_sha256_context_t* ctx, uint8_t* output) {
   uint32_t tmp_out[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
   memzero(ctx->buffer + ctx->length, HASH_SHA256_BUFFER_SIZE - ctx->length);
-  HAL_HASHEx_SHA256_Accmlt_End(&hhash, (uint8_t *)ctx->buffer, ctx->length,
-                               (uint8_t *)tmp_out, 1000);
+  HAL_HASHEx_SHA256_Accmlt_End(&hhash, (uint8_t*)ctx->buffer, ctx->length,
+                               (uint8_t*)tmp_out, 1000);
   ctx->length = 0;
   memzero(ctx->buffer, HASH_SHA256_BUFFER_SIZE);
   memcpy(output, tmp_out, SHA256_DIGEST_LENGTH);

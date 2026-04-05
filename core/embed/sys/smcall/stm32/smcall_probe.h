@@ -27,14 +27,14 @@
 
 // Checks if the non-secure code has read access to the
 // given memory range.
-bool probe_read_access(const void *addr, size_t len);
+bool probe_read_access(const void* addr, size_t len);
 
 // Checks if the non-secure code has write access to the
 // given memory range.
-bool probe_write_access(void *addr, size_t len);
+bool probe_write_access(void* addr, size_t len);
 
 // Checks if the provided address is in non-secure address range
-bool probe_execute_access(const void *addr);
+bool probe_execute_access(const void* addr);
 
 // Exits the current application task with an fatal error
 // with the message "Access violation".

@@ -52,7 +52,7 @@ static secbool pin_fails_reset(uint16_t ofs) {
   return norcow_update(PIN_FAIL_KEY, ofs, 0);
 }
 
-static secbool pin_fails_increase(const uint32_t *ptr, uint16_t ofs) {
+static secbool pin_fails_increase(const uint32_t* ptr, uint16_t ofs) {
   uint32_t ctr = *ptr;
   ctr = ctr << 1;
 
@@ -75,18 +75,18 @@ static void pin_fails_check_max(uint32_t ctr) {
 }
 
 static secbool pin_cmp(const uint32_t pin) {
-  const void *spin = NULL;
+  const void* spin = NULL;
   uint16_t spinlen = 0;
   norcow_get(PIN_KEY, &spin, &spinlen);
   if (NULL != spin && spinlen == sizeof(uint32_t)) {
-    return sectrue * (pin == *(const uint32_t *)spin);
+    return sectrue * (pin == *(const uint32_t*)spin);
   } else {
     return sectrue * (1 == pin);
   }
 }
 
-static secbool pin_get_fails(const uint32_t **pinfail, uint32_t *pofs) {
-  const void *vpinfail;
+static secbool pin_get_fails(const uint32_t** pinfail, uint32_t* pofs) {
+  const void* vpinfail;
   uint16_t pinfaillen;
   unsigned int ofs;
   // The PIN_FAIL_KEY points to an area of words, initialized to
@@ -101,7 +101,7 @@ static secbool pin_get_fails(const uint32_t **pinfail, uint32_t *pofs) {
   if (secfalse != norcow_get(PIN_FAIL_KEY, &vpinfail, &pinfaillen)) {
     *pinfail = vpinfail;
     for (ofs = 0; ofs < pinfaillen / sizeof(uint32_t); ofs++) {
-      if (((const uint32_t *)vpinfail)[ofs]) {
+      if (((const uint32_t*)vpinfail)[ofs]) {
         *pinfail = vpinfail;
         *pofs = ofs;
         return sectrue;
@@ -124,7 +124,7 @@ static secbool pin_get_fails(const uint32_t **pinfail, uint32_t *pofs) {
 }
 
 secbool storage_check_pin(const uint32_t pin) {
-  const uint32_t *pinfail = NULL;
+  const uint32_t* pinfail = NULL;
   uint32_t ofs;
   uint32_t ctr;
 
@@ -181,7 +181,7 @@ secbool storage_unlock(const uint32_t pin) {
   return unlocked;
 }
 
-secbool storage_get(const uint16_t key, const void **val, uint16_t *len) {
+secbool storage_get(const uint16_t key, const void** val, uint16_t* len) {
   const uint8_t app = key >> 8;
   // APP == 0 is reserved for PIN related values
   if (sectrue != initialized || app == 0) {
@@ -194,7 +194,7 @@ secbool storage_get(const uint16_t key, const void **val, uint16_t *len) {
   return norcow_get(key, val, len);
 }
 
-secbool storage_set(const uint16_t key, const void *val, uint16_t len) {
+secbool storage_set(const uint16_t key, const void* val, uint16_t len) {
   const uint8_t app = key >> 8;
   // APP == 0 is reserved for PIN related values
   if (sectrue != initialized || sectrue != unlocked || app == 0) {

@@ -23,7 +23,7 @@
 
 #include "usb_rbuf.h"
 
-void usb_rbuf_init(usb_rbuf_t *b, uint8_t *buf, size_t buf_size) {
+void usb_rbuf_init(usb_rbuf_t* b, uint8_t* buf, size_t buf_size) {
   b->buf = buf;
   b->cap = buf_size;
   b->used = 0;
@@ -31,7 +31,7 @@ void usb_rbuf_init(usb_rbuf_t *b, uint8_t *buf, size_t buf_size) {
   b->wptr = b->buf;
 }
 
-void usb_rbuf_reset(usb_rbuf_t *b) {
+void usb_rbuf_reset(usb_rbuf_t* b) {
   irq_key_t irq_key = irq_lock();
   b->used = 0;
   b->rptr = b->buf;
@@ -39,25 +39,25 @@ void usb_rbuf_reset(usb_rbuf_t *b) {
   irq_unlock(irq_key);
 }
 
-size_t usb_rbuf_used_bytes(usb_rbuf_t *b) {
+size_t usb_rbuf_used_bytes(usb_rbuf_t* b) {
   irq_key_t irq_key = irq_lock();
   size_t size = b->used;
   irq_unlock(irq_key);
   return size;
 }
 
-size_t usb_rbuf_unused_bytes(usb_rbuf_t *b) {
+size_t usb_rbuf_unused_bytes(usb_rbuf_t* b) {
   irq_key_t irq_key = irq_lock();
   size_t size = b->cap - b->used;
   irq_unlock(irq_key);
   return size;
 }
 
-bool usb_rbuf_is_empty(usb_rbuf_t *b) { return usb_rbuf_used_bytes(b) == 0; }
+bool usb_rbuf_is_empty(usb_rbuf_t* b) { return usb_rbuf_used_bytes(b) == 0; }
 
-bool usb_rbuf_is_full(usb_rbuf_t *b) { return usb_rbuf_unused_bytes(b) == 0; }
+bool usb_rbuf_is_full(usb_rbuf_t* b) { return usb_rbuf_unused_bytes(b) == 0; }
 
-size_t usb_rbuf_read(usb_rbuf_t *b, uint8_t *buf, size_t buf_size) {
+size_t usb_rbuf_read(usb_rbuf_t* b, uint8_t* buf, size_t buf_size) {
   irq_key_t irq_key = irq_lock();
   size_t to_read = MIN(buf_size, b->used);
   size_t first_part = MIN(to_read, b->cap - (b->rptr - b->buf));
@@ -73,7 +73,7 @@ size_t usb_rbuf_read(usb_rbuf_t *b, uint8_t *buf, size_t buf_size) {
   return to_read;
 }
 
-size_t usb_rbuf_write(usb_rbuf_t *b, const uint8_t *data, size_t data_size) {
+size_t usb_rbuf_write(usb_rbuf_t* b, const uint8_t* data, size_t data_size) {
   irq_key_t irq_key = irq_lock();
   size_t to_write = MIN(data_size, b->cap - b->used);
   size_t first_part = MIN(to_write, b->cap - (b->wptr - b->buf));

@@ -69,7 +69,7 @@ static SDRAM_HandleTypeDef SdramHandle;
 static FMC_SDRAM_TimingTypeDef Timing;
 static FMC_SDRAM_CommandTypeDef Command;
 
-void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef *hsdram, void *Params);
+void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef* hsdram, void* Params);
 
 /**
  * @}
@@ -133,7 +133,7 @@ void sdram_init(void) {
 
   /* SDRAM controller initialization */
   /* __weak function can be surcharged by the application code */
-  BSP_SDRAM_MspInit(&SdramHandle, (void *)NULL);
+  BSP_SDRAM_MspInit(&SdramHandle, (void*)NULL);
   if (HAL_SDRAM_Init(&SdramHandle, &Timing) != HAL_OK) {
     sdramstatus = SDRAM_ERROR;
   } else {
@@ -211,9 +211,9 @@ void BSP_SDRAM_Initialization_sequence(uint32_t RefreshCount) {
  * @param  pData : Pointer to data to be read
  * @param  uwDataSize: Size of read data from the memory
  */
-uint8_t BSP_SDRAM_ReadData(uint32_t uwStartAddress, uint32_t *pData,
+uint8_t BSP_SDRAM_ReadData(uint32_t uwStartAddress, uint32_t* pData,
                            uint32_t uwDataSize) {
-  if (HAL_SDRAM_Read_32b(&SdramHandle, (uint32_t *)uwStartAddress, pData,
+  if (HAL_SDRAM_Read_32b(&SdramHandle, (uint32_t*)uwStartAddress, pData,
                          uwDataSize) != HAL_OK) {
     return SDRAM_ERROR;
   } else {
@@ -227,9 +227,9 @@ uint8_t BSP_SDRAM_ReadData(uint32_t uwStartAddress, uint32_t *pData,
  * @param  pData : Pointer to data to be read
  * @param  uwDataSize: Size of read data from the memory
  */
-uint8_t BSP_SDRAM_ReadData_DMA(uint32_t uwStartAddress, uint32_t *pData,
+uint8_t BSP_SDRAM_ReadData_DMA(uint32_t uwStartAddress, uint32_t* pData,
                                uint32_t uwDataSize) {
-  if (HAL_SDRAM_Read_DMA(&SdramHandle, (uint32_t *)uwStartAddress, pData,
+  if (HAL_SDRAM_Read_DMA(&SdramHandle, (uint32_t*)uwStartAddress, pData,
                          uwDataSize) != HAL_OK) {
     return SDRAM_ERROR;
   } else {
@@ -243,13 +243,13 @@ uint8_t BSP_SDRAM_ReadData_DMA(uint32_t uwStartAddress, uint32_t *pData,
  * @param  pData : Pointer to data to be written
  * @param  uwDataSize: Size of written data from the memory
  */
-uint8_t BSP_SDRAM_WriteData(uint32_t uwStartAddress, uint32_t *pData,
+uint8_t BSP_SDRAM_WriteData(uint32_t uwStartAddress, uint32_t* pData,
                             uint32_t uwDataSize) {
   /* Disable write protection */
   HAL_SDRAM_WriteProtection_Disable(&SdramHandle);
 
   /*Write 32-bit data buffer to SDRAM memory*/
-  if (HAL_SDRAM_Write_32b(&SdramHandle, (uint32_t *)uwStartAddress, pData,
+  if (HAL_SDRAM_Write_32b(&SdramHandle, (uint32_t*)uwStartAddress, pData,
                           uwDataSize) != HAL_OK) {
     return SDRAM_ERROR;
   } else {
@@ -263,9 +263,9 @@ uint8_t BSP_SDRAM_WriteData(uint32_t uwStartAddress, uint32_t *pData,
  * @param  pData : Pointer to data to be written
  * @param  uwDataSize: Size of written data from the memory
  */
-uint8_t BSP_SDRAM_WriteData_DMA(uint32_t uwStartAddress, uint32_t *pData,
+uint8_t BSP_SDRAM_WriteData_DMA(uint32_t uwStartAddress, uint32_t* pData,
                                 uint32_t uwDataSize) {
-  if (HAL_SDRAM_Write_DMA(&SdramHandle, (uint32_t *)uwStartAddress, pData,
+  if (HAL_SDRAM_Write_DMA(&SdramHandle, (uint32_t*)uwStartAddress, pData,
                           uwDataSize) != HAL_OK) {
     return SDRAM_ERROR;
   } else {
@@ -278,7 +278,7 @@ uint8_t BSP_SDRAM_WriteData_DMA(uint32_t uwStartAddress, uint32_t *pData,
  * @param  SdramCmd: Pointer to SDRAM command structure
  * @retval HAL status
  */
-uint8_t BSP_SDRAM_Sendcmd(FMC_SDRAM_CommandTypeDef *SdramCmd) {
+uint8_t BSP_SDRAM_Sendcmd(FMC_SDRAM_CommandTypeDef* SdramCmd) {
   if (HAL_SDRAM_SendCommand(&SdramHandle, SdramCmd, SDRAM_TIMEOUT) != HAL_OK) {
     return SDRAM_ERROR;
   } else {
@@ -297,11 +297,11 @@ void BSP_SDRAM_DMA_IRQHandler(void) { HAL_DMA_IRQHandler(SdramHandle.hdma); }
  * @param  hsdram: pointer on SDRAM handle
  * @param  Params: pointer on additional configuration parameters, can be NULL.
  */
-void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef *hsdram, void *Params) {
+void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef* hsdram, void* Params) {
   static DMA_HandleTypeDef dmaHandle;
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
-  if (hsdram != (SDRAM_HandleTypeDef *)NULL) {
+  if (hsdram != (SDRAM_HandleTypeDef*)NULL) {
     /* Enable FMC clock */
     __HAL_RCC_FMC_CLK_ENABLE();
 
@@ -417,10 +417,10 @@ void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef *hsdram, void *Params) {
  * @param  hsdram: pointer on SDRAM handle
  * @param  Params: pointer on additional configuration parameters, can be NULL.
  */
-void BSP_SDRAM_MspDeInit(SDRAM_HandleTypeDef *hsdram, void *Params) {
+void BSP_SDRAM_MspDeInit(SDRAM_HandleTypeDef* hsdram, void* Params) {
   static DMA_HandleTypeDef dma_handle;
 
-  if (hsdram != (SDRAM_HandleTypeDef *)NULL) {
+  if (hsdram != (SDRAM_HandleTypeDef*)NULL) {
     /* Disable NVIC configuration for DMA interrupt */
     NVIC_DisableIRQ(SDRAM_DMAx_IRQn);
 

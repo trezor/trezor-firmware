@@ -30,9 +30,9 @@ typedef struct {
   uint16_t Z;
 } TS_StateTypeDef;
 
-void BSP_TS_GetState(TS_StateTypeDef *TsState);
+void BSP_TS_GetState(TS_StateTypeDef* TsState);
 
-void stmpe811_Reset(i2c_bus_t *i2c_bus);
+void stmpe811_Reset(i2c_bus_t* i2c_bus);
 
 void touch_set_mode(void);
 

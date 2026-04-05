@@ -17,13 +17,13 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-bool get_features(Features *resp) {
+bool get_features(Features* resp) {
   resp->has_fw_vendor = true;
 #if EMULATOR
   strlcpy(resp->fw_vendor, "EMULATOR", sizeof(resp->fw_vendor));
 #else
-  const image_header *hdr =
-      (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
+  const image_header* hdr =
+      (const image_header*)FLASH_PTR(FLASH_FWHEADER_START);
   // allow both v2 and v3 signatures
   if (SIG_OK == signatures_match(hdr, NULL)) {
     strlcpy(resp->fw_vendor, "SatoshiLabs", sizeof(resp->fw_vendor));
@@ -100,10 +100,10 @@ bool get_features(Features *resp) {
   return resp;
 }
 
-void fsm_msgInitialize(const Initialize *msg) {
+void fsm_msgInitialize(const Initialize* msg) {
   fsm_abortWorkflows();
 
-  uint8_t *session_id;
+  uint8_t* session_id;
   if (msg && msg->has_session_id) {
     session_id = session_startSession(msg->session_id.bytes);
   } else {
@@ -121,14 +121,14 @@ void fsm_msgInitialize(const Initialize *msg) {
   msg_write(MessageType_MessageType_Features, resp);
 }
 
-void fsm_msgGetFeatures(const GetFeatures *msg) {
+void fsm_msgGetFeatures(const GetFeatures* msg) {
   (void)msg;
   RESP_INIT(Features);
   get_features(resp);
   msg_write(MessageType_MessageType_Features, resp);
 }
 
-void fsm_msgPing(const Ping *msg) {
+void fsm_msgPing(const Ping* msg) {
   RESP_INIT(Success);
 
   if (msg->has_button_protection && msg->button_protection) {
@@ -150,7 +150,7 @@ void fsm_msgPing(const Ping *msg) {
   layoutHome();
 }
 
-void fsm_msgChangePin(const ChangePin *msg) {
+void fsm_msgChangePin(const ChangePin* msg) {
   CHECK_INITIALIZED
 
   bool removal = msg->has_remove && msg->remove;
@@ -191,7 +191,7 @@ void fsm_msgChangePin(const ChangePin *msg) {
   layoutHome();
 }
 
-void fsm_msgChangeWipeCode(const ChangeWipeCode *msg) {
+void fsm_msgChangeWipeCode(const ChangeWipeCode* msg) {
   CHECK_INITIALIZED
 
   bool removal = msg->has_remove && msg->remove;
@@ -237,7 +237,7 @@ void fsm_msgChangeWipeCode(const ChangeWipeCode *msg) {
   layoutHome();
 }
 
-void fsm_msgWipeDevice(const WipeDevice *msg) {
+void fsm_msgWipeDevice(const WipeDevice* msg) {
   (void)msg;
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you really want to"), _("wipe the device?"), NULL,
@@ -255,7 +255,7 @@ void fsm_msgWipeDevice(const WipeDevice *msg) {
   layoutHome();
 }
 
-void fsm_msgGetEntropy(const GetEntropy *msg) {
+void fsm_msgGetEntropy(const GetEntropy* msg) {
   CHECK_PIN
 
 #if !DEBUG_RNG
@@ -281,7 +281,7 @@ void fsm_msgGetEntropy(const GetEntropy *msg) {
 
 #if DEBUG_LINK
 
-void fsm_msgLoadDevice(const LoadDevice *msg) {
+void fsm_msgLoadDevice(const LoadDevice* msg) {
   CHECK_PIN
 
   CHECK_NOT_INITIALIZED
@@ -312,7 +312,7 @@ void fsm_msgLoadDevice(const LoadDevice *msg) {
 
 #endif
 
-void fsm_msgResetDevice(const ResetDevice *msg) {
+void fsm_msgResetDevice(const ResetDevice* msg) {
   CHECK_PIN
 
   CHECK_NOT_INITIALIZED
@@ -334,15 +334,15 @@ void fsm_msgResetDevice(const ResetDevice *msg) {
              msg->has_entropy_check ? msg->entropy_check : false);
 }
 
-void fsm_msgEntropyAck(const EntropyAck *msg) {
+void fsm_msgEntropyAck(const EntropyAck* msg) {
   reset_entropy(msg->entropy.bytes, msg->entropy.size);
 }
 
-void fsm_msgEntropyCheckContinue(const EntropyCheckContinue *msg) {
+void fsm_msgEntropyCheckContinue(const EntropyCheckContinue* msg) {
   reset_continue(msg->has_finish ? msg->finish : false);
 }
 
-void fsm_msgBackupDevice(const BackupDevice *msg) {
+void fsm_msgBackupDevice(const BackupDevice* msg) {
   (void)msg;
 
   CHECK_INITIALIZED
@@ -356,26 +356,26 @@ void fsm_msgBackupDevice(const BackupDevice *msg) {
   memzero(mnemonic, sizeof(mnemonic));
 }
 
-void fsm_msgCancel(const Cancel *msg) {
+void fsm_msgCancel(const Cancel* msg) {
   (void)msg;
   fsm_abortWorkflows();
   fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 }
 
-void fsm_msgLockDevice(const LockDevice *msg) {
+void fsm_msgLockDevice(const LockDevice* msg) {
   (void)msg;
   config_lockDevice();
   layoutScreensaver();
   fsm_sendSuccess(_("Session cleared"));
 }
 
-void fsm_msgEndSession(const EndSession *msg) {
+void fsm_msgEndSession(const EndSession* msg) {
   (void)msg;
   session_endCurrentSession();
   fsm_sendSuccess(_("Session ended"));
 }
 
-void fsm_msgApplySettings(const ApplySettings *msg) {
+void fsm_msgApplySettings(const ApplySettings* msg) {
   CHECK_PARAM(
       !msg->has_passphrase_always_on_device,
       _("This firmware is incapable of passphrase entry on the device."));
@@ -490,14 +490,14 @@ void fsm_msgApplySettings(const ApplySettings *msg) {
   layoutHome();
 }
 
-void fsm_msgApplyFlags(const ApplyFlags *msg) {
+void fsm_msgApplyFlags(const ApplyFlags* msg) {
   CHECK_PIN
 
   config_applyFlags(msg->flags);
   fsm_sendSuccess(_("Flags applied"));
 }
 
-void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
+void fsm_msgRecoveryDevice(const RecoveryDevice* msg) {
   CHECK_PIN_UNCACHED
 
   CHECK_PARAM(msg->type == RecoveryType_NormalRecovery ||
@@ -531,13 +531,13 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
                 msg->has_u2f_counter ? msg->u2f_counter : 0, dry_run);
 }
 
-void fsm_msgWordAck(const WordAck *msg) {
+void fsm_msgWordAck(const WordAck* msg) {
   CHECK_UNLOCKED
 
   recovery_word(msg->word);
 }
 
-void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
+void fsm_msgSetU2FCounter(const SetU2FCounter* msg) {
   CHECK_PIN
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
@@ -576,7 +576,7 @@ static void progress_callback(uint32_t iter, uint32_t total) {
   layoutProgress(_("Please wait"), 1000 * iter / total);
 }
 
-void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg) {
+void fsm_msgGetFirmwareHash(const GetFirmwareHash* msg) {
   RESP_INIT(FirmwareHash);
   layoutProgressSwipe(_("Please wait"), 0);
   if (memory_firmware_hash(msg->challenge.bytes, msg->challenge.size,
@@ -590,7 +590,7 @@ void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg) {
   layoutHome();
 }
 
-void fsm_msgSetBusy(const SetBusy *msg) {
+void fsm_msgSetBusy(const SetBusy* msg) {
   if (msg->has_expiry_ms) {
     trezor_set_busy(msg->expiry_ms);
   } else {

@@ -23,8 +23,8 @@
 
 #define NDEF_MESSAGE_URI_OVERHEAD 7
 
-ndef_status_t ndef_parse_message(const uint8_t *buffer, size_t buffer_size,
-                                 ndef_message_t *message) {
+ndef_status_t ndef_parse_message(const uint8_t* buffer, size_t buffer_size,
+                                 ndef_message_t* message) {
   memset(message, 0, sizeof(ndef_message_t));
 
   size_t remaining_len = buffer_size;
@@ -99,8 +99,8 @@ ndef_status_t ndef_parse_message(const uint8_t *buffer, size_t buffer_size,
   return NDEF_OK;
 }
 
-ndef_status_t ndef_parse_record(const uint8_t *buffer, size_t buffer_size,
-                                ndef_record_t *rec) {
+ndef_status_t ndef_parse_record(const uint8_t* buffer, size_t buffer_size,
+                                ndef_record_t* rec) {
   uint8_t bp = 0;
 
   // Check if there is enough items to cover first part of the header revelaing
@@ -163,7 +163,7 @@ ndef_status_t ndef_parse_record(const uint8_t *buffer, size_t buffer_size,
   return NDEF_OK;
 }
 
-size_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size) {
+size_t ndef_create_uri(const char* uri, uint8_t* buffer, size_t buffer_size) {
   size_t uri_len = strlen(uri);
 
   if (buffer_size < (uri_len + NDEF_MESSAGE_URI_OVERHEAD)) {

@@ -52,7 +52,7 @@ static uint32_t lut_add_line(uint32_t line, uint32_t offset,
   return last_block - first_block + 1;
 }
 
-const uint32_t *panel_lut_get(void) {
+const uint32_t* panel_lut_get(void) {
   uint32_t offset = 0;
   uint32_t line = 0;
 
@@ -73,7 +73,7 @@ const uint32_t *panel_lut_get(void) {
   return gfxmmu_lut_config;
 }
 
-bool panel_init(display_driver_t *drv) {
+bool panel_init(display_driver_t* drv) {
   HAL_StatusTypeDef ret;
 
   // Write(Command , 0xFF);

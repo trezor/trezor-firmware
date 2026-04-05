@@ -38,21 +38,21 @@ typedef struct {
   size_t rx_packet_size;
 
   // write function pointer
-  bool (*write)(uint8_t *data, size_t size);
+  bool (*write)(uint8_t* data, size_t size);
   // read function pointer
-  int (*read)(uint8_t *buffer, size_t buffer_size);
+  int (*read)(uint8_t* buffer, size_t buffer_size);
 
   // RSOD function pointer
   void (*error)(void);
 } wire_iface_t;
 
-secbool codec_parse_header(const uint8_t *buf, uint16_t *msg_id,
-                           size_t *msg_size);
+secbool codec_parse_header(const uint8_t* buf, uint16_t* msg_id,
+                           size_t* msg_size);
 
-secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
-                       const pb_msgdesc_t *fields, const void *msg);
+secbool codec_send_msg(wire_iface_t* iface, uint16_t msg_id,
+                       const pb_msgdesc_t* fields, const void* msg);
 
-secbool codec_recv_message(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf,
-                           const pb_msgdesc_t *fields, void *msg);
+secbool codec_recv_message(wire_iface_t* iface, uint32_t msg_size, uint8_t* buf,
+                           const pb_msgdesc_t* fields, void* msg);
 
-void codec_flush(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf);
+void codec_flush(wire_iface_t* iface, uint32_t msg_size, uint8_t* buf);

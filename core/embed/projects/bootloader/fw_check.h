@@ -36,7 +36,7 @@ typedef struct {
                            versioning and policy flags (e.g.,
                            lock, minimum versions). */
 
-  const image_header *hdr; /**< Pointer to the validated image header of
+  const image_header* hdr; /**< Pointer to the validated image header of
                                 the selected firmware (primary or
                                 backup). NULL if no valid header was
                                 found. */
@@ -59,7 +59,7 @@ firmware image is present. */
  * @return sectrue when the vendor header is the same or there is no lock;
  *         secfalse otherwise.
  */
-secbool check_vendor_header_lock(const vendor_header *vhdr);
+secbool check_vendor_header_lock(const vendor_header* vhdr);
 
 /**
  * @brief Perform comprehensive verification of the firmware image available
@@ -72,4 +72,4 @@ secbool check_vendor_header_lock(const vendor_header *vhdr);
  *                provided by the caller and remain valid for subsequent boot
  *                decisions.
  */
-void fw_check(fw_info_t *fw_info);
+void fw_check(fw_info_t* fw_info);

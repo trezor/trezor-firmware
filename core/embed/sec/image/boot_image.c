@@ -41,8 +41,8 @@
 
 #ifndef USE_BOOT_UCB
 
-static secbool hash_match(const uint8_t *hash, const uint8_t *hash_00,
-                          const uint8_t *hash_FF) {
+static secbool hash_match(const uint8_t* hash, const uint8_t* hash_00,
+                          const uint8_t* hash_FF) {
   if (0 == memcmp(hash, hash_00, BLAKE2S_DIGEST_LENGTH)) return sectrue;
   if (0 == memcmp(hash, hash_FF, BLAKE2S_DIGEST_LENGTH)) return sectrue;
   return secfalse;
@@ -56,28 +56,28 @@ _Static_assert(
     BOOTLOADER_MAXSIZE <= IMAGE_CHUNK_SIZE,
     "BOOTLOADER_MAXSIZE must be less than or equal to IMAGE_CHUNK_SIZE");
 
-static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
-                          const void *src, uint32_t srcsize, void *dest,
+static void uzlib_prepare(struct uzlib_uncomp* decomp, uint8_t* window,
+                          const void* src, uint32_t srcsize, void* dest,
                           uint32_t destsize) {
   memzero(decomp, sizeof(struct uzlib_uncomp));
   if (window) {
     memzero(window, UZLIB_WINDOW_SIZE);
   }
   memzero(dest, destsize);
-  decomp->source = (const uint8_t *)src;
+  decomp->source = (const uint8_t*)src;
   decomp->source_limit = decomp->source + srcsize;
-  decomp->dest = (uint8_t *)dest;
+  decomp->dest = (uint8_t*)dest;
   decomp->dest_limit = decomp->dest + destsize;
   uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
 }
 
-bool boot_image_check(const boot_image_t *image) {
+bool boot_image_check(const boot_image_t* image) {
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
   const uint32_t bl_len = flash_area_get_size(&BOOTLOADER_AREA);
-  const void *bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
+  const void* bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
   blake2s(bl_data, bl_len, hash, BLAKE2S_DIGEST_LENGTH);
 
   // don't whitelist the valid bootloaders for now
@@ -94,9 +94,9 @@ bool boot_image_check(const boot_image_t *image) {
   return true;
 }
 
-void boot_image_replace(const boot_image_t *image) {
+void boot_image_replace(const boot_image_t* image) {
   const uint32_t bl_len = flash_area_get_size(&BOOTLOADER_AREA);
-  const void *bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
+  const void* bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
 
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
@@ -110,10 +110,10 @@ void boot_image_replace(const boot_image_t *image) {
   ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
          "Bootloader header decompression failed");
 
-  const image_header *new_bld_hdr = read_image_header(
-      (uint8_t *)&decomp_out, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
+  const image_header* new_bld_hdr = read_image_header(
+      (uint8_t*)&decomp_out, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
 
-  ensure(new_bld_hdr == (const image_header *)&decomp_out ? sectrue : secfalse,
+  ensure(new_bld_hdr == (const image_header*)&decomp_out ? sectrue : secfalse,
          "Invalid embedded bootloader");
 
   ensure(check_image_model(new_bld_hdr), "Incompatible embedded bootloader");
@@ -121,7 +121,7 @@ void boot_image_replace(const boot_image_t *image) {
   ensure(check_bootloader_header_sig(new_bld_hdr),
          "Invalid embedded bootloader signature");
 
-  const image_header *current_bld_hdr =
+  const image_header* current_bld_hdr =
       read_image_header(bl_data, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
 
   uint8_t new_bld_hash[IMAGE_HASH_DIGEST_LENGTH] = {0};
@@ -138,10 +138,10 @@ void boot_image_replace(const boot_image_t *image) {
   uint8_t new_bld_monotonic = new_bld_hdr->monotonic;
 
   do {
-    uint8_t *p = (uint8_t *)decomp_out + header_offset;
-    uint32_t size = decomp.dest - (uint8_t *)decomp_out - header_offset;
+    uint8_t* p = (uint8_t*)decomp_out + header_offset;
+    uint32_t size = decomp.dest - (uint8_t*)decomp_out - header_offset;
     IMAGE_HASH_UPDATE(&ctx, p, size);
-    decomp.dest = (uint8_t *)decomp_out;
+    decomp.dest = (uint8_t*)decomp_out;
     header_offset =
         0;  // after the first chunk, we don't need to skip the header anymore
   } while (uzlib_uncompress(&decomp) >= 0);
@@ -157,7 +157,7 @@ void boot_image_replace(const boot_image_t *image) {
   memset(&decomp, 0, sizeof(struct uzlib_uncomp));
 
   // cannot find valid header for current bootloader, something is wrong
-  ensure(current_bld_hdr == (const image_header *)bl_data ? sectrue : secfalse,
+  ensure(current_bld_hdr == (const image_header*)bl_data ? sectrue : secfalse,
          "Invalid bootloader header");
 
   ensure(check_image_model(current_bld_hdr), "Incompatible bootloader found");
@@ -167,9 +167,9 @@ void boot_image_replace(const boot_image_t *image) {
   }
 
   uint32_t board_name = get_board_name();
-  if (board_name == 0 || strncmp((const char *)&board_name, "T2T1", 4) == 0) {
+  if (board_name == 0 || strncmp((const char*)&board_name, "T2T1", 4) == 0) {
     // no board capabilities, assume Model T
-    if ((strncmp((const char *)&new_bld_hw_model, "T2T1", 4) != 0) &&
+    if ((strncmp((const char*)&new_bld_hw_model, "T2T1", 4) != 0) &&
         (new_bld_hw_model != 0)) {
       // reject non-model T bootloader
       // 0 represents pre-model check bootloader
@@ -197,14 +197,14 @@ void boot_image_replace(const boot_image_t *image) {
          "Bootloader decompression failed");
 
   do {
-    uint32_t *p = decomp_out;
-    uint32_t size = decomp.dest - (uint8_t *)decomp_out;
+    uint32_t* p = decomp_out;
+    uint32_t size = decomp.dest - (uint8_t*)decomp_out;
     uint32_t size_padded = FLASH_ALIGN(size);
     ensure(flash_area_write_data_padded(&BOOTLOADER_AREA, offset, p, size, 0,
                                         size_padded),
            NULL);
     offset += size_padded;
-    decomp.dest = (uint8_t *)decomp_out;
+    decomp.dest = (uint8_t*)decomp_out;
   } while (uzlib_uncompress(&decomp) >= 0);
 
   if (offset < bl_len) {
@@ -221,7 +221,7 @@ void boot_image_replace(const boot_image_t *image) {
 
 #else
 
-bool boot_image_check(const boot_image_t *image) {
+bool boot_image_check(const boot_image_t* image) {
   if (image->image_size < sizeof(boot_header_auth_t)) {
     // Invalid image size, must be at least the size of the header
     return false;
@@ -229,8 +229,8 @@ bool boot_image_check(const boot_image_t *image) {
 
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
-  boot_header_auth_t *cur_hdr = (boot_header_auth_t *)BOOTLOADER_START;
-  boot_header_auth_t *new_hdr = (boot_header_auth_t *)image->image_ptr;
+  boot_header_auth_t* cur_hdr = (boot_header_auth_t*)BOOTLOADER_START;
+  boot_header_auth_t* new_hdr = (boot_header_auth_t*)image->image_ptr;
 
   bool diff = (cur_hdr->header_size != new_hdr->header_size) ||
               (memcmp(cur_hdr, new_hdr, cur_hdr->header_size) != 0);
@@ -240,7 +240,7 @@ bool boot_image_check(const boot_image_t *image) {
   return diff;
 }
 
-void boot_image_replace(const boot_image_t *image) {
+void boot_image_replace(const boot_image_t* image) {
   uint32_t header_address = (uint32_t)image->image_ptr;
 
   // Check that image is big enough to hold the header at least
@@ -248,7 +248,7 @@ void boot_image_replace(const boot_image_t *image) {
          "Bootloader image too small");
 
   // Read bootloader header
-  const boot_header_auth_t *hdr = boot_header_auth_get(header_address);
+  const boot_header_auth_t* hdr = boot_header_auth_get(header_address);
   ensure((hdr != NULL) * sectrue, "Invalid bootloader header");
 
   // Check the image is big enough to hold both header and code
@@ -259,7 +259,7 @@ void boot_image_replace(const boot_image_t *image) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
-  const boot_header_auth_t *old_hdr = boot_header_auth_get(BOOTLOADER_START);
+  const boot_header_auth_t* old_hdr = boot_header_auth_get(BOOTLOADER_START);
 
   ensure((old_hdr != NULL) * sectrue, "Invalid current bootloader header");
 

@@ -123,11 +123,11 @@ struct {
   bool set;
 } g_layout __attribute__((aligned(4))) = {0};
 
-static ssize_t console_read(void *context, char *buf, size_t size) {
+static ssize_t console_read(void* context, char* buf, size_t size) {
   return syshandle_read(SYSHANDLE_USB_VCP, buf, size);
 }
 
-static ssize_t console_write(void *context, const char *buf, size_t size) {
+static ssize_t console_write(void* context, const char* buf, size_t size) {
   static uint32_t timeout = 2000;
   int rc = syshandle_write_blocking(SYSHANDLE_USB_VCP, buf, size, timeout);
   // Do not wait too long if the host is not connected.
@@ -207,7 +207,7 @@ void prodtest_show_homescreen(void) {
 
   static char device_sn[MAX_DEVICE_SN_SIZE] = {0};
   size_t device_sn_size = 0;
-  if (unit_properties_get_sn((uint8_t *)device_sn, sizeof(device_sn) - 1,
+  if (unit_properties_get_sn((uint8_t*)device_sn, sizeof(device_sn) - 1,
                              &device_sn_size)) {
     screen_prodtest_welcome(&g_layout.layout, device_sn, device_sn_size);
   } else {
@@ -271,7 +271,7 @@ int prodtest_main(void) {
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
     if (signalled.read_ready & (1 << SYSHANDLE_USB_VCP)) {
-      const cli_command_t *cmd = cli_process_io(&g_cli);
+      const cli_command_t* cmd = cli_process_io(&g_cli);
 
       if (cmd != NULL) {
         screen_prodtest_bars("", 0);

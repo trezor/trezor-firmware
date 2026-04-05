@@ -22,7 +22,7 @@
 
 #include "secbool.h"
 
-void __fatal_error(const char *msg, const char *file, int line);
+void __fatal_error(const char* msg, const char* file, int line);
 
 void show_wipe_code_screen(void);
 void show_pin_too_many_screen(void);

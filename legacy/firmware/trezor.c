@@ -47,13 +47,13 @@
 #endif
 
 #ifdef USE_SECP256K1_ZKP
-void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
+void secp256k1_default_illegal_callback_fn(const char* str, void* data) {
   (void)data;
   __fatal_error(str, __FILE__, __LINE__);
   return;
 }
 
-void secp256k1_default_error_callback_fn(const char *str, void *data) {
+void secp256k1_default_error_callback_fn(const char* str, void* data) {
   (void)data;
   __fatal_error(str, __FILE__, __LINE__);
   return;
@@ -141,7 +141,7 @@ static void collect_hw_entropy(bool privileged) {
   memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
 #else
   if (privileged) {
-    desig_get_unique_id((uint32_t *)HW_ENTROPY_DATA);
+    desig_get_unique_id((uint32_t*)HW_ENTROPY_DATA);
     // set entropy in the OTP randomness block
     if (!flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
       uint8_t entropy[FLASH_OTP_BLOCK_SIZE] = {0};

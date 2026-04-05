@@ -37,7 +37,7 @@ int mp_hal_stdin_rx_chr(void) {
 #endif
 }
 
-void mp_hal_stdout_tx_strn(const char *str, size_t len) {
+void mp_hal_stdout_tx_strn(const char* str, size_t len) {
 #ifdef USE_DBG_CONSOLE
   dbg_console_write(str, len);
 #endif

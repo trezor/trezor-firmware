@@ -72,10 +72,10 @@ extern "C" {
 /** @defgroup CE_CardEmul_Exported_functions
  *  @{
  */
-void card_emulation_init(const uint8_t *nfcfNfcid);
-uint16_t card_emulation_t3t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
+void card_emulation_init(const uint8_t* nfcfNfcid);
+uint16_t card_emulation_t3t(uint8_t* rxData, uint16_t rxDataLen, uint8_t* txBuf,
                             uint16_t txBufLen);
-uint16_t card_emulation_t4t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
+uint16_t card_emulation_t4t(uint8_t* rxData, uint16_t rxDataLen, uint8_t* txBuf,
                             uint16_t txBufLen);
 
 /**

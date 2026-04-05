@@ -50,7 +50,7 @@ static int socket_setup(int port) {
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
-  if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
+  if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
     perror("Failed to bind socket");
     exit(1);
   }
@@ -58,11 +58,11 @@ static int socket_setup(int port) {
   return fd;
 }
 
-static size_t socket_write(struct usb_socket *sock, const void *buffer,
+static size_t socket_write(struct usb_socket* sock, const void* buffer,
                            size_t size) {
   if (sock->fromlen > 0) {
     ssize_t n = sendto(sock->fd, buffer, size, MSG_DONTWAIT,
-                       (const struct sockaddr *)&sock->from, sock->fromlen);
+                       (const struct sockaddr*)&sock->from, sock->fromlen);
     if (n < 0 || ((size_t)n) != size) {
       perror("Failed to write socket");
       return 0;
@@ -72,10 +72,10 @@ static size_t socket_write(struct usb_socket *sock, const void *buffer,
   return size;
 }
 
-static size_t socket_read(struct usb_socket *sock, void *buffer, size_t size) {
+static size_t socket_read(struct usb_socket* sock, void* buffer, size_t size) {
   sock->fromlen = sizeof(sock->from);
   ssize_t n = recvfrom(sock->fd, buffer, size, MSG_DONTWAIT,
-                       (struct sockaddr *)&sock->from, &sock->fromlen);
+                       (struct sockaddr*)&sock->from, &sock->fromlen);
 
   if (n < 0) {
     if (errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -108,7 +108,7 @@ void emulatorSocketInit(void) {
   usb_fds[1].events = POLLIN;
 }
 
-size_t emulatorSocketRead(int *iface, void *buffer, size_t size,
+size_t emulatorSocketRead(int* iface, void* buffer, size_t size,
                           int timeout_ms) {
   if (poll(usb_fds, 2, timeout_ms) > 0) {
     if (usb_fds[0].revents & POLLIN) {
@@ -122,7 +122,7 @@ size_t emulatorSocketRead(int *iface, void *buffer, size_t size,
   return 0;
 }
 
-size_t emulatorSocketWrite(int iface, const void *buffer, size_t size) {
+size_t emulatorSocketWrite(int iface, const void* buffer, size_t size) {
   if (iface == 0) {
     return socket_write(&usb_main, buffer, size);
   }

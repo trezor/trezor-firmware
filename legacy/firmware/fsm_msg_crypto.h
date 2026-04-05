@@ -17,7 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void fsm_msgCipherKeyValue(const CipherKeyValue *msg) {
+void fsm_msgCipherKeyValue(const CipherKeyValue* msg) {
   CHECK_INITIALIZED
 
   CHECK_PARAM(msg->value.size % 16 == 0,
@@ -25,7 +25,7 @@ void fsm_msgCipherKeyValue(const CipherKeyValue *msg) {
 
   CHECK_PIN
 
-  const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
+  const HDNode* node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;
 
@@ -42,11 +42,11 @@ void fsm_msgCipherKeyValue(const CipherKeyValue *msg) {
   }
 
   uint8_t data[256 + 4];
-  strlcpy((char *)data, msg->key, sizeof(data));
-  strlcat((char *)data, ask_on_encrypt ? "E1" : "E0", sizeof(data));
-  strlcat((char *)data, ask_on_decrypt ? "D1" : "D0", sizeof(data));
+  strlcpy((char*)data, msg->key, sizeof(data));
+  strlcat((char*)data, ask_on_encrypt ? "E1" : "E0", sizeof(data));
+  strlcat((char*)data, ask_on_decrypt ? "D1" : "D0", sizeof(data));
 
-  hmac_sha512(node->private_key, 32, data, strlen((char *)data), data);
+  hmac_sha512(node->private_key, 32, data, strlen((char*)data), data);
 
   if (msg->iv.size == 16) {
     // override iv if provided
@@ -70,7 +70,7 @@ void fsm_msgCipherKeyValue(const CipherKeyValue *msg) {
   layoutHome();
 }
 
-void fsm_msgSignIdentity(const SignIdentity *msg) {
+void fsm_msgSignIdentity(const SignIdentity* msg) {
   RESP_INIT(SignedIdentity);
 
   CHECK_INITIALIZED
@@ -103,11 +103,11 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
   address_n[4] = PATH_HARDENED | hash[12] | (hash[13] << 8) | (hash[14] << 16) |
                  ((uint32_t)hash[15] << 24);
 
-  const char *curve = SECP256K1_NAME;
+  const char* curve = SECP256K1_NAME;
   if (msg->has_ecdsa_curve_name) {
     curve = msg->ecdsa_curve_name;
   }
-  HDNode *node = fsm_getDerivedNode(curve, address_n, 5, NULL);
+  HDNode* node = fsm_getDerivedNode(curve, address_n, 5, NULL);
   if (!node) return;
 
   bool sign_ssh =
@@ -132,7 +132,7 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
   } else {
     uint8_t digest[64];
     sha256_Raw(msg->challenge_hidden.bytes, msg->challenge_hidden.size, digest);
-    sha256_Raw((const uint8_t *)msg->challenge_visual,
+    sha256_Raw((const uint8_t*)msg->challenge_visual,
                strlen(msg->challenge_visual), digest + 32);
     result = cryptoMessageSign(&(coins[0]), node, InputScriptType_SPENDADDRESS,
                                false, digest, 64, resp->signature.bytes);
@@ -173,7 +173,7 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
   layoutHome();
 }
 
-void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
+void fsm_msgGetECDHSessionKey(const GetECDHSessionKey* msg) {
   RESP_INIT(ECDHSessionKey);
 
   CHECK_INITIALIZED
@@ -205,12 +205,12 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
   address_n[4] = PATH_HARDENED | hash[12] | (hash[13] << 8) | (hash[14] << 16) |
                  ((uint32_t)hash[15] << 24);
 
-  const char *curve = SECP256K1_NAME;
+  const char* curve = SECP256K1_NAME;
   if (msg->has_ecdsa_curve_name) {
     curve = msg->ecdsa_curve_name;
   }
 
-  HDNode *node = fsm_getDerivedNode(curve, address_n, 5, NULL);
+  HDNode* node = fsm_getDerivedNode(curve, address_n, 5, NULL);
   if (!node) return;
 
   int result_size = 0;

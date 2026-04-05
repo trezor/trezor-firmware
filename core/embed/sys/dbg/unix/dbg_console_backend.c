@@ -24,8 +24,8 @@
 
 void dbg_console_init(void) {}
 
-ssize_t dbg_console_read(void *buffer, size_t buffer_size) { return 0; }
+ssize_t dbg_console_read(void* buffer, size_t buffer_size) { return 0; }
 
-ssize_t dbg_console_write(const void *data, size_t data_size) {
+ssize_t dbg_console_write(const void* data, size_t data_size) {
   return write(STDERR_FILENO, data, data_size);
 }

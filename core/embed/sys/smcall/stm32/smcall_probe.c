@@ -28,7 +28,7 @@
 
 #ifdef SECMON
 
-bool probe_read_access(const void *addr, size_t len) {
+bool probe_read_access(const void* addr, size_t len) {
   if (addr == NULL) {
     return true;
   }
@@ -38,7 +38,7 @@ bool probe_read_access(const void *addr, size_t len) {
     return false;
   }
 
-  if (!cmse_check_address_range((void *)addr, len,
+  if (!cmse_check_address_range((void*)addr, len,
                                 CMSE_MPU_READ | CMSE_NONSECURE)) {
     return false;
   }
@@ -46,7 +46,7 @@ bool probe_read_access(const void *addr, size_t len) {
   return true;
 }
 
-bool probe_write_access(void *addr, size_t len) {
+bool probe_write_access(void* addr, size_t len) {
   if (addr == NULL) {
     return true;
   }
@@ -64,13 +64,13 @@ bool probe_write_access(void *addr, size_t len) {
   return true;
 }
 
-bool probe_execute_access(const void *addr) {
+bool probe_execute_access(const void* addr) {
   if (addr == NULL) {
     return true;
   }
 
   // Just check if the address is in non-secure address range
-  if (!cmse_check_address_range((void *)addr, 4,
+  if (!cmse_check_address_range((void*)addr, 4,
                                 CMSE_MPU_READ | CMSE_NONSECURE)) {
     return false;
   }

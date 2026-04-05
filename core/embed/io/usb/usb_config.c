@@ -95,7 +95,7 @@ static secbool usb_device_init(void) {
 
 #ifdef TREZOR_EMULATOR
 static uint16_t usb_emu_port(uint16_t port_offset) {
-  const char *base_port = getenv("TREZOR_UDP_PORT");
+  const char* base_port = getenv("TREZOR_UDP_PORT");
   return port_offset + (base_port ? atoi(base_port) : USB_IFACE_BASE_PORT);
 }
 #endif
@@ -103,7 +103,7 @@ static uint16_t usb_emu_port(uint16_t port_offset) {
 // ----------------------------------------------------------------
 
 #ifdef USE_USB_IFACE_WIRE
-static secbool usb_wire_iface_init(uint8_t *iface_num) {
+static secbool usb_wire_iface_init(uint8_t* iface_num) {
   static uint8_t wire_iface_buffer[USB_PACKET_LEN];
 
   const usb_webusb_info_t wire_iface = {
@@ -133,7 +133,7 @@ static secbool usb_wire_iface_init(uint8_t *iface_num) {
 #endif  // USE_USB_IFACE_WIRE
 
 #ifdef USE_USB_IFACE_DEBUG
-static secbool usb_debug_iface_init(uint8_t *iface_num) {
+static secbool usb_debug_iface_init(uint8_t* iface_num) {
   static uint8_t debug_iface_buffer[USB_PACKET_LEN];
 
   const usb_webusb_info_t debug_iface = {
@@ -163,7 +163,7 @@ static secbool usb_debug_iface_init(uint8_t *iface_num) {
 #endif  // USE_USB_IFACE_DEBUG
 
 #ifdef USE_USB_IFACE_WEBAUTHN
-static secbool usb_webauthn_iface_init(uint8_t *iface_num) {
+static secbool usb_webauthn_iface_init(uint8_t* iface_num) {
   static const uint8_t webauthn_report_map[] = {
       0x06, 0xd0, 0xf1,  // USAGE_PAGE (FIDO Alliance)
       0x09, 0x01,        // USAGE (U2F HID Authenticator Device)
@@ -229,7 +229,7 @@ static secbool usb_webauthn_iface_init(uint8_t *iface_num) {
 #define VCP_RX_BUFFER_LEN 2048
 
 #ifdef USE_USB_IFACE_VCP
-static secbool usb_vcp_iface_init(uint8_t *iface_num,
+static secbool usb_vcp_iface_init(uint8_t* iface_num,
                                   usb_vcp_intr_callback_t vcp_intr_callback) {
   static uint8_t vcp_tx_packet[VCP_PACKET_LEN];
   static uint8_t vcp_tx_buffer[VCP_TX_BUFFER_LEN];

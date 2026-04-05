@@ -55,7 +55,7 @@ uint16_t flash_sector_find(uint16_t first_sector, uint32_t offset);
 // Returns the physical address of a byte on specified 'offset' in the specified
 // 'sector'. Checks if it's possible to access continues space of 'size' bytes
 // Returns NULL i [offset, offset + size] is of out of the specified sector
-const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size);
+const void* flash_get_address(uint16_t sector, uint32_t offset, uint32_t size);
 
 // Unlocks the flash memory for writes/erase operations
 // Flash must be locked again as soon as possible
@@ -76,7 +76,7 @@ secbool __wur flash_write_word(uint16_t sector, uint32_t offset, uint32_t data);
 
 // Writes a 128-byte burst to specified 'offset' inside a flash 'sector'
 secbool __wur flash_write_burst(uint16_t sector, uint32_t offset,
-                                const uint32_t *data);
+                                const uint32_t* data);
 
 // Erases a single sector/page of flash memory
 secbool __wur flash_sector_erase(uint16_t sector);

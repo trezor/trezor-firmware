@@ -132,12 +132,12 @@ typedef struct {
   AuthorizeCoinJoin coinjoin_authorization;
 } Session;
 
-static void session_clearCache(Session *session);
+static void session_clearCache(Session* session);
 static uint8_t session_findLeastRecent(void);
-static uint8_t session_findSession(const uint8_t *sessionId);
+static uint8_t session_findSession(const uint8_t* sessionId);
 
 static CONFIDENTIAL Session sessionsCache[MAX_SESSIONS_COUNT];
-static Session *activeSessionCache;
+static Session* activeSessionCache;
 
 static uint32_t sessionUseCounter = 0;
 
@@ -160,7 +160,7 @@ static secbool config_set_bool(uint16_t key, bool value) {
   }
 }
 
-static secbool config_get_bool(uint16_t key, bool *value) {
+static secbool config_get_bool(uint16_t key, bool* value) {
   uint8_t val = 0;
   uint16_t len = 0;
   if (sectrue == storage_get(key, &val, sizeof(val), &len) &&
@@ -173,8 +173,8 @@ static secbool config_get_bool(uint16_t key, bool *value) {
   }
 }
 
-static secbool config_get_bytes(uint16_t key, uint8_t *dest, uint16_t dest_size,
-                                uint16_t *real_size) {
+static secbool config_get_bytes(uint16_t key, uint8_t* dest, uint16_t dest_size,
+                                uint16_t* real_size) {
   if (dest_size == 0) {
     return secfalse;
   }
@@ -185,7 +185,7 @@ static secbool config_get_bytes(uint16_t key, uint8_t *dest, uint16_t dest_size,
   return sectrue;
 }
 
-static secbool config_get_string(uint16_t key, char *dest, uint16_t dest_size) {
+static secbool config_get_string(uint16_t key, char* dest, uint16_t dest_size) {
   if (dest_size == 0) {
     return secfalse;
   }
@@ -199,7 +199,7 @@ static secbool config_get_string(uint16_t key, char *dest, uint16_t dest_size) {
   return sectrue;
 }
 
-static secbool config_get_uint32(uint16_t key, uint32_t *value) {
+static secbool config_get_uint32(uint16_t key, uint32_t* value) {
   uint16_t len = 0;
   if (sectrue != storage_get(key, value, sizeof(uint32_t), &len) ||
       len != sizeof(uint32_t)) {
@@ -277,7 +277,7 @@ static secbool config_upgrade_v10(void) {
 
   // Erase newly added fields.
   if (old_config_size != sizeof(Storage)) {
-    memzero((char *)&config + old_config_size,
+    memzero((char*)&config + old_config_size,
             sizeof(Storage) - old_config_size);
   }
 
@@ -295,21 +295,21 @@ static secbool config_upgrade_v10(void) {
   } else {
     // Get PIN failure counter from version 10 format.
     uint32_t flash_pinfails = FLASH_STORAGE_PINAREA;
-    while (*(const uint32_t *)FLASH_PTR(flash_pinfails) == 0) {
+    while (*(const uint32_t*)FLASH_PTR(flash_pinfails) == 0) {
       flash_pinfails += sizeof(uint32_t);
     }
-    pin_wait = ~*(const uint32_t *)FLASH_PTR(flash_pinfails);
+    pin_wait = ~*(const uint32_t*)FLASH_PTR(flash_pinfails);
   }
 
   uint32_t u2f_offset = 0;
   if (config.has_u2f_counter) {
     const uint32_t FLASH_STORAGE_U2FAREA = FLASH_STORAGE_PINAREA + 0x1000;
-    const uint32_t *u2fptr = (const uint32_t *)FLASH_PTR(FLASH_STORAGE_U2FAREA);
+    const uint32_t* u2fptr = (const uint32_t*)FLASH_PTR(FLASH_STORAGE_U2FAREA);
     while (*u2fptr == 0) {
       u2fptr++;
     }
     u2f_offset =
-        32 * (u2fptr - (const uint32_t *)FLASH_PTR(FLASH_STORAGE_U2FAREA));
+        32 * (u2fptr - (const uint32_t*)FLASH_PTR(FLASH_STORAGE_U2FAREA));
     uint32_t u2fword = *u2fptr;
     while ((u2fword & 1) == 0) {
       u2f_offset++;
@@ -322,7 +322,7 @@ static secbool config_upgrade_v10(void) {
   if (config.has_pin) {
     size_t pin_len =
         MIN(strnlen(config.pin, sizeof(config.pin)), (size_t)MAX_PIN_LEN);
-    storage_change_pin((const uint8_t *)config.pin, pin_len, NULL);
+    storage_change_pin((const uint8_t*)config.pin, pin_len, NULL);
   }
 
   while (pin_wait != 0) {
@@ -404,11 +404,11 @@ void config_init(void) {
   if (sectrue !=
           storage_get(KEY_UUID, config_uuid, sizeof(config_uuid), &len) ||
       len != sizeof(config_uuid)) {
-    random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
+    random_buffer((uint8_t*)config_uuid, sizeof(config_uuid));
     storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
     storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
   }
-  data2hex((const uint8_t *)config_uuid, sizeof(config_uuid), config_uuid_str);
+  data2hex((const uint8_t*)config_uuid, sizeof(config_uuid), config_uuid_str);
 
   session_clear(false);
 
@@ -425,7 +425,7 @@ void session_clear(bool lock) {
   }
 }
 
-void session_clearCache(Session *session) {
+void session_clearCache(Session* session) {
   session->last_use = 0;
   memzero(session->id, sizeof(session->id));
   memzero(session->seed, sizeof(session->seed));
@@ -444,8 +444,8 @@ static void get_u2froot_callback(uint32_t iter, uint32_t total) {
   layoutProgress(_("Updating"), 1000 * iter / total);
 }
 
-static void config_compute_u2froot(const char *mnemonic,
-                                   StorageHDNode *u2froot) {
+static void config_compute_u2froot(const char* mnemonic,
+                                   StorageHDNode* u2froot) {
   static CONFIDENTIAL HDNode node;
   static CONFIDENTIAL uint8_t seed[64];
   char oldTiny = usbTiny(1);
@@ -468,7 +468,7 @@ static void config_compute_u2froot(const char *mnemonic,
 
 #if DEBUG_LINK
 
-bool config_dumpNode(HDNodeType *node) {
+bool config_dumpNode(HDNodeType* node) {
   memzero(node, sizeof(HDNodeType));
 
   StorageHDNode storageNode = {0};
@@ -497,7 +497,7 @@ bool config_dumpNode(HDNodeType *node) {
   return true;
 }
 
-void config_loadDevice(const LoadDevice *msg) {
+void config_loadDevice(const LoadDevice* msg) {
   session_clear(false);
   config_set_bool(KEY_IMPORTED, true);
   config_setPassphraseProtection(msg->has_passphrase_protection &&
@@ -537,7 +537,7 @@ void config_loadDevice(const LoadDevice *msg) {
 
 #endif
 
-void config_setLabel(const char *label) {
+void config_setLabel(const char* label) {
   if (label == NULL || label[0] == '\0') {
     storage_delete(KEY_LABEL);
   } else {
@@ -545,7 +545,7 @@ void config_setLabel(const char *label) {
   }
 }
 
-void config_setLanguage(const char *lang) {
+void config_setLanguage(const char* lang) {
   if (lang == NULL) {
     return;
   }
@@ -561,12 +561,12 @@ void config_setPassphraseProtection(bool passphrase_protection) {
   config_set_bool(KEY_PASSPHRASE_PROTECTION, passphrase_protection);
 }
 
-bool config_getPassphraseProtection(bool *passphrase_protection) {
+bool config_getPassphraseProtection(bool* passphrase_protection) {
   return sectrue ==
          config_get_bool(KEY_PASSPHRASE_PROTECTION, passphrase_protection);
 }
 
-void config_setHomescreen(const uint8_t *data, uint32_t size) {
+void config_setHomescreen(const uint8_t* data, uint32_t size) {
   if (data != NULL && size == HOMESCREEN_SIZE) {
     storage_set(KEY_HOMESCREEN, data, size);
   } else {
@@ -579,7 +579,7 @@ static void get_root_node_callback(uint32_t iter, uint32_t total) {
   layoutProgress(_("Waking up"), 1000 * iter / total);
 }
 
-const uint8_t *config_getSeed(void) {
+const uint8_t* config_getSeed(void) {
   if (activeSessionCache == NULL) {
     fsm_sendFailure(FailureType_Failure_InvalidSession, "Invalid session");
     return NULL;
@@ -639,7 +639,7 @@ const uint8_t *config_getSeed(void) {
   return NULL;
 }
 
-bool config_setCoinJoinAuthorization(const AuthorizeCoinJoin *authorization) {
+bool config_setCoinJoinAuthorization(const AuthorizeCoinJoin* authorization) {
   if (activeSessionCache == NULL) {
     fsm_sendFailure(FailureType_Failure_InvalidSession, "Invalid session");
     return false;
@@ -667,7 +667,7 @@ MessageType config_getAuthorizationType(void) {
   return activeSessionCache->authorization_type;
 }
 
-const AuthorizeCoinJoin *config_getCoinJoinAuthorization(void) {
+const AuthorizeCoinJoin* config_getCoinJoinAuthorization(void) {
   if (activeSessionCache == NULL) {
     fsm_sendFailure(FailureType_Failure_InvalidSession, "Invalid session");
     return NULL;
@@ -683,13 +683,13 @@ const AuthorizeCoinJoin *config_getCoinJoinAuthorization(void) {
   return &activeSessionCache->coinjoin_authorization;
 }
 
-static bool config_loadNode(const StorageHDNode *node, const char *curve,
-                            HDNode *out) {
+static bool config_loadNode(const StorageHDNode* node, const char* curve,
+                            HDNode* out) {
   return hdnode_from_xprv(node->depth, node->child_num, node->chain_code.bytes,
                           node->private_key.bytes, curve, out);
 }
 
-bool config_getU2FRoot(HDNode *node) {
+bool config_getU2FRoot(HDNode* node) {
   StorageHDNode u2fNode = {0};
   uint16_t len = 0;
   if (sectrue != storage_get(KEY_U2F_ROOT, &u2fNode, sizeof(u2fNode), &len) ||
@@ -702,8 +702,8 @@ bool config_getU2FRoot(HDNode *node) {
   return ret;
 }
 
-bool config_getRootNode(HDNode *node, const char *curve) {
-  const uint8_t *seed = config_getSeed();
+bool config_getRootNode(HDNode* node, const char* curve) {
+  const uint8_t* seed = config_getSeed();
   if (seed == NULL) {
     return false;
   }
@@ -714,11 +714,11 @@ bool config_getRootNode(HDNode *node, const char *curve) {
   return result;
 }
 
-bool config_getLabel(char *dest, uint16_t dest_size) {
+bool config_getLabel(char* dest, uint16_t dest_size) {
   return sectrue == config_get_string(KEY_LABEL, dest, dest_size);
 }
 
-bool config_getLanguage(char *dest, uint16_t dest_size) {
+bool config_getLanguage(char* dest, uint16_t dest_size) {
   if (sectrue == config_get_string(KEY_LANGUAGE, dest, dest_size)) {
     if (dest_size == 7 && (strcmp(dest, "english") != 0)) {
       // fallthrough -> return "en-US"
@@ -732,7 +732,7 @@ bool config_getLanguage(char *dest, uint16_t dest_size) {
   return true;
 }
 
-bool config_getHomescreen(uint8_t *dest, uint16_t dest_size) {
+bool config_getHomescreen(uint8_t* dest, uint16_t dest_size) {
   uint16_t len = 0;
   secbool ret = storage_get(KEY_HOMESCREEN, dest, dest_size, &len);
   if (sectrue != ret || len != HOMESCREEN_SIZE) {
@@ -741,7 +741,7 @@ bool config_getHomescreen(uint8_t *dest, uint16_t dest_size) {
   return true;
 }
 
-bool config_setMnemonic(const char *mnemonic) {
+bool config_setMnemonic(const char* mnemonic) {
   if (mnemonic == NULL) {
     return false;
   }
@@ -767,12 +767,12 @@ bool config_setMnemonic(const char *mnemonic) {
   return true;
 }
 
-bool config_getMnemonicBytes(uint8_t *dest, uint16_t dest_size,
-                             uint16_t *real_size) {
+bool config_getMnemonicBytes(uint8_t* dest, uint16_t dest_size,
+                             uint16_t* real_size) {
   return sectrue == config_get_bytes(KEY_MNEMONIC, dest, dest_size, real_size);
 }
 
-bool config_getMnemonic(char *dest, uint16_t dest_size) {
+bool config_getMnemonic(char* dest, uint16_t dest_size) {
   return sectrue == config_get_string(KEY_MNEMONIC, dest, dest_size);
 }
 
@@ -781,7 +781,7 @@ bool config_hasMnemonic(void) { return sectrue == storage_has(KEY_MNEMONIC); }
 /* Check whether mnemonic matches storage. The mnemonic must be
  * a null-terminated string.
  */
-bool config_containsMnemonic(const char *mnemonic) {
+bool config_containsMnemonic(const char* mnemonic) {
   uint16_t len = 0;
   uint8_t stored_mnemonic[MAX_MNEMONIC_LEN] = {0};
   if (sectrue != storage_get(KEY_MNEMONIC, stored_mnemonic,
@@ -795,7 +795,7 @@ bool config_containsMnemonic(const char *mnemonic) {
   memzero(stored_mnemonic, sizeof(stored_mnemonic));
 
   uint8_t digest_input[SHA256_DIGEST_LENGTH] = {0};
-  sha256_Raw((const uint8_t *)mnemonic, strnlen(mnemonic, MAX_MNEMONIC_LEN),
+  sha256_Raw((const uint8_t*)mnemonic, strnlen(mnemonic, MAX_MNEMONIC_LEN),
              digest_input);
 
   uint8_t diff = 0;
@@ -810,20 +810,20 @@ bool config_containsMnemonic(const char *mnemonic) {
 /* Check whether pin matches storage.  The pin must be
  * a null-terminated string with at most 50 characters.
  */
-bool config_unlock(const char *pin) {
+bool config_unlock(const char* pin) {
   char oldTiny = usbTiny(1);
   storage_unlock_result_t ret =
-      storage_unlock((const uint8_t *)pin, strnlen(pin, MAX_PIN_LEN), NULL);
+      storage_unlock((const uint8_t*)pin, strnlen(pin, MAX_PIN_LEN), NULL);
   usbTiny(oldTiny);
   return UNLOCK_OK == ret;
 }
 
 bool config_hasPin(void) { return sectrue == storage_has_pin(); }
 
-bool config_changePin(const char *new_pin) {
+bool config_changePin(const char* new_pin) {
   char oldTiny = usbTiny(1);
   storage_pin_change_result_t ret = storage_change_pin(
-      (const uint8_t *)new_pin, strnlen(new_pin, MAX_PIN_LEN), NULL);
+      (const uint8_t*)new_pin, strnlen(new_pin, MAX_PIN_LEN), NULL);
   usbTiny(oldTiny);
 
 #if DEBUG_LINK
@@ -840,18 +840,18 @@ bool config_changePin(const char *new_pin) {
 }
 
 #if DEBUG_LINK
-bool config_getPin(char *dest, uint16_t dest_size) {
+bool config_getPin(char* dest, uint16_t dest_size) {
   return sectrue == config_get_string(KEY_DEBUG_LINK_PIN, dest, dest_size);
 }
 #endif
 
 bool config_hasWipeCode(void) { return sectrue == storage_has_wipe_code(); }
 
-bool config_changeWipeCode(const char *pin, const char *wipe_code) {
+bool config_changeWipeCode(const char* pin, const char* wipe_code) {
   char oldTiny = usbTiny(1);
   secbool ret = storage_change_wipe_code(
-      (const uint8_t *)pin, strnlen(pin, MAX_PIN_LEN), NULL,
-      (const uint8_t *)wipe_code, strnlen(wipe_code, MAX_PIN_LEN));
+      (const uint8_t*)pin, strnlen(pin, MAX_PIN_LEN), NULL,
+      (const uint8_t*)wipe_code, strnlen(wipe_code, MAX_PIN_LEN));
   usbTiny(oldTiny);
   return sectrue == ret;
 }
@@ -872,7 +872,7 @@ uint8_t session_findLeastRecent(void) {
   return least_recent_index;
 }
 
-uint8_t session_findSession(const uint8_t *sessionId) {
+uint8_t session_findSession(const uint8_t* sessionId) {
   for (uint8_t i = 0; i < MAX_SESSIONS_COUNT; i++) {
     if (sessionsCache[i].last_use != 0) {
       if (memcmp(sessionsCache[i].id, sessionId, 32) == 0) {  // session found
@@ -883,7 +883,7 @@ uint8_t session_findSession(const uint8_t *sessionId) {
   return MAX_SESSIONS_COUNT;
 }
 
-uint8_t *session_startSession(const uint8_t *received_session_id) {
+uint8_t* session_startSession(const uint8_t* received_session_id) {
   int session_index = MAX_SESSIONS_COUNT;
 
   if (received_session_id != NULL) {
@@ -917,7 +917,7 @@ bool config_isInitialized(void) {
   return initialized;
 }
 
-bool config_getImported(bool *imported) {
+bool config_getImported(bool* imported) {
   return sectrue == config_get_bool(KEY_IMPORTED, imported);
 }
 
@@ -925,7 +925,7 @@ void config_setImported(bool imported) {
   config_set_bool(KEY_IMPORTED, imported);
 }
 
-bool config_getNeedsBackup(bool *needs_backup) {
+bool config_getNeedsBackup(bool* needs_backup) {
   return sectrue == config_get_bool(KEY_NEEDS_BACKUP, needs_backup);
 }
 
@@ -933,7 +933,7 @@ void config_setNeedsBackup(bool needs_backup) {
   config_set_bool(KEY_NEEDS_BACKUP, needs_backup);
 }
 
-bool config_getUnfinishedBackup(bool *unfinished_backup) {
+bool config_getUnfinishedBackup(bool* unfinished_backup) {
   return sectrue == config_get_bool(KEY_UNFINISHED_BACKUP, unfinished_backup);
 }
 
@@ -941,7 +941,7 @@ void config_setUnfinishedBackup(bool unfinished_backup) {
   config_set_bool(KEY_UNFINISHED_BACKUP, unfinished_backup);
 }
 
-bool config_getNoBackup(bool *no_backup) {
+bool config_getNoBackup(bool* no_backup) {
   return sectrue == config_get_bool(KEY_NO_BACKUP, no_backup);
 }
 
@@ -957,7 +957,7 @@ void config_applyFlags(uint32_t flags) {
   storage_set(KEY_FLAGS, &flags, sizeof(flags));
 }
 
-bool config_getFlags(uint32_t *flags) {
+bool config_getFlags(uint32_t* flags) {
   return sectrue == config_get_uint32(KEY_FLAGS, flags);
 }
 
@@ -1010,8 +1010,8 @@ void config_wipe(void) {
     storage_unlock(PIN_EMPTY, PIN_EMPTY_LEN, NULL);
   }
   usbTiny(oldTiny);
-  random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
-  data2hex((const uint8_t *)config_uuid, sizeof(config_uuid), config_uuid_str);
+  random_buffer((uint8_t*)config_uuid, sizeof(config_uuid));
+  data2hex((const uint8_t*)config_uuid, sizeof(config_uuid), config_uuid_str);
   autoLockDelayMsCached = secfalse;
   safetyCheckLevel = SafetyCheckLevel_Strict;
   storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));

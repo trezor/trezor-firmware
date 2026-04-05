@@ -5,7 +5,7 @@ START_TEST(test_ed25519_cardano_sign_vectors) {
   ed25519_secret_key secret_key_extension;
   ed25519_signature signature;
 
-  static const char *vectors[] = {
+  static const char* vectors[] = {
       "6065a956b1b34145c4416fdc3ba3276801850e91a77a31a7be782463288aea5"
       "3",  // private key
       "60ba6e25b1a02157fb69c5d1d7b96c4619736e545447069a6a6f0ba90844bc8"
@@ -80,7 +80,7 @@ START_TEST(test_ed25519_cardano_sign_vectors) {
       0,
   };
 
-  const char **test_data;
+  const char** test_data;
   test_data = vectors;
   while (*test_data) {
     memcpy(secret_key, fromhex(*test_data), 32);
@@ -94,7 +94,7 @@ START_TEST(test_ed25519_cardano_sign_vectors) {
 
     ck_assert_mem_eq(public_key, fromhex(*(test_data + 2)), 32);
 
-    const uint8_t *message = (const uint8_t *)"Hello World";
+    const uint8_t* message = (const uint8_t*)"Hello World";
     ed25519_sign_ext(message, 11, secret_key, secret_key_extension, signature);
     UNMARK_SECRET_DATA(signature, sizeof(signature));
 
@@ -118,7 +118,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_1) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -164,7 +164,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_2) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -205,7 +205,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_3) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -246,7 +246,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_4) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -288,7 +288,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_5) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -331,7 +331,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_6) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -375,7 +375,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_7) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -420,7 +420,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_8) {
       "action surprise weapon check fiction muscle this",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 198);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -466,7 +466,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_9) {
       "butter",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 264);
-  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+  secret_from_entropy_cardano_icarus((const uint8_t*)"", 0, mnemonic_bits,
                                      mnemonic_bits_len / 8, cardano_secret,
                                      NULL);
   hdnode_from_secret_cardano(cardano_secret, &node);
@@ -505,7 +505,7 @@ START_TEST(test_cardano_ledger_vector_1) {
   uint8_t seed[512 / 8];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
 
-  const char *mnemonic =
+  const char* mnemonic =
       "recall grace sport punch exhibit mad harbor stand obey "
       "short width stem awkward used stairs wool ugly "
       "trap season stove worth toward congress jaguar";
@@ -528,7 +528,7 @@ START_TEST(test_cardano_ledger_vector_2) {
   uint8_t seed[512 / 8];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
 
-  const char *mnemonic =
+  const char* mnemonic =
       "correct cherry mammal bubble want mandate polar hazard "
       "crater better craft exotic choice fun tourist census "
       "gap lottery neglect address glow carry old business";
@@ -551,7 +551,7 @@ START_TEST(test_cardano_ledger_vector_3) {
   uint8_t seed[512 / 8];
   uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
 
-  const char *mnemonic =
+  const char* mnemonic =
       "abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon abandon "
       "abandon abandon abandon abandon abandon abandon abandon art";

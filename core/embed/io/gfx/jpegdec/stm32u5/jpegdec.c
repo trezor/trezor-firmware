@@ -80,7 +80,7 @@ jpegdec_t g_jpegdec = {
 };
 
 bool jpegdec_open(void) {
-  jpegdec_t *dec = &g_jpegdec;
+  jpegdec_t* dec = &g_jpegdec;
 
   if (dec->inuse) {
     return false;
@@ -137,7 +137,7 @@ cleanup:
 }
 
 void jpegdec_close(void) {
-  jpegdec_t *dec = &g_jpegdec;
+  jpegdec_t* dec = &g_jpegdec;
 
   if (dec->hdma.Instance != NULL) {
     HAL_DMA_Abort(&dec->hdma);
@@ -155,7 +155,7 @@ void jpegdec_close(void) {
 
 // Extracts image parameters from the JPEG codec registers
 // and set `dec->image` and `dec->mcu_xxx` fields
-static bool jpegdec_extract_header_info(jpegdec_t *dec) {
+static bool jpegdec_extract_header_info(jpegdec_t* dec) {
   jpegdec_image_t image = {0};
   size_t mcu_size = 64;  // Grayscale, 8x8 blocks
   int16_t mcu_width = 8;
@@ -216,7 +216,7 @@ static bool jpegdec_extract_header_info(jpegdec_t *dec) {
 }
 
 // Starts DMA transfer of the decoded YCbCr data for the current slice
-static bool jpegdec_start_dma_transfer(jpegdec_t *dec) {
+static bool jpegdec_start_dma_transfer(jpegdec_t* dec) {
   // Number ofs MCU that fit into the YCbCr buffer
   int n_ycbcr = sizeof(dec->ycbcr_buffer) / dec->mcu_size;
   // Number ofs MCUs that fit into the RGB buffer
@@ -243,9 +243,9 @@ static bool jpegdec_start_dma_transfer(jpegdec_t *dec) {
 
 // Feeds the input FIFO with the data from the input buffer.
 // Returns `true` if at least one word was written to the FIFO.
-static inline bool jpegdec_feed_fifo(jpegdec_t *dec, jpegdec_input_t *inp) {
+static inline bool jpegdec_feed_fifo(jpegdec_t* dec, jpegdec_input_t* inp) {
   // Input FIFO needs data
-  const uint32_t *ptr = (const uint32_t *)&inp->data[inp->offset];
+  const uint32_t* ptr = (const uint32_t*)&inp->data[inp->offset];
   if (inp->offset + 16 <= inp->size) {
     // Feed the FIFO with 16 bytes
     JPEG->DIR = ptr[0];
@@ -273,7 +273,7 @@ static inline bool jpegdec_feed_fifo(jpegdec_t *dec, jpegdec_input_t *inp) {
 
 // Advances the slice coordinates to the next slice.
 // Returns `true` if the decoding is complete.
-static inline bool jpegdec_advance_slice_coordinates(jpegdec_t *dec) {
+static inline bool jpegdec_advance_slice_coordinates(jpegdec_t* dec) {
   dec->slice_x += dec->slice_width;
   if (dec->slice_x >= dec->image.width) {
     dec->slice_x = 0;
@@ -282,8 +282,8 @@ static inline bool jpegdec_advance_slice_coordinates(jpegdec_t *dec) {
   return dec->slice_y >= dec->image.height;
 }
 
-jpegdec_state_t jpegdec_process(jpegdec_input_t *inp) {
-  jpegdec_t *dec = &g_jpegdec;
+jpegdec_state_t jpegdec_process(jpegdec_input_t* inp) {
+  jpegdec_t* dec = &g_jpegdec;
 
   if (!dec->inuse) {
     return JPEGDEC_STATE_ERROR;
@@ -385,8 +385,8 @@ jpegdec_state_t jpegdec_process(jpegdec_input_t *inp) {
   return dec->state;
 }
 
-bool jpegdec_get_info(jpegdec_image_t *image) {
-  jpegdec_t *dec = &g_jpegdec;
+bool jpegdec_get_info(jpegdec_image_t* image) {
+  jpegdec_t* dec = &g_jpegdec;
 
   if (!dec->inuse) {
     return false;
@@ -400,8 +400,8 @@ bool jpegdec_get_info(jpegdec_image_t *image) {
   return true;
 }
 
-bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
-  jpegdec_t *dec = &g_jpegdec;
+bool jpegdec_get_slice_rgba8888(uint32_t* rgba8888, jpegdec_slice_t* slice) {
+  jpegdec_t* dec = &g_jpegdec;
 
   if (!dec->inuse) {
     return false;
@@ -467,7 +467,7 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
 //
 // 'dst_stride' is the number of bytes between the start of two consecutive
 // rows in the destination buffer.
-static void fast_copy_init(DMA_HandleTypeDef *hdma, size_t dst_stride) {
+static void fast_copy_init(DMA_HandleTypeDef* hdma, size_t dst_stride) {
   hdma->Instance = GPDMA1_Channel13;
   hdma->Init.Request = GPDMA1_REQUEST_HASH_IN;
   hdma->Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
@@ -499,10 +499,9 @@ static void fast_copy_init(DMA_HandleTypeDef *hdma, size_t dst_stride) {
 //
 // `src` is expected to be a pointer to the start of an 8x8 block.
 // `dst` is expected to be a pointer to destination bitmap buffer
-static inline void fast_copy_block(DMA_HandleTypeDef *hdma, uint8_t *dst,
-                                   uint8_t *src) {
-  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0)
-    ;
+static inline void fast_copy_block(DMA_HandleTypeDef* hdma, uint8_t* dst,
+                                   uint8_t* src) {
+  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0);
 
   hdma->Lock = 0;
   hdma->State = HAL_DMA_STATE_READY;
@@ -511,9 +510,8 @@ static inline void fast_copy_block(DMA_HandleTypeDef *hdma, uint8_t *dst,
 }
 
 // Deinitialize the DMA base copy
-static inline void fast_copy_deinit(DMA_HandleTypeDef *hdma) {
-  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0)
-    ;
+static inline void fast_copy_deinit(DMA_HandleTypeDef* hdma) {
+  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0);
 
   hdma->Lock = 0;
   hdma->State = HAL_DMA_STATE_READY;
@@ -521,8 +519,8 @@ static inline void fast_copy_deinit(DMA_HandleTypeDef *hdma) {
   HAL_DMA_DeInit(hdma);
 }
 
-bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
-  jpegdec_t *dec = &g_jpegdec;
+bool jpegdec_get_slice_mono8(uint32_t* mono8, jpegdec_slice_t* slice) {
+  jpegdec_t* dec = &g_jpegdec;
 
   if (!dec->inuse) {
     return false;
@@ -556,10 +554,10 @@ bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
     case JPEGDEC_IMAGE_GRAYSCALE: {
       static DMA_HandleTypeDef hdma = {0};
       fast_copy_init(&hdma, dec->slice_width);
-      uint8_t *src = (uint8_t *)dec->ycbcr_buffer;
+      uint8_t* src = (uint8_t*)dec->ycbcr_buffer;
       for (int y = 0; y < dec->slice_height; y += 8) {
         for (int x = 0; x < dec->slice_width; x += 8) {
-          uint8_t *dst = (uint8_t *)mono8 + y * dec->slice_width + x;
+          uint8_t* dst = (uint8_t*)mono8 + y * dec->slice_width + x;
           fast_copy_block(&hdma, dst, src);
           src += 64;
         }

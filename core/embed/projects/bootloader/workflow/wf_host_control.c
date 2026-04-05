@@ -33,7 +33,7 @@
 #include <wire/wire_iface_ble.h>
 #endif
 
-static workflow_result_t bootloader_process_comm(wire_iface_t *wire_iface) {
+static workflow_result_t bootloader_process_comm(wire_iface_t* wire_iface) {
   if (wire_iface == NULL) {
     // continue with the event processing
     return WF_OK;
@@ -87,27 +87,27 @@ static workflow_result_t bootloader_process_comm(wire_iface_t *wire_iface) {
 }
 
 workflow_result_t bootloader_process_usb(void) {
-  wire_iface_t *iface = usb_iface_get();
+  wire_iface_t* iface = usb_iface_get();
   return bootloader_process_comm(iface);
 }
 
 #ifdef USE_BLE
 workflow_result_t bootloader_process_ble(void) {
-  wire_iface_t *iface = ble_iface_get();
+  wire_iface_t* iface = ble_iface_get();
   return bootloader_process_comm(iface);
 }
 #endif
 
-void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios) {
+void workflow_ifaces_init(secbool usb21_landing, protob_ios_t* ios) {
   size_t cnt = 1;
   memset(ios, 0, sizeof(*ios));
 
-  wire_iface_t *usb_iface = usb_iface_init(usb21_landing);
+  wire_iface_t* usb_iface = usb_iface_init(usb21_landing);
 
   protob_init(&ios->ifaces[0], usb_iface);
 
 #ifdef USE_BLE
-  wire_iface_t *ble_iface = ble_iface_init();
+  wire_iface_t* ble_iface = ble_iface_init();
 
   protob_init(&ios->ifaces[1], ble_iface);
   cnt++;
@@ -116,7 +116,7 @@ void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios) {
   ios->count = cnt;
 }
 
-void workflow_ifaces_deinit(protob_ios_t *ios) {
+void workflow_ifaces_deinit(protob_ios_t* ios) {
   systick_delay_ms(100);
   usb_iface_deinit();
 #ifdef USE_BLE
@@ -124,7 +124,7 @@ void workflow_ifaces_deinit(protob_ios_t *ios) {
 #endif
 }
 
-void workflow_ifaces_pause(protob_ios_t *ios) {
+void workflow_ifaces_pause(protob_ios_t* ios) {
   if (ios == NULL) {
     return;
   }
@@ -134,7 +134,7 @@ void workflow_ifaces_pause(protob_ios_t *ios) {
 #endif
 }
 
-void workflow_ifaces_resume(protob_ios_t *ios) {
+void workflow_ifaces_resume(protob_ios_t* ios) {
   if (ios == NULL) {
     return;
   }

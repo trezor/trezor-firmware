@@ -29,7 +29,7 @@
 
 // todo static assert resolution
 
-bool panel_init(display_driver_t *drv) {
+bool panel_init(display_driver_t* drv) {
   HAL_StatusTypeDef ret;
 
   ret = HAL_DSI_ShortWrite(&drv->hlcd_dsi, 0, DSI_DCS_SHORT_PKT_WRITE_P0, 0x11,

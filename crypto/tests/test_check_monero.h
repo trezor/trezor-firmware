@@ -2,8 +2,8 @@
 START_TEST(test_xmr_base58) {
   static const struct {
     uint64_t tag;
-    char *v1;
-    char *v2;
+    char* v1;
+    char* v2;
   } tests[] = {
       {0x12,
        "3bec484c5d7f0246af520aab550452b5b6013733feabebd681c4a60d457b7fc12d5918e"
@@ -31,8 +31,8 @@ START_TEST(test_xmr_base58) {
   uint64_t tag;
 
   for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
-    const char *raw = tests[i].v1;
-    const char *str = tests[i].v2;
+    const char* raw = tests[i].v1;
+    const char* str = tests[i].v2;
     const size_t len = strlen(raw) / 2;
 
     memcpy(rawn, fromhex(raw), len);
@@ -53,7 +53,7 @@ START_TEST(test_xmr_getset256_modm) {
   static const struct {
     uint64_t val;
     int r;
-    char *a;
+    char* a;
   } tests[] = {
       {0x0, 1,
        "0000000000000000000000000000000000000000000000000000000000000000"},
@@ -93,8 +93,8 @@ END_TEST
 
 START_TEST(test_xmr_cmp256_modm) {
   static const struct {
-    char *a;
-    char *b;
+    char* a;
+    char* b;
     int res_eq;
     int res_cmp;
     int res_is_zero_a;
@@ -141,7 +141,7 @@ END_TEST
 START_TEST(test_xmr_copy_check_modm) {
   static const struct {
     int check;
-    char *a;
+    char* a;
   } tests[] = {
       {0, "0000000000000000000000000000000000000000000000000000000000000000"},
       {1, "ffffff7f00000000000000000000000000000000000000000000000000000000"},
@@ -163,10 +163,10 @@ END_TEST
 
 START_TEST(test_xmr_mulsub256_modm) {
   static const struct {
-    char *a;
-    char *b;
-    char *c;
-    char *r;
+    char* a;
+    char* b;
+    char* c;
+    char* r;
   } tests[] = {
       {
           "713c199348cf7d14b67ae6265ea49c02c8647f07afcbcb6f8d3254b3db972e02",
@@ -203,10 +203,10 @@ END_TEST
 
 START_TEST(test_xmr_muladd256_modm) {
   static const struct {
-    char *a;
-    char *b;
-    char *c;
-    char *r;
+    char* a;
+    char* b;
+    char* c;
+    char* r;
   } tests[] = {
       {
           "7c3fd8abfbe2be3739d91679ac8dbda086961b941e0d4a00561f758927d8aa09",
@@ -244,7 +244,7 @@ END_TEST
 START_TEST(test_xmr_curve25519_set) {
   static const struct {
     uint32_t val;
-    char *a;
+    char* a;
   } tests[] = {
       {0x0, "0000000000000000000000000000000000000000000000000000000000000000"},
       {0x1, "0100000000000000000000000000000000000000000000000000000000000000"},
@@ -264,9 +264,9 @@ START_TEST(test_xmr_curve25519_set) {
 END_TEST
 
 START_TEST(test_xmr_curve25519_consts) {
-  char *d = "a3785913ca4deb75abd841414d0a700098e879777940c78c73fe6f2bee6c0352";
-  char *d2 = "59f1b226949bd6eb56b183829a14e00030d1f3eef2808e19e7fcdf56dcd90624";
-  char *sqrtneg1 =
+  char* d = "a3785913ca4deb75abd841414d0a700098e879777940c78c73fe6f2bee6c0352";
+  char* d2 = "59f1b226949bd6eb56b183829a14e00030d1f3eef2808e19e7fcdf56dcd90624";
+  char* sqrtneg1 =
       "b0a00e4a271beec478e42fad0618432fa7d7fb3d99004d2b0bdfc14f8024832b";
 
   unsigned char buff[32];
@@ -288,7 +288,7 @@ END_TEST
 
 START_TEST(test_xmr_curve25519_tests) {
   static const struct {
-    char *a;
+    char* a;
     int res_neg;
     int res_nonzero;
   } tests[] = {
@@ -331,8 +331,8 @@ END_TEST
 
 START_TEST(test_xmr_curve25519_expand_reduce) {
   static const struct {
-    char *a;
-    char *b;
+    char* a;
+    char* b;
   } tests[] = {
       {"dec0adde00000000000000000000000000000000000000000000000000000000",
        "dec0adde00000000000000000000000000000000000000000000000000000000"},
@@ -357,7 +357,7 @@ END_TEST
 
 START_TEST(test_xmr_ge25519_base) {
   unsigned char buff[32];
-  char *base =
+  char* base =
       "5866666666666666666666666666666666666666666666666666666666666666";
   ge25519 b;
   ge25519_set_base(&b);
@@ -368,10 +368,10 @@ END_TEST
 
 START_TEST(test_xmr_ge25519_check) {
   static const struct {
-    char *x;
-    char *y;
-    char *z;
-    char *t;
+    char* x;
+    char* y;
+    char* z;
+    char* t;
     int r;
   } tests[] = {
       {"4ff97748221f954414f836d84e8e7e207786bcd20eb67044756dca307e792c60",
@@ -410,8 +410,8 @@ END_TEST
 
 START_TEST(test_xmr_ge25519_scalarmult_base_wrapper) {
   static const struct {
-    char *sc;
-    char *pt;
+    char* sc;
+    char* pt;
   } tests[] = {
       {
           "40be740e26bd1c84f5a8fec737c0ed30e87bd45adfcd91e320f8dfb68b1a870e",
@@ -457,9 +457,9 @@ END_TEST
 
 START_TEST(test_xmr_ge25519_scalarmult) {
   static const struct {
-    char *sc;
-    char *pt;
-    char *pt2;
+    char* sc;
+    char* pt;
+    char* pt2;
   } tests[] = {
       {
           "0000000000000000000000000000000000000000000000000000000000000000",
@@ -552,7 +552,7 @@ END_TEST
 
 START_TEST(test_xmr_check_point) {
   static const struct {
-    char *p;
+    char* p;
     bool on;
   } tests[] = {
       {"001000a93e0e6937b4feaf079e418a028ca85459aa39ac3871b94076f88ca608",
@@ -585,7 +585,7 @@ START_TEST(test_xmr_check_point) {
 END_TEST
 
 START_TEST(test_xmr_h) {
-  char *H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94";
+  char* H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94";
   ge25519 H2, Z;
   ge25519_p1p1 P_11;
   ge25519_pniels P_ni;
@@ -645,8 +645,8 @@ START_TEST(test_xmr_hasher) {
   uint8_t hash[32];
 
   static const struct {
-    char *chunk[3];
-    char *hash;
+    char* chunk[3];
+    char* hash;
   } tests[] = {
       {{"00", "01", "02"},
        "f84a97f1f0a956e738abd85c2e0a5026f8874e3ec09c8f012159dfeeaab2b156"},
@@ -729,9 +729,9 @@ END_TEST
 
 START_TEST(test_xmr_derivation_to_scalar) {
   static const struct {
-    char *pt;
+    char* pt;
     uint32_t idx;
-    char *sc;
+    char* sc;
   } tests[] = {
       {
           "c655b2d9d2670a1c9f26f7586b6d6b1ec5173b8b33bca64c3d305a42d66738b1",
@@ -773,9 +773,9 @@ END_TEST
 
 START_TEST(test_xmr_generate_key_derivation) {
   static const struct {
-    char *pt;
-    char *sc;
-    char *r;
+    char* pt;
+    char* sc;
+    char* r;
   } tests[] = {
       {
           "38f94f27c8037aff025e365275ed1029fd636dda5f69e5f98fdcf92e0a28f31a",
@@ -810,10 +810,10 @@ END_TEST
 
 START_TEST(test_xmr_derive_private_key) {
   static const struct {
-    char *pt;
+    char* pt;
     uint32_t idx;
-    char *base;
-    char *r;
+    char* base;
+    char* r;
   } tests[] = {
       {
           "0541d8f069e5e80a892e39bbf1944ef578008cf9ecf1d100760a05858c1b709e",
@@ -852,10 +852,10 @@ END_TEST
 
 START_TEST(test_xmr_derive_public_key) {
   static const struct {
-    char *pt;
+    char* pt;
     uint32_t idx;
-    char *base;
-    char *r;
+    char* base;
+    char* r;
   } tests[] = {
       {
           "653f03e7766d472826aa49793bc0cfde698e6745ae5e4217980ba307739f2ed9",
@@ -894,10 +894,10 @@ END_TEST
 
 START_TEST(test_xmr_add_keys2) {
   static const struct {
-    char *a;
-    char *b;
-    char *B;
-    char *r;
+    char* a;
+    char* b;
+    char* B;
+    char* r;
   } tests[] = {
       {
           "631238da9578d7cb8db16fc4322671bfcb251cc5228b060664800ec1895be608",
@@ -941,11 +941,11 @@ END_TEST
 
 START_TEST(test_xmr_add_keys3) {
   static const struct {
-    char *a;
-    char *A;
-    char *b;
-    char *B;
-    char *r;
+    char* a;
+    char* A;
+    char* b;
+    char* B;
+    char* r;
   } tests[] = {
       {
           "7048b8c4603ae194c502fa458b0e11a4c7a330852bbef66b7c1d67e9f919f509",
@@ -994,8 +994,8 @@ END_TEST
 START_TEST(test_xmr_get_subaddress_secret_key) {
   static const struct {
     uint32_t major, minor;
-    char *m;
-    char *r;
+    char* m;
+    char* r;
   } tests[] = {
       {
           0,
@@ -1032,9 +1032,9 @@ END_TEST
 
 START_TEST(test_xmr_gen_c) {
   static const struct {
-    char *a;
+    char* a;
     uint64_t amount;
-    char *r;
+    char* r;
   } tests[] = {
       {
           "e3e6558c291bbb98aa691d068b67d59dc520afb23fdd51bf65283626fc2ad903",
@@ -1074,7 +1074,7 @@ END_TEST
 START_TEST(test_xmr_varint) {
   static const struct {
     uint64_t x;
-    char *r;
+    char* r;
   } tests[] = {
       {
           0,

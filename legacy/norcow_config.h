@@ -24,8 +24,7 @@
 
 #define NORCOW_SECTOR_COUNT 2
 #define NORCOW_SECTOR_SIZE (16 * 1024)
-#define NORCOW_SECTORS \
-  { 2, 3 }
+#define NORCOW_SECTORS {2, 3}
 
 /*
  * The length of the sector header in bytes. The header is preserved between

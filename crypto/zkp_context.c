@@ -31,11 +31,11 @@
 #include "vendor/secp256k1-zkp/include/secp256k1.h"
 
 static uint8_t context_buffer[SECP256K1_CONTEXT_SIZE];
-static secp256k1_context *context;
+static secp256k1_context* context;
 static volatile atomic_flag locked;
 
 // returns 0 on success
-int secp256k1_context_writable_randomize(secp256k1_context *context_writable) {
+int secp256k1_context_writable_randomize(secp256k1_context* context_writable) {
   uint8_t seed[32] = {0};
   random_buffer(seed, sizeof(seed));
   int returned = secp256k1_context_randomize(context_writable, seed);
@@ -90,14 +90,14 @@ void zkp_context_destroy(void) {
   context = NULL;
 }
 
-const secp256k1_context *zkp_context_get_read_only(void) {
+const secp256k1_context* zkp_context_get_read_only(void) {
   assert(context != NULL);
 
   return context;
 }
 
 // returns NULL if context cannot be acquired
-secp256k1_context *zkp_context_acquire_writable(void) {
+secp256k1_context* zkp_context_acquire_writable(void) {
   assert(context != NULL);
 
   // We don't expect the context to be used by multiple threads

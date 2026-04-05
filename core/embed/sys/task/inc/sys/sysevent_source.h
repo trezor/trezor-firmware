@@ -26,7 +26,7 @@
 
 // Callback invoked when a new task is created.
 // Driver may use this callback to initialize the its own task local storage.
-typedef void (*syshandle_task_created_cb_t)(void *context,
+typedef void (*syshandle_task_created_cb_t)(void* context,
                                             systask_id_t task_id);
 
 // Callback invoked when a task is killed
@@ -34,13 +34,13 @@ typedef void (*syshandle_task_created_cb_t)(void *context,
 //
 // The callback may be called from the fault handler. But in this case
 // it's guaranteed that the task is not running anymore.
-typedef void (*syshandle_task_killed_cb_t)(void *context, systask_id_t task_id);
+typedef void (*syshandle_task_killed_cb_t)(void* context, systask_id_t task_id);
 
 // Callback invoked when the system is polling for events.
 //
 // 'read_awaited' is set if there's at least one task waiting for read events.
 // 'write_awaited' is set if there's at least one task waiting for write events.
-typedef void (*syshandle_poll_cb_t)(void *context, bool read_awaited,
+typedef void (*syshandle_poll_cb_t)(void* context, bool read_awaited,
                                     bool write_awaited);
 
 // Callback invoked when the driver's polling callback calls
@@ -51,13 +51,13 @@ typedef void (*syshandle_poll_cb_t)(void *context, bool read_awaited,
 // `syshandle_signal_read_ready()` or `syshandle_signal_write_ready()` function.
 //
 // The callback returns `true` if the event should be signaled to the task.
-typedef bool (*syshandle_check_cb_t)(void *context, systask_id_t task_id,
-                                     void *param);
+typedef bool (*syshandle_check_cb_t)(void* context, systask_id_t task_id,
+                                     void* param);
 
-typedef ssize_t (*syshandle_read_cb_t)(void *context, void *buffer,
+typedef ssize_t (*syshandle_read_cb_t)(void* context, void* buffer,
                                        size_t buffer_size);
 
-typedef ssize_t (*syshandle_write_cb_t)(void *context, const void *data,
+typedef ssize_t (*syshandle_write_cb_t)(void* context, const void* data,
                                         size_t data_size);
 
 // System handle virtual method table
@@ -79,8 +79,8 @@ typedef struct {
 // initialization code. Sources that are not registered will never be signaled.
 //
 // Returns `true` if the source was registered successfully.
-bool syshandle_register(syshandle_t handle, const syshandle_vmt_t *vmt,
-                        void *context);
+bool syshandle_register(syshandle_t handle, const syshandle_vmt_t* vmt,
+                        void* context);
 
 // Unregisters an event source
 //
@@ -93,7 +93,7 @@ void syshandle_unregister(syshandle_t handle);
 // to waiting tasks.
 //
 // The function may only be called from a poll callback.
-void syshandle_signal_read_ready(syshandle_t handle, void *param);
+void syshandle_signal_read_ready(syshandle_t handle, void* param);
 
 // Distributes write ready event to waiting tasks
 //
@@ -101,7 +101,7 @@ void syshandle_signal_read_ready(syshandle_t handle, void *param);
 // to waiting tasks.
 //
 // The function may only be called from a poll callback.
-void syshandle_signal_write_ready(syshandle_t handle, void *param);
+void syshandle_signal_write_ready(syshandle_t handle, void* param);
 
 // ----------------------------------------------------------------------
 // Internal functions called by the system
@@ -110,13 +110,13 @@ void syshandle_signal_write_ready(syshandle_t handle, void *param);
 //
 // The function invoke the `task_created` callback of each registered
 // event source.
-void sysevents_notify_task_created(systask_t *task);
+void sysevents_notify_task_created(systask_t* task);
 
 // Notifies all registered event sources / drivers about a task termination
 //
 // The function invoke the `task_killed` callback of each registered
 // event source.
-void sysevents_notify_task_killed(systask_t *task);
+void sysevents_notify_task_killed(systask_t* task);
 
 // Yields the CPU from the active task and schedules it to be resumed as
 // soon as possible.
@@ -125,6 +125,6 @@ void sysevents_notify_task_killed(systask_t *task);
 // specific events and with an immediate timeout of 0. This effectively
 // schedules the task to resume as soon as possible when another task
 // gives up the CPU.
-void sysevents_yield_and_reschedule(systask_t *task);
+void sysevents_yield_and_reschedule(systask_t* task);
 
 #endif  // KERNEL_MODE

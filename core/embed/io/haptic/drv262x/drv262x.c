@@ -82,7 +82,7 @@ typedef struct {
   bool initialized;
 
   // I2c bus where the touch controller is connected
-  i2c_bus_t *i2c_bus;
+  i2c_bus_t* i2c_bus;
 
   // Set if driver is enabled
   bool enabled;
@@ -98,7 +98,7 @@ static drv262x_driver_t g_drv262x_driver = {
     .initialized = false,
 };
 
-static ts_t drv262x_read_reg(i2c_bus_t *bus, uint8_t addr, uint8_t *value) {
+static ts_t drv262x_read_reg(i2c_bus_t* bus, uint8_t addr, uint8_t* value) {
   TSH_DECLARE;
 
   i2c_op_t ops[] = {
@@ -126,7 +126,7 @@ cleanup:
   TSH_RETURN;
 }
 
-static ts_t drv262x_set_reg(i2c_bus_t *bus, uint8_t addr, uint8_t value) {
+static ts_t drv262x_set_reg(i2c_bus_t* bus, uint8_t addr, uint8_t value) {
   TSH_DECLARE;
 
   i2c_op_t ops[] = {
@@ -149,7 +149,7 @@ cleanup:
   TSH_RETURN;
 }
 
-static ts_t drv262x_reg_mask_modify(i2c_bus_t *bus, uint8_t addr,
+static ts_t drv262x_reg_mask_modify(i2c_bus_t* bus, uint8_t addr,
                                     uint8_t clear_mask, uint8_t set_mask) {
   TSH_DECLARE;
   ts_t status;
@@ -186,7 +186,7 @@ typedef struct {
 
 // List of DRV2624 registered custom waveforms
 typedef struct {
-  drv2624_waveform_t *waveforms[DRV2624_LIB_MAX_WAVEFORMS];
+  drv2624_waveform_t* waveforms[DRV2624_LIB_MAX_WAVEFORMS];
   uint8_t registered_waveforms;
 } drv2624_waveform_list_t;
 
@@ -202,8 +202,8 @@ drv2624_waveform_t sharp_btn_click_effect = {
 
 static drv2624_waveform_list_t g_waveform_list = {.registered_waveforms = 0};
 
-static ts_t drv2624_register_waveform(drv2624_waveform_list_t *list,
-                                      drv2624_waveform_t *waveform) {
+static ts_t drv2624_register_waveform(drv2624_waveform_list_t* list,
+                                      drv2624_waveform_t* waveform) {
   TSH_DECLARE;
 
   TSH_CHECK_ARG(waveform->length != 0 &&
@@ -218,8 +218,8 @@ cleanup:
   TSH_RETURN;
 }
 
-static ts_t drv2624_load_ram(drv2624_waveform_list_t *wave_list) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+static ts_t drv2624_load_ram(drv2624_waveform_list_t* wave_list) {
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   TSH_DECLARE;
   ts_t status;
@@ -249,7 +249,7 @@ static ts_t drv2624_load_ram(drv2624_waveform_list_t *wave_list) {
 
   // RAM Header
   for (int i = 0; i < wave_list->registered_waveforms; i++) {
-    drv2624_waveform_t *wav = wave_list->waveforms[i];
+    drv2624_waveform_t* wav = wave_list->waveforms[i];
 
     status = drv262x_set_reg(
         drv->i2c_bus, DRV2624_RAM_DATA,
@@ -272,7 +272,7 @@ static ts_t drv2624_load_ram(drv2624_waveform_list_t *wave_list) {
   // Copy waveform data
   addr_pointer = waveform_data_start_address;
   for (int i = 0; i < wave_list->registered_waveforms; i++) {
-    drv2624_waveform_t *wav = wave_list->waveforms[i];
+    drv2624_waveform_t* wav = wave_list->waveforms[i];
 
     for (int j = 0; j < wav->length; j++) {
       if (wav->linear_ramp) {
@@ -300,7 +300,7 @@ static ts_t drv2624_waveform_configuration(void) {
   TSH_DECLARE;
   ts_t status;
 
-  drv2624_waveform_list_t *wave_list = &g_waveform_list;
+  drv2624_waveform_list_t* wave_list = &g_waveform_list;
 
   // Clear waveform list
   memset(wave_list, 0, sizeof(drv2624_waveform_list_t));
@@ -322,7 +322,7 @@ cleanup:
 }
 
 static ts_t drv2624_play_waveform(uint8_t waveform_id) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   TSH_DECLARE;
   ts_t status;
@@ -378,7 +378,7 @@ cleanup:
 #endif  // HAPTIC_CHIP_DRV2624
 
 static ts_t drv262x_actuator_configuration() {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   TSH_DECLARE;
   ts_t status;
@@ -469,7 +469,7 @@ cleanup:
 }
 
 static ts_t drv262x_play_rtp(int8_t amplitude, uint16_t duration_ms) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   TSH_DECLARE;
   ts_t status;
@@ -508,7 +508,7 @@ cleanup:
 }
 
 ts_t haptic_init(void) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   if (drv->initialized) {
     return TS_OK;
@@ -601,7 +601,7 @@ cleanup:
 }
 
 void haptic_deinit(void) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   i2c_bus_close(drv->i2c_bus);
 
@@ -631,7 +631,7 @@ void haptic_deinit(void) {
 }
 
 ts_t haptic_set_enabled(bool enabled) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   if (!drv->initialized) {
     return TS_ENOINIT;
@@ -643,7 +643,7 @@ ts_t haptic_set_enabled(bool enabled) {
 }
 
 bool haptic_get_enabled(void) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   if (!drv->initialized) {
     return false;
@@ -653,7 +653,7 @@ bool haptic_get_enabled(void) {
 }
 
 ts_t haptic_play(haptic_effect_t effect) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   TSH_DECLARE;
   ts_t status;
@@ -690,7 +690,7 @@ cleanup:
 }
 
 ts_t haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
-  drv262x_driver_t *drv = &g_drv262x_driver;
+  drv262x_driver_t* drv = &g_drv262x_driver;
 
   TSH_DECLARE;
   ts_t status;

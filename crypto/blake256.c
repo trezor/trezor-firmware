@@ -56,7 +56,7 @@ static const uint8_t padding[129] = {
     0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-static void blake256_compress(BLAKE256_CTX *S, const uint8_t *block) {
+static void blake256_compress(BLAKE256_CTX* S, const uint8_t* block) {
   uint32_t v[16] = {0}, m[16] = {0}, i = 0;
 #define ROT(x, n) (((x) << (32 - n)) | ((x) >> (n)))
 #define G(a, b, c, d, e)                                   \
@@ -108,7 +108,7 @@ static void blake256_compress(BLAKE256_CTX *S, const uint8_t *block) {
   for (i = 0; i < 8; ++i) S->h[i] ^= S->s[i % 4];
 }
 
-void blake256_Init(BLAKE256_CTX *S) {
+void blake256_Init(BLAKE256_CTX* S) {
   S->h[0] = 0x6a09e667;
   S->h[1] = 0xbb67ae85;
   S->h[2] = 0x3c6ef372;
@@ -121,13 +121,13 @@ void blake256_Init(BLAKE256_CTX *S) {
   S->s[0] = S->s[1] = S->s[2] = S->s[3] = 0;
 }
 
-void blake256_Update(BLAKE256_CTX *S, const uint8_t *in, size_t inlen) {
+void blake256_Update(BLAKE256_CTX* S, const uint8_t* in, size_t inlen) {
   size_t left = S->buflen;
   size_t fill = 64 - left;
 
   /* data left and data received fill a block  */
   if (left && (inlen >= fill)) {
-    memcpy((void *)(S->buf + left), (void *)in, fill);
+    memcpy((void*)(S->buf + left), (void*)in, fill);
     S->t[0] += 512;
 
     if (S->t[0] == 0) S->t[1]++;
@@ -151,12 +151,12 @@ void blake256_Update(BLAKE256_CTX *S, const uint8_t *in, size_t inlen) {
 
   /* store any data left */
   if (inlen > 0) {
-    memcpy((void *)(S->buf + left), (void *)in, (size_t)inlen);
+    memcpy((void*)(S->buf + left), (void*)in, (size_t)inlen);
   }
   S->buflen = left + inlen;
 }
 
-void blake256_Final(BLAKE256_CTX *S, uint8_t *out) {
+void blake256_Final(BLAKE256_CTX* S, uint8_t* out) {
   uint8_t msglen[8] = {0}, zo = 0x01, oo = 0x81;
   uint32_t lo = S->t[0] + (S->buflen << 3), hi = S->t[1];
 
@@ -202,7 +202,7 @@ void blake256_Final(BLAKE256_CTX *S, uint8_t *out) {
   U32TO8_BIG(out + 28, S->h[7]);
 }
 
-void blake256(const uint8_t *in, size_t inlen, uint8_t *out) {
+void blake256(const uint8_t* in, size_t inlen, uint8_t* out) {
   BLAKE256_CTX S = {0};
   blake256_Init(&S);
   blake256_Update(&S, in, inlen);

@@ -37,7 +37,7 @@
 #endif
 
 static uint32_t change_count;
-static const CoinInfo *coin;
+static const CoinInfo* coin;
 static AmountUnit amount_unit;
 static bool serialize;
 static CONFIDENTIAL HDNode root;
@@ -105,7 +105,7 @@ static uint64_t orig_total_in, orig_external_in, orig_total_out,
     orig_change_out;
 static uint32_t progress_step, progress_steps, progress_substep,
     progress_substeps, progress_midpoint, progress_update;
-static const char *progress_label;
+static const char* progress_label;
 static uint32_t tx_weight, tx_base_weight, our_weight, our_inputs_len;
 PathSchema unlocked_schema;
 
@@ -359,7 +359,7 @@ foreach I (idx1): // input to sign                            STAGE_REQUEST_DECR
 clang-format on
 */
 
-static bool add_amount(uint64_t *dest, uint64_t amount) {
+static bool add_amount(uint64_t* dest, uint64_t amount) {
   if (*dest + amount < *dest) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
     signing_abort();
@@ -369,7 +369,7 @@ static bool add_amount(uint64_t *dest, uint64_t amount) {
   return true;
 }
 
-static bool is_rbf_enabled(TxInfo *tx_info) {
+static bool is_rbf_enabled(TxInfo* tx_info) {
   return tx_info->min_sequence <= MAX_BIP125_RBF_SEQUENCE;
 }
 
@@ -788,7 +788,7 @@ void phase1_request_next_input(void) {
         return;
       }
 
-      char *description = NULL;
+      char* description = NULL;
       if (!is_rbf_enabled(&info) && is_rbf_enabled(&orig_info)) {
         description = _("Finalize TXID:");
       } else {
@@ -962,8 +962,8 @@ void phase2_request_orig_input(void) {
   }
 }
 
-static bool extract_input_multisig_fp(TxInfo *tx_info,
-                                      const TxInputType *txinput) {
+static bool extract_input_multisig_fp(TxInfo* tx_info,
+                                      const TxInputType* txinput) {
   if (txinput->has_multisig && !tx_info->multisig_fp_mismatch) {
     uint8_t h[32] = {0};
     if (cryptoMultisigFingerprint(&txinput->multisig, h) == 0) {
@@ -987,7 +987,7 @@ static bool extract_input_multisig_fp(TxInfo *tx_info,
   return true;
 }
 
-static void extract_is_multisig(TxInfo *tx_info, const TxInputType *txinput) {
+static void extract_is_multisig(TxInfo* tx_info, const TxInputType* txinput) {
   switch (tx_info->is_multisig_state) {
     case MatchState_MISMATCH:
       return;
@@ -1003,16 +1003,16 @@ static void extract_is_multisig(TxInfo *tx_info, const TxInputType *txinput) {
   }
 }
 
-bool check_change_multisig_fp(const TxInfo *tx_info,
-                              const TxOutputType *txoutput) {
+bool check_change_multisig_fp(const TxInfo* tx_info,
+                              const TxOutputType* txoutput) {
   uint8_t h[32] = {0};
   return tx_info->multisig_fp_set && !tx_info->multisig_fp_mismatch &&
          cryptoMultisigFingerprint(&(txoutput->multisig), h) &&
          memcmp(tx_info->multisig_fp, h, 32) == 0;
 }
 
-bool check_change_is_multisig(const TxInfo *tx_info,
-                              const TxOutputType *txoutput) {
+bool check_change_is_multisig(const TxInfo* tx_info,
+                              const TxOutputType* txoutput) {
   return tx_info->is_multisig_state == MatchState_MATCH &&
          tx_info->is_multisig == txoutput->has_multisig;
 }
@@ -1029,7 +1029,7 @@ static InputScriptType simple_script_type(InputScriptType script_type) {
   return script_type;
 }
 
-void extract_input_script_type(TxInfo *tx_info, const TxInputType *tinput) {
+void extract_input_script_type(TxInfo* tx_info, const TxInputType* tinput) {
   switch (tx_info->in_script_type_state) {
     case MatchState_UNDEFINED:
       // initialize in_script_type on first input seen
@@ -1047,8 +1047,8 @@ void extract_input_script_type(TxInfo *tx_info, const TxInputType *tinput) {
   }
 }
 
-bool check_change_script_type(const TxInfo *tx_info,
-                              const TxOutputType *toutput) {
+bool check_change_script_type(const TxInfo* tx_info,
+                              const TxOutputType* toutput) {
   InputScriptType input_script_type = 0;
   if (!change_output_to_input_script_type(toutput->script_type,
                                           &input_script_type)) {
@@ -1058,7 +1058,7 @@ bool check_change_script_type(const TxInfo *tx_info,
          tx_info->in_script_type == simple_script_type(input_script_type);
 }
 
-void extract_input_bip32_path(TxInfo *tx_info, const TxInputType *tinput) {
+void extract_input_bip32_path(TxInfo* tx_info, const TxInputType* tinput) {
   if (tx_info->in_address_n_count == BIP32_NOCHANGEALLOWED) {
     return;
   }
@@ -1090,8 +1090,8 @@ void extract_input_bip32_path(TxInfo *tx_info, const TxInputType *tinput) {
   }
 }
 
-bool check_change_bip32_path(const TxInfo *tx_info,
-                             const TxOutputType *toutput) {
+bool check_change_bip32_path(const TxInfo* tx_info,
+                             const TxOutputType* toutput) {
   size_t count = toutput->address_n_count;
 
   // Check that the change path has the same bip32 path length,
@@ -1106,7 +1106,7 @@ bool check_change_bip32_path(const TxInfo *tx_info,
           toutput->address_n[count - 1] <= PATH_MAX_ADDRESS_INDEX);
 }
 
-static bool fill_input_script_sig(TxInputType *tinput) {
+static bool fill_input_script_sig(TxInputType* tinput) {
   if (hdnode_fill_public_key(&node) != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to derive public key."));
@@ -1134,7 +1134,7 @@ static bool fill_input_script_sig(TxInputType *tinput) {
   return true;
 }
 
-static bool fill_input_script_pubkey(TxInputType *in) {
+static bool fill_input_script_pubkey(TxInputType* in) {
   if (!get_script_pubkey(coin, &node, in->has_multisig, &in->multisig,
                          in->script_type, in->script_pubkey.bytes,
                          &in->script_pubkey.size)) {
@@ -1148,7 +1148,7 @@ static bool fill_input_script_pubkey(TxInputType *in) {
 }
 
 static bool validate_path(InputScriptType script_type,
-                          pb_size_t address_n_count, const uint32_t *address_n,
+                          pb_size_t address_n_count, const uint32_t* address_n,
                           bool has_multisig) {
   if (is_coinjoin == sectrue) {
     // Check whether the authorization matches the parameters of the input.
@@ -1196,13 +1196,13 @@ static bool validate_path(InputScriptType script_type,
   return true;
 }
 
-static bool input_validate_path(const TxInputType *txi) {
+static bool input_validate_path(const TxInputType* txi) {
   return validate_path(txi->script_type, txi->address_n_count, txi->address_n,
                        txi->has_multisig);
 }
 
 static bool derive_node(InputScriptType script_type, pb_size_t address_n_count,
-                        const uint32_t *address_n, bool has_multisig) {
+                        const uint32_t* address_n, bool has_multisig) {
   if (!coin_path_check(coin, script_type, address_n_count, address_n,
                        has_multisig, unlocked_schema, false) &&
       config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
@@ -1222,12 +1222,12 @@ static bool derive_node(InputScriptType script_type, pb_size_t address_n_count,
   return true;
 }
 
-static bool input_derive_node(const TxInputType *txi) {
+static bool input_derive_node(const TxInputType* txi) {
   return derive_node(txi->script_type, txi->address_n_count, txi->address_n,
                      txi->has_multisig);
 }
 
-static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
+static bool tx_info_init(TxInfo* tx_info, uint32_t inputs_count,
                          uint32_t outputs_count, uint32_t version,
                          uint32_t lock_time, bool has_expiry, uint32_t expiry,
                          bool has_branch_id, uint32_t branch_id,
@@ -1375,8 +1375,8 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
   return true;
 }
 
-static bool init_coinjoin(const SignTx *msg,
-                          const AuthorizeCoinJoin *authorization) {
+static bool init_coinjoin(const SignTx* msg,
+                          const AuthorizeCoinJoin* authorization) {
   if (!msg->has_coinjoin_request) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Missing coinjoin request."));
@@ -1396,8 +1396,8 @@ static bool init_coinjoin(const SignTx *msg,
   return true;
 }
 
-void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
-                  const AuthorizeCoinJoin *authorization, PathSchema unlock) {
+void signing_init(const SignTx* msg, const CoinInfo* _coin, const HDNode* _root,
+                  const AuthorizeCoinJoin* authorization, PathSchema unlock) {
   coin = _coin;
   amount_unit = msg->has_amount_unit ? msg->amount_unit : AmountUnit_BITCOIN;
   serialize = msg->has_serialize ? msg->serialize : true;
@@ -1494,7 +1494,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin, const HDNode *_root,
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-static bool signing_validate_input(const TxInputType *txinput) {
+static bool signing_validate_input(const TxInputType* txinput) {
   if (txinput->prev_hash.size != 32) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Provided prev_hash is invalid."));
@@ -1613,7 +1613,7 @@ static bool signing_validate_input(const TxInputType *txinput) {
   return true;
 }
 
-static bool signing_validate_prev_input(const TxInputType *txinput) {
+static bool signing_validate_prev_input(const TxInputType* txinput) {
   if (txinput->prev_hash.size != 32) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Provided prev_hash is invalid."));
@@ -1632,7 +1632,7 @@ static bool signing_validate_prev_input(const TxInputType *txinput) {
   return true;
 }
 
-static bool signing_validate_output(TxOutputType *txoutput) {
+static bool signing_validate_output(TxOutputType* txoutput) {
   if (txoutput->has_multisig &&
       !is_multisig_output_script_type(txoutput->script_type)) {
     fsm_sendFailure(FailureType_Failure_DataError,
@@ -1719,7 +1719,7 @@ static bool signing_validate_output(TxOutputType *txoutput) {
   return true;
 }
 
-static bool signing_validate_bin_output(TxOutputBinType *tx_bin_output) {
+static bool signing_validate_bin_output(TxOutputBinType* tx_bin_output) {
 #if !BITCOIN_ONLY
   if (!coin->decred && tx_bin_output->has_decred_script_version) {
     fsm_sendFailure(
@@ -1734,7 +1734,7 @@ static bool signing_validate_bin_output(TxOutputBinType *tx_bin_output) {
   return true;
 }
 
-static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
+static bool tx_info_add_input(TxInfo* tx_info, const TxInputType* txinput) {
   if (txinput->script_type != InputScriptType_EXTERNAL) {
     // Compute multisig fingerprint for change-output detection. In order for an
     // output to be considered a change-output, it must have the same
@@ -1775,7 +1775,7 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
   return true;
 }
 
-static bool tx_info_check_input(TxInfo *tx_info, TxInputType *tinput) {
+static bool tx_info_check_input(TxInfo* tx_info, TxInputType* tinput) {
   bool result = true;
 
   if (!tx_info->multisig_fp_mismatch) {
@@ -1813,15 +1813,15 @@ static bool tx_info_check_input(TxInfo *tx_info, TxInputType *tinput) {
   return result;
 }
 
-static bool tx_info_add_output(TxInfo *tx_info,
-                               const TxOutputBinType *tx_bin_output) {
+static bool tx_info_add_output(TxInfo* tx_info,
+                               const TxOutputBinType* tx_bin_output) {
   // Add output to BIP-143/BIP-341 hashOutputs.
   tx_output_hash(&tx_info->hasher_outputs, tx_bin_output, coin->decred);
   return true;
 }
 
 #if !BITCOIN_ONLY
-static void txinfo_fill_zip244_header_hash(TxInfo *tx_info) {
+static void txinfo_fill_zip244_header_hash(TxInfo* tx_info) {
   // `T.1: header_digest` field.
   // https://zips.z.cash/zip-0244#t-1-header-digest
   Hasher hasher = {0};
@@ -1843,7 +1843,7 @@ static void txinfo_fill_zip244_header_hash(TxInfo *tx_info) {
 }
 #endif
 
-static void tx_info_finish(TxInfo *tx_info) {
+static void tx_info_finish(TxInfo* tx_info) {
   hasher_Final(&tx_info->hasher_check, tx_info->hash_inputs_check);
   hasher_Final(&tx_info->hasher_prevouts, tx_info->hash_prevouts);
   hasher_Final(&tx_info->hasher_amounts, tx_info->hash_amounts);
@@ -1874,7 +1874,7 @@ static void tx_info_finish(TxInfo *tx_info) {
 #endif
 }
 
-static bool tx_info_check_inputs_hash(TxInfo *tx_info) {
+static bool tx_info_check_inputs_hash(TxInfo* tx_info) {
   uint8_t hash[32];
   hasher_Final(&tx_info->hasher_check, hash);
   if (memcmp(hash, tx_info->hash_inputs_check, 32) != 0) {
@@ -1886,7 +1886,7 @@ static bool tx_info_check_inputs_hash(TxInfo *tx_info) {
   return true;
 }
 
-static bool tx_info_check_outputs_hash(TxInfo *tx_info) {
+static bool tx_info_check_outputs_hash(TxInfo* tx_info) {
   uint8_t hash[32] = {0};
   hasher_Final(&tx_info->hasher_check, hash);
   if (memcmp(hash, tx_info->hash_outputs, 32) != 0) {
@@ -1898,7 +1898,7 @@ static bool tx_info_check_outputs_hash(TxInfo *tx_info) {
   return true;
 }
 
-static bool coinjoin_add_input(TxInputType *txi) {
+static bool coinjoin_add_input(TxInputType* txi) {
   // Mask for the no_fee bits in coinjoin_flags.
   const uint8_t COINJOIN_FLAGS_NO_FEE = 0x02;
 
@@ -1920,7 +1920,7 @@ static bool coinjoin_add_input(TxInputType *txi) {
   return true;
 }
 
-static bool signing_add_input(TxInputType *txinput) {
+static bool signing_add_input(TxInputType* txinput) {
   // hash all input data to check it later (relevant for fee computation)
   if (!tx_input_check_hash(&info.hasher_check, txinput)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -2009,7 +2009,7 @@ static bool signing_check_prevtx_hash(void) {
   return true;
 }
 
-static bool compile_output(TxOutputType *in, TxOutputBinType *out,
+static bool compile_output(TxOutputType* in, TxOutputBinType* out,
                            bool needs_confirm) {
   memzero(out, sizeof(TxOutputBinType));
   out->amount = in->amount;
@@ -2095,8 +2095,8 @@ static bool compile_output(TxOutputType *in, TxOutputBinType *out,
   return true;
 }
 
-static bool is_change_output(const TxInfo *tx_info,
-                             const TxOutputType *txoutput) {
+static bool is_change_output(const TxInfo* tx_info,
+                             const TxOutputType* txoutput) {
   if (!is_change_output_script_type(txoutput->script_type)) {
     return false;
   }
@@ -2134,7 +2134,7 @@ static bool is_change_output(const TxInfo *tx_info,
   return check_change_bip32_path(tx_info, txoutput);
 }
 
-static bool signing_add_output(TxOutputType *txoutput) {
+static bool signing_add_output(TxOutputType* txoutput) {
   // Phase1: Check outputs
   //   add it to hash_outputs
   //   ask user for permission
@@ -2222,10 +2222,10 @@ static bool signing_add_output(TxOutputType *txoutput) {
   return tx_info_add_output(&info, &bin_output);
 }
 
-static bool save_signature(TxInputType *txinput) {
+static bool save_signature(TxInputType* txinput) {
   // Locate the signature in the witness or script_sig. We are assuming that the
   // input is not multisig, which simplifies verification.
-  uint8_t *bytes = NULL;
+  uint8_t* bytes = NULL;
   size_t size = 0;
   if (txinput->has_witness && txinput->witness.size > 1) {
     // Skip the number of stack items.
@@ -2270,7 +2270,7 @@ static bool save_signature(TxInputType *txinput) {
   return true;
 }
 
-static bool signing_add_orig_input(TxInputType *orig_input) {
+static bool signing_add_orig_input(TxInputType* orig_input) {
   // hash all input data to check it later
   if (!tx_input_check_hash(&orig_info.hasher_check, orig_input)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -2338,7 +2338,7 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
   return true;
 }
 
-static bool signing_add_orig_output(TxOutputType *orig_output) {
+static bool signing_add_orig_output(TxOutputType* orig_output) {
   // Compute scriptPubKey.
   TxOutputBinType orig_bin_output;
   if (!compile_output(orig_output, &orig_bin_output, false)) {
@@ -2653,7 +2653,7 @@ static bool signing_confirm_tx(void) {
   }
 }
 
-static uint32_t signing_hash_type(const TxInputType *txinput) {
+static uint32_t signing_hash_type(const TxInputType* txinput) {
   uint32_t hash_type = SIGHASH_ALL;
   if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
     hash_type = SIGHASH_ALL_TAPROOT;
@@ -2666,8 +2666,8 @@ static uint32_t signing_hash_type(const TxInputType *txinput) {
   return hash_type;
 }
 
-static void signing_hash_bip143(const TxInfo *tx_info,
-                                const TxInputType *txinput, uint8_t *hash) {
+static void signing_hash_bip143(const TxInfo* tx_info,
+                                const TxInputType* txinput, uint8_t* hash) {
   uint32_t hash_type = signing_hash_type(txinput);
   Hasher hasher_preimage = {0};
   hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
@@ -2697,8 +2697,8 @@ static void signing_hash_bip143(const TxInfo *tx_info,
   hasher_Final(&hasher_preimage, hash);
 }
 
-static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
-                                uint8_t sighash_type, uint8_t *hash) {
+static void signing_hash_bip341(const TxInfo* tx_info, uint32_t i,
+                                uint8_t sighash_type, uint8_t* hash) {
   const uint8_t zero = 0;
   Hasher sigmsg_hasher = {0};
   hasher_Init(&sigmsg_hasher, HASHER_SHA2_TAPSIGHASH);
@@ -2729,8 +2729,8 @@ static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
 }
 
 #if !BITCOIN_ONLY
-static void signing_hash_zip243(const TxInfo *tx_info,
-                                const TxInputType *txinput, uint8_t *hash) {
+static void signing_hash_zip243(const TxInfo* tx_info,
+                                const TxInputType* txinput, uint8_t* hash) {
   uint32_t hash_type = signing_hash_type(txinput);
   const uint8_t null_bytes[32] = {0};
   uint8_t personal[16] = {0};
@@ -2780,8 +2780,8 @@ static void signing_hash_zip243(const TxInfo *tx_info,
 #endif
 
 #if !BITCOIN_ONLY
-static void signing_hash_zip244(const TxInfo *tx_info,
-                                const TxInputType *txinput, uint8_t *hash) {
+static void signing_hash_zip244(const TxInfo* tx_info,
+                                const TxInputType* txinput, uint8_t* hash) {
   Hasher hasher = {0};
 
   // `S.2g: txin_sig_digest` field for signature digest computation.
@@ -2805,7 +2805,7 @@ static void signing_hash_zip244(const TxInfo *tx_info,
   hasher_InitParam(&hasher, HASHER_BLAKE2B_PERSONAL, "ZTxIdTranspaHash", 16);
   uint32_t hash_type = signing_hash_type(txinput);
   // S.2a: hash_type (1 byte)
-  hasher_Update(&hasher, (const uint8_t *)&hash_type, 1);
+  hasher_Update(&hasher, (const uint8_t*)&hash_type, 1);
   // S.2b: prevouts_sig_digest (32-byte hash)
   HASHER_UPDATE_BYTES(&hasher, tx_info->hash_prevouts, 32);
   // S.2c: amounts_sig_digest (32-byte hash)
@@ -2849,7 +2849,7 @@ static void signing_hash_zip244(const TxInfo *tx_info,
 }
 #endif
 
-static bool signing_verify_orig_nonlegacy_input(TxInputType *orig_input) {
+static bool signing_verify_orig_nonlegacy_input(TxInputType* orig_input) {
   // Nothing to verify for external inputs.
   if (orig_input->script_type == InputScriptType_EXTERNAL) {
     return true;
@@ -2918,7 +2918,7 @@ static bool signing_verify_orig_legacy_input(void) {
   return valid;
 }
 
-static bool signing_hash_orig_input(TxInputType *orig_input) {
+static bool signing_hash_orig_input(TxInputType* orig_input) {
   if (idx2 == 0) {
     uint32_t branch_id = 0;
 #if !BITCOIN_ONLY
@@ -2984,7 +2984,7 @@ static bool signing_hash_orig_input(TxInputType *orig_input) {
   return true;
 }
 
-static bool signing_hash_orig_output(TxOutputType *orig_output) {
+static bool signing_hash_orig_output(TxOutputType* orig_output) {
   if (!compile_output(orig_output, &bin_output, false)) {
     return false;
   }
@@ -3132,8 +3132,8 @@ static void phase1_request_orig_output(void) {
 }
 
 #if !BITCOIN_ONLY
-static void signing_hash_decred(const TxInputType *txinput,
-                                const uint8_t hash_witness[32], uint8_t *hash) {
+static void signing_hash_decred(const TxInputType* txinput,
+                                const uint8_t hash_witness[32], uint8_t* hash) {
   uint32_t hash_type = signing_hash_type(txinput);
   Hasher hasher_preimage = {0};
   hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
@@ -3144,8 +3144,8 @@ static void signing_hash_decred(const TxInputType *txinput,
 }
 #endif
 
-static bool signing_sign_ecdsa(TxInputType *txinput, const uint8_t *private_key,
-                               const uint8_t *public_key, const uint8_t *hash) {
+static bool signing_sign_ecdsa(TxInputType* txinput, const uint8_t* private_key,
+                               const uint8_t* public_key, const uint8_t* hash) {
   resp.has_serialized = true;
   resp.serialized.has_signature_index = true;
   resp.serialized.signature_index = idx1;
@@ -3190,8 +3190,8 @@ static bool signing_sign_ecdsa(TxInputType *txinput, const uint8_t *private_key,
   return true;
 }
 
-static bool signing_sign_bip340(const uint8_t *private_key,
-                                const uint8_t *hash) {
+static bool signing_sign_bip340(const uint8_t* private_key,
+                                const uint8_t* hash) {
   resp.has_serialized = true;
   resp.serialized.has_signature_index = true;
   resp.serialized.signature_index = idx1;
@@ -3225,7 +3225,7 @@ static bool signing_sign_legacy_input(void) {
   return true;
 }
 
-static bool signing_sign_segwit_input(TxInputType *txinput) {
+static bool signing_sign_segwit_input(TxInputType* txinput) {
   // idx1: index to sign
   uint8_t hash[32] = {0};
 
@@ -3344,7 +3344,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 
 #if !BITCOIN_ONLY
 
-static bool signing_sign_decred_input(TxInputType *txinput) {
+static bool signing_sign_decred_input(TxInputType* txinput) {
   uint8_t hash[32] = {}, hash_witness[32] = {};
   tx_hash_final(&ti, hash_witness, false);
   signing_hash_decred(txinput, hash_witness, hash);
@@ -3363,7 +3363,7 @@ static bool signing_sign_decred_input(TxInputType *txinput) {
 
 #define ENABLE_SEGWIT_NONSEGWIT_MIXING 1
 
-void signing_txack(TransactionType *tx) {
+void signing_txack(TransactionType* tx) {
   if (!signing) {
     fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
                     _("Not in Signing mode"));

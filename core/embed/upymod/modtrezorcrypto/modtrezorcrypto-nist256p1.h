@@ -34,7 +34,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_generate_secret() {
   vstr_t sk = {0};
   vstr_init_len(&sk, 32);
   for (;;) {
-    rng_fill_buffer((uint8_t *)sk.buf, sk.len);
+    rng_fill_buffer((uint8_t*)sk.buf, sk.len);
     // check whether secret > 0 && secret < curve_order
     if (0 ==
         memcmp(
@@ -62,7 +62,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_nist256p1_generate_secret_obj,
 ///     Computes public key from secret key.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_publickey(size_t n_args,
-                                                     const mp_obj_t *args) {
+                                                     const mp_obj_t* args) {
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
@@ -72,14 +72,14 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_publickey(size_t n_args,
   bool compressed = n_args < 2 || args[1] == mp_const_true;
   if (compressed) {
     vstr_init_len(&pk, 33);
-    if (ecdsa_get_public_key33(&nist256p1, (const uint8_t *)sk.buf,
-                               (uint8_t *)pk.buf) != 0) {
+    if (ecdsa_get_public_key33(&nist256p1, (const uint8_t*)sk.buf,
+                               (uint8_t*)pk.buf) != 0) {
       mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret key"));
     }
   } else {
     vstr_init_len(&pk, 65);
-    if (ecdsa_get_public_key65(&nist256p1, (const uint8_t *)sk.buf,
-                               (uint8_t *)pk.buf) != 0) {
+    if (ecdsa_get_public_key65(&nist256p1, (const uint8_t*)sk.buf,
+                               (uint8_t*)pk.buf) != 0) {
       mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret key"));
     }
   }
@@ -96,7 +96,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     Uses secret key to produce the signature of the digest.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
-                                                const mp_obj_t *args) {
+                                                const mp_obj_t* args) {
   mp_buffer_info_t sk = {0};
   mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
@@ -111,8 +111,8 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
   vstr_t sig = {0};
   vstr_init_len(&sig, 65);
   uint8_t pby = 0;
-  if (0 != ecdsa_sign_digest(&nist256p1, (const uint8_t *)sk.buf,
-                             (const uint8_t *)dig.buf, (uint8_t *)sig.buf + 1,
+  if (0 != ecdsa_sign_digest(&nist256p1, (const uint8_t*)sk.buf,
+                             (const uint8_t*)dig.buf, (uint8_t*)sig.buf + 1,
                              &pby, NULL)) {
     vstr_clear(&sig);
     mp_raise_ValueError(MP_ERROR_TEXT("Signing failed"));
@@ -148,10 +148,10 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify(mp_obj_t public_key,
   if (dig.len != 32) {
     return mp_const_false;
   }
-  return mp_obj_new_bool(
-      0 == ecdsa_verify_digest(&nist256p1, (const uint8_t *)pk.buf,
-                               (const uint8_t *)sig.buf + offset,
-                               (const uint8_t *)dig.buf));
+  return mp_obj_new_bool(0 ==
+                         ecdsa_verify_digest(&nist256p1, (const uint8_t*)pk.buf,
+                                             (const uint8_t*)sig.buf + offset,
+                                             (const uint8_t*)dig.buf));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_nist256p1_verify_obj,
                                  mod_trezorcrypto_nist256p1_verify);
@@ -172,7 +172,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature,
   if (dig.len != 32) {
     return mp_const_none;
   }
-  uint8_t recid = ((const uint8_t *)sig.buf)[0] - 27;
+  uint8_t recid = ((const uint8_t*)sig.buf)[0] - 27;
   if (recid >= 8) {
     return mp_const_none;
   }
@@ -180,9 +180,9 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature,
   recid &= 3;
   vstr_t pk = {0};
   vstr_init_len(&pk, 65);
-  if (0 == ecdsa_recover_pub_from_sig(&nist256p1, (uint8_t *)pk.buf,
-                                      (const uint8_t *)sig.buf + 1,
-                                      (const uint8_t *)dig.buf, recid)) {
+  if (0 == ecdsa_recover_pub_from_sig(&nist256p1, (uint8_t*)pk.buf,
+                                      (const uint8_t*)sig.buf + 1,
+                                      (const uint8_t*)dig.buf, recid)) {
     if (compressed) {
       pk.buf[0] = 0x02 | (pk.buf[64] & 1);
       pk.len = 33;
@@ -213,8 +213,8 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_multiply(mp_obj_t secret_key,
   }
   vstr_t out = {0};
   vstr_init_len(&out, 65);
-  if (0 != ecdh_multiply(&nist256p1, (const uint8_t *)sk.buf,
-                         (const uint8_t *)pk.buf, (uint8_t *)out.buf)) {
+  if (0 != ecdh_multiply(&nist256p1, (const uint8_t*)sk.buf,
+                         (const uint8_t*)pk.buf, (uint8_t*)out.buf)) {
     vstr_clear(&out);
     mp_raise_ValueError(MP_ERROR_TEXT("Multiply failed"));
   }
@@ -243,5 +243,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_nist256p1_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_nist256p1_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_nist256p1_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_nist256p1_globals,
 };

@@ -1,4 +1,4 @@
-static void send_msg_success(usbd_device *dev) {
+static void send_msg_success(usbd_device* dev) {
   uint8_t response[64];
   memzero(response, sizeof(response));
   // response: Success message (id 2), payload len 0
@@ -14,7 +14,7 @@ static void send_msg_success(usbd_device *dev) {
   }
 }
 
-static void send_msg_failure(usbd_device *dev, uint8_t code) {
+static void send_msg_failure(usbd_device* dev, uint8_t code) {
   uint8_t response[64];
   memzero(response, sizeof(response));
   // response: Failure message (id 3), payload len 2
@@ -34,7 +34,7 @@ static void send_msg_failure(usbd_device *dev, uint8_t code) {
   }
 }
 
-static void send_msg_features(usbd_device *dev) {
+static void send_msg_features(usbd_device* dev) {
   uint8_t response[64];
   memzero(response, sizeof(response));
   // response: Features message (id 17), payload len 26 / 41
@@ -49,7 +49,7 @@ static void send_msg_features(usbd_device *dev) {
   //           ? fw_version_minor = version_minor
   //           ? fw_version_patch = version_patch
   const bool firmware_present = firmware_present_new();
-  const image_header *current_hdr = (const image_header *)FLASH_FWHEADER_START;
+  const image_header* current_hdr = (const image_header*)FLASH_FWHEADER_START;
   uint32_t version = firmware_present ? current_hdr->version : 0;
 
   // clang-format off
@@ -105,7 +105,7 @@ static void send_msg_features(usbd_device *dev) {
   }
 }
 
-static void send_msg_buttonrequest_firmwarecheck(usbd_device *dev) {
+static void send_msg_buttonrequest_firmwarecheck(usbd_device* dev) {
   uint8_t response[64];
   memzero(response, sizeof(response));
   // response: ButtonRequest message (id 26), payload len 2

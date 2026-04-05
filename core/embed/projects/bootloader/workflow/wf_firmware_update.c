@@ -128,12 +128,12 @@ static int version_compare(uint32_t vera, uint32_t verb) {
   return a - b;
 }
 
-static void detect_installation(const vendor_header *current_vhdr,
-                                const image_header *current_hdr,
-                                const vendor_header *const new_vhdr,
-                                const image_header *const new_hdr,
-                                secbool *is_new, secbool *keep_seed,
-                                secbool *is_newvendor, secbool *is_upgrade) {
+static void detect_installation(const vendor_header* current_vhdr,
+                                const image_header* current_hdr,
+                                const vendor_header* const new_vhdr,
+                                const image_header* const new_hdr,
+                                secbool* is_new, secbool* keep_seed,
+                                secbool* is_newvendor, secbool* is_upgrade) {
   *is_new = secfalse;
   *keep_seed = secfalse;
   *is_newvendor = secfalse;
@@ -173,8 +173,8 @@ static void detect_installation(const vendor_header *current_vhdr,
   *keep_seed = sectrue;
 }
 
-static void fw_data_received(size_t len, void *ctx) {
-  firmware_update_ctx_t *context = (firmware_update_ctx_t *)ctx;
+static void fw_data_received(size_t len, void* ctx) {
+  firmware_update_ctx_t* context = (firmware_update_ctx_t*)ctx;
 
   context->chunk_size += len;
   // update loader only after the update is confirmed
@@ -188,13 +188,13 @@ static void fw_data_received(size_t len, void *ctx) {
   }
 }
 
-static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
-                                                  firmware_update_ctx_t *ctx) {
+static upload_status_t process_msg_FirmwareUpload(protob_io_t* iface,
+                                                  firmware_update_ctx_t* ctx) {
   FirmwareUpload msg;
 
   const secbool r =
       recv_msg_firmware_upload(iface, &msg, ctx, fw_data_received,
-                               &((uint8_t *)chunk_buffer)[ctx->read_offset],
+                               &((uint8_t*)chunk_buffer)[ctx->read_offset],
                                sizeof(chunk_buffer) - ctx->read_offset);
 
   if (sectrue != r ||
@@ -211,7 +211,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       // first block and headers are not yet parsed
       vendor_header vhdr;
 
-      if (sectrue != read_vendor_header((uint8_t *)chunk_buffer, &vhdr)) {
+      if (sectrue != read_vendor_header((uint8_t*)chunk_buffer, &vhdr)) {
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          "Invalid vendor header");
         return UPLOAD_ERR_INVALID_VENDOR_HEADER;
@@ -229,12 +229,12 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         return UPLOAD_ERR_INVALID_VENDOR_HEADER_SIG;
       }
 
-      const image_header *received_hdr =
-          read_image_header((uint8_t *)chunk_buffer + vhdr.hdrlen,
+      const image_header* received_hdr =
+          read_image_header((uint8_t*)chunk_buffer + vhdr.hdrlen,
                             FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
       if (received_hdr !=
-          (const image_header *)((uint8_t *)chunk_buffer + vhdr.hdrlen)) {
+          (const image_header*)((uint8_t*)chunk_buffer + vhdr.hdrlen)) {
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          "Invalid firmware header");
         return UPLOAD_ERR_INVALID_IMAGE_HEADER;
@@ -263,8 +263,8 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       size_t secmon_start_offset =
           (size_t)IMAGE_CODE_ALIGN(vhdr.hdrlen + IMAGE_HEADER_SIZE);
       size_t secmon_start = (size_t)chunk_buffer + secmon_start_offset;
-      const secmon_header_t *secmon_hdr =
-          read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
+      const secmon_header_t* secmon_hdr =
+          read_secmon_header((const uint8_t*)secmon_start, FIRMWARE_MAXSIZE);
 
       if (secmon_hdr != NULL) {
         ctx->secmon_code_offset =
@@ -272,7 +272,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
             SECMON_HEADER_SIZE;
       }
 
-      if (secmon_hdr != (const secmon_header_t *)secmon_start) {
+      if (secmon_hdr != (const secmon_header_t*)secmon_start) {
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          "Invalid secmon header");
         return UPLOAD_ERR_INVALID_SECMON_HEADER;
@@ -309,20 +309,19 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       secbool is_new = secfalse;
 
       if (sectrue !=
-          read_vendor_header((const uint8_t *)FIRMWARE_START, &current_vhdr)) {
+          read_vendor_header((const uint8_t*)FIRMWARE_START, &current_vhdr)) {
         is_new = sectrue;
       }
 
-      const image_header *current_hdr = NULL;
+      const image_header* current_hdr = NULL;
 
       if (is_new == secfalse) {
         current_hdr = read_image_header(
-            (const uint8_t *)FIRMWARE_START + current_vhdr.hdrlen,
+            (const uint8_t*)FIRMWARE_START + current_vhdr.hdrlen,
             FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
-        if (current_hdr !=
-            (const image_header *)(void *)(FIRMWARE_START +
-                                           current_vhdr.hdrlen)) {
+        if (current_hdr != (const image_header*)(void*)(FIRMWARE_START +
+                                                        current_vhdr.hdrlen)) {
           is_new = sectrue;
         }
       }
@@ -341,7 +340,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         IMAGE_HASH_CTX ctx;
         uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
         IMAGE_HASH_INIT(&ctx);
-        IMAGE_HASH_UPDATE(&ctx, (uint8_t *)chunk_buffer,
+        IMAGE_HASH_UPDATE(&ctx, (uint8_t*)chunk_buffer,
                           vhdr.hdrlen + received_hdr->hdrlen);
         IMAGE_HASH_FINAL(&ctx, hash);
 
@@ -461,15 +460,14 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
     return UPLOAD_ERR_FIRMWARE_TOO_BIG;
   }
 
-  if (sectrue !=
-      check_single_hash(hdr.hashes + ctx->firmware_block * 32,
-                        (uint8_t *)chunk_buffer + ctx->headers_offset,
-                        ctx->chunk_size - ctx->headers_offset)) {
+  if (sectrue != check_single_hash(hdr.hashes + ctx->firmware_block * 32,
+                                   (uint8_t*)chunk_buffer + ctx->headers_offset,
+                                   ctx->chunk_size - ctx->headers_offset)) {
     if (ctx->firmware_upload_chunk_retry > 0) {
       --ctx->firmware_upload_chunk_retry;
 
       // clear chunk buffer
-      memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
+      memset((uint8_t*)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
       ctx->chunk_size = 0;
 
       if (sectrue != send_msg_request_firmware(
@@ -504,7 +502,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
     secmon_code_to_process = MIN(secmon_code_to_process, secmon_code_remaining);
 
     sha256_Update(&ctx->secmon_hash_ctx,
-                  (uint8_t *)chunk_buffer + ctx->secmon_code_offset,
+                  (uint8_t*)chunk_buffer + ctx->secmon_code_offset,
                   secmon_code_to_process);
 
     ctx->secmon_code_processed += secmon_code_to_process;
@@ -529,7 +527,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
 #endif
 
   // buffer with the received data
-  const uint32_t *src = (const uint32_t *)chunk_buffer;
+  const uint32_t* src = (const uint32_t*)chunk_buffer;
   // number of received bytes
   uint32_t bytes_remaining = ctx->chunk_size;
   // offset into the FIRMWARE_AREA part of the flash
@@ -590,7 +588,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
 
     // clear chunk buffer
     ctx->chunk_size = 0;
-    memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
+    memset((uint8_t*)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
     if (sectrue !=
         send_msg_request_firmware(iface, ctx->firmware_block * IMAGE_CHUNK_SIZE,
                                   ctx->chunk_requested)) {
@@ -606,7 +604,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
   return UPLOAD_OK;
 }
 
-workflow_result_t workflow_firmware_update(protob_io_t *iface) {
+workflow_result_t workflow_firmware_update(protob_io_t* iface) {
   firmware_update_ctx_t ctx = {
       .firmware_upload_chunk_retry = FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT,
   };
@@ -625,7 +623,7 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
       ((ctx.firmware_remaining % sizeof(uint32_t)) == 0) &&
       (ctx.firmware_remaining <= FIRMWARE_MAXSIZE)) {
     // clear chunk buffer
-    memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
+    memset((uint8_t*)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
     ctx.chunk_size = 0;
 
     // request new firmware

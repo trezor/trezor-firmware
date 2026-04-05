@@ -35,12 +35,14 @@
 // Physical frame buffers in internal SRAM memory.
 // Both frame buffers layers in the fixed addresses that
 // are shared between bootloaders and the firmware.
-__attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-uint8_t physical_frame_buffer_0[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
+__attribute__((section(".fb1"),
+               aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    physical_frame_buffer_0[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
 
 #if (FRAME_BUFFER_COUNT > 1)
-__attribute__((section(".fb2"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
-uint8_t physical_frame_buffer_1[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
+__attribute__((section(".fb2"),
+               aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT))) uint8_t
+    physical_frame_buffer_1[ALIGNED_PHYSICAL_FRAME_BUFFER_SIZE];
 #endif
 
 #ifdef USE_TRUSTZONE
@@ -75,13 +77,13 @@ void display_set_unpriv_access(bool unpriv) {
 
 // Returns the pointer to the physical frame buffer (0.. FRAME_BUFFER_COUNT-1)
 // Returns NULL if the framebuffer index is out of range.
-static uint8_t *get_fb_ptr(int16_t index) {
+static uint8_t* get_fb_ptr(int16_t index) {
 #ifdef DISPLAY_GFXMMU
   if (index == 0) {
-    return (uint8_t *)GFXMMU_VIRTUAL_BUFFER0_BASE;
+    return (uint8_t*)GFXMMU_VIRTUAL_BUFFER0_BASE;
 #if (FRAME_BUFFER_COUNT > 1)
   } else if (index == 1) {
-    return (uint8_t *)GFXMMU_VIRTUAL_BUFFER1_BASE;
+    return (uint8_t*)GFXMMU_VIRTUAL_BUFFER1_BASE;
 #endif
 #else
   if (index == 0) {
@@ -96,8 +98,8 @@ static uint8_t *get_fb_ptr(int16_t index) {
   }
 }
 
-bool display_get_frame_buffer(display_fb_info_t *fb) {
-  display_driver_t *drv = &g_display_driver;
+bool display_get_frame_buffer(display_fb_info_t* fb) {
+  display_driver_t* drv = &g_display_driver;
 
   memset(fb, 0, sizeof(display_fb_info_t));
 
@@ -128,7 +130,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
 }
 
 void display_refresh(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -158,7 +160,7 @@ void display_refresh(void) {
 }
 
 void display_ensure_refreshed(void) {
-  display_driver_t *drv = &g_display_driver;
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
@@ -201,8 +203,8 @@ uint32_t display_fb_init(void) {
   return (uint32_t)get_fb_ptr(0);
 }
 
-void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc) {
-  display_driver_t *drv = &g_display_driver;
+void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef* hltdc) {
+  display_driver_t* drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;

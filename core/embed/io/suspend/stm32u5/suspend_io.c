@@ -53,7 +53,7 @@
 #include <io/usb.h>
 #endif
 
-void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
+void suspend_drivers_phase1(power_save_wakeup_params_t* wakeup_params) {
   suspend_secure_drivers();
 
 #ifdef USE_OPTIGA
@@ -92,7 +92,7 @@ void suspend_drivers_phase2(void) {
 #endif
 }
 
-void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
+void resume_drivers(const power_save_wakeup_params_t* wakeup_params) {
 #ifdef USE_DISPLAY
   // Reinitialize all drivers that were stopped earlier
   display_init(DISPLAY_RESET_CONTENT);

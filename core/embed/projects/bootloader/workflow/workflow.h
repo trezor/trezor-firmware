@@ -26,43 +26,43 @@
 #include "protob/protob.h"
 #include "workflow_common.h"
 
-workflow_result_t workflow_firmware_update(protob_io_t *iface);
+workflow_result_t workflow_firmware_update(protob_io_t* iface);
 
-workflow_result_t workflow_wipe_device(protob_io_t *iface);
+workflow_result_t workflow_wipe_device(protob_io_t* iface);
 
 #ifdef LOCKABLE_BOOTLOADER
-workflow_result_t workflow_unlock_bootloader(protob_io_t *iface);
+workflow_result_t workflow_unlock_bootloader(protob_io_t* iface);
 #endif
 
-workflow_result_t workflow_ping(protob_io_t *iface);
+workflow_result_t workflow_ping(protob_io_t* iface);
 
-workflow_result_t workflow_initialize(protob_io_t *iface, const fw_info_t *fw);
+workflow_result_t workflow_initialize(protob_io_t* iface, const fw_info_t* fw);
 
-workflow_result_t workflow_get_features(protob_io_t *iface,
-                                        const fw_info_t *fw);
+workflow_result_t workflow_get_features(protob_io_t* iface,
+                                        const fw_info_t* fw);
 
-workflow_result_t workflow_menu(const fw_info_t *fw, protob_ios_t *ios);
+workflow_result_t workflow_menu(const fw_info_t* fw, protob_ios_t* ios);
 
-workflow_result_t workflow_bootloader(const fw_info_t *fw);
+workflow_result_t workflow_bootloader(const fw_info_t* fw);
 
 workflow_result_t workflow_empty_device(void);
 
-workflow_result_t workflow_auto_update(const fw_info_t *fw);
+workflow_result_t workflow_auto_update(const fw_info_t* fw);
 
 #ifdef USE_BLE
 
-bool wipe_bonds(protob_io_t *iface);
+bool wipe_bonds(protob_io_t* iface);
 
-workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw);
+workflow_result_t workflow_ble_pairing_request(const fw_info_t* fw);
 
-workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
-                                          protob_ios_t *ios);
+workflow_result_t workflow_wireless_setup(const fw_info_t* fw,
+                                          protob_ios_t* ios);
 #endif
 
-void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios);
+void workflow_ifaces_init(secbool usb21_landing, protob_ios_t* ios);
 
-void workflow_ifaces_deinit(protob_ios_t *ios);
+void workflow_ifaces_deinit(protob_ios_t* ios);
 
-void workflow_ifaces_pause(protob_ios_t *ios);
+void workflow_ifaces_pause(protob_ios_t* ios);
 
-void workflow_ifaces_resume(protob_ios_t *ios);
+void workflow_ifaces_resume(protob_ios_t* ios);

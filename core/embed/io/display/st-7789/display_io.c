@@ -24,10 +24,10 @@
 #include <sys/mpu.h>
 #include "display_io.h"
 
-__IO DISP_MEM_TYPE *const DISPLAY_CMD_ADDRESS =
-    (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE);
-__IO DISP_MEM_TYPE *const DISPLAY_DATA_ADDRESS =
-    (__IO DISP_MEM_TYPE *const)((uint32_t)DISPLAY_MEMORY_BASE |
+__IO DISP_MEM_TYPE* const DISPLAY_CMD_ADDRESS =
+    (__IO DISP_MEM_TYPE* const)((uint32_t)DISPLAY_MEMORY_BASE);
+__IO DISP_MEM_TYPE* const DISPLAY_DATA_ADDRESS =
+    (__IO DISP_MEM_TYPE* const)((uint32_t)DISPLAY_MEMORY_BASE |
                                 (DISPLAY_ADDR_SHIFT << DISPLAY_MEMORY_PIN));
 
 #ifdef KERNEL_MODE

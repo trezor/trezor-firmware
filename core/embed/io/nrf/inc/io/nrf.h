@@ -58,10 +58,10 @@ typedef struct {
 } nrf_info_t;
 
 /** Callback type invoked when data is received on a registered service */
-typedef void (*nrf_rx_callback_t)(const uint8_t *data, uint32_t len);
+typedef void (*nrf_rx_callback_t)(const uint8_t* data, uint32_t len);
 
 /** Callback type invoked when a message transmission completes */
-typedef void (*nrf_tx_callback_t)(nrf_status_t status, void *context);
+typedef void (*nrf_tx_callback_t)(nrf_status_t status, void* context);
 
 /**
  * @brief Initialize the NRF driver.
@@ -124,8 +124,8 @@ void nrf_unregister_listener(nrf_service_id_t service);
  * @param context   Context pointer passed to the callback
  * @return ID of the message if successfully queued; -1 otherwise
  */
-int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
-                     uint32_t len, nrf_tx_callback_t callback, void *context);
+int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t* data,
+                     uint32_t len, nrf_tx_callback_t callback, void* context);
 
 /**
  * @brief Abort a queued message by its ID.
@@ -148,7 +148,7 @@ bool nrf_abort_msg(int32_t id);
  * @param info  Pointer to an nrf_info_t structure to populate
  * @return true on success; false on communication error
  */
-bool nrf_get_info(nrf_info_t *info);
+bool nrf_get_info(nrf_info_t* info);
 
 /**
  * Get application/firmware version of the NRF device.
@@ -177,7 +177,7 @@ void nrf_reboot(void);
  * @param len   Length of the data buffer
  * @param timeout_ms  Timeout in milliseconds for the operation
  */
-bool nrf_send_uart_data(const uint8_t *data, uint32_t len, uint32_t timeout_ms);
+bool nrf_send_uart_data(const uint8_t* data, uint32_t len, uint32_t timeout_ms);
 
 /**
  * @brief Check if an nRF device firmware update is required by comparing SHA256
@@ -188,7 +188,7 @@ bool nrf_send_uart_data(const uint8_t *data, uint32_t len, uint32_t timeout_ms);
  * @return true if an update is required (e.g., corrupted image detected or hash
  * mismatch), false if the device already has the same firmware version
  */
-bool nrf_update_required(const uint8_t *image_ptr, size_t image_len);
+bool nrf_update_required(const uint8_t* image_ptr, size_t image_len);
 
 /**
  * @brief Perform a firmware update on the nRF device via DFU (Device Firmware
@@ -198,7 +198,7 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len);
  * @param image_len  Length of the firmware image in bytes
  * @return true always (indicates that the update process was initiated)
  */
-bool nrf_update(const uint8_t *image_ptr, size_t image_len);
+bool nrf_update(const uint8_t* image_ptr, size_t image_len);
 
 /**
  * @brief Authenticate pairing of nRF chip with Trezor
@@ -269,6 +269,6 @@ void nrf_set_dtm_mode(bool set, void (*callback)(uint8_t byte));
  * @param data  Pointer to the data buffer to send
  * @param len   Length of the data buffer
  */
-void nrf_dtm_send_data(const uint8_t *data, uint32_t len);
+void nrf_dtm_send_data(const uint8_t* data, uint32_t len);
 
 ///////////////////////////////////////////////////////////////////////////////

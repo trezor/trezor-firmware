@@ -46,11 +46,10 @@ static const uint8_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
 /** Flash program word operation extracted from libopencm3,
  * so it can run from RAM
  */
-static void __attribute__((noinline, section(".data#")))
-_flash_program_word(uint32_t address, uint32_t data) {
+static void __attribute__((noinline, section(".data#"))) _flash_program_word(
+    uint32_t address, uint32_t data) {
   // Wait for flash controller to be ready
-  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
-    ;
+  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
 
   // Set program word width
   FLASH_CR &= ~(FLASH_CR_PROGRAM_MASK << FLASH_CR_PROGRAM_SHIFT);
@@ -63,15 +62,14 @@ _flash_program_word(uint32_t address, uint32_t data) {
   MMIO32(address) = data;
 
   // Wait for flash controller to be ready
-  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
-    ;
+  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
 
   // Disable writes to flash
   FLASH_CR &= ~FLASH_CR_PG;
 }
 
-static void __attribute__((noinline, section(".data#")))
-invalidate_firmware(void) {
+static void __attribute__((noinline, section(".data#"))) invalidate_firmware(
+    void) {
   // Flash unlock
   FLASH_KEYR = FLASH_KEYR_KEY1;
   FLASH_KEYR = FLASH_KEYR_KEY2;
@@ -84,13 +82,12 @@ invalidate_firmware(void) {
   FLASH_CR |= FLASH_CR_LOCK;
 }
 
-void __attribute__((noinline, noreturn, section(".data#")))
-reboot_device(void) {
+void __attribute__((noinline, noreturn, section(".data#"))) reboot_device(
+    void) {
   __disable_irq();
   *STAY_IN_BOOTLOADER_FLAG_ADDR = STAY_IN_BOOTLOADER_FLAG;
   SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
-  while (1)
-    ;
+  while (1);
 }
 
 /** Entry point of RAM shim that deletes old FW, storage and reboot */
@@ -99,8 +96,7 @@ invalidate_firmware_and_reboot(void) {
   invalidate_firmware();
   reboot_device();
 
-  for (;;)
-    ;  // never reached, but compiler would generate error
+  for (;;);  // never reached, but compiler would generate error
 }
 
 int main(void) {
@@ -121,8 +117,8 @@ int main(void) {
   secbool storage_initialized = secfalse;
 
   // check legacy storage
-  uint32_t *magic = (uint32_t *)flash_get_address(LEGACY_STORAGE_SECTOR, 0,
-                                                  sizeof(META_MAGIC_V10));
+  uint32_t* magic = (uint32_t*)flash_get_address(LEGACY_STORAGE_SECTOR, 0,
+                                                 sizeof(META_MAGIC_V10));
   if (*magic == META_MAGIC_V10) {
     storage_initialized = sectrue;
   }
@@ -130,8 +126,8 @@ int main(void) {
   if (storage_initialized == secfalse) {
     // check norcow storage
     for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
-      magic = (uint32_t *)flash_get_address(norcow_sectors[i], 0,
-                                            sizeof(NORCOW_MAGIC));
+      magic = (uint32_t*)flash_get_address(norcow_sectors[i], 0,
+                                           sizeof(NORCOW_MAGIC));
       if (*magic == NORCOW_MAGIC) {
         storage_initialized = sectrue;
         break;

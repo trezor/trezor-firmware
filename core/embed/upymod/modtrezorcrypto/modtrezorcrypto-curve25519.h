@@ -32,7 +32,7 @@
 STATIC mp_obj_t mod_trezorcrypto_curve25519_generate_secret() {
   vstr_t sk = {0};
   vstr_init_len(&sk, 32);
-  rng_fill_buffer((uint8_t *)sk.buf, sk.len);
+  rng_fill_buffer((uint8_t*)sk.buf, sk.len);
   // taken from https://cr.yp.to/ecdh.html
   sk.buf[0] &= 248;
   sk.buf[31] &= 127;
@@ -55,7 +55,7 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_publickey(mp_obj_t secret_key) {
   }
   vstr_t pk = {0};
   vstr_init_len(&pk, 32);
-  curve25519_scalarmult_basepoint((uint8_t *)pk.buf, (const uint8_t *)sk.buf);
+  curve25519_scalarmult_basepoint((uint8_t*)pk.buf, (const uint8_t*)sk.buf);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_curve25519_publickey_obj,
@@ -79,8 +79,8 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_multiply(mp_obj_t secret_key,
   }
   vstr_t out = {0};
   vstr_init_len(&out, 32);
-  curve25519_scalarmult((uint8_t *)out.buf, (const uint8_t *)sk.buf,
-                        (const uint8_t *)pk.buf);
+  curve25519_scalarmult((uint8_t*)out.buf, (const uint8_t*)sk.buf,
+                        (const uint8_t*)pk.buf);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_curve25519_multiply_obj,
@@ -100,5 +100,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_curve25519_globals,
 
 STATIC const mp_obj_module_t mod_trezorcrypto_curve25519_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorcrypto_curve25519_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorcrypto_curve25519_globals,
 };

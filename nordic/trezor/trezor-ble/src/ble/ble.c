@@ -56,7 +56,7 @@ static int8_t g_act_tx_power_level = 0;
 static int8_t g_set_tx_power_level = 0;
 #endif
 
-static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
+static void bt_receive_cb(struct bt_conn* conn, const uint8_t* const data,
                           uint16_t len) {
   if (atomic_get(&g_busy_flag) != 0) {
     LOG_INF("Trezor not ready, rejecting data");
@@ -124,9 +124,9 @@ void ble_write_thread(void) {
 
   for (;;) {
     /* Wait indefinitely for data to be sent over bluetooth */
-    trz_packet_t *buf = trz_comm_poll_data(NRF_SERVICE_BLE);
+    trz_packet_t* buf = trz_comm_poll_data(NRF_SERVICE_BLE);
 
-    struct bt_conn *conn = connection_get_current();
+    struct bt_conn* conn = connection_get_current();
 
     if (conn == NULL) {
       LOG_WRN("No active BLE connection, cannot send data");
@@ -134,7 +134,7 @@ void ble_write_thread(void) {
       return;
     }
 
-    const bt_addr_le_t *addr = bt_conn_get_dst(conn);
+    const bt_addr_le_t* addr = bt_conn_get_dst(conn);
 
     if (addr->type != buf->data[0] ||
         memcmp(addr->a.val, &buf->data[1], BT_ADDR_SIZE) != 0) {
@@ -143,7 +143,7 @@ void ble_write_thread(void) {
       return;
     }
 
-    trz_packet_t *data_to_send = k_malloc(sizeof(*data_to_send));
+    trz_packet_t* data_to_send = k_malloc(sizeof(*data_to_send));
     data_to_send->len = buf->len - 1 - BT_ADDR_SIZE;
     memcpy(data_to_send->data, &buf->data[1 + BT_ADDR_SIZE], data_to_send->len);
     k_free(buf);
@@ -161,9 +161,9 @@ void ble_set_busy_flag(uint8_t flag) { atomic_set(&g_busy_flag, flag); }
 
 uint8_t ble_get_busy_flag(void) { return atomic_get(&g_busy_flag); }
 
-static int ble_configure_tx_power(int8_t tx_power_level, struct bt_conn *conn) {
-  struct bt_hci_cp_vs_write_tx_power_level *cp;
-  struct bt_hci_rp_vs_write_tx_power_level *rp;
+static int ble_configure_tx_power(int8_t tx_power_level, struct bt_conn* conn) {
+  struct bt_hci_cp_vs_write_tx_power_level* cp;
+  struct bt_hci_rp_vs_write_tx_power_level* rp;
   struct net_buf *buf, *rsp = NULL;
   int err;
 
@@ -194,7 +194,7 @@ static int ble_configure_tx_power(int8_t tx_power_level, struct bt_conn *conn) {
   }
 
   if (rsp) {
-    rp = (void *)rsp->data;
+    rp = (void*)rsp->data;
     LOG_INF("Actual TX Power set to: %d dBm", rp->selected_tx_power);
     net_buf_unref(rsp);
     g_act_tx_power_level = rp->selected_tx_power;
@@ -209,7 +209,7 @@ int ble_set_tx_power(int8_t tx_power_level) {
 
   int8_t res = ble_configure_tx_power(tx_power_level, NULL);
 
-  struct bt_conn *conn = connection_get_current();
+  struct bt_conn* conn = connection_get_current();
 
   if (conn != NULL) {
     return ble_configure_tx_power(tx_power_level, conn);
@@ -218,7 +218,7 @@ int ble_set_tx_power(int8_t tx_power_level) {
 }
 
 int ble_reconfigure_tx_power(void) {
-  struct bt_conn *conn = connection_get_current();
+  struct bt_conn* conn = connection_get_current();
 
   if (conn != NULL) {
     return ble_configure_tx_power(g_set_tx_power_level, conn);

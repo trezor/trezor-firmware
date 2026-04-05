@@ -39,7 +39,7 @@ static uint32_t lcg_get_u32(void) {
   return seed;
 }
 
-void random_buffer(uint8_t *buf, size_t len) {
+void random_buffer(uint8_t* buf, size_t len) {
   uint32_t r = 0;
   for (size_t i = 0; i < len; i++) {
     if (i % 4 == 0) {

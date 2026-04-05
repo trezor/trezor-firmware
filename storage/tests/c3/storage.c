@@ -68,7 +68,7 @@
 #define UNAUTH_VERSION_KEY ((APP_STORAGE << 8) | 0x08)
 
 // The PIN value corresponding to an empty PIN.
-const uint8_t *PIN_EMPTY = (const uint8_t *)"";
+const uint8_t* PIN_EMPTY = (const uint8_t*)"";
 
 // The uint32 representation of an empty PIN, used prior to storage version 3.
 const uint32_t V0_PIN_EMPTY = 1;
@@ -161,8 +161,8 @@ static uint32_t ui_total = 0;
 static uint32_t ui_rem = 0;
 static enum storage_ui_message_t ui_message = NO_MSG;
 static uint8_t cached_keys[KEYS_SIZE] = {0};
-static uint8_t *const cached_dek = cached_keys;
-static uint8_t *const cached_sak = cached_keys + DEK_SIZE;
+static uint8_t* const cached_dek = cached_keys;
+static uint8_t* const cached_sak = cached_keys + DEK_SIZE;
 static uint8_t authentication_sum[SHA256_DIGEST_LENGTH] = {0};
 static uint8_t hardware_salt[HARDWARE_SALT_SIZE] = {0};
 static uint32_t norcow_active_version = 0;
@@ -171,21 +171,21 @@ static const uint8_t FALSE_BYTE = 0x00;
 static const uint32_t TRUE_WORD = 0xC35A69A5;
 static const uint32_t FALSE_WORD = 0x3CA5965A;
 
-static void __handle_fault(const char *msg, const char *file, int line);
+static void __handle_fault(const char* msg, const char* file, int line);
 #define handle_fault(msg) (__handle_fault(msg, __FILE__, __LINE__))
 
-static uint32_t pin_to_int(const uint8_t *pin, size_t pin_len);
+static uint32_t pin_to_int(const uint8_t* pin, size_t pin_len);
 static secbool storage_upgrade(void);
-static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
-                                        const uint8_t *ext_salt);
-static secbool storage_set_encrypted(const uint16_t key, const void *val,
+static secbool storage_upgrade_unlocked(const uint8_t* pin, size_t pin_len,
+                                        const uint8_t* ext_salt);
+static secbool storage_set_encrypted(const uint16_t key, const void* val,
                                      const uint16_t len);
-static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
-                                     const uint16_t max_len, uint16_t *len);
+static secbool storage_get_encrypted(const uint16_t key, void* val_dest,
+                                     const uint16_t max_len, uint16_t* len);
 
-static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
-  const uint8_t *p1 = ptr1;
-  const uint8_t *p2 = ptr2;
+static secbool secequal(const void* ptr1, const void* ptr2, size_t n) {
+  const uint8_t* p1 = ptr1;
+  const uint8_t* p2 = ptr2;
   uint8_t diff = 0;
   size_t i = 0;
   for (i = 0; i < n; ++i) {
@@ -202,14 +202,14 @@ static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
   return diff ? secfalse : sectrue;
 }
 
-static secbool secequal32(const void *ptr1, const void *ptr2, size_t n) {
+static secbool secequal32(const void* ptr1, const void* ptr2, size_t n) {
   assert(n % sizeof(uint32_t) == 0);
   assert((uintptr_t)ptr1 % sizeof(uint32_t) == 0);
   assert((uintptr_t)ptr2 % sizeof(uint32_t) == 0);
 
   size_t wn = n / sizeof(uint32_t);
-  const uint32_t *p1 = (const uint32_t *)ptr1;
-  const uint32_t *p2 = (const uint32_t *)ptr2;
+  const uint32_t* p1 = (const uint32_t*)ptr1;
+  const uint32_t* p2 = (const uint32_t*)ptr2;
   uint32_t diff = 0;
   size_t i = 0;
   for (i = 0; i < wn; ++i) {
@@ -252,7 +252,7 @@ static secbool auth_update(uint16_t key) {
   }
 
   uint8_t tag[SHA256_DIGEST_LENGTH] = {0};
-  hmac_sha256(cached_sak, SAK_SIZE, (uint8_t *)&key, sizeof(key), tag);
+  hmac_sha256(cached_sak, SAK_SIZE, (uint8_t*)&key, sizeof(key), tag);
   for (uint32_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
     authentication_sum[i] ^= tag[i];
   }
@@ -265,7 +265,7 @@ static secbool auth_update(uint16_t key) {
  * A secure version of norcow_set(), which updates the storage authentication
  * tag.
  */
-static secbool auth_set(uint16_t key, const void *val, uint16_t len) {
+static secbool auth_set(uint16_t key, const void* val, uint16_t len) {
   secbool found = secfalse;
   secbool ret = norcow_set_ex(key, val, len, &found);
   if (sectrue == ret && secfalse == found) {
@@ -281,7 +281,7 @@ static secbool auth_set(uint16_t key, const void *val, uint16_t len) {
  * A secure version of norcow_get(), which checks the storage authentication
  * tag.
  */
-static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
+static secbool auth_get(uint16_t key, const void** val, uint16_t* len) {
   *val = NULL;
   *len = 0;
   uint32_t sum[SHA256_DIGEST_LENGTH / sizeof(uint32_t)] = {0};
@@ -304,8 +304,8 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
   uint16_t tag_len = 0;
   uint16_t entry_count = 0;  // Mitigation against fault injection.
   uint16_t other_count = 0;  // Mitigation against fault injection.
-  const void *v = NULL;
-  const void *tag_val = NULL;
+  const void* v = NULL;
+  const void* tag_val = NULL;
   while (sectrue == norcow_get_next(&offset, &k, &v, &l)) {
     ++entry_count;
     if (k == key) {
@@ -340,9 +340,9 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
   // Cache the authentication sum.
   for (size_t i = 0; i < SHA256_DIGEST_LENGTH / sizeof(uint32_t); i++) {
 #if BYTE_ORDER == LITTLE_ENDIAN
-    REVERSE32(sum[i], ((uint32_t *)authentication_sum)[i]);
+    REVERSE32(sum[i], ((uint32_t*)authentication_sum)[i]);
 #else
-    ((uint32_t *)authentication_sum)[i] = sum[i];
+    ((uint32_t*)authentication_sum)[i] = sum[i];
 #endif
   }
 
@@ -372,7 +372,7 @@ static secbool auth_get(uint16_t key, const void **val, uint16_t *len) {
   return sectrue;
 }
 
-static secbool set_wipe_code(const uint8_t *wipe_code, size_t wipe_code_len) {
+static secbool set_wipe_code(const uint8_t* wipe_code, size_t wipe_code_len) {
   if (wipe_code_len > MAX_WIPE_CODE_LEN ||
       wipe_code_len > UINT16_MAX - WIPE_CODE_SALT_SIZE - WIPE_CODE_TAG_SIZE) {
     return secfalse;
@@ -389,8 +389,8 @@ static secbool set_wipe_code(const uint8_t *wipe_code, size_t wipe_code_len) {
   // wipe code (variable), random salt (16 bytes), authentication tag (16 bytes)
   // NOTE: We allocate extra space for the HMAC result.
   uint8_t salt_and_tag[WIPE_CODE_SALT_SIZE + SHA256_DIGEST_LENGTH] = {0};
-  uint8_t *salt = salt_and_tag;
-  uint8_t *tag = salt_and_tag + WIPE_CODE_SALT_SIZE;
+  uint8_t* salt = salt_and_tag;
+  uint8_t* tag = salt_and_tag + WIPE_CODE_SALT_SIZE;
 
   random_buffer(salt, WIPE_CODE_SALT_SIZE);
   hmac_sha256(salt, WIPE_CODE_SALT_SIZE, wipe_code, wipe_code_len, tag);
@@ -418,25 +418,25 @@ static secbool set_wipe_code(const uint8_t *wipe_code, size_t wipe_code_len) {
   return sectrue;
 }
 
-static secbool is_not_wipe_code(const uint8_t *pin, size_t pin_len) {
+static secbool is_not_wipe_code(const uint8_t* pin, size_t pin_len) {
   uint8_t salt[WIPE_CODE_SALT_SIZE] = {0};
   uint8_t stored_tag[WIPE_CODE_TAG_SIZE] = {0};
   uint8_t computed_tag1[SHA256_DIGEST_LENGTH] = {0};
   uint8_t computed_tag2[SHA256_DIGEST_LENGTH] = {0};
 
   // Read the wipe code data from the storage.
-  const void *wipe_code_data = NULL;
+  const void* wipe_code_data = NULL;
   uint16_t len = 0;
   if (sectrue != norcow_get(WIPE_CODE_DATA_KEY, &wipe_code_data, &len) ||
       len <= WIPE_CODE_SALT_SIZE + WIPE_CODE_TAG_SIZE) {
     handle_fault("no wipe code");
     return secfalse;
   }
-  const uint8_t *wipe_code = (const uint8_t *)wipe_code_data;
+  const uint8_t* wipe_code = (const uint8_t*)wipe_code_data;
   size_t wipe_code_len = len - WIPE_CODE_SALT_SIZE - WIPE_CODE_TAG_SIZE;
-  memcpy(salt, (uint8_t *)wipe_code_data + wipe_code_len, sizeof(salt));
+  memcpy(salt, (uint8_t*)wipe_code_data + wipe_code_len, sizeof(salt));
   memcpy(stored_tag,
-         (uint8_t *)wipe_code_data + wipe_code_len + WIPE_CODE_SALT_SIZE,
+         (uint8_t*)wipe_code_data + wipe_code_len + WIPE_CODE_SALT_SIZE,
          sizeof(stored_tag));
 
   // Check integrity in case of flash read manipulation attack.
@@ -488,8 +488,8 @@ static secbool ui_progress(uint32_t elapsed_ms) {
 }
 
 #if !USE_OPTIGA
-static void derive_kek(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *storage_salt, const uint8_t *ext_salt,
+static void derive_kek(const uint8_t* pin, size_t pin_len,
+                       const uint8_t* storage_salt, const uint8_t* ext_salt,
                        uint8_t kek[SHA256_DIGEST_LENGTH],
                        uint8_t keiv[SHA256_DIGEST_LENGTH]) {
   uint8_t salt[HARDWARE_SALT_SIZE + STORAGE_SALT_SIZE + EXTERNAL_SALT_SIZE] = {
@@ -528,9 +528,9 @@ static void derive_kek(const uint8_t *pin, size_t pin_len,
 #endif
 
 #if USE_OPTIGA
-static void stretch_pin_optiga(const uint8_t *pin, size_t pin_len,
+static void stretch_pin_optiga(const uint8_t* pin, size_t pin_len,
                                const uint8_t storage_salt[STORAGE_SALT_SIZE],
-                               const uint8_t *ext_salt,
+                               const uint8_t* ext_salt,
                                uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
   // Combining the PIN with the storage salt aims to ensure that if the
   // MCU-Optiga communication is compromised, then a user with a low-entropy PIN
@@ -588,9 +588,9 @@ static void derive_kek_optiga(
 }
 #endif
 
-static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
-                                    const uint8_t *storage_salt,
-                                    const uint8_t *ext_salt,
+static secbool __wur derive_kek_set(const uint8_t* pin, size_t pin_len,
+                                    const uint8_t* storage_salt,
+                                    const uint8_t* ext_salt,
                                     uint8_t kek[SHA256_DIGEST_LENGTH],
                                     uint8_t keiv[SHA256_DIGEST_LENGTH]) {
 #if USE_OPTIGA
@@ -611,9 +611,9 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   return sectrue;
 }
 
-static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
-                                       const uint8_t *storage_salt,
-                                       const uint8_t *ext_salt,
+static secbool __wur derive_kek_unlock(const uint8_t* pin, size_t pin_len,
+                                       const uint8_t* storage_salt,
+                                       const uint8_t* ext_salt,
                                        uint8_t kek[SHA256_DIGEST_LENGTH],
                                        uint8_t keiv[SHA256_DIGEST_LENGTH]) {
 #if USE_OPTIGA
@@ -641,13 +641,13 @@ static secbool __wur derive_kek_unlock(const uint8_t *pin, size_t pin_len,
   return sectrue;
 }
 
-static secbool set_pin(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
+static secbool set_pin(const uint8_t* pin, size_t pin_len,
+                       const uint8_t* ext_salt) {
   // Encrypt the cached keys using the new PIN and set the new PVC.
   uint8_t buffer[STORAGE_SALT_SIZE + KEYS_SIZE + POLY1305_TAG_SIZE] = {0};
-  uint8_t *rand_salt = buffer;
-  uint8_t *ekeys = buffer + STORAGE_SALT_SIZE;
-  uint8_t *pvc = buffer + STORAGE_SALT_SIZE + KEYS_SIZE;
+  uint8_t* rand_salt = buffer;
+  uint8_t* ekeys = buffer + STORAGE_SALT_SIZE;
+  uint8_t* pvc = buffer + STORAGE_SALT_SIZE + KEYS_SIZE;
 
   uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
   uint8_t keiv[SHA256_DIGEST_LENGTH] = {0};
@@ -718,8 +718,8 @@ static uint32_t generate_guard_key(void) {
   return guard_key;
 }
 
-static secbool expand_guard_key(const uint32_t guard_key, uint32_t *guard_mask,
-                                uint32_t *guard) {
+static secbool expand_guard_key(const uint32_t guard_key, uint32_t* guard_mask,
+                                uint32_t* guard) {
   if (sectrue != check_guard_key(guard_key)) {
     handle_fault("guard key check");
     return secfalse;
@@ -801,7 +801,7 @@ static void init_wiped_storage(void) {
   ensure(set_pin(PIN_EMPTY, PIN_EMPTY_LEN, NULL), "init_pin failed");
 }
 
-void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
+void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t* salt,
                   const uint16_t salt_len) {
   initialized = secfalse;
   unlocked = secfalse;
@@ -819,7 +819,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
   }
 
   // If there is no EDEK, then generate a random DEK and SAK and store them.
-  const void *val = NULL;
+  const void* val = NULL;
   uint16_t len = 0;
   if (secfalse == norcow_get(EDEK_PVC_KEY, &val, &len)) {
     init_wiped_storage();
@@ -829,7 +829,7 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
 }
 
 static secbool pin_fails_reset(void) {
-  const void *logs = NULL;
+  const void* logs = NULL;
   uint16_t len = 0;
 
   if (sectrue != norcow_get(PIN_LOGS_KEY, &logs, &len) ||
@@ -841,13 +841,13 @@ static secbool pin_fails_reset(void) {
   uint32_t guard = 0;
   wait_random();
   if (sectrue !=
-      expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
+      expand_guard_key(*(const uint32_t*)logs, &guard_mask, &guard)) {
     return secfalse;
   }
 
   uint32_t unused = guard | ~guard_mask;
-  const uint32_t *success_log = ((const uint32_t *)logs) + GUARD_KEY_WORDS;
-  const uint32_t *entry_log = success_log + PIN_LOG_WORDS;
+  const uint32_t* success_log = ((const uint32_t*)logs) + GUARD_KEY_WORDS;
+  const uint32_t* entry_log = success_log + PIN_LOG_WORDS;
   for (size_t i = 0; i < PIN_LOG_WORDS; ++i) {
     if (entry_log[i] == unused) {
       return sectrue;
@@ -868,7 +868,7 @@ secbool storage_pin_fails_increase(void) {
     return secfalse;
   }
 
-  const void *logs = NULL;
+  const void* logs = NULL;
   uint16_t len = 0;
 
   wait_random();
@@ -882,13 +882,13 @@ secbool storage_pin_fails_increase(void) {
   uint32_t guard = 0;
   wait_random();
   if (sectrue !=
-      expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
+      expand_guard_key(*(const uint32_t*)logs, &guard_mask, &guard)) {
     handle_fault("guard key expansion");
     return secfalse;
   }
 
-  const uint32_t *entry_log =
-      ((const uint32_t *)logs) + GUARD_KEY_WORDS + PIN_LOG_WORDS;
+  const uint32_t* entry_log =
+      ((const uint32_t*)logs) + GUARD_KEY_WORDS + PIN_LOG_WORDS;
   for (size_t i = 0; i < PIN_LOG_WORDS; ++i) {
     wait_random();
     if ((entry_log[i] & guard_mask) != guard) {
@@ -926,10 +926,10 @@ static uint32_t hamming_weight(uint32_t value) {
   return value & 0x3F;
 }
 
-static secbool pin_get_fails(uint32_t *ctr) {
+static secbool pin_get_fails(uint32_t* ctr) {
   *ctr = PIN_MAX_TRIES;
 
-  const void *logs = NULL;
+  const void* logs = NULL;
   uint16_t len = 0;
   wait_random();
   if (sectrue != norcow_get(PIN_LOGS_KEY, &logs, &len) ||
@@ -942,14 +942,14 @@ static secbool pin_get_fails(uint32_t *ctr) {
   uint32_t guard = 0;
   wait_random();
   if (sectrue !=
-      expand_guard_key(*(const uint32_t *)logs, &guard_mask, &guard)) {
+      expand_guard_key(*(const uint32_t*)logs, &guard_mask, &guard)) {
     handle_fault("guard key expansion");
     return secfalse;
   }
   const uint32_t unused = guard | ~guard_mask;
 
-  const uint32_t *success_log = ((const uint32_t *)logs) + GUARD_KEY_WORDS;
-  const uint32_t *entry_log = success_log + PIN_LOG_WORDS;
+  const uint32_t* success_log = ((const uint32_t*)logs) + GUARD_KEY_WORDS;
+  const uint32_t* entry_log = success_log + PIN_LOG_WORDS;
   volatile int current = -1;
   volatile size_t i = 0;
   for (i = 0; i < PIN_LOG_WORDS; ++i) {
@@ -1016,14 +1016,14 @@ void storage_lock(void) {
 
 // Returns the storage version that was used to lock the storage.
 static uint32_t get_lock_version(void) {
-  const void *val = NULL;
+  const void* val = NULL;
   uint16_t len = 0;
   if (sectrue != norcow_get(UNAUTH_VERSION_KEY, &val, &len) ||
       len != sizeof(uint32_t)) {
     handle_fault("no lock version");
   }
 
-  return *(uint32_t *)val;
+  return *(uint32_t*)val;
 }
 
 secbool check_storage_version(void) {
@@ -1041,7 +1041,7 @@ secbool check_storage_version(void) {
     return secfalse;
   }
 
-  const void *storage_upgraded = NULL;
+  const void* storage_upgraded = NULL;
   if (sectrue != norcow_get(STORAGE_UPGRADED_KEY, &storage_upgraded, &len) ||
       len != sizeof(TRUE_WORD)) {
     handle_fault("storage version check");
@@ -1055,7 +1055,7 @@ secbool check_storage_version(void) {
     return secfalse;
   } else if (version < norcow_active_version) {
     // Storage was upgraded.
-    if (*(const uint32_t *)storage_upgraded != TRUE_WORD) {
+    if (*(const uint32_t*)storage_upgraded != TRUE_WORD) {
       // Attack: The upgrade process was bypassed.
       storage_wipe();
       handle_fault("storage version check");
@@ -1068,7 +1068,7 @@ secbool check_storage_version(void) {
                sizeof(norcow_active_version));
   } else {
     // Standard operation. The storage was neither upgraded nor downgraded.
-    if (*(const uint32_t *)storage_upgraded != FALSE_WORD) {
+    if (*(const uint32_t*)storage_upgraded != FALSE_WORD) {
       // Attack: The upgrade process was launched when it shouldn't have been.
       storage_wipe();
       handle_fault("storage version check");
@@ -1078,8 +1078,8 @@ secbool check_storage_version(void) {
   return sectrue;
 }
 
-static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
-  const void *buffer = NULL;
+static secbool decrypt_dek(const uint8_t* kek, const uint8_t* keiv) {
+  const void* buffer = NULL;
   uint16_t len = 0;
   if (sectrue != initialized ||
       sectrue != norcow_get(EDEK_PVC_KEY, &buffer, &len) ||
@@ -1088,8 +1088,8 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
     return secfalse;
   }
 
-  const uint8_t *ekeys = (const uint8_t *)buffer + STORAGE_SALT_SIZE;
-  const uint32_t *pvc = (const uint32_t *)buffer +
+  const uint8_t* ekeys = (const uint8_t*)buffer + STORAGE_SALT_SIZE;
+  const uint32_t* pvc = (const uint32_t*)buffer +
                         (STORAGE_SALT_SIZE + KEYS_SIZE) / sizeof(uint32_t);
   _Static_assert(((STORAGE_SALT_SIZE + KEYS_SIZE) & 3) == 0, "PVC unaligned");
   _Static_assert((PVC_SIZE & 3) == 0, "PVC size unaligned");
@@ -1116,16 +1116,16 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
   return sectrue;
 }
 
-static void ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
+static void ensure_not_wipe_code(const uint8_t* pin, size_t pin_len) {
   if (sectrue != is_not_wipe_code(pin, pin_len)) {
     storage_wipe();
     show_wipe_code_screen();
   }
 }
 
-static secbool unlock(const uint8_t *pin, size_t pin_len,
-                      const uint8_t *ext_salt) {
-  const uint8_t *unlock_pin = pin;
+static secbool unlock(const uint8_t* pin, size_t pin_len,
+                      const uint8_t* ext_salt) {
+  const uint8_t* unlock_pin = pin;
   size_t unlock_pin_len = pin_len;
 
   // In case of an upgrade from version 1 or 2, encode the PIN to the old format
@@ -1136,7 +1136,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     ui_total += PIN_DERIVE_MS;
     ui_rem += PIN_DERIVE_MS;
     legacy_pin = pin_to_int(pin, pin_len);
-    unlock_pin = (const uint8_t *)&legacy_pin;
+    unlock_pin = (const uint8_t*)&legacy_pin;
     unlock_pin_len = sizeof(legacy_pin);
   }
 
@@ -1187,7 +1187,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 
   // Read the random salt from EDEK_PVC_KEY and use it to derive the KEK and
   // KEIV from the PIN.
-  const void *rand_salt = NULL;
+  const void* rand_salt = NULL;
   uint16_t len = 0;
   if (sectrue != initialized ||
       sectrue != norcow_get(EDEK_PVC_KEY, &rand_salt, &len) ||
@@ -1201,7 +1201,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 
   // Check whether the entered PIN is correct.
   if (sectrue != derive_kek_unlock(unlock_pin, unlock_pin_len,
-                                   (const uint8_t *)rand_salt, ext_salt, kek,
+                                   (const uint8_t*)rand_salt, ext_salt, kek,
                                    keiv) ||
       sectrue != decrypt_dek(kek, keiv)) {
     memzero(&legacy_pin, sizeof(legacy_pin));
@@ -1243,8 +1243,8 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   return pin_fails_reset();
 }
 
-secbool storage_unlock(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
+secbool storage_unlock(const uint8_t* pin, size_t pin_len,
+                       const uint8_t* ext_salt) {
   if (sectrue != initialized || pin == NULL) {
     return secfalse;
   }
@@ -1268,9 +1268,9 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
  * If val_dest is not NULL and max_len >= len, then the data is decrypted
  * to val_dest using cached_dek as the decryption key.
  */
-static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
-                                     const uint16_t max_len, uint16_t *len) {
-  const void *val_stored = NULL;
+static secbool storage_get_encrypted(const uint16_t key, void* val_dest,
+                                     const uint16_t max_len, uint16_t* len) {
+  const void* val_stored = NULL;
 
   if (sectrue != auth_get(key, &val_stored, len)) {
     return secfalse;
@@ -1290,15 +1290,15 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
     return secfalse;
   }
 
-  const uint8_t *iv = (const uint8_t *)val_stored;
-  const uint8_t *tag_stored = (const uint8_t *)val_stored + CHACHA20_IV_SIZE;
-  const uint8_t *ciphertext =
-      (const uint8_t *)val_stored + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
+  const uint8_t* iv = (const uint8_t*)val_stored;
+  const uint8_t* tag_stored = (const uint8_t*)val_stored + CHACHA20_IV_SIZE;
+  const uint8_t* ciphertext =
+      (const uint8_t*)val_stored + CHACHA20_IV_SIZE + POLY1305_TAG_SIZE;
   uint8_t tag_computed[POLY1305_TAG_SIZE] = {0};
   chacha20poly1305_ctx ctx = {0};
   rfc7539_init(&ctx, cached_dek, iv);
-  rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
-  chacha20poly1305_decrypt(&ctx, ciphertext, (uint8_t *)val_dest, *len);
+  rfc7539_auth(&ctx, (const uint8_t*)&key, sizeof(key));
+  chacha20poly1305_decrypt(&ctx, ciphertext, (uint8_t*)val_dest, *len);
   rfc7539_finish(&ctx, sizeof(key), *len, tag_computed);
   memzero(&ctx, sizeof(ctx));
 
@@ -1323,8 +1323,8 @@ secbool storage_has(const uint16_t key) {
  * Finds the data stored under key and writes its length to len. If val_dest is
  * not NULL and max_len >= len, then the data is copied to val_dest.
  */
-secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
-                    uint16_t *len) {
+secbool storage_get(const uint16_t key, void* val_dest, const uint16_t max_len,
+                    uint16_t* len) {
   const uint8_t app = key >> 8;
   // APP == 0 is reserved for PIN related values
   if (sectrue != initialized || app == APP_STORAGE) {
@@ -1334,7 +1334,7 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
   // If the top bit of APP is set, then the value is not encrypted and can be
   // read from a locked device.
   if ((app & FLAG_PUBLIC) != 0) {
-    const void *val_stored = NULL;
+    const void* val_stored = NULL;
     if (sectrue != norcow_get(key, &val_stored, len)) {
       return secfalse;
     }
@@ -1358,7 +1358,7 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
  * Encrypts the data at val using cached_dek as the encryption key and stores
  * the ciphertext under key.
  */
-static secbool storage_set_encrypted(const uint16_t key, const void *val,
+static secbool storage_set_encrypted(const uint16_t key, const void* val,
                                      const uint16_t len) {
   if (len > UINT16_MAX - CHACHA20_IV_SIZE - POLY1305_TAG_SIZE) {
     return secfalse;
@@ -1382,11 +1382,11 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   // Encrypt all blocks except for the last one.
   chacha20poly1305_ctx ctx = {0};
   rfc7539_init(&ctx, cached_dek, buffer);
-  rfc7539_auth(&ctx, (const uint8_t *)&key, sizeof(key));
+  rfc7539_auth(&ctx, (const uint8_t*)&key, sizeof(key));
   size_t i = 0;
   for (i = 0; i + CHACHA20_BLOCK_SIZE < len;
        i += CHACHA20_BLOCK_SIZE, offset += CHACHA20_BLOCK_SIZE) {
-    chacha20poly1305_encrypt(&ctx, ((const uint8_t *)val) + i, buffer,
+    chacha20poly1305_encrypt(&ctx, ((const uint8_t*)val) + i, buffer,
                              CHACHA20_BLOCK_SIZE);
     if (sectrue !=
         norcow_update_bytes(key, offset, buffer, CHACHA20_BLOCK_SIZE)) {
@@ -1397,7 +1397,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   }
 
   // Encrypt final block and compute message authentication tag.
-  chacha20poly1305_encrypt(&ctx, ((const uint8_t *)val) + i, buffer, len - i);
+  chacha20poly1305_encrypt(&ctx, ((const uint8_t*)val) + i, buffer, len - i);
   secbool ret = norcow_update_bytes(key, offset, buffer, len - i);
   if (sectrue == ret) {
     rfc7539_finish(&ctx, sizeof(key), len, buffer);
@@ -1408,7 +1408,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
   return ret;
 }
 
-secbool storage_set(const uint16_t key, const void *val, const uint16_t len) {
+secbool storage_set(const uint16_t key, const void* val, const uint16_t len) {
   const uint8_t app = key >> 8;
 
   // APP == 0 is reserved for PIN related values
@@ -1462,7 +1462,7 @@ secbool storage_set_counter(const uint16_t key, const uint32_t count) {
   return storage_set(key, value, sizeof(value));
 }
 
-secbool storage_next_counter(const uint16_t key, uint32_t *count) {
+secbool storage_next_counter(const uint16_t key, uint32_t* count) {
   const uint8_t app = key >> 8;
   // APP == 0 is reserved for PIN related values
   if (sectrue != initialized || app == APP_STORAGE ||
@@ -1475,8 +1475,8 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
   }
 
   uint16_t len = 0;
-  const uint32_t *val_stored = NULL;
-  if (sectrue != norcow_get(key, (const void **)&val_stored, &len)) {
+  const uint32_t* val_stored = NULL;
+  if (sectrue != norcow_get(key, (const void**)&val_stored, &len)) {
     *count = 0;
     return storage_set_counter(key, 0);
   }
@@ -1514,10 +1514,10 @@ secbool storage_has_pin(void) {
     return secfalse;
   }
 
-  const void *val = NULL;
+  const void* val = NULL;
   uint16_t len = 0;
   if (sectrue != norcow_get(PIN_NOT_SET_KEY, &val, &len) ||
-      (len > 0 && *(uint8_t *)val != FALSE_BYTE)) {
+      (len > 0 && *(uint8_t*)val != FALSE_BYTE)) {
     return secfalse;
   }
   return sectrue;
@@ -1556,10 +1556,10 @@ uint32_t storage_get_pin_rem(void) {
   return PIN_MAX_TRIES - ctr_mcu;
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
-                           const uint8_t *new_ext_salt) {
+secbool storage_change_pin(const uint8_t* oldpin, size_t oldpin_len,
+                           const uint8_t* newpin, size_t newpin_len,
+                           const uint8_t* old_ext_salt,
+                           const uint8_t* new_ext_salt) {
   if (sectrue != initialized || oldpin == NULL || newpin == NULL) {
     return secfalse;
   }
@@ -1581,13 +1581,13 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
   return set_pin(newpin, newpin_len, new_ext_salt);
 }
 
-void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
+void storage_ensure_not_wipe_code(const uint8_t* pin, size_t pin_len) {
   // If we are unlocking the storage during upgrade from version 2 or lower,
   // then encode the PIN to the old format.
   uint32_t legacy_pin = 0;
   if (get_lock_version() <= 2) {
     legacy_pin = pin_to_int(pin, pin_len);
-    pin = (const uint8_t *)&legacy_pin;
+    pin = (const uint8_t*)&legacy_pin;
     pin_len = sizeof(legacy_pin);
   }
 
@@ -1603,9 +1603,9 @@ secbool storage_has_wipe_code(void) {
   return is_not_wipe_code(WIPE_CODE_EMPTY, WIPE_CODE_EMPTY_LEN);
 }
 
-secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
-                                 const uint8_t *ext_salt,
-                                 const uint8_t *wipe_code,
+secbool storage_change_wipe_code(const uint8_t* pin, size_t pin_len,
+                                 const uint8_t* ext_salt,
+                                 const uint8_t* wipe_code,
                                  size_t wipe_code_len) {
   if (sectrue != initialized || pin == NULL || wipe_code == NULL ||
       (pin_len != 0 && pin_len == wipe_code_len &&
@@ -1633,7 +1633,7 @@ void storage_wipe(void) {
   init_wiped_storage();
 }
 
-static void __handle_fault(const char *msg, const char *file, int line) {
+static void __handle_fault(const char* msg, const char* file, int line) {
   static secbool in_progress = secfalse;
 
   // If fault handling is already in progress, then we are probably facing a
@@ -1668,7 +1668,7 @@ static void __handle_fault(const char *msg, const char *file, int line) {
  * Reads the PIN fail counter in version 0 format. Returns the current number of
  * failed PIN entries.
  */
-static secbool v0_pin_get_fails(uint32_t *ctr) {
+static secbool v0_pin_get_fails(uint32_t* ctr) {
   const uint16_t V0_PIN_FAIL_KEY = 0x0001;
   // The PIN_FAIL_KEY points to an area of words, initialized to
   // 0xffffffff (meaning no PIN failures).  The first non-zero word
@@ -1679,11 +1679,11 @@ static secbool v0_pin_get_fails(uint32_t *ctr) {
   // indicating that the next word is the PIN failure counter.
 
   // Find the current pin failure counter
-  const void *val = NULL;
+  const void* val = NULL;
   uint16_t len = 0;
   if (secfalse != norcow_get(V0_PIN_FAIL_KEY, &val, &len)) {
     for (unsigned int i = 0; i < len / sizeof(uint32_t); i++) {
-      uint32_t word = ((const uint32_t *)val)[i];
+      uint32_t word = ((const uint32_t*)val)[i];
       if (word != 0) {
         *ctr = hamming_weight(~word);
         return sectrue;
@@ -1698,7 +1698,7 @@ static secbool v0_pin_get_fails(uint32_t *ctr) {
 
 // Legacy conversion of PIN to the uint32 scheme that was used prior to storage
 // version 3.
-static uint32_t pin_to_int(const uint8_t *pin, size_t pin_len) {
+static uint32_t pin_to_int(const uint8_t* pin, size_t pin_len) {
   if (pin_len > V0_MAX_PIN_LEN) {
     return 0;
   }
@@ -1717,7 +1717,7 @@ static uint32_t pin_to_int(const uint8_t *pin, size_t pin_len) {
 
 // Legacy conversion of wipe code from the uint32 scheme that was used prior to
 // storage version 3.
-static char *int_to_wipe_code(uint32_t val) {
+static char* int_to_wipe_code(uint32_t val) {
   static char wipe_code[V0_MAX_PIN_LEN + 1] = {0};
   size_t pos = sizeof(wipe_code) - 1;
   wipe_code[pos] = '\0';
@@ -1753,7 +1753,7 @@ static secbool storage_upgrade(void) {
   const uint16_t V0_PIN_FAIL_KEY = 0x0001;
   uint16_t key = 0;
   uint16_t len = 0;
-  const void *val = NULL;
+  const void* val = NULL;
   secbool ret = secfalse;
 
   if (norcow_active_version == 0) {
@@ -1774,10 +1774,10 @@ static secbool storage_upgrade(void) {
     ui_rem = ui_total;
     ui_message = PROCESSING_MSG;
     secbool found = norcow_get(V0_PIN_KEY, &val, &len);
-    if (sectrue == found && *(const uint32_t *)val != V0_PIN_EMPTY) {
-      set_pin((const uint8_t *)val, len, NULL);
+    if (sectrue == found && *(const uint32_t*)val != V0_PIN_EMPTY) {
+      set_pin((const uint8_t*)val, len, NULL);
     } else {
-      set_pin((const uint8_t *)&V0_PIN_EMPTY, sizeof(V0_PIN_EMPTY), NULL);
+      set_pin((const uint8_t*)&V0_PIN_EMPTY, sizeof(V0_PIN_EMPTY), NULL);
       ret = norcow_set(PIN_NOT_SET_KEY, &TRUE_BYTE, sizeof(TRUE_BYTE));
     }
 
@@ -1830,7 +1830,7 @@ static secbool storage_upgrade(void) {
     // The storage may have gone through an upgrade to version 2 without having
     // been unlocked. We can tell by looking at STORAGE_UPGRADED_KEY.
     if (sectrue == norcow_get(STORAGE_UPGRADED_KEY, &val, &len) &&
-        len == sizeof(FALSE_WORD) && *((uint32_t *)val) == FALSE_WORD) {
+        len == sizeof(FALSE_WORD) && *((uint32_t*)val) == FALSE_WORD) {
       version = 2;
     }
 
@@ -1845,8 +1845,8 @@ static secbool storage_upgrade(void) {
   return norcow_upgrade_finish();
 }
 
-static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
-                                        const uint8_t *ext_salt) {
+static secbool storage_upgrade_unlocked(const uint8_t* pin, size_t pin_len,
+                                        const uint8_t* ext_salt) {
   uint32_t version = 0;
   uint16_t len = 0;
   if (sectrue !=
@@ -1868,21 +1868,21 @@ static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
   if (version == 2) {
     // Upgrade WIPE_CODE_DATA_KEY from the old uint32 scheme to the new
     // variable-length scheme.
-    const void *wipe_code_data = NULL;
+    const void* wipe_code_data = NULL;
     if (sectrue != norcow_get(WIPE_CODE_DATA_KEY, &wipe_code_data, &len) ||
         len < sizeof(uint32_t)) {
       handle_fault("no wipe code");
       return secfalse;
     }
 
-    char *wipe_code = int_to_wipe_code(*(uint32_t *)wipe_code_data);
+    char* wipe_code = int_to_wipe_code(*(uint32_t*)wipe_code_data);
     if (wipe_code == NULL) {
       handle_fault("invalid wipe code");
       return secfalse;
     }
 
     size_t wipe_code_len = strnlen(wipe_code, V0_MAX_PIN_LEN);
-    ret = set_wipe_code((const uint8_t *)wipe_code, wipe_code_len);
+    ret = set_wipe_code((const uint8_t*)wipe_code, wipe_code_len);
     memzero(wipe_code, wipe_code_len);
   }
 

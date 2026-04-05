@@ -175,7 +175,7 @@
 uint32_t I2cxTimeout =
     I2Cx_TIMEOUT_MAX; /*<! Value of Timeout when I2C communication fails */
 
-static i2c_bus_t *g_i2c_bus = NULL;
+static i2c_bus_t* g_i2c_bus = NULL;
 
 /**
  * @brief  Writes a value in a register of the device through BUS.
@@ -211,7 +211,7 @@ static void I2Cx_WriteData(uint8_t Addr, uint8_t Reg, uint8_t Value) {
  * @param  pBuffer: The target register value to be written
  * @param  Length: buffer size to be written
  */
-static void I2Cx_WriteBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
+static void I2Cx_WriteBuffer(uint8_t Addr, uint8_t Reg, uint8_t* pBuffer,
                              uint16_t Length) {
   i2c_op_t ops[] = {
       {
@@ -282,7 +282,7 @@ static uint8_t I2Cx_ReadData(uint8_t Addr, uint8_t Reg) {
  * @param  Length: length of the data
  * @retval 0 if no problems to read multiple data
  */
-static uint8_t I2Cx_ReadBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
+static uint8_t I2Cx_ReadBuffer(uint8_t Addr, uint8_t Reg, uint8_t* pBuffer,
                                uint16_t Length) {
   i2c_op_t ops[] = {
       {
@@ -334,7 +334,7 @@ uint8_t IOE_Read(uint8_t Addr, uint8_t Reg) { return I2Cx_ReadData(Addr, Reg); }
  * @param  pBuffer: pointer to data buffer
  * @param  Length: length of the data
  */
-void IOE_WriteMultiple(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
+void IOE_WriteMultiple(uint8_t Addr, uint8_t Reg, uint8_t* pBuffer,
                        uint16_t Length) {
   I2Cx_WriteBuffer(Addr, Reg, pBuffer, Length);
 }
@@ -347,7 +347,7 @@ void IOE_WriteMultiple(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
  * @param  Length: length of the data
  * @retval 0 if no problems to read multiple data
  */
-uint16_t IOE_ReadMultiple(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
+uint16_t IOE_ReadMultiple(uint8_t Addr, uint8_t Reg, uint8_t* pBuffer,
                           uint16_t Length) {
   return I2Cx_ReadBuffer(Addr, Reg, pBuffer, Length);
 }
@@ -462,7 +462,7 @@ void touch_set_mode(void) {
  * @param  DeviceAddr: Device address on communication Bus.
  * @retval None
  */
-void stmpe811_Reset(i2c_bus_t *i2c_bus) {
+void stmpe811_Reset(i2c_bus_t* i2c_bus) {
   g_i2c_bus = i2c_bus;
 
   /* Power Down the stmpe811 */
@@ -507,7 +507,7 @@ uint32_t touch_active(void) {
  * @param  Y: Pointer to Y position value
  * @retval None.
  */
-void stmpe811_TS_GetXY(uint16_t *X, uint16_t *Y) {
+void stmpe811_TS_GetXY(uint16_t* X, uint16_t* Y) {
   uint8_t dataXYZ[4];
   uint32_t uldataXYZ;
 
@@ -529,7 +529,7 @@ void stmpe811_TS_GetXY(uint16_t *X, uint16_t *Y) {
  * @brief  Returns status and positions of the touch screen.
  * @param  TsState: Pointer to touch screen current state structure
  */
-void BSP_TS_GetState(TS_StateTypeDef *TsState) {
+void BSP_TS_GetState(TS_StateTypeDef* TsState) {
   static bool _detected = false;
   static uint32_t _x = 0, _y = 0;
   uint16_t xDiff, yDiff, x, y, xr, yr;

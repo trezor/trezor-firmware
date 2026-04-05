@@ -22,13 +22,13 @@
 #include <rtl/printf.h>
 #include <sys/dbg_console.h>
 
-void dbg_console_vprintf(const char *fmt, va_list args) {
+void dbg_console_vprintf(const char* fmt, va_list args) {
   char temp[160];
   vsnprintf_(temp, sizeof(temp), fmt, args);
   dbg_console_write(temp, strnlen(temp, sizeof(temp)));
 }
 
-void dbg_console_printf(const char *fmt, ...) {
+void dbg_console_printf(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   dbg_console_vprintf(fmt, args);

@@ -59,7 +59,7 @@
 static SD_HandleTypeDef sd_handle = {0};
 
 // this function is inspired by functions in stm32f4xx_ll_sdmmc.c
-uint32_t SDMMC_CmdSetClrCardDetect(SDMMC_TypeDef *SDMMCx, uint32_t Argument) {
+uint32_t SDMMC_CmdSetClrCardDetect(SDMMC_TypeDef* SDMMCx, uint32_t Argument) {
   SDMMC_CmdInitTypeDef sdmmc_cmdinit = {0};
   uint32_t errorstate = SDMMC_ERROR_NONE;
 
@@ -132,7 +132,7 @@ static inline void sdcard_active_pin_state(void) {
 
 void sdcard_init(void) { sdcard_default_pin_state(); }
 
-void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
+void HAL_SD_MspInit(SD_HandleTypeDef* hsd) {
   if (hsd->Instance == sd_handle.Instance) {
     // enable SDIO clock
     SDMMC_CLK_ENABLE();
@@ -145,7 +145,7 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsd) {
   // GPIO have already been initialised by sdcard_init
 }
 
-void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd) {
+void HAL_SD_MspDeInit(SD_HandleTypeDef* hsd) {
   if (hsd->Instance == sd_handle.Instance) {
     NVIC_DisableIRQ(SDMMC_IRQn);
     SDMMC_CLK_DISABLE();
@@ -253,7 +253,7 @@ static void sdcard_reset_periph(void) {
   SDMMC1->ICR = SDMMC_STATIC_FLAGS;
 }
 
-static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd,
+static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef* sd,
                                               uint32_t timeout) {
   // Wait for HAL driver to be ready (eg for DMA to finish)
   uint32_t start = HAL_GetTick();
@@ -289,7 +289,7 @@ static HAL_StatusTypeDef sdcard_wait_finished(SD_HandleTypeDef *sd,
   return HAL_OK;
 }
 
-secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
+secbool sdcard_read_blocks(uint32_t* dest, uint32_t block_num,
                            uint32_t num_blocks) {
   // check that SD card is initialised
   if (sd_handle.Instance == NULL) {
@@ -305,7 +305,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
 
   sdcard_reset_periph();
   err =
-      HAL_SD_ReadBlocks_DMA(&sd_handle, (uint8_t *)dest, block_num, num_blocks);
+      HAL_SD_ReadBlocks_DMA(&sd_handle, (uint8_t*)dest, block_num, num_blocks);
   if (err == HAL_OK) {
     err = sdcard_wait_finished(&sd_handle, 5000);
   }
@@ -313,7 +313,7 @@ secbool sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
   return sectrue * (err == HAL_OK);
 }
 
-secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
+secbool sdcard_write_blocks(const uint32_t* src, uint32_t block_num,
                             uint32_t num_blocks) {
   // check that SD card is initialised
   if (sd_handle.Instance == NULL) {
@@ -329,7 +329,7 @@ secbool sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 
   sdcard_reset_periph();
   err =
-      HAL_SD_WriteBlocks_DMA(&sd_handle, (uint8_t *)src, block_num, num_blocks);
+      HAL_SD_WriteBlocks_DMA(&sd_handle, (uint8_t*)src, block_num, num_blocks);
   if (err == HAL_OK) {
     err = sdcard_wait_finished(&sd_handle, 5000);
   }

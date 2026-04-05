@@ -19,7 +19,7 @@
 
 #if DEBUG_LINK
 
-void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg) {
+void fsm_msgDebugLinkGetState(const DebugLinkGetState* msg) {
   (void)msg;
 
   // Do not use RESP_INIT because it clears msg_resp, but another message
@@ -62,9 +62,9 @@ void fsm_msgDebugLinkGetState(const DebugLinkGetState *msg) {
   msg_debug_write(MessageType_MessageType_DebugLinkState, &resp);
 }
 
-void fsm_msgDebugLinkStop(const DebugLinkStop *msg) { (void)msg; }
+void fsm_msgDebugLinkStop(const DebugLinkStop* msg) { (void)msg; }
 
-void fsm_msgDebugLinkMemoryRead(const DebugLinkMemoryRead *msg) {
+void fsm_msgDebugLinkMemoryRead(const DebugLinkMemoryRead* msg) {
   RESP_INIT(DebugLinkMemory);
 
   uint32_t length = 1024;
@@ -75,7 +75,7 @@ void fsm_msgDebugLinkMemoryRead(const DebugLinkMemoryRead *msg) {
   msg_debug_write(MessageType_MessageType_DebugLinkMemory, resp);
 }
 
-void fsm_msgDebugLinkMemoryWrite(const DebugLinkMemoryWrite *msg) {
+void fsm_msgDebugLinkMemoryWrite(const DebugLinkMemoryWrite* msg) {
   uint32_t length = msg->memory.size;
   if (msg->flash) {
     svc_flash_unlock();
@@ -89,19 +89,19 @@ void fsm_msgDebugLinkMemoryWrite(const DebugLinkMemoryWrite *msg) {
     (void)dummy;
   } else {
 #if !EMULATOR
-    memcpy((void *)msg->address, msg->memory.bytes, length);
+    memcpy((void*)msg->address, msg->memory.bytes, length);
 #endif
   }
 }
 
-void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg) {
+void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase* msg) {
   svc_flash_unlock();
   svc_flash_erase_sector(msg->sector);
   uint32_t dummy = svc_flash_lock();
   (void)dummy;
 }
 
-void fsm_msgDebugLinkReseedRandom(const DebugLinkReseedRandom *msg) {
+void fsm_msgDebugLinkReseedRandom(const DebugLinkReseedRandom* msg) {
 #if EMULATOR
   RESP_INIT(Success);
   random_reseed(msg->value);

@@ -27,7 +27,7 @@
 #include "util.h"
 
 #if BOOTLOADER_QA
-static int known_bootloader(int r, const uint8_t *hash) {
+static int known_bootloader(int r, const uint8_t* hash) {
   if (r != 32) return 0;
   if (0 ==
       memcmp(hash,
@@ -109,7 +109,7 @@ static int known_bootloader(int r, const uint8_t *hash) {
 
 #if PRODUCTION
 
-static int known_bootloader(int r, const uint8_t *hash) {
+static int known_bootloader(int r, const uint8_t* hash) {
   if (r != 32) return 0;
   if (0 ==
       memcmp(hash,
@@ -283,7 +283,7 @@ void check_and_replace_bootloader(bool shutdown_on_replace) {
       flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
     }
     for (int i = 0; i < FLASH_BOOT_LEN / 4; i++) {
-      const uint32_t *w = (const uint32_t *)(bl_data + i * 4);
+      const uint32_t* w = (const uint32_t*)(bl_data + i * 4);
       flash_program_word(FLASH_BOOT_START + i * 4, *w);
     }
     flash_wait_for_last_operation();

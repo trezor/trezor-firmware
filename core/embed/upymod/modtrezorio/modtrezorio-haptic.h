@@ -43,5 +43,5 @@ STATIC MP_DEFINE_CONST_DICT(mod_trezorio_haptic_globals,
 
 STATIC const mp_obj_module_t mod_trezorio_haptic_module = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mod_trezorio_haptic_globals,
+    .globals = (mp_obj_dict_t*)&mod_trezorio_haptic_globals,
 };
