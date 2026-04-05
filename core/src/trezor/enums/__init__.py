@@ -726,7 +726,6 @@ if TYPE_CHECKING:
         CKBTxAckInput = 5504
         CKBTxAckOutput = 5505
         CKBTxAckCellDep = 5506
-        CKBSignedTx = 5507
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

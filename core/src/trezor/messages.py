@@ -2085,22 +2085,6 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["CKBTxAckCellDep"]:
             return isinstance(msg, cls)
 
-    class CKBSignedTx(protobuf.MessageType):
-        signature: "AnyBytes"
-        tx_hash: "AnyBytes"
-
-        def __init__(
-            self,
-            *,
-            signature: "AnyBytes",
-            tx_hash: "AnyBytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CKBSignedTx"]:
-            return isinstance(msg, cls)
-
     class CipherKeyValue(protobuf.MessageType):
         address_n: "list[int]"
         key: "str"

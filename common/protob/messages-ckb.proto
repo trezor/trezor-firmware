@@ -155,14 +155,3 @@ message CKBTxAckCellDep {
 
     optional CKBCellDep cell_dep = 1;
 }
-
-/**
- * Response: Signed CKB transaction
- * @end
- */
-message CKBSignedTx {
-    option (wire_type) = 5507;
-
-    required bytes signature = 1;                                // 65-byte recoverable signature
-    required bytes tx_hash = 2;                                  // 32-byte transaction hash
-}
