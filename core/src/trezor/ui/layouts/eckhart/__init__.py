@@ -248,7 +248,6 @@ async def show_passphrase_from_host(passphrase: str | None) -> None:
         description="",
         br_name="passphrase_host2",
         verb=TR.passphrase__title_confirm,
-        cancel=True,
     )
 
 
@@ -736,7 +735,6 @@ def confirm_blob(
     ask_pagination: bool = False,
     verb_skip_pagination: str | None = None,
     chunkify: bool = False,
-    _prompt_screen: bool = True,
 ) -> Awaitable[None]:
 
     if ask_pagination:
@@ -769,20 +767,15 @@ def confirm_blob(
             info_layout_can_confirm=True,
         )
     else:
-        layout = trezorui_api.confirm_value(
+        return confirm_value(
+            br_name=br_name,
             title=title,
             value=data,
-            description=description,
+            description=description or "",
             subtitle=subtitle,
             verb=verb,
             hold=hold,
             chunkify=chunkify,
-            cancel=True,
-        )
-        return raise_if_not_confirmed(
-            layout,
-            br_name,
-            br_code,
         )
 
 
@@ -791,8 +784,8 @@ def confirm_address(
     address: str,
     subtitle: str | None = None,
     description: str | None = None,
-    verb: str | None = None,
-    warning_footer: str | None = None,
+    verb: str | None = TR.buttons__confirm,
+    warning_footer: str | None = TR.address__check_with_source,
     chunkify: bool = True,
     br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -807,7 +800,6 @@ def confirm_address(
         verb=verb,
         chunkify=chunkify,
         warning_footer=warning_footer,
-        cancel=True,
     )
 
 
@@ -846,7 +838,7 @@ def confirm_amount(
 
 def confirm_value(
     title: str,
-    value: str,
+    value: StrOrBytes,
     description: str,
     br_name: str,
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -858,20 +850,19 @@ def confirm_value(
     chunkify: bool = False,
     info_items: Iterable[StrPropertyType] | None = None,
     info_title: str | None = None,
-    chunkify_info: bool = False,
     warning_footer: str | None = None,
-    cancel: bool = False,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-    items = list(info_items) if info_items else []
-    info_layout = trezorui_api.show_info_with_cancel(
-        title=info_title if info_title else TR.words__title_information,
-        items=items,
-        chunkify=chunkify_info,
+    menu_items = (
+        [create_details(info_title or TR.words__title_information, list(info_items))]
+        if info_items
+        else []
     )
+    menu = Menu.root(menu_items, TR.buttons__cancel)
 
-    return with_info(
+    return confirm_with_menu(
         trezorui_api.confirm_value(
             title=title,
             value=value,
@@ -879,13 +870,13 @@ def confirm_value(
             description=description,
             subtitle=subtitle,
             verb=verb,
-            info=bool(info_items),
+            info=False,
             hold=hold,
             chunkify=chunkify,
             warning_footer=warning_footer,
-            cancel=cancel,
+            external_menu=True,
         ),
-        info_layout,
+        menu,
         br_name,
         br_code,
     )
@@ -1172,7 +1163,6 @@ if not utils.BITCOIN_ONLY:
                 chunkify=chunkify,
                 br_name=br_name,
                 verb=TR.buttons__continue,
-                cancel=True,
             )
         else:
             main_layout = trezorui_api.confirm_with_info(
@@ -1207,7 +1197,6 @@ if not utils.BITCOIN_ONLY:
                 subtitle=TR.ethereum__token_contract,
                 chunkify=chunkify,
                 br_name=br_name,
-                cancel=True,
             )
 
         if is_unknown_network:
@@ -1217,7 +1206,6 @@ if not utils.BITCOIN_ONLY:
                 chain_id,
                 TR.ethereum__approve_chain_id,
                 br_name=br_name,
-                cancel=True,
             )
 
         properties: list[PropertyType] = (
@@ -1370,7 +1358,6 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
             verb=TR.buttons__continue,
             info_items=items,
-            cancel=True,
         )
 
     def confirm_solana_tx(
@@ -1558,7 +1545,6 @@ if not utils.BITCOIN_ONLY:
             info_items=info_items,
             info_title=TR.stellar__token_info,
             is_data=False,
-            chunkify_info=True,
             chunkify=False,
         )
 
@@ -1592,7 +1578,6 @@ if not utils.BITCOIN_ONLY:
             chunkify=chunkify,
             br_name=br_name,
             verb=TR.buttons__continue,
-            cancel=True,
         )
 
         properties: Iterable[StrPropertyType] = (
@@ -1661,7 +1646,6 @@ if not utils.BITCOIN_ONLY:
             chunkify=chunkify,
             br_name=br_name,
             verb=TR.buttons__continue,
-            cancel=True,
         )
 
         properties: list[StrPropertyType] = [
