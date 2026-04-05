@@ -263,8 +263,10 @@ int main(void) {
 
   system_deinit();
 
-  jump_to_next_stage(
-      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
+  uint32_t vectbl_addr =
+      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);
+
+  jump_to_next_stage(vectbl_addr, NULL);
 
   return 0;
 }

@@ -118,7 +118,7 @@ static void drivers_init(void) {
 
 // Secure monitor panic handler
 // (may be called from interrupt context)
-static void secmon_panic(const systask_postmortem_t *pminfo) {
+static void secmon_panic(const systask_postmortem_t* pminfo) {
   // Since the system state is unreliable, enter emergency mode,
   // store the postmortem info into bootargs and reboot.
   system_emergency_rescue(NULL, pminfo);
@@ -129,7 +129,7 @@ extern uint32_t _secmon_size;
 #define SECMON_SIZE ((uint32_t) & _secmon_size)
 #define KERNEL_START (FIRMWARE_START + SECMON_SIZE)
 
-int main(void) {
+int main(startup_args_t* args) {
   // Initialize system's core services
   system_init(secmon_panic);
 

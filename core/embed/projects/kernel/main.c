@@ -297,7 +297,7 @@ static void kernel_panic(const systask_postmortem_t *pminfo) {
   // We never get here
 }
 
-int main(void) {
+int main(startup_args_t *args) {
   // Initialize system's core services
   system_init(&kernel_panic);
 

@@ -236,7 +236,7 @@ void set_core_clock(clock_settings_t settings) {
 }
 #endif
 
-__attribute((no_stack_protector)) void reset_handler(void) {
+__attribute((no_stack_protector)) void reset_handler(startup_args_t* args) {
 #ifdef BOOTLOADER
   uint32_t r11_value;
   // Copy the value of R11 to the local variable r11_value
@@ -291,8 +291,8 @@ __attribute((no_stack_protector)) void reset_handler(void) {
   __enable_fault_irq();
 
   // Run application
-  extern int main(void);
-  int main_result = main();
+  extern int main(startup_args_t * args);
+  int main_result = main(args);
 
   system_exit(main_result);
 }

@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void jump_to_next_stage(uint32_t address) {
+void jump_to_next_stage(uint32_t address, const startup_args_t *args) {
   bool storage_is_erased =
       storage_empty(&STORAGE_AREAS[0]) && storage_empty(&STORAGE_AREAS[1]);
 
