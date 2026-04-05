@@ -102,6 +102,7 @@ impl SelectWordButtons {
         for word in share_words_vec {
             unwrap!(buttons.push(
                 Button::with_text(word)
+                    .initially_enabled(!word.is_empty())
                     .styled(theme::button_select_word())
                     .with_radius(12)
                     .with_text_align(Alignment::Center),
@@ -111,11 +112,13 @@ impl SelectWordButtons {
     }
 
     fn render_separators<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        for i in 1..self.buttons.len() {
-            let button = &self.buttons[i];
-            let button_prev = &self.buttons[i - 1];
+        for pair in self.buttons.windows(2) {
+            let should_render = pair
+                .iter()
+                .all(|button| button.is_enabled() && !button.is_pressed());
 
-            if !button.is_pressed() && !button_prev.is_pressed() {
+            if should_render {
+                let button = &pair[1];
                 let separator = Rect::from_top_left_and_size(
                     button
                         .area()
