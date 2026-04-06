@@ -786,7 +786,7 @@ def confirm_address(
     subtitle: str | None = None,
     description: str | None = None,
     verb: str | None = TR.buttons__confirm,
-    warning_footer: str | None = None,
+    footer: tuple[str, bool] | None = None,
     chunkify: bool = True,
     br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -800,7 +800,7 @@ def confirm_address(
         subtitle=subtitle,
         verb=verb,
         chunkify=chunkify,
-        warning_footer=warning_footer,
+        footer=footer,
     )
 
 
@@ -851,7 +851,7 @@ def confirm_value(
     chunkify: bool = False,
     info_items: Iterable[StrPropertyType] | None = None,
     info_title: str | None = None,
-    warning_footer: str | None = None,
+    footer: tuple[str, bool] | None = None,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -874,7 +874,7 @@ def confirm_value(
             info=False,
             hold=hold,
             chunkify=chunkify,
-            warning_footer=warning_footer,
+            footer=footer,
             external_menu=True,
         ),
         menu,
@@ -1635,7 +1635,7 @@ if not utils.BITCOIN_ONLY:
     async def confirm_tron_send(amount: str | None, fee: str | None) -> None:
         await _confirm_summary(
             amount or "",
-            TR.send__total_amount if amount else "",
+            TR.words__amount if amount else "",
             fee or "",
             TR.words__fee_limit if fee else "",
             extra_items=None,
