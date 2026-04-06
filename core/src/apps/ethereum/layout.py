@@ -340,7 +340,7 @@ def require_confirm_address(
     subtitle: str | None = None,
     verb: str | None = None,
     br_name: str | None = None,
-    warning_footer: str | None = None,
+    footer: str | None = None,
 ) -> Awaitable[None]:
     from ubinascii import hexlify
 
@@ -352,7 +352,7 @@ def require_confirm_address(
         address_hex,
         subtitle=subtitle,
         verb=verb,
-        warning_footer=warning_footer,
+        footer=(footer, True) if footer is not None else None,
         br_name=br_name,
         br_code=ButtonRequestType.SignTx,
     )

@@ -162,7 +162,7 @@ impl FirmwareUI for UICaesar {
         _prompt_screen: bool,
         _cancel: bool,
         _back_button: bool,
-        _warning_footer: Option<TString<'static>>,
+        _footer: Option<(TString<'static>, bool)>,
         _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = ConfirmValueParams {

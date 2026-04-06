@@ -125,7 +125,7 @@ impl FirmwareUI for UIDelizia {
         prompt_screen: bool,
         cancel: bool,
         back_button: bool,
-        _warning_footer: Option<TString<'static>>,
+        _footer: Option<(TString<'static>, bool)>,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         if info && external_menu {
