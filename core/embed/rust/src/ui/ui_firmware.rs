@@ -71,7 +71,8 @@ pub trait FirmwareUI {
         prompt_screen: bool,
         cancel: bool,
         back_button: bool,
-        warning_footer: Option<TString<'static>>,
+        footer: Option<TString<'static>>,
+        is_footer_warning: bool,
         external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 

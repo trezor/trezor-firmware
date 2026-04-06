@@ -349,6 +349,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_confirm_set_new_code;
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_get_pubkey;
+  MP_QSTR_footer;
   MP_QSTR_get;
   MP_QSTR_get_bonds;
   MP_QSTR_get_enabled;
@@ -420,6 +421,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_is_connectable;
   MP_QSTR_is_connected;
   MP_QSTR_is_data;
+  MP_QSTR_is_footer_warning;
   MP_QSTR_is_pairing;
   MP_QSTR_is_pairing_requested;
   MP_QSTR_is_started;

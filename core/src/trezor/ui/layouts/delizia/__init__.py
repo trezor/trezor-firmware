@@ -787,11 +787,13 @@ def confirm_address(
     subtitle: str | None = None,
     description: str | None = None,
     verb: str | None = None,
-    warning_footer: str | None = None,
+    footer: str | None = None,
+    is_footer_warning: bool = True,
     chunkify: bool = True,
     br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[ui.UiResult]:
+
     return confirm_value(
         title,
         address,

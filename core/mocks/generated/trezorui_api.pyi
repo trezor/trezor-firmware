@@ -181,7 +181,8 @@ def confirm_value(
     prompt_screen: bool = False,
     cancel: bool = False,
     back_button: bool = False,
-    warning_footer: str | None = None,
+    footer: str | None = None,
+    is_footer_warning: bool = True,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm a generic piece of information on the screen.
