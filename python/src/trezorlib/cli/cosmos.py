@@ -100,6 +100,31 @@ def _validate_supported_auth_info(auth_info: Any) -> None:
         )
 
 
+def _build_supported_auth_info(
+    *,
+    auth_info_cls: type,
+    any_cls: type,
+    pubkey_cls: type,
+    fee: Any,
+    public_key: bytes,
+    sequence: int,
+) -> Any:
+    auth_info = auth_info_cls()
+    signer_info = auth_info.signer_infos.add()
+
+    signer_pubkey = any_cls()
+    signer_pubkey.type_url = "/cosmos.crypto.secp256k1.PubKey"
+    signer_pubkey.value = pubkey_cls(key=public_key).SerializeToString()
+
+    signer_info.public_key.CopyFrom(signer_pubkey)
+    signer_info.mode_info.single.mode = 1
+    signer_info.sequence = sequence
+
+    auth_info.fee.CopyFrom(fee)
+
+    return auth_info
+
+
 @click.group(name="cosmos")
 def cli() -> None:
     """Cosmos commands."""
@@ -164,10 +189,9 @@ def sign_transaction(
 ) -> str:
     """Sign Cosmos transaction."""
     try:
-        from cosmpy.aerial.coins import Coin
-        from cosmpy.aerial.tx import SigningCfg, Transaction, TxFee
-        from cosmpy.crypto.keypairs import PublicKey
-        from cosmpy.protos.cosmos.tx.v1beta1.tx_pb2 import SignDoc, Tx
+        from cosmpy.protos.cosmos.crypto.secp256k1.keys_pb2 import PubKey
+        from cosmpy.protos.cosmos.tx.v1beta1.tx_pb2 import AuthInfo, SignDoc, Tx
+        from google.protobuf.any_pb2 import Any as ProtoAny
         from google.protobuf.json_format import MessageToJson, ParseDict, ParseError
     except ModuleNotFoundError:
         _print_cosmos_dependencies_and_die()
@@ -185,32 +209,22 @@ def sign_transaction(
     except ParseError as exc:
         raise click.ClickException(f"Invalid transaction format: {exc}") from exc
 
-    fee_amount = _require_single_fee_amount(tx_pb.auth_info.fee)
+    _require_single_fee_amount(tx_pb.auth_info.fee)
     _validate_supported_auth_info(tx_pb.auth_info)
 
     pk = cosmos.get_public_key(client, address_n, False)
 
-    tx = Transaction()
-    tx.seal(
-        signing_cfgs=SigningCfg.direct(
-            public_key=PublicKey(pk.value),
-            sequence_num=sequence,
-        ),
-        fee=TxFee(
-            amount=Coin(
-                denom=fee_amount.denom,
-                amount=fee_amount.amount,
-            ),
-            gas_limit=tx_pb.auth_info.fee.gas_limit,
-            granter=tx_pb.auth_info.fee.granter,
-            payer=tx_pb.auth_info.fee.payer,
-        ),
-        memo=tx_pb.body.memo,
-        timeout_height=tx_pb.body.timeout_height,
+    auth_info = _build_supported_auth_info(
+        auth_info_cls=AuthInfo,
+        any_cls=ProtoAny,
+        pubkey_cls=PubKey,
+        fee=tx_pb.auth_info.fee,
+        public_key=pk.value,
+        sequence=sequence,
     )
 
     sd = SignDoc()
-    sd.auth_info_bytes = tx._tx.auth_info.SerializeToString()
+    sd.auth_info_bytes = auth_info.SerializeToString()
     sd.body_bytes = tx_pb.body.SerializeToString()
     sd.chain_id = chain_id
     sd.account_number = account_number
@@ -219,11 +233,10 @@ def sign_transaction(
 
     res = cosmos.sign_tx(client, address_n, sign_bytes)
 
-    signed_tx = Tx(
-        body=tx_pb.body,
-        auth_info=tx._tx.auth_info,
-        signatures=[res.signature],
-    )
+    signed_tx = Tx()
+    signed_tx.body.CopyFrom(tx_pb.body)
+    signed_tx.auth_info.CopyFrom(auth_info)
+    signed_tx.signatures.append(res.signature)
 
     return MessageToJson(
         message=signed_tx,
