@@ -24,6 +24,7 @@ async def get_address(
     from apps.common.address_mac import get_address_mac
 
     from .helpers import address_from_bytes
+    from .layout import addr_pad
 
     address_n = msg.address_n  # local_cache_attribute
 
@@ -38,14 +39,16 @@ async def get_address(
 
     if msg.show_display:
         coin = "ETH"
+        chunkify = bool(msg.chunkify)
         await show_address(
-            address,
+            address=addr_pad(address, chunkify),
             subtitle=TR.address__coin_address_template.format(coin),
+            address_qr=address,
             path=paths.address_n_to_str(address_n),
             account=paths.get_account_name(
                 coin, address_n, PATTERNS_ADDRESS, slip44_id
             ),
-            chunkify=bool(msg.chunkify),
+            chunkify=chunkify,
         )
 
     return EthereumAddress(address=address, mac=mac)
