@@ -37,12 +37,8 @@
 #include "util.h"
 
 void layoutFirmwareFingerprint(const uint8_t *hash) {
-  char str[4][17] = {0};
-  for (int i = 0; i < 4; i++) {
-    data2hex(hash + i * 8, 8, str[i]);
-  }
-  layoutDialog(&bmp_icon_question, "Abort", "Continue", "Compare fingerprints",
-               str[0], str[1], str[2], str[3], NULL, NULL);
+  // Fingerprint display removed
+  (void)hash;
 }
 
 bool get_button_response(void) {
@@ -70,28 +66,8 @@ static void show_unofficial_warning(const uint8_t *hash) {
 // On non-production we only use unofficial firmwares,
 // so just show hash for a while to see bootloader started
 // but continue
-#if PRODUCTION
-  layoutDialog(&bmp_icon_warning, "Abort", "I'll take the risk", NULL,
-               "WARNING!", NULL, "Unofficial firmware", "detected.", NULL,
-               NULL);
-
-  bool but = get_button_response();
-  if (!but) {  // no button was pressed -> halt
-    show_halt("Unofficial firmware", "aborted.");
-  }
-
-  layoutFirmwareFingerprint(hash);
-
-  but = get_button_response();
-  if (!but) {  // no button was pressed -> halt
-    show_halt("Unofficial firmware", "aborted.");
-  }
-
-  // everything is OK, user pressed 2x Continue -> continue program
-#else
-  layoutFirmwareFingerprint(hash);
-  delay(100000000);
-#endif
+  // Unofficial firmware warning removed: just continue
+  (void)hash;
 }
 
 static void __attribute__((noreturn)) load_app(int signed_firmware) {
@@ -107,7 +83,7 @@ static void bootloader_loop(void) {
   oledDrawBitmap(0, 0, &bmp_logo64_half);
   oledDrawBitmapFlip(24, 0, &bmp_logo64_half);
   if (firmware_present_new()) {
-    oledDrawStringCenter(90, 10, "Trezor", FONT_STANDARD);
+    oledDrawStringCenter(90, 10, "Orinox", FONT_STANDARD);
     oledDrawStringCenter(90, 30, "Bootloader", FONT_STANDARD);
     oledDrawStringCenter(90, 50,
                          VERSTR(VERSION_MAJOR) "." VERSTR(
@@ -116,7 +92,7 @@ static void bootloader_loop(void) {
   } else {
     oledDrawStringCenter(90, 10, "Welcome!", FONT_STANDARD);
     oledDrawStringCenter(90, 30, "Please visit", FONT_STANDARD);
-    oledDrawStringCenter(90, 50, "trezor.io/start", FONT_STANDARD);
+    oledDrawStringCenter(90, 50, "Orinox.io/start", FONT_STANDARD);
   }
   oledRefresh();
 
